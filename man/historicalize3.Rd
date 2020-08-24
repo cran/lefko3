@@ -43,9 +43,9 @@ historicalize3(
   juv3col = 0,
   stageassign = NA,
   stagesize = NA,
-  censorcol = 0,
-  censorkeep = 1,
   censor = FALSE,
+  censorcol = 0,
+  censorkeep = 0,
   spacing = NA,
   NAas0 = FALSE,
   NRasRep = FALSE,
@@ -175,10 +175,10 @@ two-flowered stems.}
 \code{fecb2col} equivalent to \code{feca2col}. This can be useful if two fecundity
 variables have related but unequal units.}
 
-\item{stage2col}{A variable name or column number corresponding to
+\item{stage2col}{Optional variable name or column number corresponding to
 life history stage in time \emph{t}.}
 
-\item{stage3col}{A variable name or column number corresponding to
+\item{stage3col}{Optional variable name or column number corresponding to
 life history stage in time \emph{t}+1.}
 
 \item{juv2col}{A variable name or column number that marks individuals in
@@ -194,12 +194,17 @@ number equal to or greater than 1, and that mature individuals are marked
 as 0 or NA.}
 
 \item{stageassign}{The stageframe object identifying the life history model
-being operationalized.}
+being operationalized. Note that is \code{stage2col} is provided, then this
+stageframe is not utilized in stage designation.}
 
 \item{stagesize}{A variable name or column number describing which size
 variable to use in stage estimation. Defaults to NA, and can also take
 \code{sizea}, \code{sizeb}, \code{sizec}, or \code{sizeadded}, depending on which size variable 
 is chosen.}
+
+\item{censor}{A logical variable determining whether the output data
+should be censored using the variable defined in \code{censorcol}. Defaults
+to FALSE.}
 
 \item{censorcol}{A variable name or column number corresponding to a censor
 variable within the dataset, used to distinguish between entries to use and
@@ -207,12 +212,8 @@ those to discard from analysis, or to designate entries with special issues
 that require further attention.}
 
 \item{censorkeep}{The value of the censoring variable identifying data
-that should be included in analysis. Defaults to 1, but may take any value
+that should be included in analysis. Defaults to 0, but may take any value
 including NA.}
-
-\item{censor}{A logical variable determining whether the output data
-should be censored using the variable defined in \code{censorcol}. Defaults
-to FALSE.}
 
 \item{spacing}{The spacing at which density should be estimated, if density
 estimation is desired and x and y coordinates are supplied. Given in the
@@ -239,7 +240,10 @@ observation status are invariant and can be removed. Defaults to TRUE.}
 If all inputs are properly formatted, then this function will output
 a historical vertical data frame (class \code{hfvdata}), meaning that the
 output data frame will have three consecutive years of size and reproductive 
-data per individual per row.
+data per individual per row. Note that determination of state in times *t*-1
+and *t*+1 gives preference to condition in time *t* within the input
+dataset. So, conflicts in condition in input datasets that have both times
+*t* and *t*+1 listed per row are resolved by using condition in time *t*.
 \item{popid}{Unique identifier for the population, if given.}
 \item{patchid}{Unique identifier for the patch within the population, if
 given.}
@@ -330,4 +334,5 @@ cypraw_v2 <- historicalize3(data = cypvert, patchidcol = "patch", individcol = "
                             stagesize = "sizeadded", censorcol = "censor", censor = FALSE,
                             NAas0 = TRUE, NRasRep = TRUE, reduce = TRUE)
 summary(cypraw_v2)
+
 }

@@ -29,9 +29,10 @@ verticalize3(
   censorcol = 0,
   repstrrel = 1,
   fecrel = 1,
+  stagecol = 0,
   stageassign = NA,
   stagesize = NA,
-  censorkeep = 1,
+  censorkeep = 0,
   censor = FALSE,
   spacing = NA,
   NAas0 = FALSE,
@@ -128,14 +129,18 @@ columns.}
 \code{repstr2col} equivalent to \code{repstr1col}. This can be useful if two 
 reproductive status variables have related but unequal units, for example
 if \code{repstr1col} refers to one-flowered stems while \code{repstr2col} refers to
-two-flowered stems.}
+two-flowered stems. Defaults to 1.}
 
 \item{fecrel}{This is a scalar modifier for that makes the variable in
 \code{fec2col} equivalent to \code{fec1col}. This can be useful if two fecundity
-variables have related but unequal units.}
+variables have related but unequal units. Defaults to 1.}
+
+\item{stagecol}{Optional variable name or column number corresponding to
+life history stage at a given time.}
 
 \item{stageassign}{The stageframe object identifying the life history model
-being operationalized.}
+being operationalized. Note that if \code{stagecol} is provided, then this
+stageframe is not used for stage designation.}
 
 \item{stagesize}{A variable name or column number describing which size
 variable to use in stage estimation. Defaults to NA, and can also take
@@ -143,7 +148,7 @@ variable to use in stage estimation. Defaults to NA, and can also take
 is chosen.}
 
 \item{censorkeep}{The value of the censoring variable identifying data
-that should be included in analysis. Defaults to 1, but may take any value
+that should be included in analysis. Defaults to 0, but may take any value
 including NA.}
 
 \item{censor}{A logical variable determining whether the output data

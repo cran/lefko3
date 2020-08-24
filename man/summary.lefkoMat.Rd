@@ -2,7 +2,7 @@
 % Please edit documentation in R/matrixcreation.R
 \name{summary.lefkoMat}
 \alias{summary.lefkoMat}
-\title{Summary of class "lefkoMat"}
+\title{Summary of Class "lefkoMat"}
 \usage{
 \method{summary}{lefkoMat}(object, ...)
 }

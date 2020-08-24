@@ -24,6 +24,9 @@
 #' each potentially new individual (row) born to each reproductive stage
 #' (column). Non-zero entries correspond to multipliers for fecundity, with 1
 #' equaling full fecundity.
+#' @param data The original historical demographic data frame used to 
+#' estimate vital rates (class \code{hfvdata}). The original data frame is 
+#' required in order to initialize years and patches properly.
 #' @param modelsuite An optional suite of models of class \code{lefkoMod}.
 #' If given, then \code{surv_model}, \code{obs_model}, \code{size_model}, \code{repst_model}, 
 #' \code{fec_model}, \code{paramnames}, \code{yearcol}, and \code{patchcol} are not required. 
@@ -106,9 +109,6 @@
 #' @param overwrite A data frame developed with the \code{\link{overwrite}()} function,
 #' describing transitions to be overwritten either with given values or 
 #' with other estimated transitions.
-#' @param data The original historical demographic data frame used to 
-#' estimate vital rates (class \code{hfvdata}). The original data frame is 
-#' required in order to initialize years and patches properly.
 #' @param yearcol The variable name or column number corresponding to year 
 #' in time \emph{t} in the dataset. Not needed if a \code{modelsuite} is supplied.
 #' @param patchcol The variable name or column number corresponding to patch in 
@@ -205,14 +205,14 @@
 #' }
 #' 
 #' @export
-flefko3 <- function(year = "all", patch = "all", stageframe, repmatrix = NA, modelsuite = NA, 
-                    surv_model = NA, obs_model = NA, size_model = NA, repst_model = NA, 
-                    fec_model = NA, jsurv_model = NA, jobs_model = NA, jsize_model = NA,
-                    jrepst_model = NA, paramnames = NA, surv_dev = 0, obs_dev = 0, 
-                    size_dev = 0, repst_dev = 0, fec_dev = 0, jsurv_dev = 0, jobs_dev = 0, 
-                    jsize_dev = 0, jrepst_dev = 0, repmod = 1, overwrite = NA, 
-                    data = NA, yearcol = NA, patchcol = NA, year.as.random = FALSE, 
-                    patch.as.random = FALSE, randomseed = 0, negfec = FALSE, reduce = FALSE) {
+flefko3 <- function(year = "all", patch = "all", stageframe, repmatrix = NA, data = NA, 
+                    modelsuite = NA, surv_model = NA, obs_model = NA, size_model = NA, 
+                    repst_model = NA, fec_model = NA, jsurv_model = NA, jobs_model = NA, 
+                    jsize_model = NA, jrepst_model = NA, paramnames = NA, surv_dev = 0, 
+                    obs_dev = 0, size_dev = 0, repst_dev = 0, fec_dev = 0, jsurv_dev = 0, 
+                    jobs_dev = 0, jsize_dev = 0, jrepst_dev = 0, repmod = 1, overwrite = NA, 
+                    yearcol = NA, patchcol = NA, year.as.random = FALSE, patch.as.random = FALSE, 
+                    randomseed = 0, negfec = FALSE, reduce = FALSE) {
   
   if (all(is.na(modelsuite)) & all(is.na(paramnames))) {
     warning("Function may not work properly without a dataframe of model parameters or equivalents supplied either through the modelsuite option or through the paramnames input parameter.")
@@ -242,8 +242,8 @@ flefko3 <- function(year = "all", patch = "all", stageframe, repmatrix = NA, mod
     }
   }
   
-  if (any(is.na(year))) {
-    stop("Function flefko2() requires at least one year as input.", call. = FALSE)
+  if (length(year) == 0 | all(is.na(year) == TRUE) | any(is.na(year))) {
+    stop("This function cannot proceed without being given a specific year, or a suite of years.", call. = FALSE)
   }
   
   if (is.na(patch) & !is.na(patchcol)) {
@@ -265,10 +265,6 @@ flefko3 <- function(year = "all", patch = "all", stageframe, repmatrix = NA, mod
     } else if (!is.element(patch, mainpatches)) {
       stop("Patch designation not recognized.", call. = FALSE)
     }
-  }
-  
-  if (length(year) == 0 | all(is.na(year) == TRUE)) {
-    stop("This function cannot proceed without being given a specific year, or a suite of years.", call. = FALSE)
   }
   
   if (all(is.na(repmatrix))) {
@@ -333,6 +329,12 @@ flefko3 <- function(year = "all", patch = "all", stageframe, repmatrix = NA, mod
                         "obs3", "obs2n", "obs2o", "obs1", "rep3", "rep2n", "rep2o", "rep1", 
                         "mat3", "mat2n", "mat2o", "mat1", "imm3", "imm2n", "imm2o", "imm1",
                         "repentry3", "indata3", "indata2n", "indata2o", "indata1", "binwidth")
+  
+  allstages$minage3 <- 0
+  allstages$minage2 <- 0
+  allstages$maxage3 <- 0
+  allstages$maxage2 <- 0
+  allstages$actualage2 <- 0
   
   allstages$index321 <- allstages$stage3 + (allstages$stage2n * instages) + (allstages$stage1 * instages * instages)
   
@@ -414,504 +416,59 @@ flefko3 <- function(year = "all", patch = "all", stageframe, repmatrix = NA, mod
   
   set.seed(randomseed)
   
-  if (class(surv_model) != "logical" & class(surv_model) != "try-error" & class(surv_model) != "numeric") {
-    
-    surv_proxy <- .modelextract(surv_model, paramnames)
-    
-    #This first part addresses years
-    if (class(surv_proxy$years) == "data.frame") {
-      survdiff <- setdiff(mainyears, rownames(surv_proxy$years))
-      
-      if (length(survdiff) > 0) {
-        if (year.as.random == TRUE) {
-          newdevs <- rnorm(length(survdiff), mean = 0, sd = sd(surv_proxy$years[,1]))
-        } else {
-          newdevs <- rep(0, (length(survdiff)))
-        }
-        surv_proxy$years <- rbind.data.frame(setNames(as.data.frame(as.matrix(newdevs, ncol = 1)), names(surv_proxy$years)), surv_proxy$years)
-        survlabels <- c(survdiff, rownames(surv_proxy$years)[(length(survdiff) + 1):(length(surv_proxy$years[,1]))])
-        surv_proxy$years <- as.data.frame(surv_proxy$years[order(survlabels),])
-        rownames(surv_proxy$years) <- sort(survlabels)
-      }
-    } else if (class(surv_proxy$years) == "numeric") {
-      warning("Survival model does not appear to include year2 (timestep t) coefficients. Setting all year2 coefficients to 0 and year names to the first year.")
-      surv_proxy$years <- matrix(surv_proxy$years, 1, 1)
-      rownames(surv_proxy$years) <- year[1]
-    }
-    
-    #This next part addresses patches
-    if (class(surv_proxy$patches) == "data.frame") {
-      survdiff <- setdiff(mainpatches, rownames(surv_proxy$patches))
-      
-      if (length(survdiff) > 0) {
-        if (patch.as.random == TRUE) {
-          newdevs <- rnorm(length(survdiff), mean = 0, sd = sd(surv_proxy$patches[,1]))
-        } else {
-          newdevs <- rep(0, (length(survdiff)))
-        }
-        surv_proxy$patches <- rbind.data.frame(setNames(as.data.frame(as.matrix(newdevs, ncol = 1)), names(surv_proxy$patches)), surv_proxy$patches)
-        survlabels <- c(survdiff, rownames(surv_proxy$patches)[(length(survdiff) + 1):(length(surv_proxy$patches[,1]))])
-        surv_proxy$patches <- as.data.frame(surv_proxy$patches[order(survlabels),])
-        rownames(surv_proxy$patches) <- sort(survlabels)
-      }
-    }
-    
-    surv_coefs <- c(surv_proxy$coefficients, surv_dev)
-    
-  } else {
-    surv_proxy <- surv_model
-    surv_coefs <- surv_model
-  }
-  
-  if(class(obs_model) != "logical" & class(obs_model) != "try-error" & class(obs_model) != "numeric") {
-    
-    obs_proxy <- .modelextract(obs_model, paramnames)
-    
-    #This first part addresses years
-    if (class(obs_proxy$years) == "data.frame") {
-      
-      obsdiff <- setdiff(mainyears, rownames(obs_proxy$years))
-      
-      if (length(obsdiff) > 0) {
-        if (year.as.random == TRUE) {
-          newdevs <- rnorm(length(obsdiff), mean = 0, sd = sd(obs_proxy$years[,1]))
-        } else {
-          newdevs <- rep(0, (length(obsdiff)))
-        }
-        obs_proxy$years <- rbind.data.frame(setNames(as.data.frame(as.matrix(newdevs, ncol = 1)), names(obs_proxy$years)),
-                                            obs_proxy$years)
-        obslabels <- c(obsdiff, rownames(obs_proxy$years)[(length(obsdiff) + 1):(length(obs_proxy$years[,1]))])
-        obs_proxy$years <- as.data.frame(obs_proxy$years[order(obslabels),])
-        rownames(obs_proxy$years) <- sort(obslabels)
-      }
-    } else if (class(obs_proxy$years) == "numeric") {
-      obs_proxy$years <- matrix(obs_proxy$years, 1, 1)
-      rownames(obs_proxy$years) <- year[1]
-    }
-    
-    #This next bit focuses on patches
-    if (class(obs_proxy$patches) == "data.frame") {
-      
-      obsdiff <- setdiff(mainpatches, rownames(obs_proxy$patches))
-      
-      if (length(obsdiff) > 0) {
-        if (patch.as.random == TRUE) {
-          newdevs <- rnorm(length(obsdiff), mean = 0, sd = sd(obs_proxy$patches[,1]))
-        } else {
-          newdevs <- rep(0, (length(obsdiff)))
-        }
-        obs_proxy$patches <- rbind.data.frame(setNames(as.data.frame(as.matrix(newdevs, ncol = 1)), names(obs_proxy$patches)), obs_proxy$patches)
-        obslabels <- c(obsdiff, rownames(obs_proxy$patches)[(length(obsdiff) + 1):(length(obs_proxy$patches[,1]))])
-        obs_proxy$patches <- as.data.frame(obs_proxy$patches[order(obslabels),])
-        rownames(obs_proxy$patches) <- sort(obslabels)
-      }
-    }
-    
-    obs_coefs <- c(obs_proxy$coefficients, obs_dev)
-  } else {
-    obs_proxy <- obs_model
-    obs_coefs <- obs_model
-  }
+  surv_proxy <- .modelextract(surv_model, paramnames, mainyears, mainpatches)
+  obs_proxy <- .modelextract(obs_model, paramnames, mainyears, mainpatches)
   
   sigma <- 0
   rvarssummed <- 0
   sizedist <- 1
   
-  if(class(size_model) != "logical" & class(size_model) != "try-error" & class(size_model) != "numeric") {
-    
-    size_proxy <- .modelextract(size_model, paramnames)
-    
-    #This first part addresses years
-    if (class(size_proxy$years) == "data.frame") {
-      sizediff <- setdiff(mainyears, rownames(size_proxy$years))
-      
-      if (length(sizediff) > 0) {
-        if (year.as.random == TRUE) {
-          newdevs <- rnorm(length(sizediff), mean = 0, sd = sd(size_proxy$years[,1]))
-        } else {
-          newdevs <- rep(0, (length(sizediff)))
-        }
-        size_proxy$years <- rbind.data.frame(setNames(as.data.frame(as.matrix(newdevs, ncol = 1)), names(size_proxy$years)),
-                                             size_proxy$years)
-        sizelabels <- c(sizediff, rownames(size_proxy$years)[(length(sizediff) + 1):(length(size_proxy$years[,1]))])
-        size_proxy$years <- as.data.frame(size_proxy$years[order(sizelabels),])
-        rownames(size_proxy$years) <- sort(sizelabels)
-      }
-    } else if (class(size_proxy$years) == "numeric") {
-      size_proxy$years <- matrix(size_proxy$years, 1, 1)
-      rownames(size_proxy$years) <- year[1]
-    }
-    
-    #This next part addresses patches
-    if (class(size_proxy$patches) == "data.frame") {
-      
-      sizediff <- setdiff(mainpatches, rownames(size_proxy$patches))
-      
-      if (length(sizediff) > 0) {
-        if (patch.as.random == TRUE) {
-          newdevs <- rnorm(length(sizediff), mean = 0, sd = sd(size_proxy$patches[,1]))
-        } else {
-          newdevs <- rep(0, (length(sizediff)))
-        }
-        size_proxy$patches <- rbind.data.frame(setNames(as.data.frame(as.matrix(newdevs, ncol = 1)),
-                                                        names(size_proxy$patches)), size_proxy$patches)
-        sizelabels <- c(sizediff, rownames(size_proxy$patches)[(length(sizediff) + 1):(length(size_proxy$patches[,1]))])
-        size_proxy$patches <- as.data.frame(size_proxy$patches[order(sizelabels),])
-        rownames(size_proxy$patches) <- sort(sizelabels)
-      }
-    }
-    
-    if (size_proxy$family == "poisson") {
-      sizedist <- 0
-      if (!all(is.na(size_proxy$variances))) {
-        rvarssummed <- sum(size_proxy$variances[,"vcov"])
-      } else {
-        rvarssummed <- 0
-      }
-    } else if (size_proxy$family == "gaussian") {
-      sizedist <- 2
-      sigma <- size_proxy$sigma
+  size_proxy <- .modelextract(size_model, paramnames, mainyears, mainpatches)
+  
+  if (size_proxy$family == "poisson") {
+    sizedist <- 0
+    if (!all(is.na(size_proxy$variances))) {
+      rvarssummed <- sum(size_proxy$variances[,"vcov"])
     } else {
-      sizedist <- 1
+      rvarssummed <- 0
     }
-    
-    size_coefs <- c(size_proxy$coefficients, size_dev)
+  } else if (size_proxy$family == "gaussian") {
+    sizedist <- 2
+    sigma <- size_proxy$sigma
   } else {
-    size_proxy <- size_model
-    size_coefs <- size_model
-    sizedist <- 3 + size_model
+    sizedist <- 1
   }
   
-  if(class(repst_model) != "logical" & class(repst_model) != "try-error" & class(repst_model) != "numeric") {
-    
-    repst_proxy <- .modelextract(repst_model, paramnames)
-    
-    #This first part addresses years
-    if (class(repst_proxy$years) == "data.frame") {
-      repstdiff <- setdiff(mainyears, rownames(repst_proxy$years))
-      
-      if (length(repstdiff) > 0) {
-        if (year.as.random == TRUE) {
-          newdevs <- rnorm(length(repstdiff), mean = 0, sd = sd(repst_proxy$years[,1]))
-        } else {
-          newdevs <- rep(0, (length(repstdiff)))
-        }
-        repst_proxy$years <- rbind.data.frame(setNames(as.data.frame(as.matrix(newdevs, ncol = 1)),
-                                                       names(repst_proxy$years)), repst_proxy$years)
-        repstlabels <- c(repstdiff, rownames(repst_proxy$years)[(length(repstdiff) + 1):(length(repst_proxy$years[,1]))])
-        repst_proxy$years <- as.data.frame(repst_proxy$years[order(repstlabels),])
-        rownames(repst_proxy$years) <- sort(repstlabels)
-      }
-    } else if (class(repst_proxy$years) == "numeric") {
-      repst_proxy$years <- matrix(repst_proxy$years, 1, 1)
-      rownames(repst_proxy$years) <- year[1]
-    }
-    
-    #This next part addresses patches
-    if (class(repst_proxy$patches) == "data.frame") {
-      
-      repstdiff <- setdiff(mainpatches, rownames(repst_proxy$patches))
-      
-      if (length(repstdiff) > 0) {
-        if (patch.as.random == TRUE) {
-          newdevs <- rnorm(length(repstdiff), mean = 0, sd = sd(repst_proxy$patches[,1]))
-        } else {
-          newdevs <- rep(0, (length(repstdiff)))
-        }
-        repst_proxy$patches <- rbind.data.frame(setNames(as.data.frame(as.matrix(newdevs, ncol = 1)),
-                                                         names(repst_proxy$patches)), repst_proxy$patches)
-        repstlabels <- c(repstdiff, 
-                         rownames(repst_proxy$patches)[(length(repstdiff) + 1):(length(repst_proxy$patches[,1]))])
-        repst_proxy$patches <- as.data.frame(repst_proxy$patches[order(repstlabels),])
-        rownames(repst_proxy$patches) <- sort(repstlabels)
-      }
-    }
-    
-    repst_coefs <- c(repst_proxy$coefficients, repst_dev)
+  repst_proxy <- .modelextract(repst_model, paramnames, mainyears, mainpatches)
+  fec_proxy <- .modelextract(fec_model, paramnames, mainyears, mainpatches)
+  
+  if (fec_proxy$family == "poisson") {
+    fecdist <- 0
+  } else if (fec_proxy$family == "gaussian") {
+    fecdist <- 2
   } else {
-    repst_proxy <- repst_model
-    repst_coefs <- repst_model
+    fecdist <- 1
   }
   
-  if(class(fec_model) != "logical" & class(fec_model) != "try-error" & class(fec_model) != "numeric") {
-    
-    fec_proxy <- .modelextract(fec_model, paramnames)
-    
-    #This first part addresses years
-    if (class(fec_proxy$years) == "data.frame") {
-      fecdiff <- setdiff(mainyears, rownames(fec_proxy$years))
-      
-      if (length(fecdiff) > 0) {
-        if (year.as.random == TRUE) {
-          newdevs <- rnorm(length(fecdiff), mean = 0, sd = sd(fec_proxy$years[,1]))
-        } else {
-          newdevs <- rep(0, (length(fecdiff)))
-        }
-        fec_proxy$years <- rbind.data.frame(setNames(as.data.frame(as.matrix(newdevs, ncol = 1)), names(fec_proxy$years)), fec_proxy$years)
-        feclabels <- c(fecdiff, rownames(fec_proxy$years)[(length(fecdiff) + 1):(length(fec_proxy$years[,1]))])
-        fec_proxy$years <- as.data.frame(fec_proxy$years[order(feclabels),])
-        rownames(fec_proxy$years) <- sort(feclabels)
-      }
-    } else if (class(fec_proxy$years) == "numeric") {
-      fec_proxy$years <- matrix(fec_proxy$years, 1, 1)
-      rownames(fec_proxy$years) <- year[1]
-    }
-    
-    #This next part addresses patches
-    if (class(fec_proxy$patches) == "data.frame") {
-      
-      fecdiff <- setdiff(mainpatches, rownames(fec_proxy$patches))
-      
-      if (length(fecdiff) > 0) {
-        if (patch.as.random == TRUE) {
-          newdevs <- rnorm(length(fecdiff), mean = 0, sd = sd(fec_proxy$patches[,1]))
-        } else {
-          newdevs <- rep(0, (length(fecdiff)))
-        }
-        fec_proxy$patches <- rbind.data.frame(setNames(as.data.frame(as.matrix(newdevs, ncol = 1)), names(fec_proxy$patches)), fec_proxy$patches)
-        feclabels <- c(fecdiff, rownames(fec_proxy$patches)[(length(fecdiff) + 1):(length(fec_proxy$patches[,1]))])
-        fec_proxy$patches <- as.data.frame(fec_proxy$patches[order(feclabels),])
-        rownames(fec_proxy$patches) <- sort(feclabels)
-      }
-    }
-    
-    fec_coefs <- c(fec_proxy$coefficients, fec_dev)
-    
-    if (fec_proxy$family == "poisson") {
-      fecdist <- 0
-    } else if (fec_proxy$family == "gaussian") {
-      fecdist <- 2
-    } else {
-      fecdist <- 1
-    }
-    
-  } else {
-    fec_proxy <- fec_model
-    fec_coefs <- fec_model
-    fecdist <- 3 + fec_model
-  }
-  
-  if (class(jsurv_model) != "logical" & class(jsurv_model) != "try-error" & class(jsurv_model) != "numeric") {
-    
-    jsurv_proxy <- .modelextract(jsurv_model, paramnames)
-    
-    #This first part addresses years
-    if (class(jsurv_proxy$years) == "data.frame") {
-      jsurvdiff <- setdiff(mainyears, rownames(jsurv_proxy$years))
-      
-      if (length(jsurvdiff) > 0) {
-        if (year.as.random == TRUE) {
-          newdevs <- rnorm(length(jsurvdiff), mean = 0, sd = sd(jsurv_proxy$years[,1]))
-        } else {
-          newdevs <- rep(0, (length(jsurvdiff)))
-        }
-        jsurv_proxy$years <- rbind.data.frame(setNames(as.data.frame(as.matrix(newdevs, ncol = 1)),
-                                                       names(jsurv_proxy$years)), jsurv_proxy$years)
-        jsurvlabels <- c(jsurvdiff, rownames(jsurv_proxy$years)[(length(jsurvdiff) + 1):(length(jsurv_proxy$years[,1]))])
-        jsurv_proxy$years <- as.data.frame(jsurv_proxy$years[order(jsurvlabels),])
-        rownames(jsurv_proxy$years) <- sort(jsurvlabels)
-      }
-    } else if (class(jsurv_proxy$years) == "numeric") {
-      warning("Juvenile survival model does not appear to include year2 (timestep t) coefficients. Setting all year2 coefficients to 0 and year names to the first year.")
-      jsurv_proxy$years <- matrix(jsurv_proxy$years, 1, 1)
-      rownames(jsurv_proxy$years) <- year[1]
-    }
-    
-    #This next part addresses patches
-    if (class(jsurv_proxy$patches) == "data.frame") {
-      jsurvdiff <- setdiff(mainpatches, rownames(jsurv_proxy$patches))
-      
-      if (length(jsurvdiff) > 0) {
-        if (patch.as.random == TRUE) {
-          newdevs <- rnorm(length(jsurvdiff), mean = 0, sd = sd(jsurv_proxy$patches[,1]))
-        } else {
-          newdevs <- rep(0, (length(jsurvdiff)))
-        }
-        jsurv_proxy$patches <- rbind.data.frame(setNames(as.data.frame(as.matrix(newdevs, ncol = 1)),
-                                                         names(jsurv_proxy$patches)), jsurv_proxy$patches)
-        jsurvlabels <- c(jsurvdiff, 
-                         rownames(jsurv_proxy$patches)[(length(jsurvdiff) + 1):(length(jsurv_proxy$patches[,1]))])
-        jsurv_proxy$patches <- as.data.frame(jsurv_proxy$patches[order(jsurvlabels),])
-        rownames(jsurv_proxy$patches) <- sort(jsurvlabels)
-      }
-    }
-    
-    jsurv_coefs <- c(jsurv_proxy$coefficients, jsurv_dev)
-    
-  } else {
-    jsurv_proxy <- jsurv_model
-    jsurv_coefs <- jsurv_model
-  }
-  
-  if(class(jobs_model) != "logical" & class(jobs_model) != "try-error" & class(jobs_model) != "numeric") {
-    
-    jobs_proxy <- .modelextract(jobs_model, paramnames)
-    
-    #This first part addresses years
-    if (class(jobs_proxy$years) == "data.frame") {
-      
-      jobsdiff <- setdiff(mainyears, rownames(jobs_proxy$years))
-      
-      if (length(jobsdiff) > 0) {
-        if (year.as.random == TRUE) {
-          newdevs <- rnorm(length(jobsdiff), mean = 0, sd = sd(jobs_proxy$years[,1]))
-        } else {
-          newdevs <- rep(0, (length(jobsdiff)))
-        }
-        jobs_proxy$years <- rbind.data.frame(setNames(as.data.frame(as.matrix(newdevs, ncol = 1)), 
-                                                      names(jobs_proxy$years)), jobs_proxy$years)
-        jobslabels <- c(jobsdiff, rownames(jobs_proxy$years)[(length(jobsdiff) + 1):(length(jobs_proxy$years[,1]))])
-        jobs_proxy$years <- as.data.frame(jobs_proxy$years[order(jobslabels),])
-        rownames(jobs_proxy$years) <- sort(jobslabels)
-      }
-    } else if (class(jobs_proxy$years) == "numeric") {
-      jobs_proxy$years <- matrix(jobs_proxy$years, 1, 1)
-      rownames(jobs_proxy$years) <- year[1]
-    }
-    
-    #This next bit focuses on patches
-    if (class(jobs_proxy$patches) == "data.frame") {
-      
-      jobsdiff <- setdiff(mainpatches, rownames(jobs_proxy$patches))
-      
-      if (length(jobsdiff) > 0) {
-        if (patch.as.random == TRUE) {
-          newdevs <- rnorm(length(jobsdiff), mean = 0, sd = sd(jobs_proxy$patches[,1]))
-        } else {
-          newdevs <- rep(0, (length(jobsdiff)))
-        }
-        jobs_proxy$patches <- rbind.data.frame(setNames(as.data.frame(as.matrix(newdevs, ncol = 1)),
-                                                        names(jobs_proxy$patches)), jobs_proxy$patches)
-        jobslabels <- c(jobsdiff, 
-                        rownames(jobs_proxy$patches)[(length(jobsdiff) + 1):(length(jobs_proxy$patches[,1]))])
-        jobs_proxy$patches <- as.data.frame(jobs_proxy$patches[order(jobslabels),])
-        rownames(jobs_proxy$patches) <- sort(jobslabels)
-      }
-    }
-    
-    jobs_coefs <- c(jobs_proxy$coefficients, jobs_dev)
-  } else {
-    jobs_proxy <- jobs_model
-    jobs_coefs <- jobs_model
-  }
+  jsurv_proxy <- .modelextract(jsurv_model, paramnames, mainyears, mainpatches)
+  jobs_proxy <- .modelextract(jobs_model, paramnames, mainyears, mainpatches)
   
   jsigma <- 0
   jrvarssummed <- 0
   
-  if(class(jsize_model) != "logical" & class(jsize_model) != "try-error" & class(jsize_model) != "numeric") {
-    
-    jsize_proxy <- .modelextract(jsize_model, paramnames)
-    
-    #This first part addresses years
-    if (class(jsize_proxy$years) == "data.frame") {
-      jsizediff <- setdiff(mainyears, rownames(jsize_proxy$years))
-      
-      if (length(jsizediff) > 0) {
-        if (year.as.random == TRUE) {
-          newdevs <- rnorm(length(jsizediff), mean = 0, sd = sd(jsize_proxy$years[,1]))
-        } else {
-          newdevs <- rep(0, (length(jsizediff)))
-        }
-        jsize_proxy$years <- rbind.data.frame(setNames(as.data.frame(as.matrix(newdevs, ncol = 1)),
-                                                       names(jsize_proxy$years)), jsize_proxy$years)
-        jsizelabels <- c(jsizediff, 
-                         rownames(jsize_proxy$years)[(length(jsizediff) + 1):(length(jsize_proxy$years[,1]))])
-        jsize_proxy$years <- as.data.frame(jsize_proxy$years[order(jsizelabels),])
-        rownames(jsize_proxy$years) <- sort(jsizelabels)
-      }
-    } else if (class(jsize_proxy$years) == "numeric") {
-      jsize_proxy$years <- matrix(jsize_proxy$years, 1, 1)
-      rownames(jsize_proxy$years) <- year[1]
+  jsize_proxy <- .modelextract(jsize_model, paramnames, mainyears, mainpatches)
+  
+  if (jsize_proxy$family == "poisson") {
+    if (!all(is.na(jsize_proxy$variances))) {
+      jrvarssummed <- sum(jsize_proxy$variances[,"vcov"])
+    } else {
+      jrvarssummed <- 0
     }
-    
-    #This next part addresses patches
-    if (class(jsize_proxy$patches) == "data.frame") {
-      
-      jsizediff <- setdiff(mainpatches, rownames(jsize_proxy$patches))
-      
-      if (length(jsizediff) > 0) {
-        if (patch.as.random == TRUE) {
-          newdevs <- rnorm(length(jsizediff), mean = 0, sd = sd(jsize_proxy$patches[,1]))
-        } else {
-          newdevs <- rep(0, (length(jsizediff)))
-        }
-        jsize_proxy$patches <- rbind.data.frame(setNames(as.data.frame(as.matrix(newdevs, ncol = 1)),
-                                                         names(jsize_proxy$patches)), jsize_proxy$patches)
-        jsizelabels <- c(jsizediff, 
-                         rownames(jsize_proxy$patches)[(length(jsizediff) + 1):(length(jsize_proxy$patches[,1]))])
-        jsize_proxy$patches <- as.data.frame(jsize_proxy$patches[order(jsizelabels),])
-        rownames(jsize_proxy$patches) <- sort(jsizelabels)
-      }
-    }
-    
-    if (jsize_proxy$family == "poisson") {
-      if (!all(is.na(jsize_proxy$variances))) {
-        jrvarssummed <- sum(jsize_proxy$variances[,"vcov"])
-      } else {
-        jrvarssummed <- 0
-      }
-    } else if (jsize_proxy$family == "gaussian") {
-      jsigma <- jsize_proxy$sigma
-    }
-    
-    jsize_coefs <- c(jsize_proxy$coefficients, jsize_dev)
-  } else {
-    jsize_proxy <- jsize_model
-    jsize_coefs <- jsize_model
+  } else if (jsize_proxy$family == "gaussian") {
+    jsigma <- jsize_proxy$sigma
   }
   
-  if(class(jrepst_model) != "logical" & class(jrepst_model) != "try-error" & class(jrepst_model) != "numeric") {
-    
-    jrepst_proxy <- .modelextract(jrepst_model, paramnames)
-    
-    #This first part addresses years
-    if (class(jrepst_proxy$years) == "data.frame") {
-      
-      jrepstdiff <- setdiff(mainyears, rownames(jrepst_proxy$years))
-      
-      if (length(jrepstdiff) > 0) {
-        if (year.as.random == TRUE) {
-          newdevs <- rnorm(length(jrepstdiff), mean = 0, sd = sd(jrepst_proxy$years[,1]))
-        } else {
-          newdevs <- rep(0, (length(jrepstdiff)))
-        }
-        jrepst_proxy$years <- rbind.data.frame(setNames(as.data.frame(as.matrix(newdevs, ncol = 1)), 
-                                                        names(jrepst_proxy$years)), jrepst_proxy$years)
-        jrepstlabels <- c(jrepstdiff, 
-                          rownames(jrepst_proxy$years)[(length(jrepstdiff) + 1):(length(jrepst_proxy$years[,1]))])
-        jrepst_proxy$years <- as.data.frame(jrepst_proxy$years[order(jrepstlabels),])
-        rownames(jrepst_proxy$years) <- sort(jrepstlabels)
-      }
-    } else if (class(jrepst_proxy$years) == "numeric") {
-      jrepst_proxy$years <- matrix(jrepst_proxy$years, 1, 1)
-      rownames(jrepst_proxy$years) <- year[1]
-    }
-    
-    #This next bit focuses on patches
-    if (class(jrepst_proxy$patches) == "data.frame") {
-      
-      jrepstdiff <- setdiff(mainpatches, rownames(jrepst_proxy$patches))
-      
-      if (length(jrepstdiff) > 0) {
-        if (patch.as.random == TRUE) {
-          newdevs <- rnorm(length(jrepstdiff), mean = 0, sd = sd(jrepst_proxy$patches[,1]))
-        } else {
-          newdevs <- rep(0, (length(jrepstdiff)))
-        }
-        jrepst_proxy$patches <- rbind.data.frame(setNames(as.data.frame(as.matrix(newdevs, ncol = 1)),
-                                                          names(jrepst_proxy$patches)), jrepst_proxy$patches)
-        jrepstlabels <- c(jrepstdiff, 
-                          rownames(jrepst_proxy$patches)[(length(jrepstdiff) + 1):(length(jrepst_proxy$patches[,1]))])
-        jrepst_proxy$patches <- as.data.frame(jrepst_proxy$patches[order(jrepstlabels),])
-        rownames(jrepst_proxy$patches) <- sort(jrepstlabels)
-      }
-    }
-    
-    jrepst_coefs <- c(jrepst_proxy$coefficients, jrepst_dev)
-  } else {
-    jrepst_proxy <- jrepst_model
-    jrepst_coefs <- jrepst_model
-  }
+  jrepst_proxy <- .modelextract(jrepst_model, paramnames, mainyears, mainpatches)
   
   if (!all(is.na(patch))) {
     listofyears <- apply(as.matrix(patch), 1, function(X) {
@@ -921,12 +478,18 @@ flefko3 <- function(year = "all", patch = "all", stageframe, repmatrix = NA, mod
     })
     
     listofyears <- do.call(rbind.data.frame, listofyears)
+    listofyears$poporder <- NA
+    listofyears$patchorder <- apply(as.matrix(c(1:dim(listofyears)[1])), 1, function(X) {which(mainpatches == listofyears$patch[X])})
+    listofyears$yearorder <- apply(as.matrix(c(1:dim(listofyears)[1])), 1, function(X) {which(mainyears == listofyears$year2[X])})
     
   } else {
     
     listofyears <- cbind.data.frame(NA, NA, as.matrix(year))
     names(listofyears) <- c("pop", "patch", "year2")
     
+    listofyears$poporder <- NA
+    listofyears$patchorder <- 1
+    listofyears$yearorder <- apply(as.matrix(c(1:dim(listofyears)[1])), 1, function(X) {which(mainyears == listofyears$year2[X])})
   }
   
   maxsize <- max(c(allstages$size3, allstages$size2n, allstages$size2o, allstages$size1), na.rm = TRUE)
@@ -946,27 +509,21 @@ flefko3 <- function(year = "all", patch = "all", stageframe, repmatrix = NA, mod
   allstages$aliveandequal <- as.vector(aliveandequal)
   allstages$r_aliveandequal <- as.vector(aliveandequal) + 1
   
-  madsexmadrigal <- lapply(yearlist, .flefko3_core, stageframe = stageframe, allstages = allstages, 
-                           paramnames = paramnames, surv_proxy = surv_proxy, obs_proxy = obs_proxy, 
-                           size_proxy = size_proxy, repst_proxy = repst_proxy, fec_proxy = fec_proxy,
-                           jsurv_proxy = jsurv_proxy, jobs_proxy = jobs_proxy, jsize_proxy = jsize_proxy,
-                           jrepst_proxy = jrepst_proxy, surv_coefs = surv_coefs, obs_coefs = obs_coefs, 
-                           size_coefs = size_coefs, repst_coefs = repst_coefs, fec_coefs = fec_coefs, 
-                           jsurv_coefs = jsurv_coefs, jobs_coefs = jobs_coefs, jsize_coefs = jsize_coefs, 
-                           jrepst_coefs = jrepst_coefs, surv_dev = surv_dev, obs_dev = obs_dev, 
-                           size_dev = size_dev, repst_dev = repst_dev, fec_dev = fec_dev, 
-                           jsurv_dev = jsurv_dev, jobs_dev = jobs_dev, jsize_dev = jsize_dev, 
-                           jrepst_dev = jrepst_dev, repmod = repmod, total.matrix.dim = total.matrix.dim, 
-                           patch.elements = patch.elements, sizedist = sizedist, fecdist = fecdist, 
-                           maxsize = maxsize, sigma = sigma, rvarssummed = rvarssummed, jsigma = jsigma, 
-                           jrvarssummed = jrvarssummed, negfec = negfec)
+  madsexmadrigal <- lapply(yearlist, jerzeibalowski, allstages, surv_proxy, obs_proxy, size_proxy, repst_proxy,
+                           fec_proxy, jsurv_proxy, jobs_proxy, jsize_proxy, jrepst_proxy, surv_dev, obs_dev, 
+                           size_dev, repst_dev, fec_dev, jsurv_dev, jobs_dev, jsize_dev, jrepst_dev, patch.elements,
+                           total.matrix.dim, repmod, rvarssummed, sigma, jrvarssummed, jsigma, maxsize, sizedist, 
+                           fecdist, negfec)
   
   a_list <- lapply(madsexmadrigal, function(X) {X$A})
   u_list <- lapply(madsexmadrigal, function(X) {X$U})
   f_list <- lapply(madsexmadrigal, function(X) {X$F})
   
-  hstages <- madsexmadrigal[[1]]$hstages
-  ahstages <- madsexmadrigal[[1]]$ahstages
+  ahstages <- stageframe[1:(dim(stageframe)[1] - 1),]
+  
+  pairings1 <- expand.grid(stcod3 = ahstages$new_stage_id, stcod2 = ahstages$new_stage_id)
+  pairings2 <- expand.grid(stage3 = ahstages$orig_stage_id, stage2 = ahstages$orig_stage_id)
+  hstages <- cbind.data.frame(pairings2, pairings1)
   
   qcoutput1 <- NA
   qcoutput2 <- NA
@@ -989,325 +546,11 @@ flefko3 <- function(year = "all", patch = "all", stageframe, repmatrix = NA, mod
   }
   
   output <- list(A = a_list, U = u_list, F = f_list, hstages = hstages, ahstages = ahstages, 
-                 labels = listofyears, matrixqc = qcoutput1, modelqc = qcoutput2)
+                 labels = listofyears[,c(1:3)], matrixqc = qcoutput1, modelqc = qcoutput2)
   
   class(output) <- "lefkoMat"
   
   return(output)
-}
-
-#' Core Wrapper Powering Historical Function-based Matrix Estimation
-#' 
-#' \code{.flefko3_core()} pulls together all required vital rate model parameters
-#' and feeds them into\code{\link{jerzeibalowski}()}, an Rcpp function designed to
-#' quickly estimate these matrices.
-#' 
-#' @param poppatchyear Data frame giving combinations of population, patch, and 
-#' year as they will be used to produce matrices.
-#' @param stageframe Original stageframe used in analysis.
-#' @param allstages Massive data frame created by \code{\link{flefko3}()} including
-#' parameter values to propagate through every element of the population projection
-#' matrix.
-#' @param paramnames Data frame giving the names being used for standard variables
-#' needed to produce matrix elements.
-#' @param surv_proxy List giving all coefficient values for use in estimating
-#' survival probability.
-#' @param obs_proxy List giving all coefficient values for use in estimating
-#' observation probability.
-#' @param size_proxy List giving all coefficient values for use in estimating
-#' size.
-#' @param repst_proxy List giving all coefficient values for use in estimating
-#' reproduction probability.
-#' @param fec_proxy List giving all coefficient values for use in estimating
-#' fecundity.
-#' @param jsurv_proxy List giving all coefficient values for use in estimating
-#' juvenile survival probability.
-#' @param jobs_proxy List giving all coefficient values for use in estimating
-#' juvenile observation probability.
-#' @param jsize_proxy List giving all coefficient values for use in estimating
-#' juvenile size.
-#' @param jrepst_proxy Vector giving all coefficient values for use in estimating
-#' juvenile reproduction probability.
-#' @param surv_coefs Vector giving key coefficient values for use in estimating
-#' survival probability.
-#' @param obs_coefs Vector giving key coefficient values for use in estimating
-#' observation probability.
-#' @param size_coefs Vector giving key coefficient values for use in estimating
-#' size.
-#' @param repst_coefs Vector giving key coefficient values for use in estimating
-#' reproduction probability.
-#' @param fec_coefs Vector giving key coefficient values for use in estimating
-#' fecundity.
-#' @param jsurv_coefs Vector giving key coefficient values for use in estimating
-#' juvenile survival probability.
-#' @param jobs_coefs Vector giving key coefficient values for use in estimating
-#' juvenile observation probability.
-#' @param jsize_coefs Vector giving key coefficient values for use in estimating
-#' juvenile size.
-#' @param jrepst_coefs Vector giving key coefficient values for use in estimating
-#' juvenile reproduction probability.
-#' @param surv_dev Scalar value to be added to the y-intercept of the linear model
-#' of survival probability.
-#' @param obs_dev Scalar value to be added to the y-intercept of the linear model
-#' of observation probability.
-#' @param size_dev Scalar value to be added to the y-intercept of the linear model
-#' of size.
-#' @param repst_dev Scalar value to be added to the y-intercept of the linear model
-#' of reproduction probability.
-#' @param fec_dev Scalar value to be added to the y-intercept of the linear model
-#' of fecundity.
-#' @param jsurv_dev Scalar value to be added to the y-intercept of the linear model
-#' of juvenile survival probability.
-#' @param jobs_dev Scalar value to be added to the y-intercept of the linear model
-#' of juvenile observation probability.
-#' @param jsize_dev Scalar value to be added to the y-intercept of the linear model
-#' of juvenile size probability.
-#' @param jrepst_dev Scalar value to be added to the y-intercept of the linear
-#' model of juvenile reproduction probability.
-#' @param repmod Multiplier for estimated fecundity.
-#' @param total.matrix.dim Scalar value denoting the number of rows in the square
-#' projection matrix.
-#' @param patch.elements The number of combinations of size in times \emph{t}+1 and
-#' \emph{t}, and \emph{t} and \emph{t}-1, across To and From stage pairs.
-#' @param sizedist Designates whether size is Gaussian (2), Poisson (0), or 
-#' negative binomial (1) distributed.
-#' @param fecdist Designates whether fecundity is Gaussian (2), Poisson (0), or
-#' negative binomial (1) distributed.
-#' @param maxsize The maximum possible size to use in matrix estimation.
-#' @param sigma Standard deviation of Gaussian size distribution.
-#' @param rvarssummed Summed variance-covariance terms in Poisson size 
-#' distribution.
-#' @param jsigma Standard deviation of Gaussian juvenile size distribution.
-#' @param jrvarssummed Summed variance-covariance terms in Poisson juvenile size
-#' distribution.
-#' @param negfec A logical value denoting whether fecundity values estimated
-#' to be negative should be reset to 0. Defaults to FALSE.
-#' 
-#' @return Returns an object of class \code{lefkoMat}, containing one set of
-#' matrices corresponding to a specific population, patch, and time step
-#' combination.
-#' 
-#' @keywords internal
-#' @noRd
-.flefko3_core <- function(poppatchyear, stageframe, allstages = NA, paramnames = NA, surv_proxy = NA, 
-                          obs_proxy = NA, size_proxy = NA, repst_proxy = NA, fec_proxy = NA,
-                          jsurv_proxy = NA, jobs_proxy = NA, jsize_proxy = NA, jrepst_proxy = NA,
-                          surv_coefs = NA, obs_coefs = NA, size_coefs = NA, repst_coefs = NA, 
-                          fec_coefs = NA, jsurv_coefs = NA, jobs_coefs = NA, jsize_coefs = NA, 
-                          jrepst_coefs = NA, surv_dev = 0, obs_dev = 0, size_dev = 0, repst_dev = 0, 
-                          fec_dev = 0, jsurv_dev = 0, jobs_dev = 0, jsize_dev = 0, jrepst_dev = 0,
-                          repmod = 1, total.matrix.dim = NA, patch.elements = NA,
-                          sizedist = NA, fecdist = NA, maxsize = NA, sigma = NA, rvarssummed = NA, 
-                          jsigma = NA, jrvarssummed = NA, negfec = NA) {
-  
-  ovest_t <- ovest_f <- NULL
-  
-  patch <- poppatchyear[1, 2]
-  year <- poppatchyear[1, 3]
-  
-  if (length(surv_proxy) > 1) {
-    
-    if (length(surv_proxy$years[which(rownames(surv_proxy$years) == year),1]) == 0) {
-      stop("Year not recognized within survival model.")
-    }
-    
-    if (!is.na(patch)) {
-      patchcoef <- surv_proxy$patches[which(rownames(surv_proxy$patches) == patch), 1]
-    } else {
-      patchcoef <- 0
-    }
-    
-    surv_coefs <- c(surv_coefs, surv_proxy$years[which(rownames(surv_proxy$years) == year),1], patchcoef)
-  } else if (is.numeric(surv_proxy)) {
-    surv_coefs <- surv_proxy
-  }
-  
-  if (length(obs_proxy) > 1) {
-    
-    if (length(obs_proxy$years[which(rownames(obs_proxy$years) == year),1]) == 0) {
-      stop("Year not recognized within observation model.")
-    }
-    
-    if (!is.na(patch)) {
-      patchcoef <- obs_proxy$patches[which(rownames(obs_proxy$patches) == patch), 1]
-    } else {
-      patchcoef <- 0
-    }
-    
-    obs_coefs <- c(obs_coefs, obs_proxy$years[which(rownames(obs_proxy$years) == year),1], patchcoef)
-  } else if (is.numeric(obs_proxy)) {
-    obs_coefs <- obs_proxy
-  }
-  
-  if (length(size_proxy) > 1) {
-    
-    if (length(size_proxy$years[which(rownames(size_proxy$years) == year),1]) == 0) {
-      stop("Year not recognized within size model.")
-    }
-    
-    if (!is.na(patch)) {
-      patchcoef <- size_proxy$patches[which(rownames(size_proxy$patches) == patch), 1]
-    } else {
-      patchcoef <- 0
-    }
-    
-    size_coefs <- c(size_coefs, size_proxy$years[which(rownames(size_proxy$years) == year),1], patchcoef)
-  } else if (is.numeric(size_proxy)) {
-    size_coefs <- size_proxy
-  }
-  
-  if (length(repst_proxy) > 1) {
-    
-    if (length(repst_proxy$years[which(rownames(repst_proxy$years) == year),1]) == 0) {
-      stop("Year not recognized within reproductive status model.")
-    }
-    
-    if (!is.na(patch)) {
-      patchcoef <- repst_proxy$patches[which(rownames(repst_proxy$patches) == patch), 1]
-    } else {
-      patchcoef <- 0
-    }
-    
-    repst_coefs <- c(repst_coefs, repst_proxy$years[which(rownames(repst_proxy$years) == year),1], patchcoef)
-  } else if (is.numeric(repst_proxy)) {
-    repst_coefs <- repst_proxy
-  }
-  
-  if (length(fec_proxy) > 1) {
-    
-    if (length(fec_proxy$years[which(rownames(fec_proxy$years) == year),1]) == 0) {
-      stop("Year not recognized within fecundity model.")
-    }
-    
-    if (!is.na(patch)) {
-      patchcoef <- fec_proxy$patches[which(rownames(fec_proxy$patches) == patch), 1]
-    } else {
-      patchcoef <- 0
-    }
-    
-    fec_coefs <- c(fec_coefs, fec_proxy$years[which(rownames(fec_proxy$years) == year),1], patchcoef)
-    
-  } else if (is.numeric(fec_proxy)) {
-    fec_coefs <- fec_proxy
-  }
-  
-  if (length(jsurv_proxy) > 1) {
-    
-    if (length(jsurv_proxy$years[which(rownames(jsurv_proxy$years) == year),1]) == 0) {
-      stop("Year not recognized within juvenile survival model.")
-    }
-    
-    if (!is.na(patch)) {
-      patchcoef <- jsurv_proxy$patches[which(rownames(jsurv_proxy$patches) == patch), 1]
-    } else {
-      patchcoef <- 0
-    }
-    
-    jsurv_coefs <- c(jsurv_coefs, jsurv_proxy$years[which(rownames(jsurv_proxy$years) == year),1], patchcoef)
-  } else if (is.numeric(jsurv_proxy)) {
-    jsurv_coefs <- jsurv_proxy
-  }
-  
-  if (length(jobs_proxy) > 1) {
-    
-    if (length(jobs_proxy$years[which(rownames(jobs_proxy$years) == year),1]) == 0) {
-      stop("Year not recognized within juvenile observation model.")
-    }
-    
-    if (!is.na(patch)) {
-      patchcoef <- jobs_proxy$patches[which(rownames(jobs_proxy$patches) == patch), 1]
-    } else {
-      patchcoef <- 0
-    }
-    
-    jobs_coefs <- c(jobs_coefs, jobs_proxy$years[which(rownames(jobs_proxy$years) == year),1], patchcoef)
-  } else if (is.numeric(jobs_proxy)) {
-    jobs_coefs <- jobs_proxy
-  }
-  
-  if (length(jsize_proxy) > 1) {
-    
-    if (length(jsize_proxy$years[which(rownames(jsize_proxy$years) == year),1]) == 0) {
-      stop("Year not recognized within juvenile size model.")
-    }
-    
-    if (!is.na(patch)) {
-      patchcoef <- jsize_proxy$patches[which(rownames(jsize_proxy$patches) == patch), 1]
-    } else {
-      patchcoef <- 0
-    }
-    
-    jsize_coefs <- c(jsize_coefs, jsize_proxy$years[which(rownames(jsize_proxy$years) == year),1], patchcoef)
-  } else if (is.numeric(jsize_proxy)) {
-    jsize_coefs <- jsize_proxy
-  }
-  
-  if (length(jrepst_proxy) > 1) {
-    
-    if (length(jrepst_proxy$years[which(rownames(jrepst_proxy$years) == year),1]) == 0) {
-      stop("Year not recognized within juvenile reproduction status model.")
-    }
-    
-    if (!is.na(patch)) {
-      patchcoef <- jrepst_proxy$patches[which(rownames(jrepst_proxy$patches) == patch), 1]
-    } else {
-      patchcoef <- 0
-    }
-    
-    jrepst_coefs <- c(jrepst_coefs, jrepst_proxy$years[which(rownames(jrepst_proxy$years) == year),1], patchcoef)
-  } else if (is.numeric(jrepst_proxy)) {
-    jrepst_coefs <- jrepst_proxy
-  }
-  
-  operationinsanity <- jerzeibalowski(surv_coefs, obs_coefs, size_coefs, repst_coefs, fec_coefs, 
-                                      jsurv_coefs, jobs_coefs, jsize_coefs, jrepst_coefs,
-                                      allstages$stage3, allstages$stage2n, allstages$stage1, 
-                                      allstages$size3, allstages$size2n, allstages$size1, 
-                                      allstages$rep3, allstages$rep2n, allstages$rep1, 
-                                      allstages$obs3, allstages$obs2n, allstages$obs1, 
-                                      allstages$imm3, allstages$imm2n, allstages$indata2n, 
-                                      allstages$indata, allstages$aliveandequal, allstages$repentry3,
-                                      allstages$ovgiven_t, allstages$ovgiven_f, 
-                                      allstages$binwidth, patch.elements, repmod, rvarssummed, 
-                                      sigma, jrvarssummed, jsigma, maxsize, sizedist, fecdist)
-  
-  bob <- operationinsanity[,c(5:6)]
-  
-  if (sum(c(allstages$ovest_t)) > 0) {
-    theoldpizzle <- subset(allstages, ovest_t > 0)
-    bob[theoldpizzle$r_aliveandequal, 1] <- apply(as.matrix(theoldpizzle$ovest_t), 1, function(X) {
-      bob[allstages$r_aliveandequal[which(allstages$index321 == X)], 1]
-    })
-  }
-  
-  if (sum(c(allstages$ovest_f)) > 0) {
-    bigsally <- subset(allstages, ovest_f > 0)
-    bob[bigsally$r_aliveandequal, 2] <- apply(as.matrix(bigsally$ovest_f), 1, function(X) {
-      bob[allstages$r_aliveandequal[which(allstages$index321 == X)], 2]
-    })
-  }
-  
-  if (negfec) {
-    bob[(which(bob[,2] < 0)), 2] <- 0
-  }
-  
-  new.matrix.u <- matrix(bob[,1], total.matrix.dim, total.matrix.dim)
-  
-  new.matrix.f <- matrix(bob[,2], total.matrix.dim, total.matrix.dim)
-  
-  new.matrix.a <- new.matrix.u + new.matrix.f
-  
-  stageframe <- stageframe[1:(dim(stageframe)[1] - 1),]
-  
-  pairings1 <- expand.grid(stcod3 = stageframe$new_stage_id, stcod2 = stageframe$new_stage_id)
-  pairings2 <- expand.grid(stage3 = stageframe$orig_stage_id, stage2 = stageframe$orig_stage_id)
-  pairings <- cbind.data.frame(pairings2, pairings1)
-  
-  new.matrix <- list(A = new.matrix.a, U = new.matrix.u, F = new.matrix.f, hstages = pairings, 
-                     ahstages = stageframe, years = year)
-  class(new.matrix) <- "lefkoMat"
-  
-  return(new.matrix)
 }
 
 #' Reduce Matrix Dimensions By Eliminating Empty Stages
@@ -1567,12 +810,12 @@ flefko3 <- function(year = "all", patch = "all", stageframe, repmatrix = NA, mod
 #' }
 #' 
 #' @export
-flefko2 <- function(year = "all", patch = "all", stageframe, repmatrix = NA, modelsuite = NA, 
-                    surv_model = NA, obs_model = NA, size_model = NA, repst_model = NA, 
-                    fec_model = NA, jsurv_model = NA, jobs_model = NA, jsize_model = NA,
-                    jrepst_model = NA, paramnames = NA, surv_dev = 0, obs_dev = 0, 
-                    size_dev = 0, repst_dev = 0, fec_dev = 0, jsurv_dev = 0, jobs_dev = 0,
-                    jsize_dev = 0, jrepst_dev = 0, repmod = 1, overwrite = NA, data = NA, 
+flefko2 <- function(year = "all", patch = "all", stageframe, repmatrix = NA, data = NA, 
+                    modelsuite = NA, surv_model = NA, obs_model = NA, size_model = NA, 
+                    repst_model = NA, fec_model = NA, jsurv_model = NA, jobs_model = NA, 
+                    jsize_model = NA, jrepst_model = NA, paramnames = NA, surv_dev = 0, 
+                    obs_dev = 0, size_dev = 0, repst_dev = 0, fec_dev = 0, jsurv_dev = 0, 
+                    jobs_dev = 0, jsize_dev = 0, jrepst_dev = 0, repmod = 1, overwrite = NA, 
                     yearcol = NA, patchcol = NA, year.as.random = FALSE, patch.as.random = FALSE, 
                     randomseed = 0, negfec = FALSE, reduce = FALSE) {
   
@@ -1604,8 +847,8 @@ flefko2 <- function(year = "all", patch = "all", stageframe, repmatrix = NA, mod
     }
   }
   
-  if (any(is.na(year))) {
-    stop("Function flefko2() requires at least one year as input.", call. = FALSE)
+  if (length(year) == 0 | all(is.na(year) == TRUE) | any(is.na(year))) {
+    stop("This function cannot proceed without being given a specific year, or a suite of years.", call. = FALSE)
   }
   
   if (is.na(patch) & !is.na(patchcol)) {
@@ -1627,10 +870,6 @@ flefko2 <- function(year = "all", patch = "all", stageframe, repmatrix = NA, mod
     } else if (!is.element(patch, mainpatches)) {
       stop("Patch designation not recognized.", call. = FALSE)
     }
-  }
-  
-  if (length(year) == 0 | all(is.na(year) == TRUE)) {
-    stop("This function cannot proceed without being given a specific year, or a suite of years.")
   }
   
   if (all(is.na(repmatrix))) {    #This bit needs to be redone to check for fecundity values in the dataset and use them to determine the proper reproductive stages
@@ -1678,9 +917,9 @@ flefko2 <- function(year = "all", patch = "all", stageframe, repmatrix = NA, mod
   allstages.rep <- expand.grid(rep3 = stageframe$repstatus, rep2n = stageframe$repstatus)
   allstages.rep <- cbind.data.frame(allstages.rep, allstages.rep[,2], 0)
   allstages.mat <- expand.grid(mat3 = stageframe$matstatus, mat2n = stageframe$matstatus)
-  allstages.mat <- cbind.data.frame(allstages.mat, allstages.mat[,2], 0)
+  allstages.mat <- cbind.data.frame(allstages.mat, allstages.mat[,2], allstages.mat[,2])
   allstages.imm <- expand.grid(imm3 = stageframe$immstatus, imm2n = stageframe$immstatus)
-  allstages.imm <- cbind.data.frame(allstages.imm, allstages.imm[,2], 0)
+  allstages.imm <- cbind.data.frame(allstages.imm, allstages.imm[,2], allstages.imm[,2])
   allstages.re3 <- cbind(c(matrix(rbind(cbind(repmatrix, 0), 0)))) #Here we take repmatrix, add a 0 row and column for death, and vectorize
   allstages.ind <- expand.grid(indata3 = stageframe$indataset, indata2n = stageframe$indataset)
   allstages.ind <- cbind.data.frame(allstages.ind, allstages.ind[,2], 1)
@@ -1694,6 +933,12 @@ flefko2 <- function(year = "all", patch = "all", stageframe, repmatrix = NA, mod
                         "obs3", "obs2n", "obs2o", "obs1", "rep3", "rep2n", "rep2o", "rep1", 
                         "mat3", "mat2n", "mat2o", "mat1", "imm3", "imm2n", "imm2o", "imm1",
                         "repentry3", "indata3", "indata2n", "indata2o", "indata1", "binwidth")
+  
+  allstages$minage3 <- 0
+  allstages$minage2 <- 0
+  allstages$maxage3 <- 0
+  allstages$maxage2 <- 0
+  allstages$actualage2 <- 0
   
   allstages$index32 <- allstages$stage3 + (allstages$stage2n * instages)
   
@@ -1757,497 +1002,59 @@ flefko2 <- function(year = "all", patch = "all", stageframe, repmatrix = NA, mod
   
   set.seed(randomseed)
   
-  if (class(surv_model) != "logical" & class(surv_model) != "try-error" & class(surv_model) != "numeric") {
-    
-    surv_proxy <- .modelextract(surv_model, paramnames)
-    
-    #This first part addresses years
-    if (class(surv_proxy$years) == "data.frame") {
-      survdiff <- setdiff(mainyears, rownames(surv_proxy$years))
-      
-      if (length(survdiff) > 0) {
-        if (year.as.random == TRUE) {
-          newdevs <- rnorm(length(survdiff), mean = 0, sd = sd(surv_proxy$years[,1]))
-        } else {
-          newdevs <- rep(0, (length(survdiff)))
-        }
-        surv_proxy$years <- rbind.data.frame(setNames(as.data.frame(as.matrix(newdevs, ncol = 1)), names(surv_proxy$years)), surv_proxy$years)
-        survlabels <- c(survdiff, rownames(surv_proxy$years)[(length(survdiff) + 1):(length(surv_proxy$years[,1]))])
-        surv_proxy$years <- as.data.frame(surv_proxy$years[order(survlabels),])
-        rownames(surv_proxy$years) <- sort(survlabels)
-      }
-    } else if (class(surv_proxy$years) == "numeric") {
-      warning("Model does not appear to include year2 (timestep t) coefficients. Setting all year2 coefficients to 0 and year names to the first year.")
-      surv_proxy$years <- matrix(surv_proxy$years, 1, 1)
-      rownames(surv_proxy$years) <- year[1]
-    }
-    
-    #This next part addresses patches
-    if (class(surv_proxy$patches) == "data.frame") {
-      survdiff <- setdiff(mainpatches, rownames(surv_proxy$patches))
-      
-      if (length(survdiff) > 0) {
-        if (patch.as.random == TRUE) {
-          newdevs <- rnorm(length(survdiff), mean = 0, sd = sd(surv_proxy$patches[,1]))
-        } else {
-          newdevs <- rep(0, (length(survdiff)))
-        }
-        surv_proxy$patches <- rbind.data.frame(setNames(as.data.frame(as.matrix(newdevs, ncol = 1)), names(surv_proxy$patches)), surv_proxy$patches)
-        survlabels <- c(survdiff, rownames(surv_proxy$patches)[(length(survdiff) + 1):(length(surv_proxy$patches[,1]))])
-        surv_proxy$patches <- as.data.frame(surv_proxy$patches[order(survlabels),])
-        rownames(surv_proxy$patches) <- sort(survlabels)
-      }
-    }
-    
-    surv_coefs <- c(surv_proxy$coefficients, surv_dev)
-    
-  } else {
-    surv_proxy <- surv_model
-    surv_coefs <- surv_model
-  }
-  
-  if(class(obs_model) != "logical" & class(obs_model) != "try-error" & class(obs_model) != "numeric") {
-    
-    obs_proxy <- .modelextract(obs_model, paramnames)
-    
-    #This first part addresses years
-    if (class(obs_proxy$years) == "data.frame") {
-      
-      obsdiff <- setdiff(mainyears, rownames(obs_proxy$years))
-      
-      if (length(obsdiff) > 0) {
-        if (year.as.random == TRUE) {
-          newdevs <- rnorm(length(obsdiff), mean = 0, sd = sd(obs_proxy$years[,1]))
-        } else {
-          newdevs <- rep(0, (length(obsdiff)))
-        }
-        obs_proxy$years <- rbind.data.frame(setNames(as.data.frame(as.matrix(newdevs, ncol = 1)), names(obs_proxy$years)), obs_proxy$years)
-        obslabels <- c(obsdiff, rownames(obs_proxy$years)[(length(obsdiff) + 1):(length(obs_proxy$years[,1]))])
-        obs_proxy$years <- as.data.frame(obs_proxy$years[order(obslabels),])
-        rownames(obs_proxy$years) <- sort(obslabels)
-      }
-    } else if (class(obs_proxy$years) == "numeric") {
-      obs_proxy$years <- matrix(obs_proxy$years, 1, 1)
-      rownames(obs_proxy$years) <- year[1]
-    }
-    
-    #This next bit focuses on patches
-    if (class(obs_proxy$patches) == "data.frame") {
-      
-      obsdiff <- setdiff(mainpatches, rownames(obs_proxy$patches))
-      
-      if (length(obsdiff) > 0) {
-        if (patch.as.random == TRUE) {
-          newdevs <- rnorm(length(obsdiff), mean = 0, sd = sd(obs_proxy$patches[,1]))
-        } else {
-          newdevs <- rep(0, (length(obsdiff)))
-        }
-        obs_proxy$patches <- rbind.data.frame(setNames(as.data.frame(as.matrix(newdevs, ncol = 1)), names(obs_proxy$patches)), obs_proxy$patches)
-        obslabels <- c(obsdiff, rownames(obs_proxy$patches)[(length(obsdiff) + 1):(length(obs_proxy$patches[,1]))])
-        obs_proxy$patches <- as.data.frame(obs_proxy$patches[order(obslabels),])
-        rownames(obs_proxy$patches) <- sort(obslabels)
-      }
-    }
-    
-    obs_coefs <- c(obs_proxy$coefficients, obs_dev)
-  } else {
-    obs_proxy <- obs_model
-    obs_coefs <- obs_model
-  }
+  surv_proxy <- .modelextract(surv_model, paramnames, mainyears, mainpatches)
+  obs_proxy <- .modelextract(obs_model, paramnames, mainyears, mainpatches)
   
   sigma <- 0
   rvarssummed <- 0
   sizedist <- 1
   
-  if(class(size_model) != "logical" & class(size_model) != "try-error" & class(size_model) != "numeric") {
-    
-    size_proxy <- .modelextract(size_model, paramnames)
-    
-    #This first part addresses years
-    if (class(size_proxy$years) == "data.frame") {
-      sizediff <- setdiff(mainyears, rownames(size_proxy$years))
-      
-      if (length(sizediff) > 0) {
-        if (year.as.random == TRUE) {
-          newdevs <- rnorm(length(sizediff), mean = 0, sd = sd(size_proxy$years[,1]))
-        } else {
-          newdevs <- rep(0, (length(sizediff)))
-        }
-        size_proxy$years <- rbind.data.frame(setNames(as.data.frame(as.matrix(newdevs, ncol = 1)), names(size_proxy$years)), size_proxy$years)
-        sizelabels <- c(sizediff, rownames(size_proxy$years)[(length(sizediff) + 1):(length(size_proxy$years[,1]))])
-        size_proxy$years <- as.data.frame(size_proxy$years[order(sizelabels),])
-        rownames(size_proxy$years) <- sort(sizelabels)
-      }
-    } else if (class(size_proxy$years) == "numeric") {
-      size_proxy$years <- matrix(size_proxy$years, 1, 1)
-      rownames(size_proxy$years) <- year[1]
-    }
-    
-    #This next part addresses patches
-    if (class(size_proxy$patches) == "data.frame") {
-      
-      sizediff <- setdiff(mainpatches, rownames(size_proxy$patches))
-      
-      if (length(sizediff) > 0) {
-        if (patch.as.random == TRUE) {
-          newdevs <- rnorm(length(sizediff), mean = 0, sd = sd(size_proxy$patches[,1]))
-        } else {
-          newdevs <- rep(0, (length(sizediff)))
-        }
-        size_proxy$patches <- rbind.data.frame(setNames(as.data.frame(as.matrix(newdevs, ncol = 1)), names(size_proxy$patches)), size_proxy$patches)
-        sizelabels <- c(sizediff, rownames(size_proxy$patches)[(length(sizediff) + 1):(length(size_proxy$patches[,1]))])
-        size_proxy$patches <- as.data.frame(size_proxy$patches[order(sizelabels),])
-        rownames(size_proxy$patches) <- sort(sizelabels)
-      }
-    }
-    
-    if (size_proxy$family == "poisson") {
-      sizedist <- 0
-      if (!all(is.na(size_proxy$variances))) {
-        rvarssummed <- sum(size_proxy$variances[,"vcov"])
-      } else {
-        rvarssummed <- 0
-      }
-    } else if (size_proxy$family == "gaussian") {
-      sizedist <- 2
-      sigma <- size_proxy$sigma
+  size_proxy <- .modelextract(size_model, paramnames, mainyears, mainpatches)
+  
+  if (size_proxy$family == "poisson") {
+    sizedist <- 0
+    if (!all(is.na(size_proxy$variances))) {
+      rvarssummed <- sum(size_proxy$variances[,"vcov"])
     } else {
-      sizedist <- 1
+      rvarssummed <- 0
     }
-    
-    size_coefs <- c(size_proxy$coefficients, size_dev)
+  } else if (size_proxy$family == "gaussian") {
+    sizedist <- 2
+    sigma <- size_proxy$sigma
   } else {
-    size_proxy <- size_model
-    size_coefs <- size_model
-    sizedist <- 3 + size_model
+    sizedist <- 1
   }
   
-  if(class(repst_model) != "logical" & class(repst_model) != "try-error" & class(repst_model) != "numeric") {
-    
-    repst_proxy <- .modelextract(repst_model, paramnames)
-    
-    #This first part addresses years
-    if (class(repst_proxy$years) == "data.frame") {
-      repstdiff <- setdiff(mainyears, rownames(repst_proxy$years))
-      
-      if (length(repstdiff) > 0) {
-        if (year.as.random == TRUE) {
-          newdevs <- rnorm(length(repstdiff), mean = 0, sd = sd(repst_proxy$years[,1]))
-        } else {
-          newdevs <- rep(0, (length(repstdiff)))
-        }
-        repst_proxy$years <- rbind.data.frame(setNames(as.data.frame(as.matrix(newdevs, ncol = 1)), names(repst_proxy$years)), repst_proxy$years)
-        repstlabels <- c(repstdiff, rownames(repst_proxy$years)[(length(repstdiff) + 1):(length(repst_proxy$years[,1]))])
-        repst_proxy$years <- as.data.frame(repst_proxy$years[order(repstlabels),])
-        rownames(repst_proxy$years) <- sort(repstlabels)
-      }
-    } else if (class(repst_proxy$years) == "numeric") {
-      repst_proxy$years <- matrix(repst_proxy$years, 1, 1)
-      rownames(repst_proxy$years) <- year[1]
-    }
-    
-    #This next part addresses patches
-    if (class(repst_proxy$patches) == "data.frame") {
-      
-      repstdiff <- setdiff(mainpatches, rownames(repst_proxy$patches))
-      
-      if (length(repstdiff) > 0) {
-        if (patch.as.random == TRUE) {
-          newdevs <- rnorm(length(repstdiff), mean = 0, sd = sd(repst_proxy$patches[,1]))
-        } else {
-          newdevs <- rep(0, (length(repstdiff)))
-        }
-        repst_proxy$patches <- rbind.data.frame(setNames(as.data.frame(as.matrix(newdevs, ncol = 1)), names(repst_proxy$patches)), repst_proxy$patches)
-        repstlabels <- c(repstdiff, rownames(repst_proxy$patches)[(length(repstdiff) + 1):(length(repst_proxy$patches[,1]))])
-        repst_proxy$patches <- as.data.frame(repst_proxy$patches[order(repstlabels),])
-        rownames(repst_proxy$patches) <- sort(repstlabels)
-      }
-    }
-    
-    repst_coefs <- c(repst_proxy$coefficients, repst_dev)
+  repst_proxy <- .modelextract(repst_model, paramnames, mainyears, mainpatches)
+  fec_proxy <- .modelextract(fec_model, paramnames, mainyears, mainpatches)
+  
+  if (fec_proxy$family == "poisson") {
+    fecdist <- 0
+  } else if (fec_proxy$family == "gaussian") {
+    fecdist <- 2
   } else {
-    repst_proxy <- repst_model
-    repst_coefs <- repst_model
+    fecdist <- 1
   }
   
-  if(class(fec_model) != "logical" & class(fec_model) != "try-error" & class(fec_model) != "numeric") {
-    
-    fec_proxy <- .modelextract(fec_model, paramnames)
-    
-    #This first part addresses years
-    if (class(fec_proxy$years) == "data.frame") {
-      fecdiff <- setdiff(mainyears, rownames(fec_proxy$years))
-      
-      if (length(fecdiff) > 0) {
-        if (year.as.random == TRUE) {
-          newdevs <- rnorm(length(fecdiff), mean = 0, sd = sd(fec_proxy$years[,1]))
-        } else {
-          newdevs <- rep(0, (length(fecdiff)))
-        }
-        fec_proxy$years <- rbind.data.frame(setNames(as.data.frame(as.matrix(newdevs, ncol = 1)), names(fec_proxy$years)), fec_proxy$years)
-        feclabels <- c(fecdiff, rownames(fec_proxy$years)[(length(fecdiff) + 1):(length(fec_proxy$years[,1]))])
-        fec_proxy$years <- as.data.frame(fec_proxy$years[order(feclabels),])
-        rownames(fec_proxy$years) <- sort(feclabels)
-      }
-    } else if (class(fec_proxy$years) == "numeric") {
-      fec_proxy$years <- matrix(fec_proxy$years, 1, 1)
-      rownames(fec_proxy$years) <- year[1]
-    }
-    
-    #This next part addresses patches
-    if (class(fec_proxy$patches) == "data.frame") {
-      
-      fecdiff <- setdiff(mainpatches, rownames(fec_proxy$patches))
-      
-      if (length(fecdiff) > 0) {
-        if (patch.as.random == TRUE) {
-          newdevs <- rnorm(length(fecdiff), mean = 0, sd = sd(fec_proxy$patches[,1]))
-        } else {
-          newdevs <- rep(0, (length(fecdiff)))
-        }
-        fec_proxy$patches <- rbind.data.frame(setNames(as.data.frame(as.matrix(newdevs, ncol = 1)), names(fec_proxy$patches)), fec_proxy$patches)
-        feclabels <- c(fecdiff, rownames(fec_proxy$patches)[(length(fecdiff) + 1):(length(fec_proxy$patches[,1]))])
-        fec_proxy$patches <- as.data.frame(fec_proxy$patches[order(feclabels),])
-        rownames(fec_proxy$patches) <- sort(feclabels)
-      }
-    }
-    
-    fec_coefs <- c(fec_proxy$coefficients, fec_dev)
-    
-    if (fec_proxy$family == "poisson") {
-      fecdist <- 0
-    } else if (fec_proxy$family == "gaussian") {
-      fecdist <- 2
-    } else {
-      fecdist <- 1
-    }
-    
-  } else {
-    fec_proxy <- fec_model
-    fec_coefs <- fec_model
-    fecdist <- 3 + fec_model
-  }
-  
-  if (class(jsurv_model) != "logical" & class(jsurv_model) != "try-error" & class(jsurv_model) != "numeric") {
-    
-    jsurv_proxy <- .modelextract(jsurv_model, paramnames)
-    
-    #This first part addresses years
-    if (class(jsurv_proxy$years) == "data.frame") {
-      jsurvdiff <- setdiff(mainyears, rownames(jsurv_proxy$years))
-      
-      if (length(jsurvdiff) > 0) {
-        if (year.as.random == TRUE) {
-          newdevs <- rnorm(length(jsurvdiff), mean = 0, sd = sd(jsurv_proxy$years[,1]))
-        } else {
-          newdevs <- rep(0, (length(jsurvdiff)))
-        }
-        jsurv_proxy$years <- rbind.data.frame(setNames(as.data.frame(as.matrix(newdevs, ncol = 1)),
-                                                       names(jsurv_proxy$years)), jsurv_proxy$years)
-        jsurvlabels <- c(jsurvdiff, rownames(jsurv_proxy$years)[(length(jsurvdiff) + 1):(length(jsurv_proxy$years[,1]))])
-        jsurv_proxy$years <- as.data.frame(jsurv_proxy$years[order(jsurvlabels),])
-        rownames(jsurv_proxy$years) <- sort(jsurvlabels)
-      }
-    } else if (class(jsurv_proxy$years) == "numeric") {
-      warning("Juvenile survival model does not appear to include year2 (timestep t) coefficients. Setting all year2 coefficients to 0 and year names to the first year.")
-      jsurv_proxy$years <- matrix(jsurv_proxy$years, 1, 1)
-      rownames(jsurv_proxy$years) <- year[1]
-    }
-    
-    #This next part addresses patches
-    if (class(jsurv_proxy$patches) == "data.frame") {
-      jsurvdiff <- setdiff(mainpatches, rownames(jsurv_proxy$patches))
-      
-      if (length(jsurvdiff) > 0) {
-        if (patch.as.random == TRUE) {
-          newdevs <- rnorm(length(jsurvdiff), mean = 0, sd = sd(jsurv_proxy$patches[,1]))
-        } else {
-          newdevs <- rep(0, (length(jsurvdiff)))
-        }
-        jsurv_proxy$patches <- rbind.data.frame(setNames(as.data.frame(as.matrix(newdevs, ncol = 1)),
-                                                         names(jsurv_proxy$patches)), jsurv_proxy$patches)
-        jsurvlabels <- c(jsurvdiff, 
-                         rownames(jsurv_proxy$patches)[(length(jsurvdiff) + 1):(length(jsurv_proxy$patches[,1]))])
-        jsurv_proxy$patches <- as.data.frame(jsurv_proxy$patches[order(jsurvlabels),])
-        rownames(jsurv_proxy$patches) <- sort(jsurvlabels)
-      }
-    }
-    
-    jsurv_coefs <- c(jsurv_proxy$coefficients, jsurv_dev)
-  } else {
-    jsurv_proxy <- jsurv_model
-    jsurv_coefs <- jsurv_model
-  }
-  
-  if(class(jobs_model) != "logical" & class(jobs_model) != "try-error" & class(jobs_model) != "numeric") {
-    
-    jobs_proxy <- .modelextract(jobs_model, paramnames)
-    
-    #This first part addresses years
-    if (class(jobs_proxy$years) == "data.frame") {
-      
-      jobsdiff <- setdiff(mainyears, rownames(jobs_proxy$years))
-      
-      if (length(jobsdiff) > 0) {
-        if (year.as.random == TRUE) {
-          newdevs <- rnorm(length(jobsdiff), mean = 0, sd = sd(jobs_proxy$years[,1]))
-        } else {
-          newdevs <- rep(0, (length(jobsdiff)))
-        }
-        jobs_proxy$years <- rbind.data.frame(setNames(as.data.frame(as.matrix(newdevs, ncol = 1)), 
-                                                      names(jobs_proxy$years)), jobs_proxy$years)
-        jobslabels <- c(jobsdiff, rownames(jobs_proxy$years)[(length(jobsdiff) + 1):(length(jobs_proxy$years[,1]))])
-        jobs_proxy$years <- as.data.frame(jobs_proxy$years[order(jobslabels),])
-        rownames(jobs_proxy$years) <- sort(jobslabels)
-      }
-    } else if (class(jobs_proxy$years) == "numeric") {
-      jobs_proxy$years <- matrix(jobs_proxy$years, 1, 1)
-      rownames(jobs_proxy$years) <- year[1]
-    }
-    
-    #This next bit focuses on patches
-    if (class(jobs_proxy$patches) == "data.frame") {
-      
-      jobsdiff <- setdiff(mainpatches, rownames(jobs_proxy$patches))
-      
-      if (length(jobsdiff) > 0) {
-        if (patch.as.random == TRUE) {
-          newdevs <- rnorm(length(jobsdiff), mean = 0, sd = sd(jobs_proxy$patches[,1]))
-        } else {
-          newdevs <- rep(0, (length(jobsdiff)))
-        }
-        jobs_proxy$patches <- rbind.data.frame(setNames(as.data.frame(as.matrix(newdevs, ncol = 1)),
-                                                        names(jobs_proxy$patches)), jobs_proxy$patches)
-        jobslabels <- c(jobsdiff, 
-                        rownames(jobs_proxy$patches)[(length(jobsdiff) + 1):(length(jobs_proxy$patches[,1]))])
-        jobs_proxy$patches <- as.data.frame(jobs_proxy$patches[order(jobslabels),])
-        rownames(jobs_proxy$patches) <- sort(jobslabels)
-      }
-    }
-    
-    jobs_coefs <- c(jobs_proxy$coefficients, jobs_dev)
-  } else {
-    jobs_proxy <- jobs_model
-    jobs_coefs <- jobs_model
-  }
+  jsurv_proxy <- .modelextract(jsurv_model, paramnames, mainyears, mainpatches)
+  jobs_proxy <- .modelextract(jobs_model, paramnames, mainyears, mainpatches)
   
   jsigma <- 0
   jrvarssummed <- 0
   
-  if(class(jsize_model) != "logical" & class(jsize_model) != "try-error" & class(jsize_model) != "numeric") {
-    
-    jsize_proxy <- .modelextract(jsize_model, paramnames)
-    
-    #This first part addresses years
-    if (class(jsize_proxy$years) == "data.frame") {
-      jsizediff <- setdiff(mainyears, rownames(jsize_proxy$years))
-      
-      if (length(jsizediff) > 0) {
-        if (year.as.random == TRUE) {
-          newdevs <- rnorm(length(jsizediff), mean = 0, sd = sd(jsize_proxy$years[,1]))
-        } else {
-          newdevs <- rep(0, (length(jsizediff)))
-        }
-        jsize_proxy$years <- rbind.data.frame(setNames(as.data.frame(as.matrix(newdevs, ncol = 1)),
-                                                       names(jsize_proxy$years)), jsize_proxy$years)
-        jsizelabels <- c(jsizediff, 
-                         rownames(jsize_proxy$years)[(length(jsizediff) + 1):(length(jsize_proxy$years[,1]))])
-        jsize_proxy$years <- as.data.frame(jsize_proxy$years[order(jsizelabels),])
-        rownames(jsize_proxy$years) <- sort(jsizelabels)
-      }
-    } else if (class(jsize_proxy$years) == "numeric") {
-      jsize_proxy$years <- matrix(jsize_proxy$years, 1, 1)
-      rownames(jsize_proxy$years) <- year[1]
+  jsize_proxy <- .modelextract(jsize_model, paramnames, mainyears, mainpatches)
+  
+  if (jsize_proxy$family == "poisson") {
+    if (!all(is.na(jsize_proxy$variances))) {
+      jrvarssummed <- sum(jsize_proxy$variances[,"vcov"])
+    } else {
+      jrvarssummed <- 0
     }
-    
-    #This next part addresses patches
-    if (class(jsize_proxy$patches) == "data.frame") {
-      
-      jsizediff <- setdiff(mainpatches, rownames(jsize_proxy$patches))
-      
-      if (length(jsizediff) > 0) {
-        if (patch.as.random == TRUE) {
-          newdevs <- rnorm(length(jsizediff), mean = 0, sd = sd(jsize_proxy$patches[,1]))
-        } else {
-          newdevs <- rep(0, (length(jsizediff)))
-        }
-        jsize_proxy$patches <- rbind.data.frame(setNames(as.data.frame(as.matrix(newdevs, ncol = 1)),
-                                                         names(jsize_proxy$patches)), jsize_proxy$patches)
-        jsizelabels <- c(jsizediff, 
-                         rownames(jsize_proxy$patches)[(length(jsizediff) + 1):(length(jsize_proxy$patches[,1]))])
-        jsize_proxy$patches <- as.data.frame(jsize_proxy$patches[order(jsizelabels),])
-        rownames(jsize_proxy$patches) <- sort(jsizelabels)
-      }
-    }
-    
-    if (jsize_proxy$family == "poisson") {
-      if (!all(is.na(jsize_proxy$variances))) {
-        jrvarssummed <- sum(jsize_proxy$variances[,"vcov"])
-      } else {
-        jrvarssummed <- 0
-      }
-    } else if (jsize_proxy$family == "gaussian") {
-      jsigma <- jsize_proxy$sigma
-    }
-    
-    jsize_coefs <- c(jsize_proxy$coefficients, jsize_dev)
-  } else {
-    jsize_proxy <- jsize_model
-    jsize_coefs <- jsize_model
+  } else if (jsize_proxy$family == "gaussian") {
+    jsigma <- jsize_proxy$sigma
   }
   
-  if(class(jrepst_model) != "logical" & class(jrepst_model) != "try-error" & class(jrepst_model) != "numeric") {
-    
-    jrepst_proxy <- .modelextract(jrepst_model, paramnames)
-    
-    #This first part addresses years
-    if (class(jrepst_proxy$years) == "data.frame") {
-      
-      jrepstdiff <- setdiff(mainyears, rownames(jrepst_proxy$years))
-      
-      if (length(jrepstdiff) > 0) {
-        if (year.as.random == TRUE) {
-          newdevs <- rnorm(length(jrepstdiff), mean = 0, sd = sd(jrepst_proxy$years[,1]))
-        } else {
-          newdevs <- rep(0, (length(jrepstdiff)))
-        }
-        jrepst_proxy$years <- rbind.data.frame(setNames(as.data.frame(as.matrix(newdevs, ncol = 1)), 
-                                                        names(jrepst_proxy$years)), jrepst_proxy$years)
-        jrepstlabels <- c(jrepstdiff, 
-                          rownames(jrepst_proxy$years)[(length(jrepstdiff) + 1):(length(jrepst_proxy$years[,1]))])
-        jrepst_proxy$years <- as.data.frame(jrepst_proxy$years[order(jrepstlabels),])
-        rownames(jrepst_proxy$years) <- sort(jrepstlabels)
-      }
-    } else if (class(jrepst_proxy$years) == "numeric") {
-      jrepst_proxy$years <- matrix(jrepst_proxy$years, 1, 1)
-      rownames(jrepst_proxy$years) <- year[1]
-    }
-    
-    #This next bit focuses on patches
-    if (class(jrepst_proxy$patches) == "data.frame") {
-      
-      jrepstdiff <- setdiff(mainpatches, rownames(jrepst_proxy$patches))
-      
-      if (length(jrepstdiff) > 0) {
-        if (patch.as.random == TRUE) {
-          newdevs <- rnorm(length(jrepstdiff), mean = 0, sd = sd(jrepst_proxy$patches[,1]))
-        } else {
-          newdevs <- rep(0, (length(jrepstdiff)))
-        }
-        jrepst_proxy$patches <- rbind.data.frame(setNames(as.data.frame(as.matrix(newdevs, ncol = 1)),
-                                                          names(jrepst_proxy$patches)), jrepst_proxy$patches)
-        jrepstlabels <- c(jrepstdiff, 
-                          rownames(jrepst_proxy$patches)[(length(jrepstdiff) + 1):(length(jrepst_proxy$patches[,1]))])
-        jrepst_proxy$patches <- as.data.frame(jrepst_proxy$patches[order(jrepstlabels),])
-        rownames(jrepst_proxy$patches) <- sort(jrepstlabels)
-      }
-    }
-    
-    jrepst_coefs <- c(jrepst_proxy$coefficients, jrepst_dev)
-  } else {
-    jrepst_proxy <- jrepst_model
-    jrepst_coefs <- jrepst_model
-  }
+  jrepst_proxy <- .modelextract(jrepst_model, paramnames, mainyears, mainpatches)
   
   if (!all(is.na(patch))) {
     listofyears <- apply(as.matrix(patch), 1, function(X) {
@@ -2256,15 +1063,18 @@ flefko2 <- function(year = "all", patch = "all", stageframe, repmatrix = NA, mod
       return(output)
     })
     
-    if (length(listofyears) > 1) {
-      listofyears <- do.call(rbind.data.frame, listofyears)
-    }
+    listofyears <- do.call(rbind.data.frame, listofyears)
+    listofyears$poporder <- NA
+    listofyears$patchorder <- apply(as.matrix(c(1:dim(listofyears)[1])), 1, function(X) {which(mainpatches == listofyears$patch[X])})
+    listofyears$yearorder <- apply(as.matrix(c(1:dim(listofyears)[1])), 1, function(X) {which(mainyears == listofyears$year2[X])})
     
   } else {
-    
     listofyears <- cbind.data.frame(NA, NA, as.matrix(year))
     names(listofyears) <- c("pop", "patch", "year2")
     
+    listofyears$poporder <- NA
+    listofyears$patchorder <- 1
+    listofyears$yearorder <- apply(as.matrix(c(1:dim(listofyears)[1])), 1, function(X) {which(mainyears == listofyears$year2[X])})
   }
   
   maxsize <- max(c(allstages$size3, allstages$size2n, allstages$size2o), na.rm = TRUE)
@@ -2281,27 +1091,21 @@ flefko2 <- function(year = "all", patch = "all", stageframe, repmatrix = NA, mod
   
   yearlist <- split(listofyears, seq(nrow(listofyears)))
   
-  madsexmadrigal <- lapply(yearlist, .flefko2_core, stageframe = stageframe, allstages = allstages, 
-                           paramnames = paramnames, surv_proxy = surv_proxy, obs_proxy = obs_proxy, 
-                           size_proxy = size_proxy, repst_proxy = repst_proxy, fec_proxy = fec_proxy, 
-                           jsurv_proxy = jsurv_proxy, jobs_proxy = jobs_proxy, jsize_proxy = jsize_proxy,
-                           jrepst_proxy = jrepst_proxy, surv_coefs = surv_coefs, obs_coefs = obs_coefs, 
-                           size_coefs = size_coefs, repst_coefs = repst_coefs, fec_coefs = fec_coefs, 
-                           jsurv_coefs = jsurv_coefs, jobs_coefs = jobs_coefs, jsize_coefs = jsize_coefs, 
-                           jrepst_coefs = jrepst_coefs, surv_dev = surv_dev, obs_dev = obs_dev, 
-                           size_dev = size_dev, repst_dev = repst_dev, fec_dev = fec_dev, 
-                           jsurv_dev = jsurv_dev, jobs_dev = jobs_dev, jsize_dev = jsize_dev, 
-                           jrepst_dev = jrepst_dev, repmod = repmod, total.matrix.dim = total.matrix.dim, 
-                           patch.elements = patch.elements, sizedist = sizedist, fecdist = fecdist, 
-                           maxsize = maxsize, sigma = sigma, rvarssummed = rvarssummed, jsigma = jsigma, 
-                           jrvarssummed = jrvarssummed, negfec = negfec)
+  madsexmadrigal <- lapply(yearlist, jerzeibalowski, allstages, surv_proxy, obs_proxy, size_proxy, repst_proxy,
+                           fec_proxy, jsurv_proxy, jobs_proxy, jsize_proxy, jrepst_proxy, surv_dev, obs_dev, 
+                           size_dev, repst_dev, fec_dev, jsurv_dev, jobs_dev, jsize_dev, jrepst_dev, patch.elements,
+                           total.matrix.dim, repmod, rvarssummed, sigma, jrvarssummed, jsigma, maxsize, sizedist, 
+                           fecdist, negfec)
   
   a_list <- lapply(madsexmadrigal, function(X) {X$A})
   u_list <- lapply(madsexmadrigal, function(X) {X$U})
   f_list <- lapply(madsexmadrigal, function(X) {X$F})
   
-  hstages <- madsexmadrigal[[1]]$hstages
-  ahstages <- madsexmadrigal[[1]]$ahstages
+  ahstages <- stageframe[1:(dim(stageframe)[1] - 1),]
+  
+  pairings1 <- expand.grid(stcod3 = stageframe$new_stage_id, stcod2 = stageframe$new_stage_id)
+  pairings2 <- expand.grid(stage3 = stageframe$orig_stage_id, stage2 = stageframe$orig_stage_id)
+  hstages <- cbind.data.frame(pairings2, pairings1)
   
   qcoutput1 <- NA
   qcoutput2 <- NA
@@ -2324,322 +1128,10 @@ flefko2 <- function(year = "all", patch = "all", stageframe, repmatrix = NA, mod
   }
   
   output <- list(A = a_list, U = u_list, F = f_list, hstages = NA, ahstages = ahstages, 
-                 labels = listofyears, matrixqc = qcoutput1, modelqc = qcoutput2)
+                 labels = listofyears[,c(1:3)], matrixqc = qcoutput1, modelqc = qcoutput2)
   class(output) <- "lefkoMat"
   
   return(output)
-}
-
-#' Core Wrapper Powering Historical Function-based Matrix Estimation
-#' 
-#' \code{.flefko2_core()} pulls together all required vital rate model parameters
-#' and feeds them into\code{\link{jerzeibalowski}()}, an Rcpp function designed to
-#' quickly estimate these matrices.
-#' 
-#' @param poppatchyear Data frame giving combinations of population, patch, and 
-#' year as they will be used to produce matrices.
-#' @param stageframe Original stageframe used in analysis.
-#' @param allstages Massive data frame created by \code{\link{flefko2}()} including
-#' parameter values to propagate through every element of the population projection
-#' matrix.
-#' @param paramnames Data frame giving the names being used for standard variables
-#' needed to produce matrix elements.
-#' @param surv_proxy List giving all coefficient values for use in estimating
-#' survival probability.
-#' @param obs_proxy List giving all coefficient values for use in estimating
-#' observation probability.
-#' @param size_proxy List giving all coefficient values for use in estimating
-#' size.
-#' @param repst_proxy List giving all coefficient values for use in estimating
-#' reproduction probability.
-#' @param fec_proxy List giving all coefficient values for use in estimating
-#' fecundity.
-#' @param jsurv_proxy List giving all coefficient values for use in estimating
-#' juvenile survival probability.
-#' @param jobs_proxy List giving all coefficient values for use in estimating
-#' juvenile observation probability.
-#' @param jsize_proxy List giving all coefficient values for use in estimating
-#' juvenile size.
-#' @param jrepst_proxy Vector giving all coefficient values for use in estimating
-#' juvenile reproduction probability.
-#' @param surv_coefs Vector giving key coefficient values for use in estimating
-#' survival probability.
-#' @param obs_coefs Vector giving key coefficient values for use in estimating
-#' observation probability.
-#' @param size_coefs Vector giving key coefficient values for use in estimating
-#' size.
-#' @param repst_coefs Vector giving key coefficient values for use in estimating
-#' reproduction probability.
-#' @param fec_coefs Vector giving key coefficient values for use in estimating
-#' fecundity.
-#' @param jsurv_coefs Vector giving key coefficient values for use in estimating
-#' juvenile survival probability.
-#' @param jobs_coefs Vector giving key coefficient values for use in estimating
-#' juvenile observation probability.
-#' @param jsize_coefs Vector giving key coefficient values for use in estimating
-#' juvenile size.
-#' @param jrepst_coefs Vector giving key coefficient values for use in estimating
-#' juvenile reproduction probability.
-#' @param surv_dev Scalar value to be added to the y-intercept of the linear model
-#' of survival probability.
-#' @param obs_dev Scalar value to be added to the y-intercept of the linear model
-#' of observation probability.
-#' @param size_dev Scalar value to be added to the y-intercept of the linear model
-#' of size.
-#' @param repst_dev Scalar value to be added to the y-intercept of the linear model
-#' of reproduction probability.
-#' @param fec_dev Scalar value to be added to the y-intercept of the linear model
-#' of fecundity.
-#' @param jsurv_dev Scalar value to be added to the y-intercept of the linear model
-#' of juvenile survival probability.
-#' @param jobs_dev Scalar value to be added to the y-intercept of the linear model
-#' of juvenile observation probability.
-#' @param jsize_dev Scalar value to be added to the y-intercept of the linear model
-#' of juvenile size probability.
-#' @param jrepst_dev Scalar value to be added to the y-intercept of the linear
-#' model of juvenile reproduction probability.
-#' @param repmod Multiplier for estimated fecundity.
-#' @param total.matrix.dim Scalar value denoting the number of rows in the square
-#' projection matrix.
-#' @param patch.elements The number of combinations of size in times \emph{t}+1 and
-#' \emph{t}, corresponding to To and From stages.
-#' @param sizedist Designates whether size is Gaussian (2), Poisson (0), or 
-#' negative binomial (1) distributed.
-#' @param fecdist Designates whether fecundity is Gaussian (2), Poisson (0), or
-#' negative binomial (1) distributed.
-#' @param maxsize The maximum possible size to use in matrix estimation.
-#' @param sigma Standard deviation of Gaussian size distribution.
-#' @param rvarssummed Summed variance-covariance terms in Poisson size 
-#' distribution.
-#' @param jsigma Standard deviation of Gaussian juvenile size distribution.
-#' @param jrvarssummed Summed variance-covariance terms in Poisson juvenile size
-#' distribution.
-#' @param negfec A logical value denoting whether fecundity values estimated
-#' to be negative should be reset to 0. Defaults to FALSE.
-#' 
-#' @return Returns an object of class \code{lefkoMat}, containing one set of
-#' matrices corresponding to a specific population, patch, and time step
-#' combination.
-#' 
-#' @keywords internal
-#' @noRd
-.flefko2_core <- function(poppatchyear, stageframe, allstages = NA, paramnames = NA, surv_proxy = NA, 
-                          obs_proxy = NA, size_proxy = NA, repst_proxy = NA, fec_proxy = NA, 
-                          jsurv_proxy = NA, jobs_proxy = NA, jsize_proxy = NA, jrepst_proxy = NA,
-                          surv_coefs = NA, obs_coefs = NA, size_coefs = NA, repst_coefs = NA, fec_coefs = NA,
-                          jsurv_coefs = NA, jobs_coefs = NA, jsize_coefs = NA, jrepst_coefs = NA,
-                          surv_dev = 0, obs_dev = 0, size_dev = 0, repst_dev = 0, fec_dev = 0,
-                          jsurv_dev = 0, jobs_dev = 0, jsize_dev = 0, jrepst_dev = 0, repmod = 1, 
-                          total.matrix.dim = NA, patch.elements = NA, sizedist = NA, fecdist = NA,
-                          maxsize = NA, sigma = NA, rvarssummed = NA, jsigma = NA, jrvarssummed = NA,
-                          negfec = NA) {
-  
-  ovest_t <- ovest_f <- NULL
-  
-  patch <- poppatchyear[1, 2]
-  year <- poppatchyear[1, 3]
-  
-  if (length(surv_proxy) > 1) {
-    
-    if (length(surv_proxy$years[which(rownames(surv_proxy$years) == year),1]) == 0) {
-      stop("Year not recognized within survival model.")
-    }
-    
-    if (!is.na(patch)) {
-      patchcoef <- surv_proxy$patches[which(rownames(surv_proxy$patches) == patch), 1]
-    } else {
-      patchcoef <- 0
-    }
-    
-    surv_coefs <- c(surv_coefs, surv_proxy$years[which(rownames(surv_proxy$years) == year),1], patchcoef)
-  } else if (is.numeric(surv_proxy)) {
-    surv_coefs <- surv_proxy
-  }
-  
-  if (length(obs_proxy) > 1) {
-    
-    if (length(obs_proxy$years[which(rownames(obs_proxy$years) == year),1]) == 0) {
-      stop("Year not recognized within observation model.")
-    }
-    
-    if (!is.na(patch)) {
-      patchcoef <- obs_proxy$patches[which(rownames(obs_proxy$patches) == patch), 1]
-    } else {
-      patchcoef <- 0
-    }
-    
-    obs_coefs <- c(obs_coefs, obs_proxy$years[which(rownames(obs_proxy$years) == year),1], patchcoef)
-  } else if (is.numeric(obs_proxy)) {
-    obs_coefs <- obs_proxy
-  }
-  
-  if (length(size_proxy) > 1) {
-    
-    if (length(size_proxy$years[which(rownames(size_proxy$years) == year),1]) == 0) {
-      stop("Year not recognized within size model.")
-    }
-    
-    if (!is.na(patch)) {
-      patchcoef <- size_proxy$patches[which(rownames(size_proxy$patches) == patch), 1]
-    } else {
-      patchcoef <- 0
-    }
-    
-    size_coefs <- c(size_coefs, size_proxy$years[which(rownames(size_proxy$years) == year),1], patchcoef)
-  } else if (is.numeric(size_proxy)) {
-    size_coefs <- size_proxy
-  }
-  
-  if (length(repst_proxy) > 1) {
-    
-    if (length(repst_proxy$years[which(rownames(repst_proxy$years) == year),1]) == 0) {
-      stop("Year not recognized within reproductive status model.")
-    }
-    
-    if (!is.na(patch)) {
-      patchcoef <- repst_proxy$patches[which(rownames(repst_proxy$patches) == patch), 1]
-    } else {
-      patchcoef <- 0
-    }
-    
-    repst_coefs <- c(repst_coefs, repst_proxy$years[which(rownames(repst_proxy$years) == year),1], patchcoef)
-  } else if (is.numeric(repst_proxy)) {
-    repst_coefs <- repst_proxy
-  }
-  
-  if (length(fec_proxy) > 1) {
-    
-    if (length(fec_proxy$years[which(rownames(fec_proxy$years) == year),1]) == 0) {
-      stop("Year not recognized within fecundity model.")
-    }
-    
-    if (!is.na(patch)) {
-      patchcoef <- fec_proxy$patches[which(rownames(fec_proxy$patches) == patch), 1]
-    } else {
-      patchcoef <- 0
-    }
-    
-    if (fec_proxy$family == "poisson") {
-      fecdist <- 0
-    } else {fecdist <- 1}
-    
-    fec_coefs <- c(fec_coefs, fec_proxy$years[which(rownames(fec_proxy$years) == year),1], patchcoef)
-  } else if (is.numeric(fec_proxy)) {
-    fec_coefs <- fec_proxy
-  }
-  
-  if (length(jsurv_proxy) > 1) {
-    
-    if (length(jsurv_proxy$years[which(rownames(jsurv_proxy$years) == year),1]) == 0) {
-      stop("Year not recognized within juvenile survival model.")
-    }
-    
-    if (!is.na(patch)) {
-      patchcoef <- jsurv_proxy$patches[which(rownames(jsurv_proxy$patches) == patch), 1]
-    } else {
-      patchcoef <- 0
-    }
-    
-    jsurv_coefs <- c(jsurv_coefs, jsurv_proxy$years[which(rownames(jsurv_proxy$years) == year),1], patchcoef)
-  } else if (is.numeric(jsurv_proxy)) {
-    jsurv_coefs <- jsurv_proxy
-  }
-  
-  if (length(jobs_proxy) > 1) {
-    
-    if (length(jobs_proxy$years[which(rownames(jobs_proxy$years) == year),1]) == 0) {
-      stop("Year not recognized within juvenile observation model.")
-    }
-    
-    if (!is.na(patch)) {
-      patchcoef <- jobs_proxy$patches[which(rownames(jobs_proxy$patches) == patch), 1]
-    } else {
-      patchcoef <- 0
-    }
-    
-    jobs_coefs <- c(jobs_coefs, jobs_proxy$years[which(rownames(jobs_proxy$years) == year),1], patchcoef)
-  } else if (is.numeric(jobs_proxy)) {
-    jobs_coefs <- jobs_proxy
-  }
-  
-  if (length(jsize_proxy) > 1) {
-    
-    if (length(jsize_proxy$years[which(rownames(jsize_proxy$years) == year),1]) == 0) {
-      stop("Year not recognized within juvenile size model.")
-    }
-    
-    if (!is.na(patch)) {
-      patchcoef <- jsize_proxy$patches[which(rownames(jsize_proxy$patches) == patch), 1]
-    } else {
-      patchcoef <- 0
-    }
-    
-    jsize_coefs <- c(jsize_coefs, jsize_proxy$years[which(rownames(jsize_proxy$years) == year),1], patchcoef)
-  } else if (is.numeric(jsize_proxy)) {
-    jsize_coefs <- jsize_proxy
-  }
-  
-  if (length(jrepst_proxy) > 1) {
-    
-    if (length(jrepst_proxy$years[which(rownames(jrepst_proxy$years) == year),1]) == 0) {
-      stop("Year not recognized within juvenile reproduction status model.")
-    }
-    
-    if (!is.na(patch)) {
-      patchcoef <- jrepst_proxy$patches[which(rownames(jrepst_proxy$patches) == patch), 1]
-    } else {
-      patchcoef <- 0
-    }
-    
-    jrepst_coefs <- c(jrepst_coefs, jrepst_proxy$years[which(rownames(jrepst_proxy$years) == year),1], patchcoef)
-  } else if (is.numeric(jrepst_proxy)) {
-    jrepst_coefs <- jrepst_proxy
-  }
-  
-  operationinsanity <- jerzeibalowski(surv_coefs, obs_coefs, size_coefs, repst_coefs, fec_coefs, 
-                                      jsurv_coefs, jobs_coefs, jsize_coefs, jrepst_coefs,
-                                      allstages$stage3, allstages$stage2n, allstages$stage1, 
-                                      allstages$size3, allstages$size2n, allstages$size1, 
-                                      allstages$rep3, allstages$rep2n, allstages$rep1, 
-                                      allstages$obs3, allstages$obs2n, allstages$obs1, 
-                                      allstages$imm3, allstages$imm2n, allstages$indata2n,
-                                      allstages$indata, allstages$aliveandequal, allstages$repentry3,
-                                      allstages$ovgiven_t, allstages$ovgiven_f, 
-                                      allstages$binwidth, patch.elements, repmod, rvarssummed, 
-                                      sigma, jrvarssummed, jsigma, maxsize, sizedist, fecdist)
-  
-  bob <- operationinsanity[,c(5:6)]
-  
-  if (negfec) {
-    bob[(which(bob[,2] < 0)), 2] <- 0
-  }
-  
-  if (sum(c(allstages$ovest_t)) > 0) {
-    theoldpizzle <- subset(allstages, ovest_t > 0)
-    bob[theoldpizzle$r_aliveandequal, 1] <- apply(as.matrix(theoldpizzle$ovest_t), 1, function(X) {
-      bob[allstages$r_aliveandequal[which(allstages$index32 == X)], 1]
-    })
-  }
-  
-  if (sum(c(allstages$ovest_f)) > 0) {
-    bigsally <- subset(allstages, ovest_f > 0)
-    bob[bigsally$r_aliveandequal, 2] <- apply(as.matrix(bigsally$ovest_f), 1, function(X) {
-      bob[allstages$r_aliveandequal[which(allstages$index32 == X)], 2]
-    })
-  }
-  
-  new.matrix.u <- matrix(bob[,1], total.matrix.dim, total.matrix.dim)
-  
-  new.matrix.f <- matrix(bob[,2], total.matrix.dim, total.matrix.dim)
-  
-  new.matrix.a <- new.matrix.u + new.matrix.f
-  
-  stageframe <- stageframe[1:(dim(stageframe)[1] - 1),]
-  
-  new.matrix <- list(A = new.matrix.a, U = new.matrix.u, F = new.matrix.f, hstages = NA, 
-                     ahstages = stageframe, years = year)
-  
-  return(new.matrix)
 }
 
 #' Reduce Matrix Dimensions By Eliminating Empty Stages
@@ -3008,7 +1500,7 @@ rlefko3 <- function(data, stageframe, year = "all", pop = NA, patch = NA, censor
       data$usedsize2 <- data[,which(names(data) == size[2])]
       data$usedsize3 <- data[,which(names(data) == size[1])]
     } else {
-      warning("Without stage columns, lefko3 marix creation functions generally require size variables. Failuire to include size variables may lead to odd results.")
+      warning("Without stage columns, lefko3 MPM estimation functions generally require size variables. Failure to include size variables may lead to odd results.")
     }
     if (length(repst) > 1) {
       data$usedrepst1 <- data[,which(names(data) == repst[3])]
@@ -3086,11 +1578,13 @@ rlefko3 <- function(data, stageframe, year = "all", pop = NA, patch = NA, censor
       data$usedstage1[which(data$usedstage1 == "NotAlive")] <- "Dead"
       data$usedstage2 <- data[, stages[2]]
       data$usedstage3 <- data[, stages[1]]
+      data$usedstage3[which(data$usedstage3 == "NotAlive")] <- "Dead"
     } else {
       data$usedstage1 <- data[,which(names(data) == stages[3])]
       data$usedstage1[which(data$usedstage1 == "NotAlive")] <- "Dead"
       data$usedstage2 <- data[,which(names(data) == stages[2])]
       data$usedstage3 <- data[,which(names(data) == stages[1])]
+      data$usedstage3[which(data$usedstage3 == "NotAlive")] <- "Dead"
     }
     stages.used <- sort(unique(c(data$usedstage2, data$usedstage3)))
     
@@ -3108,7 +1602,7 @@ rlefko3 <- function(data, stageframe, year = "all", pop = NA, patch = NA, censor
     data$usedfec2[which(is.na(data$usedfec2))] <- 0
     data$usedfec3[which(is.na(data$usedfec3))] <- 0
   } else {
-    warning("lefko3 marix creation functions generally require fecundity variables. Failuire to include fecundity variables leads to matrices composed only of survival transitions.")
+    warning("Lefko3 MPM estimation functions generally require fecundity variables. Failure to include fecundity variables leads to matrices composed only of survival transitions.")
   } 
   
   stageexpansion3a <- cbind.data.frame(expand.grid(size2o = stageframe$bin_size_ctr, size1 = stageframe$bin_size_ctr), 
@@ -3670,7 +2164,7 @@ rlefko2 <- function(data, stageframe, year = "all", pop = NA, patch = NA, censor
       data$usedsize2 <- data[,which(names(data) == size[2])]
       data$usedsize3 <- data[,which(names(data) == size[1])]
     } else {
-      warning("Without stage columns, lefko3 marix creation functions generally require size variables. Failuire to include size variables may lead to odd results.")
+      warning("Without stage columns, lefko3 MPM estimation functions generally require size variables. Failure to include size variables may lead to odd results.")
     }
     if (length(repst) > 1) {
       data$usedrepst2 <- data[,which(names(data) == repst[2])]
@@ -3726,9 +2220,11 @@ rlefko2 <- function(data, stageframe, year = "all", pop = NA, patch = NA, censor
     if (is.numeric(stages[2])) {
       data$usedstage2 <- data[, stages[2]]
       data$usedstage3 <- data[, stages[1]]
+      data$usedstage3[which(data$usedstage3 == "NotAlive")] <- "Dead"
     } else {
       data$usedstage2 <- data[,which(names(data) == stages[2])]
       data$usedstage3 <- data[,which(names(data) == stages[1])]
+      data$usedstage3[which(data$usedstage3 == "NotAlive")] <- "Dead"
     }
     stages.used <- sort(unique(c(data$usedstage2, data$usedstage3)))
     
@@ -3744,7 +2240,7 @@ rlefko2 <- function(data, stageframe, year = "all", pop = NA, patch = NA, censor
     data$usedfec2[which(is.na(data$usedfec2))] <- 0
     data$usedfec3[which(is.na(data$usedfec3))] <- 0
   } else {
-    warning("lefko3 marix creation functions generally require fecundity variables. Failuire to include fecundity variables leads to matrices composed only of survival transitions.")
+    warning("Lefko3 MPM estimation functions generally require fecundity variables. Failure to include fecundity variables leads to matrices composed only of survival transitions.")
   } 
   
   stageexpansion3 <- cbind.data.frame(expand.grid(size3 = stageframe$bin_size_ctr, size2 = stageframe$bin_size_ctr), 
@@ -3944,7 +2440,7 @@ rlefko2 <- function(data, stageframe, year = "all", pop = NA, patch = NA, censor
   return(new.matrix)
 }
 
-#' Summary of class "lefkoMat"
+#' Summary of Class "lefkoMat"
 #'
 #' A function to simplify the viewing of basic information describing the matrices
 #' produced through functions \code{\link{flefko3}()}, \code{\link{flefko2}()}, \code{\link{rlefko3}()},
@@ -4017,7 +2513,7 @@ summary.lefkoMat <- function(object, ...) {
   
   writeLines(paste0("\nThis lefkoMat object contains ", mqcc, " matrices."))
   writeLines(paste0("\nEach matrix is a square matrix with ", matdim, " rows and columns, and a total of ", matdim*matdim, " elements."))
-  writeLines(paste0("A total of ", mqca, " survival-transitions were estimated, with ", 
+  writeLines(paste0("A total of ", mqca, " survival transitions were estimated, with ", 
                     mqca / mqcc, " per matrix."))
   writeLines(paste0("A total of ", mqcb, " fecundity transitions were estimated, with ", 
                     mqcb / mqcc, " per matrix."))

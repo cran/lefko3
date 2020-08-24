@@ -70,18 +70,21 @@
 #' \code{repstr2col} equivalent to \code{repstr1col}. This can be useful if two 
 #' reproductive status variables have related but unequal units, for example
 #' if \code{repstr1col} refers to one-flowered stems while \code{repstr2col} refers to
-#' two-flowered stems.
+#' two-flowered stems. Defaults to 1.
 #' @param fecrel This is a scalar modifier for that makes the variable in
 #' \code{fec2col} equivalent to \code{fec1col}. This can be useful if two fecundity
-#' variables have related but unequal units.
+#' variables have related but unequal units. Defaults to 1.
+#' @param stagecol Optional variable name or column number corresponding to
+#' life history stage at a given time.
 #' @param stageassign The stageframe object identifying the life history model
-#' being operationalized.
+#' being operationalized. Note that if \code{stagecol} is provided, then this
+#' stageframe is not used for stage designation.
 #' @param stagesize A variable name or column number describing which size
 #' variable to use in stage estimation. Defaults to NA, and can also take
 #' \code{sizea}, \code{sizeb}, \code{sizec}, or \code{sizeadded}, depending on which size variable 
 #' is chosen.
 #' @param censorkeep The value of the censoring variable identifying data
-#' that should be included in analysis. Defaults to 1, but may take any value
+#' that should be included in analysis. Defaults to 0, but may take any value
 #' including NA.
 #' @param censor A logical variable determining whether the output data
 #' should be censored using the variable defined in \code{censorcol}. Defaults
@@ -193,14 +196,14 @@
 #' 
 #' @export
 verticalize3 <- function(data, noyears, firstyear, popidcol = 0, patchidcol = 0, individcol= 0, 
-                         blocksize, xcol = 0, ycol = 0, juvcol = 0, size1col, size2col = 0, 
-                         size3col = 0, repstr1col = 0, repstr2col = 0, fec1col = 0, fec2col = 0, 
-                         alive1col = 0, dead1col = 0, obs1col = 0, nonobs1col = 0, censorcol = 0, 
-                         repstrrel = 1, fecrel = 1, stageassign = NA, stagesize = NA, 
-                         censorkeep = 1, censor = FALSE, spacing = NA, NAas0 = FALSE, 
-                         NRasRep = FALSE, reduce = TRUE) {
+                      blocksize, xcol = 0, ycol = 0, juvcol = 0, size1col, size2col = 0, 
+                      size3col = 0, repstr1col = 0, repstr2col = 0, fec1col = 0, fec2col = 0, 
+                      alive1col = 0, dead1col = 0, obs1col = 0, nonobs1col = 0, censorcol = 0, 
+                      repstrrel = 1, fecrel = 1, stagecol = 0, stageassign = NA, stagesize = NA, 
+                      censorkeep = 0, censor = FALSE, spacing = NA, NAas0 = FALSE, 
+                      NRasRep = FALSE, reduce = TRUE) {
   
-  rowid <- alive2 <- indataset <- censor1 <- censor2 <- censor3 <- NULL
+  stassign <- rowid <- alive2 <- indataset <- censor1 <- censor2 <- censor3 <- censbool <- NULL
   
   popid <- NA
   patchid <- NA
@@ -342,6 +345,40 @@ verticalize3 <- function(data, noyears, firstyear, popidcol = 0, patchidcol = 0,
     }
   }
   
+  if (is.character(stagecol)) {
+    if (is.element(stagecol, names(data))) {
+      true.stagecol <- which(names(data) == stagecol)
+      stagecol <- true.stagecol
+    } else {stop("Please enter stagecol exactly as it appears in the dataset.", call. = FALSE)}
+  }
+  
+  if (!all(is.na(stageassign)) & stagecol == 0) {
+    
+    stassign <- TRUE 
+    
+    if (stagesize == "sizeadded") {
+      stagesizecol <- 4
+    } else if (stagesize == "sizec") {
+      stagesizecol <-3
+    } else if (stagesize == "sizeb") {
+      stagesizecol <- 2
+    } else {
+      stagesizecol <- 1
+    }
+    
+    ltdframe <- subset(stageassign, indataset == 1)
+    stagenum <- dim(ltdframe)[1]
+    
+  } else {
+    stassign <- FALSE
+    
+    ltdframe <- as.data.frame(matrix(c(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0), ncol = 14))
+    
+    stagesizecol <- 0
+    
+    stagenum <- 1
+  }
+  
   if (!is.na(spacing)) {
     if (xcol == 0 | ycol == 0) {
       stop("Density estimation cannot proceed without valid x and y coordinates.")
@@ -352,544 +389,63 @@ verticalize3 <- function(data, noyears, firstyear, popidcol = 0, patchidcol = 0,
     }
   }
   
-  #Now we come to the core part of the function that takes apart the dataset and makes it vertical
-  if (popidcol > 0) {popid <- data[,popidcol];}
-  if (patchidcol > 0) {patchid <- data[,patchidcol];}
-  if (individcol > 0) {individ <- data[,individcol];}
-  
   if (censor) {
     if (!is.element(censorkeep, data[,censorcol])) {
       fullcenvec <- as.vector(apply(as.matrix(c(1:noyears)), 1, function(X) {c(data[,(censorcol + (X - 1) * blocksize)])}))
       
       if (!is.element(censorkeep, fullcenvec)) {
-        stop("Please enter a valid value for censorkeep. This value should occur in the censor variable within the dataset.", call. = FALSE)
+        stop("Please enter a valid value for censorkeep. This value should occur in the censor variable within the dataset.", 
+             call. = FALSE)
       }
     }
   }
   
-  noindivs <- dim(data)[1]
-  
-  popdatalist <- lapply(c(1:(noyears-1)), function(j) {
-    currentyear <- firstyear + (j-1)
-    
-    if (j == 1)
-    {
-      yearblock <- cbind.data.frame(c(1:noindivs), popid, patchid, individ, currentyear)
-      
-      if (xcol > 0) {yearblock <- cbind.data.frame(yearblock, NA, NA, data[,xcol], data[,ycol], data[,xcol+blocksize], data[,ycol+blocksize])}
-      if (xcol == 0) {yearblock <- cbind.data.frame(yearblock, NA, NA, NA, NA, NA, NA)}
-      
-      yearblock <- cbind.data.frame(yearblock, NA, data[,size1col], data[,(size1col+blocksize)], NA, data[,repstr1col], data[,(repstr1col+blocksize)])
-      
-      if (fec1col > 0) {
-        yearblock <- cbind.data.frame(yearblock, NA, data[,fec1col], data[,(fec1col+blocksize)])
-      } else {yearblock <- cbind.data.frame(yearblock, NA, NA, NA)}
-      
-      if (size2col > 0) {
-        yearblock <- cbind.data.frame(yearblock, NA, data[,size2col], data[,(size2col+blocksize)])
-      } else {yearblock <- cbind.data.frame(yearblock, NA, NA, NA)}
-      
-      if (repstr2col > 0) {
-        yearblock <- cbind.data.frame(yearblock, NA, data[,repstr2col], data[,(repstr2col+blocksize)])
-      } else {yearblock <- cbind.data.frame(yearblock, NA, NA, NA)}
-      
-      if (fec2col > 0) {
-        yearblock <- cbind.data.frame(yearblock, NA, data[,fec2col], data[,(fec2col+blocksize)])
-      } else {yearblock <- cbind.data.frame(yearblock, NA, NA, NA)}
-      
-      if (size3col > 0) {
-        yearblock <- cbind.data.frame(yearblock, NA, data[,size3col], data[,(size3col+blocksize)])
-      } else {yearblock <- cbind.data.frame(yearblock, NA, NA, NA)}
-      
-      if (censorcol > 0) {
-        yearblock <- cbind.data.frame(yearblock, NA, data[,censorcol], data[,(censorcol+blocksize)])
-      } else {yearblock <- cbind.data.frame(yearblock, NA, 1, 1)}
-      
-      if (alive1col > 0) {
-        yearblock <- cbind.data.frame(yearblock, NA, data[,alive1col], data[,(alive1col+blocksize)])
-      } else {yearblock <- cbind.data.frame(yearblock, NA, NA, NA)}
-      
-      if (dead1col > 0) {
-        yearblock <- cbind.data.frame(yearblock, NA, data[,dead1col], data[,(dead1col+blocksize)])
-      } else {yearblock <- cbind.data.frame(yearblock, NA, NA, NA)}
-      
-      if (obs1col > 0) {
-        yearblock <- cbind.data.frame(yearblock, NA, data[,obs1col], data[,(obs1col+blocksize)])
-      } else {yearblock <- cbind.data.frame(yearblock, NA, NA, NA)}
-      
-      if (nonobs1col > 0) {
-        yearblock <- cbind.data.frame(yearblock, NA, data[,nonobs1col], data[,(nonobs1col+blocksize)])
-      } else {yearblock <- cbind.data.frame(yearblock, NA, NA, NA)}
-      
-      if (juvcol > 0) {
-        yearblock <- cbind.data.frame(yearblock, NA, data[,juvcol], data[,(juvcol+blocksize)])
-      } else {yearblock <- cbind.data.frame(yearblock, NA, NA, NA)}
-      
-      names(yearblock) <- c("rowid", "popid", "patchid", "individ", "year2", "xpos1", "ypos1", "xpos2", 
-                            "ypos2", "xpos3", "ypos3", "sizea1", "sizea2", "sizea3", "repstra1", 
-                            "repstra2", "repstra3", "feca1", "feca2", "feca3", "sizeb1", "sizeb2", 
-                            "sizeb3", "repstrb1", "repstrb2", "repstrb3", "fecb1", "fecb2", "fecb3", 
-                            "sizec1", "sizec2", "sizec3", "censor1", "censor2", "censor3", "alivegiven1", 
-                            "alivegiven2", "alivegiven3", "deadgiven1", "deadgiven2", "deadgiven3",
-                            "obsgiven1", "obsgiven2", "obsgiven3", "nonobsgiven1", "nonobsgiven2", 
-                            "nonobsgiven3", "juvgiven1", "juvgiven2", "juvgiven3")
-    }
-    
-    if (j > 1)
-    {
-      yearblock <- cbind.data.frame(c(1:noindivs), popid, patchid, individ, currentyear)
-      
-      if (xcol > 0) {
-        yearblock <- cbind.data.frame(yearblock, data[,xcol+(blocksize*(j-2))], data[,ycol+(blocksize*(j-2))], data[,xcol+(blocksize*(j-1))], data[,ycol+(blocksize*(j-1))], data[,xcol+blocksize*j], data[,ycol+blocksize*j])
-      } else {yearblock <- cbind.data.frame(yearblock, NA, NA, NA, NA, NA, NA)}
-      
-      yearblock <- cbind.data.frame(yearblock, data[,(size1col+(blocksize*(j-2)))], data[,(size1col+(blocksize*(j-1)))], data[,(size1col+(blocksize*j))], data[,(repstr1col+(blocksize*(j-2)))], data[,(repstr1col+(blocksize*(j-1)))], data[,(repstr1col+(blocksize*j))])
-      
-      if (fec1col > 0) {
-        yearblock <- cbind.data.frame(yearblock, data[,(fec1col+(blocksize*(j-2)))], data[,(fec1col+(blocksize*(j-1)))], data[,(fec1col+(blocksize*j))])
-      } else {yearblock <- cbind.data.frame(yearblock, NA, NA, NA)}
-      
-      if (size2col > 0) {
-        yearblock <- cbind.data.frame(yearblock, data[,(size2col+(blocksize*(j-2)))], data[,(size2col+(blocksize*(j-1)))], data[,(size2col+(blocksize*j))])
-      } else {yearblock <- cbind.data.frame(yearblock, NA, NA, NA)}
-      
-      if (repstr2col > 0) {
-        yearblock <- cbind.data.frame(yearblock, data[,(repstr2col+(blocksize*(j-2)))], data[,(repstr2col+(blocksize*(j-1)))], data[,(repstr2col+(blocksize*j))])
-      } else {yearblock <- cbind.data.frame(yearblock, NA, NA, NA)}
-      
-      if (fec2col > 0) {
-        yearblock <- cbind.data.frame(yearblock, data[,(fec2col+(blocksize*(j-2)))], data[,(fec2col+(blocksize*(j-1)))], data[,(fec2col+(blocksize*j))])
-      } else {yearblock <- cbind.data.frame(yearblock, NA, NA, NA)}
-      
-      if (size3col > 0) {
-        yearblock <- cbind.data.frame(yearblock, data[,(size3col+(blocksize*(j-2)))], data[,(size3col+(blocksize*(j-1)))], data[,(size3col+(blocksize*j))])
-      } else {yearblock <- cbind.data.frame(yearblock, NA, NA, NA)}
-      
-      if (censorcol > 0) {
-        yearblock <- cbind.data.frame(yearblock, data[,(censorcol+(blocksize*(j-2)))], data[,(censorcol+(blocksize*(j-1)))], data[,(censorcol+(blocksize*j))])
-      } else {yearblock <- cbind.data.frame(yearblock, 1, 1, 1)}
-      
-      if (alive1col > 0) {
-        yearblock <- cbind.data.frame(yearblock, data[,(alive1col+(blocksize*(j-2)))], data[,(alive1col+(blocksize*(j-1)))], data[,(alive1col+(blocksize*j))])
-      } else {yearblock <- cbind.data.frame(yearblock, NA, NA, NA)}
-      
-      if (dead1col > 0) {
-        yearblock <- cbind.data.frame(yearblock, data[,(dead1col+(blocksize*(j-2)))], data[,(dead1col+(blocksize*(j-1)))], data[,(dead1col+(blocksize*j))])
-      } else {yearblock <- cbind.data.frame(yearblock, NA, NA, NA)}
-      
-      if (obs1col > 0) {
-        yearblock <- cbind.data.frame(yearblock, data[,(obs1col+(blocksize*(j-2)))], data[,(obs1col+(blocksize*(j-1)))], data[,(obs1col+(blocksize*j))])
-      } else {yearblock <- cbind.data.frame(yearblock, NA, NA, NA)}
-      
-      if (nonobs1col > 0) {
-        yearblock <- cbind.data.frame(yearblock, data[,(nonobs1col+(blocksize*(j-2)))], data[,(nonobs1col+(blocksize*(j-1)))], data[,(nonobs1col+(blocksize*j))])
-      } else {yearblock <- cbind.data.frame(yearblock, NA, NA, NA)}
-      
-      if (juvcol > 0) {
-        yearblock <- cbind.data.frame(yearblock, data[,(juvcol+(blocksize*(j-2)))], data[,(juvcol+(blocksize*(j-1)))], data[,(juvcol+(blocksize*j))])
-      } else {yearblock <- cbind.data.frame(yearblock, NA, NA, NA)}
-      
-      
-      names(yearblock) <- c("rowid", "popid", "patchid", "individ", "year2", "xpos1", "ypos1", "xpos2", 
-                            "ypos2", "xpos3", "ypos3", "sizea1", "sizea2", "sizea3", "repstra1", 
-                            "repstra2", "repstra3", "feca1", "feca2", "feca3", "sizeb1", "sizeb2", 
-                            "sizeb3", "repstrb1", "repstrb2", "repstrb3", "fecb1", "fecb2", "fecb3", 
-                            "sizec1", "sizec2", "sizec3", "censor1", "censor2", "censor3", "alivegiven1", 
-                            "alivegiven2", "alivegiven3", "deadgiven1", "deadgiven2", "deadgiven3",
-                            "obsgiven1", "obsgiven2", "obsgiven3", "nonobsgiven1", "nonobsgiven2", 
-                            "nonobsgiven3", "juvgiven1", "juvgiven2", "juvgiven3")
-    }
-    return(yearblock)
-  })
-  
-  popdata <- do.call("rbind.data.frame", popdatalist)
-  
-  popdata$juvgiven1[which(is.na(popdata$juvgiven1))] <- 0
-  popdata$juvgiven2[which(is.na(popdata$juvgiven2))] <- 0
-  popdata$juvgiven3[which(is.na(popdata$juvgiven3))] <- 0
-  popdata$juvgiven1[which(popdata$juvgiven1 > 0)] <- 1
-  popdata$juvgiven2[which(popdata$juvgiven2 > 0)] <- 1
-  popdata$juvgiven3[which(popdata$juvgiven3 > 0)] <- 1
-  
-  popdata$addedsize1 <- apply(as.matrix(c(1:dim(popdata)[1])), 1, function(X) {sum(popdata$sizea1[X], popdata$sizeb1[X], popdata$sizec1[X], na.rm = TRUE)})
-  popdata$addedsize2 <- apply(as.matrix(c(1:dim(popdata)[1])), 1, function(X) {sum(popdata$sizea2[X], popdata$sizeb2[X], popdata$sizec2[X], na.rm = TRUE)})
-  popdata$addedsize3 <- apply(as.matrix(c(1:dim(popdata)[1])), 1, function(X) {sum(popdata$sizea3[X], popdata$sizeb3[X], popdata$sizec3[X], na.rm = TRUE)})
-  
-  popdata$addedflower1 <- apply(as.matrix(c(1:dim(popdata)[1])), 1, function(X) {sum(popdata$repstra1[X], popdata$repstrb1[X] * repstrrel, na.rm = TRUE)})
-  popdata$addedflower2 <- apply(as.matrix(c(1:dim(popdata)[1])), 1, function(X) {sum(popdata$repstra2[X], popdata$repstrb2[X] * repstrrel, na.rm = TRUE)})
-  popdata$addedflower3 <- apply(as.matrix(c(1:dim(popdata)[1])), 1, function(X) {sum(popdata$repstra3[X], popdata$repstrb3[X] * repstrrel, na.rm = TRUE)})
-  
-  popdata$addedfruit1 <- apply(as.matrix(c(1:dim(popdata)[1])), 1, function(X) {sum(popdata$feca1[X], popdata$fecb1[X] * fecrel, na.rm = TRUE)})
-  popdata$addedfruit2 <- apply(as.matrix(c(1:dim(popdata)[1])), 1, function(X) {sum(popdata$feca2[X], popdata$fecb2[X] * fecrel, na.rm = TRUE)})
-  popdata$addedfruit3 <- apply(as.matrix(c(1:dim(popdata)[1])), 1, function(X) {sum(popdata$feca3[X], popdata$fecb3[X] * fecrel, na.rm = TRUE)})
-  
-  popdata$spryn1 <- 0
-  popdata$spryn2 <- 0
-  popdata$spryn3 <- 0
-  
-  popdata$spryn1[(which(popdata$sizea1 > 0))] <- 1
-  popdata$spryn2[(which(popdata$sizea2 > 0))] <- 1
-  popdata$spryn3[(which(popdata$sizea3 > 0))] <- 1
-  popdata$spryn1[(which(popdata$sizeb1 > 0))] <- 1
-  popdata$spryn2[(which(popdata$sizeb2 > 0))] <- 1
-  popdata$spryn3[(which(popdata$sizeb3 > 0))] <- 1
-  popdata$spryn1[(which(popdata$sizec1 > 0))] <- 1
-  popdata$spryn2[(which(popdata$sizec2 > 0))] <- 1
-  popdata$spryn3[(which(popdata$sizec3 > 0))] <- 1
-  
-  popdata$spryn1[(which(popdata$obsgiven1 == 1))] <- 1
-  popdata$spryn2[(which(popdata$obsgiven2 == 1))] <- 1
-  popdata$spryn3[(which(popdata$obsgiven3 == 1))] <- 1
-  popdata$spryn1[(which(popdata$nonobsgiven1 == 1))] <- 0
-  popdata$spryn2[(which(popdata$nonobsgiven2 == 1))] <- 0
-  popdata$spryn3[(which(popdata$nonobsgiven3 == 1))] <- 0
-  
-  popdata$flryn1 <- 0
-  popdata$flryn2 <- 0
-  popdata$flryn3 <- 0
-  
-  popdata$flryn1[(which(popdata$repstra1 > 0))] <- 1
-  popdata$flryn2[(which(popdata$repstra2 > 0))] <- 1
-  popdata$flryn3[(which(popdata$repstra3 > 0))] <- 1
-  popdata$flryn1[(which(popdata$repstrb1 > 0))] <- 1
-  popdata$flryn2[(which(popdata$repstrb2 > 0))] <- 1
-  popdata$flryn3[(which(popdata$repstrb3 > 0))] <- 1
-  
-  popdata$fecyn1 <- 0
-  popdata$fecyn2 <- 0
-  popdata$fecyn3 <- 0
-  
-  popdata$fecyn1[(which(popdata$feca1 > 0))] <- 1
-  popdata$fecyn2[(which(popdata$feca2 > 0))] <- 1
-  popdata$fecyn3[(which(popdata$feca3 > 0))] <- 1
-  popdata$fecyn1[(which(popdata$fecb1 > 0))] <- 1
-  popdata$fecyn2[(which(popdata$fecb2 > 0))] <- 1
-  popdata$fecyn3[(which(popdata$fecb3 > 0))] <- 1
-  
-  #The dataset called popdata is already a vertical dataset, but we need to add some 
-  #more variables to it, including age and corrected spatial bearings
-  indivdata <- lapply(c(1:noindivs), function(i) {
-    rowdata <- subset(popdata, rowid == i)
-    
-    yearsused <- c(rowdata$year2, (firstyear + noyears - 1))
-    
-    sproutpattern <- c(rowdata$spryn2, rowdata$spryn3[(which(rowdata$year2 == (firstyear + noyears - 2)))]) #This line can be used to add a CMR resighting history variable to the output
-    
-    sproutyears <- yearsused[which(sproutpattern == 1)]
-    unsproutyears <- yearsused[which(sproutpattern == 0)]
-    
-    if (length(sproutyears) == 0) {warning(paste("Individual identified with no observation at rowID", i))}
-    
-    firstseen <- min(sproutyears)
-    lastseen <- max(sproutyears)
-    
-    xcorr <- rowdata$xpos2
-    ycorr <- rowdata$ypos2
-    
-    sproutxmean <- median(c(rowdata$xpos1[which(sproutpattern == 1)], rowdata$xpos2[which(sproutpattern == 1)], 
-                            rowdata$xpos3[which(sproutpattern == 1)]), na.rm = TRUE)
-    unsproutxmean <- median(c(rowdata$xpos1[which(sproutpattern == 0)], rowdata$xpos2[which(sproutpattern == 0)], 
-                              rowdata$xpos3[which(sproutpattern == 0)]), na.rm = TRUE)
-    sproutymean <- median(c(rowdata$ypos1[which(sproutpattern == 1)], rowdata$ypos2[which(sproutpattern == 1)], 
-                            rowdata$ypos3[which(sproutpattern == 1)]), na.rm = TRUE)
-    unsproutymean <- median(c(rowdata$ypos1[which(sproutpattern == 0)], rowdata$ypos2[which(sproutpattern == 0)], 
-                              rowdata$ypos3[which(sproutpattern == 0)]), na.rm = TRUE)
-    
-    if (xcol > 0) {
-      if(is.na(sproutxmean)) {sproutxmean <- 0}
-      if(is.na(unsproutxmean)) {unsproutxmean <- 0}
-      if (sproutxmean != unsproutxmean) {xcorr <- rep(sproutxmean, length(xcorr))}
-    }
-    
-    if (ycol > 0) {
-      if(is.na(sproutymean)) {sproutymean <- 0}
-      if(is.na(unsproutymean)) {unsproutymean <- 0}
-      if (sproutymean != unsproutymean) {ycorr <- rep(sproutymean, length(ycorr))}
-    }
-    
-    finalrowdata <- cbind.data.frame(rowdata, firstseen, lastseen, xcorr, ycorr)
-    names(finalrowdata) <- c("rowid", "popid", "patchid", "individ", "year2", "xpos1", "ypos1", 
-                             "xpos2", "ypos2", "xpos3", "ypos3", "sizea1", "sizea2", "sizea3", 
-                             "repstra1", "repstra2", "repstra3", "feca1", "feca2", "feca3", 
-                             "sizeb1", "sizeb2", "sizeb3", "repstrb1", "repstrb2", "repstrb3", 
-                             "fecb1", "fecb2", "fecb3", "sizec1", "sizec2", "sizec3", "censor1", 
-                             "censor2", "censor3", "alivegiven1", "alivegiven2", "alivegiven3", 
-                             "deadgiven1", "deadgiven2", "deadgiven3", "obsgiven1", "obsgiven2", 
-                             "obsgiven3", "nonobsgiven1", "nonobsgiven2", "nonobsgiven3", 
-                             "juvgiven1", "juvgiven2", "juvgiven3", "size1added", "size2added", 
-                             "size3added", "repstr1added", "repstr2added", "repstr3added", 
-                             "fec1added", "fec2added", "fec3added", "obsstatus1", "obsstatus2", 
-                             "obsstatus3", "repstatus1", "repstatus2", "repstatus3", "fecstatus1", 
-                             "fecstatus2", "fecstatus3", "firstseen", "lastseen", "xcorr", "ycorr")
-    return(finalrowdata)
-  })
-  popdatanew <- do.call("rbind.data.frame", indivdata)
-  rownames(popdatanew) <- c(1:dim(popdatanew)[1])
-  
-  popdatanew$alive1 <- 0
-  popdatanew$alive2 <- 0
-  popdatanew$alive3 <- 0
-  
-  popdatanew$alive1[(which((((popdatanew$year2 - 1) - popdatanew$firstseen) >= 0) & ((popdatanew$lastseen - (popdatanew$year2 - 1)) >= 0)))] <- 1
-  popdatanew$alive2[(which(((popdatanew$year2 - popdatanew$firstseen) >= 0) & ((popdatanew$lastseen - popdatanew$year2) >= 0)))] <- 1
-  popdatanew$alive3[(which((((popdatanew$year2 + 1) - popdatanew$firstseen) >= 0) & ((popdatanew$lastseen - (popdatanew$year2 + 1)) >= 0)))] <- 1
-  
-  popdatanew$alive1[which(popdatanew$alivegiven1 == 1)] <- 1
-  popdatanew$alive2[which(popdatanew$alivegiven2 == 1)] <- 1
-  popdatanew$alive3[which(popdatanew$alivegiven3 == 1)] <- 1
-  popdatanew$alive1[which(popdatanew$deadgiven1 == 1)] <- 0
-  popdatanew$alive2[which(popdatanew$deadgiven2 == 1)] <- 0
-  popdatanew$alive3[which(popdatanew$deadgiven3 == 1)] <- 0
-  
-  popdatanew$obsage <- popdatanew$year2 - popdatanew$firstseen
-  popdatanew$obslifespan <- popdatanew$lastseen - popdatanew$firstseen
-  
-  popdatareal <- subset(popdatanew, subset = (alive2 == 1))
-  
-  popdatareal$sizea1c <- popdatareal$sizea1
-  popdatareal$sizea2c <- popdatareal$sizea2
-  popdatareal$sizea3c <- popdatareal$sizea3
-  popdatareal$sizeb1c <- popdatareal$sizeb1
-  popdatareal$sizeb2c <- popdatareal$sizeb2
-  popdatareal$sizeb3c <- popdatareal$sizeb3
-  popdatareal$sizec1c <- popdatareal$sizec1
-  popdatareal$sizec2c <- popdatareal$sizec2
-  popdatareal$sizec3c <- popdatareal$sizec3
-  
-  popdatareal$repstra1c <- popdatareal$repstra1
-  popdatareal$repstra2c <- popdatareal$repstra2
-  popdatareal$repstra3c <- popdatareal$repstra3
-  popdatareal$repstrb1c <- popdatareal$repstrb1
-  popdatareal$repstrb2c <- popdatareal$repstrb2
-  popdatareal$repstrb3c <- popdatareal$repstrb3
-  
-  popdatareal$feca1c <- popdatareal$feca1
-  popdatareal$feca2c <- popdatareal$feca2
-  popdatareal$feca3c <- popdatareal$feca3
-  popdatareal$fecb1c <- popdatareal$fecb1
-  popdatareal$fecb2c <- popdatareal$fecb2
-  popdatareal$fecb3c <- popdatareal$fecb3
-  
-  popdatareal$sizea1c[which(is.na(popdatareal$sizea1))] <- 0
-  popdatareal$sizea2c[which(is.na(popdatareal$sizea2))] <- 0
-  popdatareal$sizea3c[which(is.na(popdatareal$sizea3))] <- 0
-  
-  popdatareal$repstra1c[which(is.na(popdatareal$repstra1))] <- 0
-  popdatareal$repstra2c[which(is.na(popdatareal$repstra2))] <- 0
-  popdatareal$repstra3c[which(is.na(popdatareal$repstra3))] <- 0
-  
-  popdatareal$sizeb1c[which(is.na(popdatareal$sizeb1))] <- 0
-  popdatareal$sizeb2c[which(is.na(popdatareal$sizeb2))] <- 0
-  popdatareal$sizeb3c[which(is.na(popdatareal$sizeb3))] <- 0
-  
-  popdatareal$repstrb1c[which(is.na(popdatareal$repstrb1))] <- 0
-  popdatareal$repstrb2c[which(is.na(popdatareal$repstrb2))] <- 0
-  popdatareal$repstrb3c[which(is.na(popdatareal$repstrb3))] <- 0
-  
-  popdatareal$sizec1c[which(is.na(popdatareal$sizec1))] <- 0
-  popdatareal$sizec2c[which(is.na(popdatareal$sizec2))] <- 0
-  popdatareal$sizec3c[which(is.na(popdatareal$sizec3))] <- 0
-  
-  popdatareal$feca1c[which(is.na(popdatareal$feca1))] <- 0
-  popdatareal$feca2c[which(is.na(popdatareal$feca2))] <- 0
-  popdatareal$feca3c[which(is.na(popdatareal$feca3))] <- 0
-  
-  popdatareal$fecb1c[which(is.na(popdatareal$fecb1))] <- 0
-  popdatareal$fecb2c[which(is.na(popdatareal$fecb2))] <- 0
-  popdatareal$fecb3c[which(is.na(popdatareal$fecb3))] <- 0
-  
-  if(!all(is.na(stageassign))) {
-    if (stagesize == "sizeadded") {
-      stagesizecol1 <- which(names(popdatareal) == "size1added")
-      stagesizecol2 <- which(names(popdatareal) == "size2added")
-      stagesizecol3 <- which(names(popdatareal) == "size3added")
-    } else if (stagesize == "sizec") {
-      stagesizecol1 <- which(names(popdatareal) == "sizec1c")
-      stagesizecol2 <- which(names(popdatareal) == "sizec2c")
-      stagesizecol3 <- which(names(popdatareal) == "sizec3c")
-    } else if (stagesize == "sizeb") {
-      stagesizecol1 <- which(names(popdatareal) == "sizeb1c")
-      stagesizecol2 <- which(names(popdatareal) == "sizeb2c")
-      stagesizecol3 <- which(names(popdatareal) == "sizeb3c")
-    } else {
-      stagesizecol1 <- which(names(popdatareal) == "sizea1c")
-      stagesizecol2 <- which(names(popdatareal) == "sizea2c")
-      stagesizecol3 <- which(names(popdatareal) == "sizea3c")
-    }
-    
-    ltdframe <- subset(stageassign, indataset == 1)
-    ltdframe$stagenames <- as.character(ltdframe$stagenames)
-    
-    popdatareal$stage1 <- apply(as.matrix(c(1:dim(popdatareal)[1])), 1, function(X) {
-      if (popdatareal$alive1[X] == 1) {
-        if (is.na(popdatareal[X, stagesizecol1])) {
-          popdatareal[X, stagesizecol1] <- 0
-        }
-        mainstages <- intersect(which(ltdframe$sizebin_min < popdatareal[X, stagesizecol1]), 
-                                which(ltdframe$sizebin_max >= popdatareal[X, stagesizecol1]))
-        jmstages <- which(ltdframe$immstatus == popdatareal$juvgiven1[X])
-        obsstages <- which(ltdframe$obsstatus == popdatareal$obsstatus1[X])
-        repstages <- which(ltdframe$repstatus == popdatareal$repstatus1[X])
-        
-        if (!NRasRep) {
-          choicestage <- intersect(intersect(mainstages, jmstages), intersect(obsstages, repstages))
-        } else {
-          choicestage <- intersect(intersect(mainstages, jmstages), obsstages)
-        }
-        
-        if (all(is.na(choicestage))) {
-          stop("Some stages occurring in the dataset do not match any characteristics in the input stageframe.", 
-               .call = FALSE)
-        } else if (length(choicestage) > 1) {
-          stop("Some stages in the input stageframe appear to have the same description. Please make sure that all stages included in the stageframe are defined with unique sets of characteristics.", .call = FALSE)
-        }
-        
-        return(ltdframe$stagenames[choicestage])
-      } else return("NotAlive")
-    })
-    
-    popdatareal$stage2 <- apply(as.matrix(c(1:dim(popdatareal)[1])), 1, function(X) {
-      if (is.na(popdatareal[X, stagesizecol2])) {
-        popdatareal[X, stagesizecol2] <- 0
-      }
-      mainstages <- intersect(which(ltdframe$sizebin_min < popdatareal[X, stagesizecol2]), 
-                              which(ltdframe$sizebin_max >= popdatareal[X, stagesizecol2]))
-      jmstages <- which(ltdframe$immstatus == popdatareal$juvgiven2[X])
-      obsstages <- which(ltdframe$obsstatus == popdatareal$obsstatus2[X])
-      repstages <- which(ltdframe$repstatus == popdatareal$repstatus2[X])
-      
-      if (!NRasRep) {
-        choicestage <- intersect(intersect(mainstages, jmstages), intersect(obsstages, repstages))
-      } else {
-        choicestage <- intersect(intersect(mainstages, jmstages), obsstages)
-      }
-      
-      if (all(is.na(choicestage))) {
-        stop("Some stages occurring in the dataset do not match any characteristics in the input stageframe.", 
-             .call = FALSE)
-      } else if (length(choicestage) > 1) {
-        stop("Some stages in the input stageframe appear to have the same description. Please make sure that all stages included in the stageframe are defined with unique sets of characteristics.", .call = FALSE)
-      }
-      
-      return(ltdframe$stagenames[choicestage])
-    })
-    
-    popdatareal$stage3 <- apply(as.matrix(c(1:dim(popdatareal)[1])), 1, function(X) {
-      if (popdatareal$alive3[X] == 1) {
-        if (is.na(popdatareal[X, stagesizecol3])) {
-          popdatareal[X, stagesizecol3] <- 0
-        }
-        mainstages <- intersect(which(ltdframe$sizebin_min < popdatareal[X, stagesizecol3]), 
-                                which(ltdframe$sizebin_max >= popdatareal[X, stagesizecol3]))
-        jmstages <- which(ltdframe$immstatus == popdatareal$juvgiven3[X])
-        obsstages <- which(ltdframe$obsstatus == popdatareal$obsstatus3[X])
-        repstages <- which(ltdframe$repstatus == popdatareal$repstatus3[X])
-        
-        if (!NRasRep) {
-          choicestage <- intersect(intersect(mainstages, jmstages), intersect(obsstages, repstages))
-        } else {
-          choicestage <- intersect(intersect(mainstages, jmstages), obsstages)
-        }
-        
-        if (all(is.na(choicestage))) {
-          stop("Some stages occurring in the dataset do not match any characteristics in the input stageframe.", 
-               .call = FALSE)
-        } else if (length(choicestage) > 1) {
-          stop("Some stages in the input stageframe appear to have the same description. Please make sure that all stages included in the stageframe are defined with unique sets of characteristics.", .call = FALSE)
-        }
-        
-        return(ltdframe$stagenames[choicestage])
-      } else return("Dead")
-    })
+  if (is.na(censorkeep) & censor) { # This section checks to see if NA is the censor value to keep
+    censbool <- TRUE
+    censorkeep <- 0
+  } else {
+    censbool <- FALSE
   }
+
+  popdatalist.new <- pfj(data, ltdframe, noyears, firstyear, (popidcol - 1), (patchidcol - 1), (individcol - 1), 
+                         blocksize, (xcol - 1), (ycol - 1), (juvcol - 1), (size1col - 1), (size2col - 1), 
+                         (size3col - 1), (repstr1col - 1), (repstr2col - 1), (fec1col - 1), (fec2col - 1),
+                         (alive1col - 1), (dead1col - 1), (obs1col - 1), (nonobs1col - 1), (censorcol - 1),
+                         (stagecol - 1), repstrrel, fecrel, NAas0, NRasRep, stassign, stagesizecol, stagenum, 
+                         censbool)
   
-  popdatareal$matstatus1 <- 1 - popdatareal$juvgiven1
+  popdata <- do.call("cbind.data.frame", popdatalist.new)
   
-  popdatareal$matstatus2 <- 1 - popdatareal$juvgiven2
+  names(popdata) <- c("rowid", "popid", "patchid", "individ", "year2", "firstseen", "lastseen", "obsage", 
+                      "obslifespan", "xpos1", "ypos1", "sizea1", "sizeb1", "sizec1", "size1added", "repstra1",
+                      "repstrb1", "repstr1added", "feca1", "fecb1", "fec1added", "censor1", "juvgiven1", 
+                      "obsstatus1", "repstatus1", "fecstatus1", "matstatus1", "alive1", "stage1", "stage1index", 
+                      "xpos2", "ypos2", "sizea2", "sizeb2", "sizec2", "size2added", "repstra2", "repstrb2", 
+                      "repstr2added", "feca2", "fecb2", "fec2added", "censor2", "juvgiven2",
+                      "obsstatus2", "repstatus2", "fecstatus2", "matstatus2", "alive2", "stage2", "stage2index",
+                      "xpos3", "ypos3", "sizea3", "sizeb3", "sizec3", "size3added", "repstra3", "repstrb3",
+                      "repstr3added", "feca3", "fecb3", "fec3added", "censor3", "juvgiven3", "obsstatus3", 
+                      "repstatus3", "fecstatus3", "matstatus3", "alive3", "stage3", "stage3index")
   
-  popdatareal$matstatus3 <- 1 - popdatareal$juvgiven3
+  rownames(popdata) <- c(1:dim(popdata)[1])
+  
+  popdatareal <- subset(popdata, subset = (alive2 == 1))
   
   if (any(!is.na(popdatareal$popid))) {popdatareal$popid <- as.factor(popdatareal$popid)}
   
   if (any(!is.na(popdatareal$patchid))) {popdatareal$patchid <- as.factor(popdatareal$patchid)}
   
   if (censor) {
-    if (!is.na(censorkeep)) {
-      popdatareal <- subset(popdatareal, censor1 == censorkeep)
-      popdatareal <- subset(popdatareal, censor2 == censorkeep)
-      popdatareal <- subset(popdatareal, censor3 == censorkeep)
-    } else {
-      popdatareal <- subset(popdatareal, is.na(censor1))
-      popdatareal <- subset(popdatareal, is.na(censor2))
-      popdatareal <- subset(popdatareal, is.na(censor3))
-    }
+    popdatareal <- subset(popdatareal, censor1 == censorkeep)
+    popdatareal <- subset(popdatareal, censor2 == censorkeep)
+    popdatareal <- subset(popdatareal, censor3 == censorkeep)
   }
-  
-  if (NAas0) {
-    popdatareal$sizea1 <- popdatareal$sizea1c
-    popdatareal$sizea2 <- popdatareal$sizea2c
-    popdatareal$sizea3 <- popdatareal$sizea3c
-    
-    popdatareal$sizeb1 <- popdatareal$sizeb1c
-    popdatareal$sizeb2 <- popdatareal$sizeb2c
-    popdatareal$sizeb3 <- popdatareal$sizeb3c
-    
-    popdatareal$sizec1 <- popdatareal$sizec1c
-    popdatareal$sizec2 <- popdatareal$sizec2c
-    popdatareal$sizec3 <- popdatareal$sizec3c
-    
-    popdatareal$repstra1 <- popdatareal$repstra1c
-    popdatareal$repstra2 <- popdatareal$repstra2c
-    popdatareal$repstra3 <- popdatareal$repstra3c
-    
-    popdatareal$repstrb1 <- popdatareal$repstrb1c
-    popdatareal$repstrb2 <- popdatareal$repstrb2c
-    popdatareal$repstrb3 <- popdatareal$repstrb3c
-    
-    popdatareal$feca1 <- popdatareal$feca1c
-    popdatareal$feca2 <- popdatareal$feca2c
-    popdatareal$feca3 <- popdatareal$feca3c
-    
-    popdatareal$fecb1 <- popdatareal$fecb1c
-    popdatareal$fecb2 <- popdatareal$fecb2c
-    popdatareal$fecb3 <- popdatareal$fecb3c
-  }
-  
-  popdatareal <- popdatareal[,-c(which(names(popdatareal) == "sizea1c"), which(names(popdatareal) == "sizea2c"), 
-                                 which(names(popdatareal) == "sizea3c"), which(names(popdatareal) == "sizeb1c"), 
-                                 which(names(popdatareal) == "sizeb2c"), which(names(popdatareal) == "sizeb3c"), 
-                                 which(names(popdatareal) == "sizec1c"), which(names(popdatareal) == "sizec2c"), 
-                                 which(names(popdatareal) == "sizec3c"), which(names(popdatareal) == "repstra1c"),
-                                 which(names(popdatareal) == "repstra2c"), which(names(popdatareal) == "repstra3c"), 
-                                 which(names(popdatareal) == "repstrb1c"), which(names(popdatareal) == "repstrb2c"), 
-                                 which(names(popdatareal) == "repstrb3c"), which(names(popdatareal) == "feca1c"), 
-                                 which(names(popdatareal) == "feca2c"), which(names(popdatareal) == "feca3c"), 
-                                 which(names(popdatareal) == "fecb1c"), which(names(popdatareal) == "fecb2c"), 
-                                 which(names(popdatareal) == "fecb3c"))]
-  
-  #A little clean-up
-  popdatareal <- popdatareal[,-c(which(names(popdatareal) == "alivegiven1"))]
-  popdatareal <- popdatareal[,-c(which(names(popdatareal) == "alivegiven2"))]
-  popdatareal <- popdatareal[,-c(which(names(popdatareal) == "alivegiven3"))]
-  popdatareal <- popdatareal[,-c(which(names(popdatareal) == "deadgiven1"))]
-  popdatareal <- popdatareal[,-c(which(names(popdatareal) == "deadgiven2"))]
-  popdatareal <- popdatareal[,-c(which(names(popdatareal) == "deadgiven3"))]
-  popdatareal <- popdatareal[,-c(which(names(popdatareal) == "obsgiven1"))]
-  popdatareal <- popdatareal[,-c(which(names(popdatareal) == "obsgiven2"))]
-  popdatareal <- popdatareal[,-c(which(names(popdatareal) == "obsgiven3"))]
-  popdatareal <- popdatareal[,-c(which(names(popdatareal) == "nonobsgiven1"))]
-  popdatareal <- popdatareal[,-c(which(names(popdatareal) == "nonobsgiven2"))]
-  popdatareal <- popdatareal[,-c(which(names(popdatareal) == "nonobsgiven3"))]
-  popdatareal <- popdatareal[,-c(which(names(popdatareal) == "juvgiven1"))]
-  popdatareal <- popdatareal[,-c(which(names(popdatareal) == "juvgiven2"))]
-  popdatareal <- popdatareal[,-c(which(names(popdatareal) == "juvgiven3"))]
   
   if (!is.na(spacing)) {
     popdatareal$density <- .density3(popdatareal, which(names(popdatareal) == "xpos2"),
                                      which(names(popdatareal) == "ypos2"),
                                      which(names(popdatareal) == "year2"), spacing)
   }
-  
   
   if (reduce) {
     if (all(is.na(popdatareal$xpos1)) | length(unique(popdatareal$xpos1)) == 1) {popdatareal <- popdatareal[,-c(which(names(popdatareal) =="xpos1"))]}
@@ -898,8 +454,6 @@ verticalize3 <- function(data, noyears, firstyear, popidcol = 0, patchidcol = 0,
     if (all(is.na(popdatareal$ypos2)) | length(unique(popdatareal$ypos2)) == 1) {popdatareal <- popdatareal[,-c(which(names(popdatareal) =="ypos2"))]}
     if (all(is.na(popdatareal$xpos3)) | length(unique(popdatareal$xpos3)) == 1) {popdatareal <- popdatareal[,-c(which(names(popdatareal) =="xpos3"))]}
     if (all(is.na(popdatareal$ypos3)) | length(unique(popdatareal$ypos3)) == 1) {popdatareal <- popdatareal[,-c(which(names(popdatareal) =="ypos3"))]}
-    if (all(is.na(popdatareal$xcorr)) | length(unique(popdatareal$xcorr)) == 1) {popdatareal <- popdatareal[,-c(which(names(popdatareal) =="xcorr"))]}
-    if (all(is.na(popdatareal$ycorr)) | length(unique(popdatareal$ycorr)) == 1) {popdatareal <- popdatareal[,-c(which(names(popdatareal) =="ycorr"))]}
     
     if (!is.na(censorkeep)) {
       if (censorcol > 0 & censor) {
@@ -1088,7 +642,6 @@ verticalize3 <- function(data, noyears, firstyear, popidcol = 0, patchidcol = 0,
       popdatareal <- popdatareal[,-c(which(names(popdatareal) =="censor2"))]
       popdatareal <- popdatareal[,-c(which(names(popdatareal) =="censor3"))]
     }
-    
   }
   
   class(popdatareal) <- append(class(popdatareal), "hfvdata")
@@ -1193,9 +746,9 @@ verticalize3 <- function(data, noyears, firstyear, popidcol = 0, patchidcol = 0,
 #' @param fecrel This is a scalar modifier for that makes the variable in
 #' \code{fecb2col} equivalent to \code{feca2col}. This can be useful if two fecundity
 #' variables have related but unequal units.
-#' @param stage2col A variable name or column number corresponding to
+#' @param stage2col Optional variable name or column number corresponding to
 #' life history stage in time \emph{t}.
-#' @param stage3col A variable name or column number corresponding to
+#' @param stage3col Optional variable name or column number corresponding to
 #' life history stage in time \emph{t}+1.
 #' @param juv2col A variable name or column number that marks individuals in
 #' immature stages in time \emph{t}. The \code{historicalize3()} function assumes 
@@ -1208,21 +761,22 @@ verticalize3 <- function(data, noyears, firstyear, popidcol = 0, patchidcol = 0,
 #' number equal to or greater than 1, and that mature individuals are marked 
 #' as 0 or NA.
 #' @param stageassign The stageframe object identifying the life history model
-#' being operationalized.
+#' being operationalized. Note that is \code{stage2col} is provided, then this
+#' stageframe is not utilized in stage designation.
 #' @param stagesize A variable name or column number describing which size
 #' variable to use in stage estimation. Defaults to NA, and can also take
 #' \code{sizea}, \code{sizeb}, \code{sizec}, or \code{sizeadded}, depending on which size variable 
 #' is chosen.
+#' @param censor A logical variable determining whether the output data
+#' should be censored using the variable defined in \code{censorcol}. Defaults
+#' to FALSE.
 #' @param censorcol A variable name or column number corresponding to a censor
 #' variable within the dataset, used to distinguish between entries to use and
 #' those to discard from analysis, or to designate entries with special issues 
 #' that require further attention.
 #' @param censorkeep The value of the censoring variable identifying data
-#' that should be included in analysis. Defaults to 1, but may take any value
+#' that should be included in analysis. Defaults to 0, but may take any value
 #' including NA.
-#' @param censor A logical variable determining whether the output data
-#' should be censored using the variable defined in \code{censorcol}. Defaults
-#' to FALSE.
 #' @param spacing The spacing at which density should be estimated, if density
 #' estimation is desired and x and y coordinates are supplied. Given in the
 #' same units as those used in the x and y coordinates given in \code{xcol} and
@@ -1244,7 +798,10 @@ verticalize3 <- function(data, noyears, firstyear, popidcol = 0, patchidcol = 0,
 #' @return If all inputs are properly formatted, then this function will output
 #' a historical vertical data frame (class \code{hfvdata}), meaning that the
 #' output data frame will have three consecutive years of size and reproductive 
-#' data per individual per row.
+#' data per individual per row. Note that determination of state in times *t*-1
+#' and *t*+1 gives preference to condition in time *t* within the input
+#' dataset. So, conflicts in condition in input datasets that have both times
+#' *t* and *t*+1 listed per row are resolved by using condition in time *t*.
 #' \item{popid}{Unique identifier for the population, if given.}
 #' \item{patchid}{Unique identifier for the patch within the population, if
 #' given.}
@@ -1329,22 +886,21 @@ verticalize3 <- function(data, noyears, firstyear, popidcol = 0, patchidcol = 0,
 #'                             stagesize = "sizeadded", censorcol = "censor", censor = FALSE,
 #'                             NAas0 = TRUE, NRasRep = TRUE, reduce = TRUE)
 #' summary(cypraw_v2)
-
+#'
 #' @export
-historicalize3 <- function(data, popidcol = 0, patchidcol = 0, individcol, year2col = 0, 
-                           year3col = 0, xcol = 0, ycol = 0, sizea2col = 0, sizea3col = 0, 
+historicalize3 <- function(data, popidcol = 0, patchidcol = 0, individcol, year2col = 0,
+                           year3col = 0, xcol = 0, ycol = 0, sizea2col = 0, sizea3col = 0,
                            sizeb2col = 0, sizeb3col = 0, sizec2col = 0, sizec3col = 0,
-                           repstra2col = 0, repstra3col = 0, repstrb2col = 0, 
-                           repstrb3col = 0, feca2col = 0, feca3col = 0,  fecb2col = 0, 
-                           fecb3col = 0, alive2col = 0, alive3col = 0, dead2col = 0, 
-                           dead3col = 0, obs2col = 0, obs3col = 0, nonobs2col = 0, 
-                           nonobs3col = 0, repstrrel = 1, fecrel = 1, stage2col = 0, 
-                           stage3col = 0, juv2col = 0, juv3col = 0, stageassign = NA, 
-                           stagesize = NA, censorcol = 0, censorkeep = 1, 
-                           censor = FALSE, spacing = NA, NAas0 = FALSE, NRasRep = FALSE, 
-                           reduce = TRUE) {
+                           repstra2col = 0, repstra3col = 0, repstrb2col = 0,
+                           repstrb3col = 0, feca2col = 0, feca3col = 0,  fecb2col = 0,
+                           fecb3col = 0, alive2col = 0, alive3col = 0, dead2col = 0,
+                           dead3col = 0, obs2col = 0, obs3col = 0, nonobs2col = 0,
+                           nonobs3col = 0, repstrrel = 1, fecrel = 1, stage2col = 0,
+                           stage3col = 0, juv2col = 0, juv3col = 0, stageassign = NA,
+                           stagesize = NA, censor = FALSE, censorcol = 0, censorkeep = 0,
+                           spacing = NA, NAas0 = FALSE, NRasRep = FALSE, reduce = TRUE) {
   
-  alive2 <- indataset <- censor1 <- censor2 <- censor3 <- NULL
+  alive2 <- indataset <- censor1 <- censor2 <- censor3 <- censbool <- NULL
   
   if (is.na(individcol)) {
     stop("Individual ID variable is required.", .call = FALSE)
@@ -1682,859 +1238,271 @@ historicalize3 <- function(data, popidcol = 0, patchidcol = 0, individcol, year2
     }
   }
   
-  id.vec <- sort(unique(data[, individcol]))
-  
-  norows <- dim(data)[1]
-  data$rowid <- c(1:norows)
-  
-  full.set <- do.call(rbind, apply(as.matrix(id.vec), 1, function(X) {
-    indiv.set <- .core_gather_ahvtohv(subset(data, data[,individcol] == X), popidcol, patchidcol, 
-                                      year2col, year3col, xcol, ycol, sizea2col, sizea3col, 
-                                      sizeb2col, sizeb3col, sizec2col, sizec3col, repstra2col, 
-                                      repstra3col, repstrb2col, repstrb3col, feca2col, feca3col, 
-                                      fecb2col, fecb3col, alive2col, alive3col, dead2col, dead3col,
-                                      obs2col, obs3col, nonobs2col, nonobs3col, repstrrel, fecrel,
-                                      stage2col, stage3col, juv2col, juv3col, censorcol)
-    if (!all(is.na(indiv.set))) {
-      indiv.set <- cbind.data.frame(indiv.set, X)
-    } else {
-      indiv.set <- rep(NA, 71)
-    }
-    return(indiv.set)
-  }))
-  
-  names(full.set) <- c("popid", "patchid", "rowid",
-                       
-                       "year1",  "xpos1", "ypos1", "sizea1", "sizeb1", "sizec1", 
-                       "repstra1", "repstrb1", "feca1", "fecb1", "alivegiven1", "deadgiven1", "obsgiven1", 
-                       "nonobsgiven1", "stage1", "juvgiven1", "censor1", 
-                       
-                       "year2", "xpos2", "ypos2", "sizea2", "sizeb2", "sizec2", "repstra2", "repstrb2", 
-                       "feca2", "fecb2", "alivegiven2", "deadgiven2", "obsgiven2", "nonobsgiven2", "stage2", 
-                       "juvgiven2", "censor2", 
-                       
-                       "year3", "xpos3", "ypos3", "sizea3", "sizeb3", "sizec3", "repstra3", "repstrb3", 
-                       "feca3", "fecb3", "alivegiven3", "deadgiven3", "obsgiven3", "nonobsgiven3", "stage3", 
-                       "juvgiven3", "censor3", 
-                       
-                       "firstseen", "lastseen", "alive1", "alive2", "alive3", "obsstatus1", 
-                       "obsstatus2", "obsstatus3", "matstatus1", "matstatus2", "matstatus3", "repstatus1",
-                       "repstatus2", "repstatus3", "fecstatus1", "fecstatus2", "fecstatus3", "individ")
-  
-  rownames(full.set) <- c(1:dim(full.set)[1])
-  
-  if (any(is.na(full.set$alive1))) {
-    full.set$alive1[(which(is.na(full.set$alive1)))] <- 0
-  }
-  
-  if (any(is.na(full.set$alive2))) {
-    full.set$alive2[(which(is.na(full.set$alive2)))] <- 0
-  }
-  
-  if (any(is.na(full.set$alive3))) {
-    full.set$alive3[(which(is.na(full.set$alive3)))] <- 0
-  }
-  
-  full.set <- subset(full.set, alive2 == 1)
-  
-  full.set$obsage <- full.set$year2 - full.set$firstseen
-  full.set$obslifespan <- full.set$lastseen - full.set$firstseen
-  
-  full.set$sizea1c <- full.set$sizea1
-  full.set$sizea2c <- full.set$sizea2
-  full.set$sizea3c <- full.set$sizea3
-  full.set$sizeb1c <- full.set$sizeb1
-  full.set$sizeb2c <- full.set$sizeb2
-  full.set$sizeb3c <- full.set$sizeb3
-  full.set$sizec1c <- full.set$sizec1
-  full.set$sizec2c <- full.set$sizec2
-  full.set$sizec3c <- full.set$sizec3
-  
-  full.set$repstra1c <- full.set$repstra1
-  full.set$repstra2c <- full.set$repstra2
-  full.set$repstra3c <- full.set$repstra3
-  full.set$repstrb1c <- full.set$repstrb1
-  full.set$repstrb2c <- full.set$repstrb2
-  full.set$repstrb3c <- full.set$repstrb3
-  
-  full.set$feca1c <- full.set$feca1
-  full.set$feca2c <- full.set$feca2
-  full.set$feca3c <- full.set$feca3
-  full.set$fecb1c <- full.set$fecb1
-  full.set$fecb2c <- full.set$fecb2
-  full.set$fecb3c <- full.set$fecb3
-  
-  full.set$sizea1c[which(is.na(full.set$sizea1))] <- 0
-  full.set$sizea2c[which(is.na(full.set$sizea2))] <- 0
-  full.set$sizea3c[which(is.na(full.set$sizea3))] <- 0
-  
-  full.set$repstra1c[which(is.na(full.set$repstra1))] <- 0
-  full.set$repstra2c[which(is.na(full.set$repstra2))] <- 0
-  full.set$repstra3c[which(is.na(full.set$repstra3))] <- 0
-  
-  full.set$sizeb1c[which(is.na(full.set$sizeb1))] <- 0
-  full.set$sizeb2c[which(is.na(full.set$sizeb2))] <- 0
-  full.set$sizeb3c[which(is.na(full.set$sizeb3))] <- 0
-  
-  full.set$repstrb1c[which(is.na(full.set$repstrb1))] <- 0
-  full.set$repstrb2c[which(is.na(full.set$repstrb2))] <- 0
-  full.set$repstrb3c[which(is.na(full.set$repstrb3))] <- 0
-  
-  full.set$sizec1c[which(is.na(full.set$sizec1))] <- 0
-  full.set$sizec2c[which(is.na(full.set$sizec2))] <- 0
-  full.set$sizec3c[which(is.na(full.set$sizec3))] <- 0
-  
-  full.set$feca1c[which(is.na(full.set$feca1))] <- 0
-  full.set$feca2c[which(is.na(full.set$feca2))] <- 0
-  full.set$feca3c[which(is.na(full.set$feca3))] <- 0
-  
-  full.set$fecb1c[which(is.na(full.set$fecb1))] <- 0
-  full.set$fecb2c[which(is.na(full.set$fecb2))] <- 0
-  full.set$fecb3c[which(is.na(full.set$fecb3))] <- 0
-  
-  full.set$juvgiven1[which(is.na(full.set$juvgiven1))] <- 0
-  full.set$juvgiven2[which(is.na(full.set$juvgiven2))] <- 0
-  full.set$juvgiven3[which(is.na(full.set$juvgiven3))] <- 0
-  
-  full.set$size1added <- full.set$sizea1c + full.set$sizeb1c + full.set$sizec1c
-  full.set$size2added <- full.set$sizea2c + full.set$sizeb2c + full.set$sizec2c
-  full.set$size3added <- full.set$sizea3c + full.set$sizeb3c + full.set$sizec3c
-  
-  full.set$repstr1added <- full.set$repstra1c + full.set$repstrb1c
-  full.set$repstr2added <- full.set$repstra2c + full.set$repstrb2c
-  full.set$repstr3added <- full.set$repstra3c + full.set$repstrb3c
-  
-  full.set$fec1added <- full.set$feca1c + full.set$fecb1c
-  full.set$fec2added <- full.set$feca2c + full.set$fecb2c
-  full.set$fec3added <- full.set$feca3c + full.set$fecb3c
-  
-  if(!all(is.na(stageassign))) {
+  if (!all(is.na(stageassign))) {
+    
+    stassign <- TRUE 
+    
     if (stagesize == "sizeadded") {
-      stagesizecol1 <- which(names(full.set) == "size1added")
-      stagesizecol2 <- which(names(full.set) == "size2added")
-      stagesizecol3 <- which(names(full.set) == "size3added")
+      stagesizecol <- 4
     } else if (stagesize == "sizec") {
-      stagesizecol1 <- which(names(full.set) == "sizec1c")
-      stagesizecol2 <- which(names(full.set) == "sizec2c")
-      stagesizecol3 <- which(names(full.set) == "sizec3c")
+      stagesizecol <-3
     } else if (stagesize == "sizeb") {
-      stagesizecol1 <- which(names(full.set) == "sizeb1c")
-      stagesizecol2 <- which(names(full.set) == "sizeb2c")
-      stagesizecol3 <- which(names(full.set) == "sizeb3c")
+      stagesizecol <- 2
     } else {
-      stagesizecol1 <- which(names(full.set) == "sizea1c")
-      stagesizecol2 <- which(names(full.set) == "sizea2c")
-      stagesizecol3 <- which(names(full.set) == "sizea3c")
+      stagesizecol <- 1
     }
     
     ltdframe <- subset(stageassign, indataset == 1)
-    ltdframe$stagenames <- as.character(ltdframe$stagenames)
+    stagenum <- dim(ltdframe)[1]
     
-    full.set$stage1 <- apply(as.matrix(c(1:dim(full.set)[1])), 1, function(X) {
-      if (full.set$alive1[X] == 1) {
-        if (is.na(full.set[X, stagesizecol1])) {
-          full.set[X, stagesizecol1] <- 0
-        }
-        mainstages <- intersect(which(ltdframe$sizebin_min < full.set[X, stagesizecol1]), 
-                                which(ltdframe$sizebin_max >= full.set[X, stagesizecol1]))
-        jmstages <- which(ltdframe$immstatus == full.set$juvgiven1[X])
-        obsstages <- which(ltdframe$obsstatus == full.set$obsstatus1[X])
-        repstages <- which(ltdframe$repstatus == full.set$repstatus1[X])
-        
-        if (!NRasRep) {
-          choicestage <- intersect(intersect(mainstages, jmstages), intersect(obsstages, repstages))
-        } else {
-          choicestage <- intersect(intersect(mainstages, jmstages), obsstages)
-        }
-        
-        if (all(is.na(choicestage))) {
-          stop("Some stages occurring in the dataset do not match any characteristics in the input stageframe.", 
-               .call = FALSE)
-        } else if (length(choicestage) > 1) {
-          stop("Some stages in the input stageframe appear to have the same description. Please make sure that all stages included in the stageframe are defined with unique sets of characteristics.", .call = FALSE)
-        }
-        
-        return(ltdframe$stagenames[choicestage])
-      } else return("NotAlive")
-    })
+  } else {
+    stassign <- FALSE
     
-    full.set$stage2 <- apply(as.matrix(c(1:dim(full.set)[1])), 1, function(X) {
-      if (is.na(full.set[X, stagesizecol2])) {
-        full.set[X, stagesizecol2] <- 0
-      }
-      mainstages <- intersect(which(ltdframe$sizebin_min < full.set[X, stagesizecol2]), 
-                              which(ltdframe$sizebin_max >= full.set[X, stagesizecol2]))
-      jmstages <- which(ltdframe$immstatus == full.set$juvgiven2[X])
-      obsstages <- which(ltdframe$obsstatus == full.set$obsstatus2[X])
-      repstages <- which(ltdframe$repstatus == full.set$repstatus2[X])
-      
-      if (!NRasRep) {
-        choicestage <- intersect(intersect(mainstages, jmstages), intersect(obsstages, repstages))
-      } else {
-        choicestage <- intersect(intersect(mainstages, jmstages), obsstages)
-      }
-      
-      if (all(is.na(choicestage))) {
-        stop("Some stages occurring in the dataset do not match any characteristics in the input stageframe.", 
-             .call = FALSE)
-      } else if (length(choicestage) > 1) {
-        stop("Some stages in the input stageframe appear to have the same description. Please make sure that all stages included in the stageframe are defined with unique sets of characteristics.", .call = FALSE)
-      }
-      
-      return(ltdframe$stagenames[choicestage])
-    })
+    ltdframe <- as.data.frame(matrix(c(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0), ncol = 14))
     
-    full.set$stage3 <- apply(as.matrix(c(1:dim(full.set)[1])), 1, function(X) {
-      if (full.set$alive3[X] == 1) {
-        if (is.na(full.set[X, stagesizecol3])) {
-          full.set[X, stagesizecol3] <- 0
-        }
-        mainstages <- intersect(which(ltdframe$sizebin_min < full.set[X, stagesizecol3]), 
-                                which(ltdframe$sizebin_max >= full.set[X, stagesizecol3]))
-        jmstages <- which(ltdframe$immstatus == full.set$juvgiven3[X])
-        obsstages <- which(ltdframe$obsstatus == full.set$obsstatus3[X])
-        repstages <- which(ltdframe$repstatus == full.set$repstatus3[X])
-        
-        if (!NRasRep) {
-          choicestage <- intersect(intersect(mainstages, jmstages), intersect(obsstages, repstages))
-        } else {
-          choicestage <- intersect(intersect(mainstages, jmstages), obsstages)
-        }
-        
-        if (all(is.na(choicestage))) {
-          stop("Some stages occurring in the dataset do not match any characteristics in the input stageframe.", 
-               .call = FALSE)
-        } else if (length(choicestage) > 1) {
-          stop("Some stages in the input stageframe appear to have the same description. Please make sure that all stages included in the stageframe are defined with unique sets of characteristics.", .call = FALSE)
-        }
-        
-        return(ltdframe$stagenames[choicestage])
-      } else return("Dead")
-    })
+    stagesizecol <- 0
+    
+    stagenum <- 1
+  }
+  
+  if (!is.na(spacing)) {
+    if (xcol == 0 | ycol == 0) {
+      stop("Density estimation cannot proceed without valid x and y coordinates.")
+    }
+    
+    if (is.character(spacing)) {
+      stop("The spacing option requires either a number, or defaults to NA.")
+    }
   }
   
   if (censor) {
-    full.set <- subset(full.set, censor1 != 0 & censor2 != 0)
-    full.set <- subset(full.set, censor3 != 0)
+    if (!is.element(censorkeep, data[,censorcol])) {
+      stop("Please enter a valid value for censorkeep. This value should occur in the censor variable within the dataset.", 
+           call. = FALSE)
+    }
   }
   
-  if (NAas0) {
-    full.set$sizea1 <- full.set$sizea1c
-    full.set$sizea2 <- full.set$sizea2c
-    full.set$sizea3 <- full.set$sizea3c
-    
-    full.set$sizeb1 <- full.set$sizeb1c
-    full.set$sizeb2 <- full.set$sizeb2c
-    full.set$sizeb3 <- full.set$sizeb3c
-    
-    full.set$sizec1 <- full.set$sizec1c
-    full.set$sizec2 <- full.set$sizec2c
-    full.set$sizec3 <- full.set$sizec3c
-    
-    full.set$repstra1 <- full.set$repstra1c
-    full.set$repstra2 <- full.set$repstra2c
-    full.set$repstra3 <- full.set$repstra3c
-    
-    full.set$repstrb1 <- full.set$repstrb1c
-    full.set$repstrb2 <- full.set$repstrb2c
-    full.set$repstrb3 <- full.set$repstrb3c
-    
-    full.set$feca1 <- full.set$feca1c
-    full.set$feca2 <- full.set$feca2c
-    full.set$feca3 <- full.set$feca3c
-    
-    full.set$fecb1 <- full.set$fecb1c
-    full.set$fecb2 <- full.set$fecb2c
-    full.set$fecb3 <- full.set$fecb3c
+  if (is.na(censorkeep) & censor) {
+    censbool <- TRUE
+    censorkeep <- 0
+  } else {
+    censbool <- FALSE
   }
   
-  full.set <- full.set[,-c(which(names(full.set) == "sizea1c"), which(names(full.set) == "sizea2c"), 
-                           which(names(full.set) == "sizea3c"), which(names(full.set) == "sizeb1c"), 
-                           which(names(full.set) == "sizeb2c"), which(names(full.set) == "sizeb3c"), 
-                           which(names(full.set) == "sizec1c"), which(names(full.set) == "sizec2c"), 
-                           which(names(full.set) == "sizec3c"), which(names(full.set) == "repstra1c"),
-                           which(names(full.set) == "repstra2c"), which(names(full.set) == "repstra3c"), 
-                           which(names(full.set) == "repstrb1c"), which(names(full.set) == "repstrb2c"), 
-                           which(names(full.set) == "repstrb3c"), which(names(full.set) == "feca1c"), 
-                           which(names(full.set) == "feca2c"), which(names(full.set) == "feca3c"), 
-                           which(names(full.set) == "fecb1c"), which(names(full.set) == "fecb2c"), 
-                           which(names(full.set) == "fecb3c"))]
+  popdatalist.new <- jpf(data, ltdframe, (popidcol - 1), (patchidcol - 1), (individcol - 1),
+                         (year2col - 1), (year3col - 1), (xcol - 1), (ycol - 1), (juv2col - 1), (juv3col - 1),
+                         (sizea2col - 1), (sizea3col - 1), (sizeb2col - 1), (sizeb3col - 1), (sizec2col - 1),
+                         (sizec3col - 1), (repstra2col - 1), (repstra3col - 1), (repstrb2col - 1), (repstrb3col - 1),
+                         (feca2col - 1), (feca3col - 1), (fecb2col - 1), (fecb3col - 1), (alive2col - 1),
+                         (alive3col - 1), (dead2col - 1), (dead3col - 1), (obs2col - 1), (obs3col - 1),
+                         (nonobs2col - 1), (nonobs3col - 1), repstrrel, fecrel, (stage2col - 1), (stage3col - 1), 
+                         (censorcol - 1), NAas0, NRasRep, stassign, stagesizecol, stagenum, censbool)
   
-  full.set <- full.set[,-c(which(names(full.set) == "alivegiven1"))]
-  full.set <- full.set[,-c(which(names(full.set) == "alivegiven2"))]
-  full.set <- full.set[,-c(which(names(full.set) == "alivegiven3"))]
-  full.set <- full.set[,-c(which(names(full.set) == "deadgiven1"))]
-  full.set <- full.set[,-c(which(names(full.set) == "deadgiven2"))]
-  full.set <- full.set[,-c(which(names(full.set) == "deadgiven3"))]
-  full.set <- full.set[,-c(which(names(full.set) == "obsgiven1"))]
-  full.set <- full.set[,-c(which(names(full.set) == "obsgiven2"))]
-  full.set <- full.set[,-c(which(names(full.set) == "obsgiven3"))]
-  full.set <- full.set[,-c(which(names(full.set) == "nonobsgiven1"))]
-  full.set <- full.set[,-c(which(names(full.set) == "nonobsgiven2"))]
-  full.set <- full.set[,-c(which(names(full.set) == "nonobsgiven3"))]
-  full.set <- full.set[,-c(which(names(full.set) == "juvgiven1"))]
-  full.set <- full.set[,-c(which(names(full.set) == "juvgiven2"))]
-  full.set <- full.set[,-c(which(names(full.set) == "juvgiven3"))]
+  popdata <- do.call("cbind.data.frame", popdatalist.new)
   
-  full.set <- full.set[,-c(which(names(full.set) =="year1"))]
-  full.set <- full.set[,-c(which(names(full.set) =="year3"))]
+  names(popdata) <- c("rowid", "popid", "patchid", "individ", "year2", "firstseen", "lastseen", "obsage", 
+                      "obslifespan", "xpos1", "ypos1", "sizea1", "sizeb1", "sizec1", "size1added", "repstra1", 
+                      "repstrb1", "repstr1added", "feca1", "fecb1", "fec1added", "censor1", "juvgiven1", 
+                      "obsstatus1", "repstatus1", "fecstatus1", "matstatus1", "alive1", "stage1", "stage1index", 
+                      "xpos2", "ypos2", "sizea2", "sizeb2", "sizec2", "size2added", "repstra2", "repstrb2", 
+                      "repstr2added", "feca2", "fecb2", "fec2added", "censor2", "juvgiven2", "obsstatus2", 
+                      "repstatus2", "fecstatus2", "matstatus2", "alive2", "stage2", "stage2index", "xpos3", 
+                      "ypos3", "sizea3", "sizeb3", "sizec3", "size3added", "repstra3", "repstrb3", "repstr3added", 
+                      "feca3", "fecb3", "fec3added", "censor3", "juvgiven3", "obsstatus3", "repstatus3", 
+                      "fecstatus3", "matstatus3", "alive3", "stage3", "stage3index")
+  
+  popdata <- subset(popdata, alive2 == 1)
+  
+  if (censor) {
+    popdata <- subset(popdata, censor1 == censorkeep & censor2 == censorkeep)
+    popdata <- subset(popdata, censor3 == censorkeep)
+  }
   
   if (!is.na(spacing)) {
-    full.set$density <- .density3(full.set, which(names(full.set) == "xpos2"), 
-                                  which(names(full.set) == "ypos2"), 
-                                  which(names(full.set) == "year2"), spacing)
+    popdata$density <- .density3(popdata, which(names(popdata) == "xpos2"), 
+                                 which(names(popdata) == "ypos2"), 
+                                 which(names(popdata) == "year2"), spacing)
   }
   
   if (reduce) {
-    if (all(is.na(full.set$xpos1)) | length(unique(full.set$xpos1)) == 1) {
-      full.set <- full.set[,-c(which(names(full.set) == "xpos1"))]
-    }
-    if (all(is.na(full.set$ypos1)) | length(unique(full.set$ypos1)) == 1) {
-      full.set <- full.set[,-c(which(names(full.set) == "ypos1"))]
-    }
+    if (all(is.na(popdata$xpos1)) | length(unique(popdata$xpos1)) == 1) {
+      popdata <- popdata[,-c(which(names(popdata) == "xpos1"))]
+    } else if (all.equal(sort(unique(popdata$xpos1)), c(-1,0))) {popdata <- popdata[,-c(which(names(popdata) == "xpos1"))]}
+    if (all(is.na(popdata$ypos1)) | length(unique(popdata$ypos1)) == 1) {
+      popdata <- popdata[,-c(which(names(popdata) == "ypos1"))]
+    } else if (all.equal(sort(unique(popdata$ypos1)), c(-1,0))) {popdata <- popdata[,-c(which(names(popdata) == "ypos1"))]}
     
-    if (all(is.na(full.set$xpos2)) | length(unique(full.set$xpos2)) == 1) {
-      full.set <- full.set[,-c(which(names(full.set) == "xpos2"))]
-    }
-    if (all(is.na(full.set$ypos2)) | length(unique(full.set$ypos2)) == 1) {
-      full.set <- full.set[,-c(which(names(full.set) == "ypos2"))]
-    }
-    if (all(is.na(full.set$xpos3)) | length(unique(full.set$xpos3)) == 1) {
-      full.set <- full.set[,-c(which(names(full.set) == "xpos3"))]
-    }
-    if (all(is.na(full.set$ypos3)) | length(unique(full.set$ypos3)) == 1) {
-      full.set <- full.set[,-c(which(names(full.set) == "ypos3"))]
-    }
+    if (all(is.na(popdata$xpos2)) | length(unique(popdata$xpos2)) == 1) {
+      popdata <- popdata[,-c(which(names(popdata) == "xpos2"))]
+    } else if (all.equal(sort(unique(popdata$xpos2)), c(-1,0))) {popdata <- popdata[,-c(which(names(popdata) == "xpos2"))]}
+    if (all(is.na(popdata$ypos2)) | length(unique(popdata$ypos2)) == 1) {
+      popdata <- popdata[,-c(which(names(popdata) == "ypos2"))]
+    } else if (all.equal(sort(unique(popdata$ypos2)), c(-1,0))) {popdata <- popdata[,-c(which(names(popdata) == "ypos2"))]}
+    if (all(is.na(popdata$xpos3)) | length(unique(popdata$xpos3)) == 1) {
+      popdata <- popdata[,-c(which(names(popdata) == "xpos3"))]
+    } else if (all.equal(sort(unique(popdata$xpos3)), c(-1,0))) {popdata <- popdata[,-c(which(names(popdata) == "xpos3"))]}
+    if (all(is.na(popdata$ypos3)) | length(unique(popdata$ypos3)) == 1) {
+      popdata <- popdata[,-c(which(names(popdata) == "ypos3"))]
+    } else if (all.equal(sort(unique(popdata$ypos3)), c(-1,0))) {popdata <- popdata[,-c(which(names(popdata) == "ypos3"))]}
     
     if (!censor) {
-      full.set <- full.set[,-c(which(names(full.set) =="censor1"))]
-      full.set <- full.set[,-c(which(names(full.set) =="censor2"))]
-      full.set <- full.set[,-c(which(names(full.set) =="censor3"))]
+      popdata <- popdata[,-c(which(names(popdata) =="censor1"))]
+      popdata <- popdata[,-c(which(names(popdata) =="censor2"))]
+      popdata <- popdata[,-c(which(names(popdata) =="censor3"))]
     }
     
-    if (all(is.na(full.set$sizea1)) | length(unique(full.set$sizea1)) == 1) {
-      full.set <- full.set[,-c(which(names(full.set) =="sizea1"))]
+    if (all(is.na(popdata$sizea1)) | length(unique(popdata$sizea1)) == 1) {
+      popdata <- popdata[,-c(which(names(popdata) =="sizea1"))]
     }
-    if (all(is.na(full.set$sizea2)) | length(unique(full.set$sizea2)) == 1) {
-      full.set <- full.set[,-c(which(names(full.set) =="sizea2"))]
+    if (all(is.na(popdata$sizea2)) | length(unique(popdata$sizea2)) == 1) {
+      popdata <- popdata[,-c(which(names(popdata) =="sizea2"))]
     }
-    if (all(is.na(full.set$sizea3)) | length(unique(full.set$sizea3)) == 1) {
-      full.set <- full.set[,-c(which(names(full.set) =="sizea3"))]
-    }
-    
-    if (all(is.na(full.set$sizeb1)) | length(unique(full.set$sizeb1)) == 1) {
-      full.set <- full.set[,-c(which(names(full.set) =="sizeb1"))]
-    }
-    if (all(is.na(full.set$sizeb2)) | length(unique(full.set$sizeb2)) == 1) {
-      full.set <- full.set[,-c(which(names(full.set) =="sizeb2"))]
-    }
-    if (all(is.na(full.set$sizeb3)) | length(unique(full.set$sizeb3)) == 1) {
-      full.set <- full.set[,-c(which(names(full.set) =="sizeb3"))]
+    if (all(is.na(popdata$sizea3)) | length(unique(popdata$sizea3)) == 1) {
+      popdata <- popdata[,-c(which(names(popdata) =="sizea3"))]
     }
     
-    if (all(is.na(full.set$sizec1)) | length(unique(full.set$sizec1)) == 1) {
-      full.set <- full.set[,-c(which(names(full.set) =="sizec1"))]
+    if (all(is.na(popdata$sizeb1)) | length(unique(popdata$sizeb1)) == 1) {
+      popdata <- popdata[,-c(which(names(popdata) =="sizeb1"))]
     }
-    if (all(is.na(full.set$sizec2)) | length(unique(full.set$sizec2)) == 1) {
-      full.set <- full.set[,-c(which(names(full.set) =="sizec2"))]
+    if (all(is.na(popdata$sizeb2)) | length(unique(popdata$sizeb2)) == 1) {
+      popdata <- popdata[,-c(which(names(popdata) =="sizeb2"))]
     }
-    if (all(is.na(full.set$sizec3)) | length(unique(full.set$sizec3)) == 1) {
-      full.set <- full.set[,-c(which(names(full.set) =="sizec3"))]
-    }
-    
-    if (isTRUE(all.equal(full.set$size1added, full.set$sizea1))) {
-      full.set <- full.set[,-c(which(names(full.set) == "size1added"))]
-    } else if (all(is.na(full.set$size1added)) | length(unique(full.set$size1added)) == 1) {
-      full.set <- full.set[,-c(which(names(full.set) == "size1added"))]
-    }
-    if (isTRUE(all.equal(full.set$size2added, full.set$sizea2))) {
-      full.set <- full.set[,-c(which(names(full.set) == "size2added"))]
-    } else if (all(is.na(full.set$size2added)) | length(unique(full.set$size2added)) == 1) {
-      full.set <- full.set[,-c(which(names(full.set) == "size2added"))]
-    }
-    if (isTRUE(all.equal(full.set$size3added, full.set$sizea3))) {
-      full.set <- full.set[,-c(which(names(full.set) == "size3added"))]
-    } else if (all(is.na(full.set$size3added)) | length(unique(full.set$size3added)) == 1) {
-      full.set <- full.set[,-c(which(names(full.set) == "size3added"))]
+    if (all(is.na(popdata$sizeb3)) | length(unique(popdata$sizeb3)) == 1) {
+      popdata <- popdata[,-c(which(names(popdata) =="sizeb3"))]
     }
     
-    if (all(is.na(full.set$repstra1)) | length(unique(full.set$repstra1)) == 1) {
-      full.set <- full.set[,-c(which(names(full.set) == "repstra1"))]
+    if (all(is.na(popdata$sizec1)) | length(unique(popdata$sizec1)) == 1) {
+      popdata <- popdata[,-c(which(names(popdata) =="sizec1"))]
     }
-    if (all(is.na(full.set$repstra2)) | length(unique(full.set$repstra2)) == 1) {
-      full.set <- full.set[,-c(which(names(full.set) == "repstra2"))]
+    if (all(is.na(popdata$sizec2)) | length(unique(popdata$sizec2)) == 1) {
+      popdata <- popdata[,-c(which(names(popdata) =="sizec2"))]
     }
-    if (all(is.na(full.set$repstra3)) | length(unique(full.set$repstra3)) == 1) {
-      full.set <- full.set[,-c(which(names(full.set) == "repstra3"))]
-    }
-    
-    if (all(is.na(full.set$repstrb1)) | length(unique(full.set$repstrb1)) == 1) {
-      full.set <- full.set[,-c(which(names(full.set) == "repstrb1"))]
-    }
-    if (all(is.na(full.set$repstrb2)) | length(unique(full.set$repstrb2)) == 1) {
-      full.set <- full.set[,-c(which(names(full.set) == "repstrb2"))]
-    }
-    if (all(is.na(full.set$repstrb3)) | length(unique(full.set$repstrb3)) == 1) {
-      full.set <- full.set[,-c(which(names(full.set) == "repstrb3"))]
+    if (all(is.na(popdata$sizec3)) | length(unique(popdata$sizec3)) == 1) {
+      popdata <- popdata[,-c(which(names(popdata) =="sizec3"))]
     }
     
-    if (isTRUE(all.equal(full.set$repstr1added, full.set$repstr1a))) {
-      full.set <- full.set[,-c(which(names(full.set) =="repstr1added"))]
-    } else if (all(is.na(full.set$repstr1added)) | length(unique(full.set$repstr1added)) == 1) {
-      full.set <- full.set[,-c(which(names(full.set) =="repstr1added"))]
+    if (isTRUE(all.equal(popdata$size1added, popdata$sizea1))) {
+      popdata <- popdata[,-c(which(names(popdata) == "size1added"))]
+    } else if (all(is.na(popdata$size1added)) | length(unique(popdata$size1added)) == 1) {
+      popdata <- popdata[,-c(which(names(popdata) == "size1added"))]
     }
-    if (isTRUE(all.equal(full.set$repstr2added, full.set$repstr2a))) {
-      full.set <- full.set[,-c(which(names(full.set) =="repstr2added"))]
-    } else if (all(is.na(full.set$repstr2added)) | length(unique(full.set$repstr2added)) == 1) {
-      full.set <- full.set[,-c(which(names(full.set) =="repstr2added"))]
+    if (isTRUE(all.equal(popdata$size2added, popdata$sizea2))) {
+      popdata <- popdata[,-c(which(names(popdata) == "size2added"))]
+    } else if (all(is.na(popdata$size2added)) | length(unique(popdata$size2added)) == 1) {
+      popdata <- popdata[,-c(which(names(popdata) == "size2added"))]
     }
-    if (isTRUE(all.equal(full.set$repstr3added, full.set$repstr3a))) {
-      full.set <- full.set[,-c(which(names(full.set) =="repstr3added"))]
-    } else if (all(is.na(full.set$repstr3added)) | length(unique(full.set$repstr3added)) == 1) {
-      full.set <- full.set[,-c(which(names(full.set) =="repstr3added"))]
-    }
-    
-    if (all(is.na(full.set$feca1)) | length(unique(full.set$feca1)) == 1) {
-      full.set <- full.set[,-c(which(names(full.set) =="feca1"))]
-    }
-    if (all(is.na(full.set$feca2)) | length(unique(full.set$feca2)) == 1) {
-      full.set <- full.set[,-c(which(names(full.set) =="feca2"))]
-    }
-    if (all(is.na(full.set$feca3)) | length(unique(full.set$feca3)) == 1) {
-      full.set <- full.set[,-c(which(names(full.set) =="feca3"))]
+    if (isTRUE(all.equal(popdata$size3added, popdata$sizea3))) {
+      popdata <- popdata[,-c(which(names(popdata) == "size3added"))]
+    } else if (all(is.na(popdata$size3added)) | length(unique(popdata$size3added)) == 1) {
+      popdata <- popdata[,-c(which(names(popdata) == "size3added"))]
     }
     
-    if (all(is.na(full.set$fecb1)) | length(unique(full.set$fecb1)) == 1) {
-      full.set <- full.set[,-c(which(names(full.set) =="fecb1"))]
+    if (all(is.na(popdata$repstra1)) | length(unique(popdata$repstra1)) == 1) {
+      popdata <- popdata[,-c(which(names(popdata) == "repstra1"))]
     }
-    if (all(is.na(full.set$fecb2)) | length(unique(full.set$fecb2)) == 1) {
-      full.set <- full.set[,-c(which(names(full.set) =="fecb2"))]
+    if (all(is.na(popdata$repstra2)) | length(unique(popdata$repstra2)) == 1) {
+      popdata <- popdata[,-c(which(names(popdata) == "repstra2"))]
     }
-    if (all(is.na(full.set$fecb3)) | length(unique(full.set$fecb3)) == 1) {
-      full.set <- full.set[,-c(which(names(full.set) =="fecb3"))]
-    }
-    
-    if (isTRUE(all.equal(full.set$fec1added, full.set$feca1))) {
-      full.set <- full.set[,-c(which(names(full.set) =="fec1added"))]
-    } else if (all(is.na(full.set$fec1added)) | length(unique(full.set$fec1added)) == 1) {
-      full.set <- full.set[,-c(which(names(full.set) =="fec1added"))]
-    }
-    if (isTRUE(all.equal(full.set$fec2added, full.set$feca2))) {
-      full.set <- full.set[,-c(which(names(full.set) =="fec2added"))]
-    } else if (all(is.na(full.set$fec2added)) | length(unique(full.set$fec2added)) == 1) {
-      full.set <- full.set[,-c(which(names(full.set) =="fec2added"))]
-    }
-    if (isTRUE(all.equal(full.set$fec3added, full.set$feca3))) {
-      full.set <- full.set[,-c(which(names(full.set) =="fec3added"))]
-    } else if (all(is.na(full.set$fec3added)) | length(unique(full.set$fec3added)) == 1) {
-      full.set <- full.set[,-c(which(names(full.set) =="fec3added"))]
+    if (all(is.na(popdata$repstra3)) | length(unique(popdata$repstra3)) == 1) {
+      popdata <- popdata[,-c(which(names(popdata) == "repstra3"))]
     }
     
-    if (all(full.set$obsstatus1 == full.set$obsstatus1[1])) {
-      full.set <- full.set[,-c(which(names(full.set) =="obsstatus1"))]
+    if (all(is.na(popdata$repstrb1)) | length(unique(popdata$repstrb1)) == 1) {
+      popdata <- popdata[,-c(which(names(popdata) == "repstrb1"))]
     }
-    if (all(full.set$obsstatus2 == full.set$obsstatus2[1])) {
-      full.set <- full.set[,-c(which(names(full.set) =="obsstatus2"))]
+    if (all(is.na(popdata$repstrb2)) | length(unique(popdata$repstrb2)) == 1) {
+      popdata <- popdata[,-c(which(names(popdata) == "repstrb2"))]
     }
-    if (all(full.set$obsstatus3 == full.set$obsstatus3[1])) {
-      full.set <- full.set[,-c(which(names(full.set) =="obsstatus3"))]
-    }
-    
-    if (all(full.set$repstatus1 == full.set$repstatus1[1])) {
-      full.set <- full.set[,-c(which(names(full.set) =="repstatus1"))]
-    }
-    if (all(full.set$repstatus2 == full.set$repstatus2[1])) {
-      full.set <- full.set[,-c(which(names(full.set) =="repstatus2"))]
-    }
-    if (all(full.set$repstatus3 == full.set$repstatus3[1])) {
-      full.set <- full.set[,-c(which(names(full.set) =="repstatus3"))]
+    if (all(is.na(popdata$repstrb3)) | length(unique(popdata$repstrb3)) == 1) {
+      popdata <- popdata[,-c(which(names(popdata) == "repstrb3"))]
     }
     
-    if (all(full.set$fecstatus1 == full.set$fecstatus1[1])) {
-      full.set <- full.set[,-c(which(names(full.set) =="fecstatus1"))]
+    if (isTRUE(all.equal(popdata$repstr1added, popdata$repstr1a))) {
+      popdata <- popdata[,-c(which(names(popdata) =="repstr1added"))]
+    } else if (all(is.na(popdata$repstr1added)) | length(unique(popdata$repstr1added)) == 1) {
+      popdata <- popdata[,-c(which(names(popdata) =="repstr1added"))]
     }
-    if (all(full.set$fecstatus2 == full.set$fecstatus2[1])) {
-      full.set <- full.set[,-c(which(names(full.set) =="fecstatus2"))]
+    if (isTRUE(all.equal(popdata$repstr2added, popdata$repstr2a))) {
+      popdata <- popdata[,-c(which(names(popdata) =="repstr2added"))]
+    } else if (all(is.na(popdata$repstr2added)) | length(unique(popdata$repstr2added)) == 1) {
+      popdata <- popdata[,-c(which(names(popdata) =="repstr2added"))]
     }
-    if (all(full.set$fecstatus3 == full.set$fecstatus3[1])) {
-      full.set <- full.set[,-c(which(names(full.set) =="fecstatus3"))]
-    }
-  }
-  
-  class(full.set) <- append(class(full.set), "hfvdata")
-  
-  return(full.set)
-}
-
-#' @export
-.core_gather_ahvtohv <- function(subdata, popidcol, patchidcol, year2col, year3col, xcol = 0, ycol = 0,
-                                 sizea2col = 0, sizea3col = 0, sizeb2col = 0, sizeb3col = 0, 
-                                 sizec2col = 0, sizec3col = 0, repstra2col = 0, repstra3col = 0, 
-                                 repstrb2col = 0, repstrb3col = 0, feca2col = 0, feca3col = 0, 
-                                 fecb2col = 0, fecb3col = 0, alive2col = 0, alive3col = 0, 
-                                 dead2col = 0, dead3col = 0, obs2col = 0, obs3col = 0, nonobs2col = 0,
-                                 nonobs3col = 0, repstrrel = 0, fecrel = 0, stage2col = 0,
-                                 stage3col = 0, juv2col = 0, juv3col = 0, censorcol = 0) {
-  
-  year.vec <- sort(na.omit(unique(union(subdata[,year2col], subdata[,year3col]))))
-  
-  size.vecorator <- apply(as.matrix(year.vec), 1, function(X) {
-    if (!is.element(X, subdata[, year2col])) { return(0)}
-    base.size <- 0
-    if (sizea2col != 0) {
-      if (!is.na(subdata[(which(subdata[,year2col] == X)), sizea2col])) {
-        base.size <- base.size + subdata[(which(subdata[,year2col] == X)), sizea2col]
-      }
-    }
-    if (sizeb2col != 0) {
-      if (!is.na(subdata[(which(subdata[,year2col] == X)), sizeb2col])) {
-        base.size <- base.size + subdata[(which(subdata[,year2col] == X)), sizeb2col]
-      }
-    }
-    if (sizec2col != 0) {
-      if (!is.na(subdata[(which(subdata[,year2col] == X)), sizec2col])) {
-        base.size <- base.size + subdata[(which(subdata[,year2col] == X)), sizec2col]
-      }
+    if (isTRUE(all.equal(popdata$repstr3added, popdata$repstr3a))) {
+      popdata <- popdata[,-c(which(names(popdata) =="repstr3added"))]
+    } else if (all(is.na(popdata$repstr3added)) | length(unique(popdata$repstr3added)) == 1) {
+      popdata <- popdata[,-c(which(names(popdata) =="repstr3added"))]
     }
     
-    return(base.size)
-  })
-  
-  if (all(size.vecorator == 0)) {
-    return()
-  }
-  
-  if (min(year.vec) < min(year.vec[which(size.vecorator > 0)])) {
-    year.vec <- year.vec[-(which(year.vec < min(year.vec[which(size.vecorator > 0)])))]
-  }
-  
-  firstyr <- min(year.vec)
-  lastyr <- max(year.vec)
-  
-  subdata <- subdata[order(subdata$year2), ]
-  
-  pop <- NA
-  patch <- NA
-  if(popidcol > 0) {pop <- subdata[1,popidcol]}
-  if(patchidcol > 0) {patch <- subdata[1,patchidcol]}
-  
-  if (xcol == 0) {
-    xcol <- (dim(subdata)[2] + 1)
-    subdata <- cbind.data.frame(subdata, NA)
-  }
-  if (ycol == 0) {
-    ycol <- (dim(subdata)[2] + 1)
-    subdata <- cbind.data.frame(subdata, NA)
-  }
-  if (sizea2col == 0) {
-    sizea2col <- (dim(subdata)[2] + 1)
-    subdata <- cbind.data.frame(subdata, NA)
-  }
-  if (sizea3col == 0) {
-    sizea3col <- (dim(subdata)[2] + 1)
-    subdata <- cbind.data.frame(subdata, NA)
-  }
-  if (sizeb2col == 0) {
-    sizeb2col <- (dim(subdata)[2] + 1)
-    subdata <- cbind.data.frame(subdata, NA)
-  }
-  if (sizeb3col == 0) {
-    sizeb3col <- (dim(subdata)[2] + 1)
-    subdata <- cbind.data.frame(subdata, NA)
-  }
-  if (sizec2col == 0) {
-    sizec2col <- (dim(subdata)[2] + 1)
-    subdata <- cbind.data.frame(subdata, NA)
-  }
-  if (sizec3col == 0) {
-    sizec3col <- (dim(subdata)[2] + 1)
-    subdata <- cbind.data.frame(subdata, NA)
-  }
-  if (repstra2col == 0) {
-    repstra2col <- (dim(subdata)[2] + 1)
-    subdata <- cbind.data.frame(subdata, NA)
-  }
-  if (repstra3col == 0) {
-    repstra3col <- (dim(subdata)[2] + 1)
-    subdata <- cbind.data.frame(subdata, NA)
-  }
-  if (repstrb2col == 0) {
-    repstrb2col <- (dim(subdata)[2] + 1)
-    subdata <- cbind.data.frame(subdata, NA)
-  }
-  if (repstrb3col == 0) {
-    repstrb3col <- (dim(subdata)[2] + 1)
-    subdata <- cbind.data.frame(subdata, NA)
-  }
-  if (feca2col == 0) {
-    feca2col <- (dim(subdata)[2] + 1)
-    subdata <- cbind.data.frame(subdata, NA)
-  }
-  if (feca3col == 0) {
-    feca3col <- (dim(subdata)[2] + 1)
-    subdata <- cbind.data.frame(subdata, NA)
-  }
-  if (fecb2col == 0) {
-    fecb2col <- (dim(subdata)[2] + 1)
-    subdata <- cbind.data.frame(subdata, NA)
-  }
-  if (fecb3col == 0) {
-    fecb3col <- (dim(subdata)[2] + 1)
-    subdata <- cbind.data.frame(subdata, NA)
-  }
-  if (alive2col == 0) {
-    alive2col <- (dim(subdata)[2] + 1)
-    subdata <- cbind.data.frame(subdata, NA)
-  }
-  if (alive3col == 0) {
-    alive3col <- (dim(subdata)[2] + 1)
-    subdata <- cbind.data.frame(subdata, NA)
-  }
-  if (dead2col == 0) {
-    dead2col <- (dim(subdata)[2] + 1)
-    subdata <- cbind.data.frame(subdata, NA)
-  }
-  if (dead3col == 0) {
-    dead3col <- (dim(subdata)[2] + 1)
-    subdata <- cbind.data.frame(subdata, NA)
-  }
-  if (obs2col == 0) {
-    obs2col <- (dim(subdata)[2] + 1)
-    subdata <- cbind.data.frame(subdata, NA)
-  }
-  if (obs3col == 0) {
-    obs3col <- (dim(subdata)[2] + 1)
-    subdata <- cbind.data.frame(subdata, NA)
-  }
-  if (nonobs2col == 0) {
-    nonobs2col <- (dim(subdata)[2] + 1)
-    subdata <- cbind.data.frame(subdata, NA)
-  }
-  if (nonobs3col == 0) {
-    nonobs3col <- (dim(subdata)[2] + 1)
-    subdata <- cbind.data.frame(subdata, NA)
-  }
-  if (stage2col == 0) {
-    stage2col <- (dim(subdata)[2] + 1)
-    subdata <- cbind.data.frame(subdata, NA)
-  }
-  if (stage3col == 0) {
-    stage3col <- (dim(subdata)[2] + 1)
-    subdata <- cbind.data.frame(subdata, NA)
-  }
-  if (juv2col == 0) {
-    juv2col <- (dim(subdata)[2] + 1)
-    subdata <- cbind.data.frame(subdata, NA)
-  }
-  if (juv3col == 0) {
-    juv3col <- (dim(subdata)[2] + 1)
-    subdata <- cbind.data.frame(subdata, NA)
-  }
-  if (censorcol == 0) {
-    censorcol <- (dim(subdata)[2] + 1)
-    subdata <- cbind.data.frame(subdata, 1)
-  }
-  
-  row.col <- which(names(subdata) == "rowid")
-  
-  for (i in c(firstyr:lastyr)) {
-    
-    counter <- i - (firstyr - 1)
-    
-    if (counter == 2) {start.vec <- row.vec}
-    
-    if (i == firstyr) {
-      year.t1 <- NA; xcol.t1 <- NA; ycol.t1 <- NA; sizea.t1 <- NA; sizeb.t1 <- NA; 
-      sizec.t1 <- NA; repstra.t1 <- NA; repstrb.t1 <- NA; feca.t1 <- NA; fecb.t1 <- NA; 
-      alivegvn.t1 <- NA; deadgvn.t1 <- NA; obsgvn.t1 <- NA; nonobsgvn.t1 <- NA; 
-      stage.t1 <- NA; juvgvn.t1 <- NA; censor1 <- NA; 
-      
-      year.t2 <- i; rowid <- subdata[counter, row.col]; 
-      xcol.t2 <- subdata[counter, xcol]; ycol.t2 <- subdata[counter, ycol]; 
-      sizea.t2 <- subdata[counter, sizea2col]; sizeb.t2 <- subdata[counter, sizeb2col];
-      sizec.t2 <- subdata[counter, sizec2col]; repstra.t2 <- subdata[counter, repstra2col];
-      repstrb.t2 <- subdata[counter, repstrb2col]; feca.t2 <- subdata[counter, feca2col];
-      fecb.t2 <- subdata[counter, fecb2col]; alivegvn.t2 <- subdata[counter, alive2col]; 
-      deadgvn.t2 <- subdata[counter, dead2col]; obsgvn.t2 <- subdata[counter, obs2col]; 
-      nonobsgvn.t2 <- subdata[counter, nonobs2col]; stage.t2 <- subdata[counter, stage2col]; 
-      juvgvn.t2 <- subdata[counter, juv2col]; censor2 <- subdata[counter, censorcol]
+    if (all(is.na(popdata$feca1)) | length(unique(popdata$feca1)) == 1) {
+      popdata <- popdata[,-c(which(names(popdata) =="feca1"))]
+    }
+    if (all(is.na(popdata$feca2)) | length(unique(popdata$feca2)) == 1) {
+      popdata <- popdata[,-c(which(names(popdata) =="feca2"))]
+    }
+    if (all(is.na(popdata$feca3)) | length(unique(popdata$feca3)) == 1) {
+      popdata <- popdata[,-c(which(names(popdata) =="feca3"))]
     }
     
-    if (i > firstyr) {
-      year.t1 <- i - 1; xcol.t1 <- subdata[(counter - 1), xcol]; ycol.t1 <- subdata[(counter - 1), ycol]; 
-      sizea.t1 <- subdata[(counter - 1), sizea2col]; sizeb.t1 <- subdata[(counter - 1), sizeb2col]; 
-      sizec.t1 <- subdata[(counter - 1), sizec2col]; repstra.t1 <- subdata[(counter - 1), repstra2col]; 
-      repstrb.t1 <- subdata[(counter - 1), repstrb2col]; feca.t1 <- subdata[(counter - 1), feca2col]; 
-      fecb.t1 <- subdata[(counter - 1), fecb2col]; alivegvn.t1 <- subdata[(counter - 1), alive2col]; 
-      deadgvn.t1 <- subdata[(counter - 1), dead2col]; obsgvn.t1 <- subdata[(counter - 1), obs2col];
-      nonobsgvn.t1 <- subdata[(counter - 1), nonobs2col]; stage.t1 <- subdata[(counter - 1), stage2col]; 
-      juvgvn.t1 <- subdata[(counter - 1), juv2col]; censor1 <- subdata[(counter - 1), censorcol];
-      
-      year.t2 <- i; rowid <- subdata[(counter - 1), row.col]; 
-      xcol.t2 <- subdata[(counter - 1), xcol]; ycol.t2 <- subdata[(counter - 1), ycol]; 
-      sizea.t2 <- subdata[(counter - 1), sizea3col]; sizeb.t2 <- subdata[(counter - 1), sizeb3col]; 
-      sizec.t2 <- subdata[(counter - 1), sizec3col]; repstra.t2 <- subdata[(counter - 1), repstra3col]; 
-      repstrb.t2 <- subdata[(counter - 1), repstrb3col]; feca.t2 <- subdata[(counter - 1), feca3col]; 
-      fecb.t2 <- subdata[(counter - 1), fecb3col]; alivegvn.t2 <- subdata[(counter - 1), alive3col]; 
-      deadgvn.t2 <- subdata[(counter - 1), dead3col]; obsgvn.t2 <- subdata[(counter - 1), obs3col];
-      nonobsgvn.t2 <- subdata[(counter - 1), nonobs3col]; stage.t2 <- subdata[(counter - 1), stage3col]; 
-      juvgvn.t2 <- subdata[(counter - 1), juv3col]; censor2 <- subdata[(counter - 1), censorcol];
+    if (all(is.na(popdata$fecb1)) | length(unique(popdata$fecb1)) == 1) {
+      popdata <- popdata[,-c(which(names(popdata) =="fecb1"))]
+    }
+    if (all(is.na(popdata$fecb2)) | length(unique(popdata$fecb2)) == 1) {
+      popdata <- popdata[,-c(which(names(popdata) =="fecb2"))]
+    }
+    if (all(is.na(popdata$fecb3)) | length(unique(popdata$fecb3)) == 1) {
+      popdata <- popdata[,-c(which(names(popdata) =="fecb3"))]
     }
     
-    if (i == lastyr) {
-      year.t3 <- NA; xcol.t3 <- NA; ycol.t3 <- NA; sizea.t3 <- NA; sizeb.t3 <- NA; 
-      sizec.t3 <- NA; repstra.t3 <- NA; repstrb.t3 <- NA; feca.t3 <- NA; fecb.t3 <- NA; 
-      alivegvn.t3 <- NA; deadgvn.t3 <- NA; obsgvn.t3 <- NA; nonobsgvn.t3 <- NA; 
-      stage.t3 <- NA; juvgvn.t3 <- NA; censor3 <- NA
+    if (isTRUE(all.equal(popdata$fec1added, popdata$feca1))) {
+      popdata <- popdata[,-c(which(names(popdata) =="fec1added"))]
+    } else if (all(is.na(popdata$fec1added)) | length(unique(popdata$fec1added)) == 1) {
+      popdata <- popdata[,-c(which(names(popdata) =="fec1added"))]
     }
-    if (i < lastyr) {
-      year.t3 <- i + 1; xcol.t3 <- subdata[counter, xcol]; ycol.t3 <- subdata[counter, ycol]; 
-      sizea.t3 <- subdata[counter, sizea3col]; sizeb.t3 <- subdata[counter, sizeb3col]; 
-      sizec.t3 <- subdata[counter, sizec3col]; repstra.t3 <- subdata[counter, repstra3col]; 
-      repstrb.t3 <- subdata[counter, repstrb3col]; feca.t3 <- subdata[counter, feca3col]; 
-      fecb.t3 <- subdata[counter, fecb3col]; alivegvn.t3 <- subdata[counter, alive3col]; 
-      deadgvn.t3 <- subdata[counter, dead3col]; obsgvn.t3 <- subdata[counter, obs3col]; 
-      nonobsgvn.t3 <- subdata[counter, nonobs3col]; stage.t3 <- subdata[counter, stage3col]; 
-      juvgvn.t3 <- subdata[counter, juv3col]; censor3 <- subdata[counter, censorcol]
+    if (isTRUE(all.equal(popdata$fec2added, popdata$feca2))) {
+      popdata <- popdata[,-c(which(names(popdata) =="fec2added"))]
+    } else if (all(is.na(popdata$fec2added)) | length(unique(popdata$fec2added)) == 1) {
+      popdata <- popdata[,-c(which(names(popdata) =="fec2added"))]
+    }
+    if (isTRUE(all.equal(popdata$fec3added, popdata$feca3))) {
+      popdata <- popdata[,-c(which(names(popdata) =="fec3added"))]
+    } else if (all(is.na(popdata$fec3added)) | length(unique(popdata$fec3added)) == 1) {
+      popdata <- popdata[,-c(which(names(popdata) =="fec3added"))]
     }
     
-    row.vec <- cbind.data.frame(pop, patch, rowid, year.t1, xcol.t1, ycol.t1, sizea.t1, sizeb.t1, 
-                                sizec.t1, repstra.t1, repstrb.t1, feca.t1, fecb.t1, 
-                                alivegvn.t1, deadgvn.t1, obsgvn.t1, nonobsgvn.t1, stage.t1, 
-                                juvgvn.t1, censor1, 
-                                
-                                year.t2, xcol.t2, ycol.t2, sizea.t2, sizeb.t2, sizec.t2, 
-                                repstra.t2, repstrb.t2, feca.t2, fecb.t2, alivegvn.t2, 
-                                deadgvn.t2, obsgvn.t2, nonobsgvn.t2, stage.t2, 
-                                juvgvn.t2, censor2, 
-                                
-                                year.t3, xcol.t3, ycol.t3, sizea.t3, sizeb.t3, sizec.t3, 
-                                repstra.t3, repstrb.t3, feca.t3, fecb.t3, alivegvn.t3,
-                                deadgvn.t3, obsgvn.t3, nonobsgvn.t3, stage.t3, 
-                                juvgvn.t3, censor3, firstyr, lastyr)
+    if (all(popdata$obsstatus1 == popdata$obsstatus1[1])) {
+      popdata <- popdata[,-c(which(names(popdata) =="obsstatus1"))]
+    }
+    if (all(popdata$obsstatus2 == popdata$obsstatus2[1])) {
+      popdata <- popdata[,-c(which(names(popdata) =="obsstatus2"))]
+    }
+    if (all(popdata$obsstatus3 == popdata$obsstatus3[1])) {
+      popdata <- popdata[,-c(which(names(popdata) =="obsstatus3"))]
+    }
     
-    if (counter == 2) {indiv.data <- rbind.data.frame(start.vec, row.vec)}
-    if (counter > 2) {indiv.data <- rbind.data.frame(indiv.data, row.vec)}
+    if (all(popdata$repstatus1 == popdata$repstatus1[1])) {
+      popdata <- popdata[,-c(which(names(popdata) =="repstatus1"))]
+    }
+    if (all(popdata$repstatus2 == popdata$repstatus2[1])) {
+      popdata <- popdata[,-c(which(names(popdata) =="repstatus2"))]
+    }
+    if (all(popdata$repstatus3 == popdata$repstatus3[1])) {
+      popdata <- popdata[,-c(which(names(popdata) =="repstatus3"))]
+    }
+    
+    if (all(popdata$fecstatus1 == popdata$fecstatus1[1])) {
+      popdata <- popdata[,-c(which(names(popdata) =="fecstatus1"))]
+    }
+    if (all(popdata$fecstatus2 == popdata$fecstatus2[1])) {
+      popdata <- popdata[,-c(which(names(popdata) =="fecstatus2"))]
+    }
+    if (all(popdata$fecstatus3 == popdata$fecstatus3[1])) {
+      popdata <- popdata[,-c(which(names(popdata) =="fecstatus3"))]
+    }
   }
   
-  names(indiv.data) <- c("popid", "patchid", "rowid", "year1", "xcol1", "ycol1", "sizea1", "sizeb1", 
-                         "sizec1", "repstra1", "repstrb1", "feca1", "fecb1", "alivegvn1",
-                         "deadgvn1", "obsgvn1", "nonobsgvn1", "stage1", "juvgvn1", "censor1",
-                         
-                         "year2", "xcol2", "ycol2", "sizea2", "sizeb2", "sizec2", "repstra2", 
-                         "repstrb2", "feca2", "fecb2", "alivegvn2", "deadgvn2", "obsgvn2",
-                         "nonobsgvn2", "stage2", "juvgvn2", "censor2", 
-                         
-                         "year3", "xcol3", "ycol3", "sizea3", "sizeb3", "sizec3", "repstra3", 
-                         "repstrb3", "feca3", "fecb3", "alivegvn3", "deadgvn3", "obsgvn3",
-                         "nonobsgvn3", "stage3", "juvgvn3", "censor3", "firstseen", "lastseen")
+  class(popdata) <- append(class(popdata), "hfvdata")
   
-  indiv.data <- indiv.data[(which(!is.na(indiv.data$year3))),]
-  
-  indiv.data$alive1 <- 0
-  indiv.data$alive2 <- 0
-  indiv.data$alive3 <- 0
-  
-  indiv.data$alive1[unique(intersect(which(indiv.data$year1 >= indiv.data$firstseen), which(indiv.data$year1 <= indiv.data$lastseen)))] <- 1
-  indiv.data$alive2[unique(intersect(which(indiv.data$year2 >= indiv.data$firstseen), which(indiv.data$year2 <= indiv.data$lastseen)))] <- 1
-  indiv.data$alive3[unique(intersect(which(indiv.data$year3 >= indiv.data$firstseen), which(indiv.data$year3 <= indiv.data$lastseen)))] <- 1
-  
-  if (alive2col != 0) {
-    indiv.data$alive1[which(indiv.data$alivegvn1 == 1)] <- 1
-    indiv.data$alive2[which(indiv.data$alivegvn2 == 1)] <- 1
-  }
-  if (alive3col != 0) {
-    indiv.data$alive2[which(indiv.data$alivegvn2 == 1)] <- 1
-    indiv.data$alive3[which(indiv.data$alivegvn3 == 1)] <- 1
-  }
-  if (dead2col != 0) {
-    indiv.data$alive1[which(indiv.data$deadgvn1 == 1)] <- 0
-    indiv.data$alive2[which(indiv.data$deadgvn2 == 1)] <- 0
-  }
-  if (dead3col != 0) {
-    indiv.data$alive2[which(indiv.data$deadgvn2 == 1)] <- 0
-    indiv.data$alive3[which(indiv.data$deadgvn3 == 1)] <- 0
-  }
-  
-  indiv.data$obsstatus1 <- 0
-  indiv.data$obsstatus2 <- 0
-  indiv.data$obsstatus3 <- 0
-  
-  indiv.data$obsstatus1[which(indiv.data$sizea1 > 0)] <- 1
-  indiv.data$obsstatus2[which(indiv.data$sizea2 > 0)] <- 1
-  indiv.data$obsstatus3[which(indiv.data$sizea3 > 0)] <- 1
-  
-  indiv.data$obsstatus1[which(indiv.data$sizeb1 > 0)] <- 1
-  indiv.data$obsstatus2[which(indiv.data$sizeb2 > 0)] <- 1
-  indiv.data$obsstatus3[which(indiv.data$sizeb3 > 0)] <- 1
-  
-  indiv.data$obsstatus1[which(indiv.data$sizec1 > 0)] <- 1
-  indiv.data$obsstatus2[which(indiv.data$sizec2 > 0)] <- 1
-  indiv.data$obsstatus3[which(indiv.data$sizec3 > 0)] <- 1
-  
-  indiv.data$obsstatus1[which(indiv.data$repstra1 > 0)] <- 1
-  indiv.data$obsstatus2[which(indiv.data$repstra2 > 0)] <- 1
-  indiv.data$obsstatus3[which(indiv.data$repstra3 > 0)] <- 1
-  
-  indiv.data$obsstatus1[which(indiv.data$repstrb1 > 0)] <- 1
-  indiv.data$obsstatus2[which(indiv.data$repstrb2 > 0)] <- 1
-  indiv.data$obsstatus3[which(indiv.data$repstrb3 > 0)] <- 1
-  
-  if (obs2col != 0) {
-    indiv.data$obsstatus1[which(indiv.data$obsgvn1 == 1)] <- 1
-    indiv.data$obsstatus2[which(indiv.data$obsgvn2 == 1)] <- 1
-  }
-  if (obs3col != 0) {
-    indiv.data$obsstatus2[which(indiv.data$obsgvn2 == 1)] <- 1
-    indiv.data$obsstatus3[which(indiv.data$obsgvn3 == 1)] <- 1
-  }
-  if (nonobs2col != 0) {
-    indiv.data$obsstatus1[which(indiv.data$nonobsgvn1 == 1)] <- 0
-    indiv.data$obsstatus2[which(indiv.data$nonobsgvn2 == 1)] <- 0
-  }
-  if (nonobs3col != 0) {
-    indiv.data$obsstatus2[which(indiv.data$nonobsgvn2 == 1)] <- 0
-    indiv.data$obsstatus3[which(indiv.data$nonobsgvn3 == 1)] <- 0
-  }
-  
-  indiv.data$matstatus1 <- 1
-  indiv.data$matstatus2 <- 1
-  indiv.data$matstatus3 <- 1
-  
-  if (juv2col != 0) {
-    indiv.data$matstatus1[which(indiv.data$juvgvn1 == 1)] <- 0
-    indiv.data$matstatus2[which(indiv.data$juvgvn2 == 1)] <- 0
-  }
-  if (juv3col != 0) {
-    indiv.data$matstatus2[which(indiv.data$juvgvn2 == 1)] <- 0
-    indiv.data$matstatus3[which(indiv.data$juvgvn3 == 1)] <- 0
-  }
-  
-  indiv.data$repstatus1 <- 0
-  indiv.data$repstatus2 <- 0
-  indiv.data$repstatus3 <- 0
-  
-  indiv.data$repstatus1[which(indiv.data$repstra1 > 0)] <- 1
-  indiv.data$repstatus2[which(indiv.data$repstra2 > 0)] <- 1
-  indiv.data$repstatus3[which(indiv.data$repstra3 > 0)] <- 1
-  
-  indiv.data$repstatus1[which(indiv.data$repstrb1 > 0)] <- 1
-  indiv.data$repstatus2[which(indiv.data$repstrb2 > 0)] <- 1
-  indiv.data$repstatus3[which(indiv.data$repstrb3 > 0)] <- 1
-  
-  indiv.data$fecstatus1 <- 0
-  indiv.data$fecstatus2 <- 0
-  indiv.data$fecstatus3 <- 0
-  
-  indiv.data$fecstatus1[which(indiv.data$feca1 > 0)] <- 1
-  indiv.data$fecstatus2[which(indiv.data$feca2 > 0)] <- 1
-  indiv.data$fecstatus3[which(indiv.data$feca3 > 0)] <- 1
-  
-  indiv.data$fecstatus1[which(indiv.data$fecb1 > 0)] <- 1
-  indiv.data$fecstatus2[which(indiv.data$fecb2 > 0)] <- 1
-  indiv.data$fecstatus3[which(indiv.data$fecb3 > 0)] <- 1
-  
-  return(indiv.data)
+  return(popdata)
 }
 
 #' Estimate Density on Basis of Cartesian Coordinates

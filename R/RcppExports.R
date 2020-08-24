@@ -24,6 +24,235 @@ ovreplace <- function(allst321, idx321old, idx321new, convtype, eststag3, gvnrat
     .Call('_lefko3_ovreplace', PACKAGE = 'lefko3', allst321, idx321old, idx321new, convtype, eststag3, gvnrate)
 }
 
+#' Make Horizontal Data Frame Vertical
+#' 
+#' Function \code{pfj()} powers the R function \code{\link{verticalize3}()}, creating
+#' the vertical structure and rearranging the data in that shape.
+#' 
+#' @param data The horizontal data file.
+#' @param stageframe The stageframe object identifying the life history model
+#' being operationalized.
+#' @param noyears The number of years or observation periods in the dataset.
+#' @param firstyear The first year or time of observation.
+#' @param popidcol Column number corresponding to the identity of the population 
+#' for each individual.
+#' @param patchidcol Column number corresponding to the identity of the patch for
+#' each individual.
+#' @param individcol Column number corresponding to the identity of each 
+#' individual.
+#' @param blocksize The number of variables corresponding to each time step in 
+#' the input dataset designated in \code{data}.
+#' @param xcol Column number corresponding to the x coordinate of each individual
+#' in Cartesian space.
+#' @param ycol Column number corresponding to the y coordinate of each individual
+#' in Cartesian space.
+#' @param juvcol Column number that marks individuals in immature stages within
+#' the dataset.
+#' @param size1col Column number corresponding to the first or main size variable 
+#' associated with the first year or observation time in the dataset.
+#' @param size2col Column number corresponding to the second size variable
+#' associated with the first year or observation time in the dataset.
+#' @param size3col Column number corresponding to the third size variable
+#' associated with the first year or observation time in the dataset.
+#' @param repstr1col Column number corresponding to the main variable coding the
+#' production of reproductive structures associated with the first year or 
+#' observation period in the input dataset.
+#' @param repstr2col Column number corresponding to a secone variable coding the
+#' production of reproductive structures associated with the first year or 
+#' observation period in the input dataset.
+#' @param fec1col Column number corresponding to the main variable coding for
+#' fecundity associated with the first year or observation period in the dataset.
+#' @param fec2col Column number corresponding to a second variable coding for
+#' fecundity associated with the first year or observation period in the dataset.
+#' @param alive1col Column number that details whether an individual is alive at
+#' a given time.
+#' @param dead1col Column number that details whether an individual is dead at
+#' a given time.
+#' @param obs1col Column number that details whether an individual is in an
+#' observable stage at a given time.
+#' @param nonobs1col Column number that details whether an individual is in an
+#' unobservable stage at a given time.
+#' @param censorcol Column number corresponding to the first entry of a censor 
+#' variable.
+#' @param stagecol Column number corresponding to the first entry of a column
+#' designating stages.
+#' @param repstrrel This is a scalar modifier for that makes the variable in
+#' \code{repstr2col} equivalent to \code{repstr1col}.
+#' @param fecrel This is a scalar modifier for that makes the variable in
+#' \code{fec2col} equivalent to \code{fec1col}.
+#' @param NAas0 If TRUE, then all NA entries for size and fecundity variables
+#' will be set to 0.
+#' @param NRasRep If TRUE, then will treat non-reproductive but mature
+#' individuals as reproductive during stage assignment.
+#' @param stassign A logical value indicating whether to assign stages.
+#' @param stszcol Column number describing which size variable to use in stage 
+#' estimation.
+#' @param stagenum The number of stages in the dataset.
+#' @param censorkeep The value of the censoring variable identifying data
+#' that should be included in analysis. Defaults to 0, but may take any value
+#' including NA.
+#' @param censbool A logical variable determining whether NA denotes the value
+#' of the censoring variable identifying data to keep.
+#' 
+#' @return The output is currently a 7 element list, where each element is a
+#' data frame with the same number of rows.
+#' 
+#' @keywords internal
+#' @noRd
+pfj <- function(data, stageframe, noyears, firstyear, popidcol, patchidcol, individcol, blocksize, xcol, ycol, juvcol, size1col, size2col, size3col, repstr1col, repstr2col, fec1col, fec2col, alive1col, dead1col, obs1col, nonobs1col, censorcol, stagecol, repstrrel, fecrel, NAas0, NRasRep, stassign, stszcol, stagenum, censbool) {
+    .Call('_lefko3_pfj', PACKAGE = 'lefko3', data, stageframe, noyears, firstyear, popidcol, patchidcol, individcol, blocksize, xcol, ycol, juvcol, size1col, size2col, size3col, repstr1col, repstr2col, fec1col, fec2col, alive1col, dead1col, obs1col, nonobs1col, censorcol, stagecol, repstrrel, fecrel, NAas0, NRasRep, stassign, stszcol, stagenum, censbool)
+}
+
+#' Make Vertical Data Frame Historical
+#' 
+#' Function \code{jpf()} powers the R function \code{\link{historicalize3}()}, creating
+#' the historical, vertical structure and rearranging the data in that shape.
+#'
+#' @param data The horizontal data file.
+#' @param stageframe The stageframe object identifying the life history model
+#' being operationalized.
+#' @param popidcol Column number corresponding to the identity of the population 
+#' for each individual.
+#' @param patchidcol Column number corresponding to the identity of the patch for
+#' each individual.
+#' @param individcol Column number corresponding to the identity of each 
+#' individual.
+#' @param year2col Column number of year or time step in time \emph{t}.
+#' @param year3col Column number of year or time step in time \emph{t}+1.
+#' @param xcol Column number corresponding to the x coordinate of each individual
+#' in Cartesian space.
+#' @param ycol Column number corresponding to the y coordinate of each individual
+#' in Cartesian space.
+#' @param juv2col Column number coding for status as a juvenile in time \emph{t}.
+#' @param juv3col Column number coding for status as a juvenile in time \emph{t}+1.
+#' @param sizea2col Column number corresponding to the primary size variable in
+#' time \emph{t}.
+#' @param sizea3col Column number corresponding to the primary size variable in
+#' time \emph{t}+1.
+#' @param sizeb2col Column number corresponding to the secondary size variable in
+#' time \emph{t}.
+#' @param sizeb3col Column number corresponding to the secondary size variable in
+#' time \emph{t}+1.
+#' @param sizec2col Column number corresponding to the tertiary size variable in
+#' time \emph{t}.
+#' @param sizec3col Column number corresponding to the tertiary size variable in
+#' time \emph{t}+1.
+#' @param repstra2col Column number corresponding to the main variable coding the
+#' production of reproductive structures, such as flowers, in time \emph{t}.
+#' @param repstra3col Column number corresponding to the main variable coding the
+#' production of reproductive structures, such as flowers, in time \emph{t}+1.
+#' @param repstrb2col Column number corresponding to a second variable coding the
+#' production of reproductive structures, such as flowers, in time
+#' @param repstrb3col Column number corresponding to a second variable coding the
+#' production of reproductive structures, such as flowers, in time \emph{t}+1.
+#' @param feca2col Column number corresponding to the main variable coding for
+#' fecundity in time \emph{t}.
+#' @param feca3col Column number corresponding to the main variable coding for
+#' fecundity in time \emph{t}+1.
+#' @param fecb2col Column number corresponding to a second variable coding for
+#' fecundity in time \emph{t}.
+#' @param fecb3col Column number corresponding to a second variable coding for
+#' fecundity in time \emph{t}+1.
+#' @param alive2col Column number detailing whether an individual is alive in 
+#' time \emph{t}.
+#' @param alive3col Column number detailing whether an individual is alive in 
+#' time \emph{t}+1.
+#' @param dead2col Column number detailing whether an individual is dead in 
+#' time \emph{t}.
+#' @param dead3col Column number detailing whether an individual is dead in 
+#' time \emph{t}+1.
+#' @param obs2col Column number detailing whether an individual is in an
+#' observable stage in time \emph{t}.
+#' @param obs3col Column number detailing whether an individual is in an
+#' unobservable stage in time \emph{t}.
+#' @param nonobs2col Column number detailing whether an individual is in an
+#' unobservable stage in time \emph{t}.
+#' @param nonobs3col Column number detailing whether an individual is in an
+#' unobservable stage in time \emph{t}+1.
+#' @param repstrrel This is a scalar modifier for that makes the variable in
+#' \code{repstrb2col} equivalent to \code{repstra2col}.
+#' @param fecrel This is a scalar modifier for that makes the variable in
+#' \code{fecb2col} equivalent to \code{feca2col}.
+#' @param stage2col Column number corresponding to life history stage in time \emph{t}.
+#' @param stage3col Column number corresponding to life history stage in time \emph{t}+1.
+#' @param censorcol Column number corresponding to a censor variable within the 
+#' dataset.
+#' @param NAas0 If TRUE, then all NA entries for size and fecundity variables
+#' will be set to 0.
+#' @param NRasRep If TRUE, then will treat non-reproductive but mature
+#' individuals as reproductive during stage assignment.
+#' @param stassign A logical value indicating whether to assign stages.
+#' @param stszcol Column number describing which size variable to use in stage 
+#' estimation.
+#' @param stagenum The number of stages in the dataset.
+#' @param censbool A logical variable determining whether NA denotes the value
+#' of the censoring variable identifying data to keep.
+#' 
+#' @return The output is currently a 7 element list, where each element is a
+#' data frame with the same number of rows.
+#' 
+#' @keywords internal
+#' @noRd
+jpf <- function(data, stageframe, popidcol, patchidcol, individcol, year2col, year3col, xcol, ycol, juv2col, juv3col, sizea2col, sizea3col, sizeb2col, sizeb3col, sizec2col, sizec3col, repstra2col, repstra3col, repstrb2col, repstrb3col, feca2col, feca3col, fecb2col, fecb3col, alive2col, alive3col, dead2col, dead3col, obs2col, obs3col, nonobs2col, nonobs3col, repstrrel, fecrel, stage2col, stage3col, censorcol, NAas0, NRasRep, stassign, stszcol, stagenum, censbool) {
+    .Call('_lefko3_jpf', PACKAGE = 'lefko3', data, stageframe, popidcol, patchidcol, individcol, year2col, year3col, xcol, ycol, juv2col, juv3col, sizea2col, sizea3col, sizeb2col, sizeb3col, sizec2col, sizec3col, repstra2col, repstra3col, repstrb2col, repstrb3col, feca2col, feca3col, fecb2col, fecb3col, alive2col, alive3col, dead2col, dead3col, obs2col, obs3col, nonobs2col, nonobs3col, repstrrel, fecrel, stage2col, stage3col, censorcol, NAas0, NRasRep, stassign, stszcol, stagenum, censbool)
+}
+
+#' Estimate All Elements in Function-based Population Projection Matrices
+#' 
+#' This function swiftly calculates matrix elements in function-based population
+#' projection matrices. Used in \code{\link{flefko3}()} and \code{\link{flefko2}()}.
+#' 
+#' @param ppy A data frame with one row, showing the population, patch, and year.
+#' @param AllStages A large data frame giving all required inputs for vital rate
+#' estimation other than the vital rate model coefficients themselves. Contains
+#' a row for each ultimate matrix element.
+#' @param survproxy List of coefficients estimated in model of survival.
+#' @param obsproxy List of coefficients estimated in model of observation.
+#' @param sizeproxy List of coefficients estimated in model of size.
+#' @param repstproxy List of coefficients estimated in model of reproductive 
+#' status.
+#' @param fecproxy List of coefficients estimated in model of fecundity.
+#' @param jsurvproxy List of coefficients estimated in model of juvenile
+#' survival.
+#' @param jobsproxy List of coefficients estimated in model of juvenile
+#' observation.
+#' @param jsizeproxy List of coefficients estimated in model of juvenile size.
+#' @param jrepstproxy List of coefficients estimated in model of juvenile
+#' reproductive status.
+#' @param survdev Scalar value to be added to the y-intercept of the linear model
+#' of survival probability.
+#' @param obsdev Scalar value to be added to the y-intercept of the linear model
+#' of observation probability.
+#' @param sizedev Scalar value to be added to the y-intercept of the linear model
+#' of size transition.
+#' @param repstdev Scalar value to be added to the y-intercept of the linear model
+#' of reproduction probability.
+#' @param fecdev Scalar value to be added to the y-intercept of the linear model
+#' of fecundity.
+#' @param jsurvdev Scalar value to be added to the y-intercept of the linear model
+#' of juvenile survival probability.
+#' @param jobsdev Scalar value to be added to the y-intercept of the linear model
+#' of juvenile observation probability.
+#' @param jsizedev Scalar value to be added to the y-intercept of the linear model
+#' of juvenile size transition.
+#' @param jrepstdev Scalar value to be added to the y-intercept of the linear model
+#' of juvenile reproduction probability.
+#' @param numofsizes4 Number of elements in main matrix.
+#' @param matrixdim Number of rows (and columns) in the final matrix.
+#' @param fecmod A scalar multiplier for fecundity.
+#' @param summedvars Summed variance-covariance terms in Poisson size distribution.
+#' @param sigma Standard deviation of Gaussian size distribution.
+#' @param jsummedvars Summed variance-covariance terms in Poisson juvenile size
+#' distribution.
+#' @param jsigma Standard deviation of Gaussian juvenile size distribution.
+#' @param maxsize The maximum size to be used in element estimation.
+#' @param sizedist Designates whether size is Gaussian (2), Poisson (0), or
+#' negative binomial (1) distributed.
+#' @param fecdist Designates whether fecundity is Gaussian (2), Poisson (0), or
+#' negative binomial (1) distributed.
+#' @param negfec Logical value denoting whether to change negative estimated
+NULL
+
 #' Estimate All Elements in Raw Historical Matrix
 #' 
 #' This function swiftly calculates matrix transitions in raw historical matrices,
@@ -119,81 +348,16 @@ hoffmannofstuttgart <- function(mainindex, allstages) {
     .Call('_lefko3_hoffmannofstuttgart', PACKAGE = 'lefko3', mainindex, allstages)
 }
 
-#' Estimate All Elements in Function-based Population Projection Matrices
 #' 
-#' This function swiftly calculates matrix elements in function-based population
-#' projection matrices. Used in \code{\link{flefko3}()} and \code{\link{flefko2}()}.
-#' 
-#' @param survcoefs Vector of coefficients estimated in model of survival.
-#' @param obscoefs Vector of coefficients estimated in model of observation.
-#' @param sizecoefs Vector of coefficients estimated in model of size.
-#' @param repstcoefs Vector of coefficients estimated in model of reproductive 
-#' status.
-#' @param feccoefs Vector of coefficients estimated in model of fecundity.
-#' @param jsurvcoefs Vector of coefficients estimated in model of juvenile
-#' survival.
-#' @param jobscoefs Vector of coefficients estimated in model of juvenile
-#' observation.
-#' @param jsizecoefs Vector of coefficients estimated in model of juvenile size.
-#' @param jrepstcoefs Vector of coefficients estimated in model of juvenile
-#' reproductive status.
-#' @param stage3 Vector of stage index at time \emph{t}+1 across projection matrix.
-#' @param stage2n Vector of stage index at time \emph{t} across projection matrix.
-#' @param stage1 Vector of stage index at time \emph{t}-1 across projection matrix.
-#' @param sz3 Vector of size at time \emph{t}+1 across projection matrix.
-#' @param sz2n Vector of size at time \emph{t} across projection matrix.
-#' @param sz1 Vector of size at time \emph{t}-1 across projection matrix.
-#' @param fl3 Vector of reproductive status at time \emph{t}+1 across projection 
-#' matrix.
-#' @param fl2n Vector of reproductive status at time \emph{t} across projection 
-#' matrix.
-#' @param fl1 Vector of reproductive status at time \emph{t}-1 across projection 
-#' matrix.
-#' @param ob3 Vector of observation status at time \emph{t}+1 across projection 
-#' matrix.
-#' @param ob2n Vector of observation status at time \emph{t} across projection 
-#' matrix.
-#' @param ob1 Vector of observation status at time \emph{t}-1 across projection 
-#' matrix.
-#' @param immat3 Vector of immaturity status at time \emph{t}+1 across projection 
-#' matrix.
-#' @param immat2n Vector of immaturity status at time \emph{t} across projection 
-#' matrix.
-#' @param indata2 Vector indicating whether stage time time \emph{t} in the To
-#' stage pair is estimable.
-#' @param indata Vector indicating whether the combination of stages at times
-#' \emph{t}+1 and \emph{t} in the To stage, and time \emph{t} in the From stage,
-#' are estimable.
-#' @param aliveandequal Vector indicating whether the transition indicated by the
-#' respective From and To stage-pairs is estimable.
-#' @param repentry Vector identifying whether stage at time {t}+1 is a reproductive
-#' entry stage, and whether stage at time \emph{t} is potentially reproductive.
-#' @param ovgivent Vector of given survival-transition probabilities for 
-#' replacement.
-#' @param ovgivenf Vector of given fecundity rates for replacement.
-#' @param binwidth3 Width of size class bins associated with stage in time \emph{t}+1.
-#' @param numofsizes4 Number of elements in main matrix.
-#' @param fecmod A scalar multiplier for fecundity.
-#' @param summedvars Summed variance-covariance terms in Poisson size distribution.
-#' @param sigma Standard deviation of Gaussian size distribution.
-#' @param jsummedvars Summed variance-covariance terms in Poisson juvenile size
-#' distribution.
-#' @param jsigma Standard deviation of Gaussian juvenile size distribution.
-#' @param maxsize The maximum size to be used in element estimation.
-#' @param sizedist Designates whether size is Gaussian (2), Poisson (0), or
-#' negative binomial (1) distributed.
-#' @param fecdist Designates whether fecundity is Gaussian (2), Poisson (0), or
-#' negative binomial (1) distributed.
-#' 
-#' @return A 6 column matrix showing survival probability, observation probability,
-#' reproduction probability, size transition probability, overall 
-#' survival-transition probability, and fecundity rate, for each element of the
-#' final population projection matrix.
+#' @return A list of 3 matrices, including the main MPM (A), the survival-transition
+#' matrix (U), anf a fecundity matrix (F). With tweaking, can also produce a 4 column 
+#' matrix showing survival probability, observation probability, reproduction
+#' probability, and size transition probability, for each element of the final MPM.
 #' 
 #' @keywords internal
 #' @noRd
-jerzeibalowski <- function(survcoefs, obscoefs, sizecoefs, repstcoefs, feccoefs, jsurvcoefs, jobscoefs, jsizecoefs, jrepstcoefs, stage3, stage2n, stage1, sz3, sz2n, sz1, fl3, fl2n, fl1, ob3, ob2n, ob1, immat3, immat2n, indata2, indata, aliveandequal, repentry, ovgivent, ovgivenf, binwidth3, numofsizes4, fecmod, summedvars, sigma, jsummedvars, jsigma, maxsize, sizedist, fecdist) {
-    .Call('_lefko3_jerzeibalowski', PACKAGE = 'lefko3', survcoefs, obscoefs, sizecoefs, repstcoefs, feccoefs, jsurvcoefs, jobscoefs, jsizecoefs, jrepstcoefs, stage3, stage2n, stage1, sz3, sz2n, sz1, fl3, fl2n, fl1, ob3, ob2n, ob1, immat3, immat2n, indata2, indata, aliveandequal, repentry, ovgivent, ovgivenf, binwidth3, numofsizes4, fecmod, summedvars, sigma, jsummedvars, jsigma, maxsize, sizedist, fecdist)
+jerzeibalowski <- function(ppy, AllStages, survproxy, obsproxy, sizeproxy, repstproxy, fecproxy, jsurvproxy, jobsproxy, jsizeproxy, jrepstproxy, survdev, obsdev, sizedev, repstdev, fecdev, jsurvdev, jobsdev, jsizedev, jrepstdev, numofsizes4, matrixdim, fecmod, summedvars, sigma, jsummedvars, jsigma, maxsize, sizedist, fecdist, negfec) {
+    .Call('_lefko3_jerzeibalowski', PACKAGE = 'lefko3', ppy, AllStages, survproxy, obsproxy, sizeproxy, repstproxy, fecproxy, jsurvproxy, jobsproxy, jsizeproxy, jrepstproxy, survdev, obsdev, sizedev, repstdev, fecdev, jsurvdev, jobsdev, jsizedev, jrepstdev, numofsizes4, matrixdim, fecmod, summedvars, sigma, jsummedvars, jsigma, maxsize, sizedist, fecdist, negfec)
 }
 
 #' Estimates Mean Population Projection Matrix, Using Summed U and F Matrices

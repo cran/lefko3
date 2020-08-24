@@ -22,6 +22,102 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// pfj
+List pfj(DataFrame data, DataFrame stageframe, int noyears, int firstyear, int popidcol, int patchidcol, int individcol, int blocksize, int xcol, int ycol, int juvcol, int size1col, int size2col, int size3col, int repstr1col, int repstr2col, int fec1col, int fec2col, int alive1col, int dead1col, int obs1col, int nonobs1col, int censorcol, int stagecol, double repstrrel, double fecrel, bool NAas0, bool NRasRep, bool stassign, int stszcol, int stagenum, bool censbool);
+RcppExport SEXP _lefko3_pfj(SEXP dataSEXP, SEXP stageframeSEXP, SEXP noyearsSEXP, SEXP firstyearSEXP, SEXP popidcolSEXP, SEXP patchidcolSEXP, SEXP individcolSEXP, SEXP blocksizeSEXP, SEXP xcolSEXP, SEXP ycolSEXP, SEXP juvcolSEXP, SEXP size1colSEXP, SEXP size2colSEXP, SEXP size3colSEXP, SEXP repstr1colSEXP, SEXP repstr2colSEXP, SEXP fec1colSEXP, SEXP fec2colSEXP, SEXP alive1colSEXP, SEXP dead1colSEXP, SEXP obs1colSEXP, SEXP nonobs1colSEXP, SEXP censorcolSEXP, SEXP stagecolSEXP, SEXP repstrrelSEXP, SEXP fecrelSEXP, SEXP NAas0SEXP, SEXP NRasRepSEXP, SEXP stassignSEXP, SEXP stszcolSEXP, SEXP stagenumSEXP, SEXP censboolSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< DataFrame >::type data(dataSEXP);
+    Rcpp::traits::input_parameter< DataFrame >::type stageframe(stageframeSEXP);
+    Rcpp::traits::input_parameter< int >::type noyears(noyearsSEXP);
+    Rcpp::traits::input_parameter< int >::type firstyear(firstyearSEXP);
+    Rcpp::traits::input_parameter< int >::type popidcol(popidcolSEXP);
+    Rcpp::traits::input_parameter< int >::type patchidcol(patchidcolSEXP);
+    Rcpp::traits::input_parameter< int >::type individcol(individcolSEXP);
+    Rcpp::traits::input_parameter< int >::type blocksize(blocksizeSEXP);
+    Rcpp::traits::input_parameter< int >::type xcol(xcolSEXP);
+    Rcpp::traits::input_parameter< int >::type ycol(ycolSEXP);
+    Rcpp::traits::input_parameter< int >::type juvcol(juvcolSEXP);
+    Rcpp::traits::input_parameter< int >::type size1col(size1colSEXP);
+    Rcpp::traits::input_parameter< int >::type size2col(size2colSEXP);
+    Rcpp::traits::input_parameter< int >::type size3col(size3colSEXP);
+    Rcpp::traits::input_parameter< int >::type repstr1col(repstr1colSEXP);
+    Rcpp::traits::input_parameter< int >::type repstr2col(repstr2colSEXP);
+    Rcpp::traits::input_parameter< int >::type fec1col(fec1colSEXP);
+    Rcpp::traits::input_parameter< int >::type fec2col(fec2colSEXP);
+    Rcpp::traits::input_parameter< int >::type alive1col(alive1colSEXP);
+    Rcpp::traits::input_parameter< int >::type dead1col(dead1colSEXP);
+    Rcpp::traits::input_parameter< int >::type obs1col(obs1colSEXP);
+    Rcpp::traits::input_parameter< int >::type nonobs1col(nonobs1colSEXP);
+    Rcpp::traits::input_parameter< int >::type censorcol(censorcolSEXP);
+    Rcpp::traits::input_parameter< int >::type stagecol(stagecolSEXP);
+    Rcpp::traits::input_parameter< double >::type repstrrel(repstrrelSEXP);
+    Rcpp::traits::input_parameter< double >::type fecrel(fecrelSEXP);
+    Rcpp::traits::input_parameter< bool >::type NAas0(NAas0SEXP);
+    Rcpp::traits::input_parameter< bool >::type NRasRep(NRasRepSEXP);
+    Rcpp::traits::input_parameter< bool >::type stassign(stassignSEXP);
+    Rcpp::traits::input_parameter< int >::type stszcol(stszcolSEXP);
+    Rcpp::traits::input_parameter< int >::type stagenum(stagenumSEXP);
+    Rcpp::traits::input_parameter< bool >::type censbool(censboolSEXP);
+    rcpp_result_gen = Rcpp::wrap(pfj(data, stageframe, noyears, firstyear, popidcol, patchidcol, individcol, blocksize, xcol, ycol, juvcol, size1col, size2col, size3col, repstr1col, repstr2col, fec1col, fec2col, alive1col, dead1col, obs1col, nonobs1col, censorcol, stagecol, repstrrel, fecrel, NAas0, NRasRep, stassign, stszcol, stagenum, censbool));
+    return rcpp_result_gen;
+END_RCPP
+}
+// jpf
+Rcpp::List jpf(DataFrame data, DataFrame stageframe, int popidcol, int patchidcol, int individcol, int year2col, int year3col, int xcol, int ycol, int juv2col, int juv3col, int sizea2col, int sizea3col, int sizeb2col, int sizeb3col, int sizec2col, int sizec3col, int repstra2col, int repstra3col, int repstrb2col, int repstrb3col, int feca2col, int feca3col, int fecb2col, int fecb3col, int alive2col, int alive3col, int dead2col, int dead3col, int obs2col, int obs3col, int nonobs2col, int nonobs3col, double repstrrel, double fecrel, int stage2col, int stage3col, int censorcol, bool NAas0, bool NRasRep, bool stassign, int stszcol, int stagenum, bool censbool);
+RcppExport SEXP _lefko3_jpf(SEXP dataSEXP, SEXP stageframeSEXP, SEXP popidcolSEXP, SEXP patchidcolSEXP, SEXP individcolSEXP, SEXP year2colSEXP, SEXP year3colSEXP, SEXP xcolSEXP, SEXP ycolSEXP, SEXP juv2colSEXP, SEXP juv3colSEXP, SEXP sizea2colSEXP, SEXP sizea3colSEXP, SEXP sizeb2colSEXP, SEXP sizeb3colSEXP, SEXP sizec2colSEXP, SEXP sizec3colSEXP, SEXP repstra2colSEXP, SEXP repstra3colSEXP, SEXP repstrb2colSEXP, SEXP repstrb3colSEXP, SEXP feca2colSEXP, SEXP feca3colSEXP, SEXP fecb2colSEXP, SEXP fecb3colSEXP, SEXP alive2colSEXP, SEXP alive3colSEXP, SEXP dead2colSEXP, SEXP dead3colSEXP, SEXP obs2colSEXP, SEXP obs3colSEXP, SEXP nonobs2colSEXP, SEXP nonobs3colSEXP, SEXP repstrrelSEXP, SEXP fecrelSEXP, SEXP stage2colSEXP, SEXP stage3colSEXP, SEXP censorcolSEXP, SEXP NAas0SEXP, SEXP NRasRepSEXP, SEXP stassignSEXP, SEXP stszcolSEXP, SEXP stagenumSEXP, SEXP censboolSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< DataFrame >::type data(dataSEXP);
+    Rcpp::traits::input_parameter< DataFrame >::type stageframe(stageframeSEXP);
+    Rcpp::traits::input_parameter< int >::type popidcol(popidcolSEXP);
+    Rcpp::traits::input_parameter< int >::type patchidcol(patchidcolSEXP);
+    Rcpp::traits::input_parameter< int >::type individcol(individcolSEXP);
+    Rcpp::traits::input_parameter< int >::type year2col(year2colSEXP);
+    Rcpp::traits::input_parameter< int >::type year3col(year3colSEXP);
+    Rcpp::traits::input_parameter< int >::type xcol(xcolSEXP);
+    Rcpp::traits::input_parameter< int >::type ycol(ycolSEXP);
+    Rcpp::traits::input_parameter< int >::type juv2col(juv2colSEXP);
+    Rcpp::traits::input_parameter< int >::type juv3col(juv3colSEXP);
+    Rcpp::traits::input_parameter< int >::type sizea2col(sizea2colSEXP);
+    Rcpp::traits::input_parameter< int >::type sizea3col(sizea3colSEXP);
+    Rcpp::traits::input_parameter< int >::type sizeb2col(sizeb2colSEXP);
+    Rcpp::traits::input_parameter< int >::type sizeb3col(sizeb3colSEXP);
+    Rcpp::traits::input_parameter< int >::type sizec2col(sizec2colSEXP);
+    Rcpp::traits::input_parameter< int >::type sizec3col(sizec3colSEXP);
+    Rcpp::traits::input_parameter< int >::type repstra2col(repstra2colSEXP);
+    Rcpp::traits::input_parameter< int >::type repstra3col(repstra3colSEXP);
+    Rcpp::traits::input_parameter< int >::type repstrb2col(repstrb2colSEXP);
+    Rcpp::traits::input_parameter< int >::type repstrb3col(repstrb3colSEXP);
+    Rcpp::traits::input_parameter< int >::type feca2col(feca2colSEXP);
+    Rcpp::traits::input_parameter< int >::type feca3col(feca3colSEXP);
+    Rcpp::traits::input_parameter< int >::type fecb2col(fecb2colSEXP);
+    Rcpp::traits::input_parameter< int >::type fecb3col(fecb3colSEXP);
+    Rcpp::traits::input_parameter< int >::type alive2col(alive2colSEXP);
+    Rcpp::traits::input_parameter< int >::type alive3col(alive3colSEXP);
+    Rcpp::traits::input_parameter< int >::type dead2col(dead2colSEXP);
+    Rcpp::traits::input_parameter< int >::type dead3col(dead3colSEXP);
+    Rcpp::traits::input_parameter< int >::type obs2col(obs2colSEXP);
+    Rcpp::traits::input_parameter< int >::type obs3col(obs3colSEXP);
+    Rcpp::traits::input_parameter< int >::type nonobs2col(nonobs2colSEXP);
+    Rcpp::traits::input_parameter< int >::type nonobs3col(nonobs3colSEXP);
+    Rcpp::traits::input_parameter< double >::type repstrrel(repstrrelSEXP);
+    Rcpp::traits::input_parameter< double >::type fecrel(fecrelSEXP);
+    Rcpp::traits::input_parameter< int >::type stage2col(stage2colSEXP);
+    Rcpp::traits::input_parameter< int >::type stage3col(stage3colSEXP);
+    Rcpp::traits::input_parameter< int >::type censorcol(censorcolSEXP);
+    Rcpp::traits::input_parameter< bool >::type NAas0(NAas0SEXP);
+    Rcpp::traits::input_parameter< bool >::type NRasRep(NRasRepSEXP);
+    Rcpp::traits::input_parameter< bool >::type stassign(stassignSEXP);
+    Rcpp::traits::input_parameter< int >::type stszcol(stszcolSEXP);
+    Rcpp::traits::input_parameter< int >::type stagenum(stagenumSEXP);
+    Rcpp::traits::input_parameter< bool >::type censbool(censboolSEXP);
+    rcpp_result_gen = Rcpp::wrap(jpf(data, stageframe, popidcol, patchidcol, individcol, year2col, year3col, xcol, ycol, juv2col, juv3col, sizea2col, sizea3col, sizeb2col, sizeb3col, sizec2col, sizec3col, repstra2col, repstra3col, repstrb2col, repstrb3col, feca2col, feca3col, fecb2col, fecb3col, alive2col, alive3col, dead2col, dead3col, obs2col, obs3col, nonobs2col, nonobs3col, repstrrel, fecrel, stage2col, stage3col, censorcol, NAas0, NRasRep, stassign, stszcol, stagenum, censbool));
+    return rcpp_result_gen;
+END_RCPP
+}
 // specialpatrolgroup
 arma::mat specialpatrolgroup(arma::mat sge9l, arma::mat sge3, arma::mat maindata, arma::uvec sge93index, arma::uvec sge92index, arma::uvec sge32index, arma::uvec sge33, arma::uvec sge32, arma::uvec data3221, arma::uvec data21, int nostages);
 RcppExport SEXP _lefko3_specialpatrolgroup(SEXP sge9lSEXP, SEXP sge3SEXP, SEXP maindataSEXP, SEXP sge93indexSEXP, SEXP sge92indexSEXP, SEXP sge32indexSEXP, SEXP sge33SEXP, SEXP sge32SEXP, SEXP data3221SEXP, SEXP data21SEXP, SEXP nostagesSEXP) {
@@ -76,42 +172,33 @@ BEGIN_RCPP
 END_RCPP
 }
 // jerzeibalowski
-arma::mat jerzeibalowski(arma::vec survcoefs, arma::vec obscoefs, arma::vec sizecoefs, arma::vec repstcoefs, arma::vec feccoefs, arma::vec jsurvcoefs, arma::vec jobscoefs, arma::vec jsizecoefs, arma::vec jrepstcoefs, arma::vec stage3, arma::vec stage2n, arma::vec stage1, arma::vec sz3, arma::vec sz2n, arma::vec sz1, arma::vec fl3, arma::vec fl2n, arma::vec fl1, arma::vec ob3, arma::vec ob2n, arma::vec ob1, arma::vec immat3, arma::vec immat2n, arma::vec indata2, arma::vec indata, arma::uvec aliveandequal, arma::vec repentry, arma::vec ovgivent, arma::vec ovgivenf, arma::vec binwidth3, unsigned long numofsizes4, double fecmod, double summedvars, double sigma, double jsummedvars, double jsigma, double maxsize, int sizedist, int fecdist);
-RcppExport SEXP _lefko3_jerzeibalowski(SEXP survcoefsSEXP, SEXP obscoefsSEXP, SEXP sizecoefsSEXP, SEXP repstcoefsSEXP, SEXP feccoefsSEXP, SEXP jsurvcoefsSEXP, SEXP jobscoefsSEXP, SEXP jsizecoefsSEXP, SEXP jrepstcoefsSEXP, SEXP stage3SEXP, SEXP stage2nSEXP, SEXP stage1SEXP, SEXP sz3SEXP, SEXP sz2nSEXP, SEXP sz1SEXP, SEXP fl3SEXP, SEXP fl2nSEXP, SEXP fl1SEXP, SEXP ob3SEXP, SEXP ob2nSEXP, SEXP ob1SEXP, SEXP immat3SEXP, SEXP immat2nSEXP, SEXP indata2SEXP, SEXP indataSEXP, SEXP aliveandequalSEXP, SEXP repentrySEXP, SEXP ovgiventSEXP, SEXP ovgivenfSEXP, SEXP binwidth3SEXP, SEXP numofsizes4SEXP, SEXP fecmodSEXP, SEXP summedvarsSEXP, SEXP sigmaSEXP, SEXP jsummedvarsSEXP, SEXP jsigmaSEXP, SEXP maxsizeSEXP, SEXP sizedistSEXP, SEXP fecdistSEXP) {
+List jerzeibalowski(DataFrame ppy, DataFrame AllStages, List survproxy, List obsproxy, List sizeproxy, List repstproxy, List fecproxy, List jsurvproxy, List jobsproxy, List jsizeproxy, List jrepstproxy, double survdev, double obsdev, double sizedev, double repstdev, double fecdev, double jsurvdev, double jobsdev, double jsizedev, double jrepstdev, unsigned long numofsizes4, unsigned long matrixdim, double fecmod, double summedvars, double sigma, double jsummedvars, double jsigma, double maxsize, int sizedist, int fecdist, bool negfec);
+RcppExport SEXP _lefko3_jerzeibalowski(SEXP ppySEXP, SEXP AllStagesSEXP, SEXP survproxySEXP, SEXP obsproxySEXP, SEXP sizeproxySEXP, SEXP repstproxySEXP, SEXP fecproxySEXP, SEXP jsurvproxySEXP, SEXP jobsproxySEXP, SEXP jsizeproxySEXP, SEXP jrepstproxySEXP, SEXP survdevSEXP, SEXP obsdevSEXP, SEXP sizedevSEXP, SEXP repstdevSEXP, SEXP fecdevSEXP, SEXP jsurvdevSEXP, SEXP jobsdevSEXP, SEXP jsizedevSEXP, SEXP jrepstdevSEXP, SEXP numofsizes4SEXP, SEXP matrixdimSEXP, SEXP fecmodSEXP, SEXP summedvarsSEXP, SEXP sigmaSEXP, SEXP jsummedvarsSEXP, SEXP jsigmaSEXP, SEXP maxsizeSEXP, SEXP sizedistSEXP, SEXP fecdistSEXP, SEXP negfecSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< arma::vec >::type survcoefs(survcoefsSEXP);
-    Rcpp::traits::input_parameter< arma::vec >::type obscoefs(obscoefsSEXP);
-    Rcpp::traits::input_parameter< arma::vec >::type sizecoefs(sizecoefsSEXP);
-    Rcpp::traits::input_parameter< arma::vec >::type repstcoefs(repstcoefsSEXP);
-    Rcpp::traits::input_parameter< arma::vec >::type feccoefs(feccoefsSEXP);
-    Rcpp::traits::input_parameter< arma::vec >::type jsurvcoefs(jsurvcoefsSEXP);
-    Rcpp::traits::input_parameter< arma::vec >::type jobscoefs(jobscoefsSEXP);
-    Rcpp::traits::input_parameter< arma::vec >::type jsizecoefs(jsizecoefsSEXP);
-    Rcpp::traits::input_parameter< arma::vec >::type jrepstcoefs(jrepstcoefsSEXP);
-    Rcpp::traits::input_parameter< arma::vec >::type stage3(stage3SEXP);
-    Rcpp::traits::input_parameter< arma::vec >::type stage2n(stage2nSEXP);
-    Rcpp::traits::input_parameter< arma::vec >::type stage1(stage1SEXP);
-    Rcpp::traits::input_parameter< arma::vec >::type sz3(sz3SEXP);
-    Rcpp::traits::input_parameter< arma::vec >::type sz2n(sz2nSEXP);
-    Rcpp::traits::input_parameter< arma::vec >::type sz1(sz1SEXP);
-    Rcpp::traits::input_parameter< arma::vec >::type fl3(fl3SEXP);
-    Rcpp::traits::input_parameter< arma::vec >::type fl2n(fl2nSEXP);
-    Rcpp::traits::input_parameter< arma::vec >::type fl1(fl1SEXP);
-    Rcpp::traits::input_parameter< arma::vec >::type ob3(ob3SEXP);
-    Rcpp::traits::input_parameter< arma::vec >::type ob2n(ob2nSEXP);
-    Rcpp::traits::input_parameter< arma::vec >::type ob1(ob1SEXP);
-    Rcpp::traits::input_parameter< arma::vec >::type immat3(immat3SEXP);
-    Rcpp::traits::input_parameter< arma::vec >::type immat2n(immat2nSEXP);
-    Rcpp::traits::input_parameter< arma::vec >::type indata2(indata2SEXP);
-    Rcpp::traits::input_parameter< arma::vec >::type indata(indataSEXP);
-    Rcpp::traits::input_parameter< arma::uvec >::type aliveandequal(aliveandequalSEXP);
-    Rcpp::traits::input_parameter< arma::vec >::type repentry(repentrySEXP);
-    Rcpp::traits::input_parameter< arma::vec >::type ovgivent(ovgiventSEXP);
-    Rcpp::traits::input_parameter< arma::vec >::type ovgivenf(ovgivenfSEXP);
-    Rcpp::traits::input_parameter< arma::vec >::type binwidth3(binwidth3SEXP);
+    Rcpp::traits::input_parameter< DataFrame >::type ppy(ppySEXP);
+    Rcpp::traits::input_parameter< DataFrame >::type AllStages(AllStagesSEXP);
+    Rcpp::traits::input_parameter< List >::type survproxy(survproxySEXP);
+    Rcpp::traits::input_parameter< List >::type obsproxy(obsproxySEXP);
+    Rcpp::traits::input_parameter< List >::type sizeproxy(sizeproxySEXP);
+    Rcpp::traits::input_parameter< List >::type repstproxy(repstproxySEXP);
+    Rcpp::traits::input_parameter< List >::type fecproxy(fecproxySEXP);
+    Rcpp::traits::input_parameter< List >::type jsurvproxy(jsurvproxySEXP);
+    Rcpp::traits::input_parameter< List >::type jobsproxy(jobsproxySEXP);
+    Rcpp::traits::input_parameter< List >::type jsizeproxy(jsizeproxySEXP);
+    Rcpp::traits::input_parameter< List >::type jrepstproxy(jrepstproxySEXP);
+    Rcpp::traits::input_parameter< double >::type survdev(survdevSEXP);
+    Rcpp::traits::input_parameter< double >::type obsdev(obsdevSEXP);
+    Rcpp::traits::input_parameter< double >::type sizedev(sizedevSEXP);
+    Rcpp::traits::input_parameter< double >::type repstdev(repstdevSEXP);
+    Rcpp::traits::input_parameter< double >::type fecdev(fecdevSEXP);
+    Rcpp::traits::input_parameter< double >::type jsurvdev(jsurvdevSEXP);
+    Rcpp::traits::input_parameter< double >::type jobsdev(jobsdevSEXP);
+    Rcpp::traits::input_parameter< double >::type jsizedev(jsizedevSEXP);
+    Rcpp::traits::input_parameter< double >::type jrepstdev(jrepstdevSEXP);
     Rcpp::traits::input_parameter< unsigned long >::type numofsizes4(numofsizes4SEXP);
+    Rcpp::traits::input_parameter< unsigned long >::type matrixdim(matrixdimSEXP);
     Rcpp::traits::input_parameter< double >::type fecmod(fecmodSEXP);
     Rcpp::traits::input_parameter< double >::type summedvars(summedvarsSEXP);
     Rcpp::traits::input_parameter< double >::type sigma(sigmaSEXP);
@@ -120,7 +207,8 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< double >::type maxsize(maxsizeSEXP);
     Rcpp::traits::input_parameter< int >::type sizedist(sizedistSEXP);
     Rcpp::traits::input_parameter< int >::type fecdist(fecdistSEXP);
-    rcpp_result_gen = Rcpp::wrap(jerzeibalowski(survcoefs, obscoefs, sizecoefs, repstcoefs, feccoefs, jsurvcoefs, jobscoefs, jsizecoefs, jrepstcoefs, stage3, stage2n, stage1, sz3, sz2n, sz1, fl3, fl2n, fl1, ob3, ob2n, ob1, immat3, immat2n, indata2, indata, aliveandequal, repentry, ovgivent, ovgivenf, binwidth3, numofsizes4, fecmod, summedvars, sigma, jsummedvars, jsigma, maxsize, sizedist, fecdist));
+    Rcpp::traits::input_parameter< bool >::type negfec(negfecSEXP);
+    rcpp_result_gen = Rcpp::wrap(jerzeibalowski(ppy, AllStages, survproxy, obsproxy, sizeproxy, repstproxy, fecproxy, jsurvproxy, jobsproxy, jsizeproxy, jrepstproxy, survdev, obsdev, sizedev, repstdev, fecdev, jsurvdev, jobsdev, jsizedev, jrepstdev, numofsizes4, matrixdim, fecmod, summedvars, sigma, jsummedvars, jsigma, maxsize, sizedist, fecdist, negfec));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -164,10 +252,12 @@ END_RCPP
 
 static const R_CallMethodDef CallEntries[] = {
     {"_lefko3_ovreplace", (DL_FUNC) &_lefko3_ovreplace, 6},
+    {"_lefko3_pfj", (DL_FUNC) &_lefko3_pfj, 32},
+    {"_lefko3_jpf", (DL_FUNC) &_lefko3_jpf, 44},
     {"_lefko3_specialpatrolgroup", (DL_FUNC) &_lefko3_specialpatrolgroup, 11},
     {"_lefko3_normalpatrolgroup", (DL_FUNC) &_lefko3_normalpatrolgroup, 10},
     {"_lefko3_hoffmannofstuttgart", (DL_FUNC) &_lefko3_hoffmannofstuttgart, 2},
-    {"_lefko3_jerzeibalowski", (DL_FUNC) &_lefko3_jerzeibalowski, 39},
+    {"_lefko3_jerzeibalowski", (DL_FUNC) &_lefko3_jerzeibalowski, 31},
     {"_lefko3_geodiesel", (DL_FUNC) &_lefko3_geodiesel, 8},
     {"_lefko3_turbogeodiesel", (DL_FUNC) &_lefko3_turbogeodiesel, 9},
     {NULL, NULL, 0}

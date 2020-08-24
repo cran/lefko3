@@ -4082,7 +4082,7 @@ summary.lefkoMod <- function(object, ...) {
 #' 
 #' @keywords internal
 #' @noRd
-.modelextract <- function(model, paramnames) UseMethod(".modelextract")
+.modelextract <- function(model, ...) UseMethod(".modelextract")
 
 #' Extract Required Coefficient Values From glmmTMB-estimated Vital Rate Models
 #' 
@@ -4113,7 +4113,7 @@ summary.lefkoMod <- function(object, ...) {
 #' 
 #' @keywords internal
 #' @noRd
-.modelextract.glmmTMB <- function(model, paramnames) {
+.modelextract.glmmTMB <- function(model, paramnames, mainyears, mainpatches, year.as.random, patch.as.random) {
   
   size2.coef <- 0
   size1.coef <- 0
@@ -4166,7 +4166,7 @@ summary.lefkoMod <- function(object, ...) {
   
   if (!is.na(glmmTMB::fixef(model)[["cond"]][paste0(paramnames[(which(paramnames$mainparams == "age")), 2], ":", paramnames[(which(paramnames$mainparams == "size2")), 2])])) {age.size2.coef <- glmmTMB::fixef(model)[["cond"]][paste0(paramnames[(which(paramnames$mainparams == "age")), 2], ":", paramnames[(which(paramnames$mainparams == "size2")), 2])]}
   if (!is.na(glmmTMB::fixef(model)[["cond"]][paste0(paramnames[(which(paramnames$mainparams == "size2")), 2], ":", paramnames[(which(paramnames$mainparams == "age")), 2])])) {age.size2.coef <- glmmTMB::fixef(model)[["cond"]][paste0(paramnames[(which(paramnames$mainparams == "size2")), 2], ":", paramnames[(which(paramnames$mainparams == "age")), 2])]}
-
+  
   if (!is.na(glmmTMB::fixef(model)[["cond"]][paste0(paramnames[(which(paramnames$mainparams == "age")), 2], ":", paramnames[(which(paramnames$mainparams == "repst1")), 2])])) {age.flw1.coef <- glmmTMB::fixef(model)[["cond"]][paste0(paramnames[(which(paramnames$mainparams == "age")), 2], ":", paramnames[(which(paramnames$mainparams == "repst1")), 2])]}
   if (!is.na(glmmTMB::fixef(model)[["cond"]][paste0(paramnames[(which(paramnames$mainparams == "repst1")), 2], ":", paramnames[(which(paramnames$mainparams == "age")), 2])])) {age.flw1.coef <- glmmTMB::fixef(model)[["cond"]][paste0(paramnames[(which(paramnames$mainparams == "repst1")), 2], ":", paramnames[(which(paramnames$mainparams == "age")), 2])]}
   
@@ -4180,7 +4180,7 @@ summary.lefkoMod <- function(object, ...) {
   } else if (!all(is.na(glmmTMB::ranef(model)[["cond"]][[paramnames[(which(paramnames$mainparams == "patch")), 2]]]))) {
     patch.coefs <- glmmTMB::ranef(model)[["cond"]][[paramnames[(which(paramnames$mainparams == "patch")), 2]]]
   } else {
-    patch.coefs <- NA
+    patch.coefs <- 0
   }
   
   coef.vec <- c(yintercept, flw1.coef, flw2.coef, size1.coef, size2.coef, flw1.flw2.coef, size1.size2.coef, 
@@ -4191,6 +4191,43 @@ summary.lefkoMod <- function(object, ...) {
   
   coef.list <- list(coefficients = coef.vec, years = year.coefs, patches = patch.coefs,
                     variances = rvars, family = stats::family(model)$family, sigma = NA)
+  
+  #Here we correct for missing years
+  yeardiff <- setdiff(mainyears, rownames(coef.list$years))
+  
+  if (length(yeardiff) > 0) {
+    if (year.as.random == TRUE) {
+      newdevs <- rnorm(length(yeardiff), mean = 0, sd = sd(coef.list$years[,1]))
+    } else {
+      newdevs <- rep(0, (length(yeardiff)))
+    }
+    coef.list$years <- rbind.data.frame(setNames(as.data.frame(as.matrix(newdevs, ncol = 1)), names(coef.list$years)), coef.list$years)
+    yearlabels <- c(yeardiff, rownames(coef.list$years)[(length(yeardiff) + 1):(length(coef.list$years[,1]))])
+    coef.list$years <- as.data.frame(coef.list$years[order(yearlabels),])
+    rownames(coef.list$years) <- sort(yearlabels)
+    
+  }
+  
+  #This next part addresses missing patches
+  if (class(coef.list$patches) == "data.frame") {
+    patchdiff <- setdiff(mainpatches, rownames(coef.list$patches))
+    
+    if (length(patchdiff) > 0) {
+      if (patch.as.random == TRUE) {
+        newdevs <- rnorm(length(patchdiff), mean = 0, sd = sd(coef.list$patches[,1]))
+      } else {
+        newdevs <- rep(0, (length(patchdiff)))
+      }
+      coef.list$patches <- rbind.data.frame(setNames(as.data.frame(as.matrix(newdevs, ncol = 1)), names(coef.list$patches)), coef.list$patches)
+      patchlabels <- c(patchdiff, rownames(coef.list$patches)[(length(patchdiff) + 1):(length(coef.list$patches[,1]))])
+      coef.list$patches <- as.data.frame(coef.list$patches[order(patchlabels),])
+      rownames(coef.list$patches) <- sort(patchlabels)
+      
+    }
+  }
+  
+  coef.list$years <- coef.list$years[,1]
+  coef.list$patches <- coef.list$patches[,1]
   
   return(coef.list)
 }
@@ -4224,7 +4261,7 @@ summary.lefkoMod <- function(object, ...) {
 #' 
 #' @keywords internal
 #' @noRd
-.modelextract.merMod <- function(model, paramnames) {
+.modelextract.merMod <- function(model, paramnames, mainyears, mainpatches, year.as.random, patch.as.random) {
   
   size2.coef <- 0
   size1.coef <- 0
@@ -4303,6 +4340,41 @@ summary.lefkoMod <- function(object, ...) {
   coef.list <- list(coefficients = coef.vec, years = year.coefs, patches = patch.coefs, 
                     variances = rvars, family = stats::family(model)$family, sigma = NA)
   
+  #Here we correct for missing years
+  yeardiff <- setdiff(mainyears, rownames(coef.list$years))
+  
+  if (length(yeardiff) > 0) {
+    if (year.as.random == TRUE) {
+      newdevs <- rnorm(length(yeardiff), mean = 0, sd = sd(coef.list$years[,1]))
+    } else {
+      newdevs <- rep(0, (length(yeardiff)))
+    }
+    coef.list$years <- rbind.data.frame(setNames(as.data.frame(as.matrix(newdevs, ncol = 1)), names(coef.list$years)), coef.list$years)
+    yearlabels <- c(yeardiff, rownames(coef.list$years)[(length(yeardiff) + 1):(length(coef.list$years[,1]))])
+    coef.list$years <- as.data.frame(coef.list$years[order(yearlabels),])
+    rownames(coef.list$years) <- sort(yearlabels)
+  }
+  
+  #This next part addresses missing patches
+  if (class(coef.list$patches) == "data.frame") {
+    patchdiff <- setdiff(mainpatches, rownames(coef.list$patches))
+    
+    if (length(patchdiff) > 0) {
+      if (patch.as.random == TRUE) {
+        newdevs <- rnorm(length(patchdiff), mean = 0, sd = sd(coef.list$patches[,1]))
+      } else {
+        newdevs <- rep(0, (length(patchdiff)))
+      }
+      coef.list$patches <- rbind.data.frame(setNames(as.data.frame(as.matrix(newdevs, ncol = 1)), names(coef.list$patches)), coef.list$patches)
+      patchlabels <- c(patchdiff, rownames(coef.list$patches)[(length(patchdiff) + 1):(length(coef.list$patches[,1]))])
+      coef.list$patches <- as.data.frame(coef.list$patches[order(patchlabels),])
+      rownames(coef.list$patches) <- sort(patchlabels)
+    }
+  }
+  
+  if (class(coef.list$years) == "data.frame") {coef.list$years <- coef.list$years[,1]}
+  if (class(coef.list$patches ) == "data.frame") {coef.list$patches <- coef.list$patches[,1]}
+  
   return(coef.list)
 }
 
@@ -4335,7 +4407,7 @@ summary.lefkoMod <- function(object, ...) {
 #' 
 #' @keywords internal
 #' @noRd
-.modelextract.lmerMod <- function(model, paramnames) {
+.modelextract.lmerMod <- function(model, paramnames, mainyears, mainpatches, year.as.random, patch.as.random) {
   
   size2.coef <- 0
   size1.coef <- 0
@@ -4416,6 +4488,41 @@ summary.lefkoMod <- function(object, ...) {
   coef.list <- list(coefficients = coef.vec, years = year.coefs, patches = patch.coefs, 
                     variances = rvars, family = "gaussian", sigma = sigmax)
   
+  #Here we correct for missing years
+  yeardiff <- setdiff(mainyears, rownames(coef.list$years))
+  
+  if (length(yeardiff) > 0) {
+    if (year.as.random == TRUE) {
+      newdevs <- rnorm(length(yeardiff), mean = 0, sd = sd(coef.list$years[,1]))
+    } else {
+      newdevs <- rep(0, (length(yeardiff)))
+    }
+    coef.list$years <- rbind.data.frame(setNames(as.data.frame(as.matrix(newdevs, ncol = 1)), names(coef.list$years)), coef.list$years)
+    yearlabels <- c(yeardiff, rownames(coef.list$years)[(length(yeardiff) + 1):(length(coef.list$years[,1]))])
+    coef.list$years <- as.data.frame(coef.list$years[order(yearlabels),])
+    rownames(coef.list$years) <- sort(yearlabels)
+  }
+  
+  #This next part addresses missing patches
+  if (class(coef.list$patches) == "data.frame") {
+    patchdiff <- setdiff(mainpatches, rownames(coef.list$patches))
+    
+    if (length(patchdiff) > 0) {
+      if (patch.as.random == TRUE) {
+        newdevs <- rnorm(length(patchdiff), mean = 0, sd = sd(coef.list$patches[,1]))
+      } else {
+        newdevs <- rep(0, (length(patchdiff)))
+      }
+      coef.list$patches <- rbind.data.frame(setNames(as.data.frame(as.matrix(newdevs, ncol = 1)), names(coef.list$patches)), coef.list$patches)
+      patchlabels <- c(patchdiff, rownames(coef.list$patches)[(length(patchdiff) + 1):(length(coef.list$patches[,1]))])
+      coef.list$patches <- as.data.frame(coef.list$patches[order(patchlabels),])
+      rownames(coef.list$patches) <- sort(patchlabels)
+    }
+  }
+  
+  if (class(coef.list$years) == "data.frame") {coef.list$years <- coef.list$years[,1]}
+  if (class(coef.list$patches ) == "data.frame") {coef.list$patches <- coef.list$patches[,1]}
+  
   return(coef.list)
 }
 
@@ -4448,7 +4555,7 @@ summary.lefkoMod <- function(object, ...) {
 #' 
 #' @keywords internal
 #' @noRd
-.modelextract.glm <- function(model, paramnames) {
+.modelextract.glm <- function(model, paramnames, mainyears, mainpatches, year.as.random, patch.as.random) {
   
   family.coef <- NA
   
@@ -4553,6 +4660,33 @@ summary.lefkoMod <- function(object, ...) {
   coef.list <- list(coefficients = coef.vec, years = year.vec, patches = patch.vec,
                     variances = NA, family = family.coef, sigma = NA)
   
+  #Here we correct for missing years
+  yeardiff <- setdiff(mainyears, rownames(coef.list$years))
+  
+  if (length(yeardiff) > 0) {
+    newdevs <- rep(0, (length(yeardiff)))
+    coef.list$years <- rbind.data.frame(setNames(as.data.frame(as.matrix(newdevs, ncol = 1)), names(coef.list$years)), coef.list$years)
+    yearlabels <- c(yeardiff, rownames(coef.list$years)[(length(yeardiff) + 1):(length(coef.list$years[,1]))])
+    coef.list$years <- as.data.frame(coef.list$years[order(yearlabels),])
+    rownames(coef.list$years) <- sort(yearlabels)
+  }
+  
+  #This next part addresses missing patches
+  if (class(coef.list$patches) == "data.frame") {
+    patchdiff <- setdiff(mainpatches, rownames(coef.list$patches))
+    
+    if (length(patchdiff) > 0) {
+      newdevs <- rep(0, (length(patchdiff)))
+      coef.list$patches <- rbind.data.frame(setNames(as.data.frame(as.matrix(newdevs, ncol = 1)), names(coef.list$patches)), coef.list$patches)
+      patchlabels <- c(patchdiff, rownames(coef.list$patches)[(length(patchdiff) + 1):(length(coef.list$patches[,1]))])
+      coef.list$patches <- as.data.frame(coef.list$patches[order(patchlabels),])
+      rownames(coef.list$patches) <- sort(patchlabels)
+    }
+  }
+  
+  if (class(coef.list$years) == "data.frame") {coef.list$years <- coef.list$years[,1]}
+  if (class(coef.list$patches ) == "data.frame") {coef.list$patches <- coef.list$patches[,1]}
+  
   return(coef.list)
 }
 
@@ -4585,7 +4719,7 @@ summary.lefkoMod <- function(object, ...) {
 #' 
 #' @keywords internal
 #' @noRd
-.modelextract.lm <- function(model, paramnames) {
+.modelextract.lm <- function(model, paramnames, mainyears, mainpatches, year.as.random, patch.as.random) {
   
   size2.coef <- 0
   size1.coef <- 0
@@ -4684,10 +4818,37 @@ summary.lefkoMod <- function(object, ...) {
   coef.list <- list(coefficients = coef.vec, years = year.vec, patches = patch.vec,
                     variances = NA, family = "gaussian", sigma = sigmax)
   
+  #Here we correct for missing years
+  yeardiff <- setdiff(mainyears, rownames(coef.list$years))
+  
+  if (length(yeardiff) > 0) {
+    newdevs <- rep(0, (length(yeardiff)))
+    coef.list$years <- rbind.data.frame(setNames(as.data.frame(as.matrix(newdevs, ncol = 1)), names(coef.list$years)), coef.list$years)
+    yearlabels <- c(yeardiff, rownames(coef.list$years)[(length(yeardiff) + 1):(length(coef.list$years[,1]))])
+    coef.list$years <- as.data.frame(coef.list$years[order(yearlabels),])
+    rownames(coef.list$years) <- sort(yearlabels)
+  }
+  
+  #This next part addresses missing patches
+  if (class(coef.list$patches) == "data.frame") {
+    patchdiff <- setdiff(mainpatches, rownames(coef.list$patches))
+    
+    if (length(patchdiff) > 0) {
+      newdevs <- rep(0, (length(patchdiff)))
+      coef.list$patches <- rbind.data.frame(setNames(as.data.frame(as.matrix(newdevs, ncol = 1)), names(coef.list$patches)), coef.list$patches)
+      patchlabels <- c(patchdiff, rownames(coef.list$patches)[(length(patchdiff) + 1):(length(coef.list$patches[,1]))])
+      coef.list$patches <- as.data.frame(coef.list$patches[order(patchlabels),])
+      rownames(coef.list$patches) <- sort(patchlabels)
+    }
+  }
+  
+  if (class(coef.list$years) == "data.frame") {coef.list$years <- coef.list$years[,1]}
+  if (class(coef.list$patches ) == "data.frame") {coef.list$patches <- coef.list$patches[,1]}
+  
   return(coef.list)
 }
 
-#' Return NA When Model Is Scalar Numeric
+#' Return Simple List When Model Is Scalar Numeric
 #' 
 #' \code{.modelextract.numeric()} returns NA when a vital rate model is simply a
 #' scalar numeric value. Used to supply coefficients to \code{\link{flefko3}()} and 
@@ -4697,7 +4858,7 @@ summary.lefkoMod <- function(object, ...) {
 #' @param paramnames Data frame giving the names of standard coefficients required
 #' by matrix creation functions.
 #' 
-#' @return This function returns NA.
+#' @return This function returns a list with single values for matrix estimation.
 #' 
 #' @seealso \code{\link{.modelextract}()}
 #' @seealso \code{\link{.modelextract.glmmTMB}()}
@@ -4709,11 +4870,14 @@ summary.lefkoMod <- function(object, ...) {
 #' 
 #' @keywords internal
 #' @noRd
-.modelextract.numeric <- function(model, paramnames) {
-  return(NA)
+.modelextract.numeric <- function(model, paramnames, mainyears, mainpatches, year.as.random, patch.as.random) {
+  coef.list <- list(coefficients = c(model), years = c(0), patches = c(0), 
+                    variances = as.data.frame(0), family = 1, sigma = 1)
+  
+  return(coef.list)
 }
 
-#' Return NA When Model Is Logical
+#' Return Simple List When Model Is Logical
 #' 
 #' \code{.modelextract.logical()} returns NA when a vital rate model is simply a
 #' logical value. Used to supply coefficients to \code{\link{flefko3}()} and 
@@ -4735,6 +4899,9 @@ summary.lefkoMod <- function(object, ...) {
 #' 
 #' @keywords internal
 #' @noRd
-.modelextract.logical <- function(model, paramnames) {
-  return(NA)
+.modelextract.logical <- function(model, paramnames, mainyears, mainpatches, year.as.random, patch.as.random) {
+  coef.list <- list(coefficients = c(0), years = c(0), patches = c(0), 
+                    variances = as.data.frame(0), family = 1, sigma = 1)
+  
+  return(coef.list)
 }

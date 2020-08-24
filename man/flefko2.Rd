@@ -9,6 +9,7 @@ flefko2(
   patch = "all",
   stageframe,
   repmatrix = NA,
+  data = NA,
   modelsuite = NA,
   surv_model = NA,
   obs_model = NA,
@@ -31,7 +32,6 @@ flefko2(
   jrepst_dev = 0,
   repmod = 1,
   overwrite = NA,
-  data = NA,
   yearcol = NA,
   patchcol = NA,
   year.as.random = FALSE,
@@ -60,6 +60,10 @@ continuous.}
 each potentially new individual (row) born to each reproductive stage
 (column). Non-zero entries correspond to multipliers for fecundity, with 1
 equaling full fecundity.}
+
+\item{data}{The original historical demographic data frame used to 
+estimate vital rates (class \code{hfvdata}). The original data frame is 
+required in order to initialize years and patches properly.}
 
 \item{modelsuite}{An optional suite of models of class \code{lefkoMod}.
 If given, then \code{surv_model}, \code{obs_model}, \code{size_model}, \code{repst_model}, 
@@ -163,10 +167,6 @@ model for juvenile reproduction probability.}
 \item{overwrite}{A data frame developed with the `overwrite` function,
 describing transitions to be overwritten either with given values or with 
 other estimated transitions.}
-
-\item{data}{The original historical demographic data frame used to 
-estimate vital rates (class \code{hfvdata}). The original data frame is 
-required in order to initialize years and patches properly.}
 
 \item{yearcol}{The variable name or column number corresponding to year 
 in time \emph{t} in the dataset. Not needed if a \code{modelsuite} is supplied.}
