@@ -11,7 +11,9 @@ lmean(mats, time = "arithmetic", sparse = FALSE, AasSum = TRUE)
 
 \item{time}{A variable designating whether element means be computed as 
 geometric (\code{geometric} or \code{g}) or arithmetic (\code{arithmetic} or \code{a}) across 
-time. Defaults to \code{arithmetic}.}
+time. Please note that using the \code{geometric} option does not yield a 
+geometric mean matrix - it yields a matrix of geometric mean elements, which 
+is theoretically different. Defaults to \code{arithmetic}.}
 
 \item{sparse}{If TRUE, then all 0s will be ignored in elements that include
 other numbers across matrices. Only elements that equal 0 in all matrices
@@ -47,7 +49,7 @@ vertical dataset used as input.}
 \description{
 \code{lmean()} estimates mean projection matrices. The function differs from a
 typical element-by-element mean matrix estimator through two options. First,
-it allows mean matrix element to be estimated as geometric means across time. 
+it allows mean matrix elements to be estimated as geometric means across time. 
 Spatial means are always developed as arithmetic means. Second, it allows 
 element means to be estimated ignoring 0s in cases where some elements are 
 not zero. The function takes \code{lefkoMat} objects as input, and returns the 

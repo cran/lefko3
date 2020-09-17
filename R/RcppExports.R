@@ -31,7 +31,7 @@ ovreplace <- function(allst321, idx321old, idx321new, convtype, eststag3, gvnrat
 #' 
 #' @param data The horizontal data file.
 #' @param stageframe The stageframe object identifying the life history model
-#' being operationalized.
+#' being operationalized. This should be the full stageframe.
 #' @param noyears The number of years or observation periods in the dataset.
 #' @param firstyear The first year or time of observation.
 #' @param popidcol Column number corresponding to the identity of the population 
@@ -87,7 +87,6 @@ ovreplace <- function(allst321, idx321old, idx321new, convtype, eststag3, gvnrat
 #' @param stassign A logical value indicating whether to assign stages.
 #' @param stszcol Column number describing which size variable to use in stage 
 #' estimation.
-#' @param stagenum The number of stages in the dataset.
 #' @param censorkeep The value of the censoring variable identifying data
 #' that should be included in analysis. Defaults to 0, but may take any value
 #' including NA.
@@ -99,8 +98,8 @@ ovreplace <- function(allst321, idx321old, idx321new, convtype, eststag3, gvnrat
 #' 
 #' @keywords internal
 #' @noRd
-pfj <- function(data, stageframe, noyears, firstyear, popidcol, patchidcol, individcol, blocksize, xcol, ycol, juvcol, size1col, size2col, size3col, repstr1col, repstr2col, fec1col, fec2col, alive1col, dead1col, obs1col, nonobs1col, censorcol, stagecol, repstrrel, fecrel, NAas0, NRasRep, stassign, stszcol, stagenum, censbool) {
-    .Call('_lefko3_pfj', PACKAGE = 'lefko3', data, stageframe, noyears, firstyear, popidcol, patchidcol, individcol, blocksize, xcol, ycol, juvcol, size1col, size2col, size3col, repstr1col, repstr2col, fec1col, fec2col, alive1col, dead1col, obs1col, nonobs1col, censorcol, stagecol, repstrrel, fecrel, NAas0, NRasRep, stassign, stszcol, stagenum, censbool)
+pfj <- function(data, stageframe, noyears, firstyear, popidcol, patchidcol, individcol, blocksize, xcol, ycol, juvcol, size1col, size2col, size3col, repstr1col, repstr2col, fec1col, fec2col, alive1col, dead1col, obs1col, nonobs1col, censorcol, stagecol, repstrrel, fecrel, NAas0, NRasRep, stassign, stszcol, censbool) {
+    .Call('_lefko3_pfj', PACKAGE = 'lefko3', data, stageframe, noyears, firstyear, popidcol, patchidcol, individcol, blocksize, xcol, ycol, juvcol, size1col, size2col, size3col, repstr1col, repstr2col, fec1col, fec2col, alive1col, dead1col, obs1col, nonobs1col, censorcol, stagecol, repstrrel, fecrel, NAas0, NRasRep, stassign, stszcol, censbool)
 }
 
 #' Make Vertical Data Frame Historical
@@ -110,7 +109,7 @@ pfj <- function(data, stageframe, noyears, firstyear, popidcol, patchidcol, indi
 #'
 #' @param data The horizontal data file.
 #' @param stageframe The stageframe object identifying the life history model
-#' being operationalized.
+#' being operationalized. This should be the full stageframe.
 #' @param popidcol Column number corresponding to the identity of the population 
 #' for each individual.
 #' @param patchidcol Column number corresponding to the identity of the patch for
@@ -184,7 +183,6 @@ pfj <- function(data, stageframe, noyears, firstyear, popidcol, patchidcol, indi
 #' @param stassign A logical value indicating whether to assign stages.
 #' @param stszcol Column number describing which size variable to use in stage 
 #' estimation.
-#' @param stagenum The number of stages in the dataset.
 #' @param censbool A logical variable determining whether NA denotes the value
 #' of the censoring variable identifying data to keep.
 #' 
@@ -193,14 +191,40 @@ pfj <- function(data, stageframe, noyears, firstyear, popidcol, patchidcol, indi
 #' 
 #' @keywords internal
 #' @noRd
-jpf <- function(data, stageframe, popidcol, patchidcol, individcol, year2col, year3col, xcol, ycol, juv2col, juv3col, sizea2col, sizea3col, sizeb2col, sizeb3col, sizec2col, sizec3col, repstra2col, repstra3col, repstrb2col, repstrb3col, feca2col, feca3col, fecb2col, fecb3col, alive2col, alive3col, dead2col, dead3col, obs2col, obs3col, nonobs2col, nonobs3col, repstrrel, fecrel, stage2col, stage3col, censorcol, NAas0, NRasRep, stassign, stszcol, stagenum, censbool) {
-    .Call('_lefko3_jpf', PACKAGE = 'lefko3', data, stageframe, popidcol, patchidcol, individcol, year2col, year3col, xcol, ycol, juv2col, juv3col, sizea2col, sizea3col, sizeb2col, sizeb3col, sizec2col, sizec3col, repstra2col, repstra3col, repstrb2col, repstrb3col, feca2col, feca3col, fecb2col, fecb3col, alive2col, alive3col, dead2col, dead3col, obs2col, obs3col, nonobs2col, nonobs3col, repstrrel, fecrel, stage2col, stage3col, censorcol, NAas0, NRasRep, stassign, stszcol, stagenum, censbool)
+jpf <- function(data, stageframe, popidcol, patchidcol, individcol, year2col, year3col, xcol, ycol, juv2col, juv3col, sizea2col, sizea3col, sizeb2col, sizeb3col, sizec2col, sizec3col, repstra2col, repstra3col, repstrb2col, repstrb3col, feca2col, feca3col, fecb2col, fecb3col, alive2col, alive3col, dead2col, dead3col, obs2col, obs3col, nonobs2col, nonobs3col, repstrrel, fecrel, stage2col, stage3col, censorcol, NAas0, NRasRep, stassign, stszcol, censbool) {
+    .Call('_lefko3_jpf', PACKAGE = 'lefko3', data, stageframe, popidcol, patchidcol, individcol, year2col, year3col, xcol, ycol, juv2col, juv3col, sizea2col, sizea3col, sizeb2col, sizeb3col, sizec2col, sizec3col, repstra2col, repstra3col, repstrb2col, repstrb3col, feca2col, feca3col, fecb2col, fecb3col, alive2col, alive3col, dead2col, dead3col, obs2col, obs3col, nonobs2col, nonobs3col, repstrrel, fecrel, stage2col, stage3col, censorcol, NAas0, NRasRep, stassign, stszcol, censbool)
+}
+
+#' Create Core Dataframe for Matrix Estimation
+#' 
+#' Function \code{theoldpizzle()} create a data frame object spread across three
+#' 20-element long list objects that is used by \code{jerzeibalowski()} to estimate
+#' function-derived matrices.
+#'
+#' @param StageFrame The stageframe object identifying the life history model
+#' being operationalized.
+#' @param OverWrite The overwrite table used in analysis, as modifed by 
+#' \code{.overwrite_reassess}.
+#' @param repmatrix The reproductive matrix used in analysis.
+#' @param finalage The final age to be used in analysis.
+#' @param style The style of analysis, where 0 is historical, 1 is ahistorical,
+#' and 2 is age-by-stage.
+#' @param cont Denotes whether age-by-stage matrix continues past the final age.
+#' 
+#' @return The output is currently a three element list, where each element is a
+#' data frame with the same number of rows. These are combined into one dataframe
+#' by \code{\link{flefko3}()} and \code{\link{flefko2}()}.
+#' 
+#' @keywords internal
+#' @noRd
+theoldpizzle <- function(StageFrame, OverWrite, repmatrix, finalage, style, cont) {
+    .Call('_lefko3_theoldpizzle', PACKAGE = 'lefko3', StageFrame, OverWrite, repmatrix, finalage, style, cont)
 }
 
 #' Estimate All Elements in Function-based Population Projection Matrices
 #' 
-#' This function swiftly calculates matrix elements in function-based population
-#' projection matrices. Used in \code{\link{flefko3}()} and \code{\link{flefko2}()}.
+#' Function \code{jerzeibalowski} swiftly calculates matrix elements in function-based
+#' population projection matrices. Used in \code{\link{flefko3}()} and \code{\link{flefko2}()}.
 #' 
 #' @param ppy A data frame with one row, showing the population, patch, and year.
 #' @param AllStages A large data frame giving all required inputs for vital rate
@@ -255,97 +279,44 @@ NULL
 
 #' Estimate All Elements in Raw Historical Matrix
 #' 
-#' This function swiftly calculates matrix transitions in raw historical matrices,
-#' and serves as the core workhorse function behind \code{\link{rlefko3}()}.
+#' Function \code{specialpatrolgroup} swiftly calculates matrix transitions in raw
+#' historical matrices, and serves as the core workhorse function behind \code{\link{rlefko3}()}.
 #' 
-#' @param sge9l A 7 column matrix containing information on fecundity potential,
-#' reproductive status, presence in main dataset, supplied given rates (survival
-#' and fecundity), and estimated proxy rates (survival and fecundity), 
-#' respectively, for all combinations of stage pairs at times \emph{t}+1 and \emph{t}, 
-#' and times \emph{t} and \emph{t}-1.
-#' @param sge3 A 2 column matrix containing reproductive status and fecundity 
-#' potential of stage pairs.
-#' @param maindata A 2 column matrix of raw data denoting status as alive and
-#' offspring produced.
-#' @param sge93index Full matrix index vector denoting each element with respect to
-#' From stage pair (times \emph{t} and \emph{t}-1) and To stage pair (times \emph{t}+1 and
-#' \emph{t}).
-#' @param sge92index Vector denoting From stage pair index in full matrix.
-#' @param sge32index Vector indicating overall stage pair index (baseline From
-#' pair for survival estimation).
-#' @param sge33 Vector with stage at time \emph{t}+1 in \code{sge32index}.
-#' @param sge32 Vector with stage at time \emph{t} in \code{sge32index}.
-#' @param data3221 Vector of stage-pair combination indices in raw dataset.
-#' @param data21 Vector of stage-pair indices in raw dataset, corresponding to
-#' \code{sge32index} and used in survival estimation.
-#' @param nostages The number of ahistorical stages.
+#' @param sge9l The Allstages data frame developed for rlefko3() covering stage
+#' pairs across times \emph{t}+1, \emph{t} and \emph{t}-1. Generally termed \code{stageexpansion9}.
+#' @param sge3 The data frame covering all stages in times \emph{t} and \emph{t}-1.
+#' Generally termed \code{stageexpansion3}.
+#' @param MainData The demographic dataset modified to hold \code{usedfec} columns.
+#' @param StageFrame The full stageframe for the analysis.
 #' 
-#' @return Matrix composed of the survival-transitions (U) matrix as the first 
-#' column and the fecundity matrix (F) as the second column.
+#' @return List of three matrices, including the survival-transition (U) matrix, the 
+#' fecundity matrix (F), and the sum (A) matrix, with A first.
 #' 
 #' @keywords internal
 #' @noRd
-specialpatrolgroup <- function(sge9l, sge3, maindata, sge93index, sge92index, sge32index, sge33, sge32, data3221, data21, nostages) {
-    .Call('_lefko3_specialpatrolgroup', PACKAGE = 'lefko3', sge9l, sge3, maindata, sge93index, sge92index, sge32index, sge33, sge32, data3221, data21, nostages)
+specialpatrolgroup <- function(sge9l, sge3, MainData, StageFrame) {
+    .Call('_lefko3_specialpatrolgroup', PACKAGE = 'lefko3', sge9l, sge3, MainData, StageFrame)
 }
 
 #' Estimate All Elements in Raw Ahistorical Population Projection Matrices
 #' 
-#' This function swiftly calculates matrix transitions in raw ahistorical matrices,
-#' and serves as the core workhorse function behind \code{\link{rlefko2}()}.
+#' Function \code{normalpatrolgroup} swiftly calculates matrix transitions in raw
+#' ahistorical matrices, and serves as the core workhorse function behind \code{\link{rlefko2}()}.
 #' 
-#' @param sge9l A 7 column matrix containing information on fecundity potential,
-#' reproductive status, presence in main dataset, supplied given rates (survival
-#' and fecundity), and estimated proxy rates (survival and fecundity), 
-#' respectively, for all combinations of stages at times \emph{t}+1 and \emph{t}.
-#' @param sge3 A 2 column matrix containing reproductive status and fecundity 
-#' potential of ahistorical stages.
-#' @param maindata A 2 column matrix of raw data denoting status as alive and
-#' offspring produced.
-#' @param sge93index Full matrix index vector denoting each element with respect to
-#' stage pairs (times \emph{t}+1 and \emph{t}).
-#' @param sge92index Vector denoting From stage in full matrix.
-#' @param sge32index Vector indicating overall From stage (baseline From for
-#' survival estimation).
-#' @param sge33 Vector with stage at time \emph{t} in \code{sge92index}.
-#' @param sge32 Vector with stage at time \emph{t} in \code{sge32index}.
-#' @param data3221 Vector of stage-pair indices in raw dataset.
-#' @param data21 Vector of stage indices in raw dataset, corresponding to
-#' \code{sge32index} and used in survival estimation.
-#' @param nostages The number of ahistorical stages.
+#' @param sge3 The Allstages data frame developed for rlefko2() covering stage
+#' pairs across times \emph{t}+1 and \emph{t}. Generally termed \code{stageexpansion3}.
+#' @param sge2 The data frame covering all stages in time \emph{t}. Generally termed
+#' \code{stageexpansion2}.
+#' @param MainData The demographic dataset modified to hold \code{usedfec} columns.
+#' @param StageFrame The full stageframe for the analysis.
 #' 
-#' @return Matrix composed of the survival-transitions (U) matrix as the first 
-#' column and the fecundity matrix (F) as the second column.
+#' @return List of three matrices, including the survival-transition (U) matrix, the 
+#' fecundity matrix (F), and the sum (A) matrix, with A first.
 #' 
 #' @keywords internal
 #' @noRd
-normalpatrolgroup <- function(sge9l, sge3, maindata, sge93index, sge92index, sge32index, sge32, data3221, data21, nostages) {
-    .Call('_lefko3_normalpatrolgroup', PACKAGE = 'lefko3', sge9l, sge3, maindata, sge93index, sge92index, sge32index, sge32, data3221, data21, nostages)
-}
-
-#' Creates Index of Estimable Population Projection Matrix Elements
-#' 
-#' This function identifies which matrix elements in a projection matrix are
-#' logically possible to estimate. In both historical and ahistorical matrices,
-#' this will effectively remove the Dead stage from the final matrix output. In
-#' addition, in historical matrices, this will identify matrix elements 
-#' corresponding to From and To stage-pair combinations in which stages at time \emph{t}
-#' are equal. Used in \code{\link{rlefko3}()}, \code{\link{rlefko2}()}, \code{\link{flefko3}()}, 
-#' and \code{\link{flefko2}()}.
-#' 
-#' @param mainindex Should only living elements (0) be identified, or should stages
-#' equal at time \emph{t} be identified (1)?
-#' @param allstages A 4 column matrix identifying stage at time \emph{t}+1, stage at
-#' time {t} (if historical, then in To stage-pair), stage at time \emph{t} (if
-#' historical, then in From stage pair), and stage at time \emph{t}-1 if historical
-#' or stage at time \emph{t} if ahistorical.
-#' 
-#' @return Vector of estimable matrix element indices.
-#' 
-#' @keywords internal
-#' @noRd
-hoffmannofstuttgart <- function(mainindex, allstages) {
-    .Call('_lefko3_hoffmannofstuttgart', PACKAGE = 'lefko3', mainindex, allstages)
+normalpatrolgroup <- function(sge3, sge2, MainData, StageFrame) {
+    .Call('_lefko3_normalpatrolgroup', PACKAGE = 'lefko3', sge3, sge2, MainData, StageFrame)
 }
 
 #' 
@@ -368,6 +339,10 @@ jerzeibalowski <- function(ppy, AllStages, survproxy, obsproxy, sizeproxy, repst
 #' as a sum of the associated \code{U} and \code{F} matrices. Used to power the
 #' \code{\link{lmean}()} function.
 #' 
+#' @param loy A data frame denoting the population, patch, and time step designation
+#' of each matrix. Includes a total of 9 variables.
+#' @param Umats A matrix with all U matrices turned into columns.
+#' @param Fmats A matrix with all F matrices turned into columns.
 #' @param geom Should the mean across time be geometric (1) or arithmetic (0)?
 #' @param sparse Should 0s be ignored when some matrices include non-zero entries
 #' in common elements?
@@ -375,10 +350,6 @@ jerzeibalowski <- function(ppy, AllStages, survproxy, obsproxy, sizeproxy, repst
 #' @param numofpatches Number of patches to be analyzed, where this number should
 #' include a patch total across all populations.
 #' @param numofyears Number of time steps to be analyzed.
-#' @param loy2c Matrix denoting the population, patch, and time step designation
-#' of each matrix.
-#' @param Umats A matrix with all U matrices turned into columns.
-#' @param Fmats A matrix with all F matrices turned into columns.
 #' 
 #' @return A matrix with 3n columns, where n is the sum of the number of patches and
 #' populations. Each pop/patch has its own set of three columns denoting survival,
@@ -386,8 +357,8 @@ jerzeibalowski <- function(ppy, AllStages, survproxy, obsproxy, sizeproxy, repst
 #' 
 #' @keywords internal
 #' @noRd
-geodiesel <- function(geom, sparse, numofpops, numofpatches, numofyears, loy2c, Umats, Fmats) {
-    .Call('_lefko3_geodiesel', PACKAGE = 'lefko3', geom, sparse, numofpops, numofpatches, numofyears, loy2c, Umats, Fmats)
+geodiesel <- function(loy, Umats, Fmats, geom, sparse, numofpops, numofpatches, numofyears) {
+    .Call('_lefko3_geodiesel', PACKAGE = 'lefko3', loy, Umats, Fmats, geom, sparse, numofpops, numofpatches, numofyears)
 }
 
 #' Estimates Mean Population Projection Matrix
@@ -398,6 +369,11 @@ geodiesel <- function(geom, sparse, numofpops, numofpatches, numofyears, loy2c, 
 #' indepenently of the associated \code{U} and \code{F} matrices. Used to power the
 #' \code{\link{lmean}()} function.
 #' 
+#' @param loy2c A data frame denoting the population, patch, and time step designation
+#' of each matrix. Includes 9 variables.
+#' @param Umats A matrix with all U matrices turned into columns.
+#' @param Fmats A matrix with all F matrices turned into columns.
+#' @param Amats A matrix with all A matrices turned into columns.
 #' @param geom Should the mean across time be geometric (1) or arithmetic (0)?
 #' @param sparse Should 0s be ignored when some matrices include non-zero entries
 #' in common elements?
@@ -405,11 +381,6 @@ geodiesel <- function(geom, sparse, numofpops, numofpatches, numofyears, loy2c, 
 #' @param numofpatches Number of patches to be analyzed, where this number should
 #' include a patch total across all populations.
 #' @param numofyears Number of time steps to be analyzed.
-#' @param loy2c Matrix denoting the population, patch, and time step designation
-#' of each matrix.
-#' @param Umats A matrix with all U matrices turned into columns.
-#' @param Fmats A matrix with all F matrices turned into columns.
-#' @param Amats A matrix with all A matrices turned into columns.
 #' 
 #' @return A matrix with 3n columns, where n is the sum of the number of patches and
 #' populations. Each pop/patch has its own set of three columns denoting survival,
@@ -417,7 +388,7 @@ geodiesel <- function(geom, sparse, numofpops, numofpatches, numofyears, loy2c, 
 #' 
 #' @keywords internal
 #' @noRd
-turbogeodiesel <- function(geom, sparse, numofpops, numofpatches, numofyears, loy2c, Umats, Fmats, Amats) {
-    .Call('_lefko3_turbogeodiesel', PACKAGE = 'lefko3', geom, sparse, numofpops, numofpatches, numofyears, loy2c, Umats, Fmats, Amats)
+turbogeodiesel <- function(loy, Umats, Fmats, Amats, geom, sparse, numofpops, numofpatches, numofyears) {
+    .Call('_lefko3_turbogeodiesel', PACKAGE = 'lefko3', loy, Umats, Fmats, Amats, geom, sparse, numofpops, numofpatches, numofyears)
 }
 

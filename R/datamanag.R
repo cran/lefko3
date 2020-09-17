@@ -196,12 +196,12 @@
 #' 
 #' @export
 verticalize3 <- function(data, noyears, firstyear, popidcol = 0, patchidcol = 0, individcol= 0, 
-                      blocksize, xcol = 0, ycol = 0, juvcol = 0, size1col, size2col = 0, 
-                      size3col = 0, repstr1col = 0, repstr2col = 0, fec1col = 0, fec2col = 0, 
-                      alive1col = 0, dead1col = 0, obs1col = 0, nonobs1col = 0, censorcol = 0, 
-                      repstrrel = 1, fecrel = 1, stagecol = 0, stageassign = NA, stagesize = NA, 
-                      censorkeep = 0, censor = FALSE, spacing = NA, NAas0 = FALSE, 
-                      NRasRep = FALSE, reduce = TRUE) {
+                         blocksize, xcol = 0, ycol = 0, juvcol = 0, size1col, size2col = 0, 
+                         size3col = 0, repstr1col = 0, repstr2col = 0, fec1col = 0, fec2col = 0, 
+                         alive1col = 0, dead1col = 0, obs1col = 0, nonobs1col = 0, censorcol = 0, 
+                         repstrrel = 1, fecrel = 1, stagecol = 0, stageassign = NA, stagesize = NA, 
+                         censorkeep = 0, censor = FALSE, spacing = NA, NAas0 = FALSE, 
+                         NRasRep = FALSE, reduce = TRUE) {
   
   stassign <- rowid <- alive2 <- indataset <- censor1 <- censor2 <- censor3 <- censbool <- NULL
   
@@ -366,17 +366,15 @@ verticalize3 <- function(data, noyears, firstyear, popidcol = 0, patchidcol = 0,
       stagesizecol <- 1
     }
     
-    ltdframe <- subset(stageassign, indataset == 1)
-    stagenum <- dim(ltdframe)[1]
-    
   } else {
     stassign <- FALSE
     
-    ltdframe <- as.data.frame(matrix(c(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0), ncol = 14))
+    stageassign <- as.data.frame(matrix(c(NA, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, NA), ncol = 16))
+    names(stageassign) <- c("stagenames", "size", "repstatus", "obsstatus", "propstatus", "immstatus",
+                            "matstatus", "indataset", "binhalfwidth_raw", "min_age", "max_age", "sizebin_min",
+                            "sizebin_max", "sizebin_center", "sizebin_width", "comments")
     
     stagesizecol <- 0
-    
-    stagenum <- 1
   }
   
   if (!is.na(spacing)) {
@@ -406,13 +404,12 @@ verticalize3 <- function(data, noyears, firstyear, popidcol = 0, patchidcol = 0,
   } else {
     censbool <- FALSE
   }
-
-  popdatalist.new <- pfj(data, ltdframe, noyears, firstyear, (popidcol - 1), (patchidcol - 1), (individcol - 1), 
+  
+  popdatalist.new <- pfj(data, stageassign, noyears, firstyear, (popidcol - 1), (patchidcol - 1), (individcol - 1), 
                          blocksize, (xcol - 1), (ycol - 1), (juvcol - 1), (size1col - 1), (size2col - 1), 
                          (size3col - 1), (repstr1col - 1), (repstr2col - 1), (fec1col - 1), (fec2col - 1),
                          (alive1col - 1), (dead1col - 1), (obs1col - 1), (nonobs1col - 1), (censorcol - 1),
-                         (stagecol - 1), repstrrel, fecrel, NAas0, NRasRep, stassign, stagesizecol, stagenum, 
-                         censbool)
+                         (stagecol - 1), repstrrel, fecrel, NAas0, NRasRep, stassign, stagesizecol, censbool)
   
   popdata <- do.call("cbind.data.frame", popdatalist.new)
   
@@ -421,11 +418,11 @@ verticalize3 <- function(data, noyears, firstyear, popidcol = 0, patchidcol = 0,
                       "repstrb1", "repstr1added", "feca1", "fecb1", "fec1added", "censor1", "juvgiven1", 
                       "obsstatus1", "repstatus1", "fecstatus1", "matstatus1", "alive1", "stage1", "stage1index", 
                       "xpos2", "ypos2", "sizea2", "sizeb2", "sizec2", "size2added", "repstra2", "repstrb2", 
-                      "repstr2added", "feca2", "fecb2", "fec2added", "censor2", "juvgiven2",
-                      "obsstatus2", "repstatus2", "fecstatus2", "matstatus2", "alive2", "stage2", "stage2index",
-                      "xpos3", "ypos3", "sizea3", "sizeb3", "sizec3", "size3added", "repstra3", "repstrb3",
-                      "repstr3added", "feca3", "fecb3", "fec3added", "censor3", "juvgiven3", "obsstatus3", 
-                      "repstatus3", "fecstatus3", "matstatus3", "alive3", "stage3", "stage3index")
+                      "repstr2added", "feca2", "fecb2", "fec2added", "censor2", "juvgiven2", "obsstatus2", 
+                      "repstatus2", "fecstatus2", "matstatus2", "alive2", "stage2", "stage2index", "xpos3", 
+                      "ypos3", "sizea3", "sizeb3", "sizec3", "size3added", "repstra3", "repstrb3", "repstr3added", 
+                      "feca3", "fecb3", "fec3added", "censor3", "juvgiven3", "obsstatus3", "repstatus3", 
+                      "fecstatus3", "matstatus3", "alive3", "stage3", "stage3index")
   
   rownames(popdata) <- c(1:dim(popdata)[1])
   
@@ -1252,17 +1249,15 @@ historicalize3 <- function(data, popidcol = 0, patchidcol = 0, individcol, year2
       stagesizecol <- 1
     }
     
-    ltdframe <- subset(stageassign, indataset == 1)
-    stagenum <- dim(ltdframe)[1]
-    
   } else {
     stassign <- FALSE
     
-    ltdframe <- as.data.frame(matrix(c(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0), ncol = 14))
+    stageassign <- as.data.frame(matrix(c(NA, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, NA), ncol = 16))
+    names(stageassign) <- c("stagenames", "size", "repstatus", "obsstatus", "propstatus", "immstatus",
+                            "matstatus", "indataset", "binhalfwidth_raw", "min_age", "max_age", "sizebin_min",
+                            "sizebin_max", "sizebin_center", "sizebin_width", "comments")
     
     stagesizecol <- 0
-    
-    stagenum <- 1
   }
   
   if (!is.na(spacing)) {
@@ -1289,14 +1284,14 @@ historicalize3 <- function(data, popidcol = 0, patchidcol = 0, individcol, year2
     censbool <- FALSE
   }
   
-  popdatalist.new <- jpf(data, ltdframe, (popidcol - 1), (patchidcol - 1), (individcol - 1),
+  popdatalist.new <- jpf(data, stageassign, (popidcol - 1), (patchidcol - 1), (individcol - 1),
                          (year2col - 1), (year3col - 1), (xcol - 1), (ycol - 1), (juv2col - 1), (juv3col - 1),
                          (sizea2col - 1), (sizea3col - 1), (sizeb2col - 1), (sizeb3col - 1), (sizec2col - 1),
                          (sizec3col - 1), (repstra2col - 1), (repstra3col - 1), (repstrb2col - 1), (repstrb3col - 1),
                          (feca2col - 1), (feca3col - 1), (fecb2col - 1), (fecb3col - 1), (alive2col - 1),
                          (alive3col - 1), (dead2col - 1), (dead3col - 1), (obs2col - 1), (obs3col - 1),
                          (nonobs2col - 1), (nonobs3col - 1), repstrrel, fecrel, (stage2col - 1), (stage3col - 1), 
-                         (censorcol - 1), NAas0, NRasRep, stassign, stagesizecol, stagenum, censbool)
+                         (censorcol - 1), NAas0, NRasRep, stassign, stagesizecol, censbool)
   
   popdata <- do.call("cbind.data.frame", popdatalist.new)
   

@@ -219,7 +219,7 @@ utilized incorporate state in time \emph{t}-1. Only use models developed testing
 ahistorical effects.
 }
 \description{
-\code{flefko2()} returns a list of ahistorical population projection 
+Function \code{flefko2()} returns a list of ahistorical population projection 
 matrices corresponding to the patches and years given, as well as the 
 associated component transition and fecundity matrices, a data frame 
 detailing the characteristics of ahistorical stages, and a data frame

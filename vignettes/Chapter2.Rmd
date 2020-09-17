@@ -11,7 +11,7 @@ vignette: >
 
 
 
-This document was built in Markdown in R 4.0.2, and covers package `lefko3` version 2.3.0.
+This document was built in Markdown in R 4.0.2, and covers package `lefko3` version 2.4.1.
 
 ## CASE STUDIES OF SWEDISH *Lathyrus vernus* POPULATION
 
@@ -27,13 +27,13 @@ This document was built in Markdown in R 4.0.2, and covers package `lefko3` vers
   
   1) through the estimation of **raw MPMs**, with the intention of producing matrices similar to those published in Ehrlén [-@ehrlen_dynamics_2000]; 
   
-  2) through the estimation of **function-derived MPMs** using a stage classification different from Ehrlén [-@ehrlen_dynamics_2000], developed using the natural logarithm of the size measure used in that study; and
+  2) through the estimation of **function-based MPMs** using a stage classification different from Ehrlén [-@ehrlen_dynamics_2000], developed using the natural logarithm of the size measure used in that study; and
   
   3) through the construction of a complex **integral projection model**.
   
 ### Analysis 1: Raw MPM estimation
 
-  <p style="text-indent: 20px">Here we will attempt to estimate matrices similar to and based on the dataset used in Ehrlén [-@ehrlen_dynamics_2000]. These matrices will not be the same, as the dataset currently includes more individuals for those years as well as an extra year of data. It also includes differences in classification due to different assumptions regarding transitions to and from vegetative dormancy, which is an unobservable life history stage. However, the matrices will be very similar.</p>
+  <p style="text-indent: 20px">Here we will estimate matrices similar to and based on the dataset used in Ehrlén [-@ehrlen_dynamics_2000]. These matrices will not be the same, as the dataset included in this package includes more individuals for those years as well as an extra year of data. It also includes differences in classification due to different assumptions regarding transitions to and from vegetative dormancy, which is an unobservable life history stage. However, the matrices will be very similar.</p>
   
 #### Step 1. Data characterization and reorganization
 
@@ -43,7 +43,7 @@ This document was built in Markdown in R 4.0.2, and covers package `lefko3` vers
 
   <p style="text-indent: 20px">This dataset includes information on 1119 individuals, so there are 1119 rows with data (not counting the header). There are 38 columns. The first two columns are variables giving identifying information about each individual, with each individual's data entirely restricted to one row. This is followed by four sets of nine columns, each named `VolumeXX`, `lnVolXX`, `FCODEXX`, `FlowXX`, `IntactseedXX`, `Dead19XX`, `DormantXX`, `Missing19XX`, and `SeedlingXX`, with the `XX` in each case corresponding to the year of observation and with years organized consecutively. Thus, columns 3-11 refer to year 1988, columns 12-20 refer to year 1989, etc. To properly conduct this exercise, we need to know the exact number of years used, which is 4 years here (includes all years from and including 1988 to 1991), we need the columns to be repeated in the same order in each year, and we need the years in consecutive order with no extra columns between them.</p>
 
-  <p style="text-indent: 20px">First, we load the dataset, and look at its dimensions.</p>
+  <p style="text-indent: 20px">First, we load the dataset, and note its dimensions.</p>
 
 ```r
 rm(list=ls(all=TRUE))
@@ -78,9 +78,9 @@ lathframe <- sf_create(sizes = sizevector, stagenames = stagevector, repstatus =
 To be useful to others reading your work, or to yourself in the future, it helps to add text descriptions of the stages. Here, we also add some descriptions to this stageframe as comments. Type `lathframe` after running the following to see the structure.
 
 ```r
-lathframe$comments <- c("Dormant seed", "Seedling", "Very small vegetative", 
-                        "Small vegetative", "Very large vegetative", 
-                        "Flowering", "Dormant")
+lathframe$comments <- c("Dormant seed", "Seedling", "Very small vegetative adult", 
+                        "Small vegetative adult", "Very large vegetative adult", 
+                        "Flowering adult", "Vegetatively dormant adult")
 ```
   
   <p style="text-indent: 20px">A further important point has to do with the meaning of 0 sizes. In most cases, a size of 0 will mean that the individual is alive but unobservable. However, a size of 0 may have different meanings in other cases, such as when the size metric used is a logarithm and so values of 0 and lower are possible in observable individuals in the dataset. The dataset should be explored carefully for these situations, particularly in the case of the creation of a function-based matrix, such as an IPM, in order to make sure that the stageframe accurately describes and matches the values actually occurring in the dataset.</p>
@@ -97,123 +97,117 @@ lathvert <- verticalize3(lathyrus, noyears = 4, firstyear = 1988, patchidcol = "
                          censorkeep = NA, censor = TRUE)
 
 summary(lathvert)
-#>      rowid        popid   patchid   individ              year2        firstseen       lastseen        obsage      
-#>  Min.   :   1.0   :2527   1:673   Length:2527        Min.   :1988   Min.   :   0   Min.   :   0   Min.   :0.0000  
-#>  1st Qu.: 237.0           2:202   Class :character   1st Qu.:1988   1st Qu.:1988   1st Qu.:1991   1st Qu.:0.0000  
-#>  Median : 522.0           3:556   Mode  :character   Median :1989   Median :1988   Median :1991   Median :1.0000  
-#>  Mean   : 537.3           4:469                      Mean   :1989   Mean   :1979   Mean   :1981   Mean   :0.8219  
-#>  3rd Qu.: 820.5           5:308                      3rd Qu.:1990   3rd Qu.:1988   3rd Qu.:1991   3rd Qu.:1.0000  
-#>  Max.   :1118.0           6:319                      Max.   :1990   Max.   :1990   Max.   :1991   Max.   :2.0000  
-#>                                                                                                                   
-#>   obslifespan        sizea1          repstra1          feca1          fec1added         juvgiven1         obsstatus1    
-#>  Min.   :0.000   Min.   :   0.0   Min.   :0.0000   Min.   : 0.000   Min.   : 0.0000   Min.   :0.00000   Min.   :0.0000  
-#>  1st Qu.:2.000   1st Qu.:   0.0   1st Qu.:0.0000   1st Qu.: 0.000   1st Qu.: 0.0000   1st Qu.:0.00000   1st Qu.:0.0000  
-#>  Median :3.000   Median :   9.0   Median :0.0000   Median : 0.000   Median : 0.0000   Median :0.00000   Median :1.0000  
-#>  Mean   :2.437   Mean   : 387.3   Mean   :0.2161   Mean   : 2.145   Mean   : 0.9889   Mean   :0.06292   Mean   :0.5548  
-#>  3rd Qu.:3.000   3rd Qu.: 624.6   3rd Qu.:0.0000   3rd Qu.: 0.000   3rd Qu.: 0.0000   3rd Qu.:0.00000   3rd Qu.:1.0000  
-#>  Max.   :3.000   Max.   :7032.0   Max.   :1.0000   Max.   :66.000   Max.   :66.0000   Max.   :1.00000   Max.   :1.0000  
-#>                                   NA's   :417      NA's   :1362                                                         
-#>    repstatus1       fecstatus1        matstatus1         alive1          stage1           stage1index        sizea2      
-#>  Min.   :0.0000   Min.   :0.00000   Min.   :0.0000   Min.   :0.0000   Length:2527        Min.   :0.000   Min.   :   0.0  
-#>  1st Qu.:0.0000   1st Qu.:0.00000   1st Qu.:0.0000   1st Qu.:0.0000   Class :character   1st Qu.:0.000   1st Qu.:  12.6  
-#>  Median :0.0000   Median :0.00000   Median :1.0000   Median :1.0000   Mode  :character   Median :2.000   Median : 105.6  
-#>  Mean   :0.1805   Mean   :0.08983   Mean   :0.5204   Mean   :0.5833                      Mean   :2.135   Mean   : 480.8  
-#>  3rd Qu.:0.0000   3rd Qu.:0.00000   3rd Qu.:1.0000   3rd Qu.:1.0000                      3rd Qu.:4.000   3rd Qu.: 732.5  
-#>  Max.   :1.0000   Max.   :1.00000   Max.   :1.0000   Max.   :1.0000                      Max.   :6.000   Max.   :7032.0  
-#>                                                                                                                          
-#>     repstra2          feca2          fec2added       juvgiven2        obsstatus2       repstatus2      fecstatus2    
-#>  Min.   :0.0000   Min.   : 0.000   Min.   : 0.00   Min.   :0.0000   Min.   :0.0000   Min.   :0.000   Min.   :0.0000  
-#>  1st Qu.:0.0000   1st Qu.: 0.000   1st Qu.: 0.00   1st Qu.:0.0000   1st Qu.:1.0000   1st Qu.:0.000   1st Qu.:0.0000  
-#>  Median :0.0000   Median : 0.000   Median : 0.00   Median :0.0000   Median :1.0000   Median :0.000   Median :0.0000  
-#>  Mean   :0.2508   Mean   : 4.802   Mean   : 1.14   Mean   :0.1112   Mean   :0.9454   Mean   :0.237   Mean   :0.1053  
-#>  3rd Qu.:1.0000   3rd Qu.: 6.000   3rd Qu.: 0.00   3rd Qu.:0.0000   3rd Qu.:1.0000   3rd Qu.:0.000   3rd Qu.:0.0000  
-#>  Max.   :1.0000   Max.   :66.000   Max.   :66.00   Max.   :1.0000   Max.   :1.0000   Max.   :1.000   Max.   :1.0000  
-#>  NA's   :139      NA's   :1927                                                                                       
-#>    matstatus2         alive2     stage2           stage2index        sizea3          repstra3          feca3       
-#>  Min.   :0.0000   Min.   :1   Length:2527        Min.   :1.000   Min.   :   0.0   Min.   :0.0000   Min.   : 0.000  
-#>  1st Qu.:1.0000   1st Qu.:1   Class :character   1st Qu.:2.000   1st Qu.:  10.0   1st Qu.:0.0000   1st Qu.: 0.000  
-#>  Median :1.0000   Median :1   Mode  :character   Median :3.000   Median :  72.0   Median :0.0000   Median : 2.000  
-#>  Mean   :0.8888   Mean   :1                      Mean   :3.424   Mean   : 389.7   Mean   :0.2614   Mean   : 5.969  
-#>  3rd Qu.:1.0000   3rd Qu.:1                      3rd Qu.:5.000   3rd Qu.: 543.4   3rd Qu.:1.0000   3rd Qu.: 9.000  
-#>  Max.   :1.0000   Max.   :1                      Max.   :6.000   Max.   :6645.8   Max.   :1.0000   Max.   :66.000  
-#>                                                                                   NA's   :419      NA's   :1981    
-#>    fec3added       juvgiven3   obsstatus3       repstatus3      fecstatus3       matstatus3     alive3      
-#>  Min.   : 0.00   Min.   :0   Min.   :0.0000   Min.   :0.000   Min.   :0.0000   Min.   :1    Min.   :0.0000  
-#>  1st Qu.: 0.00   1st Qu.:0   1st Qu.:1.0000   1st Qu.:0.000   1st Qu.:0.0000   1st Qu.:1    1st Qu.:1.0000  
-#>  Median : 0.00   Median :0   Median :1.0000   Median :0.000   Median :0.0000   Median :1    Median :1.0000  
-#>  Mean   : 1.29   Mean   :0   Mean   :0.8346   Mean   :0.218   Mean   :0.1116   Mean   :1    Mean   :0.9224  
-#>  3rd Qu.: 0.00   3rd Qu.:0   3rd Qu.:1.0000   3rd Qu.:0.000   3rd Qu.:0.0000   3rd Qu.:1    3rd Qu.:1.0000  
-#>  Max.   :66.00   Max.   :0   Max.   :1.0000   Max.   :1.000   Max.   :1.0000   Max.   :1    Max.   :1.0000  
-#>                                                                                                             
-#>     stage3           stage3index   
-#>  Length:2527        Min.   :0.000  
-#>  Class :character   1st Qu.:2.000  
-#>  Mode  :character   Median :3.000  
-#>                     Mean   :3.398  
-#>                     3rd Qu.:5.000  
-#>                     Max.   :6.000  
+#>      rowid        popid   patchid   individ              year2        firstseen       lastseen        obsage        obslifespan   
+#>  Min.   :   1.0   :2527   1:673   Length:2527        Min.   :1988   Min.   :   0   Min.   :   0   Min.   :0.0000   Min.   :0.000  
+#>  1st Qu.: 237.0           2:202   Class :character   1st Qu.:1988   1st Qu.:1988   1st Qu.:1991   1st Qu.:0.0000   1st Qu.:2.000  
+#>  Median : 522.0           3:556   Mode  :character   Median :1989   Median :1988   Median :1991   Median :1.0000   Median :3.000  
+#>  Mean   : 537.3           4:469                      Mean   :1989   Mean   :1979   Mean   :1981   Mean   :0.8219   Mean   :2.437  
+#>  3rd Qu.: 820.5           5:308                      3rd Qu.:1990   3rd Qu.:1988   3rd Qu.:1991   3rd Qu.:1.0000   3rd Qu.:3.000  
+#>  Max.   :1118.0           6:319                      Max.   :1990   Max.   :1990   Max.   :1991   Max.   :2.0000   Max.   :3.000  
+#>                                                                                                                                   
+#>      sizea1          repstra1          feca1          fec1added         juvgiven1         obsstatus1       repstatus1    
+#>  Min.   :   0.0   Min.   :0.0000   Min.   : 0.000   Min.   : 0.0000   Min.   :0.00000   Min.   :0.0000   Min.   :0.0000  
+#>  1st Qu.:   0.0   1st Qu.:0.0000   1st Qu.: 0.000   1st Qu.: 0.0000   1st Qu.:0.00000   1st Qu.:0.0000   1st Qu.:0.0000  
+#>  Median :   9.0   Median :0.0000   Median : 0.000   Median : 0.0000   Median :0.00000   Median :1.0000   Median :0.0000  
+#>  Mean   : 387.3   Mean   :0.2161   Mean   : 2.145   Mean   : 0.9889   Mean   :0.06292   Mean   :0.5548   Mean   :0.1805  
+#>  3rd Qu.: 624.6   3rd Qu.:0.0000   3rd Qu.: 0.000   3rd Qu.: 0.0000   3rd Qu.:0.00000   3rd Qu.:1.0000   3rd Qu.:0.0000  
+#>  Max.   :7032.0   Max.   :1.0000   Max.   :66.000   Max.   :66.0000   Max.   :1.00000   Max.   :1.0000   Max.   :1.0000  
+#>                   NA's   :417      NA's   :1362                                                                          
+#>    fecstatus1        matstatus1         alive1          stage1           stage1index        sizea2          repstra2     
+#>  Min.   :0.00000   Min.   :0.0000   Min.   :0.0000   Length:2527        Min.   :0.000   Min.   :   0.0   Min.   :0.0000  
+#>  1st Qu.:0.00000   1st Qu.:0.0000   1st Qu.:0.0000   Class :character   1st Qu.:0.000   1st Qu.:  12.6   1st Qu.:0.0000  
+#>  Median :0.00000   Median :1.0000   Median :1.0000   Mode  :character   Median :3.000   Median : 105.6   Median :0.0000  
+#>  Mean   :0.08983   Mean   :0.5204   Mean   :0.5833                      Mean   :2.718   Mean   : 480.8   Mean   :0.2508  
+#>  3rd Qu.:0.00000   3rd Qu.:1.0000   3rd Qu.:1.0000                      3rd Qu.:5.000   3rd Qu.: 732.5   3rd Qu.:1.0000  
+#>  Max.   :1.00000   Max.   :1.0000   Max.   :1.0000                      Max.   :7.000   Max.   :7032.0   Max.   :1.0000  
+#>                                                                                                          NA's   :139     
+#>      feca2          fec2added       juvgiven2        obsstatus2       repstatus2      fecstatus2       matstatus2         alive2 
+#>  Min.   : 0.000   Min.   : 0.00   Min.   :0.0000   Min.   :0.0000   Min.   :0.000   Min.   :0.0000   Min.   :0.0000   Min.   :1  
+#>  1st Qu.: 0.000   1st Qu.: 0.00   1st Qu.:0.0000   1st Qu.:1.0000   1st Qu.:0.000   1st Qu.:0.0000   1st Qu.:1.0000   1st Qu.:1  
+#>  Median : 0.000   Median : 0.00   Median :0.0000   Median :1.0000   Median :0.000   Median :0.0000   Median :1.0000   Median :1  
+#>  Mean   : 4.802   Mean   : 1.14   Mean   :0.1112   Mean   :0.9454   Mean   :0.237   Mean   :0.1053   Mean   :0.8888   Mean   :1  
+#>  3rd Qu.: 6.000   3rd Qu.: 0.00   3rd Qu.:0.0000   3rd Qu.:1.0000   3rd Qu.:0.000   3rd Qu.:0.0000   3rd Qu.:1.0000   3rd Qu.:1  
+#>  Max.   :66.000   Max.   :66.00   Max.   :1.0000   Max.   :1.0000   Max.   :1.000   Max.   :1.0000   Max.   :1.0000   Max.   :1  
+#>  NA's   :1927                                                                                                                    
+#>     stage2           stage2index        sizea3          repstra3          feca3          fec3added       juvgiven3   obsstatus3    
+#>  Length:2527        Min.   :2.000   Min.   :   0.0   Min.   :0.0000   Min.   : 0.000   Min.   : 0.00   Min.   :0   Min.   :0.0000  
+#>  Class :character   1st Qu.:3.000   1st Qu.:  10.0   1st Qu.:0.0000   1st Qu.: 0.000   1st Qu.: 0.00   1st Qu.:0   1st Qu.:1.0000  
+#>  Mode  :character   Median :4.000   Median :  72.0   Median :0.0000   Median : 2.000   Median : 0.00   Median :0   Median :1.0000  
+#>                     Mean   :4.424   Mean   : 389.7   Mean   :0.2614   Mean   : 5.969   Mean   : 1.29   Mean   :0   Mean   :0.8346  
+#>                     3rd Qu.:6.000   3rd Qu.: 543.4   3rd Qu.:1.0000   3rd Qu.: 9.000   3rd Qu.: 0.00   3rd Qu.:0   3rd Qu.:1.0000  
+#>                     Max.   :7.000   Max.   :6645.8   Max.   :1.0000   Max.   :66.000   Max.   :66.00   Max.   :0   Max.   :1.0000  
+#>                                                      NA's   :419      NA's   :1981                                                 
+#>    repstatus3      fecstatus3       matstatus3     alive3          stage3           stage3index  
+#>  Min.   :0.000   Min.   :0.0000   Min.   :1    Min.   :0.0000   Length:2527        Min.   :0.00  
+#>  1st Qu.:0.000   1st Qu.:0.0000   1st Qu.:1    1st Qu.:1.0000   Class :character   1st Qu.:3.00  
+#>  Median :0.000   Median :0.0000   Median :1    Median :1.0000   Mode  :character   Median :4.00  
+#>  Mean   :0.218   Mean   :0.1116   Mean   :1    Mean   :0.9224                      Mean   :4.32  
+#>  3rd Qu.:0.000   3rd Qu.:0.0000   3rd Qu.:1    3rd Qu.:1.0000                      3rd Qu.:6.00  
+#>  Max.   :1.000   Max.   :1.0000   Max.   :1    Max.   :1.0000                      Max.   :7.00  
 #> 
 dim(lathvert)
 #> [1] 2527   45
 ```
   
-  <p style="text-indent: 20px">It generally pays to explore a dataset thoroughly prior to full analysis. One way to do this is to look at summaries of the dataset after it has been subset to specific cases of interest. For example, after subsetting to only cases in which individuals are vegetatively dormant in time *t*, we can see that this particular stage is actually designated by a size of 0. We can also see, looking at the stage designations and at the dimensions of the aforementioned subset, that vegetative dormancy is reasonably plentiful in this dataset.</p>
+  <p style="text-indent: 20px">It generally pays to explore a dataset thoroughly prior to full analysis, and summaries can certainly help to do that. Looking at the output above, for example, reveals that the `verticalize3()` function has automatically subset the data to only those instances in which the individual is alive in time *t* (please take a look at the variable `alive2`). Noting the mean value for `alive3` suggests very high survival, and the minimum values for all size variables are 0, even in the case of `sizea2`, suggesting that unbserveable stages are certainly occurring within the dataset (these are instances of vegetative dormancy, which is treated as a separate life history stage in this example).</p>
+  
+  <p style="text-indent: 20px">Further subset summaries may help understand these data even better. For example, after subsetting to only cases in which individuals are vegetatively dormant in time *t*, we can see that this particular stage is actually designated by a size of 0. We can also see, looking at the stage designations and at the dimensions of the aforementioned subset, that vegetative dormancy is reasonably plentiful in this dataset.</p>
 
 ```r
 summary(lathvert[which(lathvert$stage2 == "Dorm"),])
-#>      rowid        popid  patchid   individ              year2        firstseen       lastseen        obsage     
-#>  Min.   :   1.0   :138   1:29    Length:138         Min.   :1989   Min.   :   0   Min.   :   0   Min.   :0.000  
-#>  1st Qu.: 303.2          2:14    Class :character   1st Qu.:1989   1st Qu.:1988   1st Qu.:1991   1st Qu.:1.000  
-#>  Median : 493.5          3:42    Mode  :character   Median :1989   Median :1988   Median :1991   Median :1.000  
-#>  Mean   : 526.7          4:13                       Mean   :1989   Mean   :1815   Mean   :1818   Mean   :1.239  
-#>  3rd Qu.: 861.8          5:31                       3rd Qu.:1990   3rd Qu.:1988   3rd Qu.:1991   3rd Qu.:2.000  
-#>  Max.   :1079.0          6: 9                       Max.   :1990   Max.   :1989   Max.   :1991   Max.   :2.000  
-#>                                                                                                                 
-#>   obslifespan        sizea1           repstra1          feca1          fec1added        juvgiven1        obsstatus1    
-#>  Min.   :0.000   Min.   :   0.00   Min.   :0.0000   Min.   : 0.000   Min.   : 0.000   Min.   :0.0000   Min.   :0.0000  
-#>  1st Qu.:2.000   1st Qu.:  87.45   1st Qu.:0.0000   1st Qu.: 0.000   1st Qu.: 0.000   1st Qu.:0.0000   1st Qu.:1.0000  
-#>  Median :3.000   Median : 477.20   Median :0.0000   Median : 0.000   Median : 0.000   Median :0.0000   Median :1.0000  
-#>  Mean   :2.551   Mean   : 595.48   Mean   :0.3178   Mean   : 4.561   Mean   : 1.355   Mean   :0.0942   Mean   :0.9348  
-#>  3rd Qu.:3.000   3rd Qu.: 732.50   3rd Qu.:1.0000   3rd Qu.: 7.000   3rd Qu.: 0.000   3rd Qu.:0.0000   3rd Qu.:1.0000  
-#>  Max.   :3.000   Max.   :2941.00   Max.   :1.0000   Max.   :30.000   Max.   :30.000   Max.   :1.0000   Max.   :1.0000  
-#>                                    NA's   :9        NA's   :97                                                         
-#>    repstatus1       fecstatus1       matstatus1         alive1     stage1           stage1index        sizea2     repstra2  
-#>  Min.   :0.0000   Min.   :0.0000   Min.   :0.0000   Min.   :1   Length:138         Min.   :1.000   Min.   :0   Min.   : NA  
-#>  1st Qu.:0.0000   1st Qu.:0.0000   1st Qu.:1.0000   1st Qu.:1   Class :character   1st Qu.:3.000   1st Qu.:0   1st Qu.: NA  
-#>  Median :0.0000   Median :0.0000   Median :1.0000   Median :1   Mode  :character   Median :4.000   Median :0   Median : NA  
-#>  Mean   :0.2971   Mean   :0.1232   Mean   :0.9058   Mean   :1                      Mean   :3.833   Mean   :0   Mean   :NaN  
-#>  3rd Qu.:1.0000   3rd Qu.:0.0000   3rd Qu.:1.0000   3rd Qu.:1                      3rd Qu.:5.000   3rd Qu.:0   3rd Qu.: NA  
-#>  Max.   :1.0000   Max.   :1.0000   Max.   :1.0000   Max.   :1                      Max.   :6.000   Max.   :0   Max.   : NA  
-#>                                                                                                                NA's   :138  
-#>      feca2       fec2added   juvgiven2   obsstatus2   repstatus2   fecstatus2   matstatus2     alive2     stage2         
-#>  Min.   : NA   Min.   :0   Min.   :0   Min.   :0    Min.   :0    Min.   :0    Min.   :1    Min.   :1   Length:138        
-#>  1st Qu.: NA   1st Qu.:0   1st Qu.:0   1st Qu.:0    1st Qu.:0    1st Qu.:0    1st Qu.:1    1st Qu.:1   Class :character  
-#>  Median : NA   Median :0   Median :0   Median :0    Median :0    Median :0    Median :1    Median :1   Mode  :character  
-#>  Mean   :NaN   Mean   :0   Mean   :0   Mean   :0    Mean   :0    Mean   :0    Mean   :1    Mean   :1                     
-#>  3rd Qu.: NA   3rd Qu.:0   3rd Qu.:0   3rd Qu.:0    3rd Qu.:0    3rd Qu.:0    3rd Qu.:1    3rd Qu.:1                     
-#>  Max.   : NA   Max.   :0   Max.   :0   Max.   :0    Max.   :0    Max.   :0    Max.   :1    Max.   :1                     
-#>  NA's   :138                                                                                                             
-#>   stage2index     sizea3           repstra3          feca3       fec3added         juvgiven3   obsstatus3    
-#>  Min.   :6    Min.   :   0.00   Min.   :0.0000   Min.   : 0    Min.   : 0.0000   Min.   :0   Min.   :0.0000  
-#>  1st Qu.:6    1st Qu.:  16.02   1st Qu.:0.0000   1st Qu.: 0    1st Qu.: 0.0000   1st Qu.:0   1st Qu.:1.0000  
-#>  Median :6    Median :  88.45   Median :0.0000   Median : 0    Median : 0.0000   Median :0   Median :1.0000  
-#>  Mean   :6    Mean   : 242.33   Mean   :0.1111   Mean   : 3    Mean   : 0.2826   Mean   :0   Mean   :0.8478  
-#>  3rd Qu.:6    3rd Qu.: 300.90   3rd Qu.:0.0000   3rd Qu.: 4    3rd Qu.: 0.0000   3rd Qu.:0   3rd Qu.:1.0000  
-#>  Max.   :6    Max.   :2637.60   Max.   :1.0000   Max.   :17    Max.   :17.0000   Max.   :0   Max.   :1.0000  
-#>                                 NA's   :21       NA's   :125                                                 
-#>    repstatus3       fecstatus3        matstatus3     alive3     stage3           stage3index   
-#>  Min.   :0.0000   Min.   :0.00000   Min.   :1    Min.   :1   Length:138         Min.   :2.000  
-#>  1st Qu.:0.0000   1st Qu.:0.00000   1st Qu.:1    1st Qu.:1   Class :character   1st Qu.:3.000  
-#>  Median :0.0000   Median :0.00000   Median :1    Median :1   Mode  :character   Median :3.000  
-#>  Mean   :0.0942   Mean   :0.02899   Mean   :1    Mean   :1                      Mean   :3.746  
-#>  3rd Qu.:0.0000   3rd Qu.:0.00000   3rd Qu.:1    3rd Qu.:1                      3rd Qu.:4.000  
-#>  Max.   :1.0000   Max.   :1.00000   Max.   :1    Max.   :1                      Max.   :6.000  
+#>      rowid        popid  patchid   individ              year2        firstseen       lastseen        obsage       obslifespan   
+#>  Min.   :   1.0   :138   1:29    Length:138         Min.   :1989   Min.   :   0   Min.   :   0   Min.   :0.000   Min.   :0.000  
+#>  1st Qu.: 303.2          2:14    Class :character   1st Qu.:1989   1st Qu.:1988   1st Qu.:1991   1st Qu.:1.000   1st Qu.:2.000  
+#>  Median : 493.5          3:42    Mode  :character   Median :1989   Median :1988   Median :1991   Median :1.000   Median :3.000  
+#>  Mean   : 526.7          4:13                       Mean   :1989   Mean   :1815   Mean   :1818   Mean   :1.239   Mean   :2.551  
+#>  3rd Qu.: 861.8          5:31                       3rd Qu.:1990   3rd Qu.:1988   3rd Qu.:1991   3rd Qu.:2.000   3rd Qu.:3.000  
+#>  Max.   :1079.0          6: 9                       Max.   :1990   Max.   :1989   Max.   :1991   Max.   :2.000   Max.   :3.000  
+#>                                                                                                                                 
+#>      sizea1           repstra1          feca1          fec1added        juvgiven1        obsstatus1       repstatus1    
+#>  Min.   :   0.00   Min.   :0.0000   Min.   : 0.000   Min.   : 0.000   Min.   :0.0000   Min.   :0.0000   Min.   :0.0000  
+#>  1st Qu.:  87.45   1st Qu.:0.0000   1st Qu.: 0.000   1st Qu.: 0.000   1st Qu.:0.0000   1st Qu.:1.0000   1st Qu.:0.0000  
+#>  Median : 477.20   Median :0.0000   Median : 0.000   Median : 0.000   Median :0.0000   Median :1.0000   Median :0.0000  
+#>  Mean   : 595.48   Mean   :0.3178   Mean   : 4.561   Mean   : 1.355   Mean   :0.0942   Mean   :0.9348   Mean   :0.2971  
+#>  3rd Qu.: 732.50   3rd Qu.:1.0000   3rd Qu.: 7.000   3rd Qu.: 0.000   3rd Qu.:0.0000   3rd Qu.:1.0000   3rd Qu.:1.0000  
+#>  Max.   :2941.00   Max.   :1.0000   Max.   :30.000   Max.   :30.000   Max.   :1.0000   Max.   :1.0000   Max.   :1.0000  
+#>                    NA's   :9        NA's   :97                                                                          
+#>    fecstatus1       matstatus1         alive1     stage1           stage1index        sizea2     repstra2       feca2    
+#>  Min.   :0.0000   Min.   :0.0000   Min.   :1   Length:138         Min.   :2.000   Min.   :0   Min.   : NA   Min.   : NA  
+#>  1st Qu.:0.0000   1st Qu.:1.0000   1st Qu.:1   Class :character   1st Qu.:4.000   1st Qu.:0   1st Qu.: NA   1st Qu.: NA  
+#>  Median :0.0000   Median :1.0000   Median :1   Mode  :character   Median :5.000   Median :0   Median : NA   Median : NA  
+#>  Mean   :0.1232   Mean   :0.9058   Mean   :1                      Mean   :4.833   Mean   :0   Mean   :NaN   Mean   :NaN  
+#>  3rd Qu.:0.0000   3rd Qu.:1.0000   3rd Qu.:1                      3rd Qu.:6.000   3rd Qu.:0   3rd Qu.: NA   3rd Qu.: NA  
+#>  Max.   :1.0000   Max.   :1.0000   Max.   :1                      Max.   :7.000   Max.   :0   Max.   : NA   Max.   : NA  
+#>                                                                                               NA's   :138   NA's   :138  
+#>    fec2added   juvgiven2   obsstatus2   repstatus2   fecstatus2   matstatus2     alive2     stage2           stage2index
+#>  Min.   :0   Min.   :0   Min.   :0    Min.   :0    Min.   :0    Min.   :1    Min.   :1   Length:138         Min.   :7   
+#>  1st Qu.:0   1st Qu.:0   1st Qu.:0    1st Qu.:0    1st Qu.:0    1st Qu.:1    1st Qu.:1   Class :character   1st Qu.:7   
+#>  Median :0   Median :0   Median :0    Median :0    Median :0    Median :1    Median :1   Mode  :character   Median :7   
+#>  Mean   :0   Mean   :0   Mean   :0    Mean   :0    Mean   :0    Mean   :1    Mean   :1                      Mean   :7   
+#>  3rd Qu.:0   3rd Qu.:0   3rd Qu.:0    3rd Qu.:0    3rd Qu.:0    3rd Qu.:1    3rd Qu.:1                      3rd Qu.:7   
+#>  Max.   :0   Max.   :0   Max.   :0    Max.   :0    Max.   :0    Max.   :1    Max.   :1                      Max.   :7   
+#>                                                                                                                         
+#>      sizea3           repstra3          feca3       fec3added         juvgiven3   obsstatus3       repstatus3       fecstatus3     
+#>  Min.   :   0.00   Min.   :0.0000   Min.   : 0    Min.   : 0.0000   Min.   :0   Min.   :0.0000   Min.   :0.0000   Min.   :0.00000  
+#>  1st Qu.:  16.02   1st Qu.:0.0000   1st Qu.: 0    1st Qu.: 0.0000   1st Qu.:0   1st Qu.:1.0000   1st Qu.:0.0000   1st Qu.:0.00000  
+#>  Median :  88.45   Median :0.0000   Median : 0    Median : 0.0000   Median :0   Median :1.0000   Median :0.0000   Median :0.00000  
+#>  Mean   : 242.33   Mean   :0.1111   Mean   : 3    Mean   : 0.2826   Mean   :0   Mean   :0.8478   Mean   :0.0942   Mean   :0.02899  
+#>  3rd Qu.: 300.90   3rd Qu.:0.0000   3rd Qu.: 4    3rd Qu.: 0.0000   3rd Qu.:0   3rd Qu.:1.0000   3rd Qu.:0.0000   3rd Qu.:0.00000  
+#>  Max.   :2637.60   Max.   :1.0000   Max.   :17    Max.   :17.0000   Max.   :0   Max.   :1.0000   Max.   :1.0000   Max.   :1.00000  
+#>                    NA's   :21       NA's   :125                                                                                    
+#>    matstatus3     alive3     stage3           stage3index   
+#>  Min.   :1    Min.   :1   Length:138         Min.   :3.000  
+#>  1st Qu.:1    1st Qu.:1   Class :character   1st Qu.:4.000  
+#>  Median :1    Median :1   Mode  :character   Median :4.000  
+#>  Mean   :1    Mean   :1                      Mean   :4.746  
+#>  3rd Qu.:1    3rd Qu.:1                      3rd Qu.:5.000  
+#>  Max.   :1    Max.   :1                      Max.   :7.000  
 #> 
 dim(lathvert[which(lathvert$stage2 == "Dorm"),])
 #> [1] 138  45
 ```
 
-The fact that dormant individuals have been assigned 0 for size does not affect us in this exercise, because the construction of raw matrices depends on the stage designations rather than on the size classifications. However, if we wished to build function-derived matrices, as in Analyses 2 and 3, then we would need to change any NAs to 0 to proceed.
+  <p style="text-indent: 20px">The fact that vegetatively dormant individuals have been assigned 0 for size does not require us to exercise any extra steps, because the construction of raw matrices depends on the stage designations rather than on the size classifications. In this case, the `verticalize3()` function has made these assignments, and this can be observed in the above summary output by looking at the `stabe2index` column, which shows all individuals that are alive and have a size of 0 in time *t* to be in the 7th stage. Typing `lathframe` and enter at the prompt can show us the stageframe being used, at which point we can check to make sure that the 7th stage is really vegetative dormancy. However, if we wished to build function-based matrices, as in Analyses 2 and 3, then we would need to change any NAs to 0 to proceed as NAs within size variables are not allowed in vital rate model estimation.</p>
 
   <p style="text-indent: 20px">Voilá! Now we will move on to creating a few extra objects that will help us estimate full population projection matrices.</p>
   
@@ -221,7 +215,7 @@ The fact that dormant individuals have been assigned 0 for size does not affect 
 
   <p style="text-indent: 20px">For our next step, we need to create a **reproductive matrix**. This matrix shows which stages are reproductive, which stages they lead to the production of, and at what level reproduction occurs. This matrix is mostly composed of 0s, but fecundity is noted as non-zero entries equal to a scalar multiplier to the full fecundity estimated by `lefko3`. This matrix has rows and columns equal to the number of stages described in the stageframe for this dataset, and the rows and columns refer to these stages in the same order as in the stageframe. In many ways, this matrix looks like a nearly empty population matrix, but notes the per-individual mean modifiers on fecundity for each stage that actually reproduces.</p>
   
-  <p style="text-indent: 20px">First, we create a 0 matrix with dimensionality equal to the number of rows in `lathframe`. Then we modify elements corresponding to fecundity by the expected mean seed dormancy probability (row 1), and by the germination rate (row 2). Since only stage 6 (flowering, or Flo) is reproductive, and since reproduction leads to the production of individuals in stage 1 (dormant seed, or Sd) and stage 2 (seedlings, or Sdl), we will alter matrix elements [1, 6] and [2, 6].</p>
+  <p style="text-indent: 20px">First, we create a 0 matrix with dimensions equal to the number of rows in `lathframe`. Then we modify elements corresponding to fecundity by the expected mean seed dormancy probability (row 1), and by the germination rate (row 2). Since only stage 6 (flowering adult, or Flo) is reproductive, and since reproduction leads to the production of individuals in stage 1 (dormant seed, or Sd) and stage 2 (seedlings, or Sdl), we will alter matrix elements [1, 6] and [2, 6]. After entering the lines of code in the next block, type `lathrepm` at the prompt to see the structure of this object.</p>
 
 ```r
 lathrepm <- matrix(0, 7, 7)
@@ -229,14 +223,14 @@ lathrepm[1, 6] <- 0.345
 lathrepm[2, 6] <- 0.054
 ```
 
-  <p style="text-indent: 20px">Next we will provide some given transitions via an **overwrite table**. In this case, we are providing the seed dormancy probability and germination rate, which in this case are provided as transitions from the dormant seed stage to another year of seed dormancy or a germinated seedling, respectively. Let's start with the ahistorical case.</p>
+  <p style="text-indent: 20px">Next we will provide some given transitions via an **overwrite table**. In this case, we are providing the seed dormancy probability and germination rate, which in this case are provided as transitions from the dormant seed stage to another year of seed dormancy or a germinated seedling, respectively. Let's start with the ahistorical case. As before, type `lathover2` at the prompt after entering the lines of code below to see the structure of the object that you have creaed.</p>
 
 ```r
 lathover2 <- overwrite(stage3 = c("Sd", "Sdl"), stage2 = c("Sd", "Sd"), 
                        givenrate = c(0.345, 0.054))
 ```
 
-And now the historical case. Here we need to show the stages in time step *t*-1 for this to work properly. Note the use of the `"rep"` designation for `Stage1` - this is shorthand telling R to use all reproductive stages for the time interval. Here, there is only one reproductive stage, but in other cases, such as in an IPM, this shorthand notation can represent many stages in a single statement.
+  <p style="text-indent: 20px">And now the historical case. Here we need to show the stages in time step *t*-1 for this to work properly. Note the use of the `"rep"` designation for `Stage1` - this is shorthand telling R to use all reproductive stages for the time interval. Here, there is only one reproductive stage, but in other cases, such as in an IPM, this shorthand notation can represent many stages in a single statement.</p>
 
 ```r
 lathover3 <- overwrite(stage3 = c("Sd", "Sd", "Sdl"), stage2 = c("Sd", "Sd", "Sd"), 
@@ -258,7 +252,7 @@ ehrlen2 <- rlefko2(data = lathvert, stageframe = lathframe, year = "all",
                    indivcol = "individ")
 ehrlen2
 #> $A
-#> $A[[1]]
+#> $A$`1`
 #>       [,1]       [,2]    [,3]       [,4]      [,5]       [,6] [,7]
 #> [1,] 0.345 0.00000000 0.00000 0.00000000 0.0000000 1.02941848    0
 #> [2,] 0.054 0.00000000 0.00000 0.00000000 0.0000000 0.16112637    0
@@ -268,7 +262,7 @@ ehrlen2
 #> [6,] 0.000 0.00000000 0.00000 0.03846154 0.2928177 0.61983471    0
 #> [7,] 0.000 0.10309278 0.03125 0.12179487 0.1160221 0.09090909    0
 #> 
-#> $A[[2]]
+#> $A$`2`
 #>       [,1]       [,2]       [,3]       [,4]       [,5]       [,6]       [,7]
 #> [1,] 0.345 0.00000000 0.00000000 0.00000000 0.00000000 2.83876712 0.00000000
 #> [2,] 0.054 0.00000000 0.00000000 0.00000000 0.00000000 0.44432877 0.00000000
@@ -278,7 +272,7 @@ ehrlen2
 #> [6,] 0.000 0.00000000 0.00000000 0.02314815 0.21323529 0.42922374 0.12328767
 #> [7,] 0.000 0.02564103 0.01538462 0.08333333 0.10294118 0.08675799 0.12328767
 #> 
-#> $A[[3]]
+#> $A$`3`
 #>       [,1]       [,2]        [,3]       [,4]       [,5]       [,6]       [,7]
 #> [1,] 0.345 0.00000000 0.000000000 0.00000000 0.00000000 0.86750000 0.00000000
 #> [2,] 0.054 0.00000000 0.000000000 0.00000000 0.00000000 0.13578261 0.00000000
@@ -290,7 +284,7 @@ ehrlen2
 #> 
 #> 
 #> $U
-#> $U[[1]]
+#> $U$`1`
 #>       [,1]       [,2]    [,3]       [,4]      [,5]       [,6] [,7]
 #> [1,] 0.345 0.00000000 0.00000 0.00000000 0.0000000 0.00000000    0
 #> [2,] 0.054 0.00000000 0.00000 0.00000000 0.0000000 0.00000000    0
@@ -300,7 +294,7 @@ ehrlen2
 #> [6,] 0.000 0.00000000 0.00000 0.03846154 0.2928177 0.61983471    0
 #> [7,] 0.000 0.10309278 0.03125 0.12179487 0.1160221 0.09090909    0
 #> 
-#> $U[[2]]
+#> $U$`2`
 #>       [,1]       [,2]       [,3]       [,4]       [,5]       [,6]       [,7]
 #> [1,] 0.345 0.00000000 0.00000000 0.00000000 0.00000000 0.00000000 0.00000000
 #> [2,] 0.054 0.00000000 0.00000000 0.00000000 0.00000000 0.00000000 0.00000000
@@ -310,7 +304,7 @@ ehrlen2
 #> [6,] 0.000 0.00000000 0.00000000 0.02314815 0.21323529 0.42922374 0.12328767
 #> [7,] 0.000 0.02564103 0.01538462 0.08333333 0.10294118 0.08675799 0.12328767
 #> 
-#> $U[[3]]
+#> $U$`3`
 #>       [,1]       [,2]        [,3]       [,4]       [,5]       [,6]       [,7]
 #> [1,] 0.345 0.00000000 0.000000000 0.00000000 0.00000000 0.00000000 0.00000000
 #> [2,] 0.054 0.00000000 0.000000000 0.00000000 0.00000000 0.00000000 0.00000000
@@ -322,7 +316,7 @@ ehrlen2
 #> 
 #> 
 #> $F
-#> $F[[1]]
+#> $F$`1`
 #>      [,1] [,2] [,3] [,4] [,5]      [,6] [,7]
 #> [1,]    0    0    0    0    0 1.0294185    0
 #> [2,]    0    0    0    0    0 0.1611264    0
@@ -332,7 +326,7 @@ ehrlen2
 #> [6,]    0    0    0    0    0 0.0000000    0
 #> [7,]    0    0    0    0    0 0.0000000    0
 #> 
-#> $F[[2]]
+#> $F$`2`
 #>      [,1] [,2] [,3] [,4] [,5]      [,6] [,7]
 #> [1,]    0    0    0    0    0 2.8387671    0
 #> [2,]    0    0    0    0    0 0.4443288    0
@@ -342,7 +336,7 @@ ehrlen2
 #> [6,]    0    0    0    0    0 0.0000000    0
 #> [7,]    0    0    0    0    0 0.0000000    0
 #> 
-#> $F[[3]]
+#> $F$`3`
 #>      [,1] [,2] [,3] [,4] [,5]      [,6] [,7]
 #> [1,]    0    0    0    0    0 0.8675000    0
 #> [2,]    0    0    0    0    0 0.1357826    0
@@ -357,22 +351,22 @@ ehrlen2
 #> NULL
 #> 
 #> $ahstages
-#>   new_stage_id orig_stage_id original_size bin_size_ctr bin_size_min bin_size_max repstatus obsstatus propstatus immstatus
-#> 1            1            Sd             0            0          0.0          0.0         0         0          1         1
-#> 2            2           Sdl           100          100          0.0        200.0         0         1          0         1
-#> 3            3           VSm            13           13          2.0         24.0         0         1          0         0
-#> 4            4            Sm           127          127         24.0        230.0         0         1          0         0
-#> 5            5           VLa          3730         3730        230.0       7230.0         0         1          0         0
-#> 6            6           Flo          3800         3800          0.0       7600.0         1         1          0         0
-#> 7            7          Dorm             0            0         -0.5          0.5         0         0          0         0
-#>   matstatus indataset bin_size_width bin_raw_halfwidth alive              comments stageno
-#> 1         0         0              0               0.0     1          Dormant seed       1
-#> 2         0         1            200             100.0     1              Seedling       2
-#> 3         1         1             22              11.0     1 Very small vegetative       3
-#> 4         1         1            206             103.0     1      Small vegetative       4
-#> 5         1         1           7000            3500.0     1 Very large vegetative       5
-#> 6         1         1           7600            3800.0     1             Flowering       6
-#> 7         1         1              1               0.5     1               Dormant       7
+#>   new_stage_id orig_stage_id original_size bin_size_ctr bin_size_min bin_size_max repstatus obsstatus propstatus immstatus matstatus
+#> 1            1            Sd             0            0          0.0          0.0         0         0          1         1         0
+#> 2            2           Sdl           100          100          0.0        200.0         0         1          0         1         0
+#> 3            3           VSm            13           13          2.0         24.0         0         1          0         0         1
+#> 4            4            Sm           127          127         24.0        230.0         0         1          0         0         1
+#> 5            5           VLa          3730         3730        230.0       7230.0         0         1          0         0         1
+#> 6            6           Flo          3800         3800          0.0       7600.0         1         1          0         0         1
+#> 7            7          Dorm             0            0         -0.5          0.5         0         0          0         0         1
+#>   indataset bin_size_width bin_raw_halfwidth alive min_age max_age                    comments stageno
+#> 1         0              0               0.0     1      NA      NA                Dormant seed       1
+#> 2         1            200             100.0     1      NA      NA                    Seedling       2
+#> 3         1             22              11.0     1      NA      NA Very small vegetative adult       3
+#> 4         1            206             103.0     1      NA      NA      Small vegetative adult       4
+#> 5         1           7000            3500.0     1      NA      NA Very large vegetative adult       5
+#> 6         1           7600            3800.0     1      NA      NA             Flowering adult       6
+#> 7         1              1               0.5     1      NA      NA  Vegetatively dormant adult       7
 #> 
 #> $labels
 #>   pop patch year2
@@ -391,7 +385,7 @@ ehrlen2
 ```
   <p style="text-indent: 20px">The output from this analysis includes is a `lefkoMat` object, which is a list object with the following elements:</p>
   
-  **A**: a list of full population projection matrices, in order of population, patch, and year
+  **A**: a list of full population projection matrices, in order of population, patch, and year (order given in `$labels`)
   
   **U**: a list of matrices showing only survival-transition elements, in the same order as A
   
@@ -403,11 +397,11 @@ ehrlen2
   
   **labels**: a table showing the order of matrices, according to population, patch, and year
   
-  **matrixqc**: a short vector used in `summary` statements to describe the overall quality of each matrix
+  **matrixqc**: a short vector used in `summary` statements to describe the overall quality of each matrix (used in `summary()` calls)
   
-  **dataqc**: a short vector used in `summary` statements to describe key sampling aspects of the dataset
+  **dataqc**: a short vector used in `summary` statements to describe key sampling aspects of the dataset (used in `summary()` calls)
   
-  <p style="text-indent: 20px">The input for the `rlefko2()` function includes `year = "all"`, which can be changed to `year = c(1989, 1990)` to focus just on years 1989 and 1990, as in the paper, or `year = 1989` to focus exclusively on the transition from 1989 to 1990 (the year entered is the year in time *t*). Package `lefko3` includes a great deal of flexibility here, and can quickly estimate many matrices covering all of the populations, patches, and years occurring in a specific dataset. The function-based matrix approach in the next section will showcase more of this flexibility.</p>
+  <p style="text-indent: 20px">The input for the `rlefko2()` function includes `year = "all"`, which can be changed to `year = c(1989, 1990)` to focus just on years 1989 and 1990, as in the paper, or `year = 1989` to focus exclusively on the transition from 1989 to 1990 (the year entered is the year in time *t*). Please note, though, that `lefko3` has a default behavior of creating a matrix for each year in the dataset, rather than lumping years. Package `lefko3` includes a great deal of flexibility here, and can quickly estimate many matrices covering all of the populations, patches, and years occurring in a specific dataset. The function-based matrix approach in the next section will showcase more of this flexibility.</p>
 
   <p style="text-indent: 20px">We can understand `lefkoMat` objects in greater detail through the summary `summary` function.</p>
 
@@ -424,7 +418,7 @@ summary(ehrlen2)
 #> NULL
 ```
 
-  <p style="text-indent: 20px">We start off learning that 3 matrices were estimated. The following line notes the dimensionality of those matrices. The third, fourth, and fifth lines of the summary are particularly important: they show how many elements were actually estimated, both overall and per matrix, and the number of individuals and transitions the matrices are based on. Matrices are often overparameterized in population ecology, meaning that the number of elements estimated is quite high given the size of the dataset. It is typical for population ecologists to consider the total number of transitions in a dataset as an indication of the statistical power going into the creation of the MPM. However, the number of individuals used is just as important because each transition that an individual experiences is dependent on the other transitions that it also experiences. Indeed, this is the fundamental point that led to the development of historical matrices and of this package - **the assumption that the status of an individual in the next time step is dependent only on its current state is too simplistic and leads to pseudoreplication, among other problems**. So, this output can be very helpful to understand the degree to which estimated matrices might be overparameterized or pseudoreplicated. With roughly 27 elements estimated per matrix, and the dataset containing 276 individuals long-lived enough to yield over 2500 transitions, overparameterization does not appear to be a problem, although pseudoreplication might certainly be.</p>
+  <p style="text-indent: 20px">We start off learning that 3 matrices were estimated, which is expected given that there are 4 consecutive years of data and an ahistorical matrix requires two consecutive years to estimate transitions. The following line notes the dimensionality of those matrices. The third, fourth, and fifth lines of the summary are particularly important: they show how many survival transition and fecundity elements were actually estimated, both overall and per matrix, and the number of individuals and transitions the matrices are based on. Matrices are often overparameterized in population ecology, meaning that the number of elements estimated is quite high given the size of the dataset. It is typical for population ecologists to consider the total number of transitions in a dataset as an indication of the statistical power going into the creation of the MPM. However, the number of individuals used is just as important because each transition that an individual experiences is dependent on the other transitions that it also experiences. Indeed, this is the fundamental point that led to the development of historical matrices and of this package - **the assumption that the status of an individual in the next time step is dependent only on its current state is too simplistic and leads to pseudoreplication, among other problems**. So, this output can be very helpful to understand the degree to which estimated matrices might be overparameterized or pseudoreplicated. With roughly 27 elements estimated per matrix (approximately 25 survival transitions and 2 fecundity), and the dataset containing 276 individuals long-lived enough to yield over 2500 transitions, overparameterization does not appear to be a problem, although pseudoreplication might certainly be.</p>
 
   <p style="text-indent: 20px">Now let's look at historical matrices. Because of the size of historical matrices, we will only show the summary.</p>
 
@@ -446,9 +440,9 @@ summary(ehrlen3)
 #> NULL
 ```
 
-  <p style="text-indent: 20px">The summary output shows a number of fundamental differences here. First, there is one less matrix estimated in the historical case than in the ahistorical case because, in the case of raw historical matrices, three consecutive time steps of data are needed to estimate each transition instead of two. Second, these matrices are quite a bit bigger than ahistorical matrices, with the number of rows and columns generally equaling the number of ahistorical rows and columns squared (although this number is sometimes smaller). Finally, a much greater proportion of each matrix is composed of 0s in the historical case than in the ahistorical case. This is because historical matrices are primarily composed of structural 0s, which works against overparameterization and helps make more realistic matrices.</p>
+  <p style="text-indent: 20px">The summary output shows a number of fundamental differences here. First, there is one less matrix estimated in the historical case than in the ahistorical case because, in the case of raw historical matrices, three consecutive time steps of data are needed to estimate each transition instead of two. Second, these matrices are quite a bit bigger than ahistorical matrices, with the number of rows and columns generally equaling the number of ahistorical rows and columns squared (although this number is sometimes smaller). Finally, a much greater proportion of each matrix is composed of 0s in the historical case than in the ahistorical case. This is because historical matrices are primarily composed of structural 0s, which works against overparameterization and helps make more realistic matrices. The result is that the typical historical matrix in this example has non-zero entries in 82.5 / 2401 = 3.4% of matrix elements, while the equivalent ahistorical matrix has non-zero entries in 26.667 / 49 = 54.45% of matrix elements.</p>
 
-  <p style="text-indent: 20px">We can see the impact of structural zeroes by eliminating some of them in the process of matrix estimation. The easy way to do that is to set `reduce = TRUE` within the `rlefko3()` call, which eliminates stage pairs in which both column and row are zero vectors. This will end up giving us matrices with 19 fewer rows and columns.</p>
+  <p style="text-indent: 20px">We can see the impact of structural zeroes by eliminating some of them in the process of matrix estimation. The easy way to do that is to set `reduce = TRUE` within the `rlefko3()` call, which eliminates stage pairs in which both column and row are zero vectors. This will end up giving us matrices with 19 fewer rows and columns, and with 82.5 / 900 = 9.2% of the resulting matrix elements estimated.</p>
 
 ```r
 ehrlen3red <- rlefko3(data = lathvert, stageframe = lathframe, year = c(1989, 1990), 
@@ -467,6 +461,7 @@ summary(ehrlen3red)
 #> The dataset contains a total of 276 unique individuals and 2527 unique transitions.
 #> NULL
 ```
+  
   <p style="text-indent: 20px">Next we will create a mean ahistorical matrix. 
 
 ```r
@@ -542,22 +537,22 @@ ehrlen2mean
 #> NULL
 #> 
 #> $ahstages
-#>   new_stage_id orig_stage_id original_size bin_size_ctr bin_size_min bin_size_max repstatus obsstatus propstatus immstatus
-#> 1            1            Sd             0            0          0.0          0.0         0         0          1         1
-#> 2            2           Sdl           100          100          0.0        200.0         0         1          0         1
-#> 3            3           VSm            13           13          2.0         24.0         0         1          0         0
-#> 4            4            Sm           127          127         24.0        230.0         0         1          0         0
-#> 5            5           VLa          3730         3730        230.0       7230.0         0         1          0         0
-#> 6            6           Flo          3800         3800          0.0       7600.0         1         1          0         0
-#> 7            7          Dorm             0            0         -0.5          0.5         0         0          0         0
-#>   matstatus indataset bin_size_width bin_raw_halfwidth alive              comments stageno
-#> 1         0         0              0               0.0     1          Dormant seed       1
-#> 2         0         1            200             100.0     1              Seedling       2
-#> 3         1         1             22              11.0     1 Very small vegetative       3
-#> 4         1         1            206             103.0     1      Small vegetative       4
-#> 5         1         1           7000            3500.0     1 Very large vegetative       5
-#> 6         1         1           7600            3800.0     1             Flowering       6
-#> 7         1         1              1               0.5     1               Dormant       7
+#>   new_stage_id orig_stage_id original_size bin_size_ctr bin_size_min bin_size_max repstatus obsstatus propstatus immstatus matstatus
+#> 1            1            Sd             0            0          0.0          0.0         0         0          1         1         0
+#> 2            2           Sdl           100          100          0.0        200.0         0         1          0         1         0
+#> 3            3           VSm            13           13          2.0         24.0         0         1          0         0         1
+#> 4            4            Sm           127          127         24.0        230.0         0         1          0         0         1
+#> 5            5           VLa          3730         3730        230.0       7230.0         0         1          0         0         1
+#> 6            6           Flo          3800         3800          0.0       7600.0         1         1          0         0         1
+#> 7            7          Dorm             0            0         -0.5          0.5         0         0          0         0         1
+#>   indataset bin_size_width bin_raw_halfwidth alive min_age max_age                    comments stageno
+#> 1         0              0               0.0     1      NA      NA                Dormant seed       1
+#> 2         1            200             100.0     1      NA      NA                    Seedling       2
+#> 3         1             22              11.0     1      NA      NA Very small vegetative adult       3
+#> 4         1            206             103.0     1      NA      NA      Small vegetative adult       4
+#> 5         1           7000            3500.0     1      NA      NA Very large vegetative adult       5
+#> 6         1           7600            3800.0     1      NA      NA             Flowering adult       6
+#> 7         1              1               0.5     1      NA      NA  Vegetatively dormant adult       7
 #> 
 #> $labels
 #>   pop patch
@@ -588,7 +583,7 @@ ehrlen2mean$A[[1]]
 #> [7,] 0.000 0.06281177 0.028668231 0.10960104 0.106045610 0.08579241 0.10263435
 ```
 
-  <p style="text-indent: 20px">Matrix designations make an impact on what we see in the output to `lmean`. Here, we see two matrices, but they are actually completely equal, because the first matrix is the mean matrix for the first patch, and the second matrix is a grand mean of patch-level means. Since there is only one patch analyzed, the patch-level mean matrix and the grand mean matrix are equal. We would see additional matrices if we had split our data by population and/or patch and asked for means for each. To see the exact specifications for each matrix, we can look at the `labels` component of our mean `lefkoMat` object.</p>
+  <p style="text-indent: 20px">Matrix designations make an impact on what we see in the output to `lmean`. Here, we see two matrices: the first matrix is the mean matrix for the first patch, and the second matrix is a grand mean of patch-level means. Since there is only one patch analyzed, the patch-level mean matrix and the grand mean matrix are equal. We would see additional matrices if we had split our data by population and/or patch and asked for means for each. To see the exact specifications for each matrix, we can look at the `labels` component of our mean `lefkoMat` object.</p>
 
 ```r
 ehrlen2mean$labels
@@ -597,7 +592,7 @@ ehrlen2mean$labels
 #> 2   1   All
 ```
 
-The designations A and 1 are the default symbols used for population and patch, respectively, when no designations are supplied. This scenario is generally the case when no such division is made in the dataset.
+The 1 designation is the default symbol used for population and patch, respectively, when no designations are supplied. This scenario is typical when no such division is made in the dataset.
 
   <p style="text-indent: 20px">We may wish to check for errors by assessing the survival of ahistorical stages. We can try the following, which shows us stage survival as the column sum for the main survival-transition matrix.</p>
 
@@ -606,7 +601,7 @@ colSums(ehrlen2mean$U[[1]])
 #> [1] 0.3990000 0.7453525 0.8765218 0.9368668 0.9659799 0.9907475 0.6666667
 ```
 
-All of the values are within the realm of possibility for probabilities, and they are also reasonably similar to values published in Ehrlén [-@ehrlen_dynamics_2000] so this matrix appears to be fine.
+All of these values are within the realm of possibility for probabilities, and they are also reasonably similar to values published in Ehrlén [-@ehrlen_dynamics_2000], so this matrix appears to be fine. Additional approaches to error-checking can include checks of specific elements within the matrix to see if they match the expected values. This is the fine-scale approach that we take to make sure that we, the maintainers of package `lefko3`, are not causing new bugs when we make improvements to core matrix estimation functions.
 
   <p style="text-indent: 20px">And now the historical mean matrix. We will use the reduced matrix to simplify later analyses, and show only the top-left corner of the rather large matrix.</p>
 
@@ -636,48 +631,48 @@ ehrlen3mean$A[[1]][1:20,1:8]
 #> [20,] 0.000    0 0.00000000 0.0000000    0 0.000000000 0.0000000    0
 ```
 
-Do not fear the prevalence of 0's in this matrix - this is normal, both because most elements are structural 0s and so cannot equal anything else, and because this is a raw matrix, meaning that transitions that do not actually occur in the dataset cannot equal anything other than 0.
+  <p style="text-indent: 20px">Do not fear the prevalence of 0s in this matrix - this is normal, both because most elements are structural 0s and so cannot equal anything else, and because this is a raw matrix, meaning that transitions that do not actually occur in the dataset cannot equal anything other than 0.</p>
 
   <p style="text-indent: 20px">To understand the dominance of structural 0s in the historical case, let's take a look at the `hstages` object associated with this mean matrix.</p>
 
 ```r
 ehrlen3mean$hstages
-#>    stcod3 stcod2 stage3 stage2
-#> 1      Sd     Sd      1      1
-#> 2     Sdl     Sd      2      1
-#> 11    VSm    Sdl      3      2
-#> 12     Sm    Sdl      4      2
-#> 15   Dorm    Sdl      7      2
-#> 19    VSm    VSm      3      3
-#> 20     Sm    VSm      4      3
-#> 21    VLa    VSm      5      3
-#> 23   Dorm    VSm      7      3
-#> 27    VSm     Sm      3      4
-#> 28     Sm     Sm      4      4
-#> 29    VLa     Sm      5      4
-#> 30    Flo     Sm      6      4
-#> 31   Dorm     Sm      7      4
-#> 35    VSm    VLa      3      5
-#> 36     Sm    VLa      4      5
-#> 37    VLa    VLa      5      5
-#> 38    Flo    VLa      6      5
-#> 39   Dorm    VLa      7      5
-#> 41     Sd    Flo      1      6
-#> 42    Sdl    Flo      2      6
-#> 44     Sm    Flo      4      6
-#> 45    VLa    Flo      5      6
-#> 46    Flo    Flo      6      6
-#> 47   Dorm    Flo      7      6
-#> 51    VSm   Dorm      3      7
-#> 52     Sm   Dorm      4      7
-#> 53    VLa   Dorm      5      7
-#> 54    Flo   Dorm      6      7
-#> 55   Dorm   Dorm      7      7
+#>    stcod3 stcod2 stage3 stage2n
+#> 1      Sd     Sd      1       1
+#> 2     Sdl     Sd      2       1
+#> 11    VSm    Sdl      3       2
+#> 12     Sm    Sdl      4       2
+#> 15   Dorm    Sdl      7       2
+#> 19    VSm    VSm      3       3
+#> 20     Sm    VSm      4       3
+#> 21    VLa    VSm      5       3
+#> 23   Dorm    VSm      7       3
+#> 27    VSm     Sm      3       4
+#> 28     Sm     Sm      4       4
+#> 29    VLa     Sm      5       4
+#> 30    Flo     Sm      6       4
+#> 31   Dorm     Sm      7       4
+#> 35    VSm    VLa      3       5
+#> 36     Sm    VLa      4       5
+#> 37    VLa    VLa      5       5
+#> 38    Flo    VLa      6       5
+#> 39   Dorm    VLa      7       5
+#> 41     Sd    Flo      1       6
+#> 42    Sdl    Flo      2       6
+#> 44     Sm    Flo      4       6
+#> 45    VLa    Flo      5       6
+#> 46    Flo    Flo      6       6
+#> 47   Dorm    Flo      7       6
+#> 51    VSm   Dorm      3       7
+#> 52     Sm   Dorm      4       7
+#> 53    VLa   Dorm      5       7
+#> 54    Flo   Dorm      6       7
+#> 55   Dorm   Dorm      7       7
 ```
 
-  <p style="text-indent: 20px">There are 30 pairs of ahistorical stages. These pairs correspond to the rows and columns of the historical matrices output by `rlefko3` in this case. The pairs are interpreted so that matrix columns represent the states of individual in times *t*-1 and *t*, and the rows represent states in times *t* and *t*+1. For an element in the matrix to contain a number other than 0, it must represent the same stage at time *t* in both the column stage pairs and the row stage pairs. The element [1, 1], for example, represents the transition probability from dormant seed at times *t*-1 and *t* (column pair), to dormant seed at times *t* and *t*+1 (row pair) - the time *t* stages match, and so this element is possible. However, element [1, 2] represents the transition probability from seedling in time *t*-1 and very small adult in time *t* (column pair), to dormant seed in time *t* and in time *t*+1 (row pair). Clearly [1, 2] is a structural 0 because it is impossible for an individual to be both a dormant seed and a very small adult at once in time *t*!</p>
+  <p style="text-indent: 20px">There are 30 pairs of ahistorical stages. These pairs correspond to the rows and columns of the historical matrices output by `rlefko3` in this case. The pairs are interpreted so that matrix columns represent the states of individual in times *t*-1 and *t*, and the rows represent states in times *t* and *t*+1. For an element in the matrix to contain a number other than 0, it must represent the same stage at time *t* in both the column stage pairs and the row stage pairs. The element [1, 1], for example, represents the transition probability from dormant seed at times *t*-1 and *t* (column pair), to dormant seed at times *t* and *t*+1 (row pair) - the time *t* stages match, and so this element is possible. However, element [1, 2] represents the transition probability from seedling in time *t*-1 and very small adult in time *t* (column pair), to dormant seed in time *t* and in time *t*+1 (row pair). Clearly [1, 2] is a structural 0 because it is impossible for an individual to be both a dormant seed and a very small adult at once in time *t*.</p>
 
-  <p style="text-indent: 20px">Error-checking is more difficult with historical matrices because they are typically one or two orders of magnitude bigger than their ahistorical counterparts. Take a look at the column sums here to see the difficulty.</p>
+  <p style="text-indent: 20px">Error-checking is more difficult with historical matrices because they are typically one or two orders of magnitude bigger than their ahistorical counterparts, but the same basic strategy can be used here as with ahistorical matrices. Take a look at the column sums here to see the difficulty.</p>
 
 ```r
 colSums(ehrlen3mean$U[[1]])
@@ -686,7 +681,7 @@ colSums(ehrlen3mean$U[[1]])
 #> [25] 1.0000000 0.5000000 0.4459459 0.4285714 0.5000000 0.5000000
 ```
 
-While not too bad here, other historical matrices often have more than 100 columns, sometimes many, many more (some historical matrices used in Shefferson et al. [-@shefferson_life_2014] had dimensions of over 2500 x 2500!). In these cases we can assess the distribution of survival estimates for historical stages, which is given as the set of column sums in the survival-transition matrix, as below.
+While not too bad here, other historical matrices often have more than 100 columns, sometimes many, many more (some historical matrices used in Shefferson et al. [-@shefferson_life_2014] had dimensions of over 2500 x 2500!). In these cases we can use `summary()` to assess the distribution of survival estimates for historical stages, which is given as the set of column sums in the survival-transition matrix, as below.
 
 ```r
 summary(colSums(ehrlen3mean$U[[1]]))
@@ -694,11 +689,11 @@ summary(colSums(ehrlen3mean$U[[1]]))
 #>  0.0000  0.5000  0.9224  0.7239  1.0000  1.0000
 ```
 
-As long as all of the numbers are between 0 and 1, then all is probably well. Fine-scale error-checking would require outputting the matrix into a spreadsheet and assessing it using the `hstages` output as a guide to what the elements refer to. Non-zero elements should only exist where biologically and logically possible.
+  <p style="text-indent: 20px">As long as all of the numbers are between 0 and 1, then all is probably well. Fine-scale error-checking would require outputting the matrix into a spreadsheet and assessing it using the `hstages` output as a guide to what the elements refer to. Non-zero elements should only exist where biologically and logically possible.</p>
 
 #### Step 4. Analyses
 
-  <p style="text-indent: 20px">We may wish to conduct all sorts of analyses with these matrices, and some are possible with `lefko3` itself. Let's estimate the deterministic population growth rate in each case via eigen analysis. We will start by estimating the annual population growth rate from the ahistorical analyses, followed by the population growth rate associated with the mean matrix from that analysis. Note that each lambda estimate also includes a data frame describing the matrices in order (this is the `labels` object within the output list). Here is the set of ahistorical annual lambda estimates.</p>
+  <p style="text-indent: 20px">We may wish to analyze population dynamics with these matrices, and some population analyses are possible with `lefko3` itself. Let's estimate the deterministic population growth rate in each case via Eigen analysis. We will start by estimating the annual population growth rate from the ahistorical analyses, followed by the population growth rate associated with the mean matrix from that analysis. Note that each lambda estimate also includes a data frame describing the matrices in order (this is the `labels` object within the output list). Here is the set of ahistorical annual lambda estimates.</p>
 
 ```r
 lambda3(ehrlen2)
@@ -708,7 +703,7 @@ lambda3(ehrlen2)
 #> 3  NA    NA  1990 1.0096490
 ```
 
-Here is the lambda associated with the mean matrix.
+  <p style="text-indent: 20px">Here is the lambda associated with the mean matrix.</p>
 
 ```r
 lambda3(ehrlen2mean)
@@ -717,7 +712,7 @@ lambda3(ehrlen2mean)
 #> 2   1   All 0.9574162
 ```
 
-Readers may be surprised to see that lambda for the mean matrix is on the high side relative to the annual matrices. This is most likely a result of the fact that some elements are 0's due simply to a lack of individuals transitioning through them. You may consider this a likely artefact of low sample size.
+  <p style="text-indent: 20px">Readers may be surprised to see that lambda for the mean matrix is on the high side relative to the annual matrices. This is most likely a result of the fact that some elements in annual matrices are 0s due simply to a lack of individuals transitioning through them. Such a situation becomes more and more likely to happen as sample size decreases.</p>
 
   <p style="text-indent: 20px">We will now look at the same numbers for the historical analyses. First the annual matrices.</p>
 
@@ -728,7 +723,7 @@ lambda3(ehrlen3red)
 #> 2  NA    NA  1990 0.9743043
 ```
 
-Now the mean matrix.
+  <p style="text-indent: 20px">Now the mean matrix.</p>
 
 ```r
 lambda3(ehrlen3mean)
@@ -737,7 +732,7 @@ lambda3(ehrlen3mean)
 #> 2   1   All 0.9045179
 ```
 
-  <p style="text-indent: 20px">Readers will likely observe both that there are fewer lambda estimates in the historical case, and that the mean lambda is lower. Both are expected. First, because there are 4 years of data, there are three ahistorical transitions possible for estimation: year 1 to 2, year 2 to 3, and year 3 to 4. However, in the historical case, only two are possible: from years 1 and 2 to years 2 and 3, and from years 2 and 3 to years 3 and 4. Second, historical matrices integrate temporal autocorrelation in vital rates in ways that ahistorical matrices generally cannot, and these autocorrelations are likely to be most strongly impacted by trade-offs operating across years [@shefferson_longitudinal_2010]. One particularly common such trade-off is the cost of growth: an individual that grows a great deal in one time step due to great environmental conditions in that year might pay a large cost of survival, growth, or reproduction in the next if those environmental conditions deteriorate [@shefferson_life_2014]. While we do not argue that the drop in lambda must be due to this specific trade-off, and it is certainly possible for historical matrix analysis to lead to higher lambda estimates, we do believe that this lambda is likely to be more realistic than the higher lambda estimated in the ahistorical case.</p>
+  <p style="text-indent: 20px">Readers will likely observe both that there are fewer lambda estimates in the historical case, and that the mean lambda is lower. First, because there are 4 years of data, there are three ahistorical transitions possible for estimation: year 1 to 2, year 2 to 3, and year 3 to 4. However, in the historical case, only two are possible: from years 1 and 2 to years 2 and 3, and from years 2 and 3 to years 3 and 4. Second, historical matrices integrate temporal autocorrelation in vital rates in ways that ahistorical matrices generally cannot, and these autocorrelations are likely to be most strongly impacted by trade-offs operating across years [@shefferson_longitudinal_2010]. One particularly common such trade-off is the cost of growth: an individual that grows a great deal in one time step due to great environmental conditions in that year might pay a large cost of survival, growth, or reproduction in the next if those environmental conditions deteriorate [@shefferson_life_2014]. While we do not argue that the drop in lambda must be due to this specific trade-off, and it is certainly possible for historical matrix analysis to lead to higher lambda estimates, we do believe that this lambda is likely to be more realistic than the higher lambda estimated in the ahistorical case.</p>
 
   <p style="text-indent: 20px">We can also take a peek at the stable stage distributions, as follows for the ahistorical case. Our numbers here match those produced by package `popbio`'s `stable.stage()` function.</p>
 
@@ -764,89 +759,89 @@ stablestage3(ehrlen2mean)
 
 ```r
 ehrlen3mss <- stablestage3(ehrlen3mean)
-ehrlen3mss$hist[,c(1,2,3,5)]
-#>    matrix orig_stage_id_2 orig_stage_id_1 new_stage_id_1
-#> 1       1              Sd              Sd              1
-#> 2       1             Sdl              Sd              1
-#> 3       1             VSm             Sdl              2
-#> 4       1              Sm             Sdl              2
-#> 5       1            Dorm             Sdl              2
-#> 6       1             VSm             VSm              3
-#> 7       1              Sm             VSm              3
-#> 8       1             VLa             VSm              3
-#> 9       1            Dorm             VSm              3
-#> 10      1             VSm              Sm              4
-#> 11      1              Sm              Sm              4
-#> 12      1             VLa              Sm              4
-#> 13      1             Flo              Sm              4
-#> 14      1            Dorm              Sm              4
-#> 15      1             VSm             VLa              5
-#> 16      1              Sm             VLa              5
-#> 17      1             VLa             VLa              5
-#> 18      1             Flo             VLa              5
-#> 19      1            Dorm             VLa              5
-#> 20      1              Sd             Flo              6
-#> 21      1             Sdl             Flo              6
-#> 22      1              Sm             Flo              6
-#> 23      1             VLa             Flo              6
-#> 24      1             Flo             Flo              6
-#> 25      1            Dorm             Flo              6
-#> 26      1             VSm            Dorm              7
-#> 27      1              Sm            Dorm              7
-#> 28      1             VLa            Dorm              7
-#> 29      1             Flo            Dorm              7
-#> 30      1            Dorm            Dorm              7
-#> 31      2              Sd              Sd              1
-#> 32      2             Sdl              Sd              1
-#> 33      2             VSm             Sdl              2
-#> 34      2              Sm             Sdl              2
-#> 35      2            Dorm             Sdl              2
-#> 36      2             VSm             VSm              3
-#> 37      2              Sm             VSm              3
-#> 38      2             VLa             VSm              3
-#> 39      2            Dorm             VSm              3
-#> 40      2             VSm              Sm              4
-#> 41      2              Sm              Sm              4
-#> 42      2             VLa              Sm              4
-#> 43      2             Flo              Sm              4
-#> 44      2            Dorm              Sm              4
-#> 45      2             VSm             VLa              5
-#> 46      2              Sm             VLa              5
-#> 47      2             VLa             VLa              5
-#> 48      2             Flo             VLa              5
-#> 49      2            Dorm             VLa              5
-#> 50      2              Sd             Flo              6
-#> 51      2             Sdl             Flo              6
-#> 52      2              Sm             Flo              6
-#> 53      2             VLa             Flo              6
-#> 54      2             Flo             Flo              6
-#> 55      2            Dorm             Flo              6
-#> 56      2             VSm            Dorm              7
-#> 57      2              Sm            Dorm              7
-#> 58      2             VLa            Dorm              7
-#> 59      2             Flo            Dorm              7
-#> 60      2            Dorm            Dorm              7
+ehrlen3mss$hist[,c(1,2,3,6)]
+#>    matrix orig_stage_id_2 orig_stage_id_1      ss_prop
+#> 1       1              Sd              Sd 1.276316e-01
+#> 2       1             Sdl              Sd 1.235747e-02
+#> 3       1             VSm             Sdl 0.000000e+00
+#> 4       1              Sm             Sdl 0.000000e+00
+#> 5       1            Dorm             Sdl 0.000000e+00
+#> 6       1             VSm             VSm 1.461200e-01
+#> 7       1              Sm             VSm 2.415823e-02
+#> 8       1             VLa             VSm 4.099566e-05
+#> 9       1            Dorm             VSm 1.868573e-03
+#> 10      1             VSm              Sm 2.856575e-02
+#> 11      1              Sm              Sm 1.119221e-01
+#> 12      1             VLa              Sm 1.643359e-02
+#> 13      1             Flo              Sm 1.518009e-02
+#> 14      1            Dorm              Sm 2.044845e-02
+#> 15      1             VSm             VLa 2.225618e-04
+#> 16      1              Sm             VLa 1.691729e-02
+#> 17      1             VLa             VLa 2.496102e-02
+#> 18      1             Flo             VLa 2.900608e-02
+#> 19      1            Dorm             VLa 1.007120e-02
+#> 20      1              Sd             Flo 2.069917e-01
+#> 21      1             Sdl             Flo 3.239869e-02
+#> 22      1              Sm             Flo 1.722032e-02
+#> 23      1             VLa             Flo 2.850957e-02
+#> 24      1             Flo             Flo 6.631266e-02
+#> 25      1            Dorm             Flo 1.086871e-02
+#> 26      1             VSm            Dorm 4.009221e-03
+#> 27      1              Sm            Dorm 2.516956e-02
+#> 28      1             VLa            Dorm 1.127899e-02
+#> 29      1             Flo            Dorm 4.153450e-03
+#> 30      1            Dorm            Dorm 7.182175e-03
+#> 31      2              Sd              Sd 1.276316e-01
+#> 32      2             Sdl              Sd 1.235747e-02
+#> 33      2             VSm             Sdl 0.000000e+00
+#> 34      2              Sm             Sdl 0.000000e+00
+#> 35      2            Dorm             Sdl 0.000000e+00
+#> 36      2             VSm             VSm 1.461200e-01
+#> 37      2              Sm             VSm 2.415823e-02
+#> 38      2             VLa             VSm 4.099566e-05
+#> 39      2            Dorm             VSm 1.868573e-03
+#> 40      2             VSm              Sm 2.856575e-02
+#> 41      2              Sm              Sm 1.119221e-01
+#> 42      2             VLa              Sm 1.643359e-02
+#> 43      2             Flo              Sm 1.518009e-02
+#> 44      2            Dorm              Sm 2.044845e-02
+#> 45      2             VSm             VLa 2.225618e-04
+#> 46      2              Sm             VLa 1.691729e-02
+#> 47      2             VLa             VLa 2.496102e-02
+#> 48      2             Flo             VLa 2.900608e-02
+#> 49      2            Dorm             VLa 1.007120e-02
+#> 50      2              Sd             Flo 2.069917e-01
+#> 51      2             Sdl             Flo 3.239869e-02
+#> 52      2              Sm             Flo 1.722032e-02
+#> 53      2             VLa             Flo 2.850957e-02
+#> 54      2             Flo             Flo 6.631266e-02
+#> 55      2            Dorm             Flo 1.086871e-02
+#> 56      2             VSm            Dorm 4.009221e-03
+#> 57      2              Sm            Dorm 2.516956e-02
+#> 58      2             VLa            Dorm 1.127899e-02
+#> 59      2             Flo            Dorm 4.153450e-03
+#> 60      2            Dorm            Dorm 7.182175e-03
 ```
 
-This is hard to read because it is by stage pair. It may make more sense if we look at the `$ahist` portion, which shows us the stable stage distribtuion according to the original stages given in our stageframe.
+  <p style="text-indent: 20px">This is hard to read because it is by stage pair. It may make more sense if we look at the `$ahist` portion, which shows us the stable stage distribtuion according to the original stages given in our stageframe.</p>
 
 ```r
 ehrlen3mss$ahist
 #>    matrix new_stage_id    ss_prop
-#> 1       1            1 0.33863782
-#> 2       1            2 0.04529314
-#> 3       1            3 0.17760532
-#> 4       1            4 0.19395458
-#> 5       1            5 0.08062848
-#> 6       1            6 0.11381145
-#> 7       1            7 0.05006921
-#> 8       2            1 0.33863782
-#> 9       2            2 0.04529314
-#> 10      2            3 0.17760532
-#> 11      2            4 0.19395458
-#> 12      2            5 0.08062848
-#> 13      2            6 0.11381145
-#> 14      2            7 0.05006921
+#> 1       1            1 0.33462326
+#> 2       1            2 0.04475616
+#> 3       1            3 0.17891752
+#> 4       1            4 0.19538751
+#> 5       1            5 0.08122417
+#> 6       1            6 0.11465228
+#> 7       1            7 0.05043911
+#> 8       2            1 0.33462326
+#> 9       2            2 0.04475616
+#> 10      2            3 0.17891752
+#> 11      2            4 0.19538751
+#> 12      2            5 0.08122417
+#> 13      2            6 0.11465228
+#> 14      2            7 0.05043911
 ```
 
   <p style="text-indent: 20px">Notice that this stable stage distribution is different from the ahistorical case, suggesting a strong influence of individual history.</p>
@@ -872,72 +867,72 @@ repvalue3(ehrlen2mean)
 #> 14      2            7          Dorm             0   0.2787137  16.88059
 ```
 
-These values are also the same as those produced by `popbio`'s `reproductive.value()` function. But there are differences when we look at the historical case. Note that `popbio` typically fails in the historical case, as that package is not generally made to handle extremely large matrices.
+  <p style="text-indent: 20px">These values are also the same as those produced by `popbio`'s `reproductive.value()` function. But there are differences when we look at the historical case. Note that `popbio` may fail in the historical case, as that package is not generally made to handle extremely large matrices.</p>
 
 ```r
 ehrlen3mrv <- repvalue3(ehrlen3mean)
-ehrlen3mrv$hist[,c(1,2,3,5,6)]
-#>    matrix orig_stage_id_2 orig_stage_id_1 new_stage_id_1 left_vector
-#> 1       1              Sd              Sd              1   0.0000000
-#> 2       1             Sdl              Sd              1   0.0000000
-#> 3       1             VSm             Sdl              2   0.1211539
-#> 4       1              Sm             Sdl              2   0.1575277
-#> 5       1            Dorm             Sdl              2   0.0942968
-#> 6       1             VSm             VSm              3   0.1452644
-#> 7       1              Sm             VSm              3   0.2058943
-#> 8       1             VLa             VSm              3   0.0000000
-#> 9       1            Dorm             VSm              3   0.1061292
-#> 10      1             VSm              Sm              4   0.1685702
-#> 11      1              Sm              Sm              4   0.2071118
-#> 12      1             VLa              Sm              4   0.2708996
-#> 13      1             Flo              Sm              4   0.3209769
-#> 14      1            Dorm              Sm              4   0.1128908
-#> 15      1             VSm             VLa              5   0.0758763
-#> 16      1              Sm             VLa              5   0.2517637
-#> 17      1             VLa             VLa              5   0.2827789
-#> 18      1             Flo             VLa              5   0.3061106
-#> 19      1            Dorm             VLa              5   0.1172431
-#> 20      1              Sd             Flo              6   0.0000000
-#> 21      1             Sdl             Flo              6   0.0000000
-#> 22      1              Sm             Flo              6   0.2627826
-#> 23      1             VLa             Flo              6   0.2983678
-#> 24      1             Flo             Flo              6   0.3455908
-#> 25      1            Dorm             Flo              6   0.1300279
-#> 26      1             VSm            Dorm              7   0.0848390
-#> 27      1              Sm            Dorm              7   0.1068625
-#> 28      1             VLa            Dorm              7   0.1221476
-#> 29      1             Flo            Dorm              7   0.1669090
-#> 30      1            Dorm            Dorm              7   0.0633956
-#> 31      2              Sd              Sd              1   0.0000000
-#> 32      2             Sdl              Sd              1   0.0000000
-#> 33      2             VSm             Sdl              2   0.1211539
-#> 34      2              Sm             Sdl              2   0.1575277
-#> 35      2            Dorm             Sdl              2   0.0942968
-#> 36      2             VSm             VSm              3   0.1452644
-#> 37      2              Sm             VSm              3   0.2058943
-#> 38      2             VLa             VSm              3   0.0000000
-#> 39      2            Dorm             VSm              3   0.1061292
-#> 40      2             VSm              Sm              4   0.1685702
-#> 41      2              Sm              Sm              4   0.2071118
-#> 42      2             VLa              Sm              4   0.2708996
-#> 43      2             Flo              Sm              4   0.3209769
-#> 44      2            Dorm              Sm              4   0.1128908
-#> 45      2             VSm             VLa              5   0.0758763
-#> 46      2              Sm             VLa              5   0.2517637
-#> 47      2             VLa             VLa              5   0.2827789
-#> 48      2             Flo             VLa              5   0.3061106
-#> 49      2            Dorm             VLa              5   0.1172431
-#> 50      2              Sd             Flo              6   0.0000000
-#> 51      2             Sdl             Flo              6   0.0000000
-#> 52      2              Sm             Flo              6   0.2627826
-#> 53      2             VLa             Flo              6   0.2983678
-#> 54      2             Flo             Flo              6   0.3455908
-#> 55      2            Dorm             Flo              6   0.1300279
-#> 56      2             VSm            Dorm              7   0.0848390
-#> 57      2              Sm            Dorm              7   0.1068625
-#> 58      2             VLa            Dorm              7   0.1221476
-#> 59      2             Flo            Dorm              7   0.1669090
-#> 60      2            Dorm            Dorm              7   0.0633956
+ehrlen3mrv$hist[,c(1,2,3,6,7)]
+#>    matrix orig_stage_id_2 orig_stage_id_1 left_vector   rep_value
+#> 1       1              Sd              Sd   0.0000000 0.000000000
+#> 2       1             Sdl              Sd   0.0000000 0.000000000
+#> 3       1             VSm             Sdl   0.1211539 0.000000000
+#> 4       1              Sm             Sdl   0.1575277 0.000000000
+#> 5       1            Dorm             Sdl   0.0942968 0.000000000
+#> 6       1             VSm             VSm   0.1452644 0.979216089
+#> 7       1              Sm             VSm   0.2058943 0.210123830
+#> 8       1             VLa             VSm   0.0000000 0.000000000
+#> 9       1            Dorm             VSm   0.1061292 0.032451907
+#> 10      1             VSm              Sm   0.1685702 0.222144838
+#> 11      1              Sm              Sm   0.2071118 0.979234173
+#> 12      1             VLa              Sm   0.2708996 0.452395497
+#> 13      1             Flo              Sm   0.3209769 0.350774425
+#> 14      1            Dorm              Sm   0.1128908 0.377758396
+#> 15      1             VSm             VLa   0.0758763 0.000779052
+#> 16      1              Sm             VLa   0.2517637 0.179924205
+#> 17      1             VLa             VLa   0.2827789 0.717276514
+#> 18      1             Flo             VLa   0.3061106 0.639215633
+#> 19      1            Dorm             VLa   0.1172431 0.193225239
+#> 20      1              Sd             Flo   0.0000000 0.000000000
+#> 21      1             Sdl             Flo   0.0000000 0.000000000
+#> 22      1              Sm             Flo   0.2627826 0.191162869
+#> 23      1             VLa             Flo   0.2983678 0.864410360
+#> 24      1             Flo             Flo   0.3455908 1.649827425
+#> 25      1            Dorm             Flo   0.1300279 0.231264874
+#> 26      1             VSm            Dorm   0.0848390 0.015691528
+#> 27      1              Sm            Dorm   0.1068625 0.113623120
+#> 28      1             VLa            Dorm   0.1221476 0.140001422
+#> 29      1             Flo            Dorm   0.1669090 0.049907829
+#> 30      1            Dorm            Dorm   0.0633956 0.074509265
+#> 31      2              Sd              Sd   0.0000000 0.000000000
+#> 32      2             Sdl              Sd   0.0000000 0.000000000
+#> 33      2             VSm             Sdl   0.1211539 0.000000000
+#> 34      2              Sm             Sdl   0.1575277 0.000000000
+#> 35      2            Dorm             Sdl   0.0942968 0.000000000
+#> 36      2             VSm             VSm   0.1452644 0.979216089
+#> 37      2              Sm             VSm   0.2058943 0.210123830
+#> 38      2             VLa             VSm   0.0000000 0.000000000
+#> 39      2            Dorm             VSm   0.1061292 0.032451907
+#> 40      2             VSm              Sm   0.1685702 0.222144838
+#> 41      2              Sm              Sm   0.2071118 0.979234173
+#> 42      2             VLa              Sm   0.2708996 0.452395497
+#> 43      2             Flo              Sm   0.3209769 0.350774425
+#> 44      2            Dorm              Sm   0.1128908 0.377758396
+#> 45      2             VSm             VLa   0.0758763 0.000779052
+#> 46      2              Sm             VLa   0.2517637 0.179924205
+#> 47      2             VLa             VLa   0.2827789 0.717276514
+#> 48      2             Flo             VLa   0.3061106 0.639215633
+#> 49      2            Dorm             VLa   0.1172431 0.193225239
+#> 50      2              Sd             Flo   0.0000000 0.000000000
+#> 51      2             Sdl             Flo   0.0000000 0.000000000
+#> 52      2              Sm             Flo   0.2627826 0.191162869
+#> 53      2             VLa             Flo   0.2983678 0.864410360
+#> 54      2             Flo             Flo   0.3455908 1.649827425
+#> 55      2            Dorm             Flo   0.1300279 0.231264874
+#> 56      2             VSm            Dorm   0.0848390 0.015691528
+#> 57      2              Sm            Dorm   0.1068625 0.113623120
+#> 58      2             VLa            Dorm   0.1221476 0.140001422
+#> 59      2             Flo            Dorm   0.1669090 0.049907829
+#> 60      2            Dorm            Dorm   0.0633956 0.074509265
 ```
 
   <p style="text-indent: 20px">The final column is the reproductive value of the stage pair. Once again, this is hard to interpret, so we can take a look at the ahistorical summary.</p>
@@ -948,107 +943,27 @@ ehrlen3mrv$ahist
 #> 1       1            1 0.0000000
 #> 2       1            2 0.0000000
 #> 3       1            3 1.0000000
-#> 4       1            4 1.3746302
-#> 5       1            5 1.7852086
-#> 6       1            6 2.2086184
-#> 7       1            7 0.7465806
+#> 4       1            4 1.3746304
+#> 5       1            5 1.7852090
+#> 6       1            6 2.2086186
+#> 7       1            7 0.7465808
 #> 8       2            1 0.0000000
 #> 9       2            2 0.0000000
 #> 10      2            3 1.0000000
-#> 11      2            4 1.3746302
-#> 12      2            5 1.7852086
-#> 13      2            6 2.2086184
-#> 14      2            7 0.7465806
+#> 11      2            4 1.3746304
+#> 12      2            5 1.7852090
+#> 13      2            6 2.2086186
+#> 14      2            7 0.7465808
 ```
 
 Notice that the reproductive values are quite different here, once again suggesting a strong importance to individual history.
 
-  <p style="text-indent: 20px">Further analytical tools are being planned for `lefko3`, but packages that handle projection matrices can typically handle the individual matrices produced and saved in `lefkoMat` objects in this package. Differences sometimes arise when packages are not made to handle large and/or sparse matrices - historical matrices are both, and so care must be taken with their analysis.</p>
+  <p style="text-indent: 20px">Further analytical tools are being planned for `lefko3`, but packages that handle projection matrices can typically handle the individual matrices produced and saved in `lefkoMat` objects in this package. Differences, obscure results, and errors sometimes arise when packages are not made to handle large and/or sparse matrices - historical matrices are both, and so care must be taken with their analysis.</p>
   
-#### Other issues
 
-  <p style="text-indent: 20px">The `lmean()` function gives the option of choosing the geometric or arithmetic mean, and also of treating 0s slightly differently depending on the situation. In principle, we advocate taking the geometric mean across time because survival and reproduction are geometric processes. Indeed, projecting an arithmetic mean matrix forward will lead to a higher projected population size over time than projecting the matrices themselves would, while the geometric mean does not suffer from this upward bias. However, a number of issues do arise when geometric mean matrices are estimated, and these need to be considered prior to a decision as to which method to take.</p>
-  
-  <p style="text-indent: 20px">In datasets sparse enough to yield many constituent matrices with 0s caused by individuals being entirely but temporarily absent from a particular stage, the use of the geometric mean may result in a downward bias since a single 0 entry will yield a geometric mean element equal to 0, regardless of the other values being averaged. Here, the dataset is sufficiently large and the stage definitions are sufficiently broad that we generally avoid this problem. Conversely, it is possible that some mean probabilities estimated through arithmetic rather geometric approaches will end up greater than 1.0, leading to problems with analysis. Though literature does not currently exist on this, one of us (RPS) suspects that relationships with time might account for the tendency of matrix projection models to overestimate lambda and future population size [@crone_ability_2013].</p>
-  
-  <p style="text-indent: 20px">Here, we create a geometric mean matrix using the `sparse` option.</p>
+### Analysis 2: Function-based MPM estimation
 
-```r
-ehrlen2geomean <- lmean(ehrlen2, time = "geometric", sparse = TRUE)
-ehrlen2geomean$A[[1]]
-#>       [,1]       [,2]        [,3]       [,4]       [,5]       [,6]       [,7]
-#> [1,] 0.345 0.00000000 0.000000000 0.00000000 0.00000000 1.36352698 0.00000000
-#> [2,] 0.054 0.00000000 0.000000000 0.00000000 0.00000000 0.21342162 0.00000000
-#> [3,] 0.000 0.66279884 0.718970853 0.07819879 0.02205882 0.00000000 0.11793803
-#> [4,] 0.000 0.02816064 0.114448308 0.57230654 0.15640472 0.08300071 0.38491032
-#> [5,] 0.000 0.00000000 0.003937008 0.05079821 0.31100573 0.22953894 0.18816400
-#> [6,] 0.000 0.00000000 0.000000000 0.05211823 0.32083642 0.56185311 0.08710301
-#> [7,] 0.000 0.05404012 0.026650231 0.10787226 0.10580558 0.08566632 0.15086683
-```
-  
-  <p style="text-indent: 20px">The `sparse = TRUE` option is vital to these matrices. This option tells R how to interpret 0s occurring within matrices. It is quite typical for raw matrices to include 0s in some elements simply because individuals did not exist in some stages within a particular year. In such cases, a 0 is a misrepresentation of that transition, because it reflects a lack of data (including low sample size) rather than a genuine transition impossibility. In the extreme case, treating a 0 just like another transition may make the mean element 0 as well when `time = "geometric"`. Thus, setting `sparse = TRUE` tells R to ignore 0's except when they are structural, and structural 0s are those elements that are 0 in every matrix. This will be particularly useful in large matrices such as historical matrices, but we can still see the effects by comparing the last mean matrix above to one in which the `sparse` option is set to `FALSE` (the default), as below.</p>
-
-```r
-ehrlen2geomeanns <- lmean(ehrlen2, time = "geometric")
-ehrlen2geomeanns$A[[1]]
-#>       [,1]       [,2]       [,3]       [,4]      [,5]       [,6] [,7]
-#> [1,] 0.345 0.00000000 0.00000000 0.00000000 0.0000000 1.36352698    0
-#> [2,] 0.054 0.00000000 0.00000000 0.00000000 0.0000000 0.21342162    0
-#> [3,] 0.000 0.66279884 0.71897085 0.07819879 0.0000000 0.00000000    0
-#> [4,] 0.000 0.00000000 0.11444831 0.57230654 0.1564047 0.08300071    0
-#> [5,] 0.000 0.00000000 0.00000000 0.05079821 0.3110057 0.22953894    0
-#> [6,] 0.000 0.00000000 0.00000000 0.05211823 0.3208364 0.56185311    0
-#> [7,] 0.000 0.05404012 0.02665023 0.10787226 0.1058056 0.08566632    0
-```
-
-  <p style="text-indent: 20px">With `sparse = FALSE`, which is the default, 8 transitions dropped to 0 in the mean matrix. This includes all of the transitions to and from vegetative dormancy, the transition from seedling to small vegetative, the transition from very small vegetative to large vegetative, and others with typically lower probabilities due to fewer individuals experiencing them. We will use the former mean matrix, with `sparse = TRUE`. Note, however, that the sparseness of data used in most situations leading to the construction of raw matrices will likely lead to the use of arithmetic means.
-
-  <p style="text-indent: 20px">As a comparison, let's now check the survival probabilities estimated using the geometric approach, and compare with the original arithmetic mean estimates as well as with the `sparse` option off.
-
-```r
-colSums(ehrlen2geomean$U[[1]])
-#> [1] 0.3990000 0.7449996 0.8640064 0.8612940 0.9161113 0.9600591 0.9289822
-colSums(ehrlen2mean$U[[1]])
-#> [1] 0.3990000 0.7453525 0.8765218 0.9368668 0.9659799 0.9907475 0.6666667
-colSums(ehrlen2geomeanns$U[[1]])
-#> [1] 0.3990000 0.7168390 0.8600694 0.8612940 0.8940525 0.9600591 0.0000000
-```
-
-  <p style="text-indent: 20px">This is an interesting, though not unexpected, comparison. The lowest estimates come from the true geometric mean, which turns all elements to 0 if a single 0 exists. The highest is the arithmetic approach, where all survival estimates are higher except for the dormant seed stage (equal everywhere), and vegetative dormancy (highest in the geometric sparse case). The sparse geometric mean leads to estimates in between these.</p>
-  
-  <p style="text-indent: 20px">Let's compare lambda in each case. First, the geometric sparse case.</p>
-
-```r
-lambda3(ehrlen2geomean)
-#>   pop patch   lambda
-#> 1   1     1 0.932975
-#> 2   1   All 0.932975
-```
-
-Now the arithmetic case.
-
-```r
-lambda3(ehrlen2mean)
-#>   pop patch    lambda
-#> 1   1     1 0.9574162
-#> 2   1   All 0.9574162
-```
-
-Finally, the true geometric case.
-
-```r
-lambda3(ehrlen2geomeanns)
-#>   pop patch    lambda
-#> 1   1     1 0.8542391
-#> 2   1   All 0.8542391
-```
-
-The true geometric mean has the lowest lambda, while the highest is the true arithmetic case, and the sparse geometric mean is in the middle. We leave it to the reader to choose the mean they view as most appropriate.
-
-
-### Analysis 2: Function-derived MPM estimation
-
-  <p style="text-indent: 20px">In this analysis, we will build function-derived MPMs using the *Lathyrus* dataset. To spice things up, we will use a slightly different approach to size classification, using the natural log of size instead of the normal size shown in the dataset. This has to do with the fact that volume is used as the size metric here, and so should have an allometric relationship to some vital rates (note that all size metrics have allometric relationships by default, but this is clearer when size is based on something more strongly related to mass, as is volume). We will also categorize individuals as reproductive vs. non-reproductive.</p>
+  <p style="text-indent: 20px">In this analysis, we will build function-based MPMs using the *Lathyrus* dataset. To spice things up, we will use a slightly different approach to size classification, using the natural log of size instead of the normal size shown in the dataset. This has to do with the fact that volume is used as the size metric here, and so should have an allometric relationship to some vital rates (note that all size metrics have allometric relationships by default, but this is clearer when size is based on something more strongly related to mass, as is volume). We will also categorize individuals as reproductive vs. non-reproductive.</p>
 
 #### Step 1. Data characterization and reorganization
 
@@ -1063,7 +978,7 @@ summary(c(lathyrus$lnVol88, lathyrus$lnVol89, lathyrus$lnVol90, lathyrus$lnVol91
 #>   0.600   2.700   4.800   4.777   6.600   8.900    1248
 ```
   
-  <p style="text-indent: 20px">It is important to note the size minima and maxima, because we have been using 0 as the size of vegetatively dormant individuals. What we note here is that apart from the many NAs that occur in the dataset, the smallest log sizes are still above 0, meaning that we are still able to use the value 0 as an indicator of vegetative dormancy. This would not be the case if the smallest size were negative, as might happen when the volume (not log volume) is between 0 and 1.</p>
+  <p style="text-indent: 20px">It is important to note the size minima and maxima, because we have been using 0 as the size of vegetatively dormant individuals. What we note here is that apart from the many NAs that occur in the log sizes in the dataset, the smallest log sizes are still above 0, meaning that we are still able to use the value 0 as an indicator of vegetative dormancy. This would not be the case if the smallest size were negative, as might happen when the volume (not log volume) is between 0 and 1.</p>
   
   <p style="text-indent: 20px">It can also help to take a look at plots of these distributions. First we will look at the raw volume data.</p>
 
@@ -1072,18 +987,18 @@ plot(density(c(lathyrus$Volume88, lathyrus$Volume89, lathyrus$Volume90, lathyrus
              na.rm = TRUE), main = "Volume")
 ```
 
-![plot of chunk Ch2an2st1ln383](Ch2an2st1ln383-1.png)
+![plot of chunk Ch2an2st1ln333](Ch2an2st1ln333-1.png)
 
-Next we will look at the log volume data.
+  <p style="text-indent: 20px">Next we will look at the log volume data.</p>
 
 ```r
 plot(density(c(lathyrus$lnVol88, lathyrus$lnVol89, lathyrus$lnVol90, lathyrus$lnVol91), 
              na.rm = TRUE), main = "Log volume")
 ```
 
-![plot of chunk Ch2an2st1ln389](Ch2an2st1ln389-1.png)
+![plot of chunk Ch2an2st1ln339](Ch2an2st1ln339-1.png)
 
-  <p style="text-indent: 20px">We see two very differently shaped distributions. The log volume distribution looks 'better' than the volume distribution, in the sense that it is closer to some semblance of normality. This is helpful since our size metrics are decimals, and so cannot be treated as integers (in the latter case, we could try modeling them as either Poisson- or negative binomial-distributed). We will work with log volume in this example, and treat it as Gaussian-distributed.</p>
+  <p style="text-indent: 20px">We see two very differently shaped distributions. The log volume distribution looks 'better' than the volume distribution, in the sense that it is closer to some semblance of a Gaussian distribution. This is helpful since our size metrics are decimals, and so cannot be treated as integers (in the latter case, we could try modeling them as either Poisson- or negative binomial-distributed). We will work with log volume in this example, and treat it as Gaussian-distributed.</p>
   
   <p style="text-indent: 20px">We need to cover all log volumes actually occurring in the dataset, because our approach will include developing estimates of vital rates given inputs including all possible sizes, reproductive status, and so forth. We will build this by creating vectors of the values describing each stage, always in the same order.</p>
 
@@ -1116,7 +1031,7 @@ lathframeln$comments <- c("Dormant seed", "Seedling", "Dormant", "Size 1 Non-rep
                         "Size 7 Reprod", "Size 8 Reprod", "Size 9 Reprod")
 ```
 
-  <p style="text-indent: 20px">Once the stageframe is created, we can reorganize the dataset into vertical format. Here, 'vertical' format is a way of organizing demographic data in which each row corresponds to the state of a single individual in two (if ahistorical) or three (if historical) consecutive time steps. To handle this, we use the `verticalize3` function, which creates historically-formatted vertical datasets, as below. We also need to get rid of NAs for `modelsearch` to work properly when we actually build models of vital rates, so we will now use the `NAas0 = TRUE` option.</p>
+  <p style="text-indent: 20px">Once the stageframe is created, we can reorganize the dataset into vertical format. Here, 'vertical' format is a way of organizing demographic data in which each row corresponds to the state of a single individual in two (if ahistorical) or three (if historical) consecutive time steps. To handle this, we use the `verticalize3()` function, which creates historically-formatted vertical datasets, as below. We also need to get rid of NAs in size and fecundity variables for `modelsearch` to work properly when we actually build models of vital rates, so we will now use the `NAas0 = TRUE` option.</p>
 
 ```r
 lathvertln <- verticalize3(lathyrus, noyears = 4, firstyear = 1988, patchidcol = "SUBPLOT", 
@@ -1149,7 +1064,7 @@ lathvertln$feca3 <- round(lathvertln$feca3)
   
 #### Step 2. Provide supplemental information for matrix estimation
 
-  <p style="text-indent: 20px">Next we need to create a **reproductive matrix**, which describes which stages are reproductive, which stages they lead to the reproduction of, and at what level they reproduce. This matrix is mostly composed of 0s, but fecundity is noted as non-zero entries equal to a scalar multiplier to the full fecundity estimated by `lefko3`. This matrix has rows and columns equal to the number of stages described in the stageframe for this dataset, and the rows and columns refer to these stages in the same order as in the stageframe. In many ways, it looks like a nearly empty population matrix, but notes the per-individual mean modifiers on fecundity for each stage that actually reproduces. Here, we first create a 0 matrix with dimensionality equal to the number of rows in `lathframeln`. Then we modify elements corresponding to fecundity by the expected mean seed dormancy probability (row 1), and by the germination rate (row 2).</p>
+  <p style="text-indent: 20px">Next we need to create a **reproductive matrix**, which describes which stages are reproductive, which stages they lead to the reproduction of, and at what level they reproduce. This matrix is mostly composed of 0s, but fecundity is noted as non-zero entries equal to a scalar multiplier to the full fecundity estimated by `lefko3`. This matrix has rows and columns equal to the number of stages described in the stageframe for this dataset, and the rows and columns refer to these stages in the same order as in the stageframe. In many ways, it looks like a nearly empty population matrix, but notes the per-individual mean modifiers on fecundity for each stage that actually reproduces. Here, we first create a 0 square matrix with dimensions equal to the number of rows in `lathframeln`. Then we modify elements corresponding to fecundity by the expected mean seed dormancy probability (row 1), and by the germination rate (row 2).</p>
 
 ```r
 lathrepmln <- matrix(0, 21, 21)
@@ -1157,7 +1072,7 @@ lathrepmln[1, c(13:21)] <- 0.345
 lathrepmln[2, c(13:21)] <- 0.054
 ```
 
-  <p style="text-indent: 20px">Next we need to provide some given transitions. However, we will use the same overwrite tables as in the last example (objects `lathover2` and `lathover3`), because these relate only to stages that are the same in both analyses. Here they are again.</p>
+  <p style="text-indent: 20px">Next we need to provide some given transitions. We will use the same overwrite tables as in the last example (objects `lathover2` and `lathover3`), because these relate only to stages that are the same in both analyses. Here they are again.</p>
 
 ```r
 lathover2 <- overwrite(stage3 = c("Sd", "Sdl"), stage2 = c("Sd", "Sd"), 
@@ -1171,7 +1086,7 @@ lathover3 <- overwrite(stage3 = c("Sd", "Sd", "Sdl"), stage2 = c("Sd", "Sd", "Sd
 
 #### Step 3. Develop models of demographic parameters
 
-  <p style="text-indent: 20px">Here, we will run the `modelsearch` function with the new vertical dataset, first for the ahistorical model set and then for the historical model set. This function will develop our models for us, provided we tell the function how this should all be handled. This function looks simple, but it is actually quite complicated in that it automates several crucial portions of demographic analysis. Specifically, it automates 1) the building of global models for each vital rate requested, 2) the exhaustive construction of all reduced models, and 3) the evaluation of models leading to the determination of the best-fit model. Let's look at some of the options that we will utilize for this purpose (please note that this list includes only some of the options actually offered by the function - further options are shown in the documentation for `modelsearch`, and further theoretical details are shown in the Basic theory vignette).</p>
+  <p style="text-indent: 20px">Here, we will run the `modelsearch` function with the new vertical dataset, first for the ahistorical model set and then for the historical model set. This function will develop our models for us, provided we tell the function how this should all be handled. This function looks simple, but it is actually quite complicated in that it automates several crucial portions of demographic analysis. Specifically, it automates 1) the building of global models for each vital rate requested, 2) the exhaustive construction of all reduced models, and 3) the evaluation of models leading to the determination of the best-fit model. Let's look at some of the options that we will utilize for this purpose (please note that this list includes only some of the options actually offered by the function - further options are shown in the documentation for `modelsearch()`, and further theoretical details are shown in the Basic theory vignette).</p>
   
   **historical**: Setting this to TRUE or FALSE tells R whether to include state in time *t*-1 in the global models.
   
@@ -1191,7 +1106,7 @@ lathover3 <- overwrite(stage3 = c("Sd", "Sd", "Sdl"), stage2 = c("Sd", "Sd", "Sd
   
   **fecdist**: This designates the distribution used for fecundity. The options include `gaussian`, `poisson`, and `negbin`, the last of which refers to the negative binomial distribution.
   
-  **fectime**: This designates whether fecundity is estimated within time *t* (the default) or time *t*+1. Plant ecologists are likely to choose the former, since fecundity is typically measured as flowers, fruit, or seed produced. Wildlife ecologists might choose the latter, since fecundity may be best estimated as a count of actual juveniles within nests, burrows, or other family structures.
+  **fectime**: This designates whether fecundity is estimated within time *t* (the default) or time *t*+1. Plant ecologists are likely to choose the former, since fecundity is typically estimated via a proxy such as flowers, fruit, or seed produced. Wildlife ecologists might choose the latter, since fecundity may be best estimated as a count of actual juveniles within nests, burrows, or other family structures.
   
   **indiv**: This should include the name of the variable corresponding to individual identity in the vertical dataset.
   
@@ -1205,7 +1120,7 @@ lathover3 <- overwrite(stage3 = c("Sd", "Sd", "Sdl"), stage2 = c("Sd", "Sd", "Sd
   
   **show.model.tables**: This tells R to include the full dredge model tables showing all models developed and their associated AICc values.
   
-In addition, there are other options that provide flexibility in handling datasets with different designations for key variables, and allowing manual designation of stages. 
+  <p style="text-indent: 20px">In addition, there are other options that provide flexibility in handling datasets with different designations for key variables, and allowing manual designation of stages.</p>
 
   <p style="text-indent: 20px">Here we create the ahistorical model set.</p>
 
@@ -1273,11 +1188,11 @@ lathmodelsln2 <- modelsearch(lathvertln, historical = FALSE, approach = "lme4", 
 #> Finished dredging all vital rates.
 ```
 
-  <p style="text-indent: 20px">The output can be rather verbose, and so we have limited it with the `quiet = TRUE` option. The function was developed to provide text marker posts of what the function is doing and what it has accomplished, as well as to show all warnings from all workhorse functions used. Because we used the `lme4` approach here, this includes warnings originating from estimating mixed linear models with package `lme4` [@bates_fitting_2015]. It also shows warnings originating from the `dredge` function of package `MuMIn` [@barton_mumin_2014], which is the core function used in model building and AICc estimation. We encourage users to get familiar with interpreting these warnings and assessing the degree to which they impact their own analyses.</p>
+  <p style="text-indent: 20px">The output can be rather verbose, and so we have limited it with the `quiet = TRUE` option. The function was developed to provide text marker posts of what the function is doing and what it has accomplished, as well as to show all warnings from all workhorse functions used. Because we used the `lme4` approach here, this includes warnings originating from estimating mixed linear models with package `lme4` [@bates_fitting_2015]. It also shows warnings originating from the `dredge()` function of package `MuMIn` [@barton_mumin_2014], which is the core function used in model building and AICc estimation. We encourage users to get familiar with interpreting these warnings and assessing the degree to which they impact their own analyses.</p>
 
   <p style="text-indent: 20px">In developing these linear models, the `modelsearch()` function set up a series of nested datasets for use in estimating vital rates as conditional rates and probabilities. The exact subsets created depend on which parameters are called for. It is rather important to consider which are required, and particular attention needs to be paid if there are size classes with sizes of 0. In these situations, it is best to consider a size of 0 as unobservable, and so to introduce observation status as a vital rate. This sets up datasets for size estimation that do not include 0 in the response term, because all 0 responses are already absorbed by observation status.</p>
   
-  <p style="text-indent: 20px">A further point of interest is in the style of model selection allowed. Package `lefko3` differs from many other approaches in that it allows a more intelligent approach to model selection. Indeed, instead of simply selecting the model with the lowest AICc, the reader can set `modelsearch()` to choose the model with fewest parameters within 2.0 AICc units of the model with the lowest AICc. This is the default setting, and is more in-line with model selection protocols preferred by information theorists [@burnham_model_2002].</p>
+  <p style="text-indent: 20px">A further important point is in the style of model selection allowed. Package `lefko3` differs from many other approaches in that it allows a more intelligent approach to model selection. Indeed, instead of simply selecting the model with the lowest AICc, the reader can set `modelsearch()` to choose the model with fewest parameters within 2.0 AICc units of the model with the lowest AICc. This is the default setting, and is more in-line with model selection protocols preferred by information theorists [@burnham_model_2002].</p>
   
   <p style="text-indent: 20px">Let's take a peek at the summary for the model selection output. This condenses the output to the necessities.</p>
 
@@ -1535,21 +1450,21 @@ lathmodelsln3 <- modelsearch(lathvertln, historical = TRUE, approach = "lme4", s
 #> Warning in modelsearch(lathvertln, historical = TRUE, approach = "lme4", : WARNING: Fecundity in time t cannot be Poisson-distributed and include 0s. Will develop fecundity models excluding all 0s. Consider adding a reproductive status variable to absorb 0 values.
 #> 
 #> Developing global model of survival probability...
-#> Warning in checkConv(attr(opt, "derivs"), opt$par, ctrl = control$checkConv, : Model failed to converge with max|grad| =
-#> 0.00425259 (tol = 0.002, component 1)
+#> Warning in checkConv(attr(opt, "derivs"), opt$par, ctrl = control$checkConv, : Model failed to converge with max|grad| = 0.00425259
+#> (tol = 0.002, component 1)
 #> Warning in checkConv(attr(opt, "derivs"), opt$par, ctrl = control$checkConv, : Model is nearly unidentifiable: large eigenvalue ratio
 #>  - Rescale variables?
 #> 
 #> Developing global model of observation probability...
-#> Warning in checkConv(attr(opt, "derivs"), opt$par, ctrl = control$checkConv, : Model failed to converge with max|grad| =
-#> 0.00529388 (tol = 0.002, component 1)
+#> Warning in checkConv(attr(opt, "derivs"), opt$par, ctrl = control$checkConv, : Model failed to converge with max|grad| = 0.00529388
+#> (tol = 0.002, component 1)
 #> 
 #> Developing global model of size (Gaussian)...
 #> 
 #> 
 #> Developing global model of the probability of reproduction...
-#> Warning in checkConv(attr(opt, "derivs"), opt$par, ctrl = control$checkConv, : Model failed to converge with max|grad| =
-#> 0.00814052 (tol = 0.002, component 1)
+#> Warning in checkConv(attr(opt, "derivs"), opt$par, ctrl = control$checkConv, : Model failed to converge with max|grad| = 0.00814052
+#> (tol = 0.002, component 1)
 #> 
 #> Developing global model of fecundity (Poisson)...
 #> fixed-effect model matrix is rank deficient so dropping 4 columns / coefficients
@@ -1614,10 +1529,8 @@ summary(lathmodelsln3)
 #>  year2   (Intercept) 0.3926  
 #> Number of obs: 2246, groups:  individ, 257; patchid, 6; year2, 3
 #> Fixed Effects:
-#>       (Intercept)         repstatus1         repstatus2             sizea1             sizea2  repstatus2:sizea2  
-#>           1.02667            1.84052           11.69226            0.46047            0.27446           -1.43729  
-#>     sizea1:sizea2  
-#>          -0.06948  
+#>       (Intercept)         repstatus1         repstatus2             sizea1             sizea2  repstatus2:sizea2      sizea1:sizea2  
+#>           1.02667            1.84052           11.69226            0.46047            0.27446           -1.43729           -0.06948  
 #> convergence code 0; 0 optimizer warnings; 1 lme4 warnings 
 #> 
 #> ────────────────────────────────────────
@@ -1678,18 +1591,17 @@ summary(lathmodelsln3)
 #>  year2   (Intercept) 0.5723020
 #> Number of obs: 1916, groups:  individ, 254; patchid, 6; year2, 3
 #> Fixed Effects:
-#>       (Intercept)         repstatus1         repstatus2             sizea1             sizea2  repstatus1:sizea1  
-#>          -8.21273           -0.12981            0.61747            0.39809            1.15700            0.57077  
-#> repstatus1:sizea2      sizea1:sizea2  
-#>          -0.55968           -0.05781  
+#>       (Intercept)         repstatus1         repstatus2             sizea1             sizea2  repstatus1:sizea1  repstatus1:sizea2  
+#>          -8.21273           -0.12981            0.61747            0.39809            1.15700            0.57077           -0.55968  
+#>     sizea1:sizea2  
+#>          -0.05781  
 #> 
 #> ────────────────────────────────────────
 #> 
 #> Fecundity model:
 #> Generalized linear mixed model fit by maximum likelihood (Laplace Approximation) ['glmerMod']
 #>  Family: poisson  ( log )
-#> Formula: feca2 ~ repstatus1 + sizea1 + sizea2 + (1 | individ) + (1 | year2) +  
-#>     (1 | patchid) + repstatus1:sizea2 + sizea1:sizea2
+#> Formula: feca2 ~ repstatus1 + sizea1 + sizea2 + (1 | individ) + (1 | year2) +      (1 | patchid) + repstatus1:sizea2 + sizea1:sizea2
 #>    Data: fec.data
 #>       AIC       BIC    logLik  deviance  df.resid 
 #>  2019.045  2051.262 -1000.522  2001.045       256 
@@ -1825,13 +1737,13 @@ summary(lathmodelsln3)
 #> NULL
 ```
 
-  <p style="text-indent: 20px">The summary will no doubt reveal some similarities, but also many differences. Historical models incorporate a further time step back in the global model, so some of the best-fit models will have these historical terms in them. Note that model sets that include historical terms should not be used to create ahistorical matrices, since the best-fit models can only be used to predict rates and probabilities using all terms in those final models.</p>
+  <p style="text-indent: 20px">The summary will no doubt reveal some similarities, but also many differences. Historical models incorporate a further time step back in the global model, so some of the best-fit models will have these historical terms in them. Here, we see some of these historical terms in the models of survival, size, reproduction status, and fecundity. Note that model sets that include historical terms should not be used to create ahistorical matrices, since the coefficients in the best-fit models are estimated assuming a specific model structure. Historical vital rate models may yield biased results if used to construct ahistorical matrices.</p>
 
   <p style="text-indent: 20px">Now we are ready to estimate matrices.</p>
   
 #### Step 4. Estimate matrices
   
-  <p style="text-indent: 20px">We will start by estimating the ahistorical set of matrices. Notice that we are matching the ahistorical matrix creation function, `flefko2`, with the appropriate ahistorical input, including the ahistorical lefkoMod object `lathmodelsln2`.</p>
+  <p style="text-indent: 20px">We will start by estimating the ahistorical set of matrices. Notice that we are matching the ahistorical matrix creation function, `flefko2()`, with the appropriate ahistorical input, including the ahistorical lefkoMod object `lathmodelsln2`.</p>
 
 ```r
 lathmat2ln <- flefko2(stageframe = lathframeln, modelsuite = lathmodelsln2,
@@ -1863,75 +1775,75 @@ summary(lathmat2ln)
 
 ```r
 lathmat2ln$A[[1]]
-#>        [,1]         [,2]         [,3]         [,4]         [,5]         [,6]         [,7]         [,8]         [,9]
-#>  [1,] 0.345 0.000000e+00 0.000000e+00 0.000000e+00 0.000000e+00 0.000000e+00 0.000000e+00 0.000000e+00 0.000000e+00
-#>  [2,] 0.054 5.993212e-06 0.000000e+00 0.000000e+00 0.000000e+00 0.000000e+00 0.000000e+00 0.000000e+00 0.000000e+00
-#>  [3,] 0.000 5.275532e-05 6.660145e-02 6.747293e-02 6.824391e-02 6.892390e-02 6.952198e-02 7.004678e-02 7.050631e-02
-#>  [4,] 0.000 9.911766e-03 7.319529e-02 3.536696e-02 1.462172e-02 5.145454e-03 1.523697e-03 3.710044e-04 7.137884e-05
-#>  [5,] 0.000 6.010009e-01 2.357008e-01 1.642418e-01 9.792480e-02 4.969653e-02 2.122312e-02 7.452427e-03 2.067742e-03
-#>  [6,] 0.000 1.979810e-01 3.104284e-01 3.119553e-01 2.682313e-01 1.963138e-01 1.209044e-01 6.122643e-02 2.449885e-02
-#>  [7,] 0.000 3.543206e-04 1.672185e-01 2.423391e-01 3.005029e-01 3.171746e-01 2.817071e-01 2.057324e-01 1.187183e-01
-#>  [8,] 0.000 3.445035e-09 3.684087e-02 7.699759e-02 1.376926e-01 2.095889e-01 2.684578e-01 2.827411e-01 2.352946e-01
-#>  [9,] 0.000 1.819765e-16 3.319693e-03 1.000583e-02 2.580447e-02 5.664490e-02 1.046349e-01 1.589271e-01 1.907344e-01
-#> [10,] 0.000 5.222294e-26 1.223456e-04 5.318046e-04 1.977888e-03 6.261464e-03 1.668015e-02 3.653669e-02 6.323660e-02
-#> [11,] 0.000 8.142014e-38 1.844173e-06 1.156041e-05 6.200564e-05 2.830828e-04 1.087541e-03 3.435446e-03 8.574931e-03
-#> [12,] 0.000 6.896467e-52 1.136939e-08 1.027820e-07 7.950294e-07 5.234481e-06 2.900106e-05 1.321173e-04 4.755709e-04
-#> [13,] 0.000 0.000000e+00 1.951182e-04 2.154427e-04 2.035411e-04 1.636804e-04 1.107621e-04 6.162984e-05 2.709573e-05
-#> [14,] 0.000 0.000000e+00 6.283125e-04 1.000502e-03 1.363158e-03 1.580881e-03 1.542772e-03 1.237969e-03 7.849242e-04
-#> [15,] 0.000 0.000000e+00 8.275154e-04 1.900319e-03 3.733903e-03 6.244878e-03 8.788904e-03 1.017070e-02 9.299875e-03
-#> [16,] 0.000 0.000000e+00 4.457579e-04 1.476242e-03 4.183139e-03 1.008954e-02 2.047813e-02 3.417548e-02 4.506600e-02
-#> [17,] 0.000 0.000000e+00 9.820747e-05 4.690415e-04 1.916744e-03 6.667168e-03 1.951500e-02 4.696788e-02 8.931892e-02
-#> [18,] 0.000 0.000000e+00 8.849375e-06 6.095192e-05 3.592100e-04 1.801913e-03 7.606225e-03 2.640036e-02 7.240365e-02
-#> [19,] 0.000 0.000000e+00 3.261393e-07 3.239561e-06 2.753312e-05 1.991815e-04 1.212530e-03 6.069336e-03 2.400490e-02
-#> [20,] 0.000 0.000000e+00 4.916050e-09 7.042185e-08 8.631471e-07 9.005059e-06 7.905660e-05 5.706832e-04 3.255083e-03
-#> [21,] 0.000 0.000000e+00 3.030763e-11 6.261109e-10 1.106718e-08 1.665124e-07 2.108174e-06 2.194682e-05 1.805289e-04
-#>              [,10]        [,11]        [,12]        [,13]        [,14]        [,15]        [,16]        [,17]        [,18]
-#>  [1,] 0.000000e+00 0.000000e+00 0.000000e+00 4.685856e-02 8.863230e-02 1.676468e-01 3.171015e-01 5.997931e-01 1.1345001737
-#>  [2,] 0.000000e+00 0.000000e+00 0.000000e+00 7.334383e-03 1.387288e-02 2.624036e-02 4.963328e-02 9.388065e-02 0.1775739402
-#>  [3,] 7.090794e-02 7.125841e-02 7.156380e-02 7.239488e-02 7.255136e-02 7.268701e-02 7.280453e-02 7.290631e-02 0.0729944162
-#>  [4,] 1.032250e-05 1.088316e-06 8.500752e-08 2.225850e-01 9.511002e-02 2.553657e-02 4.220822e-03 4.140165e-04 0.0000229322
-#>  [5,] 4.312410e-04 6.556894e-05 7.385989e-06 3.398051e-01 2.730113e-01 1.378279e-01 4.283432e-02 7.900103e-03 0.0008227751
-#>  [6,] 7.368474e-03 1.615712e-03 2.624717e-04 2.121713e-01 3.205218e-01 3.042527e-01 1.777908e-01 6.165530e-02 0.0120736633
-#>  [7,] 5.149412e-02 1.628366e-02 3.814862e-03 5.418335e-02 1.539065e-01 2.746972e-01 3.018209e-01 1.968025e-01 0.0724635368
-#>  [8,] 1.471839e-01 6.712168e-02 2.267764e-02 5.659364e-03 3.022589e-02 1.014370e-01 2.095616e-01 2.569292e-01 0.1778781219
-#>  [9,] 1.720622e-01 1.131608e-01 5.513651e-02 2.417641e-04 2.427860e-03 1.532009e-02 5.951095e-02 1.371888e-01 0.1785862781
-#> [10,] 8.226841e-02 7.802827e-02 5.482811e-02 4.224144e-06 7.976101e-05 9.463430e-04 6.912011e-03 2.996033e-02 0.0733324475
-#> [11,] 1.608805e-02 2.200546e-02 2.229923e-02 3.018618e-08 1.071717e-06 2.390884e-05 3.283482e-04 2.676067e-03 0.0123159188
-#> [12,] 1.286756e-03 2.538232e-03 3.709360e-03 8.822670e-11 5.889691e-09 2.470534e-07 6.379509e-06 9.776195e-05 0.0008459798
-#> [13,] 8.954389e-06 2.157374e-06 3.850767e-07 2.643274e-03 2.581024e-03 1.583609e-03 5.981386e-04 1.340732e-04 0.0000169703
-#> [14,] 3.740856e-04 1.299776e-04 3.345789e-05 4.035305e-03 7.408776e-03 8.547175e-03 6.070112e-03 2.558333e-03 0.0006088704
-#> [15,] 6.391878e-03 3.202832e-03 1.188974e-03 2.519608e-03 8.698080e-03 1.886773e-02 2.519498e-02 1.996617e-02 0.0089347573
-#> [16,] 4.466924e-02 3.227918e-02 1.728099e-02 6.434461e-04 4.176600e-03 1.703489e-02 4.277146e-02 6.373161e-02 0.0536244963
-#> [17,] 1.276766e-01 1.330556e-01 1.027277e-01 6.720691e-05 8.202474e-04 6.290450e-03 2.969727e-02 8.320274e-02 0.1316334408
-#> [18,] 1.492575e-01 2.243192e-01 2.497636e-01 2.871033e-06 6.588543e-05 9.500501e-04 8.433379e-03 4.442659e-02 0.1321574909
-#> [19,] 7.136479e-02 1.546758e-01 2.483666e-01 5.016318e-08 2.164495e-06 5.868591e-05 9.795108e-04 9.702213e-03 0.0542675079
-#> [20,] 1.395578e-02 4.362152e-02 1.010136e-01 3.584714e-10 2.908346e-08 1.482667e-06 4.653067e-05 8.666050e-04 0.0091140313
-#> [21,] 1.116213e-03 5.031549e-03 1.680308e-02 1.047723e-12 1.598300e-10 1.532061e-08 9.040491e-07 3.165877e-05 0.0006260423
-#>              [,19]        [,20]        [,21]
-#>  [1,] 2.145891e+00 4.058923e+00 7.677396e+00
-#>  [2,] 3.358786e-01 6.353097e-01 1.201679e+00
-#>  [3,] 7.307066e-02 7.313661e-02 7.319365e-02
-#>  [4,] 6.910093e-07 1.140410e-08 1.077605e-10
-#>  [5,] 4.661649e-05 1.446561e-06 2.570135e-08
-#>  [6,] 1.286227e-03 7.504732e-05 2.507117e-06
-#>  [7,] 1.451505e-02 1.592415e-03 1.000267e-04
-#>  [8,] 6.699489e-02 1.381973e-02 1.632223e-03
-#>  [9,] 1.264700e-01 4.905301e-02 1.089346e-02
-#> [10,] 9.764631e-02 7.121218e-02 2.973546e-02
-#> [11,] 3.083520e-02 4.228297e-02 3.319756e-02
-#> [12,] 3.982540e-03 1.026831e-02 1.515863e-02
-#> [13,] 1.168549e-06 4.407005e-08 9.516163e-10
-#> [14,] 7.883203e-05 5.590097e-06 2.269645e-07
-#> [15,] 2.175108e-03 2.900132e-04 2.213995e-05
-#> [16,] 2.454605e-02 6.153735e-03 8.833197e-04
-#> [17,] 1.132935e-01 5.340504e-02 1.441391e-02
-#> [18,] 2.138704e-01 1.895607e-01 9.619843e-02
-#> [19,] 1.651273e-01 2.751927e-01 2.625892e-01
-#> [20,] 5.214467e-02 1.633985e-01 2.931624e-01
-#> [21,] 6.734779e-03 3.968092e-02 1.338635e-01
+#>        [,1]         [,2]         [,3]         [,4]         [,5]         [,6]         [,7]         [,8]         [,9]        [,10]
+#>  [1,] 0.345 0.000000e+00 0.000000e+00 0.000000e+00 0.000000e+00 0.000000e+00 0.000000e+00 0.000000e+00 0.000000e+00 0.000000e+00
+#>  [2,] 0.054 5.993212e-06 0.000000e+00 0.000000e+00 0.000000e+00 0.000000e+00 0.000000e+00 0.000000e+00 0.000000e+00 0.000000e+00
+#>  [3,] 0.000 5.275532e-05 6.660145e-02 6.747293e-02 6.824391e-02 6.892390e-02 6.952198e-02 7.004678e-02 7.050631e-02 7.090794e-02
+#>  [4,] 0.000 9.911766e-03 7.319529e-02 3.536696e-02 1.462172e-02 5.145454e-03 1.523697e-03 3.710044e-04 7.137884e-05 1.032250e-05
+#>  [5,] 0.000 6.010009e-01 2.357008e-01 1.642418e-01 9.792480e-02 4.969653e-02 2.122312e-02 7.452427e-03 2.067742e-03 4.312410e-04
+#>  [6,] 0.000 1.979810e-01 3.104284e-01 3.119553e-01 2.682313e-01 1.963138e-01 1.209044e-01 6.122643e-02 2.449885e-02 7.368474e-03
+#>  [7,] 0.000 3.543206e-04 1.672185e-01 2.423391e-01 3.005029e-01 3.171746e-01 2.817071e-01 2.057324e-01 1.187183e-01 5.149412e-02
+#>  [8,] 0.000 3.445035e-09 3.684087e-02 7.699759e-02 1.376926e-01 2.095889e-01 2.684578e-01 2.827411e-01 2.352946e-01 1.471839e-01
+#>  [9,] 0.000 1.819765e-16 3.319693e-03 1.000583e-02 2.580447e-02 5.664490e-02 1.046349e-01 1.589271e-01 1.907344e-01 1.720622e-01
+#> [10,] 0.000 5.222294e-26 1.223456e-04 5.318046e-04 1.977888e-03 6.261464e-03 1.668015e-02 3.653669e-02 6.323660e-02 8.226841e-02
+#> [11,] 0.000 8.142014e-38 1.844173e-06 1.156041e-05 6.200564e-05 2.830828e-04 1.087541e-03 3.435446e-03 8.574931e-03 1.608805e-02
+#> [12,] 0.000 6.896467e-52 1.136939e-08 1.027820e-07 7.950294e-07 5.234481e-06 2.900106e-05 1.321173e-04 4.755709e-04 1.286756e-03
+#> [13,] 0.000 0.000000e+00 1.951182e-04 2.154427e-04 2.035411e-04 1.636804e-04 1.107621e-04 6.162984e-05 2.709573e-05 8.954389e-06
+#> [14,] 0.000 0.000000e+00 6.283125e-04 1.000502e-03 1.363158e-03 1.580881e-03 1.542772e-03 1.237969e-03 7.849242e-04 3.740856e-04
+#> [15,] 0.000 0.000000e+00 8.275154e-04 1.900319e-03 3.733903e-03 6.244878e-03 8.788904e-03 1.017070e-02 9.299875e-03 6.391878e-03
+#> [16,] 0.000 0.000000e+00 4.457579e-04 1.476242e-03 4.183139e-03 1.008954e-02 2.047813e-02 3.417548e-02 4.506600e-02 4.466924e-02
+#> [17,] 0.000 0.000000e+00 9.820747e-05 4.690415e-04 1.916744e-03 6.667168e-03 1.951500e-02 4.696788e-02 8.931892e-02 1.276766e-01
+#> [18,] 0.000 0.000000e+00 8.849375e-06 6.095192e-05 3.592100e-04 1.801913e-03 7.606225e-03 2.640036e-02 7.240365e-02 1.492575e-01
+#> [19,] 0.000 0.000000e+00 3.261393e-07 3.239561e-06 2.753312e-05 1.991815e-04 1.212530e-03 6.069336e-03 2.400490e-02 7.136479e-02
+#> [20,] 0.000 0.000000e+00 4.916050e-09 7.042185e-08 8.631471e-07 9.005059e-06 7.905660e-05 5.706832e-04 3.255083e-03 1.395578e-02
+#> [21,] 0.000 0.000000e+00 3.030763e-11 6.261109e-10 1.106718e-08 1.665124e-07 2.108174e-06 2.194682e-05 1.805289e-04 1.116213e-03
+#>              [,11]        [,12]        [,13]        [,14]        [,15]        [,16]        [,17]        [,18]        [,19]
+#>  [1,] 0.000000e+00 0.000000e+00 4.685856e-02 8.863230e-02 1.676468e-01 3.171015e-01 5.997931e-01 1.1345001737 2.145891e+00
+#>  [2,] 0.000000e+00 0.000000e+00 7.334383e-03 1.387288e-02 2.624036e-02 4.963328e-02 9.388065e-02 0.1775739402 3.358786e-01
+#>  [3,] 7.125841e-02 7.156380e-02 7.239488e-02 7.255136e-02 7.268701e-02 7.280453e-02 7.290631e-02 0.0729944162 7.307066e-02
+#>  [4,] 1.088316e-06 8.500752e-08 2.225850e-01 9.511002e-02 2.553657e-02 4.220822e-03 4.140165e-04 0.0000229322 6.910093e-07
+#>  [5,] 6.556894e-05 7.385989e-06 3.398051e-01 2.730113e-01 1.378279e-01 4.283432e-02 7.900103e-03 0.0008227751 4.661649e-05
+#>  [6,] 1.615712e-03 2.624717e-04 2.121713e-01 3.205218e-01 3.042527e-01 1.777908e-01 6.165530e-02 0.0120736633 1.286227e-03
+#>  [7,] 1.628366e-02 3.814862e-03 5.418335e-02 1.539065e-01 2.746972e-01 3.018209e-01 1.968025e-01 0.0724635368 1.451505e-02
+#>  [8,] 6.712168e-02 2.267764e-02 5.659364e-03 3.022589e-02 1.014370e-01 2.095616e-01 2.569292e-01 0.1778781219 6.699489e-02
+#>  [9,] 1.131608e-01 5.513651e-02 2.417641e-04 2.427860e-03 1.532009e-02 5.951095e-02 1.371888e-01 0.1785862781 1.264700e-01
+#> [10,] 7.802827e-02 5.482811e-02 4.224144e-06 7.976101e-05 9.463430e-04 6.912011e-03 2.996033e-02 0.0733324475 9.764631e-02
+#> [11,] 2.200546e-02 2.229923e-02 3.018618e-08 1.071717e-06 2.390884e-05 3.283482e-04 2.676067e-03 0.0123159188 3.083520e-02
+#> [12,] 2.538232e-03 3.709360e-03 8.822670e-11 5.889691e-09 2.470534e-07 6.379509e-06 9.776195e-05 0.0008459798 3.982540e-03
+#> [13,] 2.157374e-06 3.850767e-07 2.643274e-03 2.581024e-03 1.583609e-03 5.981386e-04 1.340732e-04 0.0000169703 1.168549e-06
+#> [14,] 1.299776e-04 3.345789e-05 4.035305e-03 7.408776e-03 8.547175e-03 6.070112e-03 2.558333e-03 0.0006088704 7.883203e-05
+#> [15,] 3.202832e-03 1.188974e-03 2.519608e-03 8.698080e-03 1.886773e-02 2.519498e-02 1.996617e-02 0.0089347573 2.175108e-03
+#> [16,] 3.227918e-02 1.728099e-02 6.434461e-04 4.176600e-03 1.703489e-02 4.277146e-02 6.373161e-02 0.0536244963 2.454605e-02
+#> [17,] 1.330556e-01 1.027277e-01 6.720691e-05 8.202474e-04 6.290450e-03 2.969727e-02 8.320274e-02 0.1316334408 1.132935e-01
+#> [18,] 2.243192e-01 2.497636e-01 2.871033e-06 6.588543e-05 9.500501e-04 8.433379e-03 4.442659e-02 0.1321574909 2.138704e-01
+#> [19,] 1.546758e-01 2.483666e-01 5.016318e-08 2.164495e-06 5.868591e-05 9.795108e-04 9.702213e-03 0.0542675079 1.651273e-01
+#> [20,] 4.362152e-02 1.010136e-01 3.584714e-10 2.908346e-08 1.482667e-06 4.653067e-05 8.666050e-04 0.0091140313 5.214467e-02
+#> [21,] 5.031549e-03 1.680308e-02 1.047723e-12 1.598300e-10 1.532061e-08 9.040491e-07 3.165877e-05 0.0006260423 6.734779e-03
+#>              [,20]        [,21]
+#>  [1,] 4.058923e+00 7.677396e+00
+#>  [2,] 6.353097e-01 1.201679e+00
+#>  [3,] 7.313661e-02 7.319365e-02
+#>  [4,] 1.140410e-08 1.077605e-10
+#>  [5,] 1.446561e-06 2.570135e-08
+#>  [6,] 7.504732e-05 2.507117e-06
+#>  [7,] 1.592415e-03 1.000267e-04
+#>  [8,] 1.381973e-02 1.632223e-03
+#>  [9,] 4.905301e-02 1.089346e-02
+#> [10,] 7.121218e-02 2.973546e-02
+#> [11,] 4.228297e-02 3.319756e-02
+#> [12,] 1.026831e-02 1.515863e-02
+#> [13,] 4.407005e-08 9.516163e-10
+#> [14,] 5.590097e-06 2.269645e-07
+#> [15,] 2.900132e-04 2.213995e-05
+#> [16,] 6.153735e-03 8.833197e-04
+#> [17,] 5.340504e-02 1.441391e-02
+#> [18,] 1.895607e-01 9.619843e-02
+#> [19,] 2.751927e-01 2.625892e-01
+#> [20,] 1.633985e-01 2.931624e-01
+#> [21,] 3.968092e-02 1.338635e-01
 ```
 
-The number of elements estimated is vastly greater now than in the previous case, because each matrix element must be estimated based on the vital rate linear models supplied. And the matrix is overwhelmingly composed of elements that are to be estimated, whereas in the raw matrix case, elements would only be estimated if individuals actually passed through that transition. These are interesting and important differences between raw and function-derived matrices.
+  <p style="text-indent: 20px">The number of elements estimated is vastly greater now than in the previous case, because each matrix element must be estimated based on the vital rate linear models supplied. And the matrix is overwhelmingly composed of elements that are to be estimated, whereas in the raw matrix case, elements would only be estimated if individuals actually passed through that transition. These are interesting and important differences between raw and function-based matrices.</p>
 
   <p style="text-indent: 20px">Now we will estimate the historical matrices.</p>
 
@@ -1961,7 +1873,7 @@ summary(lathmat3ln)
 #> NULL
 ```
 
-Once again, the matrices are vastly bigger. Indeed, the ahistorical matrices here are 21 x 21, so contain 441 elements each. The historical matrices are 21<sup>2</sup> x 21<sup>2</sup> (441 x 441), or 194,481 elements large. However, because of the prevalence of structural 0s in the latter, only 7,628 elements are actually estimated. Another point of interest here is that the number of **A** matrices estimated is 18, which is the same as the number of ahistorical matrices. In the raw matrix case, there would actually only be 12 historical matrices estimated, because of the lack of information for the time step previous to the start of the dataset in each of the 6 patches. Here, linear modeling allows us to make assumptions leading to estimated values for even those first transitions.
+  <p style="text-indent: 20px">Once again, the matrices are vastly bigger. Indeed, the ahistorical matrices here are 21 x 21, so contain 441 elements each. The historical matrices are 21<sup>2</sup> x 21<sup>2</sup> (441 x 441), or 194,481 elements large. However, because of the prevalence of structural 0s in the latter, only 7,628 elements are actually estimated. Another point of interest here is that the number of **A** matrices estimated is 18, which is the same as the number of ahistorical matrices. In the raw matrix case, there would actually only be 12 historical matrices estimated, because of the lack of information for the time step previous to the start of the dataset in each of the 6 patches. Here, linear modeling treating year as random allows us to make assumptions leading to estimated values for even those first transitions.</p>
 
   <p style="text-indent: 20px">Because of the size of the matrices and the proliferation of structural zeroes, we may wish to analyze these matrices after removing some unneeded rows and columns. Let's re-do the above, but overwrite the models with smaller matrices using the `reduce = TRUE` option, which eliminates stages or stage-pairs with corresponding row and column vectors both equal to zero vectors.</p>
 
@@ -2041,7 +1953,7 @@ summary(lathmat3lnmean)
 #> NULL
 ```
 
-And here we do some quality control. We will focus on the grand mean U matrix in each case.
+  <p style="text-indent: 20px">Here we will do some quality control, checking that survival terms are probabilities. We will focus on the grand mean U matrix in each case.</p>
 
 ```r
 writeLines("Stage survival in ahistorical grand mean matrix")
@@ -2057,11 +1969,11 @@ summary(colSums(lathmat3lnmean$U[[7]]))
 #>    Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
 #>  0.0000  0.9335  0.9752  0.8845  0.9960  1.0000
 ```
-Quick scans of these numbers show no real problems.
+  <p style="text-indent: 20px">Quick scans of these numbers show no real problems. Note that the spread of values is higher in the historical case - this is expected, since theoretically, the ahistorical transition values are partially determined by the historical transition values.</p>
 
 #### Step 5. Analyses
 
-  <p style="text-indent: 20px">Now let's estimate the deterministic population growth rate in each case. First the ahistorical case.</p>
+  <p style="text-indent: 20px">Now let's estimate the deterministic population growth rate in each case. First, the ahistorical case.</p>
 
 ```r
 lambda3(lathmat2lnmean)
@@ -2075,7 +1987,9 @@ lambda3(lathmat2lnmean)
 #> 7   1   All 0.9499706
 ```
 
-Relatively high lambda though still less than 1.0, suggesting a declining population. Now the historical case.
+  <p style="text-indent: 20px">These lambda estimates are all less than 1.0, suggesting a declining population. They generally agree with the ahistorical lambda values from raw matrix analysis.</p>
+  
+  <p style="text-indent: 20px">Now the historical case.</p>
 
 ```r
 lambda3(lathmat3lnmean)
@@ -2088,7 +2002,7 @@ lambda3(lathmat3lnmean)
 #> 6   1     6 0.9613652
 #> 7   1   All 0.9395367
 ```
-Note that the population growth rate values differ, and that in this case they are higher in the ahistorical case. They are nonetheless in line with the raw matrix estimates, giving extra support for our inferences.
+  <p style="text-indent: 20px">Note that the population growth rate values are very similar, but still differ by being typically lower than in the ahistorical case. These estimates are nonetheless in line with the raw matrix estimates, giving extra support for our inferences.</p>
 
   <p style="text-indent: 20px">Now let's look at the stable stage distributions, as follows for the ahistorical case. Our numbers here match those produced by package `popbio`'s `stable.stage()` function.</p>
 
@@ -2244,9 +2158,9 @@ stablestage3(lathmat2lnmean)
 #> 147      7           21          Sz9r           9.0 2.108510e-04
 ```
 
-The output is a dataframe with stage information and stable stage distributions for each matrix, with matrix info appended. Here, we have 7 sets of stable stage distributions because there are 7 matrices. Note that the last matrix, the 7th, is the grand mean matrix.
+  <p style="text-indent: 20px">The output is a dataframe with stage information and stable stage distributions for each matrix, with matrix info appended. Here, we have 7 sets of stable stage distributions because there are 7 matrices. Note that the last matrix, the 7th, is the grand mean matrix. Also note that the `ss_prop` column, which gives us the stable stage proportion of each stage, sums to 1.0 within each matrix.</p>
 
-  <p style="text-indent: 20px">Now the historical case. In this case, the historical output includes 2 data frames, so we will first create an object to hold the output and then look at the first data frame. However, because of the size of the output, we will first only inspect the summary.</p>
+  <p style="text-indent: 20px">Now the historical case. In this case, the historical output includes 2 data frames, so we will first create an object to hold the output and then look at the first data frame. Because of the size of the output, we will first only inspect the summary.</p>
 
 ```r
 ehrlen3ss <- stablestage3(lathmat3lnmean)
@@ -2261,7 +2175,7 @@ summary(ehrlen3ss$hist)
 #>              (Other):1988    (Other):1988
 ```
 
-Now the first 6 entries.
+  <p style="text-indent: 20px">Once again, the `ss_prop` column gives the stable stage proportions, with all proportions summing to 1.0 within each matrix. There are 7 matrices, as before. Now let's look at the first 6 entries.</p>
 
 ```r
 head(ehrlen3ss$hist)
@@ -2274,7 +2188,7 @@ head(ehrlen3ss$hist)
 #> 6      1            Sz4r              Sd             16              1 0.00000000
 ```
   
-Here we see the historical portion of the stable stage distribution, where the distribution of stage pairs is given. If we focus on the `$ahist` elements, then we can see the distribution in terms of the original stages shown in our stageframe.
+  <p style="text-indent: 20px">Here we see the historical portion of the stable stage distribution, where the distribution of stage pairs is given. If we focus on the `$ahist` elements, we can inspect the distribution in terms of the original ahistorical stages shown in our stageframe.</p>
 
 ```r
 ehrlen3ss$ahist
@@ -2584,7 +2498,7 @@ repvalue3(lathmat2lnmean)
 #> 147      7           21          Sz9r           9.0  -0.5684214  61.56344
 ```
 
-As before, these are similar to those estimated by `popbio`'s `reproductive.value()` function. Let's now see the historical case.
+  <p style="text-indent: 20px">The actual reproductive value estimates for each stage are given in the `rep_value` column, while `left_vector` gives the raw estimate of the left eigenvector. As before, our `rep_value` estimates are similar to those estimated by `popbio`'s `reproductive.value()` function. Let's now see the historical case.</p>
 
 ```r
 repvalue3(lathmat3lnmean)$ahist
@@ -2743,7 +2657,7 @@ Once again, we see strong differences here. We leave it to the reader to conside
 
 ### Analysis 3: Integral projection models (IPMs)
 
-  <p style="text-indent: 20px">In this analysis, we will build an integral projection model. This is essentially a form of function-derived matrix, but one in which size must be modeled as Gaussian, and in which the size distribution is broken up into many fine-scale classes or size bins. Although the number of these bins varies, package `lefko3` uses a default of 100 (this can be changed as an option). Note also that, because of the high dimensionality of IPMs, we will not create a historical version. The ahistorical version under the default setting will have at least 10,000 elements per matrix (dimensions of 100 by 100 at minimum), while a historical version would have at least 100,000,000.</p>
+  <p style="text-indent: 20px">In this analysis, we will build an integral projection model. This is essentially a form of function-based matrix, but one in which size must be modeled as Gaussian, and in which the size distribution is broken up into many fine-scale classes or size bins. Although the number of these bins varies from analysis to analysis, package `lefko3` uses a default of 100 (this can be changed as an option). Note also that, because of the high dimensionality of IPMs, we will not create a historical version. The ahistorical version under the default setting will have at least 10,000 elements per matrix (dimensions of 100 by 100 at minimum), while a historical version would have at least 100,000,000 (dimensions of 10,000 by 10,000).</p>
   
 #### Step 1. Data characterization and reorganization
 
@@ -2797,7 +2711,7 @@ lathvertipm <- verticalize3(lathyrus, noyears = 4, firstyear = 1988, patchidcol 
 lathover2 <- overwrite(stage3 = c("Sd", "Sdl"), stage2 = c("Sd", "Sd"), givenrate = c(0.345, 0.054))
 ```
 
-  <p style="text-indent: 20px">We will also create a reproductive matrix, which describes not only which stages are reproductive, but which stages they lead to the reproduction of, and at what level. This matrix is composed mostly of 0s, but fecundity is noted as non-zero entries equal to a scalar multiplier to the full fecundity estimated by R. This matrix has rows and columns equal to the number of stages described in the stageframe for this dataset, and the rows and columns refer to these stages in the same order as in the stageframe. In many ways, it looks like a nearly empty population matrix, but notes the per-individual mean modifiers on fecundity for each stage that actually reproduces. Here, we first create a 0 matrix with dimensionality equal to the number of rows in `lathframeipm`. Then we modify elements corresponding to fecundity by the expected mean seed dormancy probability (row 1), and by the germination rate (row 2).</p>
+  <p style="text-indent: 20px">We will also create a reproductive matrix, which describes not only which stages are reproductive, but which stages they lead to the reproduction of, and at what level. This matrix is composed mostly of 0s, but fecundity is noted as non-zero entries equal to a scalar multiplier to the full fecundity estimated by R. This matrix has rows and columns equal to the number of stages described in the stageframe for this dataset, and the rows and columns refer to these stages in the same order as in the stageframe. In many ways, it looks like a nearly empty population matrix, but notes the per-individual mean modifiers on fecundity for each stage that actually reproduces. Here, we first create a 0 matrix with dimensions equal to the number of rows in `lathframeipm`. Then we modify elements corresponding to fecundity by the expected mean seed dormancy probability (row 1), and by the germination rate (row 2).</p>
 
 ```r
 lathrepmipm <- matrix(0, 103, 103)
@@ -2805,7 +2719,7 @@ lathrepmipm[1, 4:103] <- 0.345
 lathrepmipm[2, 4:103] <- 0.054
 ```
 
-  <p style="text-indent: 20px">Let's now use the same rounding procedure as in Analysis 2 for fecundity in our vertical dataset, since we know that fecundity is all integers except for 6 data points that were estimated differently from the rest. Then we will take a peek at the degree to which 0's exist in fecundity.</p>
+  <p style="text-indent: 20px">Let's now use the same rounding procedure as in Analysis 2 for fecundity in our vertical dataset, since we know that fecundity is all integers except for 6 data points that were estimated differently from the rest. Then we will take a peek at the degree to which 0s exist in fecundity.</p>
 
 ```r
 lathvertipm$feca2 <- round(lathvertipm$feca2)
@@ -2820,11 +2734,12 @@ length(subset(lathvertipm, repstatus2 == 1)$feca2)
 length(which(subset(lathvertipm, repstatus2 == 1)$feca2 > 0))
 #> [1] 265
 ```
-Over half of reproductive individuals do not actually reproduce in this example. Under the circumstance, we will not be able to use the Poisson or negative binomial distribution to model fecundity, and so must rely on the Gaussian.
+
+Over half of reproductive individuals do not actually reproduce in this example. Under these circumstances, we will not be able to use the Poisson or negative binomial distribution to model fecundity, and so must rely on the Gaussian.
 
 #### Step 3: Develop models of demographic parameters
 
-  <p style="text-indent: 20px">Integral projection models (IPMs) require functions of vital rates to populate them. Here, we will create these models using `modelsearch`. This looks similar to the `modelsearch` call in the last example, but differs in that we are not including models of reproductive status. Note that we will only create ahistorical models, since IPMs already have high dimensionality.</p>
+  <p style="text-indent: 20px">Integral projection models (IPMs) require functions of vital rates to populate them. Here, we will develop these functions as linear models using `modelsearch`. This looks similar to the `modelsearch` call in the last example, but differs in that we are not including models of reproductive status. Note that we will only create ahistorical models, since IPMs already have high dimensionality.</p>
 
 ```r
 lathmodels2ipm <- modelsearch(lathvertipm, historical = FALSE, approach = "lme4", suite = "size",
@@ -3137,7 +3052,7 @@ summary(lathmat2ipm)
 #> NULL
 ```
 
-  <p style="text-indent: 20px">One thing to note is that the IPM is a large matrix with most elements estimated. This makes it likely to become overparameterized if the total sample size in the dataset and the number of stages needed are not properly considered. For example, here survival is estimated based on data for 257 individuals, yielding 2234 individual transitions actually used in modeling, while each matrix includes over 10,000 estimated elements, most of which are survival-transitions. Caution is advised.</p>
+  <p style="text-indent: 20px">One thing to note is that the IPM is a large matrix with most elements estimated. This makes it likely to become overparameterized if the total sample size in the dataset and the number of stages needed are not properly considered. For example, here survival is estimated based on data for 257 individuals, yielding 2246 individual transitions actually used in modeling, while each matrix includes over 10,000 estimated elements, most of which are survival-transitions. Caution is advised.</p>
   
   <p style="text-indent: 20px">Let's take a look at the top-left corner of the first matrix (the matrix is too huge to inspect in full here).</p>
 
@@ -3245,24 +3160,6 @@ lambda3(lathipmmean)
 #> 7   1   All 0.8165723
 ```
 
-These lambda estimates are in line with those already estimated, though certainly on the low side. Indeed, the combination of these 3 analyses suggests that the *Lathyrus* population is probably in trouble, at least in the course of the years studied.
-
-  <p style="text-indent: 20px">Let's also compare against lambda estimates evaluated with the geometric mean matrix, since there should not be any singleton 0s causing mean matrix elements to equal 0.</p>
-
-```r
-lambda3(lmean(lathmat2ipm, time = "geometric"))
-#>   pop patch    lambda
-#> 1   1     1 0.7823027
-#> 2   1     2 0.7852642
-#> 3   1     3 0.7769411
-#> 4   1     4 0.7432725
-#> 5   1     5 0.7438506
-#> 6   1     6 0.8306340
-#> 7   1   All 0.7780906
-```
-
-The geometric mean matrix lambdas are lower, suggesting a strong influence of our assumptions about time. Though we are aware that the typical population matrix study would not use the geometric mean approach, we would encourage its consideration in this case, because of the strong chance that inference of population viability would be too 'rosy' using the arithmetic approach.
-
   <p style="text-indent: 20px">Now let's look at the stable stage distribution. We will only look at the summary and first 6 entries, given the size of the output.</p>
 
 ```r
@@ -3307,7 +3204,7 @@ head(repvalue3(lathipmmean))
 #> 6      1            6 sz178.56356 rp1 mt1 ob1     178.56356 -0.04176376 1229.430674
 ```
 
-A quick scan through these values shows that the highest reproductive values are for the largest adults, all the way at the bottom of the data frame output. Since these values have been scaled to the contribution of dormant seed, the reproductive values show the important contribution of large adults to the maintenance of the population.
+A quick scan through these values shows that the highest reproductive values are for the largest adults, all the way at the bottom of the data frame output. Since these values have been scaled to the contribution of dormant seed, the reproductive values show the important contribution of large adults to the maintenance of the population. These results also showcase the importance of the underlying assumptions going into population analyses - our IPM made a number of assumptions that were different from the two other analyses conducted. Most important is likely to be the inclusion of fecundity as Gaussian, to deal with the presence of 0 values. We leave it to the reader to explore the possible reasons for the differences.
 
 ## Acknowledgements
 

@@ -2,7 +2,7 @@
 #' 
 #' \code{lmean()} estimates mean projection matrices. The function differs from a
 #' typical element-by-element mean matrix estimator through two options. First,
-#' it allows mean matrix element to be estimated as geometric means across time. 
+#' it allows mean matrix elements to be estimated as geometric means across time. 
 #' Spatial means are always developed as arithmetic means. Second, it allows 
 #' element means to be estimated ignoring 0s in cases where some elements are 
 #' not zero. The function takes \code{lefkoMat} objects as input, and returns the 
@@ -11,7 +11,9 @@
 #' @param mats A \code{lefkoMat} object holding population projection matrices.
 #' @param time A variable designating whether element means be computed as 
 #' geometric (\code{geometric} or \code{g}) or arithmetic (\code{arithmetic} or \code{a}) across 
-#' time. Defaults to \code{arithmetic}.
+#' time. Please note that using the \code{geometric} option does not yield a 
+#' geometric mean matrix - it yields a matrix of geometric mean elements, which 
+#' is theoretically different. Defaults to \code{arithmetic}. 
 #' @param sparse If TRUE, then all 0s will be ignored in elements that include
 #' other numbers across matrices. Only elements that equal 0 in all matrices
 #' (structural zeroes) will be exempt. Defaults to FALSE.
@@ -126,7 +128,7 @@ lmean <- function(mats, time = "arithmetic", sparse = FALSE, AasSum = TRUE) {
   listofyears$patchesinpop <- apply(as.matrix(c(1:length(listofyears$poppatchc))), 1, function(X) {length(unique(listofyears$poppatchc[which(listofyears$popc == listofyears$popc[X])]))})
   listofyears$yearsinpatch <- apply(as.matrix(c(1:length(listofyears$year2c))), 1, function(X) {length(unique(listofyears$year2c[which(listofyears$poppatchc == listofyears$poppatchc[X])]))})
   
-  loy2c <- as.matrix(listofyears[,5:9])
+  #  loy2c <- as.matrix(listofyears[,5:9])
   
   numofpops <- length(unique(listofyears$popc))
   numofpatches <- length(unique(listofyears$poppatchc))
@@ -146,12 +148,12 @@ lmean <- function(mats, time = "arithmetic", sparse = FALSE, AasSum = TRUE) {
   if (time == "geometric") pushtime <- 1 else pushtime <- 0
   if (sparse == TRUE) pushsparse <- 1 else pushsparse <- 0
   
-  if (AasSum == FALSE) {
-    UFmats <- turbogeodiesel(pushtime, pushsparse, numofpops, numofpatches, numofyears,
-                             loy2c, allmatricesU, allmatricesF, allmatricesA)
+  if (!AasSum) {
+    UFmats <- turbogeodiesel(listofyears, allmatricesU, allmatricesF, allmatricesA, pushtime, 
+                             pushsparse, numofpops, numofpatches, numofyears)
   } else {
-    UFmats <- geodiesel(pushtime, pushsparse, numofpops, numofpatches, numofyears, 
-                        loy2c, allmatricesU, allmatricesF)
+    UFmats <- geodiesel(listofyears, allmatricesU, allmatricesF, pushtime, pushsparse, numofpops, 
+                        numofpatches, numofyears)
   }
   
   matsdim <- dim(mats$A[[1]])[1]
@@ -172,7 +174,7 @@ lmean <- function(mats, time = "arithmetic", sparse = FALSE, AasSum = TRUE) {
   listofyears$sorter1 <- apply(as.matrix(c(1:dim(listofyears)[1])), 1, function(X) {
     paste(listofyears$pop[X], listofyears$patch[X], listofyears$year2[X])
   })
-
+  
   poppatch.combos <- sort(unique(listofyears$poppatch))
   pop.combos <- sort(unique(listofyears$pop))
   sortorder1 <- apply(as.matrix(poppatch.combos), 1, function(X) {which(listofyears$poppatch == X)[1]})

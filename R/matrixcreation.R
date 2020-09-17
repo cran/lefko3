@@ -1,6 +1,6 @@
 #' Create Function-based Historical Population Projection Matrices
 #' 
-#' \code{flefko3()} returns a list of historical population projection 
+#' Function \code{flefko3()} returns a list of historical population projection 
 #' matrices corresponding to the patches and years given, as well as the 
 #' associated component transition and fecundity matrices, data frames 
 #' detailing the characteristics of the ahistorical stages used and the
@@ -304,103 +304,17 @@ flefko3 <- function(year = "all", patch = "all", stageframe, repmatrix = NA, dat
   
   instages <- length(stageframe$new_stage_id)
   
-  allstages.size <- expand.grid(size3 = stageframe$bin_size_ctr, size2n = stageframe$bin_size_ctr, 
-                                size2o = stageframe$bin_size_ctr, size1 = stageframe$bin_size_ctr)
-  allstages.obs <- expand.grid(obs3 = stageframe$obsstatus, obs2n = stageframe$obsstatus, 
-                               obs2o = stageframe$obsstatus, obs1 = stageframe$obsstatus)
-  allstages.rep <- expand.grid(rep3 = stageframe$repstatus, rep2n = stageframe$repstatus, 
-                               rep2o = stageframe$repstatus, rep1 = stageframe$repstatus)
-  allstages.mat <- expand.grid(mat3 = stageframe$matstatus, mat2n = stageframe$matstatus,
-                               mat2o = stageframe$matstatus, mat1 = stageframe$matstatus)
-  allstages.imm <- expand.grid(imm3 = stageframe$immstatus, imm2n = stageframe$immstatus,
-                               imm2o = stageframe$immstatus, imm1 = stageframe$immstatus)
-  allstages.re32 <- as.vector(apply(as.matrix(1:dim(cbind(rbind(repmatrix, 0), 0))[1]), 
-                                    1, function(X) {as.vector(cbind(rbind(repmatrix, 0), 0)[,X])}))
-  allstages.re33 <- expand.grid(allstages.re32, allstages.re32)
-  allstages.ind <- expand.grid(indata3 = stageframe$indataset, indata2n = stageframe$indataset,
-                               indata2o = stageframe$indataset, indata1 = stageframe$indataset)
-  allstages.stages <- expand.grid(stage3 = stageframe$new_stage_id, stage2n = stageframe$new_stage_id,
-                                  stage2o = stageframe$new_stage_id, stage1 = stageframe$new_stage_id)
-  allstages.bins <- rep(stageframe$bin_size_width, (instages^3))
-  allstages <- cbind.data.frame(allstages.stages, allstages.size, allstages.obs, allstages.rep, 
-                                allstages.mat, allstages.imm, allstages.re33[,1], allstages.ind,
-                                allstages.bins)
-  names(allstages) <- c("stage3", "stage2n", "stage2o", "stage1", "size3", "size2n", "size2o", "size1", 
-                        "obs3", "obs2n", "obs2o", "obs1", "rep3", "rep2n", "rep2o", "rep1", 
-                        "mat3", "mat2n", "mat2o", "mat1", "imm3", "imm2n", "imm2o", "imm1",
-                        "repentry3", "indata3", "indata2n", "indata2o", "indata1", "binwidth")
+  overwrite <- .overwrite_reassess(overwrite, stageframe, historical = TRUE)
   
-  allstages$minage3 <- 0
-  allstages$minage2 <- 0
-  allstages$maxage3 <- 0
-  allstages$maxage2 <- 0
-  allstages$actualage2 <- 0
+  # Next the data frame carrying all raw values and element indices for matrix element estimation
+  allstages.list <- theoldpizzle(stageframe, overwrite, repmatrix, finalage = 0, style = 0, cont = 0)
+  allstages <- do.call("cbind.data.frame", allstages.list)
   
-  allstages$index321 <- allstages$stage3 + (allstages$stage2n * instages) + (allstages$stage1 * instages * instages)
+  maxsize <- max(c(allstages$a.size3, allstages$a.size2n, allstages$a.size2o, allstages$a.size1), na.rm = TRUE)
   
-  if (!all(is.na(overwrite))) {
-    
-    overwrite <- .overwrite_reassess(overwrite, stageframe, historical = TRUE)
-    if (dim(overwrite)[1] == 0) overwrite <- NA
-  }
+  allstages <- allstages[(which(allstages$b.index321 != -1)),]
   
-  if (!all(is.na(overwrite))) {
-    
-    overwrite$index3 <- apply(as.matrix(c(1:dim(overwrite)[1])), 1, function(X) {
-      stageframe$stageno[which(stageframe$orig_stage_id == overwrite$stage3[X])]})
-    overwrite$index2 <- apply(as.matrix(c(1:dim(overwrite)[1])), 1, function(X) {
-      stageframe$stageno[which(stageframe$orig_stage_id == overwrite$stage2[X])]})
-    overwrite$index1 <- apply(as.matrix(c(1:dim(overwrite)[1])), 1, function(X) {
-      stageframe$stageno[which(stageframe$orig_stage_id == overwrite$stage1[X])]})
-    overwrite$new3 <- apply(as.matrix(c(1:dim(overwrite)[1])), 1, function(X) {
-      if(!is.na(overwrite$eststage3[X])) {
-        stageframe$stageno[which(stageframe$orig_stage_id == overwrite$eststage3[X])]
-      } else {
-        overwrite$index3[X]
-      }
-    })
-    
-    overwrite$new2 <- apply(as.matrix(c(1:dim(overwrite)[1])), 1, function(X) {
-      if(!is.na(overwrite$eststage2[X])) {
-        stageframe$stageno[which(stageframe$orig_stage_id == overwrite$eststage2[X])]
-      } else {
-        overwrite$index2[X]
-      }
-    })
-    
-    overwrite$new1 <- apply(as.matrix(c(1:dim(overwrite)[1])), 1, function(X) {
-      if(!is.na(overwrite$eststage1[X])) {
-        stageframe$stageno[which(stageframe$orig_stage_id == overwrite$eststage1[X])]
-      } else {
-        overwrite$index1[X]
-      }
-    })
-    
-    overwrite$indexold321 <- overwrite$index3 + (overwrite$index2 * instages) + (overwrite$index1 * instages * instages)
-    overwrite$indexnew321 <- overwrite$new3 + (overwrite$new2 * instages) + (overwrite$new1 * instages * instages)
-    overwrite$givenrate[which(is.na(overwrite$givenrate))] <- 0
-    
-    overwrite$new3[which(is.na(overwrite$eststage3))] <- -1
-    overwrite$givenrate[which(is.na(overwrite$givenrate))] <- -1
-    overwrite$givenrate[which(overwrite$givenrate == 0)] <- -1
-    
-    allstageadditions <- ovreplace(allstages$index321, overwrite$indexold321, overwrite$indexnew321, 
-                                   overwrite$convtype, overwrite$new3, overwrite$givenrate)
-    
-    allstages$ovest_t <- allstageadditions[,1]
-    allstages$ovgiven_t <- allstageadditions[,2]
-    allstages$ovest_f <- allstageadditions[,3]
-    allstages$ovgiven_f <- allstageadditions[,4]
-    
-  } else {
-    
-    allstages$ovgiven_t <- -1
-    allstages$ovest_t <- -1
-    allstages$ovgiven_f <- -1
-    allstages$ovest_f <- -1
-    
-  }
-  
+  # Now we work up the models
   if (class(modelsuite) == "lefkoMod") {
     if(is.na(surv_model)) {surv_model <- modelsuite$survival_model}
     if(is.na(obs_model)) {obs_model <- modelsuite$observation_model}
@@ -470,6 +384,7 @@ flefko3 <- function(year = "all", patch = "all", stageframe, repmatrix = NA, dat
   
   jrepst_proxy <- .modelextract(jrepst_model, paramnames, mainyears, mainpatches)
   
+  # This creates a list of pop, patch, and year in order of matrix
   if (!all(is.na(patch))) {
     listofyears <- apply(as.matrix(patch), 1, function(X) {
       output <- cbind.data.frame(NA, X, as.matrix(year));
@@ -492,23 +407,13 @@ flefko3 <- function(year = "all", patch = "all", stageframe, repmatrix = NA, dat
     listofyears$yearorder <- apply(as.matrix(c(1:dim(listofyears)[1])), 1, function(X) {which(mainyears == listofyears$year2[X])})
   }
   
-  maxsize <- max(c(allstages$size3, allstages$size2n, allstages$size2o, allstages$size1), na.rm = TRUE)
-  allstages$indata <- allstages$indata3 * allstages$indata2n * allstages$indata2o * allstages$indata1
-  aliverows <- hoffmannofstuttgart(0, as.matrix(allstages))
-  
-  allstages <- allstages[(aliverows + 1),]
-  
-  aliveandequal <- hoffmannofstuttgart(1, as.matrix(allstages))
-  
+  # A few extra tidbits required for the core matrix estimator to work
   total.matrix.dim <- (length(stageframe$bin_size_ctr) - 1)^2
   patch.elements <- total.matrix.dim^2
   
   yearlist <- split(listofyears, seq(nrow(listofyears)))
   
-  allstages <- allstages[(aliveandequal + 1),]
-  allstages$aliveandequal <- as.vector(aliveandequal)
-  allstages$r_aliveandequal <- as.vector(aliveandequal) + 1
-  
+  # The next call runs the core matrix estimator function and creates all matrices
   madsexmadrigal <- lapply(yearlist, jerzeibalowski, allstages, surv_proxy, obs_proxy, size_proxy, repst_proxy,
                            fec_proxy, jsurv_proxy, jobs_proxy, jsize_proxy, jrepst_proxy, surv_dev, obs_dev, 
                            size_dev, repst_dev, fec_dev, jsurv_dev, jobs_dev, jsize_dev, jrepst_dev, patch.elements,
@@ -521,8 +426,10 @@ flefko3 <- function(year = "all", patch = "all", stageframe, repmatrix = NA, dat
   
   ahstages <- stageframe[1:(dim(stageframe)[1] - 1),]
   
-  pairings1 <- expand.grid(stcod3 = ahstages$new_stage_id, stcod2 = ahstages$new_stage_id)
-  pairings2 <- expand.grid(stage3 = ahstages$orig_stage_id, stage2 = ahstages$orig_stage_id)
+  pairings1 <- expand.grid(stcod3 = stageframe$new_stage_id[1:(dim(stageframe)[1] - 1)], 
+                           stcod2 = stageframe$new_stage_id[1:(dim(stageframe)[1] - 1)])
+  pairings2 <- expand.grid(stage3 = stageframe$orig_stage_id[1:(dim(stageframe)[1] - 1)], 
+                           stage2 = stageframe$orig_stage_id[1:(dim(stageframe)[1] - 1)])
   hstages <- cbind.data.frame(pairings2, pairings1)
   
   qcoutput1 <- NA
@@ -599,7 +506,7 @@ flefko3 <- function(year = "all", patch = "all", stageframe, repmatrix = NA, dat
 
 #' Create Function-based Ahistorical Population Projection Matrices
 #'
-#' \code{flefko2()} returns a list of ahistorical population projection 
+#' Function \code{flefko2()} returns a list of ahistorical population projection 
 #' matrices corresponding to the patches and years given, as well as the 
 #' associated component transition and fecundity matrices, a data frame 
 #' detailing the characteristics of ahistorical stages, and a data frame
@@ -909,84 +816,17 @@ flefko2 <- function(year = "all", patch = "all", stageframe, repmatrix = NA, dat
   
   instages <- length(stageframe$new_stage_id)
   
-  #This next portion creates a main reference table for the C++-based matrix populator functions, which are made to work on both flefko2() and flefko3()
-  allstages.size <- expand.grid(size3 = stageframe$bin_size_ctr, size2n = stageframe$bin_size_ctr)
-  allstages.size <- cbind.data.frame(allstages.size, allstages.size[,2], 0)
-  allstages.obs <- expand.grid(obs3 = stageframe$obsstatus, obs2n = stageframe$obsstatus)
-  allstages.obs <- cbind.data.frame(allstages.obs, allstages.obs[,2], 0)
-  allstages.rep <- expand.grid(rep3 = stageframe$repstatus, rep2n = stageframe$repstatus)
-  allstages.rep <- cbind.data.frame(allstages.rep, allstages.rep[,2], 0)
-  allstages.mat <- expand.grid(mat3 = stageframe$matstatus, mat2n = stageframe$matstatus)
-  allstages.mat <- cbind.data.frame(allstages.mat, allstages.mat[,2], allstages.mat[,2])
-  allstages.imm <- expand.grid(imm3 = stageframe$immstatus, imm2n = stageframe$immstatus)
-  allstages.imm <- cbind.data.frame(allstages.imm, allstages.imm[,2], allstages.imm[,2])
-  allstages.re3 <- cbind(c(matrix(rbind(cbind(repmatrix, 0), 0)))) #Here we take repmatrix, add a 0 row and column for death, and vectorize
-  allstages.ind <- expand.grid(indata3 = stageframe$indataset, indata2n = stageframe$indataset)
-  allstages.ind <- cbind.data.frame(allstages.ind, allstages.ind[,2], 1)
-  allstages.stages <- expand.grid(stage3 = stageframe$new_stage_id, stage2n = stageframe$new_stage_id)
-  allstages.stages <- cbind.data.frame(allstages.stages, allstages.stages[,2], 0)
-  allstages.bins <- rep(stageframe$bin_size_width, instages)
-  allstages <- cbind.data.frame(allstages.stages, allstages.size, allstages.obs, allstages.rep, 
-                                allstages.mat, allstages.imm, allstages.re3, allstages.ind, 
-                                allstages.bins)
-  names(allstages) <- c("stage3", "stage2n", "stage2o", "stage1", "size3", "size2n", "size2o", "size1", 
-                        "obs3", "obs2n", "obs2o", "obs1", "rep3", "rep2n", "rep2o", "rep1", 
-                        "mat3", "mat2n", "mat2o", "mat1", "imm3", "imm2n", "imm2o", "imm1",
-                        "repentry3", "indata3", "indata2n", "indata2o", "indata1", "binwidth")
+  overwrite <- .overwrite_reassess(overwrite, stageframe, historical = FALSE)
   
-  allstages$minage3 <- 0
-  allstages$minage2 <- 0
-  allstages$maxage3 <- 0
-  allstages$maxage2 <- 0
-  allstages$actualage2 <- 0
+  # Next the data frame for the C++-based matrix populator functions
+  allstages.list <- theoldpizzle(stageframe, overwrite, repmatrix, finalage = 0, style = 1, cont = 0)
+  allstages <- do.call("cbind.data.frame", allstages.list)
   
-  allstages$index32 <- allstages$stage3 + (allstages$stage2n * instages)
+  maxsize <- max(c(allstages$a.size3, allstages$a.size2n, allstages$a.size2o), na.rm = TRUE)
   
-  if (!all(is.na(overwrite))) {
-    
-    overwrite <- .overwrite_reassess(overwrite, stageframe, historical = FALSE)
-    if (dim(overwrite)[1] == 0) overwrite <- NA
-  }
+  allstages <- allstages[(which(allstages$b.index321 != -1)),]
   
-  if (!all(is.na(overwrite))) {
-    
-    overwrite$index3 <- apply(as.matrix(c(1:dim(overwrite)[1])), 1, function(X) {
-      stageframe$stageno[which(stageframe$orig_stage_id == overwrite$stage3[X])]})
-    overwrite$index2 <- apply(as.matrix(c(1:dim(overwrite)[1])), 1, function(X) {
-      stageframe$stageno[which(stageframe$orig_stage_id == overwrite$stage2[X])]})
-    overwrite$new3 <- apply(as.matrix(c(1:dim(overwrite)[1])), 1, function(X) {
-      if(!is.na(overwrite$eststage3[X])) {
-        stageframe$stageno[which(stageframe$orig_stage_id == overwrite$eststage3[X])]
-      } else {overwrite$index3[X]}
-    })
-    overwrite$new2 <- apply(as.matrix(c(1:dim(overwrite)[1])), 1, function(X) {
-      if(!is.na(overwrite$eststage2[X])) {
-        stageframe$stageno[which(stageframe$orig_stage_id == overwrite$eststage2[X])]
-      } else {overwrite$index2[X]}
-    })
-    overwrite$indexold32 <- overwrite$index3 + (overwrite$index2 * instages)
-    overwrite$indexnew32 <- overwrite$new3 + (overwrite$new2 * instages)
-    overwrite$givenrate[which(is.na(overwrite$givenrate))] <- 0
-    
-    overwrite$new3[which(is.na(overwrite$eststage3))] <- -1
-    overwrite$givenrate[which(is.na(overwrite$givenrate))] <- -1
-    overwrite$givenrate[which(overwrite$givenrate == 0)] <- -1
-    
-    allstageadditions <- ovreplace(allstages$index32, overwrite$indexold32, overwrite$indexnew32, 
-                                   overwrite$convtype, overwrite$new3, overwrite$givenrate)
-    
-    allstages$ovest_t <- allstageadditions[,1]
-    allstages$ovgiven_t <- allstageadditions[,2]
-    allstages$ovest_f <- allstageadditions[,3]
-    allstages$ovgiven_f <- allstageadditions[,4]
-  } else {
-    
-    allstages$ovgiven_t <- -1
-    allstages$ovest_t <- -1
-    allstages$ovgiven_f <- -1
-    allstages$ovest_f <- -1
-  }
-  
+  # Now we will work up the vital rate models
   if (class(modelsuite) == "lefkoMod") {
     if(is.na(surv_model)) {surv_model <- modelsuite$survival_model}
     if(is.na(obs_model)) {obs_model <- modelsuite$observation_model}
@@ -1056,6 +896,7 @@ flefko2 <- function(year = "all", patch = "all", stageframe, repmatrix = NA, dat
   
   jrepst_proxy <- .modelextract(jrepst_model, paramnames, mainyears, mainpatches)
   
+  # Next we create a list of pops, patches, and years in order of matrix
   if (!all(is.na(patch))) {
     listofyears <- apply(as.matrix(patch), 1, function(X) {
       output <- cbind.data.frame(NA, X, as.matrix(year));
@@ -1077,20 +918,13 @@ flefko2 <- function(year = "all", patch = "all", stageframe, repmatrix = NA, dat
     listofyears$yearorder <- apply(as.matrix(c(1:dim(listofyears)[1])), 1, function(X) {which(mainyears == listofyears$year2[X])})
   }
   
-  maxsize <- max(c(allstages$size3, allstages$size2n, allstages$size2o), na.rm = TRUE)
-  
-  allstages$indata <- allstages$indata3 * allstages$indata2n * allstages$indata2o
-  aliverows <- hoffmannofstuttgart(0, as.matrix(allstages))
-  allstages <- allstages[(aliverows + 1),]
-  
-  allstages$aliveandequal <- c(0:(length(aliverows) - 1))
-  allstages$r_aliveandequal <- allstages$aliveandequal + 1
-  
+  # A few extra tidbits required for the core matrix estimator to work
   total.matrix.dim <- length(stageframe$bin_size_ctr) - 1
   patch.elements <- total.matrix.dim^2
   
   yearlist <- split(listofyears, seq(nrow(listofyears)))
   
+  # The next line calls the core matrix estimator function
   madsexmadrigal <- lapply(yearlist, jerzeibalowski, allstages, surv_proxy, obs_proxy, size_proxy, repst_proxy,
                            fec_proxy, jsurv_proxy, jobs_proxy, jsize_proxy, jrepst_proxy, surv_dev, obs_dev, 
                            size_dev, repst_dev, fec_dev, jsurv_dev, jobs_dev, jsize_dev, jrepst_dev, patch.elements,
@@ -1294,15 +1128,21 @@ flefko2 <- function(year = "all", patch = "all", stageframe, repmatrix = NA, dat
 #' rep_cyp_raw <- matrix(0, 11, 11)
 #' rep_cyp_raw[1:2,7:11] <- 0.5
 #' 
-#' cypover3r <- overwrite(stage3 = c("SD", "SD", "P1", "P1", "P2", "P3", "D", "XSm", "Sm",
-#'                        "SL", "SL", "SL"), stage2 = c("SD", "SD", "SD", "SD", "P1", "P2",
-#'                        "P3", "P3", "P3", "P3", "SL", "SL"), stage1 = c("SD", "rep", "SD",
-#'                        "rep", "SD", "P1", "P2", "P2", "P2", "P2", "P3", "SL"),
-#'                        eststage3 = c(NA, NA, NA, NA, NA, NA, "D", "XSm", "Sm", NA, NA, NA),
-#'                        eststage2 = c(NA, NA, NA, NA, NA, NA, "D", "D", "D", NA, NA, NA),
-#'                        eststage1 = c(NA, NA, NA, NA, NA, NA, "D", "D", "D", NA, NA, NA),
-#'                        givenrate = c(0.1, 0.1, 0.2, 0.2, 0.2, 0.2, NA, NA, NA, 0.25, 0.4, 0.4),
-#'                        type = c("S", "S", "S", "S", "S", "S", "S", "S", "S", "S", "S", "S"))
+#' cypover3r <- overwrite(stage3 = c("SD", "SD", "P1", "P1", "P2", "P3", "SL", 
+#'                        "SL", "SL", "D", "XSm", "Sm", "D", "XSm", "Sm"), 
+#'                        stage2 = c("SD", "SD", "SD", "SD", "P1", "P2", "P3", 
+#'                        "SL", "SL", "SL", "SL", "SL", "SL", "SL", "SL"),
+#'                        stage1 = c("SD", "rep", "SD", "rep", "SD", "P1", "P2", 
+#'                        "P3", "SL", "P3", "P3", "P3", "SL", "SL", "SL"),
+#'                        eststage3 = c(NA, NA, NA, NA, NA, NA, NA, NA, NA, "D", 
+#'                        "XSm", "Sm", "D", "XSm", "Sm"), eststage2 = c(NA, NA, NA, 
+#'                        NA, NA, NA, NA, NA, NA, "XSm", "XSm", "XSm", "XSm", "XSm",
+#'                        "XSm"), eststage1 = c(NA, NA, NA, NA, NA, NA, NA, NA, NA,
+#'                        "XSm", "XSm", "XSm", "XSm", "XSm", "XSm"), 
+#'                        givenrate = c(0.1, 0.1, 0.2, 0.2, 0.2, 0.2, 0.25, 0.4,
+#'                        0.4, NA, NA, NA, NA, NA, NA), type = c("S", "S", "S", 
+#'                        "S", "S", "S", "S", "S", "S", "S", "S", "S", "S", "S", 
+#'                        "S"))
 #' 
 #' cypmatrix3r <- rlefko3(data = cypraw_v1, stageframe = cypframe_raw, year = "all",
 #'                        patch = "all", stages = c("stage3", "stage2", "stage1"),
@@ -1326,29 +1166,33 @@ rlefko3 <- function(data, stageframe, year = "all", pop = NA, patch = NA, censor
     stop("Need original vertical dataset to proceed.")
   }
   
+  if (!any(class(data) == "hfvdata")) {
+    stop("Need original vertical dataset to proceed. This dataset must be in historical vertical format.")
+  }
+  
   if (all(is.na(stages))) {
     if ((length(alive) != 3)) {
-      stop("This function requires stage informationfor each of times t+1, t, and t-1. In the absence of stage columns in the dataset, it requires three variables for living/dead status, size, reproductive status, and maturity status, for each of times t+1, t, and t-1.")
+      stop("This function requires stage information for each of times t+1, t, and t-1. In the absence of stage columns in the dataset, it requires three variables for living/dead status, size, reproductive status, and maturity status, for each of times t+1, t, and t-1.")
     }
     if ((length(size) != 3)) {
-      stop("This function requires stage informationfor each of times t+1, t, and t-1. In the absence of stage columns in the dataset, it requires three variables for living/dead status, size, reproductive status, and maturity status, for each of times t+1, t, and t-1.")
+      stop("This function requires stage information for each of times t+1, t, and t-1. In the absence of stage columns in the dataset, it requires three variables for living/dead status, size, reproductive status, and maturity status, for each of times t+1, t, and t-1.")
     }
     if (!all(is.na(repst))) {
       if ((length(repst) != 3)) {
-        stop("This function requires stage informationfor each of times t+1, t, and t-1. In the absence of stage columns in the dataset, it requires three variables for living/dead status, size, reproductive status, and maturity status, for each of times t+1, t, and t-1.")
+        stop("This function requires stage information for each of times t+1, t, and t-1. In the absence of stage columns in the dataset, it requires three variables for living/dead status, size, reproductive status, and maturity status, for each of times t+1, t, and t-1.")
       }
     }   
     if (!all(is.na(matst))) {
       if ((length(matst) != 3)) {
-        stop("This function requires stage informationfor each of times t+1, t, and t-1. In the absence of stage columns in the dataset, it requires three variables for living/dead status, size, reproductive status, and maturity status, for each of times t+1, t, and t-1.")
+        stop("This function requires stage information for each of times t+1, t, and t-1. In the absence of stage columns in the dataset, it requires three variables for living/dead status, size, reproductive status, and maturity status, for each of times t+1, t, and t-1.")
       }
     }   
   } else if (length(stages) != 3) {
-    stop("This function requires stage informationfor each of times t+1, t, and t-1.")
+    stop("This function requires stage information for each of times t+1, t, and t-1.")
   }
   
   if ((length(fec) != 3)) {
-    stop("This function requires two variables for fecundity, for each of times t+1, t, and t-1.")
+    stop("This function requires three variables for fecundity, for each of times t+1, t, and t-1.")
   }
   
   if (any(is.character(year)) & any(class(data) == "hfvdata")) {
@@ -1466,6 +1310,8 @@ rlefko3 <- function(data, stageframe, year = "all", pop = NA, patch = NA, censor
     names(listofyears) <- c("pop", "patch", "year2")
   }
   
+  yearlist <- split(listofyears, seq(nrow(listofyears)))
+  
   melchett <- .sf_reassess(stageframe, repmatrix, overwrite)
   stageframe <- melchett[[1]]
   repmatrix <- melchett[[2]]
@@ -1492,8 +1338,6 @@ rlefko3 <- function(data, stageframe, year = "all", pop = NA, patch = NA, censor
   data$alive2 <- data[,which(names(data) == alive[2])]
   data$alive3 <- data[,which(names(data) == alive[1])]
   
-  instageframe <- subset(stageframe, indataset == 1)
-  
   if (all(is.na(stages))) {
     if (length(size) > 1) {
       data$usedsize1 <- data[,which(names(data) == size[3])]
@@ -1517,33 +1361,33 @@ rlefko3 <- function(data, stageframe, year = "all", pop = NA, patch = NA, censor
       if (is.na(data$usedsize1[X])) {
         data$usedsize1[X] <- 0
       }
-      mainstages <- intersect(which(instageframe$bin_size_min < data$usedsize1[X]), 
-                              which(instageframe$bin_size_max >= data$usedsize1[X]))
-      jmstages <- which(instageframe$immstatus == (1 - data$usedmatstatus1[X]))
-      obsstages <- which(instageframe$obsstatus == data$obsstatus1[X])
-      repstages <- which(instageframe$repstatus == data$repstatus1[X])
-      alivestage1 <- which(instageframe$alive == data$alive1[X])
+      mainstages <- intersect(which(stageframe$bin_size_min < data$usedsize1[X]), 
+                              which(stageframe$bin_size_max >= data$usedsize1[X]))
+      jmstages <- which(stageframe$immstatus == (1 - data$usedmatstatus1[X]))
+      obsstages <- which(stageframe$obsstatus == data$obsstatus1[X])
+      repstages <- which(stageframe$repstatus == data$repstatus1[X])
+      alivestage1 <- which(stageframe$alive == data$alive1[X])
       
       choicestage <- intersect(intersect(intersect(mainstages, jmstages), intersect(obsstages, repstages)), alivestage1)
       
-      if (length(choicestage) == 0) choicestage <- which(instageframe$new_stage_id == max(instageframe$new_stage_id))
-
+      if (length(choicestage) == 0) choicestage <- which(stageframe$new_stage_id == max(stageframe$new_stage_id))
+      
       if (length(choicestage) == 0) {
         stop("Stage characteristics mismatch dataset. Consider using the stages option, particularly if the vertical file was created with NRasRep = TRUE in verticalize3() or historicalize3().")
       }
       
-      return(instageframe$orig_stage_id[choicestage])
+      return(stageframe$orig_stage_id[choicestage])
     })
     
     data$usedstage2 <- apply(as.matrix(c(1:dim(data)[1])), 1, function(X) {
       if (is.na(data$usedsize2[X])) {
         data$usedsize2[X] <- 0
       }
-      mainstages <- intersect(which(instageframe$bin_size_min < data$usedsize2[X]), 
-                              which(instageframe$bin_size_max >= data$usedsize2[X]))
-      jmstages <- which(instageframe$immstatus == (1 - data$usedmatstatus2[X]))
-      obsstages <- which(instageframe$obsstatus == data$obsstatus2[X])
-      repstages <- which(instageframe$repstatus == data$repstatus2[X])
+      mainstages <- intersect(which(stageframe$bin_size_min < data$usedsize2[X]), 
+                              which(stageframe$bin_size_max >= data$usedsize2[X]))
+      jmstages <- which(stageframe$immstatus == (1 - data$usedmatstatus2[X]))
+      obsstages <- which(stageframe$obsstatus == data$obsstatus2[X])
+      repstages <- which(stageframe$repstatus == data$repstatus2[X])
       
       choicestage <- intersect(intersect(mainstages, jmstages), intersect(obsstages, repstages))
       
@@ -1551,25 +1395,25 @@ rlefko3 <- function(data, stageframe, year = "all", pop = NA, patch = NA, censor
         stop("Stage characteristics mismatch dataset. Consider using the stages option, particularly if the vertical file was created with NRasRep = TRUE in verticalize3() or historicalize3().")
       }
       
-      return(instageframe$orig_stage_id[choicestage])
+      return(stageframe$orig_stage_id[choicestage])
     })
     
     data$usedstage3 <- apply(as.matrix(c(1:dim(data)[1])), 1, function(X) {
       if (is.na(data$usedsize3[X])) {
         data$usedsize3[X] <- 0
       }
-      mainstages <- intersect(which(instageframe$bin_size_min < data$usedsize3[X]), 
-                              which(instageframe$bin_size_max >= data$usedsize3[X]))
-      jmstages <- which(instageframe$immstatus == (1 - data$usedmatstatus3[X]))
-      obsstages <- which(instageframe$obsstatus == data$obsstatus3[X])
-      repstages <- which(instageframe$repstatus == data$repstatus3[X])
-      alivestage3 <- which(instageframe$alive == data$alive3[X])
+      mainstages <- intersect(which(stageframe$bin_size_min < data$usedsize3[X]), 
+                              which(stageframe$bin_size_max >= data$usedsize3[X]))
+      jmstages <- which(stageframe$immstatus == (1 - data$usedmatstatus3[X]))
+      obsstages <- which(stageframe$obsstatus == data$obsstatus3[X])
+      repstages <- which(stageframe$repstatus == data$repstatus3[X])
+      alivestage3 <- which(stageframe$alive == data$alive3[X])
       
       choicestage <- intersect(intersect(intersect(mainstages, jmstages), intersect(obsstages, repstages)), alivestage3)
       
-      if (length(choicestage) == 0) choicestage <- which(instageframe$new_stage_id == max(instageframe$new_stage_id))
+      if (length(choicestage) == 0) choicestage <- which(stageframe$new_stage_id == max(stageframe$new_stage_id))
       
-      return(instageframe$orig_stage_id[choicestage])
+      return(stageframe$orig_stage_id[choicestage])
     })
     
   } else if (length(stages) > 1) {
@@ -1605,127 +1449,55 @@ rlefko3 <- function(data, stageframe, year = "all", pop = NA, patch = NA, censor
     warning("Lefko3 MPM estimation functions generally require fecundity variables. Failure to include fecundity variables leads to matrices composed only of survival transitions.")
   } 
   
-  stageexpansion3a <- cbind.data.frame(expand.grid(size2o = stageframe$bin_size_ctr, size1 = stageframe$bin_size_ctr), 
-                                       expand.grid(rep2o = stageframe$repstatus, rep1 = stageframe$repstatus),
-                                       expand.grid(indata2o = stageframe$indataset, indata1 = stageframe$indataset),
-                                       expand.grid(stage2o = stageframe$stageno, stage1 = stageframe$stageno),
-                                       fec2o1 = c(cbind(rbind(repmatrix, 0), 0)))
+  overwrite <- .overwrite_reassess(overwrite, stageframe, historical = TRUE)
   
-  stageexpansion3a$indata2o1 <- stageexpansion3a$indata2o * stageexpansion3a$indata1
+  # This section creates stageexpansion9, which is a data frame that holds values for stage transitions from paired stages
+  # in times t and t-1 to paired stages in times t and t+1
+  majortrial <- theoldpizzle(stageframe, overwrite, repmatrix, 0, 0, 0)
+  stageexpansion9 <- do.call("cbind.data.frame", majortrial)
   
-  stageexpansion3b <- cbind.data.frame(expand.grid(size3 = stageframe$bin_size_ctr, size2n = stageframe$bin_size_ctr), 
-                                       expand.grid(rep3 = stageframe$repstatus, rep2n = stageframe$repstatus),
-                                       expand.grid(indata3 = stageframe$indataset, indata2n = stageframe$indataset),
-                                       expand.grid(stage3 = stageframe$stageno, stage2n = stageframe$stageno),
-                                       fec32n = c(cbind(rbind(repmatrix, 0), 0)))
+  # Stageexpansion3 is a dataframe created to hold values for paired stages in times t and t-1 only
+  stageexpansion3 <- cbind.data.frame(expand.grid(size3 = stageframe$bin_size_ctr, size2n = stageframe$bin_size_ctr), 
+                                      expand.grid(rep3 = stageframe$repstatus, rep2n = stageframe$repstatus),
+                                      expand.grid(indata3 = stageframe$indataset, indata2n = stageframe$indataset),
+                                      expand.grid(stage3 = stageframe$stageno, stage2n = stageframe$stageno),
+                                      fec32n = c(cbind(rbind(repmatrix, 0), 0)))
   
-  stageexpansion3b$indata32n <- stageexpansion3b$indata3 * stageexpansion3b$indata2n
+  stageexpansion3$indata32n <- stageexpansion3$indata3 * stageexpansion3$indata2n
   
   instages <- length(stageframe$new_stage_id)
   
-  stageexpansion3b$pairindex <- apply(as.matrix(c(1:dim(stageexpansion3b)[1])), 1, function(X) {
-    (stageexpansion3b$stage3[X] - 1) + ((stageexpansion3b$stage2n[X] - 1) * instages)
+  stageexpansion3$index21 <- apply(as.matrix(c(1:dim(stageexpansion3)[1])), 1, function(X) {
+    ((stageexpansion3$stage3[X] - 1) + ((stageexpansion3$stage2n[X] - 1) * instages))
   })
   
-  stageexpansion9 <- cbind.data.frame(expand.grid(index3 = stageexpansion3b$stage3, index2o = stageexpansion3a$stage2o), 
-                                      expand.grid(index2n = stageexpansion3b$stage2n, index1 = stageexpansion3a$stage1), 
-                                      expand.grid(size3 = stageexpansion3b$size3, size2o = stageexpansion3a$size2o),  
-                                      expand.grid(size2n = stageexpansion3b$size2n, size1 = stageexpansion3a$size1), 
-                                      expand.grid(rep3 = stageexpansion3b$rep3, rep2o = stageexpansion3a$rep2o), 
-                                      expand.grid(rep2n = stageexpansion3b$rep2n, rep1 = stageexpansion3a$rep1), 
-                                      expand.grid(indata32n = stageexpansion3b$indata32n, indata2o1 = 
-                                                    stageexpansion3a$indata2o1), 
-                                      expand.grid(fec32n = stageexpansion3b$fec32n, fec2o1 = stageexpansion3a$fec2o1))
-  
-  stageexpansion9$index3221 <- (stageexpansion9$index3 - 1) + ((stageexpansion9$index2n - 1) * instages) + 
-    ((stageexpansion9$index2o - 1) * instages * instages) + ((stageexpansion9$index1 - 1) * instages * instages * instages)
-  stageexpansion9$indata3221 <- stageexpansion9$indata32n * stageexpansion9$indata2o1
-  stageexpansion9$indata3221[which(stageexpansion9$index2n / stageexpansion9$index2o != 1)] <- 0
-  
-  stageexpansion9$stagepair2n1 <- (stageexpansion9$index2n - 1) + ((stageexpansion9$index1 - 1) * instages)
-  
-  stageexpansion3 <- stageexpansion3b
-  names(stageexpansion3) <- c("size3", "size2", "rep3", "rep2", "indata3", "indata2", "stage3", "stage2",
-                              "fec32", "indata32", "pairindex")
   stageexpansion3$stcod3 <- apply(as.matrix(c(1:dim(stageexpansion3)[1])), 1, function(X) {
     stageframe$orig_stage_id[which(stageframe$stageno == stageexpansion3$stage3[X])]
   })
   stageexpansion3$stcod2 <- apply(as.matrix(c(1:dim(stageexpansion3)[1])), 1, function(X) {
-    stageframe$orig_stage_id[which(stageframe$stageno == stageexpansion3$stage2[X])]
+    stageframe$orig_stage_id[which(stageframe$stageno == stageexpansion3$stage2n[X])]
   })
   
-  stageexpansion9$ovest_t <- 0
-  stageexpansion9$ovgiven_t <- 0
-  stageexpansion9$ovest_f <- 0
-  stageexpansion9$ovgiven_f <- 0
-  
-  if (!all(is.na(overwrite))) {
-    
-    overwrite <- .overwrite_reassess(overwrite, stageframe, historical = TRUE)
-    if (dim(overwrite)[1] == 0) overwrite <- NA
-  }
-  
-  if (!all(is.na(overwrite))) {
-    
-    overwrite$index3 <- apply(as.matrix(c(1:dim(overwrite)[1])), 1, function(X) {
-      stageframe$stageno[which(stageframe$orig_stage_id == overwrite$stage3[X])]})
-    overwrite$index2 <- apply(as.matrix(c(1:dim(overwrite)[1])), 1, function(X) {
-      stageframe$stageno[which(stageframe$orig_stage_id == overwrite$stage2[X])]})
-    overwrite$index1 <- apply(as.matrix(c(1:dim(overwrite)[1])), 1, function(X) {
-      stageframe$stageno[which(stageframe$orig_stage_id == overwrite$stage1[X])]})
-    overwrite$new3 <- apply(as.matrix(c(1:dim(overwrite)[1])), 1, function(X) {
-      if(!is.na(overwrite$eststage3[X])) {
-        stageframe$stageno[which(stageframe$orig_stage_id == overwrite$eststage3[X])]
-      } else {overwrite$index3[X]}
-    })
-    overwrite$new2 <- apply(as.matrix(c(1:dim(overwrite)[1])), 1, function(X) {
-      if(!is.na(overwrite$eststage2[X])) {
-        stageframe$stageno[which(stageframe$orig_stage_id == overwrite$eststage2[X])]
-      } else {overwrite$index2[X]}
-    })
-    overwrite$new1 <- apply(as.matrix(c(1:dim(overwrite)[1])), 1, function(X) {
-      if(!is.na(overwrite$eststage1[X])) {
-        stageframe$stageno[which(stageframe$orig_stage_id == overwrite$eststage1[X])]
-      } else {overwrite$index1[X]}
-    })
-    
-    overwrite$indexold3221 <- (overwrite$index3 - 1) + ((overwrite$index2 - 1) * instages) + 
-      ((overwrite$index2 - 1) * instages * instages) + ((overwrite$index1 - 1)  * instages * instages * instages)
-    overwrite$indexnew3221 <- (overwrite$new3 - 1) + ((overwrite$new2 - 1) * instages) + 
-      ((overwrite$new2 - 1) * instages * instages) + ((overwrite$new1 - 1)  * instages * instages * instages)
-    overwrite$givenrate[which(is.na(overwrite$givenrate))] <- 0
-    
-    overwrite$new3[which(is.na(overwrite$eststage3))] <- -1
-    overwrite$givenrate[which(is.na(overwrite$givenrate))] <- -1
-    overwrite$givenrate[which(overwrite$givenrate == 0)] <- -1
-    
-    allstageadditions <- ovreplace(stageexpansion9$index3221, overwrite$indexold3221, overwrite$indexnew3221, 
-                                   overwrite$convtype, overwrite$new3, overwrite$givenrate)
-    
-    stageexpansion9$ovest_t <- allstageadditions[,1]
-    stageexpansion9$ovgiven_t <- allstageadditions[,2]
-    stageexpansion9$ovest_f <- allstageadditions[,3]
-    stageexpansion9$ovgiven_f <- allstageadditions[,4]
-  }
-  
+  # Now we will add a number of indices to the dataset
   data <- subset(data, alive2 == 1)
   
   data$index1 <- apply(as.matrix(data$usedstage1), 1, function(X) {
-    instageframe$stageno[which(instageframe$orig_stage_id == X)]
+    stageframe$stageno[which(stageframe$orig_stage_id == X)]
     
   })
   data$index2 <- apply(as.matrix(data$usedstage2), 1, function(X) {
-    instageframe$stageno[which(instageframe$orig_stage_id == X)]
+    stageframe$stageno[which(stageframe$orig_stage_id == X)]
   })
   data$index3 <- apply(as.matrix(data$usedstage3), 1, function(X) {
-    instageframe$stageno[which(instageframe$orig_stage_id == X)]
+    stageframe$stageno[which(stageframe$orig_stage_id == X)]
   })
-  data$index3221 <- apply(as.matrix(c(1:length(data$usedstage1))), 1, function(X) {
-    ((data$index3[X] - 1) + ((data$index2[X] - 1) * instages) + ((data$index2[X] - 1) * instages * instages) + 
-       ((data$index1[X] - 1)  * instages * instages * instages))
+  
+  data$index321 <- apply(as.matrix(c(1:length(data$usedstage1))), 1, function(X) {
+    (data$index3[X] + (data$index2[X] * instages) + (data$index1[X] * instages * instages))
   })
   data$pairindex21 <- apply(as.matrix(c(1:dim(data)[1])), 1, function(X) {
-    (data$index2[X] - 1) + ((data$index1[X] - 1) * instages)})
+    ((data$index2[X] - 1) + ((data$index1[X] - 1) * instages))
+  })
   
   data$usedfec2[which(is.na(data$usedfec2))] <- 0
   
@@ -1739,25 +1511,22 @@ rlefko3 <- function(data, stageframe, year = "all", pop = NA, patch = NA, censor
     warning("Data (stage at time t+1) contains some stages not identified in stageframe. Note that all stage characteristics must match, including reproductive status.")
   }
   
-  aliverows <- hoffmannofstuttgart(0, as.matrix(stageexpansion9[, c("index3", "index2n", "index2o", "index1")]))
-  
-  madsexmadrigal <- apply(listofyears, 1, function(X) {
+  madsexmadrigal <- lapply(yearlist, function(X) {
     passed_data <- data
-    if (!is.na(X[1])) {
+    if (!is.na(X$pop[1])) {
       passed_data$popused <- passed_data[,popcol];
-      passed_data <- subset(passed_data, popused == X[1]);
+      passed_data <- subset(passed_data, popused == X$pop[1]);
     }
-    if (!is.na(X[2])) {
+    if (!is.na(X$patch[1])) {
       passed_data$patchused <- passed_data[,patchcol];
-      passed_data <- subset(passed_data, patchused == X[2]);
+      passed_data <- subset(passed_data, patchused == X$patch[1]);
     }
-    if (!is.na(X[3])) {
+    if (!is.na(X$year2[1])) {
       passed_data$yearused <- passed_data[,yearcol];
-      passed_data <- subset(passed_data, yearused == X[3]);
+      passed_data <- subset(passed_data, yearused == X$year2[1]);
     }
     
-    .rlefko3_core(data = passed_data, stageframe = stageframe, stageexpansion9 = stageexpansion9, 
-                  aliverows = aliverows, stageexpansion3 = stageexpansion3)
+    specialpatrolgroup(sge9l = stageexpansion9, sge3 = stageexpansion3, MainData = passed_data, StageFrame = stageframe)
   })
   
   a_list <- lapply(madsexmadrigal, function(X) {X$A})
@@ -1780,10 +1549,10 @@ rlefko3 <- function(data, stageframe, year = "all", pop = NA, patch = NA, censor
   }
   qcoutput2 <- c(indivs, dim(data)[1])
   
-  morebitstolose <- unique(c(which(stageexpansion3$stage3 == dim(stageframe)[1]), which(stageexpansion3$stage2 == dim(stageframe)[1])))
+  morebitstolose <- unique(c(which(stageexpansion3$stage3 == dim(stageframe)[1]), which(stageexpansion3$stage2n == dim(stageframe)[1])))
   stageexpansion3 <- stageexpansion3[-morebitstolose,]
   
-  hstages <- stageexpansion3[,c("stcod3", "stcod2", "stage3", "stage2")]
+  hstages <- stageexpansion3[,c("stcod3", "stcod2", "stage3", "stage2n")]
   
   if (reduce == TRUE) {
     drops <- .reducer3(a_list, u_list, f_list, hstages)
@@ -1800,59 +1569,6 @@ rlefko3 <- function(data, stageframe, year = "all", pop = NA, patch = NA, censor
   class(output) <- "lefkoMat"
   
   return(output)
-}
-
-#' Core Wrapper Powering Historical Raw Matrix Estimation
-#' 
-#' \code{.rlefko3_core()} pulls together all required data and matrix conditions
-#' and feeds them into\code{\link{specialpatrolgroup}()}, an Rcpp function designed
-#' to quickly estimate historical raw matrices.
-#' 
-#' @param data Original demographic dataset showing the states and fates of
-#' individuals.
-#' @param stageframe Original stageframe used in analysis.
-#' @param stageexpansion9 Massive data frame created by \code{\link{flefko3}()} including
-#' general life history and statistical characteristics identifying every element
-#' in the projection matrix.
-#' @param aliverows Vector identifying elements in the projection matrix that are
-#' both alive and logically possible.
-#' @param stageexpansion3 Data frame characterizing all stage pairs used in
-#' historical matrix estimation.
-#' 
-#' @return Returns a list containing one set of matrices corresponding to a 
-#' specific population, patch, and time step combination.
-#' 
-#' @keywords internal
-#' @noRd
-.rlefko3_core <- function(data, stageframe, stageexpansion9 = NA, aliverows = NA, 
-                          stageexpansion3 = NA) {
-  
-  if (all(is.na(stageexpansion9)) | all(is.na(stageexpansion3))) {
-    stop("Error processing stageframe data.")
-  }
-  
-  lifedeathandsex <- specialpatrolgroup(as.matrix(stageexpansion9[, c("fec32n", "rep2n", "indata3221", 
-                                                                      "ovgiven_t", "ovgiven_f", "ovest_t", "ovest_f")]), 
-                                        as.matrix(stageexpansion3[, c("rep2", "fec32")]), 
-                                        as.matrix(data[, c("alive3", "usedfec2")]), stageexpansion9$index3221, 
-                                        stageexpansion9$stagepair2n1, stageexpansion3$pairindex, 
-                                        stageexpansion3$stage3, stageexpansion3$stage2, data$index3221, 
-                                        data$pairindex21, max(stageframe$stageno))
-  
-  lifeanddeath <- lifedeathandsex[(aliverows + 1),]
-  stageexpansion3 <- stageexpansion3[-(unique(c(which(stageexpansion3$stage3 == dim(stageframe)[1]), which(stageexpansion3$stage2 == dim(stageframe)[1])))),]
-  
-  total.matrix.dim <- dim(stageexpansion3)[1] 
-  
-  matrix.u <- matrix(lifeanddeath[,1], nrow = total.matrix.dim, ncol = total.matrix.dim)
-  
-  matrix.f <- matrix(lifeanddeath[,2], nrow = total.matrix.dim, ncol = total.matrix.dim)
-  
-  matrix.a <- matrix.u + matrix.f
-  
-  new.matrix <- list(A = matrix.a, U = matrix.u, F = matrix.f)
-  
-  return(new.matrix)
 }
 
 #' Create Raw Ahistorical Population Projection Matrices
@@ -1971,12 +1687,13 @@ rlefko3 <- function(data, stageframe, year = "all", pop = NA, patch = NA, censor
 #' rep_cyp_raw <- matrix(0, 11, 11)
 #' rep_cyp_raw[1:2,7:11] <- 0.5
 #' 
-#' cypover2r <- overwrite(stage3 = c("SD", "P1", "P2", "P3", "D", "XSm", "Sm", "SL", "SL"),
-#'                        stage2 = c("SD", "SD", "P1", "P2", "P3", "P3", "P3", "P3", "SL"),
-#'                        eststage3 = c(NA, NA, NA, NA, "D", "XSm", "Sm", NA, NA),
-#'                        eststage2 = c(NA, NA, NA, NA, "D", "D", "D", NA, NA),
-#'                        givenrate = c(0.1, 0.2, 0.2, 0.2, NA, NA, NA, 0.25, 0.4),
-#'                        type = c("S", "S", "S", "S", "S", "S", "S", "S", "S"))
+#' cypover2r <- overwrite(stage3 = c("SD", "P1", "P2", "P3", "SL", "SL", "D", 
+#'                        "XSm", "Sm"), stage2 = c("SD", "SD", "P1", "P2", "P3", 
+#'                        "SL", "SL", "SL", "SL"), eststage3 = c(NA, NA, NA, NA, 
+#'                        NA, NA, "D", "XSm", "Sm"), eststage2 = c(NA, NA, NA, NA, 
+#'                        NA, NA, "XSm", "XSm", "XSm"), givenrate = c(0.1, 0.2, 
+#'                        0.2, 0.2, 0.25, 0.4, NA, NA, NA), type = c("S", "S", "S",
+#'                        "S", "S", "S", "S", "S", "S"))
 #' 
 #' cypmatrix2r <- rlefko2(data = cypraw_v1, stageframe = cypframe_raw, year = "all",
 #'                        patch = "all", stages = c("stage3", "stage2", "stage1"),
@@ -1985,7 +1702,6 @@ rlefko3 <- function(data, stageframe, year = "all", pop = NA, patch = NA, censor
 #'                        yearcol = "year2", patchcol = "patchid",
 #'                        indivcol = "individ")
 #' cypmatrix2r$A[[1]]
-
 #' @export
 rlefko2 <- function(data, stageframe, year = "all", pop = NA, patch = NA, censor = FALSE, 
                     stages = NA, alive = c("alive3", "alive2"), size = c("sizea3", "sizea2"), 
@@ -1997,6 +1713,10 @@ rlefko2 <- function(data, stageframe, year = "all", pop = NA, patch = NA, censor
   
   if (all(is.na(data))) {
     stop("Need original vertical dataset to proceed.")
+  }
+  
+  if (!any(class(data) == "hfvdata")) {
+    stop("Need original vertical dataset to proceed. This dataset must be in historical vertical format.")
   }
   
   if (all(is.na(stages))) {
@@ -2132,6 +1852,8 @@ rlefko2 <- function(data, stageframe, year = "all", pop = NA, patch = NA, censor
     names(listofyears) <- c("pop", "patch", "year2")
   }
   
+  yearlist <- split(listofyears, seq(nrow(listofyears)))
+  
   melchett <- .sf_reassess(stageframe, repmatrix, overwrite)
   stageframe <- melchett[[1]]
   repmatrix <- melchett[[2]]
@@ -2158,6 +1880,7 @@ rlefko2 <- function(data, stageframe, year = "all", pop = NA, patch = NA, censor
   data$alive3 <- data[,which(names(data) == alive[1])]
   
   instageframe <- subset(stageframe, indataset == 1)
+  instages <- dim(stageframe)[1]
   
   if (all(is.na(stages))) {
     if (length(size) > 1) {
@@ -2186,7 +1909,7 @@ rlefko2 <- function(data, stageframe, year = "all", pop = NA, patch = NA, censor
       repstages <- which(instageframe$repstatus == data$repstatus2[X])
       
       choicestage <- intersect(intersect(mainstages, jmstages), intersect(obsstages, repstages))
-
+      
       if (length(choicestage) == 0) {
         stop("Stage characteristics mismatch dataset. Consider using the stages option, particularly if the vertical file was created with NRasRep = TRUE in verticalize3() or historicalize3().")
       }
@@ -2206,7 +1929,7 @@ rlefko2 <- function(data, stageframe, year = "all", pop = NA, patch = NA, censor
       alivestage3 <- which(instageframe$alive == data$alive3[X])
       
       choicestage <- intersect(intersect(intersect(mainstages, jmstages), intersect(obsstages, repstages)), alivestage3)
-
+      
       if (length(choicestage) == 0) {
         stop("Stage characteristics mismatch dataset. Consider using the stages option, particularly if the vertical file was created with NRasRep = TRUE in verticalize3() or historicalize3().")
       }
@@ -2243,67 +1966,13 @@ rlefko2 <- function(data, stageframe, year = "all", pop = NA, patch = NA, censor
     warning("Lefko3 MPM estimation functions generally require fecundity variables. Failure to include fecundity variables leads to matrices composed only of survival transitions.")
   } 
   
-  stageexpansion3 <- cbind.data.frame(expand.grid(size3 = stageframe$bin_size_ctr, size2 = stageframe$bin_size_ctr), 
-                                      expand.grid(rep3 = stageframe$repstatus, rep2 = stageframe$repstatus),
-                                      expand.grid(indata3 = stageframe$indataset, indata2 = stageframe$indataset),
-                                      expand.grid(stage3 = stageframe$stageno, stage2 = stageframe$stageno),
-                                      fec32 = c(cbind(rbind(repmatrix, 0), 0)))
+  overwrite <- .overwrite_reassess(overwrite, stageframe, historical = FALSE)
   
-  instages <- length(stageframe$new_stage_id)
+  # This section creates stageexpansion3, which is a data frame that holds values for stage transitions from time t to t+1
+  majortrial <- theoldpizzle(stageframe, overwrite, repmatrix, 0, 1, 0)
+  stageexpansion3 <- do.call("cbind.data.frame", majortrial)
   
-  stageexpansion3$indata32 <- stageexpansion3$indata3 * stageexpansion3$indata2
-  stageexpansion3$index32 <- (stageexpansion3$stage3 - 1) + ((stageexpansion3$stage2 - 1) * instages)
-  stageexpansion3$index2 <- stageexpansion3$stage2 - 1
-  
-  stageexpansion3$ovest_t <- 0
-  stageexpansion3$ovgiven_t <- 0
-  stageexpansion3$ovest_f <- 0
-  stageexpansion3$ovgiven_f <- 0
-  
-  if (!all(is.na(overwrite))) {
-    
-    overwrite <- .overwrite_reassess(overwrite, stageframe, historical = FALSE)
-    if (dim(overwrite)[1] == 0) overwrite <- NA
-  }
-  
-  if (!all(is.na(overwrite))) {
-    
-    overwrite$index3 <- apply(as.matrix(c(1:dim(overwrite)[1])), 1, function(X) {
-      stageframe$stageno[which(stageframe$orig_stage_id == overwrite$stage3[X])]})
-    overwrite$index2 <- apply(as.matrix(c(1:dim(overwrite)[1])), 1, function(X) {
-      stageframe$stageno[which(stageframe$orig_stage_id == overwrite$stage2[X])]})
-    overwrite$new3 <- apply(as.matrix(c(1:dim(overwrite)[1])), 1, function(X) {
-      if(!is.na(overwrite$eststage3[X])) {
-        stageframe$stageno[which(stageframe$orig_stage_id == overwrite$eststage3[X])]
-      } else {
-        overwrite$index3[X]
-      }
-    })
-    overwrite$new2 <- apply(as.matrix(c(1:dim(overwrite)[1])), 1, function(X) {
-      if(!is.na(overwrite$eststage2[X])) {
-        stageframe$stageno[which(stageframe$orig_stage_id == overwrite$eststage2[X])]
-      } else {
-        overwrite$index2[2]
-      }
-    })
-    overwrite$indexold32 <- (overwrite$index3 - 1) + ((overwrite$index2 - 1) * instages)
-    overwrite$indexnew32 <- (overwrite$new3 - 1) + ((overwrite$new2 - 1) * instages)
-    overwrite$givenrate[which(is.na(overwrite$givenrate))] <- 0
-    
-    overwrite$new3[which(is.na(overwrite$eststage3))] <- -1
-    overwrite$givenrate[which(is.na(overwrite$givenrate))] <- -1
-    overwrite$givenrate[which(overwrite$givenrate == 0)] <- -1
-    
-    allstageadditions <- ovreplace(stageexpansion3$index32, overwrite$indexold32, overwrite$indexnew32, 
-                                   overwrite$convtype, overwrite$new3, overwrite$givenrate)
-    
-    stageexpansion3$ovest_t <- allstageadditions[,1]
-    stageexpansion3$ovgiven_t <- allstageadditions[,2]
-    stageexpansion3$ovest_f <- allstageadditions[,3]
-    stageexpansion3$ovgiven_f <- allstageadditions[,4]
-    
-  }
-  
+  # Stageexpansion2 is a dataframe created to hold values for stages in time t only
   stageexpansion2 <- cbind.data.frame(stage2 = as.numeric(stageframe$stageno), size2 = as.numeric(stageframe$bin_size_ctr), 
                                       rep2 = as.numeric(stageframe$repstatus), indata2 = as.numeric(stageframe$indataset),
                                       index2 = (as.numeric(stageframe$stageno) - 1), fec3 = c(rowSums(repmatrix), 0))
@@ -2330,24 +1999,22 @@ rlefko2 <- function(data, stageframe, year = "all", pop = NA, patch = NA, censor
     warning("Data (stage at time t+1) contains some stages not identified in stageframe. Note that all stage characteristics must match, including reproductive status.")
   }
   
-  aliverows <- hoffmannofstuttgart(0, as.matrix(stageexpansion3[, c("stage3", "stage2", "stage2", "stage2")]))
-  
-  madsexmadrigal <- apply(listofyears, 1, function(X) {
+  # This section runs the core matrix estimator
+  madsexmadrigal <- lapply(yearlist, function(X) {
     passed_data <- data
-    if (!is.na(X[1])) {
+    if (!is.na(X$pop[1])) {
       passed_data$popused <- passed_data[,popcol];
-      passed_data <- subset(passed_data, popused == X[1]);
+      passed_data <- subset(passed_data, popused == X$pop[1]);
     }
-    if (!is.na(X[2])) {
+    if (!is.na(X$patch[1])) {
       passed_data$patchused <- passed_data[,patchcol];
-      passed_data <- subset(passed_data, patchused == X[2]);
+      passed_data <- subset(passed_data, patchused == X$patch[1]);
     }
-    if (!is.na(X[3])) {
+    if (!is.na(X$year2[1])) {
       passed_data$yearused <- passed_data[,yearcol];
-      passed_data <- subset(passed_data, yearused == X[3]);
+      passed_data <- subset(passed_data, yearused == X$year2[1]);
     }
-    .rlefko2_core(data = passed_data, stageframe = stageframe, stageexpansion3 = stageexpansion3, 
-                  aliverows = aliverows, stageexpansion2 = stageexpansion2)
+    normalpatrolgroup(sge3 = stageexpansion3, sge2 = stageexpansion2, MainData = passed_data, StageFrame = stageframe)
   })
   
   a_list <- lapply(madsexmadrigal, function(X) {X$A})
@@ -2386,58 +2053,6 @@ rlefko2 <- function(data, stageframe, year = "all", pop = NA, patch = NA, censor
   class(output) <- "lefkoMat"
   
   return(output)
-}
-
-#' Core Wrapper Powering Ahistorical Raw Matrix Estimation
-#' 
-#' \code{.rlefko2_core()} pulls together all required data and matrix conditions
-#' and feeds them into\code{\link{normalpatrolgroup}()}, an Rcpp function designed
-#' to quickly estimate ahistorical raw matrices.
-#' 
-#' @param data Original demographic dataset showing the states and fates of
-#' individuals.
-#' @param stageframe Original stageframe used in analysis.
-#' @param stageexpansion3 Data frame created by \code{\link{flefko2}()} including
-#' general life history and statistical characteristics identifying every element
-#' in the projection matrix.
-#' @param aliverows Vector identifying elements in the projection matrix that are
-#' both alive and logically possible.
-#' @param stageexpansion2 Data frame characterizing all stages used in
-#' ahistorical matrix estimation.
-#' 
-#' @return Returns a list containing one set of matrices corresponding to a 
-#' specific population, patch, and time step combination.
-#' 
-#' @keywords internal
-#' @noRd
-.rlefko2_core <- function(data, stageframe, stageexpansion3 = NA, aliverows = NA, stageexpansion2 = NA) {
-  
-  if (all(is.na(stageexpansion3)) | all(is.na(stageexpansion2))) {
-    stop("Error processing stageframe data.")
-  }
-  
-  lifedeathandsex <- normalpatrolgroup(as.matrix(stageexpansion3[, c("fec32", "rep2", "indata32",
-                                                                     "ovgiven_t", "ovgiven_f", "ovest_t", "ovest_f")]), 
-                                       as.matrix(stageexpansion2[, c("rep2", "fec3")]), 
-                                       as.matrix(data[, c("alive3", "usedfec2")]), stageexpansion3$index32, 
-                                       stageexpansion3$index2, stageexpansion2$index2, 
-                                       stageexpansion2$stage2, data$index32, 
-                                       data$index2, max(stageframe$stageno))
-  
-  lifeanddeath <- lifedeathandsex[(aliverows + 1),]
-  stageexpansion2 <- stageexpansion2[-(unique(which(stageexpansion2$stage2 == dim(stageframe)[1]))),]
-  
-  total.matrix.dim <- dim(stageexpansion2)[1] 
-  
-  matrix.u <- matrix(lifeanddeath[,1], nrow = total.matrix.dim, ncol = total.matrix.dim)
-  
-  matrix.f <- matrix(lifeanddeath[,2], nrow = total.matrix.dim, ncol = total.matrix.dim)
-  
-  matrix.a <- matrix.u + matrix.f
-  
-  new.matrix <- list(A = matrix.a, U = matrix.u, F = matrix.f)
-  
-  return(new.matrix)
 }
 
 #' Summary of Class "lefkoMat"
@@ -2485,12 +2100,13 @@ rlefko2 <- function(data, stageframe, year = "all", pop = NA, patch = NA, censor
 #' rep_cyp_raw <- matrix(0, 11, 11)
 #' rep_cyp_raw[1:2,7:11] <- 0.5
 #' 
-#' cypover2r <- overwrite(stage3 = c("SD", "P1", "P2", "P3", "D", "XSm", "Sm", "SL", "SL"),
-#'                        stage2 = c("SD", "SD", "P1", "P2", "P3", "P3", "P3", "P3", "SL"),
-#'                        eststage3 = c(NA, NA, NA, NA, "D", "XSm", "Sm", NA, NA),
-#'                        eststage2 = c(NA, NA, NA, NA, "D", "D", "D", NA, NA),
-#'                        givenrate = c(0.1, 0.2, 0.2, 0.2, NA, NA, NA, 0.25, 0.4),
-#'                        type = c("S", "S", "S", "S", "S", "S", "S", "S", "S"))
+#' cypover2r <- overwrite(stage3 = c("SD", "P1", "P2", "P3", "SL", "SL", "D", 
+#'                        "XSm", "Sm"), stage2 = c("SD", "SD", "P1", "P2", "P3", 
+#'                        "SL", "SL", "SL", "SL"), eststage3 = c(NA, NA, NA, NA, 
+#'                        NA, NA, "D", "XSm", "Sm"), eststage2 = c(NA, NA, NA, NA, 
+#'                        NA, NA, "XSm", "XSm", "XSm"), givenrate = c(0.1, 0.2, 
+#'                        0.2, 0.2, 0.25, 0.4, NA, NA, NA), type = c("S", "S", "S",
+#'                        "S", "S", "S", "S", "S", "S"))
 #' 
 #' cypmatrix2r <- rlefko2(data = cypraw_v1, stageframe = cypframe_raw, year = "all",
 #'                        patch = "all", stages = c("stage3", "stage2", "stage1"),

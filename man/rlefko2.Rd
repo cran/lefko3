@@ -163,12 +163,13 @@ cypraw_v1 <- verticalize3(data = cypdata, noyears = 6, firstyear = 2004,
 rep_cyp_raw <- matrix(0, 11, 11)
 rep_cyp_raw[1:2,7:11] <- 0.5
 
-cypover2r <- overwrite(stage3 = c("SD", "P1", "P2", "P3", "D", "XSm", "Sm", "SL", "SL"),
-                       stage2 = c("SD", "SD", "P1", "P2", "P3", "P3", "P3", "P3", "SL"),
-                       eststage3 = c(NA, NA, NA, NA, "D", "XSm", "Sm", NA, NA),
-                       eststage2 = c(NA, NA, NA, NA, "D", "D", "D", NA, NA),
-                       givenrate = c(0.1, 0.2, 0.2, 0.2, NA, NA, NA, 0.25, 0.4),
-                       type = c("S", "S", "S", "S", "S", "S", "S", "S", "S"))
+cypover2r <- overwrite(stage3 = c("SD", "P1", "P2", "P3", "SL", "SL", "D", 
+                       "XSm", "Sm"), stage2 = c("SD", "SD", "P1", "P2", "P3", 
+                       "SL", "SL", "SL", "SL"), eststage3 = c(NA, NA, NA, NA, 
+                       NA, NA, "D", "XSm", "Sm"), eststage2 = c(NA, NA, NA, NA, 
+                       NA, NA, "XSm", "XSm", "XSm"), givenrate = c(0.1, 0.2, 
+                       0.2, 0.2, 0.25, 0.4, NA, NA, NA), type = c("S", "S", "S",
+                       "S", "S", "S", "S", "S", "S"))
 
 cypmatrix2r <- rlefko2(data = cypraw_v1, stageframe = cypframe_raw, year = "all",
                        patch = "all", stages = c("stage3", "stage2", "stage1"),

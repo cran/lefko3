@@ -217,7 +217,7 @@ in \code{U} and \code{F} matrices, and the number of annual matrices.}
 \item{modelqc}{This is the \code{qc} portion of the \code{modelsuite} input.}
 }
 \description{
-\code{flefko3()} returns a list of historical population projection 
+Function \code{flefko3()} returns a list of historical population projection 
 matrices corresponding to the patches and years given, as well as the 
 associated component transition and fecundity matrices, data frames 
 detailing the characteristics of the ahistorical stages used and the

@@ -69,24 +69,31 @@ within an ahistorical or historical projection matrix to overwrite with either
 given rates and probabilities, or other estimated transitions.
 }
 \examples{
-cypover2r <- overwrite(stage3 = c("SD", "P1", "P2", "P3", "D", "XSm", "Sm", "SL", "SL"),
-                       stage2 = c("SD", "SD", "P1", "P2", "P3", "P3", "P3", "P3", "SL"),
-                       eststage3 = c(NA, NA, NA, NA, "D", "XSm", "Sm", NA, NA),
-                       eststage2 = c(NA, NA, NA, NA, "D", "D", "D", NA, NA),
-                       givenrate = c(0.1, 0.2, 0.2, 0.2, NA, NA, NA, 0.25, 0.4),
-                       type = c("S", "S", "S", "S", "S", "S", "S", "S", "S"))
+cypover2r <- overwrite(stage3 = c("SD", "P1", "P2", "P3", "SL", "SL", "D", 
+                       "XSm", "Sm"), stage2 = c("SD", "SD", "P1", "P2", "P3", 
+                       "SL", "SL", "SL", "SL"), eststage3 = c(NA, NA, NA, NA, 
+                       NA, NA, "D", "XSm", "Sm"), eststage2 = c(NA, NA, NA, NA, 
+                       NA, NA, "XSm", "XSm", "XSm"), givenrate = c(0.1, 0.2, 
+                       0.2, 0.2, 0.25, 0.4, NA, NA, NA), type = c("S", "S", "S",
+                       "S", "S", "S", "S", "S", "S"))
 
 cypover2r
 
-cypover3r <- overwrite(stage3 = c("SD", "SD", "P1", "P1", "P2", "P3", "D", "XSm", "Sm",
-                       "SL", "SL", "SL"), stage2 = c("SD", "SD", "SD", "SD", "P1", "P2",
-                       "P3", "P3", "P3", "P3", "SL", "SL"), stage1 = c("SD", "rep", "SD",
-                       "rep", "SD", "P1", "P2", "P2", "P2", "P2", "P3", "SL"),
-                       eststage3 = c(NA, NA, NA, NA, NA, NA, "D", "XSm", "Sm", NA, NA, NA),
-                       eststage2 = c(NA, NA, NA, NA, NA, NA, "D", "D", "D", NA, NA, NA),
-                       eststage1 = c(NA, NA, NA, NA, NA, NA, "D", "D", "D", NA, NA, NA),
-                       givenrate = c(0.1, 0.1, 0.2, 0.2, 0.2, 0.2, NA, NA, NA, 0.25, 0.4, 0.4),
-                       type = c("S", "S", "S", "S", "S", "S", "S", "S", "S", "S", "S", "S"))
+cypover3r <- overwrite(stage3 = c("SD", "SD", "P1", "P1", "P2", "P3", "SL", 
+                       "SL", "SL", "D", "XSm", "Sm", "D", "XSm", "Sm"), 
+                       stage2 = c("SD", "SD", "SD", "SD", "P1", "P2", "P3", 
+                       "SL", "SL", "SL", "SL", "SL", "SL", "SL", "SL"),
+                       stage1 = c("SD", "rep", "SD", "rep", "SD", "P1", "P2", 
+                       "P3", "SL", "P3", "P3", "P3", "SL", "SL", "SL"),
+                       eststage3 = c(NA, NA, NA, NA, NA, NA, NA, NA, NA, "D", 
+                       "XSm", "Sm", "D", "XSm", "Sm"), eststage2 = c(NA, NA, NA, 
+                       NA, NA, NA, NA, NA, NA, "XSm", "XSm", "XSm", "XSm", "XSm",
+                       "XSm"), eststage1 = c(NA, NA, NA, NA, NA, NA, NA, NA, NA,
+                       "XSm", "XSm", "XSm", "XSm", "XSm", "XSm"), 
+                       givenrate = c(0.1, 0.1, 0.2, 0.2, 0.2, 0.2, 0.25, 0.4,
+                       0.4, NA, NA, NA, NA, NA, NA), type = c("S", "S", "S", 
+                       "S", "S", "S", "S", "S", "S", "S", "S", "S", "S", "S", 
+                       "S"))
 
 cypover3r
 

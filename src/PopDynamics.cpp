@@ -12,6 +12,10 @@ using namespace arma;
 //' as a sum of the associated \code{U} and \code{F} matrices. Used to power the
 //' \code{\link{lmean}()} function.
 //' 
+//' @param loy A data frame denoting the population, patch, and time step designation
+//' of each matrix. Includes a total of 9 variables.
+//' @param Umats A matrix with all U matrices turned into columns.
+//' @param Fmats A matrix with all F matrices turned into columns.
 //' @param geom Should the mean across time be geometric (1) or arithmetic (0)?
 //' @param sparse Should 0s be ignored when some matrices include non-zero entries
 //' in common elements?
@@ -19,10 +23,6 @@ using namespace arma;
 //' @param numofpatches Number of patches to be analyzed, where this number should
 //' include a patch total across all populations.
 //' @param numofyears Number of time steps to be analyzed.
-//' @param loy2c Matrix denoting the population, patch, and time step designation
-//' of each matrix.
-//' @param Umats A matrix with all U matrices turned into columns.
-//' @param Fmats A matrix with all F matrices turned into columns.
 //' 
 //' @return A matrix with 3n columns, where n is the sum of the number of patches and
 //' populations. Each pop/patch has its own set of three columns denoting survival,
@@ -30,13 +30,15 @@ using namespace arma;
 //' 
 //' @keywords internal
 //' @noRd
-//[[Rcpp::export]]
-arma::mat geodiesel(int geom, int sparse, int numofpops, int numofpatches, int numofyears, 
-                    arma::mat loy2c, arma::mat Umats, arma::mat Fmats) {
-  
+// [[Rcpp::export]]
+arma::mat geodiesel(DataFrame loy, arma::mat Umats, arma::mat Fmats, int geom, int sparse, 
+                    int numofpops, int numofpatches, int numofyears) {
   
   int elements = Umats.n_rows;
   int matrices = Umats.n_cols - 1;
+  
+  arma::vec poppatchc = loy["poppatchc"];
+  arma::vec yearsinpatch = loy["yearsinpatch"];
   
   arma::vec indexmatU = Umats.col(matrices);
   arma::vec indexmatF = Fmats.col(matrices);
@@ -56,16 +58,16 @@ arma::mat geodiesel(int geom, int sparse, int numofpops, int numofpatches, int n
           for (int j = 0; j < matrices; j++) {
             //This section creates the sum of logs for each non-zero positive element
             
-            if (Umats(i, j) != 0 && out(i, loy2c(j, 1)) != 1000) {
-              out(i, loy2c(j, 1)) = out(i, loy2c(j, 1)) + (log(Umats(i, j)) / loy2c(j, 4));
+            if (Umats(i, j) != 0 && out(i, poppatchc(j)) != 1000) {
+              out(i, poppatchc(j)) = out(i, poppatchc(j)) + (log(Umats(i, j)) / yearsinpatch(j));
             } else {
-              out(i, loy2c(j, 1)) = 1000;
+              out(i, poppatchc(j)) = 1000;
             }
             
-            if (Fmats(i, j) != 0 && out(i, (numofpatches + loy2c(j, 1))) != 1000) {
-              out(i, (numofpatches + loy2c(j, 1))) = out(i, (numofpatches + loy2c(j, 1))) + (log(Fmats(i, j)) / loy2c(j, 4));
+            if (Fmats(i, j) != 0 && out(i, (numofpatches + poppatchc(j))) != 1000) {
+              out(i, (numofpatches + poppatchc(j))) = out(i, (numofpatches + poppatchc(j))) + (log(Fmats(i, j)) / yearsinpatch(j));
             } else {
-              out(i, (numofpatches + loy2c(j, 1))) = 1000;
+              out(i, (numofpatches + poppatchc(j))) = 1000;
             }
           }
           
@@ -109,23 +111,23 @@ arma::mat geodiesel(int geom, int sparse, int numofpops, int numofpatches, int n
             //This section creates a vector to keep track of the dividend in mean calculations
             
             int properindex = numofyears * l;
-            totalvec(l) = loy2c(properindex, 4);
-            totalvec(l + numofpatches) = loy2c(properindex, 4);
+            totalvec(l) = yearsinpatch(properindex);
+            totalvec(l + numofpatches) = yearsinpatch(properindex);
           }
           
           for (int j = 0; j < matrices; j++) {
             //This section creates the sum of logs for each non-zero positive element
             
             if (Umats(i, j) != 0) {
-              out(i, loy2c(j, 1)) = out(i, loy2c(j, 1)) + log(Umats(i, j));
+              out(i, poppatchc(j)) = out(i, poppatchc(j)) + log(Umats(i, j));
             } else {
-              totalvec(loy2c(j, 1)) = totalvec(loy2c(j, 1)) - 1;
+              totalvec(poppatchc(j)) = totalvec(poppatchc(j)) - 1;
             }
             
             if (Fmats(i, j) != 0) {
-              out(i, (numofpatches + loy2c(j, 1))) = out(i, (numofpatches + loy2c(j, 1))) + log(Fmats(i, j));
+              out(i, (numofpatches + poppatchc(j))) = out(i, (numofpatches + poppatchc(j))) + log(Fmats(i, j));
             } else {
-              totalvec(numofpatches + loy2c(j, 1)) = totalvec(numofpatches + loy2c(j, 1)) - 1;
+              totalvec(numofpatches + poppatchc(j)) = totalvec(numofpatches + poppatchc(j)) - 1;
             }
           }
           
@@ -169,9 +171,9 @@ arma::mat geodiesel(int geom, int sparse, int numofpops, int numofpatches, int n
           for (int j = 0; j < matrices; j++) {
             //This section creates the means for U and F elements
             
-            out(i, loy2c(j, 1)) = out(i, loy2c(j, 1)) + ((Umats(i, j)) / loy2c(j, 4));
+            out(i, poppatchc(j)) = out(i, poppatchc(j)) + ((Umats(i, j)) / yearsinpatch(j));
             
-            out(i, (numofpatches + loy2c(j, 1))) = out(i, (numofpatches + loy2c(j, 1))) + ((Fmats(i, j)) / loy2c(j, 4));
+            out(i, (numofpatches + poppatchc(j))) = out(i, (numofpatches + poppatchc(j))) + ((Fmats(i, j)) / yearsinpatch(j));
           }
           
           for (int k = 0; k < numofpatches; k++) {
@@ -201,23 +203,23 @@ arma::mat geodiesel(int geom, int sparse, int numofpops, int numofpatches, int n
             //This section creates a vector to keep track of the dividend in mean calculations
             
             int properindex = numofyears * l;
-            totalvec(l) = loy2c(properindex, 4);
-            totalvec(l + numofpatches) = loy2c(properindex, 4);
+            totalvec(l) = yearsinpatch(properindex);
+            totalvec(l + numofpatches) = yearsinpatch(properindex);
           }
           
           for (int j = 0; j < matrices; j++) {
             //This section creates the sum of logs for each non-zero positive element
             
             if (Umats(i, j) != 0) {
-              out(i, loy2c(j, 1)) = out(i, loy2c(j, 1)) + (Umats(i, j));
+              out(i, poppatchc(j)) = out(i, poppatchc(j)) + (Umats(i, j));
             } else {
-              totalvec(loy2c(j, 1)) = totalvec(loy2c(j, 1)) - 1;
+              totalvec(poppatchc(j)) = totalvec(poppatchc(j)) - 1;
             }
             
             if (Fmats(i, j) != 0) {
-              out(i, (numofpatches + loy2c(j, 1))) = out(i, (numofpatches + loy2c(j, 1))) + (Fmats(i, j));
+              out(i, (numofpatches + poppatchc(j))) = out(i, (numofpatches + poppatchc(j))) + (Fmats(i, j));
             } else {
-              totalvec(numofpatches + loy2c(j, 1)) = totalvec(numofpatches + loy2c(j, 1)) - 1;
+              totalvec(numofpatches + poppatchc(j)) = totalvec(numofpatches + poppatchc(j)) - 1;
             }
           }
           
@@ -263,6 +265,11 @@ arma::mat geodiesel(int geom, int sparse, int numofpops, int numofpatches, int n
 //' indepenently of the associated \code{U} and \code{F} matrices. Used to power the
 //' \code{\link{lmean}()} function.
 //' 
+//' @param loy2c A data frame denoting the population, patch, and time step designation
+//' of each matrix. Includes 9 variables.
+//' @param Umats A matrix with all U matrices turned into columns.
+//' @param Fmats A matrix with all F matrices turned into columns.
+//' @param Amats A matrix with all A matrices turned into columns.
 //' @param geom Should the mean across time be geometric (1) or arithmetic (0)?
 //' @param sparse Should 0s be ignored when some matrices include non-zero entries
 //' in common elements?
@@ -270,11 +277,6 @@ arma::mat geodiesel(int geom, int sparse, int numofpops, int numofpatches, int n
 //' @param numofpatches Number of patches to be analyzed, where this number should
 //' include a patch total across all populations.
 //' @param numofyears Number of time steps to be analyzed.
-//' @param loy2c Matrix denoting the population, patch, and time step designation
-//' of each matrix.
-//' @param Umats A matrix with all U matrices turned into columns.
-//' @param Fmats A matrix with all F matrices turned into columns.
-//' @param Amats A matrix with all A matrices turned into columns.
 //' 
 //' @return A matrix with 3n columns, where n is the sum of the number of patches and
 //' populations. Each pop/patch has its own set of three columns denoting survival,
@@ -282,13 +284,15 @@ arma::mat geodiesel(int geom, int sparse, int numofpops, int numofpatches, int n
 //' 
 //' @keywords internal
 //' @noRd
-//[[Rcpp::export]]
-arma::mat turbogeodiesel(int geom, int sparse, int numofpops, int numofpatches, int numofyears, 
-                         arma::mat loy2c, arma::mat Umats, arma::mat Fmats, arma::mat Amats) {
-  
+// [[Rcpp::export]]
+arma::mat turbogeodiesel(DataFrame loy, arma::mat Umats, arma::mat Fmats, arma::mat Amats, int geom, 
+                         int sparse, int numofpops, int numofpatches, int numofyears) {
   
   int elements = Umats.n_rows;
   int matrices = Umats.n_cols - 1;
+  
+  arma::vec poppatchc = loy["poppatchc"];
+  arma::vec yearsinpatch = loy["yearsinpatch"];
   
   arma::vec indexmatU = Umats.col(matrices);
   arma::vec indexmatF = Fmats.col(matrices);
@@ -308,22 +312,22 @@ arma::mat turbogeodiesel(int geom, int sparse, int numofpops, int numofpatches, 
           for (int j = 0; j < matrices; j++) {
             //This section creates the sum of logs for each non-zero positive element
             
-            if (Umats(i, j) != 0 && out(i, loy2c(j, 1)) != 1000) {
-              out(i, loy2c(j, 1)) = out(i, loy2c(j, 1)) + (log(Umats(i, j)) / loy2c(j, 4));
+            if (Umats(i, j) != 0 && out(i, poppatchc(j)) != 1000) {
+              out(i, poppatchc(j)) = out(i, poppatchc(j)) + (log(Umats(i, j)) / yearsinpatch(j));
             } else {
-              out(i, loy2c(j, 1)) = 1000;
+              out(i, poppatchc(j)) = 1000;
             }
             
-            if (Fmats(i, j) != 0 && out(i, (numofpatches + loy2c(j, 1))) != 1000) {
-              out(i, (numofpatches + loy2c(j, 1))) = out(i, (numofpatches + loy2c(j, 1))) + (log(Fmats(i, j)) / loy2c(j, 4));
+            if (Fmats(i, j) != 0 && out(i, (numofpatches + poppatchc(j))) != 1000) {
+              out(i, (numofpatches + poppatchc(j))) = out(i, (numofpatches + poppatchc(j))) + (log(Fmats(i, j)) / yearsinpatch(j));
             } else {
-              out(i, (numofpatches + loy2c(j, 1))) = 1000;
+              out(i, (numofpatches + poppatchc(j))) = 1000;
             }
             
-            if (Amats(i, j) != 0 && out(i, (2 * numofpatches + loy2c(j, 1))) != 1000) {
-              out(i, (2 * numofpatches + loy2c(j, 1))) = out(i, (2 * numofpatches + loy2c(j, 1))) + (log(Amats(i, j)) / loy2c(j, 4));
+            if (Amats(i, j) != 0 && out(i, (2 * numofpatches + poppatchc(j))) != 1000) {
+              out(i, (2 * numofpatches + poppatchc(j))) = out(i, (2 * numofpatches + poppatchc(j))) + (log(Amats(i, j)) / yearsinpatch(j));
             } else {
-              out(i, (2 * numofpatches + loy2c(j, 1))) = 1000;
+              out(i, (2 * numofpatches + poppatchc(j))) = 1000;
             }
           }
           
@@ -371,30 +375,30 @@ arma::mat turbogeodiesel(int geom, int sparse, int numofpops, int numofpatches, 
             //This section creates a vector to keep track of the dividend in mean calculations
             
             int properindex = numofyears * l;
-            totalvec(l) = loy2c(properindex, 4);
-            totalvec(l + numofpatches) = loy2c(properindex, 4);
-            totalvec(l + 2 * numofpatches) = loy2c(properindex, 4);
+            totalvec(l) = yearsinpatch(properindex);
+            totalvec(l + numofpatches) = yearsinpatch(properindex);
+            totalvec(l + 2 * numofpatches) = yearsinpatch(properindex);
           }
           
           for (int j = 0; j < matrices; j++) {
             //This section creates the sum of logs for each non-zero positive element
             
             if (Umats(i, j) != 0) {
-              out(i, loy2c(j, 1)) = out(i, loy2c(j, 1)) + log(Umats(i, j));
+              out(i, poppatchc(j)) = out(i, poppatchc(j)) + log(Umats(i, j));
             } else {
-              totalvec(loy2c(j, 1)) = totalvec(loy2c(j, 1)) - 1;
+              totalvec(poppatchc(j)) = totalvec(poppatchc(j)) - 1;
             }
             
             if (Fmats(i, j) != 0) {
-              out(i, (numofpatches + loy2c(j, 1))) = out(i, (numofpatches + loy2c(j, 1))) + log(Fmats(i, j));
+              out(i, (numofpatches + poppatchc(j))) = out(i, (numofpatches + poppatchc(j))) + log(Fmats(i, j));
             } else {
-              totalvec(numofpatches + loy2c(j, 1)) = totalvec(numofpatches + loy2c(j, 1)) - 1;
+              totalvec(numofpatches + poppatchc(j)) = totalvec(numofpatches + poppatchc(j)) - 1;
             }
             
             if (Amats(i, j) != 0) {
-              out(i, (2 * numofpatches + loy2c(j, 1))) = out(i, (2 * numofpatches + loy2c(j, 1))) + log(Amats(i, j));
+              out(i, (2 * numofpatches + poppatchc(j))) = out(i, (2 * numofpatches + poppatchc(j))) + log(Amats(i, j));
             } else {
-              totalvec(2 * numofpatches + loy2c(j, 1)) = totalvec(2 * numofpatches + loy2c(j, 1)) - 1;
+              totalvec(2 * numofpatches + poppatchc(j)) = totalvec(2 * numofpatches + poppatchc(j)) - 1;
             }
           }
           
@@ -442,11 +446,11 @@ arma::mat turbogeodiesel(int geom, int sparse, int numofpops, int numofpatches, 
           for (int j = 0; j < matrices; j++) {
             //This section creates the means for U, F, and A elements
             
-            out(i, loy2c(j, 1)) = out(i, loy2c(j, 1)) + ((Umats(i, j)) / loy2c(j, 4));
+            out(i, poppatchc(j)) = out(i, poppatchc(j)) + ((Umats(i, j)) / yearsinpatch(j));
             
-            out(i, (numofpatches + loy2c(j, 1))) = out(i, (numofpatches + loy2c(j, 1))) + ((Fmats(i, j)) / loy2c(j, 4));
+            out(i, (numofpatches + poppatchc(j))) = out(i, (numofpatches + poppatchc(j))) + ((Fmats(i, j)) / yearsinpatch(j));
             
-            out(i, (2 * numofpatches + loy2c(j, 1))) = out(i, (2 * numofpatches + loy2c(j, 1))) + ((Amats(i, j)) / loy2c(j, 4));
+            out(i, (2 * numofpatches + poppatchc(j))) = out(i, (2 * numofpatches + poppatchc(j))) + ((Amats(i, j)) / yearsinpatch(j));
           }
           
           for (int k = 0; k < numofpatches; k++) {
@@ -471,30 +475,30 @@ arma::mat turbogeodiesel(int geom, int sparse, int numofpops, int numofpatches, 
             //This section creates a vector to keep track of the dividend in mean calculations
             
             int properindex = numofyears * l;
-            totalvec(l) = loy2c(properindex, 4);
-            totalvec(l + numofpatches) = loy2c(properindex, 4);
-            totalvec(l + 2 * numofpatches) = loy2c(properindex, 4);
+            totalvec(l) = yearsinpatch(properindex);
+            totalvec(l + numofpatches) = yearsinpatch(properindex);
+            totalvec(l + 2 * numofpatches) = yearsinpatch(properindex);
           }
           
           for (int j = 0; j < matrices; j++) {
             //This section creates the sum of logs for each non-zero positive element
             
             if (Umats(i, j) != 0) {
-              out(i, loy2c(j, 1)) = out(i, loy2c(j, 1)) + (Umats(i, j));
+              out(i, poppatchc(j)) = out(i, poppatchc(j)) + (Umats(i, j));
             } else {
-              totalvec(loy2c(j, 1)) = totalvec(loy2c(j, 1)) - 1;
+              totalvec(poppatchc(j)) = totalvec(poppatchc(j)) - 1;
             }
             
             if (Fmats(i, j) != 0) {
-              out(i, (numofpatches + loy2c(j, 1))) = out(i, (numofpatches + loy2c(j, 1))) + (Fmats(i, j));
+              out(i, (numofpatches + poppatchc(j))) = out(i, (numofpatches + poppatchc(j))) + (Fmats(i, j));
             } else {
-              totalvec(numofpatches + loy2c(j, 1)) = totalvec(numofpatches + loy2c(j, 1)) - 1;
+              totalvec(numofpatches + poppatchc(j)) = totalvec(numofpatches + poppatchc(j)) - 1;
             }
             
             if (Amats(i, j) != 0) {
-              out(i, (2 * numofpatches + loy2c(j, 1))) = out(i, (2 * numofpatches + loy2c(j, 1))) + (Amats(i, j));
+              out(i, (2 * numofpatches + poppatchc(j))) = out(i, (2 * numofpatches + poppatchc(j))) + (Amats(i, j));
             } else {
-              totalvec(2 * numofpatches + loy2c(j, 1)) = totalvec(2 * numofpatches + loy2c(j, 1)) - 1;
+              totalvec(2 * numofpatches + poppatchc(j)) = totalvec(2 * numofpatches + poppatchc(j)) - 1;
             }
           }
           

@@ -6,341 +6,322 @@ using namespace arma;
 
 //' Estimate All Elements in Raw Historical Matrix
 //' 
-//' This function swiftly calculates matrix transitions in raw historical matrices,
-//' and serves as the core workhorse function behind \code{\link{rlefko3}()}.
+//' Function \code{specialpatrolgroup} swiftly calculates matrix transitions in raw
+//' historical matrices, and serves as the core workhorse function behind \code{\link{rlefko3}()}.
 //' 
-//' @param sge9l A 7 column matrix containing information on fecundity potential,
-//' reproductive status, presence in main dataset, supplied given rates (survival
-//' and fecundity), and estimated proxy rates (survival and fecundity), 
-//' respectively, for all combinations of stage pairs at times \emph{t}+1 and \emph{t}, 
-//' and times \emph{t} and \emph{t}-1.
-//' @param sge3 A 2 column matrix containing reproductive status and fecundity 
-//' potential of stage pairs.
-//' @param maindata A 2 column matrix of raw data denoting status as alive and
-//' offspring produced.
-//' @param sge93index Full matrix index vector denoting each element with respect to
-//' From stage pair (times \emph{t} and \emph{t}-1) and To stage pair (times \emph{t}+1 and
-//' \emph{t}).
-//' @param sge92index Vector denoting From stage pair index in full matrix.
-//' @param sge32index Vector indicating overall stage pair index (baseline From
-//' pair for survival estimation).
-//' @param sge33 Vector with stage at time \emph{t}+1 in \code{sge32index}.
-//' @param sge32 Vector with stage at time \emph{t} in \code{sge32index}.
-//' @param data3221 Vector of stage-pair combination indices in raw dataset.
-//' @param data21 Vector of stage-pair indices in raw dataset, corresponding to
-//' \code{sge32index} and used in survival estimation.
-//' @param nostages The number of ahistorical stages.
+//' @param sge9l The Allstages data frame developed for rlefko3() covering stage
+//' pairs across times \emph{t}+1, \emph{t} and \emph{t}-1. Generally termed \code{stageexpansion9}.
+//' @param sge3 The data frame covering all stages in times \emph{t} and \emph{t}-1.
+//' Generally termed \code{stageexpansion3}.
+//' @param MainData The demographic dataset modified to hold \code{usedfec} columns.
+//' @param StageFrame The full stageframe for the analysis.
 //' 
-//' @return Matrix composed of the survival-transitions (U) matrix as the first 
-//' column and the fecundity matrix (F) as the second column.
+//' @return List of three matrices, including the survival-transition (U) matrix, the 
+//' fecundity matrix (F), and the sum (A) matrix, with A first.
 //' 
 //' @keywords internal
 //' @noRd
 // [[Rcpp::export]]
-arma::mat specialpatrolgroup(arma::mat sge9l, arma::mat sge3, arma::mat maindata, arma::uvec sge93index,
-                             arma::uvec sge92index, arma::uvec sge32index, arma::uvec sge33, arma::uvec sge32,
-                             arma::uvec data3221, arma::uvec data21, int nostages) {
+List specialpatrolgroup(DataFrame sge9l, DataFrame sge3, DataFrame MainData, DataFrame StageFrame) {
   
-  int n = maindata.n_rows;
-  int no2stages = sge3.n_rows;
-  int noelems = sge9l.n_rows;
+  arma::vec sge9fec32 = sge9l["b.repentry3"];
+  arma::vec sge9rep2 = sge9l["a.rep2n"];
+  arma::vec sge9indata32 = sge9l["b.indata"];
+  arma::vec sge9ovgivent = sge9l["b.ovgiven_t"];
+  arma::vec sge9ovgivenf = sge9l["c.ovgiven_f"];
+  arma::vec sge9ovestt = sge9l["b.ovest_t"];
+  arma::vec sge9ovestf = sge9l["c.ovest_f"];
+  arma::vec sge9index321 = sge9l["b.index321"]; // Dead stage combinations given as -1
+  arma::vec sge9special321 = sge9l["c.special321"]; // This is similar to index321, but with dead stage combinations also noted
+  arma::vec sge9index21 = sge9l["b.index21"]; // Thisd is sge92index - not sure if this is needed
+  arma::vec aliveandequal = sge9l["c.aliveandequal"];
   
-  arma::mat probsrates(noelems, 4); // 1st col = # indivs (3 trans), 2nd col = total indivs for pair stage,
-  // 3rd col = total indivs alive for pair stage, 4th col = total fec for pair stage,
-  probsrates.zeros();
+  arma::vec sge3rep2 = sge3["rep2n"];
+  arma::vec sge3fec32 = sge3["fec32n"];
+  arma::vec sge3index21 = sge3["index21"];
+  arma::vec sge3stage2n = sge3["stage2n"];
+  arma::vec sge3stage3 = sge3["stage3"];
+  
+  arma::vec dataindex321 = MainData["index321"];
+  arma::vec dataindex21 = MainData["pairindex21"];
+  arma::vec dataalive3 = MainData["alive3"];
+  arma::vec datausedfec2 = MainData["usedfec2"];
+  
+  arma::vec sfsizes = StageFrame["bin_size_ctr"];
+  int nostages = sfsizes.n_elem;
+  
+  int n = dataindex321.n_elem;
+  int no2stages = sge3index21.n_elem;
+  int noelems = sge9index321.n_elem;
+  
+  arma::vec probsrates0(noelems); // 1st vec = # indivs (3 trans)
+  arma::vec probsrates1(noelems); // 2nd vec = total indivs for pair stage
+  arma::vec probsrates2(noelems); // 3rd vec = total indivs alive for pair stage
+  arma::vec probsrates3(noelems); // 4th vec = total fec for pair stage
+  probsrates0.zeros();
+  probsrates1.zeros();
+  probsrates2.zeros();
+  probsrates3.zeros();
   
   arma::mat stage2fec(no2stages, 3); //1st col = # indivs total, 2nd col = no indivs alive, 3rd col = sum fec
   stage2fec.zeros();
   
+  arma::mat tmatrix(((nostages-1) * (nostages-1)), ((nostages-1) * (nostages-1))); // Main output U matrix
+  arma::mat fmatrix(((nostages-1) * (nostages-1)), ((nostages-1) * (nostages-1))); // Main output F matrix
+  tmatrix.zeros();
+  fmatrix.zeros();
+  
   for (int i = 0; i < n; i++) { // This main loop counts individuals going through transitions and sums their
     // fecundities, and then adds that info to the 3-trans and 2-trans tables
+    arma::uvec choiceelement = find(sge9index321 == dataindex321(i)); // Added this now
     
-    probsrates((data3221(i)), 0) = probsrates((data3221(i)), 0) + 1; // Yields sum of all individuals with particuar transition
+    stage2fec((dataindex21(i)), 0) = stage2fec((dataindex21(i)), 0) + 1; // Yields sum of all individuals with particular transition
     
-    stage2fec((data21(i)), 0) = stage2fec((data21(i)), 0) + 1; // Yields sum of all individuals with particuar transition
-    if (maindata(i, 0) > 0) {
-      stage2fec((data21(i)), 1) = stage2fec((data21(i)), 1) + 1;
+    if (choiceelement.n_elem > 0) {
+      probsrates0(choiceelement(0)) = probsrates0(choiceelement(0)) + 1; // Yields sum of all individuals with particular transition
+      
+      if (dataalive3(i) > 0) {
+        stage2fec((dataindex21(i)), 1) = stage2fec((dataindex21(i)), 1) + 1;
+      }
+      
+      stage2fec((dataindex21(i)), 2) = stage2fec((dataindex21(i)), 2) + datausedfec2(i);
     }
-    
-    stage2fec((data21(i)), 2) = stage2fec((data21(i)), 2) + maindata(i,1);
-    
   }
   
   for (int i = 0; i < no2stages; i++) {
-    unsigned int foradding = ((sge33(i) - 1) * nostages) + ((sge33(i) - 1) * nostages * nostages) + 
-      ((sge32(i) - 1) * nostages * nostages * nostages);
+    unsigned int foradding = ((sge3stage3(i) - 1) * nostages) + ((sge3stage3(i) - 1) * nostages * nostages) + 
+      ((sge3stage2n(i) - 1) * nostages * nostages * nostages);
     
     for (int j = 0; j < nostages; j++) {
       unsigned int entry = foradding + j;
       
-      probsrates(entry, 1) = stage2fec(i, 0);
-      probsrates(entry, 2) = stage2fec(i, 1);
-      probsrates(entry, 3) = stage2fec(i, 2);
+      probsrates1(entry) = stage2fec(i, 0);
+      probsrates2(entry) = stage2fec(i, 1);
+      probsrates3(entry) = stage2fec(i, 2);
     }
   }
   
-  arma::mat out(noelems, 2); // Main output matrix
-  
-  out.col(0) = probsrates.col(0) / probsrates.col(1); // Survival
-  out.col(1) = sge9l.col(0) % sge9l.col(1) % probsrates.col(3) / probsrates.col(1); // Fecundity
-  
-  out.elem(find_nonfinite(out)).zeros();
+  for (int elem3 = 0; elem3 < noelems; elem3++) {
+    
+    if (aliveandequal(elem3) != -1) {
+      
+      tmatrix(aliveandequal(elem3)) = probsrates0(elem3) / probsrates1(elem3); // Survival
+      fmatrix(aliveandequal(elem3)) = sge9fec32(elem3) * sge9rep2(elem3) * probsrates3(elem3) / probsrates1(elem3); // Fecundity
+    }
+  }
   
   // Now we will correct transitions and rates for given stuff
   
-  double ovgiventsum = arma::accu(sge9l.col(3)) / noelems;
-  double ovgivenfsum = arma::accu(sge9l.col(4)) / noelems;
+  arma::uvec ovgiventind = find(sge9ovgivent != -1);
+  arma::uvec ovgivenfind = find(sge9ovgivenf != -1);
+  int ovgtn = ovgiventind.n_elem;
+  int ovgfn = ovgivenfind.n_elem;
   
-  double ovesttsum = arma::accu(sge9l.col(5)) / noelems;
-  double ovestfsum = arma::accu(sge9l.col(6)) / noelems;
-  
-  if ((ovgiventsum + ovgivenfsum + ovesttsum + ovestfsum) > -4) {
-    
-    arma::uvec ovgiventind = find(sge9l.col(3) != -1);
-    arma::uvec ovgivenfind = find(sge9l.col(4) != -1);
-    arma::uvec ovesttind = find(sge9l.col(5) != -1);
-    arma::uvec ovestfind = find(sge9l.col(6) != -1);
-    
-    int ovgtn = ovgiventind.n_elem;
-    int ovgfn = ovgivenfind.n_elem;
-    int ovestn = ovesttind.n_elem;
-    int ovesfn = ovestfind.n_elem;
-    
-    if (ovgtn > 0) {
-      for (int i = 0; i < ovgtn; i++) {
-        out(ovgiventind(i), 0) = sge9l(ovgiventind(i), 3);
-      }
-    }
-    
-    if (ovgfn > 0) {
-      for (int i = 0; i < ovgfn; i++) {
-        out(ovgivenfind(i), 0) = sge9l(ovgivenfind(i), 4);
-      }
-    }
-    
-    if (ovestn > 0) {
-      for (int i = 0; i < ovestn; i++) {
-        unsigned int replacement = sge9l(ovesttind(i), 5);
-        
-        out(ovesttind(i), 0) = out(replacement, 0);
-      }
-    }
-    
-    if (ovesfn > 0) {
-      for (int i = 0; i < ovesfn; i++) {
-        unsigned int replacement = sge9l(ovestfind(i), 6);
-        
-        out(ovestfind(i), 0) = out(replacement, 0);
-      }
+  if (ovgtn > 0) {
+    for (int i = 0; i < ovgtn; i++) {
+      int matrixelement2 = aliveandequal(ovgiventind(i));
+      
+      tmatrix(matrixelement2) = sge9ovgivent(ovgiventind(i));
     }
   }
   
-  return out;
+  if (ovgfn > 0) {
+    for (int i = 0; i < ovgfn; i++) {
+      int matrixelement2 = aliveandequal(ovgivenfind(i));
+      
+      fmatrix(matrixelement2) = sge9ovgivenf(ovgivenfind(i));
+    }
+  }
+  
+  // This section replaces transitions for proxy values as given in the overwrite table  
+  arma::uvec ovesttind = find(sge9ovestt != -1);
+  arma::uvec ovestfind = find(sge9ovestf != -1);
+  int ovestn = ovesttind.n_elem;
+  int ovesfn = ovestfind.n_elem;
+  
+  if (ovestn > 0) {
+    for (int i = 0; i < ovestn; i++) {
+      arma::uvec replacement = find(sge9index321 == sge9ovestt(ovesttind(i)));
+      
+      tmatrix(aliveandequal(ovesttind(i))) = tmatrix(aliveandequal(replacement(0)));
+    }
+  }
+  
+  if (ovesfn > 0) {
+    for (int i = 0; i < ovesfn; i++) {
+      arma::uvec replacement = find(sge9index321 == sge9ovestf(ovestfind(i)));
+      
+      fmatrix(aliveandequal(ovestfind(i))) = fmatrix(aliveandequal(replacement(0)));
+    }
+  }
+  
+  // The next bit changes NA to 0
+  tmatrix(find_nonfinite(tmatrix)).zeros();
+  fmatrix(find_nonfinite(fmatrix)).zeros();
+  
+  arma::mat amatrix = tmatrix + fmatrix; // Create the A matrix
+  
+  return List::create(Named("A") = amatrix, _["U"] = tmatrix, _["F"] = fmatrix);
 }
 
 //' Estimate All Elements in Raw Ahistorical Population Projection Matrices
 //' 
-//' This function swiftly calculates matrix transitions in raw ahistorical matrices,
-//' and serves as the core workhorse function behind \code{\link{rlefko2}()}.
+//' Function \code{normalpatrolgroup} swiftly calculates matrix transitions in raw
+//' ahistorical matrices, and serves as the core workhorse function behind \code{\link{rlefko2}()}.
 //' 
-//' @param sge9l A 7 column matrix containing information on fecundity potential,
-//' reproductive status, presence in main dataset, supplied given rates (survival
-//' and fecundity), and estimated proxy rates (survival and fecundity), 
-//' respectively, for all combinations of stages at times \emph{t}+1 and \emph{t}.
-//' @param sge3 A 2 column matrix containing reproductive status and fecundity 
-//' potential of ahistorical stages.
-//' @param maindata A 2 column matrix of raw data denoting status as alive and
-//' offspring produced.
-//' @param sge93index Full matrix index vector denoting each element with respect to
-//' stage pairs (times \emph{t}+1 and \emph{t}).
-//' @param sge92index Vector denoting From stage in full matrix.
-//' @param sge32index Vector indicating overall From stage (baseline From for
-//' survival estimation).
-//' @param sge33 Vector with stage at time \emph{t} in \code{sge92index}.
-//' @param sge32 Vector with stage at time \emph{t} in \code{sge32index}.
-//' @param data3221 Vector of stage-pair indices in raw dataset.
-//' @param data21 Vector of stage indices in raw dataset, corresponding to
-//' \code{sge32index} and used in survival estimation.
-//' @param nostages The number of ahistorical stages.
+//' @param sge3 The Allstages data frame developed for rlefko2() covering stage
+//' pairs across times \emph{t}+1 and \emph{t}. Generally termed \code{stageexpansion3}.
+//' @param sge2 The data frame covering all stages in time \emph{t}. Generally termed
+//' \code{stageexpansion2}.
+//' @param MainData The demographic dataset modified to hold \code{usedfec} columns.
+//' @param StageFrame The full stageframe for the analysis.
 //' 
-//' @return Matrix composed of the survival-transitions (U) matrix as the first 
-//' column and the fecundity matrix (F) as the second column.
+//' @return List of three matrices, including the survival-transition (U) matrix, the 
+//' fecundity matrix (F), and the sum (A) matrix, with A first.
 //' 
 //' @keywords internal
 //' @noRd
 // [[Rcpp::export]]
-arma::mat normalpatrolgroup(arma::mat sge9l, arma::mat sge3, arma::mat maindata, arma::uvec sge93index,
-                            arma::uvec sge92index, arma::uvec sge32index, arma::uvec sge32,
-                            arma::uvec data3221, arma::uvec data21, int nostages) {
+List normalpatrolgroup(DataFrame sge3, DataFrame sge2, DataFrame MainData, DataFrame StageFrame) {
   
-  int n = maindata.n_rows;
-  int no2stages = sge3.n_rows;
-  int noelems = sge9l.n_rows;
+  arma::vec sge3fec32 = sge3["b.repentry3"];
+  arma::vec sge3rep2 = sge3["a.rep2n"];
+  arma::vec sge3indata32 = sge3["b.indata"];
+  arma::vec sge3ovgivent = sge3["b.ovgiven_t"];
+  arma::vec sge3ovgivenf = sge3["c.ovgiven_f"];
+  arma::vec sge3ovestt = sge3["b.ovest_t"];
+  arma::vec sge3ovestf = sge3["c.ovest_f"];
+  arma::vec sge3index32 = sge3["b.index321"];
+  arma::vec sge3index2 = sge3["a.stage2n"];
+  arma::vec aliveandequal = sge3["c.aliveandequal"];
   
-  arma::mat probsrates(noelems, 4); // 1st col = # indivs (3 trans), 2nd col = total indivs for pair stage,
-  // 3rd col = total indivs alive for pair stage, 4th col = total fec for pair stage,
-  probsrates.zeros();
+  arma::vec sge2rep2 = sge2["rep2"];
+  arma::vec sge2fec3 = sge2["fec3"];
+  arma::vec sge2index2 = sge2["index2"];
+  arma::vec sge2stage2 = sge2["stage2"];
+  
+  arma::vec dataindex32 = MainData["index32"];
+  arma::vec dataindex2 = MainData["index2"];
+  arma::vec dataalive3 = MainData["alive3"];
+  arma::vec datausedfec2 = MainData["usedfec2"];
+  
+  arma::vec sfsizes = StageFrame["bin_size_ctr"];
+  int nostages = sfsizes.n_elem;
+  
+  int n = dataindex32.n_elem;
+  int no2stages = sge2index2.n_elem;
+  int noelems = sge3index32.n_elem;
+  
+  arma::vec probsrates0(noelems); // 1st vec = # indivs (3 trans)
+  arma::vec probsrates1(noelems); // 2nd vec = total indivs for pair stage
+  arma::vec probsrates2(noelems); // 3rd vec = total indivs alive for pair stage
+  arma::vec probsrates3(noelems); // 4th vec = total fec for pair stage
+  probsrates0.zeros();
+  probsrates1.zeros();
+  probsrates2.zeros();
+  probsrates3.zeros();
   
   arma::mat stage2fec(no2stages, 3); //1st col = # indivs total, 2nd col = no indivs alive, 3rd col = sum fec
   stage2fec.zeros();
   
+  arma::mat tmatrix((nostages-1), (nostages-1)); // Main output U matrix
+  arma::mat fmatrix((nostages-1), (nostages-1)); // Main output F matrix
+  tmatrix.zeros();
+  fmatrix.zeros();
+  
   for (int i = 0; i < n; i++) { // This main loop counts individuals going through transitions and sums their
     // fecundities, and then adds that info to the 3-trans and 2-trans tables
     
-    probsrates((data3221(i)), 0) = probsrates((data3221(i)), 0) + 1; // Yields sum of all individuals with particuar transition
+    probsrates0(dataindex32(i)) = probsrates0(dataindex32(i)) + 1; // Yields sum of all individuals with particuar transition
     
-    stage2fec((data21(i)), 0) = stage2fec((data21(i)), 0) + 1; // Yields sum of all individuals with particuar transition
-    if (maindata(i, 0) > 0) {
-      stage2fec((data21(i)), 1) = stage2fec((data21(i)), 1) + 1;
+    stage2fec((dataindex2(i)), 0) = stage2fec((dataindex2(i)), 0) + 1; // Yields sum of all individuals with particuar transition
+    if (dataalive3(i) > 0) {
+      stage2fec((dataindex2(i)), 1) = stage2fec((dataindex2(i)), 1) + 1;
     }
     
-    stage2fec((data21(i)), 2) = stage2fec((data21(i)), 2) + maindata(i,1);
+    stage2fec((dataindex2(i)), 2) = stage2fec((dataindex2(i)), 2) + datausedfec2(i);
     
   }
   
   for (int i = 0; i < no2stages; i++) {
-    unsigned int foradding = ((sge32(i) - 1) * nostages);
+    unsigned int foradding = ((sge2stage2(i) - 1) * nostages);
     
     for (int j = 0; j < nostages; j++) {
       unsigned int entry = foradding + j;
       
-      probsrates(entry, 1) = stage2fec(i, 0);
-      probsrates(entry, 2) = stage2fec(i, 1);
-      probsrates(entry, 3) = stage2fec(i, 2);
+      probsrates1(entry) = stage2fec(i, 0);
+      probsrates2(entry) = stage2fec(i, 1);
+      probsrates3(entry) = stage2fec(i, 2);
     }
   }
   
-  arma::mat out(noelems, 2); // Main output matrix
-  
-  out.col(0) = probsrates.col(0) / probsrates.col(1);
-  out.col(1) = sge9l.col(0) % sge9l.col(1) % probsrates.col(3) / probsrates.col(1);
-  
-  out.elem(find_nonfinite(out)).zeros();
-  
-  // Now we will correct transitions and rates for given stuff
-  
-  double ovgiventsum = arma::accu(sge9l.col(3)) / noelems;
-  double ovgivenfsum = arma::accu(sge9l.col(4)) / noelems;
-  
-  double ovesttsum = arma::accu(sge9l.col(5)) / noelems;
-  double ovestfsum = arma::accu(sge9l.col(6)) / noelems;
-  
-  if ((ovgiventsum + ovgivenfsum + ovesttsum + ovestfsum) > -4) {
+  for (int elem3 = 0; elem3 < noelems; elem3++) {
     
-    arma::uvec ovgiventind = find(sge9l.col(3) != -1);
-    arma::uvec ovgivenfind = find(sge9l.col(4) != -1);
-    arma::uvec ovesttind = find(sge9l.col(5) != -1);
-    arma::uvec ovestfind = find(sge9l.col(6) != -1);
-    
-    int ovgtn = ovgiventind.n_elem;
-    int ovgfn = ovgivenfind.n_elem;
-    int ovestn = ovesttind.n_elem;
-    int ovesfn = ovestfind.n_elem;
-    
-    if (ovgtn > 0) {
-      for (int i = 0; i < ovgtn; i++) {
-        out(ovgiventind(i), 0) = sge9l(ovgiventind(i), 3);
-      }
-    }
-    
-    if (ovgfn > 0) {
-      for (int i = 0; i < ovgfn; i++) {
-        out(ovgivenfind(i), 0) = sge9l(ovgivenfind(i), 4);
-      }
-    }
-    
-    if (ovestn > 0) {
-      for (int i = 0; i < ovestn; i++) {
-        unsigned int replacement = sge9l(ovesttind(i), 5);
-        
-        out(ovesttind(i), 0) = out(replacement, 0);
-      }
-    }
-    
-    if (ovesfn > 0) {
-      for (int i = 0; i < ovesfn; i++) {
-        unsigned int replacement = sge9l(ovestfind(i), 6);
-        
-        out(ovestfind(i), 0) = out(replacement, 0);
-      }
+    if (aliveandequal(elem3) != -1) {
+      
+      tmatrix(aliveandequal(elem3)) = probsrates0(elem3) / probsrates1(elem3);
+      fmatrix(aliveandequal(elem3)) = sge3fec32(elem3) * sge3rep2(elem3) * probsrates3(elem3) / probsrates1(elem3);
+      
     }
   }
   
-  return out;
-}
-
-//' Creates Index of Estimable Population Projection Matrix Elements
-//' 
-//' This function identifies which matrix elements in a projection matrix are
-//' logically possible to estimate. In both historical and ahistorical matrices,
-//' this will effectively remove the Dead stage from the final matrix output. In
-//' addition, in historical matrices, this will identify matrix elements 
-//' corresponding to From and To stage-pair combinations in which stages at time \emph{t}
-//' are equal. Used in \code{\link{rlefko3}()}, \code{\link{rlefko2}()}, \code{\link{flefko3}()}, 
-//' and \code{\link{flefko2}()}.
-//' 
-//' @param mainindex Should only living elements (0) be identified, or should stages
-//' equal at time \emph{t} be identified (1)?
-//' @param allstages A 4 column matrix identifying stage at time \emph{t}+1, stage at
-//' time {t} (if historical, then in To stage-pair), stage at time \emph{t} (if
-//' historical, then in From stage pair), and stage at time \emph{t}-1 if historical
-//' or stage at time \emph{t} if ahistorical.
-//' 
-//' @return Vector of estimable matrix element indices.
-//' 
-//' @keywords internal
-//' @noRd
-// [[Rcpp::export]]
-arma::uvec hoffmannofstuttgart(int mainindex, arma::mat allstages) {
-  if (mainindex == 0) {
-    
-    arma::vec stages3 = allstages.col(0);
-    double death = stages3.max();
-    
-    arma::uvec aliverows3 = find(stages3 != death);
-    arma::uvec aliverows2n = find(allstages.col(1) != death);
-    arma::uvec aliverows2o = find(allstages.col(2) != death);
-    arma::uvec aliverows1 = find(allstages.col(3) != death);
-    
-    arma::uvec aliverows32o = intersect(aliverows3, aliverows2o);
-    arma::uvec aliverows2n1 = intersect(aliverows2n, aliverows1);
-    
-    arma::uvec aliverows = intersect(aliverows32o, aliverows2n1);
-    
-    return aliverows;
-    
-  } else if (mainindex == 1) {
-    
-    arma::vec stageratios = allstages.col(1) / allstages.col(2);
-    
-    arma::uvec equal2 = find(stageratios == 1);
-
-    return equal2;
-    
-  } else {
-    
-    arma::vec stages3 = allstages.col(0);
-    arma::vec stages2 = allstages.col(1);
-    double death = stages3.max();
-    
-    int endbit = stages3.n_elem;
-    
-    arma::uvec aliverows(endbit);
-    
-    aliverows.zeros();
-    
-    for (int i = 0; i < endbit; i++) {
-      if (stages3(i) != death && stages2(i) != death) aliverows(i) = 1;
+  // This section corrects for transitions given in the overwrite table
+  arma::uvec ovgiventind = find(sge3ovgivent != -1);
+  arma::uvec ovgivenfind = find(sge3ovgivenf != -1);
+  int ovgtn = ovgiventind.n_elem;
+  int ovgfn = ovgivenfind.n_elem;
+  
+  if (ovgtn > 0) {
+    for (int i = 0; i < ovgtn; i++) {
+      int matrixelement2 = aliveandequal(ovgiventind(i));
+      
+      tmatrix(matrixelement2) = sge3ovgivent(ovgiventind(i));
     }
-    
-    return aliverows;
   }
+  
+  if (ovgfn > 0) {
+    for (int i = 0; i < ovgfn; i++) {
+      int matrixelement2 = aliveandequal(ovgivenfind(i));
+      
+      fmatrix(matrixelement2) = sge3ovgivenf(ovgivenfind(i));
+    }
+  }
+  
+  // This section replaces transitions with proxies as given in the overwrite table
+  arma::uvec ovesttind = find(sge3ovestt != -1);
+  arma::uvec ovestfind = find(sge3ovestf != -1);
+  int ovestn = ovesttind.n_elem;
+  int ovesfn = ovestfind.n_elem;
+  
+  if (ovestn > 0) {
+    for (int i = 0; i < ovestn; i++) {
+      arma::uvec replacement = find(sge3index32 == sge3ovestt(ovesttind(i)));
+      
+      tmatrix(aliveandequal(ovesttind(i))) = tmatrix(aliveandequal(replacement(0)));
+    }
+  }
+  
+  if (ovesfn > 0) {
+    for (int i = 0; i < ovesfn; i++) {
+      arma::uvec replacement = find(sge3index32 == sge3ovestf(ovestfind(i)));
+      
+      fmatrix(aliveandequal(ovestfind(i))) = fmatrix(aliveandequal(replacement(0)));
+    }
+  }
+  
+  // The next bit changes NAs to 0
+  tmatrix(find_nonfinite(tmatrix)).zeros();
+  fmatrix(find_nonfinite(fmatrix)).zeros();
+  
+  arma::mat amatrix = tmatrix + fmatrix; // Create the A matrix
+  
+  return List::create(Named("A") = amatrix, _["U"] = tmatrix, _["F"] = fmatrix);
 }
 
 //' Estimate All Elements in Function-based Population Projection Matrices
 //' 
-//' This function swiftly calculates matrix elements in function-based population
-//' projection matrices. Used in \code{\link{flefko3}()} and \code{\link{flefko2}()}.
+//' Function \code{jerzeibalowski} swiftly calculates matrix elements in function-based
+//' population projection matrices. Used in \code{\link{flefko3}()} and \code{\link{flefko2}()}.
 //' 
 //' @param ppy A data frame with one row, showing the population, patch, and year.
 //' @param AllStages A large data frame giving all required inputs for vital rate
@@ -400,7 +381,7 @@ arma::uvec hoffmannofstuttgart(int mainindex, arma::mat allstages) {
 //' 
 //' @keywords internal
 //' @noRd
-//[[Rcpp::export]]
+// [[Rcpp::export]]
 List jerzeibalowski(DataFrame ppy, DataFrame AllStages, List survproxy, List obsproxy,
                     List sizeproxy, List repstproxy, List fecproxy, List jsurvproxy,
                     List jobsproxy, List jsizeproxy, List jrepstproxy, double survdev,
@@ -411,8 +392,8 @@ List jerzeibalowski(DataFrame ppy, DataFrame AllStages, List survproxy, List obs
                     double maxsize, int sizedist, int fecdist, bool negfec) {
   
   
-  // The DataFrame introduces variables used in size and fecundity calculations. This DataFrame is
-  // broken up into long vectors composed of input sizes and related variables for these calculations. 
+  // The DataFrame AllStages introduces variables used in size and fecundity calculations. This DataFrame
+  // is broken up into long vectors composed of input sizes and related variables for these calculations. 
   // The "model" Lists bring in the vital rate models, and include random coefficients
   // where needed. We also have a number of extra variables, that include such info as whether to use
   // the Poisson, negative binomial, and Gaussian for size and fecundity calculations. If either sizedist
@@ -463,46 +444,46 @@ List jerzeibalowski(DataFrame ppy, DataFrame AllStages, List survproxy, List obs
   arma::vec jsizeyear = jsizeproxy["years"];
   arma::vec jrepstyear = jrepstproxy["years"];
   
-  arma::vec stage3 = AllStages[0];
-  Rcpp::NumericVector stage2n = AllStages[1];
-  Rcpp::NumericVector stage1 = AllStages[3];
-  Rcpp::NumericVector sz3 = AllStages[4];
-  Rcpp::NumericVector sz2n = AllStages[5];
-  Rcpp::NumericVector sz1 = AllStages[7];
-  Rcpp::NumericVector ob3 = AllStages[8];
-  Rcpp::NumericVector ob2n = AllStages[9];
-  Rcpp::NumericVector ob1 = AllStages[11];
-  Rcpp::NumericVector fl3 = AllStages[12];
-  Rcpp::NumericVector fl2n = AllStages[13];
-  Rcpp::NumericVector fl1 = AllStages[15];
-  Rcpp::NumericVector mat3 = AllStages[16];
-  Rcpp::NumericVector mat2n = AllStages[17];
-  Rcpp::NumericVector mat1 = AllStages[19];
-  Rcpp::NumericVector immat3 = AllStages[20];
-  Rcpp::NumericVector immat2n = AllStages[21];
-  Rcpp::NumericVector immat1 = AllStages[23];
-  Rcpp::NumericVector indata2 = AllStages[26];
-  Rcpp::NumericVector repentry = AllStages[24];
-  Rcpp::NumericVector binwidth3 = AllStages[29];
-  Rcpp::NumericVector minage3 = AllStages[30];
-  Rcpp::NumericVector minage2 = AllStages[31];
-  Rcpp::NumericVector maxage3 = AllStages[32];
-  Rcpp::NumericVector maxage2 = AllStages[33];
-  Rcpp::NumericVector actualage2 = AllStages[34];
-  arma::uvec index321 = AllStages[35];
-  arma::vec ovestt = AllStages[36];
-  Rcpp::NumericVector ovgivent = AllStages[37];
-  arma::vec ovestf = AllStages[38];
-  Rcpp::NumericVector ovgivenf = AllStages[39];
-  Rcpp::NumericVector indata = AllStages[40];
-  Rcpp::NumericVector aliveandequal = AllStages[41];
+  arma::vec stage3 = AllStages["a.stage3"];
+  Rcpp::NumericVector stage2n = AllStages["a.stage2n"];
+  Rcpp::NumericVector stage1 = AllStages["a.stage1"];
+  Rcpp::NumericVector sz3 = AllStages["a.size3"];
+  Rcpp::NumericVector sz2n = AllStages["a.size2n"];
+  Rcpp::NumericVector sz1 = AllStages["a.size1"];
+  Rcpp::NumericVector ob3 = AllStages["a.obs3"];
+  Rcpp::NumericVector ob2n = AllStages["a.obs2n"];
+  Rcpp::NumericVector ob1 = AllStages["a.obs1"];
+  Rcpp::NumericVector fl3 = AllStages["a.rep3"];
+  Rcpp::NumericVector fl2n = AllStages["a.rep2n"];
+  Rcpp::NumericVector fl1 = AllStages["a.rep1"];
+  Rcpp::NumericVector mat3 = AllStages["a.mat3"];
+  Rcpp::NumericVector mat2n = AllStages["a.mat2n"];
+  Rcpp::NumericVector mat1 = AllStages["a.mat1"];
+  Rcpp::NumericVector immat3 = AllStages["b.imm3"];
+  Rcpp::NumericVector immat2n = AllStages["b.imm2n"];
+  Rcpp::NumericVector immat1 = AllStages["b.imm1"];
+  Rcpp::NumericVector indata2 = AllStages["b.indata2n"];
+  Rcpp::NumericVector repentry = AllStages["b.repentry3"];
+  Rcpp::NumericVector binwidth3 = AllStages["b.binwidth"];
+  Rcpp::NumericVector minage3 = AllStages["b.minage3"];
+  Rcpp::NumericVector minage2 = AllStages["b.minage2"];
+  Rcpp::NumericVector maxage3 = AllStages["b.maxage3"];
+  Rcpp::NumericVector maxage2 = AllStages["b.maxage2"];
+  Rcpp::NumericVector actualage2 = AllStages["b.actualage"];
+  arma::uvec index321 = AllStages["b.index321"];
+  Rcpp::NumericVector indata = AllStages["b.indata"];
+  arma::vec ovestt = AllStages["b.ovest_t"];
+  Rcpp::NumericVector ovgivent = AllStages["b.ovgiven_t"];
+  arma::vec ovestf = AllStages["c.ovest_f"];
+  Rcpp::NumericVector ovgivenf = AllStages["c.ovgiven_f"];
+  Rcpp::NumericVector aliveandequal = AllStages["c.aliveandequal"];
   
   int n = stage3.n_elem;
   
-  arma::uvec years = ppy[5];
+  arma::uvec years = ppy["yearorder"];
   int yearnumber = years(0) - 1;
   
-  arma::uvec patches = ppy[4];
+  arma::uvec patches = ppy["patchorder"];
   int patchnumber = patches(0) - 1;
   
   int survl = survcoefs.n_elem;

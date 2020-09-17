@@ -118,7 +118,6 @@
 #' cypframe_raw$comments[(cypframe_raw$stagenames == "XLg")] <- "Extra large adult (>10 shoots)"
 #' 
 #' cypframe_raw
-
 #' @export
 sf_create <- function(sizes, stagenames = NA, repstatus = 1, obsstatus = 1, propstatus = NA, 
                       immstatus = NA, matstatus = 1, minage = NA, maxage = NA, indataset = NA, 
@@ -229,7 +228,7 @@ sf_create <- function(sizes, stagenames = NA, repstatus = 1, obsstatus = 1, prop
     sfmat <- cbind.data.frame(stagenames = as.character(stagenames), size = sizes, repstatus = repstatus, 
                               obsstatus = obsstatus, propstatus = propstatus, immstatus = immstatus, 
                               matstatus = matstatus, indataset = indataset, binhalfwidth_raw = binhalfwidth, 
-                              stringsAsFactors = FALSE)
+                              min_age = NA, max_age = NA, stringsAsFactors = FALSE)
   } else {
     sfmat <- cbind.data.frame(stagenames = as.character(stagenames), size = sizes, repstatus = repstatus, 
                               obsstatus = obsstatus, propstatus = propstatus, immstatus = immstatus, 
@@ -391,6 +390,8 @@ sf_create <- function(sizes, stagenames = NA, repstatus = 1, obsstatus = 1, prop
   if (!no_age) {
     newstuff <- cbind.data.frame(newstuff, min_age = rep(ipmdata$min_age[loipmstage], length.out = currentbins),
                                  max_age = rep(ipmdata$max_age[loipmstage], length.out = currentbins))
+  } else {
+    newstuff <- cbind.data.frame(newstuff, min_age = NA, max_age = NA)
   }
   
   return(newstuff)
@@ -679,6 +680,9 @@ sf_create <- function(sizes, stagenames = NA, repstatus = 1, obsstatus = 1, prop
   if (age) {
     stageframe.reassessed <- cbind.data.frame(stageframe.reassessed, min_age = c(as.numeric(minage.vec.r), 0),
                                               max_age = c(as.numeric(maxage.vec.r), 0))
+  } else {
+    stageframe.reassessed <- cbind.data.frame(stageframe.reassessed, min_age = NA,
+                                              max_age = NA)
   }
   
   com.vec.r <- c(com.vec.r, "Dead")
@@ -768,24 +772,31 @@ sf_create <- function(sizes, stagenames = NA, repstatus = 1, obsstatus = 1, prop
 #' probability (1) or a fecundity rate (2).}
 #' 
 #' @examples
-#' cypover2r <- overwrite(stage3 = c("SD", "P1", "P2", "P3", "D", "XSm", "Sm", "SL", "SL"),
-#'                        stage2 = c("SD", "SD", "P1", "P2", "P3", "P3", "P3", "P3", "SL"),
-#'                        eststage3 = c(NA, NA, NA, NA, "D", "XSm", "Sm", NA, NA),
-#'                        eststage2 = c(NA, NA, NA, NA, "D", "D", "D", NA, NA),
-#'                        givenrate = c(0.1, 0.2, 0.2, 0.2, NA, NA, NA, 0.25, 0.4),
-#'                        type = c("S", "S", "S", "S", "S", "S", "S", "S", "S"))
+#' cypover2r <- overwrite(stage3 = c("SD", "P1", "P2", "P3", "SL", "SL", "D", 
+#'                        "XSm", "Sm"), stage2 = c("SD", "SD", "P1", "P2", "P3", 
+#'                        "SL", "SL", "SL", "SL"), eststage3 = c(NA, NA, NA, NA, 
+#'                        NA, NA, "D", "XSm", "Sm"), eststage2 = c(NA, NA, NA, NA, 
+#'                        NA, NA, "XSm", "XSm", "XSm"), givenrate = c(0.1, 0.2, 
+#'                        0.2, 0.2, 0.25, 0.4, NA, NA, NA), type = c("S", "S", "S",
+#'                        "S", "S", "S", "S", "S", "S"))
 #' 
 #' cypover2r
 #' 
-#' cypover3r <- overwrite(stage3 = c("SD", "SD", "P1", "P1", "P2", "P3", "D", "XSm", "Sm",
-#'                        "SL", "SL", "SL"), stage2 = c("SD", "SD", "SD", "SD", "P1", "P2",
-#'                        "P3", "P3", "P3", "P3", "SL", "SL"), stage1 = c("SD", "rep", "SD",
-#'                        "rep", "SD", "P1", "P2", "P2", "P2", "P2", "P3", "SL"),
-#'                        eststage3 = c(NA, NA, NA, NA, NA, NA, "D", "XSm", "Sm", NA, NA, NA),
-#'                        eststage2 = c(NA, NA, NA, NA, NA, NA, "D", "D", "D", NA, NA, NA),
-#'                        eststage1 = c(NA, NA, NA, NA, NA, NA, "D", "D", "D", NA, NA, NA),
-#'                        givenrate = c(0.1, 0.1, 0.2, 0.2, 0.2, 0.2, NA, NA, NA, 0.25, 0.4, 0.4),
-#'                        type = c("S", "S", "S", "S", "S", "S", "S", "S", "S", "S", "S", "S"))
+#' cypover3r <- overwrite(stage3 = c("SD", "SD", "P1", "P1", "P2", "P3", "SL", 
+#'                        "SL", "SL", "D", "XSm", "Sm", "D", "XSm", "Sm"), 
+#'                        stage2 = c("SD", "SD", "SD", "SD", "P1", "P2", "P3", 
+#'                        "SL", "SL", "SL", "SL", "SL", "SL", "SL", "SL"),
+#'                        stage1 = c("SD", "rep", "SD", "rep", "SD", "P1", "P2", 
+#'                        "P3", "SL", "P3", "P3", "P3", "SL", "SL", "SL"),
+#'                        eststage3 = c(NA, NA, NA, NA, NA, NA, NA, NA, NA, "D", 
+#'                        "XSm", "Sm", "D", "XSm", "Sm"), eststage2 = c(NA, NA, NA, 
+#'                        NA, NA, NA, NA, NA, NA, "XSm", "XSm", "XSm", "XSm", "XSm",
+#'                        "XSm"), eststage1 = c(NA, NA, NA, NA, NA, NA, NA, NA, NA,
+#'                        "XSm", "XSm", "XSm", "XSm", "XSm", "XSm"), 
+#'                        givenrate = c(0.1, 0.1, 0.2, 0.2, 0.2, 0.2, 0.25, 0.4,
+#'                        0.4, NA, NA, NA, NA, NA, NA), type = c("S", "S", "S", 
+#'                        "S", "S", "S", "S", "S", "S", "S", "S", "S", "S", "S", 
+#'                        "S"))
 #' 
 #' cypover3r
 #' 
@@ -860,41 +871,57 @@ overwrite <- function(stage3, stage2, stage1 = NA, eststage3 = NA, eststage2 = N
 #' @noRd
 .overwrite_reassess <- function(overwritetable, stageframe, historical) {
   
-  #First we make sure that the data is in the right format  
-  overwritetable$stage3 <- as.character(overwritetable$stage3)
-  overwritetable$stage2 <- as.character(overwritetable$stage2)
-  overwritetable$stage1 <- as.character(overwritetable$stage1)
-  overwritetable$eststage3 <- as.character(overwritetable$eststage3)
-  overwritetable$eststage2 <- as.character(overwritetable$eststage2)
-  overwritetable$eststage1 <- as.character(overwritetable$eststage1)
-  
-  #Now we will take some codes and replace them with actual stages, and check for some stop conditions
-  if (historical == TRUE) {
-    reassessed <- apply(as.matrix(c(1:dim(overwritetable)[1])), 1, function(X) {
-      checkna2vec <- c(overwritetable[X, "stage3"], overwritetable[X, "stage2"])
-      
-      if (!all(!is.na(checkna2vec))) {
-        stop("All entries for stage2 and stage3 in overwrite table must refer to possible life history stages and cannot include NAs.")
-      }
-      
-      checknaestvec <- c(overwritetable[X, "eststage3"], overwritetable[X, "eststage2"], overwritetable[X, "eststage1"])
-      
-      if (all(is.na(checknaestvec)) | all(!is.na(checknaestvec))) {
-        if (!is.na(overwritetable[X, "stage1"])) {
-          if (is.element(overwritetable[X, "stage1"], stageframe$orig_stage_id)) {
-            return(overwritetable[X,])
-          } else if (overwritetable[X, "stage1"] == "rep") {
-            shrubbery <- cbind.data.frame(stage3 = overwritetable[X, "stage3"], 
-                                          stage2 = overwritetable[X, "stage2"], 
-                                          stage1 = stageframe$orig_stage_id[which(stageframe$repstatus == 1)], 
-                                          eststage3 = overwritetable[X, "eststage3"], 
-                                          eststage2 = overwritetable[X, "eststage2"], 
-                                          eststage1 = overwritetable[X, "eststage1"],
-                                          givenrate = overwritetable[X, "givenrate"], 
-                                          convtype = overwritetable[X, "convtype"])
+  if (!all(is.na(overwritetable))) {
+    #First we make sure that the data is in the right format  
+    overwritetable$stage3 <- as.character(overwritetable$stage3)
+    overwritetable$stage2 <- as.character(overwritetable$stage2)
+    overwritetable$stage1 <- as.character(overwritetable$stage1)
+    overwritetable$eststage3 <- as.character(overwritetable$eststage3)
+    overwritetable$eststage2 <- as.character(overwritetable$eststage2)
+    overwritetable$eststage1 <- as.character(overwritetable$eststage1)
+    
+    #Now we will take some codes and replace them with actual stages, and check for some stop conditions
+    if (historical == TRUE) {
+      reassessed <- apply(as.matrix(c(1:dim(overwritetable)[1])), 1, function(X) {
+        checkna2vec <- c(overwritetable[X, "stage3"], overwritetable[X, "stage2"])
+        
+        if (!all(!is.na(checkna2vec))) {
+          stop("All entries for stage2 and stage3 in overwrite table must refer to possible life history stages and cannot include NAs.")
+        }
+        
+        checknaestvec <- c(overwritetable[X, "eststage3"], overwritetable[X, "eststage2"], overwritetable[X, "eststage1"])
+        
+        if (all(is.na(checknaestvec)) | all(!is.na(checknaestvec))) {
+          if (!is.na(overwritetable[X, "stage1"])) {
+            if (is.element(overwritetable[X, "stage1"], stageframe$orig_stage_id)) {
+              return(overwritetable[X,])
+            } else if (overwritetable[X, "stage1"] == "rep") {
+              shrubbery <- cbind.data.frame(stage3 = overwritetable[X, "stage3"], 
+                                            stage2 = overwritetable[X, "stage2"], 
+                                            stage1 = stageframe$orig_stage_id[which(stageframe$repstatus == 1)], 
+                                            eststage3 = overwritetable[X, "eststage3"], 
+                                            eststage2 = overwritetable[X, "eststage2"], 
+                                            eststage1 = overwritetable[X, "eststage1"],
+                                            givenrate = overwritetable[X, "givenrate"], 
+                                            convtype = overwritetable[X, "convtype"])
+              
+              return(shrubbery)
+            } else if (overwritetable[X, "stage1"] == "all") {
+              shrubbery <- cbind.data.frame(stage3 = overwritetable[X, "stage3"], 
+                                            stage2 = overwritetable[X, "stage2"], 
+                                            stage1 = stageframe$orig_stage_id, 
+                                            eststage3 = overwritetable[X, "eststage3"],
+                                            eststage2 = overwritetable[X, "eststage2"], 
+                                            eststage1 = overwritetable[X, "eststage1"],
+                                            givenrate = overwritetable[X, "givenrate"], 
+                                            convtype = overwritetable[X, "convtype"])
+              
+              return(shrubbery)
+            } else {
+              stop("Please use official stage names, NAs, or 'rep' in stage1.")
+            }
             
-            return(shrubbery)
-          } else if (overwritetable[X, "stage1"] == "all") {
+          } else if (is.na(overwritetable[X, "stage1"])) {
             shrubbery <- cbind.data.frame(stage3 = overwritetable[X, "stage3"], 
                                           stage2 = overwritetable[X, "stage2"], 
                                           stage1 = stageframe$orig_stage_id, 
@@ -906,62 +933,51 @@ overwrite <- function(stage3, stage2, stage1 = NA, eststage3 = NA, eststage2 = N
             
             return(shrubbery)
           } else {
-            stop("Please use official stage names, NAs, or 'rep' in stage1.")
+            return(overwritetable[X,])
           }
-          
-        } else if (is.na(overwritetable[X, "stage1"])) {
-          shrubbery <- cbind.data.frame(stage3 = overwritetable[X, "stage3"], 
-                                        stage2 = overwritetable[X, "stage2"], 
-                                        stage1 = stageframe$orig_stage_id, 
-                                        eststage3 = overwritetable[X, "eststage3"],
-                                        eststage2 = overwritetable[X, "eststage2"], 
-                                        eststage1 = overwritetable[X, "eststage1"],
-                                        givenrate = overwritetable[X, "givenrate"], 
-                                        convtype = overwritetable[X, "convtype"])
-          
-          return(shrubbery)
         } else {
-          return(overwritetable[X,])
+          stop("If setting transitions equal to other estimated transitions, then eststage3, eststage2, and eststage1 must refer to possible life history stages and cannot include NAs.")
         }
-      } else {
-        stop("If setting transitions equal to other estimated transitions, then eststage3, eststage2, and eststage1 must refer to possible life history stages and cannot include NAs.")
+      })
+      
+      reassessed <- do.call(rbind.data.frame, reassessed)
+      
+      checkcode <- apply(as.matrix(c(1:dim(reassessed)[1])), 1, function(X) {
+        return(paste(reassessed$stage3[X], reassessed$stage2[X], reassessed$stage1[X]))
+      })
+      
+    } else if (historical == FALSE) {
+      reassessed <- overwritetable
+      reassessed$stage1 <- NA
+      
+      if (length(reassessed$stage3) == 0) {
+        stop("No overwrite transitions listed are for ahistorical matrix use. Overwrite table will not be used.")
       }
-    })
-    
-    reassessed <- do.call(rbind.data.frame, reassessed)
-    
-    checkcode <- apply(as.matrix(c(1:dim(reassessed)[1])), 1, function(X) {
-      return(paste(reassessed$stage3[X], reassessed$stage2[X], reassessed$stage1[X]))
-    })
-    
-  } else if (historical == FALSE) {
-    reassessed <- overwritetable
-    reassessed$stage1 <- NA
-    
-    if (length(reassessed$stage3) == 0) {
-      stop("No overwrite transitions listed are for ahistorical matrix use. Overwrite table will not be used.")
+      
+      checkcode <- apply(as.matrix(c(1:dim(reassessed)[1])), 1, function(X) {
+        return(paste(reassessed$stage3[X], reassessed$stage2[X]))
+      })
+      
+    } else {
+      stop("Not clear if matrix approach is historical or ahistorical")
     }
     
-    checkcode <- apply(as.matrix(c(1:dim(reassessed)[1])), 1, function(X) {
-      return(paste(reassessed$stage3[X], reassessed$stage2[X]))
-    })
-    
+    if (length(unique(checkcode)) < length(checkcode)) {
+      dups <- checkcode[(which(duplicated(checkcode)))]
+      
+      duptest <- apply(as.matrix(c(1:length(dups))), 1, function(X) {
+        gvrvec <- reassessed$givenrate[which(checkcode == dups[X])]
+        
+        if (length(unique(gvrvec)) == 1) {thisguy = TRUE} else {thisguy = FALSE}
+        
+        return(thisguy)
+      })
+      
+      if (any(!duptest)) stop("Multiple entries with different values for the same stage transition are not allowed in the overwrite table. If performing an ahistorical analysis, then this may be due to different given rates of substitutions caused by dropping stage at time t-1, if historical transitions are used as input.")
+    }
   } else {
-    stop("Not clear if matrix approach is historical or ahistorical")
-  }
-  
-  if (length(unique(checkcode)) < length(checkcode)) {
-    dups <- checkcode[(which(duplicated(checkcode)))]
-    
-    duptest <- apply(as.matrix(c(1:length(dups))), 1, function(X) {
-      gvrvec <- reassessed$givenrate[which(checkcode == dups[X])]
-      
-      if (length(unique(gvrvec)) == 1) {thisguy = TRUE} else {thisguy = FALSE}
-      
-      return(thisguy)
-    })
-    
-    if (any(!duptest)) stop("Multiple entries with different values for the same stage transition are not allowed in the overwrite table. If performing an ahistorical analysis, then this may be due to different given rates of substitutions caused by dropping stage at time t-1, if historical transitions are used as input.")
+    reassessed <- data.frame(stage3 = NA, stage2 = NA, stage1 = NA, eststage3 = NA, eststage2 = NA, 
+                             eststage1 = NA, givenrate = NA, convtype = -1)
   }
   
   return(reassessed)
