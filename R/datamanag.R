@@ -9,22 +9,21 @@
 #' @param firstyear The first year or time of observation.
 #' @param popidcol A variable name or column number corresponding to the identity
 #' of the population for each individual.
-#' @param patchidcol A variable name or column number corresponding to the
-#' identity of the patch for each individual, if patches have been designated
-#' within populations.
-#' @param individcol A variable name or column number corresponding to the
-#' identity of each individual.
-#' @param blocksize The number of variables corresponding to each time step in 
-#' the input dataset designated in \code{data}.
-#' @param xcol A variable name or column number corresponding to the x 
-#' coordinate of each individual in Cartesian space.
-#' @param ycol A variable name or column number corresponding to the y 
-#' coordinate of each individual in Cartesian space.
+#' @param patchidcol A variable name or column number corresponding to the identity
+#' of the patch for each individual, if patches have been designated within
+#' populations.
+#' @param individcol A variable name or column number corresponding to the identity
+#' of each individual.
+#' @param blocksize The number of variables corresponding to each time in the
+#' input dataset designated in \code{data}.
+#' @param xcol A variable name or column number corresponding to the x coordinate
+#' of each individual in Cartesian space.
+#' @param ycol A variable name or column number corresponding to the y coordinate
+#' of each individual in Cartesian space.
 #' @param juvcol A variable name or column number that marks individuals in
 #' immature stages within the dataset. The \code{verticalize3()} function assumes 
-#' that immature individuals are identified in this variable marked with a 
-#' number equal to or greater than 1, and that mature individuals are marked 
-#' as 0 or NA.
+#' that immature individuals are identified in this variable marked with a number
+#' equal to or greater than 1, and that mature individuals are marked as 0 or NA.
 #' @param size1col A variable name or column number corresponding to the
 #' size entry associated with the first year or observation time in the dataset.
 #' @param size2col A second variable name or column number corresponding to the
@@ -37,136 +36,127 @@
 #' count data, and is used to in analysis of the probability of reproduction.
 #' @param repstr2col A second variable name or column number corresponding to
 #' the production of reproductive structures, such as flowers, associated with
-#' the first year or observation period in the input dataset. This can be  
-#' binomial or count data, and is used to in analysis of the probability of
-#' reproduction.
+#' the first year or observation period in the input dataset. This can be binomial
+#' or count data, and is used to in analysis of the probability of reproduction.
 #' @param fec1col A variable name or column number denoting fecundity associated
-#' with the first year or observation time in the input dataset. This may
-#' represent egg counts, fruit counts, seed production, etc.
+#' with the first year or observation time in the input dataset. This may represent
+#' egg counts, fruit counts, seed production, etc.
 #' @param fec2col A second variable name or column number denoting fecundity
 #' associated with the first year or observation time in the input dataset. This 
 #' may represent egg counts, fruit counts, seed production, etc.
 #' @param alive1col A variable name or column number that provides information
-#' an whether an individual is alive at a given time. If used, living status
-#' must be designated as binomial (living = 1, dead = 0).
-#' @param dead1col A variable name or column number that provides information
-#' an whether an individual is alive at a given time. If used, dead status
-#' must be designated as binomial (dead = 1, living = 0).
-#' @param obs1col A variable name or column number providing information on
-#' whether an individual is in an observable stage at a given time. If used,
-#' observation status must be designated as binomial (observed = 1, not 
-#' observed = 0).
+#' on whether an individual is alive at a given time. If used, living status must
+#' be designated as binomial (living = 1, dead = 0).
+#' @param dead1col A variable name or column number that provides information on
+#' whether an individual is alive at a given time. If used, dead status must be
+#' designated as binomial (dead = 1, living = 0).
+#' @param obs1col A variable name or column number providing information on whether
+#' an individual is in an observable stage at a given time. If used, observation
+#' status must be designated as binomial (observed = 1, not observed = 0).
 #' @param nonobs1col A variable name or column number providing information on
 #' whether an individual is in an unobservable stage at a given time. If used,
-#' observation status must be designated as binomial (observed = 0, not 
-#' observed = 1).
-#' @param censorcol A variable name or column number corresponding to 
-#' the first entry of a censor variable, used to distinguish between entries to 
-#' use and entries not to use, or to designate entries with special issues that 
-#' require further attention. If used, this should be associated with the first 
-#' year or observation time, and all other years or times must also have censor 
-#' columns.
-#' @param repstrrel This is a scalar modifier for that makes the variable in
-#' \code{repstr2col} equivalent to \code{repstr1col}. This can be useful if two 
-#' reproductive status variables have related but unequal units, for example
-#' if \code{repstr1col} refers to one-flowered stems while \code{repstr2col} refers to
-#' two-flowered stems. Defaults to 1.
-#' @param fecrel This is a scalar modifier for that makes the variable in
-#' \code{fec2col} equivalent to \code{fec1col}. This can be useful if two fecundity
-#' variables have related but unequal units. Defaults to 1.
-#' @param stagecol Optional variable name or column number corresponding to
-#' life history stage at a given time.
+#' observation status must be designated as binomial (not observed = 1, 
+#' observed = 0).
+#' @param censorcol A variable name or column number corresponding to the first
+#' entry of a censor variable, used to distinguish between entries to use and
+#' entries not to use, or to designate entries with special issues that require
+#' further attention. If used, this should be associated with the first year or
+#' observation time, and all other years or times must also have censor columns.
+#' @param repstrrel This is a scalar multiplier on variable \code{repstr2col} to
+#' make it equivalent to \code{repstr1col}. This can be useful if two reproductive
+#' status variables have related but unequal units, for example if \code{repstr1col}
+#' refers to one-flowered stems while \code{repstr2col} refers to two-flowered
+#' stems. Defaults to 1.
+#' @param fecrel This is a scalar multiplier on variable \code{fec2col} to make it
+#' equivalent to \code{fec1col}. This can be useful if two fecundity variables have
+#' related but unequal units. Defaults to 1.
+#' @param stagecol Optional variable name or column number corresponding to life
+#' history stage at a given time.
 #' @param stageassign The stageframe object identifying the life history model
 #' being operationalized. Note that if \code{stagecol} is provided, then this
 #' stageframe is not used for stage designation.
-#' @param stagesize A variable name or column number describing which size
-#' variable to use in stage estimation. Defaults to NA, and can also take
-#' \code{sizea}, \code{sizeb}, \code{sizec}, or \code{sizeadded}, depending on which size variable 
-#' is chosen.
-#' @param censorkeep The value of the censoring variable identifying data
-#' that should be included in analysis. Defaults to 0, but may take any value
-#' including NA.
-#' @param censor A logical variable determining whether the output data
-#' should be censored using the variable defined in \code{censorcol}. Defaults
-#' to FALSE.
+#' @param stagesize A variable name or column number describing which size variable
+#' to use in stage estimation. Defaults to NA, and can also take \code{sizea}, \code{sizeb},
+#' \code{sizec}, or \code{sizeadded}, depending on which size variable is chosen.
+#' @param censorkeep The value of the censor variable identifying data to be
+#' included in analysis. Defaults to 0, but may take any value including NA.
+#' @param censor A logical variable determining whether the output data should be 
+#' censored using the variable defined in \code{censorcol}. Defaults to FALSE.
 #' @param spacing The spacing at which density should be estimated, if density
-#' estimation is desired and x and y coordinates are supplied. Given in the
-#' same units as those used in the x and y coordinates given in \code{xcol} and
-#' \code{ycol}. Defaults to NA.
-#' @param NAas0 If TRUE, then all NA entries for size and fecundity variables
-#' will be set to 0. This can help increase the sample size analyzed by
-#' \code{\link{modelsearch}()}, but should only be used when it is clear that this
-#' substitution is biologically realistic. Defaults to FALSE.
-#' @param NRasRep If TRUE, then will treat non-reproductive but mature
-#' individuals as reproductive during stage assignment. This can be useful,
-#' for example, when a matrix is desired without separation of reproductive
-#' and non-reproductive but mature stages of the same size. Only used if
-#' \code{stageassign} is set to a stageframe. Defaults to FALSE.
-#' @param reduce A logical variable determining whether invariant state
-#' variables should be removed from the output dataset. For example, if
-#' all living individuals are always observable, then variables identifying
-#' observation status are invariant and can be removed. Defaults to TRUE.
+#' estimation is desired and x and y coordinates are supplied. Given in the same
+#' units as those used in the x and y coordinates given in \code{xcol} and \code{ycol}.
+#' Defaults to NA.
+#' @param NAas0 If TRUE, then all NA entries for size and fecundity variables will
+#' be set to 0. This can help increase the sample size analyzed by \code{\link{modelsearch}()},
+#' but should only be used when it is clear that this substitution is biologically
+#' realistic. Defaults to FALSE.
+#' @param NRasRep If TRUE, then will treat non-reproductive but mature individuals
+#' as reproductive during stage assignment. This can be useful when a matrix is
+#' desired without separation of reproductive and non-reproductive but mature
+#' stages of the same size. Only used if \code{stageassign} is set to a stageframe.
+#' Defaults to FALSE.
+#' @param reduce A logical variable determining whether unused variables and some
+#' invariant state variables should be removed from the output dataset. Defaults to
+#' TRUE.
 #' 
-#' @return If all inputs are properly formatted, then this function will output
-#' a historical vertical data frame, meaning that the output data frame will have
-#' three consecutive years of size and reproductive data per individual per row.
-#' This data frame is in standard format for all functions used in \code{lefko3},
-#' and so can be used without further modification.
+#' @return If all inputs are properly formatted, then this function will output a
+#' historical vertical data frame (class \code{hfvdata}), meaning that the output
+#' data frame will have three consecutive times of size and reproductive data per 
+#' individual per row. This data frame is in standard format for all functions used
+#' in \code{lefko3}, and so can be used without further modification.
 #' 
-#' Variables in this data frame include the following:
+#' @return Variables in this data frame include the following:
 #' \item{rowid}{Unique identifier for the row of the data frame.}
 #' \item{popid}{Unique identifier for the population, if given.}
-#' \item{patchid}{Unique identifier for patch within population, if
-#' given.}
+#' \item{patchid}{Unique identifier for patch within population, if given.}
 #' \item{individ}{Unique identifier for the individual.}
-#' \item{year2}{Year or time step at time \emph{t}.}
-#' \item{xpos,ypos}{X and Y position in Cartesian space, if given.}
-#' \item{sizea1,sizea2,sizea3}{Main size measurement in times \emph{t}-1, 
-#' \emph{t}, and \emph{t}+1, respectively.}
-#' \item{sizeb1,sizeb2,sizeb3}{Secondary size measurement in times 
-#' \emph{t}-1, \emph{t}, and \emph{t}+1, respectively.}
-#' \item{sizec1,sizec2,sizec3}{Tertiary measurement in times \emph{t}-1, 
-#' \emph{t}, and \emph{t}+1, respectively.}
-#' \item{censor1,censor2,censor3}{Censor state values in times \emph{t}-1,
-#' \emph{t}, and \emph{t}+1.}
-#' \item{repstra1,repstrb1,repstrc1}{Main, secondary, and tertiary numbers of 
-#' reproductive structures in time \emph{t}-1.}
-#' \item{repstra2,repstrb2,repstrc2}{Main, secondary, and tertiary numbers of 
-#' reproductive structures in time \emph{t}.}
-#' \item{repstra3,repstrb3,repstrc3}{Main, secondary, and tertiary numbers of 
-#' reproductive structures in time \emph{t}+1.}
-#' \item{feca1,fecb1}{Main and secondary numbers of offspring in time 
-#' \emph{t}-1.}
-#' \item{feca2,fecb2}{Main and secondary numbers of offspring in time 
-#' \emph{t}.}
-#' \item{feca3,fecb3}{Main and secondary numbers of offspring in time 
-#' \emph{t}+1.}
-#' \item{size1added,size2added,size3added}{Sum of primary, secondary, and
-#' tertiary size measurements in timea \emph{t}-1, \emph{t}, and \emph{t}+1, 
-#' respectively.}
-#' \item{repstr1added,repstr2added,repstr3added}{Sum of primary, secondary,
-#' and tertiary reproductive structures in times \emph{t}-1, \emph{t}, and 
-#' \emph{t}+1, respectively.}
-#' \item{fec1added,fec2added,fec3added}{Sum of primary and secondary 
-#' fecundity in times \emph{t}-1, \emph{t}, and \emph{t}+1, respectively.}
-#' \item{obsstatus1,obsstatus2,obsstatus3}{Binomial observation state in times
-#' \emph{t}-1, \emph{t}, and \emph{t}+1, respectively.}
-#' \item{repstatus1,repstatus2,repstatus3}{Binomial reproductive state in 
-#' times \emph{t}-1, \emph{t}, and \emph{t}+1, respectively.}
-#' \item{fecstatus1,fecstatus2,fecstatus3}{Binomial offspring production
-#' state in times \emph{t}-1, \emph{t}, and \emph{t}+1, respectively.}
-#' \item{firstseen}{Year or time step of first observation.}
-#' \item{lastseen}{Year or time step of last observation.}
-#' \item{xcorr,ycorr}{Overall x and y coordinates of individual in
-#' Cartesian space.}
-#' \item{alive1,alive2,alive3}{Binomial state as alive in times \emph{t}-1, 
-#' \emph{t}, and \emph{t}+1, respectively.}
+#' \item{year2}{Year or time at time \emph{t}.}
+#' \item{firstseen}{Year or time of first observation.}
+#' \item{lastseen}{Year or time of last observation.}
 #' \item{obsage}{Observed age in time \emph{t}, assuming first observation
 #' corresponds to age = 0.}
-#' \item{obslifespan}{Observed lifespan, given as `lastseen - firstseen + 1`.}
-#' \item{matstatus1,matstatus2,matstatus3}{Binomial state as mature.}
-#' \item{density}{Density of individuals per unit designated in `spacing`.
-#' Only given if spacing is not NA.}
+#' \item{obslifespan}{Observed lifespan, given as \code{lastseen - firstseen + 1}.}
+#' \item{xpos1,xpos2,xpos3}{X position in Cartesian space in times \emph{t}-1, \emph{t},
+#' and \emph{t}+1, respectively, if provided.}
+#' \item{ypos1,ypos2,ypos3}{Y position in Cartesian space in times \emph{t}-1, \emph{t},
+#' and \emph{t}+1, respectively, if provided.}
+#' \item{sizea1,sizea2,sizea3}{Main size measurement in times \emph{t}-1, \emph{t}, and 
+#' \emph{t}+1, respectively.}
+#' \item{sizeb1,sizeb2,sizeb3}{Secondary size measurement in times \emph{t}-1, \emph{t},
+#' and \emph{t}+1, respectively.}
+#' \item{sizec1,sizec2,sizec3}{Tertiary measurement in times \emph{t}-1, \emph{t}, and
+#' \emph{t}+1, respectively.}
+#' \item{size1added,size2added,size3added}{Sum of primary, secondary, and tertiary
+#' size measurements in timea \emph{t}-1, \emph{t}, and \emph{t}+1, respectively.}
+#' \item{repstra1,repstra2,repstra3}{Main numbers of reproductive structures in
+#' times \emph{t}-1, \emph{t}, and \emph{t}+1, respectively.}
+#' \item{repstrb1,repstrb2,repstrb3}{Secondary numbers of reproductive structures
+#' in times \emph{t}-1, \emph{t}, and \emph{t}+1, respectively.}
+#' \item{repstr1added,repstr2added,repstr3added}{Sum of primary and secondary
+#' reproductive structures in times \emph{t}-1, \emph{t}, and \emph{t}+1, respectively.}
+#' \item{feca1,feca2,feca3}{Main numbers of offspring in times \emph{t}-1, \emph{t}, and 
+#' \emph{t}+1, respectively.}
+#' \item{fecb1,fecb2, fecb3}{Secondary numbers of offspring in times \emph{t}-1, \emph{t},
+#' and \emph{t}+1, respectively.}
+#' \item{fec1added,fec2added,fec3added}{Sum of primary and secondary fecundity in
+#' times \emph{t}-1, \emph{t}, and \emph{t}+1, respectively.}
+#' \item{censor1,censor2,censor3}{Censor state values in times \emph{t}-1, \emph{t}, and
+#' \emph{t}+1, respectively.}
+#' \item{juvgiven1,juvgiven2,juvgiven3}{Binomial variable indicating whether
+#' individual is juvenile in times \emph{t}-1, \emph{t}, and \emph{t}+1. Only given if 
+#' \code{juvcol} is provided.}
+#' \item{obsstatus1,obsstatus2,obsstatus3}{Binomial observation state in times
+#' \emph{t}-1, \emph{t}, and \emph{t}+1, respectively.}
+#' \item{repstatus1,repstatus2,repstatus3}{Binomial reproductive state in times 
+#' \emph{t}-1, \emph{t}, and \emph{t}+1, respectively.}
+#' \item{fecstatus1,fecstatus2,fecstatus3}{Binomial offspring production state in
+#' times \emph{t}-1, \emph{t}, and \emph{t}+1, respectively.}
+#' \item{matstatus1,matstatus2,matstatus3}{Binomial maturity state in times \emph{t}-1, 
+#' \emph{t}, and \emph{t}+1, respectively.}
+#' \item{alive1,alive2,alive3}{Binomial state as alive in times \emph{t}-1, \emph{t},
+#' and \emph{t}+1, respectively.}
+#' \item{density}{Density of individuals per unit designated in \code{spacing}. Only
+#' given if spacing is not NA.}
 #' 
 #' @examples
 #' data(lathyrus)
@@ -650,208 +640,201 @@ verticalize3 <- function(data, noyears, firstyear, popidcol = 0, patchidcol = 0,
 #' 
 #' \code{historicalize3()} returns a vertically formatted demographic data frame
 #' organized to create historical projection matrices, given a vertically but
-#' ahistorically formatted data frame. This data frame is in standard 'lefko3'
+#' ahistorically formatted data frame. This data frame is in standard \code{lefko3}
 #' format and can be used in all functions in the package.
 #'
 #' @param data The horizontal data file.
 #' @param popidcol A variable name or column number corresponding to the identity
 #' of the population for each individual.
-#' @param patchidcol A variable name or column number corresponding to the
-#' identity of the patch for each individual, if patches have been designated
-#' within populations.
-#' @param individcol A variable name or column number corresponding to the
+#' @param patchidcol A variable name or column number corresponding to the identity
+#' of the patch for each individual, if patches have been designated within
+#' populations.
+#' @param individcol A variable name or column number corresponding to the unique
 #' identity of each individual.
-#' @param year2col A variable name or column number corresponding to the year
-#' or time step in time \emph{t}.
-#' @param year3col A variable name or column number corresponding to the year
-#' or time step in time \emph{t}+1.
-#' @param xcol A variable name or column number corresponding to the x 
-#' coordinate of each individual in Cartesian space.
-#' @param ycol A variable name or column number corresponding to the y 
-#' coordinate of each individual in Cartesian space.
-#' @param sizea2col A variable name or column number corresponding to
-#' the primary size entry in time \emph{t}.
-#' @param sizea3col A variable name or column number corresponding to
-#' the primary size entry in time \emph{t}+1.
-#' @param sizeb2col A variable name or column number corresponding to
-#' the secondary size entry in time \emph{t}.
-#' @param sizeb3col A variable name or column number corresponding to
-#' the secondary size entry in time \emph{t}+1.
-#' @param sizec2col A variable name or column number corresponding to
-#' the tertiary size entry in time \emph{t}.
-#' @param sizec3col A variable name or column number corresponding to
-#' the tertiary size entry in time \emph{t}+1.
+#' @param year2col A variable name or column number corresponding to the year or
+#' time in time \emph{t}.
+#' @param year3col A variable name or column number corresponding to the year or
+#' time in time \emph{t}+1.
+#' @param xcol A variable name or column number corresponding to the x coordinate
+#' of each individual in Cartesian space.
+#' @param ycol A variable name or column number corresponding to the y coordinate
+#' of each individual in Cartesian space.
+#' @param sizea2col A variable name or column number corresponding to the primary
+#' size entry in time \emph{t}.
+#' @param sizea3col A variable name or column number corresponding to the primary 
+#' size entry in time \emph{t}+1.
+#' @param sizeb2col A variable name or column number corresponding to the
+#' secondary size entry in time \emph{t}.
+#' @param sizeb3col A variable name or column number corresponding to the
+#' secondary size entry in time \emph{t}+1.
+#' @param sizec2col A variable name or column number corresponding to the tertiary
+#' size entry in time \emph{t}.
+#' @param sizec3col A variable name or column number corresponding to the tertiary
+#' size entry in time \emph{t}+1.
 #' @param repstra2col A variable name or column number corresponding to the
-#' production of reproductive structures, such as flowers, in time \emph{t}. 
-#' This can be binomial or count data, and is used to in analysis of the 
-#' probability of reproduction.
+#' production of reproductive structures, such as flowers, in time \emph{t}. This can
+#' be binomial or count data, and is used to in analysis of the probability of 
+#' reproduction.
 #' @param repstra3col A variable name or column number corresponding to the
-#' production of reproductive structures, such as flowers, in time \emph{t}+1. 
-#' This can be binomial or count data, and is used to in analysis of the 
-#' probability of reproduction.
-#' @param repstrb2col A second variable name or column number corresponding 
-#' to the production of reproductive structures, such as flowers, in time
-#' \emph{t}. This can be binomial or count data.
-#' @param repstrb3col A second variable name or column number corresponding 
-#' to the production of reproductive structures, such as flowers, in time
-#' \emph{t}+1. This can be binomial or count data.
-#' @param feca2col A variable name or column number corresponding to fecundity
-#' in time \emph{t}. This may represent egg counts, fruit counts, seed 
-#' production, etc.
-#' @param feca3col A variable name or column number corresponding to fecundity
-#' in time \emph{t}+1. This may represent egg counts, fruit counts, seed 
-#' production, etc.
+#' production of reproductive structures, such as flowers, in time \emph{t}+1. This
+#' can be binomial or count data, and is used to in analysis of the probability of
+#' reproduction.
+#' @param repstrb2col A second variable name or column number corresponding to the
+#' production of reproductive structures, such as flowers, in time \emph{t}. This can
+#' be binomial or count data.
+#' @param repstrb3col A second variable name or column number corresponding to the
+#' production of reproductive structures, such as flowers, in time \emph{t}+1. This can
+#' be binomial or count data.
+#' @param feca2col A variable name or column number corresponding to fecundity in
+#' time \emph{t}. This may represent egg counts, fruit counts, seed production,
+#' etc.
+#' @param feca3col A variable name or column number corresponding to fecundity in
+#' time \emph{t}+1. This may represent egg counts, fruit counts, seed production,
+#' etc.
 #' @param fecb2col A second variable name or column number corresponding to 
-#' fecundity in time \emph{t}. This may represent egg counts, fruit counts, 
-#' seed production, etc.
+#' fecundity in time \emph{t}. This may represent egg counts, fruit counts, seed
+#' production, etc.
 #' @param fecb3col A second variable name or column number corresponding to 
-#' fecundity in time \emph{t}+1. This may represent egg counts, fruit counts, 
-#' seed production, etc.
-#' @param alive2col A variable name or column number that provides information
-#' an whether an individual is alive in time \emph{t}. If used, living status
-#' must be designated as binomial (living = 1, dead = 0).
-#' @param alive3col A variable name or column number that provides information
-#' an whether an individual is alive in time \emph{t}+1. If used, living status
-#' must be designated as binomial (living = 1, dead = 0).
-#' @param dead2col A variable name or column number that provides information
-#' an whether an individual is dead in time \emph{t}. If used, dead status
-#' must be designated as binomial (living = 0, dead = 1).
-#' @param dead3col A variable name or column number that provides information
-#' an whether an individual is dead in time \emph{t}+1. If used, dead status
-#' must be designated as binomial (living = 0, dead = 1).
-#' @param obs2col A variable name or column number providing information on
-#' whether an individual is in an observable stage in time \emph{t}. If used,
-#' observation status must be designated as binomial (observed = 1, not 
-#' observed = 0).
-#' @param obs3col A variable name or column number providing information on
-#' whether an individual is in an observable stage in time \emph{t}+1. If
-#' used, observation status must be designated as binomial (observed = 1, not 
-#' observed = 0).
+#' fecundity in time \emph{t}+1. This may represent egg counts, fruit counts, seed
+#' production, etc.
+#' @param alive2col A variable name or column number that provides information on
+#' whether an individual is alive in time \emph{t}. If used, living status must be
+#' designated as binomial (living = 1, dead = 0).
+#' @param alive3col A variable name or column number that provides information on
+#' whether an individual is alive in time \emph{t}+1. If used, living status must
+#' be designated as binomial (living = 1, dead = 0).
+#' @param dead2col A variable name or column number that provides information on
+#' whether an individual is dead in time \emph{t}. If used, dead status
+#' must be designated as binomial (dead = 1, living = 0).
+#' @param dead3col A variable name or column number that provides information on
+#' whether an individual is dead in time \emph{t}+1. If used, dead status must be
+#' designated as binomial (dead = 1, living = 0).
+#' @param obs2col A variable name or column number providing information on whether
+#' an individual is in an observable stage in time \emph{t}. If used, observation
+#' status must be designated as binomial (observed = 1, not observed = 0).
+#' @param obs3col A variable name or column number providing information on whether
+#' an individual is in an observable stage in time \emph{t}+1. If used, observation
+#' status must be designated as binomial (observed = 1, not observed = 0).
 #' @param nonobs2col A variable name or column number providing information on
-#' whether an individual is in an unobservable stage in time \emph{t}. If
-#' used, observation status must be designated as binomial (observed = 0, not 
-#' observed = 1).
+#' whether an individual is in an unobservable stage in time \emph{t}. If used,
+#' observation status must be designated as binomial (not observed = 1,
+#' observed = 0).
 #' @param nonobs3col A variable name or column number providing information on
-#' whether an individual is in an unobservable stage in time \emph{t}+1. If
-#' used, observation status must be designated as binomial (observed = 0, not 
-#' observed = 1).
-#' @param repstrrel This is a scalar modifier for that makes the variable in
-#' \code{repstrb2col} equivalent to \code{repstra2col}. This can be useful if two 
-#' reproductive status variables have related but unequal units, for example
-#' if \code{repstrb2col} refers to one-flowered stems while \code{repstra2col} refers to
-#' two-flowered stems.
-#' @param fecrel This is a scalar modifier for that makes the variable in
-#' \code{fecb2col} equivalent to \code{feca2col}. This can be useful if two fecundity
-#' variables have related but unequal units.
-#' @param stage2col Optional variable name or column number corresponding to
-#' life history stage in time \emph{t}.
-#' @param stage3col Optional variable name or column number corresponding to
-#' life history stage in time \emph{t}+1.
+#' whether an individual is in an unobservable stage in time \emph{t}+1. If used,
+#' observation status must be designated as binomial (not observed = 1,
+#' observed = 0).
+#' @param repstrrel This is a scalar multiplier to make the variable represented by
+#' \code{repstrb2col} equivalent to the variable represented by \code{repstra2col}.
+#' This can be useful if two reproductive status variables have related but unequal
+#' units, for example if \code{repstrb2col} refers to one-flowered stems while 
+#' \code{repstra2col} refers to two-flowered stems.
+#' @param fecrel This is a scalar multiplier that makes the variable represented by
+#' \code{fecb2col} equivalent to the variable represented by \code{feca2col}. This can
+#' be useful if two fecundity variables have related but unequal units.
+#' @param stage2col Optional variable name or column number corresponding to life
+#' history stage in time \emph{t}.
+#' @param stage3col Optional variable name or column number corresponding to life
+#' history stage in time \emph{t}+1.
 #' @param juv2col A variable name or column number that marks individuals in
 #' immature stages in time \emph{t}. The \code{historicalize3()} function assumes 
-#' that immature individuals are identified in this variable marked with a 
-#' number equal to or greater than 1, and that mature individuals are marked 
-#' as 0 or NA.
+#' that immature individuals are identified in this variable marked with a number
+#' equal to or greater than 1, and that mature individuals are marked as 0 or NA.
 #' @param juv3col A variable name or column number that marks individuals in
 #' immature stages in time \emph{t}+1. The \code{historicalize3()} function assumes 
-#' that immature individuals are identified in this variable marked with a 
-#' number equal to or greater than 1, and that mature individuals are marked 
-#' as 0 or NA.
+#' that immature individuals are identified in this variable marked with a number
+#' equal to or greater than 1, and that mature individuals are marked as 0 or NA.
 #' @param stageassign The stageframe object identifying the life history model
-#' being operationalized. Note that is \code{stage2col} is provided, then this
+#' being operationalized. Note that if \code{stage2col} is provided, then this
 #' stageframe is not utilized in stage designation.
-#' @param stagesize A variable name or column number describing which size
-#' variable to use in stage estimation. Defaults to NA, and can also take
-#' \code{sizea}, \code{sizeb}, \code{sizec}, or \code{sizeadded}, depending on which size variable 
-#' is chosen.
-#' @param censor A logical variable determining whether the output data
-#' should be censored using the variable defined in \code{censorcol}. Defaults
-#' to FALSE.
+#' @param stagesize A variable name or column number describing which size variable
+#' to use in stage estimation. Defaults to NA, and can also take \code{sizea}, \code{sizeb},
+#' \code{sizec}, or \code{sizeadded}, depending on which size variable is chosen.
+#' @param censor A logical variable determining whether the output data should be
+#' censored using the variable defined in \code{censorcol}. Defaults to FALSE.
 #' @param censorcol A variable name or column number corresponding to a censor
 #' variable within the dataset, used to distinguish between entries to use and
-#' those to discard from analysis, or to designate entries with special issues 
-#' that require further attention.
-#' @param censorkeep The value of the censoring variable identifying data
-#' that should be included in analysis. Defaults to 0, but may take any value
-#' including NA.
+#' those to discard from analysis, or to designate entries with special issues that
+#' require further attention.
+#' @param censorkeep The value of the censoring variable identifying data that
+#' should be included in analysis. Defaults to 0, but may take any value including
+#' NA.
 #' @param spacing The spacing at which density should be estimated, if density
-#' estimation is desired and x and y coordinates are supplied. Given in the
-#' same units as those used in the x and y coordinates given in \code{xcol} and
-#' \code{ycol}. Defaults to NA.
-#' @param NAas0 If TRUE, then all NA entries for size and fecundity variables
-#' will be set to 0. This can help increase the sample size analyzed by
-#' \code{\link{modelsearch}()}, but should only be used when it is clear that this
-#' substitution is biologically realistic. Defaults to FALSE.
-#' @param NRasRep If TRUE, then will treat non-reproductive but mature
-#' individuals as reproductive during stage assignment. This can be useful,
-#' for example, when a matrix is desired without separation of reproductive
-#' and non-reproductive but mature stages of the same size. Only used if
-#' \code{stageassign} is set to a stageframe. Defaults to FALSE.
-#' @param reduce A logical variable determining whether invariant state
-#' variables should be removed from the output dataset. For example, if
-#' all living individuals are always observable, then variables identifying
-#' observation status are invariant and can be removed. Defaults to TRUE.
+#' estimation is desired and x and y coordinates are supplied. Given in the same
+#' units as those used in the x and y coordinates given in \code{xcol} and \code{ycol}.
+#' Defaults to NA.
+#' @param NAas0 If TRUE, then all NA entries for size and fecundity variables will
+#' be set to 0. This can help increase the sample size analyzed by \code{\link{modelsearch}()},
+#' but should only be used when it is clear that this substitution is biologically
+#' realistic. Defaults to FALSE.
+#' @param NRasRep If set to TRUE, then this function will treat non-reproductive
+#' but mature individuals as reproductive during stage zssignment. This can be 
+#' useful when a matrix is desired without separation of reproductive and
+#' non-reproductive but mature stages of the same size. Only used if \code{stageassign}
+#' is set to a stageframe. Defaults to FALSE.
+#' @param reduce A logical variable determining whether unused variables and some
+#' invariant state variables should be removed from the output dataset. Defaults
+#' to TRUE.
 #'
-#' @return If all inputs are properly formatted, then this function will output
-#' a historical vertical data frame (class \code{hfvdata}), meaning that the
-#' output data frame will have three consecutive years of size and reproductive 
-#' data per individual per row. Note that determination of state in times *t*-1
-#' and *t*+1 gives preference to condition in time *t* within the input
-#' dataset. So, conflicts in condition in input datasets that have both times
-#' *t* and *t*+1 listed per row are resolved by using condition in time *t*.
+#' @return If all inputs are properly formatted, then this function will output a
+#' historical vertical data frame (class \code{hfvdata}), meaning that the output
+#' data frame will have three consecutive years of size and reproductive data per
+#' individual per row. This data frame is in standard format for all functions used
+#' in \code{lefko3}, and so can be used without further modification. Note that
+#' determination of state in times *t*-1 and *t*+1 gives preference to condition in
+#' time *t* within the input dataset. Conflicts in condition in input datasets that
+#' have both times *t* and *t*+1 listed per row are resolved by using condition in
+#' time *t*.
+#' \item{rowid}{Unique identifier for the row of the data frame.}
 #' \item{popid}{Unique identifier for the population, if given.}
-#' \item{patchid}{Unique identifier for the patch within the population, if
-#' given.}
-#' \item{year1, year2, year3}{Year or time step at times \emph{t}-1, \emph{t}, 
-#' and \emph{t}+1.}
-#' \item{xpos,ypos}{X and Y position in Cartesian space, if given.}
-#' \item{sizea1,sizea2,sizea3}{Main size measurement in times \emph{t}-1, 
-#' \emph{t}, and \emph{t}+1, respectively.}
-#' \item{sizeb1,sizeb2,sizeb3}{Secondary size measurement in times \emph{t}-1, 
-#' \emph{t}, and \emph{t}+1, respectively.}
-#' \item{sizec1,sizec2,sizec3}{Tertiary size measurement in times \emph{t}-1, 
-#' \emph{t}, and \emph{t}+1, respectively.}
-#' \item{censor1,censor2,censor3}{Censor state values in times \emph{t}-1,
-#' \emph{t}, and \emph{t}+1.}
-#' \item{repstra1,repstrb1,repstrc1}{Main, secondary, and tertiary numbers of 
-#' reproductive structures in time \emph{t}-1.}
-#' \item{repstra2,repstrb2,repstrc2}{Main, secondary, and tertiary numbers of 
-#' reproductive structures in time \emph{t}.}
-#' \item{repstra3,repstrb3,repstrc3}{Main, secondary, and tertiary numbers of 
-#' reproductive structures in time \emph{t}+1.}
-#' \item{feca1,fecb1}{Main, secondary, and tertiary numbers of offspring in 
-#' time \emph{t}-1.}
-#' \item{feca2,fecb2}{Main, secondary, and tertiary numbers of offspring in 
-#' time \emph{t}.}
-#' \item{feca3,fecb3}{Main, secondary, and tertiary numbers of offspring in 
-#' time \emph{t}+1.}
-#' \item{size1added,size2added,size3added}{Sum of primary, secondary, and
-#' tertiary size measurements in times \emph{t}-1, \emph{t}, and \emph{t}+1, 
-#' respectively.}
-#' \item{repstr1added,repstr2added,repstr3added}{Sum of primary, secondary, and
-#' tertiary reproductive structures in times \emph{t}-1, \emph{t}, and 
-#' \emph{t}+1, respectively.}
-#' \item{fec1added,fec2added,fec3added}{Sum of primary, secondary, and
-#' tertiary offspring numbers in times \emph{t}-1, \emph{t}, and \emph{t}+1, 
-#' respectively.}
-#' \item{obsstatus1,obsstatus2,obsstatus3}{Binomial observation state in 
-#' times \emph{t}-1, \emph{t}, and \emph{t}+1, respectively.}
-#' \item{repstatus1,repstatus2,repstatus3}{Binomial reproductive state in 
-#' times \emph{t}-1, \emph{t}, and \emph{t}+1, respectively.}
-#' \item{fecstatus1,fecstatus2,fecstatus3}{Binomial offspring production
-#' state in times \emph{t}-1, \emph{t}, and \emph{t}+1, respectively.}
-#' \item{firstseen}{Year or time step of first observation.}
-#' \item{lastseen}{Year or time step of last observation.}
-#' \item{xcorr,ycorr}{Overall x and y coordinates of individual in
-#' Cartesian space.}
-#' \item{alive1,alive2,alive3}{Binomial state as alive in times \emph{t}-1, 
-#' \emph{t}, and \emph{t}+1, respectively.}
+#' \item{patchid}{Unique identifier for patch within population, if given.}
+#' \item{individ}{Unique identifier for the individual.}
+#' \item{year2}{Year or time at time \emph{t}.}
+#' \item{firstseen}{Year or time of first observation.}
+#' \item{lastseen}{Year or time of last observation.}
 #' \item{obsage}{Observed age in time \emph{t}, assuming first observation
 #' corresponds to age = 0.}
-#' \item{obslifespan}{Observed lifespan, given as `lastseen - firstseen + 1`.}
-#' \item{individ}{Unique identifier for the individual.}
-#' \item{density}{Density of individuals per unit designated in `spacing`.
-#' Only given if spacing is not NA.}
+#' \item{obslifespan}{Observed lifespan, given as \code{lastseen - firstseen + 1}.}
+#' \item{xpos1,xpos2,xpos3}{X position in Cartesian space in times \emph{t}-1, \emph{t},
+#' and \emph{t}+1, respectively, if provided.}
+#' \item{ypos1,ypos2,ypos3}{Y position in Cartesian space in times \emph{t}-1, \emph{t},
+#' and \emph{t}+1, respectively, if provided.}
+#' \item{sizea1,sizea2,sizea3}{Main size measurement in times \emph{t}-1, \emph{t}, and
+#' \emph{t}+1, respectively.}
+#' \item{sizeb1,sizeb2,sizeb3}{Secondary size measurement in times \emph{t}-1, \emph{t},
+#' and \emph{t}+1, respectively.}
+#' \item{sizec1,sizec2,sizec3}{Tertiary measurement in times \emph{t}-1, \emph{t}, and 
+#' \emph{t}+1, respectively.}
+#' \item{size1added,size2added,size3added}{Sum of primary, secondary, and tertiary
+#' size measurements in timea \emph{t}-1, \emph{t}, and \emph{t}+1, respectively.}
+#' \item{repstra1,repstra2,repstra3}{Main numbers of reproductive structures in
+#' times \emph{t}-1, \emph{t}, and \emph{t}+1, respectively.}
+#' \item{repstrb1,repstrb2,repstrb3}{Secondary numbers of reproductive structures
+#' in times \emph{t}-1, \emph{t}, and \emph{t}+1, respectively.}
+#' \item{repstr1added,repstr2added,repstr3added}{Sum of primary and secondary
+#' reproductive structures in times \emph{t}-1, \emph{t}, and \emph{t}+1, respectively.}
+#' \item{feca1,feca2,feca3}{Main numbers of offspring in times \emph{t}-1, \emph{t},
+#' and \emph{t}+1, respectively.}
+#' \item{fecb1,fecb2, fecb3}{Secondary numbers of offspring in times \emph{t}-1,
+#' \emph{t}, and \emph{t}+1, respectively.}
+#' \item{fec1added,fec2added,fec3added}{Sum of primary and secondary fecundity in
+#' times \emph{t}-1, \emph{t}, and \emph{t}+1, respectively.}
+#' \item{censor1,censor2,censor3}{Censor state values in times \emph{t}-1, \emph{t}, and
+#' \emph{t}+1, respectively.}
+#' \item{juvgiven1,juvgiven2,juvgiven3}{Binomial variable indicating whether
+#' individual is juvenile in times \emph{t}-1, \emph{t}, and \emph{t}+1. Only given
+#' if \code{juvcol} is provided.}
+#' \item{obsstatus1,obsstatus2,obsstatus3}{Binomial observation state in times \emph{t}-1,
+#' \emph{t}, and \emph{t}+1, respectively.}
+#' \item{repstatus1,repstatus2,repstatus3}{Binomial reproductive state in times
+#' \emph{t}-1, \emph{t}, and \emph{t}+1, respectively.}
+#' \item{fecstatus1,fecstatus2,fecstatus3}{Binomial offspring production state in
+#' times \emph{t}-1, \emph{t}, and \emph{t}+1, respectively.}
+#' \item{matstatus1,matstatus2,matstatus3}{Binomial maturity state in times \emph{t}-1,
+#' \emph{t}, and \emph{t}+1, respectively.}
+#' \item{alive1,alive2,alive3}{Binomial state as alive in times \emph{t}-1, \emph{t},
+#' and \emph{t}+1, respectively.}
+#' \item{density}{Density of individuals per unit designated in \code{spacing}. Only
+#' given if spacing is not NA.}
 #' 
 #' @examples
 #' data(cypvert)
@@ -872,8 +855,6 @@ verticalize3 <- function(data, noyears, firstyear, popidcol = 0, patchidcol = 0,
 #'                           immstatus = immvector, indataset = indataset,
 #'                           binhalfwidth = binvec)
 #' 
-#' cypframe_raw
-#' 
 #' cypraw_v2 <- historicalize3(data = cypvert, patchidcol = "patch", individcol = "plantid",
 #'                             year2col = "year2", sizea2col = "Inf2.2", sizea3col = "Inf2.3",
 #'                             sizeb2col = "Inf.2", sizeb3col = "Inf.3", sizec2col = "Veg.2",
@@ -881,7 +862,7 @@ verticalize3 <- function(data, noyears, firstyear, popidcol = 0, patchidcol = 0,
 #'                             repstrb2col = "Inf.2", repstrb3col = "Inf.3", feca2col = "Pod.2",
 #'                             feca3col = "Pod.3", repstrrel = 2, stageassign = cypframe_raw,
 #'                             stagesize = "sizeadded", censorcol = "censor", censor = FALSE,
-#'                             NAas0 = TRUE, NRasRep = TRUE, reduce = TRUE)
+#'                             NAas0 = TRUE, NRasRep = TRUE)
 #' summary(cypraw_v2)
 #'
 #' @export
@@ -1509,7 +1490,7 @@ historicalize3 <- function(data, popidcol = 0, patchidcol = 0, individcol, year2
 #' @param data Demographic dataset in historical vertical format.
 #' @param xcol Number of column in \code{data} corresponding to x position.
 #' @param ycol Number of column in \code{data} corresponding to y position.
-#' @param yearcol Number of column in \code{data} corresponding to time step.
+#' @param yearcol Number of column in \code{data} corresponding to time.
 #' @param spacing Resolution of density estimation, as a scalar numeric.
 #' 
 #' @return This function returns the original data frame supplied as \code{data} but

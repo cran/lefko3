@@ -7,25 +7,24 @@
 stablestage3(mats)
 }
 \arguments{
-\item{mats}{A lefkoMat object, or population projection matrix, for which
-the stable stage distribution is desired.}
+\item{mats}{A lefkoMat object, or population projection matrix, for which the
+stable stage distribution is desired.}
 }
 \value{
 The value returned depends on the class of the \code{mats} argument.
+See related functions for details.
 }
 \description{
 \code{stablestage3()} is a generic function that returns the stable stage 
-distribution for a population projection matrix or set of matrices. Unlike 
-the 'popbio' package's \code{\link[popbio]{stable.stage}()} function, it is 
-particularly made to handle very large and sparse matrices supplied as 
-\code{lefkoMat} objects or as individual matrices. This function can
-handle large and sparse matrices, and so can be used with large historical
-matrices, IPMs, age x stage matrices, as well as smaller ahistorical 
+distribution for a population projection matrix or set of matrices. This
+function is made to handle very large and sparse matrices supplied as 
+\code{lefkoMat} objects or as individual matrices, and can be used with large
+historical matrices, IPMs, age x stage matrices, as well as smaller ahistorical
 matrices.
 }
 \examples{
-\donttest{
 data(lathyrus)
+
 sizevector <- c(0, 100, 13, 127, 3730, 3800, 0)
 stagevector <- c("Sd", "Sdl", "VSm", "Sm", "VLa", "Flo", "Dorm")
 repvector <- c(0, 0, 0, 0, 0, 1, 0)
@@ -62,7 +61,6 @@ ehrlen3 <- rlefko3(data = lathvert, stageframe = lathframe, year = c(1989, 1990)
 
 ehrlen3mean <- lmean(ehrlen3)
 stablestage3(ehrlen3mean)
-}
 
 }
 \seealso{

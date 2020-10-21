@@ -27,7 +27,6 @@
 #' @importFrom MuMIn dredge
 #' @importFrom lme4 lmer glmer fixef ranef VarCorr
 #' @importFrom glmmTMB glmmTMB nbinom2 fixef ranef
-#' @importFrom RSpectra eigs
 #' @useDynLib lefko3
 #' @name lefko3
 NULL

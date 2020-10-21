@@ -28,12 +28,12 @@ life history stage.}
 elements in sizes. If an IPM or function-based matrix with many stages is
 desired, then two stages that occur within the dataset and represent the 
 lower and upper size limits of the IPM must be marked as \code{ipm} in this 
-vector. Note that these stages must be mature stages, and should have all 
-characteristics besides size equal. If two or more groups of stages, each
-with its own characteristics, are to be developed for IPM or function-based
-matrix development, then an even number of stages with two stages marking
-the minimum and maximum size of each group should be marked, with all other
-characteristics equal within each group.}
+vector. These stages must be mature stages, and should have all 
+characteristics other than size equal. If two or more groups of stages, each
+with its own characteristics, are to be developed for an IPM, then an even
+number of stages with two stages marking the minimum and maximum size of
+each group should be marked, with all other characteristics equal within
+each group.}
 
 \item{repstatus}{A vector denoting the binomial reproductive status of each
 life history stage. Defaults to 1.}
@@ -54,20 +54,20 @@ composed of binomial values if given. Defaults to 1 for all stages defined
 in \code{sizes}.}
 
 \item{minage}{An optional vector denoting the minimum age at which a stage
-can begin. Only used in age x stage matrix development. Defaults to NA.}
+can occur. Only used in age x stage matrix development. Defaults to NA.}
 
 \item{maxage}{An optional vector denoting the maximum age at which a stage
-should end. Only used in age x stage matrix development. Defaults to NA.}
+should occur. Only used in age x stage matrix development. Defaults to NA.}
 
 \item{indataset}{A vector designating which stages are found within the 
 dataset. While \code{\link{rlefko2}()} and \code{\link{rlefko3}()} can use all stages in
 the input dataset, \code{\link{flefko3}()} and \code{\link{flefko2}()} can only handle
 size-classified stages with non-overlapping combinations of size and 
-reproductive status, plus one immature stage. In the latter scenario, other 
-stages should be excluded by marking them as 0 in this vector.}
+reproductive status, plus one immature stage. Stages that do not actually
+exist within the dataset should be marked as 0 in this vector.}
 
-\item{binhalfwidth}{A numeric vector giving the half-width of size bins. Used
-and required to classify individuals appropriately within size classes.
+\item{binhalfwidth}{A numeric vector giving the half-width of size bins.
+Required to classify individuals appropriately within size classes.
 Defaults to 0.5 for all sizes.}
 
 \item{ipmbins}{If an IPM is desired, then this parameter sets the number of
@@ -80,7 +80,7 @@ matrix over-parameterization resulting from increasing numbers of stages.}
 and equals the number of digits used in rounding sizes. Defaults to 5.}
 }
 \value{
-A stageframe object, which is a data frame that includes information
+A data frame of class \code{stageframe}, which includes information
 on the stage name, size, reproductive status, observation status, propagule 
 status, immaturity status, maturity status, presence within the core dataset, 
 counts of similarly sized stages, raw bin half-width, and the minimum, 
@@ -92,35 +92,32 @@ object can be used as the \code{stageframe} input for \code{\link{flefko3}()}
 
 Variables in this data frame include the following:
 \item{stagenames}{The unique names of the stages to be analyzed.}
-\item{size}{The typical or representative size at which the stage occurs.}
-\item{repstatus}{A binomial variable designating whether the stage occurs
-is reproductive.}
-\item{obsstatus}{A binomial variable designating whether the stage occurs
-is observable.}
-\item{propstatus}{A binomial variable designating whether the stage occurs
-as a propagule.}
-\item{immstatus}{A binomial variable designating whether the stage occurs
-in immaturity.}
-\item{matstatus}{A binomial variable designating whether the stage occurs
-in maturity.}
-\item{indataset}{A binomial variable describing whether the stage occurs
-in the input dataset.}
-\item{binhalfwidth_raw}{The half-width input for the size bin corresponding
-to the stage.}
+\item{size}{The typical or representative size at which each stage occurs.}
+\item{repstatus}{A binomial variable showing whether each stage is reproductive.}
+\item{obsstatus}{A binomial variable showing whether each stage is observable.}
+\item{propstatus}{A binomial variable showing whether each stage is a
+propagule.}
+\item{immstatus}{A binomial variable showing whether each stage can occur as
+immature.}
+\item{matstatus}{A binomial variable showing whether each stage occurs in
+maturity.}
+\item{indataset}{A binomial variable describing whether each stage occurs in the
+input dataset.}
+\item{binhalfwidth_raw}{The half-width of the size bin, as input.}
+\item{min_age}{The minimum age at which the stage may occur.}
+\item{max_age}{The maximum age at which the stage may occur.}
 \item{sizebin_min}{The minimum size at which the stage may occur.}
 \item{sizebin_max}{The maximum size at which the stage may occur.}
 \item{sizebin_center}{The centroid of the size bin at which the stage may
 occur.}
 \item{sizebin_width}{The width of the size bin corresponding to the stage.}
-\item{min_age}{The minimum age at which the stage may occur.}
-\item{max_age}{The maximum age at which the stage may occur.}
-\item{comments}{A text field to hold verbal stage descriptions.}
+\item{comments}{A text field for stage descriptions.}
 }
 \description{
 \code{sf_create()} returns a data frame describing each ahistorical life
-history stage. This data frame can be used as input into matrix-estimating 
-functions such as \code{\link{flefko3}()}, where it instructs the function 
-as to the treatment of each stage during matrix creation.
+history stage in the life history model. This data frame can be used as 
+input into MPM creation functions such as \code{\link{flefko3}()}, where it
+determines how each stage is treated during matrix estimation.
 }
 \examples{
 sizevector <- c(0, 0, 0, 0, 0, 0, 1, 2.5, 4.5, 8, 17.5)

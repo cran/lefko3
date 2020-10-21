@@ -13,24 +13,26 @@
 This function returns a vector data frame characterizing the 
 reproductive values for stages of a population projection matrix. This is 
 given as the left eigenvector associated with largest real part of the
-dominant eigenvalue estimated via the \code{\link[RSpectra]{eigs}()} function in package 
-'RSpectra', divided by the first non-zero element of the left eigenvector.
+dominant eigenvalue, divided by the first non-zero element of the left 
+eigenvector. Eigen analysis is handled by the \code{eig_gen}() function in the
+C++ Armadillo library for square matrices with fewer than 400 rows, and using
+the \code{eigs_gen}() function for larger matrices.
 }
 \description{
 \code{repvalue3.matrix()} returns the reproductive values for stages in a 
-population projection matrix. The function assumes that the matrix is
-ahistorical and provides standard reproductive values, meaning that
-the overall reproductive values of basic life history stages in a historical
-matrix are not provided (the \code{\link{repvalue3.lefkoMat}()} function estimates
-these on the basis of stage description information provided in the 
-\code{lefkoMat} object used as input in that function). This function can
-handle large and sparse matrices, and so can be used with large historical
-matrices, IPMs, age x stage matrices, as well as smaller ahistorical 
-matrices.
+population projection matrix. The function makes no assumptions about whether
+the matrix is ahistorical and simply provides standard reproductive values
+corresponding to each row, meaning that the overall reproductive values of basic
+life history stages in a historical matrix are not provided (the 
+\code{\link{repvalue3.lefkoMat}()} function estimates these on the basis of stage
+description information provided in the \code{lefkoMat} object used as input in
+that function). This function can handle large and sparse matrices, and so can
+be used with large historical matrices, IPMs, age x stage matrices, as well as
+smaller ahistorical matrices.
 }
 \examples{
-\donttest{
 data(lathyrus)
+
 sizevector <- c(0, 100, 13, 127, 3730, 3800, 0)
 stagevector <- c("Sd", "Sdl", "VSm", "Sm", "VLa", "Flo", "Dorm")
 repvector <- c(0, 0, 0, 0, 0, 1, 0)
@@ -67,7 +69,6 @@ ehrlen3 <- rlefko3(data = lathvert, stageframe = lathframe, year = c(1989, 1990)
 
 ehrlen3mean <- lmean(ehrlen3)
 repvalue3(ehrlen3mean$A[[1]])
-}
 
 }
 \seealso{

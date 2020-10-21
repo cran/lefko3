@@ -67,6 +67,7 @@ cypmatrix2r <- rlefko2(data = cypraw_v1, stageframe = cypframe_raw, year = "all"
                        repmatrix = rep_cyp_raw, overwrite = cypover2r,
                        yearcol = "year2", patchcol = "patchid",
                        indivcol = "individ")
+                       
 summary(cypmatrix2r)
 
 }

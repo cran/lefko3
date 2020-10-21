@@ -2,7 +2,7 @@
 % Please edit documentation in R/popchar.R
 \name{overwrite}
 \alias{overwrite}
-\title{Create an Overwrite Table for Population Matrix Development}
+\title{Create an Overwrite Table for MPM Development}
 \usage{
 overwrite(
   stage3,
@@ -23,19 +23,19 @@ replaced.}
 replaced.}
 
 \item{stage1}{The name of the stage in time \emph{t}-1 in the transition to be
-replaced. Only needed if a historical matrix is to be produced. Use \code{rep}
-if all reproductive stages are to be used, and leave empty or use \code{all}
-if all stages in stageframe are to be used.}
+replaced. Only needed if a historical matrix is to be produced. Use \code{rep} if
+all reproductive stages are to be used, and leave empty or use \code{all} if all
+stages in stageframe are to be used.}
 
-\item{eststage3}{The name of the stage to replace \code{stage3}. Only needed if
-a transition will be replaced by another estimated transition.}
+\item{eststage3}{The name of the stage to replace \code{stage3}. Only needed if a
+transition will be replaced by another estimated transition.}
 
-\item{eststage2}{The name of the stage to replace \code{stage2}. Only needed if
-a transition will be replaced by another estimated transition.}
+\item{eststage2}{The name of the stage to replace \code{stage2}. Only needed if a
+transition will be replaced by another estimated transition.}
 
-\item{eststage1}{The name of the stage to replace \code{stage1}. Only needed if
-a transition will be replaced by another estimated transition, and the matrix
-to be estimated is a historical matrix.}
+\item{eststage1}{The name of the stage to replace \code{stage1}. Only needed if a
+transition will be replaced by another estimated transition, and the matrix to
+be estimated is historical.}
 
 \item{givenrate}{A fixed rate or probability to replace for the transition
 described by \code{stage3}, \code{stage2}, and \code{stage1}.}
@@ -46,19 +46,18 @@ Defaults to 1, for survival transition.}
 }
 \value{
 A data frame that puts the above vectors together and can be used as
-input in \code{\link{flefko3}}, \code{\link{flefko2}}, \code{\link{rlefko3}},
-and \code{\link{rlefko2}}.
+input in \code{\link{flefko3}}, \code{\link{flefko2}}, \code{\link{rlefko3}}, and \code{\link{rlefko2}}.
 
 Variables in this data frame include the following:
 \item{stage3}{Stage at time \emph{t}+1 in the transition to be replaced.}
 \item{stage2}{Stage at time \emph{t} in the transition to be replaced.}
 \item{stage1}{Stage at time \emph{t}-1 in the transition to be replaced.}
-\item{eststage3}{Stage at time \emph{t}+1 in the transition to replace the
-transition designated by \code{stage3}, \code{stage2}, and \code{stage1}.}
-\item{eststage2}{Stage at time \emph{t} in the transition to replace the
-transition designated by \code{stage3}, \code{stage2}, and \code{stage1}.}
-\item{eststage1}{Stage at time \emph{t}-1 in the transition to replace the
-transition designated by \code{stage3}, \code{stage2}, and \code{stage1}.}
+\item{eststage3}{Stage at time \emph{t}+1 in the transition to replace the transition
+designated by \code{stage3}, \code{stage2}, and \code{stage1}.}
+\item{eststage2}{Stage at time \emph{t} in the transition to replace the transition
+designated by \code{stage3}, \code{stage2}, and \code{stage1}.}
+\item{eststage1}{Stage at time \emph{t}-1 in the transition to replace the transition
+designated by \code{stage3}, \code{stage2}, and \code{stage1}.}
 \item{givenrate}{A constant to be used as the value of the transition.}
 \item{convtype}{Designates whether the transition is a survival-transition
 probability (1) or a fecundity rate (2).}

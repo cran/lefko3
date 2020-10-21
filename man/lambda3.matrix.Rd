@@ -10,19 +10,21 @@
 \item{mats}{A population projection matrix of class \code{matrix}.}
 }
 \value{
-This function returns the dominant eigenvalue of the matrix. This
-is given as the largest real part of all eigenvalues estimated via the 
-\code{\link[RSpectra]{eigs}()} function in package 'RSpectra'.
+This function returns the dominant eigenvalue of the matrix. For square
+matrices with fewer than 400 rows, this is given as the largest real part of all
+eigenvalues estimated via the \code{eig_gen}() function in package the C++ 
+Armadillo library. For larger matrices, the matrix is assumed to be sparse and
+\code{eigs_gen}() is used instead.
 }
 \description{
-\code{lambda3.matrix()} returns the dominant eigenvalues of a single
-projection matrix. This function can handle large and sparse matrices, 
-and so can be used with large historical matrices, IPMs, age x stage 
-matrices, as well as smaller ahistorical matrices.
+\code{lambda3.matrix()} returns the dominant eigenvalue of a single projection
+matrix. This function can handle large and sparse matrices, so can be used with
+large historical matrices, IPMs, age x stage matrices, as well as smaller
+ahistorical matrices.
 }
 \examples{
-\donttest{
 data(lathyrus)
+
 sizevector <- c(0, 100, 13, 127, 3730, 3800, 0)
 stagevector <- c("Sd", "Sdl", "VSm", "Sm", "VLa", "Flo", "Dorm")
 repvector <- c(0, 0, 0, 0, 0, 1, 0)
@@ -59,7 +61,6 @@ ehrlen3 <- rlefko3(data = lathvert, stageframe = lathframe, year = c(1989, 1990)
 
 ehrlen3mean <- lmean(ehrlen3)
 lambda3(ehrlen3mean$A[[1]])
-}
 
 }
 \seealso{

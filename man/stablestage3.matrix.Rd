@@ -11,20 +11,22 @@
 }
 \value{
 This function returns the stable stage distribution corresponding to
-the input matrix. The stable stage distribution is given as the right 
-eigenvector associated with largest real part of the eigenvalues estimated 
-for the matrix via the \code{\link[RSpectra]{eigs}()} function in package 
-'RSpectra', divided by the sum of the associated right eigenvector.
+the input matrix. For square matrices with fewer than 400 rows, the stable stage
+distribution is given as the right eigenvector associated with largest real part
+of the eigenvalues estimated for the matrix via the \code{eig_gen}() function in
+the C++ Armadillo library, divided by the sum of the associated right
+eigenvector. For larger matrices, the matrix is assumed to be sparse and the
+calculation is conducted similarly but using \code{eig_gens}() instead.
 }
 \description{
 \code{stablestage3.matrix()} returns the stable stage distribution for a 
-population projection matrix. This function can handle large and sparse 
+population projection matrix. This function can handle large and sparse
 matrices, and so can be used with large historical matrices, IPMs, 
 age x stage matrices, as well as smaller ahistorical matrices.
 }
 \examples{
-\donttest{
 data(lathyrus)
+
 sizevector <- c(0, 100, 13, 127, 3730, 3800, 0)
 stagevector <- c("Sd", "Sdl", "VSm", "Sm", "VLa", "Flo", "Dorm")
 repvector <- c(0, 0, 0, 0, 0, 1, 0)
@@ -61,7 +63,6 @@ ehrlen3 <- rlefko3(data = lathvert, stageframe = lathframe, year = c(1989, 1990)
 
 ehrlen3mean <- lmean(ehrlen3)
 stablestage3(ehrlen3mean$A[[1]])
-}
 
 }
 \seealso{

@@ -1,190 +1,179 @@
 #' Develop Best-fit Vital Rate Estimation Models For Matrix Development
 #' 
 #' \code{modelsearch()} returns both a table of vital rate estimating models and a
-#' best-fit model for each major vital rate estimated. The final output can be 
-#' used as input in other functions within this package.
+#' best-fit model for each major vital rate estimated. The final output can be used
+#' as input in other functions within this package.
 #' 
-#' @param data The vertical dataset to be used for analysis. The dataset should 
-#' ideally be of class \code{hfvdata}, but will also work with data frames 
-#' formatted similarly to the output format provided by functions 
-#' \code{\link{verticalize3}()} or \code{\link{historicalize3}()}, as long as all 
-#' needed variables are properly designated.
-#' @param historical A logical variable denoting whether to assess the effects
-#' of state in time \emph{t}-1 in addition to state in time \emph{t}. Defaults 
-#' to TRUE.
-#' @param approach Designates the approach to be taken for model building. The 
+#' @param data The vertical dataset to be used for analysis. This dataset should 
+#' be of class \code{hfvdata}, but can also be a data frame formatted similarly to
+#' the output format provided by functions \code{\link{verticalize3}()} or \code{\link{historicalize3}()},
+#' as long as all needed variables are properly designated.
+#' @param historical A logical variable denoting whether to assess the effects of
+#' state in time \emph{t}-1 in addition to state in time \emph{t}. Defaults to TRUE.
+#' @param approach The statistical approach to be taken for model building. The 
 #' default is \code{lme4}, which uses the mixed model approach utilized in 
-#' package 'lme4'. Other options include \code{glm}, which uses the \code{lm}, \code{glm},
+#' package \code{lme4}. Other options include \code{glm}, which uses \code{lm}, \code{glm},
 #' and related functions in base R.
-#' @param suite This describes the global model for each vital rate estimation
-#' and has the following possible values: \code{full}, includes main effects and 
-#' all two-way interactions of size and reproductive status; \code{main}, 
-#' includes main effects only of size and reproductive status; \code{size}, 
-#' includes only size (also interactions between size in historical model); 
-#' \code{rep}, includes only reproductive status (also interactions between 
-#' status in historical model); \code{cons}, all vital rates estimated only as 
-#' y-intercepts. If \code{approach = "glm"} and \code{year.as.random = FALSE}, then 
-#' year is also included as a fixed effect, and, in the case of \code{full}, 
-#' included in two-way interactions. Defaults to \code{size}.
-#' @param vitalrates A vector describing which vital rates will be estimated
-#' via linear modeling, with the following options: \code{surv}, survival 
-#' probability; \code{obs}, observation probability; \code{size}, overall size; \code{repst}, 
+#' @param suite This describes the global model for each vital rate estimation and
+#' has the following possible values: \code{full}, includes main effects and all
+#' two-way interactions of size and reproductive status; \code{main}, includes main
+#' effects only of size and reproductive status; \code{size}, includes only size
+#' (also interactions between size in historical model); \code{rep}, includes only
+#' reproductive status (also interactions between status in historical model); 
+#' \code{cons}, all vital rates estimated only as y-intercepts. If \code{approach = "glm"}
+#' and \code{year.as.random = FALSE}, then year is also included as a fixed effect,
+#' and, in the case of \code{full}, included in two-way interactions. Defaults to \code{size}.
+#' @param vitalrates A vector describing which vital rates will be estimated via
+#' linear modeling, with the following options: \code{surv}, survival probability;
+#' \code{obs}, observation probability; \code{size}, overall size; \code{repst}, 
 #' probability of reproducing; and \code{fec}, amount of reproduction (overall 
 #' fecundity). Defaults to \code{c("surv", "size", "fec")}.
-#' @param juvestimate An optional variable denoting the stage name of the 
-#' juvenile stage in the vertical dataset. If not NA, and \code{stage} is also 
-#' given (see below), then vital rates listed in \code{vitalrates} other than 
-#' \code{fec} will also be estimated from the juvenile stage to all adult stages. 
-#' Defaults to NA, in which case juvenile vital rates are not estimated.
-#' @param juvsize A logical variable denoting whether size should be used as
-#' a term in models involving transition from the juvenile stage. Defaults 
-#' to FALSE, and is only used if \code{juvestimate} does not equal NA.
-#' @param bestfit A variable indicating the model selection criterion for the 
+#' @param juvestimate An optional variable denoting the stage name of the juvenile
+#' stage in the vertical dataset. If not NA, and \code{stage} is also given (see
+#' below), then vital rates listed in \code{vitalrates} other than \code{fec} will also
+#' be estimated from the juvenile stage to all adult stages. Defaults to NA, in
+#' which case juvenile vital rates are not estimated.
+#' @param juvsize A logical variable denoting whether size should be used as a term
+#' in models involving transition from the juvenile stage. Defaults to FALSE, and
+#' is only used if \code{juvestimate} does not equal NA.
+#' @param bestfit A variable indicating the model selection criterion for the
 #' choice of best-fit model. The default is \code{AICc&k}, which chooses the 
-#' best-fit model as the model with the lowest AICc or, if not the same 
-#' model, then the model that has the lowest degrees of freedom among models 
-#' with delta AICc <= 2.0. Alternatively, \code{AICc} may be chosen, in which case
-#' the best-fit model is simply the model with the lowest AICc value.
-#' @param sizedist The probability distribution used to model size. Options 
-#' include \code{gaussian} for the Normal distribution (default), \code{poisson} 
-#' for the Poisson distribution, and \code{negbin} for the negative binomial
-#' distribution.
+#' best-fit model as the model with the lowest AICc or, if not the same model, then
+#' the model that has the lowest degrees of freedom among models with \eqn{\Delta AICc <= 2.0}.
+#' Alternatively, \code{AICc} may be chosen, in which case the best-fit model is simply
+#' the model with the lowest AICc value.
+#' @param sizedist The probability distribution used to model size. Options include
+#' \code{gaussian} for the Normal distribution (default), \code{poisson} for the Poisson
+#' distribution, and \code{negbin} for the negative binomial distribution.
 #' @param fecdist The probability distribution used to model fecundity. Options
-#' include \code{gaussian} for the Normal distribution (default), \code{poisson} 
-#' for the Poisson distribution, and \code{negbin} for the negative binomial 
-#' distribution.
-#' @param fectime A variable indicating which year of fecundity to use as 
-#' the response term in fecundity models. Options include \code{2}, which refers 
-#' to time \emph{t}, and \code{3}, which refers to time \emph{t}+1. Defaults to \code{2}.
-#' @param censor A vector denoting the names of censoring variables in the 
-#' dataset, in order from time \emph{t}+1, followed by time \emph{t}, 
-#' and lastly followed by time \emph{t}-1. Defaults to NA.
-#' @param indiv A variable indicating the variable name coding individual 
-#' identity. Defaults to \code{individ}.
-#' @param patch A variable indicating the variable name coding for patch, 
-#' where patches are defined as permanent subgroups within the study
-#' population. Defaults to NA.
-#' @param year A variable indicating the variable coding for  observation 
-#' time in time \emph{t}. Defaults to \code{year2}.
-#' @param surv A vector indicating the variable names coding for status as 
-#' alive or dead in times \emph{t}+1, \emph{t}, and \emph{t}-1, respectively. 
-#' Defaults to \code{c("alive3", "alive2", "alive1")}.
-#' @param obs A vector indicating the variable names coding for observation
-#' status in times \emph{t}+1, \emph{t}, and \emph{t}-1, respectively. 
-#' Defaults to \code{c("obsstatus3", "obsstatus2", "obsstatus1")}.
-#' @param size A vector indicating the variable names coding for size in 
-#' times \emph{t}+1, \emph{t}, and \emph{t}-1, respectively. Defaults to 
-#' \code{c("sizea3", "sizea2", "sizea1")}.
-#' @param repst A vector indicating the variable names coding for 
-#' reproductive status in times \emph{t}+1, \emph{t}, and \emph{t}-1, 
-#' respectively. Defaults to \code{c("repstatus3", "repstatus2", "repstatus1")}.
-#' @param fec A vector indicating the variable names coding for fecundity
+#' include \code{gaussian} for the Normal distribution (default), \code{poisson} for
+#' the Poisson distribution, and \code{negbin} for the negative binomial distribution.
+#' @param fectime A variable indicating which year of fecundity to use as the
+#' response term in fecundity models. Options include \code{2}, which refers to time \emph{t},
+#' and \code{3}, which refers to time \emph{t}+1. Defaults to \code{2}.
+#' @param censor A vector denoting the names of censoring variables in the dataset,
+#' in order from time \emph{t}+1, followed by time \emph{t}, and lastly followed by time \emph{t}-1.
+#' Defaults to NA.
+#' @param indiv A variable indicating the variable name coding individual identity.
+#' Defaults to \code{individ}.
+#' @param patch A variable indicating the variable name coding for patch, where
+#' patches are defined as permanent subgroups within the study population. Defaults
+#' to NA.
+#' @param year A variable indicating the variable coding for  observation time in 
+#' time \emph{t}. Defaults to \code{year2}.
+#' @param surv A vector indicating the variable names coding for status as alive or
+#' dead in times \emph{t}+1, \emph{t}, and \emph{t}-1, respectively. Defaults to 
+#' \code{c("alive3", "alive2", "alive1")}.
+#' @param obs A vector indicating the variable names coding for observation status
 #' in times \emph{t}+1, \emph{t}, and \emph{t}-1, respectively. Defaults to 
-#' \code{c("feca3", "feca2", "feca1")}.
-#' @param stage A vector indicating the variables coding for stage in times 
-#' \emph{t}+1, \emph{t}, and \emph{t}-1. Defaults to 
-#' \code{c("stage3", "stage2", "stage1")}.
+#' \code{c("obsstatus3", "obsstatus2", "obsstatus1")}.
+#' @param size A vector indicating the variable names coding for size in times \emph{t}+1,
+#' \emph{t}, and \emph{t}-1, respectively. Defaults to \code{c("sizea3", "sizea2", "sizea1")}.
+#' @param repst A vector indicating the variable names coding for reproductive
+#' status in times \emph{t}+1, \emph{t}, and \emph{t}-1, respectively. Defaults to 
+#' \code{c("repstatus3", "repstatus2", "repstatus1")}.
+#' @param fec A vector indicating the variable names coding for fecundity in times 
+#' \emph{t}+1, \emph{t}, and \emph{t}-1, respectively. Defaults to \code{c("feca3", "feca2", "feca1")}.
+#' @param stage A vector indicating the variables coding for stage in times \emph{t}+1, 
+#' \emph{t}, and \emph{t}-1. Defaults to \code{c("stage3", "stage2", "stage1")}.
 #' @param age Designates the name of the variable corresponding to age in the
 #' vertical dataset. Defaults to NA, in which case age is not included in linear
 #' models. Should only be used if building age x stage matrices.
 #' @param year.as.random If set to TRUE and \code{approach = "lme4"}, then \code{year} is 
 #' included as a random factor. If set to FALSE, then \code{year} is included as a 
 #' fixed factor. All other combinations of logical value and \code{approach} lead to 
-#' \code{year} not being included in modeling.
+#' \code{year} not being included in modeling. Defaults to TRUE.
 #' @param patch.as.random If set to TRUE and \code{approach = "lme4"}, then \code{patch}
 #' is included as a random factor. If set to FALSE and \code{approach = "glm"}, then 
 #' \code{patch} is included as a fixed factor. All other combinations of logical 
-#' value and \code{approach} lead to \code{patch} not being included in modeling. 
+#' value and \code{approach} lead to \code{patch} not being included in modeling.
+#' Defaults to TRUE.
 #' @param show.model.tables If set to TRUE, then includes full modeling tables
 #' in the output. Defaults to TRUE.
 #' @param quiet If set to TRUE, then model building and selection will proceed
 #' without warnings and diagnostic messages being issued. Note that this will
-#' not affect warnings and messages generated during global model development.
+#' not affect warnings and messages generated as models themselves are tested.
 #' Defaults to FALSE.
 #' 
-#' @return This function yields an object of class \code{lefkoMod}, which is a 
-#' list in which the first 8 elements are the best-fit models for survival, 
-#' observation status, size, reproductive status, fecundity, juvenile survival, 
-#' juvenile observation, and juvenile size, respectively, followed by eight 
-#' elements corresponding to the model tables for each of these vital rates, in
-#' order, followed by a single character element denoting the criterion used for
-#' model selection, as follows:
+#' @return This function yields an object of class \code{lefkoMod}, which is a list
+#' in which the first 9 elements are the best-fit models for survival, observation
+#' status, size, reproductive status, fecundity, juvenile survival, juvenile
+#' observation, juvenile size, and juvenile transition to reproduction, 
+#' respectively, followed by 9 elements corresponding to the model tables for each
+#' of these vital rates, in order, followed by a single character element denoting
+#' the criterion used for model selection, and ending on a quality control vector:
 #' 
 #' \item{survival_model}{Best-fit model of the binomial probability of survival
 #' from time \emph{t} to time \emph{t}+1. Defaults to 1.}
 #' \item{observation_model}{Best-fit model of the binomial probability of 
 #' observation in time \emph{t}+1 given survival to that time. Defaults to 1.}
-#' \item{size_model}{Best-fit model of size in time \emph{t}+1 given 
-#' survival to and observation in that time. Defaults to 1.}
+#' \item{size_model}{Best-fit model of size in time \emph{t}+1 given survival to
+#' and observation in that time. Defaults to 1.}
 #' \item{repstatus_model}{Best-fit model of the binomial probability of
-#' reproduction in time \emph{t}+1, given survival to and observation in that
-#' time. Defaults to 1.}
+#' reproduction in time \emph{t}+1, given survival to and observation in that time.
+#' Defaults to 1.}
 #' \item{fecundity_model}{Best-fit model of fecundity in time \emph{t}+1 given 
 #' survival to, and observation and reproduction in that time. Defaults to 1.}
-#' \item{juv_survival_model}{Best-fit model of the binomial probability of 
-#' survival from time \emph{t} to time \emph{t}+1 of an immature individual. 
-#' Defaults to 1.}
+#' \item{juv_survival_model}{Best-fit model of the binomial probability of survival
+#' from time \emph{t} to time \emph{t}+1 of an immature individual. Defaults to 1.}
 #' \item{juv_observation_model}{Best-fit model of the binomial probability of 
-#' observation in time \emph{t}+1 given survival to that time of 
-#' an immature individual. Defaults to 1.}
-#' \item{juv_size_model}{Best-fit model of size in time \emph{t}+1 given 
-#' survival to and observation in that time of an immature individual. Defaults 
-#' to 1.}
-#' \item{juv_reproduction_model}{Best-fit model of the binomial probability 
-#' of reproduction in time \emph{t}+1, given survival to and observation in 
-#' that time of an individual that was immature in time \emph{t}. This model is 
-#' technically not a model of reproduction probability for individuals that are 
-#' immature, rather reproduction probability here is given for individuals that 
-#' are mature in time \emph{t}+1 but were immature in time \emph{t}. Defaults 
-#' to 1.}
+#' observation in time \emph{t}+1 given survival to that time of an immature
+#' individual. Defaults to 1.}
+#' \item{juv_size_model}{Best-fit model of size in time \emph{t}+1 given survival to
+#' and observation in that time of an immature individual. Defaults to 1.}
+#' \item{juv_reproduction_model}{Best-fit model of the binomial probability of
+#' reproduction in time \emph{t}+1, given survival to and observation in that time
+#' of an individual that was immature in time \emph{t}. This model is technically
+#' not a model of reproduction probability for individuals that are immature,
+#' rather reproduction probability here is given for individuals that are mature in
+#' time \emph{t}+1 but immature in time \emph{t}. Defaults to 1.}
 #' \item{survival_table}{Full dredge model table of survival probability.}
-#' \item{observation_table}{Full dredge model table of observation
-#' probability.}
+#' \item{observation_table}{Full dredge model table of observationprobability.}
 #' \item{size_table}{Full dredge model table of size.}
 #' \item{repstatus_table}{Full dredge model table of reproduction probability.}
 #' \item{fecundity_table}{Full dredge model table of fecundity.}
 #' \item{juv_survival_table}{Full dredge model table of immature survival 
 #' probability.}
-#' \item{juv_observation_table}{Full dredge model table of immature 
-#' observation probability.}
+#' \item{juv_observation_table}{Full dredge model table of immature observation
+#' probability.}
 #' \item{juv_size_table}{Full dredge model table of immature size.}
-#' \item{juv_reproduction_table}{Full dredge model table of immature 
-#' reproduction probability.}
-#' \item{criterion}{Vharacter variable denoting the criterion used to 
-#' determine the best-fit model.}
-#' \item{qc}{Data frame with three variables: 1) Name of vital rate, 2) number
-#' of individuals used to model that vital rate, and 3) number of individual
+#' \item{juv_reproduction_table}{Full dredge model table of immature reproduction
+#' probability.}
+#' \item{criterion}{Vharacter variable denoting the criterion used to determine
+#' the best-fit model.}
+#' \item{qc}{Data frame with three variables: 1) Name of vital rate, 2) number of
+#' individuals used to model that vital rate, and 3) number of individual
 #' transitions used to model that vital rate.}
 #' 
-#' The mechanics governing model building are fairly robust to errors and 
-#' exceptions. The function attempts to build global models, and simplifies 
-#' models automatically via several steps should model building fail. Model 
-#' selection proceeds via the \link[MuMIn]{dredge} function in package 'MuMIn', and 
-#' defaults to the global model should that fail.
+#' The mechanics governing model building are fairly robust to errors and
+#' exceptions. The function attempts to build global models, and simplifies models
+#' automatically should model building fail. Model selection proceeds via the 
+#' \link[MuMIn]{dredge} function in package \code{MuMIn}, and defaults to the global
+#' model should that fail.
 #' 
-#' This function is set to run in a verbose fashion, so that any errors and 
-#' warnings developed during model building, model analysis, and model selection 
-#' can be seen and, if necessary, dealt with. Interpretations of errors during 
-#' global model analysis may be found in documentation in base R for functions 
-#' \code{lm} and \code{glm} used in analysis of models without random terms, and packages 
-#' 'lme4' and 'glmmTMB' for mixed models (see \link[lme4]{glmer} and \link[glmmTMB]{glmmTMB}, respectively). 
-#' Package 'MuMIn' is used for model dredging (see \link[MuMIn]{dredge}), and errors 
-#' and warnings during dredging can be interpreted using the documentation for 
-#' that package. The \code{quiet = TRUE} option can be used to silence dredging 
-#' warnings, but users should note that automated model selection can be viewed 
-#' as mindless, and so great care should be taken to ensure that the models run
-#' are sensical, and that issues of model quality are properly dealt with.
+#' This function is verbose, so that any errors and warnings developed during model
+#' building, model analysis, and model selection can be found and dealt with.
+#' Interpretations of errors during global model analysis may be found in
+#' documentation in base R for functions \code{lm} and \code{glm} used in analysis
+#' of models without random terms, and packages 
+#' \code{lme4} and \code{glmmTMB} for mixed models (see \link[lme4]{glmer} and \link[glmmTMB]{glmmTMB},
+#' respectively). Package \code{MuMIn} is used for model dredging (see \link[MuMIn]{dredge}),
+#' and errors and warnings during dredging can be interpreted using the
+#' documentation for that package. The \code{quiet = TRUE} option can be used to
+#' silence dredge warnings, but users should note that automated model selection
+#' can be viewed as a black box, and so great care should be taken to ensure that
+#' the models run make biological sense, and that model quality is prioritized.
 #' 
-#' Note that care must be taken to build models that test the impacts of state 
-#' in time \emph{t}-1 for historical models, and that do not test these impacts 
-#' for ahistorical models. Ahistorical matrix modeling particularly will yield
-#' transition estimates biased low if historical terms from models are ignored.
-#' This can be at the start of modeling by setting \code{historical = FALSE} for
-#' the ahistorical case, and \code{historical = TRUE} for the historical case.
+#' Care must be taken to build models that test the impacts of state in time \emph{t}-1
+#' for historical models, and that do not test these impacts for ahistorical
+#' models. Ahistorical matrix modeling particularly will yield biased transition
+#' estimates if historical terms from models are ignored. This can be dealt with
+#' at the start of modeling by setting \code{historical = FALSE} for the
+#' ahistorical case, and \code{historical = TRUE} for the historical case.
 #' 
 #' Model building and selection may fail if NAs exist within variables used in
-#' modeling. If NAs represent 0 entries, then please change all NAs to 0, as 
-#' with the \code{NAas0 = TRUE} option in function \code{\link{verticalize3}()}.
+#' modeling. If NAs represent 0 entries, then change all NAs to 0, as with the
+#' \code{NAas0 = TRUE} option in function \code{\link{verticalize3}()}.
 #' 
 #' @examples
 #' \donttest{
@@ -210,7 +199,7 @@
 #' lathvertln <- verticalize3(lathyrus, noyears = 4, firstyear = 1988, patchidcol = "SUBPLOT",
 #'                            individcol = "GENET", blocksize = 9, juvcol = "Seedling1988",
 #'                            size1col = "lnVol88", repstr1col = "FCODE88",
-#'                            fec1col = "Intactseed88", dead1col = "Dead1988",
+#'                            fec1col = "Intactseed88", dead1col = "Intactseed88",
 #'                            nonobs1col = "Dormant1988", stageassign = lathframeln,
 #'                            stagesize = "sizea", censorcol = "Missing1988",
 #'                            censorkeep = NA, NAas0 = TRUE, censor = TRUE)
@@ -266,8 +255,8 @@ modelsearch <- function(data, historical = TRUE, approach = "lme4", suite = "siz
     stop("Censor variables should be included either as 1 variable per row in the historical data file (1 variable in the dataset), or as 1 variable per timestep within each historical data file (2 or 3 variables in the dataset). No more than 3 variables are allowed, and if more than one are supplied, then they are assumed to be in order of time t+1, time t, and time t-1, respectively.", call. = FALSE)
   }
   if (length(indiv) > 1) {stop("Only one individual identification variable is allowed.", call. = FALSE)}
-  if (length(year) > 1) {stop("Only one time step variable is allowed, and it must refer to time step t.", call. = FALSE)}
-  if (length(patch) > 1) {stop("Only one patch variable is allowed, and it must refer to time step t.", call. = FALSE)}
+  if (length(year) > 1) {stop("Only one time variable is allowed, and it must refer to time t.", call. = FALSE)}
+  if (length(patch) > 1) {stop("Only one patch variable is allowed.", call. = FALSE)}
   
   if (is.element("surv", vitalrates)) {
     if (length(surv) > 3 | length(surv) == 1) {stop("This function requires 2 (if ahistorical) or 3 (if historical) survival variables from the dataset as input parameters.", call. = FALSE)}
@@ -752,7 +741,7 @@ modelsearch <- function(data, historical = TRUE, approach = "lme4", suite = "siz
     }
     
     if (is.element(0, juvsurv.data$matstatus3)) {
-      warning("Modelsearch() assumes that all juveniles either die or transition to maturity within 1 year. Some individuals in this dataset appear to live longer as juveniles than assumptions allow.")
+      warning("Function modelsearch() assumes that all juveniles either die or transition to maturity within 1 year. Some individuals in this dataset appear to live longer as juveniles than assumptions allow.")
     }
     
     juvobs.data <- subset(juvsurv.data, juvsurv.data[, which(names(juvsurv.data) == surv[1])] == 1)
@@ -819,15 +808,27 @@ modelsearch <- function(data, historical = TRUE, approach = "lme4", suite = "siz
     fec.data <- subset(surv.data, surv.data[, which(names(repst.data) == repst[2])] == 1)
     if (fectime == 2) {
       fec.data <- fec.data[which(!is.na(fec.data[, which(names(fec.data) == fec[2])])),]
+      if (full.repst.model != 1) {
+        fec.data <- fec.data[which(fec.data[, which(names(fec.data) == repst[2])] == 1),]
+      }
     } else if (fectime == 3) {
       fec.data <- fec.data[which(!is.na(fec.data[, which(names(fec.data) == fec[1])])),]
+      if (full.repst.model != 1) {
+        fec.data <- fec.data[which(fec.data[, which(names(fec.data) == repst[1])] == 1),]
+      }
     }
   } else {
     fec.data <- surv.data
     if (fectime == 2) {
       fec.data <- fec.data[which(!is.na(fec.data[, which(names(fec.data) == fec[2])])),]
+      if (full.repst.model != 1) {
+        fec.data <- fec.data[which(fec.data[, which(names(fec.data) == repst[2])] == 1),]
+      }
     } else if (fectime == 3) {
       fec.data <- fec.data[which(!is.na(fec.data[, which(names(fec.data) == fec[1])])),]
+      if (full.repst.model != 1) {
+        fec.data <- fec.data[which(fec.data[, which(names(fec.data) == repst[1])] == 1),]
+      }
     }
   }
   
@@ -877,7 +878,7 @@ modelsearch <- function(data, historical = TRUE, approach = "lme4", suite = "siz
       usedfec <- which(names(fec.data) == fec[1])
     }
     if (is.element(0, fec.data[, usedfec])) {
-      warning("WARNING: Fecundity in time t cannot be Poisson-distributed and include 0s. Will develop fecundity models excluding all 0s. Consider adding a reproductive status variable to absorb 0 values.\n")
+      warning("WARNING: Fecundity in time t cannot be Poisson-distributed and include 0s. Will develop fecundity models excluding all 0s. Consider adding a reproductive status variable to absorb 0 values, or using a fecundity variable to denote reproductive status.\n")
       fec.data <- subset(fec.data, fec.data[, usedfec] > 0)
     }
     
@@ -886,7 +887,7 @@ modelsearch <- function(data, historical = TRUE, approach = "lme4", suite = "siz
     }
   } else if (fecdist == "negbin") {
     if (is.element(0, fec.data[, usedfec])) {
-      warning("WARNING: Fecundity in time t cannot conform to the negative binomial distribution and include 0s. Will develop fecundity models excluding all 0s. Consider adding a reproductive status variable to absorb 0 values.\n")
+      warning("WARNING: Fecundity in time t cannot conform to the negative binomial distribution and include 0s. Will develop fecundity models excluding all 0s. Consider adding a reproductive status variable to absorb 0 values, or using a fecundity variable to denote reproductive status.\n")
       fec.data <- subset(fec.data, fec.data[, usedfec] > 0)
     }
     
@@ -951,7 +952,7 @@ modelsearch <- function(data, historical = TRUE, approach = "lme4", suite = "siz
   if (approach == "lme4") {
     if (full.surv.model != 1) {
       if (is.element(0, surv.data$alive3) & is.element(1, surv.data$alive3)) {
-        writeLines("\nDeveloping global model of survival probability...\n"); 
+        if (!quiet) {writeLines("\nDeveloping global model of survival probability...\n"); }
         surv.global.model <- try(lme4::glmer(formula = full.surv.model, data = surv.data, family = "binomial"),
                                  silent = TRUE)
         
@@ -978,7 +979,7 @@ modelsearch <- function(data, historical = TRUE, approach = "lme4", suite = "siz
           }
           
           if (nox.surv.model != full.surv.model) {
-            writeLines("\nInitial global model estimation failed. Attempting a global model without interaction terms.\n")
+            if (!quiet) {writeLines("\nInitial global model estimation failed. Attempting a global model without interaction terms.\n")}
             surv.global.model <- try(lme4::glmer(formula = nox.surv.model, data = surv.data, family = "binomial"),
                                      silent = TRUE)
           }
@@ -991,7 +992,7 @@ modelsearch <- function(data, historical = TRUE, approach = "lme4", suite = "siz
           if (class(surv.global.model) == "try-error") {
             
             if (nox.surv.model != nopat.surv.model) {
-              writeLines("\nGlobal model estimation difficulties. Attempting a global model without a patch term.")
+              if (!quiet) {writeLines("\nGlobal model estimation difficulties. Attempting a global model without a patch term.")}
               surv.global.model <- try(lme4::glmer(formula = nopat.surv.model, data = surv.data, family = "binomial"),
                                        silent = TRUE)
             }
@@ -1005,7 +1006,7 @@ modelsearch <- function(data, historical = TRUE, approach = "lme4", suite = "siz
           if (class(surv.global.model) == "try-error") {
             
             if (noyr.surv.model != nopat.surv.model) {
-              writeLines("\nGlobal model estimation difficulties. Attempting a global model without a year term.")
+              if (!quiet) {writeLines("\nGlobal model estimation difficulties. Attempting a global model without a year term.")}
               surv.global.model <- try(lme4::glmer(formula = noyr.surv.model, data = surv.data, family = "binomial"),
                                        silent = TRUE)
             }
@@ -1019,22 +1020,22 @@ modelsearch <- function(data, historical = TRUE, approach = "lme4", suite = "siz
           if (class(surv.global.model) == "try-error") {
             
             if (noind.surv.model != noyr.surv.model) {
-              writeLines("\nGlobal model estimation difficulties. Attempting a global model without an individual identity term.")
+              if (!quiet) {writeLines("\nGlobal model estimation difficulties. Attempting a global model without an individual identity term.")}
               surv.global.model <- try(lme4::glmer(formula = noind.surv.model, data = surv.data, family = "binomial"),
                                        silent = TRUE)
             }
           }
           
           if (class(surv.global.model) == "try-error") {
-            writeLines("\nCould not properly estimate a global model for survival.")
+            if (!quiet) {writeLines("\nCould not properly estimate a global model for survival.")}
           }
         }
       } else if (!is.element(0, surv.data$alive3)) {
-        writeLines("\nSurvival response is constant so will not model it.")
+        if (!quiet) {writeLines("\nSurvival response is constant so will not model it.")}
         full.surv.model <- 1
         surv.global.model <- 1
       } else {
-        writeLines("\nSurvival response is constant so will not model it.")
+        if (!quiet) {writeLines("\nSurvival response is constant so will not model it.")}
         full.surv.model <- 1
         surv.global.model <- 0
       }
@@ -1042,7 +1043,7 @@ modelsearch <- function(data, historical = TRUE, approach = "lme4", suite = "siz
     
     if (full.obs.model != 1) {
       if (is.element(0, obs.data$obsstatus3) & is.element(1, obs.data$obsstatus3)) {
-        writeLines("\nDeveloping global model of observation probability...\n"); 
+        if (!quiet) {writeLines("\nDeveloping global model of observation probability...\n"); }
         obs.global.model <- try(lme4::glmer(formula = full.obs.model, data = obs.data, family = "binomial"),
                                 silent = TRUE)
         
@@ -1069,7 +1070,7 @@ modelsearch <- function(data, historical = TRUE, approach = "lme4", suite = "siz
           }
           
           if (nox.obs.model != full.obs.model) {
-            writeLines("\nInitial global model estimation failed. Attempting a global model without interaction terms.\n")
+            if (!quiet) {writeLines("\nInitial global model estimation failed. Attempting a global model without interaction terms.\n")}
             obs.global.model <- try(lme4::glmer(formula = nox.obs.model, data = obs.data, family = "binomial"),
                                     silent = TRUE)
           }
@@ -1082,7 +1083,7 @@ modelsearch <- function(data, historical = TRUE, approach = "lme4", suite = "siz
           if (class(obs.global.model) == "try-error") {
             
             if (nox.obs.model != nopat.obs.model) {
-              writeLines("\nGlobal model estimation difficulties. Attempting a global model without a patch term.")
+              if (!quiet) {writeLines("\nGlobal model estimation difficulties. Attempting a global model without a patch term.")}
               obs.global.model <- try(lme4::glmer(formula = nopat.obs.model, data = obs.data, family = "binomial"),
                                       silent = TRUE)
             }
@@ -1096,7 +1097,7 @@ modelsearch <- function(data, historical = TRUE, approach = "lme4", suite = "siz
           if (class(obs.global.model) == "try-error") {
             
             if (noyr.obs.model != nopat.obs.model) {
-              writeLines("\nGlobal model estimation difficulties. Attempting a global model without a year term.")
+              if (!quiet) {writeLines("\nGlobal model estimation difficulties. Attempting a global model without a year term.")}
               obs.global.model <- try(lme4::glmer(formula = noyr.obs.model, data = obs.data, family = "binomial"),
                                       silent = TRUE)
             }
@@ -1110,22 +1111,22 @@ modelsearch <- function(data, historical = TRUE, approach = "lme4", suite = "siz
           if (class(obs.global.model) == "try-error") {
             
             if (noind.obs.model != noyr.obs.model) {
-              writeLines("\nGlobal model estimation difficulties. Attempting a global model without an individual identity term.")
+              if (!quiet) {writeLines("\nGlobal model estimation difficulties. Attempting a global model without an individual identity term.")}
               obs.global.model <- try(lme4::glmer(formula = noind.obs.model, data = obs.data, family = "binomial"),
                                       silent = TRUE)
             }
           }
           
           if (class(obs.global.model) == "try-error") {
-            writeLines("Could not properly estimate a global model for observation status.")
+            if (!quiet) {writeLines("Could not properly estimate a global model for observation status.")}
           }
         }
       } else if (!is.element(0, obs.data$obsstatus3)) {
-        writeLines("\nObservation response is constant so will not model it.")
+        if (!quiet) {writeLines("\nObservation response is constant so will not model it.")}
         full.obs.model <- 1
         obs.global.model <- 1
       } else {
-        writeLines("\nObservation response is constant so will not model it.")
+        if (!quiet) {writeLines("\nObservation response is constant so will not model it.")}
         full.obs.model <- 1
         obs.global.model <- 0
       }
@@ -1133,7 +1134,7 @@ modelsearch <- function(data, historical = TRUE, approach = "lme4", suite = "siz
     
     if (full.size.model != 1) {
       if (sizedist == "gaussian") {
-        writeLines("\nDeveloping global model of size (Gaussian)...\n");
+        if (!quiet) {writeLines("\nDeveloping global model of size (Gaussian)...\n");}
         size.global.model <- try(lme4::lmer(formula = full.size.model, data = size.data),
                                  silent = TRUE)
         
@@ -1160,7 +1161,7 @@ modelsearch <- function(data, historical = TRUE, approach = "lme4", suite = "siz
           }
           
           if (nox.size.model != full.size.model) {
-            writeLines("\nInitial global model estimation failed. Attempting a global model without interaction terms.\n")
+            if (!quiet) {writeLines("\nInitial global model estimation failed. Attempting a global model without interaction terms.\n")}
             size.global.model <- try(lme4::lmer(formula = nox.size.model, data = size.data), silent = TRUE)
           }
           
@@ -1172,7 +1173,7 @@ modelsearch <- function(data, historical = TRUE, approach = "lme4", suite = "siz
           if (class(size.global.model) == "try-error") {
             
             if (nox.size.model != nopat.size.model) {
-              writeLines("\nGlobal model estimation difficulties. Attempting a global model without a patch term.")
+              if (!quiet) {writeLines("\nGlobal model estimation difficulties. Attempting a global model without a patch term.")}
               size.global.model <- try(lme4::lmer(formula = nopat.size.model, data = size.data),
                                        silent = TRUE)
             }
@@ -1186,7 +1187,7 @@ modelsearch <- function(data, historical = TRUE, approach = "lme4", suite = "siz
           if (class(size.global.model) == "try-error") {
             
             if (noyr.size.model != nopat.size.model) {
-              writeLines("\nGlobal model estimation difficulties. Attempting a global model without a year term.")
+              if (!quiet) {writeLines("\nGlobal model estimation difficulties. Attempting a global model without a year term.")}
               size.global.model <- try(lme4::lmer(formula = noyr.size.model, data = size.data),
                                        silent = TRUE)
             }
@@ -1200,18 +1201,18 @@ modelsearch <- function(data, historical = TRUE, approach = "lme4", suite = "siz
           if (class(size.global.model) == "try-error") {
             
             if (noind.size.model != noyr.size.model) {
-              writeLines("\nGlobal model estimation difficulties. Attempting a global model without an individual identity term.")
+              if (!quiet) {writeLines("\nGlobal model estimation difficulties. Attempting a global model without an individual identity term.")}
               size.global.model <- try(lme4::lmer(formula = noind.size.model, data = size.data),
                                        silent = TRUE)
             }
           }
           
           if (class(size.global.model) == "try-error") {
-            writeLines("\nCould not properly estimate a global model for size.")
+            if (!quiet) {writeLines("\nCould not properly estimate a global model for size.")}
           }
         }
       } else if (sizedist == "poisson") {
-        writeLines("\nDeveloping global model of size (Poisson)...\n");
+        if (!quiet) {writeLines("\nDeveloping global model of size (Poisson)...\n");}
         size.global.model <- try(lme4::glmer(formula = full.size.model, data = size.data, family = "poisson"),
                                  silent = TRUE)
         
@@ -1238,7 +1239,7 @@ modelsearch <- function(data, historical = TRUE, approach = "lme4", suite = "siz
           }
           
           if (nox.size.model != full.size.model) {
-            writeLines("\nInitial global model estimation failed. Attempting a global model without interaction terms.\n")
+            if (!quiet) {writeLines("\nInitial global model estimation failed. Attempting a global model without interaction terms.\n")}
             size.global.model <- try(lme4::glmer(formula = nox.size.model, data = size.data, family = "poisson"),
                                      silent = TRUE)
           }
@@ -1251,7 +1252,7 @@ modelsearch <- function(data, historical = TRUE, approach = "lme4", suite = "siz
           if (class(size.global.model) == "try-error") {
             
             if (nox.size.model != nopat.size.model) {
-              writeLines("\nGlobal model estimation difficulties. Attempting a global model without a patch term.")
+              if (!quiet) {writeLines("\nGlobal model estimation difficulties. Attempting a global model without a patch term.")}
               size.global.model <- try(lme4::glmer(formula = nopat.size.model, data = size.data, family = "poisson"),
                                        silent = TRUE)
             }
@@ -1265,7 +1266,7 @@ modelsearch <- function(data, historical = TRUE, approach = "lme4", suite = "siz
           if (class(size.global.model) == "try-error") {
             
             if (noyr.size.model != nopat.size.model) {
-              writeLines("\nGlobal model estimation difficulties. Attempting a global model without a year term.")
+              if (!quiet) {writeLines("\nGlobal model estimation difficulties. Attempting a global model without a year term.")}
               size.global.model <- try(lme4::glmer(formula = noyr.size.model, data = size.data, family = "poisson"),
                                        silent = TRUE)
             }
@@ -1279,18 +1280,18 @@ modelsearch <- function(data, historical = TRUE, approach = "lme4", suite = "siz
           if (class(size.global.model) == "try-error") {
             
             if (noind.size.model != noyr.size.model) {
-              writeLines("\nGlobal model estimation difficulties. Attempting a global model without an individual identity term.")
+              if (!quiet) {writeLines("\nGlobal model estimation difficulties. Attempting a global model without an individual identity term.")}
               size.global.model <- try(lme4::glmer(formula = noind.size.model, data = size.data, family = "poisson"),
                                        silent = TRUE)
             }
           }
           
           if (class(size.global.model) == "try-error") {
-            writeLines("\nCould not properly estimate a global model for size.")
+            if (!quiet) {writeLines("\nCould not properly estimate a global model for size.")}
           }
         }
       } else if (sizedist == "negbin") {
-        writeLines("\nDeveloping global model of size (negative binomial)...\n");
+        if (!quiet) {writeLines("\nDeveloping global model of size (negative binomial)...\n");}
         size.global.model <- try(glmmTMB::glmmTMB(formula = as.formula(full.size.model), data = size.data,
                                                   ziformula=~0, family = glmmTMB::nbinom2), silent = TRUE)
         
@@ -1317,7 +1318,7 @@ modelsearch <- function(data, historical = TRUE, approach = "lme4", suite = "siz
           }
           
           if (nox.size.model != full.size.model) {
-            writeLines("\nInitial global model estimation failed. Attempting a global model without interaction terms.\n")
+            if (!quiet) {writeLines("\nInitial global model estimation failed. Attempting a global model without interaction terms.\n")}
             size.global.model <- try(glmmTMB::glmmTMB(formula = as.formula(nox.size.model), data = size.data,
                                                       ziformula=~0, family = glmmTMB::nbinom2), silent = TRUE)
           }
@@ -1330,7 +1331,7 @@ modelsearch <- function(data, historical = TRUE, approach = "lme4", suite = "siz
           if (class(size.global.model) == "try-error") {
             
             if (nox.size.model != nopat.size.model) {
-              writeLines("\nGlobal model estimation difficulties. Attempting a global model without a patch term.")
+              if (!quiet) {writeLines("\nGlobal model estimation difficulties. Attempting a global model without a patch term.")}
               size.global.model <- try(glmmTMB::glmmTMB(formula = as.formula(nopat.size.model), data = size.data,
                                                         ziformula=~0, family = glmmTMB::nbinom2), silent = TRUE)
             }
@@ -1344,7 +1345,7 @@ modelsearch <- function(data, historical = TRUE, approach = "lme4", suite = "siz
           if (class(size.global.model) == "try-error") {
             
             if (noyr.size.model != nopat.size.model) {
-              writeLines("\nGlobal model estimation difficulties. Attempting a global model without a year term.")
+              if (!quiet) {writeLines("\nGlobal model estimation difficulties. Attempting a global model without a year term.")}
               size.global.model <- try(glmmTMB::glmmTMB(formula = as.formula(noyr.size.model), data = size.data,
                                                         ziformula=~0, family = glmmTMB::nbinom2), silent = TRUE)
             }
@@ -1358,14 +1359,14 @@ modelsearch <- function(data, historical = TRUE, approach = "lme4", suite = "siz
           if (class(size.global.model) == "try-error") {
             
             if (noind.size.model != noyr.size.model) {
-              writeLines("\nGlobal model estimation difficulties. Attempting a global model without an individual identity term.")
+              if (!quiet) {writeLines("\nGlobal model estimation difficulties. Attempting a global model without an individual identity term.")}
               size.global.model <- try(glmmTMB::glmmTMB(formula = as.formula(noind.size.model), data = size.data,
                                                         ziformula=~0, family = glmmTMB::nbinom2), silent = TRUE)
             }
           }
           
           if (class(size.global.model) == "try-error") {
-            writeLines("\nCould not properly estimate a global model for size.")
+            if (!quiet) {writeLines("\nCould not properly estimate a global model for size.")}
           }
         }
       }
@@ -1373,7 +1374,7 @@ modelsearch <- function(data, historical = TRUE, approach = "lme4", suite = "siz
     
     if (full.repst.model != 1) {
       if (is.element(0, repst.data$repstatus3) & is.element(1, repst.data$repstatus3)) {
-        writeLines("\nDeveloping global model of the probability of reproduction...\n"); 
+        if (!quiet) {writeLines("\nDeveloping global model of the probability of reproduction...\n"); }
         repst.global.model <- try(lme4::glmer(formula = full.repst.model, data = repst.data, family = "binomial"),
                                   silent = TRUE)
         
@@ -1400,7 +1401,7 @@ modelsearch <- function(data, historical = TRUE, approach = "lme4", suite = "siz
           }
           
           if (nox.repst.model != full.repst.model) {
-            writeLines("\nInitial global model estimation failed. Attempting a global model without interaction terms.\n")
+            if (!quiet) {writeLines("\nInitial global model estimation failed. Attempting a global model without interaction terms.\n")}
             repst.global.model <- try(lme4::glmer(formula = nox.repst.model, data = repst.data, family = "binomial"),
                                       silent = TRUE)
           }
@@ -1413,7 +1414,7 @@ modelsearch <- function(data, historical = TRUE, approach = "lme4", suite = "siz
           if (class(repst.global.model) == "try-error") {
             
             if (nox.repst.model != nopat.repst.model) {
-              writeLines("\nGlobal model estimation difficulties. Attempting a global model without a patch term.")
+              if (!quiet) {writeLines("\nGlobal model estimation difficulties. Attempting a global model without a patch term.")}
               repst.global.model <- try(lme4::glmer(formula = nopat.repst.model, data = repst.data, family = "binomial"),
                                         silent = TRUE)
             }
@@ -1427,7 +1428,7 @@ modelsearch <- function(data, historical = TRUE, approach = "lme4", suite = "siz
           if (class(repst.global.model) == "try-error") {
             
             if (noyr.repst.model != nopat.repst.model) {
-              writeLines("\nGlobal model estimation difficulties. Attempting a global model without a year term.")
+              if (!quiet) {writeLines("\nGlobal model estimation difficulties. Attempting a global model without a year term.")}
               repst.global.model <- try(lme4::glmer(formula = noyr.repst.model, data = repst.data, family = "binomial"),
                                         silent = TRUE)
             }
@@ -1441,22 +1442,22 @@ modelsearch <- function(data, historical = TRUE, approach = "lme4", suite = "siz
           if (class(repst.global.model) == "try-error") {
             
             if (noind.repst.model != noyr.repst.model) {
-              writeLines("\nGlobal model estimation difficulties. Attempting a global model without an individual identity term.")
+              if (!quiet) {writeLines("\nGlobal model estimation difficulties. Attempting a global model without an individual identity term.")}
               repst.global.model <- try(lme4::glmer(formula = noind.repst.model, data = repst.data, family = "binomial"),
                                         silent = TRUE)
             }
           }
           
           if (class(repst.global.model) == "try-error") {
-            writeLines("\nCould not properly estimate a global model for reproduction status.")
+            if (!quiet) {writeLines("\nCould not properly estimate a global model for reproduction status.")}
           }
         }
       } else if (!is.element(0, repst.data$repstatus3)) {
-        writeLines("\nReproductive status response is constant so will not model it.")
+        if (!quiet) {writeLines("\nReproductive status response is constant so will not model it.")}
         full.repst.model <- 1
         repst.global.model <- 1
       } else {
-        writeLines("\nReproductive status response is constant so will not model it.")
+        if (!quiet) {writeLines("\nReproductive status response is constant so will not model it.")}
         full.repst.model <- 1
         repst.global.model <- 0
       }
@@ -1464,7 +1465,7 @@ modelsearch <- function(data, historical = TRUE, approach = "lme4", suite = "siz
     
     if (full.fec.model != 1) {
       if (fecdist == "gaussian") {
-        writeLines("\nDeveloping global model of fecundity (Gaussian)...\n");
+        if (!quiet) {writeLines("\nDeveloping global model of fecundity (Gaussian)...\n");}
         fec.global.model <- try(lme4::lmer(formula = full.fec.model, data = fec.data), silent = TRUE)
         
         if (class(fec.global.model) == "try-error") {
@@ -1490,7 +1491,7 @@ modelsearch <- function(data, historical = TRUE, approach = "lme4", suite = "siz
           }
           
           if (nox.fec.model != full.fec.model) {
-            writeLines("\nInitial global model estimation failed. Attempting a global model without interaction terms.\n")
+            if (!quiet) {writeLines("\nInitial global model estimation failed. Attempting a global model without interaction terms.\n")}
             fec.global.model <- try(lme4::lmer(formula = nox.fec.model, data = fec.data),
                                     silent = TRUE)
           }
@@ -1503,7 +1504,7 @@ modelsearch <- function(data, historical = TRUE, approach = "lme4", suite = "siz
           if (class(fec.global.model) == "try-error") {
             
             if (nox.fec.model != nopat.fec.model) {
-              writeLines("\nGlobal model estimation difficulties. Attempting a global model without a patch term.")
+              if (!quiet) {writeLines("\nGlobal model estimation difficulties. Attempting a global model without a patch term.")}
               fec.global.model <- try(lme4::lmer(formula = nopat.fec.model, data = fec.data),
                                       silent = TRUE)
             }
@@ -1517,7 +1518,7 @@ modelsearch <- function(data, historical = TRUE, approach = "lme4", suite = "siz
           if (class(fec.global.model) == "try-error") {
             
             if (noyr.fec.model != nopat.fec.model) {
-              writeLines("\nGlobal model estimation difficulties. Attempting a global model without a year term.")
+              if (!quiet) {writeLines("\nGlobal model estimation difficulties. Attempting a global model without a year term.")}
               fec.global.model <- try(lme4::lmer(formula = noyr.fec.model, data = fec.data),
                                       silent = TRUE)
             }
@@ -1531,18 +1532,18 @@ modelsearch <- function(data, historical = TRUE, approach = "lme4", suite = "siz
           if (class(fec.global.model) == "try-error") {
             
             if (noind.fec.model != noyr.fec.model) {
-              writeLines("\nGlobal model estimation difficulties. Attempting a global model without an individual identity term.")
+              if (!quiet) {writeLines("\nGlobal model estimation difficulties. Attempting a global model without an individual identity term.")}
               fec.global.model <- try(lme4::lmer(formula = noind.fec.model, data = fec.data),
                                       silent = TRUE)
             }
           }
           
           if (class(fec.global.model) == "try-error") {
-            writeLines("\nCould not properly estimate a global model for fecundity.")
+            if (!quiet) {writeLines("\nCould not properly estimate a global model for fecundity.")}
           }
         }
       } else if (fecdist == "poisson") {
-        writeLines("\nDeveloping global model of fecundity (Poisson)...\n");
+        if (!quiet) {writeLines("\nDeveloping global model of fecundity (Poisson)...\n");}
         fec.global.model <- try(lme4::glmer(formula = full.fec.model, data = fec.data, family = "poisson"),
                                 silent = TRUE)
         
@@ -1569,7 +1570,7 @@ modelsearch <- function(data, historical = TRUE, approach = "lme4", suite = "siz
           }
           
           if (nox.fec.model != full.fec.model) {
-            writeLines("\nInitial global model estimation failed. Attempting a global model without interaction terms.\n")
+            if (!quiet) {writeLines("\nInitial global model estimation failed. Attempting a global model without interaction terms.\n")}
             fec.global.model <- try(lme4::glmer(formula = nox.fec.model, data = fec.data, family = "poisson"),
                                     silent = TRUE)
           }
@@ -1582,7 +1583,7 @@ modelsearch <- function(data, historical = TRUE, approach = "lme4", suite = "siz
           if (class(fec.global.model) == "try-error") {
             
             if (nox.fec.model != nopat.fec.model) {
-              writeLines("\nGlobal model estimation difficulties. Attempting a global model without a patch term.")
+              if (!quiet) {writeLines("\nGlobal model estimation difficulties. Attempting a global model without a patch term.")}
               fec.global.model <- try(lme4::glmer(formula = nopat.fec.model, data = fec.data, family = "poisson"),
                                       silent = TRUE)
             }
@@ -1596,7 +1597,7 @@ modelsearch <- function(data, historical = TRUE, approach = "lme4", suite = "siz
           if (class(fec.global.model) == "try-error") {
             
             if (noyr.fec.model != nopat.fec.model) {
-              writeLines("\nGlobal model estimation difficulties. Attempting a global model without a year term.")
+              if (!quiet) {writeLines("\nGlobal model estimation difficulties. Attempting a global model without a year term.")}
               fec.global.model <- try(lme4::glmer(formula = noyr.fec.model, data = fec.data, family = "poisson"),
                                       silent = TRUE)
             }
@@ -1610,18 +1611,18 @@ modelsearch <- function(data, historical = TRUE, approach = "lme4", suite = "siz
           if (class(fec.global.model) == "try-error") {
             
             if (noind.fec.model != noyr.fec.model) {
-              writeLines("\nGlobal model estimation difficulties. Attempting a global model without an individual identity term.")
+              if (!quiet) {writeLines("\nGlobal model estimation difficulties. Attempting a global model without an individual identity term.")}
               fec.global.model <- try(lme4::glmer(formula = noind.fec.model, data = fec.data, family = "poisson"),
                                       silent = TRUE)
             }
           }
           
           if (class(fec.global.model) == "try-error") {
-            writeLines("\nCould not properly estimate a global model for fecundity.")
+            if (!quiet) {writeLines("\nCould not properly estimate a global model for fecundity.")}
           }
         }
       } else if (fecdist == "negbin") {
-        writeLines("\nDeveloping global model of fecundity (negative binomial)...\n");
+        if (!quiet) {writeLines("\nDeveloping global model of fecundity (negative binomial)...\n");}
         fec.global.model <- try(glmmTMB::glmmTMB(formula = as.formula(full.fec.model), data = fec.data,
                                                  ziformula=~0, family = glmmTMB::nbinom2), silent = TRUE)
         
@@ -1648,7 +1649,7 @@ modelsearch <- function(data, historical = TRUE, approach = "lme4", suite = "siz
           }
           
           if (nox.fec.model != full.fec.model) {
-            writeLines("\nInitial global model estimation failed. Attempting a global model without interaction terms.\n")
+            if (!quiet) {writeLines("\nInitial global model estimation failed. Attempting a global model without interaction terms.\n")}
             fec.global.model <- try(glmmTMB::glmmTMB(formula = as.formula(nox.fec.model), data = fec.data,
                                                      ziformula=~0, family = glmmTMB::nbinom2), silent = TRUE)
           }
@@ -1661,7 +1662,7 @@ modelsearch <- function(data, historical = TRUE, approach = "lme4", suite = "siz
           if (class(fec.global.model) == "try-error") {
             
             if (nox.fec.model != nopat.fec.model) {
-              writeLines("\nGlobal model estimation difficulties. Attempting a global model without a patch term.")
+              if (!quiet) {writeLines("\nGlobal model estimation difficulties. Attempting a global model without a patch term.")}
               fec.global.model <- try(glmmTMB::glmmTMB(formula = as.formula(nopat.fec.model), data = fec.data,
                                                        ziformula=~0, family = glmmTMB::nbinom2), silent = TRUE)
             }
@@ -1675,7 +1676,7 @@ modelsearch <- function(data, historical = TRUE, approach = "lme4", suite = "siz
           if (class(fec.global.model) == "try-error") {
             
             if (noyr.fec.model != nopat.fec.model) {
-              writeLines("\nGlobal model estimation difficulties. Attempting a global model without a year term.")
+              if (!quiet) {writeLines("\nGlobal model estimation difficulties. Attempting a global model without a year term.")}
               fec.global.model <- try(glmmTMB::glmmTMB(formula = as.formula(noyr.fec.model), data = fec.data,
                                                        ziformula=~0, family = glmmTMB::nbinom2), silent = TRUE)
             }
@@ -1689,14 +1690,14 @@ modelsearch <- function(data, historical = TRUE, approach = "lme4", suite = "siz
           if (class(fec.global.model) == "try-error") {
             
             if (noind.fec.model != noyr.fec.model) {
-              writeLines("\nGlobal model estimation difficulties. Attempting a global model without an individual identity term.")
+              if (!quiet) {writeLines("\nGlobal model estimation difficulties. Attempting a global model without an individual identity term.")}
               fec.global.model <- try(glmmTMB::glmmTMB(formula = as.formula(noind.fec.model), data = fec.data,
                                                        ziformula=~0, family = glmmTMB::nbinom2), silent = TRUE)
             }
           }
           
           if (class(fec.global.model) == "try-error") {
-            writeLines("\nCould not properly estimate a global model for fecundity.")
+            if (!quiet) {writeLines("\nCould not properly estimate a global model for fecundity.")}
           }
         }
       }
@@ -1704,7 +1705,7 @@ modelsearch <- function(data, historical = TRUE, approach = "lme4", suite = "siz
     
     if (juv.surv.model != 1) {
       if (is.element(0, juvsurv.data$alive3) & is.element(1, juvsurv.data$alive3)) {
-        writeLines("\nDeveloping global model of juvenile survival probability...\n"); 
+        if (!quiet) {writeLines("\nDeveloping global model of juvenile survival probability...\n"); }
         juv.surv.global.model <- try(lme4::glmer(formula = juv.surv.model, data = juvsurv.data, 
                                                  family = "binomial"), silent = TRUE)
         
@@ -1716,7 +1717,7 @@ modelsearch <- function(data, historical = TRUE, approach = "lme4", suite = "siz
           }
           
           if (nox.juv.surv.model != juv.surv.model) {
-            writeLines("\nInitial global model estimation failed. Attempting a global model without interaction terms.\n")
+            if (!quiet) {writeLines("\nInitial global model estimation failed. Attempting a global model without interaction terms.\n")}
             juv.surv.global.model <- try(lme4::glmer(formula = nox.juv.surv.model, data = juvsurv.data, 
                                                      family = "binomial"), silent = TRUE)
           }
@@ -1729,7 +1730,7 @@ modelsearch <- function(data, historical = TRUE, approach = "lme4", suite = "siz
           if (class(juv.surv.global.model) == "try-error") {
             
             if (nox.juv.surv.model != nopat.juv.surv.model) {
-              writeLines("\nGlobal model estimation difficulties. Attempting a global model without a patch term.")
+              if (!quiet) {writeLines("\nGlobal model estimation difficulties. Attempting a global model without a patch term.")}
               juv.surv.global.model <- try(lme4::glmer(formula = nopat.juv.surv.model, data = juvsurv.data, 
                                                        family = "binomial"), silent = TRUE)
             }
@@ -1743,7 +1744,7 @@ modelsearch <- function(data, historical = TRUE, approach = "lme4", suite = "siz
           if (class(juv.surv.global.model) == "try-error") {
             
             if (noyr.juv.surv.model != nopat.juv.surv.model) {
-              writeLines("\nGlobal model estimation difficulties. Attempting a global model without a year term.")
+              if (!quiet) {writeLines("\nGlobal model estimation difficulties. Attempting a global model without a year term.")}
               juv.surv.global.model <- try(lme4::glmer(formula = noyr.juv.surv.model, data = juvsurv.data, 
                                                        family = "binomial"), silent = TRUE)
             }
@@ -1757,22 +1758,22 @@ modelsearch <- function(data, historical = TRUE, approach = "lme4", suite = "siz
           if (class(juv.surv.global.model) == "try-error") {
             
             if (noind.juv.surv.model != noyr.juv.surv.model) {
-              writeLines("\nGlobal model estimation difficulties. Attempting a global model without an individual identity term.")
+              if (!quiet) {writeLines("\nGlobal model estimation difficulties. Attempting a global model without an individual identity term.")}
               juv.surv.global.model <- try(lme4::glmer(formula = noind.juv.surv.model, data = juvsurv.data, 
                                                        family = "binomial"), silent = TRUE)
             }
           }
           
           if (class(juv.surv.global.model) == "try-error") {
-            writeLines("\nCould not properly estimate a global model for juvenile survival.")
+            if (!quiet) {writeLines("\nCould not properly estimate a global model for juvenile survival.")}
           }
         }
       } else if (!is.element(0, juvsurv.data$alive3)) {
-        writeLines("\nJuvenile survival response is constant so will not model it.")
+        if (!quiet) {writeLines("\nJuvenile survival response is constant so will not model it.")}
         juv.surv.model <- 1
         juv.surv.global.model <- 1
       } else {
-        writeLines("\nJuvenile survival response is constant so will not model it.")
+        if (!quiet) {writeLines("\nJuvenile survival response is constant so will not model it.")}
         juv.surv.model <- 1
         juv.surv.global.model <- 0
       }
@@ -1780,7 +1781,7 @@ modelsearch <- function(data, historical = TRUE, approach = "lme4", suite = "siz
     
     if (juv.obs.model != 1) {
       if (is.element(0, juvobs.data$obsstatus3) & is.element(1, juvobs.data$obsstatus3)) {
-        writeLines("\nDeveloping global model of juvenile observation probability...\n"); 
+        if (!quiet) {writeLines("\nDeveloping global model of juvenile observation probability...\n"); }
         juv.obs.global.model <- try(lme4::glmer(formula = juv.obs.model, data = juvobs.data, 
                                                 family = "binomial"), silent = TRUE)
         
@@ -1792,7 +1793,7 @@ modelsearch <- function(data, historical = TRUE, approach = "lme4", suite = "siz
           }
           
           if (nox.juv.obs.model != juv.obs.model) {
-            writeLines("\nInitial global model estimation failed. Attempting a global model without interaction terms.\n")
+            if (!quiet) {writeLines("\nInitial global model estimation failed. Attempting a global model without interaction terms.\n")}
             juv.obs.global.model <- try(lme4::glmer(formula = nox.juv.obs.model, data = juvobs.data, 
                                                     family = "binomial"), silent = TRUE)
           }
@@ -1805,7 +1806,7 @@ modelsearch <- function(data, historical = TRUE, approach = "lme4", suite = "siz
           if (class(juv.obs.global.model) == "try-error") {
             
             if (nox.juv.obs.model != nopat.juv.obs.model) {
-              writeLines("\nGlobal model estimation difficulties. Attempting a global model without a patch term.")
+              if (!quiet) {writeLines("\nGlobal model estimation difficulties. Attempting a global model without a patch term.")}
               juv.obs.global.model <- try(lme4::glmer(formula = nopat.juv.obs.model, data = juvobs.data, 
                                                       family = "binomial"), silent = TRUE)
             }
@@ -1819,7 +1820,7 @@ modelsearch <- function(data, historical = TRUE, approach = "lme4", suite = "siz
           if (class(juv.obs.global.model) == "try-error") {
             
             if (noyr.juv.obs.model != nopat.juv.obs.model) {
-              writeLines("\nGlobal model estimation difficulties. Attempting a global model without a year term.")
+              if (!quiet) {writeLines("\nGlobal model estimation difficulties. Attempting a global model without a year term.")}
               juv.obs.global.model <- try(lme4::glmer(formula = noyr.juv.obs.model, data = juvobs.data, 
                                                       family = "binomial"), silent = TRUE)
             }
@@ -1833,22 +1834,22 @@ modelsearch <- function(data, historical = TRUE, approach = "lme4", suite = "siz
           if (class(juv.obs.global.model) == "try-error") {
             
             if (noind.juv.obs.model != noyr.juv.obs.model) {
-              writeLines("\nGlobal model estimation difficulties. Attempting a global model without an individual identity term.")
+              if (!quiet) {writeLines("\nGlobal model estimation difficulties. Attempting a global model without an individual identity term.")}
               juv.obs.global.model <- try(lme4::glmer(formula = noind.juv.obs.model, data = juvobs.data, 
                                                       family = "binomial"), silent = TRUE)
             }
           }
           
           if (class(juv.obs.global.model) == "try-error") {
-            writeLines("\nCould not properly estimate a global model for juvenile observation status.")
+            if (!quiet) {writeLines("\nCould not properly estimate a global model for juvenile observation status.")}
           }
         }
       } else if (!is.element(0, juvobs.data$obsstatus3)) {
-        writeLines("\nJuvenile observation response is constant so will not model it.")
+        if (!quiet) {writeLines("\nJuvenile observation response is constant so will not model it.")}
         juv.obs.model <- 1
         juv.obs.global.model <- 1
       } else {
-        writeLines("\nJuvenile observation response is constant so will not model it.")
+        if (!quiet) {writeLines("\nJuvenile observation response is constant so will not model it.")}
         juv.obs.model <- 1
         juv.obs.global.model <- 0
       }
@@ -1856,7 +1857,7 @@ modelsearch <- function(data, historical = TRUE, approach = "lme4", suite = "siz
     
     if (juv.size.model != 1) {
       if (sizedist == "gaussian") {
-        writeLines("\nDeveloping global model of juvenile size (Gaussian)...\n");
+        if (!quiet) {writeLines("\nDeveloping global model of juvenile size (Gaussian)...\n");}
         juv.size.global.model <- try(lme4::lmer(formula = juv.size.model, data = juvsize.data),
                                      silent = TRUE)
         
@@ -1868,7 +1869,7 @@ modelsearch <- function(data, historical = TRUE, approach = "lme4", suite = "siz
           }
           
           if (nox.juv.size.model != juv.size.model) {
-            writeLines("\nInitial global model estimation failed. Attempting a global model without interaction terms.\n")
+            if (!quiet) {writeLines("\nInitial global model estimation failed. Attempting a global model without interaction terms.\n")}
             juv.size.global.model <- try(lme4::lmer(formula = nox.juv.size.model, data = juvsize.data), 
                                          silent = TRUE)
           }
@@ -1881,7 +1882,7 @@ modelsearch <- function(data, historical = TRUE, approach = "lme4", suite = "siz
           if (class(juv.size.global.model) == "try-error") {
             
             if (nox.juv.size.model != nopat.juv.size.model) {
-              writeLines("\nGlobal model estimation difficulties. Attempting a global model without a patch term.")
+              if (!quiet) {writeLines("\nGlobal model estimation difficulties. Attempting a global model without a patch term.")}
               juv.size.global.model <- try(lme4::lmer(formula = nopat.juv.size.model, data = juvsize.data),
                                            silent = TRUE)
             }
@@ -1895,7 +1896,7 @@ modelsearch <- function(data, historical = TRUE, approach = "lme4", suite = "siz
           if (class(juv.size.global.model) == "try-error") {
             
             if (noyr.juv.size.model != nopat.juv.size.model) {
-              writeLines("\nGlobal model estimation difficulties. Attempting a global model without a year term.")
+              if (!quiet) {writeLines("\nGlobal model estimation difficulties. Attempting a global model without a year term.")}
               juv.size.global.model <- try(lme4::lmer(formula = noyr.juv.size.model, data = juvsize.data),
                                            silent = TRUE)
             }
@@ -1909,18 +1910,18 @@ modelsearch <- function(data, historical = TRUE, approach = "lme4", suite = "siz
           if (class(juv.size.global.model) == "try-error") {
             
             if (noind.juv.size.model != noyr.juv.size.model) {
-              writeLines("\nGlobal model estimation difficulties. Attempting a global model without an individual identity term.")
+              if (!quiet) {writeLines("\nGlobal model estimation difficulties. Attempting a global model without an individual identity term.")}
               juv.size.global.model <- try(lme4::lmer(formula = noind.juv.size.model, data = juvsize.data),
                                            silent = TRUE)
             }
           }
           
           if (class(juv.size.global.model) == "try-error") {
-            writeLines("\nCould not properly estimate a global model for juvenile size.")
+            if (!quiet) {writeLines("\nCould not properly estimate a global model for juvenile size.")}
           }
         }
       } else if (sizedist == "poisson") {
-        writeLines("\nDeveloping global model of juvenile size (Poisson)...\n");
+        if (!quiet) {writeLines("\nDeveloping global model of juvenile size (Poisson)...\n");}
         juv.size.global.model <- try(lme4::glmer(formula = juv.size.model, data = juvsize.data, 
                                                  family = "poisson"), silent = TRUE)
         
@@ -1932,7 +1933,7 @@ modelsearch <- function(data, historical = TRUE, approach = "lme4", suite = "siz
           }
           
           if (nox.juv.size.model != juv.size.model) {
-            writeLines("\nInitial global model estimation failed. Attempting a global model without interaction terms.\n")
+            if (!quiet) {writeLines("\nInitial global model estimation failed. Attempting a global model without interaction terms.\n")}
             juv.size.global.model <- try(lme4::glmer(formula = nox.juv.size.model, data = juvsize.data, 
                                                      family = "poisson"), silent = TRUE)
           }
@@ -1945,7 +1946,7 @@ modelsearch <- function(data, historical = TRUE, approach = "lme4", suite = "siz
           if (class(juv.size.global.model) == "try-error") {
             
             if (nox.juv.size.model != nopat.juv.size.model) {
-              writeLines("Global model estimation difficulties. Attempting a global model without a patch term.")
+              if (!quiet) {writeLines("Global model estimation difficulties. Attempting a global model without a patch term.")}
               juv.size.global.model <- try(lme4::glmer(formula = nopat.juv.size.model, data = juvsize.data, 
                                                        family = "poisson"), silent = TRUE)
             }
@@ -1959,7 +1960,7 @@ modelsearch <- function(data, historical = TRUE, approach = "lme4", suite = "siz
           if (class(juv.size.global.model) == "try-error") {
             
             if (noyr.juv.size.model != nopat.juv.size.model) {
-              writeLines("\nGlobal model estimation difficulties. Attempting a global model without a year term.")
+              if (!quiet) {writeLines("\nGlobal model estimation difficulties. Attempting a global model without a year term.")}
               juv.size.global.model <- try(lme4::glmer(formula = noyr.juv.size.model, data = juvsize.data, 
                                                        family = "poisson"), silent = TRUE)
             }
@@ -1973,18 +1974,18 @@ modelsearch <- function(data, historical = TRUE, approach = "lme4", suite = "siz
           if (class(juv.size.global.model) == "try-error") {
             
             if (noind.juv.size.model != noyr.juv.size.model) {
-              writeLines("\nGlobal model estimation difficulties. Attempting a global model without an individual identity term.")
+              if (!quiet) {writeLines("\nGlobal model estimation difficulties. Attempting a global model without an individual identity term.")}
               juv.size.global.model <- try(lme4::glmer(formula = noind.juv.size.model, data = juvsize.data, 
                                                        family = "poisson"), silent = TRUE)
             }
           }
           
           if (class(juv.size.global.model) == "try-error") {
-            writeLines("\nCould not properly estimate a global model for juvenile size.")
+            if (!quiet) {writeLines("\nCould not properly estimate a global model for juvenile size.")}
           }
         }
       } else if (sizedist == "negbin") {
-        writeLines("\nDeveloping global model of juvenile size (negative binomial)...\n");
+        if (!quiet) {writeLines("\nDeveloping global model of juvenile size (negative binomial)...\n");}
         juv.size.global.model <- try(glmmTMB::glmmTMB(formula = as.formula(juv.size.model), data = juvsize.data, 
                                                       ziformula=~0, family = glmmTMB::nbinom2), silent = TRUE)
         
@@ -1996,7 +1997,7 @@ modelsearch <- function(data, historical = TRUE, approach = "lme4", suite = "siz
           }
           
           if (nox.juv.size.model != juv.size.model) {
-            writeLines("\nInitial global model estimation failed. Attempting a global model without interaction terms.\n")
+            if (!quiet) {writeLines("\nInitial global model estimation failed. Attempting a global model without interaction terms.\n")}
             juv.size.global.model <- try(glmmTMB::glmmTMB(formula = as.formula(nox.juv.size.model), 
                                                           data = juvsize.data, ziformula=~0, family = glmmTMB::nbinom2), 
                                          silent = TRUE)
@@ -2010,7 +2011,7 @@ modelsearch <- function(data, historical = TRUE, approach = "lme4", suite = "siz
           if (class(juv.size.global.model) == "try-error") {
             
             if (nox.juv.size.model != nopat.juv.size.model) {
-              writeLines("\nGlobal model estimation difficulties. Attempting a global model without a patch term.")
+              if (!quiet) {writeLines("\nGlobal model estimation difficulties. Attempting a global model without a patch term.")}
               juv.size.global.model <- try(glmmTMB::glmmTMB(formula = as.formula(nopat.juv.size.model), 
                                                             data = juvsize.data, ziformula=~0, family = glmmTMB::nbinom2), 
                                            silent = TRUE)
@@ -2025,7 +2026,7 @@ modelsearch <- function(data, historical = TRUE, approach = "lme4", suite = "siz
           if (class(juv.size.global.model) == "try-error") {
             
             if (noyr.juv.size.model != nopat.juv.size.model) {
-              writeLines("\nGlobal model estimation difficulties. Attempting a global model without a year term.")
+              if (!quiet) {writeLines("\nGlobal model estimation difficulties. Attempting a global model without a year term.")}
               juv.size.global.model <- try(glmmTMB::glmmTMB(formula = as.formula(noyr.juv.size.model), 
                                                             data = juvsize.data, ziformula=~0, family = glmmTMB::nbinom2), 
                                            silent = TRUE)
@@ -2040,7 +2041,7 @@ modelsearch <- function(data, historical = TRUE, approach = "lme4", suite = "siz
           if (class(juv.size.global.model) == "try-error") {
             
             if (noind.juv.size.model != noyr.juv.size.model) {
-              writeLines("\nGlobal model estimation difficulties. Attempting a global model without an individual identity term.")
+              if (!quiet) {writeLines("\nGlobal model estimation difficulties. Attempting a global model without an individual identity term.")}
               juv.size.global.model <- try(glmmTMB::glmmTMB(formula = as.formula(noind.juv.size.model), 
                                                             data = juvsize.data, ziformula=~0, family = glmmTMB::nbinom2), 
                                            silent = TRUE)
@@ -2048,7 +2049,7 @@ modelsearch <- function(data, historical = TRUE, approach = "lme4", suite = "siz
           }
           
           if (class(juv.size.global.model) == "try-error") {
-            writeLines("\nCould not properly estimate a global model for juvenile size.")
+            if (!quiet) {writeLines("\nCould not properly estimate a global model for juvenile size.")}
           }
         }
       }
@@ -2056,7 +2057,7 @@ modelsearch <- function(data, historical = TRUE, approach = "lme4", suite = "siz
     
     if (juv.repst.model != 1) {
       if (is.element(0, juvrepst.data$repstatus3) & is.element(1, juvrepst.data$repstatus3)) {
-        writeLines("\nDeveloping global model of juvenile reproduction probability...\n"); 
+        if (!quiet) {writeLines("\nDeveloping global model of juvenile reproduction probability...\n"); }
         juv.repst.global.model <- try(lme4::glmer(formula = juv.repst.model, data = juvrepst.data, 
                                                   family = "binomial"), silent = TRUE)
         
@@ -2068,7 +2069,7 @@ modelsearch <- function(data, historical = TRUE, approach = "lme4", suite = "siz
           }
           
           if (nox.juv.repst.model != juv.repst.model) {
-            writeLines("\nInitial global model estimation failed. Attempting a global model without interaction terms.\n")
+            if (!quiet) {writeLines("\nInitial global model estimation failed. Attempting a global model without interaction terms.\n")}
             juv.repst.global.model <- try(lme4::glmer(formula = nox.juv.repst.model, data = juvrepst.data, 
                                                       family = "binomial"), silent = TRUE)
           }
@@ -2081,7 +2082,7 @@ modelsearch <- function(data, historical = TRUE, approach = "lme4", suite = "siz
           if (class(juv.repst.global.model) == "try-error") {
             
             if (nox.juv.repst.model != nopat.juv.repst.model) {
-              writeLines("\nGlobal model estimation difficulties. Attempting a global model without a patch term.")
+              if (!quiet) {writeLines("\nGlobal model estimation difficulties. Attempting a global model without a patch term.")}
               juv.repst.global.model <- try(lme4::glmer(formula = nopat.juv.repst.model, data = juvrepst.data,
                                                         family = "binomial"), silent = TRUE)
             }
@@ -2095,7 +2096,7 @@ modelsearch <- function(data, historical = TRUE, approach = "lme4", suite = "siz
           if (class(juv.repst.global.model) == "try-error") {
             
             if (noyr.juv.repst.model != nopat.juv.repst.model) {
-              writeLines("\nGlobal model estimation difficulties. Attempting a global model without a year term.")
+              if (!quiet) {writeLines("\nGlobal model estimation difficulties. Attempting a global model without a year term.")}
               juv.repst.global.model <- try(lme4::glmer(formula = noyr.juv.repst.model, data = juvrepst.data,
                                                         family = "binomial"), silent = TRUE)
             }
@@ -2109,34 +2110,34 @@ modelsearch <- function(data, historical = TRUE, approach = "lme4", suite = "siz
           if (class(juv.repst.global.model) == "try-error") {
             
             if (noind.juv.repst.model != noyr.juv.repst.model) {
-              writeLines("\nGlobal model estimation difficulties. Attempting a global model without an individual identity term.")
+              if (!quiet) {writeLines("\nGlobal model estimation difficulties. Attempting a global model without an individual identity term.")}
               juv.repst.global.model <- try(lme4::glmer(formula = noind.juv.repst.model, data = juvrepst.data,
                                                         family = "binomial"), silent = TRUE)
             }
           }
           
           if (class(juv.repst.global.model) == "try-error") {
-            writeLines("\nCould not properly estimate a global model for juvenile reproduction status.")
+            if (!quiet) {writeLines("\nCould not properly estimate a global model for juvenile reproduction status.")}
           }
         }
       } else if (!is.element(0, juvrepst.data$repstatus3)) {
-        writeLines("\nJuvenile reproduction response is constant so will not model it.")
+        if (!quiet) {writeLines("\nJuvenile reproduction response is constant so will not model it.")}
         juv.repst.model <- 1
         juv.repst.global.model <- 1
       } else {
-        writeLines("\nJuvenile reproduction response is constant so will not model it.")
+        if (!quiet) {writeLines("\nJuvenile reproduction response is constant so will not model it.")}
         juv.repst.model <- 1
         juv.repst.global.model <- 0
       }
     }
     
-    writeLines("\nAll global models developed.\n")
+    if (!quiet) {writeLines("\nAll global models developed.\n")}
   }
   
   if (approach == "glm") {
     if (full.surv.model != 1) {
       if (is.element(0, surv.data$alive3) & is.element(1, surv.data$alive3)) {
-        writeLines("\nDeveloping global model of survival probability...\n"); 
+        if (!quiet) {writeLines("\nDeveloping global model of survival probability...\n"); }
         surv.global.model <- try(glm(formula = full.surv.model, data = surv.data, family = "binomial"),
                                  silent = TRUE)
         
@@ -2163,7 +2164,7 @@ modelsearch <- function(data, historical = TRUE, approach = "lme4", suite = "siz
           }
           
           if (nox.surv.model != full.surv.model) {
-            writeLines("\nInitial global model estimation failed. Attempting a global model without interaction terms.\n")
+            if (!quiet) {writeLines("\nInitial global model estimation failed. Attempting a global model without interaction terms.\n")}
             surv.global.model <- try(glm(formula = nox.surv.model, data = surv.data, family = "binomial"),
                                      silent = TRUE)
           }
@@ -2176,7 +2177,7 @@ modelsearch <- function(data, historical = TRUE, approach = "lme4", suite = "siz
           if (class(surv.global.model) == "try-error") {
             
             if (nox.surv.model != nopat.surv.model) {
-              writeLines("\nGlobal model estimation difficulties. Attempting a global model without a patch term.")
+              if (!quiet) {writeLines("\nGlobal model estimation difficulties. Attempting a global model without a patch term.")}
               surv.global.model <- try(glm(formula = nopat.surv.model, data = surv.data, family = "binomial"),
                                        silent = TRUE)
             }
@@ -2190,7 +2191,7 @@ modelsearch <- function(data, historical = TRUE, approach = "lme4", suite = "siz
           if (class(surv.global.model) == "try-error") {
             
             if (noyr.surv.model != nopat.surv.model) {
-              writeLines("\nGlobal model estimation difficulties. Attempting a global model without a year term.")
+              if (!quiet) {writeLines("\nGlobal model estimation difficulties. Attempting a global model without a year term.")}
               surv.global.model <- try(glm(formula = noyr.surv.model, data = surv.data, family = "binomial"),
                                        silent = TRUE)
             }
@@ -2204,22 +2205,22 @@ modelsearch <- function(data, historical = TRUE, approach = "lme4", suite = "siz
           if (class(surv.global.model) == "try-error") {
             
             if (noind.surv.model != noyr.surv.model) {
-              writeLines("\nGlobal model estimation difficulties. Attempting a global model without an individual identity term.")
+              if (!quiet) {writeLines("\nGlobal model estimation difficulties. Attempting a global model without an individual identity term.")}
               surv.global.model <- try(glm(formula = noind.surv.model, data = surv.data, family = "binomial"),
                                        silent = TRUE)
             }
           }
           
           if (class(surv.global.model) == "try-error") {
-            writeLines("\nCould not properly estimate a global model for survival.")
+            if (!quiet) {writeLines("\nCould not properly estimate a global model for survival.")}
           }
         }
       } else if (!is.element(0, surv.data$alive3)) {
-        writeLines("\nSurvival response is constant so will not model it.")
+        if (!quiet) {writeLines("\nSurvival response is constant so will not model it.")}
         full.surv.model <- 1
         surv.global.model <- 1
       } else {
-        writeLines("\nSurvival response is constant so will not model it.")
+        if (!quiet) {writeLines("\nSurvival response is constant so will not model it.")}
         full.surv.model <- 1
         surv.global.model <- 0
       }
@@ -2227,7 +2228,7 @@ modelsearch <- function(data, historical = TRUE, approach = "lme4", suite = "siz
     
     if (full.obs.model != 1) {
       if (is.element(0, obs.data$obsstatus3) & is.element(1, obs.data$obsstatus3)) {
-        writeLines("\nDeveloping global model of observation probability...\n"); 
+        if (!quiet) {writeLines("\nDeveloping global model of observation probability...\n"); }
         obs.global.model <- try(glm(formula = full.obs.model, data = obs.data, family = "binomial"),
                                 silent = TRUE)
         
@@ -2254,7 +2255,7 @@ modelsearch <- function(data, historical = TRUE, approach = "lme4", suite = "siz
           }
           
           if (nox.obs.model != full.obs.model) {
-            writeLines("\nInitial global model estimation failed. Attempting a global model without interaction terms.\n")
+            if (!quiet) {writeLines("\nInitial global model estimation failed. Attempting a global model without interaction terms.\n")}
             obs.global.model <- try(glm(formula = nox.obs.model, data = obs.data, family = "binomial"),
                                     silent = TRUE)
           }
@@ -2267,7 +2268,7 @@ modelsearch <- function(data, historical = TRUE, approach = "lme4", suite = "siz
           if (class(obs.global.model) == "try-error") {
             
             if (nox.obs.model != nopat.obs.model) {
-              writeLines("\nGlobal model estimation difficulties. Attempting a global model without a patch term.")
+              if (!quiet) {writeLines("\nGlobal model estimation difficulties. Attempting a global model without a patch term.")}
               obs.global.model <- try(glm(formula = nopat.obs.model, data = obs.data, family = "binomial"),
                                       silent = TRUE)
             }
@@ -2281,7 +2282,7 @@ modelsearch <- function(data, historical = TRUE, approach = "lme4", suite = "siz
           if (class(obs.global.model) == "try-error") {
             
             if (noyr.obs.model != nopat.obs.model) {
-              writeLines("\nGlobal model estimation difficulties. Attempting a global model without a year term.")
+              if (!quiet) {writeLines("\nGlobal model estimation difficulties. Attempting a global model without a year term.")}
               obs.global.model <- try(glm(formula = noyr.obs.model, data = obs.data, family = "binomial"),
                                       silent = TRUE)
             }
@@ -2295,22 +2296,22 @@ modelsearch <- function(data, historical = TRUE, approach = "lme4", suite = "siz
           if (class(obs.global.model) == "try-error") {
             
             if (noind.obs.model != noyr.obs.model) {
-              writeLines("\nGlobal model estimation difficulties. Attempting a global model without an individual identity term.")
+              if (!quiet) {writeLines("\nGlobal model estimation difficulties. Attempting a global model without an individual identity term.")}
               obs.global.model <- try(glm(formula = noind.obs.model, data = obs.data, family = "binomial"),
                                       silent = TRUE)
             }
           }
           
           if (class(obs.global.model) == "try-error") {
-            writeLines("\nCould not properly estimate a global model for observation status.")
+            if (!quiet) {writeLines("\nCould not properly estimate a global model for observation status.")}
           }
         }
       } else if (!is.element(0, obs.data$obsstatus3)) {
-        writeLines("\nObservation response is constant so will not model it.")
+        if (!quiet) {writeLines("\nObservation response is constant so will not model it.")}
         full.obs.model <- 1
         obs.global.model <- 1
       } else {
-        writeLines("\nObservation response is constant so will not model it.")
+        if (!quiet) {writeLines("\nObservation response is constant so will not model it.")}
         full.obs.model <- 1
         obs.global.model <- 0
       }
@@ -2318,7 +2319,7 @@ modelsearch <- function(data, historical = TRUE, approach = "lme4", suite = "siz
     
     if (full.size.model != 1) {
       if (sizedist == "gaussian") {
-        writeLines("\nDeveloping global model of size (Gaussian)...\n");
+        if (!quiet) {writeLines("\nDeveloping global model of size (Gaussian)...\n");}
         size.global.model <- try(lm(formula = full.size.model, data = size.data), silent = TRUE)
         
         if (class(size.global.model) == "try-error") {
@@ -2344,7 +2345,7 @@ modelsearch <- function(data, historical = TRUE, approach = "lme4", suite = "siz
           }
           
           if (nox.size.model != full.size.model) {
-            writeLines("\nInitial global model estimation failed. Attempting a global model without interaction terms.\n")
+            if (!quiet) {writeLines("\nInitial global model estimation failed. Attempting a global model without interaction terms.\n")}
             size.global.model <- try(lm(formula = nox.size.model, data = size.data), silent = TRUE)
           }
           
@@ -2356,7 +2357,7 @@ modelsearch <- function(data, historical = TRUE, approach = "lme4", suite = "siz
           if (class(size.global.model) == "try-error") {
             
             if (nox.size.model != nopat.size.model) {
-              writeLines("\nGlobal model estimation difficulties. Attempting a global model without a patch term.")
+              if (!quiet) {writeLines("\nGlobal model estimation difficulties. Attempting a global model without a patch term.")}
               size.global.model <- try(lm(formula = nopat.size.model, data = size.data), silent = TRUE)
             }
           }
@@ -2369,7 +2370,7 @@ modelsearch <- function(data, historical = TRUE, approach = "lme4", suite = "siz
           if (class(size.global.model) == "try-error") {
             
             if (noyr.size.model != nopat.size.model) {
-              writeLines("\nGlobal model estimation difficulties. Attempting a global model without a year term.")
+              if (!quiet) {writeLines("\nGlobal model estimation difficulties. Attempting a global model without a year term.")}
               size.global.model <- try(lm(formula = noyr.size.model, data = size.data), silent = TRUE)
             }
           }
@@ -2382,17 +2383,18 @@ modelsearch <- function(data, historical = TRUE, approach = "lme4", suite = "siz
           if (class(size.global.model) == "try-error") {
             
             if (noind.size.model != noyr.size.model) {
-              writeLines("\nGlobal model estimation difficulties. Attempting a global model without an individual identity term.")
+              if (!quiet) {writeLines("\nGlobal model estimation difficulties. Attempting a global model without an individual identity term.")}
               size.global.model <- try(lm(formula = noind.size.model, data = size.data), silent = TRUE)
             }
           }
           
           if (class(size.global.model) == "try-error") {
-            writeLines("\nCould not properly estimate a global model for size.")
+            if (!quiet) {writeLines("\nCould not properly estimate a global model for size.")}
           }
         }
       } else if (sizedist == "poisson") {
-        writeLines("\nDeveloping global model of size (Poisson)...\n");
+        
+        if (!quiet) {writeLines("\nDeveloping global model of size (Poisson)...\n");}
         size.global.model <- try(glm(formula = full.size.model, data = size.data, family = "poisson"),
                                  silent = TRUE)
         
@@ -2419,7 +2421,7 @@ modelsearch <- function(data, historical = TRUE, approach = "lme4", suite = "siz
           }
           
           if (nox.size.model != full.size.model) {
-            writeLines("\nInitial global model estimation failed. Attempting a global model without interaction terms.\n")
+            if (!quiet) {writeLines("\nInitial global model estimation failed. Attempting a global model without interaction terms.\n")}
             size.global.model <- try(glm(formula = nox.size.model, data = size.data, family = "poisson"),
                                      silent = TRUE)
           }
@@ -2432,7 +2434,7 @@ modelsearch <- function(data, historical = TRUE, approach = "lme4", suite = "siz
           if (class(size.global.model) == "try-error") {
             
             if (nox.size.model != nopat.size.model) {
-              writeLines("\nGlobal model estimation difficulties. Attempting a global model without a patch term.")
+              if (!quiet) {writeLines("\nGlobal model estimation difficulties. Attempting a global model without a patch term.")}
               size.global.model <- try(glm(formula = nopat.size.model, data = size.data, family = "poisson"),
                                        silent = TRUE)
             }
@@ -2446,7 +2448,7 @@ modelsearch <- function(data, historical = TRUE, approach = "lme4", suite = "siz
           if (class(size.global.model) == "try-error") {
             
             if (noyr.size.model != nopat.size.model) {
-              writeLines("\nGlobal model estimation difficulties. Attempting a global model without a year term.")
+              if (!quiet) {writeLines("\nGlobal model estimation difficulties. Attempting a global model without a year term.")}
               size.global.model <- try(glm(formula = noyr.size.model, data = size.data, family = "poisson"),
                                        silent = TRUE)
             }
@@ -2460,18 +2462,18 @@ modelsearch <- function(data, historical = TRUE, approach = "lme4", suite = "siz
           if (class(size.global.model) == "try-error") {
             
             if (noind.size.model != noyr.size.model) {
-              writeLines("\nGlobal model estimation difficulties. Attempting a global model without an individual identity term.")
+              if (!quiet) {writeLines("\nGlobal model estimation difficulties. Attempting a global model without an individual identity term.")}
               size.global.model <- try(glm(formula = noind.size.model, data = size.data, family = "poisson"),
                                        silent = TRUE)
             }
           }
           
           if (class(size.global.model) == "try-error") {
-            writeLines("\nCould not properly estimate a global model for size.")
+            if (!quiet) {writeLines("\nCould not properly estimate a global model for size.")}
           }
         }
       } else if (sizedist == "negbin") {
-        writeLines("\nDeveloping global model of size (negative binomial)...\n");
+        if (!quiet) {writeLines("\nDeveloping global model of size (negative binomial)...\n");}
         size.global.model <- try(glm.nb(formula = full.size.model, data = size.data), silent = TRUE)
         
         if (class(size.global.model) == "try-error") {
@@ -2497,7 +2499,7 @@ modelsearch <- function(data, historical = TRUE, approach = "lme4", suite = "siz
           }
           
           if (nox.size.model != full.size.model) {
-            writeLines("\nInitial global model estimation failed. Attempting a global model without interaction terms.\n")
+            if (!quiet) {writeLines("\nInitial global model estimation failed. Attempting a global model without interaction terms.\n")}
             size.global.model <- try(glm.nb(formula = nox.size.model, data = size.data),
                                      silent = TRUE)
           }
@@ -2510,7 +2512,7 @@ modelsearch <- function(data, historical = TRUE, approach = "lme4", suite = "siz
           if (class(size.global.model) == "try-error") {
             
             if (nox.size.model != nopat.size.model) {
-              writeLines("\nGlobal model estimation difficulties. Attempting a global model without a patch term.")
+              if (!quiet) {writeLines("\nGlobal model estimation difficulties. Attempting a global model without a patch term.")}
               size.global.model <- try(glm.nb(formula = nopat.size.model, data = size.data),
                                        silent = TRUE)
             }
@@ -2524,7 +2526,7 @@ modelsearch <- function(data, historical = TRUE, approach = "lme4", suite = "siz
           if (class(size.global.model) == "try-error") {
             
             if (noyr.size.model != nopat.size.model) {
-              writeLines("\nGlobal model estimation difficulties. Attempting a global model without a year term.")
+              if (!quiet) {writeLines("\nGlobal model estimation difficulties. Attempting a global model without a year term.")}
               size.global.model <- try(glm.nb(formula = noyr.size.model, data = size.data),
                                        silent = TRUE)
             }
@@ -2538,14 +2540,14 @@ modelsearch <- function(data, historical = TRUE, approach = "lme4", suite = "siz
           if (class(size.global.model) == "try-error") {
             
             if (noind.size.model != noyr.size.model) {
-              writeLines("\nGlobal model estimation difficulties. Attempting a global model without an individual identity term.")
+              if (!quiet) {writeLines("\nGlobal model estimation difficulties. Attempting a global model without an individual identity term.")}
               size.global.model <- try(glm.nb(formula = noind.size.model, data = size.data),
                                        silent = TRUE)
             }
           }
           
           if (class(size.global.model) == "try-error") {
-            writeLines("\nCould not properly estimate a global model for size.")
+            if (!quiet) {writeLines("\nCould not properly estimate a global model for size.")}
           }
         }
       }
@@ -2553,7 +2555,7 @@ modelsearch <- function(data, historical = TRUE, approach = "lme4", suite = "siz
     
     if (full.repst.model != 1) {
       if (is.element(0, repst.data$repstatus3) & is.element(1, repst.data$repstatus3)) {
-        writeLines("\nDeveloping global model of the probability of reproduction...\n"); 
+        if (!quiet) {writeLines("\nDeveloping global model of the probability of reproduction...\n"); }
         repst.global.model <- try(glm(formula = full.repst.model, data = repst.data, family = "binomial"),
                                   silent = TRUE)
         
@@ -2580,7 +2582,7 @@ modelsearch <- function(data, historical = TRUE, approach = "lme4", suite = "siz
           }
           
           if (nox.repst.model != full.repst.model) {
-            writeLines("\nInitial global model estimation failed. Attempting a global model without interaction terms.\n")
+            if (!quiet) {writeLines("\nInitial global model estimation failed. Attempting a global model without interaction terms.\n")}
             repst.global.model <- try(glm(formula = nox.repst.model, data = repst.data, family = "binomial"),
                                       silent = TRUE)
           }
@@ -2593,7 +2595,7 @@ modelsearch <- function(data, historical = TRUE, approach = "lme4", suite = "siz
           if (class(repst.global.model) == "try-error") {
             
             if (nox.repst.model != nopat.repst.model) {
-              writeLines("\nGlobal model estimation difficulties. Attempting a global model without a patch term.")
+              if (!quiet) {writeLines("\nGlobal model estimation difficulties. Attempting a global model without a patch term.")}
               repst.global.model <- try(glm(formula = nopat.repst.model, data = repst.data, family = "binomial"),
                                         silent = TRUE)
             }
@@ -2607,7 +2609,7 @@ modelsearch <- function(data, historical = TRUE, approach = "lme4", suite = "siz
           if (class(repst.global.model) == "try-error") {
             
             if (noyr.repst.model != nopat.repst.model) {
-              writeLines("\nGlobal model estimation difficulties. Attempting a global model without a year term.")
+              if (!quiet) {writeLines("\nGlobal model estimation difficulties. Attempting a global model without a year term.")}
               repst.global.model <- try(glm(formula = noyr.repst.model, data = repst.data, family = "binomial"),
                                         silent = TRUE)
             }
@@ -2621,22 +2623,22 @@ modelsearch <- function(data, historical = TRUE, approach = "lme4", suite = "siz
           if (class(repst.global.model) == "try-error") {
             
             if (noind.repst.model != noyr.repst.model) {
-              writeLines("\nGlobal model estimation difficulties. Attempting a global model without an individual identity term.")
+              if (!quiet) {writeLines("\nGlobal model estimation difficulties. Attempting a global model without an individual identity term.")}
               repst.global.model <- try(glm(formula = noind.repst.model, data = repst.data, family = "binomial"),
                                         silent = TRUE)
             }
           }
           
           if (class(repst.global.model) == "try-error") {
-            writeLines("\nCould not properly estimate a global model for reproduction status.")
+            if (!quiet) {writeLines("\nCould not properly estimate a global model for reproduction status.")}
           }
         }
       } else if (!is.element(0, repst.data$repstatus3)) {
-        writeLines("\nReproductive status response is constant so will not model it.")
+        if (!quiet) {writeLines("\nReproductive status response is constant so will not model it.")}
         full.repst.model <- 1
         repst.global.model <- 1
       } else {
-        writeLines("\nReproductive status response is constant so will not model it.")
+        if (!quiet) {writeLines("\nReproductive status response is constant so will not model it.")}
         full.repst.model <- 1
         repst.global.model <- 0
       }
@@ -2644,7 +2646,7 @@ modelsearch <- function(data, historical = TRUE, approach = "lme4", suite = "siz
     
     if (full.fec.model != 1) {
       if (fecdist == "gaussian") {
-        writeLines("\nDeveloping global model of fecundity (Gaussian)...\n");
+        if (!quiet) {writeLines("\nDeveloping global model of fecundity (Gaussian)...\n");}
         fec.global.model <- try(lm(formula = full.fec.model, data = fec.data), silent = TRUE)
         
         if (class(fec.global.model) == "try-error") {
@@ -2670,7 +2672,7 @@ modelsearch <- function(data, historical = TRUE, approach = "lme4", suite = "siz
           }
           
           if (nox.fec.model != full.fec.model) {
-            writeLines("\nInitial global model estimation failed. Attempting a global model without interaction terms.\n")
+            if (!quiet) {writeLines("\nInitial global model estimation failed. Attempting a global model without interaction terms.\n")}
             fec.global.model <- try(lm(formula = nox.fec.model, data = fec.data), silent = TRUE)
           }
           
@@ -2682,7 +2684,7 @@ modelsearch <- function(data, historical = TRUE, approach = "lme4", suite = "siz
           if (class(fec.global.model) == "try-error") {
             
             if (nox.fec.model != nopat.fec.model) {
-              writeLines("\nGlobal model estimation difficulties. Attempting a global model without a patch term.")
+              if (!quiet) {writeLines("\nGlobal model estimation difficulties. Attempting a global model without a patch term.")}
               fec.global.model <- try(lm(formula = nopat.fec.model, data = fec.data), silent = TRUE)
             }
           }
@@ -2695,7 +2697,7 @@ modelsearch <- function(data, historical = TRUE, approach = "lme4", suite = "siz
           if (class(fec.global.model) == "try-error") {
             
             if (noyr.fec.model != nopat.fec.model) {
-              writeLines("\nGlobal model estimation difficulties. Attempting a global model without a year term.")
+              if (!quiet) {writeLines("\nGlobal model estimation difficulties. Attempting a global model without a year term.")}
               fec.global.model <- try(lm(formula = noyr.fec.model, data = fec.data), silent = TRUE)
             }
           }
@@ -2708,17 +2710,17 @@ modelsearch <- function(data, historical = TRUE, approach = "lme4", suite = "siz
           if (class(fec.global.model) == "try-error") {
             
             if (noind.fec.model != noyr.fec.model) {
-              writeLines("\nGlobal model estimation difficulties. Attempting a global model without an individual identity term.")
+              if (!quiet) {writeLines("\nGlobal model estimation difficulties. Attempting a global model without an individual identity term.")}
               fec.global.model <- try(lm(formula = noind.fec.model, data = fec.data), silent = TRUE)
             }
           }
           
           if (class(fec.global.model) == "try-error") {
-            writeLines("\nCould not properly estimate a global model for fecundity.")
+            if (!quiet) {writeLines("\nCould not properly estimate a global model for fecundity.")}
           }
         }
       } else if (fecdist == "poisson") {
-        writeLines("\nDeveloping global model of fecundity (Poisson)...\n");
+        if (!quiet) {writeLines("\nDeveloping global model of fecundity (Poisson)...\n");}
         fec.global.model <- try(glm(formula = full.fec.model, data = fec.data, family = "poisson"),
                                 silent = TRUE)
         
@@ -2745,7 +2747,7 @@ modelsearch <- function(data, historical = TRUE, approach = "lme4", suite = "siz
           }
           
           if (nox.fec.model != full.fec.model) {
-            writeLines("\nInitial global model estimation failed. Attempting a global model without interaction terms.\n")
+            if (!quiet) {writeLines("\nInitial global model estimation failed. Attempting a global model without interaction terms.\n")}
             fec.global.model <- try(glm(formula = nox.fec.model, data = fec.data, family = "poisson"),
                                     silent = TRUE)
           }
@@ -2758,7 +2760,7 @@ modelsearch <- function(data, historical = TRUE, approach = "lme4", suite = "siz
           if (class(fec.global.model) == "try-error") {
             
             if (nox.fec.model != nopat.fec.model) {
-              writeLines("\nGlobal model estimation difficulties. Attempting a global model without a patch term.")
+              if (!quiet) {writeLines("\nGlobal model estimation difficulties. Attempting a global model without a patch term.")}
               fec.global.model <- try(glm(formula = nopat.fec.model, data = fec.data, family = "poisson"),
                                       silent = TRUE)
             }
@@ -2772,7 +2774,7 @@ modelsearch <- function(data, historical = TRUE, approach = "lme4", suite = "siz
           if (class(fec.global.model) == "try-error") {
             
             if (noyr.fec.model != nopat.fec.model) {
-              writeLines("\nGlobal model estimation difficulties. Attempting a global model without a year term.")
+              if (!quiet) {writeLines("\nGlobal model estimation difficulties. Attempting a global model without a year term.")}
               fec.global.model <- try(glm(formula = noyr.fec.model, data = fec.data, family = "poisson"),
                                       silent = TRUE)
             }
@@ -2786,18 +2788,18 @@ modelsearch <- function(data, historical = TRUE, approach = "lme4", suite = "siz
           if (class(fec.global.model) == "try-error") {
             
             if (noind.fec.model != noyr.fec.model) {
-              writeLines("\nGlobal model estimation difficulties. Attempting a global model without an individual identity term.")
+              if (!quiet) {writeLines("\nGlobal model estimation difficulties. Attempting a global model without an individual identity term.")}
               fec.global.model <- try(glm(formula = noind.fec.model, data = fec.data, family = "poisson"),
                                       silent = TRUE)
             }
           }
           
           if (class(fec.global.model) == "try-error") {
-            writeLines("\nCould not properly estimate a global model for fecundity.")
+            if (!quiet) {writeLines("\nCould not properly estimate a global model for fecundity.")}
           }
         }
       } else if (fecdist == "negbin") {
-        writeLines("\nDeveloping global model of fecundity (negative binomial)...\n");
+        if (!quiet) {writeLines("\nDeveloping global model of fecundity (negative binomial)...\n");}
         fec.global.model <- try(glm.nb(formula = full.fec.model, data = fec.data), silent = TRUE)
         
         if (class(fec.global.model) == "try-error") {
@@ -2823,7 +2825,7 @@ modelsearch <- function(data, historical = TRUE, approach = "lme4", suite = "siz
           }
           
           if (nox.fec.model != full.fec.model) {
-            writeLines("\nInitial global model estimation failed. Attempting a global model without interaction terms.\n")
+            if (!quiet) {writeLines("\nInitial global model estimation failed. Attempting a global model without interaction terms.\n")}
             fec.global.model <- try(glm.nb(formula = nox.fec.model, data = fec.data),
                                     silent = TRUE)
           }
@@ -2836,7 +2838,7 @@ modelsearch <- function(data, historical = TRUE, approach = "lme4", suite = "siz
           if (class(fec.global.model) == "try-error") {
             
             if (nox.fec.model != nopat.fec.model) {
-              writeLines("\nGlobal model estimation difficulties. Attempting a global model without a patch term.")
+              if (!quiet) {writeLines("\nGlobal model estimation difficulties. Attempting a global model without a patch term.")}
               fec.global.model <- try(glm.nb(formula = nopat.fec.model, data = fec.data),
                                       silent = TRUE)
             }
@@ -2850,7 +2852,7 @@ modelsearch <- function(data, historical = TRUE, approach = "lme4", suite = "siz
           if (class(fec.global.model) == "try-error") {
             
             if (noyr.fec.model != nopat.fec.model) {
-              writeLines("\nGlobal model estimation difficulties. Attempting a global model without a year term.")
+              if (!quiet) {writeLines("\nGlobal model estimation difficulties. Attempting a global model without a year term.")}
               fec.global.model <- try(glm.nb(formula = noyr.fec.model, data = fec.data),
                                       silent = TRUE)
             }
@@ -2864,14 +2866,14 @@ modelsearch <- function(data, historical = TRUE, approach = "lme4", suite = "siz
           if (class(fec.global.model) == "try-error") {
             
             if (noind.fec.model != noyr.fec.model) {
-              writeLines("\nGlobal model estimation difficulties. Attempting a global model without an individual identity term.")
+              if (!quiet) {writeLines("\nGlobal model estimation difficulties. Attempting a global model without an individual identity term.")}
               fec.global.model <- try(glm.nb(formula = noind.fec.model, data = fec.data),
                                       silent = TRUE)
             }
           }
           
           if (class(fec.global.model) == "try-error") {
-            writeLines("\nCould not properly estimate a global model for fecundity.")
+            if (!quiet) {writeLines("\nCould not properly estimate a global model for fecundity.")}
           }
         }
       }
@@ -2879,7 +2881,7 @@ modelsearch <- function(data, historical = TRUE, approach = "lme4", suite = "siz
     
     if (juv.surv.model != 1) {
       if (is.element(0, juvsurv.data$alive3) & is.element(1, juvsurv.data$alive3)) {
-        writeLines("\nDeveloping global model of juvenile survival probability...\n"); 
+        if (!quiet) {writeLines("\nDeveloping global model of juvenile survival probability...\n"); }
         juv.surv.global.model <- try(glm(formula = juv.surv.model, data = juvsurv.data, family = "binomial"),
                                      silent = TRUE)
         
@@ -2891,7 +2893,7 @@ modelsearch <- function(data, historical = TRUE, approach = "lme4", suite = "siz
           }
           
           if (nox.juv.surv.model != juv.surv.model) {
-            writeLines("\nInitial global model estimation failed. Attempting a global model without interaction terms.\n")
+            if (!quiet) {writeLines("\nInitial global model estimation failed. Attempting a global model without interaction terms.\n")}
             juv.surv.global.model <- try(glm(formula = nox.juv.surv.model, data = juvsurv.data, family = "binomial"),
                                          silent = TRUE)
           }
@@ -2904,7 +2906,7 @@ modelsearch <- function(data, historical = TRUE, approach = "lme4", suite = "siz
           if (class(juv.surv.global.model) == "try-error") {
             
             if (nox.juv.surv.model != nopat.juv.surv.model) {
-              writeLines("\nGlobal model estimation difficulties. Attempting a global model without a patch term.")
+              if (!quiet) {writeLines("\nGlobal model estimation difficulties. Attempting a global model without a patch term.")}
               juv.surv.global.model <- try(glm(formula = nopat.juv.surv.model, data = juvsurv.data, family = "binomial"),
                                            silent = TRUE)
             }
@@ -2918,7 +2920,7 @@ modelsearch <- function(data, historical = TRUE, approach = "lme4", suite = "siz
           if (class(juv.surv.global.model) == "try-error") {
             
             if (noyr.juv.surv.model != nopat.juv.surv.model) {
-              writeLines("\nGlobal model estimation difficulties. Attempting a global model without a year term.")
+              if (!quiet) {writeLines("\nGlobal model estimation difficulties. Attempting a global model without a year term.")}
               juv.surv.global.model <- try(glm(formula = noyr.juv.surv.model, data = juvsurv.data, family = "binomial"),
                                            silent = TRUE)
             }
@@ -2932,22 +2934,22 @@ modelsearch <- function(data, historical = TRUE, approach = "lme4", suite = "siz
           if (class(juv.surv.global.model) == "try-error") {
             
             if (noind.juv.surv.model != noyr.juv.surv.model) {
-              writeLines("\nGlobal model estimation difficulties. Attempting a global model without an individual identity term.")
+              if (!quiet) {writeLines("\nGlobal model estimation difficulties. Attempting a global model without an individual identity term.")}
               juv.surv.global.model <- try(glm(formula = noind.juv.surv.model, data = juvsurv.data, family = "binomial"),
                                            silent = TRUE)
             }
           }
           
           if (class(juv.surv.global.model) == "try-error") {
-            writeLines("\nCould not properly estimate a global model for juvenile survival.")
+            if (!quiet) {writeLines("\nCould not properly estimate a global model for juvenile survival.")}
           }
         }
       } else if (!is.element(0, juvsurv.data$alive3)) {
-        writeLines("\nJuvenile survival response is constant so will not model it.")
+        if (!quiet) {writeLines("\nJuvenile survival response is constant so will not model it.")}
         juv.surv.model <- 1
         juv.surv.global.model <- 1
       } else {
-        writeLines("\nJuvenile survival response is constant so will not model it.")
+        if (!quiet) {writeLines("\nJuvenile survival response is constant so will not model it.")}
         juv.surv.model <- 1
         juv.surv.global.model <- 0
       }
@@ -2955,7 +2957,7 @@ modelsearch <- function(data, historical = TRUE, approach = "lme4", suite = "siz
     
     if (juv.obs.model != 1) {
       if (is.element(0, juvobs.data$obsstatus3) & is.element(1, juvobs.data$obsstatus3)) {
-        writeLines("\nDeveloping global model of juvenile observation probability...\n"); 
+        if (!quiet) {writeLines("\nDeveloping global model of juvenile observation probability...\n"); }
         juv.obs.global.model <- try(glm(formula = juv.obs.model, data = juvobs.data, family = "binomial"),
                                     silent = TRUE)
         
@@ -2967,7 +2969,7 @@ modelsearch <- function(data, historical = TRUE, approach = "lme4", suite = "siz
           }
           
           if (nox.juv.obs.model != juv.obs.model) {
-            writeLines("\nInitial global model estimation failed. Attempting a global model without interaction terms.\n")
+            if (!quiet) {writeLines("\nInitial global model estimation failed. Attempting a global model without interaction terms.\n")}
             juv.obs.global.model <- try(glm(formula = nox.juv.obs.model, data = juvobs.data, family = "binomial"),
                                         silent = TRUE)
           }
@@ -2980,7 +2982,7 @@ modelsearch <- function(data, historical = TRUE, approach = "lme4", suite = "siz
           if (class(juv.obs.global.model) == "try-error") {
             
             if (nox.juv.obs.model != nopat.juv.obs.model) {
-              writeLines("\nGlobal model estimation difficulties. Attempting a global model without a patch term.")
+              if (!quiet) {writeLines("\nGlobal model estimation difficulties. Attempting a global model without a patch term.")}
               juv.obs.global.model <- try(glm(formula = nopat.juv.obs.model, data = juvobs.data, family = "binomial"),
                                           silent = TRUE)
             }
@@ -2994,7 +2996,7 @@ modelsearch <- function(data, historical = TRUE, approach = "lme4", suite = "siz
           if (class(juv.obs.global.model) == "try-error") {
             
             if (noyr.juv.obs.model != nopat.juv.obs.model) {
-              writeLines("\nGlobal model estimation difficulties. Attempting a global model without a year term.")
+              if (!quiet) {writeLines("\nGlobal model estimation difficulties. Attempting a global model without a year term.")}
               juv.obs.global.model <- try(glm(formula = noyr.juv.obs.model, data = juvobs.data, family = "binomial"),
                                           silent = TRUE)
             }
@@ -3008,29 +3010,29 @@ modelsearch <- function(data, historical = TRUE, approach = "lme4", suite = "siz
           if (class(juv.obs.global.model) == "try-error") {
             
             if (noind.juv.obs.model != noyr.juv.obs.model) {
-              writeLines("\nGlobal model estimation difficulties. Attempting a global model without an individual identity term.")
+              if (!quiet) {writeLines("\nGlobal model estimation difficulties. Attempting a global model without an individual identity term.")}
               juv.obs.global.model <- try(glm(formula = noind.juv.obs.model, data = juvobs.data, family = "binomial"),
                                           silent = TRUE)
             }
           }
           
           if (class(juv.obs.global.model) == "try-error") {
-            writeLines("\nCould not properly estimate a global model for juvenile observation status.")
+            if (!quiet) {writeLines("\nCould not properly estimate a global model for juvenile observation status.")}
           }
         }
       } else if (!is.element(0, juvobs.data$obsstatus3)) {
-        writeLines("\nJuvenile observation response is constant so will not model it.")
+        if (!quiet) {writeLines("\nJuvenile observation response is constant so will not model it.")}
         juv.obs.model <- 1
         juv.obs.global.model <- 1
       } else {
-        writeLines("\nJuvenile observation response is constant so will not model it.")
+        if (!quiet) {writeLines("\nJuvenile observation response is constant so will not model it.")}
         juv.obs.model <- 1
         juv.obs.global.model <- 0}
     }
     
     if (juv.size.model != 1) {
       if (sizedist == "gaussian") {
-        writeLines("\nDeveloping global model of size (Gaussian)...\n");
+        if (!quiet) {writeLines("\nDeveloping global model of size (Gaussian)...\n");}
         juv.size.global.model <- try(lm(formula = juv.size.model, data = juvsize.data), silent = TRUE)
         
         if (class(juv.size.global.model) == "try-error") {
@@ -3041,7 +3043,7 @@ modelsearch <- function(data, historical = TRUE, approach = "lme4", suite = "siz
           }
           
           if (nox.juv.size.model != juv.size.model) {
-            writeLines("\nInitial global model estimation failed. Attempting a global model without interaction terms.\n")
+            if (!quiet) {writeLines("\nInitial global model estimation failed. Attempting a global model without interaction terms.\n")}
             juv.size.global.model <- try(lm(formula = nox.juv.size.model, data = juvsize.data),
                                          silent = TRUE)
           }
@@ -3054,7 +3056,7 @@ modelsearch <- function(data, historical = TRUE, approach = "lme4", suite = "siz
           if (class(juv.size.global.model) == "try-error") {
             
             if (nox.juv.size.model != nopat.juv.size.model) {
-              writeLines("\nGlobal model estimation difficulties. Attempting a global model without a patch term.")
+              if (!quiet) {writeLines("\nGlobal model estimation difficulties. Attempting a global model without a patch term.")}
               juv.size.global.model <- try(lm(formula = nopat.juv.size.model, data = juvsize.data),
                                            silent = TRUE)
             }
@@ -3068,7 +3070,7 @@ modelsearch <- function(data, historical = TRUE, approach = "lme4", suite = "siz
           if (class(juv.size.global.model) == "try-error") {
             
             if (noyr.juv.size.model != nopat.juv.size.model) {
-              writeLines("\nGlobal model estimation difficulties. Attempting a global model without a year term.")
+              if (!quiet) {writeLines("\nGlobal model estimation difficulties. Attempting a global model without a year term.")}
               juv.size.global.model <- try(lm(formula = noyr.juv.size.model, data = juvsize.data),
                                            silent = TRUE)
             }
@@ -3082,18 +3084,18 @@ modelsearch <- function(data, historical = TRUE, approach = "lme4", suite = "siz
           if (class(juv.size.global.model) == "try-error") {
             
             if (noind.juv.size.model != noyr.juv.size.model) {
-              writeLines("\nGlobal model estimation difficulties. Attempting a global model without an individual identity term.")
+              if (!quiet) {writeLines("\nGlobal model estimation difficulties. Attempting a global model without an individual identity term.")}
               juv.size.global.model <- try(lm(formula = noind.juv.size.model, data = juvsize.data),
                                            silent = TRUE)
             }
           }
           
           if (class(juv.size.global.model) == "try-error") {
-            writeLines("\nCould not properly estimate a global model for juvenile size.")
+            if (!quiet) {writeLines("\nCould not properly estimate a global model for juvenile size.")}
           }
         }
       } else if (sizedist == "poisson") {
-        writeLines("\nDeveloping global model of size (Poisson)...\n");
+        if (!quiet) {writeLines("\nDeveloping global model of size (Poisson)...\n");}
         juv.size.global.model <- try(glm(formula = juv.size.model, data = juvsize.data, family = "poisson"),
                                      silent = TRUE)
         
@@ -3105,7 +3107,7 @@ modelsearch <- function(data, historical = TRUE, approach = "lme4", suite = "siz
           }
           
           if (nox.juv.size.model != juv.size.model) {
-            writeLines("\nInitial global model estimation failed. Attempting a global model without interaction terms.\n")
+            if (!quiet) {writeLines("\nInitial global model estimation failed. Attempting a global model without interaction terms.\n")}
             juv.size.global.model <- try(glm(formula = nox.juv.size.model, data = juvsize.data, family = "poisson"),
                                          silent = TRUE)
           }
@@ -3118,7 +3120,7 @@ modelsearch <- function(data, historical = TRUE, approach = "lme4", suite = "siz
           if (class(juv.size.global.model) == "try-error") {
             
             if (nox.juv.size.model != nopat.juv.size.model) {
-              writeLines("\nGlobal model estimation difficulties. Attempting a global model without a patch term.")
+              if (!quiet) {writeLines("\nGlobal model estimation difficulties. Attempting a global model without a patch term.")}
               juv.size.global.model <- try(glm(formula = nopat.juv.size.model, data = juvsize.data, family = "poisson"),
                                            silent = TRUE)
             }
@@ -3132,7 +3134,7 @@ modelsearch <- function(data, historical = TRUE, approach = "lme4", suite = "siz
           if (class(juv.size.global.model) == "try-error") {
             
             if (noyr.juv.size.model != nopat.juv.size.model) {
-              writeLines("\nGlobal model estimation difficulties. Attempting a global model without a year term.")
+              if (!quiet) {writeLines("\nGlobal model estimation difficulties. Attempting a global model without a year term.")}
               juv.size.global.model <- try(glm(formula = noyr.juv.size.model, data = juvsize.data, family = "poisson"),
                                            silent = TRUE)
             }
@@ -3146,18 +3148,18 @@ modelsearch <- function(data, historical = TRUE, approach = "lme4", suite = "siz
           if (class(juv.size.global.model) == "try-error") {
             
             if (noind.juv.size.model != noyr.juv.size.model) {
-              writeLines("\nGlobal model estimation difficulties. Attempting a global model without an individual identity term.")
+              if (!quiet) {writeLines("\nGlobal model estimation difficulties. Attempting a global model without an individual identity term.")}
               juv.size.global.model <- try(glm(formula = noind.juv.size.model, data = juvsize.data, family = "poisson"),
                                            silent = TRUE)
             }
           }
           
           if (class(juv.size.global.model) == "try-error") {
-            writeLines("\nCould not properly estimate a global model for juvenile size.")
+            if (!quiet) {writeLines("\nCould not properly estimate a global model for juvenile size.")}
           }
         }
       } else if (sizedist == "negbin") {
-        writeLines("\nDeveloping global model of size (negative binomial)...\n");
+        if (!quiet) {writeLines("\nDeveloping global model of size (negative binomial)...\n");}
         juv.size.global.model <- try(glm.nb(formula = juv.size.model, data = juvsize.data),
                                      silent = TRUE)
         
@@ -3169,7 +3171,7 @@ modelsearch <- function(data, historical = TRUE, approach = "lme4", suite = "siz
           }
           
           if (nox.juv.size.model != juv.size.model) {
-            writeLines("\nInitial global model estimation failed. Attempting a global model without interaction terms.\n")
+            if (!quiet) {writeLines("\nInitial global model estimation failed. Attempting a global model without interaction terms.\n")}
             juv.size.global.model <- try(glm.nb(formula = nox.juv.size.model, data = juvsize.data),
                                          silent = TRUE)
           }
@@ -3182,7 +3184,7 @@ modelsearch <- function(data, historical = TRUE, approach = "lme4", suite = "siz
           if (class(juv.size.global.model) == "try-error") {
             
             if (nox.juv.size.model != nopat.juv.size.model) {
-              writeLines("\nGlobal model estimation difficulties. Attempting a global model without a patch term.")
+              if (!quiet) {writeLines("\nGlobal model estimation difficulties. Attempting a global model without a patch term.")}
               juv.size.global.model <- try(glm.nb(formula = nopat.juv.size.model, data = juvsize.data),
                                            silent = TRUE)
             }
@@ -3196,7 +3198,7 @@ modelsearch <- function(data, historical = TRUE, approach = "lme4", suite = "siz
           if (class(juv.size.global.model) == "try-error") {
             
             if (noyr.juv.size.model != nopat.juv.size.model) {
-              writeLines("\nGlobal model estimation difficulties. Attempting a global model without a year term.")
+              if (!quiet) {writeLines("\nGlobal model estimation difficulties. Attempting a global model without a year term.")}
               juv.size.global.model <- try(glm.nb(formula = noyr.juv.size.model, data = juvsize.data),
                                            silent = TRUE)
             }
@@ -3210,14 +3212,14 @@ modelsearch <- function(data, historical = TRUE, approach = "lme4", suite = "siz
           if (class(juv.size.global.model) == "try-error") {
             
             if (noind.juv.size.model != noyr.juv.size.model) {
-              writeLines("\nGlobal model estimation difficulties. Attempting a global model without an individual identity term.")
+              if (!quiet) {writeLines("\nGlobal model estimation difficulties. Attempting a global model without an individual identity term.")}
               juv.size.global.model <- try(glm.nb(formula = noind.juv.size.model, data = juvsize.data),
                                            silent = TRUE)
             }
           }
           
           if (class(juv.size.global.model) == "try-error") {
-            writeLines("\nCould not properly estimate a global model for juvenile size.")
+            if (!quiet) {writeLines("\nCould not properly estimate a global model for juvenile size.")}
           }
         }
       }
@@ -3225,7 +3227,7 @@ modelsearch <- function(data, historical = TRUE, approach = "lme4", suite = "siz
     
     if (juv.repst.model != 1) {
       if (is.element(0, juvrepst.data$repstatus3) & is.element(1, juvrepst.data$repstatus3)) {
-        writeLines("\nDeveloping global model of juvenile reproduction probability...\n"); 
+        if (!quiet) {writeLines("\nDeveloping global model of juvenile reproduction probability...\n"); }
         juv.repst.global.model <- try(glm(formula = juv.repst.model, data = juvrepst.data, family = "binomial"),
                                       silent = TRUE)
         
@@ -3237,7 +3239,7 @@ modelsearch <- function(data, historical = TRUE, approach = "lme4", suite = "siz
           }
           
           if (nox.juv.repst.model != juv.repst.model) {
-            writeLines("\nInitial global model estimation failed. Attempting a global model without interaction terms.\n")
+            if (!quiet) {writeLines("\nInitial global model estimation failed. Attempting a global model without interaction terms.\n")}
             juv.repst.global.model <- try(glm(formula = nox.juv.repst.model, data = juvrepst.data, family = "binomial"),
                                           silent = TRUE)
           }
@@ -3250,7 +3252,7 @@ modelsearch <- function(data, historical = TRUE, approach = "lme4", suite = "siz
           if (class(juv.repst.global.model) == "try-error") {
             
             if (nox.juv.repst.model != nopat.juv.repst.model) {
-              writeLines("\nGlobal model estimation difficulties. Attempting a global model without a patch term.")
+              if (!quiet) {writeLines("\nGlobal model estimation difficulties. Attempting a global model without a patch term.")}
               juv.repst.global.model <- try(glm(formula = nopat.juv.repst.model, data = juvrepst.data, family = "binomial"),
                                             silent = TRUE)
             }
@@ -3264,7 +3266,7 @@ modelsearch <- function(data, historical = TRUE, approach = "lme4", suite = "siz
           if (class(juv.repst.global.model) == "try-error") {
             
             if (noyr.juv.repst.model != nopat.juv.repst.model) {
-              writeLines("\nGlobal model estimation difficulties. Attempting a global model without a year term.")
+              if (!quiet) {writeLines("\nGlobal model estimation difficulties. Attempting a global model without a year term.")}
               juv.repst.global.model <- try(glm(formula = noyr.juv.repst.model, data = juvrepst.data, family = "binomial"),
                                             silent = TRUE)
             }
@@ -3278,27 +3280,27 @@ modelsearch <- function(data, historical = TRUE, approach = "lme4", suite = "siz
           if (class(juv.repst.global.model) == "try-error") {
             
             if (noind.juv.repst.model != noyr.juv.repst.model) {
-              writeLines("\nGlobal model estimation difficulties. Attempting a global model without an individual identity term.")
+              if (!quiet) {writeLines("\nGlobal model estimation difficulties. Attempting a global model without an individual identity term.")}
               juv.repst.global.model <- try(glm(formula = noind.juv.repst.model, data = juvrepst.data, family = "binomial"),
                                             silent = TRUE)
             }
           }
           
           if (class(juv.repst.global.model) == "try-error") {
-            writeLines("\nCould not properly estimate a global model for juvenile observation status.")
+            if (!quiet) {writeLines("\nCould not properly estimate a global model for juvenile observation status.")}
           }
         }
       } else if (!is.element(0, juvrepst.data$repstatus3)) {
-        writeLines("\nJuvenile observation response is constant so will not model it.")
+        if (!quiet) {writeLines("\nJuvenile observation response is constant so will not model it.")}
         juv.repst.model <- 1
         juv.repst.global.model <- 1
       } else {
-        writeLines("\nJuvenile observation response is constant so will not model it.")
+        if (!quiet) {writeLines("\nJuvenile observation response is constant so will not model it.")}
         juv.repst.model <- 1
         juv.repst.global.model <- 0}
     }
     
-    writeLines("All global models developed.\n")
+    if (!quiet) {writeLines("All global models developed.\n")}
   }
   
   #This is the section where we dredge the models
@@ -3307,8 +3309,8 @@ modelsearch <- function(data, historical = TRUE, approach = "lme4", suite = "siz
   if (suite != "cons") {options(na.action = "na.fail");
     if (full.surv.model != 1) {
       options(na.action = "na.fail")
-      writeLines("\nCommencing dredge of survival probability...\n")
       if (!quiet) {
+        writeLines("\nCommencing dredge of survival probability...\n")
         surv.table <- try(dredge(surv.global.model, rank = used.criterion), silent = TRUE)
       } else {
         surv.table <- suppressWarnings(suppressMessages(try(dredge(surv.global.model, rank = used.criterion), silent = TRUE)))
@@ -3318,8 +3320,8 @@ modelsearch <- function(data, historical = TRUE, approach = "lme4", suite = "siz
     
     if (full.obs.model != 1) {
       options(na.action = "na.fail")
-      writeLines("\nCommencing dredge of observation probability...\n")
       if (!quiet) {
+        writeLines("\nCommencing dredge of observation probability...\n")
         obs.table <- try(dredge(obs.global.model, rank = used.criterion), silent = TRUE)
       } else {
         obs.table <- suppressWarnings(suppressMessages(try(dredge(obs.global.model, rank = used.criterion), silent = TRUE)))
@@ -3329,8 +3331,8 @@ modelsearch <- function(data, historical = TRUE, approach = "lme4", suite = "siz
     
     if (full.size.model != 1) {
       options(na.action = "na.fail")
-      writeLines("\nCommencing dredge of size...\n")
       if (!quiet) {
+        writeLines("\nCommencing dredge of size...\n")
         size.table <- try(dredge(size.global.model, rank = used.criterion), silent = TRUE)
       } else {
         size.table <- suppressWarnings(suppressMessages(try(dredge(size.global.model, rank = used.criterion), silent = TRUE)))
@@ -3340,8 +3342,8 @@ modelsearch <- function(data, historical = TRUE, approach = "lme4", suite = "siz
     
     if (full.repst.model != 1) {
       options(na.action = "na.fail")
-      writeLines("\nCommencing dredge of reproduction probability...\n")
       if (!quiet) {
+        writeLines("\nCommencing dredge of reproduction probability...\n")
         repst.table <- try(dredge(repst.global.model, rank = used.criterion), silent = TRUE)
       } else {
         repst.table <- suppressWarnings(suppressMessages(try(dredge(repst.global.model, rank = used.criterion), silent = TRUE)))
@@ -3351,8 +3353,8 @@ modelsearch <- function(data, historical = TRUE, approach = "lme4", suite = "siz
     
     if (full.fec.model != 1) {
       options(na.action = "na.fail")
-      writeLines("\nCommencing dredge of fecundity...\n")
       if (!quiet) {
+        writeLines("\nCommencing dredge of fecundity...\n")
         fec.table <- try(dredge(fec.global.model, rank = used.criterion), silent = TRUE)
       } else {
         fec.table <- suppressWarnings(suppressMessages(try(dredge(fec.global.model, rank = used.criterion), silent = TRUE)))
@@ -3362,8 +3364,8 @@ modelsearch <- function(data, historical = TRUE, approach = "lme4", suite = "siz
     
     if (juv.surv.model != 1) {
       options(na.action = "na.fail")
-      writeLines("\nCommencing dredge of juvenile survival probability...\n")
       if (!quiet) {
+        writeLines("\nCommencing dredge of juvenile survival probability...\n")
         juvsurv.table <- try(dredge(juv.surv.global.model, rank = used.criterion), silent = TRUE)
       } else {
         juvsurv.table <- suppressWarnings(suppressMessages(try(dredge(juv.surv.global.model, rank = used.criterion), silent = TRUE)))
@@ -3373,8 +3375,8 @@ modelsearch <- function(data, historical = TRUE, approach = "lme4", suite = "siz
     
     if (juv.obs.model != 1) {
       options(na.action = "na.fail")
-      writeLines("\nCommencing dredge of juvenile observation probability...\n")
       if (!quiet) {
+        writeLines("\nCommencing dredge of juvenile observation probability...\n")
         juvobs.table <- try(dredge(juv.obs.global.model, rank = used.criterion), silent = TRUE)
       } else {
         juvobs.table <- suppressWarnings(suppressMessages(try(dredge(juv.obs.global.model, rank = used.criterion), silent = TRUE)))
@@ -3384,8 +3386,8 @@ modelsearch <- function(data, historical = TRUE, approach = "lme4", suite = "siz
     
     if (juv.size.model != 1) {
       options(na.action = "na.fail")
-      writeLines("\nCommencing dredge of juvenile size...\n")
       if (!quiet) {
+        writeLines("\nCommencing dredge of juvenile size...\n")
         juvsize.table <- try(dredge(juv.size.global.model, rank = used.criterion), silent = TRUE)
       } else {
         juvsize.table <- suppressWarnings(suppressMessages(try(dredge(juv.size.global.model, rank = used.criterion), silent = TRUE)))
@@ -3395,8 +3397,8 @@ modelsearch <- function(data, historical = TRUE, approach = "lme4", suite = "siz
     
     if (juv.repst.model != 1) {
       options(na.action = "na.fail")
-      writeLines("\nCommencing dredge of juvenile reproduction status...\n")
       if (!quiet) {
+        writeLines("\nCommencing dredge of juvenile reproduction status...\n")
         juvrepst.table <- try(dredge(juv.repst.global.model, rank = used.criterion), silent = TRUE)
       } else {
         juvrepst.table <- suppressWarnings(suppressMessages(try(dredge(juv.repst.global.model, rank = used.criterion), silent = TRUE)))
@@ -3404,9 +3406,9 @@ modelsearch <- function(data, historical = TRUE, approach = "lme4", suite = "siz
       if (any(class(juvrepst.table) == "try-error")) {warning("Dredge of juvenile reproduction status failed.")}
     }
     
-    writeLines("\nFinished dredging all vital rates.\n")
+    if (!quiet) {writeLines("\nFinished dredging all vital rates.\n")}
   }
-
+  
   if (stringr::str_detect(bestfit, "&k")) {
     if (any(class(surv.table) == "model.selection")) {
       relevant.surv.models <- which(surv.table$delta <= 2)
@@ -3780,11 +3782,13 @@ modelsearch <- function(data, historical = TRUE, approach = "lme4", suite = "siz
     }
   }
   
+  if (!quiet) {writeLines("\nFinished selecting best-fit models.\n")}
+  
   qcoutput <- cbind.data.frame(c("survival", "observation", "size", "reproduction", "fecundity", 
                                  "juvenile_survival", "juvnile_observation", "juvenile_size", 
                                  "juvenile_reproduction"), c(surv.ind, obs.ind, size.ind, repst.ind, 
-                                 fec.ind, juvsurv.ind, juvobs.ind, juvsize.ind, juvrepst.ind), 
-                                 c(surv.trans, obs.trans, size.trans, repst.trans, fec.trans, 
+                                    fec.ind, juvsurv.ind, juvobs.ind, juvsize.ind, juvrepst.ind), 
+                               c(surv.trans, obs.trans, size.trans, repst.trans, fec.trans, 
                                  juvsurv.trans, juvobs.trans, juvsize.trans, juvrepst.trans))
   names(qcoutput) <- c("vital_rate", "individuals", "transitions")
   
@@ -3819,23 +3823,20 @@ modelsearch <- function(data, historical = TRUE, approach = "lme4", suite = "siz
 
 #' Summary of Class "lefkoMod"
 #' 
-#' A function to simplify the immediate viewable output for an R object of class
-#' \code{lefkoMod}. This function shows the best-fit models, summarizes the numbers
-#' of models in the model tables, shows the criterion used to determine the
-#' best-fit models, and provides some basic quality control information about
-#' the models.
+#' A function to sumarize the viewable output for an R object of class \code{lefkoMod}.
+#' This function shows the best-fit models, summarizes the numbers of models in the
+#' model tables, shows the criterion used to determine the best-fit models, and
+#' provides some basic quality control information.
 #' 
-#' @param object An R object of class \code{lefkoMod} resulting from 
-#' \code{\link{modelsearch}()}.
+#' @param object An R object of class \code{lefkoMod} resulting from \code{\link{modelsearch}()}.
 #' @param ... Other parameters.
 #' 
 #' @return A summary of the object, showing the best-fit models for all vital
-#' rates, with constants of 0 or 1 used for unestimated models. Thie is
-#' followed by a summary of the number of models tested per vital rate, and
-#' a table showing the names of the parameters used to model vital rates and
-#' represent tested factors. At the end is a section describing the number
-#' of individuals and individual transitions used to estimate each vital
-#' rate.
+#' rates, with constants of 0 or 1 used for unestimated models. This is followed by
+#' a summary of the number of models tested per vital rate, and a table showing the
+#' names of the parameters used to model vital rates and represent tested factors.
+#' At the end is a section describing the number of individuals and individual
+#' transitions used to estimate each vital rate best-fit model.
 #' 
 #' @examples
 #' \donttest{
@@ -3860,7 +3861,7 @@ modelsearch <- function(data, historical = TRUE, approach = "lme4", suite = "siz
 #' 
 #' lathvertln <- verticalize3(lathyrus, noyears = 4, firstyear = 1988, patchidcol = "SUBPLOT",
 #'                            individcol = "GENET", blocksize = 9, juvcol = "Seedling1988",
-#'                            size1col = "lnVol88", repstr1col = "FCODE88",
+#'                            size1col = "lnVol88", repstr1col = "Intactseed88",
 #'                            fec1col = "Intactseed88", dead1col = "Dead1988",
 #'                            nonobs1col = "Dormant1988", stageassign = lathframeln,
 #'                            stagesize = "sizea", censorcol = "Missing1988",
@@ -3875,7 +3876,7 @@ modelsearch <- function(data, historical = TRUE, approach = "lme4", suite = "siz
 #'                              juvestimate = "Sdl", bestfit = "AICc&k", sizedist = "gaussian", 
 #'                              fecdist = "poisson", indiv = "individ", patch = "patchid", 
 #'                              year = "year2", year.as.random = TRUE, patch.as.random = TRUE,
-#'                              show.model.tables = TRUE)
+#'                              show.model.tables = TRUE, quiet = TRUE)
 #' 
 #' summary(lathmodelsln2)
 #' }
@@ -4097,8 +4098,8 @@ summary.lefkoMod <- function(object, ...) {
 #' 
 #' @return This function returns a list with the following elements:
 #' \item{coefficients}{Vector of fixed effect coefficients.}
-#' \item{years}{Vector of time step coefficients, typically random effect.}
-#' \item{patches}{Vector of patch coefficients, typically random effect.}
+#' \item{years}{Vector of time coefficients, typically random.}
+#' \item{patches}{Vector of patch coefficients, typically random.}
 #' \item{variances}{Residual variance terms associated with model.}
 #' \item{family}{Distribution of response term.}
 #' \item{sigma}{Standard deviation of response.}
@@ -4245,8 +4246,8 @@ summary.lefkoMod <- function(object, ...) {
 #' 
 #' @return This function returns a list with the following elements:
 #' \item{coefficients}{Vector of fixed effect coefficients.}
-#' \item{years}{Vector of time step coefficients, typically random effect.}
-#' \item{patches}{Vector of patch coefficients, typically random effect.}
+#' \item{years}{Vector of time coefficients, typically random.}
+#' \item{patches}{Vector of patch coefficients, typically random.}
 #' \item{variances}{Residual variance terms associated with model.}
 #' \item{family}{Distribution of response term.}
 #' \item{sigma}{Standard deviation of response.}
@@ -4391,8 +4392,8 @@ summary.lefkoMod <- function(object, ...) {
 #' 
 #' @return This function returns a list with the following elements:
 #' \item{coefficients}{Vector of fixed effect coefficients.}
-#' \item{years}{Vector of time step coefficients, typically random effect.}
-#' \item{patches}{Vector of patch coefficients, typically random effect.}
+#' \item{years}{Vector of time coefficients, typically random.}
+#' \item{patches}{Vector of patch coefficients, typically random.}
 #' \item{variances}{Residual variance terms associated with model.}
 #' \item{family}{Distribution of response term.}
 #' \item{sigma}{Standard deviation of response.}
@@ -4539,7 +4540,7 @@ summary.lefkoMod <- function(object, ...) {
 #' 
 #' @return This function returns a list with the following elements:
 #' \item{coefficients}{Vector of fixed effect coefficients.}
-#' \item{years}{Vector of time step coefficients.}
+#' \item{years}{Vector of time coefficients.}
 #' \item{patches}{Vector of patch coefficients.}
 #' \item{variances}{Residual variance terms associated with model.}
 #' \item{family}{Distribution of response term.}
@@ -4703,7 +4704,7 @@ summary.lefkoMod <- function(object, ...) {
 #' 
 #' @return This function returns a list with the following elements:
 #' \item{coefficients}{Vector of fixed effect coefficients.}
-#' \item{years}{Vector of time step coefficients.}
+#' \item{years}{Vector of time coefficients.}
 #' \item{patches}{Vector of patch coefficients.}
 #' \item{variances}{Residual variance terms associated with model.}
 #' \item{family}{Distribution of response term.}

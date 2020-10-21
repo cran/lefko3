@@ -161,8 +161,8 @@ BEGIN_RCPP
 END_RCPP
 }
 // jerzeibalowski
-List jerzeibalowski(DataFrame ppy, DataFrame AllStages, List survproxy, List obsproxy, List sizeproxy, List repstproxy, List fecproxy, List jsurvproxy, List jobsproxy, List jsizeproxy, List jrepstproxy, double survdev, double obsdev, double sizedev, double repstdev, double fecdev, double jsurvdev, double jobsdev, double jsizedev, double jrepstdev, unsigned long numofsizes4, unsigned long matrixdim, double fecmod, double summedvars, double sigma, double jsummedvars, double jsigma, double maxsize, int sizedist, int fecdist, bool negfec);
-RcppExport SEXP _lefko3_jerzeibalowski(SEXP ppySEXP, SEXP AllStagesSEXP, SEXP survproxySEXP, SEXP obsproxySEXP, SEXP sizeproxySEXP, SEXP repstproxySEXP, SEXP fecproxySEXP, SEXP jsurvproxySEXP, SEXP jobsproxySEXP, SEXP jsizeproxySEXP, SEXP jrepstproxySEXP, SEXP survdevSEXP, SEXP obsdevSEXP, SEXP sizedevSEXP, SEXP repstdevSEXP, SEXP fecdevSEXP, SEXP jsurvdevSEXP, SEXP jobsdevSEXP, SEXP jsizedevSEXP, SEXP jrepstdevSEXP, SEXP numofsizes4SEXP, SEXP matrixdimSEXP, SEXP fecmodSEXP, SEXP summedvarsSEXP, SEXP sigmaSEXP, SEXP jsummedvarsSEXP, SEXP jsigmaSEXP, SEXP maxsizeSEXP, SEXP sizedistSEXP, SEXP fecdistSEXP, SEXP negfecSEXP) {
+List jerzeibalowski(DataFrame ppy, DataFrame AllStages, List survproxy, List obsproxy, List sizeproxy, List repstproxy, List fecproxy, List jsurvproxy, List jobsproxy, List jsizeproxy, List jrepstproxy, double survdev, double obsdev, double sizedev, double repstdev, double fecdev, double jsurvdev, double jobsdev, double jsizedev, double jrepstdev, unsigned long matrixdim, double fecmod, double summedvars, double sigma, double jsummedvars, double jsigma, double maxsize, int sizedist, int fecdist, bool negfec);
+RcppExport SEXP _lefko3_jerzeibalowski(SEXP ppySEXP, SEXP AllStagesSEXP, SEXP survproxySEXP, SEXP obsproxySEXP, SEXP sizeproxySEXP, SEXP repstproxySEXP, SEXP fecproxySEXP, SEXP jsurvproxySEXP, SEXP jobsproxySEXP, SEXP jsizeproxySEXP, SEXP jrepstproxySEXP, SEXP survdevSEXP, SEXP obsdevSEXP, SEXP sizedevSEXP, SEXP repstdevSEXP, SEXP fecdevSEXP, SEXP jsurvdevSEXP, SEXP jobsdevSEXP, SEXP jsizedevSEXP, SEXP jrepstdevSEXP, SEXP matrixdimSEXP, SEXP fecmodSEXP, SEXP summedvarsSEXP, SEXP sigmaSEXP, SEXP jsummedvarsSEXP, SEXP jsigmaSEXP, SEXP maxsizeSEXP, SEXP sizedistSEXP, SEXP fecdistSEXP, SEXP negfecSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -186,7 +186,6 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< double >::type jobsdev(jobsdevSEXP);
     Rcpp::traits::input_parameter< double >::type jsizedev(jsizedevSEXP);
     Rcpp::traits::input_parameter< double >::type jrepstdev(jrepstdevSEXP);
-    Rcpp::traits::input_parameter< unsigned long >::type numofsizes4(numofsizes4SEXP);
     Rcpp::traits::input_parameter< unsigned long >::type matrixdim(matrixdimSEXP);
     Rcpp::traits::input_parameter< double >::type fecmod(fecmodSEXP);
     Rcpp::traits::input_parameter< double >::type summedvars(summedvarsSEXP);
@@ -197,44 +196,223 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< int >::type sizedist(sizedistSEXP);
     Rcpp::traits::input_parameter< int >::type fecdist(fecdistSEXP);
     Rcpp::traits::input_parameter< bool >::type negfec(negfecSEXP);
-    rcpp_result_gen = Rcpp::wrap(jerzeibalowski(ppy, AllStages, survproxy, obsproxy, sizeproxy, repstproxy, fecproxy, jsurvproxy, jobsproxy, jsizeproxy, jrepstproxy, survdev, obsdev, sizedev, repstdev, fecdev, jsurvdev, jobsdev, jsizedev, jrepstdev, numofsizes4, matrixdim, fecmod, summedvars, sigma, jsummedvars, jsigma, maxsize, sizedist, fecdist, negfec));
+    rcpp_result_gen = Rcpp::wrap(jerzeibalowski(ppy, AllStages, survproxy, obsproxy, sizeproxy, repstproxy, fecproxy, jsurvproxy, jobsproxy, jsizeproxy, jrepstproxy, survdev, obsdev, sizedev, repstdev, fecdev, jsurvdev, jobsdev, jsizedev, jrepstdev, matrixdim, fecmod, summedvars, sigma, jsummedvars, jsigma, maxsize, sizedist, fecdist, negfec));
     return rcpp_result_gen;
 END_RCPP
 }
-// geodiesel
-arma::mat geodiesel(DataFrame loy, arma::mat Umats, arma::mat Fmats, int geom, int sparse, int numofpops, int numofpatches, int numofyears);
-RcppExport SEXP _lefko3_geodiesel(SEXP loySEXP, SEXP UmatsSEXP, SEXP FmatsSEXP, SEXP geomSEXP, SEXP sparseSEXP, SEXP numofpopsSEXP, SEXP numofpatchesSEXP, SEXP numofyearsSEXP) {
+// flagrantcrap
+arma::vec flagrantcrap(arma::mat Xmat, arma::uvec allindices);
+RcppExport SEXP _lefko3_flagrantcrap(SEXP XmatSEXP, SEXP allindicesSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< DataFrame >::type loy(loySEXP);
-    Rcpp::traits::input_parameter< arma::mat >::type Umats(UmatsSEXP);
-    Rcpp::traits::input_parameter< arma::mat >::type Fmats(FmatsSEXP);
-    Rcpp::traits::input_parameter< int >::type geom(geomSEXP);
-    Rcpp::traits::input_parameter< int >::type sparse(sparseSEXP);
-    Rcpp::traits::input_parameter< int >::type numofpops(numofpopsSEXP);
-    Rcpp::traits::input_parameter< int >::type numofpatches(numofpatchesSEXP);
-    Rcpp::traits::input_parameter< int >::type numofyears(numofyearsSEXP);
-    rcpp_result_gen = Rcpp::wrap(geodiesel(loy, Umats, Fmats, geom, sparse, numofpops, numofpatches, numofyears));
+    Rcpp::traits::input_parameter< arma::mat >::type Xmat(XmatSEXP);
+    Rcpp::traits::input_parameter< arma::uvec >::type allindices(allindicesSEXP);
+    rcpp_result_gen = Rcpp::wrap(flagrantcrap(Xmat, allindices));
+    return rcpp_result_gen;
+END_RCPP
+}
+// moreflagrantcrap
+arma::vec moreflagrantcrap(arma::mat Xmat);
+RcppExport SEXP _lefko3_moreflagrantcrap(SEXP XmatSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< arma::mat >::type Xmat(XmatSEXP);
+    rcpp_result_gen = Rcpp::wrap(moreflagrantcrap(Xmat));
     return rcpp_result_gen;
 END_RCPP
 }
 // turbogeodiesel
-arma::mat turbogeodiesel(DataFrame loy, arma::mat Umats, arma::mat Fmats, arma::mat Amats, int geom, int sparse, int numofpops, int numofpatches, int numofyears);
-RcppExport SEXP _lefko3_turbogeodiesel(SEXP loySEXP, SEXP UmatsSEXP, SEXP FmatsSEXP, SEXP AmatsSEXP, SEXP geomSEXP, SEXP sparseSEXP, SEXP numofpopsSEXP, SEXP numofpatchesSEXP, SEXP numofyearsSEXP) {
+List turbogeodiesel(DataFrame loy, List Umats, List Fmats, DataFrame stages, DataFrame hstages, DataFrame modelqc, bool patchmats, bool popmats);
+RcppExport SEXP _lefko3_turbogeodiesel(SEXP loySEXP, SEXP UmatsSEXP, SEXP FmatsSEXP, SEXP stagesSEXP, SEXP hstagesSEXP, SEXP modelqcSEXP, SEXP patchmatsSEXP, SEXP popmatsSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< DataFrame >::type loy(loySEXP);
-    Rcpp::traits::input_parameter< arma::mat >::type Umats(UmatsSEXP);
-    Rcpp::traits::input_parameter< arma::mat >::type Fmats(FmatsSEXP);
-    Rcpp::traits::input_parameter< arma::mat >::type Amats(AmatsSEXP);
-    Rcpp::traits::input_parameter< int >::type geom(geomSEXP);
-    Rcpp::traits::input_parameter< int >::type sparse(sparseSEXP);
-    Rcpp::traits::input_parameter< int >::type numofpops(numofpopsSEXP);
-    Rcpp::traits::input_parameter< int >::type numofpatches(numofpatchesSEXP);
-    Rcpp::traits::input_parameter< int >::type numofyears(numofyearsSEXP);
-    rcpp_result_gen = Rcpp::wrap(turbogeodiesel(loy, Umats, Fmats, Amats, geom, sparse, numofpops, numofpatches, numofyears));
+    Rcpp::traits::input_parameter< List >::type Umats(UmatsSEXP);
+    Rcpp::traits::input_parameter< List >::type Fmats(FmatsSEXP);
+    Rcpp::traits::input_parameter< DataFrame >::type stages(stagesSEXP);
+    Rcpp::traits::input_parameter< DataFrame >::type hstages(hstagesSEXP);
+    Rcpp::traits::input_parameter< DataFrame >::type modelqc(modelqcSEXP);
+    Rcpp::traits::input_parameter< bool >::type patchmats(patchmatsSEXP);
+    Rcpp::traits::input_parameter< bool >::type popmats(popmatsSEXP);
+    rcpp_result_gen = Rcpp::wrap(turbogeodiesel(loy, Umats, Fmats, stages, hstages, modelqc, patchmats, popmats));
+    return rcpp_result_gen;
+END_RCPP
+}
+// geodiesel
+List geodiesel(DataFrame loy, List Umats, List Fmats, DataFrame stages, DataFrame modelqc, bool patchmats, bool popmats);
+RcppExport SEXP _lefko3_geodiesel(SEXP loySEXP, SEXP UmatsSEXP, SEXP FmatsSEXP, SEXP stagesSEXP, SEXP modelqcSEXP, SEXP patchmatsSEXP, SEXP popmatsSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< DataFrame >::type loy(loySEXP);
+    Rcpp::traits::input_parameter< List >::type Umats(UmatsSEXP);
+    Rcpp::traits::input_parameter< List >::type Fmats(FmatsSEXP);
+    Rcpp::traits::input_parameter< DataFrame >::type stages(stagesSEXP);
+    Rcpp::traits::input_parameter< DataFrame >::type modelqc(modelqcSEXP);
+    Rcpp::traits::input_parameter< bool >::type patchmats(patchmatsSEXP);
+    Rcpp::traits::input_parameter< bool >::type popmats(popmatsSEXP);
+    rcpp_result_gen = Rcpp::wrap(geodiesel(loy, Umats, Fmats, stages, modelqc, patchmats, popmats));
+    return rcpp_result_gen;
+END_RCPP
+}
+// decomp3
+List decomp3(arma::mat Amat);
+RcppExport SEXP _lefko3_decomp3(SEXP AmatSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< arma::mat >::type Amat(AmatSEXP);
+    rcpp_result_gen = Rcpp::wrap(decomp3(Amat));
+    return rcpp_result_gen;
+END_RCPP
+}
+// decomp3sp
+List decomp3sp(arma::mat Amat);
+RcppExport SEXP _lefko3_decomp3sp(SEXP AmatSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< arma::mat >::type Amat(AmatSEXP);
+    rcpp_result_gen = Rcpp::wrap(decomp3sp(Amat));
+    return rcpp_result_gen;
+END_RCPP
+}
+// lambda3matrix
+double lambda3matrix(arma::mat Amat);
+RcppExport SEXP _lefko3_lambda3matrix(SEXP AmatSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< arma::mat >::type Amat(AmatSEXP);
+    rcpp_result_gen = Rcpp::wrap(lambda3matrix(Amat));
+    return rcpp_result_gen;
+END_RCPP
+}
+// lambda3matrixsp
+double lambda3matrixsp(arma::mat Amat);
+RcppExport SEXP _lefko3_lambda3matrixsp(SEXP AmatSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< arma::mat >::type Amat(AmatSEXP);
+    rcpp_result_gen = Rcpp::wrap(lambda3matrixsp(Amat));
+    return rcpp_result_gen;
+END_RCPP
+}
+// ss3matrix
+arma::vec ss3matrix(arma::mat Amat);
+RcppExport SEXP _lefko3_ss3matrix(SEXP AmatSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< arma::mat >::type Amat(AmatSEXP);
+    rcpp_result_gen = Rcpp::wrap(ss3matrix(Amat));
+    return rcpp_result_gen;
+END_RCPP
+}
+// ss3matrixsp
+arma::vec ss3matrixsp(arma::mat Amat);
+RcppExport SEXP _lefko3_ss3matrixsp(SEXP AmatSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< arma::mat >::type Amat(AmatSEXP);
+    rcpp_result_gen = Rcpp::wrap(ss3matrixsp(Amat));
+    return rcpp_result_gen;
+END_RCPP
+}
+// rv3matrix
+arma::vec rv3matrix(arma::mat Amat);
+RcppExport SEXP _lefko3_rv3matrix(SEXP AmatSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< arma::mat >::type Amat(AmatSEXP);
+    rcpp_result_gen = Rcpp::wrap(rv3matrix(Amat));
+    return rcpp_result_gen;
+END_RCPP
+}
+// rv3matrixsp
+arma::vec rv3matrixsp(arma::mat Amat);
+RcppExport SEXP _lefko3_rv3matrixsp(SEXP AmatSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< arma::mat >::type Amat(AmatSEXP);
+    rcpp_result_gen = Rcpp::wrap(rv3matrixsp(Amat));
+    return rcpp_result_gen;
+END_RCPP
+}
+// sens3matrix
+arma::mat sens3matrix(arma::mat Amat);
+RcppExport SEXP _lefko3_sens3matrix(SEXP AmatSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< arma::mat >::type Amat(AmatSEXP);
+    rcpp_result_gen = Rcpp::wrap(sens3matrix(Amat));
+    return rcpp_result_gen;
+END_RCPP
+}
+// sens3matrixsp
+arma::mat sens3matrixsp(arma::mat Amat);
+RcppExport SEXP _lefko3_sens3matrixsp(SEXP AmatSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< arma::mat >::type Amat(AmatSEXP);
+    rcpp_result_gen = Rcpp::wrap(sens3matrixsp(Amat));
+    return rcpp_result_gen;
+END_RCPP
+}
+// sens3hlefko
+List sens3hlefko(arma::mat Amat, DataFrame ahstages, DataFrame hstages);
+RcppExport SEXP _lefko3_sens3hlefko(SEXP AmatSEXP, SEXP ahstagesSEXP, SEXP hstagesSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< arma::mat >::type Amat(AmatSEXP);
+    Rcpp::traits::input_parameter< DataFrame >::type ahstages(ahstagesSEXP);
+    Rcpp::traits::input_parameter< DataFrame >::type hstages(hstagesSEXP);
+    rcpp_result_gen = Rcpp::wrap(sens3hlefko(Amat, ahstages, hstages));
+    return rcpp_result_gen;
+END_RCPP
+}
+// elas3matrix
+arma::mat elas3matrix(arma::mat Amat);
+RcppExport SEXP _lefko3_elas3matrix(SEXP AmatSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< arma::mat >::type Amat(AmatSEXP);
+    rcpp_result_gen = Rcpp::wrap(elas3matrix(Amat));
+    return rcpp_result_gen;
+END_RCPP
+}
+// elas3matrixsp
+arma::mat elas3matrixsp(arma::mat Amat);
+RcppExport SEXP _lefko3_elas3matrixsp(SEXP AmatSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< arma::mat >::type Amat(AmatSEXP);
+    rcpp_result_gen = Rcpp::wrap(elas3matrixsp(Amat));
+    return rcpp_result_gen;
+END_RCPP
+}
+// elas3hlefko
+List elas3hlefko(arma::mat Amat, DataFrame ahstages, DataFrame hstages);
+RcppExport SEXP _lefko3_elas3hlefko(SEXP AmatSEXP, SEXP ahstagesSEXP, SEXP hstagesSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< arma::mat >::type Amat(AmatSEXP);
+    Rcpp::traits::input_parameter< DataFrame >::type ahstages(ahstagesSEXP);
+    Rcpp::traits::input_parameter< DataFrame >::type hstages(hstagesSEXP);
+    rcpp_result_gen = Rcpp::wrap(elas3hlefko(Amat, ahstages, hstages));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -246,9 +424,25 @@ static const R_CallMethodDef CallEntries[] = {
     {"_lefko3_theoldpizzle", (DL_FUNC) &_lefko3_theoldpizzle, 6},
     {"_lefko3_specialpatrolgroup", (DL_FUNC) &_lefko3_specialpatrolgroup, 4},
     {"_lefko3_normalpatrolgroup", (DL_FUNC) &_lefko3_normalpatrolgroup, 4},
-    {"_lefko3_jerzeibalowski", (DL_FUNC) &_lefko3_jerzeibalowski, 31},
-    {"_lefko3_geodiesel", (DL_FUNC) &_lefko3_geodiesel, 8},
-    {"_lefko3_turbogeodiesel", (DL_FUNC) &_lefko3_turbogeodiesel, 9},
+    {"_lefko3_jerzeibalowski", (DL_FUNC) &_lefko3_jerzeibalowski, 30},
+    {"_lefko3_flagrantcrap", (DL_FUNC) &_lefko3_flagrantcrap, 2},
+    {"_lefko3_moreflagrantcrap", (DL_FUNC) &_lefko3_moreflagrantcrap, 1},
+    {"_lefko3_turbogeodiesel", (DL_FUNC) &_lefko3_turbogeodiesel, 8},
+    {"_lefko3_geodiesel", (DL_FUNC) &_lefko3_geodiesel, 7},
+    {"_lefko3_decomp3", (DL_FUNC) &_lefko3_decomp3, 1},
+    {"_lefko3_decomp3sp", (DL_FUNC) &_lefko3_decomp3sp, 1},
+    {"_lefko3_lambda3matrix", (DL_FUNC) &_lefko3_lambda3matrix, 1},
+    {"_lefko3_lambda3matrixsp", (DL_FUNC) &_lefko3_lambda3matrixsp, 1},
+    {"_lefko3_ss3matrix", (DL_FUNC) &_lefko3_ss3matrix, 1},
+    {"_lefko3_ss3matrixsp", (DL_FUNC) &_lefko3_ss3matrixsp, 1},
+    {"_lefko3_rv3matrix", (DL_FUNC) &_lefko3_rv3matrix, 1},
+    {"_lefko3_rv3matrixsp", (DL_FUNC) &_lefko3_rv3matrixsp, 1},
+    {"_lefko3_sens3matrix", (DL_FUNC) &_lefko3_sens3matrix, 1},
+    {"_lefko3_sens3matrixsp", (DL_FUNC) &_lefko3_sens3matrixsp, 1},
+    {"_lefko3_sens3hlefko", (DL_FUNC) &_lefko3_sens3hlefko, 3},
+    {"_lefko3_elas3matrix", (DL_FUNC) &_lefko3_elas3matrix, 1},
+    {"_lefko3_elas3matrixsp", (DL_FUNC) &_lefko3_elas3matrixsp, 1},
+    {"_lefko3_elas3hlefko", (DL_FUNC) &_lefko3_elas3hlefko, 3},
     {NULL, NULL, 0}
 };
 

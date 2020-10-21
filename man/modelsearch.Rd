@@ -34,106 +34,98 @@ modelsearch(
 )
 }
 \arguments{
-\item{data}{The vertical dataset to be used for analysis. The dataset should 
-ideally be of class \code{hfvdata}, but will also work with data frames 
-formatted similarly to the output format provided by functions 
-\code{\link{verticalize3}()} or \code{\link{historicalize3}()}, as long as all 
-needed variables are properly designated.}
+\item{data}{The vertical dataset to be used for analysis. This dataset should 
+be of class \code{hfvdata}, but can also be a data frame formatted similarly to
+the output format provided by functions \code{\link{verticalize3}()} or \code{\link{historicalize3}()},
+as long as all needed variables are properly designated.}
 
-\item{historical}{A logical variable denoting whether to assess the effects
-of state in time \emph{t}-1 in addition to state in time \emph{t}. Defaults 
-to TRUE.}
+\item{historical}{A logical variable denoting whether to assess the effects of
+state in time \emph{t}-1 in addition to state in time \emph{t}. Defaults to TRUE.}
 
-\item{approach}{Designates the approach to be taken for model building. The 
+\item{approach}{The statistical approach to be taken for model building. The 
 default is \code{lme4}, which uses the mixed model approach utilized in 
-package 'lme4'. Other options include \code{glm}, which uses the \code{lm}, \code{glm},
+package \code{lme4}. Other options include \code{glm}, which uses \code{lm}, \code{glm},
 and related functions in base R.}
 
-\item{suite}{This describes the global model for each vital rate estimation
-and has the following possible values: \code{full}, includes main effects and 
-all two-way interactions of size and reproductive status; \code{main}, 
-includes main effects only of size and reproductive status; \code{size}, 
-includes only size (also interactions between size in historical model); 
-\code{rep}, includes only reproductive status (also interactions between 
-status in historical model); \code{cons}, all vital rates estimated only as 
-y-intercepts. If \code{approach = "glm"} and \code{year.as.random = FALSE}, then 
-year is also included as a fixed effect, and, in the case of \code{full}, 
-included in two-way interactions. Defaults to \code{size}.}
+\item{suite}{This describes the global model for each vital rate estimation and
+has the following possible values: \code{full}, includes main effects and all
+two-way interactions of size and reproductive status; \code{main}, includes main
+effects only of size and reproductive status; \code{size}, includes only size
+(also interactions between size in historical model); \code{rep}, includes only
+reproductive status (also interactions between status in historical model); 
+\code{cons}, all vital rates estimated only as y-intercepts. If \code{approach = "glm"}
+and \code{year.as.random = FALSE}, then year is also included as a fixed effect,
+and, in the case of \code{full}, included in two-way interactions. Defaults to \code{size}.}
 
-\item{vitalrates}{A vector describing which vital rates will be estimated
-via linear modeling, with the following options: \code{surv}, survival 
-probability; \code{obs}, observation probability; \code{size}, overall size; \code{repst}, 
+\item{vitalrates}{A vector describing which vital rates will be estimated via
+linear modeling, with the following options: \code{surv}, survival probability;
+\code{obs}, observation probability; \code{size}, overall size; \code{repst}, 
 probability of reproducing; and \code{fec}, amount of reproduction (overall 
 fecundity). Defaults to \code{c("surv", "size", "fec")}.}
 
-\item{juvestimate}{An optional variable denoting the stage name of the 
-juvenile stage in the vertical dataset. If not NA, and \code{stage} is also 
-given (see below), then vital rates listed in \code{vitalrates} other than 
-\code{fec} will also be estimated from the juvenile stage to all adult stages. 
-Defaults to NA, in which case juvenile vital rates are not estimated.}
+\item{juvestimate}{An optional variable denoting the stage name of the juvenile
+stage in the vertical dataset. If not NA, and \code{stage} is also given (see
+below), then vital rates listed in \code{vitalrates} other than \code{fec} will also
+be estimated from the juvenile stage to all adult stages. Defaults to NA, in
+which case juvenile vital rates are not estimated.}
 
-\item{juvsize}{A logical variable denoting whether size should be used as
-a term in models involving transition from the juvenile stage. Defaults 
-to FALSE, and is only used if \code{juvestimate} does not equal NA.}
+\item{juvsize}{A logical variable denoting whether size should be used as a term
+in models involving transition from the juvenile stage. Defaults to FALSE, and
+is only used if \code{juvestimate} does not equal NA.}
 
-\item{bestfit}{A variable indicating the model selection criterion for the 
+\item{bestfit}{A variable indicating the model selection criterion for the
 choice of best-fit model. The default is \code{AICc&k}, which chooses the 
-best-fit model as the model with the lowest AICc or, if not the same 
-model, then the model that has the lowest degrees of freedom among models 
-with delta AICc <= 2.0. Alternatively, \code{AICc} may be chosen, in which case
-the best-fit model is simply the model with the lowest AICc value.}
+best-fit model as the model with the lowest AICc or, if not the same model, then
+the model that has the lowest degrees of freedom among models with \eqn{\Delta AICc <= 2.0}.
+Alternatively, \code{AICc} may be chosen, in which case the best-fit model is simply
+the model with the lowest AICc value.}
 
-\item{sizedist}{The probability distribution used to model size. Options 
-include \code{gaussian} for the Normal distribution (default), \code{poisson} 
-for the Poisson distribution, and \code{negbin} for the negative binomial
-distribution.}
+\item{sizedist}{The probability distribution used to model size. Options include
+\code{gaussian} for the Normal distribution (default), \code{poisson} for the Poisson
+distribution, and \code{negbin} for the negative binomial distribution.}
 
 \item{fecdist}{The probability distribution used to model fecundity. Options
-include \code{gaussian} for the Normal distribution (default), \code{poisson} 
-for the Poisson distribution, and \code{negbin} for the negative binomial 
-distribution.}
+include \code{gaussian} for the Normal distribution (default), \code{poisson} for
+the Poisson distribution, and \code{negbin} for the negative binomial distribution.}
 
-\item{fectime}{A variable indicating which year of fecundity to use as 
-the response term in fecundity models. Options include \code{2}, which refers 
-to time \emph{t}, and \code{3}, which refers to time \emph{t}+1. Defaults to \code{2}.}
+\item{fectime}{A variable indicating which year of fecundity to use as the
+response term in fecundity models. Options include \code{2}, which refers to time \emph{t},
+and \code{3}, which refers to time \emph{t}+1. Defaults to \code{2}.}
 
-\item{censor}{A vector denoting the names of censoring variables in the 
-dataset, in order from time \emph{t}+1, followed by time \emph{t}, 
-and lastly followed by time \emph{t}-1. Defaults to NA.}
+\item{censor}{A vector denoting the names of censoring variables in the dataset,
+in order from time \emph{t}+1, followed by time \emph{t}, and lastly followed by time \emph{t}-1.
+Defaults to NA.}
 
-\item{indiv}{A variable indicating the variable name coding individual 
-identity. Defaults to \code{individ}.}
+\item{indiv}{A variable indicating the variable name coding individual identity.
+Defaults to \code{individ}.}
 
-\item{patch}{A variable indicating the variable name coding for patch, 
-where patches are defined as permanent subgroups within the study
-population. Defaults to NA.}
+\item{patch}{A variable indicating the variable name coding for patch, where
+patches are defined as permanent subgroups within the study population. Defaults
+to NA.}
 
-\item{year}{A variable indicating the variable coding for  observation 
-time in time \emph{t}. Defaults to \code{year2}.}
+\item{year}{A variable indicating the variable coding for  observation time in 
+time \emph{t}. Defaults to \code{year2}.}
 
-\item{surv}{A vector indicating the variable names coding for status as 
-alive or dead in times \emph{t}+1, \emph{t}, and \emph{t}-1, respectively. 
-Defaults to \code{c("alive3", "alive2", "alive1")}.}
+\item{surv}{A vector indicating the variable names coding for status as alive or
+dead in times \emph{t}+1, \emph{t}, and \emph{t}-1, respectively. Defaults to 
+\code{c("alive3", "alive2", "alive1")}.}
 
-\item{obs}{A vector indicating the variable names coding for observation
-status in times \emph{t}+1, \emph{t}, and \emph{t}-1, respectively. 
-Defaults to \code{c("obsstatus3", "obsstatus2", "obsstatus1")}.}
-
-\item{size}{A vector indicating the variable names coding for size in 
-times \emph{t}+1, \emph{t}, and \emph{t}-1, respectively. Defaults to 
-\code{c("sizea3", "sizea2", "sizea1")}.}
-
-\item{repst}{A vector indicating the variable names coding for 
-reproductive status in times \emph{t}+1, \emph{t}, and \emph{t}-1, 
-respectively. Defaults to \code{c("repstatus3", "repstatus2", "repstatus1")}.}
-
-\item{fec}{A vector indicating the variable names coding for fecundity
+\item{obs}{A vector indicating the variable names coding for observation status
 in times \emph{t}+1, \emph{t}, and \emph{t}-1, respectively. Defaults to 
-\code{c("feca3", "feca2", "feca1")}.}
+\code{c("obsstatus3", "obsstatus2", "obsstatus1")}.}
 
-\item{stage}{A vector indicating the variables coding for stage in times 
-\emph{t}+1, \emph{t}, and \emph{t}-1. Defaults to 
-\code{c("stage3", "stage2", "stage1")}.}
+\item{size}{A vector indicating the variable names coding for size in times \emph{t}+1,
+\emph{t}, and \emph{t}-1, respectively. Defaults to \code{c("sizea3", "sizea2", "sizea1")}.}
+
+\item{repst}{A vector indicating the variable names coding for reproductive
+status in times \emph{t}+1, \emph{t}, and \emph{t}-1, respectively. Defaults to 
+\code{c("repstatus3", "repstatus2", "repstatus1")}.}
+
+\item{fec}{A vector indicating the variable names coding for fecundity in times 
+\emph{t}+1, \emph{t}, and \emph{t}-1, respectively. Defaults to \code{c("feca3", "feca2", "feca1")}.}
+
+\item{stage}{A vector indicating the variables coding for stage in times \emph{t}+1, 
+\emph{t}, and \emph{t}-1. Defaults to \code{c("stage3", "stage2", "stage1")}.}
 
 \item{age}{Designates the name of the variable corresponding to age in the
 vertical dataset. Defaults to NA, in which case age is not included in linear
@@ -142,110 +134,107 @@ models. Should only be used if building age x stage matrices.}
 \item{year.as.random}{If set to TRUE and \code{approach = "lme4"}, then \code{year} is 
 included as a random factor. If set to FALSE, then \code{year} is included as a 
 fixed factor. All other combinations of logical value and \code{approach} lead to 
-\code{year} not being included in modeling.}
+\code{year} not being included in modeling. Defaults to TRUE.}
 
 \item{patch.as.random}{If set to TRUE and \code{approach = "lme4"}, then \code{patch}
 is included as a random factor. If set to FALSE and \code{approach = "glm"}, then 
 \code{patch} is included as a fixed factor. All other combinations of logical 
-value and \code{approach} lead to \code{patch} not being included in modeling.}
+value and \code{approach} lead to \code{patch} not being included in modeling.
+Defaults to TRUE.}
 
 \item{show.model.tables}{If set to TRUE, then includes full modeling tables
 in the output. Defaults to TRUE.}
 
 \item{quiet}{If set to TRUE, then model building and selection will proceed
 without warnings and diagnostic messages being issued. Note that this will
-not affect warnings and messages generated during global model development.
+not affect warnings and messages generated as models themselves are tested.
 Defaults to FALSE.}
 }
 \value{
-This function yields an object of class \code{lefkoMod}, which is a 
-list in which the first 8 elements are the best-fit models for survival, 
-observation status, size, reproductive status, fecundity, juvenile survival, 
-juvenile observation, and juvenile size, respectively, followed by eight 
-elements corresponding to the model tables for each of these vital rates, in
-order, followed by a single character element denoting the criterion used for
-model selection, as follows:
+This function yields an object of class \code{lefkoMod}, which is a list
+in which the first 9 elements are the best-fit models for survival, observation
+status, size, reproductive status, fecundity, juvenile survival, juvenile
+observation, juvenile size, and juvenile transition to reproduction, 
+respectively, followed by 9 elements corresponding to the model tables for each
+of these vital rates, in order, followed by a single character element denoting
+the criterion used for model selection, and ending on a quality control vector:
 
 \item{survival_model}{Best-fit model of the binomial probability of survival
 from time \emph{t} to time \emph{t}+1. Defaults to 1.}
 \item{observation_model}{Best-fit model of the binomial probability of 
 observation in time \emph{t}+1 given survival to that time. Defaults to 1.}
-\item{size_model}{Best-fit model of size in time \emph{t}+1 given 
-survival to and observation in that time. Defaults to 1.}
+\item{size_model}{Best-fit model of size in time \emph{t}+1 given survival to
+and observation in that time. Defaults to 1.}
 \item{repstatus_model}{Best-fit model of the binomial probability of
-reproduction in time \emph{t}+1, given survival to and observation in that
-time. Defaults to 1.}
+reproduction in time \emph{t}+1, given survival to and observation in that time.
+Defaults to 1.}
 \item{fecundity_model}{Best-fit model of fecundity in time \emph{t}+1 given 
 survival to, and observation and reproduction in that time. Defaults to 1.}
-\item{juv_survival_model}{Best-fit model of the binomial probability of 
-survival from time \emph{t} to time \emph{t}+1 of an immature individual. 
-Defaults to 1.}
+\item{juv_survival_model}{Best-fit model of the binomial probability of survival
+from time \emph{t} to time \emph{t}+1 of an immature individual. Defaults to 1.}
 \item{juv_observation_model}{Best-fit model of the binomial probability of 
-observation in time \emph{t}+1 given survival to that time of 
-an immature individual. Defaults to 1.}
-\item{juv_size_model}{Best-fit model of size in time \emph{t}+1 given 
-survival to and observation in that time of an immature individual. Defaults 
-to 1.}
-\item{juv_reproduction_model}{Best-fit model of the binomial probability 
-of reproduction in time \emph{t}+1, given survival to and observation in 
-that time of an individual that was immature in time \emph{t}. This model is 
-technically not a model of reproduction probability for individuals that are 
-immature, rather reproduction probability here is given for individuals that 
-are mature in time \emph{t}+1 but were immature in time \emph{t}. Defaults 
-to 1.}
+observation in time \emph{t}+1 given survival to that time of an immature
+individual. Defaults to 1.}
+\item{juv_size_model}{Best-fit model of size in time \emph{t}+1 given survival to
+and observation in that time of an immature individual. Defaults to 1.}
+\item{juv_reproduction_model}{Best-fit model of the binomial probability of
+reproduction in time \emph{t}+1, given survival to and observation in that time
+of an individual that was immature in time \emph{t}. This model is technically
+not a model of reproduction probability for individuals that are immature,
+rather reproduction probability here is given for individuals that are mature in
+time \emph{t}+1 but immature in time \emph{t}. Defaults to 1.}
 \item{survival_table}{Full dredge model table of survival probability.}
-\item{observation_table}{Full dredge model table of observation
-probability.}
+\item{observation_table}{Full dredge model table of observationprobability.}
 \item{size_table}{Full dredge model table of size.}
 \item{repstatus_table}{Full dredge model table of reproduction probability.}
 \item{fecundity_table}{Full dredge model table of fecundity.}
 \item{juv_survival_table}{Full dredge model table of immature survival 
 probability.}
-\item{juv_observation_table}{Full dredge model table of immature 
-observation probability.}
+\item{juv_observation_table}{Full dredge model table of immature observation
+probability.}
 \item{juv_size_table}{Full dredge model table of immature size.}
-\item{juv_reproduction_table}{Full dredge model table of immature 
-reproduction probability.}
-\item{criterion}{Vharacter variable denoting the criterion used to 
-determine the best-fit model.}
-\item{qc}{Data frame with three variables: 1) Name of vital rate, 2) number
-of individuals used to model that vital rate, and 3) number of individual
+\item{juv_reproduction_table}{Full dredge model table of immature reproduction
+probability.}
+\item{criterion}{Vharacter variable denoting the criterion used to determine
+the best-fit model.}
+\item{qc}{Data frame with three variables: 1) Name of vital rate, 2) number of
+individuals used to model that vital rate, and 3) number of individual
 transitions used to model that vital rate.}
 
-The mechanics governing model building are fairly robust to errors and 
-exceptions. The function attempts to build global models, and simplifies 
-models automatically via several steps should model building fail. Model 
-selection proceeds via the \link[MuMIn]{dredge} function in package 'MuMIn', and 
-defaults to the global model should that fail.
+The mechanics governing model building are fairly robust to errors and
+exceptions. The function attempts to build global models, and simplifies models
+automatically should model building fail. Model selection proceeds via the 
+\link[MuMIn]{dredge} function in package \code{MuMIn}, and defaults to the global
+model should that fail.
 
-This function is set to run in a verbose fashion, so that any errors and 
-warnings developed during model building, model analysis, and model selection 
-can be seen and, if necessary, dealt with. Interpretations of errors during 
-global model analysis may be found in documentation in base R for functions 
-\code{lm} and \code{glm} used in analysis of models without random terms, and packages 
-'lme4' and 'glmmTMB' for mixed models (see \link[lme4]{glmer} and \link[glmmTMB]{glmmTMB}, respectively). 
-Package 'MuMIn' is used for model dredging (see \link[MuMIn]{dredge}), and errors 
-and warnings during dredging can be interpreted using the documentation for 
-that package. The \code{quiet = TRUE} option can be used to silence dredging 
-warnings, but users should note that automated model selection can be viewed 
-as mindless, and so great care should be taken to ensure that the models run
-are sensical, and that issues of model quality are properly dealt with.
+This function is verbose, so that any errors and warnings developed during model
+building, model analysis, and model selection can be found and dealt with.
+Interpretations of errors during global model analysis may be found in
+documentation in base R for functions \code{lm} and \code{glm} used in analysis
+of models without random terms, and packages 
+\code{lme4} and \code{glmmTMB} for mixed models (see \link[lme4]{glmer} and \link[glmmTMB]{glmmTMB},
+respectively). Package \code{MuMIn} is used for model dredging (see \link[MuMIn]{dredge}),
+and errors and warnings during dredging can be interpreted using the
+documentation for that package. The \code{quiet = TRUE} option can be used to
+silence dredge warnings, but users should note that automated model selection
+can be viewed as a black box, and so great care should be taken to ensure that
+the models run make biological sense, and that model quality is prioritized.
 
-Note that care must be taken to build models that test the impacts of state 
-in time \emph{t}-1 for historical models, and that do not test these impacts 
-for ahistorical models. Ahistorical matrix modeling particularly will yield
-transition estimates biased low if historical terms from models are ignored.
-This can be at the start of modeling by setting \code{historical = FALSE} for
-the ahistorical case, and \code{historical = TRUE} for the historical case.
+Care must be taken to build models that test the impacts of state in time \emph{t}-1
+for historical models, and that do not test these impacts for ahistorical
+models. Ahistorical matrix modeling particularly will yield biased transition
+estimates if historical terms from models are ignored. This can be dealt with
+at the start of modeling by setting \code{historical = FALSE} for the
+ahistorical case, and \code{historical = TRUE} for the historical case.
 
 Model building and selection may fail if NAs exist within variables used in
-modeling. If NAs represent 0 entries, then please change all NAs to 0, as 
-with the \code{NAas0 = TRUE} option in function \code{\link{verticalize3}()}.
+modeling. If NAs represent 0 entries, then change all NAs to 0, as with the
+\code{NAas0 = TRUE} option in function \code{\link{verticalize3}()}.
 }
 \description{
 \code{modelsearch()} returns both a table of vital rate estimating models and a
-best-fit model for each major vital rate estimated. The final output can be 
-used as input in other functions within this package.
+best-fit model for each major vital rate estimated. The final output can be used
+as input in other functions within this package.
 }
 \examples{
 \donttest{
@@ -271,7 +260,7 @@ lathframeln <- sf_create(sizes = sizevector, stagenames = stagevector, repstatus
 lathvertln <- verticalize3(lathyrus, noyears = 4, firstyear = 1988, patchidcol = "SUBPLOT",
                            individcol = "GENET", blocksize = 9, juvcol = "Seedling1988",
                            size1col = "lnVol88", repstr1col = "FCODE88",
-                           fec1col = "Intactseed88", dead1col = "Dead1988",
+                           fec1col = "Intactseed88", dead1col = "Intactseed88",
                            nonobs1col = "Dormant1988", stageassign = lathframeln,
                            stagesize = "sizea", censorcol = "Missing1988",
                            censorkeep = NA, NAas0 = TRUE, censor = TRUE)

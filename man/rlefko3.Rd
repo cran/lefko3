@@ -28,82 +28,79 @@ rlefko3(
 )
 }
 \arguments{
-\item{data}{A vertical demographic data frame, with variables corresponding 
-to the naming conventions in \code{\link{verticalize3}()}.}
+\item{data}{A vertical demographic data frame, with variables corresponding to
+the naming conventions in \code{\link{verticalize3}()}.}
 
 \item{stageframe}{A stageframe object that includes information on the size,
-observation status, propagule status, immaturity status, and maturity status
-of each ahistorical stage. Should also incorporate bin widths if size is
+observation status, propagule status, immaturity status, and maturity status of
+each ahistorical stage. Should also incorporate bin widths if size is
 continuous.}
 
-\item{year}{A variable corresponding to year or observation time, or a set
-of such values, given in values associated with the year term used in linear 
-model development. Can also equal \code{all}, in which case matrices will
-be estimated for all years. Defaults to \code{all}.}
+\item{year}{A variable corresponding to year or observation time, or a set of
+such values, given in values associated with the year term used in linear model
+development. Can also equal \code{all}, in which case matrices will be estimated
+for all years. Defaults to \code{all}.}
 
-\item{pop}{A variable designating which populations will have matrices 
+\item{pop}{A variable designating which populations will have matrices
 estimated. Should be set to specific population names, or to \code{all} if all 
 populations should have matrices estimated.}
 
-\item{patch}{A variable designating which patches or subpopulations will
-have matrices estimated. Should be set to specific patch names, or to 
-\code{all} if all patches should have matrices estimated.}
+\item{patch}{A variable designating which patches or subpopulations will have
+matrices estimated. Should be set to specific patch names, or to \code{all} if
+matrices should be estimated for all patches. Defaults to \code{all}.}
 
-\item{censor}{If TRUE, then data will be removed according to the variable
-set in \code{censorcol}, such that only data with censor values equal to 1
-will remain. Defaults to FALSE.}
+\item{censor}{If TRUE, then data will be removed according to the variable set
+in \code{censorcol}, such that only data with censor values equal to 1 will
+remain. Defaults to FALSE.}
 
-\item{stages}{An optional but important vector denoting the names of the
-variables within the main vertical dataset coding for the names of the stages
-of each individual in times \emph{t}+1, \emph{t}, and \emph{t}-1, respectively. The names of
-the stages in these variables should match those used in the \code{stageframe}
-input for this analysis exactly. If left blank, then \code{rlefko3()} will attempt
+\item{stages}{An optional vector denoting the names of the variables within the
+main vertical dataset coding for the stages of each individual in times \emph{t}+1,
+\emph{t}, and \emph{t}-1. The names of stages in these variables should match those
+used in the \code{stageframe} exactly. If left blank, then \code{rlefko3()} will attempt
 to infer stages by matching values of \code{alive}, \code{size}, \code{repst}, and \code{matst}
 to characteristics noted in the associated \code{stageframe}.}
 
-\item{alive}{A vector of names of binomial variables corresponding to status 
-as alive (1) or dead (0) in times \emph{t}+1, \emph{t}, and \emph{t}-1, respectively.}
+\item{alive}{A vector of names of binomial variables corresponding to status as
+alive (1) or dead (0) in times \emph{t}+1, \emph{t}, and \emph{t}-1, respectively.}
 
 \item{size}{A vector of names of variables coding size in times \emph{t}+1, \emph{t},
 and \emph{t}-1, respectively. Defaults to \code{c("sizea3", "sizea2", "sizea1")}.}
 
-\item{repst}{A vector of names of variables coding reproductive status in 
-times \emph{t}+1, \emph{t}, and \emph{t}-1, respectively. Defaults to \code{c("repstatus3", 
+\item{repst}{A vector of names of variables coding reproductive status in times
+\emph{t}+1, \emph{t}, and \emph{t}-1, respectively. Defaults to \code{c("repstatus3", 
 "repstatus2", "repstatus1")}.}
 
-\item{matst}{A vector of names of variables coding maturity status in 
-times \emph{t}+1, \emph{t}, and \emph{t}-1, respectively. Defaults to \code{c("matstatus3", 
+\item{matst}{A vector of names of variables coding maturity status in times
+\emph{t}+1, \emph{t}, and \emph{t}-1, respectively. Defaults to \code{c("matstatus3", 
 "matstatus2", "matstatus1")}. Must be supplied if \code{stages} is not provided.}
 
 \item{fec}{A vector of names of variables coding fecundity in times \emph{t}+1,
 \emph{t}, and \emph{t}-1, respectively. Defaults to \code{c("feca3", "feca2", "feca1")}.}
 
-\item{repmatrix}{A matrix composed mostly of 0s, with non-zero values for
-each potentially new individual (row) born to each reproductive stage
-(column). Non-zero entries correspond to multipliers for fecundity, with 1
-equaling full fecundity.}
+\item{repmatrix}{A matrix composed mostly of 0s, with non-zero values for each
+potentially new individual (row) born to each reproductive stage (column).
+Entries act as multipliers on fecundity, with 1 equaling full fecundity.}
 
-\item{overwrite}{A data frame developed with the \code{\link{overwrite}()} function,
-describing transitions to be overwritten either with given values or with 
-other estimated transitions.}
+\item{overwrite}{A data frame developed with the \code{\link{overwrite}()} function
+describing transitions to be overwritten either with given values or 
+with other estimated transitions.}
 
-\item{yearcol}{The variable name or column number corresponding to year 
-in time \emph{t} in the dataset.}
+\item{yearcol}{The variable name or column number corresponding to time in time
+\emph{t} in the dataset.}
 
-\item{popcol}{The variable name or column number corresponding to the
-identity of the population.}
+\item{popcol}{The variable name or column number corresponding to the identity
+of the population.}
 
 \item{patchcol}{The variable name or column number corresponding to patch in 
 the dataset.}
 
-\item{indivcol}{The variable name or column number coding individual 
-identity.}
+\item{indivcol}{The variable name or column number coding individual identity.}
 
-\item{censorcol}{The variable name or column number denoting the
-censor status. Only needed if \code{censor = TRUE}.}
+\item{censorcol}{The variable name or column number denoting the censor status.
+Only needed if \code{censor = TRUE}.}
 
 \item{reduce}{A logical value denoting whether to remove historical stages
-associated with only zero transitions. These are removed only if all row
+associated exclusively with zero transitions. These are removed only if all row
 and column sums in ALL matrices estimated equal 0. Defaults to FALSE.}
 }
 \value{
@@ -111,26 +108,27 @@ If all inputs are properly formatted, then this function will return
 either an object of class \code{lefkoMat}. Output includes:
 
 \item{A}{A list of full projection matrices in order of sorted populations,
-patches, and years.}
-\item{U}{A list of survival-transition matrices sorted as in \code{A}.}
-\item{F}{A list of fecundity matrices sorted as in \code{A}.}
-\item{hstages}{A data frame matrix showing the pairing of ahistorical 
-stages used to create historical stage pairs.}
+patches, and years. All matrices output in the \code{matrix} class.}
+\item{U}{A list of survival-transition matrices sorted as in \code{A}. All 
+matrices output in the \code{matrix} class.}
+\item{F}{A list of fecundity matrices sorted as in \code{A}. All matrices 
+output in the \code{matrix} class.}
+\item{hstages}{A data frame matrix showing the pairing of ahistorical stages
+used to create historical stage pairs.}
 \item{ahstages}{A data frame detailing the characteristics of associated
 ahistorical stages.}
 \item{labels}{A data frame giving the population, patch, and year of each 
 matrix in order.}
-\item{matrixqc}{A short vector describing the number of non-zero elements
-in \code{U} and \code{F} matrices, and the number of annual matrices.}
+\item{matrixqc}{A short vector describing the number of non-zero elements in
+\code{U} and \code{F} matrices, and the number of annual matrices.}
 \item{dataqc}{A vector showing the numbers of individuals and rows in the
 vertical dataset used as input.}
 }
 \description{
-\code{rlefko3()} returns a list of raw historical population projection 
-matrices, as well as the associated component transition and fecundity
-matrices, data frames describing the ahistorical stages used and the pairing
-of ahistorical stages used to create historical paired stages, and a data
-frame describing the population, patch, and year associated with each matrix.
+\code{rlefko3()} returns raw historical MPMs, including the associated component
+transition and fecundity matrices, data frames describing the ahistorical stages
+used and the historical paired stages, and a data frame describing the
+population, patch, and year associated with each matrix.
 }
 \examples{
 data(cypdata)

@@ -71,6 +71,7 @@ List specialpatrolgroup(DataFrame sge9l, DataFrame sge3, DataFrame MainData, Dat
   tmatrix.zeros();
   fmatrix.zeros();
   
+  
   for (int i = 0; i < n; i++) { // This main loop counts individuals going through transitions and sums their
     // fecundities, and then adds that info to the 3-trans and 2-trans tables
     arma::uvec choiceelement = find(sge9index321 == dataindex321(i)); // Added this now
@@ -88,19 +89,21 @@ List specialpatrolgroup(DataFrame sge9l, DataFrame sge3, DataFrame MainData, Dat
     }
   }
   
-  for (int i = 0; i < no2stages; i++) {
-    unsigned int foradding = ((sge3stage3(i) - 1) * nostages) + ((sge3stage3(i) - 1) * nostages * nostages) + 
-      ((sge3stage2n(i) - 1) * nostages * nostages * nostages);
+  // The next bit puts together core data to be used to estimate matrix elements
+  for (int i = 0; i < noelems; i++) {
+    int baseindex21 = sge9index21(i);
     
-    for (int j = 0; j < nostages; j++) {
-      unsigned int entry = foradding + j;
+    if (baseindex21 > -1) {
+      arma::uvec coreelementsforchoice = find(sge3index21 == baseindex21);
+      unsigned int thechosenone = coreelementsforchoice(0);
       
-      probsrates1(entry) = stage2fec(i, 0);
-      probsrates2(entry) = stage2fec(i, 1);
-      probsrates3(entry) = stage2fec(i, 2);
+      probsrates1(i) = stage2fec(thechosenone, 0);
+      probsrates2(i) = stage2fec(thechosenone, 1);
+      probsrates3(i) = stage2fec(thechosenone, 2);
     }
   }
   
+  // Here we create the matrices
   for (int elem3 = 0; elem3 < noelems; elem3++) {
     
     if (aliveandequal(elem3) != -1) {
@@ -111,7 +114,6 @@ List specialpatrolgroup(DataFrame sge9l, DataFrame sge3, DataFrame MainData, Dat
   }
   
   // Now we will correct transitions and rates for given stuff
-  
   arma::uvec ovgiventind = find(sge9ovgivent != -1);
   arma::uvec ovgivenfind = find(sge9ovgivenf != -1);
   int ovgtn = ovgiventind.n_elem;
@@ -143,7 +145,10 @@ List specialpatrolgroup(DataFrame sge9l, DataFrame sge3, DataFrame MainData, Dat
     for (int i = 0; i < ovestn; i++) {
       arma::uvec replacement = find(sge9index321 == sge9ovestt(ovesttind(i)));
       
-      tmatrix(aliveandequal(ovesttind(i))) = tmatrix(aliveandequal(replacement(0)));
+      if (replacement.n_elem > 0) {
+        tmatrix(aliveandequal(ovesttind(i))) = tmatrix(aliveandequal(replacement(0)));
+      }
+      
     }
   }
   
@@ -151,7 +156,9 @@ List specialpatrolgroup(DataFrame sge9l, DataFrame sge3, DataFrame MainData, Dat
     for (int i = 0; i < ovesfn; i++) {
       arma::uvec replacement = find(sge9index321 == sge9ovestf(ovestfind(i)));
       
-      fmatrix(aliveandequal(ovestfind(i))) = fmatrix(aliveandequal(replacement(0)));
+      if (replacement.n_elem > 0) {
+        fmatrix(aliveandequal(ovestfind(i))) = fmatrix(aliveandequal(replacement(0)));
+      }
     }
   }
   
@@ -321,7 +328,8 @@ List normalpatrolgroup(DataFrame sge3, DataFrame sge2, DataFrame MainData, DataF
 //' Estimate All Elements in Function-based Population Projection Matrices
 //' 
 //' Function \code{jerzeibalowski} swiftly calculates matrix elements in function-based
-//' population projection matrices. Used in \code{\link{flefko3}()} and \code{\link{flefko2}()}.
+//' population projection matrices. Used in \code{\link{flefko3}()}, \code{\link{flefko2}()},
+//' and \code{\link{aflefko2}()}.
 //' 
 //' @param ppy A data frame with one row, showing the population, patch, and year.
 //' @param AllStages A large data frame giving all required inputs for vital rate
@@ -358,7 +366,6 @@ List normalpatrolgroup(DataFrame sge3, DataFrame sge2, DataFrame MainData, DataF
 //' of juvenile size transition.
 //' @param jrepstdev Scalar value to be added to the y-intercept of the linear model
 //' of juvenile reproduction probability.
-//' @param numofsizes4 Number of elements in main matrix.
 //' @param matrixdim Number of rows (and columns) in the final matrix.
 //' @param fecmod A scalar multiplier for fecundity.
 //' @param summedvars Summed variance-covariance terms in Poisson size distribution.
@@ -387,9 +394,9 @@ List jerzeibalowski(DataFrame ppy, DataFrame AllStages, List survproxy, List obs
                     List jobsproxy, List jsizeproxy, List jrepstproxy, double survdev,
                     double obsdev, double sizedev, double repstdev, double fecdev,
                     double jsurvdev, double jobsdev, double jsizedev, double jrepstdev,
-                    unsigned long numofsizes4, unsigned long matrixdim, double fecmod, 
-                    double summedvars, double sigma, double jsummedvars, double jsigma, 
-                    double maxsize, int sizedist, int fecdist, bool negfec) {
+                    unsigned long matrixdim, double fecmod, double summedvars, 
+                    double sigma, double jsummedvars, double jsigma, double maxsize, 
+                    int sizedist, int fecdist, bool negfec) {
   
   
   // The DataFrame AllStages introduces variables used in size and fecundity calculations. This DataFrame
@@ -398,8 +405,7 @@ List jerzeibalowski(DataFrame ppy, DataFrame AllStages, List survproxy, List obs
   // where needed. We also have a number of extra variables, that include such info as whether to use
   // the Poisson, negative binomial, and Gaussian for size and fecundity calculations. If either sizedist
   // or fecdist equals 0, then the Poisson is used. If either equals 1, then the negative binomial is 
-  // used. If 2, then the Gaussian. Please note the numofsizes4 variable, which should be the number of
-  // stages NOT INCLUDING DEATH raised to the power of 4.
+  // used. If 2, then the Gaussian.
   
   // In the code below, the function decides on an appropriate single loop routine based on which coefficient
   // vectors have length greater than 1. Only a single routine will run because of the series of else statements
@@ -445,30 +451,30 @@ List jerzeibalowski(DataFrame ppy, DataFrame AllStages, List survproxy, List obs
   arma::vec jrepstyear = jrepstproxy["years"];
   
   arma::vec stage3 = AllStages["a.stage3"];
-  Rcpp::NumericVector stage2n = AllStages["a.stage2n"];
-  Rcpp::NumericVector stage1 = AllStages["a.stage1"];
+  // Rcpp::NumericVector stage2n = AllStages["a.stage2n"];
+  // Rcpp::NumericVector stage1 = AllStages["a.stage1"];
   Rcpp::NumericVector sz3 = AllStages["a.size3"];
   Rcpp::NumericVector sz2n = AllStages["a.size2n"];
   Rcpp::NumericVector sz1 = AllStages["a.size1"];
   Rcpp::NumericVector ob3 = AllStages["a.obs3"];
-  Rcpp::NumericVector ob2n = AllStages["a.obs2n"];
-  Rcpp::NumericVector ob1 = AllStages["a.obs1"];
+  // Rcpp::NumericVector ob2n = AllStages["a.obs2n"];
+  // Rcpp::NumericVector ob1 = AllStages["a.obs1"];
   Rcpp::NumericVector fl3 = AllStages["a.rep3"];
   Rcpp::NumericVector fl2n = AllStages["a.rep2n"];
   Rcpp::NumericVector fl1 = AllStages["a.rep1"];
   Rcpp::NumericVector mat3 = AllStages["a.mat3"];
   Rcpp::NumericVector mat2n = AllStages["a.mat2n"];
   Rcpp::NumericVector mat1 = AllStages["a.mat1"];
-  Rcpp::NumericVector immat3 = AllStages["b.imm3"];
+  // Rcpp::NumericVector immat3 = AllStages["b.imm3"];
   Rcpp::NumericVector immat2n = AllStages["b.imm2n"];
   Rcpp::NumericVector immat1 = AllStages["b.imm1"];
   Rcpp::NumericVector indata2 = AllStages["b.indata2n"];
   Rcpp::NumericVector repentry = AllStages["b.repentry3"];
   Rcpp::NumericVector binwidth3 = AllStages["b.binwidth"];
-  Rcpp::NumericVector minage3 = AllStages["b.minage3"];
-  Rcpp::NumericVector minage2 = AllStages["b.minage2"];
-  Rcpp::NumericVector maxage3 = AllStages["b.maxage3"];
-  Rcpp::NumericVector maxage2 = AllStages["b.maxage2"];
+  // Rcpp::NumericVector minage3 = AllStages["b.minage3"];
+  // Rcpp::NumericVector minage2 = AllStages["b.minage2"];
+  // Rcpp::NumericVector maxage3 = AllStages["b.maxage3"];
+  // Rcpp::NumericVector maxage2 = AllStages["b.maxage2"];
   Rcpp::NumericVector actualage2 = AllStages["b.actualage"];
   arma::uvec index321 = AllStages["b.index321"];
   Rcpp::NumericVector indata = AllStages["b.indata"];
@@ -504,7 +510,7 @@ List jerzeibalowski(DataFrame ppy, DataFrame AllStages, List survproxy, List obs
   int properindex {0};
   int proxyindex {0};
   
-  arma::mat out(numofsizes4, 4);  // 0 matrix with numofsizes4 rows & 4 columns: 0 surv, 1 obs, 2 repst, 3 size
+  arma::mat out(n, 4);  // 0 matrix with n rows & 4 columns: 0 surv, 1 obs, 2 repst, 3 size
   arma::mat survtransmat(matrixdim, matrixdim);
   arma::mat fectransmat(matrixdim, matrixdim);
   
@@ -527,12 +533,15 @@ List jerzeibalowski(DataFrame ppy, DataFrame AllStages, List survproxy, List obs
             (survcoefs(2) * fl2n(i)) + (survcoefs(1) * fl1(i)) + (survcoefs(6) * sz2n(i) * sz1(i)) +
             (survcoefs(5) * fl2n(i) * fl1(i)) + (survcoefs(7) * sz1(i) * fl1(i)) +
             (survcoefs(8) * sz2n(i) * fl2n(i)) + (survcoefs(10) * sz1(i) * fl2n(i)) +
-            (survcoefs(9) * sz2n(i) * fl1(i)) + survpatch(patchnumber) + survyear(yearnumber) + survdev);
+            (survcoefs(9) * sz2n(i) * fl1(i)) + (survcoefs(11) * actualage2(i)) + 
+            (survcoefs(12) * actualage2(i) * sz1(i)) + (survcoefs(13) * actualage2(i) * sz2n(i)) + 
+            (survcoefs(14) * actualage2(i) * fl1(i)) + (survcoefs(15) * actualage2(i) * fl2n(i)) + 
+            survpatch(patchnumber) + survyear(yearnumber) + survdev);
           
-          out(k, 0) = exp(preout(0)) / (1 + exp(preout(0)));
+          out(i, 0) = exp(preout(0)) / (1 + exp(preout(0)));
           
         } else {
-          out(k, 0) = survcoefs(0);
+          out(i, 0) = survcoefs(0);
         }
         
         if (obsl > 1) {
@@ -541,12 +550,15 @@ List jerzeibalowski(DataFrame ppy, DataFrame AllStages, List survproxy, List obs
             (obscoefs(2) * fl2n(i)) + (obscoefs(1) * fl1(i)) + (obscoefs(6) * sz2n(i) * sz1(i)) +
             (obscoefs(5) * fl2n(i) * fl1(i)) + (obscoefs(7) * sz1(i) * fl1(i)) +
             (obscoefs(8) * sz2n(i) * fl2n(i)) + (obscoefs(10) * sz1(i) * fl2n(i)) + 
-            (obscoefs(9) * sz2n(i) * fl1(i)) + obspatch(patchnumber) + obsyear(yearnumber) + obsdev);
+            (obscoefs(9) * sz2n(i) * fl1(i)) + (obscoefs(11) * actualage2(i)) + 
+            (obscoefs(12) * actualage2(i) * sz1(i)) + (obscoefs(13) * actualage2(i) * sz2n(i)) + 
+            (obscoefs(14) * actualage2(i) * fl1(i)) + (obscoefs(15) * actualage2(i) * fl2n(i)) + 
+            obspatch(patchnumber) + obsyear(yearnumber) + obsdev);
           
-          out(k, 1) = exp(preout(1)) / (1 + exp(preout(1)));
+          out(i, 1) = exp(preout(1)) / (1 + exp(preout(1)));
           
         } else {
-          out(k, 1) = obscoefs(0);
+          out(i, 1) = obscoefs(0);
         }
         
         if (ob3(i) == 1) {
@@ -560,10 +572,12 @@ List jerzeibalowski(DataFrame ppy, DataFrame AllStages, List survproxy, List obs
                                   (sizecoefs(2) * fl2n(i)) + (sizecoefs(1) * fl1(i)) + (sizecoefs(6) * sz2n(i) * sz1(i)) +
                                   (sizecoefs(5) * fl2n(i) * fl1(i)) + (sizecoefs(7) * sz1(i) * fl1(i)) +
                                   (sizecoefs(8) * sz2n(i) * fl2n(i)) + (sizecoefs(10) * sz1(i) * fl2n(i)) + 
-                                  (sizecoefs(9) * sz2n(i) * fl1(i)) + sizepatch(patchnumber) + sizeyear(yearnumber) + 
-                                  sizedev + (summedvars / 2));
+                                  (sizecoefs(9) * sz2n(i) * fl1(i)) + (sizecoefs(11) * actualage2(i)) +
+                                  (sizecoefs(12) * actualage2(i) * sz1(i)) + (sizecoefs(13) * actualage2(i) * sz2n(i)) +
+                                  (sizecoefs(14) * actualage2(i) * fl1(i)) + (sizecoefs(15) * actualage2(i) * fl2n(i)) +
+                                  sizepatch(patchnumber) + sizeyear(yearnumber) + sizedev + (summedvars / 2));
               
-              out(k, 3) = ((pow(lambda, sz3(i)) * exp(-1 * lambda)) / sizefac);
+              out(i, 3) = ((pow(lambda, sz3(i)) * exp(-1 * lambda)) / sizefac);
               
             } else if (sizedist == 1) {
               // Negative binomial size distribution
@@ -572,7 +586,10 @@ List jerzeibalowski(DataFrame ppy, DataFrame AllStages, List survproxy, List obs
                               (sizecoefs(2) * fl2n(i)) + (sizecoefs(1) * fl1(i)) + (sizecoefs(6) * sz2n(i) * sz1(i)) +
                               (sizecoefs(5) * fl2n(i) * fl1(i)) + (sizecoefs(7) * sz1(i) * fl1(i)) +
                               (sizecoefs(8) * sz2n(i) * fl2n(i)) + (sizecoefs(10) * sz1(i) * fl2n(i)) + 
-                              (sizecoefs(9) * sz2n(i) * fl1(i)) + sizepatch(patchnumber) + sizeyear(yearnumber) + sizedev);
+                              (sizecoefs(9) * sz2n(i) * fl1(i)) + (sizecoefs(11) * actualage2(i)) +
+                              (sizecoefs(12) * actualage2(i) * sz1(i)) + (sizecoefs(13) * actualage2(i) * sz2n(i)) +
+                              (sizecoefs(14) * actualage2(i) * fl1(i)) + (sizecoefs(15) * actualage2(i) * fl2n(i)) +
+                              sizepatch(patchnumber) + sizeyear(yearnumber) + sizedev);
               double y = sz3(i);
               double r = maxsize - y;
               
@@ -582,7 +599,7 @@ List jerzeibalowski(DataFrame ppy, DataFrame AllStages, List survproxy, List obs
               double midterm = pow((1-p), r);
               double rightterm = pow(p, y);
               
-              out(k, 3) = (binoc * midterm * rightterm);
+              out(i, 3) = (binoc * midterm * rightterm);
               
             } else if (sizedist == 2) {
               // Gaussian size distribution
@@ -592,12 +609,15 @@ List jerzeibalowski(DataFrame ppy, DataFrame AllStages, List survproxy, List obs
                 (sizecoefs(2) * fl2n(i)) + (sizecoefs(1) * fl1(i)) + (sizecoefs(6) * sz2n(i) * sz1(i)) +
                 (sizecoefs(5) * fl2n(i) * fl1(i)) + (sizecoefs(7) * sz1(i) * fl1(i)) +
                 (sizecoefs(8) * sz2n(i) * fl2n(i)) + (sizecoefs(10) * sz1(i) * fl2n(i)) + 
-                (sizecoefs(9) * sz2n(i) * fl1(i)) + sizepatch(patchnumber) + sizeyear(yearnumber) + sizedev);
+                (sizecoefs(9) * sz2n(i) * fl1(i)) + (sizecoefs(11) * actualage2(i)) +
+                (sizecoefs(12) * actualage2(i) * sz1(i)) + (sizecoefs(13) * actualage2(i) * sz2n(i)) +
+                (sizecoefs(14) * actualage2(i) * fl1(i)) + (sizecoefs(15) * actualage2(i) * fl2n(i)) + 
+                sizepatch(patchnumber) + sizeyear(yearnumber) + sizedev);
               
-              out(k, 3) = (exp(-1 * (pow((sz3(i) - preout(3)), 2) / (2*sigma2))) / ((pow((2 * M_PI), 0.5)) * sigma)) * binwidth3(i);
+              out(i, 3) = (exp(-1 * (pow((sz3(i) - preout(3)), 2) / (2*sigma2))) / ((pow((2 * M_PI), 0.5)) * sigma)) * binwidth3(i);
               
             } else {
-              out(k, 3) = sizedist - 3;
+              out(i, 3) = sizedist - 3;
             }
           }
           
@@ -607,31 +627,34 @@ List jerzeibalowski(DataFrame ppy, DataFrame AllStages, List survproxy, List obs
               (repstcoefs(2) * fl2n(i)) + (repstcoefs(1) * fl1(i)) + (repstcoefs(6) * sz2n(i) * sz1(i)) +
               (repstcoefs(5) * fl2n(i) * fl1(i)) + (repstcoefs(7) * sz1(i) * fl1(i)) +
               (repstcoefs(8) * sz2n(i) * fl2n(i)) + (repstcoefs(10) * sz1(i) * fl2n(i)) + 
-              (repstcoefs(9) * sz2n(i) * fl1(i))  + repstpatch(patchnumber) + repstyear(yearnumber) + repstdev);
+              (repstcoefs(9) * sz2n(i) * fl1(i)) + (repstcoefs(11) * actualage2(i)) +
+              (repstcoefs(12) * actualage2(i) * sz1(i)) + (repstcoefs(13) * actualage2(i) * sz2n(i)) +
+              (repstcoefs(14) * actualage2(i) * fl1(i)) + (repstcoefs(15) * actualage2(i) * fl2n(i)) + 
+              repstpatch(patchnumber) + repstyear(yearnumber) + repstdev);
             
-            out(k, 2) = exp(preout(2)) / (1 + exp(preout(2)));
+            out(i, 2) = exp(preout(2)) / (1 + exp(preout(2)));
             
             if (fl3(i) == 0) {
-              out(k, 2) = 1 - out(k, 2);
+              out(i, 2) = 1 - out(i, 2);
             }
             
           } else {
             if (fl3(i) == 0) {
-              out(k, 2) = 1 - repstcoefs(0);
+              out(i, 2) = 1 - repstcoefs(0);
             } else if (fl3(i) == 1) {
-              out(k, 2) = repstcoefs(0);
+              out(i, 2) = repstcoefs(0);
             } else {
-              out(k, 2) = 0;
+              out(i, 2) = 0;
             }
           }
           
         } else {
-          out(k, 1) = 1 - out(k, 1);
-          out(k, 3) = 1;
-          out(k, 2) = 1;
+          out(i, 1) = 1 - out(i, 1);
+          out(i, 3) = 1;
+          out(i, 2) = 1;
         }
         
-        survtransmat(k) = out(k, 0) * out(k, 1) * out(k, 2) * out(k, 3);
+        survtransmat(k) = out(i, 0) * out(i, 1) * out(i, 2) * out(i, 3);
         
         
       } else if (immat2n(i) == 1 && immat1(i) == 1 && jsurvl > 0) {
@@ -642,18 +665,18 @@ List jerzeibalowski(DataFrame ppy, DataFrame AllStages, List survproxy, List obs
         if (jsurvl > 1) {
           preout(0) = (jsurvcoefs(0) + jsurvpatch(patchnumber) + jsurvyear(yearnumber) + jsurvdev);
           
-          out(k, 0) = exp(preout(0)) / (1 + exp(preout(0)));
+          out(i, 0) = exp(preout(0)) / (1 + exp(preout(0)));
         } else {
-          out(k, 0) = jsurvcoefs(0);
+          out(i, 0) = jsurvcoefs(0);
         }
         
         if (jobsl > 1) {
           preout(1) = (jobscoefs(0) + jobspatch(patchnumber) + jobsyear(yearnumber) + jobsdev);
           
-          out(k, 1) = exp(preout(1)) / (1 + exp(preout(1)));
+          out(i, 1) = exp(preout(1)) / (1 + exp(preout(1)));
           
         } else {
-          out(k, 1) = jobscoefs(0);
+          out(i, 1) = jobscoefs(0);
         }
         
         if (ob3(i) == 1) {
@@ -664,7 +687,7 @@ List jerzeibalowski(DataFrame ppy, DataFrame AllStages, List survproxy, List obs
               double sizefac = sz3(i) * tgamma(sz3(i));
               double lambda = exp(jsizecoefs(0) + jsizepatch(patchnumber) + jsizeyear(yearnumber) + jsizedev + (jsummedvars / 2));
               
-              out(k, 3) = ((pow(lambda, sz3(i)) * exp(-1 * lambda)) / sizefac);
+              out(i, 3) = ((pow(lambda, sz3(i)) * exp(-1 * lambda)) / sizefac);
               
             } else if (sizedist == 1) {
               // Negative binomial size distribution
@@ -679,7 +702,7 @@ List jerzeibalowski(DataFrame ppy, DataFrame AllStages, List survproxy, List obs
               double midterm = pow((1-p), r);
               double rightterm = pow(p, y);
               
-              out(k, 3) = (binoc * midterm * rightterm);
+              out(i, 3) = (binoc * midterm * rightterm);
               
             } else if (sizedist == 2) {
               // Gaussian size distribution
@@ -687,10 +710,10 @@ List jerzeibalowski(DataFrame ppy, DataFrame AllStages, List survproxy, List obs
               double sigma2 = jsigma * jsigma;
               preout(3) = (jsizecoefs(0) + jsizepatch(patchnumber) + jsizeyear(yearnumber) + jsizedev);
               
-              out(k, 3) = (exp(-1 * (pow((sz3(i) - preout(3)), 2) / (2*sigma2))) / ((pow((2 * M_PI), 0.5)) * jsigma)) * binwidth3(i);
+              out(i, 3) = (exp(-1 * (pow((sz3(i) - preout(3)), 2) / (2*sigma2))) / ((pow((2 * M_PI), 0.5)) * jsigma)) * binwidth3(i);
               
             } else {
-              out(k, 3) = sizedist - 3;
+              out(i, 3) = sizedist - 3;
             }
           }
           
@@ -698,29 +721,29 @@ List jerzeibalowski(DataFrame ppy, DataFrame AllStages, List survproxy, List obs
             
             preout(2) = (jrepstcoefs(0) + jrepstpatch(patchnumber) + jrepstyear(yearnumber) + jrepstdev);
             
-            out(k, 2) = exp(preout(2)) / (1 + exp(preout(2)));
+            out(i, 2) = exp(preout(2)) / (1 + exp(preout(2)));
             
             if (fl3(i) == 0) {
-              out(k, 2) = 1 - out(k, 2);
+              out(i, 2) = 1 - out(i, 2);
             }
             
           } else {
             if (fl3(i) == 0) {
-              out(k, 2) = 1 - jrepstcoefs(0);
+              out(i, 2) = 1 - jrepstcoefs(0);
             } else if (fl3(i) == 1) {
-              out(k, 2) = jrepstcoefs(0);
+              out(i, 2) = jrepstcoefs(0);
             } else {
-              out(k, 2) = 0;
+              out(i, 2) = 0;
             }
           }
           
         } else {
-          out(k, 1) = 1 - out(k, 1);
-          out(k, 3) = 1;
-          out(k, 2) = 1;
+          out(i, 1) = 1 - out(i, 1);
+          out(i, 3) = 1;
+          out(i, 2) = 1;
         }
         
-        survtransmat(k) = out(k, 0) * out(k, 1) * out(k, 2) * out(k, 3);
+        survtransmat(k) = out(i, 0) * out(i, 1) * out(i, 2) * out(i, 3);
         
       }
     } else if (ovgivent(i) != -1) {
@@ -740,7 +763,10 @@ List jerzeibalowski(DataFrame ppy, DataFrame AllStages, List survproxy, List obs
             (feccoefs(2) * fl2n(i)) + (feccoefs(1) * fl1(i)) + (feccoefs(6) * sz2n(i) * sz1(i)) +
             (feccoefs(5) * fl2n(i) * fl1(i)) + (feccoefs(7) * sz1(i) * fl1(i)) +
             (feccoefs(8) * sz2n(i) * fl2n(i)) + (feccoefs(10) * sz1(i) * fl2n(i)) + 
-            (feccoefs(9) * sz2n(i) * fl1(i)) + fecpatch(patchnumber) + fecyear(yearnumber) + fecdev);
+            (feccoefs(9) * sz2n(i) * fl1(i)) + (feccoefs(11) * actualage2(i)) +
+            (feccoefs(12) * actualage2(i) * sz1(i)) + (feccoefs(13) * actualage2(i) * sz2n(i)) +
+            (feccoefs(14) * actualage2(i) * fl1(i)) + (feccoefs(15) * actualage2(i) * fl2n(i)) + 
+            fecpatch(patchnumber) + fecyear(yearnumber) + fecdev);
           
           if (fecdist != 2) {
             // Poisson and negative binomial fecundity
@@ -790,7 +816,6 @@ List jerzeibalowski(DataFrame ppy, DataFrame AllStages, List survproxy, List obs
   
   arma::mat amatrix = survtransmat + fectransmat;
   
-  return List::create(Named("A") = amatrix, _["U"] = survtransmat, _["F"] = fectransmat);
+  return List::create(Named("A") = amatrix, _["U"] = survtransmat, _["F"] = fectransmat, _["out"] = out);
 }
-
 

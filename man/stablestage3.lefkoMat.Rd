@@ -10,43 +10,45 @@
 \item{mats}{An object of class \code{lefkoMat}.}
 }
 \value{
-This function returns the stable stage distributions corresponding
-to the matrices in a \code{lefkoMat} object. The stable stage distribution is 
-given as the right eigenvector associated with largest real part of all 
-eigenvalues estimated via the \code{\link[RSpectra]{eigs}()} function in 
-package 'RSpectra' divided by the sum of the associated right eigenvector. 
+This function returns the stable stage distributions corresponding to
+the matrices in a \code{lefkoMat} object. For square matrices with fewer than
+400 rows, the stable stage distribution is given as the right eigenvector
+associated with largest real part of all eigenvalues estimated via the \code{eig_gen}()
+function in the C++ Armadillo library divided by the sum of the associated right
+eigenvector. For larger matrices, the function assumes that the matrix is sparse
+and conducts a similar calculation but using the \code{eigs_gen}() for sparse matrix
+eigen analysis.
 
-The actual output depends on whether the \code{lefkoMat} object used as input
-is ahistorical or historical. If the former, then a single data frame is
-output. This data frame includes the number of the matrix within the \code{$A} 
-element of the input \code{lefkoMat} object, followed by the original stage id, 
-the new stage id (numeric and assigned through \code{\link{sf_create}()}), the 
-original given size, and the estimated proportion of the stable stage 
-distribution within a variable called \code{ss_prop}.
+The output depends on whether the \code{lefkoMat} object used as input is
+ahistorical or historical. If the former, then a single data frame is output,
+which includes the number of the matrix within the \code{$A} element of the input
+\code{lefkoMat} object, followed by the stage id (numeric and assigned through
+\code{\link{sf_create}()}), the stage name, and the estimated proportion of the
+stable stage distribution (\code{ss_prop}).
 
 If a historical matrix is used as input, then two data frames are output
 into a list object. The \code{$hist} element contains a data frame where the 
 stable stage distribution is given in terms of across-year stage pairs.
-The structure includes the matrix number, the original and new 
-designations for stages in times \emph{t} and \emph{t}-1, respectively, followed
-by the estimated proportion of the stable stage distribution for that matrix. 
-The \code{$ahist} element contains the stable stage distribution in stages
-as given in the original stageframe. It includes a data frame with the new 
-stage designation from the associated stageframe for the \code{lefkoMat}
-object, the corresponding matrix, and the stable stage distribution estimated 
-as the sum of distribution elements from \code{$hist} corresponding to the 
-equivalent stage in time \emph{t}, irrespective of stage in time \emph{t}-1.
+The structure includes the matrix number, the numeric stage designations for
+stages in times \emph{t} and \emph{t}-1, respectively, followed by the
+respective stage names, and ending with the estimated proportion of the stable
+stage distribution for that stage within its matrix (\code{ss_prop}). The
+\code{$ahist} element contains the stable stage distribution in stages
+as given in the original stageframe. It includes a data frame with the matrix 
+of origin, the numeric stage designation, stage name, and the stable stage
+distribution estimated as the sum of distribution elements from \code{$hist}
+corresponding to the equivalent stage in time \emph{t}, irrespective of stage in
+time \emph{t}-1.
 }
 \description{
-\code{stablestage3.lefkoMat()} returns the stable stage distributions for all
-\code{$A} matrices in an object of class \code{lefkoMat}. This function can 
-handle large and sparse matrices, and so can be used with large historical 
-matrices, IPMs, age x stage matrices, as well as smaller ahistorical 
-matrices.
+\code{stablestage3.lefkoMat()} returns the stable stage distributions of all
+\code{$A} matrices in an object of class \code{lefkoMat}. This function can handle
+large and sparse matrices, and so can be used with large historical matrices,
+IPMs, age x stage matrices, as well as smaller ahistorical matrices.
 }
 \examples{
-\donttest{
 data(lathyrus)
+
 sizevector <- c(0, 100, 13, 127, 3730, 3800, 0)
 stagevector <- c("Sd", "Sdl", "VSm", "Sm", "VLa", "Flo", "Dorm")
 repvector <- c(0, 0, 0, 0, 0, 1, 0)
@@ -83,7 +85,6 @@ ehrlen3 <- rlefko3(data = lathvert, stageframe = lathframe, year = c(1989, 1990)
 
 ehrlen3mean <- lmean(ehrlen3)
 stablestage3(ehrlen3mean)
-}
 
 }
 \seealso{

@@ -10,41 +10,44 @@
 \item{mats}{An object of class \code{lefkoMat} object.}
 }
 \value{
-This function returns the reproductive values for stages of a
-population projection matrix. The nature of the output depends on whether the
-lefkoMat object used as input is ahistorical or historical. In both cases,
+This function returns the reproductive values for stages of a matrices
+within a \code{lefkoMat} object. The nature of the output depends on whether the
+\code{lefkoMat} object used as input is ahistorical or historical. In both cases,
 raw reproductive values are estimated as the left eigenvector associated with
-the largest real part of the dominant eigenvalue estimated via the \code{\link[RSpectra]{eigs}()}
-function in package 'RSpectra', divided either by the first non-zero element
-of the left eigenvector.
+the largest real part of the dominant eigenvalue, divided by the first non-zero
+element of the left eigenvector. Eigen analysis is handled by the \code{eig_gen}()
+function in the C++ Armadillo library for square matrices with fewer than 400
+rows, and \code{eigs_gen}() for larger matrices.
 
-If an ahistorical matrix set is used as input, then the output is a data
-frame that includes the number of the matrix within the `$A` element of the 
-input \code{lefkoMat} object, followed by the original stage id, the new
-stage id (numeric and assigned through \code{\link{sf_create}())}, the original 
-given size, and the reproductive value estimate within a variable called
-\code{repvalue}. 
+If an ahistorical matrix set is used as input, then the output is a data frame
+that includes the number of the matrix within the \code{$A} element of the input
+\code{lefkoMat} object, followed by the numeric stage designation, the stage name,
+and the reproductive value estimated (\code{repvalue}). 
 
 If a historical matrix set is used as input, then a list with two elements is
-output. The first element is a data frame showing the reproductive values
+output. The first element is a data frame showing the reproductive values given
 given in terms of across-year stage pairs, as estimated in the procedure
-described above. The second element is another data frame showing the
+described above. The order of variables in the data frame is: the matrix of
+origin, the stage names for stages in times \emph{t} and \emph{t}-1 respectively,
+the numeric stage designations corresponding to these stages, and the
+reproductive value (\code{rep_value}). The second element is a data frame showing the
 reproductive values of the basic stages in the associated stageframe. The 
 reproductive values in this second data frame are estimated via the approach
 developed in Ehrlen (2000), in which each ahistorical stage's reproductive 
 value is the average of the RVs summed by stage at time \emph{t} weighted by 
-the proportion of that stage pair within the historical stable stage 
+the proportion of that stage pair within the historical stable stage
 distribution associated with the matrix.
 }
 \description{
-\code{repvalue3.lefkoMat()} returns the reproductive values for stages in a
-set of population projection matrices. This function can handle large and 
-sparse matrices, and so can be used with large historical matrices, IPMs, 
-age x stage matrices, as well as smaller ahistorical matrices.
+\code{repvalue3.lefkoMat()} returns the reproductive values for stages in a set
+set of population projection matrices provided as a \code{lefkoMat} object. This
+function can handle large and sparse matrices, and so can be used with large
+historical matrices, IPMs, age x stage matrices, as well as smaller ahistorical
+matrices.
 }
 \examples{
-\donttest{
 data(lathyrus)
+
 sizevector <- c(0, 100, 13, 127, 3730, 3800, 0)
 stagevector <- c("Sd", "Sdl", "VSm", "Sm", "VLa", "Flo", "Dorm")
 repvector <- c(0, 0, 0, 0, 0, 1, 0)
@@ -81,7 +84,6 @@ ehrlen3 <- rlefko3(data = lathvert, stageframe = lathframe, year = c(1989, 1990)
 
 ehrlen3mean <- lmean(ehrlen3)
 repvalue3(ehrlen3mean)
-}
 
 }
 \seealso{

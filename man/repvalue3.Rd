@@ -11,21 +11,19 @@ repvalue3(mats)
 }
 \value{
 The value returned depends on the class of the \code{mats} argument.
+See related functions for details.
 }
 \description{
-\code{repvalue3()} is a generic function that estimates returns the 
-reproductive values of stages in a population projection matrix or a set of
-matrices. The specifics of estimation vary with the class of input object.
-However, unlike the 'popbio' package's \code{\link[popbio]{reproductive.value}()}
-function, it is particularly made to handle very large and sparse matrices
-supplied as \code{lefkoMat} objects or as individual matrices. This function
-can handle large and sparse matrices, and so can be used with large
-historical matrices, IPMs, age x stage matrices, as well as smaller
-ahistorical matrices.
+\code{repvalue3()} is a generic function that estimates returns the reproductive
+values of stages in a population projection matrix or a set of matrices. The
+specifics of estimation vary with the class of input object. This function is
+made to handle very large and sparse matrices supplied as \code{lefkoMat} objects
+or as individual matrices, and can be used with large historical matrices, IPMs,
+age x stage matrices, as well as smaller ahistorical matrices.
 }
 \examples{
-\donttest{
 data(lathyrus)
+
 sizevector <- c(0, 100, 13, 127, 3730, 3800, 0)
 stagevector <- c("Sd", "Sdl", "VSm", "Sm", "VLa", "Flo", "Dorm")
 repvector <- c(0, 0, 0, 0, 0, 1, 0)
@@ -62,7 +60,6 @@ ehrlen3 <- rlefko3(data = lathvert, stageframe = lathframe, year = c(1989, 1990)
 
 ehrlen3mean <- lmean(ehrlen3)
 repvalue3(ehrlen3mean)
-}
 
 }
 \seealso{

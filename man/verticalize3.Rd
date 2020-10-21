@@ -50,27 +50,26 @@ verticalize3(
 \item{popidcol}{A variable name or column number corresponding to the identity
 of the population for each individual.}
 
-\item{patchidcol}{A variable name or column number corresponding to the
-identity of the patch for each individual, if patches have been designated
-within populations.}
+\item{patchidcol}{A variable name or column number corresponding to the identity
+of the patch for each individual, if patches have been designated within
+populations.}
 
-\item{individcol}{A variable name or column number corresponding to the
-identity of each individual.}
+\item{individcol}{A variable name or column number corresponding to the identity
+of each individual.}
 
-\item{blocksize}{The number of variables corresponding to each time step in 
-the input dataset designated in \code{data}.}
+\item{blocksize}{The number of variables corresponding to each time in the
+input dataset designated in \code{data}.}
 
-\item{xcol}{A variable name or column number corresponding to the x 
-coordinate of each individual in Cartesian space.}
+\item{xcol}{A variable name or column number corresponding to the x coordinate
+of each individual in Cartesian space.}
 
-\item{ycol}{A variable name or column number corresponding to the y 
-coordinate of each individual in Cartesian space.}
+\item{ycol}{A variable name or column number corresponding to the y coordinate
+of each individual in Cartesian space.}
 
 \item{juvcol}{A variable name or column number that marks individuals in
 immature stages within the dataset. The \code{verticalize3()} function assumes 
-that immature individuals are identified in this variable marked with a 
-number equal to or greater than 1, and that mature individuals are marked 
-as 0 or NA.}
+that immature individuals are identified in this variable marked with a number
+equal to or greater than 1, and that mature individuals are marked as 0 or NA.}
 
 \item{size1col}{A variable name or column number corresponding to the
 size entry associated with the first year or observation time in the dataset.}
@@ -88,155 +87,146 @@ count data, and is used to in analysis of the probability of reproduction.}
 
 \item{repstr2col}{A second variable name or column number corresponding to
 the production of reproductive structures, such as flowers, associated with
-the first year or observation period in the input dataset. This can be  
-binomial or count data, and is used to in analysis of the probability of
-reproduction.}
+the first year or observation period in the input dataset. This can be binomial
+or count data, and is used to in analysis of the probability of reproduction.}
 
 \item{fec1col}{A variable name or column number denoting fecundity associated
-with the first year or observation time in the input dataset. This may
-represent egg counts, fruit counts, seed production, etc.}
+with the first year or observation time in the input dataset. This may represent
+egg counts, fruit counts, seed production, etc.}
 
 \item{fec2col}{A second variable name or column number denoting fecundity
 associated with the first year or observation time in the input dataset. This 
 may represent egg counts, fruit counts, seed production, etc.}
 
 \item{alive1col}{A variable name or column number that provides information
-an whether an individual is alive at a given time. If used, living status
-must be designated as binomial (living = 1, dead = 0).}
+on whether an individual is alive at a given time. If used, living status must
+be designated as binomial (living = 1, dead = 0).}
 
-\item{dead1col}{A variable name or column number that provides information
-an whether an individual is alive at a given time. If used, dead status
-must be designated as binomial (dead = 1, living = 0).}
+\item{dead1col}{A variable name or column number that provides information on
+whether an individual is alive at a given time. If used, dead status must be
+designated as binomial (dead = 1, living = 0).}
 
-\item{obs1col}{A variable name or column number providing information on
-whether an individual is in an observable stage at a given time. If used,
-observation status must be designated as binomial (observed = 1, not 
-observed = 0).}
+\item{obs1col}{A variable name or column number providing information on whether
+an individual is in an observable stage at a given time. If used, observation
+status must be designated as binomial (observed = 1, not observed = 0).}
 
 \item{nonobs1col}{A variable name or column number providing information on
 whether an individual is in an unobservable stage at a given time. If used,
-observation status must be designated as binomial (observed = 0, not 
-observed = 1).}
+observation status must be designated as binomial (not observed = 1, 
+observed = 0).}
 
-\item{censorcol}{A variable name or column number corresponding to 
-the first entry of a censor variable, used to distinguish between entries to 
-use and entries not to use, or to designate entries with special issues that 
-require further attention. If used, this should be associated with the first 
-year or observation time, and all other years or times must also have censor 
-columns.}
+\item{censorcol}{A variable name or column number corresponding to the first
+entry of a censor variable, used to distinguish between entries to use and
+entries not to use, or to designate entries with special issues that require
+further attention. If used, this should be associated with the first year or
+observation time, and all other years or times must also have censor columns.}
 
-\item{repstrrel}{This is a scalar modifier for that makes the variable in
-\code{repstr2col} equivalent to \code{repstr1col}. This can be useful if two 
-reproductive status variables have related but unequal units, for example
-if \code{repstr1col} refers to one-flowered stems while \code{repstr2col} refers to
-two-flowered stems. Defaults to 1.}
+\item{repstrrel}{This is a scalar multiplier on variable \code{repstr2col} to
+make it equivalent to \code{repstr1col}. This can be useful if two reproductive
+status variables have related but unequal units, for example if \code{repstr1col}
+refers to one-flowered stems while \code{repstr2col} refers to two-flowered
+stems. Defaults to 1.}
 
-\item{fecrel}{This is a scalar modifier for that makes the variable in
-\code{fec2col} equivalent to \code{fec1col}. This can be useful if two fecundity
-variables have related but unequal units. Defaults to 1.}
+\item{fecrel}{This is a scalar multiplier on variable \code{fec2col} to make it
+equivalent to \code{fec1col}. This can be useful if two fecundity variables have
+related but unequal units. Defaults to 1.}
 
-\item{stagecol}{Optional variable name or column number corresponding to
-life history stage at a given time.}
+\item{stagecol}{Optional variable name or column number corresponding to life
+history stage at a given time.}
 
 \item{stageassign}{The stageframe object identifying the life history model
 being operationalized. Note that if \code{stagecol} is provided, then this
 stageframe is not used for stage designation.}
 
-\item{stagesize}{A variable name or column number describing which size
-variable to use in stage estimation. Defaults to NA, and can also take
-\code{sizea}, \code{sizeb}, \code{sizec}, or \code{sizeadded}, depending on which size variable 
-is chosen.}
+\item{stagesize}{A variable name or column number describing which size variable
+to use in stage estimation. Defaults to NA, and can also take \code{sizea}, \code{sizeb},
+\code{sizec}, or \code{sizeadded}, depending on which size variable is chosen.}
 
-\item{censorkeep}{The value of the censoring variable identifying data
-that should be included in analysis. Defaults to 0, but may take any value
-including NA.}
+\item{censorkeep}{The value of the censor variable identifying data to be
+included in analysis. Defaults to 0, but may take any value including NA.}
 
-\item{censor}{A logical variable determining whether the output data
-should be censored using the variable defined in \code{censorcol}. Defaults
-to FALSE.}
+\item{censor}{A logical variable determining whether the output data should be 
+censored using the variable defined in \code{censorcol}. Defaults to FALSE.}
 
 \item{spacing}{The spacing at which density should be estimated, if density
-estimation is desired and x and y coordinates are supplied. Given in the
-same units as those used in the x and y coordinates given in \code{xcol} and
-\code{ycol}. Defaults to NA.}
+estimation is desired and x and y coordinates are supplied. Given in the same
+units as those used in the x and y coordinates given in \code{xcol} and \code{ycol}.
+Defaults to NA.}
 
-\item{NAas0}{If TRUE, then all NA entries for size and fecundity variables
-will be set to 0. This can help increase the sample size analyzed by
-\code{\link{modelsearch}()}, but should only be used when it is clear that this
-substitution is biologically realistic. Defaults to FALSE.}
+\item{NAas0}{If TRUE, then all NA entries for size and fecundity variables will
+be set to 0. This can help increase the sample size analyzed by \code{\link{modelsearch}()},
+but should only be used when it is clear that this substitution is biologically
+realistic. Defaults to FALSE.}
 
-\item{NRasRep}{If TRUE, then will treat non-reproductive but mature
-individuals as reproductive during stage assignment. This can be useful,
-for example, when a matrix is desired without separation of reproductive
-and non-reproductive but mature stages of the same size. Only used if
-\code{stageassign} is set to a stageframe. Defaults to FALSE.}
+\item{NRasRep}{If TRUE, then will treat non-reproductive but mature individuals
+as reproductive during stage assignment. This can be useful when a matrix is
+desired without separation of reproductive and non-reproductive but mature
+stages of the same size. Only used if \code{stageassign} is set to a stageframe.
+Defaults to FALSE.}
 
-\item{reduce}{A logical variable determining whether invariant state
-variables should be removed from the output dataset. For example, if
-all living individuals are always observable, then variables identifying
-observation status are invariant and can be removed. Defaults to TRUE.}
+\item{reduce}{A logical variable determining whether unused variables and some
+invariant state variables should be removed from the output dataset. Defaults to
+TRUE.}
 }
 \value{
-If all inputs are properly formatted, then this function will output
-a historical vertical data frame, meaning that the output data frame will have
-three consecutive years of size and reproductive data per individual per row.
-This data frame is in standard format for all functions used in \code{lefko3},
-and so can be used without further modification.
+If all inputs are properly formatted, then this function will output a
+historical vertical data frame (class \code{hfvdata}), meaning that the output
+data frame will have three consecutive times of size and reproductive data per 
+individual per row. This data frame is in standard format for all functions used
+in \code{lefko3}, and so can be used without further modification.
 
 Variables in this data frame include the following:
 \item{rowid}{Unique identifier for the row of the data frame.}
 \item{popid}{Unique identifier for the population, if given.}
-\item{patchid}{Unique identifier for patch within population, if
-given.}
+\item{patchid}{Unique identifier for patch within population, if given.}
 \item{individ}{Unique identifier for the individual.}
-\item{year2}{Year or time step at time \emph{t}.}
-\item{xpos,ypos}{X and Y position in Cartesian space, if given.}
-\item{sizea1,sizea2,sizea3}{Main size measurement in times \emph{t}-1, 
-\emph{t}, and \emph{t}+1, respectively.}
-\item{sizeb1,sizeb2,sizeb3}{Secondary size measurement in times 
-\emph{t}-1, \emph{t}, and \emph{t}+1, respectively.}
-\item{sizec1,sizec2,sizec3}{Tertiary measurement in times \emph{t}-1, 
-\emph{t}, and \emph{t}+1, respectively.}
-\item{censor1,censor2,censor3}{Censor state values in times \emph{t}-1,
-\emph{t}, and \emph{t}+1.}
-\item{repstra1,repstrb1,repstrc1}{Main, secondary, and tertiary numbers of 
-reproductive structures in time \emph{t}-1.}
-\item{repstra2,repstrb2,repstrc2}{Main, secondary, and tertiary numbers of 
-reproductive structures in time \emph{t}.}
-\item{repstra3,repstrb3,repstrc3}{Main, secondary, and tertiary numbers of 
-reproductive structures in time \emph{t}+1.}
-\item{feca1,fecb1}{Main and secondary numbers of offspring in time 
-\emph{t}-1.}
-\item{feca2,fecb2}{Main and secondary numbers of offspring in time 
-\emph{t}.}
-\item{feca3,fecb3}{Main and secondary numbers of offspring in time 
-\emph{t}+1.}
-\item{size1added,size2added,size3added}{Sum of primary, secondary, and
-tertiary size measurements in timea \emph{t}-1, \emph{t}, and \emph{t}+1, 
-respectively.}
-\item{repstr1added,repstr2added,repstr3added}{Sum of primary, secondary,
-and tertiary reproductive structures in times \emph{t}-1, \emph{t}, and 
-\emph{t}+1, respectively.}
-\item{fec1added,fec2added,fec3added}{Sum of primary and secondary 
-fecundity in times \emph{t}-1, \emph{t}, and \emph{t}+1, respectively.}
-\item{obsstatus1,obsstatus2,obsstatus3}{Binomial observation state in times
-\emph{t}-1, \emph{t}, and \emph{t}+1, respectively.}
-\item{repstatus1,repstatus2,repstatus3}{Binomial reproductive state in 
-times \emph{t}-1, \emph{t}, and \emph{t}+1, respectively.}
-\item{fecstatus1,fecstatus2,fecstatus3}{Binomial offspring production
-state in times \emph{t}-1, \emph{t}, and \emph{t}+1, respectively.}
-\item{firstseen}{Year or time step of first observation.}
-\item{lastseen}{Year or time step of last observation.}
-\item{xcorr,ycorr}{Overall x and y coordinates of individual in
-Cartesian space.}
-\item{alive1,alive2,alive3}{Binomial state as alive in times \emph{t}-1, 
-\emph{t}, and \emph{t}+1, respectively.}
+\item{year2}{Year or time at time \emph{t}.}
+\item{firstseen}{Year or time of first observation.}
+\item{lastseen}{Year or time of last observation.}
 \item{obsage}{Observed age in time \emph{t}, assuming first observation
 corresponds to age = 0.}
-\item{obslifespan}{Observed lifespan, given as `lastseen - firstseen + 1`.}
-\item{matstatus1,matstatus2,matstatus3}{Binomial state as mature.}
-\item{density}{Density of individuals per unit designated in `spacing`.
-Only given if spacing is not NA.}
+\item{obslifespan}{Observed lifespan, given as \code{lastseen - firstseen + 1}.}
+\item{xpos1,xpos2,xpos3}{X position in Cartesian space in times \emph{t}-1, \emph{t},
+and \emph{t}+1, respectively, if provided.}
+\item{ypos1,ypos2,ypos3}{Y position in Cartesian space in times \emph{t}-1, \emph{t},
+and \emph{t}+1, respectively, if provided.}
+\item{sizea1,sizea2,sizea3}{Main size measurement in times \emph{t}-1, \emph{t}, and 
+\emph{t}+1, respectively.}
+\item{sizeb1,sizeb2,sizeb3}{Secondary size measurement in times \emph{t}-1, \emph{t},
+and \emph{t}+1, respectively.}
+\item{sizec1,sizec2,sizec3}{Tertiary measurement in times \emph{t}-1, \emph{t}, and
+\emph{t}+1, respectively.}
+\item{size1added,size2added,size3added}{Sum of primary, secondary, and tertiary
+size measurements in timea \emph{t}-1, \emph{t}, and \emph{t}+1, respectively.}
+\item{repstra1,repstra2,repstra3}{Main numbers of reproductive structures in
+times \emph{t}-1, \emph{t}, and \emph{t}+1, respectively.}
+\item{repstrb1,repstrb2,repstrb3}{Secondary numbers of reproductive structures
+in times \emph{t}-1, \emph{t}, and \emph{t}+1, respectively.}
+\item{repstr1added,repstr2added,repstr3added}{Sum of primary and secondary
+reproductive structures in times \emph{t}-1, \emph{t}, and \emph{t}+1, respectively.}
+\item{feca1,feca2,feca3}{Main numbers of offspring in times \emph{t}-1, \emph{t}, and 
+\emph{t}+1, respectively.}
+\item{fecb1,fecb2, fecb3}{Secondary numbers of offspring in times \emph{t}-1, \emph{t},
+and \emph{t}+1, respectively.}
+\item{fec1added,fec2added,fec3added}{Sum of primary and secondary fecundity in
+times \emph{t}-1, \emph{t}, and \emph{t}+1, respectively.}
+\item{censor1,censor2,censor3}{Censor state values in times \emph{t}-1, \emph{t}, and
+\emph{t}+1, respectively.}
+\item{juvgiven1,juvgiven2,juvgiven3}{Binomial variable indicating whether
+individual is juvenile in times \emph{t}-1, \emph{t}, and \emph{t}+1. Only given if 
+\code{juvcol} is provided.}
+\item{obsstatus1,obsstatus2,obsstatus3}{Binomial observation state in times
+\emph{t}-1, \emph{t}, and \emph{t}+1, respectively.}
+\item{repstatus1,repstatus2,repstatus3}{Binomial reproductive state in times 
+\emph{t}-1, \emph{t}, and \emph{t}+1, respectively.}
+\item{fecstatus1,fecstatus2,fecstatus3}{Binomial offspring production state in
+times \emph{t}-1, \emph{t}, and \emph{t}+1, respectively.}
+\item{matstatus1,matstatus2,matstatus3}{Binomial maturity state in times \emph{t}-1, 
+\emph{t}, and \emph{t}+1, respectively.}
+\item{alive1,alive2,alive3}{Binomial state as alive in times \emph{t}-1, \emph{t},
+and \emph{t}+1, respectively.}
+\item{density}{Density of individuals per unit designated in \code{spacing}. Only
+given if spacing is not NA.}
 }
 \description{
 \code{verticalize3()} returns a vertically formatted demographic data frame 

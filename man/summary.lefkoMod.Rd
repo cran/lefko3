@@ -7,26 +7,23 @@
 \method{summary}{lefkoMod}(object, ...)
 }
 \arguments{
-\item{object}{An R object of class \code{lefkoMod} resulting from 
-\code{\link{modelsearch}()}.}
+\item{object}{An R object of class \code{lefkoMod} resulting from \code{\link{modelsearch}()}.}
 
 \item{...}{Other parameters.}
 }
 \value{
 A summary of the object, showing the best-fit models for all vital
-rates, with constants of 0 or 1 used for unestimated models. Thie is
-followed by a summary of the number of models tested per vital rate, and
-a table showing the names of the parameters used to model vital rates and
-represent tested factors. At the end is a section describing the number
-of individuals and individual transitions used to estimate each vital
-rate.
+rates, with constants of 0 or 1 used for unestimated models. This is followed by
+a summary of the number of models tested per vital rate, and a table showing the
+names of the parameters used to model vital rates and represent tested factors.
+At the end is a section describing the number of individuals and individual
+transitions used to estimate each vital rate best-fit model.
 }
 \description{
-A function to simplify the immediate viewable output for an R object of class
-\code{lefkoMod}. This function shows the best-fit models, summarizes the numbers
-of models in the model tables, shows the criterion used to determine the
-best-fit models, and provides some basic quality control information about
-the models.
+A function to sumarize the viewable output for an R object of class \code{lefkoMod}.
+This function shows the best-fit models, summarizes the numbers of models in the
+model tables, shows the criterion used to determine the best-fit models, and
+provides some basic quality control information.
 }
 \examples{
 \donttest{
@@ -51,7 +48,7 @@ lathframeln <- sf_create(sizes = sizevector, stagenames = stagevector, repstatus
 
 lathvertln <- verticalize3(lathyrus, noyears = 4, firstyear = 1988, patchidcol = "SUBPLOT",
                            individcol = "GENET", blocksize = 9, juvcol = "Seedling1988",
-                           size1col = "lnVol88", repstr1col = "FCODE88",
+                           size1col = "lnVol88", repstr1col = "Intactseed88",
                            fec1col = "Intactseed88", dead1col = "Dead1988",
                            nonobs1col = "Dormant1988", stageassign = lathframeln,
                            stagesize = "sizea", censorcol = "Missing1988",
@@ -66,7 +63,7 @@ lathmodelsln2 <- modelsearch(lathvertln, historical = FALSE, approach = "lme4", 
                              juvestimate = "Sdl", bestfit = "AICc&k", sizedist = "gaussian", 
                              fecdist = "poisson", indiv = "individ", patch = "patchid", 
                              year = "year2", year.as.random = TRUE, patch.as.random = TRUE,
-                             show.model.tables = TRUE)
+                             show.model.tables = TRUE, quiet = TRUE)
 
 summary(lathmodelsln2)
 }

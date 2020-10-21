@@ -2,7 +2,7 @@
 % Please edit documentation in R/popdyn.R
 \name{lambda3.lefkoMat}
 \alias{lambda3.lefkoMat}
-\title{Estimate Deterministic Population Growth Rate for a lefkoMat Object}
+\title{Estimate Deterministic Population Growth Rates of Matrices in a lefkoMat Object}
 \usage{
 \method{lambda3}{lefkoMat}(mats)
 }
@@ -10,22 +10,22 @@
 \item{mats}{An object of class \code{lefkoMat}.}
 }
 \value{
-This function returns the dominant eigenvalue of each \code{$A} matrix
-in the lefkoMat object input. This is given as the largest real part of all 
-eigenvalues estimated via the \code{\link[RSpectra]{eigs}()} function in package 
-'RSpectra'. The output includes a data frame showing the population, patch,
-and lambda estimate for each \code{$A} matrix within the object. Row names
-correspond to the number of the matrix within the \code{$A} element of the 
-\code{lefkoMat} object.
+This function returns the dominant eigenvalue of each \code{$A} matrix in
+the lefkoMat object input. For square matrices with fewer than 400 rows, this is
+given as the largest real part of all eigenvalues estimated via the \code{eig_gen}()
+function in the C++ Armadillo library. For larger matrices, the function assumes
+that matrices are sparse and uses \code{eigs_gen}() instead. The output includes
+a data frame showing the population, patch, and lambda estimate for each \code{$A}
+matrix within the object. Row names correspond to the number of the matrix
+within the \code{$A} element of the \code{lefkoMat} object.
 }
 \description{
 \code{lambda3.lefkoMat()} returns the dominant eigenvalues of projection
-matrices supplied as \code{lefkoMat} objects. This function can handle large 
-and sparsematrices, and so can be used with large historical matrices, IPMs, 
+matrices supplied within \code{lefkoMat} objects. This function can handle large 
+and sparse matrices, and so can be used with large historical matrices, IPMs,
 age x stage matrices, as well as smaller ahistorical matrices.
 }
 \examples{
-\donttest{
 data(lathyrus)
 sizevector <- c(0, 100, 13, 127, 3730, 3800, 0)
 stagevector <- c("Sd", "Sdl", "VSm", "Sm", "VLa", "Flo", "Dorm")
@@ -63,7 +63,6 @@ ehrlen3 <- rlefko3(data = lathvert, stageframe = lathframe, year = c(1989, 1990)
 
 ehrlen3mean <- lmean(ehrlen3)
 lambda3(ehrlen3mean)
-}
 
 }
 \seealso{

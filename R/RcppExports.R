@@ -213,7 +213,7 @@ jpf <- function(data, stageframe, popidcol, patchidcol, individcol, year2col, ye
 #' 
 #' @return The output is currently a three element list, where each element is a
 #' data frame with the same number of rows. These are combined into one dataframe
-#' by \code{\link{flefko3}()} and \code{\link{flefko2}()}.
+#' by \code{\link{flefko3}()}, \code{\link{flefko2}()}, and \code{\link{aflefko2}()}.
 #' 
 #' @keywords internal
 #' @noRd
@@ -224,7 +224,8 @@ theoldpizzle <- function(StageFrame, OverWrite, repmatrix, finalage, style, cont
 #' Estimate All Elements in Function-based Population Projection Matrices
 #' 
 #' Function \code{jerzeibalowski} swiftly calculates matrix elements in function-based
-#' population projection matrices. Used in \code{\link{flefko3}()} and \code{\link{flefko2}()}.
+#' population projection matrices. Used in \code{\link{flefko3}()}, \code{\link{flefko2}()},
+#' and \code{\link{aflefko2}()}.
 #' 
 #' @param ppy A data frame with one row, showing the population, patch, and year.
 #' @param AllStages A large data frame giving all required inputs for vital rate
@@ -261,7 +262,6 @@ theoldpizzle <- function(StageFrame, OverWrite, repmatrix, finalage, style, cont
 #' of juvenile size transition.
 #' @param jrepstdev Scalar value to be added to the y-intercept of the linear model
 #' of juvenile reproduction probability.
-#' @param numofsizes4 Number of elements in main matrix.
 #' @param matrixdim Number of rows (and columns) in the final matrix.
 #' @param fecmod A scalar multiplier for fecundity.
 #' @param summedvars Summed variance-covariance terms in Poisson size distribution.
@@ -327,68 +327,369 @@ normalpatrolgroup <- function(sge3, sge2, MainData, StageFrame) {
 #' 
 #' @keywords internal
 #' @noRd
-jerzeibalowski <- function(ppy, AllStages, survproxy, obsproxy, sizeproxy, repstproxy, fecproxy, jsurvproxy, jobsproxy, jsizeproxy, jrepstproxy, survdev, obsdev, sizedev, repstdev, fecdev, jsurvdev, jobsdev, jsizedev, jrepstdev, numofsizes4, matrixdim, fecmod, summedvars, sigma, jsummedvars, jsigma, maxsize, sizedist, fecdist, negfec) {
-    .Call('_lefko3_jerzeibalowski', PACKAGE = 'lefko3', ppy, AllStages, survproxy, obsproxy, sizeproxy, repstproxy, fecproxy, jsurvproxy, jobsproxy, jsizeproxy, jrepstproxy, survdev, obsdev, sizedev, repstdev, fecdev, jsurvdev, jobsdev, jsizedev, jrepstdev, numofsizes4, matrixdim, fecmod, summedvars, sigma, jsummedvars, jsigma, maxsize, sizedist, fecdist, negfec)
+jerzeibalowski <- function(ppy, AllStages, survproxy, obsproxy, sizeproxy, repstproxy, fecproxy, jsurvproxy, jobsproxy, jsizeproxy, jrepstproxy, survdev, obsdev, sizedev, repstdev, fecdev, jsurvdev, jobsdev, jsizedev, jrepstdev, matrixdim, fecmod, summedvars, sigma, jsummedvars, jsigma, maxsize, sizedist, fecdist, negfec) {
+    .Call('_lefko3_jerzeibalowski', PACKAGE = 'lefko3', ppy, AllStages, survproxy, obsproxy, sizeproxy, repstproxy, fecproxy, jsurvproxy, jobsproxy, jsizeproxy, jrepstproxy, survdev, obsdev, sizedev, repstdev, fecdev, jsurvdev, jobsdev, jsizedev, jrepstdev, matrixdim, fecmod, summedvars, sigma, jsummedvars, jsigma, maxsize, sizedist, fecdist, negfec)
 }
 
-#' Estimates Mean Population Projection Matrix, Using Summed U and F Matrices
+#' Vectorize Matrix for Historical Mean Matrix Estimation
 #' 
-#' This function estimates the mean population projection matrices, treating the
-#' mean as arithmetic across space but either arithmetic or geometric across time.
-#' It differs from \code{\link{turbogeodiesel}()} in that it estimates the \code{A} matrix
-#' as a sum of the associated \code{U} and \code{F} matrices. Used to power the
-#' \code{\link{lmean}()} function.
+#' Function \code{flagrantcrap()} vectorizes core indices of matrices
+#' input as list elements.
+#' 
+#' @param Xmat A matrix originally a part of a list object.
+#' @param allindices A vector of indices to remove from the matrix
+#' 
+#' @return A column vector of certain elements from the input matrix.
+#' 
+#' @keywords internal
+#' @noRd
+flagrantcrap <- function(Xmat, allindices) {
+    .Call('_lefko3_flagrantcrap', PACKAGE = 'lefko3', Xmat, allindices)
+}
+
+#' Vectorize Matrix for Ahistorical Mean Matrix Estimation
+#' 
+#' Function \code{moreflagrantcrap()} vectorizes matrices input as list elements.
+#' 
+#' @param Xmat A matrix originally a part of a list object.
+#' 
+#' @return A column vector of the input matrix.
+#' 
+#' @keywords internal
+#' @noRd
+moreflagrantcrap <- function(Xmat) {
+    .Call('_lefko3_moreflagrantcrap', PACKAGE = 'lefko3', Xmat)
+}
+
+#' Estimates Mean LefkoMat Object for Historical MPM
+#' 
+#' Function \code{turbogeodiesel()} estimates mean historical population projection matrices,
+#' treating the mean as element-wise arithmetic.
 #' 
 #' @param loy A data frame denoting the population, patch, and time step designation
 #' of each matrix. Includes a total of 9 variables.
 #' @param Umats A matrix with all U matrices turned into columns.
 #' @param Fmats A matrix with all F matrices turned into columns.
-#' @param geom Should the mean across time be geometric (1) or arithmetic (0)?
-#' @param sparse Should 0s be ignored when some matrices include non-zero entries
-#' in common elements?
-#' @param numofpops Number of populations to be analyzed.
-#' @param numofpatches Number of patches to be analyzed, where this number should
-#' include a patch total across all populations.
-#' @param numofyears Number of time steps to be analyzed.
+#' @param stages This is the core stageframe held by \code{mats}, equivalent
+#' to \code{ahstages}.
+#' @param hstages This is the \code{hstages} object held by \code{mats}.
+#' @param modelqc This is the \code{modelqc} or \code{dataqc} portion of \code{mats}.
+#' @param patchmats A logical value stating whether to estimate patch-level means.
+#' @param popmats A logical value stating whether to estimate population-level means.
 #' 
-#' @return A matrix with 3n columns, where n is the sum of the number of patches and
-#' populations. Each pop/patch has its own set of three columns denoting survival,
-#' fecundity, and the overall sum of the previous two columns.
+#' @return A list using ther basic blueprint of a lefkoMat object.
 #' 
 #' @keywords internal
 #' @noRd
-geodiesel <- function(loy, Umats, Fmats, geom, sparse, numofpops, numofpatches, numofyears) {
-    .Call('_lefko3_geodiesel', PACKAGE = 'lefko3', loy, Umats, Fmats, geom, sparse, numofpops, numofpatches, numofyears)
+turbogeodiesel <- function(loy, Umats, Fmats, stages, hstages, modelqc, patchmats, popmats) {
+    .Call('_lefko3_turbogeodiesel', PACKAGE = 'lefko3', loy, Umats, Fmats, stages, hstages, modelqc, patchmats, popmats)
 }
 
-#' Estimates Mean Population Projection Matrix
+#' Estimates Mean LefkoMat Object for Ahistorical MPM
 #' 
-#' This function estimates the mean population projection matrices, treating the
-#' mean as arithmetic across space but either arithmetic or geometric across time.
-#' It differs from \code{\link{geodiesel}()} in that it estimates the \code{A} matrix
-#' indepenently of the associated \code{U} and \code{F} matrices. Used to power the
-#' \code{\link{lmean}()} function.
+#' Function \code{geodiesel()} estimates mean ahistorical population projection matrices,
+#' treating the mean as element-wise arithmetic.
 #' 
-#' @param loy2c A data frame denoting the population, patch, and time step designation
-#' of each matrix. Includes 9 variables.
+#' @param loy A data frame denoting the population, patch, and time step designation
+#' of each matrix. Includes a total of 9 variables.
 #' @param Umats A matrix with all U matrices turned into columns.
 #' @param Fmats A matrix with all F matrices turned into columns.
-#' @param Amats A matrix with all A matrices turned into columns.
-#' @param geom Should the mean across time be geometric (1) or arithmetic (0)?
-#' @param sparse Should 0s be ignored when some matrices include non-zero entries
-#' in common elements?
-#' @param numofpops Number of populations to be analyzed.
-#' @param numofpatches Number of patches to be analyzed, where this number should
-#' include a patch total across all populations.
-#' @param numofyears Number of time steps to be analyzed.
+#' @param stages This is the core stageframe held by \code{mats}, equivalent
+#' to \code{ahstages}.
+#' @param modelqc This is the \code{modelqc} or \code{dataqc} portion of \code{mats}.
+#' @param patchmats A logical value stating whether to estimate patch-level means.
+#' @param popmats A logical value stating whether to estimate population-level means.
 #' 
-#' @return A matrix with 3n columns, where n is the sum of the number of patches and
-#' populations. Each pop/patch has its own set of three columns denoting survival,
-#' fecundity, and the overall projection.
+#' @return A list using th4 basic blueprint of a LefkoMat object.
 #' 
 #' @keywords internal
 #' @noRd
-turbogeodiesel <- function(loy, Umats, Fmats, Amats, geom, sparse, numofpops, numofpatches, numofyears) {
-    .Call('_lefko3_turbogeodiesel', PACKAGE = 'lefko3', loy, Umats, Fmats, Amats, geom, sparse, numofpops, numofpatches, numofyears)
+geodiesel <- function(loy, Umats, Fmats, stages, modelqc, patchmats, popmats) {
+    .Call('_lefko3_geodiesel', PACKAGE = 'lefko3', loy, Umats, Fmats, stages, modelqc, patchmats, popmats)
+}
+
+#' Complete Full Eigen Analysis of a Single Dense Matrix
+#' 
+#' \code{decomp3()} returns all eigenvalues, right eigenvectors, and left
+#' eigenvectors estimated for a matrix by the \code{eig_gen}() function
+#' in the C++ Armadillo library. Works with dense matrices.
+#' 
+#' @param Amat A population projection matrix of class \code{matrix}.
+#'
+#' @return This function returns all estimated eigenvalues, right
+#' eigenvectors, and left eigenvectors of a single matrix. This output is
+#' provided as a list with three parts, named appropriately.
+#' 
+#' @keywords internal
+#' @noRd
+decomp3 <- function(Amat) {
+    .Call('_lefko3_decomp3', PACKAGE = 'lefko3', Amat)
+}
+
+#' Complete Full Eigen Analysis of a Single Sparse Matrix
+#' 
+#' \code{decomp3sp()} returns all eigenvalues, right eigenvectors, and left
+#' eigenvectors estimated for a matrix by the \code{eigs_gen}() function
+#' in the C++ Armadillo library. Works with sparse matrices.
+#' 
+#' @param Amat A population projection matrix of class \code{matrix}.
+#'
+#' @return This function returns all estimated eigenvalues, right
+#' eigenvectors, and left eigenvectors of a single matrix. This output is
+#' provided as a list with three parts, named appropriately.
+#' 
+#' @keywords internal
+#' @noRd
+decomp3sp <- function(Amat) {
+    .Call('_lefko3_decomp3sp', PACKAGE = 'lefko3', Amat)
+}
+
+#' Estimate Deterministic Population Growth Rate of a Dense Matrix
+#' 
+#' \code{lambda3matrix()} returns the dominant eigenvalue of a single
+#' dense projection matrix.
+#' 
+#' @param Amat A population projection matrix of class \code{matrix}.
+#'
+#' @return This function returns the dominant eigenvalue of the matrix. This
+#' is given as the largest real part of all eigenvalues estimated via the 
+#' \code{eig_gen}() function in the C++ Armadillo library.
+#' 
+#' @keywords internal
+#' @noRd
+lambda3matrix <- function(Amat) {
+    .Call('_lefko3_lambda3matrix', PACKAGE = 'lefko3', Amat)
+}
+
+#' Estimate Deterministic Population Growth Rate of a Sparse Matrix
+#' 
+#' \code{lambda3matrixsp()} returns the dominant eigenvalue of a single
+#' sparse projection matrix. This function can handle large and sparse 
+#' matrices, and so can be used with large historical matrices, IPMs, 
+#' age x stage matrices, as well as smaller ahistorical matrices.
+#' 
+#' @param Amat A population projection matrix of class \code{matrix}.
+#'
+#' @return This function returns the dominant eigenvalue of the matrix. This
+#' is given as the largest real part of all eigenvalues estimated via the 
+#' \code{eigs_gen}() function in the C++ Armadillo library.
+#' 
+#' @keywords internal
+#' @noRd
+lambda3matrixsp <- function(Amat) {
+    .Call('_lefko3_lambda3matrixsp', PACKAGE = 'lefko3', Amat)
+}
+
+#' Estimate Stable Stage Distribution for a Dense Population Matrix
+#' 
+#' \code{ss3matrix()} returns the stable stage distribution for a 
+#' dense population matrix.
+#' 
+#' @param Amat A population projection matrix of class \code{matrix}.
+#' 
+#' @return This function returns the stable stage distribution corresponding to
+#' the input matrix. The stable stage distribution is given as the right 
+#' eigenvector associated with largest real part of the eigenvalues estimated 
+#' for the matrix via the \code{eig_gen}() function in the C++ Armadillo 
+#' library, divided by the sum of the associated right eigenvector. 
+#' 
+#' @seealso \code{\link{stablestage3}()}
+#' @seealso \code{\link{stablestage3.lefkoMat}()}
+#' 
+#' @keywords internal
+#' @noRd
+ss3matrix <- function(Amat) {
+    .Call('_lefko3_ss3matrix', PACKAGE = 'lefko3', Amat)
+}
+
+#' Estimate Stable Stage Distribution for a Sparse Population Matrix
+#' 
+#' \code{ss3matrixsp()} returns the stable stage distribution for a 
+#' sparse population matrix. This function can handle large and sparse 
+#' matrices, and so can be used with large historical matrices, IPMs, 
+#' age x stage matrices, as well as smaller ahistorical matrices.
+#' 
+#' @param Amat A population projection matrix of class \code{matrix}.
+#' 
+#' @return This function returns the stable stage distribution corresponding to
+#' the input matrix. The stable stage distribution is given as the right 
+#' eigenvector associated with largest real part of the eigenvalues estimated 
+#' for the matrix via the \code{eigs_gen}() function in the C++ Armadillo 
+#' library, divided by the sum of the associated right eigenvector. 
+#' 
+#' @seealso \code{\link{stablestage3}()}
+#' @seealso \code{\link{stablestage3.lefkoMat}()}
+#' 
+#' @keywords internal
+#' @noRd
+ss3matrixsp <- function(Amat) {
+    .Call('_lefko3_ss3matrixsp', PACKAGE = 'lefko3', Amat)
+}
+
+#' Estimate Reproductive Value for a Dense Population Matrix
+#' 
+#' \code{rv3matrix()} returns the reproductive values for stages in a 
+#' dense population matrix. The function provides standard reproductive 
+#' values, meaning that the overall reproductive values of basic life 
+#' history stages in a historical matrix are not provided (the 
+#' \code{\link{repvalue3.lefkoMat}()} function estimates these on the basis 
+#' of stage description information provided in the \code{lefkoMat} object 
+#' used as input in that function).
+#' 
+#' @param Amat A population projection matrix.
+#' 
+#' @return This function returns a vector characterizing the 
+#' reproductive values for stages of a population projection matrix. This is 
+#' given as the left eigenvector associated with largest real part of the
+#' dominant eigenvalue estimated via the \code{eig_gen}() function in the C++ 
+#' Armadillo library, divided by the first non-zero element of the left 
+#' eigenvector. 
+#' 
+#' @seealso \code{\link{repvalue3}()}
+#' @seealso \code{\link{repvalue3.lefkoMat}()}
+#' 
+#' @keywords internal
+#' @noRd
+rv3matrix <- function(Amat) {
+    .Call('_lefko3_rv3matrix', PACKAGE = 'lefko3', Amat)
+}
+
+#' Estimate Reproductive Value for a Sparse Population Matrix
+#' 
+#' \code{rv3matrixsp()} returns the reproductive values for stages in a 
+#' sparse population matrix. The function provides standard reproductive 
+#' values, meaning that the overall reproductive values of basic life 
+#' history stages in a historical matrix are not provided (the 
+#' \code{\link{repvalue3.lefkoMat}()} function estimates these on the basis 
+#' of stage description information provided in the \code{lefkoMat} object 
+#' used as input in that function). This function can handle large and 
+#' sparse matrices, and so can be used with large historical matrices, IPMs, 
+#' age x stage matrices, as well as smaller ahistorical 
+#' matrices.
+#' 
+#' @param Amat A population projection matrix.
+#' 
+#' @return This function returns a vector characterizing the 
+#' reproductive values for stages of a population projection matrix. This is 
+#' given as the left eigenvector associated with largest real part of the
+#' dominant eigenvalue estimated via the \code{eigs_gen}() function in the C++ 
+#' Armadillo library, divided by the first non-zero element of the left 
+#' eigenvector. 
+#' 
+#' @seealso \code{\link{repvalue3}()}
+#' @seealso \code{\link{repvalue3.lefkoMat}()}
+#' 
+#' @keywords internal
+#' @noRd
+rv3matrixsp <- function(Amat) {
+    .Call('_lefko3_rv3matrixsp', PACKAGE = 'lefko3', Amat)
+}
+
+#' Estimate Sensitivities for a Dense Population Matrix
+#' 
+#' \code{sens3matrix()} returns the sensitivity of lambda with respect
+#' to each element in a dense matrix. This is accomplished via the
+#' \code{eig_gen}() function in the C++ Armadillo library.
+#' 
+#' @param Amat A population projection matrix.
+#' 
+#' @return This function returns a matrix of sensitivities. 
+#' 
+#' @keywords internal
+#' @noRd
+sens3matrix <- function(Amat) {
+    .Call('_lefko3_sens3matrix', PACKAGE = 'lefko3', Amat)
+}
+
+#' Estimate Sensitivities for a Sparse Population Matrix
+#' 
+#' \code{sens3matrixsp()} returns the sensitivity of lambda with respect
+#' to each element in a sparse matrix. This is accomplished via the
+#' \code{eig_gen}() function in the C++ Armadillo library.
+#' 
+#' @param Amat A population projection matrix.
+#' 
+#' @return This function returns a matrix of sensitivities. 
+#' 
+#' @keywords internal
+#' @noRd
+sens3matrixsp <- function(Amat) {
+    .Call('_lefko3_sens3matrixsp', PACKAGE = 'lefko3', Amat)
+}
+
+#' Estimate Sensitivities for a Historical LefkoMat Object
+#' 
+#' \code{sens3hlefko()} returns the sensitivity of lambda with respect
+#' to each historical stage-pair in the matrix, and the associated
+#' sensitivity for each life history stage. This is accomplished via the 
+#' \code{eigs_gen}() function in the C++ Armadillo library.
+#' 
+#' @param Amat A population projection matrix.
+#' @param ahstages An integar vector of unique ahistorical stages.
+#' @param hstages An integar vector of unique historical stage pairs.
+#' 
+#' @return This function returns a list with two sensitivity matrices:
+#' \item{h_smat}{Matrix of sensitivities corresponding to the historical matrix.}
+#' \item{ah_smat}{Matrix of sensitivities corresponding to the ahistorical
+#' matrix.}
+#' 
+#' @keywords internal
+#' @noRd
+sens3hlefko <- function(Amat, ahstages, hstages) {
+    .Call('_lefko3_sens3hlefko', PACKAGE = 'lefko3', Amat, ahstages, hstages)
+}
+
+#' Estimate Elasticities for a Dense Population Matrix
+#' 
+#' \code{elas3matrix()} returns the elasticity of lambda with respect
+#' to each element in a dense matrix. This is accomplished via the
+#' \code{eig_gen}() function in the C++ Armadillo library.
+#' 
+#' @param Amat A population projection matrix.
+#' 
+#' @return This function returns a matrix of elasticities. 
+#' 
+#' @keywords internal
+#' @noRd
+elas3matrix <- function(Amat) {
+    .Call('_lefko3_elas3matrix', PACKAGE = 'lefko3', Amat)
+}
+
+#' Estimate Elasticities for a Sparse Population Matrix
+#' 
+#' \code{elas3matrixsp()} returns the elasticity of lambda with respect
+#' to each element in a sparse matrix. This is accomplished via the
+#' \code{eigs_gen}() function in the C++ Armadillo library.
+#' 
+#' @param Amat A population projection matrix.
+#' 
+#' @return This function returns a matrix of elasticities. 
+#' 
+#' @keywords internal
+#' @noRd
+elas3matrixsp <- function(Amat) {
+    .Call('_lefko3_elas3matrixsp', PACKAGE = 'lefko3', Amat)
+}
+
+#' Estimate Elasticities for a Historical LefkoMod Object
+#' 
+#' \code{elas3hlefko()} returns the elasticity of lambda with respect
+#' to each historical stage-pair in the matrix, and the summed elasticities
+#' for each life history stage. This is accomplished via the \code{eigs_gen}()
+#' function in the C++ Armadillo library.
+#' 
+#' @param Amat A population projection matrix.
+#' @param ahstages An integar vector of unique ahistorical stages.
+#' @param hstages An integar vector of unique historical stage pairs.
+#' 
+#' @return This function returns a list with two elasticity matrices:
+#' \item{h_emat}{Matrix of elasticities corresponding to the historical matrix.}
+#' \item{ah_emat}{Matrix of elasticities corresponding to the ahistorical
+#' matrix, but using summed historical elasticities as the basis of estimation.}
+#' 
+#' @keywords internal
+#' @noRd
+elas3hlefko <- function(Amat, ahstages, hstages) {
+    .Call('_lefko3_elas3hlefko', PACKAGE = 'lefko3', Amat, ahstages, hstages)
 }
 

@@ -7,24 +7,23 @@
 lambda3(mats)
 }
 \arguments{
-\item{mats}{A lefkoMat object, or a population projection matrix, for which
-the dominant eigenvalue is desired.}
+\item{mats}{A lefkoMat object, or a single projection matrix, for which the
+dominant eigenvalue is desired.}
 }
 \value{
 The value returned depends on the class of the \code{mats} argument.
+See related functions for more details.
 }
 \description{
-\code{lambda3()} is a generic function that returns the dominant eigenvalue
-of a matrix, and set of dominant eigenvalues of a set of matrices. Unlike the
-'popbio' package's \link[popbio]{lambda}() function, it is particularly
-made to handle very large and sparse matrices supplied as \code{lefkoMat} 
-objects or as individual matrices. This function can handle large and sparse 
-matrices, and so can be used with large historical matrices, IPMs, 
+\code{lambda3()} is a generic function that returns the dominant eigenvalue of
+a matrix, and set of dominant eigenvalues of a set of matrices. It can handle
+very large and sparse matrices supplied as \code{lefkoMat} objects or as
+individual matrices, and can be used with large historical matrices, IPMs, 
 age x stage matrices, as well as smaller ahistorical matrices.
 }
 \examples{
-\donttest{
 data(lathyrus)
+
 sizevector <- c(0, 100, 13, 127, 3730, 3800, 0)
 stagevector <- c("Sd", "Sdl", "VSm", "Sm", "VLa", "Flo", "Dorm")
 repvector <- c(0, 0, 0, 0, 0, 1, 0)
@@ -61,7 +60,6 @@ ehrlen3 <- rlefko3(data = lathvert, stageframe = lathframe, year = c(1989, 1990)
 
 ehrlen3mean <- lmean(ehrlen3)
 lambda3(ehrlen3mean)
-}
 
 }
 \seealso{

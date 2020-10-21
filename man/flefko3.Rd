@@ -2,7 +2,7 @@
 % Please edit documentation in R/matrixcreation.R
 \name{flefko3}
 \alias{flefko3}
-\title{Create Function-based Historical Population Projection Matrices}
+\title{Create Function-based Historical Matrix Projection Model}
 \usage{
 flefko3(
   year = "all",
@@ -47,29 +47,28 @@ of such values, given in values associated with the year term used in linear
 model development. Can also equal \code{all}, in which case matrices will
 be estimated for all years. Defaults to \code{all}.}
 
-\item{patch}{A variable designating which patches or subpopulations will
-have matrices estimated. Should be set to specific patch names, or to 
-\code{all} if all patches should have matrices estimated. Defaults to \code{all}.}
+\item{patch}{A variable designating which patches or subpopulations will have
+matrices estimated. Should be set to specific patch names, or to \code{all} if
+matrices should be estimated for all patches. Defaults to \code{all}.}
 
 \item{stageframe}{A stageframe object that includes information on the size,
 observation status, propagule status, immaturity status, and maturity status
 of each ahistorical stage. Should also incorporate bin widths if size is
 continuous.}
 
-\item{repmatrix}{A matrix composed mostly of 0s, with non-zero values for
-each potentially new individual (row) born to each reproductive stage
-(column). Non-zero entries correspond to multipliers for fecundity, with 1
-equaling full fecundity.}
+\item{repmatrix}{A matrix composed mostly of 0s, with non-zero values for each
+potentially new individual (row) born to each reproductive stage (column).
+Entries act as multipliers on fecundity, with 1 equaling full fecundity.}
 
 \item{data}{The original historical demographic data frame used to 
 estimate vital rates (class \code{hfvdata}). The original data frame is 
 required in order to initialize years and patches properly.}
 
-\item{modelsuite}{An optional suite of models of class \code{lefkoMod}.
-If given, then \code{surv_model}, \code{obs_model}, \code{size_model}, \code{repst_model}, 
-\code{fec_model}, \code{paramnames}, \code{yearcol}, and \code{patchcol} are not required. 
-Note that the modeling exercise used to develop the models must have 
-tested the impact of time \emph{t}-1 for this to work properly.}
+\item{modelsuite}{An optional \code{lefkoMod} object holding the vital rate models.
+If given, then \code{surv_model}, \code{obs_model}, \code{size_model}, \code{repst_model}, \code{fec_model},
+\code{jsurv_model}, \code{jobs_model}, \code{jsize_model}, \code{jrepst_model}, \code{paramnames},
+\code{yearcol}, and \code{patchcol} are not required. One or more of these models should
+include size or reproductive status in time \emph{t}-1.}
 
 \item{surv_model}{A linear model predicting survival probability. This can 
 be a model of class \code{glm} or \code{glmer}, and requires a predicted binomial 
@@ -103,19 +102,18 @@ log link. If given, then will overwrite any fecundity model given in
 \code{modelsuite}. This model must have been developed in a modeling exercise 
 testing the impacts of times \emph{t} and \emph{t}-1.}
 
-\item{jsurv_model}{A linear model predicting juvenile survival probability.
-This can be a model of class \code{glm} or \code{glmer}, and requires a predicted 
-binomial variable under a logit link. If given, then will overwrite any 
-juvenile survival probability model given in \code{modelsuite}. This model must 
-have been developed in a modeling exercise testing the impacts of times \emph{t} 
-and \emph{t}-1.}
+\item{jsurv_model}{A linear model predicting juvenile survival probability. This
+can be a model of class \code{glm} or \code{glmer}, and requires a predicted 
+binomial variable under a logit link. If given, then will overwrite any juvenile
+survival probability model given in \code{modelsuite}. This model must have been
+developed in a modeling exercise testing the impacts of times \emph{t} and \emph{t}-1.}
 
 \item{jobs_model}{A linear model predicting juvenile sprouting or observation
 probability. This can be a model of class \code{glm} or \code{glmer}, and requires a 
-predicted binomial variable under a logit link. If given, then 
-will overwrite any juvenile observation probability model given in \code{modelsuite}.
-This model must have been developed in a modeling exercise testing the impacts 
-of times \emph{t} and \emph{t}-1.}
+predicted binomial variable under a logit link. If given, then will overwrite
+any juvenile observation probability model given in \code{modelsuite}. This model
+must have been developed in a modeling exercise testing the impacts of times \emph{t}
+and \emph{t}-1.}
 
 \item{jsize_model}{A linear model predicting juvenile size. This can be a model
 of class \code{glm} or \code{glmer}, both of which require a predicted poisson variable 
@@ -133,7 +131,7 @@ exercise testing the impacts of times \emph{t} and \emph{t}-1.}
 
 \item{paramnames}{A dataframe with two columns, the first showing the general
 model terms that will be used in matrix creation, and the second showing the
-equivalent terms used in modeling. Only required if `modelsuite` is not 
+equivalent terms used in modeling. Only required if \code{modelsuite} is not 
 supplied.}
 
 \item{surv_dev}{A numeric value to be added to the y-intercept in the linear
@@ -165,15 +163,15 @@ model for juvenile reproduction probability.}
 
 \item{repmod}{A scalar multiplier of fecundity. Defaults to 1.}
 
-\item{overwrite}{A data frame developed with the \code{\link{overwrite}()} function,
+\item{overwrite}{A data frame developed with the \code{\link{overwrite}()} function
 describing transitions to be overwritten either with given values or 
 with other estimated transitions.}
 
 \item{yearcol}{The variable name or column number corresponding to year 
-in time \emph{t} in the dataset. Not needed if a \code{modelsuite} is supplied.}
+in time \emph{t} in the dataset. Not needed if \code{modelsuite} is supplied.}
 
 \item{patchcol}{The variable name or column number corresponding to patch in 
-the dataset. Not needed if a \code{modelsuite} is supplied.}
+the dataset. Not needed if \code{modelsuite} is supplied.}
 
 \item{year.as.random}{A logical term indicating whether coefficients for
 missing patches within vital rate models should be estimated as random
@@ -185,46 +183,46 @@ missing patches within vital rate models should be estimated as random
 intercepts. Defaults to FALSE, in which case missing patch coefficients 
 are set to 0.}
 
-\item{randomseed}{A numeric value used as a seed to generate random 
-estimates for missing time step and patch coefficients, if either
-\code{year.as.random} or \code{patch.as.random} is set to TRUE.}
+\item{randomseed}{A numeric value used as a seed to generate random estimates
+for missing time step and patch coefficients, if either \code{year.as.random} or
+\code{patch.as.random} is set to TRUE. Defaults to 0.}
 
-\item{negfec}{A logical value denoting whether fecundity values estimated
-to be negative should be reset to 0. Defaults to FALSE.}
+\item{negfec}{A logical value denoting whether fecundity values estimated to be
+negative should be reset to 0. Defaults to FALSE.}
 
 \item{reduce}{A logical value denoting whether to remove historical stages
-associated solely with 0 transitions. These are only removed in cases where
-the associated row and column sums in ALL matrices estimated equal 0. 
-Defaults to FALSE.}
+associated solely with 0 transitions. These are only removed in cases where the
+associated row and column sums in ALL matrices estimated equal 0. Defaults to
+FALSE.}
 }
 \value{
-If all inputs are properly formatted, then this function will return
-either an object of class \code{lefkoMat}. Output includes:
+If all inputs are properly formatted, then this function will return an
+object of class \code{lefkoMat}, which is a list with the following elements:
 
-\item{A}{A list of full projection matrices in order of sorted patches
-and years.}
-\item{U}{A list of survival-transition matrices sorted as in \code{A}.}
-\item{F}{A list of fecundity matrices sorted as in \code{A}.}
-\item{hstages}{A data frame matrix showing the pairing of ahistorical 
-stages used to create historical stage pairs.}
+\item{A}{A list of full projection matrices in order of sorted patches and
+years. All matrices output in the \code{matrix} class.}
+\item{U}{A list of survival-transition matrices sorted as in \code{A}. All 
+matrices output in the \code{matrix} class.}
+\item{F}{A list of fecundity matrices sorted as in \code{A}. All matrices 
+output in the \code{matrix} class.}
+\item{hstages}{A data frame matrix showing the pairing of ahistorical stages
+used to create historical stage pairs.}
 \item{ahstages}{A data frame detailing the characteristics of associated
 ahistorical stages.}
-\item{labels}{A data frame giving the patch and year of each matrix in
-order. In \code{flefko3()}, only one population may be analyzed at once, and 
-so \code{pop = NA}.}
-\item{matrixqc}{A short vector describing the number of non-zero elements
-in \code{U} and \code{F} matrices, and the number of annual matrices.}
+\item{labels}{A data frame showing the patch and year of each matrix in order.
+In \code{flefko3()}, only one population may be analyzed at once, and so \code{pop = NA}.}
+\item{matrixqc}{A short vector describing the number of non-zero elements in
+\code{U} and \code{F} matrices, and the number of annual matrices.}
 \item{modelqc}{This is the \code{qc} portion of the \code{modelsuite} input.}
 }
 \description{
-Function \code{flefko3()} returns a list of historical population projection 
-matrices corresponding to the patches and years given, as well as the 
-associated component transition and fecundity matrices, data frames 
-detailing the characteristics of the ahistorical stages used and the
-historical stage pairs created, and a data frame characterizing the patch 
-and year combinations corresponding to these matrices. Note that, unlike 
-\code{\link{rlefko3}()}, this function currently does not currently distinguish
-populations.
+Function \code{flefko3()} returns function-based historical MPMs corresponding
+to the patches and years given, including the associated component transition
+and fecundity matrices, data frames detailing the characteristics of the
+ahistorical stages used and historical stage pairs created, and a data frame
+characterizing the patch and year combinations corresponding to these matrices.
+Unlike \code{\link{rlefko3}()}, this function currently does not currently
+distinguish populations.
 }
 \examples{
 \donttest{
@@ -249,7 +247,7 @@ lathframeln <- sf_create(sizes = sizevector, stagenames = stagevector, repstatus
 
 lathvertln <- verticalize3(lathyrus, noyears = 4, firstyear = 1988, patchidcol = "SUBPLOT",
                            individcol = "GENET", blocksize = 9, juvcol = "Seedling1988",
-                           size1col = "lnVol88", repstr1col = "FCODE88",
+                           size1col = "lnVol88", repstr1col = "Intactseed88",
                            fec1col = "Intactseed88", dead1col = "Dead1988",
                            nonobs1col = "Dormant1988", stageassign = lathframeln,
                            stagesize = "sizea", censorcol = "Missing1988",
@@ -278,6 +276,7 @@ lathmat3ln <- flefko3(year = "all", patch = "all", stageframe = lathframeln,
                       repmatrix = lathrepmln, overwrite = lathover3,
                       patchcol = "patchid", yearcol = "year2", year.as.random = FALSE,
                       patch.as.random = FALSE, reduce = FALSE)
+                      
 summary(lathmat3ln)
 }
 
