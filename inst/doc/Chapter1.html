@@ -31,6 +31,45 @@ document.addEventListener('DOMContentLoaded', function() {
   }
 });
 </script>
+<style type="text/css">
+a.anchor-section {margin-left: 10px; visibility: hidden; color: inherit;}
+a.anchor-section::before {content: '#';}
+.hasAnchor:hover a.anchor-section {visibility: visible;}
+</style>
+<script>// Anchor sections v1.0 written by Atsushi Yasumoto on Oct 3rd, 2020.
+document.addEventListener('DOMContentLoaded', function() {
+  // Do nothing if AnchorJS is used
+  if (typeof window.anchors === 'object' && anchors.hasOwnProperty('hasAnchorJSLink')) {
+    return;
+  }
+
+  const h = document.querySelectorAll('h1, h2, h3, h4, h5, h6');
+
+  // Do nothing if sections are already anchored
+  if (Array.from(h).some(x => x.classList.contains('hasAnchor'))) {
+    return null;
+  }
+
+  // Use section id when pandoc runs with --section-divs
+  const section_id = function(x) {
+    return ((x.classList.contains('section') || (x.tagName === 'SECTION'))
+            ? x.id : '');
+  };
+
+  // Add anchors
+  h.forEach(function(x) {
+    const id = x.id || section_id(x.parentElement);
+    if (id === '') {
+      return null;
+    }
+    let anchor = document.createElement('a');
+    anchor.href = '#' + id;
+    anchor.classList = ['anchor-section'];
+    x.classList.add('hasAnchor');
+    x.appendChild(anchor);
+  });
+});
+</script>
 
 <style type="text/css">
   code{white-space: pre-wrap;}
@@ -39,7 +78,7 @@ document.addEventListener('DOMContentLoaded', function() {
   div.column{display: inline-block; vertical-align: top; width: 50%;}
   div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
   ul.task-list{list-style: none;}
-      </style>
+    </style>
 
 
 
@@ -242,7 +281,7 @@ code > span.er { color: #a61717; background-color: #e3d2d2; }
 
 
 
-<p>This document was built in Markdown in R 4.0.3, and covers package <code>lefko3</code> version 3.0.0.</p>
+<p>This document was built in Markdown in R 4.0.3, and covers package <code>lefko3</code> version 3.1.0.</p>
 <div id="introduction-to-package-lefko3" class="section level2">
 <h2>INTRODUCTION TO PACKAGE <code>LEFKO3</code></h2>
 <p style="text-indent: 20px">
@@ -308,7 +347,7 @@ The matrix shown in figure 1 can be used to project population dynamics by predi
 The independence of consecutive stage-pairs reflects a central assumption in ahMPM analysis: the stage of an individual in the next time is influenced only by its current stage. Conceptually, if an organism’s stage in the next time is entirely determined by its current stage, then its previous states do not influence these transitions. Thus, standard ahMPMs are two dimensional and reflect only the current and next immediate stage of individuals, given by the columns and rows, respectively. This is ultimately an extension of the <em>iid</em> assumption in statistics - that the states of individuals are independent and originate from identically-distributed random variables.
 </p>
 <p style="text-indent: 20px">
-MPMs have been estimated for approximately a century now. We have never done a meta-analysis of all of these studies, but nonetheless it is safe to say that studies considering individual history are rare. The typical MPM study uses ahMPMs, and so assumes independence of stage transitions across time even from the same individual. In fact, at the time of writing, we are aware of only 5 examples of studies using a <strong>historical</strong> approach, meaning that they incorporated some degree of individual history into matrix estimation and analysis <span class="citation">(Ehrlén 2000; Shefferson, Warren, and Pulliam 2014; Shefferson, Mizuta, and Hutchings 2017; Shefferson et al. 2018; Vries and Caswell 2018)</span>.
+MPMs have been estimated for approximately a century now. We have never done a meta-analysis of all of these studies, but nonetheless it is safe to say that studies considering individual history are rare. The typical MPM study uses ahMPMs, and so assumes independence of stage transitions across time even from the same individual. In fact, at the time of writing, we are aware of only 5 examples of studies using a <strong>historical</strong> approach, meaning that they incorporated some degree of individual history into matrix estimation and analysis <span class="citation">(Ehrlén 2000; Shefferson, Warren II, and Pulliam 2014; Shefferson, Mizuta, and Hutchings 2017; Shefferson et al. 2018; Vries and Caswell 2018)</span>.
 </p>
 <p style="text-indent: 20px">
 The <strong>historical MPM</strong> (hMPM) is an extension of the matrix projection model that incorporates information on one previous time into the determination of vital rates. Thus, the expected survival-transition probability of an individual in stage <em>j</em> at time <em>t</em> to stage <em>k</em> at time <em>t</em>+1 depends not only on its stage in time <em>t</em> but also on its stage in time <em>t</em>-1. Population ecologists considering this problem analytically might be inclined to add an extra dimension to the matrix to deal with this, thus creating a 3d array or cube. However, this approach is computationally intensive and makes analysis challenging, particularly complicating projection <span class="citation">(Vries and Caswell 2018)</span>. Instead, we utilize the approach developed by Ehrlén <span class="citation">(2000)</span>, in which rows and columns represent life history stages paired in consecutive times. Thus, columns now represent the <strong>From</strong> pair of stages (stage in times <em>t</em> and <em>t</em>-1), and rows now represent the <strong>To</strong> pair of stages (stage in times <em>t</em> and <em>t</em>+1), as in Figure 2. This model is effectively equivalent to the second-order model proposed by de Vries and Caswell <span class="citation">(2018)</span>, although it organizes the elements differently.
@@ -472,7 +511,7 @@ Second, the user may provide detailed information on fecundity, including which 
 Historical MPMs are not necessarily justified in all cases. We urge the reader to use the principle of parsimony in deciding this, for example by analyzing whether lagged effects of previous stage appear to influence vital rates. Package <code>lefko3</code> includes one method to do this based on linear modeling. A number of other methods exist, mostly focused on what are known as <em>memory models</em> <span class="citation">(Brownie et al. 1993; Pradel, Wintrebert, and Gimenez 2003; Cole et al. 2014)</span>. Here, we focus only on the <code>lefko3</code> method, and leave it to the reader to explore other options.
 </p>
 <p style="text-indent: 20px">
-In <code>lefko3</code>, the function <code>modelsearch()</code> allows users to explore whether history influences component vital rates, and to develop linear models of these vital rates. The results can be used to decide not only whether a historical MPM is justified, but also to develop function-based hMPMs and ahMPMs themselves. Package <code>lefko3</code> can estimate linear models to estimate up to nine different vital rates:
+In <code>lefko3</code>, function <code>modelsearch()</code> allows users to explore whether history influences component vital rates, and to develop linear models of these vital rates. The results can be used to decide not only whether a historical MPM is justified, but also to develop function-based hMPMs and ahMPMs themselves. Package <code>lefko3</code> can estimate linear models to estimate up to nine different vital rates:
 </p>
 <ol style="list-style-type: decimal">
 <li><p><strong>Survival probability</strong> - This is the probability of surviving from time <em>t</em> to time <em>t</em>+1, given that the individual is in stage <em>j</em> in time <em>t</em> (and, if historical, in stage <em>l</em> in time <em>t</em>-1). In <code>lefko3</code>, this parameter may be modeled as a function of size, reproductive status, patch, year, and individual identity in times <em>t</em> and <em>t</em>-1. This parameter is required in all function-based matrices.</p></li>
@@ -496,11 +535,14 @@ Function <code>modelsearch()</code> handles the entire modeling process, includi
 <li><p><strong>Modeling approach</strong> - Should the models be estimated as generalized linear models (GLMs) or mixed linear models? While most function-based matrix models are estimated as the former, the latter approach can account for repeated measures of the same individual by including individual identity as a random factor. Mixed models also allow time and patch to be treated as random variables.</p></li>
 <li><p><strong>Suite of factors</strong> - Should both size and reproductive status be tested as causal factors? Should two-way interactions be included? Alternatively, should models be estimated as constants?</p></li>
 <li><p><strong>Suite of vital rates</strong> - Which adult demographic parameters should be estimated? The defaults are (1) survival, (3) size, and (5) fecundity.</p></li>
-<li><p><strong>Juvenile stage estimation</strong> - Should juvenile parameters (6) through (9) also be modeled?</p></li>
+<li><p><strong>Juvenile vital rate estimation</strong> - Should juvenile parameters (6) through (9) also be modeled?</p></li>
 <li><p><strong>Best-fit criterion</strong> - If a model with fewer parameters exists within 2.0 AICc units of the model with the lowest AICc, then should this model be used as the best-fit model (the default), or should the model with the lowest AICc always be chosen?</p></li>
-<li><p><strong>Size distribution</strong> - Should size be modeled as a continuous variable under a Gaussian distribution, or as a count variable under either a Poisson or negative binomial distribution?</p></li>
-<li><p><strong>Fecundity distribution</strong> - Should fecundity be modeled as a continuous variable under a Gaussian distribution, or as a count variable under either a Poisson or negative binomial distribution?</p></li>
-<li><p><strong>Timing of fecundity</strong> - <code>Modelsearch()</code> assumes that linear models of fecundity use a metric counted or measured in time <em>t</em> as the response. This applies well with plants, where flowers or seeds produced might be the fecundity response. However, users not wishing to follow this default behavior can use the <code>fectime</code> option to stipulate a fecundity metric measured in time <em>t</em>+1.</p></li>
+<li><p><strong>Size distribution</strong> - Should size be modeled as a continuous variable under a Gaussian distribution, or as a count variable under either a Poisson or negative binomial distribution? If the latter, should the distribution be zero-inflated?</p></li>
+<li><p><strong>Fecundity distribution</strong> - Should fecundity be modeled as a continuous variable under a Gaussian distribution, or as a count variable under either a Poisson or negative binomial distribution? If the latter, should the distribution be zero-inflated?</p></li>
+<li><p><strong>Timing of fecundity</strong> - <code>Modelsearch()</code> assumes that linear models of fecundity use a metric counted or measured in time <em>t</em> as the response. This applies well with most herbaceous plant datasets, where flowers or seeds produced in one year might be the fecundity response measured. However, users not wishing to follow this default behavior can use the <code>fectime</code> option to stipulate a fecundity metric measured in time <em>t</em>+1.</p></li>
+<li><p><strong>Age</strong> - Is an age x stage MPM the main goal?</p></li>
+<li><p><strong>Individual covariates and environmental state variables</strong> - Should individual or environmental covariates be tested as causal factors on vital rates?</p></li>
+<li><p><strong>Missing values for times and patches</strong> - Should times or patches with coefficients that drop to 0 be estimated as random values from the corresponding distributions of time or patch coefficients?</p></li>
 <li><p><strong>Censoring</strong> - Should data points marked as questionable be used or eliminated?</p></li>
 <li><p><strong>Variable names</strong> - The names of all relevant variables in the dataset need to be specified. Note that the default behavior assumes variable names produced via the <code>historicalize3()</code> or <code>verticalize3()</code> functions, which produce standardized vertical datasets.</p></li>
 </ol>
@@ -511,19 +553,20 @@ Once all inputs are provided, <code>modelsearch()</code> goes to work. The resul
 If <code>modelsearch()</code> is set for historical analysis (<code>historical = TRUE</code>, the default), then the decision of whether to develop a historical MPM can be made on the basis of whether any best-fit vital rate model includes size or reproductive status in time <em>t</em>-1. If at least one vital rate does, then a historical MPM is justified. Otherwise, it is not. Regardless, the output can be used to create a function-based MPM in the next step.
 </p>
 <p style="text-indent: 20px">
-Advanced users of <code>lefko3</code> may wish to create their own models without the package’s automated model selection function. In that case, <code>lefko3</code>’s matrix functions can accommodate single models developed using base R, package <code>lme4</code> <span class="citation">(Bates et al. 2015)</span>, and package <code>glmmTMB</code> <span class="citation">(Brooks et al. 2017)</span>. Plans are in the works to add <code>nlme</code> compatibility, as well as non-linear models (e.g. general additive models) and zero-inflated Poisson models.
+Advanced users of <code>lefko3</code> may wish to create their own models without the package’s automated model selection function. In that case, <code>lefko3</code>’s matrix functions can accommodate single models developed using base R, package <code>lme4</code> <span class="citation">(Bates et al. 2015)</span>, package <code>glmmTMB</code> <span class="citation">(Brooks et al. 2017)</span>, and package <code>pscl</code> <span class="citation">(Zeileis, Kleiber, and Jackman 2008)</span>. Plans are in the works to add <code>nlme</code> compatibility <span class="citation">(Pinheiro et al. 2020)</span>, as well as non-linear models such as general additive models (GAMs).
 </p>
 </div>
 <div id="step-4-estimate-matrices" class="section level3">
 <h3>Step 4: Estimate matrices</h3>
 <p style="text-indent: 20px">
-MPM creation can be accomplished with four different functions:
+MPM creation can be accomplished with five different functions:
 </p>
 <ol style="list-style-type: decimal">
 <li><p><code>rlefko2()</code> - This function creates raw ahistorical MPMs given a dataset, a stageframe, a reproductive matrix, and an overwrite matrix.</p></li>
 <li><p><code>rlefko3()</code> - This function creates raw historical MPMs given a dataset, a stageframe, a reproductive matrix, and an overwrite matrix.</p></li>
 <li><p><code>flefko2()</code> - This function creates function-based ahistorical MPMs given a dataset, a set of models, a stageframe, a reproductive matrix, and an overwrite matrix.</p></li>
 <li><p><code>flefko3()</code> - This function creates function-based historical MPMs given a dataset, a set of models, a stageframe, a reproductive matrix, and an overwrite matrix.</p></li>
+<li><p><code>aflefko3()</code> - This function creates function-based ahistorical age x stage MPMs given a dataset, a set of models, a stageframe,a reproductive matrix, and an overwrite matrix.</p></li>
 </ol>
 <p style="text-indent: 20px">
 These functions incorporate binary kernels developed to handle the estimation of matrix elements quickly and efficiently. A single run of <code>flefko3()</code>, for example, should be able to yield all annual matrices for all patches for the <em>Cypripedium candidum</em> dataset provided with <code>lefko3</code> in under a minute on most machines (14s or so on RPS’ 2019 MacBook Pro with 2.3 GHz 8-Core Intel Core i9). Parallel computing should not be necessary, even with the slowest of current machines, provided that the machine is current enough to handle at least R 4.0.
@@ -627,7 +670,7 @@ We are grateful to two anonymous reviewers whose scrutiny improved the quality o
 <p>Beissinger, Steven R., and Michael Ian Westphal. 1998. “On the Use of Demographic Models of Population Viability in Endangered Species Management.” <em>Journal of Wildlife Management</em> 62 (3): 821–41. <a href="https://doi.org/10.2307/3802534">https://doi.org/10.2307/3802534</a>.</p>
 </div>
 <div id="ref-brooks_glmmtmb_2017">
-<p>Brooks, Mollie E., Kasper Kristensen, Koen J. van Benthem, Arni Magnusson, Casper W. Berg, Anders Nielsen, Hans J. Skaug, Martin Mächler, and Benjamin M. Bolker. 2017. “glmmTMB Balances Speed and Flexibility Among Packages for Zero-Inflated Generalized Linear Mixed Modeling.” <em>The R Journal</em> 9 (2): 378–400. <a href="https://journal.r-project.org/archive/2017/RJ-2017-066/index.html">https://journal.r-project.org/archive/2017/RJ-2017-066/index.html</a>.</p>
+<p>Brooks, Mollie E., Kasper Kristensen, Koen J. van Benthem, Arni Magnusson, Casper W. Berg, Anders Nielsen, Hans J. Skaug, Martin Mächler, and Benjamin M. Bolker. 2017. “glmmTMB Balances Speed and Flexibility Among Packages for Zero-Inflated Generalized Linear Mixed Modeling.” <em>The R Journal</em> 9 (2): 378–400. <a href="https://doi.org/10.32614/RJ-2017-066">https://doi.org/10.32614/RJ-2017-066</a>.</p>
 </div>
 <div id="ref-brownie_capture-recapture_1993">
 <p>Brownie, C., James E. Hines, James D. Nichols, Kenneth H. Pollock, and Jay B. Hestbeck. 1993. “Capture-Recapture Studies for Multiple Strata Including Non-Markovian Transitions.” <em>Biometrics</em> 49 (4): 1173–87. <a href="https://doi.org/10.2307/2532259">https://doi.org/10.2307/2532259</a>.</p>
@@ -645,13 +688,16 @@ We are grateful to two anonymous reviewers whose scrutiny improved the quality o
 <p>Ehrlén, Johan. 2000. “The Dynamics of Plant Populations: Does the History of Individuals Matter?” <em>Ecology</em> 81 (6): 1675–84. <a href="https://doi.org/10.1890/0012-9658(2000)081%5B1675:TDOPPD%5D2.0.CO;2">https://doi.org/10.1890/0012-9658(2000)081[1675:TDOPPD]2.0.CO;2</a>.</p>
 </div>
 <div id="ref-ellner_integral_2006">
-<p>Ellner, Stephen P., and Mark Rees. 2006. “Integral Projection Models for Species with Complex Demography.” <em>The American Naturalist</em> 167 (3): 410–28. <a href="https://doi.org/10.1086/499438">https://doi.org/10.1086/499438</a>.</p>
+<p>Ellner, Stephen P., and Mark Rees. 2006. “Integral Projection Models for Species with Complex Demography.” <em>American Naturalist</em> 167 (3): 410–28. <a href="https://doi.org/10.1086/499438">https://doi.org/10.1086/499438</a>.</p>
 </div>
 <div id="ref-kendall_persistent_2019">
 <p>Kendall, Bruce E., Masami Fujiwara, Jasmin Diaz-Lopez, Sandra Schneider, Jakob Voigt, and Sören Wiesner. 2019. “Persistent Problems in the Construction of Matrix Population Models.” <em>Ecological Modelling</em> 406 (August): 33–43. <a href="https://doi.org/10.1016/j.ecolmodel.2019.03.011">https://doi.org/10.1016/j.ecolmodel.2019.03.011</a>.</p>
 </div>
 <div id="ref-morris_quantitative_2002">
 <p>Morris, William F., and Daniel F. Doak. 2002. <em>Quantitative Conservation Biology: Theory and Practice of Population Viability Analysis</em>. Sunderland, Massachusetts, USA: Sinauer Associates, Inc.</p>
+</div>
+<div id="ref-pinheiro_nlme_2020">
+<p>Pinheiro, Jose, Douglas Bates, Saikat Debroy, Deepyan Sarkar, and R Core Team. 2020. “Nlme: Linear and Nonlinear Mixed Effects Models. R Package Version 3.1-150.” <a href="https://CRAN.R-project.org/package=nlme">https://CRAN.R-project.org/package=nlme</a>.</p>
 </div>
 <div id="ref-pradel_proposal_2003">
 <p>Pradel, Roger, C. Wintrebert, and O. Gimenez. 2003. “A Proposal for a Goodness-of-Fit Test to the Arnason-Schwarz Multisite Capture-Recapture Model.” <em>Biometrics</em> 59: 43–53. <a href="https://doi.org/10.1111/1541-0420.00006">https://doi.org/10.1111/1541-0420.00006</a>.</p>
@@ -669,7 +715,7 @@ We are grateful to two anonymous reviewers whose scrutiny improved the quality o
 <p>Shefferson, Richard P., Brett K. Sandercock, Joyce Proper, and Steven R. Beissinger. 2001. “Estimating Dormancy and Survival of a Rare Herbaceous Perennial Using Mark-Recapture Models.” <em>Ecology</em> 82 (1): 145–56. <a href="https://doi.org/10.1890/0012-9658(2001)082%5B0145:EDASOA%5D2.0.CO;2">https://doi.org/10.1890/0012-9658(2001)082[0145:EDASOA]2.0.CO;2</a>.</p>
 </div>
 <div id="ref-shefferson_life_2014">
-<p>Shefferson, Richard P., Robert J. Warren, and H. Ronald Pulliam. 2014. “Life History Costs Make Perfect Sprouting Maladaptive in Two Herbaceous Perennials.” <em>Journal of Ecology</em> 102 (5): 1318–28. <a href="https://doi.org/10.1111/1365-2745.12281">https://doi.org/10.1111/1365-2745.12281</a>.</p>
+<p>Shefferson, Richard P., Robert J. Warren II, and H. Ronald Pulliam. 2014. “Life History Costs Make Perfect Sprouting Maladaptive in Two Herbaceous Perennials.” <em>Journal of Ecology</em> 102 (5): 1318–28. <a href="https://doi.org/10.1111/1365-2745.12281">https://doi.org/10.1111/1365-2745.12281</a>.</p>
 </div>
 <div id="ref-stott_popdemo_2012">
 <p>Stott, Iain, David J. Hodgson, and Stuart Townley. 2012. “Popdemo: An R Package for Population Demography Using Projection Matrix Analysis.” <em>Methods in Ecology and Evolution</em> 3 (5): 797–802. <a href="https://doi.org/10.1111/j.2041-210X.2012.00222.x">https://doi.org/10.1111/j.2041-210X.2012.00222.x</a>.</p>
@@ -682,6 +728,9 @@ We are grateful to two anonymous reviewers whose scrutiny improved the quality o
 </div>
 <div id="ref-wardle_graph_1998">
 <p>Wardle, Glenda M. 1998. “A Graph Theory Approach to Demographic Loop Analysis.” <em>Ecology</em> 79 (7): 2539–49. <a href="https://doi.org/10.1890/0012-9658(1998)079%5B2539:AGTATD%5D2.0.CO;2">https://doi.org/10.1890/0012-9658(1998)079[2539:AGTATD]2.0.CO;2</a>.</p>
+</div>
+<div id="ref-zeileis_regression_2008">
+<p>Zeileis, Achim, Christian Kleiber, and Simon Jackman. 2008. “Regression Models for Count Data in R.” <em>Journal of Statistical Software</em> 27 (1): 1–25. <a href="https://doi.org/10.18637/jss.v027.i08">https://doi.org/10.18637/jss.v027.i08</a>.</p>
 </div>
 </div>
 </div>

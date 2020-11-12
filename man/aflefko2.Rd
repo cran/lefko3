@@ -9,6 +9,8 @@ aflefko2(
   patch = NA,
   stageframe,
   repmatrix = NA,
+  overwrite = NA,
+  data = NA,
   modelsuite = NA,
   surv_model = NA,
   obs_model = NA,
@@ -20,6 +22,9 @@ aflefko2(
   jsize_model = NA,
   jrepst_model = NA,
   paramnames = NA,
+  inda = 0,
+  indb = 0,
+  indc = 0,
   surv_dev = 0,
   obs_dev = 0,
   size_dev = 0,
@@ -30,8 +35,6 @@ aflefko2(
   jsize_dev = 0,
   jrepst_dev = 0,
   repmod = 1,
-  overwrite = NA,
-  data = NA,
   yearcol = "year2",
   patchcol = "patchid",
   year.as.random = FALSE,
@@ -61,6 +64,14 @@ continuous.}
 \item{repmatrix}{A matrix composed mostly of 0s, with non-zero values for each
 potentially new individual (row) born to each reproductive stage (column).
 Entries act as multipliers on fecundity, with 1 equaling full fecundity.}
+
+\item{overwrite}{A data frame developed with the \code{\link{overwrite}()} function
+describing transitions to be overwritten either with given values or 
+with other estimated transitions.}
+
+\item{data}{The original historical demographic data frame used to estimate
+vital rates (class \code{hfvdata}). The original data frame is required in order
+to initialize years and patches properly.}
 
 \item{modelsuite}{An optional \code{lefkoMod} object holding the vital rate models.
 If given, then \code{surv_model}, \code{obs_model}, \code{size_model}, \code{repst_model}, \code{fec_model},
@@ -131,6 +142,12 @@ model terms that will be used in matrix creation, and the second showing the
 equivalent terms used in modeling. Only required if \code{modelsuite} is not 
 supplied.}
 
+\item{inda}{A numeric value to use for individual covariate a. Defaults to 0.}
+
+\item{indb}{A numeric value to use for individual covariate b. Defaults to 0.}
+
+\item{indc}{A numeric value to use for individual covariate c. Defaults to 0.}
+
 \item{surv_dev}{A numeric value to be added to the y-intercept in the linear
 model for survival probability.}
 
@@ -159,14 +176,6 @@ model for juvenile size.}
 model for juvenile reproduction probability.}
 
 \item{repmod}{A scalar multiplier of fecundity. Defaults to 1.}
-
-\item{overwrite}{A data frame developed with the \code{\link{overwrite}()} function
-describing transitions to be overwritten either with given values or 
-with other estimated transitions.}
-
-\item{data}{The original historical demographic data frame used to estimate
-vital rates (class \code{hfvdata}). The original data frame is required in order
-to initialize years and patches properly.}
 
 \item{yearcol}{The variable name or column number corresponding to year in time
 \emph{t} in the dataset. Not needed if a \code{modelsuite} is supplied.}
@@ -257,9 +266,9 @@ lathframeln <- sf_create(sizes = sizevector, stagenames = stagevector, repstatus
 
 lathvertln <- verticalize3(lathyrus, noyears = 4, firstyear = 1988, patchidcol = "SUBPLOT",
                            individcol = "GENET", blocksize = 9, juvcol = "Seedling1988",
-                           size1col = "lnVol88", repstr1col = "Intactseed88",
-                           fec1col = "Intactseed88", dead1col = "Dead1988",
-                           nonobs1col = "Dormant1988", stageassign = lathframeln,
+                           sizeacol = "lnVol88", repstracol = "Intactseed88",
+                           fecacol = "Intactseed88", deadacol = "Dead1988",
+                           nonobsacol = "Dormant1988", stageassign = lathframeln,
                            stagesize = "sizea", censorcol = "Missing1988",
                            censorkeep = NA, NAas0 = TRUE, censor = TRUE)
 

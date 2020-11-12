@@ -48,38 +48,41 @@ ovreplace <- function(allst321, idx321old, idx321new, convtype, eststag3, gvnrat
 #' in Cartesian space.
 #' @param juvcol Column number that marks individuals in immature stages within
 #' the dataset.
-#' @param size1col Column number corresponding to the first or main size variable 
+#' @param sizeacol Column number corresponding to the first or main size variable 
 #' associated with the first year or observation time in the dataset.
-#' @param size2col Column number corresponding to the second size variable
+#' @param sizebcol Column number corresponding to the second size variable
 #' associated with the first year or observation time in the dataset.
-#' @param size3col Column number corresponding to the third size variable
+#' @param sizeccol Column number corresponding to the third size variable
 #' associated with the first year or observation time in the dataset.
-#' @param repstr1col Column number corresponding to the main variable coding the
+#' @param repstracol Column number corresponding to the main variable coding the
 #' production of reproductive structures associated with the first year or 
 #' observation period in the input dataset.
-#' @param repstr2col Column number corresponding to a secone variable coding the
+#' @param repstrbcol Column number corresponding to a secone variable coding the
 #' production of reproductive structures associated with the first year or 
 #' observation period in the input dataset.
-#' @param fec1col Column number corresponding to the main variable coding for
+#' @param fecacol Column number corresponding to the main variable coding for
 #' fecundity associated with the first year or observation period in the dataset.
-#' @param fec2col Column number corresponding to a second variable coding for
+#' @param fecbcol Column number corresponding to a second variable coding for
 #' fecundity associated with the first year or observation period in the dataset.
-#' @param alive1col Column number that details whether an individual is alive at
+#' @param indcovacol Column number corresponding to an individual covariate.
+#' @param indcovbcol Column number corresponding to an individual covariate.
+#' @param indcovccol Column number corresponding to an individual covariate.
+#' @param aliveacol Column number that details whether an individual is alive at
 #' a given time.
-#' @param dead1col Column number that details whether an individual is dead at
+#' @param deadacol Column number that details whether an individual is dead at
 #' a given time.
-#' @param obs1col Column number that details whether an individual is in an
+#' @param obsacol Column number that details whether an individual is in an
 #' observable stage at a given time.
-#' @param nonobs1col Column number that details whether an individual is in an
+#' @param nonobsacol Column number that details whether an individual is in an
 #' unobservable stage at a given time.
 #' @param censorcol Column number corresponding to the first entry of a censor 
 #' variable.
 #' @param stagecol Column number corresponding to the first entry of a column
 #' designating stages.
 #' @param repstrrel This is a scalar modifier for that makes the variable in
-#' \code{repstr2col} equivalent to \code{repstr1col}.
+#' \code{repstrbcol} equivalent to \code{repstracol}.
 #' @param fecrel This is a scalar modifier for that makes the variable in
-#' \code{fec2col} equivalent to \code{fec1col}.
+#' \code{fecbcol} equivalent to \code{fecacol}.
 #' @param NAas0 If TRUE, then all NA entries for size and fecundity variables
 #' will be set to 0.
 #' @param NRasRep If TRUE, then will treat non-reproductive but mature
@@ -98,8 +101,8 @@ ovreplace <- function(allst321, idx321old, idx321new, convtype, eststag3, gvnrat
 #' 
 #' @keywords internal
 #' @noRd
-pfj <- function(data, stageframe, noyears, firstyear, popidcol, patchidcol, individcol, blocksize, xcol, ycol, juvcol, size1col, size2col, size3col, repstr1col, repstr2col, fec1col, fec2col, alive1col, dead1col, obs1col, nonobs1col, censorcol, stagecol, repstrrel, fecrel, NAas0, NRasRep, stassign, stszcol, censbool) {
-    .Call('_lefko3_pfj', PACKAGE = 'lefko3', data, stageframe, noyears, firstyear, popidcol, patchidcol, individcol, blocksize, xcol, ycol, juvcol, size1col, size2col, size3col, repstr1col, repstr2col, fec1col, fec2col, alive1col, dead1col, obs1col, nonobs1col, censorcol, stagecol, repstrrel, fecrel, NAas0, NRasRep, stassign, stszcol, censbool)
+pfj <- function(data, stageframe, noyears, firstyear, popidcol, patchidcol, individcol, blocksize, xcol, ycol, juvcol, sizeacol, sizebcol, sizeccol, repstracol, repstrbcol, fecacol, fecbcol, indcovacol, indcovbcol, indcovccol, aliveacol, deadacol, obsacol, nonobsacol, censorcol, stagecol, repstrrel, fecrel, NAas0, NRasRep, stassign, stszcol, censbool) {
+    .Call('_lefko3_pfj', PACKAGE = 'lefko3', data, stageframe, noyears, firstyear, popidcol, patchidcol, individcol, blocksize, xcol, ycol, juvcol, sizeacol, sizebcol, sizeccol, repstracol, repstrbcol, fecacol, fecbcol, indcovacol, indcovbcol, indcovccol, aliveacol, deadacol, obsacol, nonobsacol, censorcol, stagecol, repstrrel, fecrel, NAas0, NRasRep, stassign, stszcol, censbool)
 }
 
 #' Make Vertical Data Frame Historical
@@ -152,6 +155,18 @@ pfj <- function(data, stageframe, noyears, firstyear, popidcol, patchidcol, indi
 #' fecundity in time \emph{t}.
 #' @param fecb3col Column number corresponding to a second variable coding for
 #' fecundity in time \emph{t}+1.
+#' @param indcova2col Column number corresponding to an individual covariate
+#' in time \emph{t}.
+#' @param indcova3col Column number corresponding to an individual covariate
+#' in time \emph{t}+1.
+#' @param indcovb2col Column number corresponding to an individual covariate
+#' in time \emph{t}.
+#' @param indcovb3col Column number corresponding to an individual covariate
+#' in time \emph{t}+1.
+#' @param indcovc2col Column number corresponding to an individual covariate
+#' in time \emph{t}.
+#' @param indcovc3col Column number corresponding to an individual covariate
+#' in time \emph{t}+1.
 #' @param alive2col Column number detailing whether an individual is alive in 
 #' time \emph{t}.
 #' @param alive3col Column number detailing whether an individual is alive in 
@@ -191,8 +206,8 @@ pfj <- function(data, stageframe, noyears, firstyear, popidcol, patchidcol, indi
 #' 
 #' @keywords internal
 #' @noRd
-jpf <- function(data, stageframe, popidcol, patchidcol, individcol, year2col, year3col, xcol, ycol, juv2col, juv3col, sizea2col, sizea3col, sizeb2col, sizeb3col, sizec2col, sizec3col, repstra2col, repstra3col, repstrb2col, repstrb3col, feca2col, feca3col, fecb2col, fecb3col, alive2col, alive3col, dead2col, dead3col, obs2col, obs3col, nonobs2col, nonobs3col, repstrrel, fecrel, stage2col, stage3col, censorcol, NAas0, NRasRep, stassign, stszcol, censbool) {
-    .Call('_lefko3_jpf', PACKAGE = 'lefko3', data, stageframe, popidcol, patchidcol, individcol, year2col, year3col, xcol, ycol, juv2col, juv3col, sizea2col, sizea3col, sizeb2col, sizeb3col, sizec2col, sizec3col, repstra2col, repstra3col, repstrb2col, repstrb3col, feca2col, feca3col, fecb2col, fecb3col, alive2col, alive3col, dead2col, dead3col, obs2col, obs3col, nonobs2col, nonobs3col, repstrrel, fecrel, stage2col, stage3col, censorcol, NAas0, NRasRep, stassign, stszcol, censbool)
+jpf <- function(data, stageframe, popidcol, patchidcol, individcol, year2col, year3col, xcol, ycol, juv2col, juv3col, sizea2col, sizea3col, sizeb2col, sizeb3col, sizec2col, sizec3col, repstra2col, repstra3col, repstrb2col, repstrb3col, feca2col, feca3col, fecb2col, fecb3col, indcova2col, indcova3col, indcovb2col, indcovb3col, indcovc2col, indcovc3col, alive2col, alive3col, dead2col, dead3col, obs2col, obs3col, nonobs2col, nonobs3col, repstrrel, fecrel, stage2col, stage3col, censorcol, NAas0, NRasRep, stassign, stszcol, censbool) {
+    .Call('_lefko3_jpf', PACKAGE = 'lefko3', data, stageframe, popidcol, patchidcol, individcol, year2col, year3col, xcol, ycol, juv2col, juv3col, sizea2col, sizea3col, sizeb2col, sizeb3col, sizec2col, sizec3col, repstra2col, repstra3col, repstrb2col, repstrb3col, feca2col, feca3col, fecb2col, fecb3col, indcova2col, indcova3col, indcovb2col, indcovb3col, indcovc2col, indcovc3col, alive2col, alive3col, dead2col, dead3col, obs2col, obs3col, nonobs2col, nonobs3col, repstrrel, fecrel, stage2col, stage3col, censorcol, NAas0, NRasRep, stassign, stszcol, censbool)
 }
 
 #' Create Core Dataframe for Matrix Estimation
@@ -244,6 +259,12 @@ theoldpizzle <- function(StageFrame, OverWrite, repmatrix, finalage, style, cont
 #' @param jsizeproxy List of coefficients estimated in model of juvenile size.
 #' @param jrepstproxy List of coefficients estimated in model of juvenile
 #' reproductive status.
+#' @param inda A numeric value equal to the value of individual covariate a to
+#' be used in analysis.
+#' @param indb A numeric value equal to the value of individual covariate b to
+#' be used in analysis.
+#' @param indc A numeric value equal to the value of individual covariate c to
+#' be used in analysis.
 #' @param survdev Scalar value to be added to the y-intercept of the linear model
 #' of survival probability.
 #' @param obsdev Scalar value to be added to the y-intercept of the linear model
@@ -327,8 +348,71 @@ normalpatrolgroup <- function(sge3, sge2, MainData, StageFrame) {
 #' 
 #' @keywords internal
 #' @noRd
-jerzeibalowski <- function(ppy, AllStages, survproxy, obsproxy, sizeproxy, repstproxy, fecproxy, jsurvproxy, jobsproxy, jsizeproxy, jrepstproxy, survdev, obsdev, sizedev, repstdev, fecdev, jsurvdev, jobsdev, jsizedev, jrepstdev, matrixdim, fecmod, summedvars, sigma, jsummedvars, jsigma, maxsize, sizedist, fecdist, negfec) {
-    .Call('_lefko3_jerzeibalowski', PACKAGE = 'lefko3', ppy, AllStages, survproxy, obsproxy, sizeproxy, repstproxy, fecproxy, jsurvproxy, jobsproxy, jsizeproxy, jrepstproxy, survdev, obsdev, sizedev, repstdev, fecdev, jsurvdev, jobsdev, jsizedev, jrepstdev, matrixdim, fecmod, summedvars, sigma, jsummedvars, jsigma, maxsize, sizedist, fecdist, negfec)
+jerzeibalowski <- function(ppy, AllStages, survproxy, obsproxy, sizeproxy, repstproxy, fecproxy, jsurvproxy, jobsproxy, jsizeproxy, jrepstproxy, inda, indb, indc, survdev, obsdev, sizedev, repstdev, fecdev, jsurvdev, jobsdev, jsizedev, jrepstdev, matrixdim, fecmod, summedvars, sigma, jsummedvars, jsigma, maxsize, sizedist, fecdist, negfec) {
+    .Call('_lefko3_jerzeibalowski', PACKAGE = 'lefko3', ppy, AllStages, survproxy, obsproxy, sizeproxy, repstproxy, fecproxy, jsurvproxy, jobsproxy, jsizeproxy, jrepstproxy, inda, indb, indc, survdev, obsdev, sizedev, repstdev, fecdev, jsurvdev, jobsdev, jsizedev, jrepstdev, matrixdim, fecmod, summedvars, sigma, jsummedvars, jsigma, maxsize, sizedist, fecdist, negfec)
+}
+
+#' Main Formula Creation for \code{modelsearch()}
+#'
+#' Function \code{stovokor()} creates formulae to be used as input in the global
+#' model calls used in function \code{\link{modelsearch}()}.
+#'
+#' @param surv A vector of strings indicating the names of the variables coding 
+#' survival.
+#' @param obs A vector of strings indicating the names of the variables coding 
+#' observation status.
+#' @param size A vector of strings indicating the names of the variables coding 
+#' size.
+#' @param repst A vector of strings indicating the names of the variables coding 
+#' reproductive status.
+#' @param fec A vector of strings indicating the names of the variables coding 
+#' fecundity.
+#' @param vitalrates A vector of strings indicating which vital rates will be
+#' estimated.
+#' @param historical A logical value indicating whether to create global models
+#' with historical effects.
+#' @param suite A string indicating the scope of independent factors included in
+#' the global models. Options include \code{"full"}, \code{"main"}, \code{"size"}, \code{"rep"},
+#' and \code{"const"}.
+#' @param approach A string indicating whether to use mixed model encoding 
+#' (\code{"mixed"}) or GLM encoding (\code{"glm"}).
+#' @param sizedist A string variable indicating the distribution to use to
+#' model size.
+#' @param fecdist A string variable indicating the distribution to use to
+#' model fecundity.
+#' @param nojuvs A logical value indicating that juvenile rates should be
+#' estimated (\code{FALSE}) or not (\code{TRUE}).
+#' @param age A string indicating the name of the variable coding age.
+#' @param indcova A vector of strings indicating the names in times \emph{t}+1, \emph{t},
+#' and \emph{t}-1 of a specific individual covariate used in the dataset.
+#' @param indcovb A vector of strings indicating the names in times \emph{t}+1, \emph{t},
+#' and \emph{t}-1 of a specific individual covariate used in the dataset.
+#' @param indcovc A vector of strings indicating the names in times \emph{t}+1, \emph{t},
+#' and \emph{t}-1 of a specific individual covariate used in the dataset.
+#' @param indiv A string indicating the name of the variable coding individual
+#' identity.
+#' @param patch A string indicating the name of the variable coding patch identity.
+#' @param year A string indicating the name of the variable coding time \emph{t}.
+#' @param pasrand A logical value indicating whether to treat patch as a random
+#' variable within mixed models.
+#' @param yasrand A logical value indicating whether to treat year as a random
+#' variable within mixed models.
+#' @param fectime An integer indicating whether to use reproductive output in time 
+#' \emph{t} (2) or time \emph{t}+1 (3) as the response for fecundity.
+#' @param juvsize A logical value indicating whether to include size terms in
+#' juvenile models.
+#' @param size0 A logical value indicating whether size distribution should
+#' be zero-inflated. Only applies to Poisson and negative binomial distributions.
+#' @param fec0 A logical value indicating whether size distribution should
+#' be zero-inflated. Only applies to Poisson and negative binomial distributions.
+#' 
+#' @return Vector of 9 strings, each a formula to be used as input in function.
+#' \code{modelsearch()}.
+#'
+#' @keywords internal
+#' @noRd
+stovokor <- function(surv, obs, size, repst, fec, vitalrates, historical, suite, approach, sizedist, fecdist, nojuvs, age, indcova, indcovb, indcovc, indiv, patch, year, pasrand, yasrand, fectime, juvsize, size0, fec0) {
+    .Call('_lefko3_stovokor', PACKAGE = 'lefko3', surv, obs, size, repst, fec, vitalrates, historical, suite, approach, sizedist, fecdist, nojuvs, age, indcova, indcovb, indcovc, indiv, patch, year, pasrand, yasrand, fectime, juvsize, size0, fec0)
 }
 
 #' Vectorize Matrix for Historical Mean Matrix Estimation

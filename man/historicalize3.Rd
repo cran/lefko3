@@ -27,6 +27,12 @@ historicalize3(
   feca3col = 0,
   fecb2col = 0,
   fecb3col = 0,
+  indcova2col = 0,
+  indcova3col = 0,
+  indcovb2col = 0,
+  indcovb3col = 0,
+  indcovc2col = 0,
+  indcovc3col = 0,
   alive2col = 0,
   alive3col = 0,
   dead2col = 0,
@@ -128,6 +134,24 @@ production, etc.}
 \item{fecb3col}{A second variable name or column number corresponding to 
 fecundity in time \emph{t}+1. This may represent egg counts, fruit counts, seed
 production, etc.}
+
+\item{indcova2col}{A variable name or column number corresponding to an
+individual covariate to be used in analysis, in time \emph{t}.}
+
+\item{indcova3col}{A variable name or column number corresponding to an
+individual covariate to be used in analysis, in time \emph{t}+1.}
+
+\item{indcovb2col}{A second variable name or column number corresponding to an
+individual covariate to be used in analysis, in time \emph{t}.}
+
+\item{indcovb3col}{A second variable name or column number corresponding to an
+individual covariate to be used in analysis, in time \emph{t}+1.}
+
+\item{indcovc2col}{A third variable name or column number corresponding to an
+individual covariate to be used in analysis, in time \emph{t}.}
+
+\item{indcovc3col}{A third variable name or column number corresponding to an
+individual covariate to be used in analysis, in time \emph{t}+1.}
 
 \item{alive2col}{A variable name or column number that provides information on
 whether an individual is alive in time \emph{t}. If used, living status must be

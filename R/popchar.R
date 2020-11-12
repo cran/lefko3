@@ -973,3 +973,227 @@ overwrite <- function(stage3, stage2, stage1 = NA, eststage3 = NA, eststage2 = N
   return(reassessed)
 }
 
+#' Test for overdispersion and zero inflation in size and fecundity
+#' 
+#' Function \code{sf_distrib} takes a historically formatted vertical data as input
+#' and tests whether size and fecundity data are dispersed according to a Poisson
+#' distribution (where mean = variance), and whether the number of 0s exceeds
+#' expectations.
+#'
+#' @param data A historical vertical data file, which is a data frame of class
+#' \code{hfvdata}.
+#' @param size The name or column number of the variable corresponding to size.
+#' @param fec The name or column number of the variable corresponding to fecundity.
+#' Note that the name of the variable should correspond to the proper time, either
+#' time *t* or time *t*-1.
+#' @param repst The name or column number of the variable corresponding to
+#' reproductive status in time *t*. Required if fecundity distribution will be
+#' tested.
+#'
+#' @return Produces text describing the degree and significance of overdispersion
+#' and zero inflation. The tests are chi-squared score tests based on the
+#' expectations of mean = variance, and 0s as abundant as predicted by the
+#' value of lambda estimated from the dataset. See van der Broek (1995) for more
+#' details.
+#' 
+#' @examples
+#' data(lathyrus)
+#' 
+#' sizevector <- c(0, 4.6, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 1, 2, 3, 4, 5, 6, 7, 8, 9)
+#' stagevector <- c("Sd", "Sdl", "Dorm", "Sz1nr", "Sz2nr", "Sz3nr", "Sz4nr", "Sz5nr",
+#'                  "Sz6nr", "Sz7nr", "Sz8nr", "Sz9nr", "Sz1r", "Sz2r", "Sz3r", "Sz4r",
+#'                  "Sz5r", "Sz6r", "Sz7r", "Sz8r", "Sz9r")
+#' repvector <- c(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1)
+#' obsvector <- c(0, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1)
+#' matvector <- c(0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1)
+#' immvector <- c(1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)
+#' propvector <- c(1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)
+#' indataset <- c(0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1)
+#' binvec <- c(0, 4.6, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 
+#'             0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5)
+#' 
+#' lathframeln <- sf_create(sizes = sizevector, stagenames = stagevector, repstatus = repvector, 
+#'                        obsstatus = obsvector, matstatus = matvector, immstatus = immvector, 
+#'                        indataset = indataset, binhalfwidth = binvec, propstatus = propvector)
+#' 
+#' lathvertln <- verticalize3(lathyrus, noyears = 4, firstyear = 1988, patchidcol = "SUBPLOT",
+#'                            individcol = "GENET", blocksize = 9, juvcol = "Seedling1988",
+#'                            sizeacol = "lnVol88", repstracol = "Intactseed88",
+#'                            fecacol = "Intactseed88", deadacol = "Dead1988",
+#'                            nonobsacol = "Dormant1988", stageassign = lathframeln,
+#'                            stagesize = "sizea", censorcol = "Missing1988",
+#'                            censorkeep = NA, NAas0 = TRUE, censor = TRUE)
+#' 
+#' lathvertln$feca2 <- round(lathvertln$feca2)
+#' lathvertln$feca1 <- round(lathvertln$feca1)
+#' lathvertln$feca3 <- round(lathvertln$feca3)
+#' 
+#' sf_distrib(lathvertln, fec = "feca2", repst = "repstatus2")
+#' 
+#' @export
+sf_distrib <- function(data, size = NA, fec = NA, repst = NA) {
+  if (!any(class(data) == "hfvdata")) {
+    stop("Function sf_distrib requires an object of class hfvdata as input.", call. = FALSE)
+  }
+  
+  if (is.na(size) & is.na(fec)) {
+    stop("Function sf_distrib requires a size and/or fecundity variable to test. Please designate at least one such variable",
+         call. = FALSE)
+  }
+  
+  if (!is.na(fec) & is.na(repst)) {
+    stop("Function sf_distrib requires a reproductive status variable (repst) in order to test the distribution underlying fecundity.",
+         call. = FALSE)
+  }
+  
+  if (!is.na(size)) {
+    if (is.numeric(size)) {
+      if (size > dim(data)[2]) {
+        stop("Size variable seems to represent column number, but column number is out of bounds.", call. = FALSE)
+      } else {
+        sizedata <- data[, size]
+      }
+    } else if (is.character(size)) {
+      sizelow <- tolower(size)
+      datanames <- tolower(names(data))
+      
+      sizeproxy <- grep(sizelow, datanames, fixed = TRUE)
+      
+      if (length(sizeproxy) == 0) {
+        stop("Name of size variable does not match any variable in dataset.", call. = FALSE)
+      } else if (length(sizeproxy) > 1) {
+        stop("Size variable name appears to match several variable names in dataset.", call. = FALSE)
+      }
+      
+      sizedata <- data[, sizeproxy]
+    }
+    
+    #Here is the test of overdispersion for size
+    jsmean <- mean(sizedata)
+    jsvar <- stats::var(sizedata)
+    
+    jsodchip <- 1 - 2 * abs((1 - stats::pchisq((sum(sizedata - jsmean)^2 / jsmean), length(sizedata) - 1)) - 0.5)
+    
+    writeLines(paste0("The mean size is ", signif(jsmean, digits = 4)))
+    writeLines(paste0("\nThe variance in size is ", signif(jsvar, digits = 4)))
+    writeLines(paste0("\nThe probability of this dispersion level by chance is ", signif(jsodchip, digits = 4)))
+    
+    if (jsodchip <= 0.05) {
+      writeLines("\nSize is significantly overdispersed.")
+    } else {
+      writeLines("\nSize is not significantly overdispersed.")
+    }
+    
+    #Here is the test of zero inflation for size
+    s0est <- exp(-jsmean) #Estimated lambda
+    s0n0 <- sum(sizedata == 0) #Actual no of zeroes
+    
+    s0exp <- length(sizedata) * s0est #Expected no of zeroes
+    
+    jvdbs <- (s0n0 - s0exp)^2 / (s0exp * (1 - s0est) - length(sizedata) * jsmean * (s0est^2))
+    jszichip <- stats::pchisq(jvdbs, df = 1, lower.tail = FALSE)
+    
+    writeLines(paste0("\nMean lambda is ", signif(s0est, digits = 4)))
+    writeLines(paste0("The actual number of 0s in size is ", s0n0))
+    writeLines(paste0("The expected number of 0s in size is ", signif(s0exp, digits = 4)))
+    writeLines(paste0("The probability of this deviation in 0s from expectation by chance is ", signif(jszichip, digits = 4)))
+    
+    if (jszichip <= 0.05) {
+      writeLines("\nSize is significantly zero-inflated.\n")
+    } else {
+      writeLines("\nSize is not significantly zero-inflated.\n")
+    }
+    
+    if (!is.na(fec)) writeLines("\n--------------------------------------------------\n")
+  }
+  
+  if (!is.na(fec)) {
+    if (is.numeric(repst)) {
+      if (repst > dim(data)[2]) {
+        stop("\nReproductive status variable seems to represent column number, but column number is out of bounds.", 
+             call. = FALSE)
+      } else {
+        if (any(!is.element(data[, repst], c(0,1)))) {
+          stop("\nReproductive status variable used should be binomial.", call. = FALSE)
+        }
+        repstdata <- data[which(data[,repst] == 1),]
+      }
+    } else if (is.character(repst)) {
+      repstlow <- tolower(repst)
+      datanames <- tolower(names(data))
+      
+      repstproxy <- grep(repstlow, datanames, fixed = TRUE)
+      
+      if (length(repstproxy) == 0) {
+        stop("\nName of reproducdtive status variable does not match any variable in dataset.", call. = FALSE)
+      } else if (length(repstproxy) > 1) {
+        stop("\nReproductive status variable name appears to match several variable names in dataset.", call. = FALSE)
+      }
+      
+      repstdata <- data[which(data[,repstproxy] == 1),]
+      
+    } else {
+      stop("Reproductive status variable not recognized.", call. = FALSE)
+    }
+    
+    if (is.numeric(fec)) {
+      if (fec > dim(data)[2]) {
+        stop("\nFecundity variable seems to represent column number, but column number is out of bounds.", 
+             call. = FALSE)
+      } else {
+        fecdata <- repstdata[, fec]
+      }
+    } else if (is.character(fec)) {
+      feclow <- tolower(fec)
+      datanames <- tolower(names(data))
+      
+      fecproxy <- grep(feclow, datanames, fixed = TRUE)
+      
+      if (length(fecproxy) == 0) {
+        stop("\nName of fecundity variable does not match any variable in dataset.", call. = FALSE)
+      } else if (length(fecproxy) > 1) {
+        stop("\nFecundity variable name appears to match several variable names in dataset.", call. = FALSE)
+      }
+      
+      fecdata <- repstdata[, fecproxy]
+    }
+    
+    #Here is the test of overdispersion for size
+    jfmean <- mean(fecdata)
+    jfvar <- stats::var(fecdata)
+    
+    jfodchip <- 1 - 2 * abs((1 - stats::pchisq((sum(fecdata - jfmean)^2 / jfmean), length(fecdata) - 1)) - 0.5)
+    
+    writeLines(paste0("\nMean fecundity is ", signif(jfmean, digits = 4)))
+    writeLines(paste0("The variance in fecundity is ", signif(jfvar, digits = 4)))
+    writeLines(paste0("The probability of overdispersion is ", signif(jfodchip, digits = 4)))
+    
+    if (jfodchip <= 0.05) {
+      writeLines("\nFecundity is significantly overdispersed.\n")
+    } else {
+      writeLines("\nFecundity is not significantly overdispersed.\n")
+    }
+    
+    #Here is the test of zero inflation for size
+    f0est <- exp(-jfmean) #Estimated lambda
+    f0n0 <- sum(fecdata == 0) #Actual no of zeroes
+    
+    f0exp <- length(fecdata) * f0est #Expected no of zeroes
+    
+    jvdbf <- (f0n0 - f0exp)^2 / (f0exp * (1 - f0est) - length(fecdata) * jfmean * (f0est^2))
+    jfzichip <- stats::pchisq(jvdbf, df = 1, lower.tail = FALSE)
+    
+    writeLines(paste0("\nMean lambda is ", signif(f0est, digits = 4)))
+    writeLines(paste0("The actual number of 0s in fecundity is ", f0n0))
+    writeLines(paste0("The expected number of 0s in fecundity is ", signif(f0exp, digits = 4)))
+    writeLines(paste0("The probability of this deviation in 0s is ", signif(jfzichip, digits = 4)))
+    
+    if (jfzichip <= 0.05) {
+      writeLines("\nFecundity is significantly zero-inflated.")
+    } else {
+      writeLines("\nFecundity is not significantly zero-inflated.")
+    }
+  }
+  
+  return(NULL)
+}

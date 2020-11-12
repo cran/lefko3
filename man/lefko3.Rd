@@ -23,7 +23,8 @@ The lefko package provides five categories of functions:
 It also includes example datasets complete with sample code.
 }
 \references{
-Shefferson, R.P., J. Ehrlen, and S. Kurokawa. \emph{In review}. Package lefko3: individual history in population projection matrix modeling.
+Shefferson, R.P., J. Ehrlen, and S. Kurokawa. \emph{In press}. \emph{lefko3}: analyzing 
+individual history through size-classified matrix population models. \emph{Methods in Ecology and Evolution}.
 }
 \author{
 Richard P. Shefferson <cdorm@g.ecc.u-tokyo.ac.jp>

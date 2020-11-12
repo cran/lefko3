@@ -69,7 +69,7 @@ La incertidumbre asociada con el pronóstico ecológico ha sido reconocida duran
 	doi = {10.1086/499438},
 	abstract = {Matrix projection models occupy a central role in population and conservation biology. Matrix models divide a population into discrete classes, even if the structuring trait exhibits continuous variation (e.g., body size). The integral projection model (IPM) avoids discrete classes and potential artifacts from arbitrary class divisions, facilitates parsimonious modeling based on smooth relationships between individual state and demographic performance, and can be implemented with standard matrix software. Here, we extend the IPM to species with complex demographic attributes, including dormant and active life stages, cross-classification by several attributes (e.g., size, age, and condition), and changes between discrete and continuous structure over the life cycle. We present a general model encompassing these cases, numerical methods, and theoretical results, including stable population growth and sensitivity/elasticity analysis for density-independent models, local stability analysis in density-dependent models, and optimal/evolutionarily stable strategy life-history analysis. Our presentation centers on an IPM for the thistle Onopordum illyricum based on a 6-year field study. Flowering and death probabilities are size and age dependent, and individuals also vary in a latent attribute affecting survival, but a predictively accurate IPM is completely parameterized by fitting a few regression equations. The online edition of the American Naturalist includes a zip archive of R scripts illustrating our suggested methods.A zip archive of R scripts illustrating our suggested methods is also provided.},
 	number = {3},
-	journal = {The American Naturalist},
+	journal = {American Naturalist},
 	author = {Ellner, Stephen P. and Rees, Mark},
 	month = mar,
 	year = {2006},
@@ -139,6 +139,14 @@ within the group of perennial plants.},
 	pages = {308--322}
 }
 
+@misc{pinheiro_nlme_2020,
+	title = {nlme: linear and nonlinear mixed effects models. {R} package version 3.1-150},
+	shorttitle = {nlme: linear and nonlinear mixed effects models. {R} package version 3.1-150},
+	url = {https://CRAN.R-project.org/package=nlme},
+	author = {Pinheiro, Jose and Bates, Douglas and Debroy, Saikat and Sarkar, Deepyan and {R Core Team}},
+	year = {2020}
+}
+
 @article{pradel_proposal_2003,
 	title = {A proposal for a goodness-of-fit test to the {Arnason}-{Schwarz} multisite capture-recapture model},
 	volume = {59},
@@ -202,7 +210,7 @@ We found that vegetative dormancy is an adaptive consequence of life-history cos
 Synthesis. Life-history costs can drive the evolution of seemingly paradoxical traits. In particular, growth can lead to survival costs that may become significant in future years. These costs may be incurred via the use of stored reserves that, once used, cannot be used in the next several years. Such costs are the currency favouring the evolutionary maintenance of vegetative dormancy in two distantly related perennial plant species and may account for dormancy throughout the plant kingdom.},
 	number = {5},
 	journal = {Journal of Ecology},
-	author = {Shefferson, Richard P. and Warren, Robert J. and Pulliam, H. Ronald},
+	author = {Shefferson, Richard P. and Warren II, Robert J. and Pulliam, H. Ronald},
 	year = {2014},
 	pages = {1318--1328}
 }
@@ -394,7 +402,8 @@ captured with loop analyses.},
 	title = {{glmmTMB} balances speed and flexibility among packages for zero-inflated generalized linear mixed modeling},
 	volume = {9},
 	issn = {2073-4859},
-	url = {https://journal.r-project.org/archive/2017/RJ-2017-066/index.html},
+	url = {https://doi.org/10.32614/RJ-2017-066},
+	doi = {10.32614/RJ-2017-066},
 	language = {en},
 	number = {2},
 	urldate = {2020-01-22},
@@ -574,4 +583,40 @@ captured with loop analyses.},
 	publisher = {Sinauer Associates, Inc.},
 	author = {Morris, William F. and Doak, Daniel F.},
 	year = {2002}
+}
+
+@article{zeileis_regression_2008,
+	title = {Regression models for count data in {R}},
+	volume = {27},
+	copyright = {Copyright (c) 2007 Achim Zeileis, Christian Kleiber, Simon Jackman},
+	issn = {1548-7660},
+	url = {https://www.jstatsoft.org/index.php/jss/article/view/v027i08},
+	doi = {10.18637/jss.v027.i08},
+	language = {en},
+	number = {1},
+	urldate = {2020-11-07},
+	journal = {Journal of Statistical Software},
+	author = {Zeileis, Achim and Kleiber, Christian and Jackman, Simon},
+	month = jul,
+	year = {2008},
+	note = {Number: 1},
+	pages = {1--25},
+	file = {Full Text:/Users/richshefferson/Zotero/storage/383QU4NM/Zeileis et al. - 2008 - Regression Models for Count Data in R.pdf:application/pdf;Snapshot:/Users/richshefferson/Zotero/storage/NR6L66GQ/v027i08.html:text/html;Snapshot:/Users/richshefferson/Zotero/storage/242I95Q4/v027i08.html:text/html}
+}
+
+@article{van_den_broek_score_1995,
+	title = {A score test for zero inflation in a {Poisson} distribution},
+	volume = {51},
+	url = {https://www.jstor.org/stable/2532959},
+	doi = {10.2307/2532959},
+	abstract = {When analyzing Poisson-count data sometimes a lot of zeros are observed. When there are too many zeros a zero-inflated Poisson distribution can be used. A score...},
+	language = {en},
+	number = {2},
+	urldate = {2020-11-08},
+	journal = {Biometrics},
+	author = {van den Broek, Jan},
+	month = jun,
+	year = {1995},
+	pages = {738--743},
+	file = {Snapshot:/Users/richshefferson/Zotero/storage/RQD5KTGT/2532959.html:text/html}
 }

@@ -76,38 +76,41 @@ arma::mat ovreplace(arma::vec allst321, arma::vec idx321old, arma::vec idx321new
 //' in Cartesian space.
 //' @param juvcol Column number that marks individuals in immature stages within
 //' the dataset.
-//' @param size1col Column number corresponding to the first or main size variable 
+//' @param sizeacol Column number corresponding to the first or main size variable 
 //' associated with the first year or observation time in the dataset.
-//' @param size2col Column number corresponding to the second size variable
+//' @param sizebcol Column number corresponding to the second size variable
 //' associated with the first year or observation time in the dataset.
-//' @param size3col Column number corresponding to the third size variable
+//' @param sizeccol Column number corresponding to the third size variable
 //' associated with the first year or observation time in the dataset.
-//' @param repstr1col Column number corresponding to the main variable coding the
+//' @param repstracol Column number corresponding to the main variable coding the
 //' production of reproductive structures associated with the first year or 
 //' observation period in the input dataset.
-//' @param repstr2col Column number corresponding to a secone variable coding the
+//' @param repstrbcol Column number corresponding to a secone variable coding the
 //' production of reproductive structures associated with the first year or 
 //' observation period in the input dataset.
-//' @param fec1col Column number corresponding to the main variable coding for
+//' @param fecacol Column number corresponding to the main variable coding for
 //' fecundity associated with the first year or observation period in the dataset.
-//' @param fec2col Column number corresponding to a second variable coding for
+//' @param fecbcol Column number corresponding to a second variable coding for
 //' fecundity associated with the first year or observation period in the dataset.
-//' @param alive1col Column number that details whether an individual is alive at
+//' @param indcovacol Column number corresponding to an individual covariate.
+//' @param indcovbcol Column number corresponding to an individual covariate.
+//' @param indcovccol Column number corresponding to an individual covariate.
+//' @param aliveacol Column number that details whether an individual is alive at
 //' a given time.
-//' @param dead1col Column number that details whether an individual is dead at
+//' @param deadacol Column number that details whether an individual is dead at
 //' a given time.
-//' @param obs1col Column number that details whether an individual is in an
+//' @param obsacol Column number that details whether an individual is in an
 //' observable stage at a given time.
-//' @param nonobs1col Column number that details whether an individual is in an
+//' @param nonobsacol Column number that details whether an individual is in an
 //' unobservable stage at a given time.
 //' @param censorcol Column number corresponding to the first entry of a censor 
 //' variable.
 //' @param stagecol Column number corresponding to the first entry of a column
 //' designating stages.
 //' @param repstrrel This is a scalar modifier for that makes the variable in
-//' \code{repstr2col} equivalent to \code{repstr1col}.
+//' \code{repstrbcol} equivalent to \code{repstracol}.
 //' @param fecrel This is a scalar modifier for that makes the variable in
-//' \code{fec2col} equivalent to \code{fec1col}.
+//' \code{fecbcol} equivalent to \code{fecacol}.
 //' @param NAas0 If TRUE, then all NA entries for size and fecundity variables
 //' will be set to 0.
 //' @param NRasRep If TRUE, then will treat non-reproductive but mature
@@ -127,12 +130,12 @@ arma::mat ovreplace(arma::vec allst321, arma::vec idx321old, arma::vec idx321new
 //' @keywords internal
 //' @noRd
 // [[Rcpp::export]]
-List pfj(DataFrame data, DataFrame stageframe, int noyears, int firstyear, int popidcol, 
-         int patchidcol, int individcol, int blocksize, int xcol, int ycol, int juvcol, 
-         int size1col, int size2col, int size3col, int repstr1col, int repstr2col, 
-         int fec1col, int fec2col, int alive1col, int dead1col, int obs1col, 
-         int nonobs1col, int censorcol, int stagecol, double repstrrel, double fecrel,
-         bool NAas0, bool NRasRep, bool stassign, int stszcol, bool censbool) {
+Rcpp::List pfj(DataFrame data, DataFrame stageframe, int noyears, int firstyear, int popidcol, 
+               int patchidcol, int individcol, int blocksize, int xcol, int ycol, int juvcol, 
+               int sizeacol, int sizebcol, int sizeccol, int repstracol, int repstrbcol, 
+               int fecacol, int fecbcol, int indcovacol, int indcovbcol, int indcovccol, int aliveacol, 
+               int deadacol, int obsacol, int nonobsacol, int censorcol, int stagecol, double repstrrel, 
+               double fecrel, bool NAas0, bool NRasRep, bool stassign, int stszcol, bool censbool) {
   
   int noindivs = data.nrows();
   
@@ -177,13 +180,13 @@ List pfj(DataFrame data, DataFrame stageframe, int noyears, int firstyear, int p
   arma::uvec instages = find(indataset == 1);
   int instagenum = instages.n_elem;
   
-  arma::uvec stageid(stagenum);
-  arma::uvec instageid(instagenum);
-  arma::vec insfszminarma(instagenum);
-  arma::vec insfszmaxarma(instagenum);
-  arma::vec inrepstatarma(instagenum);
-  arma::vec inobsstatarma(instagenum);
-  arma::vec inmatstatarma(instagenum);
+  arma::uvec stageid (stagenum);
+  arma::uvec instageid (instagenum);
+  arma::vec insfszminarma (instagenum);
+  arma::vec insfszmaxarma (instagenum);
+  arma::vec inrepstatarma (instagenum);
+  arma::vec inobsstatarma (instagenum);
+  arma::vec inmatstatarma (instagenum);
   
   int inplace {0};
   for (int i = 0; i < stagenum; i++) {
@@ -207,12 +210,14 @@ List pfj(DataFrame data, DataFrame stageframe, int noyears, int firstyear, int p
   Rcpp::StringVector stage1x (noindivs);
   Rcpp::StringVector stage2x (noindivs);
   Rcpp::StringVector stage3x (noindivs);
+  
   Rcpp::NumericVector xpos1x (noindivs);
   Rcpp::NumericVector ypos1x (noindivs);
   Rcpp::NumericVector xpos2x (noindivs);
   Rcpp::NumericVector ypos2x (noindivs);
   Rcpp::NumericVector xpos3x (noindivs);
   Rcpp::NumericVector ypos3x (noindivs);
+  
   Rcpp::NumericVector sizea1x (noindivs);
   Rcpp::NumericVector sizea2x (noindivs);
   Rcpp::NumericVector sizea3x (noindivs);
@@ -234,6 +239,17 @@ List pfj(DataFrame data, DataFrame stageframe, int noyears, int firstyear, int p
   Rcpp::NumericVector sizec1x (noindivs);
   Rcpp::NumericVector sizec2x (noindivs);
   Rcpp::NumericVector sizec3x (noindivs);
+  
+  Rcpp::NumericVector indcova1x (noindivs);
+  Rcpp::NumericVector indcova2x (noindivs);
+  Rcpp::NumericVector indcova3x (noindivs);
+  Rcpp::NumericVector indcovb1x (noindivs);
+  Rcpp::NumericVector indcovb2x (noindivs);
+  Rcpp::NumericVector indcovb3x (noindivs);
+  Rcpp::NumericVector indcovc1x (noindivs);
+  Rcpp::NumericVector indcovc2x (noindivs);
+  Rcpp::NumericVector indcovc3x (noindivs);
+  
   Rcpp::NumericVector censor1x (noindivs);
   Rcpp::NumericVector censor2x (noindivs);
   Rcpp::NumericVector censor3x (noindivs);
@@ -314,10 +330,20 @@ List pfj(DataFrame data, DataFrame stageframe, int noyears, int firstyear, int p
   Rcpp::NumericVector feca30 (ndflength);
   Rcpp::NumericVector fecb1 (ndflength);
   Rcpp::NumericVector fecb2 (ndflength);
-  Rcpp::NumericVector fecb3  (ndflength);
+  Rcpp::NumericVector fecb3 (ndflength);
   Rcpp::NumericVector fecb10 (ndflength);
   Rcpp::NumericVector fecb20 (ndflength);
-  Rcpp::NumericVector fecb30  (ndflength);
+  Rcpp::NumericVector fecb30 (ndflength);
+  
+  Rcpp::NumericVector indcova1 (ndflength);
+  Rcpp::NumericVector indcova2 (ndflength);
+  Rcpp::NumericVector indcova3 (ndflength);
+  Rcpp::NumericVector indcovb1 (ndflength);
+  Rcpp::NumericVector indcovb2 (ndflength);
+  Rcpp::NumericVector indcovb3 (ndflength);
+  Rcpp::NumericVector indcovc1 (ndflength);
+  Rcpp::NumericVector indcovc2 (ndflength);
+  Rcpp::NumericVector indcovc3 (ndflength);
   
   Rcpp::NumericVector censor1 (ndflength);
   Rcpp::NumericVector censor2 (ndflength);
@@ -392,11 +418,11 @@ List pfj(DataFrame data, DataFrame stageframe, int noyears, int firstyear, int p
     lastseenx[i] = 0;
     
     for (int k = 0; k < noyears; k++) {
-      temp1 = data[size1col + (k * blocksize)];
-      if (size2col != -1 ) {temp2 = data[size2col + (k * blocksize)];} else {temp2 = zerovec;}
-      if (size3col != -1 ) {temp3 = data[size3col + (k * blocksize)];} else {temp3 = zerovec;}
-      if (repstr1col != -1 ) {temp4 = data[repstr1col + (k * blocksize)];} else {temp4 = zerovec;}
-      if (repstr2col != -1 ) {temp5 = data[repstr2col + (k * blocksize)];} else {temp5 = zerovec;}
+      temp1 = data[sizeacol + (k * blocksize)];
+      if (sizebcol != -1 ) {temp2 = data[sizebcol + (k * blocksize)];} else {temp2 = zerovec;}
+      if (sizeccol != -1 ) {temp3 = data[sizeccol + (k * blocksize)];} else {temp3 = zerovec;}
+      if (repstracol != -1 ) {temp4 = data[repstracol + (k * blocksize)];} else {temp4 = zerovec;}
+      if (repstrbcol != -1 ) {temp5 = data[repstrbcol + (k * blocksize)];} else {temp5 = zerovec;}
       
       if (NumericVector::is_na(temp1[i])) {temp1[i] = 0;}
       if (NumericVector::is_na(temp2[i])) {temp2[i] = 0;}
@@ -439,8 +465,8 @@ List pfj(DataFrame data, DataFrame stageframe, int noyears, int firstyear, int p
     if (j == 0) {
       
       sizea1x = zerovec;
-      sizea2x = data[size1col];
-      sizea3x = data[size1col + blocksize];
+      sizea2x = data[sizeacol];
+      sizea3x = data[sizeacol + blocksize];
       
       if (stagecol > -1) {
         stage1x.fill("NotAlive");
@@ -460,40 +486,58 @@ List pfj(DataFrame data, DataFrame stageframe, int noyears, int firstyear, int p
         ypos3x = data[ycol + blocksize];
       }
       
-      if (repstr1col > -1) {
+      if (repstracol > -1) {
         repstra1x = zerovec;
-        repstra2x = data[repstr1col];
-        repstra3x = data[repstr1col + blocksize];
+        repstra2x = data[repstracol];
+        repstra3x = data[repstracol + blocksize];
       }
       
-      if (fec1col > -1) {
+      if (fecacol > -1) {
         feca1x = zerovec;
-        feca2x = data[fec1col];
-        feca3x = data[fec1col + blocksize];
+        feca2x = data[fecacol];
+        feca3x = data[fecacol + blocksize];
       }
       
-      if (size2col > -1) {
+      if (sizebcol > -1) {
         sizeb1x = zerovec;
-        sizeb2x = data[size2col];
-        sizeb3x = data[size2col + blocksize];
+        sizeb2x = data[sizebcol];
+        sizeb3x = data[sizebcol + blocksize];
       }
       
-      if (repstr2col > -1) {
+      if (repstrbcol > -1) {
         repstrb1x = zerovec;
-        repstrb2x = data[repstr2col];
-        repstrb3x = data[repstr2col + blocksize];
+        repstrb2x = data[repstrbcol];
+        repstrb3x = data[repstrbcol + blocksize];
       }
       
-      if (fec2col > -1) {
+      if (fecbcol > -1) {
         fecb1x = zerovec;
-        fecb2x = data[fec2col];
-        fecb3x = data[fec2col + blocksize];
+        fecb2x = data[fecbcol];
+        fecb3x = data[fecbcol + blocksize];
       }
       
-      if (size3col > -1) {
+      if (sizeccol > -1) {
         sizec1x = zerovec;
-        sizec2x = data[size3col];
-        sizec3x = data[size3col + blocksize];
+        sizec2x = data[sizeccol];
+        sizec3x = data[sizeccol + blocksize];
+      }
+      
+      if (indcovacol > -1) {
+        indcova1x = zerovec;
+        indcova2x = data[indcovacol];
+        indcova3x = data[indcovacol + blocksize];
+      }
+      
+      if (indcovbcol > -1) {
+        indcovb1x = zerovec;
+        indcovb2x = data[indcovbcol];
+        indcovb3x = data[indcovbcol + blocksize];
+      }
+      
+      if (indcovccol > -1) {
+        indcovc1x = zerovec;
+        indcovc2x = data[indcovccol];
+        indcovc3x = data[indcovccol + blocksize];
       }
       
       if (censorcol > -1) {
@@ -502,28 +546,28 @@ List pfj(DataFrame data, DataFrame stageframe, int noyears, int firstyear, int p
         censor3x = data[censorcol + blocksize];
       }
       
-      if (alive1col > -1) {
+      if (aliveacol > -1) {
         alivegiven1x = zerovec;
-        alivegiven2x = data[alive1col];
-        alivegiven3x = data[alive1col + blocksize];
+        alivegiven2x = data[aliveacol];
+        alivegiven3x = data[aliveacol + blocksize];
       }
       
-      if (dead1col > -1) {
+      if (deadacol > -1) {
         deadgiven1x = zerovec;
-        deadgiven2x = data[dead1col];
-        deadgiven3x = data[dead1col + blocksize];
+        deadgiven2x = data[deadacol];
+        deadgiven3x = data[deadacol + blocksize];
       }
       
-      if (obs1col > -1) {
+      if (obsacol > -1) {
         obsgiven1x = zerovec;
-        obsgiven2x = data[obs1col];
-        obsgiven3x = data[obs1col + blocksize];
+        obsgiven2x = data[obsacol];
+        obsgiven3x = data[obsacol + blocksize];
       }
       
-      if (nonobs1col > -1) {
+      if (nonobsacol > -1) {
         nonobsgiven1x = negonevec;
-        nonobsgiven2x = data[nonobs1col];
-        nonobsgiven3x = data[nonobs1col + blocksize];
+        nonobsgiven2x = data[nonobsacol];
+        nonobsgiven3x = data[nonobsacol + blocksize];
       }
       
       if (juvcol > -1) {
@@ -533,9 +577,9 @@ List pfj(DataFrame data, DataFrame stageframe, int noyears, int firstyear, int p
       }
     } else {
       
-      sizea1x = data[size1col + ((j - 1) * blocksize)];
-      sizea2x = data[size1col + (j * blocksize)];
-      sizea3x = data[size1col + ((j + 1) * blocksize)];
+      sizea1x = data[sizeacol + ((j - 1) * blocksize)];
+      sizea2x = data[sizeacol + (j * blocksize)];
+      sizea3x = data[sizeacol + ((j + 1) * blocksize)];
       
       if (stagecol > -1) {
         stage1x = data[stagecol + ((j - 1) * blocksize)];
@@ -555,40 +599,58 @@ List pfj(DataFrame data, DataFrame stageframe, int noyears, int firstyear, int p
         ypos3x = data[ycol + ((j + 1) * blocksize)];
       }
       
-      if (repstr1col > -1) {
-        repstra1x = data[repstr1col + ((j - 1) * blocksize)];
-        repstra2x = data[repstr1col + (j * blocksize)];
-        repstra3x = data[repstr1col + ((j + 1) * blocksize)];
+      if (repstracol > -1) {
+        repstra1x = data[repstracol + ((j - 1) * blocksize)];
+        repstra2x = data[repstracol + (j * blocksize)];
+        repstra3x = data[repstracol + ((j + 1) * blocksize)];
       }
       
-      if (fec1col > -1) {
-        feca1x = data[fec1col + ((j - 1) * blocksize)];
-        feca2x = data[fec1col + (j * blocksize)];
-        feca3x = data[fec1col + ((j + 1) * blocksize)];
+      if (fecacol > -1) {
+        feca1x = data[fecacol + ((j - 1) * blocksize)];
+        feca2x = data[fecacol + (j * blocksize)];
+        feca3x = data[fecacol + ((j + 1) * blocksize)];
       }
       
-      if (size2col > -1) {
-        sizeb1x = data[size2col + ((j - 1) * blocksize)];
-        sizeb2x = data[size2col + (j * blocksize)];
-        sizeb3x = data[size2col + ((j + 1) * blocksize)];
+      if (sizebcol > -1) {
+        sizeb1x = data[sizebcol + ((j - 1) * blocksize)];
+        sizeb2x = data[sizebcol + (j * blocksize)];
+        sizeb3x = data[sizebcol + ((j + 1) * blocksize)];
       }
       
-      if (repstr2col > -1) {
-        repstrb1x = data[repstr2col + ((j - 1) * blocksize)];
-        repstrb2x = data[repstr2col + (j * blocksize)];
-        repstrb3x = data[repstr2col + ((j + 1) * blocksize)];
+      if (repstrbcol > -1) {
+        repstrb1x = data[repstrbcol + ((j - 1) * blocksize)];
+        repstrb2x = data[repstrbcol + (j * blocksize)];
+        repstrb3x = data[repstrbcol + ((j + 1) * blocksize)];
       }
       
-      if (fec2col > -1) {
-        fecb1x = data[fec2col + ((j - 1) * blocksize)];
-        fecb2x = data[fec2col + (j * blocksize)];
-        fecb3x = data[fec2col + ((j + 1) * blocksize)];
+      if (fecbcol > -1) {
+        fecb1x = data[fecbcol + ((j - 1) * blocksize)];
+        fecb2x = data[fecbcol + (j * blocksize)];
+        fecb3x = data[fecbcol + ((j + 1) * blocksize)];
       }
       
-      if (size3col > -1) {
-        sizec1x = data[size3col + ((j - 1) * blocksize)];
-        sizec2x = data[size3col + (j * blocksize)];
-        sizec3x = data[size3col + ((j + 1) * blocksize)];
+      if (sizeccol > -1) {
+        sizec1x = data[sizeccol + ((j - 1) * blocksize)];
+        sizec2x = data[sizeccol + (j * blocksize)];
+        sizec3x = data[sizeccol + ((j + 1) * blocksize)];
+      }
+      
+      if (indcovacol > -1) {
+        indcova1x = data[indcovacol + ((j - 1) * blocksize)];
+        indcova2x = data[indcovacol + (j * blocksize)];
+        indcova3x = data[indcovacol + ((j + 1) * blocksize)];
+      }
+      
+      if (indcovbcol > -1) {
+        indcovb1x = data[indcovbcol + ((j - 1) * blocksize)];
+        indcovb2x = data[indcovbcol + (j * blocksize)];
+        indcovb3x = data[indcovbcol + ((j + 1) * blocksize)];
+      }
+      
+      if (indcovccol > -1) {
+        indcovc1x = data[indcovccol + ((j - 1) * blocksize)];
+        indcovc2x = data[indcovccol + (j * blocksize)];
+        indcovc3x = data[indcovccol + ((j + 1) * blocksize)];
       }
       
       if (censorcol > -1) {
@@ -597,28 +659,28 @@ List pfj(DataFrame data, DataFrame stageframe, int noyears, int firstyear, int p
         censor3x = data[censorcol + ((j + 1) * blocksize)];
       }
       
-      if (alive1col > -1) {
-        alivegiven1x = data[alive1col + ((j - 1) * blocksize)];
-        alivegiven2x = data[alive1col + (j * blocksize)];
-        alivegiven3x = data[alive1col + ((j + 1) * blocksize)];
+      if (aliveacol > -1) {
+        alivegiven1x = data[aliveacol + ((j - 1) * blocksize)];
+        alivegiven2x = data[aliveacol + (j * blocksize)];
+        alivegiven3x = data[aliveacol + ((j + 1) * blocksize)];
       }
       
-      if (dead1col > -1) {
-        deadgiven1x = data[dead1col + ((j - 1) * blocksize)];
-        deadgiven2x = data[dead1col + (j * blocksize)];
-        deadgiven3x = data[dead1col + ((j + 1) * blocksize)];
+      if (deadacol > -1) {
+        deadgiven1x = data[deadacol + ((j - 1) * blocksize)];
+        deadgiven2x = data[deadacol + (j * blocksize)];
+        deadgiven3x = data[deadacol + ((j + 1) * blocksize)];
       }
       
-      if (obs1col > -1) {
-        obsgiven1x = data[obs1col + ((j - 1) * blocksize)];
-        obsgiven2x = data[obs1col + (j * blocksize)];
-        obsgiven3x = data[obs1col + ((j + 1) * blocksize)];
+      if (obsacol > -1) {
+        obsgiven1x = data[obsacol + ((j - 1) * blocksize)];
+        obsgiven2x = data[obsacol + (j * blocksize)];
+        obsgiven3x = data[obsacol + ((j + 1) * blocksize)];
       }
       
-      if (nonobs1col > -1) {
-        nonobsgiven1x = data[nonobs1col + ((j - 1) * blocksize)];
-        nonobsgiven2x = data[nonobs1col + (j * blocksize)];
-        nonobsgiven3x = data[nonobs1col + ((j + 1) * blocksize)];
+      if (nonobsacol > -1) {
+        nonobsgiven1x = data[nonobsacol + ((j - 1) * blocksize)];
+        nonobsgiven2x = data[nonobsacol + (j * blocksize)];
+        nonobsgiven3x = data[nonobsacol + ((j + 1) * blocksize)];
       }
       
       if (juvcol > -1) {
@@ -693,6 +755,16 @@ List pfj(DataFrame data, DataFrame stageframe, int noyears, int firstyear, int p
       fecb10[(i + (j * noindivs))] = fecb1x[i];
       fecb20[(i + (j * noindivs))] = fecb2x[i];
       fecb30[(i + (j * noindivs))] = fecb3x[i];
+      
+      indcova1[(i + (j * noindivs))] = indcova1x[i];
+      indcova2[(i + (j * noindivs))] = indcova2x[i];
+      indcova3[(i + (j * noindivs))] = indcova3x[i];
+      indcovb1[(i + (j * noindivs))] = indcovb1x[i];
+      indcovb2[(i + (j * noindivs))] = indcovb2x[i];
+      indcovb3[(i + (j * noindivs))] = indcovb3x[i];
+      indcovc1[(i + (j * noindivs))] = indcovc1x[i];
+      indcovc2[(i + (j * noindivs))] = indcovc2x[i];
+      indcovc3[(i + (j * noindivs))] = indcovc3x[i];
       
       if (stagecol > -1) {
         stage1[(i + (j * noindivs))] = stage1x[i];
@@ -769,6 +841,16 @@ List pfj(DataFrame data, DataFrame stageframe, int noyears, int firstyear, int p
       if (NumericVector::is_na(fecb10[(i + (j * noindivs))])) fecb10[(i + (j * noindivs))] = 0;
       if (NumericVector::is_na(fecb20[(i + (j * noindivs))])) fecb20[(i + (j * noindivs))] = 0;
       if (NumericVector::is_na(fecb30[(i + (j * noindivs))])) fecb30[(i + (j * noindivs))] = 0;
+      
+      if (NumericVector::is_na(indcova1[(i + (j * noindivs))])) indcova1[(i + (j * noindivs))] = 0;
+      if (NumericVector::is_na(indcova2[(i + (j * noindivs))])) indcova2[(i + (j * noindivs))] = 0;
+      if (NumericVector::is_na(indcova3[(i + (j * noindivs))])) indcova3[(i + (j * noindivs))] = 0;
+      if (NumericVector::is_na(indcovb1[(i + (j * noindivs))])) indcovb1[(i + (j * noindivs))] = 0;
+      if (NumericVector::is_na(indcovb2[(i + (j * noindivs))])) indcovb2[(i + (j * noindivs))] = 0;
+      if (NumericVector::is_na(indcovb3[(i + (j * noindivs))])) indcovb3[(i + (j * noindivs))] = 0;
+      if (NumericVector::is_na(indcovc1[(i + (j * noindivs))])) indcovc1[(i + (j * noindivs))] = 0;
+      if (NumericVector::is_na(indcovc2[(i + (j * noindivs))])) indcovc2[(i + (j * noindivs))] = 0;
+      if (NumericVector::is_na(indcovc3[(i + (j * noindivs))])) indcovc3[(i + (j * noindivs))] = 0;
       
       if (NumericVector::is_na(juvgiven1[(i + (j * noindivs))])) {
         juvgiven1[(i + (j * noindivs))] = 0;
@@ -1051,9 +1133,10 @@ List pfj(DataFrame data, DataFrame stageframe, int noyears, int firstyear, int p
   
   Rcpp::DataFrame df1 = DataFrame::create(Named("xpos1") = xpos1, _["ypos1"] = ypos1, _["sizea1"] = sizea1,
                                           _["sizeb1"] = sizeb1, _["sizec1"] = sizec1, _["sizeadded1"] = addedsize1,
-                                            _["repstra1"] = repstra1, _["repstrb1"] = repstrb1, _["repstradded1"] = addedrepstr1,
-                                              _["feca1"] = feca1, _["fecb1"] = fecb1, _["fecadded1"] = addedfec1,
-                                                _["censor1"] = censor1, _["juvgiven1"] = juvgiven1);
+                                          _["repstra1"] = repstra1, _["repstrb1"] = repstrb1, _["repstradded1"] = addedrepstr1,
+                                          _["feca1"] = feca1, _["fecb1"] = fecb1, _["fecadded1"] = addedfec1,
+                                          _["indcova1"] = indcova1, _["indcovb1"] = indcovb1, _["indcovc1"] = indcovc1,
+                                          _["censor1"] = censor1, _["juvgiven1"] = juvgiven1);
   
   Rcpp::DataFrame df1a = DataFrame::create(Named("obsstatus1") = spryn1, _["repstatus1"] = repyn1, _["fecstatus1"] = fecyn1,
                                            _["matstatus1"] = matstat1, _["alive1"] = alive1, _["stage1"] = stage1,
@@ -1061,9 +1144,10 @@ List pfj(DataFrame data, DataFrame stageframe, int noyears, int firstyear, int p
   
   Rcpp::DataFrame df2 = DataFrame::create(Named("xpos2") = xpos2,  _["ypos2"] = ypos2,  _["sizea2"] = sizea2,
                                           _["sizeb2"] = sizeb2, _["sizec2"] = sizec2, _["sizeadded2"] = addedsize2,
-                                            _["repstra2"] = repstra2, _["repstrb2"] = repstrb2, _["repstradded2"] = addedrepstr2,
-                                              _["feca2"] = feca2, _["fecb2"] = fecb2, _["fecadded2"] = addedfec2,
-                                                _["censor2"] = censor2, _["juvgiven2"] = juvgiven2);
+                                          _["repstra2"] = repstra2, _["repstrb2"] = repstrb2, _["repstradded2"] = addedrepstr2,
+                                          _["feca2"] = feca2, _["fecb2"] = fecb2, _["fecadded2"] = addedfec2,
+                                          _["indcova2"] = indcova2, _["indcovb2"] = indcovb2, _["indcovc2"] = indcovc2,
+                                          _["censor2"] = censor2, _["juvgiven2"] = juvgiven2);
   
   Rcpp::DataFrame df2a = DataFrame::create(Named("obsstatus2") = spryn2, _["repstatus2"] = repyn2, _["fecstatus2"] = fecyn2,
                                            _["matstatus2"] = matstat2, _["alive2"] = alive2, _["stage2"] = stage2,
@@ -1071,9 +1155,10 @@ List pfj(DataFrame data, DataFrame stageframe, int noyears, int firstyear, int p
   
   Rcpp::DataFrame df3 = DataFrame::create(Named("xpos3") = xpos3, _["ypos3"] = ypos3, _["sizea3"] = sizea3, 
                                           _["sizeb3"] = sizeb3, _["sizec3"] = sizec3, _["sizeadded3"] = addedsize3,
-                                            _["repstra3"] = repstra3, _["repstrb3"] = repstrb3, _["repstradded3"] = addedrepstr3,
-                                              _["feca3"] = feca3, _["fecb3"] = fecb3, _["fecadded3"] = addedfec3,
-                                                _["censor3"] = censor3, _["juvgiven3"] = juvgiven3);
+                                          _["repstra3"] = repstra3, _["repstrb3"] = repstrb3, _["repstradded3"] = addedrepstr3,
+                                          _["feca3"] = feca3, _["fecb3"] = fecb3, _["fecadded3"] = addedfec3,
+                                          _["indcova3"] = indcova3, _["indcovb3"] = indcovb3, _["indcovc3"] = indcovc3,
+                                          _["censor3"] = censor3, _["juvgiven3"] = juvgiven3);
   
   Rcpp::DataFrame df3a = DataFrame::create(Named("obsstatus3") = spryn3, _["repstatus3"] = repyn3, _["fecstatus3"] = fecyn3,
                                            _["matstatus3"] = matstat3, _["alive3"] = alive3, _["stage3"] = stage3,
@@ -1134,6 +1219,18 @@ List pfj(DataFrame data, DataFrame stageframe, int noyears, int firstyear, int p
 //' fecundity in time \emph{t}.
 //' @param fecb3col Column number corresponding to a second variable coding for
 //' fecundity in time \emph{t}+1.
+//' @param indcova2col Column number corresponding to an individual covariate
+//' in time \emph{t}.
+//' @param indcova3col Column number corresponding to an individual covariate
+//' in time \emph{t}+1.
+//' @param indcovb2col Column number corresponding to an individual covariate
+//' in time \emph{t}.
+//' @param indcovb3col Column number corresponding to an individual covariate
+//' in time \emph{t}+1.
+//' @param indcovc2col Column number corresponding to an individual covariate
+//' in time \emph{t}.
+//' @param indcovc3col Column number corresponding to an individual covariate
+//' in time \emph{t}+1.
 //' @param alive2col Column number detailing whether an individual is alive in 
 //' time \emph{t}.
 //' @param alive3col Column number detailing whether an individual is alive in 
@@ -1174,14 +1271,15 @@ List pfj(DataFrame data, DataFrame stageframe, int noyears, int firstyear, int p
 //' @keywords internal
 //' @noRd
 // [[Rcpp::export]]
-Rcpp::List jpf(DataFrame data, DataFrame stageframe, int popidcol, 
-               int patchidcol, int individcol, int year2col, int year3col, int xcol, int ycol,
-               int juv2col, int juv3col, int sizea2col, int sizea3col, int sizeb2col, int sizeb3col,
-               int sizec2col, int sizec3col, int repstra2col, int repstra3col, int repstrb2col,
-               int repstrb3col, int feca2col, int feca3col, int fecb2col, int fecb3col, int alive2col,
-               int alive3col, int dead2col, int dead3col, int obs2col, int obs3col, int nonobs2col,
-               int nonobs3col, double repstrrel, double fecrel, int stage2col, int stage3col, 
-               int censorcol, bool NAas0, bool NRasRep, bool stassign, int stszcol, bool censbool) {
+Rcpp::List jpf(DataFrame data, DataFrame stageframe, int popidcol, int patchidcol, int individcol, 
+               int year2col, int year3col, int xcol, int ycol, int juv2col, int juv3col, int sizea2col, 
+               int sizea3col, int sizeb2col, int sizeb3col, int sizec2col, int sizec3col, int repstra2col, 
+               int repstra3col, int repstrb2col, int repstrb3col, int feca2col, int feca3col, int fecb2col, 
+               int fecb3col, int indcova2col, int indcova3col, int indcovb2col, int indcovb3col,
+               int indcovc2col, int indcovc3col, int alive2col, int alive3col, int dead2col, int dead3col,
+               int obs2col, int obs3col, int nonobs2col, int nonobs3col, double repstrrel, double fecrel, 
+               int stage2col, int stage3col, int censorcol, bool NAas0, bool NRasRep, bool stassign, 
+               int stszcol, bool censbool) {
   
   int norows = data.nrows(); // The number of data points in the demographic dataset
   
@@ -1205,8 +1303,6 @@ Rcpp::List jpf(DataFrame data, DataFrame stageframe, int popidcol,
   
   int ndflength = noyears * noindivs; // This is the initial length of the final vertical dataset with all year x indiv combos
   int currentyear {0};
-  // int prevyear {0};
-  // int nextyear {0};
   int currentindiv {-1};
   int ndfindex {0};
   int prevyrindex {0};
@@ -1279,6 +1375,14 @@ Rcpp::List jpf(DataFrame data, DataFrame stageframe, int popidcol,
   Rcpp::NumericVector fecb3x (norows);
   Rcpp::NumericVector sizec2x (norows);
   Rcpp::NumericVector sizec3x (norows);
+  
+  Rcpp::NumericVector indcova2x (norows);
+  Rcpp::NumericVector indcova3x (norows);
+  Rcpp::NumericVector indcovb2x (norows);
+  Rcpp::NumericVector indcovb3x (norows);
+  Rcpp::NumericVector indcovc2x (norows);
+  Rcpp::NumericVector indcovc3x (norows);
+  
   Rcpp::NumericVector censor2x (norows);
   Rcpp::NumericVector censor3x (norows);
   Rcpp::NumericVector alivegiven2x (norows);
@@ -1331,6 +1435,14 @@ Rcpp::List jpf(DataFrame data, DataFrame stageframe, int popidcol,
   if (repstrb2col != -1) {repstrb2x = data[repstrb2col];} else {repstrb2x = zerovec;}
   if (feca2col != -1) {feca2x = data[feca2col];} else {feca2x = zerovec;}
   if (fecb2col != -1) {fecb2x = data[fecb2col];} else {fecb2x = zerovec;}
+  
+  if (indcova2col != -1) {indcova2x = data[indcova2col];} else {indcova2x = zerovec;}
+  if (indcova3col != -1) {indcova3x = data[indcova3col];} else {indcova3x = zerovec;}
+  if (indcovb2col != -1) {indcovb2x = data[indcovb2col];} else {indcovb2x = zerovec;}
+  if (indcovb3col != -1) {indcovb3x = data[indcovb3col];} else {indcovb3x = zerovec;}
+  if (indcovc2col != -1) {indcovc2x = data[indcovc2col];} else {indcovc2x = zerovec;}
+  if (indcovc3col != -1) {indcovc3x = data[indcovc3col];} else {indcovc3x = zerovec;}
+  
   if (juv2col != -1) {juvgiven2x = data[juv2col];} else {juvgiven2x = zerovec;}
   if (obs2col != -1) {obsgiven2x = data[obs2col];} else {obsgiven2x.fill(-1);} //Set to -1 to make nonobs vs dead designation easier
   if (nonobs2col != -1) {nonobsgiven2x = data[nonobs2col];} else {nonobsgiven2x.fill(-1);}
@@ -1373,11 +1485,17 @@ Rcpp::List jpf(DataFrame data, DataFrame stageframe, int popidcol,
   Rcpp::NumericVector feca2 (ndflength);
   Rcpp::NumericVector fecb2 (ndflength);
   Rcpp::NumericVector fecadded2 (ndflength);
+  
+  Rcpp::NumericVector indcova2 (ndflength);
+  Rcpp::NumericVector indcovb2 (ndflength);
+  Rcpp::NumericVector indcovc2 (ndflength);
+  
   Rcpp::NumericVector repstatus2 (ndflength);
   Rcpp::NumericVector fecstatus2 (ndflength);
   Rcpp::NumericVector obsstatus2 (ndflength);
   Rcpp::NumericVector juvgiven2 (ndflength);
   Rcpp::NumericVector matstat2 (ndflength);
+  
   censor2.fill(0);
   xpos2.fill(0);
   ypos2.fill(0);
@@ -1391,6 +1509,9 @@ Rcpp::List jpf(DataFrame data, DataFrame stageframe, int popidcol,
   feca2.fill(0);
   fecb2.fill(0);
   fecadded2.fill(0);
+  indcova2.fill(0);
+  indcovb2.fill(0);
+  indcovc2.fill(0);
   repstatus2.fill(0);
   fecstatus2.fill(0);
   obsstatus2.fill(0);
@@ -1410,11 +1531,17 @@ Rcpp::List jpf(DataFrame data, DataFrame stageframe, int popidcol,
   Rcpp::NumericVector feca3 (ndflength);
   Rcpp::NumericVector fecb3 (ndflength);
   Rcpp::NumericVector fecadded3 (ndflength);
+  
+  Rcpp::NumericVector indcova3 (ndflength);
+  Rcpp::NumericVector indcovb3 (ndflength);
+  Rcpp::NumericVector indcovc3 (ndflength);
+  
   Rcpp::NumericVector repstatus3 (ndflength);
   Rcpp::NumericVector fecstatus3 (ndflength);
   Rcpp::NumericVector obsstatus3 (ndflength);
   Rcpp::NumericVector juvgiven3 (ndflength);
   Rcpp::NumericVector matstat3 (ndflength);
+  
   censor3.fill(0);
   xpos3.fill(0);
   ypos3.fill(0);
@@ -1428,6 +1555,9 @@ Rcpp::List jpf(DataFrame data, DataFrame stageframe, int popidcol,
   feca3.fill(0);
   fecb3.fill(0);
   fecadded3.fill(0);
+  indcova3.fill(0);
+  indcovb3.fill(0);
+  indcovc3.fill(0);
   repstatus3.fill(0);
   fecstatus3.fill(0);
   obsstatus3.fill(0);
@@ -1447,11 +1577,17 @@ Rcpp::List jpf(DataFrame data, DataFrame stageframe, int popidcol,
   Rcpp::NumericVector feca1 (ndflength);
   Rcpp::NumericVector fecb1 (ndflength);
   Rcpp::NumericVector fecadded1 (ndflength);
+  
+  Rcpp::NumericVector indcova1 (ndflength);
+  Rcpp::NumericVector indcovb1 (ndflength);
+  Rcpp::NumericVector indcovc1 (ndflength);
+  
   Rcpp::NumericVector repstatus1 (ndflength);
   Rcpp::NumericVector fecstatus1 (ndflength);
   Rcpp::NumericVector obsstatus1 (ndflength);
   Rcpp::NumericVector juvgiven1 (ndflength);
   Rcpp::NumericVector matstat1 (ndflength);
+  
   censor1.fill(0);
   xpos1.fill(0);
   ypos1.fill(0);
@@ -1465,6 +1601,9 @@ Rcpp::List jpf(DataFrame data, DataFrame stageframe, int popidcol,
   feca1.fill(0);
   fecb1.fill(0);
   fecadded1.fill(0);
+  indcova1.fill(0);
+  indcovb1.fill(0);
+  indcovc1.fill(0);
   repstatus1.fill(0);
   fecstatus1.fill(0);
   obsstatus1.fill(0);
@@ -1514,8 +1653,6 @@ Rcpp::List jpf(DataFrame data, DataFrame stageframe, int popidcol,
     for (int j = 0; j < noyears; j++) {
       if (year2x[i] == yearall2x[j]) currentyear = j;
     }
-    // nextyear = currentyear + 1;
-    // prevyear = currentyear - 1;
     
     currentindiv = -1;
     for (int k = 0; k < noindivs; k++) {
@@ -1588,6 +1725,10 @@ Rcpp::List jpf(DataFrame data, DataFrame stageframe, int popidcol,
     feca2[ndfindex] = feca2x[i];
     fecb2[ndfindex] = fecb2x[i];
     fecadded2[ndfindex] = feca20x[i] + (fecb20x[i] * fecrel);
+    
+    indcova2[ndfindex] = indcova2x[i];
+    indcovb2[ndfindex] = indcovb2x[i];
+    indcovc2[ndfindex] = indcovc2x[i];
     
     if (repstradded2[ndfindex] > 0) {repstatus2[ndfindex] = 1;} else {repstatus2[ndfindex] = 0;}
     if (NumericVector::is_na(obsgiven2x[i])) {
@@ -1704,6 +1845,17 @@ Rcpp::List jpf(DataFrame data, DataFrame stageframe, int popidcol,
       if (fecadded3[ndfindex] > 0) {fecstatus3[ndfindex] = 1;}
       
       if (repstradded3[ndfindex] > 0) {repstatus3[ndfindex] = 1;} else {repstatus3[ndfindex] = 0;}
+      
+      if (indcova3col != -1) {
+        indcova3[ndfindex] = indcova3x[i];
+      }
+      if (indcovb3col != -1) {
+        indcovb3[ndfindex] = indcovb3x[i];
+      }
+      if (indcovc3col != -1) {
+        indcovc3[ndfindex] = indcovc3x[i];
+      }
+      
       if (NumericVector::is_na(obsgiven3x[i])) {
         obsstatus3[ndfindex] = 0;
       } else if (obsgiven3x[i] > 0) {
@@ -1827,6 +1979,10 @@ Rcpp::List jpf(DataFrame data, DataFrame stageframe, int popidcol,
         fecb3[i] = fecb2[nextyrindex];
         fecadded3[i] = fecadded2[nextyrindex];
         
+        indcova3[i] = indcova2[nextyrindex];
+        indcovb3[i] = indcovb2[nextyrindex];
+        indcovc3[i] = indcovc2[nextyrindex];
+        
         if (fecadded3[i] > 0) {
           fecstatus3[i] = 1;
         } else {
@@ -1868,6 +2024,10 @@ Rcpp::List jpf(DataFrame data, DataFrame stageframe, int popidcol,
         feca1[i] = feca2[prevyrindex];
         fecb1[i] = fecb2[prevyrindex];
         fecadded1[i] = fecadded2[prevyrindex];
+        
+        indcova1[i] = indcova2[prevyrindex];
+        indcovb1[i] = indcovb2[prevyrindex];
+        indcovc1[i] = indcovc2[prevyrindex];
         
         if (fecadded1[i] > 0) {
           fecstatus1[i] = 1;
@@ -2024,33 +2184,36 @@ Rcpp::List jpf(DataFrame data, DataFrame stageframe, int popidcol,
   
   Rcpp::DataFrame df1 = DataFrame::create(Named("xpos1") = xpos1, _["ypos1"] = ypos1, _["sizea1"] = sizea1, 
                                           _["sizeb1"] = sizeb1, _["sizec1"] = sizec1, _["sizeadded1"] = sizeadded1, 
-                                            _["repstra1"] = repstra1, _["repstrb1"] = repstrb1, _["repstradded1"] = repstradded1, 
-                                              _["feca1"] = feca1, _["fecb1"] = fecb1, _["fecaadded1"] = fecadded1, 
-                                                _["censor1"] = censor1, _["juvgiven1"] = juvgiven1);
+                                          _["repstra1"] = repstra1, _["repstrb1"] = repstrb1, _["repstradded1"] = repstradded1, 
+                                          _["feca1"] = feca1, _["fecb1"] = fecb1, _["fecaadded1"] = fecadded1, 
+                                          _["indcova1"] = indcova1, _["indcovb1"] = indcovb1, _["indcovc1"] = indcovc1,
+                                          _["censor1"] = censor1, _["juvgiven1"] = juvgiven1);
   
   Rcpp::DataFrame df1a = DataFrame::create(Named("obsstatus1") = obsstatus1, _["repstatus1"] = repstatus1, 
                                            _["fecstatus1"] = fecstatus1, _["matstatus1"] = matstat1, _["alive1"] = alive1, 
-                                             _["stage1"] = stage1, _["stage1index"] = stage1num);
+                                           _["stage1"] = stage1, _["stage1index"] = stage1num);
   
   Rcpp::DataFrame df2 = DataFrame::create(Named("xpos2") = xpos2, _["ypos2"] = ypos2, _["sizea2"] = sizea2, 
                                           _["sizeb2"] = sizeb2, _["sizec2"] = sizec2, _["sizeadded2"] = sizeadded2, 
-                                            _["repstra2"] = repstra2, _["repstrb2"] = repstrb2, _["repstradded2"] = repstradded2, 
-                                              _["feca2"] = feca2, _["fecb2"] = fecb2, _["fecaadded2"] = fecadded2, 
-                                                _["censor2"] = censor2, _["juvgiven2"] = juvgiven2);
+                                          _["repstra2"] = repstra2, _["repstrb2"] = repstrb2, _["repstradded2"] = repstradded2, 
+                                          _["feca2"] = feca2, _["fecb2"] = fecb2, _["fecaadded2"] = fecadded2, 
+                                          _["indcova2"] = indcova2, _["indcovb2"] = indcovb2, _["indcovc2"] = indcovc2,
+                                          _["censor2"] = censor2, _["juvgiven2"] = juvgiven2);
   
   Rcpp::DataFrame df2a = DataFrame::create(Named("obsstatus2") = obsstatus2, _["repstatus2"] = repstatus2, 
                                            _["fecstatus2"] = fecstatus2, _["matstatus2"] = matstat2, _["alive2"] = alive2,
-                                             _["stage2"] = stage2, _["stage2index"] = stage2num);
+                                           _["stage2"] = stage2, _["stage2index"] = stage2num);
   
   Rcpp::DataFrame df3 = DataFrame::create(Named("xpos3") = xpos3, _["ypos3"] = ypos3, _["sizea3"] = sizea3,
                                           _["sizeb3"] = sizeb3, _["sizec3"] = sizec3, _["sizeadded3"] = sizeadded3, 
-                                            _["repstra3"] = repstra3, _["repstrb3"] = repstrb3, _["repstradded3"] = repstradded3,  
-                                              _["feca3"] = feca3, _["fecb3"] = fecb3, _["fecaadded3"] = fecadded3, 
-                                                _["censor3"] = censor3, _["juvgiven3"] = juvgiven3);
+                                          _["repstra3"] = repstra3, _["repstrb3"] = repstrb3, _["repstradded3"] = repstradded3,  
+                                          _["feca3"] = feca3, _["fecb3"] = fecb3, _["fecaadded3"] = fecadded3, 
+                                          _["indcova3"] = indcova3, _["indcovb3"] = indcovb3, _["indcovc3"] = indcovc3,
+                                          _["censor3"] = censor3, _["juvgiven3"] = juvgiven3);
   
   Rcpp::DataFrame df3a = DataFrame::create(Named("obsstatus3") = obsstatus3, _["repstatus3"] = repstatus3, 
                                            _["fecstatus3"] = fecstatus3, _["matstatus3"] = matstat3, _["alive3"] = alive3, 
-                                             _["stage3"] = stage3, _["stage3index"] = stage3num);
+                                           _["stage3"] = stage3, _["stage3index"] = stage3num);
   
   return Rcpp::List::create(Named("a") = df0, Named("b") = df1, Named("c") = df1a, Named("d") = df2, Named("e") = df2a,
                                   Named("f") = df3, Named("g") = df3a);
@@ -2802,19 +2965,19 @@ List theoldpizzle(DataFrame StageFrame, DataFrame OverWrite, arma::mat repmatrix
   
   DataFrame df0 = DataFrame::create(Named("stage3") = stage3, _["stage2n"] = stage2n, _["stage2o"] = stage2o,
                                     _["stage1"] = stage1, _["size3"] = size3, _["size2n"] = size2n, 
-                                      _["size2o"] = size2o, _["size1"] = size1, _["obs3"] = obs3,
-                                        _["obs2n"] = obs2n, _["obs2o"] = obs2o, _["obs1"] = obs1,
-                                          _["rep3"] = rep3, _["rep2n"] = rep2n, _["rep2o"] = rep2o, 
-                                            _["rep1"] = rep1, _["mat3"] = mat3, _["mat2n"] = mat2n, 
-                                              _["mat2o"] = mat2o, _["mat1"] = mat1);
+                                    _["size2o"] = size2o, _["size1"] = size1, _["obs3"] = obs3,
+                                    _["obs2n"] = obs2n, _["obs2o"] = obs2o, _["obs1"] = obs1,
+                                    _["rep3"] = rep3, _["rep2n"] = rep2n, _["rep2o"] = rep2o, 
+                                    _["rep1"] = rep1, _["mat3"] = mat3, _["mat2n"] = mat2n, 
+                                    _["mat2o"] = mat2o, _["mat1"] = mat1);
   
   DataFrame df1 = DataFrame::create(Named("imm3") = imm3, _["imm2n"] = imm2n, _["imm2o"] = imm2o, 
                                     _["imm1"] = imm1, _["repentry3"] = repentry3, _["indata3"] = indata3, 
-                                      _["indata2n"] = indata2n, _["indata2o"] = indata2o, _["indata1"] = indata1, 
-                                        _["binwidth"] = binwidth, _["minage3"] = minage3, _["minage2"] = minage2, 
-                                          _["maxage3"] = maxage3, _["maxage2"] = maxage2, _["actualage"] = actualage,
-                                            _["index321"] = index321, _["index21"] = index21, _["indata"] = indatalong, 
-                                              _["ovgiven_t"] = ovgivent, _["ovest_t"] = ovestt);
+                                    _["indata2n"] = indata2n, _["indata2o"] = indata2o, _["indata1"] = indata1, 
+                                    _["binwidth"] = binwidth, _["minage3"] = minage3, _["minage2"] = minage2, 
+                                    _["maxage3"] = maxage3, _["maxage2"] = maxage2, _["actualage"] = actualage,
+                                    _["index321"] = index321, _["index21"] = index21, _["indata"] = indatalong, 
+                                    _["ovgiven_t"] = ovgivent, _["ovest_t"] = ovestt);
   
   DataFrame df2 = DataFrame::create(Named("ovgiven_f") = ovgivenf, _["ovest_f"] = ovestf, _["aliveandequal"] = aliveequal,
                                     _["special321"] = index321special);

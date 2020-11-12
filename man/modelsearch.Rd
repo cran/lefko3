@@ -7,29 +7,35 @@
 modelsearch(
   data,
   historical = TRUE,
-  approach = "lme4",
+  approach = "mixed",
   suite = "size",
-  vitalrates = c("surv", "size", "fec"),
-  juvestimate = NA,
-  juvsize = FALSE,
   bestfit = "AICc&k",
-  sizedist = "gaussian",
-  fecdist = "gaussian",
-  fectime = 2,
-  censor = NA,
-  indiv = "individ",
-  patch = NA,
-  year = "year2",
+  vitalrates = c("surv", "size", "fec"),
   surv = c("alive3", "alive2", "alive1"),
   obs = c("obsstatus3", "obsstatus2", "obsstatus1"),
   size = c("sizea3", "sizea2", "sizea1"),
   repst = c("repstatus3", "repstatus2", "repstatus1"),
   fec = c("feca3", "feca2", "feca1"),
   stage = c("stage3", "stage2", "stage1"),
-  age = NA,
-  year.as.random = TRUE,
+  indiv = "individ",
+  patch = NA,
+  year = "year2",
+  sizedist = "gaussian",
+  fecdist = "gaussian",
+  size.zero = FALSE,
+  fec.zero = FALSE,
   patch.as.random = TRUE,
+  year.as.random = TRUE,
+  juvestimate = NA,
+  juvsize = FALSE,
+  fectime = 2,
+  censor = NA,
+  age = NA,
+  indcova = NA,
+  indcovb = NA,
+  indcovc = NA,
   show.model.tables = TRUE,
+  global.only = FALSE,
   quiet = FALSE
 )
 }
@@ -57,22 +63,6 @@ reproductive status (also interactions between status in historical model);
 and \code{year.as.random = FALSE}, then year is also included as a fixed effect,
 and, in the case of \code{full}, included in two-way interactions. Defaults to \code{size}.}
 
-\item{vitalrates}{A vector describing which vital rates will be estimated via
-linear modeling, with the following options: \code{surv}, survival probability;
-\code{obs}, observation probability; \code{size}, overall size; \code{repst}, 
-probability of reproducing; and \code{fec}, amount of reproduction (overall 
-fecundity). Defaults to \code{c("surv", "size", "fec")}.}
-
-\item{juvestimate}{An optional variable denoting the stage name of the juvenile
-stage in the vertical dataset. If not NA, and \code{stage} is also given (see
-below), then vital rates listed in \code{vitalrates} other than \code{fec} will also
-be estimated from the juvenile stage to all adult stages. Defaults to NA, in
-which case juvenile vital rates are not estimated.}
-
-\item{juvsize}{A logical variable denoting whether size should be used as a term
-in models involving transition from the juvenile stage. Defaults to FALSE, and
-is only used if \code{juvestimate} does not equal NA.}
-
 \item{bestfit}{A variable indicating the model selection criterion for the
 choice of best-fit model. The default is \code{AICc&k}, which chooses the 
 best-fit model as the model with the lowest AICc or, if not the same model, then
@@ -80,31 +70,11 @@ the model that has the lowest degrees of freedom among models with \eqn{\Delta A
 Alternatively, \code{AICc} may be chosen, in which case the best-fit model is simply
 the model with the lowest AICc value.}
 
-\item{sizedist}{The probability distribution used to model size. Options include
-\code{gaussian} for the Normal distribution (default), \code{poisson} for the Poisson
-distribution, and \code{negbin} for the negative binomial distribution.}
-
-\item{fecdist}{The probability distribution used to model fecundity. Options
-include \code{gaussian} for the Normal distribution (default), \code{poisson} for
-the Poisson distribution, and \code{negbin} for the negative binomial distribution.}
-
-\item{fectime}{A variable indicating which year of fecundity to use as the
-response term in fecundity models. Options include \code{2}, which refers to time \emph{t},
-and \code{3}, which refers to time \emph{t}+1. Defaults to \code{2}.}
-
-\item{censor}{A vector denoting the names of censoring variables in the dataset,
-in order from time \emph{t}+1, followed by time \emph{t}, and lastly followed by time \emph{t}-1.
-Defaults to NA.}
-
-\item{indiv}{A variable indicating the variable name coding individual identity.
-Defaults to \code{individ}.}
-
-\item{patch}{A variable indicating the variable name coding for patch, where
-patches are defined as permanent subgroups within the study population. Defaults
-to NA.}
-
-\item{year}{A variable indicating the variable coding for  observation time in 
-time \emph{t}. Defaults to \code{year2}.}
+\item{vitalrates}{A vector describing which vital rates will be estimated via
+linear modeling, with the following options: \code{surv}, survival probability;
+\code{obs}, observation probability; \code{size}, overall size; \code{repst}, 
+probability of reproducing; and \code{fec}, amount of reproduction (overall 
+fecundity). Defaults to \code{c("surv", "size", "fec")}.}
 
 \item{surv}{A vector indicating the variable names coding for status as alive or
 dead in times \emph{t}+1, \emph{t}, and \emph{t}-1, respectively. Defaults to 
@@ -127,14 +97,31 @@ status in times \emph{t}+1, \emph{t}, and \emph{t}-1, respectively. Defaults to
 \item{stage}{A vector indicating the variables coding for stage in times \emph{t}+1, 
 \emph{t}, and \emph{t}-1. Defaults to \code{c("stage3", "stage2", "stage1")}.}
 
-\item{age}{Designates the name of the variable corresponding to age in the
-vertical dataset. Defaults to NA, in which case age is not included in linear
-models. Should only be used if building age x stage matrices.}
+\item{indiv}{A variable indicating the variable name coding individual identity.
+Defaults to \code{individ}.}
 
-\item{year.as.random}{If set to TRUE and \code{approach = "lme4"}, then \code{year} is 
-included as a random factor. If set to FALSE, then \code{year} is included as a 
-fixed factor. All other combinations of logical value and \code{approach} lead to 
-\code{year} not being included in modeling. Defaults to TRUE.}
+\item{patch}{A variable indicating the variable name coding for patch, where
+patches are defined as permanent subgroups within the study population. Defaults
+to NA.}
+
+\item{year}{A variable indicating the variable coding for observation time in 
+time \emph{t}. Defaults to \code{year2}.}
+
+\item{sizedist}{The probability distribution used to model size. Options include
+\code{gaussian} for the Normal distribution (default), \code{poisson} for the Poisson
+distribution, and \code{negbin} for the negative binomial distribution.}
+
+\item{fecdist}{The probability distribution used to model fecundity. Options
+include \code{gaussian} for the Normal distribution (default), \code{poisson} for
+the Poisson distribution, and \code{negbin} for the negative binomial distribution.}
+
+\item{size.zero}{A logical variable indicating whether size distribution 
+should be zero-inflated. Only applies to Poisson and negative binomial 
+distributions. Defaults to FALSE.}
+
+\item{fec.zero}{A logical variable indicating whether fecundity distribution 
+should be zero-inflated. Only applies to Poisson and negative binomial 
+distributions. Defaults to FALSE.}
 
 \item{patch.as.random}{If set to TRUE and \code{approach = "lme4"}, then \code{patch}
 is included as a random factor. If set to FALSE and \code{approach = "glm"}, then 
@@ -142,8 +129,47 @@ is included as a random factor. If set to FALSE and \code{approach = "glm"}, the
 value and \code{approach} lead to \code{patch} not being included in modeling.
 Defaults to TRUE.}
 
+\item{year.as.random}{If set to TRUE and \code{approach = "lme4"}, then \code{year} is 
+included as a random factor. If set to FALSE, then \code{year} is included as a 
+fixed factor. All other combinations of logical value and \code{approach} lead to 
+\code{year} not being included in modeling. Defaults to TRUE.}
+
+\item{juvestimate}{An optional variable denoting the stage name of the juvenile
+stage in the vertical dataset. If not NA, and \code{stage} is also given (see
+below), then vital rates listed in \code{vitalrates} other than \code{fec} will also
+be estimated from the juvenile stage to all adult stages. Defaults to NA, in
+which case juvenile vital rates are not estimated.}
+
+\item{juvsize}{A logical variable denoting whether size should be used as a term
+in models involving transition from the juvenile stage. Defaults to FALSE, and
+is only used if \code{juvestimate} does not equal NA.}
+
+\item{fectime}{A variable indicating which year of fecundity to use as the
+response term in fecundity models. Options include \code{2}, which refers to time \emph{t},
+and \code{3}, which refers to time \emph{t}+1. Defaults to \code{2}.}
+
+\item{censor}{A vector denoting the names of censoring variables in the dataset,
+in order from time \emph{t}+1, followed by time \emph{t}, and lastly followed by time \emph{t}-1.
+Defaults to NA.}
+
+\item{age}{Designates the name of the variable corresponding to age in the
+vertical dataset. Defaults to NA, in which case age is not included in linear
+models. Should only be used if building age x stage matrices.}
+
+\item{indcova}{Vector designating the names in times \emph{t}+1, \emph{t}, and
+\emph{t}-1 of an individual covariate. Defaults to NA.}
+
+\item{indcovb}{Vector designating the names in times \emph{t}+1, \emph{t}, and
+\emph{t}-1 of an individual covariate. Defaults to NA.}
+
+\item{indcovc}{Vector designating the names in times \emph{t}+1, \emph{t}, and
+\emph{t}-1 of an individual covariate. Defaults to NA.}
+
 \item{show.model.tables}{If set to TRUE, then includes full modeling tables
 in the output. Defaults to TRUE.}
+
+\item{global.only}{If set to TRUE, then only global models will be built and
+evaluated. Defaults to FALSE.}
 
 \item{quiet}{If set to TRUE, then model building and selection will proceed
 without warnings and diagnostic messages being issued. Note that this will
@@ -203,22 +229,40 @@ transitions used to model that vital rate.}
 
 The mechanics governing model building are fairly robust to errors and
 exceptions. The function attempts to build global models, and simplifies models
-automatically should model building fail. Model selection proceeds via the 
-\link[MuMIn]{dredge} function in package \code{MuMIn}, and defaults to the global
-model should that fail.
+automatically should model building fail. Model building proceeds through the 
+functions \code{\link[stats]{lm}()} (GLM with Gaussian response), \code{\link[stats]{glm}()} (GLM 
+with Poisson or binomial response), \code{\link[MASS]{glm.nb}()} (GLM with negative binomial 
+response), \code{\link[pscl]{zeroinfl}()} (zero-inflated Poisson or negative binomial response), 
+\code{\link[lme4]{lmer}()} (mixed model with Gaussian response), \code{\link[lme4]{glmer}()} 
+(mixed model with binomial or Poisson response), \code{\link[glmmTMB]{glmmTMB}()} (mixed
+model with negative binomial, zero-inflated negative binomial, or zero-inflated 
+Poisson response). See documentation related to these functions for further 
+information.
 
-This function is verbose, so that any errors and warnings developed during model
-building, model analysis, and model selection can be found and dealt with.
-Interpretations of errors during global model analysis may be found in
-documentation in base R for functions \code{lm} and \code{glm} used in analysis
-of models without random terms, and packages 
-\code{lme4} and \code{glmmTMB} for mixed models (see \link[lme4]{glmer} and \link[glmmTMB]{glmmTMB},
-respectively). Package \code{MuMIn} is used for model dredging (see \link[MuMIn]{dredge}),
+Exhaustive model building and selection proceeds via the \code{\link[MuMIn]{dredge}()}
+function in package \code{MuMIn}. This function is verbose, so that any errors and 
+warnings developed during model building, model analysis, and model selection
+can be found and dealt with. Interpretations of errors during global model
+analysis may be found in documentation in for the functions and packages
+mentioned. Package \code{MuMIn} is used for model dredging (see \link[MuMIn]{dredge}),
 and errors and warnings during dredging can be interpreted using the
-documentation for that package. The \code{quiet = TRUE} option can be used to
-silence dredge warnings, but users should note that automated model selection
-can be viewed as a black box, and so great care should be taken to ensure that
-the models run make biological sense, and that model quality is prioritized.
+documentation for that package. Errors occurring during dredging lead to the
+adoption of the global model as the best-fit, and the user should view all
+logged errors and warnings to determine the best way to proceed. The 
+\code{quiet = TRUE} option can be used to silence dredge warnings, but users should
+note that automated model selection can be viewed as a black box, and so great
+care should be taken to ensure that the models run make biological sense, and
+that model quality is prioritized.
+
+Exhaustive model selection through dredging works best with larger datasets and
+fewer tested parameters. Setting \code{suite = "full"} may initiate a dredge
+that takes a dramatically long time, particularly if the model is historical,
+individual covariates are used, or a zero-inflated distribution is assumed. In
+such cases, the number of models built and tested will run at least in the millions.
+Small datasets will also increase the error associated with these tests, leading to
+adoption of simpler models overall. We do not yet offer a parallelization option
+for function \code{modelsearch()}, but plan to offer one in the future to speed
+this process up for particularly large global models.
 
 Care must be taken to build models that test the impacts of state in time \emph{t}-1
 for historical models, and that do not test these impacts for ahistorical
@@ -226,10 +270,6 @@ models. Ahistorical matrix modeling particularly will yield biased transition
 estimates if historical terms from models are ignored. This can be dealt with
 at the start of modeling by setting \code{historical = FALSE} for the
 ahistorical case, and \code{historical = TRUE} for the historical case.
-
-Model building and selection may fail if NAs exist within variables used in
-modeling. If NAs represent 0 entries, then change all NAs to 0, as with the
-\code{NAas0 = TRUE} option in function \code{\link{verticalize3}()}.
 }
 \description{
 \code{modelsearch()} returns both a table of vital rate estimating models and a
@@ -259,9 +299,9 @@ lathframeln <- sf_create(sizes = sizevector, stagenames = stagevector, repstatus
 
 lathvertln <- verticalize3(lathyrus, noyears = 4, firstyear = 1988, patchidcol = "SUBPLOT",
                            individcol = "GENET", blocksize = 9, juvcol = "Seedling1988",
-                           size1col = "lnVol88", repstr1col = "FCODE88",
-                           fec1col = "Intactseed88", dead1col = "Intactseed88",
-                           nonobs1col = "Dormant1988", stageassign = lathframeln,
+                           sizeacol = "lnVol88", repstracol = "FCODE88",
+                           fecacol = "Intactseed88", deadacol = "Intactseed88",
+                           nonobsacol = "Dormant1988", stageassign = lathframeln,
                            stagesize = "sizea", censorcol = "Missing1988",
                            censorkeep = NA, NAas0 = TRUE, censor = TRUE)
 

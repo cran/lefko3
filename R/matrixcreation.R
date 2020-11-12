@@ -22,6 +22,9 @@
 #' @param repmatrix A matrix composed mostly of 0s, with non-zero values for each
 #' potentially new individual (row) born to each reproductive stage (column).
 #' Entries act as multipliers on fecundity, with 1 equaling full fecundity.
+#' @param overwrite A data frame developed with the \code{\link{overwrite}()} function
+#' describing transitions to be overwritten either with given values or 
+#' with other estimated transitions.
 #' @param data The original historical demographic data frame used to 
 #' estimate vital rates (class \code{hfvdata}). The original data frame is 
 #' required in order to initialize years and patches properly.
@@ -84,6 +87,9 @@
 #' model terms that will be used in matrix creation, and the second showing the
 #' equivalent terms used in modeling. Only required if \code{modelsuite} is not 
 #' supplied.
+#' @param inda A numeric value to use for individual covariate a. Defaults to 0.
+#' @param indb A numeric value to use for individual covariate b. Defaults to 0.
+#' @param indc A numeric value to use for individual covariate c. Defaults to 0.
 #' @param surv_dev A numeric value to be added to the y-intercept in the linear
 #' model for survival probability.
 #' @param obs_dev A numeric value to be added to the y-intercept in the linear
@@ -103,9 +109,6 @@
 #' @param jrepst_dev A numeric value to be added to the y-intercept in the linear
 #' model for juvenile reproduction probability.
 #' @param repmod A scalar multiplier of fecundity. Defaults to 1.
-#' @param overwrite A data frame developed with the \code{\link{overwrite}()} function
-#' describing transitions to be overwritten either with given values or 
-#' with other estimated transitions.
 #' @param yearcol The variable name or column number corresponding to year 
 #' in time \emph{t} in the dataset. Not needed if \code{modelsuite} is supplied.
 #' @param patchcol The variable name or column number corresponding to patch in 
@@ -170,9 +173,9 @@
 #' 
 #' lathvertln <- verticalize3(lathyrus, noyears = 4, firstyear = 1988, patchidcol = "SUBPLOT",
 #'                            individcol = "GENET", blocksize = 9, juvcol = "Seedling1988",
-#'                            size1col = "lnVol88", repstr1col = "Intactseed88",
-#'                            fec1col = "Intactseed88", dead1col = "Dead1988",
-#'                            nonobs1col = "Dormant1988", stageassign = lathframeln,
+#'                            sizeacol = "lnVol88", repstracol = "Intactseed88",
+#'                            fecacol = "Intactseed88", deadacol = "Dead1988",
+#'                            nonobsacol = "Dormant1988", stageassign = lathframeln,
 #'                            stagesize = "sizea", censorcol = "Missing1988",
 #'                            censorkeep = NA, NAas0 = TRUE, censor = TRUE)
 #' 
@@ -187,7 +190,7 @@
 #' lathover3 <- overwrite(stage3 = c("Sd", "Sd", "Sdl"), stage2 = c("Sd", "Sd", "Sd"),
 #'                        stage1 = c("Sd", "rep", "rep"), givenrate = c(0.345, 0.054))
 #' 
-#' lathmodelsln3 <- modelsearch(lathvertln, historical = TRUE, approach = "lme4", suite = "main", 
+#' lathmodelsln3 <- modelsearch(lathvertln, historical = TRUE, approach = "mixed", suite = "main", 
 #'                              vitalrates = c("surv", "obs", "size", "repst", "fec"), 
 #'                              juvestimate = "Sdl",bestfit = "AICc&k", sizedist = "gaussian", 
 #'                              fecdist = "poisson", indiv = "individ", patch = "patchid", 
@@ -204,12 +207,12 @@
 #' }
 #' 
 #' @export
-flefko3 <- function(year = "all", patch = "all", stageframe, repmatrix = NA, data = NA, 
-                    modelsuite = NA, surv_model = NA, obs_model = NA, size_model = NA, 
+flefko3 <- function(year = "all", patch = "all", stageframe, repmatrix = NA, overwrite = NA,
+                    data = NA, modelsuite = NA, surv_model = NA, obs_model = NA, size_model = NA, 
                     repst_model = NA, fec_model = NA, jsurv_model = NA, jobs_model = NA, 
-                    jsize_model = NA, jrepst_model = NA, paramnames = NA, surv_dev = 0, 
-                    obs_dev = 0, size_dev = 0, repst_dev = 0, fec_dev = 0, jsurv_dev = 0, 
-                    jobs_dev = 0, jsize_dev = 0, jrepst_dev = 0, repmod = 1, overwrite = NA, 
+                    jsize_model = NA, jrepst_model = NA, paramnames = NA, inda = 0, indb = 0,
+                    indc = 0, surv_dev = 0, obs_dev = 0, size_dev = 0, repst_dev = 0, fec_dev = 0, 
+                    jsurv_dev = 0, jobs_dev = 0, jsize_dev = 0, jrepst_dev = 0, repmod = 1, 
                     yearcol = NA, patchcol = NA, year.as.random = FALSE, patch.as.random = FALSE, 
                     randomseed = 0, negfec = FALSE, reduce = FALSE) {
   
@@ -272,6 +275,10 @@ flefko3 <- function(year = "all", patch = "all", stageframe, repmatrix = NA, dat
     repmatrix[1, repstages] <- 1
   }
   
+  if (!is.numeric(inda) | !is.numeric(indb) | !is.numeric(indc)) {
+    stop("Individual covariate values must equal valid numbers.", call. = FALSE)
+  }
+  
   if (any(!suppressWarnings(!is.na(as.numeric(as.character(stageframe$bin_size_ctr)))))) {
     stop("Function flefko3() requires size to be numeric rather than categorical.", call. = FALSE)
   }
@@ -329,14 +336,14 @@ flefko3 <- function(year = "all", patch = "all", stageframe, repmatrix = NA, dat
   
   set.seed(randomseed)
   
-  surv_proxy <- .modelextract(surv_model, paramnames, mainyears, mainpatches)
-  obs_proxy <- .modelextract(obs_model, paramnames, mainyears, mainpatches)
+  surv_proxy <- .modelextract(surv_model, paramnames, mainyears, mainpatches, year.as.random, patch.as.random)
+  obs_proxy <- .modelextract(obs_model, paramnames, mainyears, mainpatches, year.as.random, patch.as.random)
   
   sigma <- 0
   rvarssummed <- 0
   sizedist <- 1
   
-  size_proxy <- .modelextract(size_model, paramnames, mainyears, mainpatches)
+  size_proxy <- .modelextract(size_model, paramnames, mainyears, mainpatches, year.as.random, patch.as.random)
   
   if (size_proxy$family == "poisson") {
     sizedist <- 0
@@ -352,8 +359,8 @@ flefko3 <- function(year = "all", patch = "all", stageframe, repmatrix = NA, dat
     sizedist <- 1
   }
   
-  repst_proxy <- .modelextract(repst_model, paramnames, mainyears, mainpatches)
-  fec_proxy <- .modelextract(fec_model, paramnames, mainyears, mainpatches)
+  repst_proxy <- .modelextract(repst_model, paramnames, mainyears, mainpatches, year.as.random, patch.as.random)
+  fec_proxy <- .modelextract(fec_model, paramnames, mainyears, mainpatches, year.as.random, patch.as.random)
   
   if (fec_proxy$family == "poisson") {
     fecdist <- 0
@@ -363,13 +370,13 @@ flefko3 <- function(year = "all", patch = "all", stageframe, repmatrix = NA, dat
     fecdist <- 1
   }
   
-  jsurv_proxy <- .modelextract(jsurv_model, paramnames, mainyears, mainpatches)
-  jobs_proxy <- .modelextract(jobs_model, paramnames, mainyears, mainpatches)
+  jsurv_proxy <- .modelextract(jsurv_model, paramnames, mainyears, mainpatches, year.as.random, patch.as.random)
+  jobs_proxy <- .modelextract(jobs_model, paramnames, mainyears, mainpatches, year.as.random, patch.as.random)
   
   jsigma <- 0
   jrvarssummed <- 0
   
-  jsize_proxy <- .modelextract(jsize_model, paramnames, mainyears, mainpatches)
+  jsize_proxy <- .modelextract(jsize_model, paramnames, mainyears, mainpatches, year.as.random, patch.as.random)
   
   if (jsize_proxy$family == "poisson") {
     if (!all(is.na(jsize_proxy$variances))) {
@@ -381,7 +388,7 @@ flefko3 <- function(year = "all", patch = "all", stageframe, repmatrix = NA, dat
     jsigma <- jsize_proxy$sigma
   }
   
-  jrepst_proxy <- .modelextract(jrepst_model, paramnames, mainyears, mainpatches)
+  jrepst_proxy <- .modelextract(jrepst_model, paramnames, mainyears, mainpatches, year.as.random, patch.as.random)
   
   # This creates a list of pop, patch, and year in order of matrix
   if (!all(is.na(patch))) {
@@ -408,14 +415,15 @@ flefko3 <- function(year = "all", patch = "all", stageframe, repmatrix = NA, dat
   
   # A few extra tidbits required for the core matrix estimator to work
   total.matrix.dim <- (length(stageframe$bin_size_ctr) - 1)^2
-
+  
   yearlist <- split(listofyears, seq(nrow(listofyears)))
   
   # The next call runs the core matrix estimator function and creates all matrices
   madsexmadrigal <- lapply(yearlist, jerzeibalowski, allstages, surv_proxy, obs_proxy, size_proxy, repst_proxy,
-                           fec_proxy, jsurv_proxy, jobs_proxy, jsize_proxy, jrepst_proxy, surv_dev, obs_dev, 
-                           size_dev, repst_dev, fec_dev, jsurv_dev, jobs_dev, jsize_dev, jrepst_dev,total.matrix.dim, 
-                           repmod, rvarssummed, sigma, jrvarssummed, jsigma, maxsize, sizedist, fecdist, negfec)
+                           fec_proxy, jsurv_proxy, jobs_proxy, jsize_proxy, jrepst_proxy, inda, indb, indc, 
+                           surv_dev, obs_dev, size_dev, repst_dev, fec_dev, jsurv_dev, jobs_dev, jsize_dev, 
+                           jrepst_dev, total.matrix.dim, repmod, rvarssummed, sigma, jrvarssummed, jsigma, 
+                           maxsize, sizedist, fecdist, negfec)
   
   a_list <- lapply(madsexmadrigal, function(X) {X$A})
   u_list <- lapply(madsexmadrigal, function(X) {X$U})
@@ -526,6 +534,12 @@ flefko3 <- function(year = "all", patch = "all", stageframe, repmatrix = NA, dat
 #' @param repmatrix A matrix composed mostly of 0s, with non-zero values for each
 #' potentially new individual (row) born to each reproductive stage (column).
 #' Entries act as multipliers on fecundity, with 1 equaling full fecundity.
+#' @param overwrite A data frame developed with the \code{\link{overwrite}()} function
+#' describing transitions to be overwritten either with given values or 
+#' with other estimated transitions.
+#' @param data The original historical demographic data frame used to estimate
+#' vital rates (class \code{hfvdata}). The original data frame is required in order
+#' to initialize years and patches properly.
 #' @param modelsuite An optional \code{lefkoMod} object holding the vital rate models.
 #' If given, then \code{surv_model}, \code{obs_model}, \code{size_model}, \code{repst_model}, \code{fec_model},
 #' \code{jsurv_model}, \code{jobs_model}, \code{jsize_model}, \code{jrepst_model}, \code{paramnames},
@@ -584,6 +598,9 @@ flefko3 <- function(year = "all", patch = "all", stageframe, repmatrix = NA, dat
 #' model terms that will be used in matrix creation, and the second showing the
 #' equivalent terms used in modeling. Only required if \code{modelsuite} is not 
 #' supplied.
+#' @param inda A numeric value to use for individual covariate a. Defaults to 0.
+#' @param indb A numeric value to use for individual covariate b. Defaults to 0.
+#' @param indc A numeric value to use for individual covariate c. Defaults to 0.
 #' @param surv_dev A numeric value to be added to the y-intercept in the linear
 #' model for survival probability.
 #' @param obs_dev A numeric value to be added to the y-intercept in the linear
@@ -603,12 +620,6 @@ flefko3 <- function(year = "all", patch = "all", stageframe, repmatrix = NA, dat
 #' @param jrepst_dev A numeric value to be added to the y-intercept in the linear
 #' model for juvenile reproduction probability.
 #' @param repmod A scalar multiplier of fecundity. Defaults to 1.
-#' @param overwrite A data frame developed with the \code{\link{overwrite}()} function
-#' describing transitions to be overwritten either with given values or 
-#' with other estimated transitions.
-#' @param data The original historical demographic data frame used to estimate
-#' vital rates (class \code{hfvdata}). The original data frame is required in order
-#' to initialize years and patches properly.
 #' @param yearcol The variable name or column number corresponding to year in time
 #' \emph{t} in the dataset. Not needed if a \code{modelsuite} is supplied.
 #' @param patchcol The variable name or column number corresponding to patch in the
@@ -677,9 +688,9 @@ flefko3 <- function(year = "all", patch = "all", stageframe, repmatrix = NA, dat
 #' 
 #' lathvertln <- verticalize3(lathyrus, noyears = 4, firstyear = 1988, patchidcol = "SUBPLOT",
 #'                            individcol = "GENET", blocksize = 9, juvcol = "Seedling1988",
-#'                            size1col = "lnVol88", repstr1col = "Intactseed88",
-#'                            fec1col = "Intactseed88", dead1col = "Dead1988",
-#'                            nonobs1col = "Dormant1988", stageassign = lathframeln,
+#'                            sizeacol = "lnVol88", repstracol = "Intactseed88",
+#'                            fecacol = "Intactseed88", deadacol = "Dead1988",
+#'                            nonobsacol = "Dormant1988", stageassign = lathframeln,
 #'                            stagesize = "sizea", censorcol = "Missing1988",
 #'                            censorkeep = NA, NAas0 = TRUE, censor = TRUE)
 #' 
@@ -694,7 +705,7 @@ flefko3 <- function(year = "all", patch = "all", stageframe, repmatrix = NA, dat
 #' lathover2 <- overwrite(stage3 = c("Sd", "Sdl"), stage2 = c("Sd", "Sd"),
 #'                        givenrate = c(0.345, 0.054))
 #' 
-#' lathmodelsln2 <- modelsearch(lathvertln, historical = FALSE, approach = "lme4", suite = "main",
+#' lathmodelsln2 <- modelsearch(lathvertln, historical = FALSE, approach = "mixed", suite = "main",
 #'                              vitalrates = c("surv", "obs", "size", "repst", "fec"), 
 #'                              juvestimate = "Sdl", bestfit = "AICc&k", sizedist = "gaussian", 
 #'                              fecdist = "poisson", indiv = "individ", patch = "patchid", 
@@ -712,13 +723,13 @@ flefko3 <- function(year = "all", patch = "all", stageframe, repmatrix = NA, dat
 #' }
 #' 
 #' @export
-flefko2 <- function(year = "all", patch = "all", stageframe, repmatrix = NA, data = NA, 
-                    modelsuite = NA, surv_model = NA, obs_model = NA, size_model = NA, 
+flefko2 <- function(year = "all", patch = "all", stageframe, repmatrix = NA, overwrite = NA,
+                    data = NA, modelsuite = NA, surv_model = NA, obs_model = NA, size_model = NA, 
                     repst_model = NA, fec_model = NA, jsurv_model = NA, jobs_model = NA, 
-                    jsize_model = NA, jrepst_model = NA, paramnames = NA, surv_dev = 0, 
-                    obs_dev = 0, size_dev = 0, repst_dev = 0, fec_dev = 0, jsurv_dev = 0, 
-                    jobs_dev = 0, jsize_dev = 0, jrepst_dev = 0, repmod = 1, overwrite = NA, 
-                    yearcol = NA, patchcol = NA, year.as.random = FALSE, patch.as.random = FALSE, 
+                    jsize_model = NA, jrepst_model = NA, paramnames = NA, inda = 0, indb = 0,
+                    indc = 0, surv_dev = 0, obs_dev = 0, size_dev = 0, repst_dev = 0, fec_dev = 0, 
+                    jsurv_dev = 0, jobs_dev = 0, jsize_dev = 0, jrepst_dev = 0, repmod = 1, yearcol = NA, 
+                    patchcol = NA, year.as.random = FALSE, patch.as.random = FALSE, 
                     randomseed = 0, negfec = FALSE, reduce = FALSE) {
   
   if (all(is.na(modelsuite)) & all(is.na(paramnames))) {
@@ -780,6 +791,10 @@ flefko2 <- function(year = "all", patch = "all", stageframe, repmatrix = NA, dat
     repmatrix[1, repstages] <- 1
   }
   
+  if (!is.numeric(inda) | !is.numeric(indb) | !is.numeric(indc)) {
+    stop("Individual covariate values must equal valid numbers.", call. = FALSE)
+  }
+  
   if (any(!suppressWarnings(!is.na(as.numeric(as.character(stageframe$size)))))) {
     stop("Function flefko2() requires size to be numeric rather than categorical.")
   }
@@ -837,14 +852,14 @@ flefko2 <- function(year = "all", patch = "all", stageframe, repmatrix = NA, dat
   
   set.seed(randomseed)
   
-  surv_proxy <- .modelextract(surv_model, paramnames, mainyears, mainpatches)
-  obs_proxy <- .modelextract(obs_model, paramnames, mainyears, mainpatches)
+  surv_proxy <- .modelextract(surv_model, paramnames, mainyears, mainpatches, year.as.random, patch.as.random)
+  obs_proxy <- .modelextract(obs_model, paramnames, mainyears, mainpatches, year.as.random, patch.as.random)
   
   sigma <- 0
   rvarssummed <- 0
   sizedist <- 1
   
-  size_proxy <- .modelextract(size_model, paramnames, mainyears, mainpatches)
+  size_proxy <- .modelextract(size_model, paramnames, mainyears, mainpatches, year.as.random, patch.as.random)
   
   if (size_proxy$family == "poisson") {
     sizedist <- 0
@@ -860,8 +875,8 @@ flefko2 <- function(year = "all", patch = "all", stageframe, repmatrix = NA, dat
     sizedist <- 1
   }
   
-  repst_proxy <- .modelextract(repst_model, paramnames, mainyears, mainpatches)
-  fec_proxy <- .modelextract(fec_model, paramnames, mainyears, mainpatches)
+  repst_proxy <- .modelextract(repst_model, paramnames, mainyears, mainpatches, year.as.random, patch.as.random)
+  fec_proxy <- .modelextract(fec_model, paramnames, mainyears, mainpatches, year.as.random, patch.as.random)
   
   if (fec_proxy$family == "poisson") {
     fecdist <- 0
@@ -871,13 +886,13 @@ flefko2 <- function(year = "all", patch = "all", stageframe, repmatrix = NA, dat
     fecdist <- 1
   }
   
-  jsurv_proxy <- .modelextract(jsurv_model, paramnames, mainyears, mainpatches)
-  jobs_proxy <- .modelextract(jobs_model, paramnames, mainyears, mainpatches)
+  jsurv_proxy <- .modelextract(jsurv_model, paramnames, mainyears, mainpatches, year.as.random, patch.as.random)
+  jobs_proxy <- .modelextract(jobs_model, paramnames, mainyears, mainpatches, year.as.random, patch.as.random)
   
   jsigma <- 0
   jrvarssummed <- 0
   
-  jsize_proxy <- .modelextract(jsize_model, paramnames, mainyears, mainpatches)
+  jsize_proxy <- .modelextract(jsize_model, paramnames, mainyears, mainpatches, year.as.random, patch.as.random)
   
   if (jsize_proxy$family == "poisson") {
     if (!all(is.na(jsize_proxy$variances))) {
@@ -889,7 +904,7 @@ flefko2 <- function(year = "all", patch = "all", stageframe, repmatrix = NA, dat
     jsigma <- jsize_proxy$sigma
   }
   
-  jrepst_proxy <- .modelextract(jrepst_model, paramnames, mainyears, mainpatches)
+  jrepst_proxy <- .modelextract(jrepst_model, paramnames, mainyears, mainpatches, year.as.random, patch.as.random)
   
   # Next we create a list of pops, patches, and years in order of matrix
   if (!all(is.na(patch))) {
@@ -920,9 +935,10 @@ flefko2 <- function(year = "all", patch = "all", stageframe, repmatrix = NA, dat
   
   # The next line calls the core matrix estimator function
   madsexmadrigal <- lapply(yearlist, jerzeibalowski, allstages, surv_proxy, obs_proxy, size_proxy, repst_proxy,
-                           fec_proxy, jsurv_proxy, jobs_proxy, jsize_proxy, jrepst_proxy, surv_dev, obs_dev, 
-                           size_dev, repst_dev, fec_dev, jsurv_dev, jobs_dev, jsize_dev, jrepst_dev, total.matrix.dim, 
-                           repmod, rvarssummed, sigma, jrvarssummed, jsigma, maxsize, sizedist, fecdist, negfec)
+                           fec_proxy, jsurv_proxy, jobs_proxy, jsize_proxy, jrepst_proxy, inda, indb, indc, 
+                           surv_dev, obs_dev, size_dev, repst_dev, fec_dev, jsurv_dev, jobs_dev, jsize_dev, 
+                           jrepst_dev, total.matrix.dim, repmod, rvarssummed, sigma, jrvarssummed, jsigma, 
+                           maxsize, sizedist, fecdist, negfec)
   
   a_list <- lapply(madsexmadrigal, function(X) {X$A})
   u_list <- lapply(madsexmadrigal, function(X) {X$U})
@@ -1106,9 +1122,9 @@ flefko2 <- function(year = "all", patch = "all", stageframe, repmatrix = NA, dat
 #' 
 #' cypraw_v1 <- verticalize3(data = cypdata, noyears = 6, firstyear = 2004,
 #'                           patchidcol = "patch", individcol = "plantid",
-#'                           blocksize = 4, size1col = "Inf2.04", size2col = "Inf.04",
-#'                           size3col = "Veg.04", repstr1col = "Inf.04",
-#'                           repstr2col = "Inf2.04", fec1col = "Pod.04",
+#'                           blocksize = 4, sizeacol = "Inf2.04", sizebcol = "Inf.04",
+#'                           sizeccol = "Veg.04", repstracol = "Inf.04",
+#'                           repstrbcol = "Inf2.04", fecacol = "Pod.04",
 #'                           stageassign = cypframe_raw, stagesize = "sizeadded",
 #'                           NAas0 = TRUE, NRasRep = TRUE)
 #' 
@@ -1665,9 +1681,9 @@ rlefko3 <- function(data, stageframe, year = "all", pop = NA, patch = NA, censor
 #' 
 #' cypraw_v1 <- verticalize3(data = cypdata, noyears = 6, firstyear = 2004,
 #'                           patchidcol = "patch", individcol = "plantid",
-#'                           blocksize = 4, size1col = "Inf2.04", size2col = "Inf.04",
-#'                           size3col = "Veg.04", repstr1col = "Inf.04",
-#'                           repstr2col = "Inf2.04", fec1col = "Pod.04",
+#'                           blocksize = 4, sizeacol = "Inf2.04", sizebcol = "Inf.04",
+#'                           sizeccol = "Veg.04", repstracol = "Inf.04",
+#'                           repstrbcol = "Inf2.04", fecacol = "Pod.04",
 #'                           stageassign = cypframe_raw, stagesize = "sizeadded",
 #'                           NAas0 = TRUE, NRasRep = TRUE)
 #' 
@@ -2067,6 +2083,12 @@ rlefko2 <- function(data, stageframe, year = "all", pop = NA, patch = NA, censor
 #' @param repmatrix A matrix composed mostly of 0s, with non-zero values for each
 #' potentially new individual (row) born to each reproductive stage (column).
 #' Entries act as multipliers on fecundity, with 1 equaling full fecundity.
+#' @param overwrite A data frame developed with the \code{\link{overwrite}()} function
+#' describing transitions to be overwritten either with given values or 
+#' with other estimated transitions.
+#' @param data The original historical demographic data frame used to estimate
+#' vital rates (class \code{hfvdata}). The original data frame is required in order
+#' to initialize years and patches properly.
 #' @param modelsuite An optional \code{lefkoMod} object holding the vital rate models.
 #' If given, then \code{surv_model}, \code{obs_model}, \code{size_model}, \code{repst_model}, \code{fec_model},
 #' \code{jsurv_model}, \code{jobs_model}, \code{jsize_model}, \code{jrepst_model}, \code{paramnames},
@@ -2125,6 +2147,9 @@ rlefko2 <- function(data, stageframe, year = "all", pop = NA, patch = NA, censor
 #' model terms that will be used in matrix creation, and the second showing the
 #' equivalent terms used in modeling. Only required if \code{modelsuite} is not 
 #' supplied.
+#' @param inda A numeric value to use for individual covariate a. Defaults to 0.
+#' @param indb A numeric value to use for individual covariate b. Defaults to 0.
+#' @param indc A numeric value to use for individual covariate c. Defaults to 0.
 #' @param surv_dev A numeric value to be added to the y-intercept in the linear
 #' model for survival probability.
 #' @param obs_dev A numeric value to be added to the y-intercept in the linear
@@ -2144,12 +2169,6 @@ rlefko2 <- function(data, stageframe, year = "all", pop = NA, patch = NA, censor
 #' @param jrepst_dev A numeric value to be added to the y-intercept in the linear
 #' model for juvenile reproduction probability.
 #' @param repmod A scalar multiplier of fecundity. Defaults to 1.
-#' @param overwrite A data frame developed with the \code{\link{overwrite}()} function
-#' describing transitions to be overwritten either with given values or 
-#' with other estimated transitions.
-#' @param data The original historical demographic data frame used to estimate
-#' vital rates (class \code{hfvdata}). The original data frame is required in order
-#' to initialize years and patches properly.
 #' @param yearcol The variable name or column number corresponding to year in time
 #' \emph{t} in the dataset. Not needed if a \code{modelsuite} is supplied.
 #' @param patchcol The variable name or column number corresponding to patch in 
@@ -2222,9 +2241,9 @@ rlefko2 <- function(data, stageframe, year = "all", pop = NA, patch = NA, censor
 #' 
 #' lathvertln <- verticalize3(lathyrus, noyears = 4, firstyear = 1988, patchidcol = "SUBPLOT",
 #'                            individcol = "GENET", blocksize = 9, juvcol = "Seedling1988",
-#'                            size1col = "lnVol88", repstr1col = "Intactseed88",
-#'                            fec1col = "Intactseed88", dead1col = "Dead1988",
-#'                            nonobs1col = "Dormant1988", stageassign = lathframeln,
+#'                            sizeacol = "lnVol88", repstracol = "Intactseed88",
+#'                            fecacol = "Intactseed88", deadacol = "Dead1988",
+#'                            nonobsacol = "Dormant1988", stageassign = lathframeln,
 #'                            stagesize = "sizea", censorcol = "Missing1988",
 #'                            censorkeep = NA, NAas0 = TRUE, censor = TRUE)
 #' 
@@ -2256,15 +2275,15 @@ rlefko2 <- function(data, stageframe, year = "all", pop = NA, patch = NA, censor
 #' }
 #' 
 #' @export
-aflefko2 <- function(year = 1, patch = NA, stageframe, repmatrix = NA, modelsuite = NA, 
-                     surv_model = NA, obs_model = NA, size_model = NA, repst_model = NA, 
-                     fec_model = NA, jsurv_model = NA, jobs_model = NA, jsize_model = NA,
-                     jrepst_model = NA, paramnames = NA, surv_dev = 0, obs_dev = 0, 
-                     size_dev = 0, repst_dev = 0, fec_dev = 0, jsurv_dev = 0, jobs_dev = 0,
-                     jsize_dev = 0, jrepst_dev = 0, repmod = 1, overwrite = NA, data = NA, 
-                     yearcol = "year2", patchcol = "patchid", year.as.random = FALSE, 
-                     patch.as.random = FALSE, final_age = 10, continue = TRUE,
-                     randomseed = 0, negfec = FALSE, reduce = FALSE) {
+#' 
+aflefko2 <- function(year = 1, patch = NA, stageframe, repmatrix = NA, overwrite = NA, 
+                     data = NA, modelsuite = NA, surv_model = NA, obs_model = NA, size_model = NA, 
+                     repst_model = NA, fec_model = NA, jsurv_model = NA, jobs_model = NA, 
+                     jsize_model = NA, jrepst_model = NA, paramnames = NA, inda = 0, indb = 0, 
+                     indc = 0, surv_dev = 0, obs_dev = 0, size_dev = 0, repst_dev = 0, fec_dev = 0, 
+                     jsurv_dev = 0, jobs_dev = 0, jsize_dev = 0, jrepst_dev = 0, repmod = 1, 
+                     yearcol = "year2", patchcol = "patchid", year.as.random = FALSE, patch.as.random = FALSE, 
+                     final_age = 10, continue = TRUE, randomseed = 0, negfec = FALSE, reduce = FALSE) {
   
   if (all(is.na(modelsuite)) & all(is.na(paramnames))) {
     warnings("Function may not work properly without a dataframe of model parameters or equivalents supplied either through modelsuite or through the paramnames input parameter.")
@@ -2323,6 +2342,10 @@ aflefko2 <- function(year = 1, patch = NA, stageframe, repmatrix = NA, modelsuit
     repmatrix <- matrix(0, dim(stageframe)[1], dim(stageframe)[1])
     repstages <- which(stageframe$repstatus == 1)
     repmatrix[1, repstages] <- 1
+  }
+  
+  if (!is.numeric(inda) | !is.numeric(indb) | !is.numeric(indc)) {
+    stop("Individual covariate values must equal valid numbers.", call. = FALSE)
   }
   
   if (any(!suppressWarnings(!is.na(as.numeric(as.character(stageframe$size)))))) {
@@ -2389,14 +2412,14 @@ aflefko2 <- function(year = 1, patch = NA, stageframe, repmatrix = NA, modelsuit
   
   set.seed(randomseed)
   
-  surv_proxy <- .modelextract(surv_model, paramnames, mainyears, mainpatches)
-  obs_proxy <- .modelextract(obs_model, paramnames, mainyears, mainpatches)
+  surv_proxy <- .modelextract(surv_model, paramnames, mainyears, mainpatches, year.as.random, patch.as.random)
+  obs_proxy <- .modelextract(obs_model, paramnames, mainyears, mainpatches, year.as.random, patch.as.random)
   
   sigma <- 0
   rvarssummed <- 0
   sizedist <- 1
   
-  size_proxy <- .modelextract(size_model, paramnames, mainyears, mainpatches)
+  size_proxy <- .modelextract(size_model, paramnames, mainyears, mainpatches, year.as.random, patch.as.random)
   
   if (size_proxy$family == "poisson") {
     sizedist <- 0
@@ -2412,8 +2435,8 @@ aflefko2 <- function(year = 1, patch = NA, stageframe, repmatrix = NA, modelsuit
     sizedist <- 1
   }
   
-  repst_proxy <- .modelextract(repst_model, paramnames, mainyears, mainpatches)
-  fec_proxy <- .modelextract(fec_model, paramnames, mainyears, mainpatches)
+  repst_proxy <- .modelextract(repst_model, paramnames, mainyears, mainpatches, year.as.random, patch.as.random)
+  fec_proxy <- .modelextract(fec_model, paramnames, mainyears, mainpatches, year.as.random, patch.as.random)
   
   if (fec_proxy$family == "poisson") {
     fecdist <- 0
@@ -2423,13 +2446,13 @@ aflefko2 <- function(year = 1, patch = NA, stageframe, repmatrix = NA, modelsuit
     fecdist <- 1
   }
   
-  jsurv_proxy <- .modelextract(jsurv_model, paramnames, mainyears, mainpatches)
-  jobs_proxy <- .modelextract(jobs_model, paramnames, mainyears, mainpatches)
+  jsurv_proxy <- .modelextract(jsurv_model, paramnames, mainyears, mainpatches, year.as.random, patch.as.random)
+  jobs_proxy <- .modelextract(jobs_model, paramnames, mainyears, mainpatches, year.as.random, patch.as.random)
   
   jsigma <- 0
   jrvarssummed <- 0
   
-  jsize_proxy <- .modelextract(jsize_model, paramnames, mainyears, mainpatches)
+  jsize_proxy <- .modelextract(jsize_model, paramnames, mainyears, mainpatches, year.as.random, patch.as.random)
   
   if (jsize_proxy$family == "poisson") {
     if (!all(is.na(jsize_proxy$variances))) {
@@ -2441,7 +2464,7 @@ aflefko2 <- function(year = 1, patch = NA, stageframe, repmatrix = NA, modelsuit
     jsigma <- jsize_proxy$sigma
   }
   
-  jrepst_proxy <- .modelextract(jrepst_model, paramnames, mainyears, mainpatches)
+  jrepst_proxy <- .modelextract(jrepst_model, paramnames, mainyears, mainpatches, year.as.random, patch.as.random)
   
   # This creates a list of pop, patch, and year in order of matrix
   if (!all(is.na(patch))) {
@@ -2471,9 +2494,10 @@ aflefko2 <- function(year = 1, patch = NA, stageframe, repmatrix = NA, modelsuit
   yearlist <- split(listofyears, seq(nrow(listofyears)))
   
   madsexmadrigal <- lapply(yearlist, jerzeibalowski, allstages, surv_proxy, obs_proxy, size_proxy, repst_proxy,
-                           fec_proxy, jsurv_proxy, jobs_proxy, jsize_proxy, jrepst_proxy, surv_dev, obs_dev, 
-                           size_dev, repst_dev, fec_dev, jsurv_dev, jobs_dev, jsize_dev, jrepst_dev, total.matrix.dim, 
-                           repmod, rvarssummed, sigma, jrvarssummed, jsigma, maxsize, sizedist, fecdist, negfec)
+                           fec_proxy, jsurv_proxy, jobs_proxy, jsize_proxy, jrepst_proxy, inda, indb, indc, 
+                           surv_dev, obs_dev, size_dev, repst_dev, fec_dev, jsurv_dev, jobs_dev, jsize_dev, 
+                           jrepst_dev, total.matrix.dim, repmod, rvarssummed, sigma, jrvarssummed, jsigma, 
+                           maxsize, sizedist, fecdist, negfec)
   
   a_list <- lapply(madsexmadrigal, function(X) {X$A})
   u_list <- lapply(madsexmadrigal, function(X) {X$U})
@@ -2544,9 +2568,9 @@ aflefko2 <- function(year = 1, patch = NA, stageframe, repmatrix = NA, modelsuit
 #' 
 #' cypraw_v1 <- verticalize3(data = cypdata, noyears = 6, firstyear = 2004,
 #'                           patchidcol = "patch", individcol = "plantid",
-#'                           blocksize = 4, size1col = "Inf2.04", size2col = "Inf.04",
-#'                           size3col = "Veg.04", repstr1col = "Inf.04",
-#'                           repstr2col = "Inf2.04", fec1col = "Pod.04",
+#'                           blocksize = 4, sizeacol = "Inf2.04", sizebcol = "Inf.04",
+#'                           sizeccol = "Veg.04", repstracol = "Inf.04",
+#'                           repstrbcol = "Inf2.04", fecacol = "Pod.04",
 #'                           stageassign = cypframe_raw, stagesize = "sizeadded",
 #'                           NAas0 = TRUE, NRasRep = TRUE)
 #' 
@@ -2587,12 +2611,18 @@ summary.lefkoMat <- function(object, ...) {
     histmark <- "ahistorical"
   }
   
+  mqac <- mqca / mqcc
+  if (mqac != floor(mqac)) mqac <- round(mqac, digits = 3)
+
+  mqbc <- mqcb / mqcc
+  if (mqbc != floor(mqbc)) mqbc <- round(mqbc, digits = 3)
+  
   writeLines(paste0("\nThis ", histmark, " lefkoMat object contains ", mqcc, " matrices."))
   writeLines(paste0("\nEach matrix is a square matrix with ", matdim, " rows and columns, and a total of ", matdim*matdim, " elements."))
   writeLines(paste0("A total of ", mqca, " survival transitions were estimated, with ", 
-                    mqca / mqcc, " per matrix."))
+                    mqac, " per matrix."))
   writeLines(paste0("A total of ", mqcb, " fecundity transitions were estimated, with ", 
-                    mqcb / mqcc, " per matrix."))
+                    mqbc, " per matrix."))
   
   if (is.element("dataqc", names(matrices))) {
     dqca <- matrices$dataqc[1]

@@ -16,7 +16,7 @@ knitr::opts_chunk$set(
 )
 ```
 
-This document was built in Markdown in R `r getRversion()`, and covers package `lefko3` version 3.0.0.
+This document was built in Markdown in R `r getRversion()`, and covers package `lefko3` version 3.1.0.
 
 ## INTRODUCTION TO PACKAGE `LEFKO3`
 
@@ -224,7 +224,7 @@ Here, $n _{1,SS}$ is the number of individuals that were in stage $S$ in both ye
 
   <p style="text-indent: 20px">Historical MPMs are not necessarily justified in all cases. We urge the reader to use the principle of parsimony in deciding this, for example by analyzing whether lagged effects of previous stage appear to influence vital rates. Package `lefko3` includes one method to do this based on linear modeling. A number of other methods exist, mostly focused on what are known as *memory models* [@brownie_capture-recapture_1993; @pradel_proposal_2003; @cole_does_2014]. Here, we focus only on the `lefko3` method, and leave it to the reader to explore other options.</p>
   
-  <p style="text-indent: 20px">In `lefko3`, the function `modelsearch()` allows users to explore whether history influences component vital rates, and to develop linear models of these vital rates. The results can be used to decide not only whether a historical MPM is justified, but also to develop function-based hMPMs and ahMPMs themselves. Package `lefko3` can estimate linear models to estimate up to nine different vital rates:</p>
+  <p style="text-indent: 20px">In `lefko3`, function `modelsearch()` allows users to explore whether history influences component vital rates, and to develop linear models of these vital rates. The results can be used to decide not only whether a historical MPM is justified, but also to develop function-based hMPMs and ahMPMs themselves. Package `lefko3` can estimate linear models to estimate up to nine different vital rates:</p>
   
   1. **Survival probability** - This is the probability of surviving from time *t* to time *t*+1, given that the individual is in stage *j* in time *t* (and, if historical, in stage *l* in time *t*-1). In `lefko3`, this parameter may be modeled as a function of size, reproductive status, patch, year, and individual identity in times *t* and *t*-1. This parameter is required in all function-based matrices.
   
@@ -256,29 +256,35 @@ Here, $n _{1,SS}$ is the number of individuals that were in stage $S$ in both ye
   
   4. **Suite of vital rates** - Which adult demographic parameters should be estimated? The defaults are (1) survival, (3) size, and (5) fecundity.
   
-  5. **Juvenile stage estimation** - Should juvenile parameters (6) through (9) also be modeled?
+  5. **Juvenile vital rate estimation** - Should juvenile parameters (6) through (9) also be modeled?
   
   6. **Best-fit criterion** - If a model with fewer parameters exists within 2.0 AICc units of the model with the lowest AICc, then should this model be used as the best-fit model (the default), or should the model with the lowest AICc always be chosen?
   
-  7. **Size distribution** - Should size be modeled as a continuous variable under a Gaussian distribution, or as a count variable under either a Poisson or negative binomial distribution?
+  7. **Size distribution** - Should size be modeled as a continuous variable under a Gaussian distribution, or as a count variable under either a Poisson or negative binomial distribution? If the latter, should the distribution be zero-inflated?
   
-  8. **Fecundity distribution** - Should fecundity be modeled as a continuous variable under a Gaussian distribution, or as a count variable under either a Poisson or negative binomial distribution?
+  8. **Fecundity distribution** - Should fecundity be modeled as a continuous variable under a Gaussian distribution, or as a count variable under either a Poisson or negative binomial distribution? If the latter, should the distribution be zero-inflated?
   
-  9. **Timing of fecundity** - `Modelsearch()` assumes that linear models of fecundity use a metric counted or measured in time *t* as the response. This applies well with plants, where flowers or seeds produced might be the fecundity response. However, users not wishing to follow this default behavior can use the `fectime` option to stipulate a fecundity metric measured in time *t*+1. 
+  9. **Timing of fecundity** - `Modelsearch()` assumes that linear models of fecundity use a metric counted or measured in time *t* as the response. This applies well with most herbaceous plant datasets, where flowers or seeds produced in one year might be the fecundity response measured. However, users not wishing to follow this default behavior can use the `fectime` option to stipulate a fecundity metric measured in time *t*+1. 
   
-  10. **Censoring** - Should data points marked as questionable be used or eliminated?
+  10. **Age** - Is an age x stage MPM the main goal?
   
-  11. **Variable names** - The names of all relevant variables in the dataset need to be specified. Note that the default behavior assumes variable names produced via the `historicalize3()` or `verticalize3()` functions, which produce standardized vertical datasets.
+  11. **Individual covariates and environmental state variables** - Should individual or environmental covariates be tested as causal factors on vital rates?
+  
+  12. **Missing values for times and patches** - Should times or patches with coefficients that drop to 0 be estimated as random values from the corresponding distributions of time or patch coefficients?
+  
+  13. **Censoring** - Should data points marked as questionable be used or eliminated?
+  
+  14. **Variable names** - The names of all relevant variables in the dataset need to be specified. Note that the default behavior assumes variable names produced via the `historicalize3()` or `verticalize3()` functions, which produce standardized vertical datasets.
 
   <p style="text-indent: 20px">Once all inputs are provided, `modelsearch()` goes to work. The result is a `lefkoMod` object, which is essentially a list in which the first several elements are the best-fit models developed for each vital rate. These are followed by an equivalent number of elements showing the full model tables developed and tested, followed by an element detailing the best-fit criterion used, and ending on quality control data showing the number of individuals and the number of unique transitions used in the estimation of each model. Depending on user choices, linear modeling is handled through the `lm()` and `glm()` functions in the `stats` package, the `lmer()` and `glmer()` functions in `lme4`, or `glmmTMB()` function in `glmmTMB`. Exhaustive model building proceeds through the `dredge()` function in package `MuMIn` [@barton_mumin_2014]. Model selection is handled through assessment of AICc and the number of parameters estimated per model (see 6. **Best-fit criterion** above).</p>
   
   <p style="text-indent: 20px">If `modelsearch()` is set for historical analysis (`historical = TRUE`, the default), then the decision of whether to develop a historical MPM can be made on the basis of whether any best-fit vital rate model includes size or reproductive status in time *t*-1. If at least one vital rate does, then a historical MPM is justified. Otherwise, it is not. Regardless, the output can be used to create a function-based MPM in the next step.</p>
   
-  <p style="text-indent: 20px">Advanced users of `lefko3` may wish to create their own models without the package's automated model selection function. In that case, `lefko3`'s matrix functions can accommodate single models developed using base R, package `lme4` [@bates_fitting_2015], and package `glmmTMB` [@brooks_glmmtmb_2017]. Plans are in the works to add `nlme` compatibility, as well as non-linear models (e.g. general additive models) and zero-inflated Poisson models.</p>
+  <p style="text-indent: 20px">Advanced users of `lefko3` may wish to create their own models without the package's automated model selection function. In that case, `lefko3`'s matrix functions can accommodate single models developed using base R, package `lme4` [@bates_fitting_2015], package `glmmTMB` [@brooks_glmmtmb_2017], and package `pscl` [@zeileis_regression_2008]. Plans are in the works to add `nlme` compatibility [@pinheiro_nlme_2020], as well as non-linear models such as general additive models (GAMs).</p>
 
 ### Step 4: Estimate matrices
   
-  <p style="text-indent: 20px">MPM creation can be accomplished with four different functions:</p>
+  <p style="text-indent: 20px">MPM creation can be accomplished with five different functions:</p>
   
   1. `rlefko2()` - This function creates raw ahistorical MPMs given a dataset, a stageframe, a reproductive matrix, and an overwrite matrix.
   
@@ -287,6 +293,8 @@ Here, $n _{1,SS}$ is the number of individuals that were in stage $S$ in both ye
   3. `flefko2()` - This function creates function-based ahistorical MPMs given a dataset, a set of models, a stageframe, a reproductive matrix, and an overwrite matrix.
   
   4. `flefko3()` - This function creates function-based historical MPMs given a dataset, a set of models, a stageframe, a reproductive matrix, and an overwrite matrix.
+  
+  5. `aflefko3()` - This function creates function-based ahistorical age x stage MPMs given a dataset, a set of models, a stageframe,a reproductive matrix, and an overwrite matrix.
 
   <p style="text-indent: 20px">These functions incorporate binary kernels developed to handle the estimation of matrix elements quickly and efficiently. A single run of `flefko3()`, for example, should be able to yield all annual matrices for all patches for the *Cypripedium candidum* dataset provided with `lefko3` in under a minute on most machines (14s or so on RPS' 2019 MacBook Pro with 2.3 GHz 8-Core Intel Core i9). Parallel computing should not be necessary, even with the slowest of current machines, provided that the machine is current enough to handle at least R 4.0.</p>
 

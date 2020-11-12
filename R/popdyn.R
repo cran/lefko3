@@ -33,7 +33,6 @@
 #' vertical dataset used as input.}
 #' 
 #' @examples
-#' \donttest{
 #' data(lathyrus)
 #' 
 #' sizevector <- c(0, 100, 13, 127, 3730, 3800, 0)
@@ -52,9 +51,9 @@
 #' 
 #' lathvert <- verticalize3(lathyrus, noyears = 4, firstyear = 1988, patchidcol = "SUBPLOT", 
 #'                          individcol = "GENET", blocksize = 9, juvcol = "Seedling1988", 
-#'                          size1col = "Volume88", repstr1col = "FCODE88", 
-#'                          fec1col = "Intactseed88", dead1col = "Dead1988", 
-#'                          nonobs1col = "Dormant1988", stageassign = lathframe, 
+#'                          sizeacol = "Volume88", repstracol = "FCODE88", 
+#'                          fecacol = "Intactseed88", deadacol = "Dead1988", 
+#'                          nonobsacol = "Dormant1988", stageassign = lathframe, 
 #'                          stagesize = "sizea", censorcol = "Missing1988", 
 #'                          censorkeep = NA, censor = TRUE)
 #' 
@@ -72,7 +71,6 @@
 #' 
 #' ehrlen3mean <- lmean(ehrlen3)
 #' ehrlen3mean$A[[1]]
-#' }
 #' 
 #' @export
 lmean <- function(mats, matsout = "all") {
@@ -196,9 +194,9 @@ lmean <- function(mats, matsout = "all") {
 #' 
 #' lathvert <- verticalize3(lathyrus, noyears = 4, firstyear = 1988, patchidcol = "SUBPLOT", 
 #'                          individcol = "GENET", blocksize = 9, juvcol = "Seedling1988", 
-#'                          size1col = "Volume88", repstr1col = "FCODE88", 
-#'                          fec1col = "Intactseed88", dead1col = "Dead1988", 
-#'                          nonobs1col = "Dormant1988", stageassign = lathframe, 
+#'                          sizeacol = "Volume88", repstracol = "FCODE88", 
+#'                          fecacol = "Intactseed88", deadacol = "Dead1988", 
+#'                          nonobsacol = "Dormant1988", stageassign = lathframe, 
 #'                          stagesize = "sizea", censorcol = "Missing1988", 
 #'                          censorkeep = NA, censor = TRUE)
 #' 
@@ -243,6 +241,7 @@ lambda3 <- function(mats) UseMethod("lambda3")
 #' 
 #' @examples
 #' data(lathyrus)
+#' 
 #' sizevector <- c(0, 100, 13, 127, 3730, 3800, 0)
 #' stagevector <- c("Sd", "Sdl", "VSm", "Sm", "VLa", "Flo", "Dorm")
 #' repvector <- c(0, 0, 0, 0, 0, 1, 0)
@@ -259,9 +258,9 @@ lambda3 <- function(mats) UseMethod("lambda3")
 #' 
 #' lathvert <- verticalize3(lathyrus, noyears = 4, firstyear = 1988, patchidcol = "SUBPLOT", 
 #'                          individcol = "GENET", blocksize = 9, juvcol = "Seedling1988", 
-#'                          size1col = "Volume88", repstr1col = "FCODE88", 
-#'                          fec1col = "Intactseed88", dead1col = "Dead1988", 
-#'                          nonobs1col = "Dormant1988", stageassign = lathframe, 
+#'                          sizeacol = "Volume88", repstracol = "FCODE88", 
+#'                          fecacol = "Intactseed88", deadacol = "Dead1988", 
+#'                          nonobsacol = "Dormant1988", stageassign = lathframe, 
 #'                          stagesize = "sizea", censorcol = "Missing1988", 
 #'                          censorkeep = NA, censor = TRUE)
 #' 
@@ -349,9 +348,9 @@ lambda3.lefkoMat <- function(mats) {
 #' 
 #' lathvert <- verticalize3(lathyrus, noyears = 4, firstyear = 1988, patchidcol = "SUBPLOT", 
 #'                          individcol = "GENET", blocksize = 9, juvcol = "Seedling1988", 
-#'                          size1col = "Volume88", repstr1col = "FCODE88", 
-#'                          fec1col = "Intactseed88", dead1col = "Dead1988", 
-#'                          nonobs1col = "Dormant1988", stageassign = lathframe, 
+#'                          sizeacol = "Volume88", repstracol = "FCODE88", 
+#'                          fecacol = "Intactseed88", deadacol = "Dead1988", 
+#'                          nonobsacol = "Dormant1988", stageassign = lathframe, 
 #'                          stagesize = "sizea", censorcol = "Missing1988", 
 #'                          censorkeep = NA, censor = TRUE)
 #' 
@@ -419,9 +418,9 @@ lambda3.matrix <- function(mats)
 #' 
 #' lathvert <- verticalize3(lathyrus, noyears = 4, firstyear = 1988, patchidcol = "SUBPLOT", 
 #'                          individcol = "GENET", blocksize = 9, juvcol = "Seedling1988", 
-#'                          size1col = "Volume88", repstr1col = "FCODE88", 
-#'                          fec1col = "Intactseed88", dead1col = "Dead1988", 
-#'                          nonobs1col = "Dormant1988", stageassign = lathframe, 
+#'                          sizeacol = "Volume88", repstracol = "FCODE88", 
+#'                          fecacol = "Intactseed88", deadacol = "Dead1988", 
+#'                          nonobsacol = "Dormant1988", stageassign = lathframe, 
 #'                          stagesize = "sizea", censorcol = "Missing1988", 
 #'                          censorkeep = NA, censor = TRUE)
 #' 
@@ -504,9 +503,9 @@ stablestage3 <- function(mats) UseMethod("stablestage3")
 #' 
 #' lathvert <- verticalize3(lathyrus, noyears = 4, firstyear = 1988, patchidcol = "SUBPLOT", 
 #'                          individcol = "GENET", blocksize = 9, juvcol = "Seedling1988", 
-#'                          size1col = "Volume88", repstr1col = "FCODE88", 
-#'                          fec1col = "Intactseed88", dead1col = "Dead1988", 
-#'                          nonobs1col = "Dormant1988", stageassign = lathframe, 
+#'                          sizeacol = "Volume88", repstracol = "FCODE88", 
+#'                          fecacol = "Intactseed88", deadacol = "Dead1988", 
+#'                          nonobsacol = "Dormant1988", stageassign = lathframe, 
 #'                          stagesize = "sizea", censorcol = "Missing1988", 
 #'                          censorkeep = NA, censor = TRUE)
 #' 
@@ -627,9 +626,9 @@ stablestage3.lefkoMat <- function(mats) {
 #' 
 #' lathvert <- verticalize3(lathyrus, noyears = 4, firstyear = 1988, patchidcol = "SUBPLOT", 
 #'                          individcol = "GENET", blocksize = 9, juvcol = "Seedling1988", 
-#'                          size1col = "Volume88", repstr1col = "FCODE88", 
-#'                          fec1col = "Intactseed88", dead1col = "Dead1988", 
-#'                          nonobs1col = "Dormant1988", stageassign = lathframe, 
+#'                          sizeacol = "Volume88", repstracol = "FCODE88", 
+#'                          fecacol = "Intactseed88", deadacol = "Dead1988", 
+#'                          nonobsacol = "Dormant1988", stageassign = lathframe, 
 #'                          stagesize = "sizea", censorcol = "Missing1988", 
 #'                          censorkeep = NA, censor = TRUE)
 #' 
@@ -696,9 +695,9 @@ stablestage3.matrix <- function(mats)
 #' 
 #' lathvert <- verticalize3(lathyrus, noyears = 4, firstyear = 1988, patchidcol = "SUBPLOT", 
 #'                          individcol = "GENET", blocksize = 9, juvcol = "Seedling1988", 
-#'                          size1col = "Volume88", repstr1col = "FCODE88", 
-#'                          fec1col = "Intactseed88", dead1col = "Dead1988", 
-#'                          nonobs1col = "Dormant1988", stageassign = lathframe, 
+#'                          sizeacol = "Volume88", repstracol = "FCODE88", 
+#'                          fecacol = "Intactseed88", deadacol = "Dead1988", 
+#'                          nonobsacol = "Dormant1988", stageassign = lathframe, 
 #'                          stagesize = "sizea", censorcol = "Missing1988", 
 #'                          censorkeep = NA, censor = TRUE)
 #' 
@@ -780,9 +779,9 @@ repvalue3 <- function(mats) UseMethod("repvalue3")
 #' 
 #' lathvert <- verticalize3(lathyrus, noyears = 4, firstyear = 1988, patchidcol = "SUBPLOT", 
 #'                          individcol = "GENET", blocksize = 9, juvcol = "Seedling1988", 
-#'                          size1col = "Volume88", repstr1col = "FCODE88", 
-#'                          fec1col = "Intactseed88", dead1col = "Dead1988", 
-#'                          nonobs1col = "Dormant1988", stageassign = lathframe, 
+#'                          sizeacol = "Volume88", repstracol = "FCODE88", 
+#'                          fecacol = "Intactseed88", deadacol = "Dead1988", 
+#'                          nonobsacol = "Dormant1988", stageassign = lathframe, 
 #'                          stagesize = "sizea", censorcol = "Missing1988", 
 #'                          censorkeep = NA, censor = TRUE)
 #' 
@@ -926,9 +925,9 @@ repvalue3.lefkoMat <- function(mats) {
 #' 
 #' lathvert <- verticalize3(lathyrus, noyears = 4, firstyear = 1988, patchidcol = "SUBPLOT", 
 #'                          individcol = "GENET", blocksize = 9, juvcol = "Seedling1988", 
-#'                          size1col = "Volume88", repstr1col = "FCODE88", 
-#'                          fec1col = "Intactseed88", dead1col = "Dead1988", 
-#'                          nonobs1col = "Dormant1988", stageassign = lathframe, 
+#'                          sizeacol = "Volume88", repstracol = "FCODE88", 
+#'                          fecacol = "Intactseed88", deadacol = "Dead1988", 
+#'                          nonobsacol = "Dormant1988", stageassign = lathframe, 
 #'                          stagesize = "sizea", censorcol = "Missing1988", 
 #'                          censorkeep = NA, censor = TRUE)
 #' 
@@ -994,9 +993,9 @@ repvalue3.matrix <- function(mats)
 #' 
 #' lathvert <- verticalize3(lathyrus, noyears = 4, firstyear = 1988, patchidcol = "SUBPLOT", 
 #'                          individcol = "GENET", blocksize = 9, juvcol = "Seedling1988", 
-#'                          size1col = "Volume88", repstr1col = "FCODE88", 
-#'                          fec1col = "Intactseed88", dead1col = "Dead1988", 
-#'                          nonobs1col = "Dormant1988", stageassign = lathframe, 
+#'                          sizeacol = "Volume88", repstracol = "FCODE88", 
+#'                          fecacol = "Intactseed88", deadacol = "Dead1988", 
+#'                          nonobsacol = "Dormant1988", stageassign = lathframe, 
 #'                          stagesize = "sizea", censorcol = "Missing1988", 
 #'                          censorkeep = NA, censor = TRUE)
 #' 
@@ -1059,9 +1058,9 @@ sensitivity3 <- function(mats) UseMethod("sensitivity3")
 #' 
 #' lathvert <- verticalize3(lathyrus, noyears = 4, firstyear = 1988, patchidcol = "SUBPLOT", 
 #'                          individcol = "GENET", blocksize = 9, juvcol = "Seedling1988", 
-#'                          size1col = "Volume88", repstr1col = "FCODE88", 
-#'                          fec1col = "Intactseed88", dead1col = "Dead1988", 
-#'                          nonobs1col = "Dormant1988", stageassign = lathframe, 
+#'                          sizeacol = "Volume88", repstracol = "FCODE88", 
+#'                          fecacol = "Intactseed88", deadacol = "Dead1988", 
+#'                          nonobsacol = "Dormant1988", stageassign = lathframe, 
 #'                          stagesize = "sizea", censorcol = "Missing1988", 
 #'                          censorkeep = NA, censor = TRUE)
 #' 
@@ -1170,9 +1169,9 @@ sensitivity3.lefkoMat <- function(mats) {
 #' 
 #' lathvert <- verticalize3(lathyrus, noyears = 4, firstyear = 1988, patchidcol = "SUBPLOT", 
 #'                          individcol = "GENET", blocksize = 9, juvcol = "Seedling1988", 
-#'                          size1col = "Volume88", repstr1col = "FCODE88", 
-#'                          fec1col = "Intactseed88", dead1col = "Dead1988", 
-#'                          nonobs1col = "Dormant1988", stageassign = lathframe, 
+#'                          sizeacol = "Volume88", repstracol = "FCODE88", 
+#'                          fecacol = "Intactseed88", deadacol = "Dead1988", 
+#'                          nonobsacol = "Dormant1988", stageassign = lathframe, 
 #'                          stagesize = "sizea", censorcol = "Missing1988", 
 #'                          censorkeep = NA, censor = TRUE)
 #' 
@@ -1238,9 +1237,9 @@ sensitivity3.matrix <- function(mats)
 #' 
 #' lathvert <- verticalize3(lathyrus, noyears = 4, firstyear = 1988, patchidcol = "SUBPLOT", 
 #'                          individcol = "GENET", blocksize = 9, juvcol = "Seedling1988", 
-#'                          size1col = "Volume88", repstr1col = "FCODE88", 
-#'                          fec1col = "Intactseed88", dead1col = "Dead1988", 
-#'                          nonobs1col = "Dormant1988", stageassign = lathframe, 
+#'                          sizeacol = "Volume88", repstracol = "FCODE88", 
+#'                          fecacol = "Intactseed88", deadacol = "Dead1988", 
+#'                          nonobsacol = "Dormant1988", stageassign = lathframe, 
 #'                          stagesize = "sizea", censorcol = "Missing1988", 
 #'                          censorkeep = NA, censor = TRUE)
 #' 
@@ -1304,9 +1303,9 @@ elasticity3 <- function(mats) UseMethod("elasticity3")
 #' 
 #' lathvert <- verticalize3(lathyrus, noyears = 4, firstyear = 1988, patchidcol = "SUBPLOT", 
 #'                          individcol = "GENET", blocksize = 9, juvcol = "Seedling1988", 
-#'                          size1col = "Volume88", repstr1col = "FCODE88", 
-#'                          fec1col = "Intactseed88", dead1col = "Dead1988", 
-#'                          nonobs1col = "Dormant1988", stageassign = lathframe, 
+#'                          sizeacol = "Volume88", repstracol = "FCODE88", 
+#'                          fecacol = "Intactseed88", deadacol = "Dead1988", 
+#'                          nonobsacol = "Dormant1988", stageassign = lathframe, 
 #'                          stagesize = "sizea", censorcol = "Missing1988", 
 #'                          censorkeep = NA, censor = TRUE)
 #' 
@@ -1419,9 +1418,9 @@ elasticity3.lefkoMat <- function(mats) {
 #' 
 #' lathvert <- verticalize3(lathyrus, noyears = 4, firstyear = 1988, patchidcol = "SUBPLOT", 
 #'                          individcol = "GENET", blocksize = 9, juvcol = "Seedling1988", 
-#'                          size1col = "Volume88", repstr1col = "FCODE88", 
-#'                          fec1col = "Intactseed88", dead1col = "Dead1988", 
-#'                          nonobs1col = "Dormant1988", stageassign = lathframe, 
+#'                          sizeacol = "Volume88", repstracol = "FCODE88", 
+#'                          fecacol = "Intactseed88", deadacol = "Dead1988", 
+#'                          nonobsacol = "Dormant1988", stageassign = lathframe, 
 #'                          stagesize = "sizea", censorcol = "Missing1988", 
 #'                          censorkeep = NA, censor = TRUE)
 #' 

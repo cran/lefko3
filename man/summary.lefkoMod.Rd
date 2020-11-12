@@ -48,9 +48,9 @@ lathframeln <- sf_create(sizes = sizevector, stagenames = stagevector, repstatus
 
 lathvertln <- verticalize3(lathyrus, noyears = 4, firstyear = 1988, patchidcol = "SUBPLOT",
                            individcol = "GENET", blocksize = 9, juvcol = "Seedling1988",
-                           size1col = "lnVol88", repstr1col = "Intactseed88",
-                           fec1col = "Intactseed88", dead1col = "Dead1988",
-                           nonobs1col = "Dormant1988", stageassign = lathframeln,
+                           sizeacol = "lnVol88", repstracol = "Intactseed88",
+                           fecacol = "Intactseed88", deadacol = "Dead1988",
+                           nonobsacol = "Dormant1988", stageassign = lathframeln,
                            stagesize = "sizea", censorcol = "Missing1988",
                            censorkeep = NA, NAas0 = TRUE, censor = TRUE)
 

@@ -19,12 +19,15 @@
 #' @docType package
 #' @author Richard P. Shefferson <cdorm@g.ecc.u-tokyo.ac.jp>
 #' @author Johan Ehrlén
-#' @references Shefferson, R.P., J. Ehrlen, and S. Kurokawa. \emph{In review}. Package lefko3: individual history in population projection matrix modeling.
+#' @references Shefferson, R.P., J. Ehrlen, and S. Kurokawa. \emph{In press}. \emph{lefko3}: analyzing 
+#' individual history through size-classified matrix population models. \emph{Methods in Ecology and Evolution}.
 #' @import Rcpp
 #' @importFrom Rcpp evalCpp
-#' @importFrom stats na.action na.fail na.omit lm glm getCall xtabs sd rnorm setNames as.formula median
-#' @importFrom MASS glm.nb
+#' @importFrom stats na.action na.fail na.omit lm glm getCall xtabs sd rnorm setNames
+#' @importFrom stats as.formula median pchisq var poisson
+#' @importFrom pscl zeroinfl
 #' @importFrom MuMIn dredge
+#' @importFrom MASS glm.nb
 #' @importFrom lme4 lmer glmer fixef ranef VarCorr
 #' @importFrom glmmTMB glmmTMB nbinom2 fixef ranef
 #' @useDynLib lefko3

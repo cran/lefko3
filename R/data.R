@@ -73,9 +73,9 @@
 #' 
 #' cypraw_v1 <- verticalize3(data = cypdata, noyears = 6, firstyear = 2004, 
 #'                           patchidcol = "patch", individcol = "plantid", 
-#'                           blocksize = 4, size1col = "Inf2.04", size2col = "Inf.04", 
-#'                           size3col = "Veg.04", repstr1col = "Inf.04", 
-#'                           repstr2col = "Inf2.04", fec1col = "Pod.04", 
+#'                           blocksize = 4, sizeacol = "Inf2.04", sizebcol = "Inf.04", 
+#'                           sizeccol = "Veg.04", repstracol = "Inf.04", 
+#'                           repstrbcol = "Inf2.04", fecacol = "Pod.04", 
 #'                           stageassign = cypframe_raw, stagesize = "sizeadded", 
 #'                           NAas0 = TRUE, NRasRep = TRUE)
 #' 
@@ -279,9 +279,9 @@
 #' 
 #' lathvertln <- verticalize3(lathyrus, noyears = 4, firstyear = 1988, patchidcol = "SUBPLOT",
 #'                            individcol = "GENET", blocksize = 9, juvcol = "Seedling1988",
-#'                            size1col = "lnVol88", repstr1col = "FCODE88",
-#'                            fec1col = "Intactseed88", dead1col = "Dead1988",
-#'                            nonobs1col = "Dormant1988", stageassign = lathframeln,
+#'                            sizeacol = "lnVol88", repstracol = "FCODE88",
+#'                            fecacol = "Intactseed88", deadacol = "Dead1988",
+#'                            nonobsacol = "Dormant1988", stageassign = lathframeln,
 #'                            stagesize = "sizea", censorcol = "Missing1988",
 #'                            censorkeep = NA, NAas0 = TRUE, censor = TRUE)
 #' 

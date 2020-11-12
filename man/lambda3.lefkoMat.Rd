@@ -27,6 +27,7 @@ age x stage matrices, as well as smaller ahistorical matrices.
 }
 \examples{
 data(lathyrus)
+
 sizevector <- c(0, 100, 13, 127, 3730, 3800, 0)
 stagevector <- c("Sd", "Sdl", "VSm", "Sm", "VLa", "Flo", "Dorm")
 repvector <- c(0, 0, 0, 0, 0, 1, 0)
@@ -43,9 +44,9 @@ lathframe <- sf_create(sizes = sizevector, stagenames = stagevector, repstatus =
 
 lathvert <- verticalize3(lathyrus, noyears = 4, firstyear = 1988, patchidcol = "SUBPLOT", 
                          individcol = "GENET", blocksize = 9, juvcol = "Seedling1988", 
-                         size1col = "Volume88", repstr1col = "FCODE88", 
-                         fec1col = "Intactseed88", dead1col = "Dead1988", 
-                         nonobs1col = "Dormant1988", stageassign = lathframe, 
+                         sizeacol = "Volume88", repstracol = "FCODE88", 
+                         fecacol = "Intactseed88", deadacol = "Dead1988", 
+                         nonobsacol = "Dormant1988", stageassign = lathframe, 
                          stagesize = "sizea", censorcol = "Missing1988", 
                          censorkeep = NA, censor = TRUE)
 

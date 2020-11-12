@@ -15,17 +15,20 @@ verticalize3(
   xcol = 0,
   ycol = 0,
   juvcol = 0,
-  size1col,
-  size2col = 0,
-  size3col = 0,
-  repstr1col = 0,
-  repstr2col = 0,
-  fec1col = 0,
-  fec2col = 0,
-  alive1col = 0,
-  dead1col = 0,
-  obs1col = 0,
-  nonobs1col = 0,
+  sizeacol,
+  sizebcol = 0,
+  sizeccol = 0,
+  repstracol = 0,
+  repstrbcol = 0,
+  fecacol = 0,
+  fecbcol = 0,
+  indcovacol = 0,
+  indcovbcol = 0,
+  indcovccol = 0,
+  aliveacol = 0,
+  deadacol = 0,
+  obsacol = 0,
+  nonobsacol = 0,
   censorcol = 0,
   repstrrel = 1,
   fecrel = 1,
@@ -71,46 +74,55 @@ immature stages within the dataset. The \code{verticalize3()} function assumes
 that immature individuals are identified in this variable marked with a number
 equal to or greater than 1, and that mature individuals are marked as 0 or NA.}
 
-\item{size1col}{A variable name or column number corresponding to the
+\item{sizeacol}{A variable name or column number corresponding to the
 size entry associated with the first year or observation time in the dataset.}
 
-\item{size2col}{A second variable name or column number corresponding to the
+\item{sizebcol}{A second variable name or column number corresponding to the
 size entry associated with the first year or observation time in the dataset.}
 
-\item{size3col}{A third variable name or column number corresponding to the
+\item{sizeccol}{A third variable name or column number corresponding to the
 size entry associated with the first year or observation time in the dataset.}
 
-\item{repstr1col}{A variable name or column number corresponding to the
+\item{repstracol}{A variable name or column number corresponding to the
 production of reproductive structures, such as flowers, associated with the 
 first year or observation period in the input dataset. This can be binomial or 
 count data, and is used to in analysis of the probability of reproduction.}
 
-\item{repstr2col}{A second variable name or column number corresponding to
+\item{repstrbcol}{A second variable name or column number corresponding to
 the production of reproductive structures, such as flowers, associated with
 the first year or observation period in the input dataset. This can be binomial
 or count data, and is used to in analysis of the probability of reproduction.}
 
-\item{fec1col}{A variable name or column number denoting fecundity associated
+\item{fecacol}{A variable name or column number denoting fecundity associated
 with the first year or observation time in the input dataset. This may represent
 egg counts, fruit counts, seed production, etc.}
 
-\item{fec2col}{A second variable name or column number denoting fecundity
+\item{fecbcol}{A second variable name or column number denoting fecundity
 associated with the first year or observation time in the input dataset. This 
 may represent egg counts, fruit counts, seed production, etc.}
 
-\item{alive1col}{A variable name or column number that provides information
+\item{indcovacol}{A variable name or column number corresponding to an
+individual covariate to be used in analysis.}
+
+\item{indcovbcol}{A variable name or column number corresponding to an
+individual covariate to be used in analysis.}
+
+\item{indcovccol}{A second variable name or column number corresponding to an
+individual covariate to be used in analysis.}
+
+\item{aliveacol}{A variable name or column number that provides information
 on whether an individual is alive at a given time. If used, living status must
 be designated as binomial (living = 1, dead = 0).}
 
-\item{dead1col}{A variable name or column number that provides information on
+\item{deadacol}{A variable name or column number that provides information on
 whether an individual is alive at a given time. If used, dead status must be
 designated as binomial (dead = 1, living = 0).}
 
-\item{obs1col}{A variable name or column number providing information on whether
+\item{obsacol}{A variable name or column number providing information on whether
 an individual is in an observable stage at a given time. If used, observation
 status must be designated as binomial (observed = 1, not observed = 0).}
 
-\item{nonobs1col}{A variable name or column number providing information on
+\item{nonobsacol}{A variable name or column number providing information on
 whether an individual is in an unobservable stage at a given time. If used,
 observation status must be designated as binomial (not observed = 1, 
 observed = 0).}
@@ -121,14 +133,14 @@ entries not to use, or to designate entries with special issues that require
 further attention. If used, this should be associated with the first year or
 observation time, and all other years or times must also have censor columns.}
 
-\item{repstrrel}{This is a scalar multiplier on variable \code{repstr2col} to
-make it equivalent to \code{repstr1col}. This can be useful if two reproductive
-status variables have related but unequal units, for example if \code{repstr1col}
-refers to one-flowered stems while \code{repstr2col} refers to two-flowered
+\item{repstrrel}{This is a scalar multiplier on variable \code{repstrbcol} to
+make it equivalent to \code{repstracol}. This can be useful if two reproductive
+status variables have related but unequal units, for example if \code{repstracol}
+refers to one-flowered stems while \code{repstrbcol} refers to two-flowered
 stems. Defaults to 1.}
 
-\item{fecrel}{This is a scalar multiplier on variable \code{fec2col} to make it
-equivalent to \code{fec1col}. This can be useful if two fecundity variables have
+\item{fecrel}{This is a scalar multiplier on variable \code{fecbcol} to make it
+equivalent to \code{fecacol}. This can be useful if two fecundity variables have
 related but unequal units. Defaults to 1.}
 
 \item{stagecol}{Optional variable name or column number corresponding to life
@@ -252,9 +264,9 @@ lathframe <- sf_create(sizes = sizevector, stagenames = stagevector, repstatus =
 
 lathvert <- verticalize3(lathyrus, noyears = 4, firstyear = 1988, patchidcol = "SUBPLOT",
                          individcol = "GENET", blocksize = 9, juvcol = "Seedling1988",
-                         size1col = "Volume88", repstr1col = "FCODE88",
-                         fec1col = "Intactseed88", dead1col = "Dead1988",
-                         nonobs1col = "Dormant1988", stageassign = lathframe,
+                         sizeacol = "Volume88", repstracol = "FCODE88",
+                         fecacol = "Intactseed88", deadacol = "Dead1988",
+                         nonobsacol = "Dormant1988", stageassign = lathframe,
                          stagesize = "sizea", censorcol = "Missing1988",
                          censorkeep = NA, censor = TRUE)
 summary(lathvert)

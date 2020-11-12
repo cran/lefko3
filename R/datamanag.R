@@ -24,36 +24,42 @@
 #' immature stages within the dataset. The \code{verticalize3()} function assumes 
 #' that immature individuals are identified in this variable marked with a number
 #' equal to or greater than 1, and that mature individuals are marked as 0 or NA.
-#' @param size1col A variable name or column number corresponding to the
+#' @param sizeacol A variable name or column number corresponding to the
 #' size entry associated with the first year or observation time in the dataset.
-#' @param size2col A second variable name or column number corresponding to the
+#' @param sizebcol A second variable name or column number corresponding to the
 #' size entry associated with the first year or observation time in the dataset.
-#' @param size3col A third variable name or column number corresponding to the
+#' @param sizeccol A third variable name or column number corresponding to the
 #' size entry associated with the first year or observation time in the dataset.
-#' @param repstr1col A variable name or column number corresponding to the
+#' @param repstracol A variable name or column number corresponding to the
 #' production of reproductive structures, such as flowers, associated with the 
 #' first year or observation period in the input dataset. This can be binomial or 
 #' count data, and is used to in analysis of the probability of reproduction.
-#' @param repstr2col A second variable name or column number corresponding to
+#' @param repstrbcol A second variable name or column number corresponding to
 #' the production of reproductive structures, such as flowers, associated with
 #' the first year or observation period in the input dataset. This can be binomial
 #' or count data, and is used to in analysis of the probability of reproduction.
-#' @param fec1col A variable name or column number denoting fecundity associated
+#' @param fecacol A variable name or column number denoting fecundity associated
 #' with the first year or observation time in the input dataset. This may represent
 #' egg counts, fruit counts, seed production, etc.
-#' @param fec2col A second variable name or column number denoting fecundity
+#' @param fecbcol A second variable name or column number denoting fecundity
 #' associated with the first year or observation time in the input dataset. This 
 #' may represent egg counts, fruit counts, seed production, etc.
-#' @param alive1col A variable name or column number that provides information
+#' @param indcovacol A variable name or column number corresponding to an
+#' individual covariate to be used in analysis.
+#' @param indcovbcol A variable name or column number corresponding to an
+#' individual covariate to be used in analysis.
+#' @param indcovccol A second variable name or column number corresponding to an
+#' individual covariate to be used in analysis.
+#' @param aliveacol A variable name or column number that provides information
 #' on whether an individual is alive at a given time. If used, living status must
 #' be designated as binomial (living = 1, dead = 0).
-#' @param dead1col A variable name or column number that provides information on
+#' @param deadacol A variable name or column number that provides information on
 #' whether an individual is alive at a given time. If used, dead status must be
 #' designated as binomial (dead = 1, living = 0).
-#' @param obs1col A variable name or column number providing information on whether
+#' @param obsacol A variable name or column number providing information on whether
 #' an individual is in an observable stage at a given time. If used, observation
 #' status must be designated as binomial (observed = 1, not observed = 0).
-#' @param nonobs1col A variable name or column number providing information on
+#' @param nonobsacol A variable name or column number providing information on
 #' whether an individual is in an unobservable stage at a given time. If used,
 #' observation status must be designated as binomial (not observed = 1, 
 #' observed = 0).
@@ -62,13 +68,13 @@
 #' entries not to use, or to designate entries with special issues that require
 #' further attention. If used, this should be associated with the first year or
 #' observation time, and all other years or times must also have censor columns.
-#' @param repstrrel This is a scalar multiplier on variable \code{repstr2col} to
-#' make it equivalent to \code{repstr1col}. This can be useful if two reproductive
-#' status variables have related but unequal units, for example if \code{repstr1col}
-#' refers to one-flowered stems while \code{repstr2col} refers to two-flowered
+#' @param repstrrel This is a scalar multiplier on variable \code{repstrbcol} to
+#' make it equivalent to \code{repstracol}. This can be useful if two reproductive
+#' status variables have related but unequal units, for example if \code{repstracol}
+#' refers to one-flowered stems while \code{repstrbcol} refers to two-flowered
 #' stems. Defaults to 1.
-#' @param fecrel This is a scalar multiplier on variable \code{fec2col} to make it
-#' equivalent to \code{fec1col}. This can be useful if two fecundity variables have
+#' @param fecrel This is a scalar multiplier on variable \code{fecbcol} to make it
+#' equivalent to \code{fecacol}. This can be useful if two fecundity variables have
 #' related but unequal units. Defaults to 1.
 #' @param stagecol Optional variable name or column number corresponding to life
 #' history stage at a given time.
@@ -177,21 +183,21 @@
 #'
 #' lathvert <- verticalize3(lathyrus, noyears = 4, firstyear = 1988, patchidcol = "SUBPLOT",
 #'                          individcol = "GENET", blocksize = 9, juvcol = "Seedling1988",
-#'                          size1col = "Volume88", repstr1col = "FCODE88",
-#'                          fec1col = "Intactseed88", dead1col = "Dead1988",
-#'                          nonobs1col = "Dormant1988", stageassign = lathframe,
+#'                          sizeacol = "Volume88", repstracol = "FCODE88",
+#'                          fecacol = "Intactseed88", deadacol = "Dead1988",
+#'                          nonobsacol = "Dormant1988", stageassign = lathframe,
 #'                          stagesize = "sizea", censorcol = "Missing1988",
 #'                          censorkeep = NA, censor = TRUE)
 #' summary(lathvert)
 #' 
 #' @export
 verticalize3 <- function(data, noyears, firstyear, popidcol = 0, patchidcol = 0, individcol= 0, 
-                         blocksize, xcol = 0, ycol = 0, juvcol = 0, size1col, size2col = 0, 
-                         size3col = 0, repstr1col = 0, repstr2col = 0, fec1col = 0, fec2col = 0, 
-                         alive1col = 0, dead1col = 0, obs1col = 0, nonobs1col = 0, censorcol = 0, 
-                         repstrrel = 1, fecrel = 1, stagecol = 0, stageassign = NA, stagesize = NA, 
-                         censorkeep = 0, censor = FALSE, spacing = NA, NAas0 = FALSE, 
-                         NRasRep = FALSE, reduce = TRUE) {
+                         blocksize, xcol = 0, ycol = 0, juvcol = 0, sizeacol, sizebcol = 0, 
+                         sizeccol = 0, repstracol = 0, repstrbcol = 0, fecacol = 0, fecbcol = 0, 
+                         indcovacol = 0, indcovbcol = 0, indcovccol = 0, aliveacol = 0, deadacol = 0, 
+                         obsacol = 0, nonobsacol = 0, censorcol = 0, repstrrel = 1, fecrel = 1, 
+                         stagecol = 0, stageassign = NA, stagesize = NA, censorkeep = 0, 
+                         censor = FALSE, spacing = NA, NAas0 = FALSE, NRasRep = FALSE, reduce = TRUE) {
   
   stassign <- rowid <- alive2 <- indataset <- censor1 <- censor2 <- censor3 <- censbool <- NULL
   
@@ -242,53 +248,102 @@ verticalize3 <- function(data, noyears, firstyear, popidcol = 0, patchidcol = 0,
     } else {stop("Please enter juvcol exactly as it appears in the dataset.", call. = FALSE)}
   }
   
-  if (is.character(size1col)) {
-    if (is.element(size1col, names(data))) {
-      true.size1col <- which(names(data) == size1col)
-      size1col <- true.size1col
-    } else {stop("Please enter size1col exactly as it appears in the dataset.", call. = FALSE)}
+  if (is.character(sizeacol)) {
+    if (is.element(sizeacol, names(data))) {
+      true.sizeacol <- which(names(data) == sizeacol)
+      sizeacol <- true.sizeacol
+    } else {stop("Please enter sizeacol exactly as it appears in the dataset.", call. = FALSE)}
   }
   
-  if (is.character(size2col)) {
-    if (is.element(size2col, names(data))) {
-      true.size2col <- which(names(data) == size2col)
-      size2col <- true.size2col
-    } else {stop("Please enter size2col exactly as it appears in the dataset.", call. = FALSE)}
+  if (is.character(sizebcol)) {
+    if (is.element(sizebcol, names(data))) {
+      true.sizebcol <- which(names(data) == sizebcol)
+      sizebcol <- true.sizebcol
+    } else {stop("Please enter sizebcol exactly as it appears in the dataset.", call. = FALSE)}
   }
   
-  if (is.character(size3col)) {
-    if (is.element(size3col, names(data))) {
-      true.size3col <- which(names(data) == size3col)
-      size3col <- true.size3col
-    } else {stop("Please enter size3col exactly as it appears in the dataset.", call. = FALSE)}
+  if (is.character(sizeccol)) {
+    if (is.element(sizeccol, names(data))) {
+      true.sizeccol <- which(names(data) == sizeccol)
+      sizeccol <- true.sizeccol
+    } else {stop("Please enter sizeccol exactly as it appears in the dataset.", call. = FALSE)}
   }
   
-  if (is.character(repstr1col)) {
-    if (is.element(repstr1col, names(data))) {
-      true.repstr1col <- which(names(data) == repstr1col)
-      repstr1col <- true.repstr1col
-    } else {stop("Please enter repstr1col exactly as it appears in the dataset.", call. = FALSE)}
+  if (is.character(repstracol)) {
+    if (is.element(repstracol, names(data))) {
+      true.repstracol <- which(names(data) == repstracol)
+      repstracol <- true.repstracol
+    } else {stop("Please enter repstracol exactly as it appears in the dataset.", call. = FALSE)}
   }
   
-  if (is.character(repstr2col)) {
-    if (is.element(repstr2col, names(data))) {
-      true.repstr2col <- which(names(data) == repstr2col)
-      repstr2col <- true.repstr2col
-    } else {stop("Please enter repstr2col exactly as it appears in the dataset.", call. = FALSE)}
+  if (is.character(repstrbcol)) {
+    if (is.element(repstrbcol, names(data))) {
+      true.repstrbcol <- which(names(data) == repstrbcol)
+      repstrbcol <- true.repstrbcol
+    } else {stop("Please enter repstrbcol exactly as it appears in the dataset.", call. = FALSE)}
   }
   
-  if (is.character(fec1col)) {
-    if (is.element(fec1col, names(data))) {
-      true.fec1col <- which(names(data) == fec1col)
-      fec1col <- true.fec1col
-    } else {stop("Please enter fec1col exactly as it appears in the dataset.", call. = FALSE)}
+  if (is.character(fecacol)) {
+    if (is.element(fecacol, names(data))) {
+      true.fecacol <- which(names(data) == fecacol)
+      fecacol <- true.fecacol
+    } else {stop("Please enter fecacol exactly as it appears in the dataset.", call. = FALSE)}
   }
   
-  if (is.character(fec2col)) {
-    if (is.element(fec2col, names(data))) {
-      true.fec2col <- which(names(data) == fec2col)
-      fec2col <- true.fec2col
-    } else {stop("Please enter fec2col exactly as it appears in the dataset.", call. = FALSE)}
+  if (is.character(fecbcol)) {
+    if (is.element(fecbcol, names(data))) {
+      true.fecbcol <- which(names(data) == fecbcol)
+      fecbcol <- true.fecbcol
+    } else {stop("Please enter fecbcol exactly as it appears in the dataset.", call. = FALSE)}
+  }
+  
+  if (is.character(indcovacol)) {
+    if (is.element(indcovacol, names(data))) {
+      true.indcovacol <- which(names(data) == indcovacol)
+      indcovacol <- true.indcovacol
+    } else {stop("Please enter indcovacol exactly as it appears in the dataset.", call. = FALSE)}
+  }
+  
+  if (is.character(indcovbcol)) {
+    if (is.element(indcovbcol, names(data))) {
+      true.indcovbcol <- which(names(data) == indcovbcol)
+      indcovbcol <- true.indcovbcol
+    } else {stop("Please enter indcovbcol exactly as it appears in the dataset.", call. = FALSE)}
+  }
+  
+  if (is.character(indcovccol)) {
+    if (is.element(indcovccol, names(data))) {
+      true.indcovccol <- which(names(data) == indcovccol)
+      indcovccol <- true.indcovccol
+    } else {stop("Please enter indcovccol exactly as it appears in the dataset.", call. = FALSE)}
+  }
+  
+  if (is.character(aliveacol)) {
+    if (is.element(aliveacol, names(data))) {
+      true.aliveacol <- which(names(data) == aliveacol)
+      aliveacol <- true.aliveacol
+    } else {stop("Please enter aliveacol exactly as it appears in the dataset.", call. = FALSE)}
+  }
+  
+  if (is.character(deadacol)) {
+    if (is.element(deadacol, names(data))) {
+      true.deadacol <- which(names(data) == deadacol)
+      deadacol <- true.deadacol
+    } else {stop("Please enter deadacol exactly as it appears in the dataset.", call. = FALSE)}
+  }
+  
+  if (is.character(obsacol)) {
+    if (is.element(obsacol, names(data))) {
+      true.obsacol <- which(names(data) == obsacol)
+      obsacol <- true.obsacol
+    } else {stop("Please enter obsacol exactly as it appears in the dataset.", call. = FALSE)}
+  }
+  
+  if (is.character(nonobsacol)) {
+    if (is.element(nonobsacol, names(data))) {
+      true.nonobsacol <- which(names(data) == nonobsacol)
+      nonobsacol <- true.nonobsacol
+    } else {stop("Please enter nonobsacol exactly as it appears in the dataset.", call. = FALSE)}
   }
   
   if (is.character(censorcol)) {
@@ -296,34 +351,6 @@ verticalize3 <- function(data, noyears, firstyear, popidcol = 0, patchidcol = 0,
       true.censorcol <- which(names(data) == censorcol)
       censorcol <- true.censorcol
     } else {stop("Please enter censorcol exactly as it appears in the dataset.", call. = FALSE)}
-  }
-  
-  if (is.character(alive1col)) {
-    if (is.element(alive1col, names(data))) {
-      true.alive1col <- which(names(data) == alive1col)
-      alive1col <- true.alive1col
-    } else {stop("Please enter alive1col exactly as it appears in the dataset.", call. = FALSE)}
-  }
-  
-  if (is.character(dead1col)) {
-    if (is.element(dead1col, names(data))) {
-      true.dead1col <- which(names(data) == dead1col)
-      dead1col <- true.dead1col
-    } else {stop("Please enter dead1col exactly as it appears in the dataset.", call. = FALSE)}
-  }
-  
-  if (is.character(obs1col)) {
-    if (is.element(obs1col, names(data))) {
-      true.obs1col <- which(names(data) == obs1col)
-      obs1col <- true.obs1col
-    } else {stop("Please enter obs1col exactly as it appears in the dataset.", call. = FALSE)}
-  }
-  
-  if (is.character(nonobs1col)) {
-    if (is.element(nonobs1col, names(data))) {
-      true.nonobs1col <- which(names(data) == nonobs1col)
-      nonobs1col <- true.nonobs1col
-    } else {stop("Please enter nonobs1col exactly as it appears in the dataset.", call. = FALSE)}
   }
   
   if(!all(is.na(stageassign))) {
@@ -342,6 +369,7 @@ verticalize3 <- function(data, noyears, firstyear, popidcol = 0, patchidcol = 0,
     } else {stop("Please enter stagecol exactly as it appears in the dataset.", call. = FALSE)}
   }
   
+  # Here we will modify our approach to verticalization based on the input stageframe
   if (!all(is.na(stageassign)) & stagecol == 0) {
     
     stassign <- TRUE 
@@ -396,23 +424,26 @@ verticalize3 <- function(data, noyears, firstyear, popidcol = 0, patchidcol = 0,
   }
   
   popdatalist.new <- pfj(data, stageassign, noyears, firstyear, (popidcol - 1), (patchidcol - 1), (individcol - 1), 
-                         blocksize, (xcol - 1), (ycol - 1), (juvcol - 1), (size1col - 1), (size2col - 1), 
-                         (size3col - 1), (repstr1col - 1), (repstr2col - 1), (fec1col - 1), (fec2col - 1),
-                         (alive1col - 1), (dead1col - 1), (obs1col - 1), (nonobs1col - 1), (censorcol - 1),
-                         (stagecol - 1), repstrrel, fecrel, NAas0, NRasRep, stassign, stagesizecol, censbool)
+                         blocksize, (xcol - 1), (ycol - 1), (juvcol - 1), (sizeacol - 1), (sizebcol - 1), 
+                         (sizeccol - 1), (repstracol - 1), (repstrbcol - 1), (fecacol - 1), (fecbcol - 1),
+                         (indcovacol - 1), (indcovbcol - 1), (indcovccol - 1), (aliveacol - 1), (deadacol - 1), 
+                         (obsacol - 1), (nonobsacol - 1), (censorcol - 1), (stagecol - 1), repstrrel, 
+                         fecrel, NAas0, NRasRep, stassign, stagesizecol, censbool)
   
   popdata <- do.call("cbind.data.frame", popdatalist.new)
   
   names(popdata) <- c("rowid", "popid", "patchid", "individ", "year2", "firstseen", "lastseen", "obsage", 
                       "obslifespan", "xpos1", "ypos1", "sizea1", "sizeb1", "sizec1", "size1added", "repstra1",
-                      "repstrb1", "repstr1added", "feca1", "fecb1", "fec1added", "censor1", "juvgiven1", 
-                      "obsstatus1", "repstatus1", "fecstatus1", "matstatus1", "alive1", "stage1", "stage1index", 
-                      "xpos2", "ypos2", "sizea2", "sizeb2", "sizec2", "size2added", "repstra2", "repstrb2", 
-                      "repstr2added", "feca2", "fecb2", "fec2added", "censor2", "juvgiven2", "obsstatus2", 
-                      "repstatus2", "fecstatus2", "matstatus2", "alive2", "stage2", "stage2index", "xpos3", 
-                      "ypos3", "sizea3", "sizeb3", "sizec3", "size3added", "repstra3", "repstrb3", "repstr3added", 
-                      "feca3", "fecb3", "fec3added", "censor3", "juvgiven3", "obsstatus3", "repstatus3", 
-                      "fecstatus3", "matstatus3", "alive3", "stage3", "stage3index")
+                      "repstrb1", "repstr1added", "feca1", "fecb1", "fec1added", "indcova1", "indcovb1", 
+                      "indcovc1", "censor1", "juvgiven1", "obsstatus1", "repstatus1", "fecstatus1", 
+                      "matstatus1", "alive1", "stage1", "stage1index", "xpos2", "ypos2", "sizea2", "sizeb2", 
+                      "sizec2", "size2added", "repstra2", "repstrb2", "repstr2added", "feca2", "fecb2", 
+                      "fec2added", "indcova2", "indcovb2", "indcovc2", "censor2", "juvgiven2", "obsstatus2", 
+                      "repstatus2", "fecstatus2", "matstatus2", "alive2", "stage2", "stage2index", 
+                      "xpos3", "ypos3", "sizea3", "sizeb3", "sizec3", "size3added", "repstra3", "repstrb3", 
+                      "repstr3added", "feca3", "fecb3", "fec3added", "indcova3", "indcovb3", "indcovc3", 
+                      "censor3", "juvgiven3", "obsstatus3", "repstatus3", "fecstatus3", "matstatus3", 
+                      "alive3", "stage3", "stage3index")
   
   rownames(popdata) <- c(1:dim(popdata)[1])
   
@@ -594,6 +625,36 @@ verticalize3 <- function(data, noyears, firstyear, popidcol = 0, patchidcol = 0,
       popdatareal <- popdatareal[,-c(which(names(popdatareal) =="fec3added"))]
     }
     
+    if (all(is.na(popdatareal$indcova1)) | length(unique(popdatareal$indcova1)) == 1) {
+      popdatareal <- popdatareal[,-c(which(names(popdatareal) =="indcova1"))]
+    }
+    if (all(is.na(popdatareal$indcova2)) | length(unique(popdatareal$indcova2)) == 1) {
+      popdatareal <- popdatareal[,-c(which(names(popdatareal) =="indcova2"))]
+    }
+    if (all(is.na(popdatareal$indcova3)) | length(unique(popdatareal$indcova3)) == 1) {
+      popdatareal <- popdatareal[,-c(which(names(popdatareal) =="indcova3"))]
+    }
+    
+    if (all(is.na(popdatareal$indcovb1)) | length(unique(popdatareal$indcovb1)) == 1) {
+      popdatareal <- popdatareal[,-c(which(names(popdatareal) =="indcovb1"))]
+    }
+    if (all(is.na(popdatareal$indcovb2)) | length(unique(popdatareal$indcovb2)) == 1) {
+      popdatareal <- popdatareal[,-c(which(names(popdatareal) =="indcovb2"))]
+    }
+    if (all(is.na(popdatareal$indcovb3)) | length(unique(popdatareal$indcovb3)) == 1) {
+      popdatareal <- popdatareal[,-c(which(names(popdatareal) =="indcovb3"))]
+    }
+    
+    if (all(is.na(popdatareal$indcovc1)) | length(unique(popdatareal$indcovc1)) == 1) {
+      popdatareal <- popdatareal[,-c(which(names(popdatareal) =="indcovc1"))]
+    }
+    if (all(is.na(popdatareal$indcovc2)) | length(unique(popdatareal$indcovc2)) == 1) {
+      popdatareal <- popdatareal[,-c(which(names(popdatareal) =="indcovc2"))]
+    }
+    if (all(is.na(popdatareal$indcovc3)) | length(unique(popdatareal$indcovc3)) == 1) {
+      popdatareal <- popdatareal[,-c(which(names(popdatareal) =="indcovc3"))]
+    }
+    
     if (all(popdatareal$obsstatus1 == popdatareal$obsstatus1[1])) {
       popdatareal <- popdatareal[,-c(which(names(popdatareal) =="obsstatus1"))]
     }
@@ -697,6 +758,18 @@ verticalize3 <- function(data, noyears, firstyear, popidcol = 0, patchidcol = 0,
 #' @param fecb3col A second variable name or column number corresponding to 
 #' fecundity in time \emph{t}+1. This may represent egg counts, fruit counts, seed
 #' production, etc.
+#' @param indcova2col A variable name or column number corresponding to an
+#' individual covariate to be used in analysis, in time \emph{t}.
+#' @param indcova3col A variable name or column number corresponding to an
+#' individual covariate to be used in analysis, in time \emph{t}+1.
+#' @param indcovb2col A second variable name or column number corresponding to an
+#' individual covariate to be used in analysis, in time \emph{t}.
+#' @param indcovb3col A second variable name or column number corresponding to an
+#' individual covariate to be used in analysis, in time \emph{t}+1.
+#' @param indcovc2col A third variable name or column number corresponding to an
+#' individual covariate to be used in analysis, in time \emph{t}.
+#' @param indcovc3col A third variable name or column number corresponding to an
+#' individual covariate to be used in analysis, in time \emph{t}+1.
 #' @param alive2col A variable name or column number that provides information on
 #' whether an individual is alive in time \emph{t}. If used, living status must be
 #' designated as binomial (living = 1, dead = 0).
@@ -871,7 +944,9 @@ historicalize3 <- function(data, popidcol = 0, patchidcol = 0, individcol, year2
                            sizeb2col = 0, sizeb3col = 0, sizec2col = 0, sizec3col = 0,
                            repstra2col = 0, repstra3col = 0, repstrb2col = 0,
                            repstrb3col = 0, feca2col = 0, feca3col = 0,  fecb2col = 0,
-                           fecb3col = 0, alive2col = 0, alive3col = 0, dead2col = 0,
+                           fecb3col = 0, indcova2col = 0, indcova3col = 0, indcovb2col = 0,
+                           indcovb3col = 0, indcovc2col = 0, indcovc3col = 0,
+                           alive2col = 0, alive3col = 0, dead2col = 0,
                            dead3col = 0, obs2col = 0, obs3col = 0, nonobs2col = 0,
                            nonobs3col = 0, repstrrel = 1, fecrel = 1, stage2col = 0,
                            stage3col = 0, juv2col = 0, juv3col = 0, stageassign = NA,
@@ -1089,6 +1164,60 @@ historicalize3 <- function(data, popidcol = 0, patchidcol = 0, individcol, year2
     }
   }
   
+  if (is.character(indcova2col)) {
+    if (is.element(indcova2col, names(data))) {
+      true.indcova2col <- which(names(data) == indcova2col)
+      indcova2col <- true.indcova2col
+    } else {
+      stop("Please enter indcova2col exactly as it appears in the dataset.", call. = FALSE)
+    }
+  }
+  
+  if (is.character(indcova3col)) {
+    if (is.element(indcova3col, names(data))) {
+      true.indcova3col <- which(names(data) == indcova3col)
+      indcova3col <- true.indcova3col
+    } else {
+      stop("Please enter indcova3col exactly as it appears in the dataset.", call. = FALSE)
+    }
+  }
+  
+  if (is.character(indcovb2col)) {
+    if (is.element(indcovb2col, names(data))) {
+      true.indcovb2col <- which(names(data) == indcovb2col)
+      indcovb2col <- true.indcovb2col
+    } else {
+      stop("Please enter indcovb2col exactly as it appears in the dataset.", call. = FALSE)
+    }
+  }
+  
+  if (is.character(indcovb3col)) {
+    if (is.element(indcovb3col, names(data))) {
+      true.indcovb3col <- which(names(data) == indcovb3col)
+      indcovb3col <- true.indcovb3col
+    } else {
+      stop("Please enter indcovb3col exactly as it appears in the dataset.", call. = FALSE)
+    }
+  }
+  
+  if (is.character(indcovc2col)) {
+    if (is.element(indcovc2col, names(data))) {
+      true.indcovc2col <- which(names(data) == indcovc2col)
+      indcovc2col <- true.indcovc2col
+    } else {
+      stop("Please enter indcovc2col exactly as it appears in the dataset.", call. = FALSE)
+    }
+  }
+  
+  if (is.character(indcovc3col)) {
+    if (is.element(indcovc3col, names(data))) {
+      true.indcovc3col <- which(names(data) == indcovc3col)
+      indcovc3col <- true.indcovc3col
+    } else {
+      stop("Please enter indcovc3col exactly as it appears in the dataset.", call. = FALSE)
+    }
+  }
+  
   if (is.character(alive2col)) {
     if (is.element(alive2col, names(data))) {
       true.alive2col <- which(names(data) == alive2col)
@@ -1265,27 +1394,41 @@ historicalize3 <- function(data, popidcol = 0, patchidcol = 0, individcol, year2
     censbool <- FALSE
   }
   
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
   popdatalist.new <- jpf(data, stageassign, (popidcol - 1), (patchidcol - 1), (individcol - 1),
                          (year2col - 1), (year3col - 1), (xcol - 1), (ycol - 1), (juv2col - 1), (juv3col - 1),
                          (sizea2col - 1), (sizea3col - 1), (sizeb2col - 1), (sizeb3col - 1), (sizec2col - 1),
-                         (sizec3col - 1), (repstra2col - 1), (repstra3col - 1), (repstrb2col - 1), (repstrb3col - 1),
-                         (feca2col - 1), (feca3col - 1), (fecb2col - 1), (fecb3col - 1), (alive2col - 1),
-                         (alive3col - 1), (dead2col - 1), (dead3col - 1), (obs2col - 1), (obs3col - 1),
-                         (nonobs2col - 1), (nonobs3col - 1), repstrrel, fecrel, (stage2col - 1), (stage3col - 1), 
+                         (sizec3col - 1), (repstra2col - 1), (repstra3col - 1), (repstrb2col - 1), 
+                         (repstrb3col - 1), (feca2col - 1), (feca3col - 1), (fecb2col - 1), (fecb3col - 1), 
+                         (indcova2col - 1), (indcova3col - 1), (indcovb2col - 1), (indcovb3col - 1), 
+                         (indcovc2col - 1), (indcovc3col - 1), (alive2col - 1), (alive3col - 1), 
+                         (dead2col - 1), (dead3col - 1), (obs2col - 1), (obs3col - 1), (nonobs2col - 1), 
+                         (nonobs3col - 1), repstrrel, fecrel, (stage2col - 1), (stage3col - 1), 
                          (censorcol - 1), NAas0, NRasRep, stassign, stagesizecol, censbool)
   
   popdata <- do.call("cbind.data.frame", popdatalist.new)
   
   names(popdata) <- c("rowid", "popid", "patchid", "individ", "year2", "firstseen", "lastseen", "obsage", 
                       "obslifespan", "xpos1", "ypos1", "sizea1", "sizeb1", "sizec1", "size1added", "repstra1", 
-                      "repstrb1", "repstr1added", "feca1", "fecb1", "fec1added", "censor1", "juvgiven1", 
-                      "obsstatus1", "repstatus1", "fecstatus1", "matstatus1", "alive1", "stage1", "stage1index", 
-                      "xpos2", "ypos2", "sizea2", "sizeb2", "sizec2", "size2added", "repstra2", "repstrb2", 
-                      "repstr2added", "feca2", "fecb2", "fec2added", "censor2", "juvgiven2", "obsstatus2", 
-                      "repstatus2", "fecstatus2", "matstatus2", "alive2", "stage2", "stage2index", "xpos3", 
-                      "ypos3", "sizea3", "sizeb3", "sizec3", "size3added", "repstra3", "repstrb3", "repstr3added", 
-                      "feca3", "fecb3", "fec3added", "censor3", "juvgiven3", "obsstatus3", "repstatus3", 
-                      "fecstatus3", "matstatus3", "alive3", "stage3", "stage3index")
+                      "repstrb1", "repstr1added", "feca1", "fecb1", "fec1added", "indcova1", "indcovb1",
+                      "indcovc1", "censor1", "juvgiven1", "obsstatus1", "repstatus1", "fecstatus1", "matstatus1",
+                      "alive1", "stage1", "stage1index", "xpos2", "ypos2", "sizea2", "sizeb2", "sizec2", "size2added",
+                      "repstra2", "repstrb2", "repstr2added", "feca2", "fecb2", "fec2added", "indcova2", "indcovb2",
+                      "indcovc2", "censor2", "juvgiven2", "obsstatus2", "repstatus2", "fecstatus2", "matstatus2", 
+                      "alive2", "stage2", "stage2index", "xpos3", "ypos3", "sizea3", "sizeb3", "sizec3", "size3added", 
+                      "repstra3", "repstrb3", "repstr3added", "feca3", "fecb3", "fec3added", "indcova3", "indcovb3",
+                      "indcovc3", "censor3", "juvgiven3", "obsstatus3", "repstatus3", "fecstatus3", "matstatus3", 
+                      "alive3", "stage3", "stage3index")
   
   popdata <- subset(popdata, alive2 == 1)
   
@@ -1443,6 +1586,34 @@ historicalize3 <- function(data, popidcol = 0, patchidcol = 0, individcol, year2
       popdata <- popdata[,-c(which(names(popdata) =="fec3added"))]
     } else if (all(is.na(popdata$fec3added)) | length(unique(popdata$fec3added)) == 1) {
       popdata <- popdata[,-c(which(names(popdata) =="fec3added"))]
+    }
+    
+    if (all(is.na(popdata$indcova1)) | length(unique(popdata$indcova1)) == 1) {
+      popdata <- popdata[,-c(which(names(popdata) =="indcova1"))]
+    }
+    if (all(is.na(popdata$indcova2)) | length(unique(popdata$indcova2)) == 1) {
+      popdata <- popdata[,-c(which(names(popdata) =="indcova2"))]
+    }
+    if (all(is.na(popdata$indcova3)) | length(unique(popdata$indcova3)) == 1) {
+      popdata <- popdata[,-c(which(names(popdata) =="indcova3"))]
+    }
+    if (all(is.na(popdata$indcovb1)) | length(unique(popdata$indcovb1)) == 1) {
+      popdata <- popdata[,-c(which(names(popdata) =="indcovb1"))]
+    }
+    if (all(is.na(popdata$indcovb2)) | length(unique(popdata$indcovb2)) == 1) {
+      popdata <- popdata[,-c(which(names(popdata) =="indcovb2"))]
+    }
+    if (all(is.na(popdata$indcovb3)) | length(unique(popdata$indcovb3)) == 1) {
+      popdata <- popdata[,-c(which(names(popdata) =="indcovb3"))]
+    }
+    if (all(is.na(popdata$indcovc1)) | length(unique(popdata$indcovc1)) == 1) {
+      popdata <- popdata[,-c(which(names(popdata) =="indcovc1"))]
+    }
+    if (all(is.na(popdata$indcovc2)) | length(unique(popdata$indcovc2)) == 1) {
+      popdata <- popdata[,-c(which(names(popdata) =="indcovc2"))]
+    }
+    if (all(is.na(popdata$indcovc3)) | length(unique(popdata$indcovc3)) == 1) {
+      popdata <- popdata[,-c(which(names(popdata) =="indcovc3"))]
     }
     
     if (all(popdata$obsstatus1 == popdata$obsstatus1[1])) {

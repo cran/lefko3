@@ -79,9 +79,9 @@ cypframe_raw <- sf_create(sizes = sizevector, stagenames = stagevector,
 
 cypraw_v1 <- verticalize3(data = cypdata, noyears = 6, firstyear = 2004, 
                           patchidcol = "patch", individcol = "plantid", 
-                          blocksize = 4, size1col = "Inf2.04", size2col = "Inf.04", 
-                          size3col = "Veg.04", repstr1col = "Inf.04", 
-                          repstr2col = "Inf2.04", fec1col = "Pod.04", 
+                          blocksize = 4, sizeacol = "Inf2.04", sizebcol = "Inf.04", 
+                          sizeccol = "Veg.04", repstracol = "Inf.04", 
+                          repstrbcol = "Inf2.04", fecacol = "Pod.04", 
                           stageassign = cypframe_raw, stagesize = "sizeadded", 
                           NAas0 = TRUE, NRasRep = TRUE)
 
