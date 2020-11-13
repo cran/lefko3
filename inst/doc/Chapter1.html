@@ -15,19 +15,16 @@
 
 <title>Basic theory and concepts</title>
 
-<script>// Hide empty <a> tag within highlighted CodeBlock for screen reader accessibility (see https://github.com/jgm/pandoc/issues/6352#issuecomment-626106786) -->
-// v0.0.1
-// Written by JooYoung Seo (jooyoung@psu.edu) and Atsushi Yasumoto on June 1st, 2020.
-
-document.addEventListener('DOMContentLoaded', function() {
-  const codeList = document.getElementsByClassName("sourceCode");
-  for (var i = 0; i < codeList.length; i++) {
-    var linkList = codeList[i].getElementsByTagName('a');
-    for (var j = 0; j < linkList.length; j++) {
-      if (linkList[j].innerHTML === "") {
-        linkList[j].setAttribute('aria-hidden', 'true');
-      }
-    }
+<script>// Pandoc 2.9 adds attributes on both header and div. We remove the former (to
+// be compatible with the behavior of Pandoc < 2.8).
+document.addEventListener('DOMContentLoaded', function(e) {
+  var hs = document.querySelectorAll("div.section[class*='level'] > :first-child");
+  var i, h, a;
+  for (i = 0; i < hs.length; i++) {
+    h = hs[i];
+    if (!/^h[1-6]$/i.test(h.tagName)) continue;  // it should be a header h1-h6
+    a = h.attributes;
+    while (a.length > 0) h.removeAttribute(a[0].name);
   }
 });
 </script>
@@ -475,7 +472,7 @@ In principle, everything just noted about function-based ahistorical MPMs also a
 <div id="step-1-life-history-model-development" class="section level3">
 <h3>Step 1: Life history model development</h3>
 <p style="text-indent: 20px">
-The basic workflow to analysis with package <code>lefko3</code> starts with the development of a life history model that encapsulates all of the appropriate life stages relevant to population dynamics. We do not present a complete discussion on this step, instead focusing only on a skeletal description of the process particularly focused on the life cycle graph and noting key issues related to this package. We encourage users to explore the literature on this subject, but particularly note chapters 3 and 4 in Caswell <span class="citation">(2001)</span> for a good treatment useful for beginners. Stages need to be defined carefully, and should strongly account for variability in vital rates. We also note Kendall et al. <span class="citation">(2019)</span> as a good reference detailing common problems in MPM construction and how to avoid them through proper development and operationalization of life history models, and Beissinger and Westphal <span class="citation">(1998)</span>, Wardle <span class="citation">(1998)</span>, and Salguero-Gómez and Casper <span class="citation">(2010)</span> for good discussions of proper application of life history models to understand population dynamics through the MPM approach.
+The basic workflow to analysis with package <code>lefko3</code> starts with the development of a life history model that encapsulates all of the appropriate life stages relevant to population dynamics. We do not present a complete discussion on this step, instead focusing only on a skeletal description of the process particularly focused on the life cycle graph and noting key issues related to this package. We encourage users to explore the literature on this subject, but particularly note chapters 3 and 4 in Caswell <span class="citation">(2001)</span> for a good treatment useful for beginners. Stages need to be defined carefully, and should strongly account for variability in vital rates. We also note Kendall et al. <span class="citation">(2019)</span> as a good reference detailing common problems in MPM construction and how to avoid them through proper development and operationalization of life history models, and Beissinger and Westphal <span class="citation">(1998)</span>, Wardle <span class="citation">(1998)</span>, and Salguero-Gómez and Casper <span class="citation">(2010)</span> for good discussions of proper application of life history models to understand population dynamics through the MPM approach.
 </p>
 <p style="text-indent: 20px">
 Here we utilize a <strong>life cycle graph</strong> approach to build a life history model. A life cycle graph shows the life history of an organism as a series of nodes and arrows. The nodes represent unique stages that the individual may go through during development, and individuals are noted as occurring in these stages during monitoring sessions conducted over a typically regular frequency, such as every year. Arrows represent transitions between stages across consecutive times. These may be interpreted either as probabilities of survival when reflecting the individual’s stage across time, and as rates when reflecting the production of offspring. A good life cycle graph, and in general a good life history model, must explicitly include representations of all stages possible for the organism to enter, and all biologically plausible transitions between these transitions. Figure 1a shows an example of a life cycle graph.
@@ -484,7 +481,7 @@ Here we utilize a <strong>life cycle graph</strong> approach to build a life his
 The construction of a good life history model is not as easy as it might appear, particularly because it can be influenced by factors seemingly external to the life history of the organism. Some of the most important considerations include the size of the dataset, and the decision of whether to create a raw MPM or a function-based MPM. All else being equal, a larger dataset and a function-based approach will allow more stages to be used in the life history. However, as the number of stages increases, raw MPMs will include more and more 0s caused by a lack of individuals moving through specific transitions. Function-based MPMs are better able to handle large numbers of matrix elements because overparameterization is prevented by parsimonious model selection when vital rate models are determined. However, the size of the dataset influences the statistical power of these vital rate models, with smaller datasets yielding larger error associated with matrix elements. Chapter 6 in Morris and Doak <span class="citation">(2002)</span> provides a good description of techniques that may be used to define stages and to determine the exact number to use. Ellner and Rees <span class="citation">(2006)</span> provides some discussion of this issue within the context of integral projection model development.
 </p>
 <p style="text-indent: 20px">
-Once a life history model is developed, we need to characterize the main life stages in a way that is relevant to the dataset. We do this with the <code>sf_create()</code> function, which creates a <code>stageframe</code> object. This term is a combination of the terms ‘life history stage’ and ‘data frame’, and the object itself is a data frame that describes all of the life history stages. This object is created in a way that shows how stage relates to size, reproductive status, observation status, propagule status, maturity status, and presence in the dataset, and in which the description of each life stage is unique. A good stageframe describes stages in ways that matrix-estimating functions utilize to compute elements accurately, and also allows the user to stipulate extra descriptive information on each stage as text. If the user wishes to create an IPM, then this function also allows that to be specified in a way that simplifies calculations.
+Once a life history model is developed, we need to characterize the main life stages in a way that is relevant to the dataset. We do this with the <code>sf_create()</code> function, which creates a <code>stageframe</code> object. This term is a combination of the terms ‘life history stage’ and ‘data frame,’ and the object itself is a data frame that describes all of the life history stages. This object is created in a way that shows how stage relates to size, reproductive status, observation status, propagule status, maturity status, and presence in the dataset, and in which the description of each life stage is unique. A good stageframe describes stages in ways that matrix-estimating functions utilize to compute elements accurately, and also allows the user to stipulate extra descriptive information on each stage as text. If the user wishes to create an IPM, then this function also allows that to be specified in a way that simplifies calculations.
 </p>
 </div>
 <div id="step-2a-dataset-organization" class="section level3">
@@ -659,78 +656,78 @@ We are grateful to two anonymous reviewers whose scrutiny improved the quality o
 </div>
 <div id="literature-cited" class="section level2">
 <h2>Literature cited</h2>
-<div id="refs">
-<div id="ref-barton_mumin_2014">
-<p>Bartoń, Kamil A. 2014. “MuMIn: Multi-Model Inference.” <a href="https://CRAN.R-project.org/package=MuMIn">https://CRAN.R-project.org/package=MuMIn</a>.</p>
+<div id="refs" class="references csl-bib-body hanging-indent">
+<div id="ref-barton_mumin_2014" class="csl-entry">
+Bartoń, Kamil A. 2014. <span>“<span>MuMIn</span>: Multi-Model Inference.”</span> <a href="https://CRAN.R-project.org/package=MuMIn">https://CRAN.R-project.org/package=MuMIn</a>.
 </div>
-<div id="ref-bates_fitting_2015">
-<p>Bates, Douglas, Martin Maechler, Ben Bolker, and Steve Walker. 2015. “Fitting Linear Mixed-Effects Models Using <em>Lme4</em>.” <em>Journal of Statistical Software</em> 67 (1): 1–48. <a href="https://doi.org/10.18637/jss.v067.i01">https://doi.org/10.18637/jss.v067.i01</a>.</p>
+<div id="ref-bates_fitting_2015" class="csl-entry">
+Bates, Douglas, Martin Maechler, Ben Bolker, and Steve Walker. 2015. <span>“Fitting Linear Mixed-Effects Models Using <em>Lme4</em>.”</span> <em>Journal of Statistical Software</em> 67 (1): 1–48. <a href="https://doi.org/10.18637/jss.v067.i01">https://doi.org/10.18637/jss.v067.i01</a>.
 </div>
-<div id="ref-beissinger_use_1998">
-<p>Beissinger, Steven R., and Michael Ian Westphal. 1998. “On the Use of Demographic Models of Population Viability in Endangered Species Management.” <em>Journal of Wildlife Management</em> 62 (3): 821–41. <a href="https://doi.org/10.2307/3802534">https://doi.org/10.2307/3802534</a>.</p>
+<div id="ref-beissinger_use_1998" class="csl-entry">
+Beissinger, Steven R., and Michael Ian Westphal. 1998. <span>“On the Use of Demographic Models of Population Viability in Endangered Species Management.”</span> <em>Journal of Wildlife Management</em> 62 (3): 821–41. <a href="https://doi.org/10.2307/3802534">https://doi.org/10.2307/3802534</a>.
 </div>
-<div id="ref-brooks_glmmtmb_2017">
-<p>Brooks, Mollie E., Kasper Kristensen, Koen J. van Benthem, Arni Magnusson, Casper W. Berg, Anders Nielsen, Hans J. Skaug, Martin Mächler, and Benjamin M. Bolker. 2017. “glmmTMB Balances Speed and Flexibility Among Packages for Zero-Inflated Generalized Linear Mixed Modeling.” <em>The R Journal</em> 9 (2): 378–400. <a href="https://doi.org/10.32614/RJ-2017-066">https://doi.org/10.32614/RJ-2017-066</a>.</p>
+<div id="ref-brooks_glmmtmb_2017" class="csl-entry">
+Brooks, Mollie E., Kasper Kristensen, Koen J. van Benthem, Arni Magnusson, Casper W. Berg, Anders Nielsen, Hans J. Skaug, Martin Mächler, and Benjamin M. Bolker. 2017. <span>“<span class="nocase">glmmTMB</span> Balances Speed and Flexibility Among Packages for Zero-Inflated Generalized Linear Mixed Modeling.”</span> <em>The R Journal</em> 9 (2): 378–400. <a href="https://doi.org/10.32614/RJ-2017-066">https://doi.org/10.32614/RJ-2017-066</a>.
 </div>
-<div id="ref-brownie_capture-recapture_1993">
-<p>Brownie, C., James E. Hines, James D. Nichols, Kenneth H. Pollock, and Jay B. Hestbeck. 1993. “Capture-Recapture Studies for Multiple Strata Including Non-Markovian Transitions.” <em>Biometrics</em> 49 (4): 1173–87. <a href="https://doi.org/10.2307/2532259">https://doi.org/10.2307/2532259</a>.</p>
+<div id="ref-brownie_capture-recapture_1993" class="csl-entry">
+Brownie, C., James E. Hines, James D. Nichols, Kenneth H. Pollock, and Jay B. Hestbeck. 1993. <span>“Capture-Recapture Studies for Multiple Strata Including Non-<span>Markovian</span> Transitions.”</span> <em>Biometrics</em> 49 (4): 1173–87. <a href="https://doi.org/10.2307/2532259">https://doi.org/10.2307/2532259</a>.
 </div>
-<div id="ref-caswell_matrix_2001">
-<p>Caswell, Hal. 2001. <em>Matrix Population Models: Construction, Analysis, and Interpretation</em>. Second edition. Sunderland, Massachusetts, USA: Sinauer Associates, Inc.</p>
+<div id="ref-caswell_matrix_2001" class="csl-entry">
+Caswell, Hal. 2001. <em>Matrix Population Models: Construction, Analysis, and Interpretation</em>. Second edition. Sunderland, Massachusetts, USA: Sinauer Associates, Inc.
 </div>
-<div id="ref-caswell_sensitivity_2019">
-<p>———. 2019. <em>Sensitivity Analysis: Matrix Methods in Demography and Ecology</em>. Demographic Research Methods. Cham, Switerland: Springer Nature. <a href="https://doi.org/10.1007/978-3-030-10534-1">https://doi.org/10.1007/978-3-030-10534-1</a>.</p>
+<div id="ref-caswell_sensitivity_2019" class="csl-entry">
+———. 2019. <em>Sensitivity Analysis: Matrix Methods in Demography and Ecology</em>. Demographic <span>Research</span> <span>Methods</span>. Cham, Switerland: Springer Nature. <a href="https://doi.org/10.1007/978-3-030-10534-1">https://doi.org/10.1007/978-3-030-10534-1</a>.
 </div>
-<div id="ref-cole_does_2014">
-<p>Cole, Diana J., Byron J. T. Morgan, Rachel S. McCrea, Roger Pradel, Olivier Gimenez, and Remi Choquet. 2014. “Does Your Species Have Memory? Analyzing Capture–Recapture Data with Memory Models.” <em>Ecology and Evolution</em> 4 (11): 2124–33. <a href="https://doi.org/10.1002/ece3.1037">https://doi.org/10.1002/ece3.1037</a>.</p>
+<div id="ref-cole_does_2014" class="csl-entry">
+Cole, Diana J., Byron J. T. Morgan, Rachel S. McCrea, Roger Pradel, Olivier Gimenez, and Remi Choquet. 2014. <span>“Does Your Species Have Memory? <span>Analyzing</span> Capture–Recapture Data with Memory Models.”</span> <em>Ecology and Evolution</em> 4 (11): 2124–33. <a href="https://doi.org/10.1002/ece3.1037">https://doi.org/10.1002/ece3.1037</a>.
 </div>
-<div id="ref-ehrlen_dynamics_2000">
-<p>Ehrlén, Johan. 2000. “The Dynamics of Plant Populations: Does the History of Individuals Matter?” <em>Ecology</em> 81 (6): 1675–84. <a href="https://doi.org/10.1890/0012-9658(2000)081%5B1675:TDOPPD%5D2.0.CO;2">https://doi.org/10.1890/0012-9658(2000)081[1675:TDOPPD]2.0.CO;2</a>.</p>
+<div id="ref-ehrlen_dynamics_2000" class="csl-entry">
+Ehrlén, Johan. 2000. <span>“The Dynamics of Plant Populations: Does the History of Individuals Matter?”</span> <em>Ecology</em> 81 (6): 1675–84. <a href="https://doi.org/10.1890/0012-9658(2000)081[1675:TDOPPD]2.0.CO;2">https://doi.org/10.1890/0012-9658(2000)081[1675:TDOPPD]2.0.CO;2</a>.
 </div>
-<div id="ref-ellner_integral_2006">
-<p>Ellner, Stephen P., and Mark Rees. 2006. “Integral Projection Models for Species with Complex Demography.” <em>American Naturalist</em> 167 (3): 410–28. <a href="https://doi.org/10.1086/499438">https://doi.org/10.1086/499438</a>.</p>
+<div id="ref-ellner_integral_2006" class="csl-entry">
+Ellner, Stephen P., and Mark Rees. 2006. <span>“Integral Projection Models for Species with Complex Demography.”</span> <em>American Naturalist</em> 167 (3): 410–28. <a href="https://doi.org/10.1086/499438">https://doi.org/10.1086/499438</a>.
 </div>
-<div id="ref-kendall_persistent_2019">
-<p>Kendall, Bruce E., Masami Fujiwara, Jasmin Diaz-Lopez, Sandra Schneider, Jakob Voigt, and Sören Wiesner. 2019. “Persistent Problems in the Construction of Matrix Population Models.” <em>Ecological Modelling</em> 406 (August): 33–43. <a href="https://doi.org/10.1016/j.ecolmodel.2019.03.011">https://doi.org/10.1016/j.ecolmodel.2019.03.011</a>.</p>
+<div id="ref-kendall_persistent_2019" class="csl-entry">
+Kendall, Bruce E., Masami Fujiwara, Jasmin Diaz-Lopez, Sandra Schneider, Jakob Voigt, and Sören Wiesner. 2019. <span>“Persistent Problems in the Construction of Matrix Population Models.”</span> <em>Ecological Modelling</em> 406 (August): 33–43. <a href="https://doi.org/10.1016/j.ecolmodel.2019.03.011">https://doi.org/10.1016/j.ecolmodel.2019.03.011</a>.
 </div>
-<div id="ref-morris_quantitative_2002">
-<p>Morris, William F., and Daniel F. Doak. 2002. <em>Quantitative Conservation Biology: Theory and Practice of Population Viability Analysis</em>. Sunderland, Massachusetts, USA: Sinauer Associates, Inc.</p>
+<div id="ref-morris_quantitative_2002" class="csl-entry">
+Morris, William F., and Daniel F. Doak. 2002. <em>Quantitative Conservation Biology: Theory and Practice of Population Viability Analysis</em>. Sunderland, Massachusetts, USA: Sinauer Associates, Inc.
 </div>
-<div id="ref-pinheiro_nlme_2020">
-<p>Pinheiro, Jose, Douglas Bates, Saikat Debroy, Deepyan Sarkar, and R Core Team. 2020. “Nlme: Linear and Nonlinear Mixed Effects Models. R Package Version 3.1-150.” <a href="https://CRAN.R-project.org/package=nlme">https://CRAN.R-project.org/package=nlme</a>.</p>
+<div id="ref-pinheiro_nlme_2020" class="csl-entry">
+Pinheiro, Jose, Douglas Bates, Saikat Debroy, Deepyan Sarkar, and R Core Team. 2020. <span>“Nlme: Linear and Nonlinear Mixed Effects Models. <span>R</span> Package Version 3.1-150.”</span> <a href="https://CRAN.R-project.org/package=nlme">https://CRAN.R-project.org/package=nlme</a>.
 </div>
-<div id="ref-pradel_proposal_2003">
-<p>Pradel, Roger, C. Wintrebert, and O. Gimenez. 2003. “A Proposal for a Goodness-of-Fit Test to the Arnason-Schwarz Multisite Capture-Recapture Model.” <em>Biometrics</em> 59: 43–53. <a href="https://doi.org/10.1111/1541-0420.00006">https://doi.org/10.1111/1541-0420.00006</a>.</p>
+<div id="ref-pradel_proposal_2003" class="csl-entry">
+Pradel, Roger, C. Wintrebert, and O. Gimenez. 2003. <span>“A Proposal for a Goodness-of-Fit Test to the <span>Arnason</span>-<span>Schwarz</span> Multisite Capture-Recapture Model.”</span> <em>Biometrics</em> 59: 43–53. <a href="https://doi.org/10.1111/1541-0420.00006">https://doi.org/10.1111/1541-0420.00006</a>.
 </div>
-<div id="ref-salguero-gomez_keeping_2010">
-<p>Salguero-Gómez, Roberto, and Brenda B. Casper. 2010. “Keeping Plant Shrinkage in the Demographic Loop.” <em>Journal of Ecology</em> 98: 312–23. <a href="https://doi.org/10.1111/j.1365-2745.2009.01616.x">https://doi.org/10.1111/j.1365-2745.2009.01616.x</a>.</p>
+<div id="ref-salguero-gomez_keeping_2010" class="csl-entry">
+Salguero-Gómez, Roberto, and Brenda B. Casper. 2010. <span>“Keeping Plant Shrinkage in the Demographic Loop.”</span> <em>Journal of Ecology</em> 98: 312–23. <a href="https://doi.org/10.1111/j.1365-2745.2009.01616.x">https://doi.org/10.1111/j.1365-2745.2009.01616.x</a>.
 </div>
-<div id="ref-shefferson_drivers_2018">
-<p>Shefferson, Richard P., Tiiu Kull, Michael J. Hutchings, Marc-Andre Selosse, Hans Jacquemyn, Kimberly M. Kellett, Eric S. Menges, et al. 2018. “Drivers of Vegetative Dormancy Across Herbaceous Perennial Plant Species.” <em>Ecology Letters</em> 21 (5): 724–33. <a href="https://doi.org/10.1111/ele.12940">https://doi.org/10.1111/ele.12940</a>.</p>
+<div id="ref-shefferson_drivers_2018" class="csl-entry">
+Shefferson, Richard P., Tiiu Kull, Michael J. Hutchings, Marc-Andre Selosse, Hans Jacquemyn, Kimberly M. Kellett, Eric S. Menges, et al. 2018. <span>“Drivers of Vegetative Dormancy Across Herbaceous Perennial Plant Species.”</span> <em>Ecology Letters</em> 21 (5): 724–33. <a href="https://doi.org/10.1111/ele.12940">https://doi.org/10.1111/ele.12940</a>.
 </div>
-<div id="ref-shefferson_predicting_2017">
-<p>Shefferson, Richard P., Ryo Mizuta, and Michael J. Hutchings. 2017. “Predicting Evolution in Response to Climate Change: The Example of Sprouting Probability in Three Dormancy-Prone Orchid Species.” <em>Royal Society Open Science</em> 4 (1): 160647. <a href="https://doi.org/10.1098/rsos.160647">https://doi.org/10.1098/rsos.160647</a>.</p>
+<div id="ref-shefferson_predicting_2017" class="csl-entry">
+Shefferson, Richard P., Ryo Mizuta, and Michael J. Hutchings. 2017. <span>“Predicting Evolution in Response to Climate Change: The Example of Sprouting Probability in Three Dormancy-Prone Orchid Species.”</span> <em>Royal Society Open Science</em> 4 (1): 160647. <a href="https://doi.org/10.1098/rsos.160647">https://doi.org/10.1098/rsos.160647</a>.
 </div>
-<div id="ref-shefferson_estimating_2001">
-<p>Shefferson, Richard P., Brett K. Sandercock, Joyce Proper, and Steven R. Beissinger. 2001. “Estimating Dormancy and Survival of a Rare Herbaceous Perennial Using Mark-Recapture Models.” <em>Ecology</em> 82 (1): 145–56. <a href="https://doi.org/10.1890/0012-9658(2001)082%5B0145:EDASOA%5D2.0.CO;2">https://doi.org/10.1890/0012-9658(2001)082[0145:EDASOA]2.0.CO;2</a>.</p>
+<div id="ref-shefferson_estimating_2001" class="csl-entry">
+Shefferson, Richard P., Brett K. Sandercock, Joyce Proper, and Steven R. Beissinger. 2001. <span>“Estimating Dormancy and Survival of a Rare Herbaceous Perennial Using Mark-Recapture Models.”</span> <em>Ecology</em> 82 (1): 145–56. <a href="https://doi.org/10.1890/0012-9658(2001)082[0145:EDASOA]2.0.CO;2">https://doi.org/10.1890/0012-9658(2001)082[0145:EDASOA]2.0.CO;2</a>.
 </div>
-<div id="ref-shefferson_life_2014">
-<p>Shefferson, Richard P., Robert J. Warren II, and H. Ronald Pulliam. 2014. “Life History Costs Make Perfect Sprouting Maladaptive in Two Herbaceous Perennials.” <em>Journal of Ecology</em> 102 (5): 1318–28. <a href="https://doi.org/10.1111/1365-2745.12281">https://doi.org/10.1111/1365-2745.12281</a>.</p>
+<div id="ref-shefferson_life_2014" class="csl-entry">
+Shefferson, Richard P., Robert J. Warren II, and H. Ronald Pulliam. 2014. <span>“Life History Costs Make Perfect Sprouting Maladaptive in Two Herbaceous Perennials.”</span> <em>Journal of Ecology</em> 102 (5): 1318–28. <a href="https://doi.org/10.1111/1365-2745.12281">https://doi.org/10.1111/1365-2745.12281</a>.
 </div>
-<div id="ref-stott_popdemo_2012">
-<p>Stott, Iain, David J. Hodgson, and Stuart Townley. 2012. “Popdemo: An R Package for Population Demography Using Projection Matrix Analysis.” <em>Methods in Ecology and Evolution</em> 3 (5): 797–802. <a href="https://doi.org/10.1111/j.2041-210X.2012.00222.x">https://doi.org/10.1111/j.2041-210X.2012.00222.x</a>.</p>
+<div id="ref-stott_popdemo_2012" class="csl-entry">
+Stott, Iain, David J. Hodgson, and Stuart Townley. 2012. <span>“Popdemo: An <span>R</span> Package for Population Demography Using Projection Matrix Analysis.”</span> <em>Methods in Ecology and Evolution</em> 3 (5): 797–802. <a href="https://doi.org/10.1111/j.2041-210X.2012.00222.x">https://doi.org/10.1111/j.2041-210X.2012.00222.x</a>.
 </div>
-<div id="ref-stubben_estimating_2007">
-<p>Stubben, Chris J., and Brook G. Milligan. 2007. “Estimating and Analyzing Demographic Models Using the <em>Popbio</em> Package in <em>R</em>.” <em>Journal of Statistical Software</em> 22: 11. <a href="https://doi.org/10.18637/jss.v022.i11">https://doi.org/10.18637/jss.v022.i11</a>.</p>
+<div id="ref-stubben_estimating_2007" class="csl-entry">
+Stubben, Chris J., and Brook G. Milligan. 2007. <span>“Estimating and Analyzing Demographic Models Using the <em>Popbio</em> Package in <em>r</em>.”</span> <em>Journal of Statistical Software</em> 22: 11. <a href="https://doi.org/10.18637/jss.v022.i11">https://doi.org/10.18637/jss.v022.i11</a>.
 </div>
-<div id="ref-de_vries_demography_2018">
-<p>Vries, Charlotte de, and Hal Caswell. 2018. “Demography When History Matters: Construction and Analysis of Second-Order Matrix Population Models.” <em>Theoretical Ecology</em> 11 (2): 129–40. <a href="https://doi.org/10.1007/s12080-017-0353-0">https://doi.org/10.1007/s12080-017-0353-0</a>.</p>
+<div id="ref-de_vries_demography_2018" class="csl-entry">
+Vries, Charlotte de, and Hal Caswell. 2018. <span>“Demography When History Matters: Construction and Analysis of Second-Order Matrix Population Models.”</span> <em>Theoretical Ecology</em> 11 (2): 129–40. <a href="https://doi.org/10.1007/s12080-017-0353-0">https://doi.org/10.1007/s12080-017-0353-0</a>.
 </div>
-<div id="ref-wardle_graph_1998">
-<p>Wardle, Glenda M. 1998. “A Graph Theory Approach to Demographic Loop Analysis.” <em>Ecology</em> 79 (7): 2539–49. <a href="https://doi.org/10.1890/0012-9658(1998)079%5B2539:AGTATD%5D2.0.CO;2">https://doi.org/10.1890/0012-9658(1998)079[2539:AGTATD]2.0.CO;2</a>.</p>
+<div id="ref-wardle_graph_1998" class="csl-entry">
+Wardle, Glenda M. 1998. <span>“A Graph Theory Approach to Demographic Loop Analysis.”</span> <em>Ecology</em> 79 (7): 2539–49. <a href="https://doi.org/10.1890/0012-9658(1998)079[2539:AGTATD]2.0.CO;2">https://doi.org/10.1890/0012-9658(1998)079[2539:AGTATD]2.0.CO;2</a>.
 </div>
-<div id="ref-zeileis_regression_2008">
-<p>Zeileis, Achim, Christian Kleiber, and Simon Jackman. 2008. “Regression Models for Count Data in R.” <em>Journal of Statistical Software</em> 27 (1): 1–25. <a href="https://doi.org/10.18637/jss.v027.i08">https://doi.org/10.18637/jss.v027.i08</a>.</p>
+<div id="ref-zeileis_regression_2008" class="csl-entry">
+Zeileis, Achim, Christian Kleiber, and Simon Jackman. 2008. <span>“Regression Models for Count Data in <span>R</span>.”</span> <em>Journal of Statistical Software</em> 27 (1): 1–25. <a href="https://doi.org/10.18637/jss.v027.i08">https://doi.org/10.18637/jss.v027.i08</a>.
 </div>
 </div>
 </div>

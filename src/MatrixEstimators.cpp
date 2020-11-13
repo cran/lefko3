@@ -741,12 +741,12 @@ List jerzeibalowski(DataFrame ppy, DataFrame AllStages, List survproxy, List obs
                 
                 double leftie = 0;
                 for (int i = theta; i < (y+theta); i++) {
-                  leftie = log(i) + leftie;
+                  leftie = log(static_cast<double>(i)) + leftie;
                 }
                 leftie = exp(leftie) / tgamma(y+1);
 
-                double lnumer = y * log(mu) + theta * log(theta); // pow(mu, y) * pow(theta, theta);
-                double ldenom = (y+theta) * log(mu+theta); // pow((mu+theta), (y+theta));
+                double lnumer = y * log(mu) + static_cast<double>(theta) * log(static_cast<double>(theta)); // pow(mu, y) * pow(theta, theta);
+                double ldenom = (y+static_cast<double>(theta)) * log(mu+static_cast<double>(theta)); // pow((mu+theta), (y+theta));
                 
                 double frac = exp(lnumer - ldenom);
                 
@@ -878,12 +878,12 @@ List jerzeibalowski(DataFrame ppy, DataFrame AllStages, List survproxy, List obs
                 
                 double leftie = 0;
                 for (int i = theta; i < (y+theta); i++) {
-                  leftie = log(i) + leftie;
+                  leftie = log(static_cast<double>(i)) + leftie;
                 }
                 leftie = exp(leftie) / tgamma(y+1);
                 
-                double lnumer = y * log(mu) + theta * log(theta); // pow(mu, y) * pow(theta, theta);
-                double ldenom = (y+theta) * log(mu+theta); // pow((mu+theta), (y+theta));
+                double lnumer = y * log(mu) + theta * log(static_cast<double>(theta)); // pow(mu, y) * pow(theta, theta);
+                double ldenom = (y+static_cast<double>(theta)) * log(mu+static_cast<double>(theta)); // pow((mu+theta), (y+theta));
                 
                 double frac = exp(lnumer - ldenom);
                 
