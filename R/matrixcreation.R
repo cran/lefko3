@@ -1379,7 +1379,7 @@ rlefko3 <- function(data, stageframe, year = "all", pop = NA, patch = NA, censor
         stop("Stage characteristics mismatch dataset. Consider using the stages option, particularly if the vertical file was created with NRasRep = TRUE in verticalize3() or historicalize3().")
       }
       
-      return(stageframe$stage[choicestage])
+      return(as.character(stageframe$stage[choicestage]))
     })
     
     data$usedstage2 <- apply(as.matrix(c(1:dim(data)[1])), 1, function(X) {
@@ -1398,7 +1398,7 @@ rlefko3 <- function(data, stageframe, year = "all", pop = NA, patch = NA, censor
         stop("Stage characteristics mismatch dataset. Consider using the stages option, particularly if the vertical file was created with NRasRep = TRUE in verticalize3() or historicalize3().")
       }
       
-      return(stageframe$stage[choicestage])
+      return(as.character(stageframe$stage[choicestage]))
     })
     
     data$usedstage3 <- apply(as.matrix(c(1:dim(data)[1])), 1, function(X) {
@@ -1416,22 +1416,41 @@ rlefko3 <- function(data, stageframe, year = "all", pop = NA, patch = NA, censor
       
       if (length(choicestage) == 0) choicestage <- which(stageframe$stage_id == max(stageframe$stage_id))
       
-      return(stageframe$stage[choicestage])
+      return(as.character(stageframe$stage[choicestage]))
     })
     
   } else if (length(stages) > 1) {
+    
     if (is.numeric(stages[2])) {
       data$usedstage1 <- data[, stages[3]]
-      data$usedstage1[which(data$usedstage1 == "NotAlive")] <- "Dead"
       data$usedstage2 <- data[, stages[2]]
       data$usedstage3 <- data[, stages[1]]
-      data$usedstage3[which(data$usedstage3 == "NotAlive")] <- "Dead"
+      
+      data$usedstage1 <- as.character(data$usedstage1)
+      data$usedstage2 <- as.character(data$usedstage2)
+      data$usedstage3 <- as.character(data$usedstage3)
+      
+      if (is.element("NotAlive", unique(data$usedstage1))) {
+        data$usedstage1[which(data$usedstage1 == "NotAlive")] <- "Dead"
+      }
+      if (is.element("NotAlive", unique(data$usedstage3))) {
+        data$usedstage3[which(data$usedstage3 == "NotAlive")] <- "Dead"
+      }
     } else {
       data$usedstage1 <- data[,which(names(data) == stages[3])]
-      data$usedstage1[which(data$usedstage1 == "NotAlive")] <- "Dead"
       data$usedstage2 <- data[,which(names(data) == stages[2])]
       data$usedstage3 <- data[,which(names(data) == stages[1])]
-      data$usedstage3[which(data$usedstage3 == "NotAlive")] <- "Dead"
+      
+      data$usedstage1 <- as.character(data$usedstage1)
+      data$usedstage2 <- as.character(data$usedstage2)
+      data$usedstage3 <- as.character(data$usedstage3)
+      
+      if (is.element("NotAlive", unique(data$usedstage1))) {
+        data$usedstage1[which(data$usedstage1 == "NotAlive")] <- "Dead"
+      }
+      if (is.element("NotAlive", unique(data$usedstage3))) {
+        data$usedstage3[which(data$usedstage3 == "NotAlive")] <- "Dead"
+      }
     }
     stages.used <- sort(unique(c(data$usedstage2, data$usedstage3)))
     
@@ -1919,7 +1938,7 @@ rlefko2 <- function(data, stageframe, year = "all", pop = NA, patch = NA, censor
         stop("Stage characteristics mismatch dataset. Consider using the stages option, particularly if the vertical file was created with NRasRep = TRUE in verticalize3() or historicalize3().")
       }
       
-      return(instageframe$stage[choicestage])
+      return(as.character(instageframe$stage[choicestage]))
     })
     
     data$usedstage3 <- apply(as.matrix(c(1:dim(data)[1])), 1, function(X) {
@@ -1941,18 +1960,30 @@ rlefko2 <- function(data, stageframe, year = "all", pop = NA, patch = NA, censor
       
       if (length(choicestage) == 0) choicestage <- which(instageframe$stage_id == max(instageframe$stage_id))
       
-      return(instageframe$stage[choicestage])
+      return(as.character(instageframe$stage[choicestage]))
     })
     
   } else if (length(stages) > 1) {
     if (is.numeric(stages[2])) {
       data$usedstage2 <- data[, stages[2]]
       data$usedstage3 <- data[, stages[1]]
-      data$usedstage3[which(data$usedstage3 == "NotAlive")] <- "Dead"
+      
+      data$usedstage2 <- as.character(data$usedstage2)
+      data$usedstage3 <- as.character(data$usedstage3)
+      
+      if (is.element("NotAlive", unique(data$usedstage3))) {
+        data$usedstage3[which(data$usedstage3 == "NotAlive")] <- "Dead"
+      }
     } else {
       data$usedstage2 <- data[,which(names(data) == stages[2])]
       data$usedstage3 <- data[,which(names(data) == stages[1])]
-      data$usedstage3[which(data$usedstage3 == "NotAlive")] <- "Dead"
+      
+      data$usedstage2 <- as.character(data$usedstage2)
+      data$usedstage3 <- as.character(data$usedstage3)
+      
+      if (is.element("NotAlive", unique(data$usedstage3))) {
+        data$usedstage3[which(data$usedstage3 == "NotAlive")] <- "Dead"
+      }
     }
     stages.used <- sort(unique(c(data$usedstage2, data$usedstage3)))
     

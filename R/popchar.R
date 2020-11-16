@@ -663,18 +663,20 @@ sf_create <- function(sizes, stagenames = NA, repstatus = 1, obsstatus = 1, prop
                                             matstatus = as.numeric(mat.vec.r), 
                                             indataset = as.numeric(ind.vec.r), 
                                             bin_size_width = as.numeric(size.width.vec.r), 
-                                            bin_raw_halfwidth = as.numeric(bin.vec.r))
+                                            bin_raw_halfwidth = as.numeric(bin.vec.r),
+                                            stringsAsFactors = FALSE)
   stageframe.reassessed$alive <- 1
   
   stageframe.reassessed <- rbind.data.frame(stageframe.reassessed, c((length(orig.stage.vec.r) + 1), "Dead", 0, 
-                                                                     0, 0, 0, 0, 1, 0, 0, 1, 1, 0, 0, 0))
+                                                                     0, 0, 0, 0, 1, 0, 0, 1, 1, 0, 0, 0),
+                                            stringsAsFactors = FALSE)
   
   if (age) {
     stageframe.reassessed <- cbind.data.frame(stageframe.reassessed, min_age = c(as.numeric(minage.vec.r), 0),
-                                              max_age = c(as.numeric(maxage.vec.r), 0))
+                                              max_age = c(as.numeric(maxage.vec.r), 0), stringsAsFactors = FALSE)
   } else {
     stageframe.reassessed <- cbind.data.frame(stageframe.reassessed, min_age = NA,
-                                              max_age = NA)
+                                              max_age = NA, stringsAsFactors = FALSE)
   }
   
   com.vec.r <- c(com.vec.r, "Dead")
@@ -793,7 +795,7 @@ sf_create <- function(sizes, stagenames = NA, repstatus = 1, obsstatus = 1, prop
 #' 
 #' @export
 overwrite <- function(stage3, stage2, stage1 = NA, eststage3 = NA, eststage2 = NA, 
-                       eststage1 = NA, givenrate = NA, type = NA) {
+                      eststage1 = NA, givenrate = NA, type = NA) {
   if (length(stage3) != length(stage2)) {
     stop("All transitions to overwrite require information at least for stage2 and stage3. These inputs must also be of equal length.",
          .call = FALSE)
@@ -808,27 +810,27 @@ overwrite <- function(stage3, stage2, stage1 = NA, eststage3 = NA, eststage2 = N
   
   if (length(stage1) < fulllength) {
     missinglength <- fulllength - length(stage1)
-    stage1 <- append(stage1, rep(NA, missinglength))
+    stage1 <- as.character(append(stage1, rep(NA, missinglength)))
   }
   if (length(eststage3) < fulllength) {
     missinglength <- fulllength - length(eststage3)
-    eststage3 <- append(eststage3, rep(NA, missinglength))
+    eststage3 <- as.character(append(eststage3, rep(NA, missinglength)))
   }
   if (length(eststage2) < fulllength) {    
     missinglength <- fulllength - length(eststage2)
-    eststage2 <- append(eststage2, rep(NA, missinglength))
+    eststage2 <- as.character(append(eststage2, rep(NA, missinglength)))
   }
   if (length(eststage1) < fulllength) {
     missinglength <- fulllength - length(eststage1)
-    eststage1 <- append(eststage1, rep(NA, missinglength))
+    eststage1 <- as.character(append(eststage1, rep(NA, missinglength)))
   }
   if (length(givenrate) < fulllength) {
     missinglength <- fulllength - length(givenrate)
-    givenrate <- append(givenrate, rep(NA, missinglength))
+    givenrate <- as.numeric(append(givenrate, rep(NA, missinglength)))
   }
   if (length(type) < fulllength) {
     missinglength <- fulllength - length(type)
-    type <- append(type, rep(NA, missinglength))
+    type <- as.character(append(type, rep(NA, missinglength)))
   }
   
   if(!all(is.na(type))) {
@@ -839,8 +841,9 @@ overwrite <- function(stage3, stage2, stage1 = NA, eststage3 = NA, eststage2 = N
     convtype <- rep(1, length(stage3))
   }
   
-  fullpack <- cbind.data.frame(stage3, stage2, stage1, eststage3, eststage2, eststage1, givenrate, convtype)
-
+  fullpack <- cbind.data.frame(stage3, stage2, stage1, eststage3, eststage2, eststage1, givenrate, convtype,
+                               stringsAsFactors = FALSE)
+  
   return(fullpack)
 }
 
@@ -893,7 +896,8 @@ overwrite <- function(stage3, stage2, stage1 = NA, eststage3 = NA, eststage2 = N
                                             eststage2 = overwritetable[X, "eststage2"], 
                                             eststage1 = overwritetable[X, "eststage1"],
                                             givenrate = overwritetable[X, "givenrate"], 
-                                            convtype = overwritetable[X, "convtype"])
+                                            convtype = overwritetable[X, "convtype"],
+                                            stringsAsFactors = FALSE)
               
               return(shrubbery)
             } else if (overwritetable[X, "stage1"] == "all") {
@@ -904,7 +908,8 @@ overwrite <- function(stage3, stage2, stage1 = NA, eststage3 = NA, eststage2 = N
                                             eststage2 = overwritetable[X, "eststage2"], 
                                             eststage1 = overwritetable[X, "eststage1"],
                                             givenrate = overwritetable[X, "givenrate"], 
-                                            convtype = overwritetable[X, "convtype"])
+                                            convtype = overwritetable[X, "convtype"],
+                                            stringsAsFactors = FALSE)
               
               return(shrubbery)
             } else {
@@ -919,7 +924,8 @@ overwrite <- function(stage3, stage2, stage1 = NA, eststage3 = NA, eststage2 = N
                                           eststage2 = overwritetable[X, "eststage2"], 
                                           eststage1 = overwritetable[X, "eststage1"],
                                           givenrate = overwritetable[X, "givenrate"], 
-                                          convtype = overwritetable[X, "convtype"])
+                                          convtype = overwritetable[X, "convtype"],
+                                          stringsAsFactors = FALSE)
             
             return(shrubbery)
           } else {
