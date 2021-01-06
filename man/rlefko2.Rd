@@ -42,62 +42,66 @@ model development. Can also equal \code{all}, in which case matrices will
 be estimated for all years. Defaults to \code{all}.}
 
 \item{pop}{A variable designating which populations will have matrices
-estimated. Should be set to specific population names, or to \code{all} if all 
-populations should have matrices estimated.}
+estimated. Should be set to specific population names, or to \code{all} if
+all populations should have matrices estimated.}
 
 \item{patch}{A variable designating which patches or subpopulations will have
-matrices estimated. Should be set to specific patch names, or to \code{all} if
-matrices should be estimated for all patches. Defaults to \code{all}.}
+matrices estimated. Should be set to specific patch names, or to \code{all}
+if matrices should be estimated for all patches. Defaults to \code{all}.}
 
-\item{censor}{If TRUE, then data will be removed according to the variable set
-in \code{censorcol}, such that only data with censor values equal to 1 will
-remain. Defaults to FALSE.}
+\item{censor}{If TRUE, then data will be removed according to the variable
+set in \code{censorcol}, such that only data with censor values equal to 1
+will remain. Defaults to FALSE.}
 
-\item{stages}{An optional vector denoting the names of the variables within the
-main vertical dataset coding for the stages of each individual in times \emph{t}+1,
-\emph{t}, and \emph{t}-1. The names of stages in these variables should match those
-used in the \code{stageframe} exactly. If left blank, then \code{rlefko3()} will attempt
-to infer stages by matching values of \code{alive}, \code{size}, \code{repst}, and \code{matst}
-to characteristics noted in the associated \code{stageframe}.}
+\item{stages}{An optional vector denoting the names of the variables within
+the main vertical dataset coding for the stages of each individual in times
+\emph{t}+1, \emph{t}, and \emph{t}-1. The names of stages in these variables
+should match those used in the \code{stageframe} exactly. If left blank, then
+\code{rlefko3()} will attempt to infer stages by matching values of
+\code{alive}, \code{size}, \code{repst}, and \code{matst} to characteristics
+noted in the associated \code{stageframe}.}
 
-\item{alive}{A vector of names of binomial variables corresponding to status as
-alive (1) or dead (0) in times \emph{t}+1, \emph{t}, and \emph{t}-1, respectively.}
+\item{alive}{A vector of names of binomial variables corresponding to status
+as alive (1) or dead (0) in times \emph{t}+1, \emph{t}, and \emph{t}-1,
+respectively.}
 
-\item{size}{A vector of names of variables coding size in times \emph{t}+1 and \emph{t},
-respectively. Defaults to \code{c("sizea3", "sizea2")}.}
+\item{size}{A vector of names of variables coding size in times \emph{t}+1
+and \emph{t}, respectively. Defaults to \code{c("sizea3", "sizea2")}.}
 
-\item{repst}{A vector of names of variables coding reproductive status in times
-\emph{t}+1 and \emph{t}, respectively. Defaults to \code{c("repstatus3", 
-"repstatus2")}.}
+\item{repst}{A vector of names of variables coding reproductive status in
+times \emph{t}+1 and \emph{t}, respectively. Defaults to 
+\code{c("repstatus3", "repstatus2")}.}
 
 \item{matst}{A vector of names of variables coding maturity status in times
 \emph{t}+1 and \emph{t}, respectively. Defaults to \code{c("matstatus3", 
 "matstatus2")}. Must be supplied if \code{stages} is not provided.}
 
-\item{fec}{A vector of names of variables coding fecundity in times \emph{t}+1
-and \emph{t}, respectively. Defaults to \code{c("feca3", "feca2")}.}
+\item{fec}{A vector of names of variables coding fecundity in times
+\emph{t}+1 and \emph{t}, respectively. Defaults to \code{c("feca3", "feca2")}.}
 
-\item{repmatrix}{A matrix composed mostly of 0s, with non-zero values for each
-potentially new individual (row) born to each reproductive stage (column).
-Entries act as multipliers on fecundity, with 1 equaling full fecundity.}
+\item{repmatrix}{A matrix composed mostly of 0s, with non-zero values for
+each potentially new individual (row) born to each reproductive stage 
+(column). Entries act as multipliers on fecundity, with 1 equaling full
+fecundity.}
 
-\item{overwrite}{A data frame developed with the \code{\link{overwrite}()} function
-describing transitions to be overwritten either with given values or 
+\item{overwrite}{A data frame developed with the \code{\link{overwrite}()}
+function describing transitions to be overwritten either with given values or 
 with other estimated transitions.}
 
-\item{yearcol}{The variable name or column number corresponding to time in time
-\emph{t} in the dataset.}
+\item{yearcol}{The variable name or column number corresponding to time in
+time \emph{t} in the dataset.}
 
-\item{popcol}{The variable name or column number corresponding to the identity
-of the population.}
+\item{popcol}{The variable name or column number corresponding to the
+identity of the population.}
 
-\item{patchcol}{The variable name or column number corresponding to patch in the
-dataset.}
+\item{patchcol}{The variable name or column number corresponding to patch in
+the dataset.}
 
-\item{indivcol}{The variable name or column number coding individual identity.}
+\item{indivcol}{The variable name or column number coding individual
+identity.}
 
-\item{censorcol}{The variable name or column number denoting the censor status.
-Only needed if \code{censor = TRUE}.}
+\item{censorcol}{The variable name or column number denoting the censor
+status. Only needed if \code{censor = TRUE}.}
 
 \item{reduce}{A logical value denoting whether to remove historical stages
 associated with only zero transitions. These are removed only if all row and
@@ -115,7 +119,8 @@ matrices output in the \code{matrix} class.}
 output in the \code{matrix} class.}
 \item{hstages}{Null for ahistorical matrices.}
 \item{ahstages}{A data frame detailing the characteristics of associated
-ahistorical stages.}
+ahistorical stages, in the form of a modified stageframe that includes
+status as an entry stage through reproduction.}
 \item{labels}{A data frame giving the population, patch, and year of each 
 matrix in order.}
 \item{matrixqc}{A short vector describing the number of non-zero elements
@@ -125,16 +130,16 @@ vertical dataset used as input.}
 }
 \description{
 \code{rlefko2()} returns raw ahistorical MPMs, including the associated
-componenttransition and fecundity matrices, a data frame describing the
-ahistorical stages used, and a data frame describing the population, patch, and
-year associated with each matrix.
+component transition and fecundity matrices, a data frame describing the
+ahistorical stages used, and a data frame describing the population, patch,
+and year associated with each matrix.
 }
 \examples{
 data(cypdata)
 
 sizevector <- c(0, 0, 0, 0, 0, 0, 1, 2.5, 4.5, 8, 17.5)
-stagevector <- c("SD", "P1", "P2", "P3", "SL", "D", "XSm", 
-                 "Sm", "Md", "Lg", "XLg")
+stagevector <- c("SD", "P1", "P2", "P3", "SL", "D", "XSm", "Sm", "Md", "Lg",
+  "XLg")
 repvector <- c(0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1)
 obsvector <- c(0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1)
 matvector <- c(0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1)
@@ -144,36 +149,33 @@ indataset <- c(0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1)
 binvec <- c(0, 0, 0, 0, 0, 0.5, 0.5, 1, 1, 2.5, 7)
 
 cypframe_raw <- sf_create(sizes = sizevector, stagenames = stagevector,
-                          repstatus = repvector, obsstatus = obsvector,
-                          matstatus = matvector, propstatus = propvector,
-                          immstatus = immvector, indataset = indataset,
-                          binhalfwidth = binvec)
+  repstatus = repvector, obsstatus = obsvector, matstatus = matvector,
+  propstatus = propvector, immstatus = immvector, indataset = indataset,
+  binhalfwidth = binvec)
 
 cypraw_v1 <- verticalize3(data = cypdata, noyears = 6, firstyear = 2004,
-                          patchidcol = "patch", individcol = "plantid",
-                          blocksize = 4, sizeacol = "Inf2.04", sizebcol = "Inf.04",
-                          sizeccol = "Veg.04", repstracol = "Inf.04",
-                          repstrbcol = "Inf2.04", fecacol = "Pod.04",
-                          stageassign = cypframe_raw, stagesize = "sizeadded",
-                          NAas0 = TRUE, NRasRep = TRUE)
+  patchidcol = "patch", individcol = "plantid", blocksize = 4,
+  sizeacol = "Inf2.04", sizebcol = "Inf.04", sizeccol = "Veg.04",
+  repstracol = "Inf.04", repstrbcol = "Inf2.04", fecacol = "Pod.04",
+  stageassign = cypframe_raw, stagesize = "sizeadded", NAas0 = TRUE,
+  NRasRep = TRUE)
 
 rep_cyp_raw <- matrix(0, 11, 11)
 rep_cyp_raw[1:2,7:11] <- 0.5
 
 cypover2r <- overwrite(stage3 = c("SD", "P1", "P2", "P3", "SL", "SL", "D", 
-                       "XSm", "Sm"), stage2 = c("SD", "SD", "P1", "P2", "P3", 
-                       "SL", "SL", "SL", "SL"), eststage3 = c(NA, NA, NA, NA, 
-                       NA, NA, "D", "XSm", "Sm"), eststage2 = c(NA, NA, NA, NA, 
-                       NA, NA, "XSm", "XSm", "XSm"), givenrate = c(0.1, 0.2, 
-                       0.2, 0.2, 0.25, 0.4, NA, NA, NA), type = c("S", "S", "S",
-                       "S", "S", "S", "S", "S", "S"))
+    "XSm", "Sm"),
+  stage2 = c("SD", "SD", "P1", "P2", "P3", "SL", "SL", "SL", "SL"),
+  eststage3 = c(NA, NA, NA, NA, NA, NA, "D", "XSm", "Sm"),
+  eststage2 = c(NA, NA, NA, NA, NA, NA, "XSm", "XSm", "XSm"),
+  givenrate = c(0.1, 0.2, 0.2, 0.2, 0.25, 0.4, NA, NA, NA),
+  type = c("S", "S", "S", "S", "S", "S", "S", "S", "S"))
 
-cypmatrix2r <- rlefko2(data = cypraw_v1, stageframe = cypframe_raw, year = "all",
-                       patch = "all", stages = c("stage3", "stage2", "stage1"),
-                       size = c("size3added", "size2added"),
-                       repmatrix = rep_cyp_raw, overwrite = cypover2r,
-                       yearcol = "year2", patchcol = "patchid",
-                       indivcol = "individ")
+cypmatrix2r <- rlefko2(data = cypraw_v1, stageframe = cypframe_raw, 
+  year = "all", patch = "all", stages = c("stage3", "stage2", "stage1"),
+  size = c("size3added", "size2added"), repmatrix = rep_cyp_raw,
+  overwrite = cypover2r, yearcol = "year2", patchcol = "patchid",
+  indivcol = "individ")
                        
 cypmatrix2r$A[[1]]
 

@@ -1,105 +1,115 @@
 #' Develop Best-fit Vital Rate Estimation Models For Matrix Development
 #' 
-#' \code{modelsearch()} returns both a table of vital rate estimating models and a
-#' best-fit model for each major vital rate estimated. The final output can be used
-#' as input in other functions within this package.
+#' \code{modelsearch()} returns both a best-fit model for each vital rate, and a
+#' model table showing all models tested. The final output can be used as input
+#' in other functions within this package.
 #' 
 #' @param data The vertical dataset to be used for analysis. This dataset should 
-#' be of class \code{hfvdata}, but can also be a data frame formatted similarly to
-#' the output format provided by functions \code{\link{verticalize3}()} or \code{\link{historicalize3}()},
-#' as long as all needed variables are properly designated.
-#' @param historical A logical variable denoting whether to assess the effects of
-#' state in time \emph{t}-1 in addition to state in time \emph{t}. Defaults to TRUE.
+#' be of class \code{hfvdata}, but can also be a data frame formatted similarly
+#' to the output format provided by functions \code{\link{verticalize3}()} or
+#' \code{\link{historicalize3}()}, as long as all needed variables are properly
+#' designated.
+#' @param historical A logical variable denoting whether to assess the effects
+#' of state in time \emph{t}-1 in addition to state in time \emph{t}. Defaults
+#' to TRUE.
 #' @param approach The statistical approach to be taken for model building. The 
 #' default is \code{lme4}, which uses the mixed model approach utilized in 
-#' package \code{lme4}. Other options include \code{glm}, which uses \code{lm}, \code{glm},
-#' and related functions in base R.
-#' @param suite This describes the global model for each vital rate estimation and
-#' has the following possible values: \code{full}, includes main effects and all
-#' two-way interactions of size and reproductive status; \code{main}, includes main
-#' effects only of size and reproductive status; \code{size}, includes only size
-#' (also interactions between size in historical model); \code{rep}, includes only
-#' reproductive status (also interactions between status in historical model); 
-#' \code{cons}, all vital rates estimated only as y-intercepts. If \code{approach = "glm"}
-#' and \code{year.as.random = FALSE}, then year is also included as a fixed effect,
-#' and, in the case of \code{full}, included in two-way interactions. Defaults to \code{size}.
+#' package \code{lme4}. Other options include \code{glm}, which uses \code{lm},
+#' \code{glm}, and related functions in base R.
+#' @param suite This describes the global model for each vital rate estimation
+#' and has the following possible values: \code{full}, includes main effects and
+#' all two-way interactions of size and reproductive status; \code{main},
+#' includes main effects only of size and reproductive status; \code{size},
+#' includes only size (also interactions between size in historical model);
+#' \code{rep}, includes only reproductive status (also interactions between
+#' status in historical model); \code{cons}, all vital rates estimated only as
+#' y-intercepts. If \code{approach = "glm"} and \code{year.as.random = FALSE},
+#' then year is also included as a fixed effect, and, in the case of
+#' \code{full}, included in two-way interactions. Defaults to \code{size}.
 #' @param bestfit A variable indicating the model selection criterion for the
 #' choice of best-fit model. The default is \code{AICc&k}, which chooses the 
-#' best-fit model as the model with the lowest AICc or, if not the same model, then
-#' the model that has the lowest degrees of freedom among models with \eqn{\Delta AICc <= 2.0}.
-#' Alternatively, \code{AICc} may be chosen, in which case the best-fit model is simply
-#' the model with the lowest AICc value.
+#' best-fit model as the model with the lowest AICc or, if not the same model,
+#' then the model that has the lowest degrees of freedom among models with
+#' \eqn{\Delta AICc <= 2.0}. Alternatively, \code{AICc} may be chosen, in which
+#' case the best-fit model is simply the model with the lowest AICc value.
 #' @param vitalrates A vector describing which vital rates will be estimated via
-#' linear modeling, with the following options: \code{surv}, survival probability;
-#' \code{obs}, observation probability; \code{size}, overall size; \code{repst}, 
-#' probability of reproducing; and \code{fec}, amount of reproduction (overall 
-#' fecundity). Defaults to \code{c("surv", "size", "fec")}.
-#' @param surv A vector indicating the variable names coding for status as alive or
-#' dead in times \emph{t}+1, \emph{t}, and \emph{t}-1, respectively. Defaults to 
-#' \code{c("alive3", "alive2", "alive1")}.
-#' @param obs A vector indicating the variable names coding for observation status
-#' in times \emph{t}+1, \emph{t}, and \emph{t}-1, respectively. Defaults to 
-#' \code{c("obsstatus3", "obsstatus2", "obsstatus1")}.
-#' @param size A vector indicating the variable names coding for size in times \emph{t}+1,
-#' \emph{t}, and \emph{t}-1, respectively. Defaults to \code{c("sizea3", "sizea2", "sizea1")}.
+#' linear modeling, with the following options: \code{surv}, survival
+#' probability; \code{obs}, observation probability; \code{size}, overall size;
+#' \code{repst}, probability of reproducing; and \code{fec}, amount of
+#' reproduction (overall fecundity). Defaults to \code{c("surv", "size", "fec")}.
+#' @param surv A vector indicating the variable names coding for status as alive
+#' or dead in times \emph{t}+1, \emph{t}, and \emph{t}-1, respectively. Defaults
+#' to \code{c("alive3", "alive2", "alive1")}.
+#' @param obs A vector indicating the variable names coding for observation
+#' status in times \emph{t}+1, \emph{t}, and \emph{t}-1, respectively. Defaults
+#' to \code{c("obsstatus3", "obsstatus2", "obsstatus1")}.
+#' @param size A vector indicating the variable names coding for size in times
+#' \emph{t}+1, \emph{t}, and \emph{t}-1, respectively. Defaults to
+#' \code{c("sizea3", "sizea2", "sizea1")}.
 #' @param repst A vector indicating the variable names coding for reproductive
-#' status in times \emph{t}+1, \emph{t}, and \emph{t}-1, respectively. Defaults to 
-#' \code{c("repstatus3", "repstatus2", "repstatus1")}.
-#' @param fec A vector indicating the variable names coding for fecundity in times 
-#' \emph{t}+1, \emph{t}, and \emph{t}-1, respectively. Defaults to \code{c("feca3", "feca2", "feca1")}.
-#' @param stage A vector indicating the variables coding for stage in times \emph{t}+1, 
-#' \emph{t}, and \emph{t}-1. Defaults to \code{c("stage3", "stage2", "stage1")}.
-#' @param indiv A variable indicating the variable name coding individual identity.
-#' Defaults to \code{individ}.
+#' status in times \emph{t}+1, \emph{t}, and \emph{t}-1, respectively. Defaults
+#' to \code{c("repstatus3", "repstatus2", "repstatus1")}.
+#' @param fec A vector indicating the variable names coding for fecundity in
+#' times \emph{t}+1, \emph{t}, and \emph{t}-1, respectively. Defaults to
+#' \code{c("feca3", "feca2", "feca1")}.
+#' @param stage A vector indicating the variables coding for stage in times
+#' \emph{t}+1, \emph{t}, and \emph{t}-1. Defaults to \code{c("stage3", "stage2",
+#' "stage1")}.
+#' @param indiv A variable indicating the variable name coding individual
+#' identity. Defaults to \code{individ}.
 #' @param patch A variable indicating the variable name coding for patch, where
-#' patches are defined as permanent subgroups within the study population. Defaults
-#' to NA.
+#' patches are defined as permanent subgroups within the study population.
+#' Defaults to NA.
 #' @param year A variable indicating the variable coding for observation time in 
 #' time \emph{t}. Defaults to \code{year2}.
-#' @param sizedist The probability distribution used to model size. Options include
-#' \code{gaussian} for the Normal distribution (default), \code{poisson} for the Poisson
-#' distribution, and \code{negbin} for the negative binomial distribution.
+#' @param sizedist The probability distribution used to model size. Options
+#' include \code{gaussian} for the Normal distribution (default), \code{poisson}
+#' for the Poisson distribution, and \code{negbin} for the negative binomial
+#' distribution.
 #' @param fecdist The probability distribution used to model fecundity. Options
-#' include \code{gaussian} for the Normal distribution (default), \code{poisson} for
-#' the Poisson distribution, and \code{negbin} for the negative binomial distribution.
+#' include \code{gaussian} for the Normal distribution (default), \code{poisson}
+#' for the Poisson distribution, and \code{negbin} for the negative binomial
+#' distribution.
 #' @param size.zero A logical variable indicating whether size distribution 
 #' should be zero-inflated. Only applies to Poisson and negative binomial 
 #' distributions. Defaults to FALSE.
 #' @param fec.zero A logical variable indicating whether fecundity distribution 
 #' should be zero-inflated. Only applies to Poisson and negative binomial 
 #' distributions. Defaults to FALSE.
-#' @param patch.as.random If set to TRUE and \code{approach = "lme4"}, then \code{patch}
-#' is included as a random factor. If set to FALSE and \code{approach = "glm"}, then 
-#' \code{patch} is included as a fixed factor. All other combinations of logical 
-#' value and \code{approach} lead to \code{patch} not being included in modeling.
-#' Defaults to TRUE.
-#' @param year.as.random If set to TRUE and \code{approach = "lme4"}, then \code{year} is 
-#' included as a random factor. If set to FALSE, then \code{year} is included as a 
-#' fixed factor. All other combinations of logical value and \code{approach} lead to 
-#' \code{year} not being included in modeling. Defaults to TRUE.
-#' @param juvestimate An optional variable denoting the stage name of the juvenile
-#' stage in the vertical dataset. If not NA, and \code{stage} is also given (see
-#' below), then vital rates listed in \code{vitalrates} other than \code{fec} will also
-#' be estimated from the juvenile stage to all adult stages. Defaults to NA, in
-#' which case juvenile vital rates are not estimated.
-#' @param juvsize A logical variable denoting whether size should be used as a term
-#' in models involving transition from the juvenile stage. Defaults to FALSE, and
-#' is only used if \code{juvestimate} does not equal NA.
+#' @param patch.as.random If set to TRUE and \code{approach = "lme4"}, then
+#' \code{patch} is included as a random factor. If set to FALSE and
+#' \code{approach = "glm"}, then \code{patch} is included as a fixed factor. All
+#' other combinations of logical value and \code{approach} lead to \code{patch}
+#' not being included in modeling. Defaults to TRUE.
+#' @param year.as.random If set to TRUE and \code{approach = "lme4"}, then
+#' \code{year} is included as a random factor. If set to FALSE, then \code{year}
+#' is included as a fixed factor. All other combinations of logical value and
+#' \code{approach} lead to \code{year} not being included in modeling. Defaults
+#' to TRUE.
+#' @param juvestimate An optional variable denoting the stage name of the
+#' juvenile stage in the vertical dataset. If not NA, and \code{stage} is also
+#' given (see below), then vital rates listed in \code{vitalrates} other than
+#' \code{fec} will also be estimated from the juvenile stage to all adult
+#' stages. Defaults to NA, in which case juvenile vital rates are not estimated.
+#' @param juvsize A logical variable denoting whether size should be used as a
+#' term in models involving transition from the juvenile stage. Defaults to
+#' FALSE, and is only used if \code{juvestimate} does not equal NA.
 #' @param fectime A variable indicating which year of fecundity to use as the
-#' response term in fecundity models. Options include \code{2}, which refers to time \emph{t},
-#' and \code{3}, which refers to time \emph{t}+1. Defaults to \code{2}.
-#' @param censor A vector denoting the names of censoring variables in the dataset,
-#' in order from time \emph{t}+1, followed by time \emph{t}, and lastly followed by time \emph{t}-1.
-#' Defaults to NA.
+#' response term in fecundity models. Options include \code{2}, which refers to
+#' time \emph{t}, and \code{3}, which refers to time \emph{t}+1. Defaults to
+#' \code{2}.
+#' @param censor A vector denoting the names of censoring variables in the
+#' dataset, in order from time \emph{t}+1, followed by time \emph{t}, and lastly
+#' followed by time \emph{t}-1. Defaults to NA.
 #' @param age Designates the name of the variable corresponding to age in the
 #' vertical dataset. Defaults to NA, in which case age is not included in linear
 #' models. Should only be used if building age x stage matrices.
-#' @param indcova Vector designating the names in times \emph{t}+1, \emph{t}, and
-#' \emph{t}-1 of an individual covariate. Defaults to NA.
-#' @param indcovb Vector designating the names in times \emph{t}+1, \emph{t}, and
-#' \emph{t}-1 of an individual covariate. Defaults to NA.
-#' @param indcovc Vector designating the names in times \emph{t}+1, \emph{t}, and
-#' \emph{t}-1 of an individual covariate. Defaults to NA.
+#' @param indcova Vector designating the names in times \emph{t}+1, \emph{t},
+#' and \emph{t}-1 of an individual covariate. Defaults to NA.
+#' @param indcovb Vector designating the names in times \emph{t}+1, \emph{t},
+#' and \emph{t}-1 of an individual covariate. Defaults to NA.
+#' @param indcovc Vector designating the names in times \emph{t}+1, \emph{t},
+#' and \emph{t}-1 of an individual covariate. Defaults to NA.
 #' @param show.model.tables If set to TRUE, then includes full modeling tables
 #' in the output. Defaults to TRUE.
 #' @param global.only If set to TRUE, then only global models will be built and
@@ -109,13 +119,14 @@
 #' not affect warnings and messages generated as models themselves are tested.
 #' Defaults to FALSE.
 #' 
-#' @return This function yields an object of class \code{lefkoMod}, which is a list
-#' in which the first 9 elements are the best-fit models for survival, observation
-#' status, size, reproductive status, fecundity, juvenile survival, juvenile
-#' observation, juvenile size, and juvenile transition to reproduction, 
-#' respectively, followed by 9 elements corresponding to the model tables for each
-#' of these vital rates, in order, followed by a single character element denoting
-#' the criterion used for model selection, and ending on a quality control vector:
+#' @return This function yields an object of class \code{lefkoMod}, which is a
+#' list in which the first 9 elements are the best-fit models for survival,
+#' observation status, size, reproductive status, fecundity, juvenile survival,
+#' juvenile observation, juvenile size, and juvenile transition to reproduction, 
+#' respectively, followed by 9 elements corresponding to the model tables for
+#' each of these vital rates, in order, followed by a single character element
+#' denoting the criterion used for model selection, and ending on a quality
+#' control vector:
 #' 
 #' \item{survival_model}{Best-fit model of the binomial probability of survival
 #' from time \emph{t} to time \emph{t}+1. Defaults to 1.}
@@ -124,23 +135,25 @@
 #' \item{size_model}{Best-fit model of size in time \emph{t}+1 given survival to
 #' and observation in that time. Defaults to 1.}
 #' \item{repstatus_model}{Best-fit model of the binomial probability of
-#' reproduction in time \emph{t}+1, given survival to and observation in that time.
-#' Defaults to 1.}
+#' reproduction in time \emph{t}+1, given survival to and observation in that
+#' time. Defaults to 1.}
 #' \item{fecundity_model}{Best-fit model of fecundity in time \emph{t}+1 given 
 #' survival to, and observation and reproduction in that time. Defaults to 1.}
-#' \item{juv_survival_model}{Best-fit model of the binomial probability of survival
-#' from time \emph{t} to time \emph{t}+1 of an immature individual. Defaults to 1.}
+#' \item{juv_survival_model}{Best-fit model of the binomial probability of
+#' survival from time \emph{t} to time \emph{t}+1 of an immature individual.
+#' Defaults to 1.}
 #' \item{juv_observation_model}{Best-fit model of the binomial probability of 
 #' observation in time \emph{t}+1 given survival to that time of an immature
 #' individual. Defaults to 1.}
-#' \item{juv_size_model}{Best-fit model of size in time \emph{t}+1 given survival to
-#' and observation in that time of an immature individual. Defaults to 1.}
+#' \item{juv_size_model}{Best-fit model of size in time \emph{t}+1 given
+#' survival to and observation in that time of an immature individual. Defaults
+#' to 1.}
 #' \item{juv_reproduction_model}{Best-fit model of the binomial probability of
-#' reproduction in time \emph{t}+1, given survival to and observation in that time
-#' of an individual that was immature in time \emph{t}. This model is technically
-#' not a model of reproduction probability for individuals that are immature,
-#' rather reproduction probability here is given for individuals that are mature in
-#' time \emph{t}+1 but immature in time \emph{t}. Defaults to 1.}
+#' reproduction in time \emph{t}+1, given survival to and observation in that
+#' time of an individual that was immature in time \emph{t}. This model is
+#' technically not a model of reproduction probability for individuals that are
+#' immature, rather reproduction probability here is given for individuals that
+#' are mature in time \emph{t}+1 but immature in time \emph{t}. Defaults to 1.}
 #' \item{survival_table}{Full dredge model table of survival probability.}
 #' \item{observation_table}{Full dredge model table of observationprobability.}
 #' \item{size_table}{Full dredge model table of size.}
@@ -151,116 +164,128 @@
 #' \item{juv_observation_table}{Full dredge model table of immature observation
 #' probability.}
 #' \item{juv_size_table}{Full dredge model table of immature size.}
-#' \item{juv_reproduction_table}{Full dredge model table of immature reproduction
-#' probability.}
+#' \item{juv_reproduction_table}{Full dredge model table of immature
+#' reproduction probability.}
 #' \item{criterion}{Vharacter variable denoting the criterion used to determine
 #' the best-fit model.}
-#' \item{qc}{Data frame with three variables: 1) Name of vital rate, 2) number of
-#' individuals used to model that vital rate, and 3) number of individual
+#' \item{qc}{Data frame with three variables: 1) Name of vital rate, 2) number
+#' of individuals used to model that vital rate, and 3) number of individual
 #' transitions used to model that vital rate.}
 #' 
 #' The mechanics governing model building are fairly robust to errors and
-#' exceptions. The function attempts to build global models, and simplifies models
-#' automatically should model building fail. Model building proceeds through the 
-#' functions \code{\link[stats]{lm}()} (GLM with Gaussian response), \code{\link[stats]{glm}()} (GLM 
-#' with Poisson or binomial response), \code{\link[MASS]{glm.nb}()} (GLM with negative binomial 
-#' response), \code{\link[pscl]{zeroinfl}()} (zero-inflated Poisson or negative binomial response), 
-#' \code{\link[lme4]{lmer}()} (mixed model with Gaussian response), \code{\link[lme4]{glmer}()} 
-#' (mixed model with binomial or Poisson response), \code{\link[glmmTMB]{glmmTMB}()} (mixed
-#' model with negative binomial, zero-inflated negative binomial, or zero-inflated 
-#' Poisson response). See documentation related to these functions for further 
-#' information.
+#' exceptions. The function attempts to build global models, and simplifies
+#' models automatically should model building fail. Model building proceeds
+#' through the functions \code{\link[stats]{lm}()} (GLM with Gaussian response),
+#' \code{\link[stats]{glm}()} (GLM with Poisson or binomial response),
+#' \code{\link[MASS]{glm.nb}()} (GLM with negative binomial response),
+#' \code{\link[pscl]{zeroinfl}()} (zero-inflated Poisson or negative binomial
+#' response), \code{\link[lme4]{lmer}()} (mixed model with Gaussian response),
+#' \code{\link[lme4]{glmer}()} (mixed model with binomial or Poisson response),
+#' \code{\link[glmmTMB]{glmmTMB}()} (mixed model with negative binomial,
+#' zero-inflated negative binomial, or zero-inflated Poisson response).
+#' See documentation related to these functions for further information.
 #' 
-#' Exhaustive model building and selection proceeds via the \code{\link[MuMIn]{dredge}()}
-#' function in package \code{MuMIn}. This function is verbose, so that any errors and 
-#' warnings developed during model building, model analysis, and model selection
-#' can be found and dealt with. Interpretations of errors during global model
-#' analysis may be found in documentation in for the functions and packages
-#' mentioned. Package \code{MuMIn} is used for model dredging (see \link[MuMIn]{dredge}),
-#' and errors and warnings during dredging can be interpreted using the
+#' Exhaustive model building and selection proceeds via the
+#' \code{\link[MuMIn]{dredge}()} function in package \code{MuMIn}. This function
+#' is verbose, so that any errors and warnings developed during model building,
+#' model analysis, and model selection can be found and dealt with.
+#' Interpretations of errors during global model analysis may be found in
+#' documentation in for the functions and packages mentioned. Package
+#' \code{MuMIn} is used for model dredging (see \link[MuMIn]{dredge}), and
+#' errors and warnings during dredging can be interpreted using the
 #' documentation for that package. Errors occurring during dredging lead to the
 #' adoption of the global model as the best-fit, and the user should view all
 #' logged errors and warnings to determine the best way to proceed. The 
-#' \code{quiet = TRUE} option can be used to silence dredge warnings, but users should
-#' note that automated model selection can be viewed as a black box, and so great
-#' care should be taken to ensure that the models run make biological sense, and
-#' that model quality is prioritized.
+#' \code{quiet = TRUE} option can be used to silence dredge warnings, but users
+#' should note that automated model selection can be viewed as a black box, and
+#' so care should be taken to ensure that the models run make biological sense,
+#' and that model quality is prioritized.
 #' 
-#' Exhaustive model selection through dredging works best with larger datasets and
-#' fewer tested parameters. Setting \code{suite = "full"} may initiate a dredge
-#' that takes a dramatically long time, particularly if the model is historical,
-#' individual covariates are used, or a zero-inflated distribution is assumed. In
-#' such cases, the number of models built and tested will run at least in the millions.
-#' Small datasets will also increase the error associated with these tests, leading to
-#' adoption of simpler models overall. We do not yet offer a parallelization option
-#' for function \code{modelsearch()}, but plan to offer one in the future to speed
-#' this process up for particularly large global models.
+#' Exhaustive model selection through dredging works best with larger datasets
+#' and fewer tested parameters. Setting \code{suite = "full"} may initiate a
+#' dredge that takes a dramatically long time, particularly if the model is
+#' historical, individual covariates are used, or a zero-inflated distribution
+#' is assumed. In such cases, the number of models built and tested will run at
+#' least in the millions. Small datasets will also increase the error associated
+#' with these tests, leading to adoption of simpler models overall. We do not
+#' yet offer a parallelization option for function \code{modelsearch()}, but
+#' plan to offer one in the future to speed this process up for particularly
+#' large global models.
 #'
-#' Care must be taken to build models that test the impacts of state in time \emph{t}-1
-#' for historical models, and that do not test these impacts for ahistorical
-#' models. Ahistorical matrix modeling particularly will yield biased transition
-#' estimates if historical terms from models are ignored. This can be dealt with
-#' at the start of modeling by setting \code{historical = FALSE} for the
-#' ahistorical case, and \code{historical = TRUE} for the historical case.
+#' Care must be taken to build models that test the impacts of state in time
+#' \emph{t}-1 for historical models, and that do not test these impacts for
+#' ahistorical models. Ahistorical matrix modeling particularly will yield
+#' biased transition estimates if historical terms from models are ignored. This
+#' can be dealt with at the start of modeling by setting 
+#' \code{historical = FALSE} for the ahistorical case, and 
+#' \code{historical = TRUE} for the historical case.
 #' 
 #' @examples
 #' \donttest{
 #' data(lathyrus)
 #' 
-#' sizevector <- c(0, 4.6, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 1, 2, 3, 4, 5, 6, 7, 8, 9)
-#' stagevector <- c("Sd", "Sdl", "Dorm", "Sz1nr", "Sz2nr", "Sz3nr", "Sz4nr", "Sz5nr",
-#'                  "Sz6nr", "Sz7nr", "Sz8nr", "Sz9nr", "Sz1r", "Sz2r", "Sz3r", "Sz4r",
-#'                  "Sz5r", "Sz6r", "Sz7r", "Sz8r", "Sz9r")
+#' sizevector <- c(0, 4.6, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 1, 2, 3, 4, 5, 6, 7, 8,
+#'   9)
+#' stagevector <- c("Sd", "Sdl", "Dorm", "Sz1nr", "Sz2nr", "Sz3nr", "Sz4nr", 
+#'   "Sz5nr", "Sz6nr", "Sz7nr", "Sz8nr", "Sz9nr", "Sz1r", "Sz2r", "Sz3r",
+#'   "Sz4r", "Sz5r", "Sz6r", "Sz7r", "Sz8r", "Sz9r")
 #' repvector <- c(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1)
 #' obsvector <- c(0, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1)
 #' matvector <- c(0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1)
 #' immvector <- c(1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)
-#' propvector <- c(1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)
+#' propvector <- c(1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+#'   0)
 #' indataset <- c(0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1)
-#' binvec <- c(0, 4.6, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5,
-#'             0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5)
+#' binvec <- c(0, 4.6, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5,
+#'   0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5)
 #' 
-#' lathframeln <- sf_create(sizes = sizevector, stagenames = stagevector, repstatus = repvector,
-#'                          obsstatus = obsvector, matstatus = matvector, immstatus = immvector,
-#'                          indataset = indataset, binhalfwidth = binvec, propstatus = propvector)
+#' lathframeln <- sf_create(sizes = sizevector, stagenames = stagevector,
+#'   repstatus = repvector, obsstatus = obsvector, matstatus = matvector,
+#'   immstatus = immvector, indataset = indataset, binhalfwidth = binvec,
+#'   propstatus = propvector)
 #' 
-#' lathvertln <- verticalize3(lathyrus, noyears = 4, firstyear = 1988, patchidcol = "SUBPLOT",
-#'                            individcol = "GENET", blocksize = 9, juvcol = "Seedling1988",
-#'                            sizeacol = "lnVol88", repstracol = "FCODE88",
-#'                            fecacol = "Intactseed88", deadacol = "Intactseed88",
-#'                            nonobsacol = "Dormant1988", stageassign = lathframeln,
-#'                            stagesize = "sizea", censorcol = "Missing1988",
-#'                            censorkeep = NA, NAas0 = TRUE, censor = TRUE)
+#' lathvertln <- verticalize3(lathyrus, noyears = 4, firstyear = 1988,
+#'   patchidcol = "SUBPLOT", individcol = "GENET", blocksize = 9,
+#'   juvcol = "Seedling1988", sizeacol = "lnVol88", repstracol = "FCODE88",
+#'   fecacol = "Intactseed88", deadacol = "Intactseed88",
+#'   nonobsacol = "Dormant1988", stageassign = lathframeln, stagesize = "sizea",
+#'   censorcol = "Missing1988", censorkeep = NA, NAas0 = TRUE, censor = TRUE)
 #' 
 #' lathvertln$feca2 <- round(lathvertln$feca2)
 #' lathvertln$feca1 <- round(lathvertln$feca1)
 #' lathvertln$feca3 <- round(lathvertln$feca3)
 #' 
-#' lathmodelsln2 <- modelsearch(lathvertln, historical = FALSE, approach = "lme4", suite = "main",
-#'                              vitalrates = c("surv", "obs", "size", "repst", "fec"), 
-#'                              juvestimate = "Sdl", bestfit = "AICc&k", sizedist = "gaussian", 
-#'                              fecdist = "poisson", indiv = "individ", patch = "patchid", 
-#'                              year = "year2", year.as.random = TRUE, patch.as.random = TRUE,
-#'                              show.model.tables = TRUE)
+#' lathmodelsln2 <- modelsearch(lathvertln, historical = FALSE,
+#'   approach = "lme4", suite = "main",
+#'   vitalrates = c("surv", "obs", "size", "repst", "fec"), juvestimate = "Sdl",
+#'   bestfit = "AICc&k", sizedist = "gaussian", fecdist = "poisson",
+#'   indiv = "individ", patch = "patchid", year = "year2",
+#'   year.as.random = TRUE, patch.as.random = TRUE, show.model.tables = TRUE)
 #' 
 #' lathmodelsln2
 #' }
 #' 
 #' @export
-modelsearch <- function(data, historical = TRUE, approach = "mixed", suite = "size", bestfit = "AICc&k",
-                        vitalrates = c("surv", "size", "fec"), surv = c("alive3", "alive2", "alive1"),
-                        obs = c("obsstatus3", "obsstatus2", "obsstatus1"), size = c("sizea3", "sizea2", "sizea1"),
-                        repst = c("repstatus3", "repstatus2", "repstatus1"), fec = c("feca3", "feca2", "feca1"),
-                        stage = c("stage3", "stage2", "stage1"), indiv = "individ", patch = NA, year = "year2",
-                        sizedist = "gaussian", fecdist = "gaussian", size.zero = FALSE, fec.zero = FALSE,
-                        patch.as.random = TRUE, year.as.random = TRUE, juvestimate = NA, juvsize = FALSE, 
-                        fectime = 2, censor = NA, age = NA, indcova = NA, indcovb = NA, indcovc = NA, 
-                        show.model.tables = TRUE, global.only = FALSE, quiet = FALSE) {
+modelsearch <- function(data, historical = TRUE, approach = "mixed",
+                         suite = "size", bestfit = "AICc&k", vitalrates = c("surv", "size", "fec"),
+                         surv = c("alive3", "alive2", "alive1"),
+                         obs = c("obsstatus3", "obsstatus2", "obsstatus1"),
+                         size = c("sizea3", "sizea2", "sizea1"),
+                         repst = c("repstatus3", "repstatus2", "repstatus1"),
+                         fec = c("feca3", "feca2", "feca1"), stage = c("stage3", "stage2", "stage1"),
+                         indiv = "individ", patch = NA, year = "year2", sizedist = "gaussian",
+                         fecdist = "gaussian", size.zero = FALSE, fec.zero = FALSE,
+                         patch.as.random = TRUE, year.as.random = TRUE, juvestimate = NA,
+                         juvsize = FALSE, fectime = 2, censor = NA, age = NA, indcova = NA,
+                         indcovb = NA, indcovc = NA, show.model.tables = TRUE, global.only = FALSE,
+                         quiet = FALSE) {
   
   old <- options() #This function requires changes to options(na.action) in order for the lme4::dredge routines to work properly
   on.exit(options(old)) #This will reset options() to user originals when the function exits
   
-  censor1 <- censor2 <- censor3 <- NULL
+  censor1 <- censor2 <- censor3 <- surv.data <- obs.data <- size.data <- NULL
+  repst.data <- fec.data <- juvsurv.data <- juvobs.data <- NULL
+  juvsize.data <- juvrepst.data <- NULL
   
   #Input testing, input standardization, and exception handling
   if (all(class(data) != "hfvdata")) {warning("This function was made to work with standardized historically-formatted vertical datasets, as provided by the verticalize() and historicalize() functions. Failure to format the input data properly and designate needed variables appropriately may result in nonsensical output.")}
@@ -4451,9 +4476,17 @@ modelsearch <- function(data, historical = TRUE, approach = "mixed", suite = "si
       options(na.action = "na.fail")
       if (!quiet) {
         writeLines("\nCommencing dredge of size...\n")
-        size.table <- try(MuMIn::dredge(size.global.model, rank = used.criterion), silent = TRUE)
+        if (size.zero & approach == "glm") {
+          size.table <- MuMIn::dredge(size.global.model, rank = used.criterion)
+        } else {
+          size.table <- try(MuMIn::dredge(size.global.model, rank = used.criterion), silent = TRUE)
+        }
       } else {
-        size.table <- suppressWarnings(suppressMessages(try(MuMIn::dredge(size.global.model, rank = used.criterion), silent = TRUE)))
+        if (size.zero & approach == "glm") {
+          size.table <- suppressWarnings(suppressMessages(MuMIn::dredge(size.global.model, rank = used.criterion)))
+        } else {
+          size.table <- suppressWarnings(suppressMessages(try(MuMIn::dredge(size.global.model, rank = used.criterion), silent = TRUE)))
+        }
       }
       if (any(class(size.table) == "try-error")) {warning("Dredge of size response failed.")}
     }
@@ -4473,9 +4506,17 @@ modelsearch <- function(data, historical = TRUE, approach = "mixed", suite = "si
       options(na.action = "na.fail")
       if (!quiet) {
         writeLines("\nCommencing dredge of fecundity...\n")
-        fec.table <- try(MuMIn::dredge(fec.global.model, rank = used.criterion), silent = TRUE)
+        if (fec.zero & approach == "glm") {
+          fec.table <- MuMIn::dredge(fec.global.model, rank = used.criterion)
+        } else {
+          fec.table <- try(MuMIn::dredge(fec.global.model, rank = used.criterion), silent = TRUE)
+        }
       } else {
-        fec.table <- suppressWarnings(suppressMessages(try(MuMIn::dredge(fec.global.model, rank = used.criterion), silent = TRUE)))
+        if (fec.zero & approach == "glm") {
+          fec.table <- suppressWarnings(suppressMessages(MuMIn::dredge(fec.global.model, rank = used.criterion)))
+        } else {
+          fec.table <- suppressWarnings(suppressMessages(try(MuMIn::dredge(fec.global.model, rank = used.criterion), silent = TRUE)))
+        }
       }
       if (any(class(fec.table) == "try-error")) {warning("Dredge of fecundity response failed.")}
     }
@@ -4801,60 +4842,64 @@ modelsearch <- function(data, historical = TRUE, approach = "mixed", suite = "si
 
 #' Summary of Class "lefkoMod"
 #' 
-#' A function to sumarize the viewable output for an R object of class \code{lefkoMod}.
-#' This function shows the best-fit models, summarizes the numbers of models in the
-#' model tables, shows the criterion used to determine the best-fit models, and
-#' provides some basic quality control information.
+#' A function to summarize objects of class \code{lefkoMod}. This function shows
+#' the best-fit models, summarizes the numbers of models in the model tables,
+#' shows the criterion used to determine the best-fit models, and provides some
+#' basic quality control information.
 #' 
-#' @param object An R object of class \code{lefkoMod} resulting from \code{\link{modelsearch}()}.
+#' @param object An R object of class \code{lefkoMod} resulting from
+#' \code{\link{modelsearch}()}.
 #' @param ... Other parameters.
 #' 
 #' @return A summary of the object, showing the best-fit models for all vital
-#' rates, with constants of 0 or 1 used for unestimated models. This is followed by
-#' a summary of the number of models tested per vital rate, and a table showing the
-#' names of the parameters used to model vital rates and represent tested factors.
-#' At the end is a section describing the number of individuals and individual
-#' transitions used to estimate each vital rate best-fit model.
+#' rates, with constants of 0 or 1 used for unestimated models. This is followed
+#' by a summary of the number of models tested per vital rate, and a table
+#' showing the names of the parameters used to model vital rates and represent
+#' tested factors. At the end is a section describing the number of individuals
+#' and individual transitions used to estimate each vital rate best-fit model.
 #' 
 #' @examples
 #' \donttest{
 #' data(lathyrus)
 #' 
-#' sizevector <- c(0, 4.6, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 1, 2, 3, 4, 5, 6, 7, 8, 9)
-#' stagevector <- c("Sd", "Sdl", "Dorm", "Sz1nr", "Sz2nr", "Sz3nr", "Sz4nr", "Sz5nr",
-#'                  "Sz6nr", "Sz7nr", "Sz8nr", "Sz9nr", "Sz1r", "Sz2r", "Sz3r", "Sz4r",
-#'                  "Sz5r", "Sz6r", "Sz7r", "Sz8r", "Sz9r")
+#' sizevector <- c(0, 4.6, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 1, 2, 3, 4, 5, 6, 7, 8,
+#'   9)
+#' stagevector <- c("Sd", "Sdl", "Dorm", "Sz1nr", "Sz2nr", "Sz3nr", "Sz4nr",
+#'   "Sz5nr", "Sz6nr", "Sz7nr", "Sz8nr", "Sz9nr", "Sz1r", "Sz2r", "Sz3r",
+#'   "Sz4r", "Sz5r", "Sz6r", "Sz7r", "Sz8r", "Sz9r")
 #' repvector <- c(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1)
 #' obsvector <- c(0, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1)
 #' matvector <- c(0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1)
 #' immvector <- c(1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)
-#' propvector <- c(1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)
+#' propvector <- c(1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+#'   0)
 #' indataset <- c(0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1)
-#' binvec <- c(0, 4.6, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5,
-#'             0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5)
+#' binvec <- c(0, 4.6, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5,
+#'   0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5)
 #' 
-#' lathframeln <- sf_create(sizes = sizevector, stagenames = stagevector, repstatus = repvector,
-#'                          obsstatus = obsvector, matstatus = matvector, immstatus = immvector,
-#'                          indataset = indataset, binhalfwidth = binvec, propstatus = propvector)
+#' lathframeln <- sf_create(sizes = sizevector, stagenames = stagevector,
+#'   repstatus = repvector, obsstatus = obsvector, matstatus = matvector,
+#'   immstatus = immvector, indataset = indataset, binhalfwidth = binvec,
+#'   propstatus = propvector)
 #' 
-#' lathvertln <- verticalize3(lathyrus, noyears = 4, firstyear = 1988, patchidcol = "SUBPLOT",
-#'                            individcol = "GENET", blocksize = 9, juvcol = "Seedling1988",
-#'                            sizeacol = "lnVol88", repstracol = "Intactseed88",
-#'                            fecacol = "Intactseed88", deadacol = "Dead1988",
-#'                            nonobsacol = "Dormant1988", stageassign = lathframeln,
-#'                            stagesize = "sizea", censorcol = "Missing1988",
-#'                            censorkeep = NA, NAas0 = TRUE, censor = TRUE)
+#' lathvertln <- verticalize3(lathyrus, noyears = 4, firstyear = 1988,
+#'   patchidcol = "SUBPLOT", individcol = "GENET", blocksize = 9,
+#'   juvcol = "Seedling1988", sizeacol = "lnVol88", repstracol = "Intactseed88",
+#'   fecacol = "Intactseed88", deadacol = "Dead1988",
+#'   nonobsacol = "Dormant1988", stageassign = lathframeln, stagesize = "sizea",
+#'   censorcol = "Missing1988", censorkeep = NA, NAas0 = TRUE, censor = TRUE)
 #' 
 #' lathvertln$feca2 <- round(lathvertln$feca2)
 #' lathvertln$feca1 <- round(lathvertln$feca1)
 #' lathvertln$feca3 <- round(lathvertln$feca3)
 #' 
-#' lathmodelsln2 <- modelsearch(lathvertln, historical = FALSE, approach = "lme4", suite = "main",
-#'                              vitalrates = c("surv", "obs", "size", "repst", "fec"), 
-#'                              juvestimate = "Sdl", bestfit = "AICc&k", sizedist = "gaussian", 
-#'                              fecdist = "poisson", indiv = "individ", patch = "patchid", 
-#'                              year = "year2", year.as.random = TRUE, patch.as.random = TRUE,
-#'                              show.model.tables = TRUE, quiet = TRUE)
+#' lathmodelsln2 <- modelsearch(lathvertln, historical = FALSE,
+#'   approach = "lme4", suite = "main",
+#'   vitalrates = c("surv", "obs", "size", "repst", "fec"), juvestimate = "Sdl",
+#'   bestfit = "AICc&k", sizedist = "gaussian", fecdist = "poisson",
+#'   indiv = "individ", patch = "patchid", year = "year2",
+#'   year.as.random = TRUE, patch.as.random = TRUE, show.model.tables = TRUE,
+#'   quiet = TRUE)
 #' 
 #' summary(lathmodelsln2)
 #' }
@@ -5065,14 +5110,15 @@ summary.lefkoMod <- function(object, ...) {
 
 #' Extract Required Coefficient Values From glmmTMB-estimated Vital Rate Models
 #' 
-#' \code{.modelextract.glmmTMB()} extracts coefficient values from linear models 
+#' \code{.modelextract.glmmTMB()} extracts coefficient values from linear models
 #' estimated through the \code{\link[glmmTMB]{glmmTMB}()} function, to estimate
-#' vital rates in \code{'lefko3'}. Used to supply coefficients to \code{\link{flefko3}()},
-#' \code{\link{flefko2}()}, and \code{\link{aflefko2}()}.
+#' vital rates in \code{'lefko3'}. Used to supply coefficients to
+#' \code{\link{flefko3}()}, \code{\link{flefko2}()}, and
+#' \code{\link{aflefko2}()}.
 #' 
 #' @param model Model estimated through \code{\link[glmmTMB]{glmmTMB}()}.
-#' @param paramnames Data frame giving the names of standard coefficients required
-#' by matrix creation functions.
+#' @param paramnames Data frame giving the names of standard coefficients
+#' required by matrix creation functions.
 #' 
 #' @return This function returns a list with the following elements:
 #' \item{coefficients}{Vector of fixed effect coefficients.}
@@ -5092,7 +5138,8 @@ summary.lefkoMod <- function(object, ...) {
 #' 
 #' @keywords internal
 #' @noRd
-.modelextract.glmmTMB <- function(model, paramnames, mainyears, mainpatches, year.as.random, patch.as.random) {
+.modelextract.glmmTMB <- function(model, paramnames, mainyears, mainpatches,
+  year.as.random, patch.as.random) {
   
   size2.coef <- 0
   size1.coef <- 0
@@ -5464,12 +5511,13 @@ summary.lefkoMod <- function(object, ...) {
 #' 
 #' \code{.modelextract.merMod()} extracts coefficient values from linear models 
 #' estimated through the \code{\link[lme4]{glmer}()} function, to estimate
-#' vital rates in \code{'lefko3'}. Used to supply coefficients to \code{\link{flefko3}()},
-#' \code{\link{flefko2}()}, and \code{\link{aflefko2}()}.
+#' vital rates in \code{'lefko3'}. Used to supply coefficients to
+#' \code{\link{flefko3}()}, \code{\link{flefko2}()}, and
+#' \code{\link{aflefko2}()}.
 #' 
 #' @param model Model estimated through \code{\link[lme4]{glmer}()}.
-#' @param paramnames Data frame giving the names of standard coefficients required
-#' by matrix creation functions.
+#' @param paramnames Data frame giving the names of standard coefficients
+#' required by matrix creation functions.
 #' 
 #' @return This function returns a list with the following elements:
 #' \item{coefficients}{Vector of fixed effect coefficients.}
@@ -5489,7 +5537,8 @@ summary.lefkoMod <- function(object, ...) {
 #' 
 #' @keywords internal
 #' @noRd
-.modelextract.merMod <- function(model, paramnames, mainyears, mainpatches, year.as.random, patch.as.random) {
+.modelextract.merMod <- function(model, paramnames, mainyears, mainpatches,
+  year.as.random, patch.as.random) {
   
   size2.coef <- 0
   size1.coef <- 0
@@ -5688,12 +5737,13 @@ summary.lefkoMod <- function(object, ...) {
 #' 
 #' \code{.modelextract.lmerMod()} extracts coefficient values from linear models 
 #' estimated through the \code{\link[lme4]{lmer}()} function, to estimate
-#' vital rates in \code{'lefko3'}. Used to supply coefficients to \code{\link{flefko3}()},
-#' \code{\link{flefko2}()}, and \code{\link{aflefko2}()}.
+#' vital rates in \code{'lefko3'}. Used to supply coefficients to
+#' \code{\link{flefko3}()}, \code{\link{flefko2}()}, and
+#' \code{\link{aflefko2}()}.
 #' 
 #' @param model Model estimated through \code{\link[lme4]{lmer}()}.
-#' @param paramnames Data frame giving the names of standard coefficients required
-#' by matrix creation functions.
+#' @param paramnames Data frame giving the names of standard coefficients
+#' required by matrix creation functions.
 #' 
 #' @return This function returns a list with the following elements:
 #' \item{coefficients}{Vector of fixed effect coefficients.}
@@ -5713,7 +5763,8 @@ summary.lefkoMod <- function(object, ...) {
 #' 
 #' @keywords internal
 #' @noRd
-.modelextract.lmerMod <- function(model, paramnames, mainyears, mainpatches, year.as.random, patch.as.random) {
+.modelextract.lmerMod <- function(model, paramnames, mainyears, mainpatches,
+  year.as.random, patch.as.random) {
   
   size2.coef <- 0
   size1.coef <- 0
@@ -5914,12 +5965,13 @@ summary.lefkoMod <- function(object, ...) {
 #' 
 #' \code{.modelextract.zeroinfl()} extracts coefficient values from linear models 
 #' estimated through the \code{\link[pscl]{zeroinfl}()} function, to estimate
-#' vital rates in \code{'lefko3'}. Used to supply coefficients to \code{\link{flefko3}()}, 
-#' \code{\link{flefko2}()}, and \code{\link{aflefko2}()}.
+#' vital rates in \code{'lefko3'}. Used to supply coefficients to
+#' \code{\link{flefko3}()}, \code{\link{flefko2}()}, and
+#' \code{\link{aflefko2}()}.
 #' 
-#' @param model Model estimated through \code{\link[glmmTMB]{glmmTMB}()}.
-#' @param paramnames Data frame giving the names of standard coefficients required
-#' by matrix creation functions.
+#' @param model Model estimated through \code{\link[pscl]{zeroinfl}()}.
+#' @param paramnames Data frame giving the names of standard coefficients
+#' required by matrix creation functions.
 #' 
 #' @return This function returns a list with the following elements:
 #' \item{coefficients}{Vector of fixed effect coefficients.}
@@ -5939,7 +5991,8 @@ summary.lefkoMod <- function(object, ...) {
 #' 
 #' @keywords internal
 #' @noRd
-.modelextract.zeroinfl <- function(model, paramnames, mainyears, mainpatches, year.as.random, patch.as.random) {
+.modelextract.zeroinfl <- function(model, paramnames, mainyears, mainpatches,
+  year.as.random, patch.as.random) {
   
   family.coef <- NA
   
@@ -6350,12 +6403,13 @@ summary.lefkoMod <- function(object, ...) {
 #' 
 #' \code{.modelextract.glm()} extracts coefficient values from linear models 
 #' estimated through the \code{\link[stats]{glm}()} function, to estimate
-#' vital rates in \code{'lefko3'}. Used to supply coefficients to \code{\link{flefko3}()},
-#' \code{\link{flefko2}()}, and \code{\link{aflefko2}()}.
+#' vital rates in \code{'lefko3'}. Used to supply coefficients to
+#' \code{\link{flefko3}()}, \code{\link{flefko2}()}, and
+#' \code{\link{aflefko2}()}.
 #' 
 #' @param model Model estimated through \code{\link[stats]{glm}()}.
-#' @param paramnames Data frame giving the names of standard coefficients required
-#' by matrix creation functions.
+#' @param paramnames Data frame giving the names of standard coefficients
+#' required by matrix creation functions.
 #' 
 #' @return This function returns a list with the following elements:
 #' \item{coefficients}{Vector of fixed effect coefficients.}
@@ -6375,7 +6429,8 @@ summary.lefkoMod <- function(object, ...) {
 #' 
 #' @keywords internal
 #' @noRd
-.modelextract.glm <- function(model, paramnames, mainyears, mainpatches, year.as.random, patch.as.random) {
+.modelextract.glm <- function(model, paramnames, mainyears, mainpatches,
+  year.as.random, patch.as.random) {
   
   family.coef <- NA
   
@@ -6597,12 +6652,13 @@ summary.lefkoMod <- function(object, ...) {
 #' 
 #' \code{.modelextract.lm()} extracts coefficient values from linear models 
 #' estimated through the \code{\link[stats]{lm}()} function, to estimate
-#' vital rates in \code{'lefko3'}. Used to supply coefficients to \code{\link{flefko3}()},
-#' \code{\link{flefko2}()}, and \code{\link{aflefko2}()}.
+#' vital rates in \code{'lefko3'}. Used to supply coefficients to
+#' \code{\link{flefko3}()}, \code{\link{flefko2}()}, and
+#' \code{\link{aflefko2}()}.
 #' 
 #' @param model Model estimated through \code{\link[stats]{lm}()}.
-#' @param paramnames Data frame giving the names of standard coefficients required
-#' by matrix creation functions.
+#' @param paramnames Data frame giving the names of standard coefficients
+#' required by matrix creation functions.
 #' 
 #' @return This function returns a list with the following elements:
 #' \item{coefficients}{Vector of fixed effect coefficients.}
@@ -6622,7 +6678,8 @@ summary.lefkoMod <- function(object, ...) {
 #' 
 #' @keywords internal
 #' @noRd
-.modelextract.lm <- function(model, paramnames, mainyears, mainpatches, year.as.random, patch.as.random) {
+.modelextract.lm <- function(model, paramnames, mainyears, mainpatches,
+  year.as.random, patch.as.random) {
   
   size2.coef <- 0
   size1.coef <- 0
@@ -6832,8 +6889,8 @@ summary.lefkoMod <- function(object, ...) {
 #' \code{\link{flefko2}()}, and \code{\link{aflefko2}()}.
 #' 
 #' @param model Model estimated through functions supported by \code{'lefko3'}.
-#' @param paramnames Data frame giving the names of standard coefficients required
-#' by matrix creation functions.
+#' @param paramnames Data frame giving the names of standard coefficients
+#' required by matrix creation functions.
 #' 
 #' @return This function returns a list with single values for matrix estimation.
 #' 
@@ -6847,7 +6904,9 @@ summary.lefkoMod <- function(object, ...) {
 #' 
 #' @keywords internal
 #' @noRd
-.modelextract.numeric <- function(model, paramnames, mainyears, mainpatches, year.as.random, patch.as.random) {
+.modelextract.numeric <- function(model, paramnames, mainyears, mainpatches,
+  year.as.random, patch.as.random) {
+  
   coef.list <- list(coefficients = c(model), years = c(0), patches = c(0), variances = as.data.frame(0), 
                     family = 1, sigma = 1, zeroyear = NA, zeropatch = NA)
   
@@ -6861,8 +6920,8 @@ summary.lefkoMod <- function(object, ...) {
 #' \code{\link{flefko2}()}, and \code{\link{aflefko2}()}.
 #' 
 #' @param model Model estimated through functions supported by \code{'lefko3'}.
-#' @param paramnames Data frame giving the names of standard coefficients required
-#' by matrix creation functions.
+#' @param paramnames Data frame giving the names of standard coefficients
+#' required by matrix creation functions.
 #' 
 #' @return This function returns NA.
 #' 
@@ -6876,7 +6935,9 @@ summary.lefkoMod <- function(object, ...) {
 #' 
 #' @keywords internal
 #' @noRd
-.modelextract.logical <- function(model, paramnames, mainyears, mainpatches, year.as.random, patch.as.random) {
+.modelextract.logical <- function(model, paramnames, mainyears, mainpatches,
+  year.as.random, patch.as.random) {
+  
   coef.list <- list(coefficients = c(0), years = c(0), patches = c(0), variances = as.data.frame(0), 
                     family = 1, sigma = 1, zeroyear = NA, zeropatch = NA)
   

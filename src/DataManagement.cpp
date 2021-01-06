@@ -6,13 +6,15 @@ using namespace arma;
 
 //' Re-index Projection Matrix On Basis of Overwrite Table
 //' 
-//' This function takes matrix indices provided by functions \code{\link{rlefko3}()},
-//' \code{\link{rlefko2}()}, \code{\link{flefko3}()}, and \code{\link{flefko2}()} and updates
-//' them with information provided in the overwrite table used as input in that
-//' function.
+//' This function takes matrix indices provided by functions
+//' \code{\link{rlefko3}()}, \code{\link{rlefko2}()}, \code{\link{flefko3}()},
+//' and \code{\link{flefko2}()} and updates them with information provided in
+//' the overwrite table used as input in that function.
 //' 
-//' @param allst321 Vector containing the original element-by-element matrix index.
-//' @param idx321old Vector containing the indices of matrix elements to be updated.
+//' @param allst321 Vector containing the original element-by-element matrix
+//' index.
+//' @param idx321old Vector containing the indices of matrix elements to be
+//' updated.
 //' @param idx321new Vector containing the replacement matrix element indices.
 //' @param convtype Vector denoting survival-transition (1) or fecundity (2).
 //' @param eststag3 Vector of new stages in time \emph{t}+1.
@@ -24,8 +26,9 @@ using namespace arma;
 //' @keywords internal
 //' @noRd
 // [[Rcpp::export]]
-arma::mat ovreplace(arma::vec allst321, arma::vec idx321old, arma::vec idx321new, arma::vec convtype,
-                    arma::vec eststag3, arma::vec gvnrate) {
+arma::mat ovreplace(arma::vec allst321, arma::vec idx321old,
+  arma::vec idx321new, arma::vec convtype, arma::vec eststag3, arma::vec gvnrate) {
+  
   int n = idx321new.n_elem;
   
   arma::mat replacements(allst321.n_elem, 4);
@@ -54,49 +57,51 @@ arma::mat ovreplace(arma::vec allst321, arma::vec idx321old, arma::vec idx321new
 
 //' Make Horizontal Data Frame Vertical
 //' 
-//' Function \code{pfj()} powers the R function \code{\link{verticalize3}()}, creating
-//' the vertical structure and rearranging the data in that shape.
+//' Function \code{pfj()} powers the R function \code{\link{verticalize3}()},
+//' creating the vertical structure and rearranging the data in that shape.
 //' 
 //' @param data The horizontal data file.
 //' @param stageframe The stageframe object identifying the life history model
 //' being operationalized. This should be the full stageframe.
 //' @param noyears The number of years or observation periods in the dataset.
 //' @param firstyear The first year or time of observation.
-//' @param popidcol Column number corresponding to the identity of the population 
+//' @param popidcol Column number corresponding to the identity of the
+//' population for each individual.
+//' @param patchidcol Column number corresponding to the identity of the patch
 //' for each individual.
-//' @param patchidcol Column number corresponding to the identity of the patch for
-//' each individual.
 //' @param individcol Column number corresponding to the identity of each 
 //' individual.
 //' @param blocksize The number of variables corresponding to each time step in 
 //' the input dataset designated in \code{data}.
-//' @param xcol Column number corresponding to the x coordinate of each individual
-//' in Cartesian space.
-//' @param ycol Column number corresponding to the y coordinate of each individual
-//' in Cartesian space.
+//' @param xcol Column number corresponding to the x coordinate of each
+//' individual in Cartesian space.
+//' @param ycol Column number corresponding to the y coordinate of each
+//' individual in Cartesian space.
 //' @param juvcol Column number that marks individuals in immature stages within
 //' the dataset.
-//' @param sizeacol Column number corresponding to the first or main size variable 
-//' associated with the first year or observation time in the dataset.
+//' @param sizeacol Column number corresponding to the first or main size
+//' variable associated with the first year or observation time in the dataset.
 //' @param sizebcol Column number corresponding to the second size variable
 //' associated with the first year or observation time in the dataset.
 //' @param sizeccol Column number corresponding to the third size variable
 //' associated with the first year or observation time in the dataset.
-//' @param repstracol Column number corresponding to the main variable coding the
-//' production of reproductive structures associated with the first year or 
+//' @param repstracol Column number corresponding to the main variable coding
+//' the production of reproductive structures associated with the first year or 
 //' observation period in the input dataset.
-//' @param repstrbcol Column number corresponding to a secone variable coding the
-//' production of reproductive structures associated with the first year or 
+//' @param repstrbcol Column number corresponding to a secone variable coding
+//' the production of reproductive structures associated with the first year or 
 //' observation period in the input dataset.
 //' @param fecacol Column number corresponding to the main variable coding for
-//' fecundity associated with the first year or observation period in the dataset.
+//' fecundity associated with the first year or observation period in the
+//' dataset.
 //' @param fecbcol Column number corresponding to a second variable coding for
-//' fecundity associated with the first year or observation period in the dataset.
+//' fecundity associated with the first year or observation period in the
+//' dataset.
 //' @param indcovacol Column number corresponding to an individual covariate.
 //' @param indcovbcol Column number corresponding to an individual covariate.
 //' @param indcovccol Column number corresponding to an individual covariate.
-//' @param aliveacol Column number that details whether an individual is alive at
-//' a given time.
+//' @param aliveacol Column number that details whether an individual is alive
+//' at a given time.
 //' @param deadacol Column number that details whether an individual is dead at
 //' a given time.
 //' @param obsacol Column number that details whether an individual is in an
@@ -130,12 +135,13 @@ arma::mat ovreplace(arma::vec allst321, arma::vec idx321old, arma::vec idx321new
 //' @keywords internal
 //' @noRd
 // [[Rcpp::export]]
-Rcpp::List pfj(DataFrame data, DataFrame stageframe, int noyears, int firstyear, int popidcol, 
-               int patchidcol, int individcol, int blocksize, int xcol, int ycol, int juvcol, 
-               int sizeacol, int sizebcol, int sizeccol, int repstracol, int repstrbcol, 
-               int fecacol, int fecbcol, int indcovacol, int indcovbcol, int indcovccol, int aliveacol, 
-               int deadacol, int obsacol, int nonobsacol, int censorcol, int stagecol, double repstrrel, 
-               double fecrel, bool NAas0, bool NRasRep, bool stassign, int stszcol, bool censbool) {
+Rcpp::List pfj(DataFrame data, DataFrame stageframe, int noyears, int firstyear,
+  int popidcol, int patchidcol, int individcol, int blocksize, int xcol,
+  int ycol, int juvcol, int sizeacol, int sizebcol, int sizeccol,
+  int repstracol, int repstrbcol, int fecacol, int fecbcol, int indcovacol,
+  int indcovbcol, int indcovccol, int aliveacol, int deadacol, int obsacol,
+  int nonobsacol, int censorcol, int stagecol, double repstrrel, double fecrel,
+  bool NAas0, bool NRasRep, bool stassign, int stszcol, bool censbool) {
   
   int noindivs = data.nrows();
   
@@ -162,7 +168,7 @@ Rcpp::List pfj(DataFrame data, DataFrame stageframe, int noyears, int firstyear,
   arma::uvec cs4;
   int choicestage;
   
-  Rcpp::StringVector sfname = stageframe["stagenames"];
+  Rcpp::StringVector sfname = stageframe["stage"];
   Rcpp::NumericVector repstat = stageframe["repstatus"];
   Rcpp::NumericVector obsstat = stageframe["obsstatus"];
   Rcpp::NumericVector matstat = stageframe["matstatus"];
@@ -1171,46 +1177,51 @@ Rcpp::List pfj(DataFrame data, DataFrame stageframe, int noyears, int firstyear,
 
 //' Make Vertical Data Frame Historical
 //' 
-//' Function \code{jpf()} powers the R function \code{\link{historicalize3}()}, creating
-//' the historical, vertical structure and rearranging the data in that shape.
+//' Function \code{jpf()} powers the R function \code{\link{historicalize3}()},
+//' creating the historical, vertical structure and rearranging the data in that
+//' shape.
 //'
 //' @param data The horizontal data file.
 //' @param stageframe The stageframe object identifying the life history model
 //' being operationalized. This should be the full stageframe.
-//' @param popidcol Column number corresponding to the identity of the population 
+//' @param popidcol Column number corresponding to the identity of the
+//' population for each individual.
+//' @param patchidcol Column number corresponding to the identity of the patch
 //' for each individual.
-//' @param patchidcol Column number corresponding to the identity of the patch for
-//' each individual.
 //' @param individcol Column number corresponding to the identity of each 
 //' individual.
 //' @param year2col Column number of year or time step in time \emph{t}.
 //' @param year3col Column number of year or time step in time \emph{t}+1.
-//' @param xcol Column number corresponding to the x coordinate of each individual
-//' in Cartesian space.
-//' @param ycol Column number corresponding to the y coordinate of each individual
-//' in Cartesian space.
-//' @param juv2col Column number coding for status as a juvenile in time \emph{t}.
-//' @param juv3col Column number coding for status as a juvenile in time \emph{t}+1.
+//' @param xcol Column number corresponding to the x coordinate of each
+//' individual in Cartesian space.
+//' @param ycol Column number corresponding to the y coordinate of each
+//' individual in Cartesian space.
+//' @param juv2col Column number coding for status as a juvenile in time
+//' \emph{t}.
+//' @param juv3col Column number coding for status as a juvenile in time
+//' \emph{t}+1.
 //' @param sizea2col Column number corresponding to the primary size variable in
 //' time \emph{t}.
 //' @param sizea3col Column number corresponding to the primary size variable in
 //' time \emph{t}+1.
-//' @param sizeb2col Column number corresponding to the secondary size variable in
-//' time \emph{t}.
-//' @param sizeb3col Column number corresponding to the secondary size variable in
-//' time \emph{t}+1.
-//' @param sizec2col Column number corresponding to the tertiary size variable in
-//' time \emph{t}.
-//' @param sizec3col Column number corresponding to the tertiary size variable in
-//' time \emph{t}+1.
-//' @param repstra2col Column number corresponding to the main variable coding the
-//' production of reproductive structures, such as flowers, in time \emph{t}.
-//' @param repstra3col Column number corresponding to the main variable coding the
-//' production of reproductive structures, such as flowers, in time \emph{t}+1.
-//' @param repstrb2col Column number corresponding to a second variable coding the
-//' production of reproductive structures, such as flowers, in time
-//' @param repstrb3col Column number corresponding to a second variable coding the
-//' production of reproductive structures, such as flowers, in time \emph{t}+1.
+//' @param sizeb2col Column number corresponding to the secondary size variable
+//' in time \emph{t}.
+//' @param sizeb3col Column number corresponding to the secondary size variable
+//' in time \emph{t}+1.
+//' @param sizec2col Column number corresponding to the tertiary size variable
+//' in time \emph{t}.
+//' @param sizec3col Column number corresponding to the tertiary size variable
+//' in time \emph{t}+1.
+//' @param repstra2col Column number corresponding to the main variable coding
+//' the production of reproductive structures, such as flowers, in time \emph{t}.
+//' @param repstra3col Column number corresponding to the main variable coding
+//' the production of reproductive structures, such as flowers, in time
+//' \emph{t}+1.
+//' @param repstrb2col Column number corresponding to a second variable coding
+//' the production of reproductive structures, such as flowers, in time \emph{t}.
+//' @param repstrb3col Column number corresponding to a second variable coding
+//' the production of reproductive structures, such as flowers, in time
+//' \emph{t}+1.
 //' @param feca2col Column number corresponding to the main variable coding for
 //' fecundity in time \emph{t}.
 //' @param feca3col Column number corresponding to the main variable coding for
@@ -1251,9 +1262,11 @@ Rcpp::List pfj(DataFrame data, DataFrame stageframe, int noyears, int firstyear,
 //' \code{repstrb2col} equivalent to \code{repstra2col}.
 //' @param fecrel This is a scalar modifier for that makes the variable in
 //' \code{fecb2col} equivalent to \code{feca2col}.
-//' @param stage2col Column number corresponding to life history stage in time \emph{t}.
-//' @param stage3col Column number corresponding to life history stage in time \emph{t}+1.
-//' @param censorcol Column number corresponding to a censor variable within the 
+//' @param stage2col Column number corresponding to life history stage in time
+//' \emph{t}.
+//' @param stage3col Column number corresponding to life history stage in time
+//' \emph{t}+1.
+//' @param censorcol Column number corresponding to a censor variable within the
 //' dataset.
 //' @param NAas0 If TRUE, then all NA entries for size and fecundity variables
 //' will be set to 0.
@@ -1271,15 +1284,17 @@ Rcpp::List pfj(DataFrame data, DataFrame stageframe, int noyears, int firstyear,
 //' @keywords internal
 //' @noRd
 // [[Rcpp::export]]
-Rcpp::List jpf(DataFrame data, DataFrame stageframe, int popidcol, int patchidcol, int individcol, 
-               int year2col, int year3col, int xcol, int ycol, int juv2col, int juv3col, int sizea2col, 
-               int sizea3col, int sizeb2col, int sizeb3col, int sizec2col, int sizec3col, int repstra2col, 
-               int repstra3col, int repstrb2col, int repstrb3col, int feca2col, int feca3col, int fecb2col, 
-               int fecb3col, int indcova2col, int indcova3col, int indcovb2col, int indcovb3col,
-               int indcovc2col, int indcovc3col, int alive2col, int alive3col, int dead2col, int dead3col,
-               int obs2col, int obs3col, int nonobs2col, int nonobs3col, double repstrrel, double fecrel, 
-               int stage2col, int stage3col, int censorcol, bool NAas0, bool NRasRep, bool stassign, 
-               int stszcol, bool censbool) {
+Rcpp::List jpf(DataFrame data, DataFrame stageframe, int popidcol,
+  int patchidcol, int individcol, int year2col, int year3col, int xcol,
+  int ycol, int juv2col, int juv3col, int sizea2col, int sizea3col,
+  int sizeb2col, int sizeb3col, int sizec2col, int sizec3col, int repstra2col,
+  int repstra3col, int repstrb2col, int repstrb3col, int feca2col, int feca3col,
+  int fecb2col, int fecb3col, int indcova2col, int indcova3col, int indcovb2col,
+  int indcovb3col, int indcovc2col, int indcovc3col, int alive2col,
+  int alive3col, int dead2col, int dead3col, int obs2col, int obs3col,
+  int nonobs2col, int nonobs3col, double repstrrel, double fecrel,
+  int stage2col, int stage3col, int censorcol, bool NAas0, bool NRasRep,
+  bool stassign, int stszcol, bool censbool) {
   
   int norows = data.nrows(); // The number of data points in the demographic dataset
   
@@ -1310,7 +1325,7 @@ Rcpp::List jpf(DataFrame data, DataFrame stageframe, int popidcol, int patchidco
   double livcheck2 {0};
   double livcheck3 {0};
   
-  Rcpp::StringVector sfname = stageframe["stagenames"]; // This section reads in the stageframe
+  Rcpp::StringVector sfname = stageframe["stage"]; // This section reads in the stageframe
   Rcpp::NumericVector repstat = stageframe["repstatus"];
   Rcpp::NumericVector obsstat = stageframe["obsstatus"];
   Rcpp::NumericVector matstat = stageframe["matstatus"];
@@ -2221,9 +2236,10 @@ Rcpp::List jpf(DataFrame data, DataFrame stageframe, int popidcol, int patchidco
 
 //' Create Core Dataframe for Matrix Estimation
 //' 
-//' Function \code{theoldpizzle()} create a data frame object spread across three
-//' 20-element long list objects that is used by \code{jerzeibalowski()} to estimate
-//' function-derived matrices.
+//' Function \code{theoldpizzle()} create a data frame object spread across
+//' three 20-element long list objects that is used by \code{jerzeibalowski()}
+//' to estimate function-derived matrices, and also provides the element map for
+//' raw matrices.
 //'
 //' @param StageFrame The stageframe object identifying the life history model
 //' being operationalized.
@@ -2235,14 +2251,16 @@ Rcpp::List jpf(DataFrame data, DataFrame stageframe, int popidcol, int patchidco
 //' and 2 is age-by-stage.
 //' @param cont Denotes whether age-by-stage matrix continues past the final age.
 //' 
-//' @return The output is currently a three element list, where each element is a
-//' data frame with the same number of rows. These are combined into one dataframe
-//' by \code{\link{flefko3}()}, \code{\link{flefko2}()}, and \code{\link{aflefko2}()}.
+//' @return The output is currently a three element list, where each element is
+//' a data frame with the same number of rows. These are combined into one data
+//' frame by \code{\link{flefko3}()}, \code{\link{flefko2}()}, and
+//' \code{\link{aflefko2}()}.
 //' 
 //' @keywords internal
 //' @noRd
 // [[Rcpp::export]]
-List theoldpizzle(DataFrame StageFrame, DataFrame OverWrite, arma::mat repmatrix, int finalage, int style, int cont) {
+List theoldpizzle(DataFrame StageFrame, DataFrame OverWrite, 
+  arma::mat repmatrix, int finalage, int style, int cont) {
   
   StringVector ovstage3 = OverWrite["stage3"];
   StringVector ovstage2 = OverWrite["stage2"];

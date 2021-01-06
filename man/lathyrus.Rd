@@ -91,30 +91,32 @@ from 1988 to 1991 in six study plots.
 \examples{
 data(lathyrus)
 
-sizevector <- c(0, 4.6, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 1, 2, 3, 4, 5, 6, 7, 8, 9)
-stagevector <- c("Sd", "Sdl", "Dorm", "Sz1nr", "Sz2nr", "Sz3nr", "Sz4nr", "Sz5nr",
-                 "Sz6nr", "Sz7nr", "Sz8nr", "Sz9nr", "Sz1r", "Sz2r", "Sz3r", "Sz4r",
-                 "Sz5r", "Sz6r", "Sz7r", "Sz8r", "Sz9r")
+sizevector <- c(0, 4.6, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 1, 2, 3, 4, 5, 6, 7, 8,
+  9)
+stagevector <- c("Sd", "Sdl", "Dorm", "Sz1nr", "Sz2nr", "Sz3nr", "Sz4nr", 
+  "Sz5nr", "Sz6nr", "Sz7nr", "Sz8nr", "Sz9nr", "Sz1r", "Sz2r", "Sz3r", 
+  "Sz4r", "Sz5r", "Sz6r", "Sz7r", "Sz8r", "Sz9r")
 repvector <- c(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1)
 obsvector <- c(0, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1)
 matvector <- c(0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1)
 immvector <- c(1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)
-propvector <- c(1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)
+propvector <- c(1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
+  0)
 indataset <- c(0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1)
-binvec <- c(0, 4.6, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5,
-            0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5)
+binvec <- c(0, 4.6, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 
+  0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5)
 
-lathframeln <- sf_create(sizes = sizevector, stagenames = stagevector, repstatus = repvector,
-                         obsstatus = obsvector, matstatus = matvector, immstatus = immvector,
-                         indataset = indataset, binhalfwidth = binvec, propstatus = propvector)
+lathframeln <- sf_create(sizes = sizevector, stagenames = stagevector, 
+  repstatus = repvector, obsstatus = obsvector, matstatus = matvector, 
+  immstatus = immvector, indataset = indataset, binhalfwidth = binvec, 
+  propstatus = propvector)
 
-lathvertln <- verticalize3(lathyrus, noyears = 4, firstyear = 1988, patchidcol = "SUBPLOT",
-                           individcol = "GENET", blocksize = 9, juvcol = "Seedling1988",
-                           sizeacol = "lnVol88", repstracol = "FCODE88",
-                           fecacol = "Intactseed88", deadacol = "Dead1988",
-                           nonobsacol = "Dormant1988", stageassign = lathframeln,
-                           stagesize = "sizea", censorcol = "Missing1988",
-                           censorkeep = NA, NAas0 = TRUE, censor = TRUE)
+lathvertln <- verticalize3(lathyrus, noyears = 4, firstyear = 1988, 
+  patchidcol = "SUBPLOT", individcol = "GENET", blocksize = 9, 
+  juvcol = "Seedling1988", sizeacol = "lnVol88", repstracol = "FCODE88",
+  fecacol = "Intactseed88", deadacol = "Dead1988", 
+  nonobsacol = "Dormant1988", stageassign = lathframeln, stagesize = "sizea",
+  censorcol = "Missing1988", censorkeep = NA, NAas0 = TRUE, censor = TRUE)
 
 summary(lathvertln)
 

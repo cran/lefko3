@@ -48,7 +48,8 @@ vertical format.
 data(cypvert)
 
 sizevector <- c(0, 0, 0, 0, 0, 0, 1, 2.5, 4.5, 8, 17.5)
-stagevector <- c("SD", "P1", "P2", "P3", "SL", "D", "XSm", "Sm", "Md", "Lg", "XLg")
+stagevector <- c("SD", "P1", "P2", "P3", "SL", "D", "XSm", "Sm", "Md", "Lg",
+  "XLg")
 repvector <- c(0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1)
 obsvector <- c(0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1)
 matvector <- c(0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1)
@@ -58,21 +59,21 @@ indataset <- c(0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1)
 binvec <- c(0, 0, 0, 0, 0, 0.5, 0.5, 1, 1, 2.5, 7)
 
 cypframe_raw <- sf_create(sizes = sizevector, stagenames = stagevector, 
-                          repstatus = repvector, obsstatus = obsvector,
-                          matstatus = matvector, propstatus = propvector,
-                          immstatus = immvector, indataset = indataset,
-                          binhalfwidth = binvec)
+  repstatus = repvector, obsstatus = obsvector, matstatus = matvector, 
+  propstatus = propvector, immstatus = immvector, indataset = indataset,
+  binhalfwidth = binvec)
 
 cypframe_raw
 
-cypraw_v2 <- historicalize3(data = cypvert, patchidcol = "patch", individcol = "plantid",
-                            year2col = "year2", sizea2col = "Inf2.2", sizea3col = "Inf2.3",
-                            sizeb2col = "Inf.2", sizeb3col = "Inf.3", sizec2col = "Veg.2",
-                            sizec3col = "Veg.3", repstra2col = "Inf2.2", repstra3col = "Inf2.3",
-                            repstrb2col = "Inf.2", repstrb3col = "Inf.3", feca2col = "Pod.2",
-                            feca3col = "Pod.3", repstrrel = 2, stageassign = cypframe_raw,
-                            stagesize = "sizeadded", censorcol = "censor", censor = FALSE,
-                            NAas0 = TRUE, NRasRep = TRUE, reduce = TRUE)
+cypraw_v2 <- historicalize3(data = cypvert, patchidcol = "patch", 
+  individcol = "plantid", year2col = "year2", sizea2col = "Inf2.2", 
+  sizea3col = "Inf2.3", sizeb2col = "Inf.2", sizeb3col = "Inf.3", 
+  sizec2col = "Veg.2", sizec3col = "Veg.3", repstra2col = "Inf2.2", 
+  repstra3col = "Inf2.3", repstrb2col = "Inf.2", repstrb3col = "Inf.3", 
+  feca2col = "Pod.2", feca3col = "Pod.3", repstrrel = 2, 
+  stageassign = cypframe_raw, stagesize = "sizeadded", censorcol = "censor",
+  censor = FALSE, NAas0 = TRUE, NRasRep = TRUE, reduce = TRUE)
+  
 summary(cypraw_v2)
 
 }

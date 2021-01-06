@@ -55,8 +55,8 @@
 #' data(cypdata)
 #' 
 #' sizevector <- c(0, 0, 0, 0, 0, 0, 1, 2.5, 4.5, 8, 17.5)
-#' stagevector <- c("SD", "P1", "P2", "P3", "SL", "D", "XSm", 
-#'                  "Sm", "Md", "Lg", "XLg")
+#' stagevector <- c("SD", "P1", "P2", "P3", "SL", "D", "XSm", "Sm", "Md", "Lg",
+#'   "XLg")
 #' repvector <- c(0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1)
 #' obsvector <- c(0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1)
 #' matvector <- c(0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1)
@@ -66,36 +66,34 @@
 #' binvec <- c(0, 0, 0, 0, 0, 0.5, 0.5, 1, 1, 2.5, 7)
 #' 
 #' cypframe_raw <- sf_create(sizes = sizevector, stagenames = stagevector, 
-#'                           repstatus = repvector, obsstatus = obsvector, 
-#'                           matstatus = matvector, propstatus = propvector, 
-#'                           immstatus = immvector, indataset = indataset, 
-#'                           binhalfwidth = binvec)
+#'   repstatus = repvector, obsstatus = obsvector, matstatus = matvector, 
+#'   propstatus = propvector, immstatus = immvector, indataset = indataset, 
+#'   binhalfwidth = binvec)
 #' 
 #' cypraw_v1 <- verticalize3(data = cypdata, noyears = 6, firstyear = 2004, 
-#'                           patchidcol = "patch", individcol = "plantid", 
-#'                           blocksize = 4, sizeacol = "Inf2.04", sizebcol = "Inf.04", 
-#'                           sizeccol = "Veg.04", repstracol = "Inf.04", 
-#'                           repstrbcol = "Inf2.04", fecacol = "Pod.04", 
-#'                           stageassign = cypframe_raw, stagesize = "sizeadded", 
-#'                           NAas0 = TRUE, NRasRep = TRUE)
+#'   patchidcol = "patch", individcol = "plantid", blocksize = 4, 
+#'   sizeacol = "Inf2.04", sizebcol = "Inf.04", sizeccol = "Veg.04", 
+#'   repstracol = "Inf.04", repstrbcol = "Inf2.04", fecacol = "Pod.04", 
+#'   stageassign = cypframe_raw, stagesize = "sizeadded", NAas0 = TRUE, 
+#'   NRasRep = TRUE)
 #' 
 #' rep_cyp_raw <- matrix(0, 11, 11)
 #' rep_cyp_raw[1:2,7:11] <- 0.5
 #' 
 #' cypover2r <- overwrite(stage3 = c("SD", "P1", "P2", "P3", "SL", "SL", "D", 
-#'                        "XSm", "Sm"), stage2 = c("SD", "SD", "P1", "P2", "P3", 
-#'                        "SL", "SL", "SL", "SL"), eststage3 = c(NA, NA, NA, NA, 
-#'                        NA, NA, "D", "XSm", "Sm"), eststage2 = c(NA, NA, NA, NA, 
-#'                        NA, NA, "XSm", "XSm", "XSm"), givenrate = c(0.1, 0.2, 
-#'                        0.2, 0.2, 0.25, 0.4, NA, NA, NA), type = c("S", "S", "S",
-#'                        "S", "S", "S", "S", "S", "S"))
+#'     "XSm", "Sm"), 
+#'   stage2 = c("SD", "SD", "P1", "P2", "P3", "SL", "SL", "SL", "SL"), 
+#'   eststage3 = c(NA, NA, NA, NA, NA, NA, "D", "XSm", "Sm"), 
+#'   eststage2 = c(NA, NA, NA, NA, NA, NA, "XSm", "XSm", "XSm"), 
+#'   givenrate = c(0.1, 0.2, 0.2, 0.2, 0.25, 0.4, NA, NA, NA), 
+#'   type = c("S", "S", "S", "S", "S", "S", "S", "S", "S"))
 #' 
-#' cypmatrix2r <- rlefko2(data = cypraw_v1, stageframe = cypframe_raw, year = "all", 
-#'                        patch = "all", stages = c("stage3", "stage2"),
-#'                        size = c("size3added", "size2added"),
-#'                        repmatrix = rep_cyp_raw, overwrite = cypover2r,
-#'                        yearcol = "year2", patchcol = "patchid",
-#'                        indivcol = "individ")
+#' cypmatrix2r <- rlefko2(data = cypraw_v1, stageframe = cypframe_raw, 
+#'   year = "all", patch = "all", stages = c("stage3", "stage2"),
+#'   size = c("size3added", "size2added"), repmatrix = rep_cyp_raw, 
+#'   overwrite = cypover2r, yearcol = "year2", patchcol = "patchid",
+#'   indivcol = "individ")
+#'   
 #' cypmatrix2r$A[[1]]
 #' 
 "cypdata"
@@ -144,7 +142,8 @@
 #' data(cypvert)
 #' 
 #' sizevector <- c(0, 0, 0, 0, 0, 0, 1, 2.5, 4.5, 8, 17.5)
-#' stagevector <- c("SD", "P1", "P2", "P3", "SL", "D", "XSm", "Sm", "Md", "Lg", "XLg")
+#' stagevector <- c("SD", "P1", "P2", "P3", "SL", "D", "XSm", "Sm", "Md", "Lg",
+#'   "XLg")
 #' repvector <- c(0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1)
 #' obsvector <- c(0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1)
 #' matvector <- c(0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1)
@@ -154,21 +153,21 @@
 #' binvec <- c(0, 0, 0, 0, 0, 0.5, 0.5, 1, 1, 2.5, 7)
 #' 
 #' cypframe_raw <- sf_create(sizes = sizevector, stagenames = stagevector, 
-#'                           repstatus = repvector, obsstatus = obsvector,
-#'                           matstatus = matvector, propstatus = propvector,
-#'                           immstatus = immvector, indataset = indataset,
-#'                           binhalfwidth = binvec)
+#'   repstatus = repvector, obsstatus = obsvector, matstatus = matvector, 
+#'   propstatus = propvector, immstatus = immvector, indataset = indataset,
+#'   binhalfwidth = binvec)
 #' 
 #' cypframe_raw
 #' 
-#' cypraw_v2 <- historicalize3(data = cypvert, patchidcol = "patch", individcol = "plantid",
-#'                             year2col = "year2", sizea2col = "Inf2.2", sizea3col = "Inf2.3",
-#'                             sizeb2col = "Inf.2", sizeb3col = "Inf.3", sizec2col = "Veg.2",
-#'                             sizec3col = "Veg.3", repstra2col = "Inf2.2", repstra3col = "Inf2.3",
-#'                             repstrb2col = "Inf.2", repstrb3col = "Inf.3", feca2col = "Pod.2",
-#'                             feca3col = "Pod.3", repstrrel = 2, stageassign = cypframe_raw,
-#'                             stagesize = "sizeadded", censorcol = "censor", censor = FALSE,
-#'                             NAas0 = TRUE, NRasRep = TRUE, reduce = TRUE)
+#' cypraw_v2 <- historicalize3(data = cypvert, patchidcol = "patch", 
+#'   individcol = "plantid", year2col = "year2", sizea2col = "Inf2.2", 
+#'   sizea3col = "Inf2.3", sizeb2col = "Inf.2", sizeb3col = "Inf.3", 
+#'   sizec2col = "Veg.2", sizec3col = "Veg.3", repstra2col = "Inf2.2", 
+#'   repstra3col = "Inf2.3", repstrb2col = "Inf.2", repstrb3col = "Inf.3", 
+#'   feca2col = "Pod.2", feca3col = "Pod.3", repstrrel = 2, 
+#'   stageassign = cypframe_raw, stagesize = "sizeadded", censorcol = "censor",
+#'   censor = FALSE, NAas0 = TRUE, NRasRep = TRUE, reduce = TRUE)
+#'   
 #' summary(cypraw_v2)
 #' 
 "cypvert"
@@ -260,30 +259,32 @@
 #' @examples
 #' data(lathyrus)
 #' 
-#' sizevector <- c(0, 4.6, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 1, 2, 3, 4, 5, 6, 7, 8, 9)
-#' stagevector <- c("Sd", "Sdl", "Dorm", "Sz1nr", "Sz2nr", "Sz3nr", "Sz4nr", "Sz5nr",
-#'                  "Sz6nr", "Sz7nr", "Sz8nr", "Sz9nr", "Sz1r", "Sz2r", "Sz3r", "Sz4r",
-#'                  "Sz5r", "Sz6r", "Sz7r", "Sz8r", "Sz9r")
+#' sizevector <- c(0, 4.6, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 1, 2, 3, 4, 5, 6, 7, 8,
+#'   9)
+#' stagevector <- c("Sd", "Sdl", "Dorm", "Sz1nr", "Sz2nr", "Sz3nr", "Sz4nr", 
+#'   "Sz5nr", "Sz6nr", "Sz7nr", "Sz8nr", "Sz9nr", "Sz1r", "Sz2r", "Sz3r", 
+#'   "Sz4r", "Sz5r", "Sz6r", "Sz7r", "Sz8r", "Sz9r")
 #' repvector <- c(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1)
 #' obsvector <- c(0, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1)
 #' matvector <- c(0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1)
 #' immvector <- c(1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)
-#' propvector <- c(1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)
+#' propvector <- c(1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
+#'   0)
 #' indataset <- c(0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1)
-#' binvec <- c(0, 4.6, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5,
-#'             0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5)
+#' binvec <- c(0, 4.6, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 
+#'   0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5)
 #' 
-#' lathframeln <- sf_create(sizes = sizevector, stagenames = stagevector, repstatus = repvector,
-#'                          obsstatus = obsvector, matstatus = matvector, immstatus = immvector,
-#'                          indataset = indataset, binhalfwidth = binvec, propstatus = propvector)
+#' lathframeln <- sf_create(sizes = sizevector, stagenames = stagevector, 
+#'   repstatus = repvector, obsstatus = obsvector, matstatus = matvector, 
+#'   immstatus = immvector, indataset = indataset, binhalfwidth = binvec, 
+#'   propstatus = propvector)
 #' 
-#' lathvertln <- verticalize3(lathyrus, noyears = 4, firstyear = 1988, patchidcol = "SUBPLOT",
-#'                            individcol = "GENET", blocksize = 9, juvcol = "Seedling1988",
-#'                            sizeacol = "lnVol88", repstracol = "FCODE88",
-#'                            fecacol = "Intactseed88", deadacol = "Dead1988",
-#'                            nonobsacol = "Dormant1988", stageassign = lathframeln,
-#'                            stagesize = "sizea", censorcol = "Missing1988",
-#'                            censorkeep = NA, NAas0 = TRUE, censor = TRUE)
+#' lathvertln <- verticalize3(lathyrus, noyears = 4, firstyear = 1988, 
+#'   patchidcol = "SUBPLOT", individcol = "GENET", blocksize = 9, 
+#'   juvcol = "Seedling1988", sizeacol = "lnVol88", repstracol = "FCODE88",
+#'   fecacol = "Intactseed88", deadacol = "Dead1988", 
+#'   nonobsacol = "Dormant1988", stageassign = lathframeln, stagesize = "sizea",
+#'   censorcol = "Missing1988", censorkeep = NA, NAas0 = TRUE, censor = TRUE)
 #' 
 #' summary(lathvertln)
 #' 

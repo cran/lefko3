@@ -60,11 +60,12 @@ can occur. Only used in age x stage matrix development. Defaults to NA.}
 should occur. Only used in age x stage matrix development. Defaults to NA.}
 
 \item{indataset}{A vector designating which stages are found within the 
-dataset. While \code{\link{rlefko2}()} and \code{\link{rlefko3}()} can use all stages in
-the input dataset, \code{\link{flefko3}()} and \code{\link{flefko2}()} can only handle
-size-classified stages with non-overlapping combinations of size and 
-reproductive status, plus one immature stage. Stages that do not actually
-exist within the dataset should be marked as 0 in this vector.}
+dataset. While \code{\link{rlefko2}()} and \code{\link{rlefko3}()} can use
+all stages in the input dataset, \code{\link{flefko3}()} and
+\code{\link{flefko2}()} can only handle size-classified stages with
+non-overlapping combinations of size and reproductive status, plus one
+immature stage. Stages that do not actually exist within the dataset should
+be marked as 0 in this vector.}
 
 \item{binhalfwidth}{A numeric vector giving the half-width of size bins.
 Required to classify individuals appropriately within size classes.
@@ -91,18 +92,20 @@ object can be used as the \code{stageframe} input for \code{\link{flefko3}()}
 \code{\link{flefko2}()}, \code{\link{rlefko3}()}, and \code{\link{rlefko2}()}.
 
 Variables in this data frame include the following:
-\item{stagenames}{The unique names of the stages to be analyzed.}
+\item{stage}{The unique names of the stages to be analyzed.}
 \item{size}{The typical or representative size at which each stage occurs.}
-\item{repstatus}{A binomial variable showing whether each stage is reproductive.}
-\item{obsstatus}{A binomial variable showing whether each stage is observable.}
+\item{repstatus}{A binomial variable showing whether each stage is
+reproductive.}
+\item{obsstatus}{A binomial variable showing whether each stage is
+observable.}
 \item{propstatus}{A binomial variable showing whether each stage is a
 propagule.}
 \item{immstatus}{A binomial variable showing whether each stage can occur as
 immature.}
 \item{matstatus}{A binomial variable showing whether each stage occurs in
 maturity.}
-\item{indataset}{A binomial variable describing whether each stage occurs in the
-input dataset.}
+\item{indataset}{A binomial variable describing whether each stage occurs in
+the input dataset.}
 \item{binhalfwidth_raw}{The half-width of the size bin, as input.}
 \item{min_age}{The minimum age at which the stage may occur.}
 \item{max_age}{The maximum age at which the stage may occur.}
@@ -122,7 +125,7 @@ determines how each stage is treated during matrix estimation.
 \examples{
 sizevector <- c(0, 0, 0, 0, 0, 0, 1, 2.5, 4.5, 8, 17.5)
 stagevector <- c("SD", "P1", "P2", "P3", "SL", "D", "XSm", "Sm", "Md", "Lg", 
-                 "XLg")
+  "XLg")
 repvector <- c(0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1)
 obsvector <- c(0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1)
 matvector <- c(0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1)
@@ -132,10 +135,9 @@ indataset <- c(0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1)
 binvec <- c(0, 0, 0, 0, 0, 0.5, 0.5, 1, 1, 2.5, 7)
 
 cypframe_raw <- sf_create(sizes = sizevector, stagenames = stagevector,
-                          repstatus = repvector, obsstatus = obsvector,
-                          matstatus = matvector, propstatus = propvector,
-                          immstatus = immvector, indataset = indataset,
-                          binhalfwidth = binvec)
+  repstatus = repvector, obsstatus = obsvector, matstatus = matvector,
+  propstatus = propvector, immstatus = immvector, indataset = indataset,
+  binhalfwidth = binvec)
 
 cypframe_raw$comments[(cypframe_raw$stagenames == "SD")] <- "Dormant seed"
 cypframe_raw$comments[(cypframe_raw$stagenames == "P1")] <- "1st yr protocorm"

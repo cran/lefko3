@@ -10,17 +10,17 @@
 \item{mats}{A population projection matrix of class \code{matrix}.}
 }
 \value{
-This function returns the dominant eigenvalue of the matrix. For square
-matrices with fewer than 400 rows, this is given as the largest real part of all
-eigenvalues estimated via the \code{eig_gen}() function in package the C++ 
-Armadillo library. For larger matrices, the matrix is assumed to be sparse and
-\code{eigs_gen}() is used instead.
+This function returns the dominant eigenvalue of the matrix. For
+square matrices with fewer than 400 rows, this is given as the largest real
+part of all eigenvalues estimated via the \code{eig_gen}() function in
+package the C++ Armadillo library. For larger matrices, the matrix is assumed
+to be sparse and \code{eigs_gen}() is used instead.
 }
 \description{
-\code{lambda3.matrix()} returns the dominant eigenvalue of a single projection
-matrix. This function can handle large and sparse matrices, so can be used with
-large historical matrices, IPMs, age x stage matrices, as well as smaller
-ahistorical matrices.
+\code{lambda3.matrix()} returns the dominant eigenvalue of a single
+projection matrix. This function can handle large and sparse matrices, so can
+be used with large historical matrices, IPMs, age x stage matrices, as well
+as smaller ahistorical matrices.
 }
 \examples{
 data(lathyrus)
@@ -35,29 +35,30 @@ propvector <- c(1, 0, 0, 0, 0, 0, 0)
 indataset <- c(0, 1, 1, 1, 1, 1, 1)
 binvec <- c(0, 100, 11, 103, 3500, 3800, 0.5)
 
-lathframe <- sf_create(sizes = sizevector, stagenames = stagevector, repstatus = repvector, 
-                       obsstatus = obsvector, matstatus = matvector, immstatus = immvector, 
-                       indataset = indataset, binhalfwidth = binvec, propstatus = propvector)
+lathframe <- sf_create(sizes = sizevector, stagenames = stagevector,
+  repstatus = repvector, obsstatus = obsvector, matstatus = matvector,
+  immstatus = immvector, indataset = indataset, binhalfwidth = binvec,
+  propstatus = propvector)
 
-lathvert <- verticalize3(lathyrus, noyears = 4, firstyear = 1988, patchidcol = "SUBPLOT", 
-                         individcol = "GENET", blocksize = 9, juvcol = "Seedling1988", 
-                         sizeacol = "Volume88", repstracol = "FCODE88", 
-                         fecacol = "Intactseed88", deadacol = "Dead1988", 
-                         nonobsacol = "Dormant1988", stageassign = lathframe, 
-                         stagesize = "sizea", censorcol = "Missing1988", 
-                         censorkeep = NA, censor = TRUE)
+lathvert <- verticalize3(lathyrus, noyears = 4, firstyear = 1988,
+  patchidcol = "SUBPLOT", individcol = "GENET", blocksize = 9,
+  juvcol = "Seedling1988", sizeacol = "Volume88", repstracol = "FCODE88",
+  fecacol = "Intactseed88", deadacol = "Dead1988",
+  nonobsacol = "Dormant1988", stageassign = lathframe, stagesize = "sizea",
+  censorcol = "Missing1988", censorkeep = NA, censor = TRUE)
 
 lathrepm <- matrix(0, 7, 7)
 lathrepm[1, 6] <- 0.345
 lathrepm[2, 6] <- 0.054
 
-lathover3 <- overwrite(stage3 = c("Sd", "Sd", "Sdl"), stage2 = c("Sd", "Sd", "Sd"), 
-                       stage1 = c("Sd", "rep", "rep"), givenrate = c(0.345, 0.054))
+lathover3 <- overwrite(stage3 = c("Sd", "Sd", "Sdl"),
+  stage2 = c("Sd", "Sd", "Sd"), stage1 = c("Sd", "rep", "rep"),
+  givenrate = c(0.345, 0.345, 0.054))
 
-ehrlen3 <- rlefko3(data = lathvert, stageframe = lathframe, year = c(1989, 1990), 
-                   stages = c("stage3", "stage2", "stage1"), repmatrix = lathrepm, 
-                   overwrite = lathover3, yearcol = "year2", 
-                   indivcol = "individ")
+ehrlen3 <- rlefko3(data = lathvert, stageframe = lathframe,
+  year = c(1989, 1990), stages = c("stage3", "stage2", "stage1"),
+  repmatrix = lathrepm, overwrite = lathover3, yearcol = "year2",
+  indivcol = "individ")
 
 ehrlen3mean <- lmean(ehrlen3)
 lambda3(ehrlen3mean$A[[1]])

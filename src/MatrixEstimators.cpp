@@ -6,23 +6,27 @@ using namespace arma;
 
 //' Estimate All Elements in Raw Historical Matrix
 //' 
-//' Function \code{specialpatrolgroup} swiftly calculates matrix transitions in raw
-//' historical matrices, and serves as the core workhorse function behind \code{\link{rlefko3}()}.
+//' Function \code{specialpatrolgroup} swiftly calculates matrix transitions in
+//' raw historical matrices, and serves as the core workhorse function behind
+//' \code{\link{rlefko3}()}.
 //' 
 //' @param sge9l The Allstages data frame developed for rlefko3() covering stage
-//' pairs across times \emph{t}+1, \emph{t} and \emph{t}-1. Generally termed \code{stageexpansion9}.
-//' @param sge3 The data frame covering all stages in times \emph{t} and \emph{t}-1.
-//' Generally termed \code{stageexpansion3}.
-//' @param MainData The demographic dataset modified to hold \code{usedfec} columns.
+//' pairs across times \emph{t}+1, \emph{t} and \emph{t}-1. Generally termed
+//' \code{stageexpansion9}.
+//' @param sge3 The data frame covering all stages in times \emph{t} and
+//' \emph{t}-1. Generally termed \code{stageexpansion3}.
+//' @param MainData The demographic dataset modified to hold \code{usedfec}
+//' columns.
 //' @param StageFrame The full stageframe for the analysis.
 //' 
-//' @return List of three matrices, including the survival-transition (U) matrix, the 
-//' fecundity matrix (F), and the sum (A) matrix, with A first.
+//' @return List of three matrices, including the survival-transition (U)
+//' matrix, the fecundity matrix (F), and the sum (A) matrix, with A first.
 //' 
 //' @keywords internal
 //' @noRd
 // [[Rcpp::export]]
-List specialpatrolgroup(DataFrame sge9l, DataFrame sge3, DataFrame MainData, DataFrame StageFrame) {
+List specialpatrolgroup(DataFrame sge9l, DataFrame sge3, DataFrame MainData,
+  DataFrame StageFrame) {
   
   arma::vec sge9fec32 = sge9l["b.repentry3"];
   arma::vec sge9rep2 = sge9l["a.rep2n"];
@@ -173,23 +177,27 @@ List specialpatrolgroup(DataFrame sge9l, DataFrame sge3, DataFrame MainData, Dat
 
 //' Estimate All Elements in Raw Ahistorical Population Projection Matrices
 //' 
-//' Function \code{normalpatrolgroup} swiftly calculates matrix transitions in raw
-//' ahistorical matrices, and serves as the core workhorse function behind \code{\link{rlefko2}()}.
+//' Function \code{normalpatrolgroup} swiftly calculates matrix transitions in
+//' raw ahistorical matrices, and serves as the core workhorse function behind
+//' \code{\link{rlefko2}()}.
 //' 
 //' @param sge3 The Allstages data frame developed for rlefko2() covering stage
-//' pairs across times \emph{t}+1 and \emph{t}. Generally termed \code{stageexpansion3}.
-//' @param sge2 The data frame covering all stages in time \emph{t}. Generally termed
-//' \code{stageexpansion2}.
-//' @param MainData The demographic dataset modified to hold \code{usedfec} columns.
+//' pairs across times \emph{t}+1 and \emph{t}. Generally termed
+//' \code{stageexpansion3}.
+//' @param sge2 The data frame covering all stages in time \emph{t}. Generally
+//' termed \code{stageexpansion2}.
+//' @param MainData The demographic dataset modified to hold \code{usedfec}
+//' columns.
 //' @param StageFrame The full stageframe for the analysis.
 //' 
-//' @return List of three matrices, including the survival-transition (U) matrix, the 
-//' fecundity matrix (F), and the sum (A) matrix, with A first.
+//' @return List of three matrices, including the survival-transition (U)
+//' matrix, the fecundity matrix (F), and the sum (A) matrix, with A first.
 //' 
 //' @keywords internal
 //' @noRd
 // [[Rcpp::export]]
-List normalpatrolgroup(DataFrame sge3, DataFrame sge2, DataFrame MainData, DataFrame StageFrame) {
+List normalpatrolgroup(DataFrame sge3, DataFrame sge2, DataFrame MainData,
+  DataFrame StageFrame) {
   
   arma::vec sge3fec32 = sge3["b.repentry3"];
   arma::vec sge3rep2 = sge3["a.rep2n"];
@@ -327,14 +335,16 @@ List normalpatrolgroup(DataFrame sge3, DataFrame sge2, DataFrame MainData, DataF
 
 //' Estimate All Elements in Function-based Population Projection Matrices
 //' 
-//' Function \code{jerzeibalowski} swiftly calculates matrix elements in function-based
-//' population projection matrices. Used in \code{\link{flefko3}()}, \code{\link{flefko2}()},
-//' and \code{\link{aflefko2}()}.
+//' Function \code{jerzeibalowski} swiftly calculates matrix elements in
+//' function-based population projection matrices. Used in
+//' \code{\link{flefko3}()}, \code{\link{flefko2}()}, and
+//' \code{\link{aflefko2}()}.
 //' 
-//' @param ppy A data frame with one row, showing the population, patch, and year.
-//' @param AllStages A large data frame giving all required inputs for vital rate
-//' estimation other than the vital rate model coefficients themselves. Contains
-//' a row for each ultimate matrix element.
+//' @param ppy A data frame with one row, showing the population, patch, and
+//' year.
+//' @param AllStages A large data frame giving all required inputs for vital
+//' rate estimation other than the vital rate model coefficients themselves.
+//' Contains a row for each ultimate matrix element.
 //' @param survproxy List of coefficients estimated in model of survival.
 //' @param obsproxy List of coefficients estimated in model of observation.
 //' @param sizeproxy List of coefficients estimated in model of size.
@@ -354,27 +364,28 @@ List normalpatrolgroup(DataFrame sge3, DataFrame sge2, DataFrame MainData, DataF
 //' be used in analysis.
 //' @param indc A numeric value equal to the value of individual covariate c to
 //' be used in analysis.
-//' @param survdev Scalar value to be added to the y-intercept of the linear model
-//' of survival probability.
-//' @param obsdev Scalar value to be added to the y-intercept of the linear model
-//' of observation probability.
-//' @param sizedev Scalar value to be added to the y-intercept of the linear model
-//' of size transition.
-//' @param repstdev Scalar value to be added to the y-intercept of the linear model
-//' of reproduction probability.
-//' @param fecdev Scalar value to be added to the y-intercept of the linear model
-//' of fecundity.
-//' @param jsurvdev Scalar value to be added to the y-intercept of the linear model
-//' of juvenile survival probability.
-//' @param jobsdev Scalar value to be added to the y-intercept of the linear model
-//' of juvenile observation probability.
-//' @param jsizedev Scalar value to be added to the y-intercept of the linear model
-//' of juvenile size transition.
-//' @param jrepstdev Scalar value to be added to the y-intercept of the linear model
-//' of juvenile reproduction probability.
+//' @param survdev Scalar value to be added to the y-intercept of the linear
+//' model of survival probability.
+//' @param obsdev Scalar value to be added to the y-intercept of the linear
+//' model of observation probability.
+//' @param sizedev Scalar value to be added to the y-intercept of the linear
+//' model of size transition.
+//' @param repstdev Scalar value to be added to the y-intercept of the linear
+//' model of reproduction probability.
+//' @param fecdev Scalar value to be added to the y-intercept of the linear
+//' model of fecundity.
+//' @param jsurvdev Scalar value to be added to the y-intercept of the linear
+//' model of juvenile survival probability.
+//' @param jobsdev Scalar value to be added to the y-intercept of the linear
+//' model of juvenile observation probability.
+//' @param jsizedev Scalar value to be added to the y-intercept of the linear
+//' model of juvenile size transition.
+//' @param jrepstdev Scalar value to be added to the y-intercept of the linear
+//' model of juvenile reproduction probability.
 //' @param matrixdim Number of rows (and columns) in the final matrix.
 //' @param fecmod A scalar multiplier for fecundity.
-//' @param summedvars Summed variance-covariance terms in Poisson size distribution.
+//' @param summedvars Summed variance-covariance terms in Poisson size
+//' distribution.
 //' @param sigma Standard deviation of Gaussian size distribution.
 //' @param jsummedvars Summed variance-covariance terms in Poisson juvenile size
 //' distribution.
@@ -387,23 +398,23 @@ List normalpatrolgroup(DataFrame sge3, DataFrame sge2, DataFrame MainData, DataF
 //' @param negfec Logical value denoting whether to change negative estimated
 //` fecundity to 0.
 //' 
-//' @return A list of 3 matrices, including the main MPM (A), the survival-transition
-//' matrix (U), anf a fecundity matrix (F). With tweaking, can also produce a 4 column 
-//' matrix showing survival probability, observation probability, reproduction
-//' probability, and size transition probability, for each element of the final MPM.
+//' @return A list of 3 matrices, including the main MPM (A), the survival-
+//' transition matrix (U), anf a fecundity matrix (F). With tweaking, can also
+//' produce a 4 column matrix showing survival probability, observation
+//' probability, reproduction probability, and size transition probability, for
+//' each element of the final MPM.
 //' 
 //' @keywords internal
 //' @noRd
 // [[Rcpp::export]]
-List jerzeibalowski(DataFrame ppy, DataFrame AllStages, List survproxy, List obsproxy,
-                    List sizeproxy, List repstproxy, List fecproxy, List jsurvproxy,
-                    List jobsproxy, List jsizeproxy, List jrepstproxy, double inda,
-                    double indb, double indc, double survdev, double obsdev, double sizedev, 
-                    double repstdev, double fecdev, double jsurvdev, double jobsdev, 
-                    double jsizedev, double jrepstdev, unsigned long matrixdim, double fecmod, 
-                    double summedvars, double sigma, double jsummedvars, double jsigma, 
-                    double maxsize, int sizedist, int fecdist, bool negfec) {
-  
+List jerzeibalowski(DataFrame ppy, DataFrame AllStages, List survproxy,
+  List obsproxy, List sizeproxy, List repstproxy, List fecproxy,
+  List jsurvproxy, List jobsproxy, List jsizeproxy, List jrepstproxy,
+  double inda, double indb, double indc, double survdev, double obsdev,
+  double sizedev, double repstdev, double fecdev, double jsurvdev,
+  double jobsdev, double jsizedev, double jrepstdev, unsigned long matrixdim,
+  double fecmod, double summedvars, double sigma, double jsummedvars,
+  double jsigma, double maxsize, int sizedist, int fecdist, bool negfec) {
   
   // The DataFrame AllStages introduces variables used in size and fecundity calculations. This DataFrame
   // is broken up into long vectors composed of input sizes and related variables for these calculations. 

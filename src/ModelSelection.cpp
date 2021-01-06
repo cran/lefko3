@@ -6,26 +6,26 @@ using namespace arma;
 
 //' Main Formula Creation for \code{modelsearch()}
 //'
-//' Function \code{stovokor()} creates formulae to be used as input in the global
-//' model calls used in function \code{\link{modelsearch}()}.
+//' Function \code{stovokor()} creates formulae to be used as input in the
+//' global model calls used in function \code{\link{modelsearch}()}.
 //'
-//' @param surv A vector of strings indicating the names of the variables coding 
+//' @param surv A vector of strings indicating the names of the variables coding
 //' survival.
-//' @param obs A vector of strings indicating the names of the variables coding 
+//' @param obs A vector of strings indicating the names of the variables coding
 //' observation status.
-//' @param size A vector of strings indicating the names of the variables coding 
+//' @param size A vector of strings indicating the names of the variables coding
 //' size.
-//' @param repst A vector of strings indicating the names of the variables coding 
-//' reproductive status.
-//' @param fec A vector of strings indicating the names of the variables coding 
+//' @param repst A vector of strings indicating the names of the variables
+//' coding reproductive status.
+//' @param fec A vector of strings indicating the names of the variables coding
 //' fecundity.
 //' @param vitalrates A vector of strings indicating which vital rates will be
 //' estimated.
 //' @param historical A logical value indicating whether to create global models
 //' with historical effects.
-//' @param suite A string indicating the scope of independent factors included in
-//' the global models. Options include \code{"full"}, \code{"main"}, \code{"size"}, \code{"rep"},
-//' and \code{"const"}.
+//' @param suite A string indicating the scope of independent factors included
+//' in the global models. Options include \code{"full"}, \code{"main"},
+//' \code{"size"}, \code{"rep"}, and \code{"const"}.
 //' @param approach A string indicating whether to use mixed model encoding 
 //' (\code{"mixed"}) or GLM encoding (\code{"glm"}).
 //' @param sizedist A string variable indicating the distribution to use to
@@ -35,28 +35,35 @@ using namespace arma;
 //' @param nojuvs A logical value indicating that juvenile rates should be
 //' estimated (\code{FALSE}) or not (\code{TRUE}).
 //' @param age A string indicating the name of the variable coding age.
-//' @param indcova A vector of strings indicating the names in times \emph{t}+1, \emph{t},
-//' and \emph{t}-1 of a specific individual covariate used in the dataset.
-//' @param indcovb A vector of strings indicating the names in times \emph{t}+1, \emph{t},
-//' and \emph{t}-1 of a specific individual covariate used in the dataset.
-//' @param indcovc A vector of strings indicating the names in times \emph{t}+1, \emph{t},
-//' and \emph{t}-1 of a specific individual covariate used in the dataset.
+//' @param indcova A vector of strings indicating the names in times \emph{t}+1,
+//' \emph{t}, and \emph{t}-1 of a specific individual covariate used in the
+//' dataset.
+//' @param indcovb A vector of strings indicating the names in times \emph{t}+1,
+//' \emph{t}, and \emph{t}-1 of a specific individual covariate used in the
+//' dataset.
+//' @param indcovc A vector of strings indicating the names in times \emph{t}+1,
+//' \emph{t}, and \emph{t}-1 of a specific individual covariate used in the
+//' dataset.
 //' @param indiv A string indicating the name of the variable coding individual
 //' identity.
-//' @param patch A string indicating the name of the variable coding patch identity.
-//' @param year A string indicating the name of the variable coding time \emph{t}.
+//' @param patch A string indicating the name of the variable coding patch
+//' identity.
+//' @param year A string indicating the name of the variable coding time
+//' \emph{t}.
 //' @param pasrand A logical value indicating whether to treat patch as a random
 //' variable within mixed models.
 //' @param yasrand A logical value indicating whether to treat year as a random
 //' variable within mixed models.
-//' @param fectime An integer indicating whether to use reproductive output in time 
-//' \emph{t} (2) or time \emph{t}+1 (3) as the response for fecundity.
+//' @param fectime An integer indicating whether to use reproductive output in
+//' time \emph{t} (2) or time \emph{t}+1 (3) as the response for fecundity.
 //' @param juvsize A logical value indicating whether to include size terms in
 //' juvenile models.
 //' @param size0 A logical value indicating whether size distribution should
-//' be zero-inflated. Only applies to Poisson and negative binomial distributions.
+//' be zero-inflated. Only applies to Poisson and negative binomial
+//' distributions.
 //' @param fec0 A logical value indicating whether size distribution should
-//' be zero-inflated. Only applies to Poisson and negative binomial distributions.
+//' be zero-inflated. Only applies to Poisson and negative binomial
+//' distributions.
 //' 
 //' @return Vector of 9 strings, each a formula to be used as input in function.
 //' \code{modelsearch()}.
@@ -64,12 +71,13 @@ using namespace arma;
 //' @keywords internal
 //' @noRd
 // [[Rcpp::export]]
-List stovokor(StringVector surv, StringVector obs, StringVector size, StringVector repst, 
-              StringVector fec, StringVector vitalrates, bool historical, String suite, 
-              String approach, String sizedist, String fecdist, bool nojuvs, String age, 
-              StringVector indcova, StringVector indcovb, StringVector indcovc,
-              String indiv, String patch, String year, bool pasrand, bool yasrand, 
-              int fectime, bool juvsize, bool size0, bool fec0) {
+List stovokor(StringVector surv, StringVector obs, StringVector size,
+  StringVector repst, StringVector fec, StringVector vitalrates,
+  bool historical, String suite, String approach, String sizedist,
+  String fecdist, bool nojuvs, String age, StringVector indcova,
+  StringVector indcovb, StringVector indcovc, String indiv, String patch,
+  String year, bool pasrand, bool yasrand, int fectime, bool juvsize,
+  bool size0, bool fec0) {
   
   if (nojuvs) juvsize = FALSE;
   

@@ -10,22 +10,26 @@
 \item{mats}{An object of class \code{lefkoMat}.}
 }
 \value{
-This function's output depends on whether the lefkoMat object is historical
-or ahistorical. If the former, then it is a list with four elements. The first 
-(\code{h_elasmats}) is a list of historical elasticity matrices, the second 
-(\code{ah_elasmats}) is a list of sensitivity matrices in which historical
-elasticities have been summed by the stage in times \emph{t} and \emph{t}+1, to produce 
-elasticity matrices equivalent in principle to ahistorical elasticity matrices but 
-reflecting the effects of stage in time \emph{t}-1. The third element (\code{h_stages}) is a 
-data frame showing historical stage pairs, and the fourth (\code{ah_stages}) is a data 
-frame showing the ahistorical stages.
+This function returns an object of class \code{lefkoElas}, which is a
+list with 7 elements. The first, \code{h_elasmats}, is a list of historical
+elasticity matrices (\code{NULL} if an ahMPM is used as input). The second,
+\code{ah_elasmats}, is a list of either ahistorical elasticity matrices if
+an ahMPM is used as input, or, if an hMPM is used as input, then the result
+is a list of elasticity matrices in which historical elasticities have been
+summed by the stage in times \emph{t} and \emph{t}+1 to produce
+\emph{historically-corrected} elasticity matrices, which are equivalent in
+dimension to ahistorical elasticity matrices but reflect the effects of stage
+in time \emph{t}-1. The third element, \code{h_stages}, is a data frame
+showing historical stage pairs (NULL if ahMPM used as input). The fourth
+element, \code{ah_stages}, is a data frame showing the order of ahistorical
+stages. The last 3 elements are the A, U, and F portions of the input.
 }
 \description{
 \code{elasticity3.lefkoMat()} returns the elasticities of lambda to elements
-of all \code{$A} matrices in an object of class \code{lefkoMat}. This function
-can handle large and sparse matrices, and so can be used with large historical 
-matrices, IPMs, age x stage matrices, as well as smaller ahistorical 
-matrices.
+of all \code{$A} matrices in an object of class \code{lefkoMat}. This
+function can handle large and sparse matrices, and so can be used with large
+historical matrices, IPMs, age x stage matrices, as well as smaller
+ahistorical matrices.
 }
 \examples{
 data(lathyrus)
@@ -40,29 +44,30 @@ propvector <- c(1, 0, 0, 0, 0, 0, 0)
 indataset <- c(0, 1, 1, 1, 1, 1, 1)
 binvec <- c(0, 100, 11, 103, 3500, 3800, 0.5)
 
-lathframe <- sf_create(sizes = sizevector, stagenames = stagevector, repstatus = repvector, 
-                       obsstatus = obsvector, matstatus = matvector, immstatus = immvector, 
-                       indataset = indataset, binhalfwidth = binvec, propstatus = propvector)
+lathframe <- sf_create(sizes = sizevector, stagenames = stagevector,
+  repstatus = repvector, obsstatus = obsvector, matstatus = matvector,
+  immstatus = immvector, indataset = indataset, binhalfwidth = binvec,
+  propstatus = propvector)
 
-lathvert <- verticalize3(lathyrus, noyears = 4, firstyear = 1988, patchidcol = "SUBPLOT", 
-                         individcol = "GENET", blocksize = 9, juvcol = "Seedling1988", 
-                         sizeacol = "Volume88", repstracol = "FCODE88", 
-                         fecacol = "Intactseed88", deadacol = "Dead1988", 
-                         nonobsacol = "Dormant1988", stageassign = lathframe, 
-                         stagesize = "sizea", censorcol = "Missing1988", 
-                         censorkeep = NA, censor = TRUE)
+lathvert <- verticalize3(lathyrus, noyears = 4, firstyear = 1988,
+  patchidcol = "SUBPLOT", individcol = "GENET", blocksize = 9,
+  juvcol = "Seedling1988", sizeacol = "Volume88", repstracol = "FCODE88",
+  fecacol = "Intactseed88", deadacol = "Dead1988",
+  nonobsacol = "Dormant1988", stageassign = lathframe, stagesize = "sizea",
+  censorcol = "Missing1988", censorkeep = NA, censor = TRUE)
 
 lathrepm <- matrix(0, 7, 7)
 lathrepm[1, 6] <- 0.345
 lathrepm[2, 6] <- 0.054
 
-lathover3 <- overwrite(stage3 = c("Sd", "Sd", "Sdl"), stage2 = c("Sd", "Sd", "Sd"), 
-                       stage1 = c("Sd", "rep", "rep"), givenrate = c(0.345, 0.054))
+lathover3 <- overwrite(stage3 = c("Sd", "Sd", "Sdl"),
+  stage2 = c("Sd", "Sd", "Sd"), stage1 = c("Sd", "rep", "rep"),
+  givenrate = c(0.345, 0.345, 0.054))
 
-ehrlen3 <- rlefko3(data = lathvert, stageframe = lathframe, year = c(1989, 1990), 
-                   stages = c("stage3", "stage2", "stage1"), repmatrix = lathrepm, 
-                   overwrite = lathover3, yearcol = "year2", 
-                   indivcol = "individ")
+ehrlen3 <- rlefko3(data = lathvert, stageframe = lathframe,
+  year = c(1989, 1990), stages = c("stage3", "stage2", "stage1"),
+  repmatrix = lathrepm, overwrite = lathover3, yearcol = "year2",
+  indivcol = "individ")
 
 ehrlen3mean <- lmean(ehrlen3)
 elasticity3(ehrlen3mean)

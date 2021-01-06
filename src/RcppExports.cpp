@@ -141,6 +141,32 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// hoffmannofstuttgart
+List hoffmannofstuttgart(arma::mat mainmat, DataFrame indices, int ahstages, StringVector stagenames);
+RcppExport SEXP _lefko3_hoffmannofstuttgart(SEXP mainmatSEXP, SEXP indicesSEXP, SEXP ahstagesSEXP, SEXP stagenamesSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< arma::mat >::type mainmat(mainmatSEXP);
+    Rcpp::traits::input_parameter< DataFrame >::type indices(indicesSEXP);
+    Rcpp::traits::input_parameter< int >::type ahstages(ahstagesSEXP);
+    Rcpp::traits::input_parameter< StringVector >::type stagenames(stagenamesSEXP);
+    rcpp_result_gen = Rcpp::wrap(hoffmannofstuttgart(mainmat, indices, ahstages, stagenames));
+    return rcpp_result_gen;
+END_RCPP
+}
+// cond_hmpm
+List cond_hmpm(List hmpm, Nullable<CharacterVector> matchoice);
+RcppExport SEXP _lefko3_cond_hmpm(SEXP hmpmSEXP, SEXP matchoiceSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< List >::type hmpm(hmpmSEXP);
+    Rcpp::traits::input_parameter< Nullable<CharacterVector> >::type matchoice(matchoiceSEXP);
+    rcpp_result_gen = Rcpp::wrap(cond_hmpm(hmpm, matchoice));
+    return rcpp_result_gen;
+END_RCPP
+}
 // specialpatrolgroup
 List specialpatrolgroup(DataFrame sge9l, DataFrame sge3, DataFrame MainData, DataFrame StageFrame);
 RcppExport SEXP _lefko3_specialpatrolgroup(SEXP sge9lSEXP, SEXP sge3SEXP, SEXP MainDataSEXP, SEXP StageFrameSEXP) {
@@ -271,8 +297,8 @@ BEGIN_RCPP
 END_RCPP
 }
 // turbogeodiesel
-List turbogeodiesel(DataFrame loy, List Umats, List Fmats, DataFrame stages, DataFrame hstages, DataFrame modelqc, bool patchmats, bool popmats);
-RcppExport SEXP _lefko3_turbogeodiesel(SEXP loySEXP, SEXP UmatsSEXP, SEXP FmatsSEXP, SEXP stagesSEXP, SEXP hstagesSEXP, SEXP modelqcSEXP, SEXP patchmatsSEXP, SEXP popmatsSEXP) {
+List turbogeodiesel(DataFrame loy, List Umats, List Fmats, DataFrame stages, DataFrame hstages, bool patchmats, bool popmats);
+RcppExport SEXP _lefko3_turbogeodiesel(SEXP loySEXP, SEXP UmatsSEXP, SEXP FmatsSEXP, SEXP stagesSEXP, SEXP hstagesSEXP, SEXP patchmatsSEXP, SEXP popmatsSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -281,16 +307,15 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< List >::type Fmats(FmatsSEXP);
     Rcpp::traits::input_parameter< DataFrame >::type stages(stagesSEXP);
     Rcpp::traits::input_parameter< DataFrame >::type hstages(hstagesSEXP);
-    Rcpp::traits::input_parameter< DataFrame >::type modelqc(modelqcSEXP);
     Rcpp::traits::input_parameter< bool >::type patchmats(patchmatsSEXP);
     Rcpp::traits::input_parameter< bool >::type popmats(popmatsSEXP);
-    rcpp_result_gen = Rcpp::wrap(turbogeodiesel(loy, Umats, Fmats, stages, hstages, modelqc, patchmats, popmats));
+    rcpp_result_gen = Rcpp::wrap(turbogeodiesel(loy, Umats, Fmats, stages, hstages, patchmats, popmats));
     return rcpp_result_gen;
 END_RCPP
 }
 // geodiesel
-List geodiesel(DataFrame loy, List Umats, List Fmats, DataFrame stages, DataFrame modelqc, bool patchmats, bool popmats);
-RcppExport SEXP _lefko3_geodiesel(SEXP loySEXP, SEXP UmatsSEXP, SEXP FmatsSEXP, SEXP stagesSEXP, SEXP modelqcSEXP, SEXP patchmatsSEXP, SEXP popmatsSEXP) {
+List geodiesel(DataFrame loy, List Umats, List Fmats, DataFrame stages, bool patchmats, bool popmats);
+RcppExport SEXP _lefko3_geodiesel(SEXP loySEXP, SEXP UmatsSEXP, SEXP FmatsSEXP, SEXP stagesSEXP, SEXP patchmatsSEXP, SEXP popmatsSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -298,10 +323,9 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< List >::type Umats(UmatsSEXP);
     Rcpp::traits::input_parameter< List >::type Fmats(FmatsSEXP);
     Rcpp::traits::input_parameter< DataFrame >::type stages(stagesSEXP);
-    Rcpp::traits::input_parameter< DataFrame >::type modelqc(modelqcSEXP);
     Rcpp::traits::input_parameter< bool >::type patchmats(patchmatsSEXP);
     Rcpp::traits::input_parameter< bool >::type popmats(popmatsSEXP);
-    rcpp_result_gen = Rcpp::wrap(geodiesel(loy, Umats, Fmats, stages, modelqc, patchmats, popmats));
+    rcpp_result_gen = Rcpp::wrap(geodiesel(loy, Umats, Fmats, stages, patchmats, popmats));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -463,20 +487,86 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// proj3
+arma::mat proj3(arma::vec start_vec, List core_list, arma::uvec mat_order, bool standardize);
+RcppExport SEXP _lefko3_proj3(SEXP start_vecSEXP, SEXP core_listSEXP, SEXP mat_orderSEXP, SEXP standardizeSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< arma::vec >::type start_vec(start_vecSEXP);
+    Rcpp::traits::input_parameter< List >::type core_list(core_listSEXP);
+    Rcpp::traits::input_parameter< arma::uvec >::type mat_order(mat_orderSEXP);
+    Rcpp::traits::input_parameter< bool >::type standardize(standardizeSEXP);
+    rcpp_result_gen = Rcpp::wrap(proj3(start_vec, core_list, mat_order, standardize));
+    return rcpp_result_gen;
+END_RCPP
+}
+// slambda3
+DataFrame slambda3(List mpm, int times, Nullable<NumericVector> tweights);
+RcppExport SEXP _lefko3_slambda3(SEXP mpmSEXP, SEXP timesSEXP, SEXP tweightsSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< List >::type mpm(mpmSEXP);
+    Rcpp::traits::input_parameter< int >::type times(timesSEXP);
+    Rcpp::traits::input_parameter< Nullable<NumericVector> >::type tweights(tweightsSEXP);
+    rcpp_result_gen = Rcpp::wrap(slambda3(mpm, times, tweights));
+    return rcpp_result_gen;
+END_RCPP
+}
+// bambi3
+DataFrame bambi3(DataFrame stages, DataFrame hstages);
+RcppExport SEXP _lefko3_bambi3(SEXP stagesSEXP, SEXP hstagesSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< DataFrame >::type stages(stagesSEXP);
+    Rcpp::traits::input_parameter< DataFrame >::type hstages(hstagesSEXP);
+    rcpp_result_gen = Rcpp::wrap(bambi3(stages, hstages));
+    return rcpp_result_gen;
+END_RCPP
+}
+// bambi2
+DataFrame bambi2(DataFrame stages);
+RcppExport SEXP _lefko3_bambi2(SEXP stagesSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< DataFrame >::type stages(stagesSEXP);
+    rcpp_result_gen = Rcpp::wrap(bambi2(stages));
+    return rcpp_result_gen;
+END_RCPP
+}
+// demolition3
+List demolition3(arma::mat e_amat, arma::mat amat, arma::mat fmat, DataFrame bambesque);
+RcppExport SEXP _lefko3_demolition3(SEXP e_amatSEXP, SEXP amatSEXP, SEXP fmatSEXP, SEXP bambesqueSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< arma::mat >::type e_amat(e_amatSEXP);
+    Rcpp::traits::input_parameter< arma::mat >::type amat(amatSEXP);
+    Rcpp::traits::input_parameter< arma::mat >::type fmat(fmatSEXP);
+    Rcpp::traits::input_parameter< DataFrame >::type bambesque(bambesqueSEXP);
+    rcpp_result_gen = Rcpp::wrap(demolition3(e_amat, amat, fmat, bambesque));
+    return rcpp_result_gen;
+END_RCPP
+}
 
 static const R_CallMethodDef CallEntries[] = {
     {"_lefko3_ovreplace", (DL_FUNC) &_lefko3_ovreplace, 6},
     {"_lefko3_pfj", (DL_FUNC) &_lefko3_pfj, 34},
     {"_lefko3_jpf", (DL_FUNC) &_lefko3_jpf, 49},
     {"_lefko3_theoldpizzle", (DL_FUNC) &_lefko3_theoldpizzle, 6},
+    {"_lefko3_hoffmannofstuttgart", (DL_FUNC) &_lefko3_hoffmannofstuttgart, 4},
+    {"_lefko3_cond_hmpm", (DL_FUNC) &_lefko3_cond_hmpm, 2},
     {"_lefko3_specialpatrolgroup", (DL_FUNC) &_lefko3_specialpatrolgroup, 4},
     {"_lefko3_normalpatrolgroup", (DL_FUNC) &_lefko3_normalpatrolgroup, 4},
     {"_lefko3_jerzeibalowski", (DL_FUNC) &_lefko3_jerzeibalowski, 33},
     {"_lefko3_stovokor", (DL_FUNC) &_lefko3_stovokor, 25},
     {"_lefko3_flagrantcrap", (DL_FUNC) &_lefko3_flagrantcrap, 2},
     {"_lefko3_moreflagrantcrap", (DL_FUNC) &_lefko3_moreflagrantcrap, 1},
-    {"_lefko3_turbogeodiesel", (DL_FUNC) &_lefko3_turbogeodiesel, 8},
-    {"_lefko3_geodiesel", (DL_FUNC) &_lefko3_geodiesel, 7},
+    {"_lefko3_turbogeodiesel", (DL_FUNC) &_lefko3_turbogeodiesel, 7},
+    {"_lefko3_geodiesel", (DL_FUNC) &_lefko3_geodiesel, 6},
     {"_lefko3_decomp3", (DL_FUNC) &_lefko3_decomp3, 1},
     {"_lefko3_decomp3sp", (DL_FUNC) &_lefko3_decomp3sp, 1},
     {"_lefko3_lambda3matrix", (DL_FUNC) &_lefko3_lambda3matrix, 1},
@@ -491,6 +581,11 @@ static const R_CallMethodDef CallEntries[] = {
     {"_lefko3_elas3matrix", (DL_FUNC) &_lefko3_elas3matrix, 1},
     {"_lefko3_elas3matrixsp", (DL_FUNC) &_lefko3_elas3matrixsp, 1},
     {"_lefko3_elas3hlefko", (DL_FUNC) &_lefko3_elas3hlefko, 3},
+    {"_lefko3_proj3", (DL_FUNC) &_lefko3_proj3, 4},
+    {"_lefko3_slambda3", (DL_FUNC) &_lefko3_slambda3, 3},
+    {"_lefko3_bambi3", (DL_FUNC) &_lefko3_bambi3, 2},
+    {"_lefko3_bambi2", (DL_FUNC) &_lefko3_bambi2, 1},
+    {"_lefko3_demolition3", (DL_FUNC) &_lefko3_demolition3, 4},
     {NULL, NULL, 0}
 };
 

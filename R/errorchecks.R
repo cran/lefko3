@@ -1,0 +1,90 @@
+#' Summary of Class "lefkoCondMat"
+#' 
+#' A function to simplify the viewing of basic information describing the 
+#' conditional matrices derived from a \code{loefkoMat} object.
+#' 
+#' @param object An object of class \code{lefkoMat}.
+#' @param ... Other parameters.
+#' 
+#' @return A summary of the object, showing the number of historical matrices,
+#' as well as the number of conditional matrices nested within each historical
+#' matrix.
+#' 
+#' @examples
+#' data(cypdata)
+#'  
+#' sizevector <- c(0, 0, 0, 0, 0, 0, 1, 2.5, 4.5, 8, 17.5)
+#' stagevector <- c("SD", "P1", "P2", "P3", "SL", "D", "XSm", "Sm", "Md", "Lg",
+#'   "XLg")
+#' repvector <- c(0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1)
+#' obsvector <- c(0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1)
+#' matvector <- c(0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1)
+#' immvector <- c(0, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0)
+#' propvector <- c(1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)
+#' indataset <- c(0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1)
+#' binvec <- c(0, 0, 0, 0, 0, 0.5, 0.5, 1, 1, 2.5, 7)
+#' 
+#' cypframe_raw <- sf_create(sizes = sizevector, stagenames = stagevector,
+#'   repstatus = repvector, obsstatus = obsvector, matstatus = matvector, 
+#'   propstatus = propvector, immstatus = immvector, indataset = indataset,
+#'   binhalfwidth = binvec)
+#' 
+#' cypraw_v1 <- verticalize3(data = cypdata, noyears = 6, firstyear = 2004,
+#'   patchidcol = "patch", individcol = "plantid", blocksize = 4, 
+#'   sizeacol = "Inf2.04", sizebcol = "Inf.04", sizeccol = "Veg.04", 
+#'   repstracol = "Inf.04", repstrbcol = "Inf2.04", fecacol = "Pod.04",
+#'   stageassign = cypframe_raw, stagesize = "sizeadded", NAas0 = TRUE,
+#'   NRasRep = TRUE)
+#' 
+#' rep_cyp_raw <- matrix(0, 11, 11)
+#' rep_cyp_raw[1:2,7:11] <- 0.5
+#' 
+#' cypover3r <- overwrite(stage3 = c("SD", "SD", "P1", "P1", "P2", "P3", "SL", 
+#'     "SL", "SL", "D", "XSm", "Sm", "D", "XSm", "Sm"), 
+#'   stage2 = c("SD", "SD", "SD", "SD", "P1", "P2", "P3", "SL", "SL", "SL", 
+#'     "SL", "SL", "SL", "SL", "SL"),
+#'   stage1 = c("SD", "rep", "SD", "rep", "SD", "P1", "P2", "P3", "SL", "P3",
+#'     "P3", "P3", "SL", "SL", "SL"),
+#'   eststage3 = c(NA, NA, NA, NA, NA, NA, NA, NA, NA, "D", "XSm", "Sm", "D", 
+#'     "XSm", "Sm"), 
+#'   eststage2 = c(NA, NA, NA, NA, NA, NA, NA, NA, NA, "XSm", "XSm", "XSm",
+#'     "XSm", "XSm", "XSm"),
+#'   eststage1 = c(NA, NA, NA, NA, NA, NA, NA, NA, NA, "XSm", "XSm", "XSm",
+#'     "XSm", "XSm", "XSm"), 
+#'   givenrate = c(0.1, 0.1, 0.2, 0.2, 0.2, 0.2, 0.25, 0.4, 0.4, NA, NA, NA, NA,
+#'     NA, NA), 
+#'   type = c("S", "S", "S", "S", "S", "S", "S", "S", "S", "S", "S", "S", "S",
+#'     "S", "S"))
+#' 
+#' cypmatrix3r <- rlefko3(data = cypraw_v1, stageframe = cypframe_raw, 
+#'   year = "all", patch = "all", stages = c("stage3", "stage2", "stage1"),
+#'   size = c("size3added", "size2added", "size1added"), 
+#'   repmatrix = rep_cyp_raw, overwrite = cypover3r, yearcol = "year2", 
+#'   patchcol = "patchid", indivcol = "individ")
+#' 
+#' cypcondmats <- cond_hmpm(cypmatrix3r)
+#' 
+#' summary(cypcondmats)
+#' 
+#' @export
+summary.lefkoCondMat <- function(object, ...) {
+  
+  histmatrices <- object$Acond
+  condmatrices <- histmatrices[[1]]
+  firstcondmat <- condmatrices[[1]]
+  
+  numhistmats <- length(histmatrices)
+  prevstages <- length(condmatrices)
+  matdim <- dim(firstcondmat)
+  
+  writeLines(paste0("\nThis lefkoCondMat object contains ", prevstages, " conditional matrices per historical matrix, covering ", numhistmats, " historical matrices."))
+  writeLines(paste0("Each conditional matrix is a square matrix with ", matdim[1], " rows and columns, and a total of ", matdim[1]*matdim[1], " elements."))
+  writeLines(paste0("\nThe order of conditional matrices is:\n", paste(object$ahstages$stage, collapse = " ")))
+  writeLines("\nThe order of historical matrices is: \n")
+  print.data.frame(object$labels)
+  
+  writeLines("\nThe order of conditional matrices matches the stage column in object $ahstages.")
+  writeLines("The order of historical matrices follows that shown in object $labels.")
+  
+  return()
+}

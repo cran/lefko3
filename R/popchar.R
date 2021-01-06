@@ -35,11 +35,12 @@
 #' @param maxage An optional vector denoting the maximum age at which a stage
 #' should occur. Only used in age x stage matrix development. Defaults to NA.
 #' @param indataset A vector designating which stages are found within the 
-#' dataset. While \code{\link{rlefko2}()} and \code{\link{rlefko3}()} can use all stages in
-#' the input dataset, \code{\link{flefko3}()} and \code{\link{flefko2}()} can only handle
-#' size-classified stages with non-overlapping combinations of size and 
-#' reproductive status, plus one immature stage. Stages that do not actually
-#' exist within the dataset should be marked as 0 in this vector.
+#' dataset. While \code{\link{rlefko2}()} and \code{\link{rlefko3}()} can use
+#' all stages in the input dataset, \code{\link{flefko3}()} and
+#' \code{\link{flefko2}()} can only handle size-classified stages with
+#' non-overlapping combinations of size and reproductive status, plus one
+#' immature stage. Stages that do not actually exist within the dataset should
+#' be marked as 0 in this vector.
 #' @param binhalfwidth A numeric vector giving the half-width of size bins.
 #' Required to classify individuals appropriately within size classes.
 #' Defaults to 0.5 for all sizes.
@@ -62,18 +63,20 @@
 #' \code{\link{flefko2}()}, \code{\link{rlefko3}()}, and \code{\link{rlefko2}()}.
 #' 
 #' @return Variables in this data frame include the following:
-#' \item{stagenames}{The unique names of the stages to be analyzed.}
+#' \item{stage}{The unique names of the stages to be analyzed.}
 #' \item{size}{The typical or representative size at which each stage occurs.}
-#' \item{repstatus}{A binomial variable showing whether each stage is reproductive.}
-#' \item{obsstatus}{A binomial variable showing whether each stage is observable.}
+#' \item{repstatus}{A binomial variable showing whether each stage is
+#' reproductive.}
+#' \item{obsstatus}{A binomial variable showing whether each stage is
+#' observable.}
 #' \item{propstatus}{A binomial variable showing whether each stage is a
 #' propagule.}
 #' \item{immstatus}{A binomial variable showing whether each stage can occur as
 #' immature.}
 #' \item{matstatus}{A binomial variable showing whether each stage occurs in
 #' maturity.}
-#' \item{indataset}{A binomial variable describing whether each stage occurs in the
-#' input dataset.}
+#' \item{indataset}{A binomial variable describing whether each stage occurs in
+#' the input dataset.}
 #' \item{binhalfwidth_raw}{The half-width of the size bin, as input.}
 #' \item{min_age}{The minimum age at which the stage may occur.}
 #' \item{max_age}{The maximum age at which the stage may occur.}
@@ -87,7 +90,7 @@
 #' @examples
 #' sizevector <- c(0, 0, 0, 0, 0, 0, 1, 2.5, 4.5, 8, 17.5)
 #' stagevector <- c("SD", "P1", "P2", "P3", "SL", "D", "XSm", "Sm", "Md", "Lg", 
-#'                  "XLg")
+#'   "XLg")
 #' repvector <- c(0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1)
 #' obsvector <- c(0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1)
 #' matvector <- c(0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1)
@@ -97,10 +100,9 @@
 #' binvec <- c(0, 0, 0, 0, 0, 0.5, 0.5, 1, 1, 2.5, 7)
 #' 
 #' cypframe_raw <- sf_create(sizes = sizevector, stagenames = stagevector,
-#'                           repstatus = repvector, obsstatus = obsvector,
-#'                           matstatus = matvector, propstatus = propvector,
-#'                           immstatus = immvector, indataset = indataset,
-#'                           binhalfwidth = binvec)
+#'   repstatus = repvector, obsstatus = obsvector, matstatus = matvector,
+#'   propstatus = propvector, immstatus = immvector, indataset = indataset,
+#'   binhalfwidth = binvec)
 #' 
 #' cypframe_raw$comments[(cypframe_raw$stagenames == "SD")] <- "Dormant seed"
 #' cypframe_raw$comments[(cypframe_raw$stagenames == "P1")] <- "1st yr protocorm"
@@ -116,9 +118,9 @@
 #' 
 #' cypframe_raw
 #' @export
-sf_create <- function(sizes, stagenames = NA, repstatus = 1, obsstatus = 1, propstatus = NA, 
-                      immstatus = NA, matstatus = 1, minage = NA, maxage = NA, indataset = NA, 
-                      binhalfwidth = 0.5, ipmbins = 100, roundsize = 5) {
+sf_create <- function(sizes, stagenames = NA, repstatus = 1, obsstatus = 1,
+  propstatus = NA, immstatus = NA, matstatus = 1, minage = NA, maxage = NA,
+  indataset = NA, binhalfwidth = 0.5, ipmbins = 100, roundsize = 5) {
   
   #Initially we standardize the length of option vectors and check for incorrect input
   matsize <- length(sizes)
@@ -223,12 +225,12 @@ sf_create <- function(sizes, stagenames = NA, repstatus = 1, obsstatus = 1, prop
   
   # Now we will build the model stageframe
   if (no_age == TRUE) {
-    sfmat <- cbind.data.frame(stagenames = as.character(stagenames), size = sizes, repstatus = repstatus, 
+    sfmat <- cbind.data.frame(stage = as.character(stagenames), size = sizes, repstatus = repstatus, 
                               obsstatus = obsstatus, propstatus = propstatus, immstatus = immstatus, 
                               matstatus = matstatus, indataset = indataset, binhalfwidth_raw = binhalfwidth, 
                               min_age = NA, max_age = NA, stringsAsFactors = FALSE)
   } else {
-    sfmat <- cbind.data.frame(stagenames = as.character(stagenames), size = sizes, repstatus = repstatus, 
+    sfmat <- cbind.data.frame(stage = as.character(stagenames), size = sizes, repstatus = repstatus, 
                               obsstatus = obsstatus, propstatus = propstatus, immstatus = immstatus, 
                               matstatus = matstatus, indataset = indataset, binhalfwidth_raw = binhalfwidth,
                               min_age = minage, max_age = maxage, stringsAsFactors = FALSE)
@@ -310,10 +312,10 @@ sf_create <- function(sizes, stagenames = NA, repstatus = 1, obsstatus = 1, prop
 
 #' Rewrite Stageframe To Reflect IPM Stages
 #' 
-#' \code{.ipmerator()} searches through the supplied stageframe and rearranges the
-#' information if an IPM is desired. This allows the original input in the
-#' stageframe to be developed easily in shorthand, which this function then parses
-#' into a long format for analysis.
+#' \code{.ipmerator()} searches through the supplied stageframe and rearranges
+#' the information if an IPM is desired. This allows the original input in the
+#' stageframe to be developed easily in shorthand, which this function then
+#' parses into a long format for analysis.
 #' 
 #' @param ipmdata Stageframe rows corresponding to the IPM sections only.
 #' @param maindata The full stageframe.
@@ -325,7 +327,8 @@ sf_create <- function(sizes, stagenames = NA, repstatus = 1, obsstatus = 1, prop
 #' 
 #' @keywords internal
 #' @noRd
-.ipmerator <- function(ipmdata, maindata, no_age, notin, currentbins, roundsize) {
+.ipmerator <- function(ipmdata, maindata, no_age, notin, currentbins,
+  roundsize) {
   
   isx <- c(which(ipmdata$size == min(ipmdata$size)), which(ipmdata$size == max(ipmdata$size)))
   loipmborder <- isx[1]
@@ -370,7 +373,7 @@ sf_create <- function(sizes, stagenames = NA, repstatus = 1, obsstatus = 1, prop
   })
   ipmbinhalfwidth <- ipmhalftest
   
-  newstuff <- cbind.data.frame(stagenames = extrastagenames, size = extrasizes, 
+  newstuff <- cbind.data.frame(stage = extrastagenames, size = extrasizes, 
                                repstatus = rep(ipmdata$repstatus[loipmborder], length.out = currentbins),
                                obsstatus = rep(ipmdata$obsstatus[loipmborder], length.out = currentbins), 
                                propstatus = rep(ipmdata$propstatus[loipmborder], length.out = currentbins), 
@@ -391,15 +394,16 @@ sf_create <- function(sizes, stagenames = NA, repstatus = 1, obsstatus = 1, prop
 
 #' Standardize Stageframe Input For Analysis
 #' 
-#' \code{.sfreassess()} takes a stageframe as input, and uses information supplied 
-#' there and through the reproduction and overwrite matrices to rearrange this
-#' into a format usable by the matrix creation functions, \code{\link{flefko3}()}, \code{\link{flefko2}()},
-#' \code{\link{rlefko3}()}, and \code{\link{rlefko2}()}.
+#' \code{.sfreassess()} takes a stageframe as input, and uses information
+#' supplied there and through the reproduction and overwrite matrices to
+#' rearrange this into a format usable by the matrix creation functions,
+#' \code{\link{flefko3}()}, \code{\link{flefko2}()}, \code{\link{rlefko3}()},
+#' and \code{\link{rlefko2}()}.
 #' 
 #' @param stageframe The original stageframe.
 #' @param repmatrix The original reproduction matrix.
-#' @param overwrite The original overwrite table, as supplied by the \code{\link{overwrite}()}
-#' function.
+#' @param overwrite The original overwrite table, as supplied by the
+#' \code{\link{overwrite}()} function.
 #' 
 #' @return This function returns a list with a modified stageframe usable in MPM
 #' construction, and an associated reproduction matrix.
@@ -650,33 +654,32 @@ sf_create <- function(sizes, stagenames = NA, repstatus = 1, obsstatus = 1, prop
     repmatrix.r <- repmatrix
   }
   
+  entry_stages <- rowSums(repmatrix.r)
+  entry_stages[which(entry_stages > 0)] <- 1
+  
   stageframe.reassessed <- cbind.data.frame(stage_id = as.numeric(c(1:length(orig.stage.vec.r))), 
-                                            stage = as.character(orig.stage.vec.r), 
-                                            original_size = as.numeric(orig.size.vec.r), 
-                                            bin_size_ctr = as.numeric(size.ctr.vec.r), 
-                                            bin_size_min = as.numeric(size.min.vec.r), 
-                                            bin_size_max = as.numeric(size.max.vec.r), 
-                                            repstatus = as.numeric(rep.vec.r), 
-                                            obsstatus = as.numeric(obs.vec.r), 
-                                            propstatus = as.numeric(prop.vec.r), 
-                                            immstatus = as.numeric(imm.vec.r), 
-                                            matstatus = as.numeric(mat.vec.r), 
-                                            indataset = as.numeric(ind.vec.r), 
-                                            bin_size_width = as.numeric(size.width.vec.r), 
-                                            bin_raw_halfwidth = as.numeric(bin.vec.r),
-                                            stringsAsFactors = FALSE)
+    stage = as.character(orig.stage.vec.r), original_size = as.numeric(orig.size.vec.r),
+    bin_size_ctr = as.numeric(size.ctr.vec.r), bin_size_min = as.numeric(size.min.vec.r),
+    bin_size_max = as.numeric(size.max.vec.r), repstatus = as.numeric(rep.vec.r),
+    obsstatus = as.numeric(obs.vec.r), propstatus = as.numeric(prop.vec.r),
+    immstatus = as.numeric(imm.vec.r), matstatus = as.numeric(mat.vec.r),
+    entrystage = as.numeric(entry_stages), indataset = as.numeric(ind.vec.r),
+    bin_size_width = as.numeric(size.width.vec.r),
+    bin_raw_halfwidth = as.numeric(bin.vec.r), stringsAsFactors = FALSE)
+  
   stageframe.reassessed$alive <- 1
   
-  stageframe.reassessed <- rbind.data.frame(stageframe.reassessed, c((length(orig.stage.vec.r) + 1), "Dead", 0, 
-                                                                     0, 0, 0, 0, 1, 0, 0, 1, 1, 0, 0, 0),
-                                            stringsAsFactors = FALSE)
+  stageframe.reassessed <- rbind.data.frame(stageframe.reassessed, 
+    c((length(orig.stage.vec.r) + 1), "Dead", 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 1,
+      0, 0, 0), stringsAsFactors = FALSE)
   
   if (age) {
-    stageframe.reassessed <- cbind.data.frame(stageframe.reassessed, min_age = c(as.numeric(minage.vec.r), 0),
-                                              max_age = c(as.numeric(maxage.vec.r), 0), stringsAsFactors = FALSE)
+    stageframe.reassessed <- cbind.data.frame(stageframe.reassessed, 
+      min_age = c(as.numeric(minage.vec.r), 0), 
+      max_age = c(as.numeric(maxage.vec.r), 0), stringsAsFactors = FALSE)
   } else {
-    stageframe.reassessed <- cbind.data.frame(stageframe.reassessed, min_age = NA,
-                                              max_age = NA, stringsAsFactors = FALSE)
+    stageframe.reassessed <- cbind.data.frame(stageframe.reassessed, 
+      min_age = NA, max_age = NA, stringsAsFactors = FALSE)
   }
   
   com.vec.r <- c(com.vec.r, "Dead")
@@ -722,25 +725,26 @@ sf_create <- function(sizes, stagenames = NA, repstatus = 1, obsstatus = 1, prop
 
 #' Create an Overwrite Table for MPM Development
 #' 
-#' \code{overwrite()} returns a data frame describing which particular transitions
-#' within an ahistorical or historical projection matrix to overwrite with either
-#' given rates and probabilities, or other estimated transitions.
+#' \code{overwrite()} returns a data frame describing which particular
+#' transitions within an ahistorical or historical projection matrix to
+#' overwrite with either given rates and probabilities, or other estimated
+#' transitions.
 #'
-#' @param stage3 The name of the stage in time \emph{t}+1 in the transition to be 
-#' replaced.
+#' @param stage3 The name of the stage in time \emph{t}+1 in the transition to
+#' be replaced.
 #' @param stage2 The name of the stage in time \emph{t} in the transition to be 
 #' replaced.
-#' @param stage1 The name of the stage in time \emph{t}-1 in the transition to be
-#' replaced. Only needed if a historical matrix is to be produced. Use \code{rep} if
-#' all reproductive stages are to be used, and leave empty or use \code{all} if all
-#' stages in stageframe are to be used.
-#' @param eststage3 The name of the stage to replace \code{stage3}. Only needed if a
-#' transition will be replaced by another estimated transition.
-#' @param eststage2 The name of the stage to replace \code{stage2}. Only needed if a
-#' transition will be replaced by another estimated transition.
-#' @param eststage1 The name of the stage to replace \code{stage1}. Only needed if a
-#' transition will be replaced by another estimated transition, and the matrix to
-#' be estimated is historical.
+#' @param stage1 The name of the stage in time \emph{t}-1 in the transition to
+#' be replaced. Only needed if a historical matrix is to be produced. Use
+#' \code{rep} if all reproductive stages are to be used, and leave empty or use
+#' \code{all} if all stages in stageframe are to be used.
+#' @param eststage3 The name of the stage to replace \code{stage3}. Only needed
+#' if a transition will be replaced by another estimated transition.
+#' @param eststage2 The name of the stage to replace \code{stage2}. Only needed
+#' if a transition will be replaced by another estimated transition.
+#' @param eststage1 The name of the stage to replace \code{stage1}. Only needed
+#' if a transition will be replaced by another estimated transition, and the
+#' matrix to be estimated is historical.
 #' @param givenrate A fixed rate or probability to replace for the transition
 #' described by \code{stage3}, \code{stage2}, and \code{stage1}.
 #' @param type A vector denoting the kind of transition that will be replaced.
@@ -748,54 +752,57 @@ sf_create <- function(sizes, stagenames = NA, repstatus = 1, obsstatus = 1, prop
 #' Defaults to 1, for survival transition.
 #'
 #' @return A data frame that puts the above vectors together and can be used as
-#' input in \code{\link{flefko3}}, \code{\link{flefko2}}, \code{\link{rlefko3}}, and \code{\link{rlefko2}}.
+#' input in \code{\link{flefko3}}, \code{\link{flefko2}}, \code{\link{rlefko3}},
+#' and \code{\link{rlefko2}}.
 #' 
 #' Variables in this data frame include the following:
 #' \item{stage3}{Stage at time \emph{t}+1 in the transition to be replaced.}
 #' \item{stage2}{Stage at time \emph{t} in the transition to be replaced.}
 #' \item{stage1}{Stage at time \emph{t}-1 in the transition to be replaced.}
-#' \item{eststage3}{Stage at time \emph{t}+1 in the transition to replace the transition
-#' designated by \code{stage3}, \code{stage2}, and \code{stage1}.}
-#' \item{eststage2}{Stage at time \emph{t} in the transition to replace the transition
-#' designated by \code{stage3}, \code{stage2}, and \code{stage1}.}
-#' \item{eststage1}{Stage at time \emph{t}-1 in the transition to replace the transition
-#' designated by \code{stage3}, \code{stage2}, and \code{stage1}.}
+#' \item{eststage3}{Stage at time \emph{t}+1 in the transition to replace the
+#' transition designated by \code{stage3}, \code{stage2}, and \code{stage1}.}
+#' \item{eststage2}{Stage at time \emph{t} in the transition to replace the
+#' transition designated by \code{stage3}, \code{stage2}, and \code{stage1}.}
+#' \item{eststage1}{Stage at time \emph{t}-1 in the transition to replace the
+#' transition designated by \code{stage3}, \code{stage2}, and \code{stage1}.}
 #' \item{givenrate}{A constant to be used as the value of the transition.}
 #' \item{convtype}{Designates whether the transition is a survival-transition
 #' probability (1) or a fecundity rate (2).}
 #' 
 #' @examples
 #' cypover2r <- overwrite(stage3 = c("SD", "P1", "P2", "P3", "SL", "SL", "D", 
-#'                        "XSm", "Sm"), stage2 = c("SD", "SD", "P1", "P2", "P3", 
-#'                        "SL", "SL", "SL", "SL"), eststage3 = c(NA, NA, NA, NA, 
-#'                        NA, NA, "D", "XSm", "Sm"), eststage2 = c(NA, NA, NA, NA, 
-#'                        NA, NA, "XSm", "XSm", "XSm"), givenrate = c(0.1, 0.2, 
-#'                        0.2, 0.2, 0.25, 0.4, NA, NA, NA), type = c("S", "S", "S",
-#'                        "S", "S", "S", "S", "S", "S"))
+#'     "XSm", "Sm"),
+#'   stage2 = c("SD", "SD", "P1", "P2", "P3", "SL", "SL", "SL", "SL"),
+#'   eststage3 = c(NA, NA, NA, NA, NA, NA, "D", "XSm", "Sm"),
+#'   eststage2 = c(NA, NA, NA, NA, NA, NA, "XSm", "XSm", "XSm"),
+#'   givenrate = c(0.1, 0.2, 0.2, 0.2, 0.25, 0.4, NA, NA, NA),
+#'   type = c("S", "S", "S","S", "S", "S", "S", "S", "S"))
 #' 
 #' cypover2r
 #' 
 #' cypover3r <- overwrite(stage3 = c("SD", "SD", "P1", "P1", "P2", "P3", "SL", 
-#'                        "SL", "SL", "D", "XSm", "Sm", "D", "XSm", "Sm"), 
-#'                        stage2 = c("SD", "SD", "SD", "SD", "P1", "P2", "P3", 
-#'                        "SL", "SL", "SL", "SL", "SL", "SL", "SL", "SL"),
-#'                        stage1 = c("SD", "rep", "SD", "rep", "SD", "P1", "P2", 
-#'                        "P3", "SL", "P3", "P3", "P3", "SL", "SL", "SL"),
-#'                        eststage3 = c(NA, NA, NA, NA, NA, NA, NA, NA, NA, "D", 
-#'                        "XSm", "Sm", "D", "XSm", "Sm"), eststage2 = c(NA, NA, NA, 
-#'                        NA, NA, NA, NA, NA, NA, "XSm", "XSm", "XSm", "XSm", "XSm",
-#'                        "XSm"), eststage1 = c(NA, NA, NA, NA, NA, NA, NA, NA, NA,
-#'                        "XSm", "XSm", "XSm", "XSm", "XSm", "XSm"), 
-#'                        givenrate = c(0.1, 0.1, 0.2, 0.2, 0.2, 0.2, 0.25, 0.4,
-#'                        0.4, NA, NA, NA, NA, NA, NA), type = c("S", "S", "S", 
-#'                        "S", "S", "S", "S", "S", "S", "S", "S", "S", "S", "S", 
-#'                        "S"))
+#'     "SL", "SL", "D", "XSm", "Sm", "D", "XSm", "Sm"),
+#'   stage2 = c("SD", "SD", "SD", "SD", "P1", "P2", "P3", "SL", "SL", "SL",
+#'     "SL", "SL", "SL", "SL", "SL"),
+#'   stage1 = c("SD", "rep", "SD", "rep", "SD", "P1", "P2", "P3", "SL", "P3",
+#'     "P3", "P3", "SL", "SL", "SL"),
+#'   eststage3 = c(NA, NA, NA, NA, NA, NA, NA, NA, NA, "D", "XSm", "Sm", "D",
+#'     "XSm", "Sm"),
+#'   eststage2 = c(NA, NA, NA, NA, NA, NA, NA, NA, NA, "XSm", "XSm", "XSm",
+#'     "XSm", "XSm", "XSm"),
+#'   eststage1 = c(NA, NA, NA, NA, NA, NA, NA, NA, NA, "XSm", "XSm", "XSm",
+#'     "XSm", "XSm", "XSm"),
+#'   givenrate = c(0.1, 0.1, 0.2, 0.2, 0.2, 0.2, 0.25, 0.4, 0.4, NA, NA, NA, NA,
+#'     NA, NA),
+#'   type = c("S", "S", "S", "S", "S", "S", "S", "S", "S", "S", "S", "S", "S",
+#'     "S", "S"))
 #' 
 #' cypover3r
 #' 
 #' @export
-overwrite <- function(stage3, stage2, stage1 = NA, eststage3 = NA, eststage2 = NA, 
-                      eststage1 = NA, givenrate = NA, type = NA) {
+overwrite <- function(stage3, stage2, stage1 = NA, eststage3 = NA, 
+  eststage2 = NA, eststage1 = NA, givenrate = NA, type = NA) {
+  
   if (length(stage3) != length(stage2)) {
     stop("All transitions to overwrite require information at least for stage2 and stage3. These inputs must also be of equal length.",
          .call = FALSE)
@@ -849,16 +856,19 @@ overwrite <- function(stage3, stage2, stage1 = NA, eststage3 = NA, eststage2 = N
 
 #' Check and Reorganize Overwrite Table Into Usable Format
 #' 
-#' \code{.overwrite_reassess()} takes an overwrite table as supplied by the \code{\link{overwrite}()}
-#' function, and checks and rearranges it to make it usable by the MPM creation
-#' functions \code{\link{flefko3}()}, \code{\link{flefko2}()}, \code{\link{rlefko3}()}, and \code{\link{rlefko2}()}.
+#' \code{.overwrite_reassess()} takes an overwrite table as supplied by the
+#' \code{\link{overwrite}()} function, and checks and rearranges it to make it
+#' usable by the MPM creation functions \code{\link{flefko3}()},
+#' \code{\link{flefko2}()}, \code{\link{rlefko3}()}, and \code{\link{rlefko2}()}.
 #' 
-#' @param overwritetable The original overwrite table created by the \code{\link{overwrite}()}
-#' function,
-#' @param stageframe The correct stageframe, already modified by \code{\link{.sf_reassess}()}.
-#' @param historical Logical value denoting whether matrix to create is historical.
+#' @param overwritetable The original overwrite table created by the
+#' \code{\link{overwrite}()} function.
+#' @param stageframe The correct stageframe, already modified by
+#' \code{\link{.sf_reassess}()}.
+#' @param historical Logical value denoting whether matrix to create is
+#' historical.
 #' 
-#' @return A corrected overwrite table, usable in matrix creation.
+#' @return A corrected overwrite table, usable in MPM creation.
 #' 
 #' @keywords internal
 #' @noRd
@@ -981,54 +991,56 @@ overwrite <- function(stage3, stage2, stage1 = NA, eststage3 = NA, eststage2 = N
 
 #' Test for overdispersion and zero inflation in size and fecundity
 #' 
-#' Function \code{sf_distrib} takes a historically formatted vertical data as input
-#' and tests whether size and fecundity data are dispersed according to a Poisson
-#' distribution (where mean = variance), and whether the number of 0s exceeds
-#' expectations.
+#' Function \code{sf_distrib} takes a historically formatted vertical data as
+#' input and tests whether size and fecundity data are dispersed according to a
+#' Poisson distribution (where mean = variance), and whether the number of 0s
+#' exceeds expectations.
 #'
 #' @param data A historical vertical data file, which is a data frame of class
 #' \code{hfvdata}.
 #' @param size The name or column number of the variable corresponding to size.
-#' @param fec The name or column number of the variable corresponding to fecundity.
-#' Note that the name of the variable should correspond to the proper time, either
-#' time *t* or time *t*-1.
+#' @param fec The name or column number of the variable corresponding to
+#' fecundity. The name of the variable should correspond to the proper time,
+#' either time *t* or time *t*-1.
 #' @param repst The name or column number of the variable corresponding to
 #' reproductive status in time *t*. Required if fecundity distribution will be
 #' tested.
 #'
-#' @return Produces text describing the degree and significance of overdispersion
-#' and zero inflation. The tests are chi-squared score tests based on the
-#' expectations of mean = variance, and 0s as abundant as predicted by the
-#' value of lambda estimated from the dataset. See van der Broek (1995) for more
-#' details.
+#' @return Produces text describing the degree and significance of
+#' overdispersion and zero inflation. The tests are chi-squared score tests
+#' based on the expectations of mean = variance, and 0s as abundant as predicted
+#' by the value of lambda estimated from the dataset. See van der Broek (1995)
+#' for more details.
 #' 
 #' @examples
 #' data(lathyrus)
 #' 
-#' sizevector <- c(0, 4.6, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 1, 2, 3, 4, 5, 6, 7, 8, 9)
-#' stagevector <- c("Sd", "Sdl", "Dorm", "Sz1nr", "Sz2nr", "Sz3nr", "Sz4nr", "Sz5nr",
-#'                  "Sz6nr", "Sz7nr", "Sz8nr", "Sz9nr", "Sz1r", "Sz2r", "Sz3r", "Sz4r",
-#'                  "Sz5r", "Sz6r", "Sz7r", "Sz8r", "Sz9r")
+#' sizevector <- c(0, 4.6, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 1, 2, 3, 4, 5, 6, 7, 8,
+#'   9)
+#' stagevector <- c("Sd", "Sdl", "Dorm", "Sz1nr", "Sz2nr", "Sz3nr", "Sz4nr",
+#'   "Sz5nr", "Sz6nr", "Sz7nr", "Sz8nr", "Sz9nr", "Sz1r", "Sz2r", "Sz3r",
+#'   "Sz4r", "Sz5r", "Sz6r", "Sz7r", "Sz8r", "Sz9r")
 #' repvector <- c(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1)
 #' obsvector <- c(0, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1)
 #' matvector <- c(0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1)
 #' immvector <- c(1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)
-#' propvector <- c(1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)
+#' propvector <- c(1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+#'   0)
 #' indataset <- c(0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1)
-#' binvec <- c(0, 4.6, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 
-#'             0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5)
+#' binvec <- c(0, 4.6, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5,
+#'   0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5)
 #' 
-#' lathframeln <- sf_create(sizes = sizevector, stagenames = stagevector, repstatus = repvector, 
-#'                        obsstatus = obsvector, matstatus = matvector, immstatus = immvector, 
-#'                        indataset = indataset, binhalfwidth = binvec, propstatus = propvector)
+#' lathframeln <- sf_create(sizes = sizevector, stagenames = stagevector,
+#'   repstatus = repvector, obsstatus = obsvector, matstatus = matvector,
+#'   immstatus = immvector, indataset = indataset, binhalfwidth = binvec,
+#'   propstatus = propvector)
 #' 
-#' lathvertln <- verticalize3(lathyrus, noyears = 4, firstyear = 1988, patchidcol = "SUBPLOT",
-#'                            individcol = "GENET", blocksize = 9, juvcol = "Seedling1988",
-#'                            sizeacol = "lnVol88", repstracol = "Intactseed88",
-#'                            fecacol = "Intactseed88", deadacol = "Dead1988",
-#'                            nonobsacol = "Dormant1988", stageassign = lathframeln,
-#'                            stagesize = "sizea", censorcol = "Missing1988",
-#'                            censorkeep = NA, NAas0 = TRUE, censor = TRUE)
+#' lathvertln <- verticalize3(lathyrus, noyears = 4, firstyear = 1988,
+#'   patchidcol = "SUBPLOT", individcol = "GENET", blocksize = 9,
+#'   juvcol = "Seedling1988", sizeacol = "lnVol88", repstracol = "Intactseed88",
+#'   fecacol = "Intactseed88", deadacol = "Dead1988",
+#'   nonobsacol = "Dormant1988", stageassign = lathframeln, stagesize = "sizea",
+#'   censorcol = "Missing1988", censorkeep = NA, NAas0 = TRUE, censor = TRUE)
 #' 
 #' lathvertln$feca2 <- round(lathvertln$feca2)
 #' lathvertln$feca1 <- round(lathvertln$feca1)
@@ -1038,6 +1050,7 @@ overwrite <- function(stage3, stage2, stage1 = NA, eststage3 = NA, eststage2 = N
 #' 
 #' @export
 sf_distrib <- function(data, size = NA, fec = NA, repst = NA) {
+  
   if (!any(class(data) == "hfvdata")) {
     stop("Function sf_distrib requires an object of class hfvdata as input.", call. = FALSE)
   }

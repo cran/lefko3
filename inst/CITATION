@@ -1,0 +1,35 @@
+citHeader("To cite the 'lefko3' package in publications use:")
+
+year <- sub(".*(2[[:digit:]]{3})-.*", "\\1", meta$Date, perl = TRUE)
+vers <- paste("R package version", meta$Version)
+
+citEntry(entry="Manual",
+         title = "lefko3: Historical and Ahistorical Population Projection Matrix Analysis",
+         author = personList(as.person("Richard P. Shefferson"),
+                             as.person("Shun Kurokawa"),
+                             as.person("Johan Ehrlen")),
+         year = year,
+         note = vers,
+         
+         textVersion =
+           paste("Richard P. Shefferson, Shun Kurokawa, and Johan Ehrlen (",
+                 year,
+                 "). lefko3: Historical and Ahistorical Population Projection Matrix Analysis. ",
+                 vers, ".", sep=""))
+
+citEntry(entry="Article",
+         title = "lefko3: analyzing individual history through size-classified matrix population models",
+         author = personList(as.person("R.P. Shefferson"),
+                             as.person("S. Kurokawa"),
+                             as.person("J. Ehrlen")),
+         journal = "Methods in Ecology and Evolution",
+         address   = "Cambridge",
+         year     = "In press",
+         doi     = "10.1111/2041-210X.13526",
+         url      = "https://doi.org/10.1111/2041-210X.13526",
+         
+         textVersion =
+           paste("Shefferson, R.P., Kurokawa, S., and Ehrlen, J. (In press)",
+                 "lefko3: analyzing individual history through size-classified matrix population models.",
+                 "Methods in Ecology and Evolution.")
+)

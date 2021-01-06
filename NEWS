@@ -1,0 +1,127 @@
+LEFKO3 NEWS
+
+CHANGES IN VERSION 3.2.0 (2021-01-03)
+-------------------------------------
+  NEW FEATURES
+    1. Function cond_hmpm() added to create conditional hMPMs
+    2. Function slambda3() added to estimate the log stochastic growth rate
+    3. Function summary.lefkoElas() added to summarize elasticities by kind of
+       transition
+    4. Added citation() data for package
+    5. Added NEWS section, using package lme4 NEWS as a template
+    
+  USER-VISIBLE CHANGES
+    1. Corrected inconsistent stage name variable in stage frame creation and
+       manipulation functions
+    2. Updated and reorganized vignettes
+    3. Modified stageframes exported by matrix creation functions now include
+       entry status variable
+    4. Objects of class lefkoElas now include the original A, U, and F matrices
+    5. Elasticity and sensitivity outputs for lefkoMat objects now include the
+       original A, U, and F matrices used as input
+  
+  BUG FIXES
+    1. Matrix estimation function now create loy tables treating pop and patch
+       as strings by default, eliminating possible conversion errors
+    2. Corrected incorrect overwrite() call in lathyrus example used in function
+       flefko3() and all population dynamics analysis functions
+
+
+CHANGES IN VERSION 3.1.2 (2020-11-16)
+-------------------------------------
+  BUG FIXES
+    1. Corrected auto-conversion of characters to factors occurring on R 3.6.3,
+       which affected the creation and interpretation of the $labels element in
+       matrix estimation
+
+
+CHANGES IN VERSION 3.1.1 (2020-11-13)
+-------------------------------------
+  BUG FIXES
+    1. Fixed bug in lmean() function resulting from an implicit cast and
+       affecting users operating lefko3 on Solaris systems
+
+
+CHANGES IN VERSION 3.1.0 (2020-11-08)
+-------------------------------------
+  NEW FEATURES
+    1. Added function sfdistrib() to test whether mean = var and the level of
+       zero-inflation in count variable data to be used for size and fecundity
+    2. Added zero-inflated Poisson and negative binomial distributions
+       as choices for the underlying distribution of size and fecundity
+    3. Added individual and environmental covariates to function-based
+       MPM estimation functions
+
+  USER-VISIBLE CHANGES
+    1. Corrected, updated, and reorganized vignettes
+
+  BUG FIXES
+    1. Corrected parameterization of negative binomial distribution in
+        function modelsarch()
+
+
+
+CHANGES IN VERSION 3.0.0 (2020-10-22)
+-------------------------------------
+  NEW FEATURES
+    1. Added function aflefko2() function to estimate age x stage MPMs
+    2. Added function sensitivity3() to estimate sensitivity matrices of
+       historical and ahistorical MPMs
+    3. Added Function elasticity3() to estimate elasticity matrices of
+       historical and ahistorical MPMs
+
+  USER-VISIBLE CHANGES
+    1. Increased consistency of output variable names across functions
+    2. Corrected, updated, and reorganized vignettes
+    3. Eliminated faulty parameterization of matrix geometric mean in lmean()
+       function
+
+  \subsection{BUG FIXES}{
+    1. Corrected core kernel underlying lmean(), and redeveloped in C++ to yield
+       faster results
+    2. Corrected parameterization of negative binomial distribution
+    3. Function summary.lefkoMat() now shows which vital rate models were not
+       estimated
+
+
+
+CHANGES IN VERSION 2.4.2 (2020-09-12)
+-------------------------------------
+  USER-VISIBLE CHANGES
+    1. All matrix estimators sped up through lapply()-based calls to C++ kernels
+    2. Function lmean() now keeps the original names of populations and patches
+    3. Corrected incorrect reference links in vignettes
+
+  BUG FIXES
+    1. Fixed memory leak in kernel behind function historicalize3()
+    2. Fixed faulty indexing affecting all matrix estimators under certain
+       conditions
+    3. Bugs in Cypripedium candidum vignettes and examples caused by incomplete
+       overwrite tables fixed
+
+
+CHANGES IN VERSION 2.3.0 (2020-08-18)
+-------------------------------------
+  USER-VISIBLE CHANGES
+    1. Major speed up to flefko2() and flefko3() through the
+       incorporation of C++ core kernels
+
+  BUG FIXES
+    1. Bug fixed that could lead to the erroneous incorporation of mature
+       stages as immature in flefko3() under certain rare circumstances
+    2. Bug fixed that could fit proxy rates into the wrong elements in all
+       matrix construction under certain rare circumstances
+    3. Bug fixed that could, under some circumstances, lead to individuals
+       being treated as dead when not observed for a period of more than a year
+
+
+CHANGES IN VERSION 2.2.2 (2020-07-28)
+-------------------------------------
+  USER-VISIBLE CHANGES
+    1. Revised vignettes
+    2. Improved default handling of reproductive ratio and fecundity ratio
+
+  BUG FIXES
+    1. Fixed calculation of observed lifespan in functions verticalize3() 
+       and historicalize3()
+

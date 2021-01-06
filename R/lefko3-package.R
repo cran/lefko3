@@ -1,26 +1,29 @@
 #' @title Historical and Ahistorical Population Projection Matrix Analysis
 #' 
-#' @description This package creates population projection matrices for use in population 
-#' ecological analyses. The particular specialty of the package is the construction
-#' of historical matrices, which are 2-dimensional matrices comprising 3 time
-#' intervals of demographic information. The package is robust and can produce 
-#' function-based and raw matrices for both standard ahistorical (i.e. 2 time 
-#' interval) and historical analyses.
+#' @description This package creates population matrix projection models (MPMs)
+#' for use in population ecological analyses. Its specialty is the estimation
+#' of historical MPMs, which are 2-dimensional matrices comprising 3 time steps
+#' of demographic information. The package constructs both function-based and
+#' raw MPMs for both standard ahistorical (i.e. 2 time interval) and historical
+#' analyses.
 #' 
-#' @details The lefko package provides five categories of functions:
+#' @details The lefko3 package provides six categories of functions:
 #' 1. Data transformation and handling functions
 #' 2. Functions determining population characteristics from vertical data
 #' 3. Model building and selection
 #' 4. Matrix / integral projection model creation functions
 #' 5. Population dynamics analysis functions
+#' 6. Functions describing, summarizing, or visualizing MPMs and derived
+#' structures
 #' 
-#' @details It also includes example datasets complete with sample code.
+#' @details lefko3 also includes example datasets complete with sample code.
 #' 
 #' @docType package
 #' @author Richard P. Shefferson <cdorm@g.ecc.u-tokyo.ac.jp>
 #' @author Johan Ehrlén
-#' @references Shefferson, R.P., J. Ehrlen, and S. Kurokawa. \emph{In press}. \emph{lefko3}: analyzing 
-#' individual history through size-classified matrix population models. \emph{Methods in Ecology and Evolution}.
+#' @references Shefferson, R.P., J. Ehrlen, and S. Kurokawa. \emph{In press}. 
+#' \emph{lefko3}: analyzing individual history through size-classified matrix 
+#' population models. \emph{Methods in Ecology and Evolution}.
 #' @import Rcpp
 #' @importFrom Rcpp evalCpp
 #' @importFrom stats na.action na.fail na.omit lm glm getCall xtabs sd rnorm setNames

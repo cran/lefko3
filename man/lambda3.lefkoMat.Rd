@@ -2,7 +2,8 @@
 % Please edit documentation in R/popdyn.R
 \name{lambda3.lefkoMat}
 \alias{lambda3.lefkoMat}
-\title{Estimate Deterministic Population Growth Rates of Matrices in a lefkoMat Object}
+\title{Estimate Deterministic Population Growth Rates of Matrices in a lefkoMat
+Object}
 \usage{
 \method{lambda3}{lefkoMat}(mats)
 }
@@ -10,20 +11,21 @@
 \item{mats}{An object of class \code{lefkoMat}.}
 }
 \value{
-This function returns the dominant eigenvalue of each \code{$A} matrix in
-the lefkoMat object input. For square matrices with fewer than 400 rows, this is
-given as the largest real part of all eigenvalues estimated via the \code{eig_gen}()
-function in the C++ Armadillo library. For larger matrices, the function assumes
-that matrices are sparse and uses \code{eigs_gen}() instead. The output includes
-a data frame showing the population, patch, and lambda estimate for each \code{$A}
-matrix within the object. Row names correspond to the number of the matrix
-within the \code{$A} element of the \code{lefkoMat} object.
+This function returns the dominant eigenvalue of each \code{$A}
+matrix in \code{mats}. For square matrices with fewer than 400 rows, this is
+given as the largest real part of all eigenvalues estimated via the
+\code{eig_gen}() function in the C++ Armadillo library. For larger matrices,
+the function assumes that matrices are sparse and uses \code{eigs_gen}()
+instead (the function handles all conversions automatically). The output
+includes a data frame showing the population, patch, and lambda estimate for
+each \code{$A} matrix. Row names correspond to the order of the matrix within
+the \code{$A} element of \code{mats}.
 }
 \description{
-\code{lambda3.lefkoMat()} returns the dominant eigenvalues of projection
-matrices supplied within \code{lefkoMat} objects. This function can handle large 
-and sparse matrices, and so can be used with large historical matrices, IPMs,
-age x stage matrices, as well as smaller ahistorical matrices.
+\code{lambda3.lefkoMat()} returns the dominant eigenvalues of all projection
+matrices supplied within \code{lefkoMat} objects. This function can handle
+large and sparse matrices, and so can be used with large historical matrices,
+IPMs, age x stage matrices, as well as smaller ahistorical matrices.
 }
 \examples{
 data(lathyrus)
@@ -38,29 +40,30 @@ propvector <- c(1, 0, 0, 0, 0, 0, 0)
 indataset <- c(0, 1, 1, 1, 1, 1, 1)
 binvec <- c(0, 100, 11, 103, 3500, 3800, 0.5)
 
-lathframe <- sf_create(sizes = sizevector, stagenames = stagevector, repstatus = repvector, 
-                       obsstatus = obsvector, matstatus = matvector, immstatus = immvector, 
-                       indataset = indataset, binhalfwidth = binvec, propstatus = propvector)
+lathframe <- sf_create(sizes = sizevector, stagenames = stagevector,
+  repstatus = repvector, obsstatus = obsvector, matstatus = matvector,
+  immstatus = immvector, indataset = indataset, binhalfwidth = binvec,
+  propstatus = propvector)
 
-lathvert <- verticalize3(lathyrus, noyears = 4, firstyear = 1988, patchidcol = "SUBPLOT", 
-                         individcol = "GENET", blocksize = 9, juvcol = "Seedling1988", 
-                         sizeacol = "Volume88", repstracol = "FCODE88", 
-                         fecacol = "Intactseed88", deadacol = "Dead1988", 
-                         nonobsacol = "Dormant1988", stageassign = lathframe, 
-                         stagesize = "sizea", censorcol = "Missing1988", 
-                         censorkeep = NA, censor = TRUE)
+lathvert <- verticalize3(lathyrus, noyears = 4, firstyear = 1988,
+  patchidcol = "SUBPLOT", individcol = "GENET", blocksize = 9,
+  juvcol = "Seedling1988", sizeacol = "Volume88", repstracol = "FCODE88",
+  fecacol = "Intactseed88", deadacol = "Dead1988",
+  nonobsacol = "Dormant1988", stageassign = lathframe, stagesize = "sizea",
+  censorcol = "Missing1988", censorkeep = NA, censor = TRUE)
 
 lathrepm <- matrix(0, 7, 7)
 lathrepm[1, 6] <- 0.345
 lathrepm[2, 6] <- 0.054
 
-lathover3 <- overwrite(stage3 = c("Sd", "Sd", "Sdl"), stage2 = c("Sd", "Sd", "Sd"), 
-                       stage1 = c("Sd", "rep", "rep"), givenrate = c(0.345, 0.054))
+lathover3 <- overwrite(stage3 = c("Sd", "Sd", "Sdl"), 
+  stage2 = c("Sd", "Sd", "Sd"), stage1 = c("Sd", "rep", "rep"),
+  givenrate = c(0.345, 0.345, 0.054))
 
-ehrlen3 <- rlefko3(data = lathvert, stageframe = lathframe, year = c(1989, 1990), 
-                   stages = c("stage3", "stage2", "stage1"), repmatrix = lathrepm, 
-                   overwrite = lathover3, yearcol = "year2", 
-                   indivcol = "individ")
+ehrlen3 <- rlefko3(data = lathvert, stageframe = lathframe,
+  year = c(1989, 1990), stages = c("stage3", "stage2", "stage1"),
+  repmatrix = lathrepm, overwrite = lathover3, yearcol = "year2",
+  indivcol = "individ")
 
 ehrlen3mean <- lmean(ehrlen3)
 lambda3(ehrlen3mean)
