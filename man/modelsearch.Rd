@@ -2,7 +2,7 @@
 % Please edit documentation in R/modelselection.R
 \name{modelsearch}
 \alias{modelsearch}
-\title{Develop Best-fit Vital Rate Estimation Models For Matrix Development}
+\title{Develop Best-fit Vital Rate Estimation Models For MPM Development}
 \usage{
 modelsearch(
   data,
@@ -51,9 +51,10 @@ of state in time \emph{t}-1 in addition to state in time \emph{t}. Defaults
 to TRUE.}
 
 \item{approach}{The statistical approach to be taken for model building. The 
-default is \code{lme4}, which uses the mixed model approach utilized in 
-package \code{lme4}. Other options include \code{glm}, which uses \code{lm},
-\code{glm}, and related functions in base R.}
+default is \code{mixed}, which uses the mixed model approach utilized in 
+packages \code{lme4} and \code{glmmTMB}. Other options include \code{glm},
+which uses \code{lm}, \code{glm}, \code{glm.nb}, and related functions in
+packages \code{MASS}, \code{stats}, and \code{pscl}.}
 
 \item{suite}{This describes the global model for each vital rate estimation
 and has the following possible values: \code{full}, includes main effects and
@@ -223,7 +224,7 @@ technically not a model of reproduction probability for individuals that are
 immature, rather reproduction probability here is given for individuals that
 are mature in time \emph{t}+1 but immature in time \emph{t}. Defaults to 1.}
 \item{survival_table}{Full dredge model table of survival probability.}
-\item{observation_table}{Full dredge model table of observationprobability.}
+\item{observation_table}{Full dredge model table of observation probability.}
 \item{size_table}{Full dredge model table of size.}
 \item{repstatus_table}{Full dredge model table of reproduction probability.}
 \item{fecundity_table}{Full dredge model table of fecundity.}
@@ -234,11 +235,18 @@ probability.}
 \item{juv_size_table}{Full dredge model table of immature size.}
 \item{juv_reproduction_table}{Full dredge model table of immature
 reproduction probability.}
-\item{criterion}{Vharacter variable denoting the criterion used to determine
+\item{criterion}{Character variable denoting the criterion used to determine
 the best-fit model.}
 \item{qc}{Data frame with three variables: 1) Name of vital rate, 2) number
 of individuals used to model that vital rate, and 3) number of individual
 transitions used to model that vital rate.}
+}
+\description{
+Function \code{modelsearch()} returns both a best-fit model for each vital
+rate, and a model table showing all models tested. The final output can be
+used as input in other functions within this package.
+}
+\section{Notes}{
 
 The mechanics governing model building are fairly robust to errors and
 exceptions. The function attempts to build global models, and simplifies
@@ -259,7 +267,7 @@ is verbose, so that any errors and warnings developed during model building,
 model analysis, and model selection can be found and dealt with.
 Interpretations of errors during global model analysis may be found in
 documentation in for the functions and packages mentioned. Package
-\code{MuMIn} is used for model dredging (see \link[MuMIn]{dredge}), and
+\code{MuMIn} is used for model dredging (see \link[MuMIn]{dredge}()), and
 errors and warnings during dredging can be interpreted using the
 documentation for that package. Errors occurring during dredging lead to the
 adoption of the global model as the best-fit, and the user should view all
@@ -288,11 +296,7 @@ can be dealt with at the start of modeling by setting
 \code{historical = FALSE} for the ahistorical case, and 
 \code{historical = TRUE} for the historical case.
 }
-\description{
-\code{modelsearch()} returns both a best-fit model for each vital rate, and a
-model table showing all models tested. The final output can be used as input
-in other functions within this package.
-}
+
 \examples{
 \donttest{
 data(lathyrus)

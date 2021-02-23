@@ -1,4 +1,4 @@
-#' Create Historical Vertical Data Frames From Horizontal Data Frames
+#' Create Historical Vertical Data Frame From Horizontal Data Frame
 #'
 #' \code{verticalize3()} returns a vertically formatted demographic data frame 
 #' organized to create historical projection matrices, given a horizontally
@@ -90,6 +90,11 @@
 #' which size variable is chosen.
 #' @param censorkeep The value of the censor variable identifying data to be
 #' included in analysis. Defaults to 0, but may take any value including NA.
+#' Note that if NA is the value to keep, then this function will alter all NAs
+#' to 0 values, and all other values to 1, treating 0 as the value to keep.
+#' @param censorRepeat A logical value indicating whether the censor variable
+#' is a single column, or whether it repeats across time blocks. Defaults to
+#' TRUE.
 #' @param censor A logical variable determining whether the output data should 
 #' be censored using the variable defined in \code{censorcol}. Defaults to 
 #' FALSE.
@@ -109,6 +114,9 @@
 #' @param reduce A logical variable determining whether unused variables and 
 #' some invariant state variables should be removed from the output dataset.
 #' Defaults to TRUE.
+#' @param a2check A logical variable indicating whether to retain all data with
+#' living status at time \emph{t} equal to 0. Defaults to FALSE, and should be
+#' kept on FALSE except to inspect potential errors in the dataset.
 #' 
 #' @return If all inputs are properly formatted, then this function will output
 #' a historical vertical data frame (class \code{hfvdata}), meaning that the
@@ -117,7 +125,7 @@
 #' functions used in \code{lefko3}, and so can be used without further
 #' modification.
 #' 
-#' @return Variables in this data frame include the following:
+#' Variables in this data frame include the following:
 #' \item{rowid}{Unique identifier for the row of the data frame.}
 #' \item{popid}{Unique identifier for the population, if given.}
 #' \item{patchid}{Unique identifier for patch within population, if given.}
@@ -139,7 +147,7 @@
 #' \item{sizec1,sizec2,sizec3}{Tertiary measurement in times \emph{t}-1, 
 #' \emph{t}, and \emph{t}+1, respectively.}
 #' \item{size1added,size2added,size3added}{Sum of primary, secondary, and 
-#' tertiary size measurements in timea \emph{t}-1, \emph{t}, and \emph{t}+1, 
+#' tertiary size measurements in times \emph{t}-1, \emph{t}, and \emph{t}+1, 
 #' respectively.}
 #' \item{repstra1,repstra2,repstra3}{Main numbers of reproductive structures in
 #' times \emph{t}-1, \emph{t}, and \emph{t}+1, respectively.}
@@ -171,6 +179,36 @@
 #'  \emph{t}, and \emph{t}+1, respectively.}
 #' \item{density}{Density of individuals per unit designated in \code{spacing}.
 #' Only given if spacing is not NA.}
+#' 
+#' @section Notes:
+#' In some datasets on species with unobserveable stages, observation status
+#' (\code{obsstatus}) might not be inferred properly if a single size variable
+#' is used that does not yield sizes greater than 0 in all cases in which
+#' individuals were observed. Such situations may arise, for example, in plants
+#' when leaf number is the dominant size variable used, but individuals
+#' occasionally occur with inflorescences but no leaves. In this instances,
+#' it helps to mark related variables as \code{sizeb} and \code{sizec}, because
+#' observation status will be interpreted in relation to all 3 size variables.
+#' Further analysis can then utilize only a single size variable, of the user's
+#' choosing. Similar issues can arise in reproductive status (\code{repstatus}).
+#' 
+#' Warnings that some individuals occur in state combinations that do not match
+#' any stages in the stageframe used to assign stages are common when first
+#' working with a dataset. Typically, these situations can be identified as
+#' \code{NoMatch} entries in \code{stage3}, although such entries may crop up in
+#' \code{stage1} and \code{stage2}, as well. In rare cases, these warnings will
+#' arise with no concurrent \code{NoMatch} entries, which indicates that the
+#' input dataset contained conflicting state data at once suggesting that the
+#' individual is in some stage but is also dead. The latter is removed if the
+#' conflict occurs in time \emph{t} or time \emph{t}-1, as only living entries
+#' are allowed in these times.
+#' 
+#' Care should be taken to avoid variables with negative values indicating size,
+#' fecundity, or reproductive or observation status. Negative values can be
+#' interpreted in different ways, typically reflecting estimation through other
+#' algorithms rather than actual measured data. Variables holding negative
+#' values can conflict with data management algorithms in ways that are
+#' difficult to predict.
 #' 
 #' @examples
 #' data(lathyrus)
@@ -206,13 +244,15 @@ verticalize3 <- function(data, noyears, firstyear, popidcol = 0, patchidcol = 0,
   fecbcol = 0, indcovacol = 0, indcovbcol = 0, indcovccol = 0, aliveacol = 0, 
   deadacol = 0, obsacol = 0, nonobsacol = 0, censorcol = 0, repstrrel = 1, 
   fecrel = 1, stagecol = 0, stageassign = NA, stagesize = NA, censorkeep = 0, 
-  censor = FALSE, spacing = NA, NAas0 = FALSE, NRasRep = FALSE, reduce = TRUE) {
+  censorRepeat = TRUE, censor = FALSE, spacing = NA, NAas0 = FALSE,
+  NRasRep = FALSE, reduce = TRUE, a2check = FALSE) {
   
   stassign <- rowid <- alive2 <- indataset <- censor1 <- censor2 <- censor3 <- censbool <- NULL
   
   popid <- NA
   patchid <- NA
   individ <- NA
+  RepasObs <- FALSE
   
   #This first section tests the input for valid entries
   if (is.character(popidcol)) {
@@ -393,10 +433,21 @@ verticalize3 <- function(data, noyears, firstyear, popidcol = 0, patchidcol = 0,
       stagesizecol <- 1
     }
     
+    repcheck1 <- intersect(which(stageassign$repstatus == 1), which(stageassign$size == 0))
+    repcheck <- intersect(repcheck1, which(stageassign$obsstatus == 1))
+    
+    if (length(repcheck) > 0) {
+      message("Stageframe indicates the presence of an observeable, reproductive stage with a size of 0.")
+      RepasObs <- TRUE
+    } else if (length(repcheck1) > 0) {
+      message("Stageframe indicates the presence of an unobserveable, reproductive stage with a size of 0.")
+    }
+    
   } else {
     stassign <- FALSE
     
-    stageassign <- as.data.frame(matrix(c(NA, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, NA), ncol = 16))
+    stageassign <- as.data.frame(matrix(c(NA, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, NA), ncol = 16),
+      stringsAsFactors = FALSE)
     names(stageassign) <- c("stage", "size", "repstatus", "obsstatus", "propstatus", "immstatus",
                             "matstatus", "indataset", "binhalfwidth_raw", "min_age", "max_age", "sizebin_min",
                             "sizebin_max", "sizebin_center", "sizebin_width", "comments")
@@ -432,31 +483,39 @@ verticalize3 <- function(data, noyears, firstyear, popidcol = 0, patchidcol = 0,
     censbool <- FALSE
   }
   
-  popdatalist.new <- pfj(data, stageassign, noyears, firstyear, (popidcol - 1), (patchidcol - 1), (individcol - 1), 
-                         blocksize, (xcol - 1), (ycol - 1), (juvcol - 1), (sizeacol - 1), (sizebcol - 1), 
-                         (sizeccol - 1), (repstracol - 1), (repstrbcol - 1), (fecacol - 1), (fecbcol - 1),
-                         (indcovacol - 1), (indcovbcol - 1), (indcovccol - 1), (aliveacol - 1), (deadacol - 1), 
-                         (obsacol - 1), (nonobsacol - 1), (censorcol - 1), (stagecol - 1), repstrrel, 
-                         fecrel, NAas0, NRasRep, stassign, stagesizecol, censbool)
+  popdatalist.new <- pfj(data, stageassign, noyears, firstyear, (popidcol - 1),
+    (patchidcol - 1), (individcol - 1), blocksize, (xcol - 1), (ycol - 1),
+    (juvcol - 1), (sizeacol - 1), (sizebcol - 1), (sizeccol - 1),
+    (repstracol - 1), (repstrbcol - 1), (fecacol - 1), (fecbcol - 1),
+    (indcovacol - 1), (indcovbcol - 1), (indcovccol - 1), (aliveacol - 1),
+    (deadacol - 1), (obsacol - 1), (nonobsacol - 1), (censorcol - 1),
+    (stagecol - 1), repstrrel, fecrel, NAas0, NRasRep, RepasObs, stassign,
+    stagesizecol, censorkeep, censbool, censorRepeat)
   
-  popdata <- do.call("cbind.data.frame", popdatalist.new)
+  popdata <- do.call("cbind.data.frame", c(popdatalist.new, stringsAsFactors = FALSE))
   
-  names(popdata) <- c("rowid", "popid", "patchid", "individ", "year2", "firstseen", "lastseen", "obsage", 
-                      "obslifespan", "xpos1", "ypos1", "sizea1", "sizeb1", "sizec1", "size1added", "repstra1",
-                      "repstrb1", "repstr1added", "feca1", "fecb1", "fec1added", "indcova1", "indcovb1", 
-                      "indcovc1", "censor1", "juvgiven1", "obsstatus1", "repstatus1", "fecstatus1", 
-                      "matstatus1", "alive1", "stage1", "stage1index", "xpos2", "ypos2", "sizea2", "sizeb2", 
-                      "sizec2", "size2added", "repstra2", "repstrb2", "repstr2added", "feca2", "fecb2", 
-                      "fec2added", "indcova2", "indcovb2", "indcovc2", "censor2", "juvgiven2", "obsstatus2", 
-                      "repstatus2", "fecstatus2", "matstatus2", "alive2", "stage2", "stage2index", 
-                      "xpos3", "ypos3", "sizea3", "sizeb3", "sizec3", "size3added", "repstra3", "repstrb3", 
-                      "repstr3added", "feca3", "fecb3", "fec3added", "indcova3", "indcovb3", "indcovc3", 
-                      "censor3", "juvgiven3", "obsstatus3", "repstatus3", "fecstatus3", "matstatus3", 
-                      "alive3", "stage3", "stage3index")
+  names(popdata) <- c("rowid", "popid", "patchid", "individ", "year2",
+    "firstseen", "lastseen", "obsage", "obslifespan", "xpos1", "ypos1",
+    "sizea1", "sizeb1", "sizec1", "size1added", "repstra1", "repstrb1",
+    "repstr1added", "feca1", "fecb1", "fec1added", "indcova1", "indcovb1",
+    "indcovc1", "censor1", "juvgiven1", "obsstatus1", "repstatus1", "fecstatus1",
+    "matstatus1", "alive1", "stage1", "stage1index", "xpos2", "ypos2", "sizea2",
+    "sizeb2", "sizec2", "size2added", "repstra2", "repstrb2", "repstr2added",
+    "feca2", "fecb2", "fec2added", "indcova2", "indcovb2", "indcovc2", "censor2",
+    "juvgiven2", "obsstatus2", "repstatus2", "fecstatus2", "matstatus2",
+    "alive2", "stage2", "stage2index", "xpos3", "ypos3", "sizea3", "sizeb3",
+    "sizec3", "size3added", "repstra3", "repstrb3", "repstr3added", "feca3",
+    "fecb3", "fec3added", "indcova3", "indcovb3", "indcovc3", "censor3",
+    "juvgiven3", "obsstatus3", "repstatus3", "fecstatus3", "matstatus3",
+    "alive3", "stage3", "stage3index")
   
   rownames(popdata) <- c(1:dim(popdata)[1])
   
-  popdatareal <- subset(popdata, subset = (alive2 == 1))
+  if (a2check) {    # This whole if-else statement was originally just the line stating: popdatareal <- subset(popdata, subset = (alive2 == 1))
+    popdatareal <- popdata
+  } else {
+    popdatareal <- subset(popdata, subset = (alive2 == 1))
+  }
   
   if (any(!is.na(popdatareal$popid))) {popdatareal$popid <- as.factor(popdatareal$popid)}
   
@@ -470,8 +529,7 @@ verticalize3 <- function(data, noyears, firstyear, popidcol = 0, patchidcol = 0,
   
   if (!is.na(spacing)) {
     popdatareal$density <- .density3(popdatareal, which(names(popdatareal) == "xpos2"),
-                                     which(names(popdatareal) == "ypos2"),
-                                     which(names(popdatareal) == "year2"), spacing)
+      which(names(popdatareal) == "ypos2"), which(names(popdatareal) == "year2"), spacing)
   }
   
   if (reduce) {
@@ -872,6 +930,8 @@ verticalize3 <- function(data, noyears, firstyear, popidcol = 0, patchidcol = 0,
 #' preference to condition in time *t* within the input dataset. Conflicts in
 #' condition in input datasets that have both times *t* and *t*+1 listed per row
 #' are resolved by using condition in time *t*.
+#' 
+#' Variables in this data frame include the following:
 #' \item{rowid}{Unique identifier for the row of the data frame.}
 #' \item{popid}{Unique identifier for the population, if given.}
 #' \item{patchid}{Unique identifier for patch within population, if given.}
@@ -893,7 +953,7 @@ verticalize3 <- function(data, noyears, firstyear, popidcol = 0, patchidcol = 0,
 #' \item{sizec1,sizec2,sizec3}{Tertiary measurement in times \emph{t}-1,
 #' \emph{t}, and \emph{t}+1, respectively.}
 #' \item{size1added,size2added,size3added}{Sum of primary, secondary, and
-#' tertiary size measurements in timea \emph{t}-1, \emph{t}, and \emph{t}+1,
+#' tertiary size measurements in times \emph{t}-1, \emph{t}, and \emph{t}+1,
 #' respectively.}
 #' \item{repstra1,repstra2,repstra3}{Main numbers of reproductive structures in
 #' times \emph{t}-1, \emph{t}, and \emph{t}+1, respectively.}
@@ -925,6 +985,36 @@ verticalize3 <- function(data, noyears, firstyear, popidcol = 0, patchidcol = 0,
 #'  \emph{t}, and \emph{t}+1, respectively.}
 #' \item{density}{Density of individuals per unit designated in \code{spacing}.
 #' Only given if spacing is not NA.}
+#' 
+#' @section Notes:
+#' In some datasets on species with unobserveable stages, observation status
+#' (\code{obsstatus}) might not be inferred properly if a single size variable
+#' is used that does not yield sizes greater than 0 in all cases in which
+#' individuals were observed. Such situations may arise, for example, in plants
+#' when leaf number is the dominant size variable used, but individuals
+#' occasionally occur with inflorescences but no leaves. In this instances,
+#' it helps to mark related variables as \code{sizeb} and \code{sizec}, because
+#' observation status will be interpreted in relation to all 3 size variables.
+#' Further analysis can then utilize only a single size variable, of the user's
+#' choosing. Similar issues can arise in reproductive status (\code{repstatus}).
+#' 
+#' Warnings that some individuals occur in state combinations that do not match
+#' any stages in the stageframe used to assign stages are common when first
+#' working with a dataset. Typically, these situations can be identified as
+#' \code{NoMatch} entries in \code{stage3}, although such entries may crop up in
+#' \code{stage1} and \code{stage2}, as well. In rare cases, these warnings will
+#' arise with no concurrent \code{NoMatch} entries, which indicates that the
+#' input dataset contained conflicting state data at once suggesting that the
+#' individual is in some stage but is also dead. The latter is removed if the
+#' conflict occurs in time \emph{t} or time \emph{t}-1, as only living entries
+#' are allowed in these times.
+#' 
+#' Care should be taken to avoid variables with negative values indicating size,
+#' fecundity, or reproductive or observation status. Negative values can be
+#' interpreted in different ways, typically reflecting estimation through other
+#' algorithms rather than actual measured data. Variables holding negative
+#' values can conflict with data management algorithms in ways that are
+#' difficult to predict.
 #' 
 #' @examples
 #' data(cypvert)
@@ -972,11 +1062,11 @@ historicalize3 <- function(data, popidcol = 0, patchidcol = 0, individcol,
   alive2 <- indataset <- censor1 <- censor2 <- censor3 <- censbool <- NULL
   
   if (is.na(individcol)) {
-    stop("Individual ID variable is required.", .call = FALSE)
+    stop("Individual ID variable is required.", call. = FALSE)
   }
   
   if (is.na(year2col) & is.na(year3col)) {
-    stop("Variable identifying either year2 (time t) or year3 (time t+1) is required.", .call = FALSE)
+    stop("Variable identifying either year2 (time t) or year3 (time t+1) is required.", call. = FALSE)
   }
   
   if (is.character(popidcol)) {
@@ -1403,37 +1493,42 @@ historicalize3 <- function(data, popidcol = 0, patchidcol = 0, individcol,
     }
   }
   
-  if (is.na(censorkeep) & censor) {
+  if (is.na(censorkeep)  & censor) {
     censbool <- TRUE
     censorkeep <- 0
   } else {
     censbool <- FALSE
   }
   
-  popdatalist.new <- jpf(data, stageassign, (popidcol - 1), (patchidcol - 1), (individcol - 1),
-                         (year2col - 1), (year3col - 1), (xcol - 1), (ycol - 1), (juv2col - 1), (juv3col - 1),
-                         (sizea2col - 1), (sizea3col - 1), (sizeb2col - 1), (sizeb3col - 1), (sizec2col - 1),
-                         (sizec3col - 1), (repstra2col - 1), (repstra3col - 1), (repstrb2col - 1), 
-                         (repstrb3col - 1), (feca2col - 1), (feca3col - 1), (fecb2col - 1), (fecb3col - 1), 
-                         (indcova2col - 1), (indcova3col - 1), (indcovb2col - 1), (indcovb3col - 1), 
-                         (indcovc2col - 1), (indcovc3col - 1), (alive2col - 1), (alive3col - 1), 
-                         (dead2col - 1), (dead3col - 1), (obs2col - 1), (obs3col - 1), (nonobs2col - 1), 
-                         (nonobs3col - 1), repstrrel, fecrel, (stage2col - 1), (stage3col - 1), 
-                         (censorcol - 1), NAas0, NRasRep, stassign, stagesizecol, censbool)
+  popdatalist.new <- jpf(data, stageassign, (popidcol - 1), (patchidcol - 1),
+                         (individcol - 1), (year2col - 1), (year3col - 1), (xcol - 1), (ycol - 1),
+                         (juv2col - 1), (juv3col - 1), (sizea2col - 1), (sizea3col - 1),
+                         (sizeb2col - 1), (sizeb3col - 1), (sizec2col - 1), (sizec3col - 1),
+                         (repstra2col - 1), (repstra3col - 1), (repstrb2col - 1), (repstrb3col - 1),
+                         (feca2col - 1), (feca3col - 1), (fecb2col - 1), (fecb3col - 1),
+                         (indcova2col - 1), (indcova3col - 1), (indcovb2col - 1), (indcovb3col - 1),
+                         (indcovc2col - 1), (indcovc3col - 1), (alive2col - 1), (alive3col - 1),
+                         (dead2col - 1), (dead3col - 1), (obs2col - 1), (obs3col - 1),
+                         (nonobs2col - 1), (nonobs3col - 1), repstrrel, fecrel, (stage2col - 1),
+                         (stage3col - 1), (censorcol - 1), NAas0, NRasRep, stassign, stagesizecol,
+                         censorkeep, censbool)
   
-  popdata <- do.call("cbind.data.frame", popdatalist.new)
+  popdata <- do.call("cbind.data.frame", c(popdatalist.new, stringsAsFactors = FALSE))
   
-  names(popdata) <- c("rowid", "popid", "patchid", "individ", "year2", "firstseen", "lastseen", "obsage", 
-                      "obslifespan", "xpos1", "ypos1", "sizea1", "sizeb1", "sizec1", "size1added", "repstra1", 
-                      "repstrb1", "repstr1added", "feca1", "fecb1", "fec1added", "indcova1", "indcovb1",
-                      "indcovc1", "censor1", "juvgiven1", "obsstatus1", "repstatus1", "fecstatus1", "matstatus1",
-                      "alive1", "stage1", "stage1index", "xpos2", "ypos2", "sizea2", "sizeb2", "sizec2", "size2added",
-                      "repstra2", "repstrb2", "repstr2added", "feca2", "fecb2", "fec2added", "indcova2", "indcovb2",
-                      "indcovc2", "censor2", "juvgiven2", "obsstatus2", "repstatus2", "fecstatus2", "matstatus2", 
-                      "alive2", "stage2", "stage2index", "xpos3", "ypos3", "sizea3", "sizeb3", "sizec3", "size3added", 
-                      "repstra3", "repstrb3", "repstr3added", "feca3", "fecb3", "fec3added", "indcova3", "indcovb3",
-                      "indcovc3", "censor3", "juvgiven3", "obsstatus3", "repstatus3", "fecstatus3", "matstatus3", 
-                      "alive3", "stage3", "stage3index")
+  names(popdata) <- c("rowid", "popid", "patchid", "individ", "year2", "firstseen", 
+    "lastseen", "obsage", "obslifespan", "xpos1", "ypos1", "sizea1", "sizeb1",
+    "sizec1", "size1added", "repstra1", "repstrb1", "repstr1added", "feca1",
+    "fecb1", "fec1added", "indcova1", "indcovb1", "indcovc1", "censor1",
+    "juvgiven1", "obsstatus1", "repstatus1", "fecstatus1", "matstatus1",
+    "alive1", "stage1", "stage1index", "xpos2", "ypos2", "sizea2", "sizeb2", 
+    "sizec2", "size2added", "repstra2", "repstrb2", "repstr2added", "feca2",
+    "fecb2", "fec2added", "indcova2", "indcovb2", "indcovc2", "censor2",
+    "juvgiven2", "obsstatus2", "repstatus2", "fecstatus2", "matstatus2",
+    "alive2", "stage2", "stage2index", "xpos3", "ypos3", "sizea3", "sizeb3",
+    "sizec3", "size3added", "repstra3", "repstrb3", "repstr3added",
+    "feca3", "fecb3", "fec3added", "indcova3", "indcovb3", "indcovc3",
+    "censor3", "juvgiven3", "obsstatus3", "repstatus3", "fecstatus3",
+    "matstatus3", "alive3", "stage3", "stage3index")
   
   popdata <- subset(popdata, alive2 == 1)
   
@@ -1444,8 +1539,7 @@ historicalize3 <- function(data, popidcol = 0, patchidcol = 0, individcol,
   
   if (!is.na(spacing)) {
     popdata$density <- .density3(popdata, which(names(popdata) == "xpos2"), 
-                                 which(names(popdata) == "ypos2"), 
-                                 which(names(popdata) == "year2"), spacing)
+      which(names(popdata) == "ypos2"), which(names(popdata) == "year2"), spacing)
   }
   
   if (reduce) {
@@ -1469,9 +1563,13 @@ historicalize3 <- function(data, popidcol = 0, patchidcol = 0, individcol,
       popdata <- popdata[,-c(which(names(popdata) == "ypos3"))]
     } else if (all.equal(sort(unique(popdata$ypos3)), c(-1,0))) {popdata <- popdata[,-c(which(names(popdata) == "ypos3"))]}
     
-    if (!censor) {
+    if (all(is.na(popdata$censor1)) | length(unique(popdata$censor1)) == 1) {
       popdata <- popdata[,-c(which(names(popdata) =="censor1"))]
+    }
+    if (all(is.na(popdata$censor2)) | length(unique(popdata$censor2)) == 1) {
       popdata <- popdata[,-c(which(names(popdata) =="censor2"))]
+    }
+    if (all(is.na(popdata$censor3)) | length(unique(popdata$censor3)) == 1) {
       popdata <- popdata[,-c(which(names(popdata) =="censor3"))]
     }
     
@@ -1657,7 +1755,7 @@ historicalize3 <- function(data, popidcol = 0, patchidcol = 0, individcol,
   return(popdata)
 }
 
-#' Estimate Density on Basis of Cartesian Coordinates
+#' Estimate Density in Cartesian Space
 #' 
 #' \code{.density3()} estimates density on the basis of Cartesian coordinates
 #' and spacing information supplied as input. It is used internally by 

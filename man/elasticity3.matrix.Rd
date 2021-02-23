@@ -2,21 +2,25 @@
 % Please edit documentation in R/popdyn.R
 \name{elasticity3.matrix}
 \alias{elasticity3.matrix}
-\title{Calculate Elasticity of Lambda to Matrix Elements for a Matrix}
+\title{Estimate Elasticity of Population Growth Rate of a Single Matrix}
 \usage{
-\method{elasticity3}{matrix}(mats)
+\method{elasticity3}{matrix}(mats, ...)
 }
 \arguments{
 \item{mats}{An object of class \code{matrix}.}
+
+\item{...}{Other parameters.}
 }
 \value{
 This function returns a single elasticity matrix.
 }
 \description{
 \code{elasticity3.matrix()} returns the elasticities of lambda to elements
-of a single matrix. This function can handle large and sparse matrices, and 
-so can be used with large historical matrices, IPMs, age x stage matrices,
-as well as smaller ahistorical matrices.
+of a single matrix.  Because this handles only one matrix, the elasticities
+are inherently deterministic and based on the dominant eigen value as the
+best metric of the population growth rate. This function can handle large and
+sparse matrices, and so can be used with large historical matrices, IPMs,
+age x stage matrices, as well as smaller ahistorical matrices.
 }
 \examples{
 data(lathyrus)
@@ -64,4 +68,6 @@ elasticity3(ehrlen3mean$A[[1]])
 \code{\link{elasticity3}()}
 
 \code{\link{elasticity3.lefkoMat}()}
+
+\code{\link{elasticity3.list}()}
 }

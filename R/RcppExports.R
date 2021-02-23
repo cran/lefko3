@@ -5,28 +5,29 @@
 #' 
 #' This function takes matrix indices provided by functions
 #' \code{\link{rlefko3}()}, \code{\link{rlefko2}()}, \code{\link{flefko3}()},
-#' and \code{\link{flefko2}()} and updates them with information provided in
-#' the overwrite table used as input in that function.
+#' \code{\link{flefko2}()}, and \code{\link{aflefko2}()} and updates them with
+#' information provided in the overwrite table used as input in that function.
 #' 
 #' @param allst321 Vector containing the original element-by-element matrix
 #' index.
 #' @param idx321old Vector containing the indices of matrix elements to be
 #' updated.
 #' @param idx321new Vector containing the replacement matrix element indices.
-#' @param convtype Vector denoting survival-transition (1) or fecundity (2).
+#' @param convtype Vector denoting survival transition (1) or fecundity (2).
 #' @param eststag3 Vector of new stages in time \emph{t}+1.
 #' @param gvnrate Vector of replacement transition values.
+#' @param multipl Vector of fecundity multipliers.
 #' 
 #' @return Vector of updated matrix indices and, where appropriate, replacement
 #' matrix element values.
 #' 
 #' @keywords internal
 #' @noRd
-ovreplace <- function(allst321, idx321old, idx321new, convtype, eststag3, gvnrate) {
-    .Call('_lefko3_ovreplace', PACKAGE = 'lefko3', allst321, idx321old, idx321new, convtype, eststag3, gvnrate)
+ovreplace <- function(allst321, idx321old, idx321new, convtype, eststag3, gvnrate, multipl) {
+    .Call('_lefko3_ovreplace', PACKAGE = 'lefko3', allst321, idx321old, idx321new, convtype, eststag3, gvnrate, multipl)
 }
 
-#' Make Horizontal Data Frame Vertical
+#' Create Vertical Structure for Horizontal Data Frame Input
 #' 
 #' Function \code{pfj()} powers the R function \code{\link{verticalize3}()},
 #' creating the vertical structure and rearranging the data in that shape.
@@ -91,25 +92,31 @@ ovreplace <- function(allst321, idx321old, idx321new, convtype, eststag3, gvnrat
 #' will be set to 0.
 #' @param NRasRep If TRUE, then will treat non-reproductive but mature
 #' individuals as reproductive during stage assignment.
+#' @param RepasObs If TRUE, then will treat individuals with size 0 as observed
+#' if and only if they are reproductive. Otherwise, all individuals with size 0
+#' are treated as not observed.
 #' @param stassign A logical value indicating whether to assign stages.
 #' @param stszcol Column number describing which size variable to use in stage 
 #' estimation.
 #' @param censorkeep The value of the censoring variable identifying data
-#' that should be included in analysis. Defaults to 0, but may take any value
-#' including NA.
+#' that should be included in analysis. Defaults to 0, but may take any numeric
+#' value including NA.
 #' @param censbool A logical variable determining whether NA denotes the value
-#' of the censoring variable identifying data to keep.
+#' of the censoring variable identifying data to keep. If used, then will set
+#' all NAs to 0 and all other values to 1, treating 0 as the value to keep.
+#' @param censrepeat A logical value indicating whether censor variable is a
+#' single static column, or whether censor variables repeat across blocks.
 #' 
 #' @return The output is currently a 7 element list, where each element is a
 #' data frame with the same number of rows.
 #' 
 #' @keywords internal
 #' @noRd
-pfj <- function(data, stageframe, noyears, firstyear, popidcol, patchidcol, individcol, blocksize, xcol, ycol, juvcol, sizeacol, sizebcol, sizeccol, repstracol, repstrbcol, fecacol, fecbcol, indcovacol, indcovbcol, indcovccol, aliveacol, deadacol, obsacol, nonobsacol, censorcol, stagecol, repstrrel, fecrel, NAas0, NRasRep, stassign, stszcol, censbool) {
-    .Call('_lefko3_pfj', PACKAGE = 'lefko3', data, stageframe, noyears, firstyear, popidcol, patchidcol, individcol, blocksize, xcol, ycol, juvcol, sizeacol, sizebcol, sizeccol, repstracol, repstrbcol, fecacol, fecbcol, indcovacol, indcovbcol, indcovccol, aliveacol, deadacol, obsacol, nonobsacol, censorcol, stagecol, repstrrel, fecrel, NAas0, NRasRep, stassign, stszcol, censbool)
+pfj <- function(data, stageframe, noyears, firstyear, popidcol, patchidcol, individcol, blocksize, xcol, ycol, juvcol, sizeacol, sizebcol, sizeccol, repstracol, repstrbcol, fecacol, fecbcol, indcovacol, indcovbcol, indcovccol, aliveacol, deadacol, obsacol, nonobsacol, censorcol, stagecol, repstrrel, fecrel, NAas0, NRasRep, RepasObs, stassign, stszcol, censorkeep, censbool, censrepeat) {
+    .Call('_lefko3_pfj', PACKAGE = 'lefko3', data, stageframe, noyears, firstyear, popidcol, patchidcol, individcol, blocksize, xcol, ycol, juvcol, sizeacol, sizebcol, sizeccol, repstracol, repstrbcol, fecacol, fecbcol, indcovacol, indcovbcol, indcovccol, aliveacol, deadacol, obsacol, nonobsacol, censorcol, stagecol, repstrrel, fecrel, NAas0, NRasRep, RepasObs, stassign, stszcol, censorkeep, censbool, censrepeat)
 }
 
-#' Make Vertical Data Frame Historical
+#' Create Historical Vertical Structure for Ahistorical Vertical Data Frame
 #' 
 #' Function \code{jpf()} powers the R function \code{\link{historicalize3}()},
 #' creating the historical, vertical structure and rearranging the data in that
@@ -209,6 +216,9 @@ pfj <- function(data, stageframe, noyears, firstyear, popidcol, patchidcol, indi
 #' @param stassign A logical value indicating whether to assign stages.
 #' @param stszcol Column number describing which size variable to use in stage 
 #' estimation.
+#' @param censorkeep Numeric value of censor variable, denoting elements to
+#' keep. If NA is to be used, then set this variable to 0 and set
+#' \code{censbool = TRUE}.
 #' @param censbool A logical variable determining whether NA denotes the value
 #' of the censoring variable identifying data to keep.
 #' 
@@ -217,11 +227,11 @@ pfj <- function(data, stageframe, noyears, firstyear, popidcol, patchidcol, indi
 #' 
 #' @keywords internal
 #' @noRd
-jpf <- function(data, stageframe, popidcol, patchidcol, individcol, year2col, year3col, xcol, ycol, juv2col, juv3col, sizea2col, sizea3col, sizeb2col, sizeb3col, sizec2col, sizec3col, repstra2col, repstra3col, repstrb2col, repstrb3col, feca2col, feca3col, fecb2col, fecb3col, indcova2col, indcova3col, indcovb2col, indcovb3col, indcovc2col, indcovc3col, alive2col, alive3col, dead2col, dead3col, obs2col, obs3col, nonobs2col, nonobs3col, repstrrel, fecrel, stage2col, stage3col, censorcol, NAas0, NRasRep, stassign, stszcol, censbool) {
-    .Call('_lefko3_jpf', PACKAGE = 'lefko3', data, stageframe, popidcol, patchidcol, individcol, year2col, year3col, xcol, ycol, juv2col, juv3col, sizea2col, sizea3col, sizeb2col, sizeb3col, sizec2col, sizec3col, repstra2col, repstra3col, repstrb2col, repstrb3col, feca2col, feca3col, fecb2col, fecb3col, indcova2col, indcova3col, indcovb2col, indcovb3col, indcovc2col, indcovc3col, alive2col, alive3col, dead2col, dead3col, obs2col, obs3col, nonobs2col, nonobs3col, repstrrel, fecrel, stage2col, stage3col, censorcol, NAas0, NRasRep, stassign, stszcol, censbool)
+jpf <- function(data, stageframe, popidcol, patchidcol, individcol, year2col, year3col, xcol, ycol, juv2col, juv3col, sizea2col, sizea3col, sizeb2col, sizeb3col, sizec2col, sizec3col, repstra2col, repstra3col, repstrb2col, repstrb3col, feca2col, feca3col, fecb2col, fecb3col, indcova2col, indcova3col, indcovb2col, indcovb3col, indcovc2col, indcovc3col, alive2col, alive3col, dead2col, dead3col, obs2col, obs3col, nonobs2col, nonobs3col, repstrrel, fecrel, stage2col, stage3col, censorcol, NAas0, NRasRep, stassign, stszcol, censorkeep, censbool) {
+    .Call('_lefko3_jpf', PACKAGE = 'lefko3', data, stageframe, popidcol, patchidcol, individcol, year2col, year3col, xcol, ycol, juv2col, juv3col, sizea2col, sizea3col, sizeb2col, sizeb3col, sizec2col, sizec3col, repstra2col, repstra3col, repstrb2col, repstrb3col, feca2col, feca3col, fecb2col, fecb3col, indcova2col, indcova3col, indcovb2col, indcovb3col, indcovc2col, indcovc3col, alive2col, alive3col, dead2col, dead3col, obs2col, obs3col, nonobs2col, nonobs3col, repstrrel, fecrel, stage2col, stage3col, censorcol, NAas0, NRasRep, stassign, stszcol, censorkeep, censbool)
 }
 
-#' Create Core Dataframe for Matrix Estimation
+#' Create Element Index for Matrix Estimation
 #' 
 #' Function \code{theoldpizzle()} create a data frame object spread across
 #' three 20-element long list objects that is used by \code{jerzeibalowski()}
@@ -230,8 +240,9 @@ jpf <- function(data, stageframe, popidcol, patchidcol, individcol, year2col, ye
 #'
 #' @param StageFrame The stageframe object identifying the life history model
 #' being operationalized.
-#' @param OverWrite The overwrite table used in analysis, as modifed by 
-#' \code{.overwrite_reassess}.
+#' @param OverWrite The overwrite table used in analysis, as modified by 
+#' \code{.overwrite_reassess}. Must be processed via \code{.overwrite_reassess}
+#' rather than being a raew overwrite or supplement table.
 #' @param repmatrix The reproductive matrix used in analysis.
 #' @param finalage The final age to be used in analysis.
 #' @param style The style of analysis, where 0 is historical, 1 is ahistorical,
@@ -249,7 +260,7 @@ theoldpizzle <- function(StageFrame, OverWrite, repmatrix, finalage, style, cont
     .Call('_lefko3_theoldpizzle', PACKAGE = 'lefko3', StageFrame, OverWrite, repmatrix, finalage, style, cont)
 }
 
-#' Core engine for dv_hmpm
+#' Core Engine for dv_hmpm
 #' 
 #' Creates a list of conditional ahistorical matrices in the style noted in
 #' deVries and Caswell (2018).
@@ -269,7 +280,7 @@ hoffmannofstuttgart <- function(mainmat, indices, ahstages, stagenames) {
     .Call('_lefko3_hoffmannofstuttgart', PACKAGE = 'lefko3', mainmat, indices, ahstages, stagenames)
 }
 
-#' Extracts conditional ahistorical matrices from historical MPM
+#' Extract Conditional Ahistorical Matrices from Historical MPM
 #' 
 #' Function \code{cond_hmpm()} takes historical MPMs and decomposes them into 
 #' ahistorical matrices conditional upon stage in time \emph{t}-1. In effect,
@@ -353,7 +364,7 @@ cond_hmpm <- function(hmpm, matchoice = NULL) {
     .Call('_lefko3_cond_hmpm', PACKAGE = 'lefko3', hmpm, matchoice)
 }
 
-#' Estimate All Elements in Function-based Population Projection Matrices
+#' Estimate All Elements of Function-based Population Projection Matrix
 #' 
 #' Function \code{jerzeibalowski} swiftly calculates matrix elements in
 #' function-based population projection matrices. Used in
@@ -418,7 +429,7 @@ cond_hmpm <- function(hmpm, matchoice = NULL) {
 #' @param negfec Logical value denoting whether to change negative estimated
 NULL
 
-#' Estimate All Elements in Raw Historical Matrix
+#' Estimate All Elements of Raw Historical Matrix
 #' 
 #' Function \code{specialpatrolgroup} swiftly calculates matrix transitions in
 #' raw historical matrices, and serves as the core workhorse function behind
@@ -442,7 +453,7 @@ specialpatrolgroup <- function(sge9l, sge3, MainData, StageFrame) {
     .Call('_lefko3_specialpatrolgroup', PACKAGE = 'lefko3', sge9l, sge3, MainData, StageFrame)
 }
 
-#' Estimate All Elements in Raw Ahistorical Population Projection Matrices
+#' Estimate All Elements of Raw Ahistorical Population Projection Matrix
 #' 
 #' Function \code{normalpatrolgroup} swiftly calculates matrix transitions in
 #' raw ahistorical matrices, and serves as the core workhorse function behind
@@ -629,7 +640,7 @@ geodiesel <- function(loy, Umats, Fmats, stages, patchmats, popmats) {
     .Call('_lefko3_geodiesel', PACKAGE = 'lefko3', loy, Umats, Fmats, stages, patchmats, popmats)
 }
 
-#' Complete Full Eigen Analysis of a Single Dense Matrix
+#' Full Eigen Analysis of a Single Dense Matrix
 #' 
 #' \code{decomp3()} returns all eigenvalues, right eigenvectors, and left
 #' eigenvectors estimated for a matrix by the \code{eig_gen}() function
@@ -647,7 +658,7 @@ decomp3 <- function(Amat) {
     .Call('_lefko3_decomp3', PACKAGE = 'lefko3', Amat)
 }
 
-#' Complete Full Eigen Analysis of a Single Sparse Matrix
+#' Full Eigen Analysis of a Single Sparse Matrix
 #' 
 #' \code{decomp3sp()} returns all eigenvalues, right eigenvectors, and left
 #' eigenvectors estimated for a matrix by the \code{eigs_gen}() function
@@ -701,7 +712,7 @@ lambda3matrixsp <- function(Amat) {
     .Call('_lefko3_lambda3matrixsp', PACKAGE = 'lefko3', Amat)
 }
 
-#' Estimate Stable Stage Distribution for a Dense Population Matrix
+#' Estimate Stable Stage Distribution of a Dense Population Matrix
 #' 
 #' \code{ss3matrix()} returns the stable stage distribution for a 
 #' dense population matrix.
@@ -723,7 +734,7 @@ ss3matrix <- function(Amat) {
     .Call('_lefko3_ss3matrix', PACKAGE = 'lefko3', Amat)
 }
 
-#' Estimate Stable Stage Distribution for a Sparse Population Matrix
+#' Estimate Stable Stage Distribution of a Sparse Population Matrix
 #' 
 #' \code{ss3matrixsp()} returns the stable stage distribution for a 
 #' sparse population matrix. This function can handle large and sparse 
@@ -747,7 +758,7 @@ ss3matrixsp <- function(Amat) {
     .Call('_lefko3_ss3matrixsp', PACKAGE = 'lefko3', Amat)
 }
 
-#' Estimate Reproductive Value for a Dense Population Matrix
+#' Estimate Reproductive Value of a Dense Population Matrix
 #' 
 #' \code{rv3matrix()} returns the reproductive values for stages in a
 #' dense population matrix. The function provides standard reproductive
@@ -775,7 +786,7 @@ rv3matrix <- function(Amat) {
     .Call('_lefko3_rv3matrix', PACKAGE = 'lefko3', Amat)
 }
 
-#' Estimate Reproductive Value for a Sparse Population Matrix
+#' Estimate Reproductive Value of a Sparse Population Matrix
 #' 
 #' \code{rv3matrixsp()} returns the reproductive values for stages in a 
 #' sparse population matrix. The function provides standard reproductive 
@@ -806,7 +817,7 @@ rv3matrixsp <- function(Amat) {
     .Call('_lefko3_rv3matrixsp', PACKAGE = 'lefko3', Amat)
 }
 
-#' Estimate Sensitivities for a Dense Population Matrix
+#' Estimate Deterministic Sensitivities of a Dense Population Matrix
 #' 
 #' \code{sens3matrix()} returns the sensitivity of lambda with respect
 #' to each element in a dense matrix. This is accomplished via the
@@ -822,7 +833,7 @@ sens3matrix <- function(Amat) {
     .Call('_lefko3_sens3matrix', PACKAGE = 'lefko3', Amat)
 }
 
-#' Estimate Sensitivities for a Sparse Population Matrix
+#' Estimate Deterministic Sensitivities of a Sparse Population Matrix
 #' 
 #' \code{sens3matrixsp()} returns the sensitivity of lambda with respect
 #' to each element in a sparse matrix. This is accomplished via the
@@ -838,7 +849,7 @@ sens3matrixsp <- function(Amat) {
     .Call('_lefko3_sens3matrixsp', PACKAGE = 'lefko3', Amat)
 }
 
-#' Estimate Sensitivities for a Historical LefkoMat Object
+#' Estimate Deterministic Sensitivities of a Historical LefkoMat Object
 #' 
 #' \code{sens3hlefko()} returns the sensitivity of lambda with respect
 #' to each historical stage-pair in the matrix, and the associated
@@ -861,7 +872,7 @@ sens3hlefko <- function(Amat, ahstages, hstages) {
     .Call('_lefko3_sens3hlefko', PACKAGE = 'lefko3', Amat, ahstages, hstages)
 }
 
-#' Estimate Elasticities for a Dense Population Matrix
+#' Estimate Deterministic Elasticities of a Dense Population Matrix
 #' 
 #' \code{elas3matrix()} returns the elasticity of lambda with respect
 #' to each element in a dense matrix. This is accomplished via the
@@ -877,7 +888,7 @@ elas3matrix <- function(Amat) {
     .Call('_lefko3_elas3matrix', PACKAGE = 'lefko3', Amat)
 }
 
-#' Estimate Elasticities for a Sparse Population Matrix
+#' Estimate Deterministic Elasticities of a Sparse Population Matrix
 #' 
 #' \code{elas3matrixsp()} returns the elasticity of lambda with respect
 #' to each element in a sparse matrix. This is accomplished via the
@@ -893,7 +904,7 @@ elas3matrixsp <- function(Amat) {
     .Call('_lefko3_elas3matrixsp', PACKAGE = 'lefko3', Amat)
 }
 
-#' Estimate Elasticities for a Historical LefkoMod Object
+#' Estimate Deterministic Elasticities of a Historical LefkoMod Object
 #' 
 #' \code{elas3hlefko()} returns the elasticity of lambda with respect
 #' to each historical stage-pair in the matrix, and the summed elasticities
@@ -915,10 +926,10 @@ elas3hlefko <- function(Amat, ahstages, hstages) {
     .Call('_lefko3_elas3hlefko', PACKAGE = 'lefko3', Amat, ahstages, hstages)
 }
 
-#' Core projection function
+#' Core Time-based Population Matrix Projection Function
 #' 
 #' Function \code{proj3()} runs the matrix projections used in other functions
-#' in package \code{lefko3}.
+#' in package \code{lefko3}. Provides the population vector output only.
 #' 
 #' @param start_mat The starting matrix for the projection.
 #' @param start_vec The starting population vector for the projection.
@@ -927,25 +938,30 @@ elas3hlefko <- function(Amat, ahstages, hstages) {
 #' @param mat_order A vector giving the order of matrices to use at each time.
 #' @param standardize A logical value stating whether to standardize population
 #' size vector to sum to 1 at each estimated time.
+#' @param forward A logical value stating whether the projection should be a
+#' forward projetion. Should generally be true, except in certain cases where
+#' reverse-time vectors or matrices need to be created, as in
+#' \code{\link{stochsens}()}.
 #' 
 #' @return A matrix in which each row is the population vector at each 
-#' projected time.
+#' projected time. This matrix can contain raw versiomns of the w and v
+#' vectors needed for stochastic sensitivity and elasticity estimation.
 #' 
 #' @keywords internal
 #' @noRd
-proj3 <- function(start_vec, core_list, mat_order, standardize) {
-    .Call('_lefko3_proj3', PACKAGE = 'lefko3', start_vec, core_list, mat_order, standardize)
+proj3 <- function(start_vec, core_list, mat_order, standardize, forward) {
+    .Call('_lefko3_proj3', PACKAGE = 'lefko3', start_vec, core_list, mat_order, standardize, forward)
 }
 
-#' Stochastic population growth rate estimation
+#' Estimate Stochastic Population Growth Rate
 #' 
 #' Function \code{slambda3()} estimates the stochastic population growth rate,
 #' \eqn{a}, defined as the long-term arithmetic mean of the log population 
-#' growth estimated per simulated time (as given in equation 2 in Tuljapurkar,
-#' Horvitz, and Pascarella 2003). This term is estimated via projection of 
-#' randomly sampled matrices, similarly to the procedure outlined in Box 7.4 of
-#' Morris and Doak (2002). Can handle both lefkoMat objects and lists of full A
-#' matrices. 
+#' growth rate estimated per simulated time (as given in equation 2 in
+#' Tuljapurkar, Horvitz, and Pascarella 2003). This term is estimated via
+#' projection of randomly sampled matrices, similarly to the procedure outlined
+#' in Box 7.4 of Morris and Doak (2002). Can handle both lefkoMat objects and
+#' lists of full A matrices. 
 #' 
 #' @param mpm A matrix projection model of class \code{lefkoMat}, or a list of
 #' full matrix projection matrices.
@@ -967,6 +983,11 @@ proj3 <- function(start_vec, core_list, mat_order, standardize) {
 #' population level. Population level estimates will be noted at the end of the
 #' data frame with 0 entries for patch designation.
 #' 
+#' @section Notes:
+#' Weightings given in \code{tweights} do not need to sum to 1. Final
+#' weightings used will be based on the proportion per element of the sum of
+#' elements in the user-supplied vector.
+#'
 #' @examples
 #' data(cypdata)
 #'  
@@ -1020,10 +1041,46 @@ proj3 <- function(start_vec, core_list, mat_order, standardize) {
 #'   patchcol = "patchid", indivcol = "individ")
 #' 
 #' cypstoch <- slambda3(cypmatrix3r)
+#' cypstoch
 #' 
 #' @export slambda3
 slambda3 <- function(mpm, times = 10000L, tweights = NULL) {
     .Call('_lefko3_slambda3', PACKAGE = 'lefko3', mpm, times, tweights)
+}
+
+#' Estimate Stochastic Sensitivity or Elasticity of Matrix Set
+#' 
+#' Function \code{stoch_senselas()} estimates the sensitivity and elasticity to
+#' matrix elements of \eqn{a}, defined as the long-term arithmetic mean of the
+#' log population growth estimated per simulated time (as given in equation 2
+#' in Tuljapurkar, Horvitz, and Pascarella 2003). 
+#' 
+#' @param mpm A matrix projection model of class \code{lefkoMat}, or a list of
+#' full matrix projection matrices.
+#' @param times Number of iterations to random samples. Defaults to 10,000.
+#' @param style An integer designating whether to estimate sensitivity matrices
+#' (\code{1}) or elasticity matrices (\code{2}). Defaults to 1.
+#' @param tweights Numeric vector denoting the probabilistic weightings of
+#' annual matrices. Defaults to equal weighting among times.
+#' 
+#' @return A cube (3d array) where each slice corresponds to sensitivity or
+#' elasticity matrix for a specific pop-patch, followed by the sensitivity or
+#' elasticity matrices of all populations (only if multiple pop-patches occur
+#' in the input).
+#'
+#' @section Notes:
+#' Weightings given in \code{tweights} do not need to sum to 1. Final
+#' weightings used will be based on the proportion per element of the sum of
+#' elements in the user-supplied vector.
+#' 
+#' This function currently requires all patches to have the same times, if a
+#' \code{lefkoMat} object is used as input. Asymmetry in times across patches
+#' and/or populations will likely cause errors.
+#'
+#' @keywords internal
+#' @noRd
+stoch_senselas <- function(mpm, times = 10000L, style = 1L, tweights = NULL) {
+    .Call('_lefko3_stoch_senselas', PACKAGE = 'lefko3', mpm, times, style, tweights)
 }
 
 #' Creates Size Index for Elasticity Summaries of hMPMs

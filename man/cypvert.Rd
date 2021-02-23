@@ -12,7 +12,7 @@ Variable codes are similar to those for \code{cypdata}, but use \code{.2} to
 identify time \emph{t} and \code{.3} to identify time \emph{t}+1.
 
 \describe{
-  \item{plantid}{A numberic variable giving a unique number to each 
+  \item{plantid}{A numeric variable giving a unique number to each 
   individual.}
   \item{patch}{A variable refering to patch within the population.}
   \item{censor}{A variable coding for whether the data point is valid. An
@@ -74,7 +74,24 @@ cypraw_v2 <- historicalize3(data = cypvert, patchidcol = "patch",
   stageassign = cypframe_raw, stagesize = "sizeadded", censorcol = "censor",
   censor = FALSE, NAas0 = TRUE, NRasRep = TRUE, reduce = TRUE)
   
-summary(cypraw_v2)
+cypsupp2r <- supplemental(stage3 = c("SD", "P1", "P2", "P3", "SL", "SL", "D", 
+    "XSm", "Sm", "SD", "P1"),
+  stage2 = c("SD", "SD", "P1", "P2", "P3", "SL", "SL", "SL", "SL", "rep",
+    "rep"),
+  eststage3 = c(NA, NA, NA, NA, NA, NA, "D", "XSm", "Sm", NA, NA),
+  eststage2 = c(NA, NA, NA, NA, NA, NA, "XSm", "XSm", "XSm", NA, NA),
+  givenrate = c(0.10, 0.20, 0.20, 0.20, 0.25, 0.40, NA, NA, NA, NA, NA),
+  multiplier = c(NA, NA, NA, NA, NA, NA, NA, NA, NA, 0.5, 0.5),
+  type =c(1, 1, 1, 1, 1, 1, 1, 1, 1, 3, 3),
+  stageframe = cypframe_raw, historical = FALSE)
+
+cypmatrix2r <- rlefko2(data = cypraw_v2, stageframe = cypframe_raw, 
+  year = "all", patch = "all", stages = c("stage3", "stage2"),
+  size = c("size3added", "size2added"), supplement = cypsupp2r,
+  yearcol = "year2", patchcol = "patchid", indivcol = "individ")
+  
+cypmatrix2r$A[[intersect(which(cypmatrix2r$labels$patch == "A"), 
+  which(cypmatrix2r$labels$year2 == 2004))]]
 
 }
 \keyword{datasets}

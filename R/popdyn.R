@@ -144,7 +144,7 @@ lmean <- function(mats, matsout = "all") {
   return(output)
 }
 
-#' Dominant Eigenvalue and Deterministic Population Growth Rate Estimation
+#' Estimate Dominant Eigenvalue and Deterministic Population Growth Rate
 #' 
 #' \code{lambda3()} is a generic function that returns the dominant eigenvalue
 #' of a matrix, and set of dominant eigenvalues of a set of matrices. It can
@@ -205,8 +205,7 @@ lmean <- function(mats, matsout = "all") {
 #' @export
 lambda3 <- function(mats) UseMethod("lambda3")
 
-#' Estimate Deterministic Population Growth Rates of Matrices in a lefkoMat
-#' Object
+#' Estimate Deterministic Population Growth Rates of lefkoMat Matrices
 #' 
 #' \code{lambda3.lefkoMat()} returns the dominant eigenvalues of all projection
 #' matrices supplied within \code{lefkoMat} objects. This function can handle
@@ -305,7 +304,7 @@ lambda3.lefkoMat <- function(mats) {
   return(output)
 }
 
-#' Estimate Deterministic Population Growth Rate of a Projection Matrix
+#' Estimate Deterministic Population Growth Rate of Single Projection Matrix
 #' 
 #' \code{lambda3.matrix()} returns the dominant eigenvalue of a single
 #' projection matrix. This function can handle large and sparse matrices, so can
@@ -376,7 +375,7 @@ lambda3.matrix <- function(mats)
   return(lambda)
 }
 
-#' Stable Stage Distribution Estimation
+#' Estimate Stable Stage Distribution
 #' 
 #' \code{stablestage3()} is a generic function that returns the stable stage 
 #' distribution for a population projection matrix or set of matrices. This
@@ -438,7 +437,7 @@ lambda3.matrix <- function(mats)
 #' @export
 stablestage3 <- function(mats) UseMethod("stablestage3")
 
-#' Estimate Stable Stage Distribution for a lefkoMat Object
+#' Estimate Stable Stage Distribution of Matrices in lefkoMat Object
 #' 
 #' \code{stablestage3.lefkoMat()} returns the stable stage distributions of all
 #' \code{$A} matrices in an object of class \code{lefkoMat}. This function can
@@ -464,8 +463,8 @@ stablestage3 <- function(mats) UseMethod("stablestage3")
 #' proportion of the stable stage distribution (\code{ss_prop}).
 #' 
 #' If a historical matrix is used as input, then two data frames are output
-#' into a list object. The \code{$hist} element contains a data frame where the 
-#' stable stage distribution is given in terms of across-year stage pairs.
+#' into a list object. The \code{$hist} element contains a data frame in which 
+#' the stable stage distribution is given in terms of across-year stage pairs.
 #' The structure includes the matrix number, the numeric stage designations for
 #' stages in times \emph{t} and \emph{t}-1, respectively, followed by the
 #' respective stage names, and ending with the estimated proportion of the
@@ -586,7 +585,7 @@ stablestage3.lefkoMat <- function(mats) {
   return(output)
 }
 
-#' Estimate Stable Stage Distribution for a Population Projection Matrix
+#' Estimate Stable Stage Distribution of a Single Population Projection Matrix
 #' 
 #' \code{stablestage3.matrix()} returns the stable stage distribution for a 
 #' population projection matrix. This function can handle large and sparse
@@ -660,7 +659,7 @@ stablestage3.matrix <- function(mats)
   return(wcorr)
 }
 
-#' Reproductive Value Estimation
+#' Estimate Reproductive Value
 #' 
 #' \code{repvalue3()} is a generic function that estimates returns the
 #' reproductive values of stages in a population projection matrix or a set of
@@ -722,7 +721,7 @@ stablestage3.matrix <- function(mats)
 #' @export
 repvalue3 <- function(mats) UseMethod("repvalue3")
 
-#' Estimate Reproductive Value for a lefkoMat Object
+#' Estimate Reproductive Value Vectors of Matrices in a lefkoMat Object
 #' 
 #' \code{repvalue3.lefkoMat()} returns the reproductive values for stages in a
 #' set of population projection matrices provided as a \code{lefkoMat} object.
@@ -880,13 +879,11 @@ repvalue3.lefkoMat <- function(mats) {
     rownames(outputah) <- c(1:dim(outputah)[1])
     
     output <-list(hist = outputh, ahist = outputah)
-    
   }
-  
   return(output)
 }
 
-#' Estimate Reproductive Value for a Population Projection Matrix
+#' Estimate Reproductive Value Vector for a Single Population Projection Matrix
 #' 
 #' \code{repvalue3.matrix()} returns the reproductive values for stages in a 
 #' population projection matrix. The function makes no assumptions about whether
@@ -965,21 +962,25 @@ repvalue3.matrix <- function(mats)
   return(v)
 }
 
-#' Calculate Sensitivity of Lambda to Matrix Elements
+#' Estimate Sensitivity of Population Growth Rate to Matrix Elements
 #' 
 #' \code{sensitivity3()} is a generic function that returns the sensitivity of
-#' the deterministic population growth rate, lambda, to the elements of the
-#' matrix population model. This function is made to handle very large and
-#' sparse matrices supplied as \code{lefkoMat} objects or as individual
-#' matrices.
+#' the population growth rate to the elements of the matrices in a matrix
+#' population model. Currently, this function estimates both deterministic and
+#' stochastic sensitivities, where the growth rate is \eqn{\lambda} in the former
+#' case and the log of the stochastic \eqn{\lambda} in the latter case. This
+#' function is made to handle very large and sparse matrices supplied as
+#' \code{lefkoMat} objects, as lists of matrices, and as individual matrices.
 #' 
 #' @param mats A lefkoMat object, or population projection matrix, for which
 #' the stable stage distribution is desired.
+#' @param ... Other parameters
 #' 
 #' @return The value returned depends on the class of the \code{mats} argument.
 #' 
 #' @seealso \code{\link{sensitivity3.lefkoMat}()}
 #' @seealso \code{\link{sensitivity3.matrix}()}
+#' @seealso \code{\link{sensitivity3.list}()}
 #' 
 #' @examples
 #' data(lathyrus)
@@ -1023,31 +1024,52 @@ repvalue3.matrix <- function(mats)
 #' sensitivity3(ehrlen3mean)
 #' 
 #' @export
-sensitivity3 <- function(mats) UseMethod("sensitivity3")
+sensitivity3 <- function(mats, ...) UseMethod("sensitivity3")
 
-#' Calculate Sensitivity of Lambda to Matrix Elements for a lefkoMat Object
+#' Estimate Sensitivity of Population Growth Rate of a lefkoMat Object
 #' 
-#' \code{sensitivity3.lefkoMat()} returns the sensitivities of lambda to
-#' elements of all \code{$A} matrices in an object of class \code{lefkoMat}.
-#' This function can handle large and sparse matrices, and so can be used with
-#' large historical matrices, IPMs, age x stage matrices, as well as smaller
+#' \code{sensitivity3.lefkoMat()} returns the sensitivities of population growth
+#' rate to elements of all \code{$A} matrices in an object of class
+#' \code{lefkoMat}. If deterministic, then \eqn{\lambda} is taken as the population
+#' growth rate. If stochastic, then the log of stochastic \eqn{\lambda}, or
+#' the log stochastic growth rate, is taken as the population growth rate. This
+#' function can handle large and sparse matrices, and so can be used with large
+#' historical matrices, IPMs, age x stage matrices, as well as smaller
 #' ahistorical matrices.
 #' 
 #' @param mats An object of class \code{lefkoMat}.
+#' @param stochastic A logical value determining whether to conduct a
+#' deterministic (FALSE) or stochastic (TRUE) sensitivity analysis. Defaults to
+#' FALSE.
+#' @param steps The number of times to project forward in stochastic simulation.
+#' Defaults to 10,000.
+#' @param time_weights Numeric vector denoting the probabilistic weightings of
+#' annual matrices. Defaults to equal weighting among times.
+#' @param ... Other parameters.
 #' 
-#' @return The output from this function depends on whether the input is a
-#' historical or ahistorical \code{lefkoMat} object. If the latter, then this
-#' function returns a list with five elements, the first being a list of
-#' sensitivity matrices corresponding to the \code{$A} matrices in a
-#' \code{lefkoMat} object, and the second being a data frame showing the order
-#' of stages. If the former, then the output also includes the equivalent
-#' sensitivities to ahistorical transitions estimated using the historical
-#' matrix, and a data frame detailing the order of historical paired stages. The
-#' output also includes the A, U, and F matrices used to develop the elasticity
-#' matrices.
+#' @return This function returns an object of class \code{lefkoSens}, which is a
+#' list of 7 elements. The first, h_sensmats, is a list of historical sensitivity
+#' matrices (NULL if an ahMPM is used as input). The second, ah_elasmats, is a
+#' list of either ahistorical sensitivity matrices if an ahMPM is used as input,
+#' or, if an hMPM is used as input, then the result is a list of ahistorical
+#' matrices based on the equivalent historical dependencies assumed in the
+#' input historical matrices. The third element, h_stages, is a data frame
+#' showing historical stage pairs (NULL if ahMPM used as input). The fourth
+#' element, ah_stages, is a data frame showing the order of ahistorical stages.
+#' The last 3 elements are the A, U, and F portions of the input.
 #' 
+#' @section Notes:
+#' Deterministic sensitivities are estimated as eqn. 9.14 in Caswell (2001,
+#' Matrix Population Models). Stochastic sensitivities are estimated as eqn.
+#' 14.97 in Caswell (2001). Note that stochastic sensitivities are of the log of
+#' the stochastic \eqn{\lambda}.
+#'
+#' Currently, this function does not estimate equivalent ahistorical stochastic
+#' sensitivities for input historical matrices.
+#'
 #' @seealso \code{\link{sensitivity3}()}
 #' @seealso \code{\link{sensitivity3.matrix}()}
+#' @seealso \code{\link{sensitivity3.list}()}
 #' 
 #' @examples
 #' data(lathyrus)
@@ -1087,75 +1109,107 @@ sensitivity3 <- function(mats) UseMethod("sensitivity3")
 #'   repmatrix = lathrepm, overwrite = lathover3, yearcol = "year2",
 #'   indivcol = "individ")
 #' 
-#' ehrlen3mean <- lmean(ehrlen3)
-#' sensitivity3(ehrlen3mean)
+#' sensitivity3(ehrlen3, stochastic = TRUE)
 #' 
 #' @export
-sensitivity3.lefkoMat <- function(mats) {
-  baldrick <- if (any(class(mats$A) == "matrix")) {
+sensitivity3.lefkoMat <- function(mats, stochastic = FALSE, steps = 10000,
+  time_weights = NA, ...) {
+  
+  if (stochastic & length(mats$A) < 2) {
+    stop("Stochastic sensitivity estimation cannot be completed with fewer than 2 annual matrices.", call. = FALSE)
+  }
+  
+  if (!stochastic) {
+    # Deterministic sensitivity analysis
     
-    if (dim(mats$A)[1] > 400) {
-      sens3matrixsp(mats$A)
+    baldrick <- if (any(class(mats$A) == "matrix")) {
+      
+      if (dim(mats$A)[1] > 400) {
+        sens3matrixsp(mats$A)
+      } else {
+        sens3matrix(mats$A)
+      }
+      
+    } else if (class(mats$A) == "list") {
+      
+      if (all(is.na(mats$hstages))) {
+        
+        if (dim(mats$A[[1]])[1] > 400) {
+          lapply(mats$A, sens3matrixsp)
+        } else {
+          lapply(mats$A, sens3matrix)
+        }
+        
+      } else {
+        
+        lapply(mats$A, sens3hlefko, mats$ahstages, mats$hstages)
+      }
     } else {
-      sens3matrix(mats$A)
+      
+      stop("Input not recognized.")
     }
-    
-  } else if (class(mats$A) == "list") {
     
     if (all(is.na(mats$hstages))) {
       
-      if (dim(mats$A[[1]])[1] > 400) {
-        lapply(mats$A, sens3matrixsp)
-      } else {
-        lapply(mats$A, sens3matrix)
-      }
+      ahlabels <- mats$ahstages
+      
+      output <- list(h_sensmats = NULL, ah_sensmats = baldrick, h_stages = NULL, 
+                     ah_stages = ahlabels, A = mats$A, U = mats$U, F = mats$F)
       
     } else {
       
-      lapply(mats$A, sens3hlefko, mats$ahstages, mats$hstages)
+      he_list <- lapply(baldrick, function(X) {X$h_smat})
+      ahe_list <- lapply(baldrick, function(X) {X$ah_smat})
+      
+      hlabels <- mats$hstages
+      
+      ahlabels <- mats$ahstages
+      
+      output <- list(h_sensmats = he_list, ah_sensmats = ahe_list,
+                     h_stages = hlabels, ah_stages = ahlabels, A = mats$A, U = mats$U,
+                     F = mats$F)
     }
   } else {
+    # Stochastic sensitivity analysis
     
-    stop("Input not recognized.")
+    if(!any(is.na(time_weights))) {
+      returned_cube <- stoch_senselas(mats, times = steps, style = 1, tweights = time_weights) 
+    } else {
+      returned_cube <- stoch_senselas(mats, times = steps, style = 1) 
+    }
+    
+    returned_list <- lapply(as.list(c(1:dim(returned_cube)[3])), function(X) {return(returned_cube[,,])})
+    if (!all(is.na(mats$hstages))) {
+      output <- list(h_sensmats = returned_list, ah_sensmats = NULL, h_stages = mats$hstages,
+                     ah_stages = mats$ahstages, A = mats$A, U = mats$U, F = mats$F)
+    } else {
+      output <- list(h_sensmats = NULL, ah_sensmats = returned_list, h_stages = mats$hstages,
+                     ah_stages = mats$ahstages, A = mats$A, U = mats$U, F = mats$F)
+    }
   }
-  
-  if (all(is.na(mats$hstages))) {
-    
-    ahlabels <- mats$ahstages
-
-    output <- list(sensmats = baldrick, stages = ahlabels, A = mats$A,
-      U = mats$U, F = mats$F)
-    
-  } else {
-    
-    he_list <- lapply(baldrick, function(X) {X$h_smat})
-    ahe_list <- lapply(baldrick, function(X) {X$ah_smat})
-    
-    hlabels <- mats$hstages
-    
-    ahlabels <- mats$ahstages
-
-    output <- list(h_sensmats = he_list, ah_sensmats = ahe_list,
-      h_stages = hlabels, ah_stages = ahlabels, A = mats$A, U = mats$U,
-      F = mats$F)
-  }
+  class(output) <- "lefkoSens"
   
   return(output)
 }
 
-#' Calculate Sensitivity of Lambda to Matrix Elements for a Matrix
+#' Estimate Sensitivity of Population Growth Rate of a Single Matrix
 #' 
-#' \code{sensitivity3.matrix()} returns the sensitivities of lambda to elements
-#' of a single matrix. This function can handle large and sparse matrices, and 
-#' so can be used with large historical matrices, IPMs, age x stage matrices,
-#' as well as smaller ahistorical matrices.
+#' \code{sensitivity3.matrix()} returns the sensitivities of \eqn{\lambda} to
+#' elements of a single matrix. Because this handles only one matrix, the
+#' sensitivities are inherently deterministic and based on the dominant eigen
+#' value as the best metric of the population growth rate. This function can
+#' handle large and sparse matrices, and so can be used with large historical
+#' matrices, IPMs, age x stage matrices, as well as smaller ahistorical
+#' matrices.
 #' 
 #' @param mats An object of class \code{matrix}.
+#' @param ... Other parameters.
 #' 
 #' @return This function returns a single sensitivity matrix.
 #' 
 #' @seealso \code{\link{sensitivity3}()}
 #' @seealso \code{\link{sensitivity3.lefkoMat}()}
+#' @seealso \code{\link{sensitivity3.list}()}
 #' 
 #' @examples
 #' data(lathyrus)
@@ -1199,7 +1253,7 @@ sensitivity3.lefkoMat <- function(mats) {
 #' sensitivity3(ehrlen3mean$A[[1]])
 #' 
 #' @export
-sensitivity3.matrix <- function(mats)
+sensitivity3.matrix <- function(mats, ...)
 {
   if (dim(mats)[1] > 400) {
     wcorr <- sens3matrixsp(mats)
@@ -1210,21 +1264,171 @@ sensitivity3.matrix <- function(mats)
   return(wcorr)
 }
 
-#' Calculate Elasticity of Lambda to Matrix Elements
+#' Estimate Sensitivity of Population Growth Rate of a List of Matrices
+#' 
+#' \code{sensitivity3.list()} returns the sensitivities of population growth
+#' rate to elements of matrices supplied in a list. The sensitivity analysis can
+#' be deterministic or stochastic, but if the latter then at least two A
+#' matrices must be included in the list. This function can handle large and
+#' sparse matrices, and so can be used with large historical matrices, IPMs,
+#' age x stage matrices, as well as smaller ahistorical matrices.
+#' 
+#' @param mats An object of class \code{matrix}.
+#' @param stochastic A logical value determining whether to conduct a
+#' deterministic (FALSE) or stochastic (TRUE) sensitivity analysis. Defaults to
+#' FALSE.
+#' @param steps The number of times to project forward in stochastic simulation.
+#' Defaults to 10,000.
+#' @param time_weights Numeric vector denoting the probabilistic weightings of
+#' annual matrices. Defaults to equal weighting among times.
+#' @param ... Other parameters.
+#' 
+#' @return This function returns an object of class \code{lefkoSens}, which is a
+#' list of 7 elements. The first, h_sensmats, is a list of historical
+#' sensitivity matrices (NULL if an ahMPM is used as input). The second,
+#' ah_elasmats, is a list of ahistorical sensitivity matrices if an ahMPM is
+#' used as input (NULL if an hMPM is used as input). The third element,
+#' h_stages, and the fourth element, ah_stages, are NULL. The last 3 elements
+#' include the original A matrices supplied (as the A element), followed by
+#' NULLs for the U and F elements.
+#' 
+#' @section Notes:
+#' Deterministic sensitivities are estimated as eqn. 9.14 in Caswell (2001,
+#' Matrix Population Models). Stochastic sensitivities are estimated as eqn.
+#' 14.97 in Caswell (2001). Note that stochastic sensitivities are with regard
+#' to the log of the stochastic \eqn{\lambda}.
+#'
+#' Determination of whether the input MPM is ahistorical or historical is made
+#' on the basis of the dimensionality of input matrices - fewer than 400 rows
+#' suggests an ahistorical MPM, while more indicates a historical MPM. This
+#' designation does not impact the underlying algorithms in any way, so mistaken
+#' calls can be fixed by moving the resulting sensitivity matrices to the
+#' correct element of the output list.
+#' 
+#' Currently, this function does not estimate equivalent ahistorical stochastic
+#' sensitivities for input historical matrices.
+#'
+#' @seealso \code{\link{sensitivity3}()}
+#' @seealso \code{\link{sensitivity3.lefkoMat}()}
+#' @seealso \code{\link{sensitivity3.matrix}()}
+#' 
+#' @examples
+#' data(lathyrus)
+#' 
+#' sizevector <- c(0, 100, 13, 127, 3730, 3800, 0)
+#' stagevector <- c("Sd", "Sdl", "VSm", "Sm", "VLa", "Flo", "Dorm")
+#' repvector <- c(0, 0, 0, 0, 0, 1, 0)
+#' obsvector <- c(0, 1, 1, 1, 1, 1, 0)
+#' matvector <- c(0, 0, 1, 1, 1, 1, 1)
+#' immvector <- c(1, 1, 0, 0, 0, 0, 0)
+#' propvector <- c(1, 0, 0, 0, 0, 0, 0)
+#' indataset <- c(0, 1, 1, 1, 1, 1, 1)
+#' binvec <- c(0, 100, 11, 103, 3500, 3800, 0.5)
+#' 
+#' lathframe <- sf_create(sizes = sizevector, stagenames = stagevector,
+#'   repstatus = repvector, obsstatus = obsvector, matstatus = matvector,
+#'   immstatus = immvector, indataset = indataset, binhalfwidth = binvec,
+#'   propstatus = propvector)
+#' 
+#' lathvert <- verticalize3(lathyrus, noyears = 4, firstyear = 1988,
+#'   patchidcol = "SUBPLOT", individcol = "GENET", blocksize = 9,
+#'   juvcol = "Seedling1988", sizeacol = "Volume88", repstracol = "FCODE88",
+#'   fecacol = "Intactseed88", deadacol = "Dead1988",
+#'   nonobsacol = "Dormant1988", stageassign = lathframe, stagesize = "sizea",
+#'   censorcol = "Missing1988", censorkeep = NA, censor = TRUE)
+#' 
+#' lathrepm <- matrix(0, 7, 7)
+#' lathrepm[1, 6] <- 0.345
+#' lathrepm[2, 6] <- 0.054
+#' 
+#' lathover3 <- overwrite(stage3 = c("Sd", "Sd", "Sdl"),
+#'   stage2 = c("Sd", "Sd", "Sd"), stage1 = c("Sd", "rep", "rep"),
+#'   givenrate = c(0.345, 0.345, 0.054))
+#' 
+#' ehrlen3 <- rlefko3(data = lathvert, stageframe = lathframe,
+#'   year = c(1989, 1990), stages = c("stage3", "stage2", "stage1"),
+#'   repmatrix = lathrepm, overwrite = lathover3, yearcol = "year2",
+#'   indivcol = "individ")
+#' 
+#' sensitivity3(ehrlen3$A)
+#' 
+#' @export
+sensitivity3.list <- function(mats, stochastic = FALSE, steps = 10000,
+  time_weights = NA, ...) {
+  
+  if(length(setdiff(unlist(lapply(mats, class)), c("matrix", "array"))) > 0) {
+    stop("Input list must be composed only of numeric matrices.", call. = FALSE)
+  }
+  if (stochastic & length(mats) < 2) {
+    stop("Stochastic sensitivity estimation cannot be completed with fewer than 2 annual matrices.", call. = FALSE)
+  }
+  
+  if (!stochastic) {
+    # Deterministic sensitivity analysis
+    
+    if (dim(mats[[1]])[1] > 400) {
+      message("Matrices have more than 400 rows and columns, so assuming they are historical.")
+      
+      baldrick <- lapply(mats, sens3matrixsp)
+      
+      output <- list(h_sensmats = baldrick, ah_sensmats = NULL, h_stages = NULL,
+                     ah_stages = NULL, A = mats, U = NULL, F = NULL)
+    } else {
+      message("Matrices have fewer than 400 rows and columns, so assuming they are ahistorical.")
+      
+      baldrick <- lapply(mats, sens3matrix)
+      
+      output <- list(h_sensmats = NULL, ah_sensmats = baldrick, h_stages = NULL,
+                     ah_stages = NULL, A = mats, U = NULL, F = NULL)
+    }
+    
+  } else {
+    # Stochastic sensitivity analysis
+    
+    if(!any(is.na(time_weights))) {
+      returned_cube <- stoch_senselas(mats, times = steps, style = 1, tweights = time_weights) 
+    } else {
+      returned_cube <- stoch_senselas(mats, times = steps, style = 1) 
+    }
+    
+    returned_list <- lapply(as.list(c(1:dim(returned_cube)[3])), function(X) {return(returned_cube[,,X])})
+    
+    if (dim(mats[[1]])[1] > 400) {
+      message("Matrices have more than 400 rows and columns, so assuming they are historical.")
+      
+      output <- list(h_sensmats = returned_list, ah_sensmats = NULL, h_stages = NULL,
+                     ah_stages = NULL, A = mats, U = NULL, F = NULL)
+    } else {
+      message("Matrices have fewer than 400 rows and columns, so assuming they are ahistorical.")
+      
+      output <- list(h_sensmats = NULL, ah_sensmats = returned_list, h_stages = NULL,
+                     ah_stages = NULL, A = mats, U = NULL, F = NULL)
+    }
+  }
+  class(output) <- "lefkoSens"
+  
+  return(output)
+}
+
+#' Estimate Elasticity of Population Growth Rate to Matrix Elements
 #' 
 #' \code{elasticity3()} is a generic function that returns the elasticity of
-#' the deterministic population growth rate, lambda, to the elements of the
-#' matrix population model. This function is made to handle very large and
-#' sparse matrices supplied as \code{lefkoMat} objects or as individual
-#' matrices.
+#' the population growth rate to the elements of the matrices in a matrix
+#' population model. Currently, this function estimates both deterministic and
+#' stochastic elasticities, where the growth rate is \eqn{\lambda} in the former
+#' case and the log of the stochastic \eqn{\lambda} in the latter case. This
+#' function is made to handle very large and sparse matrices supplied as
+#' \code{lefkoMat} objects, as lists of matrices, and as individual matrices.
 #' 
 #' @param mats A lefkoMat object, or population projection matrix, for which
 #' the stable stage distribution is desired.
+#' @param ... Other parameters.
 #' 
 #' @return The value returned depends on the class of the \code{mats} argument.
 #' 
 #' @seealso \code{\link{elasticity3.lefkoMat}()}
 #' @seealso \code{\link{elasticity3.matrix}()}
+#' @seealso \code{\link{elasticity3.list}()}
 #' 
 #' @examples
 #' data(lathyrus)
@@ -1268,34 +1472,57 @@ sensitivity3.matrix <- function(mats)
 #' elasticity3(ehrlen3mean)
 #' 
 #' @export
-elasticity3 <- function(mats) UseMethod("elasticity3")
+elasticity3 <- function(mats, ...) UseMethod("elasticity3")
 
-#' Calculate Elasticity of Lambda to Matrix Elements for a lefkoMat Object
+#' Estimate Elasticity of Population Growth Rate of a lefkoMat Object
 #' 
-#' \code{elasticity3.lefkoMat()} returns the elasticities of lambda to elements
-#' of all \code{$A} matrices in an object of class \code{lefkoMat}. This
+#' \code{elasticity3.lefkoMat()} returns the elasticities of population growth
+#' rate to elements of all \code{$A} matrices in an object of class
+#' \code{lefkoMat}. If deterministic, then \eqn{\lambda} is taken as the
+#' population growth rate. If stochastic, then stochastic \eqn{\lambda}, or
+#' the stochastic growth rate, is taken as the population growth rate. This
 #' function can handle large and sparse matrices, and so can be used with large
 #' historical matrices, IPMs, age x stage matrices, as well as smaller
 #' ahistorical matrices.
 #' 
 #' @param mats An object of class \code{lefkoMat}.
+#' @param stochastic A logical value determining whether to conduct a
+#' deterministic (FALSE) or stochastic (TRUE) elasticity analysis. Defaults to
+#' FALSE.
+#' @param steps The number of times to project forward in stochastic simulation.
+#' Defaults to 10,000.
+#' @param time_weights Numeric vector denoting the probabilistic weightings of
+#' annual matrices. Defaults to equal weighting among times.
+#' @param ... Other parameters.
 #' 
 #' @return This function returns an object of class \code{lefkoElas}, which is a
-#' list with 7 elements. The first, \code{h_elasmats}, is a list of historical
-#' elasticity matrices (\code{NULL} if an ahMPM is used as input). The second,
-#' \code{ah_elasmats}, is a list of either ahistorical elasticity matrices if
-#' an ahMPM is used as input, or, if an hMPM is used as input, then the result
-#' is a list of elasticity matrices in which historical elasticities have been
-#' summed by the stage in times \emph{t} and \emph{t}+1 to produce
-#' \emph{historically-corrected} elasticity matrices, which are equivalent in
-#' dimension to ahistorical elasticity matrices but reflect the effects of stage
-#' in time \emph{t}-1. The third element, \code{h_stages}, is a data frame
-#' showing historical stage pairs (NULL if ahMPM used as input). The fourth
-#' element, \code{ah_stages}, is a data frame showing the order of ahistorical
-#' stages. The last 3 elements are the A, U, and F portions of the input.
+#' list with 7 elements. The first, h_elasmats, is a list of historical
+#' elasticity matrices (NULL if an ahMPM is used as input). The second,
+#' ah_elasmats, is a list of either ahistorical elasticity matrices if an ahMPM
+#' is used as input, or, if an hMPM is used as input, then the result is a list
+#' of elasticity matrices in which historical elasticities have been summed by
+#' the stage in times t and t+1 to produce historically-corrected elasticity
+#' matrices, which are equivalent in dimension to ahistorical elasticity
+#' matrices but reflect the effects of stage in time t-1. The third element,
+#' h_stages, is a data frame showing historical stage pairs (NULL if ahMPM used
+#' as input). The fourth element, ah_stages, is a data frame showing the order
+#' of ahistorical stages. The last 3 elements are the A, U, and F portions of
+#' the input.
 #' 
+#' @section Notes:
+#' Deterministic elasticities are estimated as eqn. 9.72 in Caswell (2001,
+#' Matrix Population Models). Stochastic elasticities are estimated as eqn.
+#' 14.99 in Caswell (2001). Note that stochastic elasticities are of the
+#' stochastic \eqn{\lambda}, while stochastic sensitivities are with regard to
+#' the log of the stochastic \eqn{\lambda}.
+#' 
+#' Currently, this function does not estimate equivalent ahistorical stochastic
+#' elasticities for input historical matrices.
+#'
 #' @seealso \code{\link{elasticity3}()}
 #' @seealso \code{\link{elasticity3.matrix}()}
+#' @seealso \code{\link{elasticity3.list}()}
+#' @seealso \code{\link{summary.lefkoElas}()}
 #' 
 #' @examples
 #' data(lathyrus)
@@ -1335,83 +1562,106 @@ elasticity3 <- function(mats) UseMethod("elasticity3")
 #'   repmatrix = lathrepm, overwrite = lathover3, yearcol = "year2",
 #'   indivcol = "individ")
 #' 
-#' ehrlen3mean <- lmean(ehrlen3)
-#' elasticity3(ehrlen3mean)
+#' elasticity3(ehrlen3, stochastic = TRUE)
 #' 
 #' @export
-elasticity3.lefkoMat <- function(mats) {
-  baldrick <- if (any(class(mats$A) == "matrix")) {
+elasticity3.lefkoMat <- function(mats, stochastic = FALSE, steps = 10000,
+  time_weights = NA, ...) {
+  
+  if (!stochastic) {
+    # Deterministic elasticity analysis
     
-    if (dim(mats$A)[1] > 400) {
-      elas3matrixsp(mats$A)
-    } else {
-      elas3matrix(mats$A)
-    }
-    
-  } else if (class(mats$A) == "list") {
-    
-    if (all(is.na(mats$hstages))) {
+    baldrick <- if (any(class(mats$A) == "matrix")) {
       
-      if (dim(mats$A[[1]])[1] > 400) {
-        lapply(mats$A, elas3matrixsp)
+      if (dim(mats$A)[1] > 400) {
+        elas3matrixsp(mats$A)
       } else {
-        lapply(mats$A, elas3matrix)
+        elas3matrix(mats$A)
+      }
+      
+    } else if (class(mats$A) == "list") {
+      
+      if (all(is.na(mats$hstages))) {
+        
+        if (dim(mats$A[[1]])[1] > 400) {
+          lapply(mats$A, elas3matrixsp)
+        } else {
+          lapply(mats$A, elas3matrix)
+        }
+        
+      } else {
+        
+        lapply(mats$A, elas3hlefko, mats$ahstages, mats$hstages)
       }
       
     } else {
       
-      lapply(mats$A, elas3hlefko, mats$ahstages, mats$hstages)
+      stop("Input not recognized.")
     }
     
+    if (class(mats$A) == "list") {
+      multiplier <- length(mats$A)
+    } else multiplier <- 1
+    
+    if (all(is.na(mats$hstages))) {
+      
+      ahlabels <- mats$ahstages #Originally only the first two columns
+      
+      output <- list(h_elasmats = NULL, ah_elasmats = baldrick, h_stages = NULL,
+                     ah_stages = ahlabels, A = mats$A, U = mats$U, F = mats$F)
+    } else {
+      
+      he_list <- lapply(baldrick, function(X) {X$h_emat})
+      ahe_list <- lapply(baldrick, function(X) {X$ah_emat})
+      
+      hlabels <- mats$hstages
+      
+      ahlabels <- mats$ahstages #Originally only the first two columns
+      
+      output <- list(h_elasmats = he_list, ah_elasmats = ahe_list, 
+                     h_stages = hlabels, ah_stages = ahlabels, A = mats$A, U = mats$U,
+                     F = mats$F)
+    }
   } else {
+    # Stochastic elasticity analysis
     
-    stop("Input not recognized.")
+    if(!any(is.na(time_weights))) {
+      returned_cube <- stoch_senselas(mats, times = steps, style = 2, tweights = time_weights) 
+    } else {
+      returned_cube <- stoch_senselas(mats, times = steps, style = 2) 
+    }
+    
+    returned_list <- lapply(as.list(c(1:dim(returned_cube)[3])), function(X) {return(returned_cube[,,])})
+    if (!all(is.na(mats$hstages))) {
+      output <- list(h_elasmats = returned_list, ah_elasmats = NULL, h_stages = mats$hstages,
+                     ah_stages = mats$ahstages, A = mats$A, U = mats$U, F = mats$F)
+    } else {
+      output <- list(h_elasmats = NULL, ah_elasmats = returned_list, h_stages = mats$hstages,
+                     ah_stages = mats$ahstages, A = mats$A, U = mats$U, F = mats$F)
+    }
   }
-  
-  if (class(mats$A) == "list") {
-    multiplier <- length(mats$A)
-  } else multiplier <- 1
-  
-  if (all(is.na(mats$hstages))) {
-    
-    ahlabels <- mats$ahstages #Originally only the first two columns
-    #names(ahlabels) <- c("stage_id", "stage")
-    
-    output <- list(h_elasmats = NULL, ah_elasmats = baldrick, 
-      h_stages = NULL, ah_stages = ahlabels, A = mats$A, U = mats$U, F = mats$F)
-  } else {
-    
-    he_list <- lapply(baldrick, function(X) {X$h_emat})
-    ahe_list <- lapply(baldrick, function(X) {X$ah_emat})
-    
-    hlabels <- mats$hstages
-    
-    ahlabels <- mats$ahstages #Originally only the first two columns
-    #names(ahlabels) <- c("stage_id", "stage")
-    
-    output <- list(h_elasmats = he_list, ah_elasmats = ahe_list,
-      h_stages = hlabels, ah_stages = ahlabels, A = mats$A, U = mats$U,
-      F = mats$F)
-  }
-  
   class(output) <- "lefkoElas"
   
   return(output)
 }
 
-#' Calculate Elasticity of Lambda to Matrix Elements for a Matrix
+#' Estimate Elasticity of Population Growth Rate of a Single Matrix
 #' 
 #' \code{elasticity3.matrix()} returns the elasticities of lambda to elements
-#' of a single matrix. This function can handle large and sparse matrices, and 
-#' so can be used with large historical matrices, IPMs, age x stage matrices,
-#' as well as smaller ahistorical matrices.
+#' of a single matrix.  Because this handles only one matrix, the elasticities
+#' are inherently deterministic and based on the dominant eigen value as the
+#' best metric of the population growth rate. This function can handle large and
+#' sparse matrices, and so can be used with large historical matrices, IPMs,
+#' age x stage matrices, as well as smaller ahistorical matrices.
 #' 
 #' @param mats An object of class \code{matrix}.
+#' @param ... Other parameters.
 #' 
 #' @return This function returns a single elasticity matrix.
 #' 
 #' @seealso \code{\link{elasticity3}()}
 #' @seealso \code{\link{elasticity3.lefkoMat}()}
+#' @seealso \code{\link{elasticity3.list}()}
 #' 
 #' @examples
 #' data(lathyrus)
@@ -1455,7 +1705,7 @@ elasticity3.lefkoMat <- function(mats) {
 #' elasticity3(ehrlen3mean$A[[1]])
 #' 
 #' @export
-elasticity3.matrix <- function(mats)
+elasticity3.matrix <- function(mats, ...)
 {
   if (dim(mats)[1] > 400) {
     wcorr <- elas3matrixsp(mats)
@@ -1464,6 +1714,127 @@ elasticity3.matrix <- function(mats)
   }
   
   return(wcorr)
+}
+
+#' Estimate Elasticity of Population Growth Rate of a List of Matrices
+#' 
+#' \code{elasticity3.list()} returns the elasticities of lambda to elements
+#' of a single matrix. This function can handle large and sparse matrices, and 
+#' so can be used with large historical matrices, IPMs, age x stage matrices,
+#' as well as smaller ahistorical matrices.
+#' 
+#' @param mats A list of objects of class \code{matrix}.
+#' @param stochastic A logical value determining whether to conduct a
+#' deterministic (FALSE) or stochastic (TRUE) elasticity analysis. Defaults to
+#' FALSE.
+#' @param steps The number of times to project forward in stochastic simulation.
+#' Defaults to 10,000.
+#' @param time_weights Numeric vector denoting the probabilistic weightings of
+#' annual matrices. Defaults to equal weighting among times.
+#' @param ... Other parameters.
+#' 
+#' @return This function returns an object of class \code{lefkoElas}, which is a
+#' list with 7 elements. The first, h_elasmats, is a list of historical
+#' elasticity matrices, though in the standard list case it returns a NULL
+#' value. The second, ah_elasmats, is a list of either ahistorical elasticity
+#' matrices. Since the list used as input contains no stage information, all
+#' matrices are assumed to be ahistorical and elasticities are provided via this
+#' element. The third element, h_stages, and the fourth element, ah_stages, are
+#' NULL. The last 3 elements are the original A matrices in element A, followed
+#' by NULL values for the U and F elements.
+#' 
+#' @section Notes:
+#' Deterministic elasticities are estimated as eqn. 9.72 in Caswell (2001,
+#' Matrix Population Models). Stochastic elasticities are estimated as eqn.
+#' 14.99 in Caswell (2001). Note that stochastic elasticities are of stochastic
+#' \eqn{\lambda}, while stochastic sensitivities are with regard to the log of
+#' the stochastic \eqn{\lambda}.
+#' 
+#' @seealso \code{\link{elasticity3}()}
+#' @seealso \code{\link{elasticity3.lefkoMat}()}
+#' @seealso \code{\link{elasticity3.matrix}()}
+#' 
+#' @examples
+#' data(lathyrus)
+#' 
+#' sizevector <- c(0, 100, 13, 127, 3730, 3800, 0)
+#' stagevector <- c("Sd", "Sdl", "VSm", "Sm", "VLa", "Flo", "Dorm")
+#' repvector <- c(0, 0, 0, 0, 0, 1, 0)
+#' obsvector <- c(0, 1, 1, 1, 1, 1, 0)
+#' matvector <- c(0, 0, 1, 1, 1, 1, 1)
+#' immvector <- c(1, 1, 0, 0, 0, 0, 0)
+#' propvector <- c(1, 0, 0, 0, 0, 0, 0)
+#' indataset <- c(0, 1, 1, 1, 1, 1, 1)
+#' binvec <- c(0, 100, 11, 103, 3500, 3800, 0.5)
+#' 
+#' lathframe <- sf_create(sizes = sizevector, stagenames = stagevector,
+#'   repstatus = repvector, obsstatus = obsvector, matstatus = matvector,
+#'   immstatus = immvector, indataset = indataset, binhalfwidth = binvec,
+#'   propstatus = propvector)
+#' 
+#' lathvert <- verticalize3(lathyrus, noyears = 4, firstyear = 1988,
+#'   patchidcol = "SUBPLOT", individcol = "GENET", blocksize = 9,
+#'   juvcol = "Seedling1988", sizeacol = "Volume88", repstracol = "FCODE88",
+#'   fecacol = "Intactseed88", deadacol = "Dead1988",
+#'   nonobsacol = "Dormant1988", stageassign = lathframe, stagesize = "sizea",
+#'   censorcol = "Missing1988", censorkeep = NA, censor = TRUE)
+#' 
+#' lathrepm <- matrix(0, 7, 7)
+#' lathrepm[1, 6] <- 0.345
+#' lathrepm[2, 6] <- 0.054
+#' 
+#' lathover3 <- overwrite(stage3 = c("Sd", "Sd", "Sdl"),
+#'   stage2 = c("Sd", "Sd", "Sd"), stage1 = c("Sd", "rep", "rep"),
+#'   givenrate = c(0.345, 0.345, 0.054))
+#' 
+#' ehrlen3 <- rlefko3(data = lathvert, stageframe = lathframe,
+#'   year = c(1989, 1990), stages = c("stage3", "stage2", "stage1"),
+#'   repmatrix = lathrepm, overwrite = lathover3, yearcol = "year2",
+#'   indivcol = "individ")
+#' 
+#' elasticity3(ehrlen3$A, stochastic = TRUE)
+#' 
+#' @export
+elasticity3.list <- function(mats, stochastic = FALSE, steps = 10000,
+  time_weights = NA, ...) {
+  
+  if(length(setdiff(unlist(lapply(mats, class)), c("matrix", "array"))) > 0) {
+    stop("Input list must be composed only of numeric matrices.", call. = FALSE)
+  }
+  if (stochastic & length(mats) < 2) {
+    stop("Stochastic elasticity estimation cannot be completed with fewer than 2 annual matrices.", call. = FALSE)
+  }
+  
+  if (!stochastic) {
+    # Deterministic elasticity analysis
+    
+    if (dim(mats[[1]])[1] > 400) {
+      baldrick <- lapply(mats, elas3matrixsp)
+      
+      output <- list(h_elasmats = NULL, ah_elasmats = baldrick, h_stages = NULL,
+                     ah_stages = NULL, A = mats, U = NULL, F = NULL)
+    } else {
+      baldrick <- lapply(mats, elas3matrix)
+      
+      output <- list(h_elasmats = NULL, ah_elasmats = baldrick, h_stages = NULL,
+                     ah_stages = NULL, A = mats, U = NULL, F = NULL)
+    }
+  } else {
+    # Stochastic elasticity analysis
+    
+    if(!any(is.na(time_weights))) {
+      returned_cube <- stoch_senselas(mats, times = steps, style = 2, tweights = time_weights) 
+    } else {
+      returned_cube <- stoch_senselas(mats, times = steps, style = 2) 
+    }
+    
+    returned_list <- lapply(as.list(c(1:dim(returned_cube)[3])), function(X) {return(returned_cube[,,])})
+    output <- list(h_elasmats = NULL, ah_elasmats = returned_list,
+      h_stages = NULL, ah_stages = NULL, A = mats, U = NULL, F = NULL)
+  }
+  class(output) <- "lefkoElas"
+  
+  return(output)
 }
 
 #' Summarize lefkoElas Objects

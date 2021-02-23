@@ -15,7 +15,7 @@
 #' on refers to the state of the individual in a particular year.
 #' 
 #' \describe{
-#'   \item{plantid}{A numberic variable giving a unique number to each 
+#'   \item{plantid}{A numeric variable giving a unique number to each 
 #'   individual.}
 #'   \item{patch}{A variable refering to patch within the population.}
 #'   \item{censor}{A variable coding for whether the data point is valid. An
@@ -77,24 +77,24 @@
 #'   stageassign = cypframe_raw, stagesize = "sizeadded", NAas0 = TRUE, 
 #'   NRasRep = TRUE)
 #' 
-#' rep_cyp_raw <- matrix(0, 11, 11)
-#' rep_cyp_raw[1:2,7:11] <- 0.5
-#' 
-#' cypover2r <- overwrite(stage3 = c("SD", "P1", "P2", "P3", "SL", "SL", "D", 
-#'     "XSm", "Sm"), 
-#'   stage2 = c("SD", "SD", "P1", "P2", "P3", "SL", "SL", "SL", "SL"), 
-#'   eststage3 = c(NA, NA, NA, NA, NA, NA, "D", "XSm", "Sm"), 
-#'   eststage2 = c(NA, NA, NA, NA, NA, NA, "XSm", "XSm", "XSm"), 
-#'   givenrate = c(0.1, 0.2, 0.2, 0.2, 0.25, 0.4, NA, NA, NA), 
-#'   type = c("S", "S", "S", "S", "S", "S", "S", "S", "S"))
+#' cypsupp2r <- supplemental(stage3 = c("SD", "P1", "P2", "P3", "SL", "SL", "D", 
+#'     "XSm", "Sm", "SD", "P1"),
+#'   stage2 = c("SD", "SD", "P1", "P2", "P3", "SL", "SL", "SL", "SL", "rep",
+#'     "rep"),
+#'   eststage3 = c(NA, NA, NA, NA, NA, NA, "D", "XSm", "Sm", NA, NA),
+#'   eststage2 = c(NA, NA, NA, NA, NA, NA, "XSm", "XSm", "XSm", NA, NA),
+#'   givenrate = c(0.10, 0.20, 0.20, 0.20, 0.25, 0.40, NA, NA, NA, NA, NA),
+#'   multiplier = c(NA, NA, NA, NA, NA, NA, NA, NA, NA, 0.5, 0.5),
+#'   type =c(1, 1, 1, 1, 1, 1, 1, 1, 1, 3, 3),
+#'   stageframe = cypframe_raw, historical = FALSE)
 #' 
 #' cypmatrix2r <- rlefko2(data = cypraw_v1, stageframe = cypframe_raw, 
 #'   year = "all", patch = "all", stages = c("stage3", "stage2"),
-#'   size = c("size3added", "size2added"), repmatrix = rep_cyp_raw, 
-#'   overwrite = cypover2r, yearcol = "year2", patchcol = "patchid",
-#'   indivcol = "individ")
+#'   size = c("size3added", "size2added"), supplement = cypsupp2r,
+#'   yearcol = "year2", patchcol = "patchid", indivcol = "individ")
 #'   
-#' cypmatrix2r$A[[1]]
+#' cypmatrix2r$A[[intersect(which(cypmatrix2r$labels$patch == "A"), 
+#'   which(cypmatrix2r$labels$year2 == 2004))]]
 #' 
 "cypdata"
 
@@ -117,7 +117,7 @@
 #' identify time \emph{t} and \code{.3} to identify time \emph{t}+1.
 #' 
 #' \describe{
-#'   \item{plantid}{A numberic variable giving a unique number to each 
+#'   \item{plantid}{A numeric variable giving a unique number to each 
 #'   individual.}
 #'   \item{patch}{A variable refering to patch within the population.}
 #'   \item{censor}{A variable coding for whether the data point is valid. An
@@ -168,7 +168,24 @@
 #'   stageassign = cypframe_raw, stagesize = "sizeadded", censorcol = "censor",
 #'   censor = FALSE, NAas0 = TRUE, NRasRep = TRUE, reduce = TRUE)
 #'   
-#' summary(cypraw_v2)
+#' cypsupp2r <- supplemental(stage3 = c("SD", "P1", "P2", "P3", "SL", "SL", "D", 
+#'     "XSm", "Sm", "SD", "P1"),
+#'   stage2 = c("SD", "SD", "P1", "P2", "P3", "SL", "SL", "SL", "SL", "rep",
+#'     "rep"),
+#'   eststage3 = c(NA, NA, NA, NA, NA, NA, "D", "XSm", "Sm", NA, NA),
+#'   eststage2 = c(NA, NA, NA, NA, NA, NA, "XSm", "XSm", "XSm", NA, NA),
+#'   givenrate = c(0.10, 0.20, 0.20, 0.20, 0.25, 0.40, NA, NA, NA, NA, NA),
+#'   multiplier = c(NA, NA, NA, NA, NA, NA, NA, NA, NA, 0.5, 0.5),
+#'   type =c(1, 1, 1, 1, 1, 1, 1, 1, 1, 3, 3),
+#'   stageframe = cypframe_raw, historical = FALSE)
+#' 
+#' cypmatrix2r <- rlefko2(data = cypraw_v2, stageframe = cypframe_raw, 
+#'   year = "all", patch = "all", stages = c("stage3", "stage2"),
+#'   size = c("size3added", "size2added"), supplement = cypsupp2r,
+#'   yearcol = "year2", patchcol = "patchid", indivcol = "individ")
+#'   
+#' cypmatrix2r$A[[intersect(which(cypmatrix2r$labels$patch == "A"), 
+#'   which(cypmatrix2r$labels$year2 == 2004))]]
 #' 
 "cypvert"
 
@@ -188,7 +205,7 @@
 #' 
 #' \describe{
 #'   \item{SUBPLOT}{A variable refering to patch within the population.}
-#'   \item{GENET}{A numberic variable giving a unique number to each 
+#'   \item{GENET}{A numeric variable giving a unique number to each 
 #'   individual.}
 #'   \item{Volume88}{Aboveground volume in cubic mm in 1988.}
 #'   \item{lnVol88}{Natural logarithm of \code{Volume88}.}

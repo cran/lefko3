@@ -2,7 +2,7 @@
 % Please edit documentation in R/RcppExports.R
 \name{cond_hmpm}
 \alias{cond_hmpm}
-\title{Extracts conditional ahistorical matrices from historical MPM}
+\title{Extract Conditional Ahistorical Matrices from Historical MPM}
 \usage{
 cond_hmpm(hmpm, matchoice = NULL)
 }

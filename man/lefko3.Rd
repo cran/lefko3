@@ -14,20 +14,26 @@ analyses.
 }
 \details{
 The lefko3 package provides six categories of functions:
+
 1. Data transformation and handling functions
+
 2. Functions determining population characteristics from vertical data
+
 3. Model building and selection
+
 4. Matrix / integral projection model creation functions
+
 5. Population dynamics analysis functions
+
 6. Functions describing, summarizing, or visualizing MPMs and derived
 structures
 
 lefko3 also includes example datasets complete with sample code.
 }
 \references{
-Shefferson, R.P., J. Ehrlen, and S. Kurokawa. \emph{In press}. 
+Shefferson, R.P., J. Ehrlen, and S. Kurokawa. 2021. 
 \emph{lefko3}: analyzing individual history through size-classified matrix 
-population models. \emph{Methods in Ecology and Evolution}.
+population models. \emph{Methods in Ecology and Evolution} 12(2): 378-382.
 }
 \author{
 Richard P. Shefferson <cdorm@g.ecc.u-tokyo.ac.jp>

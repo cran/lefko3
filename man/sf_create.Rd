@@ -2,7 +2,7 @@
 % Please edit documentation in R/popchar.R
 \name{sf_create}
 \alias{sf_create}
-\title{Create a Stageframe for Population Matrix Projection Analysis}
+\title{Create Stageframe for Population Matrix Projection Analysis}
 \usage{
 sf_create(
   sizes,
@@ -152,4 +152,5 @@ cypframe_raw$comments[(cypframe_raw$stagenames == "Lg")] <- "Large adult (6-10 s
 cypframe_raw$comments[(cypframe_raw$stagenames == "XLg")] <- "Extra large adult (>10 shoots)"
 
 cypframe_raw
+
 }

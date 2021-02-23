@@ -11,7 +11,7 @@ on refers to the state of the individual in a given year.
 
 \describe{
   \item{SUBPLOT}{A variable refering to patch within the population.}
-  \item{GENET}{A numberic variable giving a unique number to each 
+  \item{GENET}{A numeric variable giving a unique number to each 
   individual.}
   \item{Volume88}{Aboveground volume in cubic mm in 1988.}
   \item{lnVol88}{Natural logarithm of \code{Volume88}.}

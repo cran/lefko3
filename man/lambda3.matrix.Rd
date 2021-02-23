@@ -2,7 +2,7 @@
 % Please edit documentation in R/popdyn.R
 \name{lambda3.matrix}
 \alias{lambda3.matrix}
-\title{Estimate Deterministic Population Growth Rate of a Projection Matrix}
+\title{Estimate Deterministic Population Growth Rate of Single Projection Matrix}
 \usage{
 \method{lambda3}{matrix}(mats)
 }

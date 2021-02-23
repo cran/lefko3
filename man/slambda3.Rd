@@ -2,7 +2,7 @@
 % Please edit documentation in R/RcppExports.R
 \name{slambda3}
 \alias{slambda3}
-\title{Stochastic population growth rate estimation}
+\title{Estimate Stochastic Population Growth Rate}
 \usage{
 slambda3(mpm, times = 10000L, tweights = NULL)
 }
@@ -33,12 +33,19 @@ data frame with 0 entries for patch designation.
 \description{
 Function \code{slambda3()} estimates the stochastic population growth rate,
 \eqn{a}, defined as the long-term arithmetic mean of the log population 
-growth estimated per simulated time (as given in equation 2 in Tuljapurkar,
-Horvitz, and Pascarella 2003). This term is estimated via projection of 
-randomly sampled matrices, similarly to the procedure outlined in Box 7.4 of
-Morris and Doak (2002). Can handle both lefkoMat objects and lists of full A
-matrices.
+growth rate estimated per simulated time (as given in equation 2 in
+Tuljapurkar, Horvitz, and Pascarella 2003). This term is estimated via
+projection of randomly sampled matrices, similarly to the procedure outlined
+in Box 7.4 of Morris and Doak (2002). Can handle both lefkoMat objects and
+lists of full A matrices.
 }
+\section{Notes}{
+
+Weightings given in \code{tweights} do not need to sum to 1. Final
+weightings used will be based on the proportion per element of the sum of
+elements in the user-supplied vector.
+}
+
 \examples{
 data(cypdata)
  
@@ -92,5 +99,6 @@ cypmatrix3r <- rlefko3(data = cypraw_v1, stageframe = cypframe_raw,
   patchcol = "patchid", indivcol = "individ")
 
 cypstoch <- slambda3(cypmatrix3r)
+cypstoch
 
 }

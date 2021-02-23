@@ -2551,16 +2551,19 @@ List stovokor(StringVector surv, StringVector obs, StringVector size,
     fullfecmodel = "none";
   }
   
-  StringVector fullnames {"time t", "individual", "patch", "alive in time t+1", "observed in time t+1", 
-                          "size in time t+1", "reproductive status in time t+1", "fecundity in time t+1",
-                          "fecundity in time t", "size in time t", "size in time t-1", 
-                          "reproductive status in time t", "reprodutive status in time t-1", "age in time t",
-                          "individual covariate a in time t", "individual covariate a in time t-1", 
-                          "individual covariate b in time t", "individual covariate b in time t-1",
-                          "individual covariate c in time t", "individual covariate c in time t-1",};
-  StringVector mainparams {"year2", "individ", "patch", "surv3", "obs3", "size3", "repst3", "fec3", "fec2", 
-                           "size2", "size1", "repst2", "repst1", "age", "indcova2", "indcova1", "indcovb2",
-                           "indcovb1", "indcovc2", "indcovc1"};
+  StringVector fullnames {"time t", "individual", "patch", "alive in time t+1",
+    "observed in time t+1", "size in time t+1",
+    "reproductive status in time t+1", "fecundity in time t+1",
+    "fecundity in time t", "size in time t", "size in time t-1", 
+    "reproductive status in time t", "reprodutive status in time t-1",
+    "age in time t", "individual covariate a in time t",
+    "individual covariate a in time t-1", "individual covariate b in time t",
+    "individual covariate b in time t-1", "individual covariate c in time t",
+    "individual covariate c in time t-1",};
+  StringVector mainparams {"year2", "individ", "patch", "surv3", "obs3",
+    "size3", "repst3", "fec3", "fec2", "size2", "size1", "repst2", "repst1",
+    "age", "indcova2", "indcova1", "indcovb2", "indcovb1", "indcovc2",
+    "indcovc1"};
   
   StringVector modelparams (20);
   modelparams(0) = year;
@@ -2584,14 +2587,15 @@ List stovokor(StringVector surv, StringVector obs, StringVector size,
   modelparams(18) = indcovc(1);
   if (historical) {modelparams(19) = indcovc(2);} else {modelparams(19) = "none";}
   
-  Rcpp::DataFrame paramnames = DataFrame::create(Named("parameter_names") = fullnames, _["mainparams"] = mainparams,
-                                                 _["modelparams"] = modelparams);
+  Rcpp::DataFrame paramnames = DataFrame::create(Named("parameter_names") = fullnames,
+    _["mainparams"] = mainparams, _["modelparams"] = modelparams);
   
-  Rcpp::List output = List::create(Named("full.surv.model") = fullsurvmodel, _["full.obs.model"] = fullobsmodel,  
-                                   _["full.size.model"] = fullsizemodel, _["full.repst.model"] = fullrepstmodel,  
-                                   _["full.fec.model"] = fullfecmodel,  _["juv.surv.model"] = juvsurvmodel,
-                                   _["juv.obs.model"] = juvobsmodel, _["juv.size.model"] = juvsizemodel, 
-                                   _["juv.repst.model"] = juvrepstmodel, _["paramnames"] = paramnames);
+  Rcpp::List output = List::create(Named("full.surv.model") = fullsurvmodel,
+    _["full.obs.model"] = fullobsmodel, _["full.size.model"] = fullsizemodel,
+    _["full.repst.model"] = fullrepstmodel, _["full.fec.model"] = fullfecmodel,
+    _["juv.surv.model"] = juvsurvmodel, _["juv.obs.model"] = juvobsmodel,
+    _["juv.size.model"] = juvsizemodel, _["juv.repst.model"] = juvrepstmodel,
+    _["paramnames"] = paramnames);
   
   if (fullsurvmodel == "none") {
     output["full.surv.model"] = 1;

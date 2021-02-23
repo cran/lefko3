@@ -269,6 +269,8 @@ modification. Note that determination of state in times *t*-1 and *t*+1 gives
 preference to condition in time *t* within the input dataset. Conflicts in
 condition in input datasets that have both times *t* and *t*+1 listed per row
 are resolved by using condition in time *t*.
+
+Variables in this data frame include the following:
 \item{rowid}{Unique identifier for the row of the data frame.}
 \item{popid}{Unique identifier for the population, if given.}
 \item{patchid}{Unique identifier for patch within population, if given.}
@@ -290,7 +292,7 @@ corresponds to age = 0.}
 \item{sizec1,sizec2,sizec3}{Tertiary measurement in times \emph{t}-1,
 \emph{t}, and \emph{t}+1, respectively.}
 \item{size1added,size2added,size3added}{Sum of primary, secondary, and
-tertiary size measurements in timea \emph{t}-1, \emph{t}, and \emph{t}+1,
+tertiary size measurements in times \emph{t}-1, \emph{t}, and \emph{t}+1,
 respectively.}
 \item{repstra1,repstra2,repstra3}{Main numbers of reproductive structures in
 times \emph{t}-1, \emph{t}, and \emph{t}+1, respectively.}
@@ -329,6 +331,38 @@ organized to create historical projection matrices, given a vertically but
 ahistorically formatted data frame. This data frame is in standard 
 \code{lefko3} format and can be used in all functions in the package.
 }
+\section{Notes}{
+
+In some datasets on species with unobserveable stages, observation status
+(\code{obsstatus}) might not be inferred properly if a single size variable
+is used that does not yield sizes greater than 0 in all cases in which
+individuals were observed. Such situations may arise, for example, in plants
+when leaf number is the dominant size variable used, but individuals
+occasionally occur with inflorescences but no leaves. In this instances,
+it helps to mark related variables as \code{sizeb} and \code{sizec}, because
+observation status will be interpreted in relation to all 3 size variables.
+Further analysis can then utilize only a single size variable, of the user's
+choosing. Similar issues can arise in reproductive status (\code{repstatus}).
+
+Warnings that some individuals occur in state combinations that do not match
+any stages in the stageframe used to assign stages are common when first
+working with a dataset. Typically, these situations can be identified as
+\code{NoMatch} entries in \code{stage3}, although such entries may crop up in
+\code{stage1} and \code{stage2}, as well. In rare cases, these warnings will
+arise with no concurrent \code{NoMatch} entries, which indicates that the
+input dataset contained conflicting state data at once suggesting that the
+individual is in some stage but is also dead. The latter is removed if the
+conflict occurs in time \emph{t} or time \emph{t}-1, as only living entries
+are allowed in these times.
+
+Care should be taken to avoid variables with negative values indicating size,
+fecundity, or reproductive or observation status. Negative values can be
+interpreted in different ways, typically reflecting estimation through other
+algorithms rather than actual measured data. Variables holding negative
+values can conflict with data management algorithms in ways that are
+difficult to predict.
+}
+
 \examples{
 data(cypvert)
 

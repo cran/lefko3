@@ -2,7 +2,7 @@
 % Please edit documentation in R/popdyn.R
 \name{lambda3}
 \alias{lambda3}
-\title{Dominant Eigenvalue and Deterministic Population Growth Rate Estimation}
+\title{Estimate Dominant Eigenvalue and Deterministic Population Growth Rate}
 \usage{
 lambda3(mats)
 }

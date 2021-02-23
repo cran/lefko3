@@ -2,21 +2,26 @@
 % Please edit documentation in R/popdyn.R
 \name{sensitivity3.matrix}
 \alias{sensitivity3.matrix}
-\title{Calculate Sensitivity of Lambda to Matrix Elements for a Matrix}
+\title{Estimate Sensitivity of Population Growth Rate of a Single Matrix}
 \usage{
-\method{sensitivity3}{matrix}(mats)
+\method{sensitivity3}{matrix}(mats, ...)
 }
 \arguments{
 \item{mats}{An object of class \code{matrix}.}
+
+\item{...}{Other parameters.}
 }
 \value{
 This function returns a single sensitivity matrix.
 }
 \description{
-\code{sensitivity3.matrix()} returns the sensitivities of lambda to elements
-of a single matrix. This function can handle large and sparse matrices, and 
-so can be used with large historical matrices, IPMs, age x stage matrices,
-as well as smaller ahistorical matrices.
+\code{sensitivity3.matrix()} returns the sensitivities of \eqn{\lambda} to
+elements of a single matrix. Because this handles only one matrix, the
+sensitivities are inherently deterministic and based on the dominant eigen
+value as the best metric of the population growth rate. This function can
+handle large and sparse matrices, and so can be used with large historical
+matrices, IPMs, age x stage matrices, as well as smaller ahistorical
+matrices.
 }
 \examples{
 data(lathyrus)
@@ -64,4 +69,6 @@ sensitivity3(ehrlen3mean$A[[1]])
 \code{\link{sensitivity3}()}
 
 \code{\link{sensitivity3.lefkoMat}()}
+
+\code{\link{sensitivity3.list}()}
 }

@@ -1,4 +1,50 @@
 LEFKO3 NEWS
+-----------
+
+CHANGES IN VERSION 3.3.1 (2021-02-23)
+-------------------------------------
+  USER-VISIBLE CHANGES
+    1. Corrections to vignettes.
+    2. Help file typos fixed.
+
+
+CHANGES IN VERSION 3.3.0 (2021-02-21)
+-------------------------------------
+  NEW FEATURES
+    1. Function supplemental() created to allow greater flexibility in the input
+       of reproductive multipliers. All matrix creation functions can now handle
+       its output.
+    2. Stochastic sensitivity and elasticity analyses now enabled through
+       functions sensitivity3() and elasticity3(), respectively.
+    3. Functions sensitivity3() and elasticity3() now handle simple lists of A
+       matrices, in addition to lefkoMat objects and simple matrices.
+    4. Function parasearch() created to allow parallelized model building and
+       selection.
+  
+  USER-VISIBLE CHANGES
+    1. Censoring options in verticalize3() and historicalize3() can now handle
+       both static and temporally-variable censor variables.
+    2. Overwrite and supplemental tables can now include "prop", "immat", and
+       "mat" as shorthand for suites of all propagule, immature, and mature
+       stages.
+    3. Function modelsearch() now gives warning if a dataset is used with NAs in
+       individual ID when a mixed modeling approach is requested. It now also
+       provides standard diagnostic messages at each step.
+    4. Corrections and additions to help files.
+  
+  BUG FIXES
+    1. Fixed censoring protocols in verticalize3(), historicalize3() rlefko3(),
+       and rlefko2().
+    2. Corrected distribtution algorithm for zero inflation and text output in
+       sf_distrib().
+    3. Eliminated bug causing high overdispersion parameters from negative
+       binomial-based size models to yield function-based matrices with NA
+       values for all transitions to stages with positive size.
+    4. Fixed issue in which mixed models with a non-zero-inflated negative
+       binomial distribution fails to estimate function-based martrices.
+    5. Fixed compatibility issues in matrix creation functions with R 3.6.3.
+    6. Fixed minor issue in summary.lefkoMat output text.
+
 
 CHANGES IN VERSION 3.2.0 (2021-01-03)
 -------------------------------------

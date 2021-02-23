@@ -2,7 +2,7 @@
 % Please edit documentation in R/popdyn.R
 \name{repvalue3}
 \alias{repvalue3}
-\title{Reproductive Value Estimation}
+\title{Estimate Reproductive Value}
 \usage{
 repvalue3(mats)
 }

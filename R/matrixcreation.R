@@ -6,7 +6,7 @@
 #' characteristics of the ahistorical stages used and historical stage pairs
 #' created, and a data frame characterizing the patch and year combinations
 #' corresponding to these matrices. Unlike \code{\link{rlefko3}()}, this
-#' function currently does not currently distinguish populations.
+#' function currently does not distinguish populations within the same dataset.
 #'
 #' @param year A variable corresponding to year or observation time, or a set
 #' of such values, given in values associated with the year term used in linear 
@@ -19,18 +19,37 @@
 #' observation status, propagule status, immaturity status, and maturity status
 #' of each ahistorical stage. Should also incorporate bin widths if size is
 #' continuous.
-#' @param repmatrix A matrix composed mostly of 0s, with non-zero values for
-#' each potentially new individual (row) born to each reproductive stage
-#' (column). Entries act as multipliers on fecundity, with 1 equaling full
-#' fecundity.
-#' @param overwrite A data frame developed with the \code{\link{overwrite}()}
-#' function describing transitions to be overwritten either with given values or 
-#' with other estimated transitions.
-#' @param data The original historical demographic data frame used to estimate
-#' vital rates (class \code{hfvdata}). The original data frame is required in
-#' order to initialize years and patches properly.
+#' @param supplement An optional data frame of class \code{lefkoSD} that
+#' provides supplemental data that should be incorporated into the MPM. Three
+#' kinds of data may be integrated this way: transitions to be estimated via the
+#' use of proxy transitions, transition overwrites from the literature or
+#' supplemental studies, and transition multipliers for fecundity. This data
+#' frame should be produced using the \code{\link{supplemental}()} function. Can
+#' be used in place of or in addition to an overwrite table (see 
+#' \code{overwrite} below) and a reproduction matrix (see \code{repmatrix}
+#' below).
+#' @param repmatrix A reproduction matrix, which is an optional matrix composed
+#' mostly of 0s, with non-zero values for each potentially new individual (row)
+#' born to each reproductive stage (column). Entries act as multipliers on
+#' fecundity, with 1 equaling full fecundity. Fecundity multipliers provided
+#' this way supplement rather than replace those provided in \code{supplement}.
+#' If left blank, then \code{flefko3()} will assume that all stages marked as
+#' reproductive produce offspring at 1x that of fecundity estimated in provided
+#' linear models, and that fecundity will be into the first stage noted as
+#' propagule or immature. To prevent this behavior, input just \code{0}, which
+#' will result in fecundity being estimated only for transitions noted in
+#' \code{supplement} above. May be the dimensions of either a historical or an
+#' ahistorical matrix. If the latter, then all stages will be used in time
+#' \emph{t}-1 for each suggested ahistorical transition.
+#' @param overwrite An optional data frame developed with the
+#' \code{\link{overwrite}()} function describing transitions to be overwritten
+#' either with given values or with other estimated transitions. Note that this
+#' function supplements overwrite data provided in \code{supplement}.
+#' @param data The historical vertical demographic data frame used to estimate
+#' vital rates (class \code{hfvdata}), which is required to initialize years and
+#' patches properly.
 #' @param modelsuite An optional \code{lefkoMod} object holding the vital rate
-#' models. If given, then \code{surv_model}, \code{obs_model}, 
+#' models. If given, then \code{surv_model}, \code{obs_model},
 #' \code{size_model}, \code{repst_model}, \code{fec_model}, \code{jsurv_model},
 #' \code{jobs_model}, \code{jsize_model}, \code{jrepst_model},
 #' \code{paramnames}, \code{yearcol}, and \code{patchcol} are not required. One
@@ -146,7 +165,7 @@
 #' 
 #' \item{A}{A list of full projection matrices in order of sorted patches and
 #' years. All matrices output in the \code{matrix} class.}
-#' \item{U}{A list of survival-transition matrices sorted as in \code{A}. All 
+#' \item{U}{A list of survival transition matrices sorted as in \code{A}. All 
 #' matrices output in the \code{matrix} class.}
 #' \item{F}{A list of fecundity matrices sorted as in \code{A}. All matrices 
 #' output in the \code{matrix} class.}
@@ -161,6 +180,35 @@
 #' \item{matrixqc}{A short vector describing the number of non-zero elements in
 #' \code{U} and \code{F} matrices, and the number of annual matrices.}
 #' \item{modelqc}{This is the \code{qc} portion of the \code{modelsuite} input.}
+#'
+#' @section Notes:
+#' The default behavior of this function is to estimate fecundity with regards
+#' to transitions specified via associated fecundity multipliers in either
+#' \code{supplement} or \code{repmatrix}. If both of these fields are left
+#' empty, then fecundity will be estimated at full for all transitions leading
+#' from reproductive stages to immature and propagule stages. However, if a
+#' \code{supplement} is provided and a \code{repmatrix} is not, or if
+#' \code{repmatrix} is set to 0, then only fecundity transitions noted in the
+#' supplement will be set to non-zero values. To use the default behavior of
+#' setting all reproductive stages to reproduce at full fecundity into immature
+#' and propagule stages but incorporate given or proxy survival transitions,
+#' input those given and proxy transitions through the \code{overwrite} option.
+#' 
+#' The reproduction matrix (field \code{repmatrix}) may be supplied as either
+#' historical or ahistorical. If provided as ahistorical, then \code{flefko3()}
+#' will assume that all historical transitions involving stages noted for times
+#' \emph{t} and \emph{t}+1 should be set to the respective fecundity multipliers
+#' noted.
+#' 
+#' Users may at times wish to estimate MPMs using a dataset incorporating
+#' multiple patches or subpopulations. Should the aim of analysis be a general
+#' MPM that does not distinguish these patches or subpopulations, the
+#' \code{patchcol} variable should be left to NA, which is the default.
+#' 
+#' Input options including multiple variable names must be entered in the order
+#' of variables in time \emph{t}+1, \emph{t}, and \emph{t}-1. Rearranging the
+#' order WILL lead to erroneous calculations, and will probably also lead to
+#' fatal errors.
 #'
 #' @examples
 #' \donttest{
@@ -197,6 +245,31 @@
 #' lathvertln$feca1 <- round(lathvertln$feca1)
 #' lathvertln$feca3 <- round(lathvertln$feca3)
 #' 
+#' lathmodelsln3 <- modelsearch(lathvertln, historical = TRUE, 
+#'   approach = "mixed", suite = "main", 
+#'   vitalrates = c("surv", "obs", "size", "repst", "fec"), juvestimate = "Sdl",
+#'   bestfit = "AICc&k", sizedist = "gaussian", fecdist = "poisson", 
+#'   indiv = "individ", patch = "patchid", year = "year2",year.as.random = TRUE,
+#'   patch.as.random = TRUE, show.model.tables = TRUE, quiet = TRUE)
+#' 
+#' # Here we use supplemental() to provide overwrite and reproductive info
+#' lathsupp3 <- supplemental(stage3 = c("Sd", "Sd", "Sdl", "Sd", "Sdl"), 
+#'   stage2 = c("Sd", "Sd", "Sd", "rep", "rep"),
+#'   stage1 = c("Sd", "rep", "rep", "all", "all"), 
+#'   givenrate = c(0.345, 0.345, 0.054, NA, NA),
+#'   multiplier = c(NA, NA, NA, 0.345, 0.054),
+#'   type = c(1, 1, 1, 3, 3), stageframe = lathframeln, historical = TRUE)
+#' 
+#' lathmat3ln <- flefko3(year = "all", patch = "all", stageframe = lathframeln, 
+#'   modelsuite = lathmodelsln3, data = lathvertln, supplement = lathsupp3, 
+#'   patchcol = "patchid", yearcol = "year2", year.as.random = FALSE,
+#'   patch.as.random = FALSE, reduce = FALSE)
+#' 
+#' summary(lathmat3ln)
+#' 
+#' # Alternatively, we can use overwrite() and a reproductive matrix to provide
+#' # supplemental info
+#' 
 #' lathrepmln <- matrix(0, 21, 21)
 #' lathrepmln[1, c(13:21)] <- 0.345
 #' lathrepmln[2, c(13:21)] <- 0.054
@@ -205,29 +278,23 @@
 #'   stage2 = c("Sd", "Sd", "Sd"), stage1 = c("Sd", "rep", "rep"), 
 #'   givenrate = c(0.345, 0.345, 0.054))
 #' 
-#' lathmodelsln3 <- modelsearch(lathvertln, historical = TRUE, 
-#'   approach = "mixed", suite = "main", 
-#'   vitalrates = c("surv", "obs", "size", "repst", "fec"), juvestimate = "Sdl",
-#'   bestfit = "AICc&k", sizedist = "gaussian", fecdist = "poisson", 
-#'   indiv = "individ", patch = "patchid", year = "year2",year.as.random = TRUE,
-#'   patch.as.random = TRUE, show.model.tables = TRUE, quiet = TRUE)
+#' lathmat3ln_alt <- flefko3(year = "all", patch = "all",
+#'   stageframe = lathframeln, modelsuite = lathmodelsln3, data = lathvertln,
+#'   repmatrix = lathrepmln, overwrite = lathover3, patchcol = "patchid",
+#'   yearcol = "year2", year.as.random = FALSE, patch.as.random = FALSE,
+#'   reduce = FALSE)
 #' 
-#' lathmat3ln <- flefko3(year = "all", patch = "all", stageframe = lathframeln, 
-#'   modelsuite = lathmodelsln3, data = lathvertln, repmatrix = lathrepmln,
-#'   overwrite = lathover3, patchcol = "patchid", yearcol = "year2",
-#'   year.as.random = FALSE, patch.as.random = FALSE, reduce = FALSE)
-#' 
-#' summary(lathmat3ln)
+#' summary(lathmat3ln_alt)
 #' }
 #' 
 #' @export
-flefko3 <- function(year = "all", patch = "all", stageframe, repmatrix = NA, 
-  overwrite = NA, data = NA, modelsuite = NA, surv_model = NA, obs_model = NA,
-  size_model = NA, repst_model = NA, fec_model = NA, jsurv_model = NA, 
-  jobs_model = NA, jsize_model = NA, jrepst_model = NA, paramnames = NA, 
-  inda = 0, indb = 0, indc = 0, surv_dev = 0, obs_dev = 0, size_dev = 0,
-  repst_dev = 0, fec_dev = 0, jsurv_dev = 0, jobs_dev = 0, jsize_dev = 0,
-  jrepst_dev = 0, repmod = 1, yearcol = NA, patchcol = NA, 
+flefko3 <- function(year = "all", patch = "all", stageframe, supplement = NA,
+  repmatrix = NA, overwrite = NA, data = NA, modelsuite = NA, surv_model = NA,
+  obs_model = NA, size_model = NA, repst_model = NA, fec_model = NA,
+  jsurv_model = NA, jobs_model = NA, jsize_model = NA, jrepst_model = NA,
+  paramnames = NA, inda = 0, indb = 0, indc = 0, surv_dev = 0, obs_dev = 0,
+  size_dev = 0, repst_dev = 0, fec_dev = 0, jsurv_dev = 0, jobs_dev = 0,
+  jsize_dev = 0, jrepst_dev = 0, repmod = 1, yearcol = NA, patchcol = NA, 
   year.as.random = FALSE, patch.as.random = FALSE, randomseed = NA,
   negfec = FALSE, reduce = FALSE) {
   
@@ -239,8 +306,12 @@ flefko3 <- function(year = "all", patch = "all", stageframe, repmatrix = NA,
     patchcol <- paramnames$modelparams[which(paramnames$mainparams == "patch")]
   }
   
-  if (all(is.na(data))) {stop("Need original vertical dataset to set proper limits on year and patch.", call. = FALSE)}
-  if (!any(class(data) == "data.frame")) {stop("Need original vertical dataset used in modeling to proceed.", call. = FALSE)}
+  if (all(is.na(data))) {
+    stop("Need original vertical dataset to set proper limits on year and patch.", call. = FALSE)
+  }
+  if (!any(class(data) == "data.frame")) {
+    stop("Need original vertical dataset used in modeling to proceed.", call. = FALSE)
+  }
   
   if (is.character(yearcol)) {
     choicevar <- which(names(data) == yearcol);
@@ -252,7 +323,7 @@ flefko3 <- function(year = "all", patch = "all", stageframe, repmatrix = NA,
   }
   
   if (any(is.character(year))) {
-    if (is.element(tolower(year), "all")) {
+    if (is.element("all", tolower(year))) {
       year <- mainyears
     } else {
       stop("Year designation not recognized.", call. = FALSE)
@@ -260,14 +331,14 @@ flefko3 <- function(year = "all", patch = "all", stageframe, repmatrix = NA,
   }
   
   if (length(year) == 0 | all(is.na(year) == TRUE) | any(is.na(year))) {
-    stop("This function cannot proceed without being given a specific year, or a suite of years.", call. = FALSE)
+    stop("This function cannot proceed without being given a specific year, or a suite of years. NA entries are not allowed.", call. = FALSE)
   }
   
-  if (is.na(patch) & !is.na(patchcol)) {
+  if (all(is.na(patch)) & !is.na(patchcol)) {
     warning("Matrix creation may not proceed properly without input in the patch option when using a modelsuite in which patch is designated.")
   }
   
-  if (is.character(patchcol)) {
+  if (is.character(patchcol) & patchcol != "none") {
     choicevar <- which(names(data) == patchcol);
     mainpatches <- sort(unique(as.character(data[,choicevar])))
   } else if (is.numeric(patchcol)) {
@@ -277,28 +348,45 @@ flefko3 <- function(year = "all", patch = "all", stageframe, repmatrix = NA,
   }
   
   if (any(is.character(patch))) {
-    if (is.element(tolower(patch), "all")) {
+    if (is.element("all", tolower(patch))) {
       patch <- mainpatches
-    } else if (!is.element(patch, mainpatches)) {
+    } else if (!all(is.element(patch, mainpatches))) {
       stop("Patch designation not recognized.", call. = FALSE)
     }
   }
   
-  if (all(is.na(repmatrix))) {
-    repmatrix <- matrix(0, dim(stageframe)[1], dim(stageframe)[1])
-    repstages <- which(stageframe$repstatus == 1)
-    repmatrix[1, repstages] <- 1
+  if (!is.numeric(inda) | !is.numeric(indb) | !is.numeric(indc)) {
+    stop("Individual covariate values must be numeric.", call. = FALSE)
   }
   
-  if (!is.numeric(inda) | !is.numeric(indb) | !is.numeric(indc)) {
-    stop("Individual covariate values must equal valid numbers.", call. = FALSE)
+  if (all(is.na(repmatrix)) & all(is.na(supplement))) {
+    warning("Neither supplemental data nor a reproduction matrix have been supplied. All fecundity transitions will be inferred from the stageframe.")
+  } else if (all(is.na(repmatrix)) & any(class(supplement) == "lefkoSD")) {
+    checkconv <- supplement$convtype
+    
+    if (!is.element(3, checkconv)) {
+      warning("Supplemental data does not include fecundity information, and a reproduction matrix has not been supplied. All fecundity transitions will be inferred from the stageframe.")
+    }
+  }
+  
+  stagenum_init <- dim(stageframe)[1]
+  if (!all(is.na(repmatrix))) {
+    if (any(class(repmatrix) == "matrix")) {
+      if (dim(repmatrix)[1] != stagenum_init & dim(repmatrix)[1] != stagenum_init^2) {
+        stop("The repmatrix provided must be a square matrix with dimensions equal to the number of stages in the stageframe, or the square thereof.", call. = FALSE)
+      }
+      
+      if (dim(repmatrix)[2] != stagenum_init & dim(repmatrix)[2] != stagenum_init^2) {
+        stop("The repmatrix provided must be a square matrix with dimensions equal to the number of stages in the stageframe, or the square thereof.", call. = FALSE)
+      }
+    }
   }
   
   if (any(!suppressWarnings(!is.na(as.numeric(as.character(stageframe$bin_size_ctr)))))) {
     stop("Function flefko3() requires size to be numeric rather than categorical.", call. = FALSE)
   }
   
-  melchett <- .sf_reassess(stageframe, repmatrix, overwrite)
+  melchett <- .sf_reassess(stageframe, supplement, repmatrix, overwrite)
   stageframe <- melchett[[1]]
   repmatrix <- melchett[[2]]
   
@@ -326,11 +414,11 @@ flefko3 <- function(year = "all", patch = "all", stageframe, repmatrix = NA,
   
   instages <- length(stageframe$stage_id)
   
-  overwrite <- .overwrite_reassess(overwrite, stageframe, historical = TRUE)
+  ovtable <- .overwrite_reassess(stageframe, supplement, overwrite, historical = TRUE)
   
   # Next the data frame carrying all raw values and element indices for matrix element estimation
-  allstages.list <- theoldpizzle(stageframe, overwrite, repmatrix, finalage = 0, style = 0, cont = 0)
-  allstages <- do.call("cbind.data.frame", allstages.list)
+  allstages.list <- theoldpizzle(stageframe, ovtable, repmatrix, finalage = 0, style = 0, cont = 0)
+  allstages <- do.call("cbind.data.frame", c(allstages.list, stringsAsFactors = FALSE))
   
   maxsize <- max(c(allstages$a.size3, allstages$a.size2n, allstages$a.size2o, allstages$a.size1), na.rm = TRUE)
   
@@ -413,7 +501,7 @@ flefko3 <- function(year = "all", patch = "all", stageframe, repmatrix = NA,
   # This creates a list of pop, patch, and year in order of matrix
   if (!all(is.na(patch))) {
     listofyears <- apply(as.matrix(patch), 1, function(X) {
-      output <- cbind.data.frame("1", X, as.matrix(year));
+      output <- cbind.data.frame("1", X, as.matrix(year), stringsAsFactors = FALSE);
       names(output) <- c("pop", "patch", "year2");
       return(output)
     })
@@ -425,7 +513,7 @@ flefko3 <- function(year = "all", patch = "all", stageframe, repmatrix = NA,
     
   } else {
     
-    listofyears <- cbind.data.frame("1", "1", as.matrix(year))
+    listofyears <- cbind.data.frame("1", "1", as.matrix(year), stringsAsFactors = FALSE)
     names(listofyears) <- c("pop", "patch", "year2")
     
     listofyears$poporder <- 1
@@ -439,11 +527,12 @@ flefko3 <- function(year = "all", patch = "all", stageframe, repmatrix = NA,
   yearlist <- split(listofyears, seq(nrow(listofyears)))
   
   # The next call runs the core matrix estimator function and creates all matrices
-  madsexmadrigal <- lapply(yearlist, jerzeibalowski, allstages, surv_proxy, obs_proxy, size_proxy, repst_proxy,
-                           fec_proxy, jsurv_proxy, jobs_proxy, jsize_proxy, jrepst_proxy, inda, indb, indc, 
-                           surv_dev, obs_dev, size_dev, repst_dev, fec_dev, jsurv_dev, jobs_dev, jsize_dev, 
-                           jrepst_dev, total.matrix.dim, repmod, rvarssummed, sigma, jrvarssummed, jsigma, 
-                           maxsize, sizedist, fecdist, negfec)
+  madsexmadrigal <- lapply(yearlist, jerzeibalowski, allstages, surv_proxy,
+    obs_proxy, size_proxy, repst_proxy, fec_proxy, jsurv_proxy, jobs_proxy,
+    jsize_proxy, jrepst_proxy, inda, indb, indc, surv_dev, obs_dev, size_dev,
+    repst_dev, fec_dev, jsurv_dev, jobs_dev, jsize_dev, jrepst_dev,
+    total.matrix.dim, repmod, rvarssummed, sigma, jrvarssummed, jsigma, maxsize,
+    sizedist, fecdist, negfec)
   
   a_list <- lapply(madsexmadrigal, function(X) {X$A})
   u_list <- lapply(madsexmadrigal, function(X) {X$U})
@@ -452,9 +541,9 @@ flefko3 <- function(year = "all", patch = "all", stageframe, repmatrix = NA,
   ahstages <- stageframe[1:(dim(stageframe)[1] - 1),]
   
   pairings1 <- expand.grid(stage_id_2 = stageframe$stage_id[1:(dim(stageframe)[1] - 1)], 
-                           stage_id_1 = stageframe$stage_id[1:(dim(stageframe)[1] - 1)])
+    stage_id_1 = stageframe$stage_id[1:(dim(stageframe)[1] - 1)])
   pairings2 <- expand.grid(stage_2 = stageframe$stage[1:(dim(stageframe)[1] - 1)], 
-                           stage_1 = stageframe$stage[1:(dim(stageframe)[1] - 1)])
+    stage_1 = stageframe$stage[1:(dim(stageframe)[1] - 1)])
   hstages <- cbind.data.frame(pairings1, pairings2)
   
   qcoutput1 <- NA
@@ -479,8 +568,9 @@ flefko3 <- function(year = "all", patch = "all", stageframe, repmatrix = NA,
   
   rownames(hstages) <- c(1:dim(hstages)[1])
   
-  output <- list(A = a_list, U = u_list, F = f_list, hstages = hstages, ahstages = ahstages, 
-                 labels = listofyears[,c(1:3)], matrixqc = qcoutput1, modelqc = qcoutput2)
+  output <- list(A = a_list, U = u_list, F = f_list, hstages = hstages,
+    ahstages = ahstages, labels = listofyears[,c(1:3)], matrixqc = qcoutput1,
+    modelqc = qcoutput2)
   
   class(output) <- "lefkoMat"
   
@@ -553,13 +643,30 @@ flefko3 <- function(year = "all", patch = "all", stageframe, repmatrix = NA,
 #' observation status, propagule status, immaturity status, and maturity status
 #' of each ahistorical stage. Should also incorporate bin widths if size is
 #' continuous.
-#' @param repmatrix A matrix composed mostly of 0s, with non-zero values for
-#' each potentially new individual (row) born to each reproductive stage
-#' (column). Entries act as multipliers on fecundity, with 1 equaling full
-#' fecundity.
-#' @param overwrite A data frame developed with the \code{\link{overwrite}()}
-#' function describing transitions to be overwritten either with given values or 
-#' with other estimated transitions.
+#' @param supplement An optional data frame of class \code{lefkoSD} that
+#' provides supplemental data that should be incorporated into the MPM. Three
+#' kinds of data may be integrated this way: transitions to be estimated via the
+#' use of proxy transitions, transition overwrites from the literature or
+#' supplemental studies, and transition multipliers for fecundity. This data
+#' frame should be produced using the \code{\link{supplemental}()} function. Can
+#' be used in place of or in addition to an overwrite table (see 
+#' \code{overwrite} below) and a reproduction matrix (see \code{repmatrix}
+#' below).
+#' @param repmatrix A reproduction matrix, which is an optional matrix composed
+#' mostly of 0s, with non-zero values for each potentially new individual (row)
+#' born to each reproductive stage (column). Entries act as multipliers on
+#' fecundity, with 1 equaling full fecundity. Fecundity multipliers provided
+#' this way supplement rather than replace those provided in \code{supplement}.
+#' If left blank, then \code{flefko2()} will assume that all stages marked as
+#' reproductive produce offspring at 1x that of fecundity estimated in provided
+#' linear models, and that fecundity will be into the first stage noted as
+#' propagule or immature. To prevent this behavior, input just \code{0}, which
+#' will result in fecundity being estimated only for transitions noted in
+#' \code{supplement} above. Must be the dimensions of an ahistorical matrix.
+#' @param overwrite An optional data frame developed with the
+#' \code{\link{overwrite}()} function describing transitions to be overwritten
+#' either with given values or with other estimated transitions. Note that this
+#' function supplements overwrite data provided in \code{supplement}.
 #' @param data The original historical demographic data frame used to estimate
 #' vital rates (class \code{hfvdata}). The original data frame is required in
 #' order to initialize years and patches properly.
@@ -677,7 +784,7 @@ flefko3 <- function(year = "all", patch = "all", stageframe, repmatrix = NA,
 #'
 #' \item{A}{A list of full projection matrices in order of sorted patches and
 #' years. All matrices output in the \code{matrix} class.}
-#' \item{U}{A list of survival-transition matrices sorted as in \code{A}. All 
+#' \item{U}{A list of survival transition matrices sorted as in \code{A}. All 
 #' matrices output in the \code{matrix} class.}
 #' \item{F}{A list of fecundity matrices sorted as in \code{A}. All matrices 
 #' output in the \code{matrix} class.}
@@ -692,9 +799,36 @@ flefko3 <- function(year = "all", patch = "all", stageframe, repmatrix = NA,
 #' \code{U} and \code{F} matrices, and the number of annual matrices.}
 #' \item{modelqc}{This is the \code{qc} portion of the modelsuite input.}
 #' 
-#' Please note that this function will yield incorrect estimates if the models
-#' utilized incorporate state in time \emph{t}-1. Only use models developed
-#' testing ahistorical effects.
+#' @section Notes:
+#' This function will yield incorrect estimates if the models utilized
+#' incorporate state in time \emph{t}-1. Only use models developed testing for
+#' ahistorical effects.
+#' 
+#' The default behavior of this function is to estimate fecundity with regards
+#' to transitions specified via associated fecundity multipliers in either
+#' \code{supplement} or \code{repmatrix}. If both of these fields are left
+#' empty, then fecundity will be estimated at full for all transitions leading
+#' from reproductive stages to immature and propagule stages. However, if a
+#' \code{supplement} is provided and a \code{repmatrix} is not, or if
+#' \code{repmatrix} is set to 0, then only fecundity transitions noted in the
+#' supplement will be set to non-zero values. To use the default behavior of
+#' setting all reproductive stages to reproduce at full fecundity into immature
+#' and propagule stages but also incorporate given or proxy
+#' survival transitions, input those given and proxy transitions through the
+#' \code{overwrite} option.
+#' 
+#' The reproduction matrix (field \code{repmatrix}) may only be supplied as
+#' ahistorical. If provided as historical, then \code{flefko2()} will fail and
+#' produce an error.
+#' 
+#' Users may at times wish to estimate MPMs using a dataset incorporating
+#' multiple patches or subpopulations. Should the aim of analysis be a general
+#' MPM that does not distinguish these patches or subpopulations, the
+#' \code{patchcol} variable should be left to NA, which is the default.
+#'
+#' Input options including multiple variable names must be entered in the order
+#' of variables in time \emph{t}+1 and \emph{t}. Rearranging the order WILL lead
+#' to erroneous calculations, and will probably also lead to fatal errors.
 #'
 #' @examples
 #' \donttest{
@@ -715,7 +849,6 @@ flefko3 <- function(year = "all", patch = "all", stageframe, repmatrix = NA,
 #' binvec <- c(0, 4.6, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5,
 #'   0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5)
 #' 
-#' 
 #' lathframeln <- sf_create(sizes = sizevector, stagenames = stagevector, 
 #'   repstatus = repvector, obsstatus = obsvector, matstatus = matvector,
 #'   immstatus = immvector, indataset = indataset, binhalfwidth = binvec,
@@ -733,13 +866,6 @@ flefko3 <- function(year = "all", patch = "all", stageframe, repmatrix = NA,
 #' lathvertln$feca1 <- round(lathvertln$feca1)
 #' lathvertln$feca3 <- round(lathvertln$feca3)
 #' 
-#' lathrepmln <- matrix(0, 21, 21)
-#' lathrepmln[1, c(13:21)] <- 0.345
-#' lathrepmln[2, c(13:21)] <- 0.054
-#' 
-#' lathover2 <- overwrite(stage3 = c("Sd", "Sdl"), stage2 = c("Sd", "Sd"),
-#'   givenrate = c(0.345, 0.054))
-#' 
 #' lathmodelsln2 <- modelsearch(lathvertln, historical = FALSE, 
 #'   approach = "mixed", suite = "main",
 #'   vitalrates = c("surv", "obs", "size", "repst", "fec"), juvestimate = "Sdl",
@@ -747,23 +873,47 @@ flefko3 <- function(year = "all", patch = "all", stageframe, repmatrix = NA,
 #'   indiv = "individ", patch = "patchid", year = "year2",
 #'   year.as.random = TRUE, patch.as.random = TRUE, show.model.tables = TRUE,
 #'   quiet = TRUE)
-#'                              
+#' 
+#' # Here we use supplemental to provide overwrite and reproductive info
+#' lathsupp2 <- supplemental(stage3 = c("Sd", "Sdl", "Sd", "Sdl"), 
+#'   stage2 = c("Sd", "Sd", "rep", "rep"),
+#'   givenrate = c(0.345, 0.054, NA, NA),
+#'   multiplier = c(NA, NA, 0.345, 0.054),
+#'   type = c(1, 1, 3, 3), stageframe = lathframeln, historical = FALSE)
+#' 
 #' lathmat2ln <- flefko2(year = "all", patch = "all", stageframe = lathframeln, 
-#'   modelsuite = lathmodelsln2, data = lathvertln, repmatrix = lathrepmln,
-#'   overwrite = lathover2, patchcol = "patchid", yearcol = "year2",
-#'   year.as.random = FALSE, patch.as.random = FALSE, reduce = FALSE)
+#'   modelsuite = lathmodelsln2, data = lathvertln, supplement = lathsupp2,
+#'   patchcol = "patchid", yearcol = "year2", year.as.random = FALSE,
+#'   patch.as.random = FALSE, reduce = FALSE)
 #' 
 #' summary(lathmat2ln)
+#' 
+#' # Alternatively, we can use overwrite() and a reproductive matrix instead of
+#' # supplemental()
+#' lathrepmln <- matrix(0, 21, 21)
+#' lathrepmln[1, c(13:21)] <- 0.345
+#' lathrepmln[2, c(13:21)] <- 0.054
+#' 
+#' lathover2 <- overwrite(stage3 = c("Sd", "Sdl"), stage2 = c("Sd", "Sd"),
+#'   givenrate = c(0.345, 0.054))
+#' 
+#' lathmat2ln_alt <- flefko2(year = "all", patch = "all",
+#'   stageframe = lathframeln, modelsuite = lathmodelsln2, data = lathvertln,
+#'   repmatrix = lathrepmln, overwrite = lathover2, patchcol = "patchid",
+#'   yearcol = "year2", year.as.random = FALSE, patch.as.random = FALSE,
+#'   reduce = FALSE)
+#' 
+#' summary(lathmat2ln_alt)
 #' }
 #' 
 #' @export
-flefko2 <- function(year = "all", patch = "all", stageframe, repmatrix = NA, 
-  overwrite = NA, data = NA, modelsuite = NA, surv_model = NA, obs_model = NA,
-  size_model = NA, repst_model = NA, fec_model = NA, jsurv_model = NA,
-  jobs_model = NA, jsize_model = NA, jrepst_model = NA, paramnames = NA,
-  inda = 0, indb = 0, indc = 0, surv_dev = 0, obs_dev = 0, size_dev = 0,
-  repst_dev = 0, fec_dev = 0, jsurv_dev = 0, jobs_dev = 0, jsize_dev = 0,
-  jrepst_dev = 0, repmod = 1, yearcol = NA, patchcol = NA,
+flefko2 <- function(year = "all", patch = "all", stageframe, supplement = NA,
+  repmatrix = NA, overwrite = NA, data = NA, modelsuite = NA, surv_model = NA,
+  obs_model = NA, size_model = NA, repst_model = NA, fec_model = NA,
+  jsurv_model = NA, jobs_model = NA, jsize_model = NA, jrepst_model = NA,
+  paramnames = NA, inda = 0, indb = 0, indc = 0, surv_dev = 0, obs_dev = 0,
+  size_dev = 0, repst_dev = 0, fec_dev = 0, jsurv_dev = 0, jobs_dev = 0,
+  jsize_dev = 0, jrepst_dev = 0, repmod = 1, yearcol = NA, patchcol = NA,
   year.as.random = FALSE, patch.as.random = FALSE, randomseed = NA,
   negfec = FALSE, reduce = FALSE) {
   
@@ -775,8 +925,12 @@ flefko2 <- function(year = "all", patch = "all", stageframe, repmatrix = NA,
     patchcol <- paramnames$modelparams[which(paramnames$mainparams == "patch")]
   }
   
-  if (all(is.na(data))) {stop("Need original vertical dataset to set proper limits on year and patch.", call. = FALSE)}
-  if (!any(class(data) == "data.frame")) {stop("Need original vertical dataset used in modeling to proceed.", call. = FALSE)}
+  if (all(is.na(data))) {
+    stop("Need original vertical dataset to set proper limits on year and patch.", call. = FALSE)
+  }
+  if (!any(class(data) == "data.frame")) {
+    stop("Need original vertical dataset used in modeling to proceed.", call. = FALSE)
+  }
   
   if (is.character(yearcol)) {
     choicevar <- which(names(data) == yearcol);
@@ -788,7 +942,7 @@ flefko2 <- function(year = "all", patch = "all", stageframe, repmatrix = NA,
   }
   
   if (any(is.character(year))) {
-    if (is.element(tolower(year), "all")) {
+    if (is.element("all", tolower(year))) {
       year <- mainyears
     } else {
       stop("Year designation not recognized.", call. = FALSE)
@@ -796,14 +950,14 @@ flefko2 <- function(year = "all", patch = "all", stageframe, repmatrix = NA,
   }
   
   if (length(year) == 0 | all(is.na(year) == TRUE) | any(is.na(year))) {
-    stop("This function cannot proceed without being given a specific year, or a suite of years.", call. = FALSE)
+    stop("This function cannot proceed without being given a specific year, or a suite of years. NA entries are not allowed.", call. = FALSE)
   }
   
-  if (is.na(patch) & !is.na(patchcol)) {
+  if (all(is.na(patch)) & !is.na(patchcol)) {
     warning("Matrix creation may not proceed properly without input in the patch option when using a modelsuite in which patch is designated.")
   }
   
-  if (is.character(patchcol)) {
+  if (is.character(patchcol) & patchcol != "none") {
     choicevar <- which(names(data) == patchcol);
     mainpatches <- sort(unique(as.character(data[,choicevar])))
   } else if (is.numeric(patchcol)) {
@@ -813,28 +967,41 @@ flefko2 <- function(year = "all", patch = "all", stageframe, repmatrix = NA,
   }
   
   if (any(is.character(patch))) {
-    if (is.element(tolower(patch), "all")) {
+    if (is.element("all", tolower(patch))) {
       patch <- mainpatches
     } else if (!is.element(patch, mainpatches)) {
       stop("Patch designation not recognized.", call. = FALSE)
     }
   }
   
-  if (all(is.na(repmatrix))) {    #This bit needs to be redone to check for fecundity values in the dataset and use them to determine the proper reproductive stages
-    repmatrix <- matrix(0, dim(stageframe)[1], dim(stageframe)[1])
-    repstages <- which(stageframe$repstatus == 1)
-    repmatrix[1, repstages] <- 1
+  if (!is.numeric(inda) | !is.numeric(indb) | !is.numeric(indc)) {
+    stop("Individual covariate values must be numeric.", call. = FALSE)
   }
   
-  if (!is.numeric(inda) | !is.numeric(indb) | !is.numeric(indc)) {
-    stop("Individual covariate values must equal valid numbers.", call. = FALSE)
+  if (all(is.na(repmatrix)) & all(is.na(supplement))) {
+    warning("Neither supplemental data nor a reproduction matrix have been supplied. All fecundity transitions will be inferred from the stageframe.")
+  } else if (all(is.na(repmatrix)) & any(class(supplement) == "lefkoSD")) {
+    checkconv <- supplement$convtype
+    
+    if (!is.element(3, checkconv)) {
+      warning("Supplemental data does not include fecundity information, and a reproduction matrix has not been supplied. All fecundity transitions will be inferred from the stageframe.")
+    }
+  }
+  
+  stagenum_init <- dim(stageframe)[1]
+  if (!all(is.na(repmatrix))) {
+    if (any(class(repmatrix) == "matrix")) {
+      if (dim(repmatrix)[1] != stagenum_init | dim(repmatrix)[2] != stagenum_init) {
+        stop("The repmatrix provided must be a square matrix with dimensions equal to the number of stages in the stageframe.", call. = FALSE)
+      }
+    }
   }
   
   if (any(!suppressWarnings(!is.na(as.numeric(as.character(stageframe$size)))))) {
     stop("Function flefko2() requires size to be numeric rather than categorical.")
   }
   
-  melchett <- .sf_reassess(stageframe, repmatrix, overwrite)
+  melchett <- .sf_reassess(stageframe, supplement, repmatrix, overwrite)
   stageframe <- melchett[[1]]
   repmatrix <- melchett[[2]]
   
@@ -862,11 +1029,11 @@ flefko2 <- function(year = "all", patch = "all", stageframe, repmatrix = NA,
   
   instages <- length(stageframe$stage_id)
   
-  overwrite <- .overwrite_reassess(overwrite, stageframe, historical = FALSE)
+  ovtable <- .overwrite_reassess(stageframe, supplement, overwrite, historical = FALSE)
   
   # Next the data frame for the C++-based matrix populator functions
-  allstages.list <- theoldpizzle(stageframe, overwrite, repmatrix, finalage = 0, style = 1, cont = 0)
-  allstages <- do.call("cbind.data.frame", allstages.list)
+  allstages.list <- theoldpizzle(stageframe, ovtable, repmatrix, finalage = 0, style = 1, cont = 0)
+  allstages <- do.call("cbind.data.frame", c(allstages.list, stringsAsFactors = FALSE))
   
   maxsize <- max(c(allstages$a.size3, allstages$a.size2n, allstages$a.size2o), na.rm = TRUE)
   
@@ -949,7 +1116,7 @@ flefko2 <- function(year = "all", patch = "all", stageframe, repmatrix = NA,
   # Next we create a list of pops, patches, and years in order of matrix
   if (!all(is.na(patch))) {
     listofyears <- apply(as.matrix(patch), 1, function(X) {
-      output <- cbind.data.frame("1", X, as.matrix(year));
+      output <- cbind.data.frame("1", X, as.matrix(year), stringsAsFactors = FALSE);
       names(output) <- c("pop", "patch", "year2");
       return(output)
     })
@@ -960,7 +1127,7 @@ flefko2 <- function(year = "all", patch = "all", stageframe, repmatrix = NA,
     listofyears$yearorder <- apply(as.matrix(c(1:dim(listofyears)[1])), 1, function(X) {which(mainyears == listofyears$year2[X])})
     
   } else {
-    listofyears <- cbind.data.frame("1", "1", as.matrix(year))
+    listofyears <- cbind.data.frame("1", "1", as.matrix(year), stringsAsFactors = FALSE)
     names(listofyears) <- c("pop", "patch", "year2")
     
     listofyears$poporder <- 1
@@ -970,15 +1137,16 @@ flefko2 <- function(year = "all", patch = "all", stageframe, repmatrix = NA,
   
   # A few extra tidbits required for the core matrix estimator to work
   total.matrix.dim <- length(stageframe$bin_size_ctr) - 1
-
+  
   yearlist <- split(listofyears, seq(nrow(listofyears)))
   
   # The next line calls the core matrix estimator function
-  madsexmadrigal <- lapply(yearlist, jerzeibalowski, allstages, surv_proxy, obs_proxy, size_proxy, repst_proxy,
-                           fec_proxy, jsurv_proxy, jobs_proxy, jsize_proxy, jrepst_proxy, inda, indb, indc, 
-                           surv_dev, obs_dev, size_dev, repst_dev, fec_dev, jsurv_dev, jobs_dev, jsize_dev, 
-                           jrepst_dev, total.matrix.dim, repmod, rvarssummed, sigma, jrvarssummed, jsigma, 
-                           maxsize, sizedist, fecdist, negfec)
+  madsexmadrigal <- lapply(yearlist, jerzeibalowski, allstages, surv_proxy,
+    obs_proxy, size_proxy, repst_proxy, fec_proxy, jsurv_proxy, jobs_proxy,
+    jsize_proxy, jrepst_proxy, inda, indb, indc, surv_dev, obs_dev, size_dev,
+    repst_dev, fec_dev, jsurv_dev, jobs_dev, jsize_dev, jrepst_dev,
+    total.matrix.dim, repmod, rvarssummed, sigma, jrvarssummed, jsigma, maxsize,
+    sizedist, fecdist, negfec)
   
   a_list <- lapply(madsexmadrigal, function(X) {X$A})
   u_list <- lapply(madsexmadrigal, function(X) {X$U})
@@ -1006,8 +1174,10 @@ flefko2 <- function(year = "all", patch = "all", stageframe, repmatrix = NA,
     ahstages <- drops$ahstages
   }
   
-  output <- list(A = a_list, U = u_list, F = f_list, hstages = NA, ahstages = ahstages, 
-                 labels = listofyears[,c(1:3)], matrixqc = qcoutput1, modelqc = qcoutput2)
+  output <- list(A = a_list, U = u_list, F = f_list, hstages = NA,
+    ahstages = ahstages, labels = listofyears[,c(1:3)], matrixqc = qcoutput1,
+    modelqc = qcoutput2)
+  
   class(output) <- "lefkoMat"
   
   return(output)
@@ -1058,7 +1228,7 @@ flefko2 <- function(year = "all", patch = "all", stageframe, repmatrix = NA,
   return(list(A = Ared, U = Ured, F = Fred, ahstages = ahstred))
 }
 
-#' Create Raw Historical Population Projection Matrices
+#' Create Raw Historical Matrix Projection Model
 #' 
 #' \code{rlefko3()} returns raw historical MPMs, including the associated
 #' component transition and fecundity matrices, data frames describing the
@@ -1107,13 +1277,32 @@ flefko2 <- function(year = "all", patch = "all", stageframe, repmatrix = NA,
 #' @param fec A vector of names of variables coding fecundity in times
 #' \emph{t}+1, \emph{t}, and \emph{t}-1, respectively. Defaults to
 #' \code{c("feca3", "feca2", "feca1")}.
-#' @param repmatrix A matrix composed mostly of 0s, with non-zero values for
-#' each potentially new individual (row) born to each reproductive stage
-#' (column). Entries act as multipliers on fecundity, with 1 equaling full
-#' fecundity.
-#' @param overwrite A data frame developed with the \code{\link{overwrite}()}
-#' function describing transitions to be overwritten either with given values or 
-#' with other estimated transitions.
+#' @param supplement An optional data frame of class \code{lefkoSD} that
+#' provides supplemental data that should be incorporated into the MPM. Three
+#' kinds of data may be integrated this way: transitions to be estimated via the
+#' use of proxy transitions, transition overwrites from the literature or
+#' supplemental studies, and transition multipliers for fecundity. This data
+#' frame should be produced using the \code{\link{supplemental}()} function. Can
+#' be used in place of or in addition to an overwrite table (see 
+#' \code{overwrite} below) and a reproduction matrix (see \code{repmatrix}
+#' below).
+#' @param repmatrix A reproduction matrix, which is an optional matrix composed
+#' mostly of 0s, with non-zero values for each potentially new individual (row)
+#' born to each reproductive stage (column). Entries act as multipliers on
+#' fecundity, with 1 equaling full fecundity. Fecundity multipliers provided
+#' this way supplement rather than replace those provided in \code{supplement}.
+#' If left blank, then \code{rlefko3()} will assume that all stages marked as
+#' reproductive produce offspring at 1x that of fecundity estimated in provided
+#' linear models, and that fecundity will be into the first stage noted as
+#' propagule or immature. To prevent this behavior, input just \code{0}, which
+#' will result in fecundity being estimated only for transitions noted in
+#' \code{supplement} above. May be the dimensions of either a historical or an
+#' ahistorical matrix. If the latter, then all stages will be used in time
+#' \emph{t}-1 for each suggested ahistorical transition.
+#' @param overwrite An optional data frame developed with the
+#' \code{\link{overwrite}()} function describing transitions to be overwritten
+#' either with given values or with other estimated transitions. Note that this
+#' function supplements overwrite data provided in \code{supplement}.
 #' @param yearcol The variable name or column number corresponding to time in
 #' time \emph{t} in the dataset.
 #' @param popcol The variable name or column number corresponding to the
@@ -1124,6 +1313,8 @@ flefko2 <- function(year = "all", patch = "all", stageframe, repmatrix = NA,
 #' identity.
 #' @param censorcol The variable name or column number denoting the censor
 #' status. Only needed if \code{censor = TRUE}.
+#' @param censorkeep The value of the censor variable denoting data elements to
+#' keep. Defaults to 0.
 #' @param reduce A logical value denoting whether to remove historical stages
 #' associated exclusively with zero transitions. These are removed only if all
 #' row and column sums in ALL matrices estimated equal 0. Defaults to FALSE.
@@ -1133,7 +1324,7 @@ flefko2 <- function(year = "all", patch = "all", stageframe, repmatrix = NA,
 #'
 #' \item{A}{A list of full projection matrices in order of sorted populations,
 #' patches, and years. All matrices output in the \code{matrix} class.}
-#' \item{U}{A list of survival-transition matrices sorted as in \code{A}. All 
+#' \item{U}{A list of survival transition matrices sorted as in \code{A}. All 
 #' matrices output in the \code{matrix} class.}
 #' \item{F}{A list of fecundity matrices sorted as in \code{A}. All matrices 
 #' output in the \code{matrix} class.}
@@ -1148,6 +1339,35 @@ flefko2 <- function(year = "all", patch = "all", stageframe, repmatrix = NA,
 #' \code{U} and \code{F} matrices, and the number of annual matrices.}
 #' \item{dataqc}{A vector showing the numbers of individuals and rows in the
 #' vertical dataset used as input.}
+#'
+#' @section Notes:
+#' The default behavior of this function is to estimate fecundity with regards
+#' to transitions specified via associated fecundity multipliers in either
+#' \code{supplement} or \code{repmatrix}. If both of these fields are left
+#' empty, then fecundity will be estimated at full for all transitions leading
+#' from reproductive stages to immature and propagule stages. However, if a
+#' \code{supplement} is provided and a \code{repmatrix} is not, or if
+#' \code{repmatrix} is set to 0, then only fecundity transitions noted in the
+#' supplement will be set to non-zero values. To use the default behavior of
+#' setting all reproductive stages to reproduce at full fecundity into immature
+#' and propagule stages but incorporate given or proxy survival transitions,
+#' input those given and proxy transitions through the \code{overwrite} option.
+#' 
+#' The reproduction matrix (field \code{repmatrix}) may be supplied as either
+#' historical or ahistorical. If provided as ahistorical, then \code{flefko3()}
+#' will assume that all historical transitions involving stages noted for times
+#' \emph{t} and \emph{t}+1 should be set to the respective fecundity multipliers
+#' noted.
+#' 
+#' Users may at times wish to estimate MPMs using a dataset incorporating
+#' multiple patches or subpopulations. Should the aim of analysis be a general
+#' MPM that does not distinguish these patches or subpopulations, the
+#' \code{patchcol} variable should be left to NA, which is the default.
+#'
+#' Input options including multiple variable names must be entered in the order
+#' of variables in time \emph{t}+1, \emph{t}, and \emph{t}-1. Rearranging the
+#' order WILL lead to erroneous calculations, and will probably also lead to
+#' fatal errors.
 #'
 #' @examples
 #' data(cypdata)
@@ -1175,6 +1395,37 @@ flefko2 <- function(year = "all", patch = "all", stageframe, repmatrix = NA,
 #'   stageassign = cypframe_raw, stagesize = "sizeadded", NAas0 = TRUE,
 #'   NRasRep = TRUE)
 #' 
+#' # Here we use supplemental() to provide overwrite() and reproductive info
+#' cypsupp3r <- supplemental(stage3 = c("SD", "SD", "P1", "P1", "P2", "P3",
+#'     "SL", "SL", "SL", "D", "XSm", "Sm", "D", "XSm", "Sm", "SD", "P1"),
+#'   stage2 = c("SD", "SD", "SD", "SD", "P1", "P2", "P3", "SL", "SL", "SL",
+#'     "SL", "SL", "SL", "SL", "SL", "rep", "rep"),
+#'   stage1 = c("SD", "rep", "SD", "rep", "SD", "P1", "P2", "P3", "SL", "P3",
+#'     "P3", "P3", "SL", "SL", "SL", "all", "all"),
+#'   eststage3 = c(NA, NA, NA, NA, NA, NA, NA, NA, NA, "D", "XSm", "Sm", "D",
+#'     "XSm", "Sm", NA, NA),
+#'   eststage2 = c(NA, NA, NA, NA, NA, NA, NA, NA, NA, "XSm", "XSm", "XSm",
+#'     "XSm", "XSm", "XSm", NA, NA),
+#'   eststage1 = c(NA, NA, NA, NA, NA, NA, NA, NA, NA, "XSm", "XSm", "XSm",
+#'     "XSm", "XSm", "XSm", NA, NA),
+#'   givenrate = c(0.1, 0.1, 0.2, 0.2, 0.2, 0.2, 0.25, 0.4, 0.4, NA, NA, NA, NA,
+#'     NA, NA, NA, NA),
+#'   multiplier = c(NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA,
+#'     0.5, 0.5),
+#'   type =c(1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 3, 3),
+#'   stageframe = cypframe_raw, historical = TRUE)
+#' 
+#' cypmatrix3r <- rlefko3(data = cypraw_v1, stageframe = cypframe_raw,
+#'   year = "all", patch = "all", stages = c("stage3", "stage2", "stage1"),
+#'   size = c("size3added", "size2added", "size1added"),
+#'   supplement = cypsupp3r, yearcol = "year2", patchcol = "patchid",
+#'   indivcol = "individ")
+#' 
+#' summary(cypmatrix3r)
+#' 
+#' # Alternatively, we can use overwrite() and a reproductive matrix instead of
+#' # supplemental()
+#' 
 #' rep_cyp_raw <- matrix(0, 11, 11)
 #' rep_cyp_raw[1:2,7:11] <- 0.5
 #' 
@@ -1195,13 +1446,13 @@ flefko2 <- function(year = "all", patch = "all", stageframe, repmatrix = NA,
 #'   type = c("S", "S", "S", "S", "S", "S", "S", "S", "S", "S", "S", "S", "S",
 #'     "S", "S"))
 #' 
-#' cypmatrix3r <- rlefko3(data = cypraw_v1, stageframe = cypframe_raw,
+#' cypmatrix3r_alt <- rlefko3(data = cypraw_v1, stageframe = cypframe_raw,
 #'   year = "all", patch = "all", stages = c("stage3", "stage2", "stage1"),
 #'   size = c("size3added", "size2added", "size1added"),
 #'   repmatrix = rep_cyp_raw, overwrite = cypover3r, yearcol = "year2",
 #'   patchcol = "patchid", indivcol = "individ")
 #' 
-#' summary(cypmatrix3r)
+#' summary(cypmatrix3r_alt)
 #' 
 #' @export
 rlefko3 <- function(data, stageframe, year = "all", pop = NA, patch = NA,
@@ -1209,101 +1460,114 @@ rlefko3 <- function(data, stageframe, year = "all", pop = NA, patch = NA,
   size = c("sizea3", "sizea2", "sizea1"), 
   repst = c("repstatus3", "repstatus2", "repstatus1"),
   matst = c("matstatus3", "matstatus2", "matstatus1"),
-  fec = c("feca3", "feca2", "feca1"), repmatrix = NA, overwrite = NA,
-  yearcol = NA, popcol = NA, patchcol = NA, indivcol = NA, censorcol = NA,
-  reduce = FALSE) {
+  fec = c("feca3", "feca2", "feca1"), supplement = NA, repmatrix = NA,
+  overwrite = NA, yearcol = NA, popcol = NA, patchcol = NA, indivcol = NA,
+  censorcol = NA, censorkeep = 0, reduce = FALSE) {
   
   tocensor <- indataset <- alive2 <- popused <- patchused <- yearused <- NULL
   
   if (all(is.na(data))) {
-    stop("Need original vertical dataset to proceed.")
+    stop("Need original vertical dataset to proceed.", call. = FALSE)
+  }
+  
+  if (!any(class(data) == "data.frame")) {
+    stop("Need original vertical dataset to proceed. This dataset must be in historical vertical format.", call. = FALSE)
   }
   
   if (!any(class(data) == "hfvdata")) {
-    stop("Need original vertical dataset to proceed. This dataset must be in historical vertical format.")
+    warning("Dataset used as input is not of class hfvdata. Will assume that the dataset has been formatted equivalently.", call. = FALSE)
   }
   
   if (all(is.na(stages))) {
     if ((length(alive) != 3)) {
-      stop("This function requires stage information for each of times t+1, t, and t-1. In the absence of stage columns in the dataset, it requires three variables for living/dead status, size, reproductive status, and maturity status, for each of times t+1, t, and t-1.")
+      stop("This function requires stage information for each of times t+1, t, and t-1. In the absence of stage columns in the dataset, it requires the input of data for living/dead status, size, reproductive status, and maturity status, for each of times t+1, t, and t-1.", call. = FALSE)
     }
     if ((length(size) != 3)) {
-      stop("This function requires stage information for each of times t+1, t, and t-1. In the absence of stage columns in the dataset, it requires three variables for living/dead status, size, reproductive status, and maturity status, for each of times t+1, t, and t-1.")
+      stop("This function requires stage information for each of times t+1, t, and t-1. In the absence of stage columns in the dataset, it requires the input of data for living/dead status, size, reproductive status, and maturity status, for each of times t+1, t, and t-1.", call. = FALSE)
     }
     if (!all(is.na(repst))) {
       if ((length(repst) != 3)) {
-        stop("This function requires stage information for each of times t+1, t, and t-1. In the absence of stage columns in the dataset, it requires three variables for living/dead status, size, reproductive status, and maturity status, for each of times t+1, t, and t-1.")
+        stop("This function requires stage information for each of times t+1, t, and t-1. In the absence of stage columns in the dataset, it requires the input of data for living/dead status, size, reproductive status, and maturity status, for each of times t+1, t, and t-1.", call. = FALSE)
       }
     }   
     if (!all(is.na(matst))) {
       if ((length(matst) != 3)) {
-        stop("This function requires stage information for each of times t+1, t, and t-1. In the absence of stage columns in the dataset, it requires three variables for living/dead status, size, reproductive status, and maturity status, for each of times t+1, t, and t-1.")
+        stop("This function requires stage information for each of times t+1, t, and t-1. In the absence of stage columns in the dataset, it requires the input of data for living/dead status, size, reproductive status, and maturity status, for each of times t+1, t, and t-1.", call. = FALSE)
       }
     }   
   } else if (length(stages) != 3) {
-    stop("This function requires stage information for each of times t+1, t, and t-1.")
+    stop("This function requires stage information for each of times t+1, t, and t-1.", call. = FALSE)
   }
   
   if ((length(fec) != 3)) {
-    stop("This function requires three variables for fecundity, for each of times t+1, t, and t-1.")
+    stop("This function requires three variables for fecundity, for each of times t+1, t, and t-1.", call. = FALSE)
   }
   
-  if (any(is.character(year)) & any(class(data) == "hfvdata")) {
-    if (is.element(tolower(year), "all")) {
-      if (is.character(yearcol)) {
-        choicevar <- which(names(data) == yearcol)
-        year <- sort(unique(data[,choicevar]))[-1] #Here we remove the 1st year because it has no time t-1 in the dataset
-        yearcol <- choicevar
-      } else if (all(is.numeric(year))) {
-        year <- sort(unique(data[,yearcol]))[-1]
-      } else {stop("Cannot understand year designation.")}
+  if (is.character(yearcol)) {
+    choicevar <- which(names(data) == yearcol);
+    mainyears <- sort(unique(data[,choicevar]))[-1] #Here we remove the 1st year because it has no time t-1 in the dataset
+  } else if (is.numeric(yearcol)) {
+    mainyears <- sort(unique(data[, yearcol]))[-1]
+  } else {
+    stop("Need appropriate year column designation.", call. = FALSE)
+  }
+  
+  if (any(is.character(year))) {
+    if (is.element("all", tolower(year))) {
+      year <- mainyears
+    } else {
+      stop("Year designation not recognized.", call. = FALSE)
     }
   }
   
-  if (length(year) == 0 | all(is.na(year) == TRUE)) {
-    stop("This function cannot proceed without being given a specific year, or a suite of years.")
+  if (length(year) == 0 | all(is.na(year) == TRUE) | any(is.na(year))) {
+    stop("This function cannot proceed without being given a specific year, or a suite of years. NA entries are not allowed.", call. = FALSE)
   }
   
-  if (!all(is.element(year, sort(unique(data[,yearcol]))))) {
-    stop("Dataset does not contain one or more of the requested years.")
+  if (!all(is.element(year, mainyears))) {
+    stop("Dataset does not contain one or more of the requested years. Note that matrices cannot be made for the first year in a historical dataset.", call. = FALSE)
   }
-  
-  if (all(is.na(repmatrix))) {    #This bit needs to be redone to check for fecundity values in the dataset and use them to determine the proper reproductive stages
-    repmatrix <- matrix(0, dim(stageframe)[1], dim(stageframe)[1])
-    repstages <- which(stageframe$repstatus == 1)
-    repmatrix[1, repstages] <- 1
-  }
-  
+
   if (censor == TRUE) {
     if(all(is.na(censorcol)) == TRUE) {
-      stop("Cannot censor the data without a proper censor variable.")
+      stop("Cannot censor the data without a proper censor variable.", call. = FALSE)
     }
     
-    for (i in c(1:length(censorcol))) {
-      if (is.character(censorcol)) {
-        data$tocensor <- data[,which(names(data) == censorcol[i])]
-      } else {
-        data$tocensor <- data[,censorcol[i]]
+    if (all(is.character(censorcol))) {
+      if (!all(is.element(censorcol, names(data)))) {
+        stop("Censor variable names input for censorcol do not match any variable names in the dataset.", call. = FALSE)
       }
-      data <- subset(data, tocensor == 1)
-    }   
+    }
+    
+    censorcolsonly <- data[,censorcol]
+    sleeplessnights <- apply(as.matrix(c(1:dim(censorcolsonly)[1])), 1, function(X) {
+      crazyvec <- if(is.element(censorkeep, censorcolsonly[X,])) {
+        return(X);
+      } else {
+        return(NA);
+      }
+    })
+    sleeplessnights <- sleeplessnights[!is.na(sleeplessnights)]
+    
+    data <- data[sleeplessnights,]
   }
   
   if (!all(is.na(pop)) & !all(is.na(patch))) {
-    if (is.na(popcol) | is.na(patchcol)) {stop("Need population and patch designation variables to proceed.")}
+    if (is.na(popcol) | is.na(patchcol)) {stop("Need population and patch designation variables to proceed.", call. = FALSE)}
     
-    if (is.element(tolower(pop), "all")) {
+    if (is.element("all", tolower(pop))) {
       if (is.character(popcol)) {popcol <- which(names(data) == popcol)}
       
       pops <- unique(data[,popcol])
     } else {pops <- pop}
     
-    if (is.element(tolower(patch), "all")) {
+    if (is.element("all", tolower(patch))) {
       if (is.character(patchcol)) {patchcol <- which(names(data) == patchcol)}
       
       listofpatches <- apply(as.matrix(pops), 1, function(X) {
         patchfolly <- subset(data, popcol == X);
-        output <- cbind.data.frame(X, sort(unique(patchfolly[,patchcol])));
+        output <- cbind.data.frame(X, sort(unique(patchfolly[,patchcol])),
+          stringsAsFactors = FALSE);
         names(output) <- c("pop", "patch");
         return(output);
       })
@@ -1316,14 +1580,15 @@ rlefko3 <- function(data, stageframe, year = "all", pop = NA, patch = NA,
     listofyears <- apply(as.matrix(listofpatches), 1, function(X) {
       checkyrdata <- subset(data, popcol = X[1]);
       checkyrdata <- subset(checkyrdata, patchcol = X[2])
-      output <- cbind.data.frame(X[1], X[2], sort(unique(checkyrdata[,yearcol]))[-1]);
+      output <- cbind.data.frame(X[1], X[2], sort(unique(checkyrdata[,yearcol]))[-1],
+        stringsAsFactors = FALSE);
       names(output) <- c("pop", "patch", "year2");
       return(output)
     })
   } else if (all(is.na(pop)) & !all(is.na(patch))) {
-    if (is.na(patchcol)) {stop("Need patch designation variable to proceed.")}
+    if (is.na(patchcol)) {stop("Need patch designation variable to proceed.", call. = FALSE)}
     
-    if (is.element(tolower(patch), "all")) {
+    if (is.element("all", tolower(patch))) {
       if (is.character(patchcol)) {patchcol <- which(names(data) == patchcol)}
       
       patches <- sort(unique(data[,patchcol]))
@@ -1331,7 +1596,8 @@ rlefko3 <- function(data, stageframe, year = "all", pop = NA, patch = NA,
     
     listofyears <- apply(as.matrix(patches), 1, function(X) {
       checkyrdata <- subset(data, patchcol = X);
-      output <- cbind.data.frame("1", X, sort(unique(checkyrdata[,yearcol]))[-1]);
+      output <- cbind.data.frame("1", X, sort(unique(checkyrdata[,yearcol]))[-1],
+        stringsAsFactors = FALSE);
       names(output) <- c("pop", "patch", "year2");
       return(output)
     })
@@ -1340,9 +1606,9 @@ rlefko3 <- function(data, stageframe, year = "all", pop = NA, patch = NA,
       listofyears <- do.call(rbind.data.frame, listofyears)
     }
   } else if (!all(is.na(pop)) & all(is.na(patch))) {
-    if (is.na(popcol)) {stop("Need population designation variable to proceed.")}
+    if (is.na(popcol)) {stop("Need population designation variable to proceed.", call. = FALSE)}
     
-    if (is.element(tolower(pop), "all")) {
+    if (is.element("all", tolower(pop))) {
       if (is.character(popcol)) {popcol <- which(names(data) == popcol)}
       
       pops <- unique(data[,popcol])
@@ -1350,7 +1616,8 @@ rlefko3 <- function(data, stageframe, year = "all", pop = NA, patch = NA,
     
     listofyears <- apply(as.matrix(pops), 1, function(X) {
       checkyrdata <- subset(data, popcol = X);
-      output <- cbind.data.frame(X, "1", sort(unique(checkyrdata[,yearcol]))[-1]);
+      output <- cbind.data.frame(X, "1", sort(unique(checkyrdata[,yearcol]))[-1],
+        stringsAsFactors = FALSE);
       names(output) <- c("pop", "patch", "year2");
       return(output)
     })
@@ -1359,13 +1626,26 @@ rlefko3 <- function(data, stageframe, year = "all", pop = NA, patch = NA,
       listofyears <- do.call(rbind.data.frame, listofyears)
     }
   } else if (all(is.na(pop)) & all(is.na(patch))) {
-    listofyears <- cbind.data.frame("1", "1", year)
+    listofyears <- cbind.data.frame("1", "1", year, stringsAsFactors = FALSE)
     names(listofyears) <- c("pop", "patch", "year2")
   }
   
   yearlist <- split(listofyears, seq(nrow(listofyears)))
   
-  melchett <- .sf_reassess(stageframe, repmatrix, overwrite)
+  stagenum_init <- dim(stageframe)[1]
+  if (!all(is.na(repmatrix))) {
+    if (any(class(repmatrix) == "matrix")) {
+      if (dim(repmatrix)[1] != stagenum_init & dim(repmatrix)[1] != stagenum_init^2) {
+        stop("The repmatrix provided must be a square matrix with dimensions equal to the number of stages in the stageframe, or the square thereof.", call. = FALSE)
+      }
+      
+      if (dim(repmatrix)[2] != stagenum_init & dim(repmatrix)[2] != stagenum_init^2) {
+        stop("The repmatrix provided must be a square matrix with dimensions equal to the number of stages in the stageframe, or the square thereof.", call. = FALSE)
+      }
+    }
+  }
+  
+  melchett <- .sf_reassess(stageframe, supplement, repmatrix, overwrite)
   stageframe <- melchett[[1]]
   repmatrix <- melchett[[2]]
   
@@ -1398,7 +1678,7 @@ rlefko3 <- function(data, stageframe, year = "all", pop = NA, patch = NA,
       data$usedsize2 <- data[,which(names(data) == size[2])]
       data$usedsize3 <- data[,which(names(data) == size[1])]
     } else {
-      warning("Without stage columns, lefko3 MPM estimation functions generally require size variables. Failure to include size variables may lead to odd results.")
+      warning("Without stage columns, lefko3 MPM estimation functions generally require size variables. Failure to include size variables may lead to odd results.", call. = FALSE)
     }
     if (length(repst) > 1) {
       data$usedrepst1 <- data[,which(names(data) == repst[3])]
@@ -1416,7 +1696,7 @@ rlefko3 <- function(data, stageframe, year = "all", pop = NA, patch = NA,
         data$usedsize1[X] <- 0
       }
       mainstages <- intersect(which(stageframe$bin_size_min < data$usedsize1[X]), 
-                              which(stageframe$bin_size_max >= data$usedsize1[X]))
+        which(stageframe$bin_size_max >= data$usedsize1[X]))
       jmstages <- which(stageframe$immstatus == (1 - data$usedmatstatus1[X]))
       obsstages <- which(stageframe$obsstatus == data$obsstatus1[X])
       repstages <- which(stageframe$repstatus == data$repstatus1[X])
@@ -1427,7 +1707,7 @@ rlefko3 <- function(data, stageframe, year = "all", pop = NA, patch = NA,
       if (length(choicestage) == 0) choicestage <- which(stageframe$stage_id == max(stageframe$stage_id))
       
       if (length(choicestage) == 0) {
-        stop("Stage characteristics mismatch dataset. Consider using the stages option, particularly if the vertical file was created with NRasRep = TRUE in verticalize3() or historicalize3().")
+        stop("Stage characteristics mismatch dataset. Consider using the stages option, particularly if the vertical file was created with NRasRep = TRUE in verticalize3() or historicalize3().", call. = FALSE)
       }
       
       return(as.character(stageframe$stage[choicestage]))
@@ -1438,7 +1718,7 @@ rlefko3 <- function(data, stageframe, year = "all", pop = NA, patch = NA,
         data$usedsize2[X] <- 0
       }
       mainstages <- intersect(which(stageframe$bin_size_min < data$usedsize2[X]), 
-                              which(stageframe$bin_size_max >= data$usedsize2[X]))
+        which(stageframe$bin_size_max >= data$usedsize2[X]))
       jmstages <- which(stageframe$immstatus == (1 - data$usedmatstatus2[X]))
       obsstages <- which(stageframe$obsstatus == data$obsstatus2[X])
       repstages <- which(stageframe$repstatus == data$repstatus2[X])
@@ -1446,7 +1726,7 @@ rlefko3 <- function(data, stageframe, year = "all", pop = NA, patch = NA,
       choicestage <- intersect(intersect(mainstages, jmstages), intersect(obsstages, repstages))
       
       if (length(choicestage) == 0) {
-        stop("Stage characteristics mismatch dataset. Consider using the stages option, particularly if the vertical file was created with NRasRep = TRUE in verticalize3() or historicalize3().")
+        stop("Stage characteristics mismatch dataset. Consider using the stages option, particularly if the vertical file was created with NRasRep = TRUE in verticalize3() or historicalize3().", call. = FALSE)
       }
       
       return(as.character(stageframe$stage[choicestage]))
@@ -1457,7 +1737,7 @@ rlefko3 <- function(data, stageframe, year = "all", pop = NA, patch = NA,
         data$usedsize3[X] <- 0
       }
       mainstages <- intersect(which(stageframe$bin_size_min < data$usedsize3[X]), 
-                              which(stageframe$bin_size_max >= data$usedsize3[X]))
+        which(stageframe$bin_size_max >= data$usedsize3[X]))
       jmstages <- which(stageframe$immstatus == (1 - data$usedmatstatus3[X]))
       obsstages <- which(stageframe$obsstatus == data$obsstatus3[X])
       repstages <- which(stageframe$repstatus == data$repstatus3[X])
@@ -1506,7 +1786,7 @@ rlefko3 <- function(data, stageframe, year = "all", pop = NA, patch = NA,
     stages.used <- sort(unique(c(data$usedstage2, data$usedstage3)))
     
     if (length(setdiff(stages.used, stageframe$stage)) > 0 & !is.element("NotAlive", stages.used)) {
-      stop("Some stages in dataset do not match those detailed in the input stageframe.", .call = FALSE)
+      stop("Some stages in dataset do not match those detailed in the input stageframe.", call. = FALSE)
     }
   }
   
@@ -1519,22 +1799,22 @@ rlefko3 <- function(data, stageframe, year = "all", pop = NA, patch = NA,
     data$usedfec2[which(is.na(data$usedfec2))] <- 0
     data$usedfec3[which(is.na(data$usedfec3))] <- 0
   } else {
-    warning("Lefko3 MPM estimation functions generally require fecundity variables. Failure to include fecundity variables leads to matrices composed only of survival transitions.")
+    warning("Lefko3 MPM estimation functions generally require fecundity variables. Failure to include fecundity variables leads to matrices composed only of survival transitions.", call. = FALSE)
   } 
   
-  overwrite <- .overwrite_reassess(overwrite, stageframe, historical = TRUE)
+  ovtable <- .overwrite_reassess(stageframe, supplement, overwrite, historical = TRUE)
   
   # This section creates stageexpansion9, which is a data frame that holds values for stage transitions from paired stages
   # in times t and t-1 to paired stages in times t and t+1
-  majortrial <- theoldpizzle(stageframe, overwrite, repmatrix, 0, 0, 0)
-  stageexpansion9 <- do.call("cbind.data.frame", majortrial)
+  majortrial <- theoldpizzle(stageframe, ovtable, repmatrix, 0, 0, 0)
+  stageexpansion9 <- do.call("cbind.data.frame", c(majortrial, stringsAsFactors = FALSE))
   
   # Stageexpansion3 is a dataframe created to hold values for paired stages in times t and t-1 only
-  stageexpansion3 <- cbind.data.frame(expand.grid(size3 = stageframe$bin_size_ctr, size2n = stageframe$bin_size_ctr), 
-                                      expand.grid(rep3 = stageframe$repstatus, rep2n = stageframe$repstatus),
-                                      expand.grid(indata3 = stageframe$indataset, indata2n = stageframe$indataset),
-                                      expand.grid(stage3 = stageframe$stageno, stage2n = stageframe$stageno),
-                                      fec32n = c(cbind(rbind(repmatrix, 0), 0)))
+  stageexpansion3 <- cbind.data.frame(expand.grid(size3 = stageframe$bin_size_ctr, 
+      size2n = stageframe$bin_size_ctr), expand.grid(rep3 = stageframe$repstatus, 
+      rep2n = stageframe$repstatus), expand.grid(indata3 = stageframe$indataset, 
+      indata2n = stageframe$indataset), expand.grid(stage3 = stageframe$stageno,
+      stage2n = stageframe$stageno), fec32n = c(cbind(rbind(repmatrix, 0), 0)))
   
   stageexpansion3$indata32n <- stageexpansion3$indata3 * stageexpansion3$indata2n
   
@@ -1556,7 +1836,6 @@ rlefko3 <- function(data, stageframe, year = "all", pop = NA, patch = NA,
   
   data$index1 <- apply(as.matrix(data$usedstage1), 1, function(X) {
     stageframe$stageno[which(stageframe$stage == X)]
-    
   })
   data$index2 <- apply(as.matrix(data$usedstage2), 1, function(X) {
     stageframe$stageno[which(stageframe$stage == X)]
@@ -1575,13 +1854,13 @@ rlefko3 <- function(data, stageframe, year = "all", pop = NA, patch = NA,
   data$usedfec2[which(is.na(data$usedfec2))] <- 0
   
   if(is.element(0, unique(data$index1))) {
-    warning("Data (stage at time t-1) contains some stages not identified in stageframe. Note that all stage characteristics must match, including reproductive status.")
+    warning("Data (stage at time t-1) contains some stages not identified in stageframe. Note that all stage characteristics must match, including reproductive status.", call. = FALSE)
   }
   if(is.element(0, unique(data$index2))) {
-    warning("Data (stage at time t) contains some stages not identified in stageframe. Note that all stage characteristics must match, including reproductive status.")
+    warning("Data (stage at time t) contains some stages not identified in stageframe. Note that all stage characteristics must match, including reproductive status.", call. = FALSE)
   }
   if(is.element(0, unique(data$index3))) {
-    warning("Data (stage at time t+1) contains some stages not identified in stageframe. Note that all stage characteristics must match, including reproductive status.")
+    warning("Data (stage at time t+1) contains some stages not identified in stageframe. Note that all stage characteristics must match, including reproductive status.", call. = FALSE)
   }
   
   madsexmadrigal <- lapply(yearlist, function(X) {
@@ -1598,8 +1877,8 @@ rlefko3 <- function(data, stageframe, year = "all", pop = NA, patch = NA,
       passed_data$yearused <- passed_data[,yearcol];
       passed_data <- subset(passed_data, yearused == X$year2[1]);
     }
-    
-    specialpatrolgroup(sge9l = stageexpansion9, sge3 = stageexpansion3, MainData = passed_data, StageFrame = stageframe)
+    specialpatrolgroup(sge9l = stageexpansion9, sge3 = stageexpansion3,
+      MainData = passed_data, StageFrame = stageframe)
   })
   
   a_list <- lapply(madsexmadrigal, function(X) {X$A})
@@ -1640,14 +1919,15 @@ rlefko3 <- function(data, stageframe, year = "all", pop = NA, patch = NA,
   rownames(hstages) <- c(1:dim(hstages)[1])
   
   output <- list(A = a_list, U = u_list, F = f_list, hstages = hstages, 
-                 ahstages = stageframe[1:(dim(stageframe)[1] - 1),], labels = listofyears,
-                 matrixqc = qcoutput1, dataqc = qcoutput2)
+    ahstages = stageframe[1:(dim(stageframe)[1] - 1),], labels = listofyears,
+    matrixqc = qcoutput1, dataqc = qcoutput2)
+  
   class(output) <- "lefkoMat"
   
   return(output)
 }
 
-#' Create Raw Ahistorical Population Projection Matrices
+#' Create Raw Ahistorical Matrix Projection Model
 #'
 #' \code{rlefko2()} returns raw ahistorical MPMs, including the associated
 #' component transition and fecundity matrices, a data frame describing the
@@ -1693,13 +1973,30 @@ rlefko3 <- function(data, stageframe, year = "all", pop = NA, patch = NA,
 #' "matstatus2")}. Must be supplied if \code{stages} is not provided.
 #' @param fec A vector of names of variables coding fecundity in times
 #' \emph{t}+1 and \emph{t}, respectively. Defaults to \code{c("feca3", "feca2")}.
-#' @param repmatrix A matrix composed mostly of 0s, with non-zero values for
-#' each potentially new individual (row) born to each reproductive stage 
-#' (column). Entries act as multipliers on fecundity, with 1 equaling full
-#' fecundity.
-#' @param overwrite A data frame developed with the \code{\link{overwrite}()}
-#' function describing transitions to be overwritten either with given values or 
-#' with other estimated transitions.
+#' @param supplement An optional data frame of class \code{lefkoSD} that
+#' provides supplemental data that should be incorporated into the MPM. Three
+#' kinds of data may be integrated this way: transitions to be estimated via the
+#' use of proxy transitions, transition overwrites from the literature or
+#' supplemental studies, and transition multipliers for fecundity. This data
+#' frame should be produced using the \code{\link{supplemental}()} function. Can
+#' be used in place of or in addition to an overwrite table (see 
+#' \code{overwrite} below) and a reproduction matrix (see \code{repmatrix}
+#' below).
+#' @param repmatrix A reproduction matrix, which is an optional matrix composed
+#' mostly of 0s, with non-zero values for each potentially new individual (row)
+#' born to each reproductive stage (column). Entries act as multipliers on
+#' fecundity, with 1 equaling full fecundity. Fecundity multipliers provided
+#' this way supplement rather than replace those provided in \code{supplement}.
+#' If left blank, then \code{rlefko2()} will assume that all stages marked as
+#' reproductive produce offspring at 1x that of fecundity estimated in provided
+#' linear models, and that fecundity will be into the first stage noted as
+#' propagule or immature. To prevent this behavior, input just \code{0}, which
+#' will result in fecundity being estimated only for transitions noted in
+#' \code{supplement} above. Must be the dimensions of an ahistorical matrix.
+#' @param overwrite An optional data frame developed with the
+#' \code{\link{overwrite}()} function describing transitions to be overwritten
+#' either with given values or with other estimated transitions. Note that this
+#' function supplements overwrite data provided in \code{supplement}.
 #' @param yearcol The variable name or column number corresponding to time in
 #' time \emph{t} in the dataset.
 #' @param popcol The variable name or column number corresponding to the
@@ -1710,6 +2007,8 @@ rlefko3 <- function(data, stageframe, year = "all", pop = NA, patch = NA,
 #' identity.
 #' @param censorcol The variable name or column number denoting the censor
 #' status. Only needed if \code{censor = TRUE}.
+#' @param censorkeep The value of the censor variable denoting data elements to
+#' keep. Defaults to 0.
 #' @param reduce A logical value denoting whether to remove historical stages
 #' associated with only zero transitions. These are removed only if all row and
 #' column sums in ALL matrices estimated equal 0. Defaults to FALSE.
@@ -1719,7 +2018,7 @@ rlefko3 <- function(data, stageframe, year = "all", pop = NA, patch = NA,
 #' 
 #' \item{A}{A list of full projection matrices in order of sorted populations,
 #' patches, and years. All matrices output in the \code{matrix} class.}
-#' \item{U}{A list of survival-transition matrices sorted as in \code{A}. All 
+#' \item{U}{A list of survival transition matrices sorted as in \code{A}. All 
 #' matrices output in the \code{matrix} class.}
 #' \item{F}{A list of fecundity matrices sorted as in \code{A}. All matrices 
 #' output in the \code{matrix} class.}
@@ -1733,6 +2032,33 @@ rlefko3 <- function(data, stageframe, year = "all", pop = NA, patch = NA,
 #' in \code{U} and \code{F} matrices, and the number of annual matrices.}
 #' \item{dataqc}{A vector showing the numbers of individuals and rows in the
 #' vertical dataset used as input.}
+#'
+#' @section Notes:
+#' The default behavior of this function is to estimate fecundity with regards
+#' to transitions specified via associated fecundity multipliers in either
+#' \code{supplement} or \code{repmatrix}. If both of these fields are left
+#' empty, then fecundity will be estimated at full for all transitions leading
+#' from reproductive stages to immature and propagule stages. However, if a
+#' \code{supplement} is provided and a \code{repmatrix} is not, or if
+#' \code{repmatrix} is set to 0, then only fecundity transitions noted in the
+#' supplement will be set to non-zero values. To use the default behavior of
+#' setting all reproductive stages to reproduce at full fecundity into immature
+#' and propagule stages but also incorporate given or proxy
+#' survival transitions, input those given and proxy transitions through the
+#' \code{overwrite} option.
+#' 
+#' The reproduction matrix (field \code{repmatrix}) may only be supplied as
+#' ahistorical. If provided as historical, then \code{rlefko2()} will fail and
+#' produce an error.
+#' 
+#' Users may at times wish to estimate MPMs using a dataset incorporating
+#' multiple patches or subpopulations. Should the aim of analysis be a general
+#' MPM that does not distinguish these patches or subpopulations, the
+#' \code{patchcol} variable should be left to NA, which is the default.
+#'
+#' Input options including multiple variable names must be entered in the order
+#' of variables in time \emph{t}+1 and \emph{t}. Rearranging the order WILL lead
+#' to erroneous calculations, and will probably also lead to fatal errors.
 #'
 #' @examples
 #' data(cypdata)
@@ -1760,6 +2086,28 @@ rlefko3 <- function(data, stageframe, year = "all", pop = NA, patch = NA,
 #'   stageassign = cypframe_raw, stagesize = "sizeadded", NAas0 = TRUE,
 #'   NRasRep = TRUE)
 #' 
+#' # Here we use supplemental() to provide overwrite and reproductive info
+#' cypsupp2r <- supplemental(stage3 = c("SD", "P1", "P2", "P3", "SL", "SL", "D", 
+#'     "XSm", "Sm", "SD", "P1"),
+#'   stage2 = c("SD", "SD", "P1", "P2", "P3", "SL", "SL", "SL", "SL", "rep",
+#'     "rep"),
+#'   eststage3 = c(NA, NA, NA, NA, NA, NA, "D", "XSm", "Sm", NA, NA),
+#'   eststage2 = c(NA, NA, NA, NA, NA, NA, "XSm", "XSm", "XSm", NA, NA),
+#'   givenrate = c(0.10, 0.20, 0.20, 0.20, 0.25, 0.40, NA, NA, NA, NA, NA),
+#'   multiplier = c(NA, NA, NA, NA, NA, NA, NA, NA, NA, 0.5, 0.5),
+#'   type =c(1, 1, 1, 1, 1, 1, 1, 1, 1, 3, 3),
+#'   stageframe = cypframe_raw, historical = FALSE)
+#' 
+#' cypmatrix2r <- rlefko2(data = cypraw_v1, stageframe = cypframe_raw, 
+#'   year = "all", patch = "all", stages = c("stage3", "stage2", "stage1"),
+#'   size = c("size3added", "size2added"), supplement = cypsupp2r,
+#'   yearcol = "year2", patchcol = "patchid", indivcol = "individ")
+#'                        
+#' cypmatrix2r$A[[1]]
+#' 
+#' # Alternatively, we can use overwrite() and a reproductive matrix instead of
+#' # supplemental()
+#' 
 #' rep_cyp_raw <- matrix(0, 11, 11)
 #' rep_cyp_raw[1:2,7:11] <- 0.5
 #' 
@@ -1771,106 +2119,123 @@ rlefko3 <- function(data, stageframe, year = "all", pop = NA, patch = NA,
 #'   givenrate = c(0.1, 0.2, 0.2, 0.2, 0.25, 0.4, NA, NA, NA),
 #'   type = c("S", "S", "S", "S", "S", "S", "S", "S", "S"))
 #' 
-#' cypmatrix2r <- rlefko2(data = cypraw_v1, stageframe = cypframe_raw, 
+#' cypmatrix2r_alt <- rlefko2(data = cypraw_v1, stageframe = cypframe_raw,
 #'   year = "all", patch = "all", stages = c("stage3", "stage2", "stage1"),
 #'   size = c("size3added", "size2added"), repmatrix = rep_cyp_raw,
 #'   overwrite = cypover2r, yearcol = "year2", patchcol = "patchid",
 #'   indivcol = "individ")
-#'                        
-#' cypmatrix2r$A[[1]]
+#' 
+#' cypmatrix2r_alt$A[[1]]
 #' 
 #' @export
 rlefko2 <- function(data, stageframe, year = "all", pop = NA, patch = NA,
   censor = FALSE, stages = NA, alive = c("alive3", "alive2"),
   size = c("sizea3", "sizea2"), repst = c("repstatus3", "repstatus2"),
   matst = c("matstatus3", "matstatus2"), fec = c("feca3", "feca2"),
-  repmatrix = NA, overwrite = NA, yearcol = NA, popcol = NA, patchcol = NA,
-  indivcol = NA, censorcol = NA, reduce = FALSE) {
+  supplement = NA, repmatrix = NA, overwrite = NA, yearcol = NA, popcol = NA,
+  patchcol = NA, indivcol = NA, censorcol = NA, censorkeep = 0, reduce = FALSE) {
   
   tocensor <- indataset <- alive2 <- popused <- patchused <- yearused <- NULL
   
   if (all(is.na(data))) {
-    stop("Need original vertical dataset to proceed.")
+    stop("Need original vertical dataset to proceed.", call. = FALSE)
+  }
+  
+  if (!any(class(data) == "data.frame")) {
+    stop("Need original vertical dataset to proceed. This dataset must be in historical vertical format.", call. = FALSE)
   }
   
   if (!any(class(data) == "hfvdata")) {
-    stop("Need original vertical dataset to proceed. This dataset must be in historical vertical format.")
+    warning("Dataset used as input is not of class hfvdata. Will assume that the dataset has been formatted equivalently.", call. = FALSE)
   }
   
   if (all(is.na(stages))) {
     if (!(length(alive) > 1)) {
-      stop("This function requires stage information. In the absence of stage columns in the dataset, it requires two variables for living/dead status, size, reproductive status, and maturity status, for each of times t+1 and t.")
+      stop("This function requires stage information for each of times t+1 and t. In the absence of stage columns in the dataset, it requires two variables for living/dead status, size, reproductive status, and maturity status, for each of times t+1 and t.", call. = FALSE)
     }
     if (!(length(size) > 1)) {
-      stop("This function requires stage information. In the absence of stage columns in the dataset, it requires two variables for living/dead status, size, reproductive status, and maturity status, for each of times t+1 and t.")
+      stop("This function requires stage information for each of times t+1 and t. In the absence of stage columns in the dataset, it requires two variables for living/dead status, size, reproductive status, and maturity status, for each of times t+1 and t.", call. = FALSE)
     }
     if (!all(is.na(repst))) {
       if (!(length(repst) > 1)) {
-        stop("This function requires stage information. In the absence of stage columns in the dataset, it requires two variables for living/dead status, size, reproductive status, and maturity status, for each of times t+1 and t.")
+        stop("This function requires stage information for each of times t+1 and t. In the absence of stage columns in the dataset, it requires two variables for living/dead status, size, reproductive status, and maturity status, for each of times t+1 and t.", call. = FALSE)
       }
     }   
     if (!all(is.na(matst))) {
       if (!(length(matst) > 1)) {
-        stop("This function requires stage information. In the absence of stage columns in the dataset, it requires two variables for living/dead status, size, reproductive status, and maturity status, for each of times t+1 and t.")
+        stop("This function requires stage information for each of times t+1 and t. In the absence of stage columns in the dataset, it requires two variables for living/dead status, size, reproductive status, and maturity status, for each of times t+1 and t.", call. = FALSE)
       }
     }   
   }
   
   if (!(length(fec) > 1)) {
-    stop("This function requires two variables for fecundity, for each of times t+1 and t.")
+    stop("This function requires two variables for fecundity, for each of times t+1 and t.", call. = FALSE)
   }
   
-  if (any(is.character(year)) & any(class(data) == "hfvdata")) {
-    if (is.element(tolower(year), "all")) {
-      if (is.character(yearcol)) {choicevar <- which(names(data) == yearcol);
-      year <- sort(unique(data[,choicevar]))
-      yearcol <- choicevar
-      } else if (all(is.numeric(year))) {
-        year <- sort(unique(data[,yearcol]))
-      } else {stop("Cannot understand year designation.")}
+  if (is.character(yearcol)) {
+    choicevar <- which(names(data) == yearcol);
+    mainyears <- sort(unique(data[,choicevar]))
+  } else if (is.numeric(yearcol)) {
+    mainyears <- sort(unique(data[, yearcol]))
+  } else {
+    stop("Need appropriate year column designation.", call. = FALSE)
+  }
+  
+  if (any(is.character(year))) {
+    if (is.element("all", tolower(year))) {
+      year <- mainyears
+    } else {
+      stop("Year designation not recognized.", call. = FALSE)
     }
   }
   
-  if (length(year) == 0 | all(is.na(year) == TRUE)) {
-    stop("This function cannot proceed without being given a specific year, or a suite of years.")
+  if (length(year) == 0 | all(is.na(year) == TRUE) | any(is.na(year))) {
+    stop("This function cannot proceed without being given a specific year, or a suite of years. NA entries are not allowed.", call. = FALSE)
   }
   
-  if (!all(is.element(year, sort(unique(data[,yearcol]))))) {
-    stop("Dataset does not contain one or more of the requested years.")
-  }
-  
-  if (all(is.na(repmatrix))) {    
-    repmatrix <- matrix(0, dim(stageframe)[1], dim(stageframe)[1])
-    repstages <- which(stageframe$repstatus == 1)
-    repmatrix[1, repstages] <- 1
+  if (!all(is.element(year, mainyears))) {
+    stop("Dataset does not contain one or more of the requested years. Note that matrices cannot be made for the first year in a historical dataset.", call. = FALSE)
   }
   
   if (censor == TRUE) {
-    if(all(is.na(censorcol)) == TRUE) {stop("Cannot censor the data without a proper censor variable.")}
+    if(all(is.na(censorcol)) == TRUE) {
+      stop("Cannot censor the data without a proper censor variable.", call. = FALSE)
+    }
     
-    for (i in c(1:length(censorcol))) {
-      if (is.character(censorcol)) {
-        data$tocensor <- data[,which(names(data) == censorcol[i])]} else {data$tocensor <- data[,censorcol[i]]
-        }
-      data <- subset(data, tocensor == 1)
-    }   
+    if (all(is.character(censorcol))) {
+      if (!all(is.element(censorcol, names(data)))) {
+        stop("Censor variable names input for censorcol do not match any variable names in the dataset.", call. = FALSE)
+      }
+    }
+    
+    censorcolsonly <- data[,censorcol]
+    sleeplessnights <- apply(as.matrix(c(1:dim(censorcolsonly)[1])), 1, function(X) {
+      crazyvec <- if(is.element(censorkeep, censorcolsonly[X,])) {
+        return(X);
+      } else {
+        return(NA);
+      }
+    })
+    sleeplessnights <- sleeplessnights[!is.na(sleeplessnights)]
+    
+    data <- data[sleeplessnights,]
   }
   
   if (!all(is.na(pop)) & !all(is.na(patch))) {
-    if (is.na(popcol) | is.na(patchcol)) {stop("Need population and patch designation variables to proceed.")}
+    if (is.na(popcol) | is.na(patchcol)) {stop("Need population and patch designation variables to proceed.", call. = FALSE)}
     
-    if (is.element(tolower(pop), "all")) {
+    if (is.element("all", tolower(pop))) {
       if (is.character(popcol)) {popcol <- which(names(data) == popcol)}
       
       pops <- unique(data[,popcol])
     } else {pops <- pop}
     
-    if (is.element(tolower(patch), "all")) {
+    if (is.element("all", tolower(patch))) {
       if (is.character(patchcol)) {patchcol <- which(names(data) == patchcol)}
       
       listofpatches <- apply(as.matrix(pops), 1, function(X) {
         patchfolly <- subset(data, popcol == X);
-        output <- cbind.data.frame(X, unique(patchfolly[,yearcol]));
+        output <- cbind.data.frame(X, unique(patchfolly[,yearcol]), stringsAsFactors = FALSE);
         names(output) <- c("pop", "patch");
         return(output);
       })
@@ -1883,14 +2248,15 @@ rlefko2 <- function(data, stageframe, year = "all", pop = NA, patch = NA,
     listofyears <- apply(as.matrix(listofpatches), 1, function(X) {
       checkyrdata <- subset(data, popcol = X[1]);
       checkyrdata <- subset(checkyrdata, patchcol = X[2])
-      output <- cbind.data.frame(X[1], X[2], unique(checkyrdata[,yearcol]));
+      output <- cbind.data.frame(X[1], X[2], unique(checkyrdata[,yearcol]),
+        stringsAsFactors = FALSE);
       names(output) <- c("pop", "patch", "year2");
       return(output)
     })
   } else if (all(is.na(pop)) & !all(is.na(patch))) {
-    if (is.na(patchcol)) {stop("Need patch designation variable to proceed.")}
+    if (is.na(patchcol)) {stop("Need patch designation variable to proceed.", call. = FALSE)}
     
-    if (is.element(tolower(patch), "all")) {
+    if (is.element("all", tolower(patch))) {
       if (is.character(patchcol)) {patchcol <- which(names(data) == patchcol)}
       
       patches <- unique(data[,patchcol])
@@ -1898,7 +2264,7 @@ rlefko2 <- function(data, stageframe, year = "all", pop = NA, patch = NA,
     
     listofyears <- apply(as.matrix(patches), 1, function(X) {
       checkyrdata <- subset(data, patchcol = X);
-      output <- cbind.data.frame("1", X, unique(checkyrdata[,yearcol]));
+      output <- cbind.data.frame("1", X, unique(checkyrdata[,yearcol]), stringsAsFactors = FALSE);
       names(output) <- c("pop", "patch", "year2");
       return(output)
     })
@@ -1907,9 +2273,9 @@ rlefko2 <- function(data, stageframe, year = "all", pop = NA, patch = NA,
       listofyears <- do.call(rbind.data.frame, listofyears)
     }
   } else if (!all(is.na(pop)) & all(is.na(patch))) {
-    if (is.na(popcol)) {stop("Need population designation variable to proceed.")}
+    if (is.na(popcol)) {stop("Need population designation variable to proceed.", call. = FALSE)}
     
-    if (is.element(tolower(pop), "all")) {
+    if (is.element("all", tolower(pop))) {
       if (is.character(popcol)) {popcol <- which(names(data) == popcol)}
       
       pops <- unique(data[,popcol])
@@ -1917,7 +2283,7 @@ rlefko2 <- function(data, stageframe, year = "all", pop = NA, patch = NA,
     
     listofyears <- apply(as.matrix(pops), 1, function(X) {
       checkyrdata <- subset(data, popcol = X);
-      output <- cbind.data.frame(X, "1", unique(checkyrdata[,yearcol]));
+      output <- cbind.data.frame(X, "1", unique(checkyrdata[,yearcol]), stringsAsFactors = FALSE);
       names(output) <- c("pop", "patch", "year2");
       return(output)
     })
@@ -1926,13 +2292,26 @@ rlefko2 <- function(data, stageframe, year = "all", pop = NA, patch = NA,
       listofyears <- do.call(rbind.data.frame, listofyears)
     }
   } else if (all(is.na(pop)) & all(is.na(patch))) {
-    listofyears <- cbind.data.frame("1", "1", year)
+    listofyears <- cbind.data.frame("1", "1", year, stringsAsFactors = FALSE)
     names(listofyears) <- c("pop", "patch", "year2")
   }
   
   yearlist <- split(listofyears, seq(nrow(listofyears)))
   
-  melchett <- .sf_reassess(stageframe, repmatrix, overwrite)
+  stagenum_init <- dim(stageframe)[1]
+  if (!all(is.na(repmatrix))) {
+    if (any(class(repmatrix) == "matrix")) {
+      if (dim(repmatrix)[1] != stagenum_init) {
+        stop("The repmatrix provided must be a square matrix with dimensions equal to the number of stages in the stageframe.", call. = FALSE)
+      }
+      
+      if (dim(repmatrix)[2] != stagenum_init) {
+        stop("The repmatrix provided must be a square matrix with dimensions equal to the number of stages in the stageframe, or the square thereof.", call. = FALSE)
+      }
+    }
+  }
+  
+  melchett <- .sf_reassess(stageframe, supplement, repmatrix, overwrite)
   stageframe <- melchett[[1]]
   repmatrix <- melchett[[2]]
   
@@ -1966,7 +2345,7 @@ rlefko2 <- function(data, stageframe, year = "all", pop = NA, patch = NA,
       data$usedsize2 <- data[,which(names(data) == size[2])]
       data$usedsize3 <- data[,which(names(data) == size[1])]
     } else {
-      warning("Without stage columns, lefko3 MPM estimation functions generally require size variables. Failure to include size variables may lead to odd results.")
+      warning("Without stage columns, lefko3 MPM estimation functions generally require size variables. Failure to include size variables may lead to odd results.", call. = FALSE)
     }
     if (length(repst) > 1) {
       data$usedrepst2 <- data[,which(names(data) == repst[2])]
@@ -1990,7 +2369,7 @@ rlefko2 <- function(data, stageframe, year = "all", pop = NA, patch = NA,
       choicestage <- intersect(intersect(mainstages, jmstages), intersect(obsstages, repstages))
       
       if (length(choicestage) == 0) {
-        stop("Stage characteristics mismatch dataset. Consider using the stages option, particularly if the vertical file was created with NRasRep = TRUE in verticalize3() or historicalize3().")
+        stop("Stage characteristics mismatch dataset. Consider using the stages option, particularly if the vertical file was created with NRasRep = TRUE in verticalize3() or historicalize3().", call. = FALSE)
       }
       
       return(as.character(instageframe$stage[choicestage]))
@@ -2001,7 +2380,7 @@ rlefko2 <- function(data, stageframe, year = "all", pop = NA, patch = NA,
         data$usedsize3[X] <- 0
       }
       mainstages <- intersect(which(instageframe$bin_size_min < data$usedsize3[X]), 
-                              which(instageframe$bin_size_max >= data$usedsize3[X]))
+        which(instageframe$bin_size_max >= data$usedsize3[X]))
       jmstages <- which(instageframe$immstatus == (1 - data$usedmatstatus3[X]))
       obsstages <- which(instageframe$obsstatus == data$obsstatus3[X])
       repstages <- which(instageframe$repstatus == data$repstatus3[X])
@@ -2010,7 +2389,7 @@ rlefko2 <- function(data, stageframe, year = "all", pop = NA, patch = NA,
       choicestage <- intersect(intersect(intersect(mainstages, jmstages), intersect(obsstages, repstages)), alivestage3)
       
       if (length(choicestage) == 0) {
-        stop("Stage characteristics mismatch dataset. Consider using the stages option, particularly if the vertical file was created with NRasRep = TRUE in verticalize3() or historicalize3().")
+        stop("Stage characteristics mismatch dataset. Consider using the stages option, particularly if the vertical file was created with NRasRep = TRUE in verticalize3() or historicalize3().", call. = FALSE)
       }
       
       if (length(choicestage) == 0) choicestage <- which(instageframe$stage_id == max(instageframe$stage_id))
@@ -2043,7 +2422,7 @@ rlefko2 <- function(data, stageframe, year = "all", pop = NA, patch = NA,
     stages.used <- sort(unique(c(data$usedstage2, data$usedstage3)))
     
     if (length(setdiff(stages.used, stageframe$stage)) > 0) {
-      stop("Some stages in dataset do not match those detailed in the input stageframe.", .call = FALSE)
+      stop("Some stages in dataset do not match those detailed in the input stageframe.", call. = FALSE)
     }
   }
   
@@ -2054,19 +2433,20 @@ rlefko2 <- function(data, stageframe, year = "all", pop = NA, patch = NA,
     data$usedfec2[which(is.na(data$usedfec2))] <- 0
     data$usedfec3[which(is.na(data$usedfec3))] <- 0
   } else {
-    warning("Lefko3 MPM estimation functions generally require fecundity variables. Failure to include fecundity variables leads to matrices composed only of survival transitions.")
+    warning("Lefko3 MPM estimation functions generally require fecundity variables. Failure to include fecundity variables leads to matrices composed only of survival transitions.", call. = FALSE)
   } 
   
-  overwrite <- .overwrite_reassess(overwrite, stageframe, historical = FALSE)
+  ovtable <- .overwrite_reassess(stageframe, supplement, overwrite, historical = FALSE)
   
   # This section creates stageexpansion3, which is a data frame that holds values for stage transitions from time t to t+1
-  majortrial <- theoldpizzle(stageframe, overwrite, repmatrix, 0, 1, 0)
-  stageexpansion3 <- do.call("cbind.data.frame", majortrial)
+  majortrial <- theoldpizzle(stageframe, ovtable, repmatrix, 0, 1, 0)
+  stageexpansion3 <- do.call("cbind.data.frame", c(majortrial, stringsAsFactors = FALSE))
   
   # Stageexpansion2 is a dataframe created to hold values for stages in time t only
-  stageexpansion2 <- cbind.data.frame(stage2 = as.numeric(stageframe$stageno), size2 = as.numeric(stageframe$bin_size_ctr), 
-                                      rep2 = as.numeric(stageframe$repstatus), indata2 = as.numeric(stageframe$indataset),
-                                      index2 = (as.numeric(stageframe$stageno) - 1), fec3 = c(rowSums(repmatrix), 0))
+  stageexpansion2 <- cbind.data.frame(stage2 = as.numeric(stageframe$stageno),
+    size2 = as.numeric(stageframe$bin_size_ctr), rep2 = as.numeric(stageframe$repstatus),
+    indata2 = as.numeric(stageframe$indataset), index2 = (as.numeric(stageframe$stageno) - 1),
+    fec3 = c(rowSums(repmatrix), 0))
   stageexpansion2$fec3[which(stageexpansion2$fec3 > 0)] <- 1
   
   data <- subset(data, alive2 == 1)
@@ -2084,10 +2464,10 @@ rlefko2 <- function(data, stageframe, year = "all", pop = NA, patch = NA,
   })
   
   if(is.element(0, unique(data$index2))) {
-    warning("Data (stage at time t) contains some stages not identified in stageframe. Note that all stage characteristics must match, including reproductive status.")
+    warning("Data (stage at time t) contains some stages not identified in stageframe. Note that all stage characteristics must match, including reproductive status.", call. = FALSE)
   }
   if(is.element(0, unique(data$index3))) {
-    warning("Data (stage at time t+1) contains some stages not identified in stageframe. Note that all stage characteristics must match, including reproductive status.")
+    warning("Data (stage at time t+1) contains some stages not identified in stageframe. Note that all stage characteristics must match, including reproductive status.", call. = FALSE)
   }
   
   # This section runs the core matrix estimator
@@ -2105,7 +2485,8 @@ rlefko2 <- function(data, stageframe, year = "all", pop = NA, patch = NA,
       passed_data$yearused <- passed_data[,yearcol];
       passed_data <- subset(passed_data, yearused == X$year2[1]);
     }
-    normalpatrolgroup(sge3 = stageexpansion3, sge2 = stageexpansion2, MainData = passed_data, StageFrame = stageframe)
+    normalpatrolgroup(sge3 = stageexpansion3, sge2 = stageexpansion2, 
+      MainData = passed_data, StageFrame = stageframe)
   })
   
   a_list <- lapply(madsexmadrigal, function(X) {X$A})
@@ -2139,8 +2520,10 @@ rlefko2 <- function(data, stageframe, year = "all", pop = NA, patch = NA,
     ahstages <- drops$ahstages
   }
   
-  output <- list(A = a_list, U = u_list, F = f_list, hstages = NA, ahstages = ahstages, 
-                 labels = listofyears, matrixqc = qcoutput1, dataqc = qcoutput2)
+  output <- list(A = a_list, U = u_list, F = f_list, hstages = NA,
+    ahstages = ahstages, labels = listofyears, matrixqc = qcoutput1,
+    dataqc = qcoutput2)
+  
   class(output) <- "lefkoMat"
   
   return(output)
@@ -2167,13 +2550,30 @@ rlefko2 <- function(data, stageframe, year = "all", pop = NA, patch = NA,
 #' observation status, propagule status, immaturity status, and maturity status
 #' of each ahistorical stage. Should also incorporate bin widths if size is
 #' continuous.
-#' @param repmatrix A matrix composed mostly of 0s, with non-zero values for
-#' each potentially new individual (row) born to each reproductive stage
-#' (column). Entries act as multipliers on fecundity, with 1 equaling full
-#' fecundity.
-#' @param overwrite A data frame developed with the \code{\link{overwrite}()}
-#' function describing transitions to be overwritten either with given values or 
-#' with other estimated transitions.
+#' @param supplement An optional data frame of class \code{lefkoSD} that
+#' provides supplemental data that should be incorporated into the MPM. Three
+#' kinds of data may be integrated this way: transitions to be estimated via the
+#' use of proxy transitions, transition overwrites from the literature or
+#' supplemental studies, and transition multipliers for fecundity. This data
+#' frame should be produced using the \code{\link{supplemental}()} function. Can
+#' be used in place of or in addition to an overwrite table (see 
+#' \code{overwrite} below) and a reproduction matrix (see \code{repmatrix}
+#' below).
+#' @param repmatrix A reproduction matrix, which is an optional matrix composed
+#' mostly of 0s, with non-zero values for each potentially new individual (row)
+#' born to each reproductive stage (column). Entries act as multipliers on
+#' fecundity, with 1 equaling full fecundity. Fecundity multipliers provided
+#' this way supplement rather than replace those provided in \code{supplement}.
+#' If left blank, then \code{aflefko2()} will assume that all stages marked as
+#' reproductive produce offspring at 1x that of fecundity estimated in provided
+#' linear models, and that fecundity will be into the first stage noted as
+#' propagule or immature. To prevent this behavior, input just \code{0}, which
+#' will result in fecundity being estimated only for transitions noted in
+#' \code{supplement} above. Must be the dimensions of an ahistorical matrix.
+#' @param overwrite An optional data frame developed with the
+#' \code{\link{overwrite}()} function describing transitions to be overwritten
+#' either with given values or with other estimated transitions. Note that this
+#' function supplements overwrite data provided in \code{supplement}.
 #' @param data The original historical demographic data frame used to estimate
 #' vital rates (class \code{hfvdata}). The original data frame is required in
 #' order to initialize years and patches properly.
@@ -2296,7 +2696,7 @@ rlefko2 <- function(data, stageframe, year = "all", pop = NA, patch = NA,
 #'
 #' \item{A}{A list of full projection matrices in order of sorted patches and
 #' years.}
-#' \item{U}{A list of survival-transition matrices sorted as in \code{A}.}
+#' \item{U}{A list of survival transition matrices sorted as in \code{A}.}
 #' \item{F}{A list of fecundity matrices sorted as in \code{A}.}
 #' \item{hstages}{Null for ahistorical matrices.}
 #' \item{ahstages}{A data frame detailing the characteristics of associated
@@ -2309,9 +2709,37 @@ rlefko2 <- function(data, stageframe, year = "all", pop = NA, patch = NA,
 #' in \code{U} and \code{F} matrices, and the number of annual matrices.}
 #' \item{modelqc}{This is the \code{qc} portion of the modelsuite input.}
 #' 
-#' Please note that this function will yield incorrect estimates if the models
-#' utilized incorporate state in time \emph{t}-1. Only use models developed
-#' testing ahistorical effects.
+#' @section Notes:
+#' This function will yield incorrect estimates if the models utilized
+#' incorporate state in time \emph{t}-1. Only use models developed testing for
+#' ahistorical effects.
+#' 
+#' The default behavior of this function is to estimate fecundity with regards
+#' to transitions specified via associated fecundity multipliers in either
+#' \code{supplement} or \code{repmatrix}. If both of these fields are left
+#' empty, then fecundity will be estimated at full for all transitions leading
+#' from reproductive stages to immature and propagule stages. However, if a
+#' \code{supplement} is provided and a \code{repmatrix} is not, or if
+#' \code{repmatrix} is set to 0, then only fecundity transitions noted in the
+#' supplement will be set to non-zero values. To use the default behavior of
+#' setting all reproductive stages to reproduce at full fecundity into immature
+#' and propagule stages but also incorporate given or proxy
+#' survival transitions, input those given and proxy transitions through the
+#' \code{overwrite} option.
+#' 
+#' The reproduction matrix (field \code{repmatrix}) may only be supplied as
+#' ahistorical. If provided as historical, then \code{flefko2()} will fail and
+#' produce an error.
+#' 
+#' Users may at times wish to estimate MPMs using a dataset incorporating
+#' multiple patches or subpopulations. Should the aim of analysis be a general
+#' MPM that does not distinguish these patches or subpopulations, the
+#' \code{patchcol} variable should be left to NA, which is the default.
+#'
+#' Input options including multiple variable names must be entered in the order
+#' of variables in time \emph{t}+1, \emph{t}, and \emph{t}-1. Rearranging the
+#' order WILL lead to erroneous calculations, and will probably also lead to
+#' fatal errors.
 #'
 #' @examples
 #' \donttest{
@@ -2352,13 +2780,6 @@ rlefko2 <- function(data, stageframe, year = "all", pop = NA, patch = NA,
 #' lathvertln$feca1 <- round(lathvertln$feca1)
 #' lathvertln$feca3 <- round(lathvertln$feca3)
 #' 
-#' lathrepmln <- matrix(0, 21, 21)
-#' lathrepmln[1, c(13:21)] <- 0.345
-#' lathrepmln[2, c(13:21)] <- 0.054
-#' 
-#' lathover2 <- overwrite(stage3 = c("Sd", "Sdl"), stage2 = c("Sd", "Sd"),
-#'   givenrate = c(0.345, 0.054))
-#' 
 #' lathmodelsln2 <- modelsearch(lathvertln, historical = FALSE,
 #'   approach = "lme4", suite = "main",
 #'   vitalrates = c("surv", "obs", "size", "repst", "fec"), juvestimate = "Sdl",
@@ -2366,27 +2787,51 @@ rlefko2 <- function(data, stageframe, year = "all", pop = NA, patch = NA,
 #'   indiv = "individ", patch = "patchid", year = "year2", age = "obsage",
 #'   year.as.random = TRUE, patch.as.random = TRUE, show.model.tables = TRUE,
 #'   quiet = TRUE)
-#'                              
+#' 
+#' # Here we use supplemental() to provide overwrite and reproductive info
+#' lathsupp2 <- supplemental(stage3 = c("Sd", "Sdl", "Sd", "Sdl"), 
+#'   stage2 = c("Sd", "Sd", "rep", "rep"),
+#'   givenrate = c(0.345, 0.054, NA, NA),
+#'   multiplier = c(NA, NA, 0.345, 0.054),
+#'   type = c(1, 1, 3, 3), stageframe = lathframeln, historical = FALSE)
+#' 
 #' lathmat2age <- aflefko2(year = "all", patch = "all", 
 #'   stageframe = lathframeln, modelsuite = lathmodelsln2, data = lathvertln,
-#'   repmatrix = lathrepmln, overwrite = lathover2, patchcol = "patchid",
+#'   supplement = lathsupp2, patchcol = "patchid",
 #'   yearcol = "year2", year.as.random = FALSE, patch.as.random = FALSE,
 #'   final_age = 2, continue = TRUE, reduce = FALSE)
 #' 
 #' summary(lathmat2age)
+#' 
+#' # Here we use overwrite() and a reproductive matrix to provide info instead
+#' # of supplemental()
+#' 
+#' lathrepmln <- matrix(0, 21, 21)
+#' lathrepmln[1, c(13:21)] <- 0.345
+#' lathrepmln[2, c(13:21)] <- 0.054
+#' 
+#' lathover2 <- overwrite(stage3 = c("Sd", "Sdl"), stage2 = c("Sd", "Sd"),
+#'   givenrate = c(0.345, 0.054))
+#' 
+#' lathmat2age_alt <- aflefko2(year = "all", patch = "all", 
+#'   stageframe = lathframeln, modelsuite = lathmodelsln2, data = lathvertln,
+#'   repmatrix = lathrepmln, overwrite = lathover2, patchcol = "patchid",
+#'   yearcol = "year2", year.as.random = FALSE, patch.as.random = FALSE,
+#'   final_age = 2, continue = TRUE, reduce = FALSE)
+#'   
+#' summary(lathmat2age_alt)
 #' }
-#' 
 #' @export
-#' 
-aflefko2 <- function(year = 1, patch = NA, stageframe, repmatrix = NA, 
-  overwrite = NA, data = NA, modelsuite = NA, surv_model = NA, obs_model = NA,
-  size_model = NA, repst_model = NA, fec_model = NA, jsurv_model = NA,
-  jobs_model = NA, jsize_model = NA, jrepst_model = NA, paramnames = NA,
-  inda = 0, indb = 0, indc = 0, surv_dev = 0, obs_dev = 0, size_dev = 0,
-  repst_dev = 0, fec_dev = 0, jsurv_dev = 0, jobs_dev = 0, jsize_dev = 0,
-  jrepst_dev = 0, repmod = 1, yearcol = "year2", patchcol = "patchid",
-  year.as.random = FALSE, patch.as.random = FALSE, final_age = 10,
-  continue = TRUE, randomseed = NA, negfec = FALSE, reduce = FALSE) {
+aflefko2 <- function(year = 1, patch = NA, stageframe, supplement = NA,
+  repmatrix = NA, overwrite = NA, data = NA, modelsuite = NA, surv_model = NA,
+  obs_model = NA, size_model = NA, repst_model = NA, fec_model = NA,
+  jsurv_model = NA, jobs_model = NA, jsize_model = NA, jrepst_model = NA,
+  paramnames = NA, inda = 0, indb = 0, indc = 0, surv_dev = 0, obs_dev = 0,
+  size_dev = 0, repst_dev = 0, fec_dev = 0, jsurv_dev = 0, jobs_dev = 0,
+  jsize_dev = 0, jrepst_dev = 0, repmod = 1, yearcol = "year2",
+  patchcol = "patchid", year.as.random = FALSE, patch.as.random = FALSE,
+  final_age = 10, continue = TRUE, randomseed = NA, negfec = FALSE,
+  reduce = FALSE) {
   
   if (all(is.na(modelsuite)) & all(is.na(paramnames))) {
     warnings("Function may not work properly without a dataframe of model parameters or equivalents supplied either through modelsuite or through the paramnames input parameter.")
@@ -2396,8 +2841,12 @@ aflefko2 <- function(year = 1, patch = NA, stageframe, repmatrix = NA,
     patchcol <- paramnames$modelparams[which(paramnames$mainparams == "patch")]
   }
   
-  if (all(is.na(data))) {stop("Need original vertical dataset to set proper limits on year and patch.", call. = FALSE)}
-  if (!any(class(data) == "data.frame")) {stop("Need original vertical dataset used in modeling to proceed.", call. = FALSE)}
+  if (all(is.na(data))) {
+    stop("Need original vertical dataset to set proper limits on year and patch.", call. = FALSE)
+  }
+  if (!any(class(data) == "data.frame")) {
+    stop("Need original vertical dataset used in modeling to proceed.", call. = FALSE)
+  }
   
   if (is.character(yearcol)) {
     choicevar <- which(names(data) == yearcol);
@@ -2409,7 +2858,7 @@ aflefko2 <- function(year = 1, patch = NA, stageframe, repmatrix = NA,
   }
   
   if (any(is.character(year))) {
-    if (is.element(tolower(year), "all")) {
+    if (is.element("all", tolower(year))) {
       year <- mainyears
     } else {
       stop("Year designation not recognized.", call. = FALSE)
@@ -2417,10 +2866,10 @@ aflefko2 <- function(year = 1, patch = NA, stageframe, repmatrix = NA,
   }
   
   if (length(year) == 0 | all(is.na(year) == TRUE) | any(is.na(year))) {
-    stop("This function cannot proceed without being given a specific year, or a suite of years.", call. = FALSE)
+    stop("This function cannot proceed without being given a specific year, or a suite of years. NA entries are not allowed.", call. = FALSE)
   }
   
-  if (is.na(patch) & !is.na(patchcol)) {
+  if (all(is.na(patch)) & !is.na(patchcol)) {
     warning("Matrix creation may not proceed properly without input in the patch option when using a modelsuite in which patch is designated.")
   }
   
@@ -2434,36 +2883,51 @@ aflefko2 <- function(year = 1, patch = NA, stageframe, repmatrix = NA,
   }
   
   if (any(is.character(patch))) {
-    if (is.element(tolower(patch), "all")) {
+    if (is.element("all", tolower(patch))) {
       patch <- mainpatches
     } else if (!is.element(patch, mainpatches)) {
       stop("Patch designation not recognized.", call. = FALSE)
     }
   }
   
-  if (all(is.na(repmatrix))) {    #This bit needs to be redone to check for fecundity values in the dataset and use them to determine the proper reproductive stages
-    repmatrix <- matrix(0, dim(stageframe)[1], dim(stageframe)[1])
-    repstages <- which(stageframe$repstatus == 1)
-    repmatrix[1, repstages] <- 1
+  if (!is.numeric(inda) | !is.numeric(indb) | !is.numeric(indc)) {
+    stop("Individual covariate values must be numeric.", call. = FALSE)
   }
   
-  if (!is.numeric(inda) | !is.numeric(indb) | !is.numeric(indc)) {
-    stop("Individual covariate values must equal valid numbers.", call. = FALSE)
+  if (all(is.na(repmatrix)) & all(is.na(supplement))) {
+    warning("Neither supplemental data nor a reproduction matrix have been supplied. All fecundity transitions will be inferred from the stageframe.")
+  } else if (all(is.na(repmatrix)) & any(class(supplement) == "lefkoSD")) {
+    checkconv <- supplement$convtype
+    
+    if (!is.element(3, checkconv)) {
+      warning("Supplemental data does not include fecundity information, and a reproduction matrix has not been supplied. All fecundity transitions will be inferred from the stageframe.")
+    }
+  }
+  
+  stagenum_init <- dim(stageframe)[1]
+  if (!all(is.na(repmatrix))) {
+    if (any(class(repmatrix) == "matrix")) {
+      if (dim(repmatrix)[1] != stagenum_init | dim(repmatrix)[2] != stagenum_init) {
+        stop("The repmatrix provided must be a square matrix with dimensions equal to the number of stages in the stageframe.", call. = FALSE)
+      }
+    }
   }
   
   if (any(!suppressWarnings(!is.na(as.numeric(as.character(stageframe$size)))))) {
     stop("Function aflefko2() requires size to be numeric rather than categorical.")
   }
   
-  melchett <- .sf_reassess(stageframe, repmatrix, overwrite)
+  melchett <- .sf_reassess(stageframe, supplement, repmatrix, overwrite)
   stageframe <- melchett[[1]]
   repmatrix <- melchett[[2]]
   
   stageframe$stage_id <- as.numeric(stageframe$stage_id)
   stageframe$original_size <- as.numeric(stageframe$original_size)
-  stageframe$bin_size_ctr <- as.numeric(stageframe$bin_size_ctr)
   stageframe$bin_size_min <- as.numeric(stageframe$bin_size_min)
+  stageframe$bin_size_ctr <- as.numeric(stageframe$bin_size_ctr)
   stageframe$bin_size_max <- as.numeric(stageframe$bin_size_max)
+  stageframe$bin_size_width <- as.numeric(stageframe$bin_size_width)
+  stageframe$bin_raw_halfwidth <- as.numeric(stageframe$bin_raw_halfwidth)
   stageframe$repstatus <- as.numeric(stageframe$repstatus)
   stageframe$obsstatus <- as.numeric(stageframe$obsstatus)
   stageframe$propstatus <- as.numeric(stageframe$propstatus)
@@ -2471,8 +2935,6 @@ aflefko2 <- function(year = 1, patch = NA, stageframe, repmatrix = NA,
   stageframe$matstatus <- as.numeric(stageframe$matstatus)
   stageframe$entrystage <- as.numeric(stageframe$entrystage)
   stageframe$indataset <- as.numeric(stageframe$indataset)
-  stageframe$bin_size_width <- as.numeric(stageframe$bin_size_width)
-  stageframe$bin_raw_halfwidth <- as.numeric(stageframe$bin_raw_halfwidth)
   stageframe$alive <- as.numeric(stageframe$alive)
   stageframe$min_age <- as.numeric(stageframe$min_age)
   stageframe$max_age <- as.numeric(stageframe$max_age)
@@ -2492,10 +2954,12 @@ aflefko2 <- function(year = 1, patch = NA, stageframe, repmatrix = NA,
     final_age <- max(stageframe$max_age, na.rm = TRUE)
   }
   
+  ovtable <- .overwrite_reassess(stageframe, supplement, overwrite, historical = FALSE)
+  
   # Next the data frame for the C++-based matrix populator functions
-  allstages.list <- theoldpizzle(stageframe, overwrite, repmatrix, finalage = final_age, 
-                                 style = 2, cont = continue)
-  allstages <- do.call("cbind.data.frame", allstages.list)
+  allstages.list <- theoldpizzle(stageframe, ovtable, repmatrix, finalage = final_age, 
+    style = 2, cont = continue)
+  allstages <- do.call("cbind.data.frame", c(allstages.list, stringsAsFactors = FALSE))
   
   maxsize <- max(c(allstages$a.size3, allstages$a.size2n), na.rm = TRUE)
   
@@ -2519,7 +2983,7 @@ aflefko2 <- function(year = 1, patch = NA, stageframe, repmatrix = NA,
   } else {
     set.seed(randomseed)
   }
-
+  
   surv_proxy <- .modelextract(surv_model, paramnames, mainyears, mainpatches, year.as.random, patch.as.random)
   obs_proxy <- .modelextract(obs_model, paramnames, mainyears, mainpatches, year.as.random, patch.as.random)
   
@@ -2577,7 +3041,7 @@ aflefko2 <- function(year = 1, patch = NA, stageframe, repmatrix = NA,
   # This creates a list of pop, patch, and year in order of matrix
   if (!all(is.na(patch))) {
     listofyears <- apply(as.matrix(patch), 1, function(X) {
-      output <- cbind.data.frame("1", X, as.matrix(year));
+      output <- cbind.data.frame("1", X, as.matrix(year), stringsAsFactors = FALSE);
       names(output) <- c("pop", "patch", "year2");
       return(output)
     })
@@ -2589,7 +3053,7 @@ aflefko2 <- function(year = 1, patch = NA, stageframe, repmatrix = NA,
     
   } else {
     
-    listofyears <- cbind.data.frame("1", "1", as.matrix(year))
+    listofyears <- cbind.data.frame("1", "1", as.matrix(year), stringsAsFactors = FALSE)
     names(listofyears) <- c("pop", "patch", "year2")
     
     listofyears$poporder <- 1
@@ -2598,14 +3062,15 @@ aflefko2 <- function(year = 1, patch = NA, stageframe, repmatrix = NA,
   }
   
   total.matrix.dim <- (instages - 1) * (final_age + 1)
-
+  
   yearlist <- split(listofyears, seq(nrow(listofyears)))
   
-  madsexmadrigal <- lapply(yearlist, jerzeibalowski, allstages, surv_proxy, obs_proxy, size_proxy, repst_proxy,
-                           fec_proxy, jsurv_proxy, jobs_proxy, jsize_proxy, jrepst_proxy, inda, indb, indc, 
-                           surv_dev, obs_dev, size_dev, repst_dev, fec_dev, jsurv_dev, jobs_dev, jsize_dev, 
-                           jrepst_dev, total.matrix.dim, repmod, rvarssummed, sigma, jrvarssummed, jsigma, 
-                           maxsize, sizedist, fecdist, negfec)
+  madsexmadrigal <- lapply(yearlist, jerzeibalowski, allstages, surv_proxy,
+    obs_proxy, size_proxy, repst_proxy, fec_proxy, jsurv_proxy, jobs_proxy,
+    jsize_proxy, jrepst_proxy, inda, indb, indc, surv_dev, obs_dev, size_dev,
+    repst_dev, fec_dev, jsurv_dev, jobs_dev, jsize_dev, jrepst_dev,
+    total.matrix.dim, repmod, rvarssummed, sigma, jrvarssummed, jsigma, maxsize,
+    sizedist, fecdist, negfec)
   
   a_list <- lapply(madsexmadrigal, function(X) {X$A})
   u_list <- lapply(madsexmadrigal, function(X) {X$U})
@@ -2633,8 +3098,10 @@ aflefko2 <- function(year = 1, patch = NA, stageframe, repmatrix = NA,
     ahstages <- drops$ahstages
   }
   
-  output <- list(A = a_list, U = u_list, F = f_list, hstages = NA, ahstages = ahstages, 
-                 labels = listofyears[,c(1:3)], matrixqc = qcoutput1, modelqc = qcoutput2)
+  output <- list(A = a_list, U = u_list, F = f_list, hstages = NA,
+    ahstages = ahstages, labels = listofyears[,c(1:3)], matrixqc = qcoutput1,
+    modelqc = qcoutput2)
+  
   class(output) <- "lefkoMat"
   
   return(output)
@@ -2722,7 +3189,11 @@ summary.lefkoMat <- function(object, ...) {
   mqbc <- mqcb / mqcc
   if (mqbc != floor(mqbc)) mqbc <- round(mqbc, digits = 3)
   
-  writeLines(paste0("\nThis ", histmark, " lefkoMat object contains ", mqcc, " matrices."))
+  if (mqcc == 1) {
+    writeLines(paste0("\nThis ", histmark, " lefkoMat object contains ", mqcc, " matrix."))
+  } else {
+    writeLines(paste0("\nThis ", histmark, " lefkoMat object contains ", mqcc, " matrices."))
+  }
   writeLines(paste0("\nEach matrix is a square matrix with ", matdim, " rows and columns, and a total of ", matdim*matdim, " elements."))
   writeLines(paste0("A total of ", mqca, " survival transitions were estimated, with ", 
                     mqac, " per matrix."))

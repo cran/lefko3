@@ -2,7 +2,7 @@
 % Please edit documentation in R/popchar.R
 \name{overwrite}
 \alias{overwrite}
-\title{Create an Overwrite Table for MPM Development}
+\title{Create Overwrite Table for MPM Development}
 \usage{
 overwrite(
   stage3,
@@ -46,8 +46,9 @@ Defaults to 1, for survival transition.}
 }
 \value{
 A data frame that puts the above vectors together and can be used as
-input in \code{\link{flefko3}}, \code{\link{flefko2}}, \code{\link{rlefko3}},
-and \code{\link{rlefko2}}.
+input in \code{\link{flefko3}()}, \code{\link{flefko2}()},
+\code{\link{rlefko3}()},\code{\link{rlefko2}()}, and
+\code{\link{aflefko2}()}.
 
 Variables in this data frame include the following:
 \item{stage3}{Stage at time \emph{t}+1 in the transition to be replaced.}

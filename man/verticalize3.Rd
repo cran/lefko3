@@ -2,7 +2,7 @@
 % Please edit documentation in R/datamanag.R
 \name{verticalize3}
 \alias{verticalize3}
-\title{Create Historical Vertical Data Frames From Horizontal Data Frames}
+\title{Create Historical Vertical Data Frame From Horizontal Data Frame}
 \usage{
 verticalize3(
   data,
@@ -36,11 +36,13 @@ verticalize3(
   stageassign = NA,
   stagesize = NA,
   censorkeep = 0,
+  censorRepeat = TRUE,
   censor = FALSE,
   spacing = NA,
   NAas0 = FALSE,
   NRasRep = FALSE,
-  reduce = TRUE
+  reduce = TRUE,
+  a2check = FALSE
 )
 }
 \arguments{
@@ -159,7 +161,13 @@ variable to use in stage estimation. Defaults to NA, and can also take
 which size variable is chosen.}
 
 \item{censorkeep}{The value of the censor variable identifying data to be
-included in analysis. Defaults to 0, but may take any value including NA.}
+included in analysis. Defaults to 0, but may take any value including NA.
+Note that if NA is the value to keep, then this function will alter all NAs
+to 0 values, and all other values to 1, treating 0 as the value to keep.}
+
+\item{censorRepeat}{A logical value indicating whether the censor variable
+is a single column, or whether it repeats across time blocks. Defaults to
+TRUE.}
 
 \item{censor}{A logical variable determining whether the output data should 
 be censored using the variable defined in \code{censorcol}. Defaults to 
@@ -184,6 +192,10 @@ to a stageframe. Defaults to FALSE.}
 \item{reduce}{A logical variable determining whether unused variables and 
 some invariant state variables should be removed from the output dataset.
 Defaults to TRUE.}
+
+\item{a2check}{A logical variable indicating whether to retain all data with
+living status at time \emph{t} equal to 0. Defaults to FALSE, and should be
+kept on FALSE except to inspect potential errors in the dataset.}
 }
 \value{
 If all inputs are properly formatted, then this function will output
@@ -215,7 +227,7 @@ corresponds to age = 0.}
 \item{sizec1,sizec2,sizec3}{Tertiary measurement in times \emph{t}-1, 
 \emph{t}, and \emph{t}+1, respectively.}
 \item{size1added,size2added,size3added}{Sum of primary, secondary, and 
-tertiary size measurements in timea \emph{t}-1, \emph{t}, and \emph{t}+1, 
+tertiary size measurements in times \emph{t}-1, \emph{t}, and \emph{t}+1, 
 respectively.}
 \item{repstra1,repstra2,repstra3}{Main numbers of reproductive structures in
 times \emph{t}-1, \emph{t}, and \emph{t}+1, respectively.}
@@ -253,6 +265,38 @@ Only given if spacing is not NA.}
 organized to create historical projection matrices, given a horizontally
 formatted input data frame.
 }
+\section{Notes}{
+
+In some datasets on species with unobserveable stages, observation status
+(\code{obsstatus}) might not be inferred properly if a single size variable
+is used that does not yield sizes greater than 0 in all cases in which
+individuals were observed. Such situations may arise, for example, in plants
+when leaf number is the dominant size variable used, but individuals
+occasionally occur with inflorescences but no leaves. In this instances,
+it helps to mark related variables as \code{sizeb} and \code{sizec}, because
+observation status will be interpreted in relation to all 3 size variables.
+Further analysis can then utilize only a single size variable, of the user's
+choosing. Similar issues can arise in reproductive status (\code{repstatus}).
+
+Warnings that some individuals occur in state combinations that do not match
+any stages in the stageframe used to assign stages are common when first
+working with a dataset. Typically, these situations can be identified as
+\code{NoMatch} entries in \code{stage3}, although such entries may crop up in
+\code{stage1} and \code{stage2}, as well. In rare cases, these warnings will
+arise with no concurrent \code{NoMatch} entries, which indicates that the
+input dataset contained conflicting state data at once suggesting that the
+individual is in some stage but is also dead. The latter is removed if the
+conflict occurs in time \emph{t} or time \emph{t}-1, as only living entries
+are allowed in these times.
+
+Care should be taken to avoid variables with negative values indicating size,
+fecundity, or reproductive or observation status. Negative values can be
+interpreted in different ways, typically reflecting estimation through other
+algorithms rather than actual measured data. Variables holding negative
+values can conflict with data management algorithms in ways that are
+difficult to predict.
+}
+
 \examples{
 data(lathyrus)
 

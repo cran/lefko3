@@ -2,7 +2,7 @@
 % Please edit documentation in R/popdyn.R
 \name{stablestage3}
 \alias{stablestage3}
-\title{Stable Stage Distribution Estimation}
+\title{Estimate Stable Stage Distribution}
 \usage{
 stablestage3(mats)
 }

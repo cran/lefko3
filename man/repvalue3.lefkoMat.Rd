@@ -2,7 +2,7 @@
 % Please edit documentation in R/popdyn.R
 \name{repvalue3.lefkoMat}
 \alias{repvalue3.lefkoMat}
-\title{Estimate Reproductive Value for a lefkoMat Object}
+\title{Estimate Reproductive Value Vectors of Matrices in a lefkoMat Object}
 \usage{
 \method{repvalue3}{lefkoMat}(mats)
 }

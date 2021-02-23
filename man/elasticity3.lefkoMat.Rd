@@ -2,35 +2,62 @@
 % Please edit documentation in R/popdyn.R
 \name{elasticity3.lefkoMat}
 \alias{elasticity3.lefkoMat}
-\title{Calculate Elasticity of Lambda to Matrix Elements for a lefkoMat Object}
+\title{Estimate Elasticity of Population Growth Rate of a lefkoMat Object}
 \usage{
-\method{elasticity3}{lefkoMat}(mats)
+\method{elasticity3}{lefkoMat}(mats, stochastic = FALSE, steps = 10000, time_weights = NA, ...)
 }
 \arguments{
 \item{mats}{An object of class \code{lefkoMat}.}
+
+\item{stochastic}{A logical value determining whether to conduct a
+deterministic (FALSE) or stochastic (TRUE) elasticity analysis. Defaults to
+FALSE.}
+
+\item{steps}{The number of times to project forward in stochastic simulation.
+Defaults to 10,000.}
+
+\item{time_weights}{Numeric vector denoting the probabilistic weightings of
+annual matrices. Defaults to equal weighting among times.}
+
+\item{...}{Other parameters.}
 }
 \value{
 This function returns an object of class \code{lefkoElas}, which is a
-list with 7 elements. The first, \code{h_elasmats}, is a list of historical
-elasticity matrices (\code{NULL} if an ahMPM is used as input). The second,
-\code{ah_elasmats}, is a list of either ahistorical elasticity matrices if
-an ahMPM is used as input, or, if an hMPM is used as input, then the result
-is a list of elasticity matrices in which historical elasticities have been
-summed by the stage in times \emph{t} and \emph{t}+1 to produce
-\emph{historically-corrected} elasticity matrices, which are equivalent in
-dimension to ahistorical elasticity matrices but reflect the effects of stage
-in time \emph{t}-1. The third element, \code{h_stages}, is a data frame
-showing historical stage pairs (NULL if ahMPM used as input). The fourth
-element, \code{ah_stages}, is a data frame showing the order of ahistorical
-stages. The last 3 elements are the A, U, and F portions of the input.
+list with 7 elements. The first, h_elasmats, is a list of historical
+elasticity matrices (NULL if an ahMPM is used as input). The second,
+ah_elasmats, is a list of either ahistorical elasticity matrices if an ahMPM
+is used as input, or, if an hMPM is used as input, then the result is a list
+of elasticity matrices in which historical elasticities have been summed by
+the stage in times t and t+1 to produce historically-corrected elasticity
+matrices, which are equivalent in dimension to ahistorical elasticity
+matrices but reflect the effects of stage in time t-1. The third element,
+h_stages, is a data frame showing historical stage pairs (NULL if ahMPM used
+as input). The fourth element, ah_stages, is a data frame showing the order
+of ahistorical stages. The last 3 elements are the A, U, and F portions of
+the input.
 }
 \description{
-\code{elasticity3.lefkoMat()} returns the elasticities of lambda to elements
-of all \code{$A} matrices in an object of class \code{lefkoMat}. This
+\code{elasticity3.lefkoMat()} returns the elasticities of population growth
+rate to elements of all \code{$A} matrices in an object of class
+\code{lefkoMat}. If deterministic, then \eqn{\lambda} is taken as the
+population growth rate. If stochastic, then stochastic \eqn{\lambda}, or
+the stochastic growth rate, is taken as the population growth rate. This
 function can handle large and sparse matrices, and so can be used with large
 historical matrices, IPMs, age x stage matrices, as well as smaller
 ahistorical matrices.
 }
+\section{Notes}{
+
+Deterministic elasticities are estimated as eqn. 9.72 in Caswell (2001,
+Matrix Population Models). Stochastic elasticities are estimated as eqn.
+14.99 in Caswell (2001). Note that stochastic elasticities are of the
+stochastic \eqn{\lambda}, while stochastic sensitivities are with regard to
+the log of the stochastic \eqn{\lambda}.
+
+Currently, this function does not estimate equivalent ahistorical stochastic
+elasticities for input historical matrices.
+}
+
 \examples{
 data(lathyrus)
 
@@ -69,12 +96,15 @@ ehrlen3 <- rlefko3(data = lathvert, stageframe = lathframe,
   repmatrix = lathrepm, overwrite = lathover3, yearcol = "year2",
   indivcol = "individ")
 
-ehrlen3mean <- lmean(ehrlen3)
-elasticity3(ehrlen3mean)
+elasticity3(ehrlen3, stochastic = TRUE)
 
 }
 \seealso{
 \code{\link{elasticity3}()}
 
 \code{\link{elasticity3.matrix}()}
+
+\code{\link{elasticity3.list}()}
+
+\code{\link{summary.lefkoElas}()}
 }

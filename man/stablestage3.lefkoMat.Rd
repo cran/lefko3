@@ -2,7 +2,7 @@
 % Please edit documentation in R/popdyn.R
 \name{stablestage3.lefkoMat}
 \alias{stablestage3.lefkoMat}
-\title{Estimate Stable Stage Distribution for a lefkoMat Object}
+\title{Estimate Stable Stage Distribution of Matrices in lefkoMat Object}
 \usage{
 \method{stablestage3}{lefkoMat}(mats)
 }
@@ -27,8 +27,8 @@ through \code{\link{sf_create}()}), the stage name, and the estimated
 proportion of the stable stage distribution (\code{ss_prop}).
 
 If a historical matrix is used as input, then two data frames are output
-into a list object. The \code{$hist} element contains a data frame where the 
-stable stage distribution is given in terms of across-year stage pairs.
+into a list object. The \code{$hist} element contains a data frame in which 
+the stable stage distribution is given in terms of across-year stage pairs.
 The structure includes the matrix number, the numeric stage designations for
 stages in times \emph{t} and \emph{t}-1, respectively, followed by the
 respective stage names, and ending with the estimated proportion of the

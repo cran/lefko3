@@ -4,7 +4,7 @@
 using namespace Rcpp;
 using namespace arma;
 
-//' Core engine for dv_hmpm
+//' Core Engine for dv_hmpm
 //' 
 //' Creates a list of conditional ahistorical matrices in the style noted in
 //' deVries and Caswell (2018).
@@ -58,7 +58,7 @@ List hoffmannofstuttgart(arma::mat mainmat, DataFrame indices, int ahstages,
   return (condlist);
 }
 
-//' Extracts conditional ahistorical matrices from historical MPM
+//' Extract Conditional Ahistorical Matrices from Historical MPM
 //' 
 //' Function \code{cond_hmpm()} takes historical MPMs and decomposes them into 
 //' ahistorical matrices conditional upon stage in time \emph{t}-1. In effect,
@@ -237,8 +237,8 @@ List cond_hmpm(List hmpm, Nullable<CharacterVector> matchoice = R_NilValue) {
     }
   }
   
-  List panama = List::create(Named("Acond") = allout, _["hstages"] = hstages, _["ahstages"] = stageframe,
-                             _["labels"] = labels);
+  List panama = List::create(Named("Acond") = allout, _["hstages"] = hstages,
+    _["ahstages"] = stageframe, _["labels"] = labels);
   panama.attr("class") = "lefkoCondMat";
   
   return (panama);

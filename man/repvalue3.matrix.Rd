@@ -2,7 +2,7 @@
 % Please edit documentation in R/popdyn.R
 \name{repvalue3.matrix}
 \alias{repvalue3.matrix}
-\title{Estimate Reproductive Value for a Population Projection Matrix}
+\title{Estimate Reproductive Value Vector for a Single Population Projection Matrix}
 \usage{
 \method{repvalue3}{matrix}(mats)
 }

@@ -2,7 +2,7 @@
 % Please edit documentation in R/popdyn.R
 \name{stablestage3.matrix}
 \alias{stablestage3.matrix}
-\title{Estimate Stable Stage Distribution for a Population Projection Matrix}
+\title{Estimate Stable Stage Distribution of a Single Population Projection Matrix}
 \usage{
 \method{stablestage3}{matrix}(mats)
 }

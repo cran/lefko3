@@ -22,14 +22,17 @@ citEntry(entry="Article",
          author = personList(as.person("R.P. Shefferson"),
                              as.person("S. Kurokawa"),
                              as.person("J. Ehrlen")),
-         journal = "Methods in Ecology and Evolution",
-         address   = "Cambridge",
-         year     = "In press",
+         journal    = "Methods in Ecology and Evolution",
+         address    = "Cambridge",
+         year       = "2021",
+         volume     = "12",
+         number     = "2",
+         pages      = "378-382",
          doi     = "10.1111/2041-210X.13526",
          url      = "https://doi.org/10.1111/2041-210X.13526",
          
          textVersion =
-           paste("Shefferson, R.P., Kurokawa, S., and Ehrlen, J. (In press)",
+           paste("Shefferson, R.P., Kurokawa, S., and Ehrlen, J. 2021",
                  "lefko3: analyzing individual history through size-classified matrix population models.",
-                 "Methods in Ecology and Evolution.")
+                 "Methods in Ecology and Evolution 12(2): 378-382.")
 )

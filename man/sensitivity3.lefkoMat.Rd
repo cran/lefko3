@@ -2,32 +2,58 @@
 % Please edit documentation in R/popdyn.R
 \name{sensitivity3.lefkoMat}
 \alias{sensitivity3.lefkoMat}
-\title{Calculate Sensitivity of Lambda to Matrix Elements for a lefkoMat Object}
+\title{Estimate Sensitivity of Population Growth Rate of a lefkoMat Object}
 \usage{
-\method{sensitivity3}{lefkoMat}(mats)
+\method{sensitivity3}{lefkoMat}(mats, stochastic = FALSE, steps = 10000, time_weights = NA, ...)
 }
 \arguments{
 \item{mats}{An object of class \code{lefkoMat}.}
+
+\item{stochastic}{A logical value determining whether to conduct a
+deterministic (FALSE) or stochastic (TRUE) sensitivity analysis. Defaults to
+FALSE.}
+
+\item{steps}{The number of times to project forward in stochastic simulation.
+Defaults to 10,000.}
+
+\item{time_weights}{Numeric vector denoting the probabilistic weightings of
+annual matrices. Defaults to equal weighting among times.}
+
+\item{...}{Other parameters.}
 }
 \value{
-The output from this function depends on whether the input is a
-historical or ahistorical \code{lefkoMat} object. If the latter, then this
-function returns a list with five elements, the first being a list of
-sensitivity matrices corresponding to the \code{$A} matrices in a
-\code{lefkoMat} object, and the second being a data frame showing the order
-of stages. If the former, then the output also includes the equivalent
-sensitivities to ahistorical transitions estimated using the historical
-matrix, and a data frame detailing the order of historical paired stages. The
-output also includes the A, U, and F matrices used to develop the elasticity
-matrices.
+This function returns an object of class \code{lefkoSens}, which is a
+list of 7 elements. The first, h_sensmats, is a list of historical sensitivity
+matrices (NULL if an ahMPM is used as input). The second, ah_elasmats, is a
+list of either ahistorical sensitivity matrices if an ahMPM is used as input,
+or, if an hMPM is used as input, then the result is a list of ahistorical
+matrices based on the equivalent historical dependencies assumed in the
+input historical matrices. The third element, h_stages, is a data frame
+showing historical stage pairs (NULL if ahMPM used as input). The fourth
+element, ah_stages, is a data frame showing the order of ahistorical stages.
+The last 3 elements are the A, U, and F portions of the input.
 }
 \description{
-\code{sensitivity3.lefkoMat()} returns the sensitivities of lambda to
-elements of all \code{$A} matrices in an object of class \code{lefkoMat}.
-This function can handle large and sparse matrices, and so can be used with
-large historical matrices, IPMs, age x stage matrices, as well as smaller
+\code{sensitivity3.lefkoMat()} returns the sensitivities of population growth
+rate to elements of all \code{$A} matrices in an object of class
+\code{lefkoMat}. If deterministic, then \eqn{\lambda} is taken as the population
+growth rate. If stochastic, then the log of stochastic \eqn{\lambda}, or
+the log stochastic growth rate, is taken as the population growth rate. This
+function can handle large and sparse matrices, and so can be used with large
+historical matrices, IPMs, age x stage matrices, as well as smaller
 ahistorical matrices.
 }
+\section{Notes}{
+
+Deterministic sensitivities are estimated as eqn. 9.14 in Caswell (2001,
+Matrix Population Models). Stochastic sensitivities are estimated as eqn.
+14.97 in Caswell (2001). Note that stochastic sensitivities are of the log of
+the stochastic \eqn{\lambda}.
+
+Currently, this function does not estimate equivalent ahistorical stochastic
+sensitivities for input historical matrices.
+}
+
 \examples{
 data(lathyrus)
 
@@ -66,12 +92,13 @@ ehrlen3 <- rlefko3(data = lathvert, stageframe = lathframe,
   repmatrix = lathrepm, overwrite = lathover3, yearcol = "year2",
   indivcol = "individ")
 
-ehrlen3mean <- lmean(ehrlen3)
-sensitivity3(ehrlen3mean)
+sensitivity3(ehrlen3, stochastic = TRUE)
 
 }
 \seealso{
 \code{\link{sensitivity3}()}
 
 \code{\link{sensitivity3.matrix}()}
+
+\code{\link{sensitivity3.list}()}
 }

@@ -2,8 +2,7 @@
 % Please edit documentation in R/popdyn.R
 \name{lambda3.lefkoMat}
 \alias{lambda3.lefkoMat}
-\title{Estimate Deterministic Population Growth Rates of Matrices in a lefkoMat
-Object}
+\title{Estimate Deterministic Population Growth Rates of lefkoMat Matrices}
 \usage{
 \method{lambda3}{lefkoMat}(mats)
 }

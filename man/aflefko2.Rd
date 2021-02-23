@@ -8,6 +8,7 @@ aflefko2(
   year = 1,
   patch = NA,
   stageframe,
+  supplement = NA,
   repmatrix = NA,
   overwrite = NA,
   data = NA,
@@ -61,14 +62,32 @@ observation status, propagule status, immaturity status, and maturity status
 of each ahistorical stage. Should also incorporate bin widths if size is
 continuous.}
 
-\item{repmatrix}{A matrix composed mostly of 0s, with non-zero values for
-each potentially new individual (row) born to each reproductive stage
-(column). Entries act as multipliers on fecundity, with 1 equaling full
-fecundity.}
+\item{supplement}{An optional data frame of class \code{lefkoSD} that
+provides supplemental data that should be incorporated into the MPM. Three
+kinds of data may be integrated this way: transitions to be estimated via the
+use of proxy transitions, transition overwrites from the literature or
+supplemental studies, and transition multipliers for fecundity. This data
+frame should be produced using the \code{\link{supplemental}()} function. Can
+be used in place of or in addition to an overwrite table (see 
+\code{overwrite} below) and a reproduction matrix (see \code{repmatrix}
+below).}
 
-\item{overwrite}{A data frame developed with the \code{\link{overwrite}()}
-function describing transitions to be overwritten either with given values or 
-with other estimated transitions.}
+\item{repmatrix}{A reproduction matrix, which is an optional matrix composed
+mostly of 0s, with non-zero values for each potentially new individual (row)
+born to each reproductive stage (column). Entries act as multipliers on
+fecundity, with 1 equaling full fecundity. Fecundity multipliers provided
+this way supplement rather than replace those provided in \code{supplement}.
+If left blank, then \code{aflefko2()} will assume that all stages marked as
+reproductive produce offspring at 1x that of fecundity estimated in provided
+linear models, and that fecundity will be into the first stage noted as
+propagule or immature. To prevent this behavior, input just \code{0}, which
+will result in fecundity being estimated only for transitions noted in
+\code{supplement} above. Must be the dimensions of an ahistorical matrix.}
+
+\item{overwrite}{An optional data frame developed with the
+\code{\link{overwrite}()} function describing transitions to be overwritten
+either with given values or with other estimated transitions. Note that this
+function supplements overwrite data provided in \code{supplement}.}
 
 \item{data}{The original historical demographic data frame used to estimate
 vital rates (class \code{hfvdata}). The original data frame is required in
@@ -226,7 +245,7 @@ an object of class \code{lefkoMat}. Output includes:
 
 \item{A}{A list of full projection matrices in order of sorted patches and
 years.}
-\item{U}{A list of survival-transition matrices sorted as in \code{A}.}
+\item{U}{A list of survival transition matrices sorted as in \code{A}.}
 \item{F}{A list of fecundity matrices sorted as in \code{A}.}
 \item{hstages}{Null for ahistorical matrices.}
 \item{ahstages}{A data frame detailing the characteristics of associated
@@ -238,10 +257,6 @@ In \code{aflefko2()}, only one population may be analyzed at once, and so
 \item{matrixqc}{A short vector describing the number of non-zero elements
 in \code{U} and \code{F} matrices, and the number of annual matrices.}
 \item{modelqc}{This is the \code{qc} portion of the modelsuite input.}
-
-Please note that this function will yield incorrect estimates if the models
-utilized incorporate state in time \emph{t}-1. Only use models developed
-testing ahistorical effects.
 }
 \description{
 Function \code{aflefko2()} returns ahistorical age x stage MPMs corresponding
@@ -252,6 +267,40 @@ combinations corresponding to these matrices. Unlike \code{\link{rlefko2}()}
 and \code{\link{rlefko3}()}, this function currently does not currently
 distinguish populations.
 }
+\section{Notes}{
+
+This function will yield incorrect estimates if the models utilized
+incorporate state in time \emph{t}-1. Only use models developed testing for
+ahistorical effects.
+
+The default behavior of this function is to estimate fecundity with regards
+to transitions specified via associated fecundity multipliers in either
+\code{supplement} or \code{repmatrix}. If both of these fields are left
+empty, then fecundity will be estimated at full for all transitions leading
+from reproductive stages to immature and propagule stages. However, if a
+\code{supplement} is provided and a \code{repmatrix} is not, or if
+\code{repmatrix} is set to 0, then only fecundity transitions noted in the
+supplement will be set to non-zero values. To use the default behavior of
+setting all reproductive stages to reproduce at full fecundity into immature
+and propagule stages but also incorporate given or proxy
+survival transitions, input those given and proxy transitions through the
+\code{overwrite} option.
+
+The reproduction matrix (field \code{repmatrix}) may only be supplied as
+ahistorical. If provided as historical, then \code{flefko2()} will fail and
+produce an error.
+
+Users may at times wish to estimate MPMs using a dataset incorporating
+multiple patches or subpopulations. Should the aim of analysis be a general
+MPM that does not distinguish these patches or subpopulations, the
+\code{patchcol} variable should be left to NA, which is the default.
+
+Input options including multiple variable names must be entered in the order
+of variables in time \emph{t}+1, \emph{t}, and \emph{t}-1. Rearranging the
+order WILL lead to erroneous calculations, and will probably also lead to
+fatal errors.
+}
+
 \examples{
 \donttest{
 data(lathyrus)
@@ -291,13 +340,6 @@ lathvertln$feca2 <- round(lathvertln$feca2)
 lathvertln$feca1 <- round(lathvertln$feca1)
 lathvertln$feca3 <- round(lathvertln$feca3)
 
-lathrepmln <- matrix(0, 21, 21)
-lathrepmln[1, c(13:21)] <- 0.345
-lathrepmln[2, c(13:21)] <- 0.054
-
-lathover2 <- overwrite(stage3 = c("Sd", "Sdl"), stage2 = c("Sd", "Sd"),
-  givenrate = c(0.345, 0.054))
-
 lathmodelsln2 <- modelsearch(lathvertln, historical = FALSE,
   approach = "lme4", suite = "main",
   vitalrates = c("surv", "obs", "size", "repst", "fec"), juvestimate = "Sdl",
@@ -305,14 +347,38 @@ lathmodelsln2 <- modelsearch(lathvertln, historical = FALSE,
   indiv = "individ", patch = "patchid", year = "year2", age = "obsage",
   year.as.random = TRUE, patch.as.random = TRUE, show.model.tables = TRUE,
   quiet = TRUE)
-                             
+
+# Here we use supplemental() to provide overwrite and reproductive info
+lathsupp2 <- supplemental(stage3 = c("Sd", "Sdl", "Sd", "Sdl"), 
+  stage2 = c("Sd", "Sd", "rep", "rep"),
+  givenrate = c(0.345, 0.054, NA, NA),
+  multiplier = c(NA, NA, 0.345, 0.054),
+  type = c(1, 1, 3, 3), stageframe = lathframeln, historical = FALSE)
+
 lathmat2age <- aflefko2(year = "all", patch = "all", 
   stageframe = lathframeln, modelsuite = lathmodelsln2, data = lathvertln,
-  repmatrix = lathrepmln, overwrite = lathover2, patchcol = "patchid",
+  supplement = lathsupp2, patchcol = "patchid",
   yearcol = "year2", year.as.random = FALSE, patch.as.random = FALSE,
   final_age = 2, continue = TRUE, reduce = FALSE)
 
 summary(lathmat2age)
-}
 
+# Here we use overwrite() and a reproductive matrix to provide info instead
+# of supplemental()
+
+lathrepmln <- matrix(0, 21, 21)
+lathrepmln[1, c(13:21)] <- 0.345
+lathrepmln[2, c(13:21)] <- 0.054
+
+lathover2 <- overwrite(stage3 = c("Sd", "Sdl"), stage2 = c("Sd", "Sd"),
+  givenrate = c(0.345, 0.054))
+
+lathmat2age_alt <- aflefko2(year = "all", patch = "all", 
+  stageframe = lathframeln, modelsuite = lathmodelsln2, data = lathvertln,
+  repmatrix = lathrepmln, overwrite = lathover2, patchcol = "patchid",
+  yearcol = "year2", year.as.random = FALSE, patch.as.random = FALSE,
+  final_age = 2, continue = TRUE, reduce = FALSE)
+  
+summary(lathmat2age_alt)
+}
 }

@@ -4,7 +4,7 @@
 using namespace Rcpp;
 using namespace arma;
 
-//' Estimate All Elements in Raw Historical Matrix
+//' Estimate All Elements of Raw Historical Matrix
 //' 
 //' Function \code{specialpatrolgroup} swiftly calculates matrix transitions in
 //' raw historical matrices, and serves as the core workhorse function behind
@@ -175,7 +175,7 @@ List specialpatrolgroup(DataFrame sge9l, DataFrame sge3, DataFrame MainData,
   return List::create(Named("A") = amatrix, _["U"] = tmatrix, _["F"] = fmatrix);
 }
 
-//' Estimate All Elements in Raw Ahistorical Population Projection Matrices
+//' Estimate All Elements of Raw Ahistorical Population Projection Matrix
 //' 
 //' Function \code{normalpatrolgroup} swiftly calculates matrix transitions in
 //' raw ahistorical matrices, and serves as the core workhorse function behind
@@ -333,7 +333,7 @@ List normalpatrolgroup(DataFrame sge3, DataFrame sge2, DataFrame MainData,
   return List::create(Named("A") = amatrix, _["U"] = tmatrix, _["F"] = fmatrix);
 }
 
-//' Estimate All Elements in Function-based Population Projection Matrices
+//' Estimate All Elements of Function-based Population Projection Matrix
 //' 
 //' Function \code{jerzeibalowski} swiftly calculates matrix elements in
 //' function-based population projection matrices. Used in
@@ -489,9 +489,9 @@ List jerzeibalowski(DataFrame ppy, DataFrame AllStages, List survproxy,
   arma::vec fecyearzi = fecproxy["zeroyear"];
   arma::vec jsizeyearzi = jsizeproxy["zeroyear"];
   
-  if (!NumericVector::is_na(sizeyearzi(0)) && sizezerosum > 0) sizezero = TRUE;
-  if (!NumericVector::is_na(fecyearzi(0)) && feczerosum > 0) feczero = TRUE;
-  if (!NumericVector::is_na(jsizeyearzi(0)) && jsizezerosum > 0) jsizezero = TRUE;
+  if (!NumericVector::is_na(sizeyearzi(0)) && sizezerosum != 0) sizezero = TRUE;
+  if (!NumericVector::is_na(fecyearzi(0)) && feczerosum != 0) feczero = TRUE;
+  if (!NumericVector::is_na(jsizeyearzi(0)) && jsizezerosum != 0) jsizezero = TRUE;
   
   if (NumericVector::is_na(sizeyearzi(0))) {sizeyearzi(0) = 0;}
   if (NumericVector::is_na(fecyearzi(0))) {fecyearzi(0) = 0;}
@@ -582,7 +582,7 @@ List jerzeibalowski(DataFrame ppy, DataFrame AllStages, List survproxy,
   int properindex {0};
   int proxyindex {0};
   
-  arma::mat out(n, 4);  // 0 matrix with n rows & 4 columns: 0 surv, 1 obs, 2 repst, 3 size
+  arma::mat out(n, 4);  // 0 matrix with n rows & 4 columns: 0 surv, 1 obs, 2 repst, 3 size, 4 test variable
   arma::mat survtransmat(matrixdim, matrixdim);
   arma::mat fectransmat(matrixdim, matrixdim);
   
@@ -657,47 +657,47 @@ List jerzeibalowski(DataFrame ppy, DataFrame AllStages, List survproxy,
               
               if (sizezero == TRUE && sz3(i) == 0) {
                 double lambda = exp(sizecoefs(46) + (sizecoefs(47) * fl1(i)) + (sizecoefs(48) * fl2n(i)) + (sizecoefs(49) * sz1(i)) +
-                                    (sizecoefs(50) * sz2n(i)) + (sizecoefs(51) * fl2n(i) * fl1(i)) + (sizecoefs(52) * sz2n(i) * sz1(i)) +
-                                    (sizecoefs(53) * sz1(i) * fl1(i)) + (sizecoefs(54) * sz2n(i) * fl2n(i)) + 
-                                    (sizecoefs(55) * sz2n(i) * fl1(i)) + (sizecoefs(56) * sz1(i) * fl2n(i)) + 
-                                    (sizecoefs(57) * actualage2(i)) + (sizecoefs(58) * actualage2(i) * sz1(i)) + 
-                                    (sizecoefs(59) * actualage2(i) * sz2n(i)) + (sizecoefs(60) * actualage2(i) * fl1(i)) + 
-                                    (sizecoefs(61) * actualage2(i) * fl2n(i)) + (sizecoefs(62) * inda) + (sizecoefs(63) * indb) + 
-                                    (sizecoefs(64) * indc) + (sizecoefs(65) * inda) + (sizecoefs(66) * indb) + (sizecoefs(67) * indc) + 
-                                    (sizecoefs(68) * inda * sz2n(i)) + (sizecoefs(69) * indb * sz2n(i)) + 
-                                    (sizecoefs(70) * indc * sz2n(i)) + (sizecoefs(71) * inda * fl2n(i)) + 
-                                    (sizecoefs(72) * indb * fl2n(i)) + (sizecoefs(73) * indc * fl2n(i)) + 
-                                    (sizecoefs(74) * inda * sz1(i)) + (sizecoefs(75) * indb * sz1(i)) + 
-                                    (sizecoefs(76) * indc * sz1(i)) + (sizecoefs(77) * inda * fl1(i)) + 
-                                    (sizecoefs(78) * indb * fl1(i)) + (sizecoefs(79) * indc * fl1(i)) + 
-                                    (sizecoefs(80) * inda * indb) + (sizecoefs(81) * inda * indc) + (sizecoefs(82) * indb * indc) + 
-                                    (sizecoefs(83) * inda * indb) + (sizecoefs(84) * inda * indc) + (sizecoefs(85) * indb * indc) + 
-                                    (sizecoefs(86) * inda * indb) + (sizecoefs(87) * inda * indb) + (sizecoefs(88) * inda * indc) + 
-                                    (sizecoefs(89) * inda * indc) + (sizecoefs(90) * indb * indc) + (sizecoefs(91) * indb * indc) + 
-                                    sizepatchzi(patchnumber) + sizeyearzi(yearnumber) + sizedev + (summedvars / 2));
+                  (sizecoefs(50) * sz2n(i)) + (sizecoefs(51) * fl2n(i) * fl1(i)) + (sizecoefs(52) * sz2n(i) * sz1(i)) +
+                  (sizecoefs(53) * sz1(i) * fl1(i)) + (sizecoefs(54) * sz2n(i) * fl2n(i)) + 
+                  (sizecoefs(55) * sz2n(i) * fl1(i)) + (sizecoefs(56) * sz1(i) * fl2n(i)) + 
+                  (sizecoefs(57) * actualage2(i)) + (sizecoefs(58) * actualage2(i) * sz1(i)) + 
+                  (sizecoefs(59) * actualage2(i) * sz2n(i)) + (sizecoefs(60) * actualage2(i) * fl1(i)) + 
+                  (sizecoefs(61) * actualage2(i) * fl2n(i)) + (sizecoefs(62) * inda) + (sizecoefs(63) * indb) + 
+                  (sizecoefs(64) * indc) + (sizecoefs(65) * inda) + (sizecoefs(66) * indb) + (sizecoefs(67) * indc) + 
+                  (sizecoefs(68) * inda * sz2n(i)) + (sizecoefs(69) * indb * sz2n(i)) + 
+                  (sizecoefs(70) * indc * sz2n(i)) + (sizecoefs(71) * inda * fl2n(i)) + 
+                  (sizecoefs(72) * indb * fl2n(i)) + (sizecoefs(73) * indc * fl2n(i)) + 
+                  (sizecoefs(74) * inda * sz1(i)) + (sizecoefs(75) * indb * sz1(i)) + 
+                  (sizecoefs(76) * indc * sz1(i)) + (sizecoefs(77) * inda * fl1(i)) + 
+                  (sizecoefs(78) * indb * fl1(i)) + (sizecoefs(79) * indc * fl1(i)) + 
+                  (sizecoefs(80) * inda * indb) + (sizecoefs(81) * inda * indc) + (sizecoefs(82) * indb * indc) + 
+                  (sizecoefs(83) * inda * indb) + (sizecoefs(84) * inda * indc) + (sizecoefs(85) * indb * indc) + 
+                  (sizecoefs(86) * inda * indb) + (sizecoefs(87) * inda * indb) + (sizecoefs(88) * inda * indc) + 
+                  (sizecoefs(89) * inda * indc) + (sizecoefs(90) * indb * indc) + (sizecoefs(91) * indb * indc) + 
+                  sizepatchzi(patchnumber) + sizeyearzi(yearnumber) + sizedev + (summedvars / 2));
                 out(i, 3) = (lambda) / (1 + (lambda));
                 
               } else {
                 double sizefac = sz3(i) * tgamma(sz3(i));
                 double lambda = exp(sizecoefs(0) + (sizecoefs(1) * fl1(i)) + (sizecoefs(2) * fl2n(i)) + (sizecoefs(3) * sz1(i)) +
-                                    (sizecoefs(4) * sz2n(i)) + (sizecoefs(5) * fl2n(i) * fl1(i)) + (sizecoefs(6) * sz2n(i) * sz1(i)) +
-                                    (sizecoefs(7) * sz1(i) * fl1(i)) + (sizecoefs(8) * sz2n(i) * fl2n(i)) + 
-                                    (sizecoefs(9) * sz2n(i) * fl1(i)) + (sizecoefs(10) * sz1(i) * fl2n(i)) + 
-                                    (sizecoefs(11) * actualage2(i)) + (sizecoefs(12) * actualage2(i) * sz1(i)) + 
-                                    (sizecoefs(13) * actualage2(i) * sz2n(i)) + (sizecoefs(14) * actualage2(i) * fl1(i)) + 
-                                    (sizecoefs(15) * actualage2(i) * fl2n(i)) + (sizecoefs(16) * inda) + (sizecoefs(17) * indb) + 
-                                    (sizecoefs(18) * indc) + (sizecoefs(19) * inda) + (sizecoefs(20) * indb) + (sizecoefs(21) * indc) + 
-                                    (sizecoefs(22) * inda * sz2n(i)) + (sizecoefs(23) * indb * sz2n(i)) + 
-                                    (sizecoefs(24) * indc * sz2n(i)) + (sizecoefs(25) * inda * fl2n(i)) + 
-                                    (sizecoefs(26) * indb * fl2n(i)) + (sizecoefs(27) * indc * fl2n(i)) + 
-                                    (sizecoefs(28) * inda * sz1(i)) + (sizecoefs(29) * indb * sz1(i)) + 
-                                    (sizecoefs(30) * indc * sz1(i)) + (sizecoefs(31) * inda * fl1(i)) + 
-                                    (sizecoefs(32) * indb * fl1(i)) + (sizecoefs(33) * indc * fl1(i)) + 
-                                    (sizecoefs(34) * inda * indb) + (sizecoefs(35) * inda * indc) + (sizecoefs(36) * indb * indc) + 
-                                    (sizecoefs(37) * inda * indb) + (sizecoefs(38) * inda * indc) + (sizecoefs(39) * indb * indc) + 
-                                    (sizecoefs(40) * inda * indb) + (sizecoefs(41) * inda * indb) + (sizecoefs(42) * inda * indc) + 
-                                    (sizecoefs(43) * inda * indc) + (sizecoefs(44) * indb * indc) + (sizecoefs(45) * indb * indc) + 
-                                    sizepatch(patchnumber) + sizeyear(yearnumber) + sizedev + (summedvars / 2));
+                  (sizecoefs(4) * sz2n(i)) + (sizecoefs(5) * fl2n(i) * fl1(i)) + (sizecoefs(6) * sz2n(i) * sz1(i)) +
+                  (sizecoefs(7) * sz1(i) * fl1(i)) + (sizecoefs(8) * sz2n(i) * fl2n(i)) + 
+                  (sizecoefs(9) * sz2n(i) * fl1(i)) + (sizecoefs(10) * sz1(i) * fl2n(i)) + 
+                  (sizecoefs(11) * actualage2(i)) + (sizecoefs(12) * actualage2(i) * sz1(i)) + 
+                  (sizecoefs(13) * actualage2(i) * sz2n(i)) + (sizecoefs(14) * actualage2(i) * fl1(i)) + 
+                  (sizecoefs(15) * actualage2(i) * fl2n(i)) + (sizecoefs(16) * inda) + (sizecoefs(17) * indb) + 
+                  (sizecoefs(18) * indc) + (sizecoefs(19) * inda) + (sizecoefs(20) * indb) + (sizecoefs(21) * indc) + 
+                  (sizecoefs(22) * inda * sz2n(i)) + (sizecoefs(23) * indb * sz2n(i)) + 
+                  (sizecoefs(24) * indc * sz2n(i)) + (sizecoefs(25) * inda * fl2n(i)) + 
+                  (sizecoefs(26) * indb * fl2n(i)) + (sizecoefs(27) * indc * fl2n(i)) + 
+                  (sizecoefs(28) * inda * sz1(i)) + (sizecoefs(29) * indb * sz1(i)) + 
+                  (sizecoefs(30) * indc * sz1(i)) + (sizecoefs(31) * inda * fl1(i)) + 
+                  (sizecoefs(32) * indb * fl1(i)) + (sizecoefs(33) * indc * fl1(i)) + 
+                  (sizecoefs(34) * inda * indb) + (sizecoefs(35) * inda * indc) + (sizecoefs(36) * indb * indc) + 
+                  (sizecoefs(37) * inda * indb) + (sizecoefs(38) * inda * indc) + (sizecoefs(39) * indb * indc) + 
+                  (sizecoefs(40) * inda * indb) + (sizecoefs(41) * inda * indb) + (sizecoefs(42) * inda * indc) + 
+                  (sizecoefs(43) * inda * indc) + (sizecoefs(44) * indb * indc) + (sizecoefs(45) * indb * indc) + 
+                  sizepatch(patchnumber) + sizeyear(yearnumber) + sizedev + (summedvars / 2));
                 
                 out(i, 3) = ((pow(lambda, sz3(i)) * exp(-1 * lambda)) / sizefac);
               }
@@ -707,61 +707,62 @@ List jerzeibalowski(DataFrame ppy, DataFrame AllStages, List survproxy,
               
               if (sizezero == TRUE && sz3(i) == 0) {
                 double mu = exp(sizecoefs(46) + (sizecoefs(47) * fl1(i)) + (sizecoefs(48) * fl2n(i)) + (sizecoefs(49) * sz1(i)) +
-                                (sizecoefs(50) * sz2n(i)) + (sizecoefs(51) * fl2n(i) * fl1(i)) + (sizecoefs(52) * sz2n(i) * sz1(i)) +
-                                (sizecoefs(53) * sz1(i) * fl1(i)) + (sizecoefs(54) * sz2n(i) * fl2n(i)) + 
-                                (sizecoefs(55) * sz2n(i) * fl1(i)) + (sizecoefs(56) * sz1(i) * fl2n(i)) + 
-                                (sizecoefs(57) * actualage2(i)) + (sizecoefs(58) * actualage2(i) * sz1(i)) + 
-                                (sizecoefs(59) * actualage2(i) * sz2n(i)) + (sizecoefs(60) * actualage2(i) * fl1(i)) + 
-                                (sizecoefs(61) * actualage2(i) * fl2n(i)) + (sizecoefs(62) * inda) + (sizecoefs(63) * indb) + 
-                                (sizecoefs(64) * indc) + (sizecoefs(65) * inda) + (sizecoefs(66) * indb) + (sizecoefs(67) * indc) + 
-                                (sizecoefs(68) * inda * sz2n(i)) + (sizecoefs(69) * indb * sz2n(i)) + 
-                                (sizecoefs(70) * indc * sz2n(i)) + (sizecoefs(71) * inda * fl2n(i)) + 
-                                (sizecoefs(72) * indb * fl2n(i)) + (sizecoefs(73) * indc * fl2n(i)) + 
-                                (sizecoefs(74) * inda * sz1(i)) + (sizecoefs(75) * indb * sz1(i)) + 
-                                (sizecoefs(76) * indc * sz1(i)) + (sizecoefs(77) * inda * fl1(i)) + 
-                                (sizecoefs(78) * indb * fl1(i)) + (sizecoefs(79) * indc * fl1(i)) + 
-                                (sizecoefs(80) * inda * indb) + (sizecoefs(81) * inda * indc) + (sizecoefs(82) * indb * indc) + 
-                                (sizecoefs(83) * inda * indb) + (sizecoefs(84) * inda * indc) + (sizecoefs(85) * indb * indc) + 
-                                (sizecoefs(86) * inda * indb) + (sizecoefs(87) * inda * indb) + (sizecoefs(88) * inda * indc) + 
-                                (sizecoefs(89) * inda * indc) + (sizecoefs(90) * indb * indc) + (sizecoefs(91) * indb * indc) + 
-                                sizepatchzi(patchnumber) + sizeyearzi(yearnumber) + sizedev + (summedvars / 2));
+                  (sizecoefs(50) * sz2n(i)) + (sizecoefs(51) * fl2n(i) * fl1(i)) + (sizecoefs(52) * sz2n(i) * sz1(i)) +
+                  (sizecoefs(53) * sz1(i) * fl1(i)) + (sizecoefs(54) * sz2n(i) * fl2n(i)) + 
+                  (sizecoefs(55) * sz2n(i) * fl1(i)) + (sizecoefs(56) * sz1(i) * fl2n(i)) + 
+                  (sizecoefs(57) * actualage2(i)) + (sizecoefs(58) * actualage2(i) * sz1(i)) + 
+                  (sizecoefs(59) * actualage2(i) * sz2n(i)) + (sizecoefs(60) * actualage2(i) * fl1(i)) + 
+                  (sizecoefs(61) * actualage2(i) * fl2n(i)) + (sizecoefs(62) * inda) + (sizecoefs(63) * indb) + 
+                  (sizecoefs(64) * indc) + (sizecoefs(65) * inda) + (sizecoefs(66) * indb) + (sizecoefs(67) * indc) + 
+                  (sizecoefs(68) * inda * sz2n(i)) + (sizecoefs(69) * indb * sz2n(i)) + 
+                  (sizecoefs(70) * indc * sz2n(i)) + (sizecoefs(71) * inda * fl2n(i)) + 
+                  (sizecoefs(72) * indb * fl2n(i)) + (sizecoefs(73) * indc * fl2n(i)) + 
+                  (sizecoefs(74) * inda * sz1(i)) + (sizecoefs(75) * indb * sz1(i)) + 
+                  (sizecoefs(76) * indc * sz1(i)) + (sizecoefs(77) * inda * fl1(i)) + 
+                  (sizecoefs(78) * indb * fl1(i)) + (sizecoefs(79) * indc * fl1(i)) + 
+                  (sizecoefs(80) * inda * indb) + (sizecoefs(81) * inda * indc) + (sizecoefs(82) * indb * indc) + 
+                  (sizecoefs(83) * inda * indb) + (sizecoefs(84) * inda * indc) + (sizecoefs(85) * indb * indc) + 
+                  (sizecoefs(86) * inda * indb) + (sizecoefs(87) * inda * indb) + (sizecoefs(88) * inda * indc) + 
+                  (sizecoefs(89) * inda * indc) + (sizecoefs(90) * indb * indc) + (sizecoefs(91) * indb * indc) + 
+                  sizepatchzi(patchnumber) + sizeyearzi(yearnumber) + sizedev + (summedvars / 2));
                 
                 out(i, 3) = (mu) / (1 + (mu));
               } else {
                 double mu = exp(sizecoefs(0) + (sizecoefs(1) * fl1(i)) + (sizecoefs(2) * fl2n(i)) + (sizecoefs(3) * sz1(i)) +
-                                (sizecoefs(4) * sz2n(i)) + (sizecoefs(5) * fl2n(i) * fl1(i)) + (sizecoefs(6) * sz2n(i) * sz1(i)) +
-                                (sizecoefs(7) * sz1(i) * fl1(i)) + (sizecoefs(8) * sz2n(i) * fl2n(i)) + 
-                                (sizecoefs(9) * sz2n(i) * fl1(i)) + (sizecoefs(10) * sz1(i) * fl2n(i)) + 
-                                (sizecoefs(11) * actualage2(i)) + (sizecoefs(12) * actualage2(i) * sz1(i)) + 
-                                (sizecoefs(13) * actualage2(i) * sz2n(i)) + (sizecoefs(14) * actualage2(i) * fl1(i)) + 
-                                (sizecoefs(15) * actualage2(i) * fl2n(i)) + (sizecoefs(16) * inda) + (sizecoefs(17) * indb) + 
-                                (sizecoefs(18) * indc) + (sizecoefs(19) * inda) + (sizecoefs(20) * indb) + (sizecoefs(21) * indc) + 
-                                (sizecoefs(22) * inda * sz2n(i)) + (sizecoefs(23) * indb * sz2n(i)) + (sizecoefs(24) * indc * sz2n(i)) +
-                                (sizecoefs(25) * inda * fl2n(i)) + (sizecoefs(26) * indb * fl2n(i)) + (sizecoefs(27) * indc * fl2n(i)) + 
-                                (sizecoefs(28) * inda * sz1(i)) + (sizecoefs(29) * indb * sz1(i)) + (sizecoefs(30) * indc * sz1(i)) + 
-                                (sizecoefs(31) * inda * fl1(i)) + (sizecoefs(32) * indb * fl1(i)) + (sizecoefs(33) * indc * fl1(i)) + 
-                                (sizecoefs(34) * inda * indb) + (sizecoefs(35) * inda * indc) + (sizecoefs(36) * indb * indc) + 
-                                (sizecoefs(37) * inda * indb) + (sizecoefs(38) * inda * indc) + (sizecoefs(39) * indb * indc) + 
-                                (sizecoefs(40) * inda * indb) + (sizecoefs(41) * inda * indb) + (sizecoefs(42) * inda * indc) + 
-                                (sizecoefs(43) * inda * indc) + (sizecoefs(44) * indb * indc) + (sizecoefs(45) * indb * indc) + 
-                                sizepatch(patchnumber) + sizeyear(yearnumber) + sizedev);
+                  (sizecoefs(4) * sz2n(i)) + (sizecoefs(5) * fl2n(i) * fl1(i)) + (sizecoefs(6) * sz2n(i) * sz1(i)) +
+                  (sizecoefs(7) * sz1(i) * fl1(i)) + (sizecoefs(8) * sz2n(i) * fl2n(i)) + 
+                  (sizecoefs(9) * sz2n(i) * fl1(i)) + (sizecoefs(10) * sz1(i) * fl2n(i)) + 
+                  (sizecoefs(11) * actualage2(i)) + (sizecoefs(12) * actualage2(i) * sz1(i)) + 
+                  (sizecoefs(13) * actualage2(i) * sz2n(i)) + (sizecoefs(14) * actualage2(i) * fl1(i)) + 
+                  (sizecoefs(15) * actualage2(i) * fl2n(i)) + (sizecoefs(16) * inda) + (sizecoefs(17) * indb) + 
+                  (sizecoefs(18) * indc) + (sizecoefs(19) * inda) + (sizecoefs(20) * indb) + (sizecoefs(21) * indc) + 
+                  (sizecoefs(22) * inda * sz2n(i)) + (sizecoefs(23) * indb * sz2n(i)) + (sizecoefs(24) * indc * sz2n(i)) +
+                  (sizecoefs(25) * inda * fl2n(i)) + (sizecoefs(26) * indb * fl2n(i)) + (sizecoefs(27) * indc * fl2n(i)) + 
+                  (sizecoefs(28) * inda * sz1(i)) + (sizecoefs(29) * indb * sz1(i)) + (sizecoefs(30) * indc * sz1(i)) + 
+                  (sizecoefs(31) * inda * fl1(i)) + (sizecoefs(32) * indb * fl1(i)) + (sizecoefs(33) * indc * fl1(i)) + 
+                  (sizecoefs(34) * inda * indb) + (sizecoefs(35) * inda * indc) + (sizecoefs(36) * indb * indc) + 
+                  (sizecoefs(37) * inda * indb) + (sizecoefs(38) * inda * indc) + (sizecoefs(39) * indb * indc) + 
+                  (sizecoefs(40) * inda * indb) + (sizecoefs(41) * inda * indb) + (sizecoefs(42) * inda * indc) + 
+                  (sizecoefs(43) * inda * indc) + (sizecoefs(44) * indb * indc) + (sizecoefs(45) * indb * indc) + 
+                  sizepatch(patchnumber) + sizeyear(yearnumber) + sizedev);
                 
-                int theta = sizesigma;
+                double theta = sizesigma;
                 
-                double y = sz3(i);
+                int y = static_cast<int>(sz3(i));
                 
                 double leftie = 0;
-                for (int i = theta; i < (y+theta); i++) {
-                  leftie = log(static_cast<double>(i)) + leftie;
+                for (int i = 0; i < y; i++) {
+                  leftie = log(static_cast<double>(i) + theta) + leftie;
                 }
-                leftie = exp(leftie) / tgamma(y+1);
+                leftie = exp(leftie) / tgamma(static_cast<double>(y)+1);
 
-                double lnumer = y * log(mu) + static_cast<double>(theta) * log(static_cast<double>(theta)); // pow(mu, y) * pow(theta, theta);
-                double ldenom = (y+static_cast<double>(theta)) * log(mu+static_cast<double>(theta)); // pow((mu+theta), (y+theta));
+                double lnumer = static_cast<double>(y) * log(mu) + static_cast<double>(theta) * log(static_cast<double>(theta)); // pow(mu, y) * pow(theta, theta);
+                double ldenom = (static_cast<double>(y)+static_cast<double>(theta)) * log(mu+static_cast<double>(theta)); // pow((mu+theta), (y+theta));
                 
                 double frac = exp(lnumer - ldenom);
                 
                 out(i, 3) = leftie * frac;
+                // out(i, 4) = theta;  // THIS IS JUST FOR DEBUGGING
               }
               
             } else if (sizedist == 2) {
@@ -885,16 +886,16 @@ List jerzeibalowski(DataFrame ppy, DataFrame AllStages, List survproxy,
                 
                 double theta = jsizesigma;
                 
-                double y = sz3(i);
+                int y = static_cast<int>(sz3(i));
                 
                 double leftie = 0;
-                for (int i = theta; i < (y+theta); i++) {
-                  leftie = log(static_cast<double>(i)) + leftie;
+                for (int i = 0; i < y; i++) {
+                  leftie = log(static_cast<double>(i) + theta) + leftie;
                 }
-                leftie = exp(leftie) / tgamma(y+1);
+                leftie = exp(leftie) / tgamma(static_cast<double>(y)+1);
                 
-                double lnumer = y * log(mu) + theta * log(static_cast<double>(theta)); // pow(mu, y) * pow(theta, theta);
-                double ldenom = (y+static_cast<double>(theta)) * log(mu+static_cast<double>(theta)); // pow((mu+theta), (y+theta));
+                double lnumer = static_cast<double>(y) * log(mu) + theta * log(static_cast<double>(theta)); // pow(mu, y) * pow(theta, theta);
+                double ldenom = (static_cast<double>(y)+static_cast<double>(theta)) * log(mu+static_cast<double>(theta)); // pow((mu+theta), (y+theta));
                 
                 double frac = exp(lnumer - ldenom);
                 
@@ -1044,6 +1045,6 @@ List jerzeibalowski(DataFrame ppy, DataFrame AllStages, List survproxy,
   
   arma::mat amatrix = survtransmat + fectransmat;
   
-  return List::create(Named("A") = amatrix, _["U"] = survtransmat, _["F"] = fectransmat, _["out"] = out);
+  return List::create(Named("A") = amatrix, _["U"] = survtransmat,
+    _["F"] = fectransmat, _["out"] = out);
 }
-

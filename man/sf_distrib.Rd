@@ -21,11 +21,11 @@ reproductive status in time *t*. Required if fecundity distribution will be
 tested.}
 }
 \value{
-Produces text describing the degree and significance of
-overdispersion and zero inflation. The tests are chi-squared score tests
-based on the expectations of mean = variance, and 0s as abundant as predicted
-by the value of lambda estimated from the dataset. See van der Broek (1995)
-for more details.
+Produces text describing the degree and significance of difference
+from expected dispersion, and the degree and significance of zero inflation.
+The tests are chi-squared score tests based on the expectations of 
+mean = variance, and 0s as abundant as predicted by the value of lambda
+estimated from the dataset. See van der Broek (1995) for more details.
 }
 \description{
 Function \code{sf_distrib} takes a historically formatted vertical data as
@@ -33,6 +33,14 @@ input and tests whether size and fecundity data are dispersed according to a
 Poisson distribution (where mean = variance), and whether the number of 0s
 exceeds expectations.
 }
+\section{Notes}{
+
+This function subsets the data in the same way as \code{\link{modelsearch}()}
+before testing underlying distributions, making the output much more
+appropriate than a simple analysis of size and fecundity variables in
+\code{data}.
+}
+
 \examples{
 data(lathyrus)
 

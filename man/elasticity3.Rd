@@ -2,23 +2,27 @@
 % Please edit documentation in R/popdyn.R
 \name{elasticity3}
 \alias{elasticity3}
-\title{Calculate Elasticity of Lambda to Matrix Elements}
+\title{Estimate Elasticity of Population Growth Rate to Matrix Elements}
 \usage{
-elasticity3(mats)
+elasticity3(mats, ...)
 }
 \arguments{
 \item{mats}{A lefkoMat object, or population projection matrix, for which
 the stable stage distribution is desired.}
+
+\item{...}{Other parameters.}
 }
 \value{
 The value returned depends on the class of the \code{mats} argument.
 }
 \description{
 \code{elasticity3()} is a generic function that returns the elasticity of
-the deterministic population growth rate, lambda, to the elements of the
-matrix population model. This function is made to handle very large and
-sparse matrices supplied as \code{lefkoMat} objects or as individual
-matrices.
+the population growth rate to the elements of the matrices in a matrix
+population model. Currently, this function estimates both deterministic and
+stochastic elasticities, where the growth rate is \eqn{\lambda} in the former
+case and the log of the stochastic \eqn{\lambda} in the latter case. This
+function is made to handle very large and sparse matrices supplied as
+\code{lefkoMat} objects, as lists of matrices, and as individual matrices.
 }
 \examples{
 data(lathyrus)
@@ -66,4 +70,6 @@ elasticity3(ehrlen3mean)
 \code{\link{elasticity3.lefkoMat}()}
 
 \code{\link{elasticity3.matrix}()}
+
+\code{\link{elasticity3.list}()}
 }
