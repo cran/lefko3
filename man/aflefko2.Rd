@@ -5,8 +5,8 @@
 \title{Create Function-based Ahistorical Age x Stage Matrix Projection Model}
 \usage{
 aflefko2(
-  year = 1,
-  patch = NA,
+  year = "all",
+  patch = "all",
   stageframe,
   supplement = NA,
   repmatrix = NA,

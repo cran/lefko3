@@ -11,7 +11,7 @@ vignette: >
 
 
 
-This document was built in Markdown in R 4.0.4 and compiled on 23 February 2021. It covers package `lefko3` version 3.3.1.
+This document was built in Markdown in R 4.0.4 and compiled on 25 February 2021. It covers package `lefko3` version 3.3.2.
 
 ## CASE STUDIES OF SWEDISH *Lathyrus vernus* POPULATION
 
@@ -711,11 +711,11 @@ lambda3(ehrlen3mean)
 
 ```r
 slambda3(ehrlen2)
-#>   pop patch           a        var        sd          se
-#> 1   1     1 -0.04469784 0.03120623 0.1766529 0.001766529
+#>   pop patch         a        var        sd          se
+#> 1   1     1 -0.044079 0.03217919 0.1793856 0.001793856
 slambda3(ehrlen3)
-#>   pop patch          a       var        sd          se
-#> 1   1     1 -0.1037036 0.0272949 0.1652117 0.001652117
+#>   pop patch          a        var        sd          se
+#> 1   1     1 -0.1029562 0.02785338 0.1668933 0.001668933
 ```
 
 We see that $a = \text{log} \lambda _{S}$ is estimated to be higher in the ahistorical case, similarly to the pattern seen in the case of $\lambda$.

@@ -164,7 +164,7 @@ div.csl-indent {
 
 
 
-<p>This document was built in Markdown in R 4.0.4 and compiled on 23 February 2021. It covers package <code>lefko3</code> version 3.3.1.</p>
+<p>This document was built in Markdown in R 4.0.4 and compiled on 25 February 2021. It covers package <code>lefko3</code> version 3.3.2.</p>
 <div id="case-studies-of-american-cypripedium-candidum-population" class="section level2">
 <h2>CASE STUDIES OF AMERICAN <em>Cypripedium candidum</em> POPULATION</h2>
 <p style="text-indent: 20px">
@@ -509,7 +509,7 @@ Once a general approach is decided upon, the next step is to decide the underlyi
 The Poisson and the negative binomial distributions both predict specific numbers of 0s in the response variable. If excess 0s occur within the dataset even after including the observation status and reproductive status as vital rates to absorb 0s, then a zero-inflated Poisson or negative binomial distribution may be used. These modeling approaches work by parameterizing a binomial model, typically with a logit link, to predict 0 responses. The Poisson or negative binomial is then used to predict non-zero responses. This conditional model ends up really acting as two separate models in which 0s are assumed to be predicted under potentially different processes than the remaining counts. Users should be aware that, because an extra model is built to cover 0s, zero-inflated models are much more complex and can include many more parameters than their non-inflated counterparts. The principle of parsimony suggests that they should only be used when there are significantly more 0s than expected.
 </p>
 <p style="text-indent: 20px">
-Package <code>lefko3</code> includes a function that can help in determining which distributions to use; <code>sf_distrib()</code>. Here, we use this function on our data. Earlier in this vignette, we used it to determine that we should use the negative binomial for size, and the zero-inflated negative binomial for fecundity.
+Package <code>lefko3</code> includes a function that can help in determining which distributions to use: <code>sf_distrib()</code>. Earlier in this vignette, we used it to determine that we should use the negative binomial for size, and the zero-inflated negative binomial for fecundity.
 </p>
 </div>
 <div id="step-3c.-model-building-and-selection" class="section level4">
@@ -1450,10 +1450,10 @@ We find that annual <span class="math inline">\(\lambda\)</span> differs between
 <p>We may also compare the stochastic population growth rate, <span class="math inline">\(a = \text{log} \lambda _{S}\)</span>, as below.</p>
 <div class="sourceCode" id="cb31"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb31-1"><a href="#cb31-1" aria-hidden="true" tabindex="-1"></a><span class="fu">slambda3</span>(cypmatrix2)</span>
 <span id="cb31-2"><a href="#cb31-2" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;   pop patch          a         var         sd           se</span></span>
-<span id="cb31-3"><a href="#cb31-3" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 1   1     1 -0.1023553 0.001794935 0.04236667 0.0004236667</span></span>
+<span id="cb31-3"><a href="#cb31-3" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 1   1     1 -0.1028182 0.001783574 0.04223238 0.0004223238</span></span>
 <span id="cb31-4"><a href="#cb31-4" aria-hidden="true" tabindex="-1"></a><span class="fu">slambda3</span>(cypmatrix3)</span>
-<span id="cb31-5"><a href="#cb31-5" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;   pop patch           a        var         sd           se</span></span>
-<span id="cb31-6"><a href="#cb31-6" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 1   1     1 -0.05874882 0.00148659 0.03855632 0.0003855632</span></span></code></pre></div>
+<span id="cb31-5"><a href="#cb31-5" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;   pop patch           a         var         sd           se</span></span>
+<span id="cb31-6"><a href="#cb31-6" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 1   1     1 -0.05924337 0.001548299 0.03934844 0.0003934844</span></span></code></pre></div>
 <p style="text-indent: 20px">
 We find that historical <span class="math inline">\(a\)</span> is higher than ahistorical <span class="math inline">\(a\)</span>, as was the case with <span class="math inline">\(\lambda\)</span>, although both show declining populations over time.
 </p>
@@ -1572,7 +1572,7 @@ Now let’s compare the elasticity of <span class="math inline">\(\lambda\)</spa
 <p class="caption">Figure 5.9. Ahistorical vs. historically-corrected elasticity of lambda to stage</p>
 </div>
 <p style="text-indent: 20px">
-The historical barplots show that incorporating individual history leads to greater elasticity values in larger adults and in flowering adults, while in the ahistorical case we see greater elasticity in smaller individuals, with greater elasticity in non-flowering stages. These patterns look somewhat reminiscent of the stable stage profiles that we saw earlier. Further analysis and exploration will be required to flesh out why we see the patterns that we do here.
+The historical barplots show that incorporating individual history leads to greater elasticity values in larger adults and in flowering adults, while in the ahistorical case we see greater elasticity in smaller individuals, with greater elasticity in non-flowering stages. These patterns look somewhat reminiscent of the stable stage profiles that we saw in Figure 5.7. Further analysis and exploration will be required to flesh out why we see the patterns that we do here.
 </p>
 <p style="text-indent: 20px">
 Finally, let’s take a look at how the importance of different kinds of transitions changes, by looking at elasticity sums.

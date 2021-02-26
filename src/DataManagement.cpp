@@ -1367,7 +1367,7 @@ Rcpp::List jpf(DataFrame data, DataFrame stageframe, int popidcol,
   
   int norows = data.nrows(); // The number of data points in the demographic dataset
   
-  Rcpp::NumericVector ckcheck (1);
+  Rcpp::NumericVector ckcheck (1); // This section through 1378 is new
   ckcheck(0) = censorkeep;
   double crazycensor;
   Rcpp::NumericVector censfillvec (norows);
@@ -1375,7 +1375,7 @@ Rcpp::List jpf(DataFrame data, DataFrame stageframe, int popidcol,
     crazycensor = 0;
   } else{
     crazycensor = censorkeep;
-  }
+  }                               // End new section
   
   Rcpp::NumericVector zerovec (norows);
   Rcpp::NumericVector negonevec (norows);
@@ -1566,7 +1566,6 @@ Rcpp::List jpf(DataFrame data, DataFrame stageframe, int popidcol,
   Rcpp::StringVector patchid (ndflength);
   Rcpp::StringVector individ (ndflength);
   Rcpp::NumericVector censor2 (ndflength);
-  arma::vec year2 (ndflength);
   Rcpp::NumericVector xpos2 (ndflength);
   Rcpp::NumericVector ypos2 (ndflength);
   Rcpp::NumericVector sizea2 (ndflength);
@@ -1580,6 +1579,9 @@ Rcpp::List jpf(DataFrame data, DataFrame stageframe, int popidcol,
   Rcpp::NumericVector fecb2 (ndflength);
   Rcpp::NumericVector fecadded2 (ndflength);
   
+  arma::ivec year2 (ndflength);   // valgrind mentioned this line, which used to be an Rcpp::IntegerVector
+  year2.zeros();
+  
   Rcpp::NumericVector indcova2 (ndflength);
   Rcpp::NumericVector indcovb2 (ndflength);
   Rcpp::NumericVector indcovc2 (ndflength);
@@ -1590,12 +1592,7 @@ Rcpp::List jpf(DataFrame data, DataFrame stageframe, int popidcol,
   Rcpp::NumericVector juvgiven2 (ndflength);
   Rcpp::IntegerVector matstat2 (ndflength);
   
-//  if (censorkeep != 0) {
-//    censor2.fill(0);
-//  } else {
-//    censor2.fill(1);
-//  }
-  censor2.fill(crazycensor);
+  censor2.fill(crazycensor); //This variable used to be filled with 0
   
   xpos2.fill(0);
   ypos2.fill(0);
@@ -1642,12 +1639,7 @@ Rcpp::List jpf(DataFrame data, DataFrame stageframe, int popidcol,
   Rcpp::NumericVector juvgiven3 (ndflength);
   Rcpp::IntegerVector matstat3 (ndflength);
   
-//  if (censorkeep != 0) {
-//    censor3.fill(0);
-//  } else {
-//    censor3.fill(1);
-//  }
-  censor3.fill(crazycensor);
+  censor3.fill(crazycensor); // This used to be filled with 0
   
   xpos3.fill(0);
   ypos3.fill(0);
@@ -1694,12 +1686,7 @@ Rcpp::List jpf(DataFrame data, DataFrame stageframe, int popidcol,
   Rcpp::NumericVector juvgiven1 (ndflength);
   Rcpp::IntegerVector matstat1 (ndflength);
   
-//  if (censorkeep != 0) {
-//   censor1.fill(0);
-//  } else {
-//    censor1.fill(1);
-//  }
-  censor1.fill(crazycensor);
+  censor1.fill(crazycensor); // This used to be filled with 0
   
   xpos1.fill(0);
   ypos1.fill(0);
@@ -1723,16 +1710,16 @@ Rcpp::List jpf(DataFrame data, DataFrame stageframe, int popidcol,
   matstat1.fill(0);
   
   // This section introduces variables used to check whether the censor variable has been checked and set at each step
-  arma::uvec indivnum (ndflength);
-  arma::uvec censor2check (ndflength);
-  indivnum.zeros();
-  censor2check.zeros();
+  arma::uvec indivnum (ndflength);          // New Line
+  arma::uvec censor2check (ndflength);      // New line
+  indivnum.zeros();                         // New line
+  censor2check.zeros();                     // New line
   
   // Here we introduce some derived variables that require extra looping or other control parameters
-  arma::vec firstseen (ndflength);
-  arma::vec lastseen (ndflength);
-  arma::vec obsage (ndflength);
-  arma::vec obslifespan (ndflength);
+  arma::ivec firstseen (ndflength);
+  arma::ivec lastseen (ndflength);
+  arma::ivec obsage (ndflength);
+  arma::ivec obslifespan (ndflength);
   Rcpp::NumericVector alive1 (ndflength);
   Rcpp::NumericVector alive2 (ndflength);
   Rcpp::NumericVector alive3 (ndflength);
@@ -1767,9 +1754,9 @@ Rcpp::List jpf(DataFrame data, DataFrame stageframe, int popidcol,
   arma::uvec cs4;
   int choicestage {0};
   
-  // Main loop, which creates the main new dataset rows establishes state in time t for all cases in which an individual is observed
+  // Main loop, which creates the main new dataset rows. Establishes state in time t for all cases in which an individual is observed
   for (int i = 0; i < norows; i++) { // Variable i corresponds to row in the old dataset
-    for (int j = 0; j < noyears; j++) { // This is establishes a place marker for vectors corresponding to the current year
+    for (int j = 0; j < noyears; j++) { // This establishes a place marker for vectors corresponding to the current year
       if (year2x[i] == yearall2x[j]) currentyear = j;
     }
     
@@ -1913,7 +1900,7 @@ Rcpp::List jpf(DataFrame data, DataFrame stageframe, int popidcol,
         } else {
           censor3[ndfindex] = 1;
         }
-      } else if (censorcol != -1) {
+      } else if (censorcol != -1) {     // New section through 1908
         if (censorkeep == 0 && NumericVector::is_na(censor2x[i])) {
           censor3[ndfindex] = 1;
         } else if (censorkeep == 1 && NumericVector::is_na(censor2x[i])) {
@@ -2057,7 +2044,7 @@ Rcpp::List jpf(DataFrame data, DataFrame stageframe, int popidcol,
         }
       }
     }
-    
+    // valgrind mentioned this line
     // Now the normal calculations
     currentindiv = -1;
     for (int k = 0; k < noindivs; k++) {
@@ -2104,7 +2091,7 @@ Rcpp::List jpf(DataFrame data, DataFrame stageframe, int popidcol,
       if (currentyear < (noyears - 1)) { 
         nextyrindex = (noyears * currentindiv) + (currentyear + 1);
         
-        if (censor2[i] == censorkeep && alive2[i] == 1) {
+        if (censor2[i] == censorkeep && alive2[i] == 1) {      // New section through 2095
           censor3[i] = censorkeep;
         } else {
           censor3[i] = censor2[nextyrindex];
@@ -2157,7 +2144,7 @@ Rcpp::List jpf(DataFrame data, DataFrame stageframe, int popidcol,
         
         alive1[i] = alive2[prevyrindex];
         
-        if (censor2(i) == censorkeep && alive1(i) == 1) {
+        if (censor2(i) == censorkeep && alive1(i) == 1) {  // New section through 2153
           if (censbool) {
             censor1(i) = 0;
           } else {
@@ -2334,7 +2321,7 @@ Rcpp::List jpf(DataFrame data, DataFrame stageframe, int popidcol,
     } // currentindiv if statement
   } // i loop
   
-  // Now let's check to see if censor variables have been fully and properly assigned
+  // Now let's check to see if censor variables have been fully and properly assigned - new section
   if (censorcol != -1) {
     arma::uvec censorzeros = find(censor2check == 0);
     
@@ -2342,7 +2329,7 @@ Rcpp::List jpf(DataFrame data, DataFrame stageframe, int popidcol,
       arma::uvec indivindices = sort(find(indivnum == i));
       
       arma::uvec indivzeros = intersect(indivindices, censorzeros);
-      arma::vec years_utilized = year2.elem(indivindices);
+      arma::ivec years_utilized = year2.elem(indivindices);
       
       int newcount = indivzeros.n_elem;
       
@@ -2356,32 +2343,35 @@ Rcpp::List jpf(DataFrame data, DataFrame stageframe, int popidcol,
           
           arma::uvec currenttracking = find(indivindices == indivzeros(j));
           
-          double yearnow = year2(indivindices(currenttracking(0)));
-          double yearprior = yearnow - 1;
-          double yearnext = yearnow + 1;
-          
-          arma::uvec priorvec = find(years_utilized == yearprior);
-          arma::uvec nextvec = find(years_utilized == yearnext);
-          
-          if (nextvec.n_elem > 0) {
-            if (censbool) {
-              censor1(nextvec(0)) = 0;
-            } else {
-              censor1(nextvec(0)) = censorkeep;
+          if (currenttracking.n_elem > 0) {
+            
+            int yearnow = year2(indivindices(currenttracking(0)));
+            int yearprior = yearnow - 1;
+            int yearnext = yearnow + 1;
+            
+            arma::uvec priorvec = find(years_utilized == yearprior);
+            arma::uvec nextvec = find(years_utilized == yearnext);
+            
+            if (nextvec.n_elem > 0) {
+              if (censbool) {
+                censor1(nextvec(0)) = 0;
+              } else {
+                censor1(nextvec(0)) = censorkeep;
+              }
             }
-          }
-          
-          if (priorvec.n_elem > 0) {
-            if (censbool) {
-              censor3(priorvec(0)) = 0;
-            } else {
-              censor3(priorvec(0)) = censorkeep;
-            }
-          }
-        }
-      }
-    }
-  }
+            
+            if (priorvec.n_elem > 0) {
+              if (censbool) {
+                censor3(priorvec(0)) = 0;
+              } else {
+                censor3(priorvec(0)) = censorkeep;  // valgrind mentioned this line
+              }
+            } // priorvec if statement
+          } // currenttracking if statement
+        } // newcount for loop
+      } // newcount if statement
+    } // noindivs for loop
+  } // end censor correction section
   
   Rcpp::DataFrame df0 = DataFrame::create(Named("rowid") = rowid,
     _["popid"] = popid, _["patchid"] = patchid, _["individ"] = individ,
@@ -2564,36 +2554,79 @@ List theoldpizzle(DataFrame StageFrame, DataFrame OverWrite,
   arma::vec stage2n(totallength);
   arma::vec stage2o(totallength);
   arma::vec stage1(totallength);
+  stage3.zeros();
+  stage2n.zeros();
+  stage2o.zeros();
+  stage1.zeros();
+  
   arma::vec size3(totallength);
   arma::vec size2n(totallength);
   arma::vec size2o(totallength);
   arma::vec size1(totallength);
+  size3.zeros();
+  size2n.zeros();
+  size2o.zeros();
+  size1.zeros();
+  
   arma::vec obs3(totallength);
   arma::vec obs2n(totallength);
   arma::vec obs2o(totallength);
   arma::vec obs1(totallength);
+  obs3.zeros();
+  obs2n.zeros();
+  obs2o.zeros();
+  obs1.zeros();
+  
   arma::vec rep3(totallength);
   arma::vec rep2n(totallength);
   arma::vec rep2o(totallength);
   arma::vec rep1(totallength);
+  rep3.zeros();
+  rep2n.zeros();
+  rep2o.zeros();
+  rep1.zeros();
+  
   arma::vec mat3(totallength);
   arma::vec mat2n(totallength);
   arma::vec mat2o(totallength);
   arma::vec mat1(totallength);
+  mat3.zeros();
+  mat2n.zeros();
+  mat2o.zeros();
+  mat1.zeros();
+  
   arma::vec imm3(totallength);
   arma::vec imm2n(totallength);
   arma::vec imm2o(totallength);
   arma::vec imm1(totallength);
+  imm3.zeros();
+  imm2n.zeros();
+  imm2o.zeros();
+  imm1.zeros();
+  
   arma::vec repentry3(totallength);
+  arma::vec binwidth(totallength);
+  repentry3.zeros();
+  binwidth.zeros();
+  
   arma::vec indata3(totallength);
   arma::vec indata2n(totallength);
   arma::vec indata2o(totallength);
   arma::vec indata1(totallength);
-  arma::vec binwidth(totallength);
+  indata3.zeros();
+  indata2n.zeros();
+  indata2o.zeros();
+  indata1.zeros();
+  
   arma::vec minage3(totallength);
   arma::vec minage2(totallength);
   arma::vec maxage3(totallength);
   arma::vec maxage2(totallength);
+  minage3.zeros();
+  minage2.zeros();
+  maxage3.zeros();
+  maxage2.zeros();
+  
   arma::vec actualage(totallength);
   arma::vec index321(totallength);
   arma::vec index321special(totallength);
@@ -2601,10 +2634,13 @@ List theoldpizzle(DataFrame StageFrame, DataFrame OverWrite,
   arma::vec indatalong(totallength);
   arma::vec aliveequal(totallength);
   arma::vec included(totallength);
+  actualage.zeros();
   index321.fill(-1);
-  index21.fill(-1);
   index321special.fill(0);
+  index21.fill(-1);
+  indatalong.zeros();
   aliveequal.fill(-1);
+  included.zeros();
   
   arma::mat asadditions(totallength, 5);
   arma::vec ovgivent(totallength);
@@ -2612,6 +2648,7 @@ List theoldpizzle(DataFrame StageFrame, DataFrame OverWrite,
   arma::vec ovgivenf(totallength);
   arma::vec ovestf(totallength);
   arma::vec ovrepentry(totallength);
+  asadditions.zeros();
   ovgivent.fill(-1);
   ovestt.fill(-1);
   ovgivenf.fill(-1);

@@ -411,6 +411,7 @@ sf_create <- function(sizes, stagenames = NA, repstatus = 1, obsstatus = 1,
 #' @param repmatrix The original reproduction matrix. Can also equal NA or 0.
 #' @param overwrite The original overwrite table, as supplied by the
 #' \code{\link{overwrite}()} function. Can also equal NA.
+#' @param agemat A logical value indicating whether the MPM is age-by-stage
 #' 
 #' @return This function returns a list with a modified stageframe usable in MPM
 #' construction, and an associated reproduction matrix. Note that if a
@@ -419,7 +420,7 @@ sf_create <- function(sizes, stagenames = NA, repstatus = 1, obsstatus = 1,
 #' 
 #' @keywords internal
 #' @noRd
-.sf_reassess <- function(stageframe, supplement, repmatrix, overwrite) {
+.sf_reassess <- function(stageframe, supplement, repmatrix, overwrite, agemat = FALSE) {
   
   skiprepmat <- FALSE
   
@@ -564,10 +565,41 @@ sf_create <- function(sizes, stagenames = NA, repstatus = 1, obsstatus = 1,
       if (any(tolower(used_entries) == "immat")) {
         rep.entry.stages[which(imm.vec == 1)] <- 1
       }
+      
+      if (agemat) {
+        used_reprods <- supplement$stage2[vectorofpossibilities]
+        
+        needed_reprods <- apply(as.matrix(used_reprods), 1, function(X) {
+          which(stageframe$stage == X)
+        })
+        used_values <- supplement$multiplier[vectorofpossibilities]
+        
+        repmatrix <- matrix(0, ncol = length(mat.vec), nrow = length(mat.vec))
+        for (i in c(1:length(vectorofpossibilities))) {
+          repmatrix[needed_entries[i], needed_reprods[i]] <- used_values[i]
+        }
+        
+        fec.stages <- rep(0, length(orig.size.vec))
+        
+        if (any(tolower(used_reprods) == "rep")) {
+          needed_reprods <- which(stageframe$repstatus == 1)
+          needed_fecs <- which(tolower(used_reprods) == "rep")
+          
+          for (i in c(1:length(needed_fecs))) {
+            fec.stages[needed_reprods] <- used_values[needed_fecs[i]]
+            entry_stage <- which(stageframe$stage == supplement$stage3[i])
+            repmatrix[entry_stage,] <- fec.stages
+          }
+        }
+        
+        skiprepmat <- FALSE
+      }
     }
     
-    repmatrix <- matrix(0, ncol = length(mat.vec), nrow = length(mat.vec))
-    skiprepmat <- TRUE
+    if (!agemat) {
+      repmatrix <- matrix(0, ncol = length(mat.vec), nrow = length(mat.vec))
+      skiprepmat <- TRUE
+    }
     
   } else if (all(is.na(repmatrix)) & all(is.na(supplement))) {
     if (sum(prop.vec + imm.vec) > 1) {

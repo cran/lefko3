@@ -11,7 +11,7 @@ vignette: >
 
 
 
-This document was built in Markdown in R 4.0.4 and compiled on 23 February 2021. It covers package `lefko3` version 3.3.1.
+This document was built in Markdown in R 4.0.4 and compiled on 25 February 2021. It covers package `lefko3` version 3.3.2.
 
 ## CASE STUDIES OF AMERICAN *Cypripedium candidum* POPULATION
 
@@ -355,7 +355,7 @@ cypover2 <- overwrite(stage3 = c("SD", "P1", "P2", "P3", "SL", "SL", "D", "V1",
   
   <p style="text-indent: 20px">The Poisson and the negative binomial distributions both predict specific numbers of 0s in the response variable. If excess 0s occur within the dataset even after including the observation status and reproductive status as vital rates to absorb 0s, then a zero-inflated Poisson or negative binomial distribution may be used. These modeling approaches work by parameterizing a binomial model, typically with a logit link, to predict 0 responses. The Poisson or negative binomial is then used to predict non-zero responses. This conditional model ends up really acting as two separate models in which 0s are assumed to be predicted under potentially different processes than the remaining counts. Users should be aware that, because an extra model is built to cover 0s, zero-inflated models are much more complex and can include many more parameters than their non-inflated counterparts. The principle of parsimony suggests that they should only be used when there are significantly more 0s than expected.</p>
   
-  <p style="text-indent: 20px">Package `lefko3` includes a function that can help in determining which distributions to use; `sf_distrib()`. Here, we use this function on our data. Earlier in this vignette, we used it to determine that we should use the negative binomial for size, and the zero-inflated negative binomial for fecundity.</p>
+  <p style="text-indent: 20px">Package `lefko3` includes a function that can help in determining which distributions to use: `sf_distrib()`. Earlier in this vignette, we used it to determine that we should use the negative binomial for size, and the zero-inflated negative binomial for fecundity.</p>
 
 #### Step 3c. Model building and selection
 
@@ -1317,10 +1317,10 @@ legend("bottomright", c("ahistorical", "historical"), lty = c(1, 2), col = c("bl
 ```r
 slambda3(cypmatrix2)
 #>   pop patch          a         var         sd           se
-#> 1   1     1 -0.1023553 0.001794935 0.04236667 0.0004236667
+#> 1   1     1 -0.1028182 0.001783574 0.04223238 0.0004223238
 slambda3(cypmatrix3)
-#>   pop patch           a        var         sd           se
-#> 1   1     1 -0.05874882 0.00148659 0.03855632 0.0003855632
+#>   pop patch           a         var         sd           se
+#> 1   1     1 -0.05924337 0.001548299 0.03934844 0.0003934844
 ```
 
   <p style="text-indent: 20px">We find that historical $a$ is higher than ahistorical $a$, as was the case with $\lambda$, although both show declining populations over time.</p>
@@ -1440,7 +1440,7 @@ legend("topright", c("ahistorical", "historical"), col = c("black", "red"), pch 
 
 ![Figure 5.9. Ahistorical vs. historically-corrected elasticity of lambda to stage](Ch5.35-1.png)
 
-  <p style="text-indent: 20px">The historical barplots show that incorporating individual history leads to greater elasticity values in larger adults and in flowering adults, while in the ahistorical case we see greater elasticity in smaller individuals, with greater elasticity in non-flowering stages. These patterns look somewhat reminiscent of the stable stage profiles that we saw earlier. Further analysis and exploration will be required to flesh out why we see the patterns that we do here.</p>
+  <p style="text-indent: 20px">The historical barplots show that incorporating individual history leads to greater elasticity values in larger adults and in flowering adults, while in the ahistorical case we see greater elasticity in smaller individuals, with greater elasticity in non-flowering stages. These patterns look somewhat reminiscent of the stable stage profiles that we saw in Figure 5.7. Further analysis and exploration will be required to flesh out why we see the patterns that we do here.</p>
 
   <p style="text-indent: 20px">Finally, let's take a look at how the importance of different kinds of transitions changes, by looking at elasticity sums.</p>
 

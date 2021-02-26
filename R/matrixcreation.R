@@ -386,7 +386,7 @@ flefko3 <- function(year = "all", patch = "all", stageframe, supplement = NA,
     stop("Function flefko3() requires size to be numeric rather than categorical.", call. = FALSE)
   }
   
-  melchett <- .sf_reassess(stageframe, supplement, repmatrix, overwrite)
+  melchett <- .sf_reassess(stageframe, supplement, repmatrix, overwrite, agemat = FALSE)
   stageframe <- melchett[[1]]
   repmatrix <- melchett[[2]]
   
@@ -1001,7 +1001,7 @@ flefko2 <- function(year = "all", patch = "all", stageframe, supplement = NA,
     stop("Function flefko2() requires size to be numeric rather than categorical.")
   }
   
-  melchett <- .sf_reassess(stageframe, supplement, repmatrix, overwrite)
+  melchett <- .sf_reassess(stageframe, supplement, repmatrix, overwrite, agemat = FALSE)
   stageframe <- melchett[[1]]
   repmatrix <- melchett[[2]]
   
@@ -1645,7 +1645,7 @@ rlefko3 <- function(data, stageframe, year = "all", pop = NA, patch = NA,
     }
   }
   
-  melchett <- .sf_reassess(stageframe, supplement, repmatrix, overwrite)
+  melchett <- .sf_reassess(stageframe, supplement, repmatrix, overwrite, agemat = FALSE)
   stageframe <- melchett[[1]]
   repmatrix <- melchett[[2]]
   
@@ -2311,7 +2311,7 @@ rlefko2 <- function(data, stageframe, year = "all", pop = NA, patch = NA,
     }
   }
   
-  melchett <- .sf_reassess(stageframe, supplement, repmatrix, overwrite)
+  melchett <- .sf_reassess(stageframe, supplement, repmatrix, overwrite, agemat = FALSE)
   stageframe <- melchett[[1]]
   repmatrix <- melchett[[2]]
   
@@ -2822,7 +2822,7 @@ rlefko2 <- function(data, stageframe, year = "all", pop = NA, patch = NA,
 #' summary(lathmat2age_alt)
 #' }
 #' @export
-aflefko2 <- function(year = 1, patch = NA, stageframe, supplement = NA,
+aflefko2 <- function(year = "all", patch = "all", stageframe, supplement = NA,
   repmatrix = NA, overwrite = NA, data = NA, modelsuite = NA, surv_model = NA,
   obs_model = NA, size_model = NA, repst_model = NA, fec_model = NA,
   jsurv_model = NA, jobs_model = NA, jsize_model = NA, jrepst_model = NA,
@@ -2917,7 +2917,7 @@ aflefko2 <- function(year = 1, patch = NA, stageframe, supplement = NA,
     stop("Function aflefko2() requires size to be numeric rather than categorical.")
   }
   
-  melchett <- .sf_reassess(stageframe, supplement, repmatrix, overwrite)
+  melchett <- .sf_reassess(stageframe, supplement, repmatrix, overwrite, agemat = TRUE)
   stageframe <- melchett[[1]]
   repmatrix <- melchett[[2]]
   

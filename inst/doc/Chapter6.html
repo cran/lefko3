@@ -164,7 +164,7 @@ div.csl-indent {
 
 
 
-<p>This document was built in Markdown in R 4.0.4 and compiled on 23 February 2021. It covers package <code>lefko3</code> version 3.3.1.</p>
+<p>This document was built in Markdown in R 4.0.4 and compiled on 25 February 2021. It covers package <code>lefko3</code> version 3.3.2.</p>
 <div id="case-studies-of-swedish-lathyrus-vernus-population" class="section level2">
 <h2>CASE STUDIES OF SWEDISH <em>Lathyrus vernus</em> POPULATION</h2>
 <p style="text-indent: 20px">
@@ -877,10 +877,10 @@ Let’s now take a peek at the stochastic growth rate, <span class="math inline"
 </p>
 <div class="sourceCode" id="cb25"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a><span class="fu">slambda3</span>(lathmat2ipm)</span>
 <span id="cb25-2"><a href="#cb25-2" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;   pop patch          a        var        sd          se</span></span>
-<span id="cb25-3"><a href="#cb25-3" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 1   1     1 -0.2124356 0.01071815 0.1035285 0.001035285</span></span>
+<span id="cb25-3"><a href="#cb25-3" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 1   1     1 -0.2103745 0.01043859 0.1021694 0.001021694</span></span>
 <span id="cb25-4"><a href="#cb25-4" aria-hidden="true" tabindex="-1"></a><span class="fu">slambda3</span>(lathmat3ipm, <span class="at">times =</span> <span class="dv">1000</span>)</span>
-<span id="cb25-5"><a href="#cb25-5" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;   pop patch          a         var         sd          se</span></span>
-<span id="cb25-6"><a href="#cb25-6" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 1   1     1 -0.1411755 0.007937664 0.08909357 0.002817386</span></span></code></pre></div>
+<span id="cb25-5"><a href="#cb25-5" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;   pop patch          a        var         sd          se</span></span>
+<span id="cb25-6"><a href="#cb25-6" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 1   1     1 -0.1376136 0.00746988 0.08642847 0.002733108</span></span></code></pre></div>
 <p style="text-indent: 20px">
 The historical growth rate is larger than the ahistorical, as in the deterministic case, although both sets of numbers suggest a decreasing population over time.
 </p>
@@ -982,7 +982,7 @@ Now let’s take a look at the summed elasticities of different kinds of transit
 <p class="caption">Figure 6.9. Ahistorical vs. historically-corrected elasticity of lambda to transitions</p>
 </div>
 <p style="text-indent: 20px">
-We see extremely similar transition elasticities between ahistorical and historical analyses, with growth and shrinkage the most influential on <span class="math inline">\(\lambda\)</span> while fecundity is the least influential.
+We see extremely similar transition elasticities between ahistorical and historical analyses, with growth and shrinkage the most influential on <span class="math inline">\(\lambda\)</span> while fecundity is by far the least influential.
 </p>
 <p style="text-indent: 20px">
 Finally, let’s estimate the elasticity of stochastic lambda, <span class="math inline">\(a = \text{log} \lambda _{S}\)</span>, to matrix elements. We will only focus on the ahistorical case to save time and compare with the deterministic elasticity matrix. However, users can update the code below to estimate stochastic elasticities for the historical MPM, as well.

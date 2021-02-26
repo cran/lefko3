@@ -363,7 +363,7 @@ barplot(t(elas_sums_together), beside=T, ylab = "Elasticity of lambda", xlab = "
 legend("topright", c("ahistorical", "historical"), col = c("black", "red"), pch = 15, bty = "n")
 ```
 
-  <p style="text-indent: 20px">We see extremely similar transition elasticities between ahistorical and historical analyses, with growth and shrinkage the most influential on $\lambda$ while fecundity is the least influential.</p>
+  <p style="text-indent: 20px">We see extremely similar transition elasticities between ahistorical and historical analyses, with growth and shrinkage the most influential on $\lambda$ while fecundity is by far the least influential.</p>
 
   <p style="text-indent: 20px">Finally, let's estimate the elasticity of stochastic lambda, $a = \text{log} \lambda _{S}$, to matrix elements. We will only focus on the ahistorical case to save time and compare with the deterministic elasticity matrix. However, users can update the code below to estimate stochastic elasticities for the historical MPM, as well.</p>
 ```{r Ch6.29}

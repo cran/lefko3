@@ -11,7 +11,7 @@ vignette: >
 
 
 
-This document was built in Markdown in R 4.0.4 and compiled on 23 February 2021. It covers package `lefko3` version 3.3.1.
+This document was built in Markdown in R 4.0.4 and compiled on 25 February 2021. It covers package `lefko3` version 3.3.2.
 
 ## CASE STUDIES OF SWEDISH *Lathyrus vernus* POPULATION
 
@@ -747,10 +747,10 @@ legend("bottomleft", c("ahistorical", "historical"), lty = c(1, 2),
 ```r
 slambda3(lathmat2ipm)
 #>   pop patch          a        var        sd          se
-#> 1   1     1 -0.2124356 0.01071815 0.1035285 0.001035285
+#> 1   1     1 -0.2103745 0.01043859 0.1021694 0.001021694
 slambda3(lathmat3ipm, times = 1000)
-#>   pop patch          a         var         sd          se
-#> 1   1     1 -0.1411755 0.007937664 0.08909357 0.002817386
+#>   pop patch          a        var         sd          se
+#> 1   1     1 -0.1376136 0.00746988 0.08642847 0.002733108
 ```
 
   <p style="text-indent: 20px">The historical growth rate is larger than the ahistorical, as in the deterministic case, although both sets of numbers suggest a decreasing population over time.</p>
@@ -851,7 +851,7 @@ legend("topright", c("ahistorical", "historical"), col = c("black", "red"), pch 
 
 ![Figure 6.9. Ahistorical vs. historically-corrected elasticity of lambda to transitions](Ch6.28-1.png)
 
-  <p style="text-indent: 20px">We see extremely similar transition elasticities between ahistorical and historical analyses, with growth and shrinkage the most influential on $\lambda$ while fecundity is the least influential.</p>
+  <p style="text-indent: 20px">We see extremely similar transition elasticities between ahistorical and historical analyses, with growth and shrinkage the most influential on $\lambda$ while fecundity is by far the least influential.</p>
 
   <p style="text-indent: 20px">Finally, let's estimate the elasticity of stochastic lambda, $a = \text{log} \lambda _{S}$, to matrix elements. We will only focus on the ahistorical case to save time and compare with the deterministic elasticity matrix. However, users can update the code below to estimate stochastic elasticities for the historical MPM, as well.</p>
 

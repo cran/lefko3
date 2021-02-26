@@ -164,7 +164,7 @@ div.csl-indent {
 
 
 
-<p>This document was built in Markdown in R 4.0.4 and compiled on 23 February 2021. It covers package <code>lefko3</code> version 3.3.1.</p>
+<p>This document was built in Markdown in R 4.0.4 and compiled on 25 February 2021. It covers package <code>lefko3</code> version 3.3.2.</p>
 <div id="case-studies-of-swedish-lathyrus-vernus-population" class="section level2">
 <h2>CASE STUDIES OF SWEDISH <em>Lathyrus vernus</em> POPULATION</h2>
 <p style="text-indent: 20px">
@@ -828,11 +828,11 @@ Readers will likely observe both that there are fewer <span class="math inline">
 Now let’s take a peek at (<span class="math inline">\(a = \text{log} \lambda _{S}\)</span>).
 </p>
 <div class="sourceCode" id="cb28"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb28-1"><a href="#cb28-1" aria-hidden="true" tabindex="-1"></a><span class="fu">slambda3</span>(ehrlen2)</span>
-<span id="cb28-2"><a href="#cb28-2" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;   pop patch           a        var        sd          se</span></span>
-<span id="cb28-3"><a href="#cb28-3" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 1   1     1 -0.04469784 0.03120623 0.1766529 0.001766529</span></span>
+<span id="cb28-2"><a href="#cb28-2" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;   pop patch         a        var        sd          se</span></span>
+<span id="cb28-3"><a href="#cb28-3" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 1   1     1 -0.044079 0.03217919 0.1793856 0.001793856</span></span>
 <span id="cb28-4"><a href="#cb28-4" aria-hidden="true" tabindex="-1"></a><span class="fu">slambda3</span>(ehrlen3)</span>
-<span id="cb28-5"><a href="#cb28-5" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;   pop patch          a       var        sd          se</span></span>
-<span id="cb28-6"><a href="#cb28-6" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 1   1     1 -0.1037036 0.0272949 0.1652117 0.001652117</span></span></code></pre></div>
+<span id="cb28-5"><a href="#cb28-5" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;   pop patch          a        var        sd          se</span></span>
+<span id="cb28-6"><a href="#cb28-6" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 1   1     1 -0.1029562 0.02785338 0.1668933 0.001668933</span></span></code></pre></div>
 <p>We see that <span class="math inline">\(a = \text{log} \lambda _{S}\)</span> is estimated to be higher in the ahistorical case, similarly to the pattern seen in the case of <span class="math inline">\(\lambda\)</span>.</p>
 <p style="text-indent: 20px">
 We can also examine the stable stage distributions, as follows for the ahistorical case. Our numbers here match those produced by package <code>popbio</code>’s <code>stable.stage()</code> function.

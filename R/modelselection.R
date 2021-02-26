@@ -5717,8 +5717,8 @@ parasearch <- function(data, historical = TRUE, approach = "mixed",
       if (is.element(0, surv.data$alive3) & is.element(1, surv.data$alive3)) {
         
         if (!quiet) {message("\nDeveloping global model of survival probability...\n"); }
-        surv.global.model <- try(lme4::glmer(formula = stats::as.formula(formulae$full.surv.model), data = surv.data, family = "binomial"),
-                                 silent = TRUE)
+        surv.global.model <- try(lme4::glmer(formula = stats::as.formula(formulae$full.surv.model), 
+            data = surv.data, family = "binomial"), silent = TRUE)
         
         if (any(class(surv.global.model) == "try-error")) {
           nox.surv.model <- formulae$full.surv.model
@@ -5750,8 +5750,8 @@ parasearch <- function(data, historical = TRUE, approach = "mixed",
           
           if (nox.surv.model != formulae$full.surv.model) {
             if (!quiet) {message("\nInitial global model estimation failed. Attempting a global model without interaction terms.\n")}
-            surv.global.model <- try(lme4::glmer(formula = nox.surv.model, data = surv.data, family = "binomial"),
-                                     silent = TRUE)
+            surv.global.model <- try(lme4::glmer(formula = nox.surv.model,
+                data = surv.data, family = "binomial"), silent = TRUE)
           }
           
           nopat.surv.model <- nox.surv.model
@@ -5763,8 +5763,8 @@ parasearch <- function(data, historical = TRUE, approach = "mixed",
             
             if (nox.surv.model != nopat.surv.model) {
               if (!quiet) {message("\nGlobal model estimation difficulties. Attempting a global model without a patch term.")}
-              surv.global.model <- try(lme4::glmer(formula = nopat.surv.model, data = surv.data, family = "binomial"),
-                                       silent = TRUE)
+              surv.global.model <- try(lme4::glmer(formula = nopat.surv.model,
+                  data = surv.data, family = "binomial"), silent = TRUE)
             }
           }
           
@@ -5777,8 +5777,8 @@ parasearch <- function(data, historical = TRUE, approach = "mixed",
             
             if (noyr.surv.model != nopat.surv.model) {
               if (!quiet) {message("\nGlobal model estimation difficulties. Attempting a global model without a year term.")}
-              surv.global.model <- try(lme4::glmer(formula = noyr.surv.model, data = surv.data, family = "binomial"),
-                                       silent = TRUE)
+              surv.global.model <- try(lme4::glmer(formula = noyr.surv.model, 
+                  data = surv.data, family = "binomial"), silent = TRUE)
             }
           }
           
@@ -5791,8 +5791,8 @@ parasearch <- function(data, historical = TRUE, approach = "mixed",
             
             if (noind.surv.model != noyr.surv.model) {
               if (!quiet) {message("\nGlobal model estimation difficulties. Attempting a global model without an individual identity term.")}
-              surv.global.model <- try(lme4::glmer(formula = noind.surv.model, data = surv.data, family = "binomial"),
-                                       silent = TRUE)
+              surv.global.model <- try(lme4::glmer(formula = noind.surv.model,
+                  data = surv.data, family = "binomial"), silent = TRUE)
             }
           }
           
@@ -5859,8 +5859,8 @@ parasearch <- function(data, historical = TRUE, approach = "mixed",
           
           if (nox.obs.model != formulae$full.obs.model) {
             if (!quiet) {message("\nInitial global model estimation failed. Attempting a global model without interaction terms.\n")}
-            obs.global.model <- try(lme4::glmer(formula = nox.obs.model, data = obs.data, family = "binomial"),
-                                    silent = TRUE)
+            obs.global.model <- try(lme4::glmer(formula = nox.obs.model,
+                data = obs.data, family = "binomial"), silent = TRUE)
           }
           
           nopat.obs.model <- nox.obs.model
@@ -5872,8 +5872,8 @@ parasearch <- function(data, historical = TRUE, approach = "mixed",
             
             if (nox.obs.model != nopat.obs.model) {
               if (!quiet) {message("\nGlobal model estimation difficulties. Attempting a global model without a patch term.")}
-              obs.global.model <- try(lme4::glmer(formula = nopat.obs.model, data = obs.data, family = "binomial"),
-                                      silent = TRUE)
+              obs.global.model <- try(lme4::glmer(formula = nopat.obs.model,
+                  data = obs.data, family = "binomial"), silent = TRUE)
             }
           }
           
@@ -5886,8 +5886,8 @@ parasearch <- function(data, historical = TRUE, approach = "mixed",
             
             if (noyr.obs.model != nopat.obs.model) {
               if (!quiet) {message("\nGlobal model estimation difficulties. Attempting a global model without a year term.")}
-              obs.global.model <- try(lme4::glmer(formula = noyr.obs.model, data = obs.data, family = "binomial"),
-                                      silent = TRUE)
+              obs.global.model <- try(lme4::glmer(formula = noyr.obs.model,
+                  data = obs.data, family = "binomial"), silent = TRUE)
             }
           }
           
@@ -5900,8 +5900,8 @@ parasearch <- function(data, historical = TRUE, approach = "mixed",
             
             if (noind.obs.model != noyr.obs.model) {
               if (!quiet) {message("\nGlobal model estimation difficulties. Attempting a global model without an individual identity term.")}
-              obs.global.model <- try(lme4::glmer(formula = noind.obs.model, data = obs.data, family = "binomial"),
-                                      silent = TRUE)
+              obs.global.model <- try(lme4::glmer(formula = noind.obs.model, 
+                  data = obs.data, family = "binomial"), silent = TRUE)
             }
           }
           
@@ -5935,8 +5935,8 @@ parasearch <- function(data, historical = TRUE, approach = "mixed",
     if (formulae$full.size.model != 1) {
       if (sizedist == "gaussian") {
         if (!quiet) {message("\nDeveloping global model of size (Gaussian)...\n");}
-        size.global.model <- try(lme4::lmer(formula = formulae$full.size.model, data = size.data),
-                                 silent = TRUE)
+        size.global.model <- try(lme4::lmer(formula = formulae$full.size.model,
+            data = size.data), silent = TRUE)
         
         if (any(class(size.global.model) == "try-error")) {
           nox.size.model <- formulae$full.size.model
@@ -5968,7 +5968,8 @@ parasearch <- function(data, historical = TRUE, approach = "mixed",
           
           if (nox.size.model != formulae$full.size.model) {
             if (!quiet) {message("\nInitial global model estimation failed. Attempting a global model without interaction terms.\n")}
-            size.global.model <- try(lme4::lmer(formula = nox.size.model, data = size.data), silent = TRUE)
+            size.global.model <- try(lme4::lmer(formula = nox.size.model,
+                data = size.data), silent = TRUE)
           }
           
           nopat.size.model <- nox.size.model
@@ -5980,8 +5981,8 @@ parasearch <- function(data, historical = TRUE, approach = "mixed",
             
             if (nox.size.model != nopat.size.model) {
               if (!quiet) {message("\nGlobal model estimation difficulties. Attempting a global model without a patch term.")}
-              size.global.model <- try(lme4::lmer(formula = nopat.size.model, data = size.data),
-                                       silent = TRUE)
+              size.global.model <- try(lme4::lmer(formula = nopat.size.model,
+                  data = size.data), silent = TRUE)
             }
           }
           
@@ -5994,8 +5995,8 @@ parasearch <- function(data, historical = TRUE, approach = "mixed",
             
             if (noyr.size.model != nopat.size.model) {
               if (!quiet) {message("\nGlobal model estimation difficulties. Attempting a global model without a year term.")}
-              size.global.model <- try(lme4::lmer(formula = noyr.size.model, data = size.data),
-                                       silent = TRUE)
+              size.global.model <- try(lme4::lmer(formula = noyr.size.model,
+                  data = size.data), silent = TRUE)
             }
           }
           
@@ -6008,8 +6009,8 @@ parasearch <- function(data, historical = TRUE, approach = "mixed",
             
             if (noind.size.model != noyr.size.model) {
               if (!quiet) {message("\nGlobal model estimation difficulties. Attempting a global model without an individual identity term.")}
-              size.global.model <- try(lme4::lmer(formula = noind.size.model, data = size.data),
-                                       silent = TRUE)
+              size.global.model <- try(lme4::lmer(formula = noind.size.model,
+                  data = size.data), silent = TRUE)
             }
           }
           
@@ -6023,8 +6024,8 @@ parasearch <- function(data, historical = TRUE, approach = "mixed",
         }
       } else if (sizedist == "poisson" & !size.zero) {
         if (!quiet) {message("\nDeveloping global model of size (Poisson)...\n");}
-        size.global.model <- try(lme4::glmer(formula = formulae$full.size.model, data = size.data, family = "poisson"),
-                                 silent = TRUE)
+        size.global.model <- try(lme4::glmer(formula = formulae$full.size.model,
+            data = size.data, family = "poisson"), silent = TRUE)
         
         if (any(class(size.global.model) == "try-error")) {
           nox.size.model <- formulae$full.size.model
@@ -6056,8 +6057,8 @@ parasearch <- function(data, historical = TRUE, approach = "mixed",
           
           if (nox.size.model != formulae$full.size.model) {
             if (!quiet) {message("\nInitial global model estimation failed. Attempting a global model without interaction terms.\n")}
-            size.global.model <- try(lme4::glmer(formula = nox.size.model, data = size.data, family = "poisson"),
-                                     silent = TRUE)
+            size.global.model <- try(lme4::glmer(formula = nox.size.model,
+                data = size.data, family = "poisson"), silent = TRUE)
           }
           
           nopat.size.model <- nox.size.model
@@ -6069,8 +6070,8 @@ parasearch <- function(data, historical = TRUE, approach = "mixed",
             
             if (nox.size.model != nopat.size.model) {
               if (!quiet) {message("\nGlobal model estimation difficulties. Attempting a global model without a patch term.")}
-              size.global.model <- try(lme4::glmer(formula = nopat.size.model, data = size.data, family = "poisson"),
-                                       silent = TRUE)
+              size.global.model <- try(lme4::glmer(formula = nopat.size.model,
+                  data = size.data, family = "poisson"), silent = TRUE)
             }
           }
           
@@ -6083,8 +6084,8 @@ parasearch <- function(data, historical = TRUE, approach = "mixed",
             
             if (noyr.size.model != nopat.size.model) {
               if (!quiet) {message("\nGlobal model estimation difficulties. Attempting a global model without a year term.")}
-              size.global.model <- try(lme4::glmer(formula = noyr.size.model, data = size.data, family = "poisson"),
-                                       silent = TRUE)
+              size.global.model <- try(lme4::glmer(formula = noyr.size.model,
+                  data = size.data, family = "poisson"), silent = TRUE)
             }
           }
           
@@ -6097,8 +6098,8 @@ parasearch <- function(data, historical = TRUE, approach = "mixed",
             
             if (noind.size.model != noyr.size.model) {
               if (!quiet) {message("\nGlobal model estimation difficulties. Attempting a global model without an individual identity term.")}
-              size.global.model <- try(lme4::glmer(formula = noind.size.model, data = size.data, family = "poisson"),
-                                       silent = TRUE)
+              size.global.model <- try(lme4::glmer(formula = noind.size.model,
+                  data = size.data, family = "poisson"), silent = TRUE)
             }
           }
           
@@ -6112,8 +6113,8 @@ parasearch <- function(data, historical = TRUE, approach = "mixed",
         }
       } else if (sizedist == "negbin" & !size.zero) {
         if (!quiet) {message("\nDeveloping global model of size (negative binomial)...\n");}
-        size.global.model <- try(glmmTMB::glmmTMB(formula = stats::as.formula(formulae$full.size.model), data = size.data,
-                                                  ziformula=~0, family = glmmTMB::nbinom2), silent = TRUE)
+        size.global.model <- try(glmmTMB::glmmTMB(formula = stats::as.formula(formulae$full.size.model), 
+            data = size.data, ziformula=~0, family = glmmTMB::nbinom2), silent = TRUE)
         
         if (any(class(size.global.model) == "try-error")) {
           nox.size.model <- formulae$full.size.model
@@ -6145,8 +6146,8 @@ parasearch <- function(data, historical = TRUE, approach = "mixed",
           
           if (nox.size.model != formulae$full.size.model) {
             if (!quiet) {message("\nInitial global model estimation failed. Attempting a global model without interaction terms.\n")}
-            size.global.model <- try(glmmTMB::glmmTMB(formula = stats::as.formula(nox.size.model), data = size.data,
-                                                      ziformula=~0, family = glmmTMB::nbinom2), silent = TRUE)
+            size.global.model <- try(glmmTMB::glmmTMB(formula = stats::as.formula(nox.size.model),
+                data = size.data, ziformula=~0, family = glmmTMB::nbinom2), silent = TRUE)
           }
           
           nopat.size.model <- nox.size.model
@@ -6158,8 +6159,8 @@ parasearch <- function(data, historical = TRUE, approach = "mixed",
             
             if (nox.size.model != nopat.size.model) {
               if (!quiet) {message("\nGlobal model estimation difficulties. Attempting a global model without a patch term.")}
-              size.global.model <- try(glmmTMB::glmmTMB(formula = stats::as.formula(nopat.size.model), data = size.data,
-                                                        ziformula=~0, family = glmmTMB::nbinom2), silent = TRUE)
+              size.global.model <- try(glmmTMB::glmmTMB(formula = stats::as.formula(nopat.size.model), 
+                  data = size.data, ziformula=~0, family = glmmTMB::nbinom2), silent = TRUE)
             }
           }
           
@@ -6172,8 +6173,8 @@ parasearch <- function(data, historical = TRUE, approach = "mixed",
             
             if (noyr.size.model != nopat.size.model) {
               if (!quiet) {message("\nGlobal model estimation difficulties. Attempting a global model without a year term.")}
-              size.global.model <- try(glmmTMB::glmmTMB(formula = stats::as.formula(noyr.size.model), data = size.data,
-                                                        ziformula=~0, family = glmmTMB::nbinom2), silent = TRUE)
+              size.global.model <- try(glmmTMB::glmmTMB(formula = stats::as.formula(noyr.size.model), 
+                  data = size.data, ziformula=~0, family = glmmTMB::nbinom2), silent = TRUE)
             }
           }
           
@@ -6186,8 +6187,8 @@ parasearch <- function(data, historical = TRUE, approach = "mixed",
             
             if (noind.size.model != noyr.size.model) {
               if (!quiet) {message("\nGlobal model estimation difficulties. Attempting a global model without an individual identity term.")}
-              size.global.model <- try(glmmTMB::glmmTMB(formula = stats::as.formula(noind.size.model), data = size.data,
-                                                        ziformula=~0, family = glmmTMB::nbinom2), silent = TRUE)
+              size.global.model <- try(glmmTMB::glmmTMB(formula = stats::as.formula(noind.size.model),
+                  data = size.data, ziformula=~0, family = glmmTMB::nbinom2), silent = TRUE)
             }
           }
           
@@ -6201,8 +6202,8 @@ parasearch <- function(data, historical = TRUE, approach = "mixed",
         }
       }  else if (sizedist == "poisson" & size.zero) {
         if (!quiet) {message("\nDeveloping global model of size (Poisson)...\n");}
-        size.global.model <- try(glmmTMB::glmmTMB(formula = stats::as.formula(formulae$full.size.model), data = size.data,
-                                                  ziformula=~., family = "poisson"), silent = TRUE)
+        size.global.model <- try(glmmTMB::glmmTMB(formula = stats::as.formula(formulae$full.size.model),
+            data = size.data, ziformula=~., family = "poisson"), silent = TRUE)
         
         if (any(class(size.global.model) == "try-error")) {
           nox.size.model <- formulae$full.size.model
@@ -6234,8 +6235,8 @@ parasearch <- function(data, historical = TRUE, approach = "mixed",
           
           if (nox.size.model != formulae$full.size.model) {
             if (!quiet) {message("\nInitial global model estimation failed. Attempting a global model without interaction terms.\n")}
-            size.global.model <- try(glmmTMB::glmmTMB(formula = stats::as.formula(nox.size.model), data = size.data,
-                                                      ziformula=~., family = "poisson"), silent = TRUE)
+            size.global.model <- try(glmmTMB::glmmTMB(formula = stats::as.formula(nox.size.model),
+                data = size.data, ziformula=~., family = "poisson"), silent = TRUE)
           }
           
           nopat.size.model <- nox.size.model
@@ -6247,8 +6248,8 @@ parasearch <- function(data, historical = TRUE, approach = "mixed",
             
             if (nox.size.model != nopat.size.model) {
               if (!quiet) {message("\nGlobal model estimation difficulties. Attempting a global model without a patch term.")}
-              size.global.model <- try(glmmTMB::glmmTMB(formula = stats::as.formula(nopat.size.model), data = size.data,
-                                                        ziformula=~., family = "poisson"), silent = TRUE)
+              size.global.model <- try(glmmTMB::glmmTMB(formula = stats::as.formula(nopat.size.model),
+                  data = size.data, ziformula=~., family = "poisson"), silent = TRUE)
             }
           }
           
@@ -6261,8 +6262,8 @@ parasearch <- function(data, historical = TRUE, approach = "mixed",
             
             if (noyr.size.model != nopat.size.model) {
               if (!quiet) {message("\nGlobal model estimation difficulties. Attempting a global model without a year term.")}
-              size.global.model <- try(glmmTMB::glmmTMB(formula = stats::as.formula(noyr.size.model), data = size.data,
-                                                        ziformula=~., family = "poisson"), silent = TRUE)
+              size.global.model <- try(glmmTMB::glmmTMB(formula = stats::as.formula(noyr.size.model),
+                  data = size.data, ziformula=~., family = "poisson"), silent = TRUE)
             }
           }
           
@@ -6275,8 +6276,8 @@ parasearch <- function(data, historical = TRUE, approach = "mixed",
             
             if (noind.size.model != noyr.size.model) {
               if (!quiet) {message("\nGlobal model estimation difficulties. Attempting a global model without an individual identity term.")}
-              size.global.model <- try(glmmTMB::glmmTMB(formula = stats::as.formula(noind.size.model), data = size.data,
-                                                        ziformula=~., family = "poisson"), silent = TRUE)
+              size.global.model <- try(glmmTMB::glmmTMB(formula = stats::as.formula(noind.size.model),
+                  data = size.data, ziformula=~., family = "poisson"), silent = TRUE)
             }
           }
           
@@ -6290,8 +6291,8 @@ parasearch <- function(data, historical = TRUE, approach = "mixed",
         }
       } else if (sizedist == "negbin" & size.zero) {
         if (!quiet) {message("\nDeveloping global model of size (negative binomial)...\n");}
-        size.global.model <- try(glmmTMB::glmmTMB(formula = stats::as.formula(formulae$full.size.model), data = size.data,
-                                                  ziformula=~., family = glmmTMB::nbinom2), silent = TRUE)
+        size.global.model <- try(glmmTMB::glmmTMB(formula = stats::as.formula(formulae$full.size.model),
+            data = size.data, ziformula=~., family = glmmTMB::nbinom2), silent = TRUE)
         
         if (any(class(size.global.model) == "try-error")) {
           nox.size.model <- formulae$full.size.model
@@ -6323,8 +6324,8 @@ parasearch <- function(data, historical = TRUE, approach = "mixed",
           
           if (nox.size.model != formulae$full.size.model) {
             if (!quiet) {message("\nInitial global model estimation failed. Attempting a global model without interaction terms.\n")}
-            size.global.model <- try(glmmTMB::glmmTMB(formula = stats::as.formula(nox.size.model), data = size.data,
-                                                      ziformula=~., family = glmmTMB::nbinom2), silent = TRUE)
+            size.global.model <- try(glmmTMB::glmmTMB(formula = stats::as.formula(nox.size.model),
+                data = size.data, ziformula=~., family = glmmTMB::nbinom2), silent = TRUE)
           }
           
           nopat.size.model <- nox.size.model
@@ -6336,8 +6337,8 @@ parasearch <- function(data, historical = TRUE, approach = "mixed",
             
             if (nox.size.model != nopat.size.model) {
               if (!quiet) {message("\nGlobal model estimation difficulties. Attempting a global model without a patch term.")}
-              size.global.model <- try(glmmTMB::glmmTMB(formula = stats::as.formula(nopat.size.model), data = size.data,
-                                                        ziformula=~., family = glmmTMB::nbinom2), silent = TRUE)
+              size.global.model <- try(glmmTMB::glmmTMB(formula = stats::as.formula(nopat.size.model),
+                  data = size.data, ziformula=~., family = glmmTMB::nbinom2), silent = TRUE)
             }
           }
           
@@ -6350,8 +6351,8 @@ parasearch <- function(data, historical = TRUE, approach = "mixed",
             
             if (noyr.size.model != nopat.size.model) {
               if (!quiet) {message("\nGlobal model estimation difficulties. Attempting a global model without a year term.")}
-              size.global.model <- try(glmmTMB::glmmTMB(formula = stats::as.formula(noyr.size.model), data = size.data,
-                                                        ziformula=~., family = glmmTMB::nbinom2), silent = TRUE)
+              size.global.model <- try(glmmTMB::glmmTMB(formula = stats::as.formula(noyr.size.model),
+                  data = size.data, ziformula=~., family = glmmTMB::nbinom2), silent = TRUE)
             }
           }
           
@@ -6364,8 +6365,8 @@ parasearch <- function(data, historical = TRUE, approach = "mixed",
             
             if (noind.size.model != noyr.size.model) {
               if (!quiet) {message("\nGlobal model estimation difficulties. Attempting a global model without an individual identity term.")}
-              size.global.model <- try(glmmTMB::glmmTMB(formula = stats::as.formula(noind.size.model), data = size.data,
-                                                        ziformula=~., family = glmmTMB::nbinom2), silent = TRUE)
+              size.global.model <- try(glmmTMB::glmmTMB(formula = stats::as.formula(noind.size.model),
+                  data = size.data, ziformula=~., family = glmmTMB::nbinom2), silent = TRUE)
             }
           }
           
@@ -6387,8 +6388,8 @@ parasearch <- function(data, historical = TRUE, approach = "mixed",
     if (formulae$full.repst.model != 1) {
       if (is.element(0, repst.data$repstatus3) & is.element(1, repst.data$repstatus3)) {
         if (!quiet) {message("\nDeveloping global model of the probability of reproduction...\n"); }
-        repst.global.model <- try(lme4::glmer(formula = formulae$full.repst.model, data = repst.data, family = "binomial"),
-                                  silent = TRUE)
+        repst.global.model <- try(lme4::glmer(formula = formulae$full.repst.model,
+            data = repst.data, family = "binomial"), silent = TRUE)
         
         if (any(class(repst.global.model) == "try-error")) {
           nox.repst.model <- formulae$full.repst.model
@@ -6420,8 +6421,8 @@ parasearch <- function(data, historical = TRUE, approach = "mixed",
           
           if (nox.repst.model != formulae$full.repst.model) {
             if (!quiet) {message("\nInitial global model estimation failed. Attempting a global model without interaction terms.\n")}
-            repst.global.model <- try(lme4::glmer(formula = nox.repst.model, data = repst.data, family = "binomial"),
-                                      silent = TRUE)
+            repst.global.model <- try(lme4::glmer(formula = nox.repst.model,
+                data = repst.data, family = "binomial"), silent = TRUE)
           }
           
           nopat.repst.model <- nox.repst.model
@@ -6433,8 +6434,8 @@ parasearch <- function(data, historical = TRUE, approach = "mixed",
             
             if (nox.repst.model != nopat.repst.model) {
               if (!quiet) {message("\nGlobal model estimation difficulties. Attempting a global model without a patch term.")}
-              repst.global.model <- try(lme4::glmer(formula = nopat.repst.model, data = repst.data, family = "binomial"),
-                                        silent = TRUE)
+              repst.global.model <- try(lme4::glmer(formula = nopat.repst.model,
+                  data = repst.data, family = "binomial"), silent = TRUE)
             }
           }
           
@@ -6447,8 +6448,8 @@ parasearch <- function(data, historical = TRUE, approach = "mixed",
             
             if (noyr.repst.model != nopat.repst.model) {
               if (!quiet) {message("\nGlobal model estimation difficulties. Attempting a global model without a year term.")}
-              repst.global.model <- try(lme4::glmer(formula = noyr.repst.model, data = repst.data, family = "binomial"),
-                                        silent = TRUE)
+              repst.global.model <- try(lme4::glmer(formula = noyr.repst.model,
+                  data = repst.data, family = "binomial"), silent = TRUE)
             }
           }
           
@@ -6461,8 +6462,8 @@ parasearch <- function(data, historical = TRUE, approach = "mixed",
             
             if (noind.repst.model != noyr.repst.model) {
               if (!quiet) {message("\nGlobal model estimation difficulties. Attempting a global model without an individual identity term.")}
-              repst.global.model <- try(lme4::glmer(formula = noind.repst.model, data = repst.data, family = "binomial"),
-                                        silent = TRUE)
+              repst.global.model <- try(lme4::glmer(formula = noind.repst.model,
+                  data = repst.data, family = "binomial"), silent = TRUE)
             }
           }
           
@@ -6495,7 +6496,8 @@ parasearch <- function(data, historical = TRUE, approach = "mixed",
     if (formulae$full.fec.model != 1) {
       if (fecdist == "gaussian") {
         if (!quiet) {message("\nDeveloping global model of fecundity (Gaussian)...\n");}
-        fec.global.model <- try(lme4::lmer(formula = formulae$full.fec.model, data = fec.data), silent = TRUE)
+        fec.global.model <- try(lme4::lmer(formula = formulae$full.fec.model,
+            data = fec.data), silent = TRUE)
         
         if (any(class(fec.global.model) == "try-error")) {
           nox.fec.model <- formulae$full.fec.model
@@ -6527,8 +6529,8 @@ parasearch <- function(data, historical = TRUE, approach = "mixed",
           
           if (nox.fec.model != formulae$full.fec.model) {
             if (!quiet) {message("\nInitial global model estimation failed. Attempting a global model without interaction terms.\n")}
-            fec.global.model <- try(lme4::lmer(formula = nox.fec.model, data = fec.data),
-                                    silent = TRUE)
+            fec.global.model <- try(lme4::lmer(formula = nox.fec.model,
+                data = fec.data), silent = TRUE)
           }
           
           nopat.fec.model <- nox.fec.model
@@ -6540,8 +6542,8 @@ parasearch <- function(data, historical = TRUE, approach = "mixed",
             
             if (nox.fec.model != nopat.fec.model) {
               if (!quiet) {message("\nGlobal model estimation difficulties. Attempting a global model without a patch term.")}
-              fec.global.model <- try(lme4::lmer(formula = nopat.fec.model, data = fec.data),
-                                      silent = TRUE)
+              fec.global.model <- try(lme4::lmer(formula = nopat.fec.model,
+                  data = fec.data), silent = TRUE)
             }
           }
           
@@ -6554,8 +6556,8 @@ parasearch <- function(data, historical = TRUE, approach = "mixed",
             
             if (noyr.fec.model != nopat.fec.model) {
               if (!quiet) {message("\nGlobal model estimation difficulties. Attempting a global model without a year term.")}
-              fec.global.model <- try(lme4::lmer(formula = noyr.fec.model, data = fec.data),
-                                      silent = TRUE)
+              fec.global.model <- try(lme4::lmer(formula = noyr.fec.model,
+                  data = fec.data), silent = TRUE)
             }
           }
           
@@ -6568,8 +6570,8 @@ parasearch <- function(data, historical = TRUE, approach = "mixed",
             
             if (noind.fec.model != noyr.fec.model) {
               if (!quiet) {message("\nGlobal model estimation difficulties. Attempting a global model without an individual identity term.")}
-              fec.global.model <- try(lme4::lmer(formula = noind.fec.model, data = fec.data),
-                                      silent = TRUE)
+              fec.global.model <- try(lme4::lmer(formula = noind.fec.model,
+                  data = fec.data), silent = TRUE)
             }
           }
           
@@ -6582,8 +6584,8 @@ parasearch <- function(data, historical = TRUE, approach = "mixed",
         }
       } else if (fecdist == "poisson" & !fec.zero) {
         if (!quiet) {message("\nDeveloping global model of fecundity (Poisson)...\n");}
-        fec.global.model <- try(lme4::glmer(formula = formulae$full.fec.model, data = fec.data, family = "poisson"),
-                                silent = TRUE)
+        fec.global.model <- try(lme4::glmer(formula = formulae$full.fec.model,
+            data = fec.data, family = "poisson"), silent = TRUE)
         
         if (any(class(fec.global.model) == "try-error")) {
           nox.fec.model <- formulae$full.fec.model
@@ -6615,8 +6617,8 @@ parasearch <- function(data, historical = TRUE, approach = "mixed",
           
           if (nox.fec.model != formulae$full.fec.model) {
             if (!quiet) {message("\nInitial global model estimation failed. Attempting a global model without interaction terms.\n")}
-            fec.global.model <- try(lme4::glmer(formula = nox.fec.model, data = fec.data, family = "poisson"),
-                                    silent = TRUE)
+            fec.global.model <- try(lme4::glmer(formula = nox.fec.model,
+                data = fec.data, family = "poisson"), silent = TRUE)
           }
           
           nopat.fec.model <- nox.fec.model
@@ -6628,8 +6630,8 @@ parasearch <- function(data, historical = TRUE, approach = "mixed",
             
             if (nox.fec.model != nopat.fec.model) {
               if (!quiet) {message("\nGlobal model estimation difficulties. Attempting a global model without a patch term.")}
-              fec.global.model <- try(lme4::glmer(formula = nopat.fec.model, data = fec.data, family = "poisson"),
-                                      silent = TRUE)
+              fec.global.model <- try(lme4::glmer(formula = nopat.fec.model,
+                  data = fec.data, family = "poisson"), silent = TRUE)
             }
           }
           
@@ -6642,8 +6644,8 @@ parasearch <- function(data, historical = TRUE, approach = "mixed",
             
             if (noyr.fec.model != nopat.fec.model) {
               if (!quiet) {message("\nGlobal model estimation difficulties. Attempting a global model without a year term.")}
-              fec.global.model <- try(lme4::glmer(formula = noyr.fec.model, data = fec.data, family = "poisson"),
-                                      silent = TRUE)
+              fec.global.model <- try(lme4::glmer(formula = noyr.fec.model,
+                  data = fec.data, family = "poisson"), silent = TRUE)
             }
           }
           
@@ -6656,8 +6658,8 @@ parasearch <- function(data, historical = TRUE, approach = "mixed",
             
             if (noind.fec.model != noyr.fec.model) {
               if (!quiet) {message("\nGlobal model estimation difficulties. Attempting a global model without an individual identity term.")}
-              fec.global.model <- try(lme4::glmer(formula = noind.fec.model, data = fec.data, family = "poisson"),
-                                      silent = TRUE)
+              fec.global.model <- try(lme4::glmer(formula = noind.fec.model,
+                  data = fec.data, family = "poisson"), silent = TRUE)
             }
           }
           
@@ -6670,8 +6672,8 @@ parasearch <- function(data, historical = TRUE, approach = "mixed",
         }
       } else if (fecdist == "negbin" & !fec.zero) {
         if (!quiet) {message("\nDeveloping global model of fecundity (negative binomial)...\n");}
-        fec.global.model <- try(glmmTMB::glmmTMB(formula = stats::as.formula(formulae$full.fec.model), data = fec.data,
-                                                 ziformula=~0, family = glmmTMB::nbinom2), silent = TRUE)
+        fec.global.model <- try(glmmTMB::glmmTMB(formula = stats::as.formula(formulae$full.fec.model),
+            data = fec.data, ziformula=~0, family = glmmTMB::nbinom2), silent = TRUE)
         
         if (any(class(fec.global.model) == "try-error")) {
           nox.fec.model <- formulae$full.fec.model
@@ -6703,8 +6705,8 @@ parasearch <- function(data, historical = TRUE, approach = "mixed",
           
           if (nox.fec.model != formulae$full.fec.model) {
             if (!quiet) {message("\nInitial global model estimation failed. Attempting a global model without interaction terms.\n")}
-            fec.global.model <- try(glmmTMB::glmmTMB(formula = stats::as.formula(nox.fec.model), data = fec.data,
-                                                     ziformula=~0, family = glmmTMB::nbinom2), silent = TRUE)
+            fec.global.model <- try(glmmTMB::glmmTMB(formula = stats::as.formula(nox.fec.model),
+                data = fec.data, ziformula=~0, family = glmmTMB::nbinom2), silent = TRUE)
           }
           
           nopat.fec.model <- nox.fec.model
@@ -6716,8 +6718,8 @@ parasearch <- function(data, historical = TRUE, approach = "mixed",
             
             if (nox.fec.model != nopat.fec.model) {
               if (!quiet) {message("\nGlobal model estimation difficulties. Attempting a global model without a patch term.")}
-              fec.global.model <- try(glmmTMB::glmmTMB(formula = stats::as.formula(nopat.fec.model), data = fec.data,
-                                                       ziformula=~0, family = glmmTMB::nbinom2), silent = TRUE)
+              fec.global.model <- try(glmmTMB::glmmTMB(formula = stats::as.formula(nopat.fec.model),
+                  data = fec.data, ziformula=~0, family = glmmTMB::nbinom2), silent = TRUE)
             }
           }
           
@@ -6730,8 +6732,8 @@ parasearch <- function(data, historical = TRUE, approach = "mixed",
             
             if (noyr.fec.model != nopat.fec.model) {
               if (!quiet) {message("\nGlobal model estimation difficulties. Attempting a global model without a year term.")}
-              fec.global.model <- try(glmmTMB::glmmTMB(formula = stats::as.formula(noyr.fec.model), data = fec.data,
-                                                       ziformula=~0, family = glmmTMB::nbinom2), silent = TRUE)
+              fec.global.model <- try(glmmTMB::glmmTMB(formula = stats::as.formula(noyr.fec.model),
+                  data = fec.data, ziformula=~0, family = glmmTMB::nbinom2), silent = TRUE)
             }
           }
           
@@ -6744,8 +6746,8 @@ parasearch <- function(data, historical = TRUE, approach = "mixed",
             
             if (noind.fec.model != noyr.fec.model) {
               if (!quiet) {message("\nGlobal model estimation difficulties. Attempting a global model without an individual identity term.")}
-              fec.global.model <- try(glmmTMB::glmmTMB(formula = stats::as.formula(noind.fec.model), data = fec.data,
-                                                       ziformula=~0, family = glmmTMB::nbinom2), silent = TRUE)
+              fec.global.model <- try(glmmTMB::glmmTMB(formula = stats::as.formula(noind.fec.model),
+                  data = fec.data, ziformula=~0, family = glmmTMB::nbinom2), silent = TRUE)
             }
           }
           
@@ -6758,8 +6760,8 @@ parasearch <- function(data, historical = TRUE, approach = "mixed",
         }
       }  else if (fecdist == "poisson" & fec.zero) {
         if (!quiet) {message("\nDeveloping global model of fecundity (Poisson)...\n");}
-        fec.global.model <- try(glmmTMB::glmmTMB(formula = stats::as.formula(formulae$full.fec.model), data = fec.data,
-                                                 ziformula=~., family = "poisson"), silent = TRUE)
+        fec.global.model <- try(glmmTMB::glmmTMB(formula = stats::as.formula(formulae$full.fec.model),
+            data = fec.data, ziformula=~., family = "poisson"), silent = TRUE)
         
         if (any(class(fec.global.model) == "try-error")) {
           nox.fec.model <- formulae$full.fec.model
@@ -6791,8 +6793,8 @@ parasearch <- function(data, historical = TRUE, approach = "mixed",
           
           if (nox.fec.model != formulae$full.fec.model) {
             if (!quiet) {message("\nInitial global model estimation failed. Attempting a global model without interaction terms.\n")}
-            fec.global.model <- try(glmmTMB::glmmTMB(formula = stats::as.formula(nox.fec.model), data = fec.data,
-                                                     ziformula=~., family = "poisson"), silent = TRUE)
+            fec.global.model <- try(glmmTMB::glmmTMB(formula = stats::as.formula(nox.fec.model),
+                data = fec.data, ziformula=~., family = "poisson"), silent = TRUE)
           }
           
           nopat.fec.model <- nox.fec.model
@@ -6804,8 +6806,8 @@ parasearch <- function(data, historical = TRUE, approach = "mixed",
             
             if (nox.fec.model != nopat.fec.model) {
               if (!quiet) {message("\nGlobal model estimation difficulties. Attempting a global model without a patch term.")}
-              fec.global.model <- try(glmmTMB::glmmTMB(formula = stats::as.formula(nopat.fec.model), data = fec.data,
-                                                       ziformula=~., family = "poisson"), silent = TRUE)
+              fec.global.model <- try(glmmTMB::glmmTMB(formula = stats::as.formula(nopat.fec.model),
+                  data = fec.data, ziformula=~., family = "poisson"), silent = TRUE)
             }
           }
           
@@ -6818,8 +6820,8 @@ parasearch <- function(data, historical = TRUE, approach = "mixed",
             
             if (noyr.fec.model != nopat.fec.model) {
               if (!quiet) {message("\nGlobal model estimation difficulties. Attempting a global model without a year term.")}
-              fec.global.model <- try(glmmTMB::glmmTMB(formula = stats::as.formula(noyr.fec.model), data = fec.data,
-                                                       ziformula=~., family = "poisson"), silent = TRUE)
+              fec.global.model <- try(glmmTMB::glmmTMB(formula = stats::as.formula(noyr.fec.model),
+                  data = fec.data, ziformula=~., family = "poisson"), silent = TRUE)
             }
           }
           
@@ -6832,8 +6834,8 @@ parasearch <- function(data, historical = TRUE, approach = "mixed",
             
             if (noind.fec.model != noyr.fec.model) {
               if (!quiet) {message("\nGlobal model estimation difficulties. Attempting a global model without an individual identity term.")}
-              fec.global.model <- try(glmmTMB::glmmTMB(formula = stats::as.formula(noind.fec.model), data = fec.data,
-                                                       ziformula=~., family = "poisson"), silent = TRUE)
+              fec.global.model <- try(glmmTMB::glmmTMB(formula = stats::as.formula(noind.fec.model),
+                  data = fec.data, ziformula=~., family = "poisson"), silent = TRUE)
             }
           }
           
@@ -6846,8 +6848,8 @@ parasearch <- function(data, historical = TRUE, approach = "mixed",
         }
       } else if (fecdist == "negbin" & fec.zero) {
         if (!quiet) {message("\nDeveloping global model of fecundity (negative binomial)...\n");}
-        fec.global.model <- try(glmmTMB::glmmTMB(formula = stats::as.formula(formulae$full.fec.model), data = fec.data,
-                                                 ziformula=~., family = glmmTMB::nbinom2), silent = TRUE)
+        fec.global.model <- try(glmmTMB::glmmTMB(formula = stats::as.formula(formulae$full.fec.model),
+            data = fec.data, ziformula=~., family = glmmTMB::nbinom2), silent = TRUE)
         
         if (any(class(fec.global.model) == "try-error")) {
           nox.fec.model <- formulae$full.fec.model
@@ -6879,8 +6881,8 @@ parasearch <- function(data, historical = TRUE, approach = "mixed",
           
           if (nox.fec.model != formulae$full.fec.model) {
             if (!quiet) {message("\nInitial global model estimation failed. Attempting a global model without interaction terms.\n")}
-            fec.global.model <- try(glmmTMB::glmmTMB(formula = stats::as.formula(nox.fec.model), data = fec.data,
-                                                     ziformula=~., family = glmmTMB::nbinom2), silent = TRUE)
+            fec.global.model <- try(glmmTMB::glmmTMB(formula = stats::as.formula(nox.fec.model),
+                data = fec.data, ziformula=~., family = glmmTMB::nbinom2), silent = TRUE)
           }
           
           nopat.fec.model <- nox.fec.model
@@ -6892,8 +6894,8 @@ parasearch <- function(data, historical = TRUE, approach = "mixed",
             
             if (nox.fec.model != nopat.fec.model) {
               if (!quiet) {message("\nGlobal model estimation difficulties. Attempting a global model without a patch term.")}
-              fec.global.model <- try(glmmTMB::glmmTMB(formula = stats::as.formula(nopat.fec.model), data = fec.data,
-                                                       ziformula=~., family = glmmTMB::nbinom2), silent = TRUE)
+              fec.global.model <- try(glmmTMB::glmmTMB(formula = stats::as.formula(nopat.fec.model),
+                  data = fec.data, ziformula=~., family = glmmTMB::nbinom2), silent = TRUE)
             }
           }
           
@@ -6906,8 +6908,8 @@ parasearch <- function(data, historical = TRUE, approach = "mixed",
             
             if (noyr.fec.model != nopat.fec.model) {
               if (!quiet) {message("\nGlobal model estimation difficulties. Attempting a global model without a year term.")}
-              fec.global.model <- try(glmmTMB::glmmTMB(formula = stats::as.formula(noyr.fec.model), data = fec.data,
-                                                       ziformula=~., family = glmmTMB::nbinom2), silent = TRUE)
+              fec.global.model <- try(glmmTMB::glmmTMB(formula = stats::as.formula(noyr.fec.model),
+                  data = fec.data, ziformula=~., family = glmmTMB::nbinom2), silent = TRUE)
             }
           }
           
@@ -6920,8 +6922,8 @@ parasearch <- function(data, historical = TRUE, approach = "mixed",
             
             if (noind.fec.model != noyr.fec.model) {
               if (!quiet) {message("\nGlobal model estimation difficulties. Attempting a global model without an individual identity term.")}
-              fec.global.model <- try(glmmTMB::glmmTMB(formula = stats::as.formula(noind.fec.model), data = fec.data,
-                                                       ziformula=~., family = glmmTMB::nbinom2), silent = TRUE)
+              fec.global.model <- try(glmmTMB::glmmTMB(formula = stats::as.formula(noind.fec.model),
+                  data = fec.data, ziformula=~., family = glmmTMB::nbinom2), silent = TRUE)
             }
           }
           
