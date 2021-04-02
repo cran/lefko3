@@ -44,6 +44,53 @@ arma::vec moreflagrantcrap(arma::mat Xmat) {
   return newcol;
 }
 
+//' Historical to Ahistorical Matrix Conversion (Sums)
+//' 
+//' Function \code{shopliftersunite} sums historical elements in matrices and
+//' outputs the corresponding ahistorical matrices. This is typically used for
+//' elasticity matrices, because their elements can be summed.
+//' 
+//' @param hmats A historical matrix.
+//' @param hstages The \code{hstages} portion of a historical \code{lefkoElas}
+//' object.
+//' @param ahstages The \code{ahstages} portion of a historical \code{lefkoElas}
+//' object.
+//' 
+//' @return A matrix in the dimensions of the ahistorical matrices corresponding
+//' to \code{hmats}.
+//' 
+//' @keywords internal
+//' @noRd
+// [[Rcpp::export]]
+arma::mat shopliftersunite(arma::mat hmats, DataFrame hstages,
+  DataFrame ahstages) {
+  
+  arma::uvec hstage2 = hstages["stage_id_2"];
+  arma::uvec hstage1 = hstages["stage_id_1"];
+  arma::uvec ahstage2 = ahstages["stage_id"];
+  
+  int h_rows = hmats.n_rows;
+  int h_cols = hmats.n_cols;
+  
+  int hstages_all = hstage2.n_elem;
+  int ahstages_all = ahstage2.n_elem;
+  
+  if (hstages_all != h_cols) {
+    stop("The number of historical stage pairs does not match.");
+  }
+  
+  arma::mat ahmats(ahstages_all, ahstages_all);
+  ahmats.zeros();
+  
+  for (int i = 0; i < h_cols; i++) {
+    for (int j = 0; j < h_rows; j++) {
+      ahmats((hstage2(j) - 1), (hstage1(i) - 1)) = ahmats((hstage2(j) - 1), (hstage1(i) - 1)) + hmats(j, i);
+    }
+  }
+  
+  return(ahmats);
+}
+
 //' Estimates Mean LefkoMat Object for Historical MPM
 //' 
 //' Function \code{turbogeodiesel()} estimates mean historical population
@@ -317,8 +364,10 @@ List turbogeodiesel(DataFrame loy, List Umats, List Fmats, DataFrame stages,
 
 //' Estimates Mean LefkoMat Object for Ahistorical MPM
 //' 
-//' Function \code{geodiesel()} estimates mean ahistorical population projection
-//' matrices, treating the mean as element-wise arithmetic.
+//' Function \code{geodiesel()} estimates mean ahistorical population
+//' projection matrices, treating the mean as element-wise arithmetic. The
+//' function can handle both normal ahistorical MPMs and age x stage ahistorical
+//' MPMs.
 //' 
 //' @param loy A data frame denoting the population, patch, and time step
 //' designation of each matrix. Includes a total of 9 variables.
@@ -430,7 +479,14 @@ List geodiesel(DataFrame loy, List Umats, List Fmats, DataFrame stages,
   
   // This next chunk predicts which elements will be targeted for arithmetic mean estimation
   arma::uvec astages = stages["stage_id"];
-  int numstages = astages.n_elem;
+  int initialstages = astages.n_elem;
+  
+  // Now we will tet for the presence of ages, and determine the matrix dimensions required
+  arma::mat initUmat = Umats(0);
+  int colsused = initUmat.n_cols;
+  int agemultiplier = colsused / initialstages;
+  
+  int numstages = astages.n_elem * agemultiplier;
   
   // Now we build a U and F matrices of element-wise arithmetic means, where
   // each column corresponds to the predicted non-zero elements of each mean
@@ -706,6 +762,7 @@ arma::vec ss3matrix(arma::mat Amat) {
   
   cx_mat rightvec = eigenstuff["right_eigenvectors"];
   arma::vec realrightvec = real(rightvec.col(lambda1));
+  realrightvec.clean(0.0000000001); // This line replaces all numbers lower than 1 x 10-10 with 0
   
   double rvsum = sum(realrightvec);
   int rvel = realrightvec.n_elem;
@@ -751,7 +808,7 @@ arma::vec ss3matrixsp(arma::mat Amat) {
   
   cx_mat rightvec = eigenstuff["right_eigenvectors"];
   arma::vec realrightvec = real(rightvec.col(lambda1));
-  realrightvec.clean(0.00000000000001); // This line replaces all numbers lower than 1 x 10-14 with 0
+  realrightvec.clean(0.0000000001); // This line replaces all numbers lower than 1 x 10-10 with 0
   
   double rvsum = sum(realrightvec);
   int rvel = realrightvec.n_elem;
@@ -801,6 +858,7 @@ arma::vec rv3matrix(arma::mat Amat) {
   
   cx_mat leftvec = eigenstuff["left_eigenvectors"];
   arma::vec realleftvec = real(leftvec.col(lambda1));
+  realleftvec.clean(0.0000000001); // This line replaces all numbers lower than 1 x 10-10 with 0
   arma::vec rlvabs = abs(realleftvec);
   
   // This section identifies the first non-zero element of the reproductive value vector
@@ -858,7 +916,7 @@ arma::vec rv3matrixsp(arma::mat Amat) {
   
   cx_mat leftvec = eigenstuff["left_eigenvectors"];
   arma::vec realleftvec = real(leftvec.col(lambda1));
-  realleftvec.clean(0.00000000000001); // This line replaces all numbers lower than 1 x 10-14 with 0
+  realleftvec.clean(0.0000000001); // This line replaces all numbers lower than 1 x 10-10 with 0
   arma::vec rlvabs = abs(realleftvec);
   
   // This section identifies the first non-zero element of the reproductive value vector
@@ -902,6 +960,7 @@ arma::mat sens3matrix(arma::mat Amat) {
   // This is the w vector
   cx_mat rightvec = eigenstuff["right_eigenvectors"];
   arma::vec realrightvec = real(rightvec.col(lambda1));
+  realrightvec.clean(0.00000000000001); // This line replaces all numbers lower than 1 x 10-14 with 0
   
   double rvsum = sum(realrightvec);
   int rvel = realrightvec.n_elem;
@@ -909,6 +968,7 @@ arma::mat sens3matrix(arma::mat Amat) {
   // This is the v vector
   cx_mat leftvec = eigenstuff["left_eigenvectors"];
   arma::vec realleftvec = real(leftvec.col(lambda1));
+  realleftvec.clean(0.00000000000001); // This line replaces all numbers lower than 1 x 10-14 with 0
   arma::vec rlvabs = abs(realleftvec);
   
   arma::uvec rlvabsalt = find(rlvabs);
@@ -1046,16 +1106,17 @@ List sens3hlefko(arma::mat Amat, DataFrame ahstages, DataFrame hstages) {
   // This is the w vector
   cx_mat rightvec = eigenstuff["right_eigenvectors"];
   arma::vec realrightvec = real(rightvec.col(lambda1));
-  realrightvec.clean(0.00000000000001); // This line replaces all numbers lower than 1 x 10-14 with 0
-  
-  double rvsum = sum(realrightvec);
-  int rvel = realrightvec.n_elem;
+  arma::vec rrvabs = abs(realrightvec);
+  rrvabs.clean(0.00000000000001); // This line replaces all numbers lower than 1 x 10-14 with 0
+
+  double rvsum = sum(rrvabs);
+  int rvel = rrvabs.n_elem;
   
   // This is the v vector
   cx_mat leftvec = eigenstuff["left_eigenvectors"];
   arma::vec realleftvec = real(leftvec.col(lambda1));
-  realleftvec.clean(0.00000000000001); // This line replaces all numbers lower than 1 x 10-14 with 0
   arma::vec rlvabs = abs(realleftvec);
+  rlvabs.clean(0.00000000000001); // This line replaces all numbers lower than 1 x 10-14 with 0
   
   arma::uvec rlvabsalt = find(rlvabs);
   int rlvminelem = rlvabsalt(0);
@@ -1083,8 +1144,8 @@ List sens3hlefko(arma::mat Amat, DataFrame ahstages, DataFrame hstages) {
   
   // This loop and the following line create the scalar product vw and the ahistorical stable stage distribution w
   for (int i = 0; i < rvel; i++) {
-    wcorr(i) = realrightvec(i) / rvsum;
-    vcorr(i) = realleftvec(i) / rlvmin;
+    wcorr(i) = rrvabs(i) / rvsum;
+    vcorr(i) = rlvabs(i) / rlvmin;
     
     vwprod(i) = wcorr(i) * vcorr(i);
     
@@ -1099,10 +1160,15 @@ List sens3hlefko(arma::mat Amat, DataFrame ahstages, DataFrame hstages) {
   for (int i = 0; i < rvel; i++) {
     ahrows = h_stage_2(i) - 1;
     
-    vcorrah(ahrows) = vcorr(i) * wcorr(i) / wcorrah(ahrows);
+    if (wcorrah(ahrows) != 0) {
+      vcorrah(ahrows) = vwprod(i) / wcorrah(ahrows) + vcorrah(ahrows);
+    } else {
+      // This line deals with the fact that some stages are associated with expected corrected stable stage proportions of 0
+      vcorrah(ahrows) = 0 + vcorrah(ahrows);
+    }
   }
   
-  // This loop populates the historical and ahistorical elasticity matrices
+  // This loop populates the historical and ahistorical sensitivity matrices
   for (int i = 0; i < rvel; i++) {
     for (int j = 0; j < rvel; j++) {
       
@@ -1153,6 +1219,7 @@ arma::mat elas3matrix(arma::mat Amat) {
   // This is the w vector
   cx_mat rightvec = eigenstuff["right_eigenvectors"];
   arma::vec realrightvec = real(rightvec.col(lambda1));
+  realrightvec.clean(0.00000000000001); // This line replaces all numbers lower than 1 x 10-14 with 0
   
   double rvsum = sum(realrightvec);
   int rvel = realrightvec.n_elem;
@@ -1160,6 +1227,7 @@ arma::mat elas3matrix(arma::mat Amat) {
   // This is the v vector
   cx_mat leftvec = eigenstuff["left_eigenvectors"];
   arma::vec realleftvec = real(leftvec.col(lambda1));
+  realleftvec.clean(0.00000000000001); // This line replaces all numbers lower than 1 x 10-14 with 0
   arma::vec rlvabs = abs(realleftvec);
   
   arma::uvec rlvabsalt = find(rlvabs);
@@ -1366,40 +1434,85 @@ List elas3hlefko(arma::mat Amat, DataFrame ahstages, DataFrame hstages) {
 //' @param mat_order A vector giving the order of matrices to use at each time.
 //' @param standardize A logical value stating whether to standardize population
 //' size vector to sum to 1 at each estimated time.
-//' @param forward A logical value stating whether the projection should be a
-//' forward projetion. Should generally be true, except in certain cases where
-//' reverse-time vectors or matrices need to be created, as in
-//' \code{\link{stochsens}()}.
+//' @param growthonly A logical value stating whether to output a matrix
+//' showing the change in population size from one year to the next for use in
+//' stochastic population growth rate estimation (TRUE), or a matrix containing
+//' the w and v projections for stochastic perturbation analysis, stage
+//' distribution estimation, and reproductive value estimation.
+//' @param integeronly A logical value indicating whether to round all projected
+//' numbers of individuals to the nearest integer.
 //' 
-//' @return A matrix in which each row is the population vector at each 
-//' projected time. This matrix can contain raw versiomns of the w and v
-//' vectors needed for stochastic sensitivity and elasticity estimation.
+//' @return A matrix in which, if \code{growthonly = TRUE}, each row is the
+//' population vector at each projected time, and if \code{growthonly = FALSE},
+//' the top half of the matrix is the w projection (stage distribution) and the
+//' bottom half is the v projection (reproductive values) for use in estimation
+//' of stochastic sensitivities and elasticities (in addition, a further row is
+//' appended to the bottom, corresponding to the R vector, which is the
+//' sum of the unstandardized w vector resulting from each time step's
+//' projection).
+//' 
+//' @section Notes:
+//' This function uses dense matrix approaches except for sparse matrices with
+//' over 400 rows, which are projected using sparse matrix multiplication.
 //' 
 //' @keywords internal
 //' @noRd
 // [[Rcpp::export]]
 arma::mat proj3(arma::vec start_vec, List core_list, arma::uvec mat_order,
-                bool standardize, bool forward) {
+  bool standardize, bool growthonly, bool integeronly) {
+  
+  int sparse_switch {0};
   
   int nostages = start_vec.n_elem;
   int theclairvoyant = mat_order.n_elem;
   arma::vec thechosenone;
+  arma::rowvec thechosentwo;
   arma::vec theseventhson;
+  arma::vec theseventhgrandson;
   arma::mat theprophecy;
-  arma::sp_mat theprophecy_sp;
+  arma::mat thesecondprophecy;
   
   arma::mat popproj(nostages, (theclairvoyant + 1)); // This is the population vector
+  arma::mat wpopproj(nostages, (theclairvoyant + 1)); // This is the population vector
+  arma::mat vpopproj(nostages, (theclairvoyant + 1)); // This is the population vector
+  arma::mat Rvecmat(1, (theclairvoyant+1));
   popproj.zeros();
+  wpopproj.zeros();
+  vpopproj.zeros();
+  Rvecmat.zeros();
   
   thechosenone = start_vec;
+  thechosentwo = start_vec.as_row();
   
-  theprophecy = as<arma::mat>(core_list[mat_order(0)]);
+  arma::mat finaloutput;
   
-  if (forward) {
-    popproj.col(0) = start_vec;
-    
+  // Here we will check if the matrix is large and sparse
+  arma::mat testmat = core_list(0);
+  int test_rows = testmat.n_rows;
+  int test_elems = testmat.n_elem;
+  arma::uvec nonzero_elems = find(testmat);
+  int all_nonzeros = nonzero_elems.n_elem;
+  double sparse_check = static_cast<double>(all_nonzeros) / static_cast<double>(test_elems);
+  if (sparse_check <= 0.5 && test_rows > 400) {
+    sparse_switch = 1;
+  } else sparse_switch = 0;
+  
+  // Now the projection
+  popproj.col(0) = start_vec;
+  if (!growthonly) {
+    wpopproj.col(0) = start_vec / sum(start_vec);
+    vpopproj.col(theclairvoyant) = start_vec / sum(start_vec);
+  }
+  
+  if (sparse_switch == 0) {
+    // Dense matrix projection
     for (int i = 0; i < theclairvoyant; i++) {
+      theprophecy = as<arma::mat>(core_list[(mat_order(i))]);
+      
       theseventhson = theprophecy * thechosenone;
+      if (integeronly) {
+        theseventhson = floor(theseventhson);
+      }
       popproj.col(i+1) = theseventhson;
       
       if (standardize) {
@@ -1408,19 +1521,45 @@ arma::mat proj3(arma::vec start_vec, List core_list, arma::uvec mat_order,
         thechosenone = theseventhson;
       }
       
-      theprophecy = as<arma::mat>(core_list[(mat_order(i))]);
+      if (!growthonly) {
+        wpopproj.col(i+1) = thechosenone;
+        Rvecmat(i+1) = sum(theseventhson);
+        
+        thesecondprophecy = as<arma::mat>(core_list[(mat_order(theclairvoyant - (i+1)))]);
+        arma::rowvec theseventhrow = thechosentwo * thesecondprophecy;
+        
+        theseventhgrandson = theseventhrow.as_col();
+        
+        thechosentwo = theseventhrow / sum(theseventhrow);
+        
+        arma::vec  midwife = theseventhgrandson / sum(theseventhgrandson);
+        vpopproj.col(theclairvoyant - (i+1)) = midwife;
+      }
     }
   } else {
-    popproj.col(theclairvoyant) = start_vec;
+    // Sparse matrix projection
+    int matlist_length = core_list.size();
+    arma::mat first_mat = core_list(0);
+    arma::sp_mat new_sparse = arma::sp_mat(first_mat);
+    Rcpp::List sparse_list = List::create(_["1"] = new_sparse);
+    if(matlist_length > 1) {
+      for (int i = 1; i < matlist_length; i++) {
+        first_mat = as<arma::mat>(core_list(i));
+        new_sparse = arma::sp_mat(first_mat);
+        sparse_list.push_back(new_sparse);
+      }
+    }
+    arma::sp_mat sparse_prophecy;
+    arma::sp_mat sparse_secondprophecy;
     
-    theprophecy = as<arma::mat>(core_list[mat_order(theclairvoyant - 1)]);
-    
-    for (int i = theclairvoyant; i > 0; i--) {
-      arma::rowvec thechosenrow = thechosenone.as_row();
-      arma::rowvec theseventhrow = thechosenrow * theprophecy;
+    for (int i = 0; i < theclairvoyant; i++) {
+      sparse_prophecy = as<arma::sp_mat>(sparse_list[(mat_order(i))]);
       
-      theseventhson = theseventhrow.as_col();
-      popproj.col(i-1) = theseventhson;
+      theseventhson = sparse_prophecy * thechosenone;
+      if (integeronly) {
+        theseventhson = floor(theseventhson);
+      }
+      popproj.col(i+1) = theseventhson;
       
       if (standardize) {
         thechosenone = theseventhson / sum(theseventhson);
@@ -1428,11 +1567,504 @@ arma::mat proj3(arma::vec start_vec, List core_list, arma::uvec mat_order,
         thechosenone = theseventhson;
       }
       
-      theprophecy = as<arma::mat>(core_list[(mat_order(i-1))]);
+      if (!growthonly) {
+        wpopproj.col(i+1) = thechosenone;
+        Rvecmat(i+1) = sum(theseventhson);
+        
+        sparse_secondprophecy = as<arma::sp_mat>(sparse_list[(mat_order(theclairvoyant - (i+1)))]);
+        arma::rowvec theseventhrow = thechosentwo * sparse_secondprophecy;
+        
+        theseventhgrandson = theseventhrow.as_col();
+        
+        thechosentwo = theseventhrow / sum(theseventhrow);
+        
+        arma::vec  midwife = theseventhgrandson / sum(theseventhgrandson);
+        vpopproj.col(theclairvoyant - (i+1)) = midwife;
+      }
     }
   }
   
-  return popproj;
+  if (growthonly) {
+    return popproj;
+  } else {
+    arma::mat revised_vproj = join_cols(vpopproj, Rvecmat);
+    arma::mat expanded_proj = join_cols(wpopproj, revised_vproj);
+    
+    return join_cols(popproj, expanded_proj);
+  }
+}
+
+//' Estimate Stochastic Population Growth Rate
+//' 
+//' Function \code{projection3()} projects the population forward in time by
+//' a user-defined number of time steps. Projections may be deterministic or
+//' stochastic. If deterministic, then projections will be cyclical if mjultiple
+//' years of matrices exist for each population or patch. If stochastic, then
+//' annual matrices will be shuffled within patches and populations.
+//' 
+//' @param mpm A matrix projection model of class \code{lefkoMat}, or a list of
+//' full matrix projection matrices.
+//' @param times Number of iterations to random samples. Defaults to 10,000.
+//' @param stochastic A logical value denoting whether to conduct a stochastic
+//' projection or a deterministic / cyclical projection.
+//' @param standardize A logical value denoting whether to re-standardize the
+//' population size to 1.0 at each time step. Defaults to FALSE.
+//' @param growthonly A logical value indicating whether to produce only the
+//' projected population size at each time step, or a vector showing the stage
+//' distribution followed by the reproductive value vector followed by the full
+//' population size at each time step. Defaults to TRUE.
+//' @param integeronly A logical value indicating whether to round the number of
+//' individuals projected in each stage at each time step to the nearest
+//' integer. Defaults to FALSE.
+//' @param start_vec An optional numeric vector denoting the starting stage
+//' distribution for the projection. Defaults to a single individual of each
+//' stage.
+//' @param tweights An optional numeric vector denoting the probabilistic
+//' weightings of annual matrices. Defaults to equal weighting among times.
+//' 
+//' @return A list with two elements:
+//' \item{projection}{A list of matrices showing the total number of individuals
+//' per stage per time step, or showing the former with the projected stage 
+//' distribution and reproductive value per stage per time step followed by
+//' the total population size per time step (all row-bound in order).}
+//' \item{labels}{A data frame showing the order of populations and patches in
+//' item \code{projection}.}
+//' 
+//' Projections are run both at the patch level and at the population level.
+//' Population level estimates will be noted at the end of the
+//' data frame with 0 entries for patch designation.
+//' 
+//' @section Notes:
+//' Weightings given in \code{tweights} do not need to sum to 1. Final
+//' weightings used will be based on the proportion per element of the sum of
+//' elements in the user-supplied vector.
+//'
+//' @examples
+//' # Lathyrus example
+//' data(lathyrus)
+//' 
+//' sizevector <- c(0, 100, 13, 127, 3730, 3800, 0)
+//' stagevector <- c("Sd", "Sdl", "VSm", "Sm", "VLa", "Flo", "Dorm")
+//' repvector <- c(0, 0, 0, 0, 0, 1, 0)
+//' obsvector <- c(0, 1, 1, 1, 1, 1, 0)
+//' matvector <- c(0, 0, 1, 1, 1, 1, 1)
+//' immvector <- c(1, 1, 0, 0, 0, 0, 0)
+//' propvector <- c(1, 0, 0, 0, 0, 0, 0)
+//' indataset <- c(0, 1, 1, 1, 1, 1, 1)
+//' binvec <- c(0, 100, 11, 103, 3500, 3800, 0.5)
+//' 
+//' lathframe <- sf_create(sizes = sizevector, stagenames = stagevector,
+//'   repstatus = repvector, obsstatus = obsvector, matstatus = matvector,
+//'   immstatus = immvector, indataset = indataset, binhalfwidth = binvec,
+//'   propstatus = propvector)
+//' 
+//' lathvert <- verticalize3(lathyrus, noyears = 4, firstyear = 1988,
+//'   patchidcol = "SUBPLOT", individcol = "GENET", blocksize = 9,
+//'   juvcol = "Seedling1988", sizeacol = "Volume88", repstracol = "FCODE88",
+//'   fecacol = "Intactseed88", deadacol = "Dead1988",
+//'   nonobsacol = "Dormant1988", stageassign = lathframe, stagesize = "sizea",
+//'   censorcol = "Missing1988", censorkeep = NA, censor = TRUE)
+//' 
+//' lathrepm <- matrix(0, 7, 7)
+//' lathrepm[1, 6] <- 0.345
+//' lathrepm[2, 6] <- 0.054
+//' 
+//' lathover3 <- overwrite(stage3 = c("Sd", "Sd", "Sdl"),
+//'   stage2 = c("Sd", "Sd", "Sd"), stage1 = c("Sd", "rep", "rep"),
+//'   givenrate = c(0.345, 0.345, 0.054))
+//' 
+//' ehrlen3 <- rlefko3(data = lathvert, stageframe = lathframe,
+//'   year = c(1989, 1990), stages = c("stage3", "stage2", "stage1"),
+//'   repmatrix = lathrepm, overwrite = lathover3, yearcol = "year2",
+//'   indivcol = "individ")
+//' 
+//' lathproj <- projection3(ehrlen3, stochastic = TRUE)
+//' 
+//' # Cypripedium example
+//' rm(list = ls(all=TRUE))
+//' data(cypdata)
+//'  
+//' sizevector <- c(0, 0, 0, 0, 0, 0, 1, 2.5, 4.5, 8, 17.5)
+//' stagevector <- c("SD", "P1", "P2", "P3", "SL", "D", "XSm", "Sm", "Md", "Lg",
+//'   "XLg")
+//' repvector <- c(0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1)
+//' obsvector <- c(0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1)
+//' matvector <- c(0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1)
+//' immvector <- c(0, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0)
+//' propvector <- c(1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)
+//' indataset <- c(0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1)
+//' binvec <- c(0, 0, 0, 0, 0, 0.5, 0.5, 1, 1, 2.5, 7)
+//' 
+//' cypframe_raw <- sf_create(sizes = sizevector, stagenames = stagevector,
+//'   repstatus = repvector, obsstatus = obsvector, matstatus = matvector, 
+//'   propstatus = propvector, immstatus = immvector, indataset = indataset,
+//'   binhalfwidth = binvec)
+//' 
+//' cypraw_v1 <- verticalize3(data = cypdata, noyears = 6, firstyear = 2004,
+//'   patchidcol = "patch", individcol = "plantid", blocksize = 4, 
+//'   sizeacol = "Inf2.04", sizebcol = "Inf.04", sizeccol = "Veg.04", 
+//'   repstracol = "Inf.04", repstrbcol = "Inf2.04", fecacol = "Pod.04",
+//'   stageassign = cypframe_raw, stagesize = "sizeadded", NAas0 = TRUE, 
+//'   NRasRep = TRUE)
+//' 
+//' rep_cyp_raw <- matrix(0, 11, 11)
+//' rep_cyp_raw[1:2,7:11] <- 0.5
+//' 
+//' cypover3r <- overwrite(stage3 = c("SD", "SD", "P1", "P1", "P2", "P3", "SL", 
+//'     "SL", "SL", "D", "XSm", "Sm", "D", "XSm", "Sm"), 
+//'   stage2 = c("SD", "SD", "SD", "SD", "P1", "P2", "P3", "SL", "SL", "SL", 
+//'     "SL", "SL", "SL", "SL", "SL"),
+//'   stage1 = c("SD", "rep", "SD", "rep", "SD", "P1", "P2", "P3", "SL", "P3", 
+//'     "P3", "P3", "SL", "SL", "SL"),
+//'   eststage3 = c(NA, NA, NA, NA, NA, NA, NA, NA, NA, "D", "XSm", "Sm", "D", 
+//'     "XSm", "Sm"), 
+//'   eststage2 = c(NA, NA, NA, NA, NA, NA, NA, NA, NA, "XSm", "XSm", "XSm", 
+//'     "XSm", "XSm", "XSm"), 
+//'   eststage1 = c(NA, NA, NA, NA, NA, NA, NA, NA, NA, "XSm", "XSm", "XSm", 
+//'     "XSm", "XSm", "XSm"), 
+//'   givenrate = c(0.1, 0.1, 0.2, 0.2, 0.2, 0.2, 0.25, 0.4, 0.4, NA, NA, NA, 
+//'     NA, NA, NA), 
+//'   type = c("S", "S", "S", "S", "S", "S", "S", "S", "S", "S", "S", "S", "S", 
+//'     "S", "S"))
+//' 
+//' cypmatrix3r <- rlefko3(data = cypraw_v1, stageframe = cypframe_raw, 
+//'   year = "all", patch = "all", stages = c("stage3", "stage2", "stage1"),
+//'   size = c("size3added", "size2added", "size1added"), 
+//'   repmatrix = rep_cyp_raw, overwrite = cypover3r, yearcol = "year2", 
+//'   patchcol = "patchid", indivcol = "individ")
+//' 
+//' cypstoch <- projection3(cypmatrix3r, stochastic = TRUE)
+//' 
+//' @export projection3
+// [[Rcpp::export]]
+Rcpp::List projection3(List mpm, int times = 10000, bool stochastic = false,
+  bool standardize = false, bool growthonly = true, bool integeronly = false,
+  Nullable<NumericVector> start_vec = R_NilValue,
+  Nullable<NumericVector> tweights = R_NilValue) {
+  
+  Rcpp::List projection_list;
+  
+  int theclairvoyant {0};
+  theclairvoyant = times;
+  
+  if (theclairvoyant < 1) {
+    stop("Option times must equal a positive integer.");
+  }
+  
+  arma::uvec theprophecy(theclairvoyant);
+  theprophecy.zeros();
+  
+  arma::vec startvec;
+  arma::mat projection;
+  
+  if (!Rf_isMatrix(mpm[0])) {
+    List amats = mpm["A"];
+    List umats = mpm["U"];
+    List fmats = mpm["F"];
+    DataFrame stageframe = as<DataFrame>(mpm["ahstages"]);
+    DataFrame hstages = as<DataFrame>(mpm["hstages"]);
+    DataFrame labels = as<DataFrame>(mpm["labels"]);
+    
+    bool historical;
+    
+    if (hstages.length() > 1) {
+      historical = true;
+    } else {
+      historical = false;
+    }
+    
+    if (labels.length() < 3) {
+      stop("Function 'slambda3' requires annual matrices. This lefkoMat object appears to be a set of mean matrices, and lacks annual matrices.");
+    }
+    
+    StringVector poporder = labels["pop"];
+    StringVector patchorder = labels["patch"];
+    IntegerVector yearorder = labels["year2"];
+    
+    int loysize = poporder.length();
+    StringVector poppatch = clone(poporder);
+    
+    for (int i = 0; i < loysize; i++) {
+      poppatch(i) += " ";
+      poppatch(i) += patchorder(i);
+    }
+    
+    StringVector uniquepops = sort_unique(poporder);
+    StringVector uniquepoppatches = sort_unique(poppatch);
+    IntegerVector uniqueyears = sort_unique(yearorder);
+    IntegerVector popc = match(poporder, uniquepops) - 1;
+    IntegerVector poppatchc = match(poppatch, uniquepoppatches) - 1;
+    IntegerVector year2c = match(yearorder, uniqueyears) - 1;
+    int yl = uniqueyears.length();
+    
+    arma::vec twinput;
+    
+    if (tweights.isNotNull()) {
+      if (as<NumericVector>(tweights).length() != yl) {
+        stop("Time weight vector must be the same length as the number of times represented in the lefkoMat object used as input.");
+      }
+      twinput = as<arma::vec>(tweights);
+    } else {
+      twinput.resize(yl);
+      twinput.ones();
+    } // At the end of this, we have an arma::vec holding with whatever the user supplied, or a 1 for each time
+    
+    arma::uvec armapopc = as<arma::uvec>(popc);
+    arma::uvec armapoppatchc = as<arma::uvec>(poppatchc);
+    arma::uvec armayear2c = as<arma::uvec>(year2c);
+    arma::uvec patchesinpop(loysize);
+    arma::uvec yearsinpatch(loysize);
+    patchesinpop.zeros();
+    yearsinpatch.zeros();
+    
+    for (int i = 0; i < loysize; i++) {
+      arma::uvec animalhouse = find(armapopc == armapopc(i));
+      arma::uvec christmasvacation = armapoppatchc.elem(animalhouse);
+      arma::uvec summervacation = unique(christmasvacation);
+      int togaparty = summervacation.n_elem;
+      
+      patchesinpop(i) = togaparty;
+      
+      arma::uvec ninebelowzero = find(armapoppatchc == armapoppatchc(i));
+      arma::uvec thedamned = armayear2c.elem(ninebelowzero);
+      arma::uvec motorhead = unique(thedamned);
+      int dexysmidnightrunners = motorhead.n_elem;
+      
+      yearsinpatch(i) = dexysmidnightrunners;
+    }
+    
+    DataFrame listofyears = DataFrame::create(Named("pop") = poporder,
+      _["patch"] = patchorder, _["year2"] = yearorder, _["poppatch"] = poppatch,
+      _["popc"] = popc, _["poppatchc"] = poppatchc, _["year2c"] = year2c, 
+      _["patchesinpop"] = patchesinpop, _["yearsinpatch"] = yearsinpatch);
+    
+    List mean_lefkomat;
+    
+    if (hstages.length() == 1) {
+      mean_lefkomat = geodiesel(listofyears, umats, fmats, stageframe, 1, 1);
+    } else {
+      mean_lefkomat = turbogeodiesel(listofyears, umats, fmats, stageframe, hstages, 1, 1);
+    }
+    
+    // Here we take the matrices corresponding to each individual patch, run the simulation, and
+    // estimate all descriptive metrics
+    List meanamats = mean_lefkomat["A"];
+    List mmlabels = mean_lefkomat["labels"];
+    StringVector mmpops = mmlabels["pop"];
+    StringVector mmpatches = mmlabels["patch"];
+    
+    arma::mat thechosenone = as<arma::mat>(meanamats[0]);
+    int meanmatsize = thechosenone.n_elem;
+    int meanmatrows = thechosenone.n_rows;
+    arma::vec startvec;
+    int trials = meanamats.length();
+    
+    arma::uvec ppcindex = as<arma::uvec>(poppatchc);
+    arma::uvec allppcs = as<arma::uvec>(sort_unique(poppatchc));
+    int allppcsnem = allppcs.n_elem;
+    
+    if (start_vec.isNotNull()) {
+      if (as<NumericVector>(start_vec).length() != meanmatrows) {
+        stop("Start vector must be the same length as the number of rows in each matrix.");
+      }
+      startvec = as<arma::vec>(start_vec);
+    } else {
+      startvec.set_size(meanmatrows);
+      startvec.ones();
+    } // At the end of this, we have an arma::vec holding with whatever the user supplied, or a 1 for each stage
+    
+    arma::vec tweights_corr = twinput / sum(twinput);
+    
+    for (int i= 0; i < allppcsnem; i++) {
+      thechosenone = as<arma::mat>(meanamats[i]);
+      
+      arma::uvec thenumbersofthebeast = find(ppcindex == allppcs(i));
+      int chosen_yl = thenumbersofthebeast.n_elem;
+      
+      if (stochastic) {
+        theprophecy = Rcpp::RcppArmadillo::sample(thenumbersofthebeast, theclairvoyant, true, tweights_corr);
+      } else {
+        theprophecy.set_size(theclairvoyant);
+        theprophecy.zeros();
+        
+        for (int j = 0; j < theclairvoyant; j++) {
+          theprophecy(j) = thenumbersofthebeast(j % chosen_yl);
+        }
+      }
+      
+      arma::mat projection = proj3(startvec, amats, theprophecy, standardize, growthonly, integeronly);
+      if (i == 0) {
+        projection_list = List::create(_["0"] = projection);
+      } else {
+        projection_list.push_back(projection);
+      }
+    }
+    
+    int pop_est {1};
+    StringVector allpops = unique(poporder);
+    arma::uvec popmatch(loysize);
+    arma::uvec yearmatch(loysize);
+    popmatch.zeros();
+    yearmatch.zeros();
+    List meanmatyearlist(uniqueyears.length());
+    
+    if (allppcsnem > 1) { // This checks if there are any pop-mean matrices separate from the the patch means
+      pop_est = trials - allppcsnem;
+      
+      for (int i = 0; i < pop_est; i++) { // This loop goes through each population
+        thechosenone = as<arma::mat>(meanamats[allppcsnem + i]);
+        
+        for (int j = 0; j < loysize; j++) { // This checks which A matrices match the current population in the loop
+          if (poporder(j) == allpops(i)) {
+            popmatch(j) = 1;
+          } else {
+            popmatch(j) = 0;
+          }
+        }
+        
+        arma::uvec neededmatspop = find(popmatch);
+        
+        for (int j = 0; j < yl; j++) { // This loop checks for each year and develops a matrix mean across patches
+          for (int k = 0; k < loysize; k++) { // This inner loop develops a vector to find all matrices corresponding to the current year
+            
+            if (yearorder(k) == uniqueyears(j)) {
+              yearmatch(k) = 1;
+            } else {
+              yearmatch(k) = 0;
+            }
+          }
+          
+          arma::uvec neededmatsyear = find(yearmatch);
+          arma::uvec crankybanky = intersect(neededmatsyear, neededmatspop);
+          // This vector catches the indices of matrices that match the current year and population
+          int crankybankynem = crankybanky.n_elem;
+          
+          arma::mat crossmat(meanmatsize, crankybankynem);
+          crossmat.zeros();
+          
+          for (int j = 0; j < crankybankynem; j++) {
+            crossmat.col(j) = as<arma::vec>(amats(crankybanky(j)));
+          }
+          
+          arma::vec happymedium(meanmatsize);
+          happymedium.zeros();
+          
+          for (int j = 0; j < meanmatsize; j++) {
+            for (int k = 0; k < crankybankynem; k++) {
+              happymedium(j) = happymedium(j) + crossmat(j, k) / (crankybankynem);
+            }
+          }
+          
+          arma::mat finalyearmat = happymedium;
+          finalyearmat.reshape(meanmatrows, meanmatrows);
+          
+          meanmatyearlist(j) = finalyearmat;
+        }
+        
+        int numyearsused = meanmatyearlist.length();
+        arma::uvec choicevec = linspace<arma::uvec>(0, (numyearsused - 1), numyearsused);
+        int chosen_yl = choicevec.n_elem;
+        
+        if (stochastic) {
+          theprophecy = Rcpp::RcppArmadillo::sample(choicevec, theclairvoyant, true, tweights_corr);
+        } else {
+          theprophecy.zeros();
+          
+          for (int j = 0; j < theclairvoyant; j++) {
+            theprophecy(j) = choicevec(j % chosen_yl);
+          }
+        }
+        
+        arma::mat projection = proj3(startvec, meanmatyearlist, theprophecy, standardize, growthonly, integeronly);
+        projection_list.push_back(projection);
+      }
+    }
+    DataFrame newlabels = DataFrame::create(_["pop"] = mmpops,
+      _["patch"] = mmpatches);
+    
+    return List::create(_["projection"] = projection_list, _["labels"] = newlabels);
+    
+  } else {
+    
+    List amats = mpm;
+    
+    int yl = amats.length();
+    arma::mat firstmat = as<arma::mat>(amats[0]);
+    int matrows = firstmat.n_rows;
+    int matcols = firstmat.n_cols;
+    
+    bool historical;
+    
+    if (matrows > 400) {
+      historical = true;
+    } else {
+      historical = false;
+    }
+    
+    arma::uvec uniqueyears(yl);
+    for (int i = 0; i < yl; i++) {
+      uniqueyears(i) = i;
+    }
+    
+    arma::vec twinput;
+    
+    if (matrows != matcols) {
+      stop("Supplied matrices must be square. Please check matrix dimensions and fix.");
+    }
+    
+    if (tweights.isNotNull()) {
+      if (as<NumericVector>(tweights).length() != yl) {
+        stop("Time weight vector must be the same length as the number of times represented in the lefkoMat object used as input.");
+      }
+      twinput = as<arma::vec>(tweights);
+    } else {
+      twinput.resize(yl);
+      twinput.ones();
+    } // At the end of this, we have an arma::vec holding with whatever the user supplied, or a 1 for each time
+    
+    if (start_vec.isNotNull()) {
+      if (as<NumericVector>(start_vec).length() != matrows) {
+        stop("Start vector must be the same length as the number of rows in each matrix.");
+      }
+      startvec = as<arma::vec>(start_vec);
+    } else {
+      startvec.set_size(matrows);
+      startvec.ones();
+    } // At the end of this, we have an arma::vec holding with whatever the user supplied, or a 1 for each stage
+    
+    // Now we create the mean matrix
+    arma::mat thechosenone(matrows, matcols);
+    thechosenone.zeros();
+    
+    for (int i = 0; i < yl; i++) {
+      arma::mat columnified = as<arma::mat>(amats[i]);
+      thechosenone = thechosenone + (columnified / yl);
+    }
+    
+    // Here we take the matrices corresponding to each individual patch, run the simulation, and
+    // estimate all descriptive metrics
+    arma::vec tweights_corr = twinput / sum(twinput);
+    
+    arma::uvec thenumbersofthebeast = uniqueyears;
+    
+    if (stochastic) {
+      theprophecy = Rcpp::RcppArmadillo::sample(thenumbersofthebeast, theclairvoyant, true, tweights_corr);
+    } else {
+      theprophecy.zeros();
+      
+      for (int i = 0; i < theclairvoyant; i++) {
+        theprophecy(i) = thenumbersofthebeast(i % yl);
+      }
+    }
+    
+    projection = proj3(startvec, amats, theprophecy, standardize, growthonly, integeronly);
+    projection_list = List::create(_["0"] = projection);
+
+    DataFrame newlabels = DataFrame::create(_["pop"] = 1,
+      _["patch"] = 1);
+    
+    return List::create(_["projection"] = projection_list, _["labels"] = newlabels);
+  }
 }
 
 //' Estimate Stochastic Population Growth Rate
@@ -1471,6 +2103,47 @@ arma::mat proj3(arma::vec start_vec, List core_list, arma::uvec mat_order,
 //' elements in the user-supplied vector.
 //'
 //' @examples
+//' # Lathyrus example
+//' data(lathyrus)
+//' 
+//' sizevector <- c(0, 100, 13, 127, 3730, 3800, 0)
+//' stagevector <- c("Sd", "Sdl", "VSm", "Sm", "VLa", "Flo", "Dorm")
+//' repvector <- c(0, 0, 0, 0, 0, 1, 0)
+//' obsvector <- c(0, 1, 1, 1, 1, 1, 0)
+//' matvector <- c(0, 0, 1, 1, 1, 1, 1)
+//' immvector <- c(1, 1, 0, 0, 0, 0, 0)
+//' propvector <- c(1, 0, 0, 0, 0, 0, 0)
+//' indataset <- c(0, 1, 1, 1, 1, 1, 1)
+//' binvec <- c(0, 100, 11, 103, 3500, 3800, 0.5)
+//' 
+//' lathframe <- sf_create(sizes = sizevector, stagenames = stagevector,
+//'   repstatus = repvector, obsstatus = obsvector, matstatus = matvector,
+//'   immstatus = immvector, indataset = indataset, binhalfwidth = binvec,
+//'   propstatus = propvector)
+//' 
+//' lathvert <- verticalize3(lathyrus, noyears = 4, firstyear = 1988,
+//'   patchidcol = "SUBPLOT", individcol = "GENET", blocksize = 9,
+//'   juvcol = "Seedling1988", sizeacol = "Volume88", repstracol = "FCODE88",
+//'   fecacol = "Intactseed88", deadacol = "Dead1988",
+//'   nonobsacol = "Dormant1988", stageassign = lathframe, stagesize = "sizea",
+//'   censorcol = "Missing1988", censorkeep = NA, censor = TRUE)
+//' 
+//' lathrepm <- matrix(0, 7, 7)
+//' lathrepm[1, 6] <- 0.345
+//' lathrepm[2, 6] <- 0.054
+//' 
+//' lathover3 <- overwrite(stage3 = c("Sd", "Sd", "Sdl"),
+//'   stage2 = c("Sd", "Sd", "Sd"), stage1 = c("Sd", "rep", "rep"),
+//'   givenrate = c(0.345, 0.345, 0.054))
+//' 
+//' ehrlen3 <- rlefko3(data = lathvert, stageframe = lathframe,
+//'   year = c(1989, 1990), stages = c("stage3", "stage2", "stage1"),
+//'   repmatrix = lathrepm, overwrite = lathover3, yearcol = "year2",
+//'   indivcol = "individ")
+//' 
+//' slambda3(ehrlen3)
+//' 
+//' # Cypripedium example
 //' data(cypdata)
 //'  
 //' sizevector <- c(0, 0, 0, 0, 0, 0, 1, 2.5, 4.5, 8, 17.5)
@@ -1670,10 +2343,9 @@ DataFrame slambda3(List mpm, int times = 10000,
         startvec = ss3matrix(thechosenone);
       }
       
-      arma::mat projection = proj3(startvec, amats, theprophecy, 1, 1);
+      arma::mat projection = proj3(startvec, amats, theprophecy, 1, 1, 0);
       
       for (int j = 0; j < theclairvoyant; j++) {
-        //slmat(j,i) = sum(projection.col(j+1));
         double madness = sum(projection.col(j+1));
         slmat(j,i) = log(madness);
       }
@@ -1755,7 +2427,7 @@ DataFrame slambda3(List mpm, int times = 10000,
         arma::uvec choicevec = linspace<arma::uvec>(0, (numyearsused - 1), numyearsused);
         arma::uvec theprophecy = Rcpp::RcppArmadillo::sample(choicevec, theclairvoyant, true, tweights_corr);
         
-        arma::mat projection = proj3(startvec, meanmatyearlist, theprophecy, 1, 1);
+        arma::mat projection = proj3(startvec, meanmatyearlist, theprophecy, 1, 1, 0);
         
         for (int j = 0; j < theclairvoyant; j++) {
           double madness = sum(projection.col(j+1));
@@ -1846,7 +2518,7 @@ DataFrame slambda3(List mpm, int times = 10000,
       startvec = ss3matrix(thechosenone);
     }
     
-    arma::mat projection = proj3(startvec, amats, theprophecy, 1, 1);
+    arma::mat projection = proj3(startvec, amats, theprophecy, 1, 1, 0);
     
     for (int j = 0; j < theclairvoyant; j++) {
       slmat(j,0) = sum(projection.col(j+1));
@@ -2079,35 +2751,16 @@ arma::cube stoch_senselas(List mpm, int times = 10000, int style = 1,
       theprophesizedvector = startvec;
       theprophesizedsecondvector = startvec;
       
-      wprojection.col(0) = startvec;
-      vprojection.col(theclairvoyant) = startvec;
-      
-      for (int j = 0; j < theclairvoyant; j++) { // This loop focuses on the times of the simulation, calculating all w and v values
-        // First we deal with w
-        thechosenone = as<arma::mat>(amats[(theprophecy(j))]);
-        theseventhson = thechosenone * theprophesizedvector;
-        
-        double madness = sum(theseventhson);
-        Rvecmat(i,j) = madness;
-        
-        theprophesizedvector = theseventhson / madness;
-        wprojection.col(j+1) = theprophesizedvector;
-        
-        // Next we deal with v
-        thechosentwo = as<arma::mat>(amats[(theprophecy(theclairvoyant - (j+1)))]);
-        arma::rowvec theprophesizedrowvector = theprophesizedsecondvector.as_row();
-        arma::rowvec theseventhrow = theprophesizedrowvector * thechosentwo;
-        
-        theseventhgrandson = theseventhrow.as_col();
-        
-        theprophesizedsecondvector = theseventhgrandson / sum(theseventhgrandson);
-        vprojection.col(theclairvoyant - (j+1)) = theprophesizedsecondvector;
-      }
+      arma::mat crazy_prophet = proj3(startvec, amats, theprophecy, 1, 0, 0);
+      wprojection = crazy_prophet.submat(startvec.n_elem, 0, ((startvec.n_elem * 2) - 1), theclairvoyant);
+      vprojection = crazy_prophet.submat((startvec.n_elem * 2), 0, ((startvec.n_elem * 3) - 1), theclairvoyant);
+      arma::mat Rvec = crazy_prophet.submat((startvec.n_elem * 3), 1, (startvec.n_elem * 3), theclairvoyant);
+      Rvecmat.row(i) = Rvec;
       
       // All references should go to senscube, which is a 3d array designed to hold the sensitivity matrices
       for (int j = 0; j < theclairvoyant; j++) { // This is the main time loop for the sensitivity matrices, 
                                                  // adding each time to the respective matrix for each pop-patch
-        arma::vec vtplus1 = vprojection.col(j+1); // used to be j+1
+        arma::vec vtplus1 = vprojection.col(j+1);
         arma::rowvec vtplus1_tpose = vtplus1.as_row();
         
         arma::vec wtplus1 = wprojection.col(j+1);
@@ -2221,35 +2874,16 @@ arma::cube stoch_senselas(List mpm, int times = 10000, int style = 1,
         theprophesizedvector = startvec;
         theprophesizedsecondvector = startvec;
         
-        wprojection.col(0) = startvec;
-        vprojection.col(theclairvoyant) = startvec;
-        
-        for (int j = 0; j < theclairvoyant; j++) { // This loop focuses on the times of the simulation, calculating all w and v values
-          // First we deal with w
-          thechosenone = as<arma::mat>(meanmatyearlist[(theprophecy(j))]);
-          theseventhson = thechosenone * theprophesizedvector;
-          
-          double madness = sum(theseventhson);
-          Rvecmat((allppcsnem + i),j) = madness;
-          
-          theprophesizedvector = theseventhson / madness;
-          wprojection.col(j+1) = theprophesizedvector;
-          
-          // Next we deal with v
-          thechosentwo = as<arma::mat>(meanmatyearlist[(theprophecy(theclairvoyant - (j+1)))]);
-          arma::rowvec theprophesizedrowvector = theprophesizedsecondvector.as_row();
-          arma::rowvec theseventhrow = theprophesizedrowvector * thechosentwo;
-          
-          theseventhgrandson = theseventhrow.as_col();
-          
-          theprophesizedsecondvector = theseventhgrandson / sum(theseventhgrandson);
-          vprojection.col(theclairvoyant - (j+1)) = theprophesizedsecondvector;
-        }
+        arma::mat crazy_prophet = proj3(startvec, meanmatyearlist, theprophecy, 1, 0, 0);
+        wprojection = crazy_prophet.submat(startvec.n_elem, 0, ((startvec.n_elem * 2) - 1), theclairvoyant);
+        vprojection = crazy_prophet.submat((startvec.n_elem * 2), 0, ((startvec.n_elem * 3) - 1), theclairvoyant);
+        arma::mat Rvec = crazy_prophet.submat((startvec.n_elem * 3), 1, (startvec.n_elem * 3), theclairvoyant);
+        Rvecmat.row(allppcsnem + i) = Rvec;
         
         // All references should go to senscube, which is a 3d array designed to hold the sensitivity matrices
         for (int j = 0; j < theclairvoyant; j++) { // This is the main time loop for the sensitivity matrices, 
                                                    // adding each time to the respective matrix for each pop-patch
-          arma::vec vtplus1 = vprojection.col(j+1); // used to be j+1
+          arma::vec vtplus1 = vprojection.col(j+1);
           arma::rowvec vtplus1_tpose = vtplus1.as_row();
           
           arma::vec wtplus1 = wprojection.col(j+1);
@@ -2349,30 +2983,12 @@ arma::cube stoch_senselas(List mpm, int times = 10000, int style = 1,
     theprophesizedvector = startvec;
     theprophesizedsecondvector = startvec;
     
-    wprojection.col(0) = startvec;
-    vprojection.col(theclairvoyant) = startvec;
-    
-    for (int j = 0; j < theclairvoyant; j++) { // This loop focuses on the times of the simulation, calculating all w and v values
-      // First we deal with w
-      thechosenone = as<arma::mat>(amats[(theprophecy(j))]);
-      theseventhson = thechosenone * theprophesizedvector;
+    arma::mat crazy_prophet = proj3(startvec, amats, theprophecy, 1, 0, 0);
+    wprojection = crazy_prophet.submat(startvec.n_elem, 0, ((startvec.n_elem * 2) - 1), theclairvoyant);
+    vprojection = crazy_prophet.submat((startvec.n_elem * 2), 0, ((startvec.n_elem * 3) - 1), theclairvoyant);
+    arma::mat Rvec = crazy_prophet.submat((startvec.n_elem * 3), 1, (startvec.n_elem * 3), theclairvoyant);
+    Rvecmat.row(0) = Rvec;
       
-      double madness = sum(theseventhson);
-      Rvecmat(0,j) = madness;
-      
-      theprophesizedvector = theseventhson / madness;
-      wprojection.col(j+1) = theprophesizedvector;
-      
-      // Next we deal with v
-      thechosentwo = as<arma::mat>(amats[(theprophecy(theclairvoyant - (j+1)))]);
-      arma::rowvec theprophesizedrowvector = theprophesizedsecondvector.as_row();
-      arma::rowvec theseventhrow = theprophesizedrowvector * thechosentwo;
-      
-      theseventhgrandson = theseventhrow.as_col();
-      
-      theprophesizedsecondvector = theseventhgrandson / sum(theseventhgrandson);
-      vprojection.col(theclairvoyant - (j+1)) = theprophesizedsecondvector;
-    }
     
     // All references should go to senscube, which is a 3d array designed to hold the sensitivity matrices
     for (int j = 0; j < theclairvoyant; j++) { // This is the main time loop for the sensitivity matrices, 

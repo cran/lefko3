@@ -301,6 +301,19 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// shopliftersunite
+arma::mat shopliftersunite(arma::mat hmats, DataFrame hstages, DataFrame ahstages);
+RcppExport SEXP _lefko3_shopliftersunite(SEXP hmatsSEXP, SEXP hstagesSEXP, SEXP ahstagesSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< arma::mat >::type hmats(hmatsSEXP);
+    Rcpp::traits::input_parameter< DataFrame >::type hstages(hstagesSEXP);
+    Rcpp::traits::input_parameter< DataFrame >::type ahstages(ahstagesSEXP);
+    rcpp_result_gen = Rcpp::wrap(shopliftersunite(hmats, hstages, ahstages));
+    return rcpp_result_gen;
+END_RCPP
+}
 // turbogeodiesel
 List turbogeodiesel(DataFrame loy, List Umats, List Fmats, DataFrame stages, DataFrame hstages, bool patchmats, bool popmats);
 RcppExport SEXP _lefko3_turbogeodiesel(SEXP loySEXP, SEXP UmatsSEXP, SEXP FmatsSEXP, SEXP stagesSEXP, SEXP hstagesSEXP, SEXP patchmatsSEXP, SEXP popmatsSEXP) {
@@ -493,8 +506,8 @@ BEGIN_RCPP
 END_RCPP
 }
 // proj3
-arma::mat proj3(arma::vec start_vec, List core_list, arma::uvec mat_order, bool standardize, bool forward);
-RcppExport SEXP _lefko3_proj3(SEXP start_vecSEXP, SEXP core_listSEXP, SEXP mat_orderSEXP, SEXP standardizeSEXP, SEXP forwardSEXP) {
+arma::mat proj3(arma::vec start_vec, List core_list, arma::uvec mat_order, bool standardize, bool growthonly, bool integeronly);
+RcppExport SEXP _lefko3_proj3(SEXP start_vecSEXP, SEXP core_listSEXP, SEXP mat_orderSEXP, SEXP standardizeSEXP, SEXP growthonlySEXP, SEXP integeronlySEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -502,8 +515,27 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< List >::type core_list(core_listSEXP);
     Rcpp::traits::input_parameter< arma::uvec >::type mat_order(mat_orderSEXP);
     Rcpp::traits::input_parameter< bool >::type standardize(standardizeSEXP);
-    Rcpp::traits::input_parameter< bool >::type forward(forwardSEXP);
-    rcpp_result_gen = Rcpp::wrap(proj3(start_vec, core_list, mat_order, standardize, forward));
+    Rcpp::traits::input_parameter< bool >::type growthonly(growthonlySEXP);
+    Rcpp::traits::input_parameter< bool >::type integeronly(integeronlySEXP);
+    rcpp_result_gen = Rcpp::wrap(proj3(start_vec, core_list, mat_order, standardize, growthonly, integeronly));
+    return rcpp_result_gen;
+END_RCPP
+}
+// projection3
+Rcpp::List projection3(List mpm, int times, bool stochastic, bool standardize, bool growthonly, bool integeronly, Nullable<NumericVector> start_vec, Nullable<NumericVector> tweights);
+RcppExport SEXP _lefko3_projection3(SEXP mpmSEXP, SEXP timesSEXP, SEXP stochasticSEXP, SEXP standardizeSEXP, SEXP growthonlySEXP, SEXP integeronlySEXP, SEXP start_vecSEXP, SEXP tweightsSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< List >::type mpm(mpmSEXP);
+    Rcpp::traits::input_parameter< int >::type times(timesSEXP);
+    Rcpp::traits::input_parameter< bool >::type stochastic(stochasticSEXP);
+    Rcpp::traits::input_parameter< bool >::type standardize(standardizeSEXP);
+    Rcpp::traits::input_parameter< bool >::type growthonly(growthonlySEXP);
+    Rcpp::traits::input_parameter< bool >::type integeronly(integeronlySEXP);
+    Rcpp::traits::input_parameter< Nullable<NumericVector> >::type start_vec(start_vecSEXP);
+    Rcpp::traits::input_parameter< Nullable<NumericVector> >::type tweights(tweightsSEXP);
+    rcpp_result_gen = Rcpp::wrap(projection3(mpm, times, stochastic, standardize, growthonly, integeronly, start_vec, tweights));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -585,6 +617,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_lefko3_stovokor", (DL_FUNC) &_lefko3_stovokor, 25},
     {"_lefko3_flagrantcrap", (DL_FUNC) &_lefko3_flagrantcrap, 2},
     {"_lefko3_moreflagrantcrap", (DL_FUNC) &_lefko3_moreflagrantcrap, 1},
+    {"_lefko3_shopliftersunite", (DL_FUNC) &_lefko3_shopliftersunite, 3},
     {"_lefko3_turbogeodiesel", (DL_FUNC) &_lefko3_turbogeodiesel, 7},
     {"_lefko3_geodiesel", (DL_FUNC) &_lefko3_geodiesel, 6},
     {"_lefko3_decomp3", (DL_FUNC) &_lefko3_decomp3, 1},
@@ -601,7 +634,8 @@ static const R_CallMethodDef CallEntries[] = {
     {"_lefko3_elas3matrix", (DL_FUNC) &_lefko3_elas3matrix, 1},
     {"_lefko3_elas3matrixsp", (DL_FUNC) &_lefko3_elas3matrixsp, 1},
     {"_lefko3_elas3hlefko", (DL_FUNC) &_lefko3_elas3hlefko, 3},
-    {"_lefko3_proj3", (DL_FUNC) &_lefko3_proj3, 5},
+    {"_lefko3_proj3", (DL_FUNC) &_lefko3_proj3, 6},
+    {"_lefko3_projection3", (DL_FUNC) &_lefko3_projection3, 8},
     {"_lefko3_slambda3", (DL_FUNC) &_lefko3_slambda3, 3},
     {"_lefko3_stoch_senselas", (DL_FUNC) &_lefko3_stoch_senselas, 4},
     {"_lefko3_bambi3", (DL_FUNC) &_lefko3_bambi3, 2},

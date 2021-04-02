@@ -16,6 +16,7 @@ sf_create(
   maxage = NA,
   indataset = NA,
   binhalfwidth = 0.5,
+  comments = NA,
   ipmbins = 100,
   roundsize = 5
 )
@@ -71,6 +72,9 @@ be marked as 0 in this vector.}
 Required to classify individuals appropriately within size classes.
 Defaults to 0.5 for all sizes.}
 
+\item{comments}{An optional vector of text entries holding useful text
+descriptions of all stages.}
+
 \item{ipmbins}{If an IPM is desired, then this parameter sets the number of
 stages to create for that IPM. This number is in addition to any stages
 that are not size-classified. Defaults to 100, and numbers greater than this
@@ -123,8 +127,52 @@ input into MPM creation functions such as \code{\link{flefko3}()}, where it
 determines how each stage is treated during matrix estimation.
 }
 \examples{
+# Lathyrus example
+data(lathyrus)
+
+sizevector <- c(0, 100, 13, 127, 3730, 3800, 0)
+stagevector <- c("Sd", "Sdl", "VSm", "Sm", "VLa", "Flo", "Dorm")
+repvector <- c(0, 0, 0, 0, 0, 1, 0)
+obsvector <- c(0, 1, 1, 1, 1, 1, 0)
+matvector <- c(0, 0, 1, 1, 1, 1, 1)
+immvector <- c(1, 1, 0, 0, 0, 0, 0)
+propvector <- c(1, 0, 0, 0, 0, 0, 0)
+indataset <- c(0, 1, 1, 1, 1, 1, 1)
+binvec <- c(0, 100, 11, 103, 3500, 3800, 0.5)
+
+lathframe <- sf_create(sizes = sizevector, stagenames = stagevector,
+  repstatus = repvector, obsstatus = obsvector, matstatus = matvector,
+  immstatus = immvector, indataset = indataset, binhalfwidth = binvec,
+  propstatus = propvector)
+
+lathvert <- verticalize3(lathyrus, noyears = 4, firstyear = 1988,
+  patchidcol = "SUBPLOT", individcol = "GENET", blocksize = 9,
+  juvcol = "Seedling1988", sizeacol = "Volume88", repstracol = "FCODE88",
+  fecacol = "Intactseed88", deadacol = "Dead1988",
+  nonobsacol = "Dormant1988", stageassign = lathframe, stagesize = "sizea",
+  censorcol = "Missing1988", censorkeep = NA, censor = TRUE)
+
+lathsupp3 <- supplemental(stage3 = c("Sd", "Sd", "Sdl", "Sd", "Sdl"), 
+  stage2 = c("Sd", "Sd", "Sd", "rep", "rep"),
+  stage1 = c("Sd", "rep", "rep", "all", "all"), 
+  givenrate = c(0.345, 0.345, 0.054, NA, NA),
+  multiplier = c(NA, NA, NA, 0.345, 0.054),
+  type = c(1, 1, 1, 3, 3), stageframe = lathframe, historical = TRUE)
+
+ehrlen3 <- rlefko3(data = lathvert, stageframe = lathframe, year = "all", 
+  stages = c("stage3", "stage2", "stage1"), supplement = lathsupp3,
+  yearcol = "year2", indivcol = "individ")
+
+ehrlen3mean <- lmean(ehrlen3)
+ehrlen3mean$A[[1]]
+
+# Cypripedium example
+rm(list=ls(all=TRUE))
+
+data(cypdata)
+
 sizevector <- c(0, 0, 0, 0, 0, 0, 1, 2.5, 4.5, 8, 17.5)
-stagevector <- c("SD", "P1", "P2", "P3", "SL", "D", "XSm", "Sm", "Md", "Lg", 
+stagevector <- c("SD", "P1", "P2", "P3", "SL", "D", "XSm", "Sm", "Md", "Lg",
   "XLg")
 repvector <- c(0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1)
 obsvector <- c(0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1)
@@ -139,18 +187,30 @@ cypframe_raw <- sf_create(sizes = sizevector, stagenames = stagevector,
   propstatus = propvector, immstatus = immvector, indataset = indataset,
   binhalfwidth = binvec)
 
-cypframe_raw$comments[(cypframe_raw$stagenames == "SD")] <- "Dormant seed"
-cypframe_raw$comments[(cypframe_raw$stagenames == "P1")] <- "1st yr protocorm"
-cypframe_raw$comments[(cypframe_raw$stagenames == "P2")] <- "2nd yr protocorm"
-cypframe_raw$comments[(cypframe_raw$stagenames == "P3")] <- "3rd yr protocorm"
-cypframe_raw$comments[(cypframe_raw$stagenames == "SL")] <- "Seedling"
-cypframe_raw$comments[(cypframe_raw$stagenames == "D")] <- "Dormant adult"
-cypframe_raw$comments[(cypframe_raw$stagenames == "XSm")] <- "Extra small adult (1 shoot)"
-cypframe_raw$comments[(cypframe_raw$stagenames == "Sm")] <- "Small adult (2-3 shoots)"
-cypframe_raw$comments[(cypframe_raw$stagenames == "Md")] <- "Medium adult (4-5 shoots)"
-cypframe_raw$comments[(cypframe_raw$stagenames == "Lg")] <- "Large adult (6-10 shoots)"
-cypframe_raw$comments[(cypframe_raw$stagenames == "XLg")] <- "Extra large adult (>10 shoots)"
+cypraw_v1 <- verticalize3(data = cypdata, noyears = 6, firstyear = 2004,
+  patchidcol = "patch", individcol = "plantid", blocksize = 4,
+  sizeacol = "Inf2.04", sizebcol = "Inf.04", sizeccol = "Veg.04",
+  repstracol = "Inf.04", repstrbcol = "Inf2.04", fecacol = "Pod.04",
+  stageassign = cypframe_raw, stagesize = "sizeadded", NAas0 = TRUE,
+  NRasRep = TRUE)
 
-cypframe_raw
+cypsupp2r <- supplemental(stage3 = c("SD", "P1", "P2", "P3", "SL", "SL", "D", 
+    "XSm", "Sm", "SD", "P1"),
+  stage2 = c("SD", "SD", "P1", "P2", "P3", "SL", "SL", "SL", "SL", "rep",
+    "rep"),
+  eststage3 = c(NA, NA, NA, NA, NA, NA, "D", "XSm", "Sm", NA, NA),
+  eststage2 = c(NA, NA, NA, NA, NA, NA, "XSm", "XSm", "XSm", NA, NA),
+  givenrate = c(0.10, 0.20, 0.20, 0.20, 0.25, 0.40, NA, NA, NA, NA, NA),
+  multiplier = c(NA, NA, NA, NA, NA, NA, NA, NA, NA, 0.5, 0.5),
+  type =c(1, 1, 1, 1, 1, 1, 1, 1, 1, 3, 3),
+  stageframe = cypframe_raw, historical = FALSE)
+
+cypmatrix2r <- rlefko2(data = cypraw_v1, stageframe = cypframe_raw, 
+  year = "all", patch = "all", stages = c("stage3", "stage2", "stage1"),
+  size = c("size3added", "size2added"), supplement = cypsupp2r,
+  yearcol = "year2", patchcol = "patchid", indivcol = "individ")
+                       
+cyp2mean <- lmean(cypmatrix2r)
+cyp2mean
 
 }

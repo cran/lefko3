@@ -44,7 +44,8 @@ aflefko2(
   continue = TRUE,
   randomseed = NA,
   negfec = FALSE,
-  reduce = FALSE
+  reduce = FALSE,
+  err_check = FALSE
 )
 }
 \arguments{
@@ -238,6 +239,9 @@ be negative should be reset to 0. Defaults to FALSE.}
 associated solely with 0 transitions. These are only removed in cases where
 the associated row and column sums in ALL matrices estimated equal 0. 
 Defaults to FALSE.}
+
+\item{err_check}{A logical value indicating whether to add matrices of vital
+rate probabilities associated with each matrix. Defaults to FALSE.}
 }
 \value{
 If all inputs are properly formatted, then this function will return
@@ -257,6 +261,10 @@ In \code{aflefko2()}, only one population may be analyzed at once, and so
 \item{matrixqc}{A short vector describing the number of non-zero elements
 in \code{U} and \code{F} matrices, and the number of annual matrices.}
 \item{modelqc}{This is the \code{qc} portion of the modelsuite input.}
+\item{prob_out}{An optional element only added if \code{err_check = TRUE}.
+This is a list of vital rate probability matrices, with 4 columns in the
+order of survival, observation probability, reproduction probability, and
+size transition probability.}
 }
 \description{
 Function \code{aflefko2()} returns ahistorical age x stage MPMs corresponding
@@ -299,6 +307,12 @@ Input options including multiple variable names must be entered in the order
 of variables in time \emph{t}+1, \emph{t}, and \emph{t}-1. Rearranging the
 order WILL lead to erroneous calculations, and will probably also lead to
 fatal errors.
+
+Using the \code{err_check} option will produce a matrix of 4 columns, each
+characterizing a different vital rate. The product of each row yields an
+element in the associated \code{$U} matrix. The number and order of elements
+in each column of this matrix matches the associated matrix in column vector
+format. Use of this option is generally for the purposes of debugging code.
 }
 
 \examples{
@@ -341,7 +355,7 @@ lathvertln$feca1 <- round(lathvertln$feca1)
 lathvertln$feca3 <- round(lathvertln$feca3)
 
 lathmodelsln2 <- modelsearch(lathvertln, historical = FALSE,
-  approach = "lme4", suite = "main",
+  approach = "mixed", suite = "main",
   vitalrates = c("surv", "obs", "size", "repst", "fec"), juvestimate = "Sdl",
   bestfit = "AICc&k", sizedist = "gaussian", fecdist = "poisson",
   indiv = "individ", patch = "patchid", year = "year2", age = "obsage",

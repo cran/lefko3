@@ -28,12 +28,13 @@ basic quality control information.
 }
 \examples{
 \donttest{
+# Lathyrus example
 data(lathyrus)
 
 sizevector <- c(0, 4.6, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 1, 2, 3, 4, 5, 6, 7, 8,
   9)
-stagevector <- c("Sd", "Sdl", "Dorm", "Sz1nr", "Sz2nr", "Sz3nr", "Sz4nr",
-  "Sz5nr", "Sz6nr", "Sz7nr", "Sz8nr", "Sz9nr", "Sz1r", "Sz2r", "Sz3r",
+stagevector <- c("Sd", "Sdl", "Dorm", "Sz1nr", "Sz2nr", "Sz3nr", "Sz4nr", 
+  "Sz5nr", "Sz6nr", "Sz7nr", "Sz8nr", "Sz9nr", "Sz1r", "Sz2r", "Sz3r", 
   "Sz4r", "Sz5r", "Sz6r", "Sz7r", "Sz8r", "Sz9r")
 repvector <- c(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1)
 obsvector <- c(0, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1)
@@ -45,24 +46,25 @@ indataset <- c(0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1)
 binvec <- c(0, 4.6, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5,
   0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5)
 
-lathframeln <- sf_create(sizes = sizevector, stagenames = stagevector,
+lathframeln <- sf_create(sizes = sizevector, stagenames = stagevector, 
   repstatus = repvector, obsstatus = obsvector, matstatus = matvector,
   immstatus = immvector, indataset = indataset, binhalfwidth = binvec,
   propstatus = propvector)
 
-lathvertln <- verticalize3(lathyrus, noyears = 4, firstyear = 1988,
+lathvertln <- verticalize3(lathyrus, noyears = 4, firstyear = 1988, 
   patchidcol = "SUBPLOT", individcol = "GENET", blocksize = 9,
   juvcol = "Seedling1988", sizeacol = "lnVol88", repstracol = "Intactseed88",
-  fecacol = "Intactseed88", deadacol = "Dead1988",
-  nonobsacol = "Dormant1988", stageassign = lathframeln, stagesize = "sizea",
-  censorcol = "Missing1988", censorkeep = NA, NAas0 = TRUE, censor = TRUE)
+  fecacol = "Intactseed88", deadacol = "Dead1988", 
+  nonobsacol = "Dormant1988", stageassign = lathframeln,
+  stagesize = "sizea", censorcol = "Missing1988", censorkeep = NA,
+  NAas0 = TRUE, censor = TRUE)
 
 lathvertln$feca2 <- round(lathvertln$feca2)
 lathvertln$feca1 <- round(lathvertln$feca1)
 lathvertln$feca3 <- round(lathvertln$feca3)
 
-lathmodelsln2 <- modelsearch(lathvertln, historical = FALSE,
-  approach = "lme4", suite = "main",
+lathmodelsln2 <- modelsearch(lathvertln, historical = FALSE, 
+  approach = "mixed", suite = "main",
   vitalrates = c("surv", "obs", "size", "repst", "fec"), juvestimate = "Sdl",
   bestfit = "AICc&k", sizedist = "gaussian", fecdist = "poisson",
   indiv = "individ", patch = "patchid", year = "year2",
@@ -70,6 +72,41 @@ lathmodelsln2 <- modelsearch(lathvertln, historical = FALSE,
   quiet = TRUE)
 
 summary(lathmodelsln2)
+
+# Cypripedium example
+rm(list = ls(all=TRUE))
+
+data(cypdata)
+
+sizevector <- c(0, 0, 0, 0, 0, seq(from = 0, t = 24), seq(from = 1, to = 24))
+stagevector <- c("SD", "P1", "P2", "P3", "SL", "D", "V1", "V2", "V3", "V4", "V5", 
+  "V6", "V7", "V8", "V9", "V10", "V11", "V12", "V13", "V14", "V15", "V16", "V17", 
+  "V18", "V19", "V20", "V21", "V22", "V23", "V24", "F1", "F2", "F3", "F4", "F5",
+  "F6", "F7", "F8", "F9", "F10", "F11", "F12", "F13", "F14", "F15", "F16", "F17",
+  "F18", "F19", "F20", "F21", "F22", "F23", "F24")
+repvector <- c(0, 0, 0, 0, 0, rep(0, 25), rep(1, 24))
+obsvector <- c(0, 0, 0, 0, 0, 0, rep(1, 48))
+matvector <- c(0, 0, 0, 0, 0, rep(1, 49))
+immvector <- c(0, 1, 1, 1, 1, rep(0, 49))
+propvector <- c(1, rep(0, 53))
+indataset <- c(0, 0, 0, 0, 0, rep(1, 49))
+
+cypframe <- sf_create(sizes = sizevector, stagenames = stagevector, 
+  repstatus = repvector, obsstatus = obsvector, matstatus = matvector, 
+  propstatus = propvector, immstatus = immvector, indataset = indataset)
+
+vertdata <- verticalize3(data = cypdata, noyears = 6, firstyear = 2004, 
+  patchidcol = "patch", individcol = "plantid", blocksize = 4, 
+  sizeacol = "Inf2.04", sizebcol = "Inf.04", sizeccol = "Veg.04", 
+  repstracol = "Inf.04", repstrbcol = "Inf2.04", fecacol = "Pod.04", 
+  stageassign = cypframe, stagesize = "sizeadded", NAas0 = TRUE)
+
+cypmodels2 <- modelsearch(vertdata, historical = FALSE, approach = "mixed", 
+  vitalrates = c("surv", "obs", "size", "repst", "fec"), sizedist = "negbin", 
+  size.trunc = TRUE, fecdist = "poisson", fec.zero = TRUE, suite = "full", 
+  size = c("size3added", "size2added"), quiet = TRUE)
+
+summary(cypmodels2)
 }
 
 }

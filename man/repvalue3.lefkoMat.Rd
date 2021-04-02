@@ -4,40 +4,67 @@
 \alias{repvalue3.lefkoMat}
 \title{Estimate Reproductive Value Vectors of Matrices in a lefkoMat Object}
 \usage{
-\method{repvalue3}{lefkoMat}(mats)
+\method{repvalue3}{lefkoMat}(
+  mats,
+  stochastic = FALSE,
+  times = 10000,
+  tweights = NA,
+  seed = NA,
+  ...
+)
 }
 \arguments{
 \item{mats}{An object of class \code{lefkoMat} object.}
+
+\item{stochastic}{A logical value indicating whether to use deterministic
+(\code{FALSE}) or stochastic (\code{TRUE}) analysis. Defaults to
+\code{FALSE}.}
+
+\item{times}{An integer variable indicating number of times to project if
+using stochastic analysis. Defaults to 10000.}
+
+\item{tweights}{An optional vector indicating the probability weighting to
+use for each matrix in stochastic simulations. If not given, then defaults to
+equal weighting.}
+
+\item{seed}{A number to use as a random number seed.}
+
+\item{...}{Other parameters.}
 }
 \value{
-This function returns the reproductive values for stages of a
-matrices within a \code{lefkoMat} object. The nature of the output depends on
-whether the \code{lefkoMat} object used as input is ahistorical or
-historical. In both cases, raw reproductive values are estimated as the left
-eigenvector associated with the largest real part of the dominant eigenvalue,
-divided by the first non-zero element of the left eigenvector. Eigen analysis
-is handled by the \code{eig_gen}() function in the C++ Armadillo library for
-square matrices with fewer than 400 rows, and \code{eigs_gen}() for larger
-matrices.
+This function returns the asymptotic reproductive value vectors if
+deterministic analysis chosen, and long-run mean reproductive value vectors
+if stochastic analysis was chosen.
 
-If an ahistorical matrix set is used as input, then the output is a data
-frame that includes the number of the matrix within the \code{$A} element of
-the input \code{lefkoMat} object, followed by the numeric stage designation,
-the stage name, and the reproductive value estimated (\code{repvalue}). 
+The output depends on whether the \code{lefkoMat} object used as input is
+ahistorical or historical, and whether the analysis is deterministic or
+stochastic. If ahistorical, then a single data frame is output, which
+includes the number of the matrix within the \code{$A} element of the input
+\code{lefkoMat} object, followed by the stage id (numeric and assigned
+through \code{\link{sf_create}()}), the stage name, and the estimated
+reproductive value (\code{rep_value}). Reproductive values are scaled by the
+first non-zero value.
 
-If a historical matrix set is used as input, then a list with two elements is
-output. The first element is a data frame showing the reproductive values
-given in terms of across-year stage pairs, as estimated in the procedure
-described above. The order of variables in the data frame is: the matrix of
-origin, the stage names for stages in times \emph{t} and \emph{t}-1
-respectively, the numeric stage designations corresponding to these stages,
-and the reproductive value (\code{rep_value}). The second element is a data
-frame showing the reproductive values of the basic stages in the associated
-stageframe. The reproductive values in this second data frame are estimated
-via the approach developed in Ehrlen (2000), in which each ahistorical
-stage's reproductive value is the average of the RVs summed by stage at time
-\emph{t} weighted by the proportion of that stage pair within the historical
-stable stage distribution associated with the matrix.
+If a historical matrix is used as input, then two data frames are output
+into a list object. The \code{$hist} element contains a data frame in which 
+the stable stage distribution is given in terms of across-year stage pairs.
+The structure includes the matrix number, the numeric stage designations for
+stages in times \emph{t} and \emph{t}-1, respectively, followed by the
+respective stage names, and ending with the estimated reproductive value for
+that stage within its matrix (\code{rep_value}). The \code{$ahist} element is
+a data frame showing the reproductive values of the basic stages in the
+associated stageframe. The reproductive values in this second data frame are
+estimated via the approach developed in Ehrlen (2000), in which each
+ahistorical stage's reproductive value is the average of the RVs summed by
+stage at time \emph{t} weighted by the proportion of that stage pair within
+the historical stable stage distribution associated with the matrix. Both
+historical and ahistorical reproductive values are scaled to the first non-
+zero reproductive value in each case.
+
+In addition to the data frames noted above, stochastic analysis will result
+in the additional output of a list of matrices containing the actual
+projected reproductive value vectors across all projected times, in the order
+of population-patch combinations in the \code{lefkoMat} input.
 }
 \description{
 \code{repvalue3.lefkoMat()} returns the reproductive values for stages in a
@@ -46,7 +73,28 @@ This function can handle large and sparse matrices, and so can be used with
 large historical matrices, IPMs, age x stage matrices, as well as smaller
 ahistorical matrices.
 }
+\section{Notes}{
+
+For square matrices with fewer than 400 rows, the reproductive value vector
+is given as the right eigenvector associated with largest real part of all
+eigenvalues estimated via the \code{eig_gen}() function in the C++ Armadillo
+library divided by the sum of the associated right eigenvector. For larger
+matrices, the function assumes that the matrix is sparse and conducts a
+similar calculation but using the \code{eigs_gen}() for sparse matrix eigen
+analysis.
+
+In stochastic analysis, the projected mean reproductive value vector is the
+arithmetic mean across the final projected 1000 times if the simulation is at
+least 2000 projected times long. If between 500 and 2000 projected times
+long, then only the final 200 are used, and if fewer than 500 times are used,
+then all are used. Note that because reproductive values in stochastic
+simulations can change greatly in the initial portion of the run, we
+encourage a minimum 2000 projected times per simulation, with 10,000
+preferred.
+}
+
 \examples{
+# Lathyrus deterministic example
 data(lathyrus)
 
 sizevector <- c(0, 100, 13, 127, 3730, 3800, 0)
@@ -71,21 +119,65 @@ lathvert <- verticalize3(lathyrus, noyears = 4, firstyear = 1988,
   nonobsacol = "Dormant1988", stageassign = lathframe, stagesize = "sizea",
   censorcol = "Missing1988", censorkeep = NA, censor = TRUE)
 
-lathrepm <- matrix(0, 7, 7)
-lathrepm[1, 6] <- 0.345
-lathrepm[2, 6] <- 0.054
+lathsupp3 <- supplemental(stage3 = c("Sd", "Sd", "Sdl", "Sd", "Sdl"), 
+  stage2 = c("Sd", "Sd", "Sd", "rep", "rep"),
+  stage1 = c("Sd", "rep", "rep", "all", "all"), 
+  givenrate = c(0.345, 0.345, 0.054, NA, NA),
+  multiplier = c(NA, NA, NA, 0.345, 0.054),
+  type = c(1, 1, 1, 3, 3), stageframe = lathframe, historical = TRUE)
 
-lathover3 <- overwrite(stage3 = c("Sd", "Sd", "Sdl"),
-  stage2 = c("Sd", "Sd", "Sd"), stage1 = c("Sd", "rep", "rep"),
-  givenrate = c(0.345, 0.345, 0.054))
-
-ehrlen3 <- rlefko3(data = lathvert, stageframe = lathframe,
-  year = c(1989, 1990), stages = c("stage3", "stage2", "stage1"),
-  repmatrix = lathrepm, overwrite = lathover3, yearcol = "year2",
-  indivcol = "individ", reduce = TRUE)
+ehrlen3 <- rlefko3(data = lathvert, stageframe = lathframe, year = "all", 
+  stages = c("stage3", "stage2", "stage1"), supplement = lathsupp3,
+  yearcol = "year2", indivcol = "individ")
 
 ehrlen3mean <- lmean(ehrlen3)
 repvalue3(ehrlen3mean)
+
+# Cypripedium stochastic example
+rm(list=ls(all=TRUE))
+data(cypdata)
+
+sizevector <- c(0, 0, 0, 0, 0, 0, 1, 2.5, 4.5, 8, 17.5)
+stagevector <- c("SD", "P1", "P2", "P3", "SL", "D", "XSm", "Sm", "Md", "Lg",
+  "XLg")
+repvector <- c(0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1)
+obsvector <- c(0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1)
+matvector <- c(0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1)
+immvector <- c(0, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0)
+propvector <- c(1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)
+indataset <- c(0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1)
+binvec <- c(0, 0, 0, 0, 0, 0.5, 0.5, 1, 1, 2.5, 7)
+
+cypframe_raw <- sf_create(sizes = sizevector, stagenames = stagevector,
+  repstatus = repvector, obsstatus = obsvector, matstatus = matvector,
+  propstatus = propvector, immstatus = immvector, indataset = indataset,
+  binhalfwidth = binvec)
+
+cypraw_v1 <- verticalize3(data = cypdata, noyears = 6, firstyear = 2004,
+  patchidcol = "patch", individcol = "plantid", blocksize = 4,
+  sizeacol = "Inf2.04", sizebcol = "Inf.04", sizeccol = "Veg.04",
+  repstracol = "Inf.04", repstrbcol = "Inf2.04", fecacol = "Pod.04",
+  stageassign = cypframe_raw, stagesize = "sizeadded", NAas0 = TRUE,
+  NRasRep = TRUE)
+
+# Here we use supplemental() to provide overwrite and reproductive info
+cypsupp2r <- supplemental(stage3 = c("SD", "P1", "P2", "P3", "SL", "SL", "D", 
+    "XSm", "Sm", "SD", "P1"),
+  stage2 = c("SD", "SD", "P1", "P2", "P3", "SL", "SL", "SL", "SL", "rep",
+    "rep"),
+  eststage3 = c(NA, NA, NA, NA, NA, NA, "D", "XSm", "Sm", NA, NA),
+  eststage2 = c(NA, NA, NA, NA, NA, NA, "XSm", "XSm", "XSm", NA, NA),
+  givenrate = c(0.10, 0.20, 0.20, 0.20, 0.25, 0.40, NA, NA, NA, NA, NA),
+  multiplier = c(NA, NA, NA, NA, NA, NA, NA, NA, NA, 0.5, 0.5),
+  type =c(1, 1, 1, 1, 1, 1, 1, 1, 1, 3, 3),
+  stageframe = cypframe_raw, historical = FALSE)
+
+cypmatrix2r <- rlefko2(data = cypraw_v1, stageframe = cypframe_raw, 
+  year = "all", patch = "all", stages = c("stage3", "stage2", "stage1"),
+  size = c("size3added", "size2added"), supplement = cypsupp2r,
+  yearcol = "year2", patchcol = "patchid", indivcol = "individ")
+                       
+repvalue3(cypmatrix2r, stochastic = TRUE)
 
 }
 \seealso{

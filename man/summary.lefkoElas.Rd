@@ -25,6 +25,7 @@ Particularly, it breaks down elasticity values by the kind of ahistorical
 and, if applicable, historical transition.
 }
 \examples{
+# Lathyrus example
 data(lathyrus)
 
 sizevector <- c(0, 100, 13, 127, 3730, 3800, 0)
@@ -49,25 +50,26 @@ lathvert <- verticalize3(lathyrus, noyears = 4, firstyear = 1988,
   nonobsacol = "Dormant1988", stageassign = lathframe, stagesize = "sizea",
   censorcol = "Missing1988", censorkeep = NA, censor = TRUE)
 
-lathrepm <- matrix(0, 7, 7)
-lathrepm[1, 6] <- 0.345
-lathrepm[2, 6] <- 0.054
+lathsupp3 <- supplemental(stage3 = c("Sd", "Sd", "Sdl", "Sd", "Sdl"), 
+  stage2 = c("Sd", "Sd", "Sd", "rep", "rep"),
+  stage1 = c("Sd", "rep", "rep", "all", "all"), 
+  givenrate = c(0.345, 0.345, 0.054, NA, NA),
+  multiplier = c(NA, NA, NA, 0.345, 0.054),
+  type = c(1, 1, 1, 3, 3), stageframe = lathframe, historical = TRUE)
 
-lathover3 <- overwrite(stage3 = c("Sd", "Sd", "Sdl"),
-  stage2 = c("Sd", "Sd", "Sd"), stage1 = c("Sd", "rep", "rep"),
-  givenrate = c(0.345, 0.345, 0.054))
-lathover2 <- overwrite(stage3 = c("Sd", "Sdl"), stage2 = c("Sd", "Sd"),
-  givenrate = c(0.345, 0.054))
+lathsupp2 <- supplemental(stage3 = c("Sd", "Sdl", "Sd", "Sdl"), 
+  stage2 = c("Sd", "Sd", "rep", "rep"),
+  givenrate = c(0.345, 0.054, NA, NA),
+  multiplier = c(NA, NA, 0.345, 0.054),
+  type = c(1, 1, 3, 3), stageframe = lathframe, historical = FALSE)
+  
+ehrlen3 <- rlefko3(data = lathvert, stageframe = lathframe, year = "all", 
+  stages = c("stage3", "stage2", "stage1"), supplement = lathsupp3,
+  yearcol = "year2", indivcol = "individ")
 
-ehrlen3 <- rlefko3(data = lathvert, stageframe = lathframe,
-  year = c(1989, 1990), stages = c("stage3", "stage2", "stage1"),
-  repmatrix = lathrepm, overwrite = lathover3, yearcol = "year2",
-  indivcol = "individ")
-
-ehrlen2 <- rlefko2(data = lathvert, stageframe = lathframe,
-  year = c(1989, 1990), stages = c("stage3", "stage2"),
-  repmatrix = lathrepm, overwrite = lathover2, yearcol = "year2",
-  indivcol = "individ")
+ehrlen2 <- rlefko2(data = lathvert, stageframe = lathframe, year = "all",
+  stages = c("stage3", "stage2"), supplement = lathsupp2,
+  yearcol = "year2", indivcol = "individ")
 
 ehrlen3elas <- elasticity3(ehrlen3)
 ehrlen2elas <- elasticity3(ehrlen2)

@@ -44,6 +44,8 @@
 #' @param binhalfwidth A numeric vector giving the half-width of size bins.
 #' Required to classify individuals appropriately within size classes.
 #' Defaults to 0.5 for all sizes.
+#' @param comments An optional vector of text entries holding useful text
+#' descriptions of all stages.
 #' @param ipmbins If an IPM is desired, then this parameter sets the number of
 #' stages to create for that IPM. This number is in addition to any stages
 #' that are not size-classified. Defaults to 100, and numbers greater than this
@@ -88,8 +90,52 @@
 #' \item{comments}{A text field for stage descriptions.}
 #'  
 #' @examples
+#' # Lathyrus example
+#' data(lathyrus)
+#' 
+#' sizevector <- c(0, 100, 13, 127, 3730, 3800, 0)
+#' stagevector <- c("Sd", "Sdl", "VSm", "Sm", "VLa", "Flo", "Dorm")
+#' repvector <- c(0, 0, 0, 0, 0, 1, 0)
+#' obsvector <- c(0, 1, 1, 1, 1, 1, 0)
+#' matvector <- c(0, 0, 1, 1, 1, 1, 1)
+#' immvector <- c(1, 1, 0, 0, 0, 0, 0)
+#' propvector <- c(1, 0, 0, 0, 0, 0, 0)
+#' indataset <- c(0, 1, 1, 1, 1, 1, 1)
+#' binvec <- c(0, 100, 11, 103, 3500, 3800, 0.5)
+#' 
+#' lathframe <- sf_create(sizes = sizevector, stagenames = stagevector,
+#'   repstatus = repvector, obsstatus = obsvector, matstatus = matvector,
+#'   immstatus = immvector, indataset = indataset, binhalfwidth = binvec,
+#'   propstatus = propvector)
+#' 
+#' lathvert <- verticalize3(lathyrus, noyears = 4, firstyear = 1988,
+#'   patchidcol = "SUBPLOT", individcol = "GENET", blocksize = 9,
+#'   juvcol = "Seedling1988", sizeacol = "Volume88", repstracol = "FCODE88",
+#'   fecacol = "Intactseed88", deadacol = "Dead1988",
+#'   nonobsacol = "Dormant1988", stageassign = lathframe, stagesize = "sizea",
+#'   censorcol = "Missing1988", censorkeep = NA, censor = TRUE)
+#' 
+#' lathsupp3 <- supplemental(stage3 = c("Sd", "Sd", "Sdl", "Sd", "Sdl"), 
+#'   stage2 = c("Sd", "Sd", "Sd", "rep", "rep"),
+#'   stage1 = c("Sd", "rep", "rep", "all", "all"), 
+#'   givenrate = c(0.345, 0.345, 0.054, NA, NA),
+#'   multiplier = c(NA, NA, NA, 0.345, 0.054),
+#'   type = c(1, 1, 1, 3, 3), stageframe = lathframe, historical = TRUE)
+#' 
+#' ehrlen3 <- rlefko3(data = lathvert, stageframe = lathframe, year = "all", 
+#'   stages = c("stage3", "stage2", "stage1"), supplement = lathsupp3,
+#'   yearcol = "year2", indivcol = "individ")
+#' 
+#' ehrlen3mean <- lmean(ehrlen3)
+#' ehrlen3mean$A[[1]]
+#' 
+#' # Cypripedium example
+#' rm(list=ls(all=TRUE))
+#' 
+#' data(cypdata)
+#' 
 #' sizevector <- c(0, 0, 0, 0, 0, 0, 1, 2.5, 4.5, 8, 17.5)
-#' stagevector <- c("SD", "P1", "P2", "P3", "SL", "D", "XSm", "Sm", "Md", "Lg", 
+#' stagevector <- c("SD", "P1", "P2", "P3", "SL", "D", "XSm", "Sm", "Md", "Lg",
 #'   "XLg")
 #' repvector <- c(0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1)
 #' obsvector <- c(0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1)
@@ -104,24 +150,36 @@
 #'   propstatus = propvector, immstatus = immvector, indataset = indataset,
 #'   binhalfwidth = binvec)
 #' 
-#' cypframe_raw$comments[(cypframe_raw$stagenames == "SD")] <- "Dormant seed"
-#' cypframe_raw$comments[(cypframe_raw$stagenames == "P1")] <- "1st yr protocorm"
-#' cypframe_raw$comments[(cypframe_raw$stagenames == "P2")] <- "2nd yr protocorm"
-#' cypframe_raw$comments[(cypframe_raw$stagenames == "P3")] <- "3rd yr protocorm"
-#' cypframe_raw$comments[(cypframe_raw$stagenames == "SL")] <- "Seedling"
-#' cypframe_raw$comments[(cypframe_raw$stagenames == "D")] <- "Dormant adult"
-#' cypframe_raw$comments[(cypframe_raw$stagenames == "XSm")] <- "Extra small adult (1 shoot)"
-#' cypframe_raw$comments[(cypframe_raw$stagenames == "Sm")] <- "Small adult (2-3 shoots)"
-#' cypframe_raw$comments[(cypframe_raw$stagenames == "Md")] <- "Medium adult (4-5 shoots)"
-#' cypframe_raw$comments[(cypframe_raw$stagenames == "Lg")] <- "Large adult (6-10 shoots)"
-#' cypframe_raw$comments[(cypframe_raw$stagenames == "XLg")] <- "Extra large adult (>10 shoots)"
+#' cypraw_v1 <- verticalize3(data = cypdata, noyears = 6, firstyear = 2004,
+#'   patchidcol = "patch", individcol = "plantid", blocksize = 4,
+#'   sizeacol = "Inf2.04", sizebcol = "Inf.04", sizeccol = "Veg.04",
+#'   repstracol = "Inf.04", repstrbcol = "Inf2.04", fecacol = "Pod.04",
+#'   stageassign = cypframe_raw, stagesize = "sizeadded", NAas0 = TRUE,
+#'   NRasRep = TRUE)
 #' 
-#' cypframe_raw
+#' cypsupp2r <- supplemental(stage3 = c("SD", "P1", "P2", "P3", "SL", "SL", "D", 
+#'     "XSm", "Sm", "SD", "P1"),
+#'   stage2 = c("SD", "SD", "P1", "P2", "P3", "SL", "SL", "SL", "SL", "rep",
+#'     "rep"),
+#'   eststage3 = c(NA, NA, NA, NA, NA, NA, "D", "XSm", "Sm", NA, NA),
+#'   eststage2 = c(NA, NA, NA, NA, NA, NA, "XSm", "XSm", "XSm", NA, NA),
+#'   givenrate = c(0.10, 0.20, 0.20, 0.20, 0.25, 0.40, NA, NA, NA, NA, NA),
+#'   multiplier = c(NA, NA, NA, NA, NA, NA, NA, NA, NA, 0.5, 0.5),
+#'   type =c(1, 1, 1, 1, 1, 1, 1, 1, 1, 3, 3),
+#'   stageframe = cypframe_raw, historical = FALSE)
+#' 
+#' cypmatrix2r <- rlefko2(data = cypraw_v1, stageframe = cypframe_raw, 
+#'   year = "all", patch = "all", stages = c("stage3", "stage2", "stage1"),
+#'   size = c("size3added", "size2added"), supplement = cypsupp2r,
+#'   yearcol = "year2", patchcol = "patchid", indivcol = "individ")
+#'                        
+#' cyp2mean <- lmean(cypmatrix2r)
+#' cyp2mean
 #' 
 #' @export
 sf_create <- function(sizes, stagenames = NA, repstatus = 1, obsstatus = 1,
   propstatus = NA, immstatus = NA, matstatus = 1, minage = NA, maxage = NA,
-  indataset = NA, binhalfwidth = 0.5, ipmbins = 100, roundsize = 5) {
+  indataset = NA, binhalfwidth = 0.5, comments = NA, ipmbins = 100, roundsize = 5) {
   
   #Initially we standardize the length of option vectors and check for incorrect input
   matsize <- length(sizes)
@@ -224,19 +282,27 @@ sf_create <- function(sizes, stagenames = NA, repstatus = 1, obsstatus = 1,
     warning("High ipmbin numbers may lead to dramatic decreases in statistical power and overparameterized matrices.")
   }
   
+  if (!all(is.na(comments))) {
+    if (length(comments) != matsize) {
+      stop("Comments field must be either NA or a vector of the same length as the sizes vector.", call. = FALSE)
+    }
+  } else {
+    comments <- rep("No description", matsize)
+  }
+  
   # Now we will build the model stageframe
   if (no_age == TRUE) {
     sfmat <- cbind.data.frame(stage = as.character(stagenames), size = sizes,
       repstatus = repstatus, obsstatus = obsstatus, propstatus = propstatus,
       immstatus = immstatus, matstatus = matstatus, indataset = indataset,
       binhalfwidth_raw = binhalfwidth, min_age = NA, max_age = NA,
-      stringsAsFactors = FALSE)
+      comments = comments, stringsAsFactors = FALSE)
   } else {
     sfmat <- cbind.data.frame(stage = as.character(stagenames), size = sizes,
       repstatus = repstatus, obsstatus = obsstatus, propstatus = propstatus,
       immstatus = immstatus, matstatus = matstatus, indataset = indataset,
       binhalfwidth_raw = binhalfwidth, min_age = minage, max_age = maxage,
-      stringsAsFactors = FALSE)
+      comments = comments, stringsAsFactors = FALSE)
   }
   
   # Here we take care of IPM coding
@@ -304,11 +370,14 @@ sf_create <- function(sizes, stagenames = NA, repstatus = 1, obsstatus = 1,
   
   sfmat$sizebin_width <- sfmat$sizebin_max - sfmat$sizebin_min
   
-  sfmat$comments <- "Add text stage description if desired"
+  outmat <- sfmat[,c("stage", "size", "repstatus", "obsstatus", "propstatus",
+      "immstatus", "matstatus", "indataset", "binhalfwidth_raw", "min_age",
+      "max_age", "sizebin_min", "sizebin_max", "sizebin_center",
+      "sizebin_width", "comments")]
   
-  class(sfmat) <- append(class(sfmat), "stageframe")
+  class(outmat) <- append(class(outmat), "stageframe")
   
-  return(sfmat)
+  return(outmat)
 }
 
 #' Rewrite Stageframe To Reflect IPM Stages
@@ -371,7 +440,7 @@ sf_create <- function(sizes, stagenames = NA, repstatus = 1, obsstatus = 1,
   
   extrastagenames <- apply(as.matrix(extrasizes), 1, function(X) {
     paste0("sz", round(X, roundsize), " rp", ipmdata$repstatus[loipmborder], " mt", 
-           ipmdata$matstatus[loipmborder], " ob", ipmdata$obsstatus[loipmborder])
+      ipmdata$matstatus[loipmborder], " ob", ipmdata$obsstatus[loipmborder])
   })
   ipmbinhalfwidth <- ipmhalftest
   
@@ -383,6 +452,7 @@ sf_create <- function(sizes, stagenames = NA, repstatus = 1, obsstatus = 1,
     matstatus = rep(ipmdata$matstatus[loipmborder], length.out = currentbins), 
     indataset = rep(ipmdata$indataset[loipmborder], length.out = currentbins), 
     binhalfwidth_raw = rep(ipmbinhalfwidth, length.out = currentbins),
+    comments = rep(ipmdata$comments[loipmborder], length.out = currentbins),
     stringsAsFactors = FALSE)
   
   if (!no_age) {
@@ -1630,6 +1700,47 @@ overwrite <- function(stage3, stage2, stage1 = NA, eststage3 = NA,
 #' and function \code{supplemental()}, the latter is used.
 #' 
 #' @examples
+#' # Lathyrus example
+#' data(lathyrus)
+#' 
+#' sizevector <- c(0, 100, 13, 127, 3730, 3800, 0)
+#' stagevector <- c("Sd", "Sdl", "VSm", "Sm", "VLa", "Flo", "Dorm")
+#' repvector <- c(0, 0, 0, 0, 0, 1, 0)
+#' obsvector <- c(0, 1, 1, 1, 1, 1, 0)
+#' matvector <- c(0, 0, 1, 1, 1, 1, 1)
+#' immvector <- c(1, 1, 0, 0, 0, 0, 0)
+#' propvector <- c(1, 0, 0, 0, 0, 0, 0)
+#' indataset <- c(0, 1, 1, 1, 1, 1, 1)
+#' binvec <- c(0, 100, 11, 103, 3500, 3800, 0.5)
+#' 
+#' lathframe <- sf_create(sizes = sizevector, stagenames = stagevector,
+#'   repstatus = repvector, obsstatus = obsvector, matstatus = matvector,
+#'   immstatus = immvector, indataset = indataset, binhalfwidth = binvec,
+#'   propstatus = propvector)
+#' 
+#' lathvert <- verticalize3(lathyrus, noyears = 4, firstyear = 1988,
+#'   patchidcol = "SUBPLOT", individcol = "GENET", blocksize = 9,
+#'   juvcol = "Seedling1988", sizeacol = "Volume88", repstracol = "FCODE88",
+#'   fecacol = "Intactseed88", deadacol = "Dead1988",
+#'   nonobsacol = "Dormant1988", stageassign = lathframe, stagesize = "sizea",
+#'   censorcol = "Missing1988", censorkeep = NA, censor = TRUE)
+#' 
+#' lathsupp3 <- supplemental(stage3 = c("Sd", "Sd", "Sdl", "Sd", "Sdl"), 
+#'   stage2 = c("Sd", "Sd", "Sd", "rep", "rep"),
+#'   stage1 = c("Sd", "rep", "rep", "all", "all"), 
+#'   givenrate = c(0.345, 0.345, 0.054, NA, NA),
+#'   multiplier = c(NA, NA, NA, 0.345, 0.054),
+#'   type = c(1, 1, 1, 3, 3), stageframe = lathframe, historical = TRUE)
+#' 
+#' ehrlen3 <- rlefko3(data = lathvert, stageframe = lathframe, year = "all", 
+#'   stages = c("stage3", "stage2", "stage1"), supplement = lathsupp3,
+#'   yearcol = "year2", indivcol = "individ")
+#' 
+#' ehrlen3mean <- lmean(ehrlen3)
+#' ehrlen3mean$A[[1]]
+#' 
+#' # Cypripedium example
+#' rm(list=ls(all=TRUE))
 #' data(cypdata)
 #' 
 #' sizevector <- c(0, 0, 0, 0, 0, 0, 1, 2.5, 4.5, 8, 17.5)
@@ -1648,39 +1759,31 @@ overwrite <- function(stage3, stage2, stage1 = NA, eststage3 = NA,
 #'   propstatus = propvector, immstatus = immvector, indataset = indataset,
 #'   binhalfwidth = binvec)
 #' 
+#' cypraw_v1 <- verticalize3(data = cypdata, noyears = 6, firstyear = 2004,
+#'   patchidcol = "patch", individcol = "plantid", blocksize = 4,
+#'   sizeacol = "Inf2.04", sizebcol = "Inf.04", sizeccol = "Veg.04",
+#'   repstracol = "Inf.04", repstrbcol = "Inf2.04", fecacol = "Pod.04",
+#'   stageassign = cypframe_raw, stagesize = "sizeadded", NAas0 = TRUE,
+#'   NRasRep = TRUE)
+#' 
 #' cypsupp2r <- supplemental(stage3 = c("SD", "P1", "P2", "P3", "SL", "SL", "D", 
 #'     "XSm", "Sm", "SD", "P1"),
-#'   stage2 = c("SD", "SD", "P1", "P2", "P3", "SL", "SL", "SL", "SL", "XLg", "XLg"),
+#'   stage2 = c("SD", "SD", "P1", "P2", "P3", "SL", "SL", "SL", "SL", "rep",
+#'     "rep"),
 #'   eststage3 = c(NA, NA, NA, NA, NA, NA, "D", "XSm", "Sm", NA, NA),
 #'   eststage2 = c(NA, NA, NA, NA, NA, NA, "XSm", "XSm", "XSm", NA, NA),
-#'   givenrate = c(0.1, 0.2, 0.2, 0.2, 0.25, 0.4, NA, NA, NA, NA, NA),
-#'   multiplier = c(NA, NA, NA, NA, NA, NA, NA, NA, NA, 0.50, 0.35),
-#'   type = c("S", "S", "S", "S", "S", "S", "S", "S", "S", "R", "R"),
+#'   givenrate = c(0.10, 0.20, 0.20, 0.20, 0.25, 0.40, NA, NA, NA, NA, NA),
+#'   multiplier = c(NA, NA, NA, NA, NA, NA, NA, NA, NA, 0.5, 0.5),
+#'   type =c(1, 1, 1, 1, 1, 1, 1, 1, 1, 3, 3),
 #'   stageframe = cypframe_raw, historical = FALSE)
 #' 
-#' cypsupp2r
-#' 
-#' cypsupp3r <- supplemental(stage3 = c("SD", "SD", "P1", "P1", "P2", "P3", "SL", 
-#'   "SL", "SL", "D", "XSm", "Sm", "D", "XSm", "Sm", "SD", "P1"), 
-#'   stage2 = c("SD", "SD", "SD", "SD", "P1", "P2", "P3", "SL", "SL", "SL",
-#'    "SL", "SL", "SL", "SL", "SL", "XLg", "XLg"),
-#'   stage1 = c("SD", "rep", "SD", "rep", "SD", "P1", "P2", "P3", "SL", "P3",
-#'    "P3", "P3", "SL", "SL", "SL", "XLg", "XLg"),
-#'   eststage3 = c(NA, NA, NA, NA, NA, NA, NA, NA, NA, "D", "XSm", "Sm", "D",
-#'    "XSm", "Sm", NA, NA), 
-#'   eststage2 = c(NA, NA, NA, NA, NA, NA, NA, NA, NA, "XSm", "XSm", "XSm",
-#'    "XSm", "XSm", "XSm", NA, NA), 
-#'   eststage1 = c(NA, NA, NA, NA, NA, NA, NA, NA, NA, "XSm", "XSm", "XSm",
-#'     "XSm", "XSm", "XSm", NA, NA),
-#'   givenrate = c(0.1, 0.1, 0.2, 0.2, 0.2, 0.2, 0.25, 0.4, 0.4, NA, NA, NA, NA,
-#'     NA, NA, NA, NA),
-#'   multiplier = c(NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA,
-#'                  0.50, 0.35),
-#'   type = c("S", "S", "S", "S", "S", "S", "S", "S", "S", "S", "S", "S", "S",
-#'     "S", "S", "R", "R"),
-#'   stageframe = cypframe_raw, historical = TRUE)
-#' 
-#' cypsupp3r
+#' cypmatrix2r <- rlefko2(data = cypraw_v1, stageframe = cypframe_raw, 
+#'   year = "all", patch = "all", stages = c("stage3", "stage2", "stage1"),
+#'   size = c("size3added", "size2added"), supplement = cypsupp2r,
+#'   yearcol = "year2", patchcol = "patchid", indivcol = "individ")
+#'                        
+#' cyp2mean <- lmean(cypmatrix2r)
+#' cyp2mean
 #' 
 #' @export
 supplemental <- function(stage3, stage2, stage1 = NA, eststage3 = NA,
@@ -1768,6 +1871,25 @@ supplemental <- function(stage3, stage2, stage1 = NA, eststage3 = NA,
   
   class(output) <- append(class(output), "lefkoSD")
   
+  #Final check
+  all12s <- which(convtype != 3)
+  all3s <- which(convtype == 3)
+  
+  if (length(all12s) > 0) {
+    givenests <- which(!is.na(eststage3))
+    givengivens <- which(!is.na(givenrate))
+    
+    givens <- unique(union(givenests, givengivens))
+    if (length(givens) < length(all12s)) {
+      stop("Some given rates or proxy transitions do not appear to be given. Please correct.", call. = FALSE)
+    }
+  }
+  if (length(all3s) > 0) {
+    if (any(is.na(multiplier[all3s]))) {
+      stop("Some fecundity multipliers appear to be NAs. Please correct.", call. = FALSE)
+    }
+  }
+  
   return(output)
 }
 
@@ -1780,13 +1902,23 @@ supplemental <- function(stage3, stage2, stage1 = NA, eststage3 = NA,
 #'
 #' @param data A historical vertical data file, which is a data frame of class
 #' \code{hfvdata}.
-#' @param size The name or column number of the variable corresponding to size.
+#' @param size3 The name or column number of the variable corresponding to size
+#' in time *t+1*.
+#' @param size2 The name or column number of the variable corresponding to size
+#' in time *t*. This term is required for both size and fecundity tests.
+#' @param obs3 The name or column number of the variable corresponding to
+#' observation status in time *t+1*. This should be used if observation status
+#' will be used as a vital rate to absorb states of size = 0.
 #' @param fec The name or column number of the variable corresponding to
 #' fecundity. The name of the variable should correspond to the proper time,
 #' either time *t* or time *t*-1.
 #' @param repst The name or column number of the variable corresponding to
 #' reproductive status in time *t*. Required if fecundity distribution will be
 #' tested.
+#' @param zisize A logical value indicating whether to conduct a test of zero
+#' inflation in size. Defaults to TRUE.
+#' @param zifec A logical value indicating whether to conduct a test of zero
+#' inflation in fecundity. Defaults to TRUE.
 #'
 #' @return Produces text describing the degree and significance of difference
 #' from expected dispersion, and the degree and significance of zero inflation.
@@ -1800,7 +1932,15 @@ supplemental <- function(stage3, stage2, stage1 = NA, eststage3 = NA,
 #' appropriate than a simple analysis of size and fecundity variables in
 #' \code{data}.
 #' 
+#' The specific test used for overdispersion is a chi-squared test of the
+#' dispersion parameter estimated using a generalized linear model predicting
+#' the response given size in time *t*, under a quasi-Poisson distribution.
+#' 
+#' The specific test used for zero-inflation is the chi-squared test presented
+#' in van der Broek (1995).
+#' 
 #' @examples
+#' # Lathyrux example
 #' data(lathyrus)
 #' 
 #' sizevector <- c(0, 4.6, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 1, 2, 3, 4, 5, 6, 7, 8,
@@ -1834,16 +1974,55 @@ supplemental <- function(stage3, stage2, stage1 = NA, eststage3 = NA,
 #' lathvertln$feca1 <- round(lathvertln$feca1)
 #' lathvertln$feca3 <- round(lathvertln$feca3)
 #' 
-#' sf_distrib(lathvertln, fec = "feca2", repst = "repstatus2")
+#' # The following will only test fecundity, since size is Gaussian.
+#' # Zero-inflation will not be assessed in this example, since 0 values in
+#' # fecundity have been excluded in the life history model.
+#' 
+#' sf_distrib(lathvertln, size2 = "sizea2", fec = "feca2",
+#'   repst = "repstatus2", zifec = FALSE)
+#' 
+#' # Cypripedium example
+#' rm(list=ls(all=TRUE))
+#' 
+#' data(cypdata)
+#' 
+#' sizevector <- c(0, 0, 0, 0, 0, 0, 1, 2.5, 4.5, 8, 17.5)
+#' stagevector <- c("SD", "P1", "P2", "P3", "SL", "D", "XSm", "Sm", "Md", "Lg",
+#'   "XLg")
+#' repvector <- c(0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1)
+#' obsvector <- c(0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1)
+#' matvector <- c(0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1)
+#' immvector <- c(0, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0)
+#' propvector <- c(1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)
+#' indataset <- c(0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1)
+#' binvec <- c(0, 0, 0, 0, 0, 0.5, 0.5, 1, 1, 2.5, 7)
+#' 
+#' cypframe_raw <- sf_create(sizes = sizevector, stagenames = stagevector,
+#'   repstatus = repvector, obsstatus = obsvector, matstatus = matvector,
+#'   propstatus = propvector, immstatus = immvector, indataset = indataset,
+#'   binhalfwidth = binvec)
+#' 
+#' cypraw_v1 <- verticalize3(data = cypdata, noyears = 6, firstyear = 2004,
+#'   patchidcol = "patch", individcol = "plantid", blocksize = 4,
+#'   sizeacol = "Inf2.04", sizebcol = "Inf.04", sizeccol = "Veg.04",
+#'   repstracol = "Inf.04", repstrbcol = "Inf2.04", fecacol = "Pod.04",
+#'   stageassign = cypframe_raw, stagesize = "sizeadded", NAas0 = TRUE,
+#'   NRasRep = TRUE)
+#' 
+#' sf_distrib(cypraw_v1, size2 = "size2added", fec = "feca2",
+#'   repst = "repstatus2", zisize = FALSE)
 #' 
 #' @export
-sf_distrib <- function(data, size = NA, fec = NA, repst = NA) {
+sf_distrib <- function(data, size3 = NA, size2 = NA, obs3 = NA, fec = NA,
+  repst = NA, zisize = TRUE, zifec = TRUE) {
+  
+  alive3 <- NULL
   
   if (!any(class(data) == "hfvdata")) {
     stop("Function sf_distrib requires an object of class hfvdata as input.", call. = FALSE)
   }
   
-  if (is.na(size) & is.na(fec)) {
+  if (is.na(size3) & is.na(fec)) {
     stop("Function sf_distrib requires a size and/or fecundity variable to test. Please designate at least one such variable",
          call. = FALSE)
   }
@@ -1853,37 +2032,93 @@ sf_distrib <- function(data, size = NA, fec = NA, repst = NA) {
          call. = FALSE)
   }
   
-  if (!is.na(size)) {
-    if (is.numeric(size)) {
-      if (size > dim(data)[2]) {
-        stop("Size variable seems to represent column number, but column number is out of bounds.", call. = FALSE)
+  if (is.na(size2)) {
+    stop("Function sf_distrib requires size in time t to function. Please designate this variable",
+         call. = FALSE)
+  }
+  
+  sdata <- subset(data, alive3 == 1)
+  
+  if (!is.na(obs3)) {
+    if (is.numeric(obs3)) {
+      if (obs3 > dim(sdata)[2]) {
+        stop("Obs3 variable seems to represent column number, but column number is out of bounds.", call. = FALSE)
       } else {
-        sizedata <- data[, size]
+        sdata <- sdata[which(sdata[,obs3] == 1),]
       }
-    } else if (is.character(size)) {
-      sizelow <- tolower(size)
-      datanames <- tolower(names(data))
+    } else if (is.character(obs3)) {
+      obs3low <- tolower(obs3)
+      datanames <- tolower(names(sdata))
       
-      sizeproxy <- grep(sizelow, datanames, fixed = TRUE)
+      obs3proxy <- grep(obs3low, datanames, fixed = TRUE)
       
-      if (length(sizeproxy) == 0) {
-        stop("Name of size variable does not match any variable in dataset.", call. = FALSE)
-      } else if (length(sizeproxy) > 1) {
-        stop("Size variable name appears to match several variable names in dataset.", call. = FALSE)
+      if (length(obs3proxy) == 0) {
+        stop("Name of obs3 variable does not match any variable in dataset.", call. = FALSE)
+      } else if (length(obs3proxy) > 1) {
+        stop("Obs3 variable name appears to match several variable names in dataset.", call. = FALSE)
       }
       
-      sizedata <- data[, sizeproxy]
+      sdata <- sdata[which(sdata[,obs3proxy] == 1),]
+    }
+  }
+  
+  if (!is.na(size3)) {
+    if (is.numeric(size3)) {
+      if (size3 > dim(sdata)[2]) {
+        stop("Size3 variable seems to represent column number, but column number is out of bounds.", call. = FALSE)
+      } else {
+        size3data <- sdata[, size3]
+      }
+    } else if (is.character(size3)) {
+      size3low <- tolower(size3)
+      datanames <- tolower(names(sdata))
+      
+      size3proxy <- grep(size3low, datanames, fixed = TRUE)
+      
+      if (length(size3proxy) == 0) {
+        stop("Name of size3 variable does not match any variable in dataset.", call. = FALSE)
+      } else if (length(size3proxy) > 1) {
+        stop("Size3 variable name appears to match several variable names in dataset.", call. = FALSE)
+      }
+      
+      size3data <- sdata[, size3proxy]
+    }
+    
+    if (is.numeric(size2)) {
+      if (size2 > dim(sdata)[2]) {
+        stop("Size2 variable seems to represent column number, but column number is out of bounds.", call. = FALSE)
+      } else {
+        size2data <- sdata[, size2]
+      }
+    } else if (is.character(size2)) {
+      size2low <- tolower(size2)
+      datanames <- tolower(names(sdata))
+      
+      size2proxy <- grep(size2low, datanames, fixed = TRUE)
+      
+      if (length(size2proxy) == 0) {
+        stop("Name of size2 variable does not match any variable in dataset.", call. = FALSE)
+      } else if (length(size2proxy) > 1) {
+        stop("Size3 variable name appears to match several variable names in dataset.", call. = FALSE)
+      }
+      
+      size2data <- sdata[, size2proxy]
     }
     
     #Here is the test of overdispersion for size
-    jsmean <- mean(sizedata)
-    jsvar <- stats::var(sizedata)
+    jsmean <- mean(size3data)
+    jsvar <- stats::var(size3data)
     
-    jsodchip <- 1 - 2 * abs((1 - stats::pchisq((sum(sizedata - jsmean)^2 / jsmean), length(sizedata) - 1)) - 0.5)
+    s_pmodel <- stats::glm(size3data ~ size2data)
+    s_qpmodel <- stats::glm(size3data ~ size2data)
+    s_disp <- summary(s_qpmodel)$dispersion
+    s_df <- summary(s_pmodel)$df.residual
+    
+    jsodchip <- stats::pchisq(s_disp * s_df, s_df, lower = FALSE)
     
     writeLines(paste0("The mean size is ", signif(jsmean, digits = 4)))
     writeLines(paste0("\nThe variance in size is ", signif(jsvar, digits = 4)))
-    writeLines(paste0("\nThe probability of this dispersion level by chance assuming the true mean size = variance in size is ", signif(jsodchip, digits = 4)))
+    writeLines(paste0("\nThe probability of this dispersion level by chance assuming the true mean size = variance in size, and an alternative hypothesis of overdispersion, is ", signif(jsodchip, digits = 4)))
     
     if (jsodchip <= 0.05 & jsvar > jsmean) {
       writeLines("\nSize is significantly overdispersed.")
@@ -1894,28 +2129,57 @@ sf_distrib <- function(data, size = NA, fec = NA, repst = NA) {
     }
     
     #Here is the test of zero inflation for size
-    s0est <- exp(-jsmean) #Estimated lambda
-    s0n0 <- sum(sizedata == 0) #Actual no of zeroes
-    
-    s0exp <- length(sizedata) * s0est #Expected no of zeroes
-    
-    jvdbs <- (s0n0 - s0exp)^2 / (s0exp * (1 - s0est) - length(sizedata) * jsmean * (s0est^2))
-    jszichip <- stats::pchisq(jvdbs, df = 1, lower.tail = FALSE)
-    
-    writeLines(paste0("\nMean lambda is ", signif(s0est, digits = 4)))
-    writeLines(paste0("The actual number of 0s in size is ", s0n0))
-    writeLines(paste0("The expected number of 0s in size under the null hypothesis is ", signif(s0exp, digits = 4)))
-    writeLines(paste0("The probability of this deviation in 0s from expectation by chance is ", signif(jszichip, digits = 4)))
-    
-    if (jszichip <= 0.05 & s0n0 > s0exp) {
-      writeLines("\nSize is significantly zero-inflated.\n")
-    } else {
-      writeLines("\nSize is not significantly zero-inflated.\n")
+    if (zisize) {
+      
+      s0est <- exp(-jsmean) #Estimated lambda
+      s0n0 <- sum(size3data == 0) #Actual no of zeroes
+      
+      s0exp <- length(size3data) * s0est #Expected no of zeroes
+      
+      jvdbs <- (s0n0 - s0exp)^2 / (s0exp * (1 - s0est) - length(size3data) * jsmean * (s0est^2))
+      jszichip <- stats::pchisq(jvdbs, df = 1, lower.tail = FALSE)
+      
+      writeLines(paste0("\nMean lambda is ", signif(s0est, digits = 4)))
+      writeLines(paste0("The actual number of 0s in size is ", s0n0))
+      writeLines(paste0("The expected number of 0s in size under the null hypothesis is ", signif(s0exp, digits = 4)))
+      writeLines(paste0("The probability of this deviation in 0s from expectation by chance is ", signif(jszichip, digits = 4)))
+      
+      if (jszichip <= 0.05 & s0n0 > s0exp) {
+        writeLines("\nSize is significantly zero-inflated.\n")
+      } else {
+        writeLines("\nSize is not significantly zero-inflated.")
+        if (s0n0 == 0) {
+          writeLines("Size does not appear to include 0s, suggesting that a zero-truncated distribution may be warranted.")
+        }
+        writeLines("\n")
+      }
+      
+      if (!is.na(fec)) writeLines("\n--------------------------------------------------\n")
     }
-    if (!is.na(fec)) writeLines("\n--------------------------------------------------\n")
   }
   
   if (!is.na(fec)) {
+    if (is.numeric(size2)) {
+      if (size2 > dim(sdata)[2]) {
+        stop("Size2 variable seems to represent column number, but column number is out of bounds.", call. = FALSE)
+      } else {
+        size2data <- data[, size2]
+      }
+    } else if (is.character(size2)) {
+      size2low <- tolower(size2)
+      datanames <- tolower(names(data))
+      
+      size2proxy <- grep(size2low, datanames, fixed = TRUE)
+      
+      if (length(size2proxy) == 0) {
+        stop("Name of size2 variable does not match any variable in dataset.", call. = FALSE)
+      } else if (length(size2proxy) > 1) {
+        stop("Size2 variable name appears to match several variable names in dataset.", call. = FALSE)
+      }
+      
+      size2data <- data[, size2proxy]
+    }
+    
     if (is.numeric(repst)) {
       if (repst > dim(data)[2]) {
         stop("\nReproductive status variable seems to represent column number, but column number is out of bounds.", 
@@ -1925,6 +2189,7 @@ sf_distrib <- function(data, size = NA, fec = NA, repst = NA) {
           stop("\nReproductive status variable used should be binomial.", call. = FALSE)
         }
         repstdata <- data[which(data[,repst] == 1),]
+        size2data <- size2data[which(data[,repst] == 1)]
       }
     } else if (is.character(repst)) {
       repstlow <- tolower(repst)
@@ -1939,7 +2204,7 @@ sf_distrib <- function(data, size = NA, fec = NA, repst = NA) {
       }
       
       repstdata <- data[which(data[,repstproxy] == 1),]
-      
+      size2data <- size2data[which(data[,repstproxy] == 1)]
     } else {
       stop("Reproductive status variable not recognized.", call. = FALSE)
     }
@@ -1970,11 +2235,16 @@ sf_distrib <- function(data, size = NA, fec = NA, repst = NA) {
     jfmean <- mean(fecdata)
     jfvar <- stats::var(fecdata)
     
-    jfodchip <- 1 - 2 * abs((1 - stats::pchisq((sum(fecdata - jfmean)^2 / jfmean), length(fecdata) - 1)) - 0.5)
+    f_pmodel <- stats::glm(fecdata ~ size2data)
+    f_qpmodel <- stats::glm(fecdata ~ size2data)
+    f_disp <- summary(f_qpmodel)$dispersion
+    f_df <- summary(f_pmodel)$df.residual
+    
+    jfodchip <- stats::pchisq(f_disp * f_df, f_df, lower = FALSE)
     
     writeLines(paste0("\nMean fecundity is ", signif(jfmean, digits = 4)))
     writeLines(paste0("The variance in fecundity is ", signif(jfvar, digits = 4)))
-    writeLines(paste0("The probability of this dispersion level by chance assuming the true mean fecundity = variance in fecundity is ", signif(jfodchip, digits = 4)))
+    writeLines(paste0("The probability of this dispersion level by chance assuming the true mean fecundity = variance in fecundity, and an alternative hypothesis of overdispersion, is ", signif(jfodchip, digits = 4)))
     
     if (jfodchip <= 0.05 & jfmean < jfvar) {
       writeLines("\nFecundity is significantly overdispersed.\n")
@@ -1985,25 +2255,31 @@ sf_distrib <- function(data, size = NA, fec = NA, repst = NA) {
     }
     
     #Here is the test of zero inflation for size
-    f0est <- exp(-jfmean) #Estimated lambda
-    f0n0 <- sum(fecdata == 0) #Actual no of zeroes
-    
-    f0exp <- length(fecdata) * f0est #Expected no of zeroes
-    
-    jvdbf <- (f0n0 - f0exp)^2 / (f0exp * (1 - f0est) - length(fecdata) * jfmean * (f0est^2))
-    jfzichip <- stats::pchisq(jvdbf, df = 1, lower.tail = FALSE)
-    
-    writeLines(paste0("\nMean lambda is ", signif(f0est, digits = 4)))
-    writeLines(paste0("The actual number of 0s in fecundity is ", f0n0))
-    writeLines(paste0("The expected number of 0s in fecundity under the null hypothesis is ", signif(f0exp, digits = 4)))
-    writeLines(paste0("The probability of this deviation in 0s is ", signif(jfzichip, digits = 4)))
-    
-    if (jfzichip <= 0.05 & f0n0 > f0exp) {
-      writeLines("\nFecundity is significantly zero-inflated.")
-    } else {
-      writeLines("\nFecundity is not significantly zero-inflated.")
+    if (zifec) {
+      f0est <- exp(-jfmean) #Estimated lambda
+      f0n0 <- sum(fecdata == 0) #Actual no of zeroes
+      
+      f0exp <- length(fecdata) * f0est #Expected no of zeroes
+      
+      jvdbf <- (f0n0 - f0exp)^2 / (f0exp * (1 - f0est) - length(fecdata) * jfmean * (f0est^2))
+      jfzichip <- stats::pchisq(jvdbf, df = 1, lower.tail = FALSE)
+      
+      writeLines(paste0("\nMean lambda is ", signif(f0est, digits = 4)))
+      writeLines(paste0("The actual number of 0s in fecundity is ", f0n0))
+      writeLines(paste0("The expected number of 0s in fecundity under the null hypothesis is ", signif(f0exp, digits = 4)))
+      writeLines(paste0("The probability of this deviation in 0s is ", signif(jfzichip, digits = 4)))
+      
+      if (jfzichip <= 0.05 & f0n0 > f0exp) {
+        writeLines("\nFecundity is significantly zero-inflated.")
+      } else {
+        writeLines("\nFecundity is not significantly zero-inflated.")
+        if (f0n0 == 0) {
+          writeLines("Fecundity does not appear to include 0s, suggesting that a zero-truncated distribution may be warranted.")
+        }
+      }
     }
   }
   
   return(NULL)
 }
+

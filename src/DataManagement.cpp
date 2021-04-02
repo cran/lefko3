@@ -16,7 +16,8 @@ using namespace arma;
 //' @param idx321old Vector containing the indices of matrix elements to be
 //' updated.
 //' @param idx321new Vector containing the replacement matrix element indices.
-//' @param convtype Vector denoting survival transition (1) or fecundity (2).
+//' @param convtype Vector denoting survival transition (1), fecundity (2), or
+//' fecundity multiplier (3).
 //' @param eststag3 Vector of new stages in time \emph{t}+1.
 //' @param gvnrate Vector of replacement transition values.
 //' @param multipl Vector of fecundity multipliers.
@@ -43,13 +44,13 @@ arma::mat ovreplace(arma::vec allst321, arma::vec idx321old,
     
     for (int j = 0; j < m; j++) {
       if (convtype[i] == 1) {
-        if (gvnrate[i] != -1) {replacements(correctplace[j], 0) = gvnrate[i];}
-        if (eststag3[i] != -1) {replacements(correctplace[j], 1) = idx321new[i];}
+        if (gvnrate[i] >= 0) {replacements(correctplace[j], 0) = gvnrate[i];}
+        if (eststag3[i] != -1 && idx321new[i] >= 0) {replacements(correctplace[j], 1) = idx321new[i];}
       }
       
       if (convtype[i] == 2) {
-        if (gvnrate[i] != -1) {replacements(correctplace[j], 2) = gvnrate[i];}
-        if (eststag3[i] != -1) {replacements(correctplace[j], 3) = idx321new[i];}
+        if (gvnrate[i] >= 0) {replacements(correctplace[j], 2) = gvnrate[i];}
+        if (eststag3[i] != -1 && idx321new[i] >= 0) {replacements(correctplace[j], 3) = idx321new[i];}
       }
       
       if (convtype[i] == 3) {
@@ -2436,7 +2437,7 @@ Rcpp::List jpf(DataFrame data, DataFrame stageframe, int popidcol,
 //' being operationalized.
 //' @param OverWrite The overwrite table used in analysis, as modified by 
 //' \code{.overwrite_reassess}. Must be processed via \code{.overwrite_reassess}
-//' rather than being a raew overwrite or supplement table.
+//' rather than being a raw overwrite or supplement table.
 //' @param repmatrix The reproductive matrix used in analysis.
 //' @param finalage The final age to be used in analysis.
 //' @param style The style of analysis, where 0 is historical, 1 is ahistorical,
@@ -2477,6 +2478,7 @@ List theoldpizzle(DataFrame StageFrame, DataFrame OverWrite,
   arma::vec ovindexnew321(ovrows * totalages);
   arma::vec ovnewgivenrate(ovrows * totalages);
   arma::vec ovnewmultiplier(ovrows * totalages);
+  arma::vec ovconvtypeage(ovrows * totalages);
   ovindex3.fill(-1);
   ovindex2.fill(-1);
   ovindex1.fill(-1);
@@ -2487,6 +2489,7 @@ List theoldpizzle(DataFrame StageFrame, DataFrame OverWrite,
   ovindexnew321.fill(-1);
   ovnewgivenrate.fill(-1);
   ovnewmultiplier.zeros();
+  ovconvtypeage.fill(-1);
   
   arma::vec newstageid = StageFrame["stage_id"];
   StringVector origstageid = StageFrame["stage"];
@@ -2939,9 +2942,12 @@ List theoldpizzle(DataFrame StageFrame, DataFrame OverWrite,
     
     // This sets up the overwrite tables
     if (ovrows > 1 || ovconvtype(0) != -1) {
+      // This first set of loops establishes a number of indices
       for (int age2 = 0; age2 < totalages; age2++) {
         for (int i = 0; i < ovrows; i++) { // Loop across overwrite rows
           for (int j = 0; j < nostages; j++) { // Loop across stageframe rows
+            ovconvtypeage(i + (ovrows * age2)) = ovconvtype(i);
+              
             if (age2 < (totalages - 1)) {
               if (ovconvtype(i) == 1) {
                 age3 = age2 + 1;
@@ -2965,10 +2971,15 @@ List theoldpizzle(DataFrame StageFrame, DataFrame OverWrite,
                 ovnew2(i + (ovrows * age2)) = newstageid(j) - 1;
               }
               
-              ovindexold321(i + (ovrows * age2)) = ovindex3(i + (ovrows * age2)) + (age3 * nostages) + 
-                (ovindex2(i + (ovrows * age2)) * nostages * totalages) + (age2 * nostages * nostages * totalages);
-              ovindexnew321(i + (ovrows * age2)) = ovnew3(i + (ovrows * age2)) + (age3 * nostages) + 
-                (ovnew2(i + (ovrows * age2)) * nostages * totalages) + (age2 * nostages * nostages * totalages);
+              if (ovindex3(i + (ovrows * age2)) != -1 && ovindex2(i + (ovrows * age2)) != -1) {
+                ovindexold321(i + (ovrows * age2)) = ovindex3(i + (ovrows * age2)) + (age3 * nostages) + 
+                  (ovindex2(i + (ovrows * age2)) * nostages * totalages) + (age2 * nostages * nostages * totalages);
+              }
+              
+              if (ovnew3(i + (ovrows * age2)) != -1 && ovnew2(i + (ovrows * age2)) != -1) {
+                ovindexnew321(i + (ovrows * age2)) = ovnew3(i + (ovrows * age2)) + (age3 * nostages) + 
+                  (ovnew2(i + (ovrows * age2)) * nostages * totalages) + (age2 * nostages * nostages * totalages);
+              }
               
               if (!NumericVector::is_na(ovgivenrate(i))) {
                 ovnewgivenrate(i + (ovrows * age2)) = ovgivenrate(i);
@@ -2999,11 +3010,15 @@ List theoldpizzle(DataFrame StageFrame, DataFrame OverWrite,
                 ovnew2(i + (ovrows * age2)) = newstageid(j) - 1;
               }
               
-              ovindexold321(i + (ovrows * age2)) = ovindex3(i + (ovrows * age2)) + (age3 * nostages) + 
-                (ovindex2(i + (ovrows * age2)) * nostages * totalages) + (age2 * nostages * nostages * totalages);
-              ovindexnew321(i + (ovrows * age2)) = ovnew3(i + (ovrows * age2)) + (age3 * nostages) + 
-                (ovnew2(i + (ovrows * age2)) * nostages * totalages) + (age2 * nostages * nostages * totalages);
+              if (ovindex3(i + (ovrows * age2)) != -1 && ovindex2(i + (ovrows * age2)) != -1) {
+                ovindexold321(i + (ovrows * age2)) = ovindex3(i + (ovrows * age2)) + (age3 * nostages) + 
+                  (ovindex2(i + (ovrows * age2)) * nostages * totalages) + (age2 * nostages * nostages * totalages);
+              }
               
+              if (ovnew3(i + (ovrows * age2)) != -1 && ovnew2(i + (ovrows * age2)) != -1) {
+                ovindexnew321(i + (ovrows * age2)) = ovnew3(i + (ovrows * age2)) + (age3 * nostages) + 
+                  (ovnew2(i + (ovrows * age2)) * nostages * totalages) + (age2 * nostages * nostages * totalages);
+              }
               if (!NumericVector::is_na(ovgivenrate(i))) {
                 ovnewgivenrate(i + (ovrows * age2)) = ovgivenrate(i);
               }
@@ -3269,7 +3284,8 @@ List theoldpizzle(DataFrame StageFrame, DataFrame OverWrite,
     } // age2 loop
     
     if (ovrows > 1 || ovconvtype(0) != -1) {
-      asadditions = ovreplace(index321, ovindexold321, ovindexnew321, ovconvtype, ovnew3, ovnewgivenrate, ovnewmultiplier);
+      asadditions = ovreplace(index321, ovindexold321, ovindexnew321, ovconvtypeage,
+        ovnew3, ovnewgivenrate, ovnewmultiplier);
       
       ovgivent = asadditions.col(0);
       ovestt = asadditions.col(1);

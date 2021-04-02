@@ -444,6 +444,9 @@ List jerzeibalowski(DataFrame ppy, DataFrame AllStages, List survproxy,
   arma::vec jsizecoefs = jsizeproxy["coefficients"];
   arma::vec jrepstcoefs = jrepstproxy["coefficients"];
   
+  int sizetrunc = sizeproxy["trunc"];
+  int jsizetrunc = jsizeproxy["trunc"];
+  
   int jslength = jsizecoefs.n_elem;
   
   for (int i = 46; i < 92; i++) {
@@ -582,7 +585,7 @@ List jerzeibalowski(DataFrame ppy, DataFrame AllStages, List survproxy,
   int properindex {0};
   int proxyindex {0};
   
-  arma::mat out(n, 4);  // 0 matrix with n rows & 4 columns: 0 surv, 1 obs, 2 repst, 3 size, 4 test variable
+  arma::mat out(n, 4);  // 0 matrix with n rows & 4 columns: 0 surv, 1 obs, 2 repst, 3 size, >3 are test variables
   arma::mat survtransmat(matrixdim, matrixdim);
   arma::mat fectransmat(matrixdim, matrixdim);
   
@@ -699,7 +702,11 @@ List jerzeibalowski(DataFrame ppy, DataFrame AllStages, List survproxy,
                   (sizecoefs(43) * inda * indc) + (sizecoefs(44) * indb * indc) + (sizecoefs(45) * indb * indc) + 
                   sizepatch(patchnumber) + sizeyear(yearnumber) + sizedev + (summedvars / 2));
                 
-                out(i, 3) = ((pow(lambda, sz3(i)) * exp(-1 * lambda)) / sizefac);
+                if (sizetrunc == 1) {
+                  out(i, 3) = ((pow(lambda, sz3(i)) * exp(-1 * lambda)) / sizefac) / (1 - (exp(-1 * lambda)));
+                } else {
+                  out(i, 3) = ((pow(lambda, sz3(i)) * exp(-1 * lambda)) / sizefac);
+                }
               }
               
             } else if (sizedist == 1) {
@@ -747,22 +754,36 @@ List jerzeibalowski(DataFrame ppy, DataFrame AllStages, List survproxy,
                   sizepatch(patchnumber) + sizeyear(yearnumber) + sizedev);
                 
                 double theta = sizesigma;
+                if (theta > 1000000000) {
+                  theta = 1000000000;
+                }
+                double alpha = 1 / theta;
                 
                 int y = static_cast<int>(sz3(i));
                 
-                double leftie = 0;
-                for (int i = 0; i < y; i++) {
-                  leftie = log(static_cast<double>(i) + theta) + leftie;
+                double log_leftie = 0;
+                for (int j = 0; j < y; j++) {
+                  log_leftie = log(static_cast<double>(j) + theta) - log(static_cast<double>(j) + 1) + log_leftie;
                 }
-                leftie = exp(leftie) / tgamma(static_cast<double>(y)+1);
-
-                double lnumer = static_cast<double>(y) * log(mu) + static_cast<double>(theta) * log(static_cast<double>(theta)); // pow(mu, y) * pow(theta, theta);
-                double ldenom = (static_cast<double>(y)+static_cast<double>(theta)) * log(mu+static_cast<double>(theta)); // pow((mu+theta), (y+theta));
                 
-                double frac = exp(lnumer - ldenom);
+                double log_amu = log(alpha) + log(mu);
+                double log_mid = -1 * theta * log(1 + (alpha * mu));
                 
-                out(i, 3) = leftie * frac;
-                // out(i, 4) = theta;  // THIS IS JUST FOR DEBUGGING
+                double log_rightie = sz3(i) * (log_amu - log(1 + (alpha * mu)));
+                
+                double raw_prob = log_leftie + log_mid + log_rightie;
+                
+                if (sizetrunc == 1) {
+                  double zero_raw_prob = log_mid;
+                  
+                  out(i, 3) = exp(raw_prob) / (1 - exp(zero_raw_prob));
+                } else {
+                  out(i, 3) = exp(raw_prob);
+                }
+                
+                // out(i, 4) = log_leftie;
+                // out(i, 5) = log_mid;
+                // out(i, 6) = log_rightie;
               }
               
             } else if (sizedist == 2) {
@@ -872,7 +893,11 @@ List jerzeibalowski(DataFrame ppy, DataFrame AllStages, List survproxy,
                 double sizefac = sz3(i) * tgamma(sz3(i));
                 double lambda = exp(jsizecoefs(0) + jsizepatch(patchnumber) + jsizeyear(yearnumber) + jsizedev + (jsummedvars / 2));
                 
-                out(i, 3) = ((pow(lambda, sz3(i)) * exp(-1 * lambda)) / sizefac);
+                if (jsizetrunc == 1) {
+                  out(i, 3) = ((pow(lambda, sz3(i)) * exp(-1 * lambda)) / sizefac) / (1 - (exp(-1 * lambda)));
+                } else {
+                  out(i, 3) = ((pow(lambda, sz3(i)) * exp(-1 * lambda)) / sizefac);
+                }
               }
             } else if (sizedist == 1) {
               // Negative binomial size distribution
@@ -885,21 +910,32 @@ List jerzeibalowski(DataFrame ppy, DataFrame AllStages, List survproxy,
                 double mu = exp(jsizecoefs(0) + jsizepatch(patchnumber) + jsizeyear(yearnumber) + jsizedev);
                 
                 double theta = jsizesigma;
+                if (theta > 1000000000) {
+                  theta = 1000000000;
+                }
+                double alpha = 1 / theta;
                 
                 int y = static_cast<int>(sz3(i));
                 
-                double leftie = 0;
-                for (int i = 0; i < y; i++) {
-                  leftie = log(static_cast<double>(i) + theta) + leftie;
+                double log_leftie = 0;
+                for (int j = 0; j < y; j++) {
+                  log_leftie = log(static_cast<double>(j) + theta) - log(static_cast<double>(j) + 1) + log_leftie;
                 }
-                leftie = exp(leftie) / tgamma(static_cast<double>(y)+1);
                 
-                double lnumer = static_cast<double>(y) * log(mu) + theta * log(static_cast<double>(theta)); // pow(mu, y) * pow(theta, theta);
-                double ldenom = (static_cast<double>(y)+static_cast<double>(theta)) * log(mu+static_cast<double>(theta)); // pow((mu+theta), (y+theta));
+                double log_amu = log(alpha) + log(mu);
+                double log_mid = -1 * theta * log(1 + (alpha * mu));
                 
-                double frac = exp(lnumer - ldenom);
+                double log_rightie = sz3(i) * (log_amu - log(1 + (alpha * mu)));
                 
-                out(i, 3) = leftie * frac;
+                double raw_prob = log_leftie + log_mid + log_rightie;
+                
+                if (jsizetrunc == 1) {
+                  double zero_raw_prob = log_mid;
+                  
+                  out(i, 3) = exp(raw_prob) / (1 - exp(zero_raw_prob));
+                } else {
+                  out(i, 3) = exp(raw_prob);
+                }
               }
             } else if (sizedist == 2) {
               // Gaussian size distribution
@@ -1048,3 +1084,4 @@ List jerzeibalowski(DataFrame ppy, DataFrame AllStages, List survproxy,
   return List::create(Named("A") = amatrix, _["U"] = survtransmat,
     _["F"] = fectransmat, _["out"] = out);
 }
+

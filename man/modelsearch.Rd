@@ -23,11 +23,15 @@ modelsearch(
   sizedist = "gaussian",
   fecdist = "gaussian",
   size.zero = FALSE,
+  size.trunc = FALSE,
   fec.zero = FALSE,
+  fec.trunc = FALSE,
   patch.as.random = TRUE,
   year.as.random = TRUE,
   juvestimate = NA,
   juvsize = FALSE,
+  jsize.zero = FALSE,
+  jsize.trunc = FALSE,
   fectime = 2,
   censor = NA,
   age = NA,
@@ -128,9 +132,16 @@ distribution.}
 should be zero-inflated. Only applies to Poisson and negative binomial 
 distributions. Defaults to FALSE.}
 
+\item{size.trunc}{A logical variable indicating whether size distribution is
+zero-truncated. Defaults to FALSE. Cannot be TRUE if \code{size.zero = TRUE}.}
+
 \item{fec.zero}{A logical variable indicating whether fecundity distribution 
 should be zero-inflated. Only applies to Poisson and negative binomial 
 distributions. Defaults to FALSE.}
+
+\item{fec.trunc}{A logical variable indicating whether fecundity distribution
+is zero-truncated. Defaults to FALSE. Cannot be TRUE if
+\code{fec.zero = TRUE}.}
 
 \item{patch.as.random}{If set to TRUE and \code{approach = "lme4"}, then
 \code{patch} is included as a random factor. If set to FALSE and
@@ -153,6 +164,14 @@ stages. Defaults to NA, in which case juvenile vital rates are not estimated.}
 \item{juvsize}{A logical variable denoting whether size should be used as a
 term in models involving transition from the juvenile stage. Defaults to
 FALSE, and is only used if \code{juvestimate} does not equal NA.}
+
+\item{jsize.zero}{A logical variable indicating whether size distribution 
+of juveniles should be zero-inflated. Only applies to Poisson and negative
+binomial distributions. Defaults to FALSE.}
+
+\item{jsize.trunc}{A logical variable indicating whether size distribution in
+juveniles is zero-truncated. Defaults to FALSE. Cannot be TRUE if
+\code{jsize.zero = TRUE}.}
 
 \item{fectime}{A variable indicating which year of fecundity to use as the
 response term in fecundity models. Options include \code{2}, which refers to
@@ -295,36 +314,55 @@ biased transition estimates if historical terms from models are ignored. This
 can be dealt with at the start of modeling by setting 
 \code{historical = FALSE} for the ahistorical case, and 
 \code{historical = TRUE} for the historical case.
+
+This function handles generalized linear models (GLMs) under zero-inflated
+distributions using the \code{\link[pscl]{zeroinfl}()} function, and zero-
+truncated distributions using the \code{\link[VGAM]{vglm}()} function. Model
+dredging may fail with these functions, leading to the global model being
+accepted as the best-fit model. However, model dredges of mixed models work
+for all distributions. We encourage the use of mixed models in all cases.
+
+The negative binomial and truncated negative binomial distributions use the
+quadratic structure emphasized in Hardin and Hilbe (2018, 4th Edition of
+Generalized Linear Models and Extensions). The truncated negative binomial
+distribution may fail to predict size probabilities correctly when dispersion
+is near that expected of the Poisson distribution. To prevent this problem,
+we have integrated a cap on the overdispersion parameter. However, when using
+this distribution, please check the matrix column sums to make sure that they
+do not predict survival greater than 1.0. If they do, then please use either
+the negative binomial distribution or the zero-truncated Poisson
+distribution.
 }
 
 \examples{
 \donttest{
+# Lathyrus example
 data(lathyrus)
 
 sizevector <- c(0, 4.6, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 1, 2, 3, 4, 5, 6, 7, 8,
   9)
-stagevector <- c("Sd", "Sdl", "Dorm", "Sz1nr", "Sz2nr", "Sz3nr", "Sz4nr", 
-  "Sz5nr", "Sz6nr", "Sz7nr", "Sz8nr", "Sz9nr", "Sz1r", "Sz2r", "Sz3r",
+stagevector <- c("Sd", "Sdl", "Dorm", "Sz1nr", "Sz2nr", "Sz3nr", "Sz4nr",
+  "Sz5nr", "Sz6nr", "Sz7nr", "Sz8nr", "Sz9nr", "Sz1r", "Sz2r", "Sz3r", 
   "Sz4r", "Sz5r", "Sz6r", "Sz7r", "Sz8r", "Sz9r")
 repvector <- c(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1)
 obsvector <- c(0, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1)
 matvector <- c(0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1)
 immvector <- c(1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)
-propvector <- c(1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+propvector <- c(1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
   0)
 indataset <- c(0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1)
-binvec <- c(0, 4.6, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5,
+binvec <- c(0, 4.6, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 
   0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5)
 
-lathframeln <- sf_create(sizes = sizevector, stagenames = stagevector,
-  repstatus = repvector, obsstatus = obsvector, matstatus = matvector,
-  immstatus = immvector, indataset = indataset, binhalfwidth = binvec,
+lathframeln <- sf_create(sizes = sizevector, stagenames = stagevector, 
+  repstatus = repvector, obsstatus = obsvector, matstatus = matvector, 
+  immstatus = immvector, indataset = indataset, binhalfwidth = binvec, 
   propstatus = propvector)
 
 lathvertln <- verticalize3(lathyrus, noyears = 4, firstyear = 1988,
-  patchidcol = "SUBPLOT", individcol = "GENET", blocksize = 9,
-  juvcol = "Seedling1988", sizeacol = "lnVol88", repstracol = "FCODE88",
-  fecacol = "Intactseed88", deadacol = "Intactseed88",
+  patchidcol = "SUBPLOT", individcol = "GENET", blocksize = 9, 
+  juvcol = "Seedling1988", sizeacol = "lnVol88", repstracol = "Intactseed88",
+  fecacol = "Intactseed88", deadacol = "Dead1988", 
   nonobsacol = "Dormant1988", stageassign = lathframeln, stagesize = "sizea",
   censorcol = "Missing1988", censorkeep = NA, NAas0 = TRUE, censor = TRUE)
 
@@ -332,14 +370,85 @@ lathvertln$feca2 <- round(lathvertln$feca2)
 lathvertln$feca1 <- round(lathvertln$feca1)
 lathvertln$feca3 <- round(lathvertln$feca3)
 
-lathmodelsln2 <- modelsearch(lathvertln, historical = FALSE,
-  approach = "lme4", suite = "main",
+lathmodelsln3 <- modelsearch(lathvertln, historical = TRUE, 
+  approach = "mixed", suite = "main", 
   vitalrates = c("surv", "obs", "size", "repst", "fec"), juvestimate = "Sdl",
-  bestfit = "AICc&k", sizedist = "gaussian", fecdist = "poisson",
-  indiv = "individ", patch = "patchid", year = "year2",
-  year.as.random = TRUE, patch.as.random = TRUE, show.model.tables = TRUE)
+  bestfit = "AICc&k", sizedist = "gaussian", fecdist = "poisson", 
+  indiv = "individ", patch = "patchid", year = "year2",year.as.random = TRUE,
+  patch.as.random = TRUE, show.model.tables = TRUE, quiet = TRUE)
 
-lathmodelsln2
+# Here we use supplemental() to provide overwrite and reproductive info
+lathsupp3 <- supplemental(stage3 = c("Sd", "Sd", "Sdl", "Sd", "Sdl"), 
+  stage2 = c("Sd", "Sd", "Sd", "rep", "rep"),
+  stage1 = c("Sd", "rep", "rep", "all", "all"), 
+  givenrate = c(0.345, 0.345, 0.054, NA, NA),
+  multiplier = c(NA, NA, NA, 0.345, 0.054),
+  type = c(1, 1, 1, 3, 3), stageframe = lathframeln, historical = TRUE)
+
+lathmat3ln <- flefko3(year = "all", patch = "all", stageframe = lathframeln, 
+  modelsuite = lathmodelsln3, data = lathvertln, supplement = lathsupp3, 
+  patchcol = "patchid", yearcol = "year2", year.as.random = FALSE,
+  patch.as.random = FALSE, reduce = FALSE)
+
+summary(lathmat3ln)
+
+# Cypripedium example
+rm(list = ls(all=TRUE))
+
+data(cypdata)
+
+sizevector <- c(0, 0, 0, 0, 0, seq(from = 0, t = 24), seq(from = 1, to = 24))
+stagevector <- c("SD", "P1", "P2", "P3", "SL", "D", "V1", "V2", "V3", "V4", "V5", 
+  "V6", "V7", "V8", "V9", "V10", "V11", "V12", "V13", "V14", "V15", "V16", "V17", 
+  "V18", "V19", "V20", "V21", "V22", "V23", "V24", "F1", "F2", "F3", "F4", "F5",
+  "F6", "F7", "F8", "F9", "F10", "F11", "F12", "F13", "F14", "F15", "F16", "F17",
+  "F18", "F19", "F20", "F21", "F22", "F23", "F24")
+repvector <- c(0, 0, 0, 0, 0, rep(0, 25), rep(1, 24))
+obsvector <- c(0, 0, 0, 0, 0, 0, rep(1, 48))
+matvector <- c(0, 0, 0, 0, 0, rep(1, 49))
+immvector <- c(0, 1, 1, 1, 1, rep(0, 49))
+propvector <- c(1, rep(0, 53))
+indataset <- c(0, 0, 0, 0, 0, rep(1, 49))
+
+cypframe <- sf_create(sizes = sizevector, stagenames = stagevector, 
+  repstatus = repvector, obsstatus = obsvector, matstatus = matvector, 
+  propstatus = propvector, immstatus = immvector, indataset = indataset)
+
+vertdata <- verticalize3(data = cypdata, noyears = 6, firstyear = 2004, 
+  patchidcol = "patch", individcol = "plantid", blocksize = 4, 
+  sizeacol = "Inf2.04", sizebcol = "Inf.04", sizeccol = "Veg.04", 
+  repstracol = "Inf.04", repstrbcol = "Inf2.04", fecacol = "Pod.04", 
+  stageassign = cypframe, stagesize = "sizeadded", NAas0 = TRUE)
+
+cypmodels3 <- modelsearch(vertdata, historical = TRUE, approach = "mixed", 
+  vitalrates = c("surv", "obs", "size", "repst", "fec"), sizedist = "negbin", 
+  size.trunc = TRUE, fecdist = "poisson", fec.zero = TRUE, suite = "main", 
+  size = c("size3added", "size2added", "size1added"), quiet = TRUE)
+
+cypsupp3 <- supplemental(stage3 = c("SD", "SD", "P1", "P1", "P2", "P3", "SL",
+    "SL", "SL", "D", "V1", "V2", "V3", "D", "V1", "V2", "V3", "SD", "P1"), 
+  stage2 = c("SD", "SD", "SD", "SD", "P1", "P2", "P3", "SL", "SL", "SL", "SL", 
+    "SL", "SL", "SL", "SL", "SL", "SL", "rep", "rep"), 
+  stage1 = c("SD", "rep", "SD", "rep", "SD", "P1", "P2", "P3", "SL", "P3", "P3",
+    "P3", "P3", "SL", "SL", "SL", "SL", "mat", "mat"), 
+  eststage3 = c(NA, NA, NA, NA, NA, NA, NA, NA, NA, "D", "V1", "V2", "V3", "D",
+    "V1", "V2", "V3", NA, NA), 
+  eststage2 = c(NA, NA, NA, NA, NA, NA, NA, NA, NA, "D", "D", "D", "D", "D", 
+    "D", "D", "D", NA, NA), 
+  eststage1 = c(NA, NA, NA, NA, NA, NA, NA, NA, NA, "D", "D", "D", "D", "D", 
+    "D", "D", "D", NA, NA), 
+  givenrate = c(0.08, 0.08, 0.1, 0.1, 0.1, 0.1, 0.125, 0.2, 0.2, NA, NA, NA, NA, 
+    NA, NA, NA, NA, NA, NA),
+  multiplier = c(NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA,
+    NA, 0.5, 0.5),
+  type = c("S", "S", "S", "S", "S", "S", "S", "S", "S", "S", "S", "S", "S", "S",
+    "S", "S", "S", "R", "R"), stageframe = cypframe)
+
+cypmatrix3 <- flefko3(stageframe = cypframe, supplement = cypsupp3, 
+  modelsuite = cypmodels3, data = vertdata, yearcol = "year2",
+  year.as.random = TRUE)
+
+summary(cypmatrix3)
 }
 
 }

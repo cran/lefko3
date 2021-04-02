@@ -367,7 +367,7 @@ difficult to predict.
 data(cypvert)
 
 sizevector <- c(0, 0, 0, 0, 0, 0, 1, 2.5, 4.5, 8, 17.5)
-stagevector <- c("SD", "P1", "P2", "P3", "SL", "D", "XSm", "Sm", "Md", "Lg", 
+stagevector <- c("SD", "P1", "P2", "P3", "SL", "D", "XSm", "Sm", "Md", "Lg",
   "XLg")
 repvector <- c(0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1)
 obsvector <- c(0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1)
@@ -378,19 +378,40 @@ indataset <- c(0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1)
 binvec <- c(0, 0, 0, 0, 0, 0.5, 0.5, 1, 1, 2.5, 7)
 
 cypframe_raw <- sf_create(sizes = sizevector, stagenames = stagevector, 
-  repstatus = repvector, obsstatus = obsvector, matstatus = matvector,
+  repstatus = repvector, obsstatus = obsvector, matstatus = matvector, 
   propstatus = propvector, immstatus = immvector, indataset = indataset,
   binhalfwidth = binvec)
+
+cypframe_raw
 
 cypraw_v2 <- historicalize3(data = cypvert, patchidcol = "patch", 
   individcol = "plantid", year2col = "year2", sizea2col = "Inf2.2", 
   sizea3col = "Inf2.3", sizeb2col = "Inf.2", sizeb3col = "Inf.3", 
-  sizec2col = "Veg.2", sizec3col = "Veg.3", repstra2col = "Inf2.2",
+  sizec2col = "Veg.2", sizec3col = "Veg.3", repstra2col = "Inf2.2", 
   repstra3col = "Inf2.3", repstrb2col = "Inf.2", repstrb3col = "Inf.3", 
   feca2col = "Pod.2", feca3col = "Pod.3", repstrrel = 2, 
   stageassign = cypframe_raw, stagesize = "sizeadded", censorcol = "censor",
-  censor = FALSE, NAas0 = TRUE, NRasRep = TRUE)
+  censor = FALSE, NAas0 = TRUE, NRasRep = TRUE, reduce = TRUE)
   
-summary(cypraw_v2)
+cypsupp2r <- supplemental(stage3 = c("SD", "P1", "P2", "P3", "SL", "SL", "D", 
+    "XSm", "Sm", "SD", "P1"),
+  stage2 = c("SD", "SD", "P1", "P2", "P3", "SL", "SL", "SL", "SL", "rep",
+    "rep"),
+  eststage3 = c(NA, NA, NA, NA, NA, NA, "D", "XSm", "Sm", NA, NA),
+  eststage2 = c(NA, NA, NA, NA, NA, NA, "XSm", "XSm", "XSm", NA, NA),
+  givenrate = c(0.10, 0.20, 0.20, 0.20, 0.25, 0.40, NA, NA, NA, NA, NA),
+  multiplier = c(NA, NA, NA, NA, NA, NA, NA, NA, NA, 0.5, 0.5),
+  type =c(1, 1, 1, 1, 1, 1, 1, 1, 1, 3, 3),
+  stageframe = cypframe_raw, historical = FALSE)
+
+cypmatrix2r <- rlefko2(data = cypraw_v2, stageframe = cypframe_raw, 
+  year = "all", patch = "all", stages = c("stage3", "stage2"),
+  size = c("size3added", "size2added"), supplement = cypsupp2r,
+  yearcol = "year2", patchcol = "patchid", indivcol = "individ")
+  
+cypmatrix2r$A[[intersect(which(cypmatrix2r$labels$patch == "A"), 
+  which(cypmatrix2r$labels$year2 == 2004))]]
+
+lambda3(cypmatrix2r)
 
 }

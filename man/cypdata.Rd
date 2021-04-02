@@ -102,5 +102,7 @@ cypmatrix2r <- rlefko2(data = cypraw_v1, stageframe = cypframe_raw,
 cypmatrix2r$A[[intersect(which(cypmatrix2r$labels$patch == "A"), 
   which(cypmatrix2r$labels$year2 == 2004))]]
 
+lambda3(cypmatrix2r)
+
 }
 \keyword{datasets}

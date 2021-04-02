@@ -42,7 +42,8 @@ flefko2(
   patch.as.random = FALSE,
   randomseed = NA,
   negfec = FALSE,
-  reduce = FALSE
+  reduce = FALSE,
+  err_check = FALSE
 )
 }
 \arguments{
@@ -229,6 +230,9 @@ be negative should be reset to 0. Defaults to FALSE.}
 associated solely with 0 transitions. These are only removed in cases where
 the associated row and column sums in ALL matrices estimated equal 0.
 Defaults to FALSE.}
+
+\item{err_check}{A logical value indicating whether to add matrices of vital
+rate probabilities associated with each matrix. Defaults to FALSE.}
 }
 \value{
 If all inputs are properly formatted, then this function will return
@@ -250,6 +254,10 @@ In \code{flefko2()}, only one population may be analyzed at once, and so
 \item{matrixqc}{A short vector describing the number of non-zero elements in
 \code{U} and \code{F} matrices, and the number of annual matrices.}
 \item{modelqc}{This is the \code{qc} portion of the modelsuite input.}
+\item{prob_out}{An optional element only added if \code{err_check = TRUE}.
+This is a list of vital rate probability matrices, with 4 columns in the
+order of survival, observation probability, reproduction probability, and
+size transition probability.}
 }
 \description{
 Function \code{flefko2()} returns ahistorical MPMs corresponding to the
@@ -291,10 +299,17 @@ MPM that does not distinguish these patches or subpopulations, the
 Input options including multiple variable names must be entered in the order
 of variables in time \emph{t}+1 and \emph{t}. Rearranging the order WILL lead
 to erroneous calculations, and will probably also lead to fatal errors.
+
+Using the \code{err_check} option will produce a matrix of 4 columns, each
+characterizing a different vital rate. The product of each row yields an
+element in the associated \code{$U} matrix. The number and order of elements
+in each column of this matrix matches the associated matrix in column vector
+format. Use of this option is generally for the purposes of debugging code.
 }
 
 \examples{
 \donttest{
+# Lathyrus example
 data(lathyrus)
 
 sizevector <- c(0, 4.6, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 1, 2, 3, 4, 5, 6, 7, 8,
@@ -367,6 +382,74 @@ lathmat2ln_alt <- flefko2(year = "all", patch = "all",
   reduce = FALSE)
 
 summary(lathmat2ln_alt)
+
+# Cypripedium example
+rm(list = ls(all=TRUE))
+
+data(cypdata)
+
+sizevector <- c(0, 0, 0, 0, 0, seq(from = 0, t = 24), seq(from = 1, to = 24))
+stagevector <- c("SD", "P1", "P2", "P3", "SL", "D", "V1", "V2", "V3", "V4", "V5", 
+  "V6", "V7", "V8", "V9", "V10", "V11", "V12", "V13", "V14", "V15", "V16", "V17", 
+  "V18", "V19", "V20", "V21", "V22", "V23", "V24", "F1", "F2", "F3", "F4", "F5",
+  "F6", "F7", "F8", "F9", "F10", "F11", "F12", "F13", "F14", "F15", "F16", "F17",
+  "F18", "F19", "F20", "F21", "F22", "F23", "F24")
+repvector <- c(0, 0, 0, 0, 0, rep(0, 25), rep(1, 24))
+obsvector <- c(0, 0, 0, 0, 0, 0, rep(1, 48))
+matvector <- c(0, 0, 0, 0, 0, rep(1, 49))
+immvector <- c(0, 1, 1, 1, 1, rep(0, 49))
+propvector <- c(1, rep(0, 53))
+indataset <- c(0, 0, 0, 0, 0, rep(1, 49))
+
+cypframe <- sf_create(sizes = sizevector, stagenames = stagevector, 
+  repstatus = repvector, obsstatus = obsvector, matstatus = matvector, 
+  propstatus = propvector, immstatus = immvector, indataset = indataset)
+
+vertdata <- verticalize3(data = cypdata, noyears = 6, firstyear = 2004, 
+  patchidcol = "patch", individcol = "plantid", blocksize = 4, 
+  sizeacol = "Inf2.04", sizebcol = "Inf.04", sizeccol = "Veg.04", 
+  repstracol = "Inf.04", repstrbcol = "Inf2.04", fecacol = "Pod.04", 
+  stageassign = cypframe, stagesize = "sizeadded", NAas0 = TRUE)
+
+cypmodels2 <- modelsearch(vertdata, historical = FALSE, approach = "mixed", 
+  vitalrates = c("surv", "obs", "size", "repst", "fec"), sizedist = "negbin", 
+  size.trunc = TRUE, fecdist = "poisson", fec.zero = TRUE, suite = "full", 
+  size = c("size3added", "size2added"), quiet = TRUE)
+
+cypsupp2 <- supplemental(stage3 = c("SD", "P1", "P2", "P3", "SL", "SL", "D",
+    "V1", "V2", "V3", "SD", "P1"), 
+  stage2 = c("SD", "SD", "P1", "P2", "P3", "SL", "SL", "SL", "SL", "SL", "rep",
+    "rep"), 
+  eststage3 = c(NA, NA, NA, NA, NA, NA, "D", "V1", "V2", "V3", NA, NA), 
+  eststage2 = c(NA, NA, NA, NA, NA, NA, "D", "D", "D", "D", NA, NA), 
+  givenrate = c(0.08, 0.1, 0.1, 0.1, 0.125, 0.2, NA, NA, NA, NA, NA, NA), 
+  multiplier = c(NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, 0.5, 0.5),
+  type = c("S", "S", "S", "S", "S", "S", "S", "S", "S", "S", "R", "R"),
+  stageframe = cypframe, historical = FALSE)
+
+cypmatrix2 <- flefko2(stageframe = cypframe, supplement = cypsupp2, 
+  modelsuite = cypmodels2, data = vertdata, year.as.random = TRUE)
+
+summary(cypmatrix2)
+
+# Here is a version using a reproductive matrix and overwrite table instead
+
+rep.assumptions <- matrix(0, 54, 54)
+rep.assumptions[1:2,31:54] <- 0.5
+
+cypover2 <- overwrite(stage3 = c("SD", "P1", "P2", "P3", "SL", "SL", "D", "V1",
+    "V2", "V3"), 
+  stage2 = c("SD", "SD", "P1", "P2", "P3", "SL", "SL", "SL", "SL", "SL"), 
+  eststage3 = c(NA, NA, NA, NA, NA, NA, "D", "V1", "V2", "V3"), 
+  eststage2 = c(NA, NA, NA, NA, NA, NA, "D", "D", "D", "D"), 
+  givenrate = c(0.08, 0.1, 0.1, 0.1, 0.125, 0.2, NA, NA, NA, NA), 
+  type = c("S", "S", "S", "S", "S", "S", "S", "S", "S", "S"))
+
+cypmatrix2_alt <- flefko2(stageframe = cypframe, overwrite = cypover2,
+  repmatrix = rep.assumptions, modelsuite = cypmodels2, data = vertdata,
+  year.as.random = TRUE)
+
+summary(cypmatrix2_alt)
 }
 
 }

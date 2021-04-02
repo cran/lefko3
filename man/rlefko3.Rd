@@ -195,6 +195,46 @@ fatal errors.
 }
 
 \examples{
+# Lathyrus example
+data(lathyrus)
+
+sizevector <- c(0, 100, 13, 127, 3730, 3800, 0)
+stagevector <- c("Sd", "Sdl", "VSm", "Sm", "VLa", "Flo", "Dorm")
+repvector <- c(0, 0, 0, 0, 0, 1, 0)
+obsvector <- c(0, 1, 1, 1, 1, 1, 0)
+matvector <- c(0, 0, 1, 1, 1, 1, 1)
+immvector <- c(1, 1, 0, 0, 0, 0, 0)
+propvector <- c(1, 0, 0, 0, 0, 0, 0)
+indataset <- c(0, 1, 1, 1, 1, 1, 1)
+binvec <- c(0, 100, 11, 103, 3500, 3800, 0.5)
+
+lathframe <- sf_create(sizes = sizevector, stagenames = stagevector, 
+  repstatus = repvector, obsstatus = obsvector, matstatus = matvector, 
+  immstatus = immvector, indataset = indataset, binhalfwidth = binvec, 
+  propstatus = propvector)
+
+lathvert <- verticalize3(lathyrus, noyears = 4, firstyear = 1988, 
+  patchidcol = "SUBPLOT", individcol = "GENET", blocksize = 9, 
+  juvcol = "Seedling1988", sizeacol = "Volume88", repstracol = "FCODE88", 
+  fecacol = "Intactseed88", deadacol = "Dead1988", nonobsacol = "Dormant1988", 
+  stageassign = lathframe, stagesize = "sizea", censorcol = "Missing1988", 
+  censorkeep = NA, censor = TRUE)
+
+lathsupp3 <- supplemental(stage3 = c("Sd", "Sd", "Sdl", "Sd", "Sdl"), 
+  stage2 = c("Sd", "Sd", "Sd", "rep", "rep"),
+  stage1 = c("Sd", "rep", "rep", "all", "all"), 
+  givenrate = c(0.345, 0.345, 0.054, NA, NA),
+  multiplier = c(NA, NA, NA, 0.345, 0.054),
+  type = c(1, 1, 1, 3, 3), stageframe = lathframe, historical = TRUE)
+
+ehrlen3 <- rlefko3(data = lathvert, stageframe = lathframe, year = "all", 
+  stages = c("stage3", "stage2", "stage1"), supplement = lathsupp3,
+  yearcol = "year2", indivcol = "individ")
+
+summary(ehrlen3)
+
+# Cypripedium example
+rm(list=ls(all=TRUE))
 data(cypdata)
 
 sizevector <- c(0, 0, 0, 0, 0, 0, 1, 2.5, 4.5, 8, 17.5)

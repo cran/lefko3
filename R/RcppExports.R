@@ -13,7 +13,8 @@
 #' @param idx321old Vector containing the indices of matrix elements to be
 #' updated.
 #' @param idx321new Vector containing the replacement matrix element indices.
-#' @param convtype Vector denoting survival transition (1) or fecundity (2).
+#' @param convtype Vector denoting survival transition (1), fecundity (2), or
+#' fecundity multiplier (3).
 #' @param eststag3 Vector of new stages in time \emph{t}+1.
 #' @param gvnrate Vector of replacement transition values.
 #' @param multipl Vector of fecundity multipliers.
@@ -242,7 +243,7 @@ jpf <- function(data, stageframe, popidcol, patchidcol, individcol, year2col, ye
 #' being operationalized.
 #' @param OverWrite The overwrite table used in analysis, as modified by 
 #' \code{.overwrite_reassess}. Must be processed via \code{.overwrite_reassess}
-#' rather than being a raew overwrite or supplement table.
+#' rather than being a raw overwrite or supplement table.
 #' @param repmatrix The reproductive matrix used in analysis.
 #' @param finalage The final age to be used in analysis.
 #' @param style The style of analysis, where 0 is historical, 1 is ahistorical,
@@ -591,6 +592,27 @@ moreflagrantcrap <- function(Xmat) {
     .Call('_lefko3_moreflagrantcrap', PACKAGE = 'lefko3', Xmat)
 }
 
+#' Historical to Ahistorical Matrix Conversion (Sums)
+#' 
+#' Function \code{shopliftersunite} sums historical elements in matrices and
+#' outputs the corresponding ahistorical matrices. This is typically used for
+#' elasticity matrices, because their elements can be summed.
+#' 
+#' @param hmats A historical matrix.
+#' @param hstages The \code{hstages} portion of a historical \code{lefkoElas}
+#' object.
+#' @param ahstages The \code{ahstages} portion of a historical \code{lefkoElas}
+#' object.
+#' 
+#' @return A matrix in the dimensions of the ahistorical matrices corresponding
+#' to \code{hmats}.
+#' 
+#' @keywords internal
+#' @noRd
+shopliftersunite <- function(hmats, hstages, ahstages) {
+    .Call('_lefko3_shopliftersunite', PACKAGE = 'lefko3', hmats, hstages, ahstages)
+}
+
 #' Estimates Mean LefkoMat Object for Historical MPM
 #' 
 #' Function \code{turbogeodiesel()} estimates mean historical population
@@ -618,8 +640,10 @@ turbogeodiesel <- function(loy, Umats, Fmats, stages, hstages, patchmats, popmat
 
 #' Estimates Mean LefkoMat Object for Ahistorical MPM
 #' 
-#' Function \code{geodiesel()} estimates mean ahistorical population projection
-#' matrices, treating the mean as element-wise arithmetic.
+#' Function \code{geodiesel()} estimates mean ahistorical population
+#' projection matrices, treating the mean as element-wise arithmetic. The
+#' function can handle both normal ahistorical MPMs and age x stage ahistorical
+#' MPMs.
 #' 
 #' @param loy A data frame denoting the population, patch, and time step
 #' designation of each matrix. Includes a total of 9 variables.
@@ -938,19 +962,177 @@ elas3hlefko <- function(Amat, ahstages, hstages) {
 #' @param mat_order A vector giving the order of matrices to use at each time.
 #' @param standardize A logical value stating whether to standardize population
 #' size vector to sum to 1 at each estimated time.
-#' @param forward A logical value stating whether the projection should be a
-#' forward projetion. Should generally be true, except in certain cases where
-#' reverse-time vectors or matrices need to be created, as in
-#' \code{\link{stochsens}()}.
+#' @param growthonly A logical value stating whether to output a matrix
+#' showing the change in population size from one year to the next for use in
+#' stochastic population growth rate estimation (TRUE), or a matrix containing
+#' the w and v projections for stochastic perturbation analysis, stage
+#' distribution estimation, and reproductive value estimation.
+#' @param integeronly A logical value indicating whether to round all projected
+#' numbers of individuals to the nearest integer.
 #' 
-#' @return A matrix in which each row is the population vector at each 
-#' projected time. This matrix can contain raw versiomns of the w and v
-#' vectors needed for stochastic sensitivity and elasticity estimation.
+#' @return A matrix in which, if \code{growthonly = TRUE}, each row is the
+#' population vector at each projected time, and if \code{growthonly = FALSE},
+#' the top half of the matrix is the w projection (stage distribution) and the
+#' bottom half is the v projection (reproductive values) for use in estimation
+#' of stochastic sensitivities and elasticities (in addition, a further row is
+#' appended to the bottom, corresponding to the R vector, which is the
+#' sum of the unstandardized w vector resulting from each time step's
+#' projection).
+#' 
+#' @section Notes:
+#' This function uses dense matrix approaches except for sparse matrices with
+#' over 400 rows, which are projected using sparse matrix multiplication.
 #' 
 #' @keywords internal
 #' @noRd
-proj3 <- function(start_vec, core_list, mat_order, standardize, forward) {
-    .Call('_lefko3_proj3', PACKAGE = 'lefko3', start_vec, core_list, mat_order, standardize, forward)
+proj3 <- function(start_vec, core_list, mat_order, standardize, growthonly, integeronly) {
+    .Call('_lefko3_proj3', PACKAGE = 'lefko3', start_vec, core_list, mat_order, standardize, growthonly, integeronly)
+}
+
+#' Estimate Stochastic Population Growth Rate
+#' 
+#' Function \code{projection3()} projects the population forward in time by
+#' a user-defined number of time steps. Projections may be deterministic or
+#' stochastic. If deterministic, then projections will be cyclical if mjultiple
+#' years of matrices exist for each population or patch. If stochastic, then
+#' annual matrices will be shuffled within patches and populations.
+#' 
+#' @param mpm A matrix projection model of class \code{lefkoMat}, or a list of
+#' full matrix projection matrices.
+#' @param times Number of iterations to random samples. Defaults to 10,000.
+#' @param stochastic A logical value denoting whether to conduct a stochastic
+#' projection or a deterministic / cyclical projection.
+#' @param standardize A logical value denoting whether to re-standardize the
+#' population size to 1.0 at each time step. Defaults to FALSE.
+#' @param growthonly A logical value indicating whether to produce only the
+#' projected population size at each time step, or a vector showing the stage
+#' distribution followed by the reproductive value vector followed by the full
+#' population size at each time step. Defaults to TRUE.
+#' @param integeronly A logical value indicating whether to round the number of
+#' individuals projected in each stage at each time step to the nearest
+#' integer. Defaults to FALSE.
+#' @param start_vec An optional numeric vector denoting the starting stage
+#' distribution for the projection. Defaults to a single individual of each
+#' stage.
+#' @param tweights An optional numeric vector denoting the probabilistic
+#' weightings of annual matrices. Defaults to equal weighting among times.
+#' 
+#' @return A list with two elements:
+#' \item{projection}{A list of matrices showing the total number of individuals
+#' per stage per time step, or showing the former with the projected stage 
+#' distribution and reproductive value per stage per time step followed by
+#' the total population size per time step (all row-bound in order).}
+#' \item{labels}{A data frame showing the order of populations and patches in
+#' item \code{projection}.}
+#' 
+#' Projections are run both at the patch level and at the population level.
+#' Population level estimates will be noted at the end of the
+#' data frame with 0 entries for patch designation.
+#' 
+#' @section Notes:
+#' Weightings given in \code{tweights} do not need to sum to 1. Final
+#' weightings used will be based on the proportion per element of the sum of
+#' elements in the user-supplied vector.
+#'
+#' @examples
+#' # Lathyrus example
+#' data(lathyrus)
+#' 
+#' sizevector <- c(0, 100, 13, 127, 3730, 3800, 0)
+#' stagevector <- c("Sd", "Sdl", "VSm", "Sm", "VLa", "Flo", "Dorm")
+#' repvector <- c(0, 0, 0, 0, 0, 1, 0)
+#' obsvector <- c(0, 1, 1, 1, 1, 1, 0)
+#' matvector <- c(0, 0, 1, 1, 1, 1, 1)
+#' immvector <- c(1, 1, 0, 0, 0, 0, 0)
+#' propvector <- c(1, 0, 0, 0, 0, 0, 0)
+#' indataset <- c(0, 1, 1, 1, 1, 1, 1)
+#' binvec <- c(0, 100, 11, 103, 3500, 3800, 0.5)
+#' 
+#' lathframe <- sf_create(sizes = sizevector, stagenames = stagevector,
+#'   repstatus = repvector, obsstatus = obsvector, matstatus = matvector,
+#'   immstatus = immvector, indataset = indataset, binhalfwidth = binvec,
+#'   propstatus = propvector)
+#' 
+#' lathvert <- verticalize3(lathyrus, noyears = 4, firstyear = 1988,
+#'   patchidcol = "SUBPLOT", individcol = "GENET", blocksize = 9,
+#'   juvcol = "Seedling1988", sizeacol = "Volume88", repstracol = "FCODE88",
+#'   fecacol = "Intactseed88", deadacol = "Dead1988",
+#'   nonobsacol = "Dormant1988", stageassign = lathframe, stagesize = "sizea",
+#'   censorcol = "Missing1988", censorkeep = NA, censor = TRUE)
+#' 
+#' lathrepm <- matrix(0, 7, 7)
+#' lathrepm[1, 6] <- 0.345
+#' lathrepm[2, 6] <- 0.054
+#' 
+#' lathover3 <- overwrite(stage3 = c("Sd", "Sd", "Sdl"),
+#'   stage2 = c("Sd", "Sd", "Sd"), stage1 = c("Sd", "rep", "rep"),
+#'   givenrate = c(0.345, 0.345, 0.054))
+#' 
+#' ehrlen3 <- rlefko3(data = lathvert, stageframe = lathframe,
+#'   year = c(1989, 1990), stages = c("stage3", "stage2", "stage1"),
+#'   repmatrix = lathrepm, overwrite = lathover3, yearcol = "year2",
+#'   indivcol = "individ")
+#' 
+#' lathproj <- projection3(ehrlen3, stochastic = TRUE)
+#' 
+#' # Cypripedium example
+#' rm(list = ls(all=TRUE))
+#' data(cypdata)
+#'  
+#' sizevector <- c(0, 0, 0, 0, 0, 0, 1, 2.5, 4.5, 8, 17.5)
+#' stagevector <- c("SD", "P1", "P2", "P3", "SL", "D", "XSm", "Sm", "Md", "Lg",
+#'   "XLg")
+#' repvector <- c(0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1)
+#' obsvector <- c(0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1)
+#' matvector <- c(0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1)
+#' immvector <- c(0, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0)
+#' propvector <- c(1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)
+#' indataset <- c(0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1)
+#' binvec <- c(0, 0, 0, 0, 0, 0.5, 0.5, 1, 1, 2.5, 7)
+#' 
+#' cypframe_raw <- sf_create(sizes = sizevector, stagenames = stagevector,
+#'   repstatus = repvector, obsstatus = obsvector, matstatus = matvector, 
+#'   propstatus = propvector, immstatus = immvector, indataset = indataset,
+#'   binhalfwidth = binvec)
+#' 
+#' cypraw_v1 <- verticalize3(data = cypdata, noyears = 6, firstyear = 2004,
+#'   patchidcol = "patch", individcol = "plantid", blocksize = 4, 
+#'   sizeacol = "Inf2.04", sizebcol = "Inf.04", sizeccol = "Veg.04", 
+#'   repstracol = "Inf.04", repstrbcol = "Inf2.04", fecacol = "Pod.04",
+#'   stageassign = cypframe_raw, stagesize = "sizeadded", NAas0 = TRUE, 
+#'   NRasRep = TRUE)
+#' 
+#' rep_cyp_raw <- matrix(0, 11, 11)
+#' rep_cyp_raw[1:2,7:11] <- 0.5
+#' 
+#' cypover3r <- overwrite(stage3 = c("SD", "SD", "P1", "P1", "P2", "P3", "SL", 
+#'     "SL", "SL", "D", "XSm", "Sm", "D", "XSm", "Sm"), 
+#'   stage2 = c("SD", "SD", "SD", "SD", "P1", "P2", "P3", "SL", "SL", "SL", 
+#'     "SL", "SL", "SL", "SL", "SL"),
+#'   stage1 = c("SD", "rep", "SD", "rep", "SD", "P1", "P2", "P3", "SL", "P3", 
+#'     "P3", "P3", "SL", "SL", "SL"),
+#'   eststage3 = c(NA, NA, NA, NA, NA, NA, NA, NA, NA, "D", "XSm", "Sm", "D", 
+#'     "XSm", "Sm"), 
+#'   eststage2 = c(NA, NA, NA, NA, NA, NA, NA, NA, NA, "XSm", "XSm", "XSm", 
+#'     "XSm", "XSm", "XSm"), 
+#'   eststage1 = c(NA, NA, NA, NA, NA, NA, NA, NA, NA, "XSm", "XSm", "XSm", 
+#'     "XSm", "XSm", "XSm"), 
+#'   givenrate = c(0.1, 0.1, 0.2, 0.2, 0.2, 0.2, 0.25, 0.4, 0.4, NA, NA, NA, 
+#'     NA, NA, NA), 
+#'   type = c("S", "S", "S", "S", "S", "S", "S", "S", "S", "S", "S", "S", "S", 
+#'     "S", "S"))
+#' 
+#' cypmatrix3r <- rlefko3(data = cypraw_v1, stageframe = cypframe_raw, 
+#'   year = "all", patch = "all", stages = c("stage3", "stage2", "stage1"),
+#'   size = c("size3added", "size2added", "size1added"), 
+#'   repmatrix = rep_cyp_raw, overwrite = cypover3r, yearcol = "year2", 
+#'   patchcol = "patchid", indivcol = "individ")
+#' 
+#' cypstoch <- projection3(cypmatrix3r, stochastic = TRUE)
+#' 
+#' @export projection3
+projection3 <- function(mpm, times = 10000L, stochastic = FALSE, standardize = FALSE, growthonly = TRUE, integeronly = FALSE, start_vec = NULL, tweights = NULL) {
+    .Call('_lefko3_projection3', PACKAGE = 'lefko3', mpm, times, stochastic, standardize, growthonly, integeronly, start_vec, tweights)
 }
 
 #' Estimate Stochastic Population Growth Rate
@@ -989,6 +1171,47 @@ proj3 <- function(start_vec, core_list, mat_order, standardize, forward) {
 #' elements in the user-supplied vector.
 #'
 #' @examples
+#' # Lathyrus example
+#' data(lathyrus)
+#' 
+#' sizevector <- c(0, 100, 13, 127, 3730, 3800, 0)
+#' stagevector <- c("Sd", "Sdl", "VSm", "Sm", "VLa", "Flo", "Dorm")
+#' repvector <- c(0, 0, 0, 0, 0, 1, 0)
+#' obsvector <- c(0, 1, 1, 1, 1, 1, 0)
+#' matvector <- c(0, 0, 1, 1, 1, 1, 1)
+#' immvector <- c(1, 1, 0, 0, 0, 0, 0)
+#' propvector <- c(1, 0, 0, 0, 0, 0, 0)
+#' indataset <- c(0, 1, 1, 1, 1, 1, 1)
+#' binvec <- c(0, 100, 11, 103, 3500, 3800, 0.5)
+#' 
+#' lathframe <- sf_create(sizes = sizevector, stagenames = stagevector,
+#'   repstatus = repvector, obsstatus = obsvector, matstatus = matvector,
+#'   immstatus = immvector, indataset = indataset, binhalfwidth = binvec,
+#'   propstatus = propvector)
+#' 
+#' lathvert <- verticalize3(lathyrus, noyears = 4, firstyear = 1988,
+#'   patchidcol = "SUBPLOT", individcol = "GENET", blocksize = 9,
+#'   juvcol = "Seedling1988", sizeacol = "Volume88", repstracol = "FCODE88",
+#'   fecacol = "Intactseed88", deadacol = "Dead1988",
+#'   nonobsacol = "Dormant1988", stageassign = lathframe, stagesize = "sizea",
+#'   censorcol = "Missing1988", censorkeep = NA, censor = TRUE)
+#' 
+#' lathrepm <- matrix(0, 7, 7)
+#' lathrepm[1, 6] <- 0.345
+#' lathrepm[2, 6] <- 0.054
+#' 
+#' lathover3 <- overwrite(stage3 = c("Sd", "Sd", "Sdl"),
+#'   stage2 = c("Sd", "Sd", "Sd"), stage1 = c("Sd", "rep", "rep"),
+#'   givenrate = c(0.345, 0.345, 0.054))
+#' 
+#' ehrlen3 <- rlefko3(data = lathvert, stageframe = lathframe,
+#'   year = c(1989, 1990), stages = c("stage3", "stage2", "stage1"),
+#'   repmatrix = lathrepm, overwrite = lathover3, yearcol = "year2",
+#'   indivcol = "individ")
+#' 
+#' slambda3(ehrlen3)
+#' 
+#' # Cypripedium example
 #' data(cypdata)
 #'  
 #' sizevector <- c(0, 0, 0, 0, 0, 0, 1, 2.5, 4.5, 8, 17.5)

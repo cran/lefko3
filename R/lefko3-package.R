@@ -31,14 +31,16 @@
 #' \emph{lefko3}: analyzing individual history through size-classified matrix 
 #' population models. \emph{Methods in Ecology and Evolution} 12(2): 378-382.
 #' @import Rcpp
-#' @importFrom Rcpp evalCpp
-#' @importFrom stats na.action na.fail na.omit lm glm getCall xtabs sd rnorm setNames
-#' @importFrom stats as.formula median pchisq var poisson
-#' @importFrom pscl zeroinfl
-#' @importFrom MuMIn dredge
+#' @importFrom glmmTMB fixef glmmTMB nbinom2 ranef truncated_nbinom2 truncated_poisson
+#' @importFrom lme4 fixef glmer lmer ranef VarCorr
 #' @importFrom MASS glm.nb
-#' @importFrom lme4 lmer glmer fixef ranef VarCorr
-#' @importFrom glmmTMB glmmTMB nbinom2 fixef ranef
+#' @importFrom MuMIn dredge
+#' @importFrom pscl zeroinfl
+#' @importFrom Rcpp evalCpp
+#' @importFrom SparseM as.matrix.csr image
+#' @importFrom stats getCall glm lm na.action na.fail na.omit rnorm sd setNames xtabs
+#' @importFrom stats as.formula median pchisq poisson var
+#' @importFrom VGAM posnegbinomial pospoisson vglm
 #' @useDynLib lefko3
 #' @name lefko3
 NULL

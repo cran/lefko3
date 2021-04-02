@@ -1,6 +1,57 @@
 LEFKO3 NEWS
 -----------
 
+CHANGES IN VERSION 3.4.0 (2021-03-31)
+-------------------------------------
+  NEW FEATURES
+    1. Zero-truncated Poisson and negative binomial distributions have been
+       added to function modelsearch(), and as underlying size and fecundity
+       distributions in flefko3(), flefko2(), and aflefko2().
+    2. New function image3() created to easily create matrix images for lefkoMat
+       and other objects. Function acts as a wrapper for the image() function in
+       package SparseM.
+    3. New vignette showcasing the estimation and analysis of age x stage MPMs.
+  
+  USER-VISIBLE CHANGES
+    1. Added err_check option to function-based matrix estimators, allowing the
+       output of vital rates used in the estimation of U matrices.
+    2. The test used to assess overdispersion in size and fecundity has been
+       changed to deal more accurately with count-based variance (including
+       tests performed and how data are subsetted), and to offer more choices in
+       which tests to run.
+    3. Function modelsearch() has been rewritten to result in a smaller
+       installed package size.
+    4. Function parasearch() has been removed pending revision of modeling
+       methodology.
+    5. Reproductive value vectors are now all standardized to the first non-zero
+       value in the vector.
+    6. Function sf_create() can now handle stage comments as input.
+    7. Functions sensitivity3() and elasticity3() have been redesigned for
+       increased speed with unusually large matrices.
+    8. Stochastic analysis functions have been streamlined for speed and
+       efficiency.
+    9. Expanded all examples to include both Lathyrus and Cypripedium versions.
+    10. Corrections and expansions to package vignettes.
+  
+  BUG FIXES
+    1. Fixed issue in which loss of one of the year or patch terms in modeling
+       of zero-inflated mixed models could lead to errors in function-based
+       matrix estimation.
+    2. Corrected error in estimation algorithm for size transition probability
+       under negative binomial distribution, and difficulty in handling low
+       levels of overdispersion in some negative binomial models.
+    3. Fixed issue making lmean() unable to take element-wise mean matrices of
+       age x stage MPMs produced using aflefko2().
+    4. Fixed bug yielding erroneous reproductive values in historical matrices.
+    5. Fixed bug yielding erroneous sensitivity elements in historically-
+       corrected ahistorical sensitivity matrices.
+    6. Fixed bug occasionally yielding 3d arrays in response to stochastic
+       calls of sensitivity3() and elasticity3().
+    7. Corrected stablestage3() and repvalue3() to properly handle age x stage
+       MPMs.
+    8. Corrected memory leak issue in aflefko2().
+
+
 CHANGES IN VERSION 3.3.2 (2021-02-25)
 -------------------------------------
   BUG FIXES
