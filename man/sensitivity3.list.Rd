@@ -4,7 +4,14 @@
 \alias{sensitivity3.list}
 \title{Estimate Sensitivity of Population Growth Rate of a List of Matrices}
 \usage{
-\method{sensitivity3}{list}(mats, stochastic = FALSE, steps = 10000, time_weights = NA, ...)
+\method{sensitivity3}{list}(
+  mats,
+  stochastic = FALSE,
+  steps = 10000,
+  time_weights = NA,
+  historical = FALSE,
+  ...
+)
 }
 \arguments{
 \item{mats}{An object of class \code{matrix}.}
@@ -19,17 +26,21 @@ Defaults to 10,000.}
 \item{time_weights}{Numeric vector denoting the probabilistic weightings of
 annual matrices. Defaults to equal weighting among times.}
 
+\item{historical}{A logical value indicating whether matrices are historical.
+Defaults to FALSE.}
+
 \item{...}{Other parameters.}
 }
 \value{
 This function returns an object of class \code{lefkoSens}, which is a
-list of 7 elements. The first, h_sensmats, is a list of historical
+list of 8 elements. The first, \code{h_sensmats}, is a list of historical
 sensitivity matrices (NULL if an ahMPM is used as input). The second,
-ah_elasmats, is a list of ahistorical sensitivity matrices if an ahMPM is
-used as input (NULL if an hMPM is used as input). The third element,
-h_stages, and the fourth element, ah_stages, are NULL. The last 3 elements
-include the original A matrices supplied (as the A element), followed by
-NULLs for the U and F elements.
+\code{ah_elasmats}, is a list of ahistorical sensitivity matrices if an ahMPM
+is used as input (NULL if an hMPM is used as input). The third element,
+\code{h_stages}, the fourth element, \code{agestages}, and the fifth element,
+\code{ah_stages}, are NULL. The last 3 elements include the original A
+matrices supplied (as the \code{A} element), followed by NULLs for the U and
+F elements.
 }
 \description{
 \code{sensitivity3.list()} returns the sensitivities of population growth
@@ -46,15 +57,9 @@ Matrix Population Models). Stochastic sensitivities are estimated as eqn.
 14.97 in Caswell (2001). Note that stochastic sensitivities are with regard
 to the log of the stochastic \eqn{\lambda}.
 
-Determination of whether the input MPM is ahistorical or historical is made
-on the basis of the dimensionality of input matrices - fewer than 400 rows
-suggests an ahistorical MPM, while more indicates a historical MPM. This
-designation does not impact the underlying algorithms in any way, so mistaken
-calls can be fixed by moving the resulting sensitivity matrices to the
-correct element of the output list.
-
 Currently, this function does not estimate equivalent ahistorical stochastic
-sensitivities for input historical matrices.
+sensitivities for input historical matrices, due to the lack of guidance
+input on the order of stages.
 }
 
 \examples{
@@ -83,12 +88,13 @@ lathvert <- verticalize3(lathyrus, noyears = 4, firstyear = 1988,
   nonobsacol = "Dormant1988", stageassign = lathframe, stagesize = "sizea",
   censorcol = "Missing1988", censorkeep = NA, censor = TRUE)
 
-lathsupp3 <- supplemental(stage3 = c("Sd", "Sd", "Sdl", "Sd", "Sdl"), 
-  stage2 = c("Sd", "Sd", "Sd", "rep", "rep"),
-  stage1 = c("Sd", "rep", "rep", "all", "all"), 
-  givenrate = c(0.345, 0.345, 0.054, NA, NA),
-  multiplier = c(NA, NA, NA, 0.345, 0.054),
-  type = c(1, 1, 1, 3, 3), stageframe = lathframe, historical = TRUE)
+lathsupp3 <- supplemental(stage3 = c("Sd", "Sd", "Sdl", "Sdl", "Sd", "Sdl"), 
+  stage2 = c("Sd", "Sd", "Sd", "Sd", "rep", "rep"),
+  stage1 = c("Sd", "rep", "Sd", "rep", "all", "all"), 
+  givenrate = c(0.345, 0.345, 0.054, 0.054, NA, NA),
+  multiplier = c(NA, NA, NA, NA, 0.345, 0.054),
+  type = c(1, 1, 1, 1, 3, 3), type_t12 = c(1, 2, 1, 2, 1, 1),
+  stageframe = lathframe, historical = TRUE)
 
 ehrlen3 <- rlefko3(data = lathvert, stageframe = lathframe, year = "all", 
   stages = c("stage3", "stage2", "stage1"), supplement = lathsupp3,

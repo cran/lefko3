@@ -23,18 +23,20 @@ annual matrices. Defaults to equal weighting among times.}
 }
 \value{
 This function returns an object of class \code{lefkoElas}, which is a
-list with 7 elements. The first, h_elasmats, is a list of historical
+list with 8 elements. The first, \code{h_elasmats}, is a list of historical
 elasticity matrices (NULL if an ahMPM is used as input). The second,
-ah_elasmats, is a list of either ahistorical elasticity matrices if an ahMPM
-is used as input, or, if an hMPM is used as input, then the result is a list
-of elasticity matrices in which historical elasticities have been summed by
-the stage in times \emph{t} and \emph{t}+1 to produce historically-corrected
-elasticity matrices, which are equivalent in dimension to ahistorical
-elasticitymatrices but reflect the effects of stage in time t-1. The third
-element, h_stages, is a data frame showing historical stage pairs (NULL if
-ahMPM used as input). The fourth element, ah_stages, is a data frame showing
-the order of ahistorical stages. The last 3 elements are the A, U, and F
-portions of the input.
+\code{ah_elasmats}, is a list of either ahistorical elasticity matrices if an
+ahMPM is used as input, or, if an hMPM is used as input, then the result is a
+list of elasticity matrices in which historical elasticities have been summed
+by the stage in times \emph{t} and \emph{t}+1 to produce
+historically-corrected elasticity matrices, which are equivalent in dimension
+to ahistorical elasticity matrices but reflect the effects of stage in time
+\emph{t}-1. The third element, \code{h_stages}, is a data frame showing
+historical stage pairs (NULL if ahMPM used as input). The fourth element,
+\code{agestages}, shows age-stage combinations in the order used in
+age-by-stage MPMs, if suppled. The fifth element, \code{ah_stages}, is a data
+frame showing the order of ahistorical stages. The last 3 elements are the A,
+U, and F portions of the input.
 }
 \description{
 \code{elasticity3.lefkoMat()} returns the elasticities of population growth
@@ -81,12 +83,13 @@ lathvert <- verticalize3(lathyrus, noyears = 4, firstyear = 1988,
   nonobsacol = "Dormant1988", stageassign = lathframe, stagesize = "sizea",
   censorcol = "Missing1988", censorkeep = NA, censor = TRUE)
 
-lathsupp3 <- supplemental(stage3 = c("Sd", "Sd", "Sdl", "Sd", "Sdl"), 
-  stage2 = c("Sd", "Sd", "Sd", "rep", "rep"),
-  stage1 = c("Sd", "rep", "rep", "all", "all"), 
-  givenrate = c(0.345, 0.345, 0.054, NA, NA),
-  multiplier = c(NA, NA, NA, 0.345, 0.054),
-  type = c(1, 1, 1, 3, 3), stageframe = lathframe, historical = TRUE)
+lathsupp3 <- supplemental(stage3 = c("Sd", "Sd", "Sdl", "Sdl", "Sd", "Sdl"), 
+  stage2 = c("Sd", "Sd", "Sd", "Sd", "rep", "rep"),
+  stage1 = c("Sd", "rep", "Sd", "rep", "all", "all"), 
+  givenrate = c(0.345, 0.345, 0.054, 0.054, NA, NA),
+  multiplier = c(NA, NA, NA, NA, 0.345, 0.054),
+  type = c(1, 1, 1, 1, 3, 3), type_t12 = c(1, 2, 1, 2, 1, 1),
+  stageframe = lathframe, historical = TRUE)
 
 ehrlen3 <- rlefko3(data = lathvert, stageframe = lathframe, year = "all", 
   stages = c("stage3", "stage2", "stage1"), supplement = lathsupp3,

@@ -4,12 +4,17 @@
 \alias{cond_hmpm}
 \title{Extract Conditional Ahistorical Matrices from Historical MPM}
 \usage{
-cond_hmpm(hmpm, matchoice = NULL)
+cond_hmpm(hmpm, matchoice = NULL, err_check = NULL)
 }
 \arguments{
 \item{hmpm}{A historical matrix projection model of class \code{lefkoMat}.}
 
-\item{matchoice}{A character denoting whether to use A, U, or F matrices.}
+\item{matchoice}{A character denoting whether to use A, U, or F matrices.
+Defaults to A matrices.}
+
+\item{err_check}{A logical value denoting whether to include a data frame
+of element equivalence from the conditional matrices to the original
+matrices. Used only for debugging purposes. Defaults to FALSE.}
 }
 \value{
 A \code{lefkoCondMat} object, with the following elements:
@@ -36,8 +41,8 @@ forms one ahistorical matrix for each stage in time \emph{t}-1.
 data(cypdata)
  
 sizevector <- c(0, 0, 0, 0, 0, 0, 1, 2.5, 4.5, 8, 17.5)
-stagevector <- c("SD", "P1", "P2", "P3", "SL", "D", "XSm", 
-                 "Sm", "Md", "Lg", "XLg")
+stagevector <- c("SD", "P1", "P2", "P3", "SL", "D", "XSm", "Sm", "Md",
+  "Lg", "XLg")
 repvector <- c(0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1)
 obsvector <- c(0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1)
 matvector <- c(0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1)

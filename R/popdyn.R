@@ -56,12 +56,13 @@
 #'   nonobsacol = "Dormant1988", stageassign = lathframe, stagesize = "sizea",
 #'   censorcol = "Missing1988", censorkeep = NA, censor = TRUE)
 #' 
-#' lathsupp3 <- supplemental(stage3 = c("Sd", "Sd", "Sdl", "Sd", "Sdl"), 
-#'   stage2 = c("Sd", "Sd", "Sd", "rep", "rep"),
-#'   stage1 = c("Sd", "rep", "rep", "all", "all"), 
-#'   givenrate = c(0.345, 0.345, 0.054, NA, NA),
-#'   multiplier = c(NA, NA, NA, 0.345, 0.054),
-#'   type = c(1, 1, 1, 3, 3), stageframe = lathframe, historical = TRUE)
+#' lathsupp3 <- supplemental(stage3 = c("Sd", "Sd", "Sdl", "Sdl", "Sd", "Sdl"), 
+#'   stage2 = c("Sd", "Sd", "Sd", "Sd", "rep", "rep"),
+#'   stage1 = c("Sd", "rep", "Sd", "rep", "all", "all"), 
+#'   givenrate = c(0.345, 0.345, 0.054, 0.054, NA, NA),
+#'   multiplier = c(NA, NA, NA, NA, 0.345, 0.054),
+#'   type = c(1, 1, 1, 1, 3, 3), type_t12 = c(1, 2, 1, 2, 1, 1),
+#'   stageframe = lathframe, historical = TRUE)
 #' 
 #' ehrlen3 <- rlefko3(data = lathvert, stageframe = lathframe, year = "all", 
 #'   stages = c("stage3", "stage2", "stage1"), supplement = lathsupp3,
@@ -119,8 +120,14 @@
 #' @export
 lmean <- function(mats, matsout = "all") {
   
+  agestages <- NA
+  
   if (class(mats) != "lefkoMat") {
     stop("An object of class lefkoMat is required as input.")
+  }
+  
+  if (is.element("agestages", names(mats))) {
+    agestages <- mats$agestages
   }
   
   matsout.possible <- c("all", "pop", "patch")
@@ -178,9 +185,11 @@ lmean <- function(mats, matsout = "all") {
   }
   
   if (!all(is.na(mats$hstages))) {
-    output <- turbogeodiesel(listofyears, mats$U, mats$F, mats$ahstages, mats$hstages, patchonly, poponly)
+    output <- turbogeodiesel(listofyears, mats$U, mats$F, mats$hstages, 
+      agestages, mats$ahstages, patchonly, poponly)
   } else {
-    output <- geodiesel(listofyears, mats$U, mats$F, mats$ahstages, patchonly, poponly)
+    output <- geodiesel(listofyears, mats$U, mats$F, agestages, mats$ahstages,
+      patchonly, poponly)
     output$hstages <- NA
   }
   
@@ -232,12 +241,13 @@ lmean <- function(mats, matsout = "all") {
 #'   nonobsacol = "Dormant1988", stageassign = lathframe, stagesize = "sizea",
 #'   censorcol = "Missing1988", censorkeep = NA, censor = TRUE)
 #' 
-#' lathsupp3 <- supplemental(stage3 = c("Sd", "Sd", "Sdl", "Sd", "Sdl"), 
-#'   stage2 = c("Sd", "Sd", "Sd", "rep", "rep"),
-#'   stage1 = c("Sd", "rep", "rep", "all", "all"), 
-#'   givenrate = c(0.345, 0.345, 0.054, NA, NA),
-#'   multiplier = c(NA, NA, NA, 0.345, 0.054),
-#'   type = c(1, 1, 1, 3, 3), stageframe = lathframe, historical = TRUE)
+#' lathsupp3 <- supplemental(stage3 = c("Sd", "Sd", "Sdl", "Sdl", "Sd", "Sdl"), 
+#'   stage2 = c("Sd", "Sd", "Sd", "Sd", "rep", "rep"),
+#'   stage1 = c("Sd", "rep", "Sd", "rep", "all", "all"), 
+#'   givenrate = c(0.345, 0.345, 0.054, 0.054, NA, NA),
+#'   multiplier = c(NA, NA, NA, NA, 0.345, 0.054),
+#'   type = c(1, 1, 1, 1, 3, 3), type_t12 = c(1, 2, 1, 2, 1, 1),
+#'   stageframe = lathframe, historical = TRUE)
 #' 
 #' ehrlen3 <- rlefko3(data = lathvert, stageframe = lathframe, year = "all", 
 #'   stages = c("stage3", "stage2", "stage1"), supplement = lathsupp3,
@@ -343,12 +353,13 @@ lambda3 <- function(mats) UseMethod("lambda3")
 #'   nonobsacol = "Dormant1988", stageassign = lathframe, stagesize = "sizea",
 #'   censorcol = "Missing1988", censorkeep = NA, censor = TRUE)
 #' 
-#' lathsupp3 <- supplemental(stage3 = c("Sd", "Sd", "Sdl", "Sd", "Sdl"), 
-#'   stage2 = c("Sd", "Sd", "Sd", "rep", "rep"),
-#'   stage1 = c("Sd", "rep", "rep", "all", "all"), 
-#'   givenrate = c(0.345, 0.345, 0.054, NA, NA),
-#'   multiplier = c(NA, NA, NA, 0.345, 0.054),
-#'   type = c(1, 1, 1, 3, 3), stageframe = lathframe, historical = TRUE)
+#' lathsupp3 <- supplemental(stage3 = c("Sd", "Sd", "Sdl", "Sdl", "Sd", "Sdl"), 
+#'   stage2 = c("Sd", "Sd", "Sd", "Sd", "rep", "rep"),
+#'   stage1 = c("Sd", "rep", "Sd", "rep", "all", "all"), 
+#'   givenrate = c(0.345, 0.345, 0.054, 0.054, NA, NA),
+#'   multiplier = c(NA, NA, NA, NA, 0.345, 0.054),
+#'   type = c(1, 1, 1, 1, 3, 3), type_t12 = c(1, 2, 1, 2, 1, 1),
+#'   stageframe = lathframe, historical = TRUE)
 #' 
 #' ehrlen3 <- rlefko3(data = lathvert, stageframe = lathframe, year = "all", 
 #'   stages = c("stage3", "stage2", "stage1"), supplement = lathsupp3,
@@ -483,12 +494,13 @@ lambda3.lefkoMat <- function(mats) {
 #'   nonobsacol = "Dormant1988", stageassign = lathframe, stagesize = "sizea",
 #'   censorcol = "Missing1988", censorkeep = NA, censor = TRUE)
 #' 
-#' lathsupp3 <- supplemental(stage3 = c("Sd", "Sd", "Sdl", "Sd", "Sdl"), 
-#'   stage2 = c("Sd", "Sd", "Sd", "rep", "rep"),
-#'   stage1 = c("Sd", "rep", "rep", "all", "all"), 
-#'   givenrate = c(0.345, 0.345, 0.054, NA, NA),
-#'   multiplier = c(NA, NA, NA, 0.345, 0.054),
-#'   type = c(1, 1, 1, 3, 3), stageframe = lathframe, historical = TRUE)
+#' lathsupp3 <- supplemental(stage3 = c("Sd", "Sd", "Sdl", "Sdl", "Sd", "Sdl"), 
+#'   stage2 = c("Sd", "Sd", "Sd", "Sd", "rep", "rep"),
+#'   stage1 = c("Sd", "rep", "Sd", "rep", "all", "all"), 
+#'   givenrate = c(0.345, 0.345, 0.054, 0.054, NA, NA),
+#'   multiplier = c(NA, NA, NA, NA, 0.345, 0.054),
+#'   type = c(1, 1, 1, 1, 3, 3), type_t12 = c(1, 2, 1, 2, 1, 1),
+#'   stageframe = lathframe, historical = TRUE)
 #' 
 #' ehrlen3 <- rlefko3(data = lathvert, stageframe = lathframe, year = "all", 
 #'   stages = c("stage3", "stage2", "stage1"), supplement = lathsupp3,
@@ -600,12 +612,13 @@ lambda3.matrix <- function(mats)
 #'   nonobsacol = "Dormant1988", stageassign = lathframe, stagesize = "sizea",
 #'   censorcol = "Missing1988", censorkeep = NA, censor = TRUE)
 #' 
-#' lathsupp3 <- supplemental(stage3 = c("Sd", "Sd", "Sdl", "Sd", "Sdl"), 
-#'   stage2 = c("Sd", "Sd", "Sd", "rep", "rep"),
-#'   stage1 = c("Sd", "rep", "rep", "all", "all"), 
-#'   givenrate = c(0.345, 0.345, 0.054, NA, NA),
-#'   multiplier = c(NA, NA, NA, 0.345, 0.054),
-#'   type = c(1, 1, 1, 3, 3), stageframe = lathframe, historical = TRUE)
+#' lathsupp3 <- supplemental(stage3 = c("Sd", "Sd", "Sdl", "Sdl", "Sd", "Sdl"), 
+#'   stage2 = c("Sd", "Sd", "Sd", "Sd", "rep", "rep"),
+#'   stage1 = c("Sd", "rep", "Sd", "rep", "all", "all"), 
+#'   givenrate = c(0.345, 0.345, 0.054, 0.054, NA, NA),
+#'   multiplier = c(NA, NA, NA, NA, 0.345, 0.054),
+#'   type = c(1, 1, 1, 1, 3, 3), type_t12 = c(1, 2, 1, 2, 1, 1),
+#'   stageframe = lathframe, historical = TRUE)
 #' 
 #' ehrlen3 <- rlefko3(data = lathvert, stageframe = lathframe, year = "all", 
 #'   stages = c("stage3", "stage2", "stage1"), supplement = lathsupp3,
@@ -761,12 +774,13 @@ stablestage3 <- function(mats, ...) UseMethod("stablestage3")
 #'   nonobsacol = "Dormant1988", stageassign = lathframe, stagesize = "sizea",
 #'   censorcol = "Missing1988", censorkeep = NA, censor = TRUE)
 #' 
-#' lathsupp3 <- supplemental(stage3 = c("Sd", "Sd", "Sdl", "Sd", "Sdl"), 
-#'   stage2 = c("Sd", "Sd", "Sd", "rep", "rep"),
-#'   stage1 = c("Sd", "rep", "rep", "all", "all"), 
-#'   givenrate = c(0.345, 0.345, 0.054, NA, NA),
-#'   multiplier = c(NA, NA, NA, 0.345, 0.054),
-#'   type = c(1, 1, 1, 3, 3), stageframe = lathframe, historical = TRUE)
+#' lathsupp3 <- supplemental(stage3 = c("Sd", "Sd", "Sdl", "Sdl", "Sd", "Sdl"), 
+#'   stage2 = c("Sd", "Sd", "Sd", "Sd", "rep", "rep"),
+#'   stage1 = c("Sd", "rep", "Sd", "rep", "all", "all"), 
+#'   givenrate = c(0.345, 0.345, 0.054, 0.054, NA, NA),
+#'   multiplier = c(NA, NA, NA, NA, 0.345, 0.054),
+#'   type = c(1, 1, 1, 1, 3, 3), type_t12 = c(1, 2, 1, 2, 1, 1),
+#'   stageframe = lathframe, historical = TRUE)
 #' 
 #' ehrlen3 <- rlefko3(data = lathvert, stageframe = lathframe, year = "all", 
 #'   stages = c("stage3", "stage2", "stage1"), supplement = lathsupp3,
@@ -1038,12 +1052,13 @@ stablestage3.lefkoMat <- function(mats, stochastic = FALSE, times = 10000,
 #'   nonobsacol = "Dormant1988", stageassign = lathframe, stagesize = "sizea",
 #'   censorcol = "Missing1988", censorkeep = NA, censor = TRUE)
 #' 
-#' lathsupp3 <- supplemental(stage3 = c("Sd", "Sd", "Sdl", "Sd", "Sdl"), 
-#'   stage2 = c("Sd", "Sd", "Sd", "rep", "rep"),
-#'   stage1 = c("Sd", "rep", "rep", "all", "all"), 
-#'   givenrate = c(0.345, 0.345, 0.054, NA, NA),
-#'   multiplier = c(NA, NA, NA, 0.345, 0.054),
-#'   type = c(1, 1, 1, 3, 3), stageframe = lathframe, historical = TRUE)
+#' lathsupp3 <- supplemental(stage3 = c("Sd", "Sd", "Sdl", "Sdl", "Sd", "Sdl"), 
+#'   stage2 = c("Sd", "Sd", "Sd", "Sd", "rep", "rep"),
+#'   stage1 = c("Sd", "rep", "Sd", "rep", "all", "all"), 
+#'   givenrate = c(0.345, 0.345, 0.054, 0.054, NA, NA),
+#'   multiplier = c(NA, NA, NA, NA, 0.345, 0.054),
+#'   type = c(1, 1, 1, 1, 3, 3), type_t12 = c(1, 2, 1, 2, 1, 1),
+#'   stageframe = lathframe, historical = TRUE)
 #' 
 #' ehrlen3 <- rlefko3(data = lathvert, stageframe = lathframe, year = "all", 
 #'   stages = c("stage3", "stage2", "stage1"), supplement = lathsupp3,
@@ -1155,12 +1170,13 @@ stablestage3.matrix <- function(mats, ...)
 #'   nonobsacol = "Dormant1988", stageassign = lathframe, stagesize = "sizea",
 #'   censorcol = "Missing1988", censorkeep = NA, censor = TRUE)
 #' 
-#' lathsupp3 <- supplemental(stage3 = c("Sd", "Sd", "Sdl", "Sd", "Sdl"), 
-#'   stage2 = c("Sd", "Sd", "Sd", "rep", "rep"),
-#'   stage1 = c("Sd", "rep", "rep", "all", "all"), 
-#'   givenrate = c(0.345, 0.345, 0.054, NA, NA),
-#'   multiplier = c(NA, NA, NA, 0.345, 0.054),
-#'   type = c(1, 1, 1, 3, 3), stageframe = lathframe, historical = TRUE)
+#' lathsupp3 <- supplemental(stage3 = c("Sd", "Sd", "Sdl", "Sdl", "Sd", "Sdl"), 
+#'   stage2 = c("Sd", "Sd", "Sd", "Sd", "rep", "rep"),
+#'   stage1 = c("Sd", "rep", "Sd", "rep", "all", "all"), 
+#'   givenrate = c(0.345, 0.345, 0.054, 0.054, NA, NA),
+#'   multiplier = c(NA, NA, NA, NA, 0.345, 0.054),
+#'   type = c(1, 1, 1, 1, 3, 3), type_t12 = c(1, 2, 1, 2, 1, 1),
+#'   stageframe = lathframe, historical = TRUE)
 #' 
 #' ehrlen3 <- rlefko3(data = lathvert, stageframe = lathframe, year = "all", 
 #'   stages = c("stage3", "stage2", "stage1"), supplement = lathsupp3,
@@ -1319,12 +1335,13 @@ repvalue3 <- function(mats, ...) UseMethod("repvalue3")
 #'   nonobsacol = "Dormant1988", stageassign = lathframe, stagesize = "sizea",
 #'   censorcol = "Missing1988", censorkeep = NA, censor = TRUE)
 #' 
-#' lathsupp3 <- supplemental(stage3 = c("Sd", "Sd", "Sdl", "Sd", "Sdl"), 
-#'   stage2 = c("Sd", "Sd", "Sd", "rep", "rep"),
-#'   stage1 = c("Sd", "rep", "rep", "all", "all"), 
-#'   givenrate = c(0.345, 0.345, 0.054, NA, NA),
-#'   multiplier = c(NA, NA, NA, 0.345, 0.054),
-#'   type = c(1, 1, 1, 3, 3), stageframe = lathframe, historical = TRUE)
+#' lathsupp3 <- supplemental(stage3 = c("Sd", "Sd", "Sdl", "Sdl", "Sd", "Sdl"), 
+#'   stage2 = c("Sd", "Sd", "Sd", "Sd", "rep", "rep"),
+#'   stage1 = c("Sd", "rep", "Sd", "rep", "all", "all"), 
+#'   givenrate = c(0.345, 0.345, 0.054, 0.054, NA, NA),
+#'   multiplier = c(NA, NA, NA, NA, 0.345, 0.054),
+#'   type = c(1, 1, 1, 1, 3, 3), type_t12 = c(1, 2, 1, 2, 1, 1),
+#'   stageframe = lathframe, historical = TRUE)
 #' 
 #' ehrlen3 <- rlefko3(data = lathvert, stageframe = lathframe, year = "all", 
 #'   stages = c("stage3", "stage2", "stage1"), supplement = lathsupp3,
@@ -1702,12 +1719,13 @@ repvalue3.lefkoMat <- function(mats, stochastic = FALSE, times = 10000,
 #'   nonobsacol = "Dormant1988", stageassign = lathframe, stagesize = "sizea",
 #'   censorcol = "Missing1988", censorkeep = NA, censor = TRUE)
 #' 
-#' lathsupp3 <- supplemental(stage3 = c("Sd", "Sd", "Sdl", "Sd", "Sdl"), 
-#'   stage2 = c("Sd", "Sd", "Sd", "rep", "rep"),
-#'   stage1 = c("Sd", "rep", "rep", "all", "all"), 
-#'   givenrate = c(0.345, 0.345, 0.054, NA, NA),
-#'   multiplier = c(NA, NA, NA, 0.345, 0.054),
-#'   type = c(1, 1, 1, 3, 3), stageframe = lathframe, historical = TRUE)
+#' lathsupp3 <- supplemental(stage3 = c("Sd", "Sd", "Sdl", "Sdl", "Sd", "Sdl"), 
+#'   stage2 = c("Sd", "Sd", "Sd", "Sd", "rep", "rep"),
+#'   stage1 = c("Sd", "rep", "Sd", "rep", "all", "all"), 
+#'   givenrate = c(0.345, 0.345, 0.054, 0.054, NA, NA),
+#'   multiplier = c(NA, NA, NA, NA, 0.345, 0.054),
+#'   type = c(1, 1, 1, 1, 3, 3), type_t12 = c(1, 2, 1, 2, 1, 1),
+#'   stageframe = lathframe, historical = TRUE)
 #' 
 #' ehrlen3 <- rlefko3(data = lathvert, stageframe = lathframe, year = "all", 
 #'   stages = c("stage3", "stage2", "stage1"), supplement = lathsupp3,
@@ -1820,12 +1838,13 @@ repvalue3.matrix <- function(mats, ...)
 #'   nonobsacol = "Dormant1988", stageassign = lathframe, stagesize = "sizea",
 #'   censorcol = "Missing1988", censorkeep = NA, censor = TRUE)
 #' 
-#' lathsupp3 <- supplemental(stage3 = c("Sd", "Sd", "Sdl", "Sd", "Sdl"), 
-#'   stage2 = c("Sd", "Sd", "Sd", "rep", "rep"),
-#'   stage1 = c("Sd", "rep", "rep", "all", "all"), 
-#'   givenrate = c(0.345, 0.345, 0.054, NA, NA),
-#'   multiplier = c(NA, NA, NA, 0.345, 0.054),
-#'   type = c(1, 1, 1, 3, 3), stageframe = lathframe, historical = TRUE)
+#' lathsupp3 <- supplemental(stage3 = c("Sd", "Sd", "Sdl", "Sdl", "Sd", "Sdl"), 
+#'   stage2 = c("Sd", "Sd", "Sd", "Sd", "rep", "rep"),
+#'   stage1 = c("Sd", "rep", "Sd", "rep", "all", "all"), 
+#'   givenrate = c(0.345, 0.345, 0.054, 0.054, NA, NA),
+#'   multiplier = c(NA, NA, NA, NA, 0.345, 0.054),
+#'   type = c(1, 1, 1, 1, 3, 3), type_t12 = c(1, 2, 1, 2, 1, 1),
+#'   stageframe = lathframe, historical = TRUE)
 #' 
 #' ehrlen3 <- rlefko3(data = lathvert, stageframe = lathframe, year = "all", 
 #'   stages = c("stage3", "stage2", "stage1"), supplement = lathsupp3,
@@ -1904,24 +1923,23 @@ sensitivity3 <- function(mats, ...) UseMethod("sensitivity3")
 #' @param ... Other parameters.
 #' 
 #' @return This function returns an object of class \code{lefkoSens}, which is a
-#' list of 7 elements. The first, h_sensmats, is a list of historical sensitivity
-#' matrices (NULL if an ahMPM is used as input). The second, ah_elasmats, is a
-#' list of either ahistorical sensitivity matrices if an ahMPM is used as input,
-#' or, if an hMPM is used as input, then the result is a list of ahistorical
-#' matrices based on the equivalent historical dependencies assumed in the
-#' input historical matrices. The third element, h_stages, is a data frame
-#' showing historical stage pairs (NULL if ahMPM used as input). The fourth
-#' element, ah_stages, is a data frame showing the order of ahistorical stages.
-#' The last 3 elements are the A, U, and F portions of the input.
+#' list of 8 elements. The first, \code{h_sensmats}, is a list of historical
+#' sensitivity matrices (NULL if an ahMPM is used as input). The second,
+#' \code{ah_elasmats}, is a list of either ahistorical sensitivity matrices if
+#' an ahMPM is used as input, or, if an hMPM is used as input, then the result
+#' is a list of ahistorical matrices based on the equivalent historical
+#' dependencies assumed in the input historical matrices. The third element,
+#' \code{h_stages}, is a data frame showing historical stage pairs (NULL if
+#' ahMPM used as input). The fourth element, \code{agestages}, show the order of
+#' age-stage combinations, if age-by-stage MPMs have been supplied. The fifth
+#' element, \code{ah_stages}, is a data frame showing the order of ahistorical
+#' stages. The last 3 elements are the A, U, and F portions of the input.
 #' 
 #' @section Notes:
 #' Deterministic sensitivities are estimated as eqn. 9.14 in Caswell (2001,
 #' Matrix Population Models). Stochastic sensitivities are estimated as eqn.
 #' 14.97 in Caswell (2001). Note that stochastic sensitivities are of the log of
 #' the stochastic \eqn{\lambda}.
-#'
-#' Currently, this function does not estimate equivalent ahistorical stochastic
-#' sensitivities for input historical matrices.
 #'
 #' @seealso \code{\link{sensitivity3}()}
 #' @seealso \code{\link{sensitivity3.matrix}()}
@@ -1953,12 +1971,13 @@ sensitivity3 <- function(mats, ...) UseMethod("sensitivity3")
 #'   nonobsacol = "Dormant1988", stageassign = lathframe, stagesize = "sizea",
 #'   censorcol = "Missing1988", censorkeep = NA, censor = TRUE)
 #' 
-#' lathsupp3 <- supplemental(stage3 = c("Sd", "Sd", "Sdl", "Sd", "Sdl"), 
-#'   stage2 = c("Sd", "Sd", "Sd", "rep", "rep"),
-#'   stage1 = c("Sd", "rep", "rep", "all", "all"), 
-#'   givenrate = c(0.345, 0.345, 0.054, NA, NA),
-#'   multiplier = c(NA, NA, NA, 0.345, 0.054),
-#'   type = c(1, 1, 1, 3, 3), stageframe = lathframe, historical = TRUE)
+#' lathsupp3 <- supplemental(stage3 = c("Sd", "Sd", "Sdl", "Sdl", "Sd", "Sdl"), 
+#'   stage2 = c("Sd", "Sd", "Sd", "Sd", "rep", "rep"),
+#'   stage1 = c("Sd", "rep", "Sd", "rep", "all", "all"), 
+#'   givenrate = c(0.345, 0.345, 0.054, 0.054, NA, NA),
+#'   multiplier = c(NA, NA, NA, NA, 0.345, 0.054),
+#'   type = c(1, 1, 1, 1, 3, 3), type_t12 = c(1, 2, 1, 2, 1, 1),
+#'   stageframe = lathframe, historical = TRUE)
 #' 
 #' ehrlen3 <- rlefko3(data = lathvert, stageframe = lathframe, year = "all", 
 #'   stages = c("stage3", "stage2", "stage1"), supplement = lathsupp3,
@@ -2019,6 +2038,10 @@ sensitivity3.lefkoMat <- function(mats, stochastic = FALSE, steps = 10000,
     stop("Stochastic sensitivity estimation cannot be completed with fewer than 2 annual matrices.", call. = FALSE)
   }
   
+  if (!is.element("agestages", names(mats))) {
+    mats$agestages <- NA
+  }
+  
   if (!stochastic) {
     # Deterministic sensitivity analysis
     
@@ -2073,25 +2096,32 @@ sensitivity3.lefkoMat <- function(mats, stochastic = FALSE, steps = 10000,
     # Stochastic sensitivity analysis
     
     if(!any(is.na(time_weights))) {
-      returned_cube <- stoch_senselas(mats, times = steps, style = 1,
+      returned_cubes <- stoch_senselas(mats, times = steps, style = 1,
         tweights = time_weights) 
     } else {
-      returned_cube <- stoch_senselas(mats, times = steps, style = 1) 
+      returned_cubes <- stoch_senselas(mats, times = steps, style = 1) 
     }
     
-    returned_list <- lapply(as.list(c(1:dim(returned_cube)[3])), function(X) {
-        return(returned_cube[,,X])
+    main_cube <- returned_cubes[[1]]
+    ah_cube <- returned_cubes[[2]]
+    
+    returned_main <- lapply(as.list(c(1:dim(main_cube)[3])), function(X) {
+        return(main_cube[,,X])
       }
     )
     
     if (!all(is.na(mats$hstages))) {
-      output <- list(h_sensmats = returned_list, ah_sensmats = NULL,
-        h_stages = mats$hstages, ah_stages = mats$ahstages, A = mats$A,
-        U = mats$U, F = mats$F)
+      returned_ah <- lapply(as.list(c(1:dim(ah_cube)[3])), function(X) {
+          return(ah_cube[,,X])
+        }
+      )
+      output <- list(h_sensmats = returned_main, ah_sensmats = returned_ah,
+        h_stages = mats$hstages, agestages = mats$agestages,
+        ah_stages = mats$ahstages, A = mats$A, U = mats$U, F = mats$F)
     } else {
-      output <- list(h_sensmats = NULL, ah_sensmats = returned_list,
-        h_stages = mats$hstages, ah_stages = mats$ahstages, A = mats$A,
-        U = mats$U, F = mats$F)
+      output <- list(h_sensmats = NULL, ah_sensmats = returned_main,
+        h_stages = mats$hstages, agestages = mats$agestages,
+        ah_stages = mats$ahstages, A = mats$A, U = mats$U, F = mats$F)
     }
   }
   class(output) <- "lefkoSens"
@@ -2112,7 +2142,7 @@ sensitivity3.lefkoMat <- function(mats, stochastic = FALSE, steps = 10000,
 #' @param mats An object of class \code{matrix}.
 #' @param ... Other parameters.
 #' 
-#' @return This function returns a single sensitivity matrix.
+#' @return This function returns a single deterministic sensitivity matrix.
 #' 
 #' @seealso \code{\link{sensitivity3}()}
 #' @seealso \code{\link{sensitivity3.lefkoMat}()}
@@ -2144,12 +2174,13 @@ sensitivity3.lefkoMat <- function(mats, stochastic = FALSE, steps = 10000,
 #'   nonobsacol = "Dormant1988", stageassign = lathframe, stagesize = "sizea",
 #'   censorcol = "Missing1988", censorkeep = NA, censor = TRUE)
 #' 
-#' lathsupp3 <- supplemental(stage3 = c("Sd", "Sd", "Sdl", "Sd", "Sdl"), 
-#'   stage2 = c("Sd", "Sd", "Sd", "rep", "rep"),
-#'   stage1 = c("Sd", "rep", "rep", "all", "all"), 
-#'   givenrate = c(0.345, 0.345, 0.054, NA, NA),
-#'   multiplier = c(NA, NA, NA, 0.345, 0.054),
-#'   type = c(1, 1, 1, 3, 3), stageframe = lathframe, historical = TRUE)
+#' lathsupp3 <- supplemental(stage3 = c("Sd", "Sd", "Sdl", "Sdl", "Sd", "Sdl"), 
+#'   stage2 = c("Sd", "Sd", "Sd", "Sd", "rep", "rep"),
+#'   stage1 = c("Sd", "rep", "Sd", "rep", "all", "all"), 
+#'   givenrate = c(0.345, 0.345, 0.054, 0.054, NA, NA),
+#'   multiplier = c(NA, NA, NA, NA, 0.345, 0.054),
+#'   type = c(1, 1, 1, 1, 3, 3), type_t12 = c(1, 2, 1, 2, 1, 1),
+#'   stageframe = lathframe, historical = TRUE)
 #' 
 #' ehrlen3 <- rlefko3(data = lathvert, stageframe = lathframe, year = "all", 
 #'   stages = c("stage3", "stage2", "stage1"), supplement = lathsupp3,
@@ -2206,7 +2237,11 @@ sensitivity3.lefkoMat <- function(mats, stochastic = FALSE, steps = 10000,
 #' @export
 sensitivity3.matrix <- function(mats, ...)
 {
-  if (dim(mats)[1] > 400 & ((length(mats[which(mats > 0)]) / length(mats)) <= 0.5)) {
+  allelems <- length(mats)
+  allnzs <- length(which(mats > 0))
+  nzprop <- allnzs / allelems
+  
+  if (nzprop <= 0.5) {
     wcorr <- sens3matrixsp(mats)
   } else {
     wcorr <- sens3matrix(mats)
@@ -2232,16 +2267,19 @@ sensitivity3.matrix <- function(mats, ...)
 #' Defaults to 10,000.
 #' @param time_weights Numeric vector denoting the probabilistic weightings of
 #' annual matrices. Defaults to equal weighting among times.
+#' @param historical A logical value indicating whether matrices are historical.
+#' Defaults to FALSE.
 #' @param ... Other parameters.
 #' 
 #' @return This function returns an object of class \code{lefkoSens}, which is a
-#' list of 7 elements. The first, h_sensmats, is a list of historical
+#' list of 8 elements. The first, \code{h_sensmats}, is a list of historical
 #' sensitivity matrices (NULL if an ahMPM is used as input). The second,
-#' ah_elasmats, is a list of ahistorical sensitivity matrices if an ahMPM is
-#' used as input (NULL if an hMPM is used as input). The third element,
-#' h_stages, and the fourth element, ah_stages, are NULL. The last 3 elements
-#' include the original A matrices supplied (as the A element), followed by
-#' NULLs for the U and F elements.
+#' \code{ah_elasmats}, is a list of ahistorical sensitivity matrices if an ahMPM
+#' is used as input (NULL if an hMPM is used as input). The third element,
+#' \code{h_stages}, the fourth element, \code{agestages}, and the fifth element,
+#' \code{ah_stages}, are NULL. The last 3 elements include the original A
+#' matrices supplied (as the \code{A} element), followed by NULLs for the U and
+#' F elements.
 #' 
 #' @section Notes:
 #' Deterministic sensitivities are estimated as eqn. 9.14 in Caswell (2001,
@@ -2249,15 +2287,9 @@ sensitivity3.matrix <- function(mats, ...)
 #' 14.97 in Caswell (2001). Note that stochastic sensitivities are with regard
 #' to the log of the stochastic \eqn{\lambda}.
 #'
-#' Determination of whether the input MPM is ahistorical or historical is made
-#' on the basis of the dimensionality of input matrices - fewer than 400 rows
-#' suggests an ahistorical MPM, while more indicates a historical MPM. This
-#' designation does not impact the underlying algorithms in any way, so mistaken
-#' calls can be fixed by moving the resulting sensitivity matrices to the
-#' correct element of the output list.
-#' 
 #' Currently, this function does not estimate equivalent ahistorical stochastic
-#' sensitivities for input historical matrices.
+#' sensitivities for input historical matrices, due to the lack of guidance
+#' input on the order of stages.
 #'
 #' @seealso \code{\link{sensitivity3}()}
 #' @seealso \code{\link{sensitivity3.lefkoMat}()}
@@ -2289,12 +2321,13 @@ sensitivity3.matrix <- function(mats, ...)
 #'   nonobsacol = "Dormant1988", stageassign = lathframe, stagesize = "sizea",
 #'   censorcol = "Missing1988", censorkeep = NA, censor = TRUE)
 #' 
-#' lathsupp3 <- supplemental(stage3 = c("Sd", "Sd", "Sdl", "Sd", "Sdl"), 
-#'   stage2 = c("Sd", "Sd", "Sd", "rep", "rep"),
-#'   stage1 = c("Sd", "rep", "rep", "all", "all"), 
-#'   givenrate = c(0.345, 0.345, 0.054, NA, NA),
-#'   multiplier = c(NA, NA, NA, 0.345, 0.054),
-#'   type = c(1, 1, 1, 3, 3), stageframe = lathframe, historical = TRUE)
+#' lathsupp3 <- supplemental(stage3 = c("Sd", "Sd", "Sdl", "Sdl", "Sd", "Sdl"), 
+#'   stage2 = c("Sd", "Sd", "Sd", "Sd", "rep", "rep"),
+#'   stage1 = c("Sd", "rep", "Sd", "rep", "all", "all"), 
+#'   givenrate = c(0.345, 0.345, 0.054, 0.054, NA, NA),
+#'   multiplier = c(NA, NA, NA, NA, 0.345, 0.054),
+#'   type = c(1, 1, 1, 1, 3, 3), type_t12 = c(1, 2, 1, 2, 1, 1),
+#'   stageframe = lathframe, historical = TRUE)
 #' 
 #' ehrlen3 <- rlefko3(data = lathvert, stageframe = lathframe, year = "all", 
 #'   stages = c("stage3", "stage2", "stage1"), supplement = lathsupp3,
@@ -2349,7 +2382,7 @@ sensitivity3.matrix <- function(mats, ...)
 #' 
 #' @export
 sensitivity3.list <- function(mats, stochastic = FALSE, steps = 10000,
-  time_weights = NA, ...) {
+  time_weights = NA, historical = FALSE, ...) {
   
   if(length(setdiff(unlist(lapply(mats, class)), c("matrix", "array"))) > 0) {
     stop("Input list must be composed only of numeric matrices.", call. = FALSE)
@@ -2361,20 +2394,22 @@ sensitivity3.list <- function(mats, stochastic = FALSE, steps = 10000,
   if (!stochastic) {
     # Deterministic sensitivity analysis
     
-    if (dim(mats[[1]])[1] > 400 & ((length(mats[[1]][which(mats[[1]] > 0)]) / length(mats[[1]])) <= 0.5)) {
-      message("Matrices have more than 400 rows and columns, so assuming they are historical.")
-      
+    allelems <- length(mats[[1]])
+    allnzs <- length(which(mats[[1]] > 0))
+    nzprop <- allnzs / allelems
+    
+    if (nzprop <= 0.5) {
       baldrick <- lapply(mats, sens3matrixsp)
-      
-      output <- list(h_sensmats = baldrick, ah_sensmats = NULL, h_stages = NULL,
-        ah_stages = NULL, A = mats, U = NULL, F = NULL)
     } else {
-      message("Matrices have fewer than 400 rows and columns, so assuming they are ahistorical.")
-      
       baldrick <- lapply(mats, sens3matrix)
-      
+    }
+    
+    if (historical) {
+      output <- list(h_sensmats = baldrick, ah_sensmats = NULL, h_stages = NULL,
+        agestages = NULL, ah_stages = NULL, A = mats, U = NULL, F = NULL)
+    } else {
       output <- list(h_sensmats = NULL, ah_sensmats = baldrick, h_stages = NULL,
-        ah_stages = NULL, A = mats, U = NULL, F = NULL)
+        agestages = NULL, ah_stages = NULL, A = mats, U = NULL, F = NULL)
     }
     
   } else {
@@ -2382,9 +2417,9 @@ sensitivity3.list <- function(mats, stochastic = FALSE, steps = 10000,
     
     if(!any(is.na(time_weights))) {
       returned_cube <- stoch_senselas(mats, times = steps, style = 1,
-        tweights = time_weights) 
+        tweights = time_weights)[[1]]
     } else {
-      returned_cube <- stoch_senselas(mats, times = steps, style = 1) 
+      returned_cube <- stoch_senselas(mats, times = steps, style = 1)[[1]]
     }
     
     returned_list <- lapply(as.list(c(1:dim(returned_cube)[3])), function(X) {
@@ -2392,16 +2427,14 @@ sensitivity3.list <- function(mats, stochastic = FALSE, steps = 10000,
       }
     )
     
-    if (dim(mats[[1]])[1] > 400) {
-      message("Matrices have more than 400 rows and columns, so assuming they are historical.")
-      
+    if (historical) {
       output <- list(h_sensmats = returned_list, ah_sensmats = NULL,
-        h_stages = NULL, ah_stages = NULL, A = mats, U = NULL, F = NULL)
+        h_stages = NULL, agestages = NULL, ah_stages = NULL, A = mats, U = NULL,
+        F = NULL)
     } else {
-      message("Matrices have fewer than 400 rows and columns, so assuming they are ahistorical.")
-      
       output <- list(h_sensmats = NULL, ah_sensmats = returned_list,
-        h_stages = NULL, ah_stages = NULL, A = mats, U = NULL, F = NULL)
+        h_stages = NULL, agestages = NULL, ah_stages = NULL, A = mats, U = NULL,
+        F = NULL)
     }
   }
   class(output) <- "lefkoSens"
@@ -2455,12 +2488,13 @@ sensitivity3.list <- function(mats, stochastic = FALSE, steps = 10000,
 #'   nonobsacol = "Dormant1988", stageassign = lathframe, stagesize = "sizea",
 #'   censorcol = "Missing1988", censorkeep = NA, censor = TRUE)
 #' 
-#' lathsupp3 <- supplemental(stage3 = c("Sd", "Sd", "Sdl", "Sd", "Sdl"), 
-#'   stage2 = c("Sd", "Sd", "Sd", "rep", "rep"),
-#'   stage1 = c("Sd", "rep", "rep", "all", "all"), 
-#'   givenrate = c(0.345, 0.345, 0.054, NA, NA),
-#'   multiplier = c(NA, NA, NA, 0.345, 0.054),
-#'   type = c(1, 1, 1, 3, 3), stageframe = lathframe, historical = TRUE)
+#' lathsupp3 <- supplemental(stage3 = c("Sd", "Sd", "Sdl", "Sdl", "Sd", "Sdl"), 
+#'   stage2 = c("Sd", "Sd", "Sd", "Sd", "rep", "rep"),
+#'   stage1 = c("Sd", "rep", "Sd", "rep", "all", "all"), 
+#'   givenrate = c(0.345, 0.345, 0.054, 0.054, NA, NA),
+#'   multiplier = c(NA, NA, NA, NA, 0.345, 0.054),
+#'   type = c(1, 1, 1, 1, 3, 3), type_t12 = c(1, 2, 1, 2, 1, 1),
+#'   stageframe = lathframe, historical = TRUE)
 #' 
 #' ehrlen3 <- rlefko3(data = lathvert, stageframe = lathframe, year = "all", 
 #'   stages = c("stage3", "stage2", "stage1"), supplement = lathsupp3,
@@ -2539,18 +2573,20 @@ elasticity3 <- function(mats, ...) UseMethod("elasticity3")
 #' @param ... Other parameters.
 #' 
 #' @return This function returns an object of class \code{lefkoElas}, which is a
-#' list with 7 elements. The first, h_elasmats, is a list of historical
+#' list with 8 elements. The first, \code{h_elasmats}, is a list of historical
 #' elasticity matrices (NULL if an ahMPM is used as input). The second,
-#' ah_elasmats, is a list of either ahistorical elasticity matrices if an ahMPM
-#' is used as input, or, if an hMPM is used as input, then the result is a list
-#' of elasticity matrices in which historical elasticities have been summed by
-#' the stage in times \emph{t} and \emph{t}+1 to produce historically-corrected
-#' elasticity matrices, which are equivalent in dimension to ahistorical
-#' elasticitymatrices but reflect the effects of stage in time t-1. The third
-#' element, h_stages, is a data frame showing historical stage pairs (NULL if
-#' ahMPM used as input). The fourth element, ah_stages, is a data frame showing
-#' the order of ahistorical stages. The last 3 elements are the A, U, and F
-#' portions of the input.
+#' \code{ah_elasmats}, is a list of either ahistorical elasticity matrices if an
+#' ahMPM is used as input, or, if an hMPM is used as input, then the result is a
+#' list of elasticity matrices in which historical elasticities have been summed
+#' by the stage in times \emph{t} and \emph{t}+1 to produce
+#' historically-corrected elasticity matrices, which are equivalent in dimension
+#' to ahistorical elasticity matrices but reflect the effects of stage in time
+#' \emph{t}-1. The third element, \code{h_stages}, is a data frame showing
+#' historical stage pairs (NULL if ahMPM used as input). The fourth element,
+#' \code{agestages}, shows age-stage combinations in the order used in
+#' age-by-stage MPMs, if suppled. The fifth element, \code{ah_stages}, is a data
+#' frame showing the order of ahistorical stages. The last 3 elements are the A,
+#' U, and F portions of the input.
 #' 
 #' @section Notes:
 #' Deterministic elasticities are estimated as eqn. 9.72 in Caswell (2001,
@@ -2590,12 +2626,13 @@ elasticity3 <- function(mats, ...) UseMethod("elasticity3")
 #'   nonobsacol = "Dormant1988", stageassign = lathframe, stagesize = "sizea",
 #'   censorcol = "Missing1988", censorkeep = NA, censor = TRUE)
 #' 
-#' lathsupp3 <- supplemental(stage3 = c("Sd", "Sd", "Sdl", "Sd", "Sdl"), 
-#'   stage2 = c("Sd", "Sd", "Sd", "rep", "rep"),
-#'   stage1 = c("Sd", "rep", "rep", "all", "all"), 
-#'   givenrate = c(0.345, 0.345, 0.054, NA, NA),
-#'   multiplier = c(NA, NA, NA, 0.345, 0.054),
-#'   type = c(1, 1, 1, 3, 3), stageframe = lathframe, historical = TRUE)
+#' lathsupp3 <- supplemental(stage3 = c("Sd", "Sd", "Sdl", "Sdl", "Sd", "Sdl"), 
+#'   stage2 = c("Sd", "Sd", "Sd", "Sd", "rep", "rep"),
+#'   stage1 = c("Sd", "rep", "Sd", "rep", "all", "all"), 
+#'   givenrate = c(0.345, 0.345, 0.054, 0.054, NA, NA),
+#'   multiplier = c(NA, NA, NA, NA, 0.345, 0.054),
+#'   type = c(1, 1, 1, 1, 3, 3), type_t12 = c(1, 2, 1, 2, 1, 1),
+#'   stageframe = lathframe, historical = TRUE)
 #' 
 #' ehrlen3 <- rlefko3(data = lathvert, stageframe = lathframe, year = "all", 
 #'   stages = c("stage3", "stage2", "stage1"), supplement = lathsupp3,
@@ -2652,6 +2689,10 @@ elasticity3 <- function(mats, ...) UseMethod("elasticity3")
 elasticity3.lefkoMat <- function(mats, stochastic = FALSE, steps = 10000,
   time_weights = NA, ...) {
   
+  if (!is.element("agestages", names(mats))) {
+    mats$agestages <- NULL
+  }
+  
   if (!stochastic) {
     # Deterministic elasticity analysis
     
@@ -2692,7 +2733,8 @@ elasticity3.lefkoMat <- function(mats, stochastic = FALSE, steps = 10000,
       ahlabels <- mats$ahstages #Originally only the first two columns
       
       output <- list(h_elasmats = NULL, ah_elasmats = baldrick, h_stages = NULL,
-        ah_stages = ahlabels, A = mats$A, U = mats$U, F = mats$F)
+        agestages = mats$agestages, ah_stages = ahlabels, A = mats$A,
+        U = mats$U, F = mats$F)
     } else {
       
       he_list <- lapply(baldrick, function(X) {X$h_emat})
@@ -2703,34 +2745,40 @@ elasticity3.lefkoMat <- function(mats, stochastic = FALSE, steps = 10000,
       ahlabels <- mats$ahstages #Originally only the first two columns
       
       output <- list(h_elasmats = he_list, ah_elasmats = ahe_list, 
-        h_stages = hlabels, ah_stages = ahlabels, A = mats$A, U = mats$U,
-        F = mats$F)
+        h_stages = hlabels, agestages = mats$agestages, ah_stages = ahlabels,
+        A = mats$A, U = mats$U, F = mats$F)
     }
   } else {
     # Stochastic elasticity analysis
     
     if(!any(is.na(time_weights))) {
-      returned_cube <- stoch_senselas(mats, times = steps, style = 2,
+      returned_cubes <- stoch_senselas(mats, times = steps, style = 2,
         tweights = time_weights) 
     } else {
-      returned_cube <- stoch_senselas(mats, times = steps, style = 2) 
+      returned_cubes <- stoch_senselas(mats, times = steps, style = 2) 
     }
     
-    returned_list <- lapply(as.list(c(1:dim(returned_cube)[3])), function(X) {
-      return(returned_cube[,,X])
+    main_cube <- returned_cubes[[1]]
+    ah_cube <- returned_cubes[[2]]
+    
+    returned_list <- lapply(as.list(c(1:dim(main_cube)[3])), function(X) {
+      return(main_cube[,,X])
       }
     )
     
     if (!all(is.na(mats$hstages))) {
-      ah_list <- lapply(returned_list, shopliftersunite, mats$hstages, mats$ahstages)
+      ah_list <- lapply(as.list(c(1:dim(ah_cube)[3])), function(X) {
+      return(ah_cube[,,X])
+      }
+    )
       
       output <- list(h_elasmats = returned_list, ah_elasmats = ah_list,
-        h_stages = mats$hstages, ah_stages = mats$ahstages, A = mats$A,
-        U = mats$U, F = mats$F)
+        h_stages = mats$hstages, agestages = mats$agestages, 
+        ah_stages = mats$ahstages, A = mats$A, U = mats$U, F = mats$F)
     } else {
       output <- list(h_elasmats = NULL, ah_elasmats = returned_list,
-        h_stages = mats$hstages, ah_stages = mats$ahstages, A = mats$A,
-        U = mats$U, F = mats$F)
+        h_stages = mats$hstages, agestages = mats$agestages, 
+        ah_stages = mats$ahstages, A = mats$A, U = mats$U, F = mats$F)
     }
   }
   class(output) <- "lefkoElas"
@@ -2782,12 +2830,13 @@ elasticity3.lefkoMat <- function(mats, stochastic = FALSE, steps = 10000,
 #'   nonobsacol = "Dormant1988", stageassign = lathframe, stagesize = "sizea",
 #'   censorcol = "Missing1988", censorkeep = NA, censor = TRUE)
 #' 
-#' lathsupp3 <- supplemental(stage3 = c("Sd", "Sd", "Sdl", "Sd", "Sdl"), 
-#'   stage2 = c("Sd", "Sd", "Sd", "rep", "rep"),
-#'   stage1 = c("Sd", "rep", "rep", "all", "all"), 
-#'   givenrate = c(0.345, 0.345, 0.054, NA, NA),
-#'   multiplier = c(NA, NA, NA, 0.345, 0.054),
-#'   type = c(1, 1, 1, 3, 3), stageframe = lathframe, historical = TRUE)
+#' lathsupp3 <- supplemental(stage3 = c("Sd", "Sd", "Sdl", "Sdl", "Sd", "Sdl"), 
+#'   stage2 = c("Sd", "Sd", "Sd", "Sd", "rep", "rep"),
+#'   stage1 = c("Sd", "rep", "Sd", "rep", "all", "all"), 
+#'   givenrate = c(0.345, 0.345, 0.054, 0.054, NA, NA),
+#'   multiplier = c(NA, NA, NA, NA, 0.345, 0.054),
+#'   type = c(1, 1, 1, 1, 3, 3), type_t12 = c(1, 2, 1, 2, 1, 1),
+#'   stageframe = lathframe, historical = TRUE)
 #' 
 #' ehrlen3 <- rlefko3(data = lathvert, stageframe = lathframe, year = "all", 
 #'   stages = c("stage3", "stage2", "stage1"), supplement = lathsupp3,
@@ -2844,7 +2893,11 @@ elasticity3.lefkoMat <- function(mats, stochastic = FALSE, steps = 10000,
 #' @export
 elasticity3.matrix <- function(mats, ...)
 {
-  if (dim(mats)[1] > 400 & ((length(mats[which(mats > 0)]) / length(mats)) <= 0.5)) {
+  allelems <- length(mats)
+  allnzs <- length(which(mats > 0))
+  nzprop <- allnzs / allelems
+  
+  if (nzprop <= 0.5) {
     wcorr <- elas3matrixsp(mats)
   } else {
     wcorr <- elas3matrix(mats)
@@ -2868,17 +2921,18 @@ elasticity3.matrix <- function(mats, ...)
 #' Defaults to 10,000.
 #' @param time_weights Numeric vector denoting the probabilistic weightings of
 #' annual matrices. Defaults to equal weighting among times.
+#' @param historical A logical value denoting whether the input matrices are
+#' historical. Defaults to FALSE.
 #' @param ... Other parameters.
 #' 
 #' @return This function returns an object of class \code{lefkoElas}, which is a
-#' list with 7 elements. The first, h_elasmats, is a list of historical
+#' list with 8 elements. The first, \code{h_elasmats}, is a list of historical
 #' elasticity matrices, though in the standard list case it returns a NULL
-#' value. The second, ah_elasmats, is a list of either ahistorical elasticity
-#' matrices. Since the list used as input contains no stage information, all
-#' matrices are assumed to be ahistorical and elasticities are provided via this
-#' element. The third element, h_stages, and the fourth element, ah_stages, are
-#' NULL. The last 3 elements are the original A matrices in element A, followed
-#' by NULL values for the U and F elements.
+#' value. The second, \code{ah_elasmats}, is a list of ahistorical elasticity
+#' matrices. The third element, \code{h_stages}, the fourth element,
+#' \code{agestages}, and the fifth element, \code{ah_stages}, are set to NULL.
+#' The last 3 elements are the original A matrices in element A, followed by
+#' NULL values for the U and F elements.
 #' 
 #' @section Notes:
 #' Deterministic elasticities are estimated as eqn. 9.72 in Caswell (2001,
@@ -2917,12 +2971,13 @@ elasticity3.matrix <- function(mats, ...)
 #'   nonobsacol = "Dormant1988", stageassign = lathframe, stagesize = "sizea",
 #'   censorcol = "Missing1988", censorkeep = NA, censor = TRUE)
 #' 
-#' lathsupp3 <- supplemental(stage3 = c("Sd", "Sd", "Sdl", "Sd", "Sdl"), 
-#'   stage2 = c("Sd", "Sd", "Sd", "rep", "rep"),
-#'   stage1 = c("Sd", "rep", "rep", "all", "all"), 
-#'   givenrate = c(0.345, 0.345, 0.054, NA, NA),
-#'   multiplier = c(NA, NA, NA, 0.345, 0.054),
-#'   type = c(1, 1, 1, 3, 3), stageframe = lathframe, historical = TRUE)
+#' lathsupp3 <- supplemental(stage3 = c("Sd", "Sd", "Sdl", "Sdl", "Sd", "Sdl"), 
+#'   stage2 = c("Sd", "Sd", "Sd", "Sd", "rep", "rep"),
+#'   stage1 = c("Sd", "rep", "Sd", "rep", "all", "all"), 
+#'   givenrate = c(0.345, 0.345, 0.054, 0.054, NA, NA),
+#'   multiplier = c(NA, NA, NA, NA, 0.345, 0.054),
+#'   type = c(1, 1, 1, 1, 3, 3), type_t12 = c(1, 2, 1, 2, 1, 1),
+#'   stageframe = lathframe, historical = TRUE)
 #' 
 #' ehrlen3 <- rlefko3(data = lathvert, stageframe = lathframe, year = "all", 
 #'   stages = c("stage3", "stage2", "stage1"), supplement = lathsupp3,
@@ -2977,7 +3032,7 @@ elasticity3.matrix <- function(mats, ...)
 #' 
 #' @export
 elasticity3.list <- function(mats, stochastic = FALSE, steps = 10000,
-  time_weights = NA, ...) {
+  time_weights = NA, historical = FALSE, ...) {
   
   if(length(setdiff(unlist(lapply(mats, class)), c("matrix", "array"))) > 0) {
     stop("Input list must be composed only of numeric matrices.", call. = FALSE)
@@ -2989,14 +3044,20 @@ elasticity3.list <- function(mats, stochastic = FALSE, steps = 10000,
   if (!stochastic) {
     # Deterministic elasticity analysis
     
-    if (dim(mats[[1]])[1] > 400 & ((length(mats[[1]][which(mats$A[[1]] > 0)]) / length(mats[[1]])) <= 0.5)) {
+    allelems <- length(mats[[1]])
+    allnzs <- length(which(mats[[1]] > 0))
+    nzprop <- allnzs / allelems
+  
+    if (nzprop <= 0.5) {
       baldrick <- lapply(mats, elas3matrixsp)
-      
-      output <- list(h_elasmats = NULL, ah_elasmats = baldrick, h_stages = NULL,
-        ah_stages = NULL, A = mats, U = NULL, F = NULL)
     } else {
       baldrick <- lapply(mats, elas3matrix)
-      
+    }
+    
+    if (historical) {
+      output <- list(h_elasmats = baldrick, ah_elasmats = NULL, h_stages = NULL,
+        ah_stages = NULL, A = mats, U = NULL, F = NULL)
+    } else {
       output <- list(h_elasmats = NULL, ah_elasmats = baldrick, h_stages = NULL,
         ah_stages = NULL, A = mats, U = NULL, F = NULL)
     }
@@ -3005,17 +3066,23 @@ elasticity3.list <- function(mats, stochastic = FALSE, steps = 10000,
     
     if(!any(is.na(time_weights))) {
       returned_cube <- stoch_senselas(mats, times = steps, style = 2,
-        tweights = time_weights) 
+        tweights = time_weights)[[1]]
     } else {
-      returned_cube <- stoch_senselas(mats, times = steps, style = 2) 
+      returned_cube <- stoch_senselas(mats, times = steps, style = 2)[[1]]
     }
     
     returned_list <- lapply(as.list(c(1:dim(returned_cube)[3])), function(X) {
       return(returned_cube[,,X])
       }
     )
-    output <- list(h_elasmats = NULL, ah_elasmats = returned_list,
-      h_stages = NULL, ah_stages = NULL, A = mats, U = NULL, F = NULL)
+    
+    if (historical) {
+      output <- list(h_elasmats = returned_list, ah_elasmats = NULL,
+        h_stages = NULL, ah_stages = NULL, A = mats, U = NULL, F = NULL)
+    } else {
+      output <- list(h_elasmats = NULL, ah_elasmats = returned_list,
+        h_stages = NULL, ah_stages = NULL, A = mats, U = NULL, F = NULL)
+    }
   }
   class(output) <- "lefkoElas"
   
@@ -3064,12 +3131,13 @@ elasticity3.list <- function(mats, stochastic = FALSE, steps = 10000,
 #'   nonobsacol = "Dormant1988", stageassign = lathframe, stagesize = "sizea",
 #'   censorcol = "Missing1988", censorkeep = NA, censor = TRUE)
 #' 
-#' lathsupp3 <- supplemental(stage3 = c("Sd", "Sd", "Sdl", "Sd", "Sdl"), 
-#'   stage2 = c("Sd", "Sd", "Sd", "rep", "rep"),
-#'   stage1 = c("Sd", "rep", "rep", "all", "all"), 
-#'   givenrate = c(0.345, 0.345, 0.054, NA, NA),
-#'   multiplier = c(NA, NA, NA, 0.345, 0.054),
-#'   type = c(1, 1, 1, 3, 3), stageframe = lathframe, historical = TRUE)
+#' lathsupp3 <- supplemental(stage3 = c("Sd", "Sd", "Sdl", "Sdl", "Sd", "Sdl"), 
+#'   stage2 = c("Sd", "Sd", "Sd", "Sd", "rep", "rep"),
+#'   stage1 = c("Sd", "rep", "Sd", "rep", "all", "all"), 
+#'   givenrate = c(0.345, 0.345, 0.054, 0.054, NA, NA),
+#'   multiplier = c(NA, NA, NA, NA, 0.345, 0.054),
+#'   type = c(1, 1, 1, 1, 3, 3), type_t12 = c(1, 2, 1, 2, 1, 1),
+#'   stageframe = lathframe, historical = TRUE)
 #' 
 #' lathsupp2 <- supplemental(stage3 = c("Sd", "Sdl", "Sd", "Sdl"), 
 #'   stage2 = c("Sd", "Sd", "rep", "rep"),

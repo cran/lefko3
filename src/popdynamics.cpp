@@ -44,53 +44,6 @@ arma::vec moreflagrantcrap(arma::mat Xmat) {
   return newcol;
 }
 
-//' Historical to Ahistorical Matrix Conversion (Sums)
-//' 
-//' Function \code{shopliftersunite} sums historical elements in matrices and
-//' outputs the corresponding ahistorical matrices. This is typically used for
-//' elasticity matrices, because their elements can be summed.
-//' 
-//' @param hmats A historical matrix.
-//' @param hstages The \code{hstages} portion of a historical \code{lefkoElas}
-//' object.
-//' @param ahstages The \code{ahstages} portion of a historical \code{lefkoElas}
-//' object.
-//' 
-//' @return A matrix in the dimensions of the ahistorical matrices corresponding
-//' to \code{hmats}.
-//' 
-//' @keywords internal
-//' @noRd
-// [[Rcpp::export]]
-arma::mat shopliftersunite(arma::mat hmats, DataFrame hstages,
-  DataFrame ahstages) {
-  
-  arma::uvec hstage2 = hstages["stage_id_2"];
-  arma::uvec hstage1 = hstages["stage_id_1"];
-  arma::uvec ahstage2 = ahstages["stage_id"];
-  
-  int h_rows = hmats.n_rows;
-  int h_cols = hmats.n_cols;
-  
-  int hstages_all = hstage2.n_elem;
-  int ahstages_all = ahstage2.n_elem;
-  
-  if (hstages_all != h_cols) {
-    stop("The number of historical stage pairs does not match.");
-  }
-  
-  arma::mat ahmats(ahstages_all, ahstages_all);
-  ahmats.zeros();
-  
-  for (int i = 0; i < h_cols; i++) {
-    for (int j = 0; j < h_rows; j++) {
-      ahmats((hstage2(j) - 1), (hstage1(i) - 1)) = ahmats((hstage2(j) - 1), (hstage1(i) - 1)) + hmats(j, i);
-    }
-  }
-  
-  return(ahmats);
-}
-
 //' Estimates Mean LefkoMat Object for Historical MPM
 //' 
 //' Function \code{turbogeodiesel()} estimates mean historical population
@@ -100,9 +53,10 @@ arma::mat shopliftersunite(arma::mat hmats, DataFrame hstages,
 //' designation of each matrix. Includes a total of 9 variables.
 //' @param Umats A matrix with all U matrices turned into columns.
 //' @param Fmats A matrix with all F matrices turned into columns.
+//' @param hstages This is the \code{hstages} object held by \code{mats}.
+//' @param agestages This is the \code{agestages} object held by \code{mats}.
 //' @param stages This is the core stageframe held by \code{mats}, equivalent to
 //' \code{ahstages}.
-//' @param hstages This is the \code{hstages} object held by \code{mats}.
 //' @param patchmats A logical value stating whether to estimate patch-level
 //' means.
 //' @param popmats A logical value stating whether to estimate population-level
@@ -113,8 +67,8 @@ arma::mat shopliftersunite(arma::mat hmats, DataFrame hstages,
 //' @keywords internal
 //' @noRd
 // [[Rcpp::export]]
-List turbogeodiesel(DataFrame loy, List Umats, List Fmats, DataFrame stages, 
-  DataFrame hstages, bool patchmats, bool popmats) {
+List turbogeodiesel(DataFrame loy, List Umats, List Fmats, DataFrame hstages, 
+  DataFrame agestages, DataFrame stages, bool patchmats, bool popmats) {
   
   StringVector pops = loy["pop"];
   arma::uvec pop_num = loy["popc"];
@@ -206,27 +160,51 @@ List turbogeodiesel(DataFrame loy, List Umats, List Fmats, DataFrame stages,
   }
   
   // This next chunk predicts which elements will be targeted for arithmetic mean estimation
+  int format_int {0};
   arma::uvec astages = stages["stage_id"];
+  StringVector stagenames = stages["stage"];
   int numstages = astages.n_elem;
+  
+  if (stagenames(numstages - 1) == "AlmostBorn") format_int = 1;
   
   arma::uvec hstage3in = hstages["stage_id_2"];
   arma::uvec hstage2nin = hstages["stage_id_1"];
   int numhstages = hstage3in.n_elem;
   
-  int predictedsize = numstages * numstages * numstages;
+  int predictedsize = 2 * numstages * numstages * numstages;
   
   arma::uvec hsindexl(predictedsize);
   hsindexl.zeros();
   
   counter = 0;
   
-  for (int i1 = 0; i1 < numhstages; i1++) {
-    for (int i2 = 0; i2 < numhstages; i2++) {
-      if (hstage3in(i1) == hstage2nin(i2)) {
-        
-        hsindexl(counter) = (i1 * numhstages) + i2;
-        
-        counter++;
+  if (format_int == 0) {
+    // This bit handles Ehrlen format
+    for (int i1 = 0; i1 < numhstages; i1++) {
+      for (int i2 = 0; i2 < numhstages; i2++) {
+        if (hstage3in(i1) == hstage2nin(i2)) {
+          
+          hsindexl(counter) = (i1 * numhstages) + i2;
+          
+          counter++;
+        }
+      }
+    }
+  } else {
+    // This bit handles deVries format
+    for (int i1 = 0; i1 < numhstages; i1++) {
+      for (int i2 = 0; i2 < numhstages; i2++) {
+        if (hstage3in(i1) == hstage2nin(i2)) {
+          
+          hsindexl(counter) = (i1 * numhstages) + i2;
+          
+          counter++;
+        } else if (hstage2nin(i2) == numstages || hstage3in(i1) == numstages) {
+          
+          hsindexl(counter) = (i1 * numhstages) + i2;
+          
+          counter++;
+        }
       }
     }
   }
@@ -356,8 +334,8 @@ List turbogeodiesel(DataFrame loy, List Umats, List Fmats, DataFrame stages,
   
   // Final output
   List output = List::create(Named("A") = A, _["U"] = U, _["F"] = F,
-    _["hstages"] = hstages, _["ahstages"] = stages, _["labels"] = cheatsheet,
-    _["matrixqc"] = matrixqc);
+    _["hstages"] = hstages, _["agestages"] = agestages, _["ahstages"] = stages,
+    _["labels"] = cheatsheet, _["matrixqc"] = matrixqc);
   
   return output;
 }
@@ -373,6 +351,7 @@ List turbogeodiesel(DataFrame loy, List Umats, List Fmats, DataFrame stages,
 //' designation of each matrix. Includes a total of 9 variables.
 //' @param Umats A matrix with all U matrices turned into columns.
 //' @param Fmats A matrix with all F matrices turned into columns.
+//' @param agestages This is the \code{agestages} object held by \code{mats}.
 //' @param stages This is the core stageframe held by \code{mats}, equivalent to
 //' \code{ahstages}.
 //' @param patchmats A logical value stating whether to estimate patch-level
@@ -385,8 +364,8 @@ List turbogeodiesel(DataFrame loy, List Umats, List Fmats, DataFrame stages,
 //' @keywords internal
 //' @noRd
 // [[Rcpp::export]]
-List geodiesel(DataFrame loy, List Umats, List Fmats, DataFrame stages,
-  bool patchmats, bool popmats) {
+List geodiesel(DataFrame loy, List Umats, List Fmats, DataFrame agestages,
+  DataFrame stages, bool patchmats, bool popmats) {
   
   StringVector pops = loy["pop"];
   arma::uvec pop_num = loy["popc"];
@@ -608,8 +587,8 @@ List geodiesel(DataFrame loy, List Umats, List Fmats, DataFrame stages,
   // Final output
   
   List output = List::create(Named("A") = A, _["U"] = U, _["F"] = F, 
-    _["hstages"] = NULL, _["ahstages"] = stages, _["labels"] = cheatsheet, 
-    _["matrixqc"] = matrixqc);
+    _["hstages"] = NULL, _["agestages"] = agestages, _["ahstages"] = stages,
+    _["labels"] = cheatsheet, _["matrixqc"] = matrixqc);
   
   return output;
 }
@@ -1168,7 +1147,7 @@ List sens3hlefko(arma::mat Amat, DataFrame ahstages, DataFrame hstages) {
     }
   }
   
-  // This loop populates the historical and ahistorical sensitivity matrices
+  // These next two loops populate the historical and ahistorical sensitivity matrices
   for (int i = 0; i < rvel; i++) {
     for (int j = 0; j < rvel; j++) {
       
@@ -1669,13 +1648,17 @@ arma::mat proj3(arma::vec start_vec, List core_list, arma::uvec mat_order,
 //' lathrepm[1, 6] <- 0.345
 //' lathrepm[2, 6] <- 0.054
 //' 
-//' lathover3 <- overwrite(stage3 = c("Sd", "Sd", "Sdl"),
-//'   stage2 = c("Sd", "Sd", "Sd"), stage1 = c("Sd", "rep", "rep"),
-//'   givenrate = c(0.345, 0.345, 0.054))
+//' lathsupp3 <- supplemental(stage3 = c("Sd", "Sd", "Sdl", "Sdl", "Sd", "Sdl"), 
+//'   stage2 = c("Sd", "Sd", "Sd", "Sd", "rep", "rep"),
+//'   stage1 = c("Sd", "rep", "Sd", "rep", "all", "all"), 
+//'   givenrate = c(0.345, 0.345, 0.054, 0.054, NA, NA),
+//'   multiplier = c(NA, NA, NA, NA, 0.345, 0.054),
+//'   type = c(1, 1, 1, 1, 3, 3), type_t12 = c(1, 2, 1, 2, 1, 1),
+//'   stageframe = lathframe, historical = TRUE)
 //' 
 //' ehrlen3 <- rlefko3(data = lathvert, stageframe = lathframe,
 //'   year = c(1989, 1990), stages = c("stage3", "stage2", "stage1"),
-//'   repmatrix = lathrepm, overwrite = lathover3, yearcol = "year2",
+//'   repmatrix = lathrepm, supplement = lathsupp3, yearcol = "year2",
 //'   indivcol = "individ")
 //' 
 //' lathproj <- projection3(ehrlen3, stochastic = TRUE)
@@ -1710,27 +1693,30 @@ arma::mat proj3(arma::vec start_vec, List core_list, arma::uvec mat_order,
 //' rep_cyp_raw <- matrix(0, 11, 11)
 //' rep_cyp_raw[1:2,7:11] <- 0.5
 //' 
-//' cypover3r <- overwrite(stage3 = c("SD", "SD", "P1", "P1", "P2", "P3", "SL", 
-//'     "SL", "SL", "D", "XSm", "Sm", "D", "XSm", "Sm"), 
-//'   stage2 = c("SD", "SD", "SD", "SD", "P1", "P2", "P3", "SL", "SL", "SL", 
-//'     "SL", "SL", "SL", "SL", "SL"),
-//'   stage1 = c("SD", "rep", "SD", "rep", "SD", "P1", "P2", "P3", "SL", "P3", 
-//'     "P3", "P3", "SL", "SL", "SL"),
-//'   eststage3 = c(NA, NA, NA, NA, NA, NA, NA, NA, NA, "D", "XSm", "Sm", "D", 
-//'     "XSm", "Sm"), 
-//'   eststage2 = c(NA, NA, NA, NA, NA, NA, NA, NA, NA, "XSm", "XSm", "XSm", 
-//'     "XSm", "XSm", "XSm"), 
-//'   eststage1 = c(NA, NA, NA, NA, NA, NA, NA, NA, NA, "XSm", "XSm", "XSm", 
-//'     "XSm", "XSm", "XSm"), 
-//'   givenrate = c(0.1, 0.1, 0.2, 0.2, 0.2, 0.2, 0.25, 0.4, 0.4, NA, NA, NA, 
-//'     NA, NA, NA), 
-//'   type = c("S", "S", "S", "S", "S", "S", "S", "S", "S", "S", "S", "S", "S", 
-//'     "S", "S"))
+//' cypsupp3r <- supplemental(stage3 = c("SD", "SD", "P1", "P1", "P2", "P3",
+//'     "SL", "SL", "SL", "D", "XSm", "Sm", "D", "XSm", "Sm", "SD", "P1"),
+//'   stage2 = c("SD", "SD", "SD", "SD", "P1", "P2", "P3", "SL", "SL", "SL",
+//'     "SL", "SL", "SL", "SL", "SL", "rep", "rep"),
+//'   stage1 = c("SD", "rep", "SD", "rep", "SD", "P1", "P2", "P3", "SL", "P3",
+//'     "P3", "P3", "SL", "SL", "SL", "all", "all"),
+//'   eststage3 = c(NA, NA, NA, NA, NA, NA, NA, NA, NA, "D", "XSm", "Sm", "D",
+//'     "XSm", "Sm", NA, NA),
+//'   eststage2 = c(NA, NA, NA, NA, NA, NA, NA, NA, NA, "XSm", "XSm", "XSm",
+//'     "XSm", "XSm", "XSm", NA, NA),
+//'   eststage1 = c(NA, NA, NA, NA, NA, NA, NA, NA, NA, "XSm", "XSm", "XSm",
+//'     "XSm", "XSm", "XSm", NA, NA),
+//'   givenrate = c(0.1, 0.1, 0.2, 0.2, 0.2, 0.2, 0.25, 0.4, 0.4, NA, NA, NA, NA,
+//'     NA, NA, NA, NA),
+//'   multiplier = c(NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA,
+//'     0.5, 0.5),
+//'   type = c(1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 3, 3),
+//'   type_t12 = c(1, 2, 1, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1),
+//'   stageframe = cypframe_raw, historical = TRUE)
 //' 
 //' cypmatrix3r <- rlefko3(data = cypraw_v1, stageframe = cypframe_raw, 
 //'   year = "all", patch = "all", stages = c("stage3", "stage2", "stage1"),
 //'   size = c("size3added", "size2added", "size1added"), 
-//'   repmatrix = rep_cyp_raw, overwrite = cypover3r, yearcol = "year2", 
+//'   repmatrix = rep_cyp_raw, supplement = cypsupp3r, yearcol = "year2", 
 //'   patchcol = "patchid", indivcol = "individ")
 //' 
 //' cypstoch <- projection3(cypmatrix3r, stochastic = TRUE)
@@ -1764,6 +1750,7 @@ Rcpp::List projection3(List mpm, int times = 10000, bool stochastic = false,
     DataFrame stageframe = as<DataFrame>(mpm["ahstages"]);
     DataFrame hstages = as<DataFrame>(mpm["hstages"]);
     DataFrame labels = as<DataFrame>(mpm["labels"]);
+    DataFrame agestages = as<DataFrame>(mpm["agestages"]);
     
     bool historical;
     
@@ -1841,9 +1828,11 @@ Rcpp::List projection3(List mpm, int times = 10000, bool stochastic = false,
     List mean_lefkomat;
     
     if (hstages.length() == 1) {
-      mean_lefkomat = geodiesel(listofyears, umats, fmats, stageframe, 1, 1);
+      mean_lefkomat = geodiesel(listofyears, umats, fmats, agestages,
+        stageframe, 1, 1);
     } else {
-      mean_lefkomat = turbogeodiesel(listofyears, umats, fmats, stageframe, hstages, 1, 1);
+      mean_lefkomat = turbogeodiesel(listofyears, umats, fmats, hstages,
+        agestages, stageframe, 1, 1);
     }
     
     // Here we take the matrices corresponding to each individual patch, run the simulation, and
@@ -2218,6 +2207,7 @@ DataFrame slambda3(List mpm, int times = 10000,
     DataFrame stageframe = as<DataFrame>(mpm["ahstages"]);
     DataFrame hstages = as<DataFrame>(mpm["hstages"]);
     DataFrame labels = as<DataFrame>(mpm["labels"]);
+    DataFrame agestages = as<DataFrame>(mpm["agestages"]);
     
     bool historical;
     
@@ -2295,9 +2285,11 @@ DataFrame slambda3(List mpm, int times = 10000,
     List mean_lefkomat;
     
     if (hstages.length() == 1) {
-      mean_lefkomat = geodiesel(listofyears, umats, fmats, stageframe, 1, 1);
+      mean_lefkomat = geodiesel(listofyears, umats, fmats, agestages,
+        stageframe, 1, 1);
     } else {
-      mean_lefkomat = turbogeodiesel(listofyears, umats, fmats, stageframe, hstages, 1, 1);
+      mean_lefkomat = turbogeodiesel(listofyears, umats, fmats, hstages,
+        agestages, stageframe, 1, 1);
     }
     
     // Here we take the matrices corresponding to each individual patch, run the simulation, and
@@ -2554,10 +2546,13 @@ DataFrame slambda3(List mpm, int times = 10000,
 //' @param tweights Numeric vector denoting the probabilistic weightings of
 //' annual matrices. Defaults to equal weighting among times.
 //' 
-//' @return A cube (3d array) where each slice corresponds to sensitivity or
-//' elasticity matrix for a specific pop-patch, followed by the sensitivity or
-//' elasticity matrices of all populations (only if multiple pop-patches occur
-//' in the input).
+//' @return A list of one or two cubes (3d array) where each slice corresponds
+//' to sensitivity or elasticity matrix for a specific pop-patch, followed by
+//' the sensitivity or elasticity matrices of all populations (only if multiple
+//' pop-patches occur in the input). Two such cubes are only provided when a
+//' historical lefkoMat object is used as input, in which case the first
+//' element is the historical sensitivity/elasticity matrix, and the second is
+// the ahistorical sensitivity/elasticity matrix.
 //'
 //' @section Notes:
 //' Weightings given in \code{tweights} do not need to sum to 1. Final
@@ -2571,7 +2566,7 @@ DataFrame slambda3(List mpm, int times = 10000,
 //' @keywords internal
 //' @noRd
 // [[Rcpp::export]]
-arma::cube stoch_senselas(List mpm, int times = 10000, int style = 1,
+Rcpp::List stoch_senselas(List mpm, int times = 10000, int style = 1,
   Nullable<NumericVector> tweights = R_NilValue) {
   
   int theclairvoyant {0};
@@ -2591,11 +2586,32 @@ arma::cube stoch_senselas(List mpm, int times = 10000, int style = 1,
     DataFrame stageframe = as<DataFrame>(mpm["ahstages"]);
     DataFrame hstages = as<DataFrame>(mpm["hstages"]);
     DataFrame labels = as<DataFrame>(mpm["labels"]);
+    DataFrame agestages = as<DataFrame>(mpm["agestages"]);
+    
+    // The next lines are necessary to assess ahistorical versions of historical
+    // sensitivities and potentially elasticities
+    arma::uvec ahstages_id = stageframe["stage_id"];
+    StringVector ahstages_name = stageframe["stage"];
+    int ahstages_num = ahstages_id.n_elem;
+    
+    // arma::uvec hstages_id1(ahstages_num * ahstages_num);
+    arma::uvec hstages_id2(ahstages_num * ahstages_num);
+    // hstages_id1.zeros();
+    hstages_id2.zeros();
+    int hstages_num {0};
     
     bool historical;
     
     if (hstages.length() > 1) {
       historical = true;
+      
+      arma::uvec hstages_id = hstages["stage_id_2"];
+      
+      hstages_num = hstages_id.n_elem;
+      
+      for (int i = 0; i < hstages_num; i++) {
+        hstages_id2(i) = hstages_id(i);
+      }
     } else {
       historical = false;
     }
@@ -2674,9 +2690,11 @@ arma::cube stoch_senselas(List mpm, int times = 10000, int style = 1,
     List mean_lefkomat;
     
     if (hstages.length() == 1) {
-      mean_lefkomat = geodiesel(listofyears, umats, fmats, stageframe, 1, 1);
+      mean_lefkomat = geodiesel(listofyears, umats, fmats, agestages,
+        stageframe, 1, 1);
     } else {
-      mean_lefkomat = turbogeodiesel(listofyears, umats, fmats, stageframe, hstages, 1, 1);
+      mean_lefkomat = turbogeodiesel(listofyears, umats, fmats, hstages,
+        agestages, stageframe, 1, 1);
     }
     
     // Now we will set up the preliminaries for the stochastic simulations
@@ -2694,9 +2712,14 @@ arma::cube stoch_senselas(List mpm, int times = 10000, int style = 1,
     startvec = startvec / meanmatrows; // This is the start vector for w and v calculations
     int trials = meanamats.length();
     
-    // Here we initialize a cube to hold sensitivity or elasticity matrices
+    // Here we initialize two cubes to hold sensitivity or elasticity matrices, the
+    // first for general use while the second is specifically for ahistorical versions
+    // of historical matrices
     arma::cube senscube(meanmatrows, meanmatrows, trials);
+    arma::cube senscube_ah(ahstages_num, ahstages_num, trials);
+    
     senscube.zeros();
+    senscube_ah.zeros();
     
     // This next matrix will hold the year values for each run
     arma::umat yearspulled(trials, theclairvoyant);
@@ -2737,10 +2760,18 @@ arma::cube stoch_senselas(List mpm, int times = 10000, int style = 1,
       }
       yearspulled.row(i) = theprophecy.t();
       
+      // The next section creates stable stage and rep value vectors arranged in
+      // matrix format. The first two are general for whatever has been input,
+      // whether historical or ahistorical, while the next two are specifically
+      // for ahistorical versions of historical inputs
       arma::mat wprojection(startvec.n_elem, (theclairvoyant + 1));
       arma::mat vprojection(startvec.n_elem, (theclairvoyant + 1));
+      arma::vec wprojection_ah(ahstages_num);
+      arma::vec vprojection_ah(ahstages_num);
       wprojection.zeros();
       vprojection.zeros();
+      wprojection_ah.zeros();
+      vprojection_ah.zeros();
       
       // Here we run the control loop to create the w and v values we need
       arma::vec theprophesizedvector;
@@ -2776,10 +2807,47 @@ arma::cube stoch_senselas(List mpm, int times = 10000, int style = 1,
         
         arma::mat currentsens = currentsens_num / (cd_double * theclairvoyant);
         
+        // This creates the sensitivity matrices
         if (style == 1) {
-          senscube.slice(i) += currentsens; // This is the sensitivity matrix
+          senscube.slice(i) += currentsens;
+          
+          if (historical) {
+            wprojection_ah.zeros();
+            vprojection_ah.zeros();
+            
+            // This loop creates the ahistorical stable stage distribution for projected
+            // time j+1
+            for (int k1 = 0; k1 < hstages_num; k1++) {
+              int current_stage2 = hstages_id2(k1);
+              wprojection_ah(current_stage2 - 1) = wprojection_ah(current_stage2 - 1)  +
+                wtplus1(k1);
+            } // k1 loop
+            
+            // Now the ahistorical reproductive value vector for time j+1
+            for (int k2 = 0; k2 < hstages_num; k2++) {
+              int current_stage2 = hstages_id2(k2);
+              
+              if (wprojection_ah(current_stage2 - 1) > 0) {
+                vprojection_ah(current_stage2 - 1) = vprojection_ah(current_stage2 - 1) +
+                  (vtplus1(k2) * wtplus1(k2) / wprojection_ah(current_stage2 - 1));
+              }
+            } // k2 loop
+            
+            // Now to propagate the projection sensitivity matrix, and add it to
+            // the main sensitivity matrix
+            arma::rowvec wtah_tpose = wprojection_ah.as_row();
+            arma::rowvec vtah_tpose = vprojection_ah.as_row();
+            arma::mat csah_num = vprojection_ah * wtah_tpose;
+            arma::mat csah_den = (Rvecmat(i, j) * vtah_tpose * wprojection_ah);
+            double cdah_double = csah_den(0,0);
+            arma::mat csah = csah_num / (cdah_double * theclairvoyant);
+            senscube_ah.slice(i) += csah;
+
+          } // if historical statement
+          
         } else {
-          senscube.slice(i) += currentsens % thechosenone ; // This is the elasticity matrix
+          // This creates the elasticity matrices
+          senscube.slice(i) += currentsens % thechosenone ;
         }
       }
     }
@@ -2862,8 +2930,12 @@ arma::cube stoch_senselas(List mpm, int times = 10000, int style = 1,
         // Now we need to use meanmatyearlist in place of amats
         arma::mat wprojection(startvec.n_elem, (theclairvoyant + 1));
         arma::mat vprojection(startvec.n_elem, (theclairvoyant + 1));
+        arma::vec wprojection_ah(ahstages_num);
+        arma::vec vprojection_ah(ahstages_num);
         wprojection.zeros();
         vprojection.zeros();
+        wprojection_ah.zeros();
+        vprojection_ah.zeros();
         
         // Here we run the control loop to create the w and v values we need
         arma::vec theprophesizedvector;
@@ -2880,9 +2952,13 @@ arma::cube stoch_senselas(List mpm, int times = 10000, int style = 1,
         arma::mat Rvec = crazy_prophet.submat((startvec.n_elem * 3), 1, (startvec.n_elem * 3), theclairvoyant);
         Rvecmat.row(allppcsnem + i) = Rvec;
         
-        // All references should go to senscube, which is a 3d array designed to hold the sensitivity matrices
-        for (int j = 0; j < theclairvoyant; j++) { // This is the main time loop for the sensitivity matrices, 
-                                                   // adding each time to the respective matrix for each pop-patch
+        // All references should go to senscube, which is a 3d array designed to
+        // hold the sensitivity matrices
+        
+        // Next is the main time loop for the sensitivity matrices, adding each
+        // time to the respective matrix for each pop-patch
+        for (int j = 0; j < theclairvoyant; j++) {  
+          
           arma::vec vtplus1 = vprojection.col(j+1);
           arma::rowvec vtplus1_tpose = vtplus1.as_row();
           
@@ -2900,16 +2976,74 @@ arma::cube stoch_senselas(List mpm, int times = 10000, int style = 1,
           arma::mat currentsens = currentsens_num / (cd_double * theclairvoyant);
           
           if (style == 1) {
-            senscube.slice(allppcsnem + i) += currentsens; // This is the sensitivity matrix
+            // This is the sensitivity matrix
+            senscube.slice(allppcsnem + i) += currentsens; 
+            
+            if (historical) {
+              wprojection_ah.zeros();
+              vprojection_ah.zeros();
+              
+              // This loop creates the ahistorical stable stage distribution for projected
+              // time j+1
+              for (int k1 = 0; k1 < hstages_num; k1++) {
+                int current_stage2 = hstages_id2(k1);
+                wprojection_ah(current_stage2 - 1) = wprojection_ah(current_stage2 - 1)  +
+                  wtplus1(k1);
+              } // k1 loop
+              
+              // Now the ahistorical reproductive value vector for time j+1
+              for (int k2 = 0; k2 < hstages_num; k2++) {
+                int current_stage2 = hstages_id2(k2);
+                
+                if (wprojection_ah(current_stage2 - 1) > 0) {
+                  vprojection_ah(current_stage2 - 1) = vprojection_ah(current_stage2 - 1) +
+                    (vtplus1(k2) * wtplus1(k2) / wprojection_ah(current_stage2 - 1));
+                }
+              } // k2 loop
+              
+              // Now to propagate the projection sensitivity matrix, and add it to
+              // the main sensitivity matrix
+              arma::rowvec wtah_tpose = wprojection_ah.as_row();
+              arma::rowvec vtah_tpose = vprojection_ah.as_row();
+              arma::mat csah_num = vprojection_ah * wtah_tpose;
+              arma::mat csah_den = (Rvecmat(i, j) * vtah_tpose * wprojection_ah);
+              double cdah_double = csah_den(0,0);
+              arma::mat csah = csah_num / (cdah_double * theclairvoyant);
+              senscube_ah.slice(i) += csah;
+              
+            } // if historical statement
           } else {
-            senscube.slice(allppcsnem + i) += currentsens % thechosenone ; // This is the elasticity matrix
+            // This is the elasticity matrix
+            senscube.slice(allppcsnem + i) += currentsens % thechosenone ; 
           }
         }
       } // for loop i, for populations
-    } // if statement, checking if more than one patch and thus determining if population means need to be dealt with
-    return senscube;
+    } // if statement, checking if more than one patch and thus determining if 
+      // population means need to be dealt with
     
-  } else { // This chunk focuses on the core population in cases where no patch and year data is given, but a single list of A matrices is provided
+    if (historical && style == 2) {
+      for (int k = 0; k < trials; k++) {
+        arma::uvec hstages_id1 = hstages["stage_id_1"];
+        arma::uvec hstages_id2 = hstages["stage_id_2"];
+        arma::mat elasah(ahstages_num, ahstages_num);
+        elasah.zeros();
+        
+        arma::mat hslice = senscube.slice(k);
+        
+        for (int i = 0; i < hstages_num; i++) {
+          for (int j = 0; j < hstages_num; j++) {
+            elasah((hstages_id2(j) - 1), (hstages_id1(i) - 1)) = elasah((hstages_id2(j) - 1), (hstages_id1(i) - 1)) + hslice(j, i);
+          }
+        }
+        senscube_ah.slice(k) = elasah;
+      }
+    }
+
+    return Rcpp::List::create(_["maincube"] = senscube, _["ahcube"] = senscube_ah);
+    
+  } else { 
+    // This chunk focuses on the core population in cases where no patch and year
+    // data is given, but a single list of A matrices is provided
     
     List amats = mpm;
     
@@ -3015,8 +3149,8 @@ arma::cube stoch_senselas(List mpm, int times = 10000, int style = 1,
         senscube.slice(0) += currentsens % thechosenone ; // This is the elasticity matrix
       }
     }
-    return senscube;
     
+  return Rcpp::List::create(_["maincube"] = senscube);    
   }
 }
 

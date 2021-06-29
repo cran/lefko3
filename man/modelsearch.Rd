@@ -261,6 +261,9 @@ of individuals used to model that vital rate, and 3) number of individual
 transitions used to model that vital rate.}
 }
 \description{
+Develop Best-fit Vital Rate Estimation Models For MPM Development
+}
+\details{
 Function \code{modelsearch()} returns both a best-fit model for each vital
 rate, and a model table showing all models tested. The final output can be
 used as input in other functions within this package.
@@ -278,7 +281,9 @@ response), \code{\link[lme4]{lmer}()} (mixed model with Gaussian response),
 \code{\link[lme4]{glmer}()} (mixed model with binomial or Poisson response),
 \code{\link[glmmTMB]{glmmTMB}()} (mixed model with negative binomial,
 zero-inflated negative binomial, or zero-inflated Poisson response).
-See documentation related to these functions for further information.
+See documentation related to these functions for further information. Any
+response term that is invariable in the dataset will lead to a best-fit model
+for that response represented by a single constant value.
 
 Exhaustive model building and selection proceeds via the
 \code{\link[MuMIn]{dredge}()} function in package \code{MuMIn}. This function
@@ -378,12 +383,13 @@ lathmodelsln3 <- modelsearch(lathvertln, historical = TRUE,
   patch.as.random = TRUE, show.model.tables = TRUE, quiet = TRUE)
 
 # Here we use supplemental() to provide overwrite and reproductive info
-lathsupp3 <- supplemental(stage3 = c("Sd", "Sd", "Sdl", "Sd", "Sdl"), 
-  stage2 = c("Sd", "Sd", "Sd", "rep", "rep"),
-  stage1 = c("Sd", "rep", "rep", "all", "all"), 
-  givenrate = c(0.345, 0.345, 0.054, NA, NA),
-  multiplier = c(NA, NA, NA, 0.345, 0.054),
-  type = c(1, 1, 1, 3, 3), stageframe = lathframeln, historical = TRUE)
+lathsupp3 <- supplemental(stage3 = c("Sd", "Sd", "Sdl", "Sdl", "Sd", "Sdl"), 
+  stage2 = c("Sd", "Sd", "Sd", "Sd", "rep", "rep"),
+  stage1 = c("Sd", "rep", "Sd", "rep", "all", "all"), 
+  givenrate = c(0.345, 0.345, 0.054, 0.054, NA, NA),
+  multiplier = c(NA, NA, NA, NA, 0.345, 0.054),
+  type = c(1, 1, 1, 1, 3, 3), type_t12 = c(1, 2, 1, 2, 1, 1),
+  stageframe = lathframeln, historical = TRUE)
 
 lathmat3ln <- flefko3(year = "all", patch = "all", stageframe = lathframeln, 
   modelsuite = lathmodelsln3, data = lathvertln, supplement = lathsupp3, 
@@ -391,64 +397,6 @@ lathmat3ln <- flefko3(year = "all", patch = "all", stageframe = lathframeln,
   patch.as.random = FALSE, reduce = FALSE)
 
 summary(lathmat3ln)
-
-# Cypripedium example
-rm(list = ls(all=TRUE))
-
-data(cypdata)
-
-sizevector <- c(0, 0, 0, 0, 0, seq(from = 0, t = 24), seq(from = 1, to = 24))
-stagevector <- c("SD", "P1", "P2", "P3", "SL", "D", "V1", "V2", "V3", "V4", "V5", 
-  "V6", "V7", "V8", "V9", "V10", "V11", "V12", "V13", "V14", "V15", "V16", "V17", 
-  "V18", "V19", "V20", "V21", "V22", "V23", "V24", "F1", "F2", "F3", "F4", "F5",
-  "F6", "F7", "F8", "F9", "F10", "F11", "F12", "F13", "F14", "F15", "F16", "F17",
-  "F18", "F19", "F20", "F21", "F22", "F23", "F24")
-repvector <- c(0, 0, 0, 0, 0, rep(0, 25), rep(1, 24))
-obsvector <- c(0, 0, 0, 0, 0, 0, rep(1, 48))
-matvector <- c(0, 0, 0, 0, 0, rep(1, 49))
-immvector <- c(0, 1, 1, 1, 1, rep(0, 49))
-propvector <- c(1, rep(0, 53))
-indataset <- c(0, 0, 0, 0, 0, rep(1, 49))
-
-cypframe <- sf_create(sizes = sizevector, stagenames = stagevector, 
-  repstatus = repvector, obsstatus = obsvector, matstatus = matvector, 
-  propstatus = propvector, immstatus = immvector, indataset = indataset)
-
-vertdata <- verticalize3(data = cypdata, noyears = 6, firstyear = 2004, 
-  patchidcol = "patch", individcol = "plantid", blocksize = 4, 
-  sizeacol = "Inf2.04", sizebcol = "Inf.04", sizeccol = "Veg.04", 
-  repstracol = "Inf.04", repstrbcol = "Inf2.04", fecacol = "Pod.04", 
-  stageassign = cypframe, stagesize = "sizeadded", NAas0 = TRUE)
-
-cypmodels3 <- modelsearch(vertdata, historical = TRUE, approach = "mixed", 
-  vitalrates = c("surv", "obs", "size", "repst", "fec"), sizedist = "negbin", 
-  size.trunc = TRUE, fecdist = "poisson", fec.zero = TRUE, suite = "main", 
-  size = c("size3added", "size2added", "size1added"), quiet = TRUE)
-
-cypsupp3 <- supplemental(stage3 = c("SD", "SD", "P1", "P1", "P2", "P3", "SL",
-    "SL", "SL", "D", "V1", "V2", "V3", "D", "V1", "V2", "V3", "SD", "P1"), 
-  stage2 = c("SD", "SD", "SD", "SD", "P1", "P2", "P3", "SL", "SL", "SL", "SL", 
-    "SL", "SL", "SL", "SL", "SL", "SL", "rep", "rep"), 
-  stage1 = c("SD", "rep", "SD", "rep", "SD", "P1", "P2", "P3", "SL", "P3", "P3",
-    "P3", "P3", "SL", "SL", "SL", "SL", "mat", "mat"), 
-  eststage3 = c(NA, NA, NA, NA, NA, NA, NA, NA, NA, "D", "V1", "V2", "V3", "D",
-    "V1", "V2", "V3", NA, NA), 
-  eststage2 = c(NA, NA, NA, NA, NA, NA, NA, NA, NA, "D", "D", "D", "D", "D", 
-    "D", "D", "D", NA, NA), 
-  eststage1 = c(NA, NA, NA, NA, NA, NA, NA, NA, NA, "D", "D", "D", "D", "D", 
-    "D", "D", "D", NA, NA), 
-  givenrate = c(0.08, 0.08, 0.1, 0.1, 0.1, 0.1, 0.125, 0.2, 0.2, NA, NA, NA, NA, 
-    NA, NA, NA, NA, NA, NA),
-  multiplier = c(NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA,
-    NA, 0.5, 0.5),
-  type = c("S", "S", "S", "S", "S", "S", "S", "S", "S", "S", "S", "S", "S", "S",
-    "S", "S", "S", "R", "R"), stageframe = cypframe)
-
-cypmatrix3 <- flefko3(stageframe = cypframe, supplement = cypsupp3, 
-  modelsuite = cypmodels3, data = vertdata, yearcol = "year2",
-  year.as.random = TRUE)
-
-summary(cypmatrix3)
 }
 
 }

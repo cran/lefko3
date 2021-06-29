@@ -154,12 +154,17 @@
 #' \code{\link{set.seed}()} default.
 #' @param negfec A logical value denoting whether fecundity values estimated to
 #' be negative should be reset to 0. Defaults to FALSE.
+#' @param format A string indicating whether to estimate matrices in
+#' \code{ehrlen} format or \code{deVries} format. The latter adds one extra
+#' prior stage to account for the prior state of newborns. Defaults to
+#' \code{ehrlen} format.
 #' @param reduce A logical value denoting whether to remove historical stages
 #' associated solely with 0 transitions. These are only removed in cases where
 #' the associated row and column sums in ALL matrices estimated equal 0. 
 #' Defaults to FALSE.
-#' @param err_check A logical value indicating whether to add matrices of vital
-#' rate probabilities associated with each matrix. Defaults to FALSE.
+#' @param err_check A logical value indicating whether to append matrices of
+#' vital rate probabilities associated with each matrix. These matrices are
+#' developed internally and can be used for erroc checking. Defaults to FALSE.
 #'
 #' @return If all inputs are properly formatted, then this function will return
 #' an object of class \code{lefkoMat}, which is a list with the following
@@ -173,6 +178,8 @@
 #' output in the \code{matrix} class.}
 #' \item{hstages}{A data frame matrix showing the pairing of ahistorical stages
 #' used to create historical stage pairs.}
+#' \item{agestages}{Set to NA. Only used in output to function
+#' \code{aflefko2}().}
 #' \item{ahstages}{A data frame detailing the characteristics of associated
 #' ahistorical stages, in the form of a modified stageframe that includes
 #' status as an entry stage through reproduction.}
@@ -266,12 +273,13 @@
 #'   patch.as.random = TRUE, show.model.tables = TRUE, quiet = TRUE)
 #' 
 #' # Here we use supplemental() to provide overwrite and reproductive info
-#' lathsupp3 <- supplemental(stage3 = c("Sd", "Sd", "Sdl", "Sd", "Sdl"), 
-#'   stage2 = c("Sd", "Sd", "Sd", "rep", "rep"),
-#'   stage1 = c("Sd", "rep", "rep", "all", "all"), 
-#'   givenrate = c(0.345, 0.345, 0.054, NA, NA),
-#'   multiplier = c(NA, NA, NA, 0.345, 0.054),
-#'   type = c(1, 1, 1, 3, 3), stageframe = lathframeln, historical = TRUE)
+#' lathsupp3 <- supplemental(stage3 = c("Sd", "Sd", "Sdl", "Sdl", "Sd", "Sdl"), 
+#'   stage2 = c("Sd", "Sd", "Sd", "Sd", "rep", "rep"),
+#'   stage1 = c("Sd", "rep", "Sd", "rep", "all", "all"), 
+#'   givenrate = c(0.345, 0.345, 0.054, 0.054, NA, NA),
+#'   multiplier = c(NA, NA, NA, NA, 0.345, 0.054),
+#'   type = c(1, 1, 1, 1, 3, 3), type_t12 = c(1, 2, 1, 2, 1, 1),
+#'   stageframe = lathframeln, historical = TRUE)
 #' 
 #' lathmat3ln <- flefko3(year = "all", patch = "all", stageframe = lathframeln, 
 #'   modelsuite = lathmodelsln3, data = lathvertln, supplement = lathsupp3, 
@@ -298,92 +306,6 @@
 #'   reduce = FALSE)
 #' 
 #' summary(lathmat3ln_alt)
-#' 
-#' # Cypripedium example
-#' rm(list = ls(all=TRUE))
-#' 
-#' data(cypdata)
-#' 
-#' sizevector <- c(0, 0, 0, 0, 0, seq(from = 0, t = 24), seq(from = 1, to = 24))
-#' stagevector <- c("SD", "P1", "P2", "P3", "SL", "D", "V1", "V2", "V3", "V4", "V5", 
-#'   "V6", "V7", "V8", "V9", "V10", "V11", "V12", "V13", "V14", "V15", "V16", "V17", 
-#'   "V18", "V19", "V20", "V21", "V22", "V23", "V24", "F1", "F2", "F3", "F4", "F5",
-#'   "F6", "F7", "F8", "F9", "F10", "F11", "F12", "F13", "F14", "F15", "F16", "F17",
-#'   "F18", "F19", "F20", "F21", "F22", "F23", "F24")
-#' repvector <- c(0, 0, 0, 0, 0, rep(0, 25), rep(1, 24))
-#' obsvector <- c(0, 0, 0, 0, 0, 0, rep(1, 48))
-#' matvector <- c(0, 0, 0, 0, 0, rep(1, 49))
-#' immvector <- c(0, 1, 1, 1, 1, rep(0, 49))
-#' propvector <- c(1, rep(0, 53))
-#' indataset <- c(0, 0, 0, 0, 0, rep(1, 49))
-#' 
-#' cypframe <- sf_create(sizes = sizevector, stagenames = stagevector, 
-#'   repstatus = repvector, obsstatus = obsvector, matstatus = matvector, 
-#'   propstatus = propvector, immstatus = immvector, indataset = indataset)
-#' 
-#' vertdata <- verticalize3(data = cypdata, noyears = 6, firstyear = 2004, 
-#'   patchidcol = "patch", individcol = "plantid", blocksize = 4, 
-#'   sizeacol = "Inf2.04", sizebcol = "Inf.04", sizeccol = "Veg.04", 
-#'   repstracol = "Inf.04", repstrbcol = "Inf2.04", fecacol = "Pod.04", 
-#'   stageassign = cypframe, stagesize = "sizeadded", NAas0 = TRUE)
-#' 
-#' cypmodels3 <- modelsearch(vertdata, historical = TRUE, approach = "mixed", 
-#'   vitalrates = c("surv", "obs", "size", "repst", "fec"), sizedist = "negbin", 
-#'   size.trunc = TRUE, fecdist = "poisson", fec.zero = TRUE, suite = "main", 
-#'   size = c("size3added", "size2added", "size1added"), quiet = TRUE)
-#' 
-#' cypsupp3 <- supplemental(stage3 = c("SD", "SD", "P1", "P1", "P2", "P3", "SL",
-#'     "SL", "SL", "D", "V1", "V2", "V3", "D", "V1", "V2", "V3", "SD", "P1"), 
-#'   stage2 = c("SD", "SD", "SD", "SD", "P1", "P2", "P3", "SL", "SL", "SL", "SL", 
-#'     "SL", "SL", "SL", "SL", "SL", "SL", "rep", "rep"), 
-#'   stage1 = c("SD", "rep", "SD", "rep", "SD", "P1", "P2", "P3", "SL", "P3", "P3",
-#'     "P3", "P3", "SL", "SL", "SL", "SL", "mat", "mat"), 
-#'   eststage3 = c(NA, NA, NA, NA, NA, NA, NA, NA, NA, "D", "V1", "V2", "V3", "D",
-#'     "V1", "V2", "V3", NA, NA), 
-#'   eststage2 = c(NA, NA, NA, NA, NA, NA, NA, NA, NA, "D", "D", "D", "D", "D", 
-#'     "D", "D", "D", NA, NA), 
-#'   eststage1 = c(NA, NA, NA, NA, NA, NA, NA, NA, NA, "D", "D", "D", "D", "D", 
-#'     "D", "D", "D", NA, NA), 
-#'   givenrate = c(0.08, 0.08, 0.1, 0.1, 0.1, 0.1, 0.125, 0.2, 0.2, NA, NA, NA, NA, 
-#'     NA, NA, NA, NA, NA, NA),
-#'   multiplier = c(NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA,
-#'     NA, 0.5, 0.5),
-#'   type = c("S", "S", "S", "S", "S", "S", "S", "S", "S", "S", "S", "S", "S", "S",
-#'     "S", "S", "S", "R", "R"), stageframe = cypframe)
-#' 
-#' cypmatrix3 <- flefko3(stageframe = cypframe, supplement = cypsupp3, 
-#'   modelsuite = cypmodels3, data = vertdata, yearcol = "year2",
-#'   year.as.random = TRUE)
-#' 
-#' summary(cypmatrix3)
-#' 
-#' # Here is a version using a reproductive matrix and overwrite table instead
-#' 
-#' rep.assumptions <- matrix(0, 54, 54)
-#' rep.assumptions[1:2,31:54] <- 0.5
-#' 
-#' cypover3 <- overwrite(stage3 = c("SD", "SD", "P1", "P1", "P2", "P3", "SL", "SL", 
-#'     "SL", "D", "V1", "V2", "V3", "D", "V1", "V2", "V3"), 
-#'   stage2 = c("SD", "SD", "SD", "SD", "P1", "P2", "P3", "SL", "SL", "SL", "SL", 
-#'     "SL", "SL", "SL", "SL", "SL", "SL"), 
-#'   stage1 = c("SD", "rep", "SD", "rep", "SD", "P1", "P2", "P3", "SL", "P3", "P3",
-#'     "P3", "P3", "SL", "SL", "SL", "SL"), 
-#'   eststage3 = c(NA, NA, NA, NA, NA, NA, NA, NA, NA, "D", "V1", "V2", "V3", "D",
-#'     "V1", "V2", "V3"), 
-#'   eststage2 = c(NA, NA, NA, NA, NA, NA, NA, NA, NA, "D", "D", "D", "D", "D", 
-#'     "D", "D", "D"), 
-#'   eststage1 = c(NA, NA, NA, NA, NA, NA, NA, NA, NA, "D", "D", "D", "D", "D", 
-#'     "D", "D", "D"), 
-#'   givenrate = c(0.08, 0.08, 0.1, 0.1, 0.1, 0.1, 0.125, 0.2, 0.2, NA, NA, NA, NA, 
-#'     NA, NA, NA, NA), 
-#'   type = c("S", "S", "S", "S", "S", "S", "S", "S", "S", "S", "S", "S", "S", "S",
-#'     "S", "S", "S"))
-#' 
-#' cypmatrix3_alt <- flefko3(stageframe = cypframe, repmatrix = rep.assumptions,
-#'   overwrite = cypover3, modelsuite = cypmodels3, data = vertdata,
-#'   yearcol = "year2", year.as.random = TRUE)
-#' 
-#' summary(cypmatrix3_alt)
 #' }
 #' 
 #' @export
@@ -395,7 +317,15 @@ flefko3 <- function(year = "all", patch = "all", stageframe, supplement = NA,
   size_dev = 0, repst_dev = 0, fec_dev = 0, jsurv_dev = 0, jobs_dev = 0,
   jsize_dev = 0, jrepst_dev = 0, repmod = 1, yearcol = NA, patchcol = NA, 
   year.as.random = FALSE, patch.as.random = FALSE, randomseed = NA,
-  negfec = FALSE, reduce = FALSE, err_check = FALSE) {
+  negfec = FALSE, format = "ehrlen", reduce = FALSE, err_check = FALSE) {
+  
+  if (tolower(format) == "ehrlen") {
+    format_int <- 1
+  } else if (tolower(format) == "devries") {
+    format_int <- 2
+  } else {
+    stop("The format parameter must be set to either 'ehrlen' or 'deVries'.", call. = FALSE)
+  }
   
   if (all(is.na(modelsuite)) & all(is.na(paramnames))) {
     warning("Function may not work properly without a dataframe of model parameters or equivalents supplied either through the modelsuite option or through the paramnames input parameter.")
@@ -430,11 +360,11 @@ flefko3 <- function(year = "all", patch = "all", stageframe, supplement = NA,
   }
   
   if (length(year) == 0 | all(is.na(year) == TRUE) | any(is.na(year))) {
-    stop("This function cannot proceed without being given a specific year, or a suite of years. NA entries are not allowed.", call. = FALSE)
+    stop("This function cannot proceed without a specific time, or a suite of times, designated via the year option. NA entries are not allowed.", call. = FALSE)
   }
   
   if (all(is.na(patch)) & !is.na(patchcol)) {
-    warning("Matrix creation may not proceed properly without input in the patch option when using a modelsuite in which patch is designated.")
+    warning("Matrix creation may not proceed properly without input in the patch option when using a modelsuite in which patch is designated.", call. = FALSE)
   }
   
   if (is.character(patchcol) & patchcol != "none") {
@@ -459,12 +389,12 @@ flefko3 <- function(year = "all", patch = "all", stageframe, supplement = NA,
   }
   
   if (all(is.na(repmatrix)) & all(is.na(supplement))) {
-    warning("Neither supplemental data nor a reproduction matrix have been supplied. All fecundity transitions will be inferred from the stageframe.")
+    warning("Neither supplemental data nor a reproduction matrix have been supplied. All fecundity transitions will be inferred from the stageframe.", call. = FALSE)
   } else if (all(is.na(repmatrix)) & any(class(supplement) == "lefkoSD")) {
     checkconv <- supplement$convtype
     
     if (!is.element(3, checkconv)) {
-      warning("Supplemental data does not include fecundity information, and a reproduction matrix has not been supplied. All fecundity transitions will be inferred from the stageframe.")
+      warning("Supplemental data does not include fecundity information, and a reproduction matrix has not been supplied. All fecundity transitions will be inferred from the stageframe.", call. = FALSE)
     }
   }
   
@@ -485,7 +415,7 @@ flefko3 <- function(year = "all", patch = "all", stageframe, supplement = NA,
     stop("Function flefko3() requires size to be numeric rather than categorical.", call. = FALSE)
   }
   
-  melchett <- .sf_reassess(stageframe, supplement, repmatrix, overwrite, agemat = FALSE)
+  melchett <- .sf_reassess(stageframe, supplement, repmatrix, overwrite, agemat = FALSE, format = format_int)
   stageframe <- melchett[[1]]
   repmatrix <- melchett[[2]]
   
@@ -516,12 +446,13 @@ flefko3 <- function(year = "all", patch = "all", stageframe, supplement = NA,
   ovtable <- .overwrite_reassess(stageframe, supplement, overwrite, historical = TRUE)
   
   # Next the data frame carrying all raw values and element indices for matrix element estimation
-  allstages.list <- theoldpizzle(stageframe, ovtable, repmatrix, finalage = 0, style = 0, cont = 0)
+  allstages.list <- theoldpizzle(stageframe, ovtable, repmatrix, finalage = 0,
+    format = format_int, style = 0, cont = 0)
   allstages <- do.call("cbind.data.frame", c(allstages.list, stringsAsFactors = FALSE))
   
   maxsize <- max(c(allstages$a.size3, allstages$a.size2n, allstages$a.size2o, allstages$a.size1), na.rm = TRUE)
   
-  allstages <- allstages[(which(allstages$b.index321 != -1)),]
+  allstages <- allstages[(which(allstages$c.index321 != -1)),]
   
   # Now we work up the models
   if (class(modelsuite) == "lefkoMod") {
@@ -621,17 +552,15 @@ flefko3 <- function(year = "all", patch = "all", stageframe, supplement = NA,
   }
   
   # A few extra tidbits required for the core matrix estimator to work
-  total.matrix.dim <- (length(stageframe$bin_size_ctr) - 1)^2
-  
   yearlist <- split(listofyears, seq(nrow(listofyears)))
   
   # The next call runs the core matrix estimator function and creates all matrices
-  madsexmadrigal <- lapply(yearlist, jerzeibalowski, allstages, surv_proxy,
-    obs_proxy, size_proxy, repst_proxy, fec_proxy, jsurv_proxy, jobs_proxy,
-    jsize_proxy, jrepst_proxy, inda, indb, indc, surv_dev, obs_dev, size_dev,
-    repst_dev, fec_dev, jsurv_dev, jobs_dev, jsize_dev, jrepst_dev,
-    total.matrix.dim, repmod, rvarssummed, sigma, jrvarssummed, jsigma, maxsize,
-    sizedist, fecdist, negfec)
+  madsexmadrigal <- lapply(yearlist, jerzeibalowski, allstages, stageframe, format_int,
+    surv_proxy, obs_proxy, size_proxy, repst_proxy, fec_proxy, jsurv_proxy,
+    jobs_proxy, jsize_proxy, jrepst_proxy, inda, indb, indc, surv_dev, obs_dev,
+    size_dev, repst_dev, fec_dev, jsurv_dev, jobs_dev, jsize_dev, jrepst_dev,
+    repmod, rvarssummed, sigma, jrvarssummed, jsigma, maxsize, 0, sizedist,
+    fecdist, negfec)
   
   a_list <- lapply(madsexmadrigal, function(X) {X$A})
   u_list <- lapply(madsexmadrigal, function(X) {X$U})
@@ -641,9 +570,9 @@ flefko3 <- function(year = "all", patch = "all", stageframe, supplement = NA,
   
   ahstages <- stageframe[1:(dim(stageframe)[1] - 1),]
   
-  pairings1 <- expand.grid(stage_id_2 = stageframe$stage_id[1:(dim(stageframe)[1] - 1)], 
+  pairings1 <- expand.grid(stage_id_2 = stageframe$stage_id[1:(dim(stageframe)[1] - format_int)], 
     stage_id_1 = stageframe$stage_id[1:(dim(stageframe)[1] - 1)])
-  pairings2 <- expand.grid(stage_2 = stageframe$stage[1:(dim(stageframe)[1] - 1)], 
+  pairings2 <- expand.grid(stage_2 = stageframe$stage[1:(dim(stageframe)[1] - format_int)], 
     stage_1 = stageframe$stage[1:(dim(stageframe)[1] - 1)])
   hstages <- cbind.data.frame(pairings1, pairings2)
   
@@ -671,12 +600,12 @@ flefko3 <- function(year = "all", patch = "all", stageframe, supplement = NA,
   
   if (!err_check) {
     output <- list(A = a_list, U = u_list, F = f_list, hstages = hstages,
-      ahstages = ahstages, labels = listofyears[,c(1:3)], matrixqc = qcoutput1,
-      modelqc = qcoutput2)
+      agestages = NA, ahstages = ahstages, labels = listofyears[,c(1:3)],
+      matrixqc = qcoutput1, modelqc = qcoutput2)
   } else {
     output <- list(A = a_list, U = u_list, F = f_list, hstages = hstages,
-      ahstages = ahstages, labels = listofyears[,c(1:3)], matrixqc = qcoutput1,
-      modelqc = qcoutput2, prob_out = out_list)
+      agestages = NA, ahstages = ahstages, labels = listofyears[,c(1:3)],
+      matrixqc = qcoutput1, modelqc = qcoutput2, prob_out = out_list)
   }
   
   class(output) <- "lefkoMat"
@@ -736,8 +665,8 @@ flefko3 <- function(year = "all", patch = "all", stageframe, supplement = NA,
 #' fecundity matrices, a data frame detailing the characteristics of the
 #' ahistorical stages used, and a data frame characterizing the patch and year
 #' combinations corresponding to these matrices. Unlike \code{\link{rlefko2}()}
-#' and \code{\link{rlefko3}()}, this function currently does not currently
-#' distinguish populations.
+#' and \code{\link{rlefko3}()}, this function does not currently distinguish
+#' populations.
 #'
 #' @param year A variable corresponding to year or observation time, or a set of
 #' such values, given in values associated with the year term used in linear
@@ -897,7 +826,9 @@ flefko3 <- function(year = "all", patch = "all", stageframe, supplement = NA,
 #' matrices output in the \code{matrix} class.}
 #' \item{F}{A list of fecundity matrices sorted as in \code{A}. All matrices 
 #' output in the \code{matrix} class.}
-#' \item{hstages}{Null for ahistorical matrices.}
+#' \item{hstages}{Set to NA for ahistorical matrices.}
+#' \item{agestages}{Set to NA. Only used in output to function
+#' \code{aflefko2}().}
 #' \item{ahstages}{A data frame detailing the characteristics of associated
 #' ahistorical stages, in the form of a modified stageframe that includes
 #' status as an entry stage through reproduction.}
@@ -1024,74 +955,6 @@ flefko3 <- function(year = "all", patch = "all", stageframe, supplement = NA,
 #'   reduce = FALSE)
 #' 
 #' summary(lathmat2ln_alt)
-#' 
-#' # Cypripedium example
-#' rm(list = ls(all=TRUE))
-#' 
-#' data(cypdata)
-#' 
-#' sizevector <- c(0, 0, 0, 0, 0, seq(from = 0, t = 24), seq(from = 1, to = 24))
-#' stagevector <- c("SD", "P1", "P2", "P3", "SL", "D", "V1", "V2", "V3", "V4", "V5", 
-#'   "V6", "V7", "V8", "V9", "V10", "V11", "V12", "V13", "V14", "V15", "V16", "V17", 
-#'   "V18", "V19", "V20", "V21", "V22", "V23", "V24", "F1", "F2", "F3", "F4", "F5",
-#'   "F6", "F7", "F8", "F9", "F10", "F11", "F12", "F13", "F14", "F15", "F16", "F17",
-#'   "F18", "F19", "F20", "F21", "F22", "F23", "F24")
-#' repvector <- c(0, 0, 0, 0, 0, rep(0, 25), rep(1, 24))
-#' obsvector <- c(0, 0, 0, 0, 0, 0, rep(1, 48))
-#' matvector <- c(0, 0, 0, 0, 0, rep(1, 49))
-#' immvector <- c(0, 1, 1, 1, 1, rep(0, 49))
-#' propvector <- c(1, rep(0, 53))
-#' indataset <- c(0, 0, 0, 0, 0, rep(1, 49))
-#' 
-#' cypframe <- sf_create(sizes = sizevector, stagenames = stagevector, 
-#'   repstatus = repvector, obsstatus = obsvector, matstatus = matvector, 
-#'   propstatus = propvector, immstatus = immvector, indataset = indataset)
-#' 
-#' vertdata <- verticalize3(data = cypdata, noyears = 6, firstyear = 2004, 
-#'   patchidcol = "patch", individcol = "plantid", blocksize = 4, 
-#'   sizeacol = "Inf2.04", sizebcol = "Inf.04", sizeccol = "Veg.04", 
-#'   repstracol = "Inf.04", repstrbcol = "Inf2.04", fecacol = "Pod.04", 
-#'   stageassign = cypframe, stagesize = "sizeadded", NAas0 = TRUE)
-#' 
-#' cypmodels2 <- modelsearch(vertdata, historical = FALSE, approach = "mixed", 
-#'   vitalrates = c("surv", "obs", "size", "repst", "fec"), sizedist = "negbin", 
-#'   size.trunc = TRUE, fecdist = "poisson", fec.zero = TRUE, suite = "full", 
-#'   size = c("size3added", "size2added"), quiet = TRUE)
-#' 
-#' cypsupp2 <- supplemental(stage3 = c("SD", "P1", "P2", "P3", "SL", "SL", "D",
-#'     "V1", "V2", "V3", "SD", "P1"), 
-#'   stage2 = c("SD", "SD", "P1", "P2", "P3", "SL", "SL", "SL", "SL", "SL", "rep",
-#'     "rep"), 
-#'   eststage3 = c(NA, NA, NA, NA, NA, NA, "D", "V1", "V2", "V3", NA, NA), 
-#'   eststage2 = c(NA, NA, NA, NA, NA, NA, "D", "D", "D", "D", NA, NA), 
-#'   givenrate = c(0.08, 0.1, 0.1, 0.1, 0.125, 0.2, NA, NA, NA, NA, NA, NA), 
-#'   multiplier = c(NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, 0.5, 0.5),
-#'   type = c("S", "S", "S", "S", "S", "S", "S", "S", "S", "S", "R", "R"),
-#'   stageframe = cypframe, historical = FALSE)
-#' 
-#' cypmatrix2 <- flefko2(stageframe = cypframe, supplement = cypsupp2, 
-#'   modelsuite = cypmodels2, data = vertdata, year.as.random = TRUE)
-#' 
-#' summary(cypmatrix2)
-#' 
-#' # Here is a version using a reproductive matrix and overwrite table instead
-#' 
-#' rep.assumptions <- matrix(0, 54, 54)
-#' rep.assumptions[1:2,31:54] <- 0.5
-#' 
-#' cypover2 <- overwrite(stage3 = c("SD", "P1", "P2", "P3", "SL", "SL", "D", "V1",
-#'     "V2", "V3"), 
-#'   stage2 = c("SD", "SD", "P1", "P2", "P3", "SL", "SL", "SL", "SL", "SL"), 
-#'   eststage3 = c(NA, NA, NA, NA, NA, NA, "D", "V1", "V2", "V3"), 
-#'   eststage2 = c(NA, NA, NA, NA, NA, NA, "D", "D", "D", "D"), 
-#'   givenrate = c(0.08, 0.1, 0.1, 0.1, 0.125, 0.2, NA, NA, NA, NA), 
-#'   type = c("S", "S", "S", "S", "S", "S", "S", "S", "S", "S"))
-#' 
-#' cypmatrix2_alt <- flefko2(stageframe = cypframe, overwrite = cypover2,
-#'   repmatrix = rep.assumptions, modelsuite = cypmodels2, data = vertdata,
-#'   year.as.random = TRUE)
-#' 
-#' summary(cypmatrix2_alt)
 #' }
 #' 
 #' @export
@@ -1138,11 +1001,11 @@ flefko2 <- function(year = "all", patch = "all", stageframe, supplement = NA,
   }
   
   if (length(year) == 0 | all(is.na(year) == TRUE) | any(is.na(year))) {
-    stop("This function cannot proceed without being given a specific year, or a suite of years. NA entries are not allowed.", call. = FALSE)
+    stop("This function cannot proceed without a specific time, or a suite of times, designated via the year option. NA entries are not allowed.", call. = FALSE)
   }
   
   if (all(is.na(patch)) & !is.na(patchcol)) {
-    warning("Matrix creation may not proceed properly without input in the patch option when using a modelsuite in which patch is designated.")
+    warning("Matrix creation may not proceed properly without input in the patch option when using a modelsuite in which patch is designated.", call. = FALSE)
   }
   
   if (is.character(patchcol) & patchcol != "none") {
@@ -1167,12 +1030,12 @@ flefko2 <- function(year = "all", patch = "all", stageframe, supplement = NA,
   }
   
   if (all(is.na(repmatrix)) & all(is.na(supplement))) {
-    warning("Neither supplemental data nor a reproduction matrix have been supplied. All fecundity transitions will be inferred from the stageframe.")
+    warning("Neither supplemental data nor a reproduction matrix have been supplied. All fecundity transitions will be inferred from the stageframe.", call. = FALSE)
   } else if (all(is.na(repmatrix)) & any(class(supplement) == "lefkoSD")) {
     checkconv <- supplement$convtype
     
     if (!is.element(3, checkconv)) {
-      warning("Supplemental data does not include fecundity information, and a reproduction matrix has not been supplied. All fecundity transitions will be inferred from the stageframe.")
+      warning("Supplemental data does not include fecundity information, and a reproduction matrix has not been supplied. All fecundity transitions will be inferred from the stageframe.", call. = FALSE)
     }
   }
   
@@ -1186,10 +1049,11 @@ flefko2 <- function(year = "all", patch = "all", stageframe, supplement = NA,
   }
   
   if (any(!suppressWarnings(!is.na(as.numeric(as.character(stageframe$size)))))) {
-    stop("Function flefko2() requires size to be numeric rather than categorical.")
+    stop("Function flefko2() requires size to be numeric rather than categorical.", call. = FALSE)
   }
   
-  melchett <- .sf_reassess(stageframe, supplement, repmatrix, overwrite, agemat = FALSE)
+  melchett <- .sf_reassess(stageframe, supplement, repmatrix, overwrite,
+    agemat = FALSE, format = 1)
   stageframe <- melchett[[1]]
   repmatrix <- melchett[[2]]
   
@@ -1220,12 +1084,13 @@ flefko2 <- function(year = "all", patch = "all", stageframe, supplement = NA,
   ovtable <- .overwrite_reassess(stageframe, supplement, overwrite, historical = FALSE)
   
   # Next the data frame for the C++-based matrix populator functions
-  allstages.list <- theoldpizzle(stageframe, ovtable, repmatrix, finalage = 0, style = 1, cont = 0)
+  allstages.list <- theoldpizzle(stageframe, ovtable, repmatrix, finalage = 0,
+    format = 1, style = 1, cont = 0)
   allstages <- do.call("cbind.data.frame", c(allstages.list, stringsAsFactors = FALSE))
   
   maxsize <- max(c(allstages$a.size3, allstages$a.size2n, allstages$a.size2o), na.rm = TRUE)
   
-  allstages <- allstages[(which(allstages$b.index321 != -1)),]
+  allstages <- allstages[(which(allstages$c.index321 != -1)),]
   
   # Now we will work up the vital rate models
   if (class(modelsuite) == "lefkoMod") {
@@ -1324,17 +1189,15 @@ flefko2 <- function(year = "all", patch = "all", stageframe, supplement = NA,
   }
   
   # A few extra tidbits required for the core matrix estimator to work
-  total.matrix.dim <- length(stageframe$bin_size_ctr) - 1
-  
   yearlist <- split(listofyears, seq(nrow(listofyears)))
   
   # The next line calls the core matrix estimator function
-  madsexmadrigal <- lapply(yearlist, jerzeibalowski, allstages, surv_proxy,
-    obs_proxy, size_proxy, repst_proxy, fec_proxy, jsurv_proxy, jobs_proxy,
-    jsize_proxy, jrepst_proxy, inda, indb, indc, surv_dev, obs_dev, size_dev,
-    repst_dev, fec_dev, jsurv_dev, jobs_dev, jsize_dev, jrepst_dev,
-    total.matrix.dim, repmod, rvarssummed, sigma, jrvarssummed, jsigma, maxsize,
-    sizedist, fecdist, negfec)
+  madsexmadrigal <- lapply(yearlist, jerzeibalowski, allstages, stageframe, 3,
+    surv_proxy, obs_proxy, size_proxy, repst_proxy, fec_proxy, jsurv_proxy,
+    jobs_proxy, jsize_proxy, jrepst_proxy, inda, indb, indc, surv_dev, obs_dev,
+    size_dev, repst_dev, fec_dev, jsurv_dev, jobs_dev, jsize_dev, jrepst_dev,
+    repmod, rvarssummed, sigma, jrvarssummed, jsigma, maxsize, 0, sizedist,
+    fecdist, negfec)
   
   a_list <- lapply(madsexmadrigal, function(X) {X$A})
   u_list <- lapply(madsexmadrigal, function(X) {X$U})
@@ -1366,12 +1229,12 @@ flefko2 <- function(year = "all", patch = "all", stageframe, supplement = NA,
   
   if (!err_check) {
     output <- list(A = a_list, U = u_list, F = f_list, hstages = NA,
-      ahstages = ahstages, labels = listofyears[,c(1:3)], matrixqc = qcoutput1,
-      modelqc = qcoutput2)
+      agestages = NA, ahstages = ahstages, labels = listofyears[,c(1:3)],
+      matrixqc = qcoutput1, modelqc = qcoutput2)
   } else {
     output <- list(A = a_list, U = u_list, F = f_list, hstages = NA,
-      ahstages = ahstages, labels = listofyears[,c(1:3)], matrixqc = qcoutput1,
-      modelqc = qcoutput2, prob_out = out_list)
+      agestages = NA, ahstages = ahstages, labels = listofyears[,c(1:3)],
+      matrixqc = qcoutput1, modelqc = qcoutput2, prob_out = out_list)
   }
   
   class(output) <- "lefkoMat"
@@ -1511,9 +1374,16 @@ flefko2 <- function(year = "all", patch = "all", stageframe, supplement = NA,
 #' status. Only needed if \code{censor = TRUE}.
 #' @param censorkeep The value of the censor variable denoting data elements to
 #' keep. Defaults to 0.
+#' @param format A string indicating whether to estimate matrices in
+#' \code{ehrlen} format or \code{deVries} format. The latter adds one extra
+#' prior stage to account for the prior state of newborns. Defaults to
+#' \code{ehrlen} format.
 #' @param reduce A logical value denoting whether to remove historical stages
 #' associated exclusively with zero transitions. These are removed only if all
 #' row and column sums in ALL matrices estimated equal 0. Defaults to FALSE.
+#' @param err_check A logical value indicating whether to append extra
+#' information used in matrix calculation within the output list. Used for
+#' development debugging purposes.
 #'
 #' @return If all inputs are properly formatted, then this function will return
 #' either an object of class \code{lefkoMat}. Output includes:
@@ -1526,6 +1396,8 @@ flefko2 <- function(year = "all", patch = "all", stageframe, supplement = NA,
 #' output in the \code{matrix} class.}
 #' \item{hstages}{A data frame matrix showing the pairing of ahistorical stages
 #' used to create historical stage pairs.}
+#' \item{agestages}{Set to NA. Only used in output to function
+#' \code{aflefko2}().}
 #' \item{ahstages}{A data frame detailing the characteristics of associated
 #' ahistorical stages, in the form of a modified stageframe that includes
 #' status as an entry stage through reproduction.}
@@ -1591,12 +1463,13 @@ flefko2 <- function(year = "all", patch = "all", stageframe, supplement = NA,
 #'   stageassign = lathframe, stagesize = "sizea", censorcol = "Missing1988", 
 #'   censorkeep = NA, censor = TRUE)
 #' 
-#' lathsupp3 <- supplemental(stage3 = c("Sd", "Sd", "Sdl", "Sd", "Sdl"), 
-#'   stage2 = c("Sd", "Sd", "Sd", "rep", "rep"),
-#'   stage1 = c("Sd", "rep", "rep", "all", "all"), 
-#'   givenrate = c(0.345, 0.345, 0.054, NA, NA),
-#'   multiplier = c(NA, NA, NA, 0.345, 0.054),
-#'   type = c(1, 1, 1, 3, 3), stageframe = lathframe, historical = TRUE)
+#' lathsupp3 <- supplemental(stage3 = c("Sd", "Sd", "Sdl", "Sdl", "Sd", "Sdl"), 
+#'   stage2 = c("Sd", "Sd", "Sd", "Sd", "rep", "rep"),
+#'   stage1 = c("Sd", "rep", "Sd", "rep", "all", "all"), 
+#'   givenrate = c(0.345, 0.345, 0.054, 0.054, NA, NA),
+#'   multiplier = c(NA, NA, NA, NA, 0.345, 0.054),
+#'   type = c(1, 1, 1, 1, 3, 3), type_t12 = c(1, 2, 1, 2, 1, 1),
+#'   stageframe = lathframe, historical = TRUE)
 #' 
 #' ehrlen3 <- rlefko3(data = lathvert, stageframe = lathframe, year = "all", 
 #'   stages = c("stage3", "stage2", "stage1"), supplement = lathsupp3,
@@ -1648,7 +1521,8 @@ flefko2 <- function(year = "all", patch = "all", stageframe, supplement = NA,
 #'     NA, NA, NA, NA),
 #'   multiplier = c(NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA,
 #'     0.5, 0.5),
-#'   type =c(1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 3, 3),
+#'   type = c(1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 3, 3),
+#'   type_t12 = c(1, 2, 1, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1),
 #'   stageframe = cypframe_raw, historical = TRUE)
 #' 
 #' cypmatrix3r <- rlefko3(data = cypraw_v1, stageframe = cypframe_raw,
@@ -1698,9 +1572,18 @@ rlefko3 <- function(data, stageframe, year = "all", pop = NA, patch = NA,
   matst = c("matstatus3", "matstatus2", "matstatus1"),
   fec = c("feca3", "feca2", "feca1"), supplement = NA, repmatrix = NA,
   overwrite = NA, yearcol = NA, popcol = NA, patchcol = NA, indivcol = NA,
-  censorcol = NA, censorkeep = 0, reduce = FALSE) {
+  censorcol = NA, censorkeep = 0, format = "ehrlen", reduce = FALSE,
+  err_check = FALSE) {
   
   tocensor <- indataset <- alive2 <- popused <- patchused <- yearused <- NULL
+  
+  if (tolower(format) == "ehrlen") {
+    format_int <- 1
+  } else if (tolower(format) == "devries") {
+    format_int <- 2
+  } else {
+    stop("The format parameter must be set to either 'ehrlen' or 'deVries'.", call. = FALSE)
+  }
   
   if (all(is.na(data))) {
     stop("Need original vertical dataset to proceed.", call. = FALSE)
@@ -1881,7 +1764,8 @@ rlefko3 <- function(data, stageframe, year = "all", pop = NA, patch = NA,
     }
   }
   
-  melchett <- .sf_reassess(stageframe, supplement, repmatrix, overwrite, agemat = FALSE)
+  melchett <- .sf_reassess(stageframe, supplement, repmatrix, overwrite, 
+    agemat = FALSE, format = format_int)
   stageframe <- melchett[[1]]
   repmatrix <- melchett[[2]]
   
@@ -2042,19 +1926,29 @@ rlefko3 <- function(data, stageframe, year = "all", pop = NA, patch = NA,
   
   # This section creates stageexpansion9, which is a data frame that holds values for stage transitions from paired stages
   # in times t and t-1 to paired stages in times t and t+1
-  majortrial <- theoldpizzle(stageframe, ovtable, repmatrix, 0, 0, 0)
+  majortrial <- theoldpizzle(stageframe, ovtable, repmatrix, finalage = 0,
+    format = format_int, style = 0, cont = 0)
   stageexpansion9 <- do.call("cbind.data.frame", c(majortrial, stringsAsFactors = FALSE))
+  
+  harpoon <- if (format_int == 2) {
+    prior_reps <- colSums(repmatrix)
+    prior_reps[which(prior_reps > 0)] <- 1
+    
+    cbind(rbind(repmatrix, prior_reps, 0), 0, 0)
+  } else {
+    harpoon <- cbind(rbind(repmatrix, 0), 0)
+  }
   
   # Stageexpansion3 is a dataframe created to hold values for paired stages in times t and t-1 only
   stageexpansion3 <- cbind.data.frame(expand.grid(size3 = stageframe$bin_size_ctr, 
-      size2n = stageframe$bin_size_ctr), expand.grid(rep3 = stageframe$repstatus, 
-      rep2n = stageframe$repstatus), expand.grid(indata3 = stageframe$indataset, 
-      indata2n = stageframe$indataset), expand.grid(stage3 = stageframe$stageno,
-      stage2n = stageframe$stageno), fec32n = c(cbind(rbind(repmatrix, 0), 0)))
+    size2n = stageframe$bin_size_ctr), expand.grid(rep3 = stageframe$repstatus, 
+    rep2n = stageframe$repstatus), expand.grid(indata3 = stageframe$indataset, 
+    indata2n = stageframe$indataset), expand.grid(stage3 = stageframe$stageno,
+    stage2n = stageframe$stageno), fec32n = c(harpoon))
   
   stageexpansion3$indata32n <- stageexpansion3$indata3 * stageexpansion3$indata2n
   
-  instages <- length(stageframe$stage_id)
+  instages <- length(stageframe$stage_id) #Total number of stages, including the dead stage
   
   stageexpansion3$index21 <- apply(as.matrix(c(1:dim(stageexpansion3)[1])), 1, function(X) {
     ((stageexpansion3$stage3[X] - 1) + ((stageexpansion3$stage2n[X] - 1) * instages))
@@ -2081,12 +1975,19 @@ rlefko3 <- function(data, stageframe, year = "all", pop = NA, patch = NA,
   })
   
   data$index321 <- apply(as.matrix(c(1:length(data$usedstage1))), 1, function(X) {
-    (data$index3[X] + (data$index2[X] * instages) + (data$index1[X] * instages * instages))
+    if (format_int == 2) {
+      ((data$index3[X] - 1) + ((data$index2[X] - 1) * instages) +
+        ((data$index2[X] - 1) * instages * instages) + 
+        ((data$index1[X] - 1) * instages * instages * instages))
+    } else {
+      ((data$index3[X] - 1) + ((data$index2[X] - 1) * (instages - 1)) + 
+        ((data$index2[X] - 1) * (instages - 1) * (instages - 1)) + 
+        ((data$index1[X] - 1) * (instages - 1) * (instages - 1) * (instages - 1)))
+    }
   })
   data$pairindex21 <- apply(as.matrix(c(1:dim(data)[1])), 1, function(X) {
-    ((data$index2[X] - 1) + ((data$index1[X] - 1) * instages))
+    return(((data$index2[X] - 1) + ((data$index1[X] - 1) * instages)))
   })
-  
   data$usedfec2[which(is.na(data$usedfec2))] <- 0
   
   if(is.element(0, unique(data$index1))) {
@@ -2113,8 +2014,11 @@ rlefko3 <- function(data, stageframe, year = "all", pop = NA, patch = NA,
       passed_data$yearused <- passed_data[,yearcol];
       passed_data <- subset(passed_data, yearused == X$year2[1]);
     }
+    if (err_check) { err_push <- 1} else {err_push <- 0}
+    
     specialpatrolgroup(sge9l = stageexpansion9, sge3 = stageexpansion3,
-      MainData = passed_data, StageFrame = stageframe)
+      MainData = passed_data, StageFrame = stageframe, format = format_int, 
+        err_switch = err_push)
   })
   
   a_list <- lapply(madsexmadrigal, function(X) {X$A})
@@ -2137,7 +2041,9 @@ rlefko3 <- function(data, stageframe, year = "all", pop = NA, patch = NA,
   }
   qcoutput2 <- c(indivs, dim(data)[1])
   
-  morebitstolose <- unique(c(which(stageexpansion3$stage3 == dim(stageframe)[1]), which(stageexpansion3$stage2n == dim(stageframe)[1])))
+  morebitstolose <- unique(c(which(stageexpansion3$stcod3 == "Dead"),
+    which(stageexpansion3$stcod2 == "Dead"),
+    which(stageexpansion3$stcod3 == "AlmostBorn")))
   stageexpansion3 <- stageexpansion3[-morebitstolose,]
   
   hstages <- stageexpansion3[,c("stage3", "stage2n", "stcod3", "stcod2")]
@@ -2154,9 +2060,20 @@ rlefko3 <- function(data, stageframe, year = "all", pop = NA, patch = NA,
   
   rownames(hstages) <- c(1:dim(hstages)[1])
   
-  output <- list(A = a_list, U = u_list, F = f_list, hstages = hstages, 
-    ahstages = stageframe[1:(dim(stageframe)[1] - 1),], labels = listofyears,
-    matrixqc = qcoutput1, dataqc = qcoutput2)
+  if (!err_check) {
+    output <- list(A = a_list, U = u_list, F = f_list, hstages = hstages, 
+      agestages = NA, ahstages = stageframe[1:(dim(stageframe)[1] - 1),],
+      labels = listofyears, matrixqc = qcoutput1, dataqc = qcoutput2)
+  } else {
+    err1_concrp <- lapply(madsexmadrigal, function(X) {X$concrp})
+    err2_s2f <- lapply(madsexmadrigal, function(X) {X$s2f})
+    err3_dpr <- lapply(madsexmadrigal, function(X) {X$dataprior})
+    
+    output <- list(A = a_list, U = u_list, F = f_list, hstages = hstages, 
+      agestages = NA, ahstages = stageframe[1:(dim(stageframe)[1] - 1),],
+      labels = listofyears, matrixqc = qcoutput1, dataqc = qcoutput2,
+      err1_concrp = err1_concrp, err2_s2f = err2_s2f, err3_dpr = err3_dpr)
+  }
   
   class(output) <- "lefkoMat"
   
@@ -2258,7 +2175,9 @@ rlefko3 <- function(data, stageframe, year = "all", pop = NA, patch = NA,
 #' matrices output in the \code{matrix} class.}
 #' \item{F}{A list of fecundity matrices sorted as in \code{A}. All matrices 
 #' output in the \code{matrix} class.}
-#' \item{hstages}{Null for ahistorical matrices.}
+#' \item{hstages}{Set to NA for ahistorical matrices.}
+#' \item{agestages}{Set to NA. Only used in output to function
+#' \code{aflefko2}().}
 #' \item{ahstages}{A data frame detailing the characteristics of associated
 #' ahistorical stages, in the form of a modified stageframe that includes
 #' status as an entry stage through reproduction.}
@@ -2497,7 +2416,9 @@ rlefko2 <- function(data, stageframe, year = "all", pop = NA, patch = NA,
   }
   
   if (!all(is.na(pop)) & !all(is.na(patch))) {
-    if (is.na(popcol) | is.na(patchcol)) {stop("Need population and patch designation variables to proceed.", call. = FALSE)}
+    if (is.na(popcol) | is.na(patchcol)) {
+      stop("Need population and patch designation variables to proceed.", call. = FALSE)
+    }
     
     if (is.element("all", tolower(pop))) {
       if (is.character(popcol)) {popcol <- which(names(data) == popcol)}
@@ -2529,7 +2450,9 @@ rlefko2 <- function(data, stageframe, year = "all", pop = NA, patch = NA,
       return(output)
     })
   } else if (all(is.na(pop)) & !all(is.na(patch))) {
-    if (is.na(patchcol)) {stop("Need patch designation variable to proceed.", call. = FALSE)}
+    if (is.na(patchcol)) {
+      stop("Need patch designation variable to proceed.", call. = FALSE)
+    }
     
     if (is.element("all", tolower(patch))) {
       if (is.character(patchcol)) {patchcol <- which(names(data) == patchcol)}
@@ -2548,7 +2471,9 @@ rlefko2 <- function(data, stageframe, year = "all", pop = NA, patch = NA,
       listofyears <- do.call(rbind.data.frame, listofyears)
     }
   } else if (!all(is.na(pop)) & all(is.na(patch))) {
-    if (is.na(popcol)) {stop("Need population designation variable to proceed.", call. = FALSE)}
+    if (is.na(popcol)) {
+      stop("Need population designation variable to proceed.", call. = FALSE)
+    }
     
     if (is.element("all", tolower(pop))) {
       if (is.character(popcol)) {popcol <- which(names(data) == popcol)}
@@ -2586,7 +2511,8 @@ rlefko2 <- function(data, stageframe, year = "all", pop = NA, patch = NA,
     }
   }
   
-  melchett <- .sf_reassess(stageframe, supplement, repmatrix, overwrite, agemat = FALSE)
+  melchett <- .sf_reassess(stageframe, supplement, repmatrix, overwrite,
+    agemat = FALSE, format = 1)
   stageframe <- melchett[[1]]
   repmatrix <- melchett[[2]]
   
@@ -2613,7 +2539,7 @@ rlefko2 <- function(data, stageframe, year = "all", pop = NA, patch = NA,
   data$alive3 <- data[,which(names(data) == alive[1])]
   
   instageframe <- subset(stageframe, indataset == 1)
-  instages <- dim(stageframe)[1]
+  instages <- dim(stageframe)[1] #This is actually the total number of stages, including the dead stage
   
   if (all(is.na(stages))) {
     if (length(size) > 1) {
@@ -2713,8 +2639,9 @@ rlefko2 <- function(data, stageframe, year = "all", pop = NA, patch = NA,
   
   ovtable <- .overwrite_reassess(stageframe, supplement, overwrite, historical = FALSE)
   
-  # This section creates stageexpansion3, which is a data frame that holds values for stage transitions from time t to t+1
-  majortrial <- theoldpizzle(stageframe, ovtable, repmatrix, 0, 1, 0)
+  # This section creates stageexpansion3, a data frame with stage transition values from time t to t+1
+  majortrial <- theoldpizzle(stageframe, ovtable, repmatrix, finalage = 0, 
+    format = 1, style = 1, cont = 0)
   stageexpansion3 <- do.call("cbind.data.frame", c(majortrial, stringsAsFactors = FALSE))
   
   # Stageexpansion2 is a dataframe created to hold values for stages in time t only
@@ -2796,8 +2723,8 @@ rlefko2 <- function(data, stageframe, year = "all", pop = NA, patch = NA,
   }
   
   output <- list(A = a_list, U = u_list, F = f_list, hstages = NA,
-    ahstages = ahstages, labels = listofyears, matrixqc = qcoutput1,
-    dataqc = qcoutput2)
+    agestages = NA, ahstages = ahstages, labels = listofyears,
+    matrixqc = qcoutput1, dataqc = qcoutput2)
   
   class(output) <- "lefkoMat"
   
@@ -2808,11 +2735,12 @@ rlefko2 <- function(data, stageframe, year = "all", pop = NA, patch = NA,
 #'
 #' Function \code{aflefko2()} returns ahistorical age x stage MPMs corresponding
 #' to the patches and years given, including the associated component transition
-#' and fecundity matrices, a data frame detailing the characteristics of
-#' ahistorical stages, and a data frame characterizing the patch and year
-#' combinations corresponding to these matrices. Unlike \code{\link{rlefko2}()}
-#' and \code{\link{rlefko3}()}, this function currently does not currently
-#' distinguish populations.
+#' and fecundity matrices, data frame detailing the characteristics of
+#' ahistorical stages and the exact age-stage combinations corresponding to rows
+#' and columns in estimated matrices, and a data frame characterizing the patch
+#' and year combinations corresponding to these matrices. Unlike
+#' \code{\link{rlefko2}()} and \code{\link{rlefko3}()}, this function does not
+#' currently distinguish populations.
 #'
 #' @param year A variable corresponding to year or observation time, or a set
 #' of such values, given in values associated with the year term used in linear 
@@ -2976,6 +2904,9 @@ rlefko2 <- function(data, stageframe, year = "all", pop = NA, patch = NA,
 #' \item{U}{A list of survival transition matrices sorted as in \code{A}.}
 #' \item{F}{A list of fecundity matrices sorted as in \code{A}.}
 #' \item{hstages}{Null for ahistorical matrices.}
+#' \item{agestages}{A data frame showing the stage number and stage name
+#' corresponding to \code{ahstages}, as well as the associated age, of each
+#' actual row in each age-by-stage matrix.}
 #' \item{ahstages}{A data frame detailing the characteristics of associated
 #' ahistorical stages, in the form of a modified stageframe that includes
 #' status as an entry stage through reproduction.}
@@ -3182,12 +3113,12 @@ aflefko2 <- function(year = "all", patch = "all", stageframe, supplement = NA,
   }
   
   if (all(is.na(repmatrix)) & all(is.na(supplement))) {
-    warning("Neither supplemental data nor a reproduction matrix have been supplied. All fecundity transitions will be inferred from the stageframe.")
+    warning("Neither supplemental data nor a reproduction matrix have been supplied. All fecundity transitions will be inferred from the stageframe.", call. = FALSE)
   } else if (all(is.na(repmatrix)) & any(class(supplement) == "lefkoSD")) {
     checkconv <- supplement$convtype
     
     if (!is.element(3, checkconv)) {
-      warning("Supplemental data does not include fecundity information, and a reproduction matrix has not been supplied. All fecundity transitions will be inferred from the stageframe.")
+      warning("Supplemental data does not include fecundity information, and a reproduction matrix has not been supplied. All fecundity transitions will be inferred from the stageframe.", call. = FALSE)
     }
   }
   
@@ -3201,10 +3132,11 @@ aflefko2 <- function(year = "all", patch = "all", stageframe, supplement = NA,
   }
   
   if (any(!suppressWarnings(!is.na(as.numeric(as.character(stageframe$size)))))) {
-    stop("Function aflefko2() requires size to be numeric rather than categorical.")
+    stop("Function aflefko2() requires size to be numeric rather than categorical.", call. = FALSE)
   }
   
-  melchett <- .sf_reassess(stageframe, supplement, repmatrix, overwrite, agemat = TRUE)
+  melchett <- .sf_reassess(stageframe, supplement, repmatrix, overwrite,
+    agemat = TRUE, format = 1)
   stageframe <- melchett[[1]]
   repmatrix <- melchett[[2]]
   
@@ -3237,7 +3169,8 @@ aflefko2 <- function(year = "all", patch = "all", stageframe, supplement = NA,
   stageframe$min_age[which(is.na(stageframe$min_age))] <- 0
   
   if (final_age < max(stageframe$max_age, na.rm = TRUE)) {
-    warning("Value of final_age will be adjusted to equal the maximum max_age value in the stageframe supplied.")
+    warning("Value of final_age will be adjusted to equal the maximum max_age value in the stageframe supplied.",
+      call. = FALSE)
     final_age <- max(stageframe$max_age, na.rm = TRUE)
   }
   
@@ -3245,7 +3178,7 @@ aflefko2 <- function(year = "all", patch = "all", stageframe, supplement = NA,
   
   # Next the data frame for the C++-based matrix populator functions
   allstages.list <- theoldpizzle(stageframe, ovtable, repmatrix, finalage = final_age, 
-    style = 2, cont = continue)
+    format = 1, style = 2, cont = continue)
   allstages <- do.call("cbind.data.frame", c(allstages.list, stringsAsFactors = FALSE))
   
   maxsize <- max(c(allstages$a.size3, allstages$a.size2n), na.rm = TRUE)
@@ -3348,15 +3281,13 @@ aflefko2 <- function(year = "all", patch = "all", stageframe, supplement = NA,
     listofyears$yearorder <- apply(as.matrix(c(1:dim(listofyears)[1])), 1, function(X) {which(mainyears == listofyears$year2[X])})
   }
   
-  total.matrix.dim <- (instages - 1) * (final_age + 1)
-  
   yearlist <- split(listofyears, seq(nrow(listofyears)))
   
-  madsexmadrigal <- lapply(yearlist, jerzeibalowski, allstages, surv_proxy,
-    obs_proxy, size_proxy, repst_proxy, fec_proxy, jsurv_proxy, jobs_proxy,
-    jsize_proxy, jrepst_proxy, inda, indb, indc, surv_dev, obs_dev, size_dev,
-    repst_dev, fec_dev, jsurv_dev, jobs_dev, jsize_dev, jrepst_dev,
-    total.matrix.dim, repmod, rvarssummed, sigma, jrvarssummed, jsigma, maxsize,
+  madsexmadrigal <- lapply(yearlist, jerzeibalowski, allstages, stageframe, 4,
+    surv_proxy, obs_proxy, size_proxy, repst_proxy, fec_proxy, jsurv_proxy,
+    jobs_proxy, jsize_proxy, jrepst_proxy, inda, indb, indc, surv_dev, obs_dev,
+    size_dev, repst_dev, fec_dev, jsurv_dev, jobs_dev, jsize_dev, jrepst_dev,
+    repmod, rvarssummed, sigma, jrvarssummed, jsigma, maxsize, final_age,
     sizedist, fecdist, negfec)
   
   a_list <- lapply(madsexmadrigal, function(X) {X$A})
@@ -3366,6 +3297,11 @@ aflefko2 <- function(year = "all", patch = "all", stageframe, supplement = NA,
   if (err_check) {out_list <- lapply(madsexmadrigal, function(X) {X$out})}
   
   ahstages <- stageframe[1:(dim(stageframe)[1] - 1),]
+  
+  agestages3 <- ahstages[rep(seq_len(nrow(ahstages)), (final_age + 1)), c(1,2)]
+  agestages2 <- rep(c(0:final_age), each = nrow(ahstages))
+  agestages <- cbind.data.frame(agestages3, agestages2)
+  names(agestages) <- c("stage_id", "stage", "age")
   
   qcoutput1 <- NA
   qcoutput2 <- NA
@@ -3381,6 +3317,11 @@ aflefko2 <- function(year = "all", patch = "all", stageframe, supplement = NA,
   if (reduce == TRUE) {
     drops <- .reducer2(a_list, u_list, f_list, ahstages)
     
+    mismatched_stages <- which(!is.element(agestages$stage_id, ahstages$stage_id))
+    if (length(mismatched_stages > 0)) {
+      agestages <- agestages[-mismatched_stages,]
+    }
+    
     a_list <- drops$A
     u_list <- drops$U
     f_list <- drops$F
@@ -3389,12 +3330,12 @@ aflefko2 <- function(year = "all", patch = "all", stageframe, supplement = NA,
   
   if (!err_check) {
     output <- list(A = a_list, U = u_list, F = f_list, hstages = NA,
-      ahstages = ahstages, labels = listofyears[,c(1:3)], matrixqc = qcoutput1,
-      modelqc = qcoutput2)
+      agestages = agestages, ahstages = ahstages, labels = listofyears[,c(1:3)],
+      matrixqc = qcoutput1, modelqc = qcoutput2)
   } else {
     output <- list(A = a_list, U = u_list, F = f_list, hstages = NA,
-      ahstages = ahstages, labels = listofyears[,c(1:3)], matrixqc = qcoutput1,
-      modelqc = qcoutput2, prob_out = out_list)
+      agestages = agestages, ahstages = ahstages, labels = listofyears[,c(1:3)],
+      matrixqc = qcoutput1, modelqc = qcoutput2, prob_out = out_list)
   }
   
   class(output) <- "lefkoMat"

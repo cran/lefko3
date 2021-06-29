@@ -4,9 +4,11 @@
 #' organized to create historical projection matrices, given a horizontally
 #' formatted input data frame.
 #'
-#' @param data The horizontal data file.
-#' @param noyears The number of years or observation periods in the dataset.
-#' @param firstyear The first year or time of observation.
+#' @param data The horizontal data file. A valid data frame is required as
+#' input.
+#' @param noyears The number of years or observation periods in the dataset. A
+#' valid integer is required as input.
+#' @param firstyear The first year or time of observation. Defaults to 1.
 #' @param popidcol A variable name or column number corresponding to the 
 #' identity of the population for each individual.
 #' @param patchidcol A variable name or column number corresponding to the 
@@ -15,62 +17,102 @@
 #' @param individcol A variable name or column number corresponding to the 
 #' identity of each individual.
 #' @param blocksize The number of variables corresponding to each time in the
-#' input dataset designated in \code{data}.
-#' @param xcol A variable name or column number corresponding to the x 
-#' coordinate of each individual in Cartesian space.
-#' @param ycol A variable name or column number corresponding to the y
-#' coordinate of each individual in Cartesian space.
-#' @param juvcol A variable name or column number that marks individuals in
-#' immature stages within the dataset. The \code{verticalize3()} function 
+#' input dataset designated in \code{data}, if a set pattern of variables is
+#' used for each observation time in the data frame used as input. If such a
+#' pattern is not used, and all variable names are properly noted as character
+#' vectors in the other input variables, then this may be set to NA. Defaults to
+#' NA.
+#' @param xcol A variable name(s) or column number(s) corresponding to the x 
+#' coordinate of each individual, or each individual-time combination, in
+#' Cartesian space. Can refer to the only instance, the first instance, or all
+#' instances of x variables. In the last case, the values should be entered as
+#' a vector.
+#' @param ycol A variable name(s) or column number(s) corresponding to the y
+#' coordinate of each individual, or each individual-time combination, in
+#' Cartesian space. Can refer to the only instance, the first instance, or all
+#' instances of y variables. In the last case, the values should be entered as
+#' a vector.
+#' @param juvcol A variable name(s) or column number(s) that marks individuals
+#' in immature stages within the dataset. The \code{verticalize3()} function 
 #' assumes that immature individuals are identified in this variable marked with
 #' a number equal to or greater than 1, and that mature individuals are marked
-#' as 0 or NA.
-#' @param sizeacol A variable name or column number corresponding to the
+#' as 0 or NA. Can refer to the first instance, or all instances of these
+#' variables. In the latter case, the values should be entered as a vector.
+#' @param sizeacol A variable name(s) or column number(s) corresponding to the
 #' size entry associated with the first year or observation time in the dataset.
-#' @param sizebcol A second variable name or column number corresponding to the
-#' size entry associated with the first year or observation time in the dataset.
-#' @param sizeccol A third variable name or column number corresponding to the
-#' size entry associated with the first year or observation time in the dataset.
-#' @param repstracol A variable name or column number corresponding to the
+#' Can refer to the first instance, or all instances of these variables. In the
+#' latter case, the values should be entered as a vector.
+#' @param sizebcol A second variable name(s) or column number(s) corresponding
+#' tp the size entry associated with the first year or observation time in the
+#' dataset. Can refer to the first instance, or all instances of these
+#' variables. In the latter case, the values should be entered as a vector.
+#' @param sizeccol A third variable name(s) or column number(s) corresponding to
+#' the size entry associated with the first year or observation time in the
+#' dataset. Can refer to the first instance, or all instances of these variables.
+#' In the latter case, the values should be entered as a vector.
+#' @param repstracol A variable name(s) or column number(s) corresponding to the
 #' production of reproductive structures, such as flowers, associated with the 
 #' first year or observation period in the input dataset. This can be binomial 
 #' or count data, and is used to in analysis of the probability of reproduction.
-#' @param repstrbcol A second variable name or column number corresponding to
-#' the production of reproductive structures, such as flowers, associated with
-#' the first year or observation period in the input dataset. This can be 
+#' Can refer to the first instance, or all instances of these variables. In the
+#' latter case, the values should be entered as a vector.
+#' @param repstrbcol A second variable name(s) or column number(s) corresponding
+#' to the production of reproductive structures, such as flowers, associated
+#' with the first year or observation period in the input dataset. This can be 
 #' binomial or count data, and is used to in analysis of the probability of
-#' reproduction.
-#' @param fecacol A variable name or column number denoting fecundity associated
-#' with the first year or observation time in the input dataset. This may 
-#' represent egg counts, fruit counts, seed production, etc.
-#' @param fecbcol A second variable name or column number denoting fecundity
-#' associated with the first year or observation time in the input dataset. This 
-#' may represent egg counts, fruit counts, seed production, etc.
-#' @param indcovacol A variable name or column number corresponding to an
-#' individual covariate to be used in analysis.
-#' @param indcovbcol A variable name or column number corresponding to an
-#' individual covariate to be used in analysis.
-#' @param indcovccol A second variable name or column number corresponding to an
-#' individual covariate to be used in analysis.
-#' @param aliveacol A variable name or column number that provides information
+#' reproduction. Can refer to the first instance, or all instances of these
+#' variables. In the latter case, the values should be entered as a vector.
+#' @param fecacol A variable name(s) or column number(s) denoting fecundity
+#' associated with the first year or observation time in the input dataset. This
+#' may represent egg counts, fruit counts, seed production, etc. Can refer to
+#' the first instance, or all instances of these variables. In the latter case,
+#' the values should be entered as a vector.
+#' @param fecbcol A second variable name(s) or column number(s) denoting
+#' fecundity associated with the first year or observation time in the input
+#' dataset. This may represent egg counts, fruit counts, seed production, etc.
+#' Can refer to the first instance, or all instances of these variables. In the
+#' latter case, the values should be entered as a vector.
+#' @param indcovacol A variable name(s) or column number(s) corresponding to an
+#' individual covariate to be used in analysis. Can refer to the only instance,
+#' the first instance, or all instances of these variables. In the last case,
+#' the values should be entered as a vector.
+#' @param indcovbcol A variable name(s) or column number(s) corresponding to an
+#' individual covariate to be used in analysis. Can refer to the only instance,
+#' the first instance, or all instances of these variables. In the last case,
+#' the values should be entered as a vector.
+#' @param indcovccol A second variable name(s) or column number(s) corresponding
+#' to an individual covariate to be used in analysis. Can refer to the only
+#' instance, the first instance, or all instances of these variables. In the
+#' last case, the values should be entered as a vector.
+#' @param aliveacol Variable name(s) or column number(s) providing information
 #' on whether an individual is alive at a given time. If used, living status
-#' must be designated as binomial (living = 1, dead = 0).
-#' @param deadacol A variable name or column number that provides information on
+#' must be designated as binomial (living = 1, dead = 0). Can refer to the first
+#' instance of a living status variable in the dataset, or equal a full vector
+#' of all living status variables in temporal order.
+#' @param deadacol Variable name(s) or column number(s) providing information on
 #' whether an individual is alive at a given time. If used, dead status must be
-#' designated as binomial (dead = 1, living = 0).
-#' @param obsacol A variable name or column number providing information on 
-#' whether an individual is in an observable stage at a given time. If used, 
+#' designated as binomial (dead = 1, living = 0).  Can refer to the first
+#' instance of a dead status variable in the dataset, or equal a full vector
+#' of all dead status variables in temporal order.
+#' @param obsacol A variable name(s) or column number(s) providing information
+#' on whether an individual is in an observable stage at a given time. If used, 
 #' observation status must be designated as binomial (observed = 1, not 
-#' observed = 0).
-#' @param nonobsacol A variable name or column number providing information on
-#' whether an individual is in an unobservable stage at a given time. If used,
-#' observation status must be designated as binomial (not observed = 1, 
-#' observed = 0).
-#' @param censorcol A variable name or column number corresponding to the first
-#' entry of a censor variable, used to distinguish between entries to use and
-#' entries not to use, or to designate entries with special issues that require
-#' further attention. If used, this should be associated with the first year or
-#' observation time, and all other years or times must also have censor columns.
+#' observed = 0). Can refer to the first instance of an observation status
+#' variable in the dataset, or equal a full vector of all observation status
+#' variables in temporal order.
+#' @param nonobsacol A variable name(s) or column number(s) providing
+#' information on whether an individual is in an unobservable stage at a given
+#' time. If used, observation status must be designated as binomial (not
+#' observed = 1, observed = 0). Can refer to the first instance of a
+#' non-observation status variable in the dataset, or equal a full vector of all
+#' non-observation status variables in temporal order.
+#' @param censorcol A variable name(s) or column number(s) corresponding to the
+#' first entry of a censor variable, used to distinguish between entries to use
+#' and entries not to use, or to designate entries with special issues that
+#' require further attention. Can refer to the first instance of a censor status
+#' variable in the dataset, or equal a full vector of all censor status
+#' variables in temporal order. Can also refer to a single censor status
+#' variable used for the entire individual, if \code{singlecensor = TRUE}.
 #' @param repstrrel This is a scalar multiplier on variable \code{repstrbcol} to
 #' make it equivalent to \code{repstracol}. This can be useful if two 
 #' reproductive status variables have related but unequal units, for example if
@@ -79,8 +121,10 @@
 #' @param fecrel This is a scalar multiplier on variable \code{fecbcol} to make
 #' it equivalent to \code{fecacol}. This can be useful if two fecundity 
 #' variables have related but unequal units. Defaults to 1.
-#' @param stagecol Optional variable name or column number corresponding to life
-#' history stage at a given time.
+#' @param stagecol Optional variable name(s) or column number(s) corresponding
+#' to life history stage at a given time. Can refer to the first instance of a
+#' stage identity variable in the dataset, or equal a full vector of all
+#' stage identity variables in temporal order.
 #' @param stageassign The stageframe object identifying the life history model
 #' being operationalized. Note that if \code{stagecol} is provided, then this
 #' stageframe is not used for stage designation.
@@ -98,6 +142,9 @@
 #' @param censor A logical variable determining whether the output data should 
 #' be censored using the variable defined in \code{censorcol}. Defaults to 
 #' FALSE.
+#' @param coordsRepeat A logical value indicating whether x and y coordinates
+#' correspond to a single x and a single y column. If TRUE, then each
+#' observation time has its own x and y variables. Defaults to FALSE.
 #' @param spacing The spacing at which density should be estimated, if density
 #' estimation is desired and x and y coordinates are supplied. Given in the same
 #' units as those used in the x and y coordinates given in \code{xcol} and 
@@ -211,7 +258,8 @@
 #' difficult to predict.
 #' 
 #' @examples
-#' # Lathyrus example
+#' # Lathyrus example using blocksize - when repeated patterns exist in variable
+#' # order
 #' data(lathyrus)
 #' 
 #' sizevector <- c(0, 100, 13, 127, 3730, 3800, 0)
@@ -236,12 +284,13 @@
 #'   nonobsacol = "Dormant1988", stageassign = lathframe, stagesize = "sizea",
 #'   censorcol = "Missing1988", censorkeep = NA, censor = TRUE)
 #' 
-#' lathsupp3 <- supplemental(stage3 = c("Sd", "Sd", "Sdl", "Sd", "Sdl"), 
-#'   stage2 = c("Sd", "Sd", "Sd", "rep", "rep"),
-#'   stage1 = c("Sd", "rep", "rep", "all", "all"), 
-#'   givenrate = c(0.345, 0.345, 0.054, NA, NA),
-#'   multiplier = c(NA, NA, NA, 0.345, 0.054),
-#'   type = c(1, 1, 1, 3, 3), stageframe = lathframe, historical = TRUE)
+#' lathsupp3 <- supplemental(stage3 = c("Sd", "Sd", "Sdl", "Sdl", "Sd", "Sdl"), 
+#'   stage2 = c("Sd", "Sd", "Sd", "Sd", "rep", "rep"),
+#'   stage1 = c("Sd", "rep", "Sd", "rep", "all", "all"), 
+#'   givenrate = c(0.345, 0.345, 0.054, 0.054, NA, NA),
+#'   multiplier = c(NA, NA, NA, NA, 0.345, 0.054),
+#'   type = c(1, 1, 1, 1, 3, 3), type_t12 = c(1, 2, 1, 2, 1, 1),
+#'   stageframe = lathframe, historical = TRUE)
 #' 
 #' ehrlen3 <- rlefko3(data = lathvert, stageframe = lathframe, year = "all", 
 #'   stages = c("stage3", "stage2", "stage1"), supplement = lathsupp3,
@@ -250,7 +299,53 @@
 #' ehrlen3mean <- lmean(ehrlen3)
 #' ehrlen3mean$A[[1]]
 #' 
-#' # Cypripedium example
+#' # Lathyrus example without blocksize - when no repeated patterns exist in
+#' # variable order and all variables names are specified
+#' data(lathyrus)
+#' 
+#' sizevector <- c(0, 100, 13, 127, 3730, 3800, 0)
+#' stagevector <- c("Sd", "Sdl", "VSm", "Sm", "VLa", "Flo", "Dorm")
+#' repvector <- c(0, 0, 0, 0, 0, 1, 0)
+#' obsvector <- c(0, 1, 1, 1, 1, 1, 0)
+#' matvector <- c(0, 0, 1, 1, 1, 1, 1)
+#' immvector <- c(1, 1, 0, 0, 0, 0, 0)
+#' propvector <- c(1, 0, 0, 0, 0, 0, 0)
+#' indataset <- c(0, 1, 1, 1, 1, 1, 1)
+#' binvec <- c(0, 100, 11, 103, 3500, 3800, 0.5)
+#' 
+#' lathframe <- sf_create(sizes = sizevector, stagenames = stagevector,
+#'   repstatus = repvector, obsstatus = obsvector, matstatus = matvector,
+#'   immstatus = immvector, indataset = indataset, binhalfwidth = binvec,
+#'   propstatus = propvector)
+#' 
+#' lathvert <- verticalize3(lathyrus, noyears = 4, firstyear = 1988,
+#'   patchidcol = "SUBPLOT", individcol = "GENET",
+#'   juvcol = c("Seedling1988", "Seedling1989", "Seedling1990", "Seedling1991"),
+#'   sizeacol = c("Volume88", "Volume89", "Volume90", "Volume91"),
+#'   repstracol = c("FCODE88", "FCODE89", "FCODE90", "FCODE91"),
+#'   fecacol = c("Intactseed88", "Intactseed89", "Intactseed90", "Intactseed91"),
+#'   deadacol = c("Dead1988", "Dead1989", "Dead1990", "Dead1991"),
+#'   nonobsacol = c("Dormant1988", "Dormant1989", "Dormant1990", "Dormant1991"),
+#'   censorcol = c("Missing1988", "Missing1989", "Missing1990", "Missing1991"), 
+#'   stageassign = lathframe, stagesize = "sizea",
+#'   censorkeep = NA, censor = TRUE)
+#' 
+#' lathsupp3 <- supplemental(stage3 = c("Sd", "Sd", "Sdl", "Sdl", "Sd", "Sdl"), 
+#'   stage2 = c("Sd", "Sd", "Sd", "Sd", "rep", "rep"),
+#'   stage1 = c("Sd", "rep", "Sd", "rep", "all", "all"), 
+#'   givenrate = c(0.345, 0.345, 0.054, 0.054, NA, NA),
+#'   multiplier = c(NA, NA, NA, NA, 0.345, 0.054),
+#'   type = c(1, 1, 1, 1, 3, 3), type_t12 = c(1, 2, 1, 2, 1, 1),
+#'   stageframe = lathframe, historical = TRUE)
+#' 
+#' ehrlen3 <- rlefko3(data = lathvert, stageframe = lathframe, year = "all", 
+#'   stages = c("stage3", "stage2", "stage1"), supplement = lathsupp3,
+#'   yearcol = "year2", indivcol = "individ")
+#' 
+#' ehrlen3mean <- lmean(ehrlen3)
+#' ehrlen3mean$A[[1]]
+#' 
+#' # Cypripedium example using blocksize
 #' rm(list=ls(all=TRUE))
 #' 
 #' data(cypdata)
@@ -297,15 +392,63 @@
 #' cyp2mean <- lmean(cypmatrix2r)
 #' cyp2mean
 #' 
+#' # Cypripedium example using partial repeat patterns with blocksize and part
+#' # explicit variable name cast
+#' data(cypdata)
+#' 
+#' sizevector <- c(0, 0, 0, 0, 0, 0, 1, 2.5, 4.5, 8, 17.5)
+#' stagevector <- c("SD", "P1", "P2", "P3", "SL", "D", "XSm", "Sm", "Md", "Lg",
+#'   "XLg")
+#' repvector <- c(0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1)
+#' obsvector <- c(0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1)
+#' matvector <- c(0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1)
+#' immvector <- c(0, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0)
+#' propvector <- c(1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)
+#' indataset <- c(0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1)
+#' binvec <- c(0, 0, 0, 0, 0, 0.5, 0.5, 1, 1, 2.5, 7)
+#' 
+#' cypframe_raw <- sf_create(sizes = sizevector, stagenames = stagevector,
+#'   repstatus = repvector, obsstatus = obsvector, matstatus = matvector,
+#'   propstatus = propvector, immstatus = immvector, indataset = indataset,
+#'   binhalfwidth = binvec)
+#' 
+#' cypraw_v1 <- verticalize3(data = cypdata, noyears = 6, firstyear = 2004,
+#'   patchidcol = "patch", individcol = "plantid", blocksize = 4,
+#'   sizeacol = "Inf2.04", sizebcol = "Inf.04", sizeccol = "Veg.04",
+#'   repstracol = c("Inf.04", "Inf.05", "Inf.06", "Inf.07", "Inf.08", "Inf.09"),
+#'   repstrbcol = c("Inf2.04", "Inf2.05", "Inf2.06", "Inf2.07", "Inf2.08", "Inf2.09"), 
+#'   fecacol = "Pod.04", stageassign = cypframe_raw, stagesize = "sizeadded",
+#'   NAas0 = TRUE, NRasRep = TRUE)
+#' 
+#' cypsupp2r <- supplemental(stage3 = c("SD", "P1", "P2", "P3", "SL", "SL", "D", 
+#'     "XSm", "Sm", "SD", "P1"),
+#'   stage2 = c("SD", "SD", "P1", "P2", "P3", "SL", "SL", "SL", "SL", "rep",
+#'     "rep"),
+#'   eststage3 = c(NA, NA, NA, NA, NA, NA, "D", "XSm", "Sm", NA, NA),
+#'   eststage2 = c(NA, NA, NA, NA, NA, NA, "XSm", "XSm", "XSm", NA, NA),
+#'   givenrate = c(0.10, 0.20, 0.20, 0.20, 0.25, 0.40, NA, NA, NA, NA, NA),
+#'   multiplier = c(NA, NA, NA, NA, NA, NA, NA, NA, NA, 0.5, 0.5),
+#'   type =c(1, 1, 1, 1, 1, 1, 1, 1, 1, 3, 3),
+#'   stageframe = cypframe_raw, historical = FALSE)
+#' 
+#' cypmatrix2r <- rlefko2(data = cypraw_v1, stageframe = cypframe_raw, 
+#'   year = "all", patch = "all", stages = c("stage3", "stage2", "stage1"),
+#'   size = c("size3added", "size2added"), supplement = cypsupp2r,
+#'   yearcol = "year2", patchcol = "patchid", indivcol = "individ")
+#'                        
+#' cyp2mean <- lmean(cypmatrix2r)
+#' cyp2mean
+#' 
 #' @export
-verticalize3 <- function(data, noyears, firstyear, popidcol = 0, patchidcol = 0, 
-  individcol= 0, blocksize, xcol = 0, ycol = 0, juvcol = 0, sizeacol, 
-  sizebcol = 0, sizeccol = 0, repstracol = 0, repstrbcol = 0, fecacol = 0, 
-  fecbcol = 0, indcovacol = 0, indcovbcol = 0, indcovccol = 0, aliveacol = 0, 
-  deadacol = 0, obsacol = 0, nonobsacol = 0, censorcol = 0, repstrrel = 1, 
-  fecrel = 1, stagecol = 0, stageassign = NA, stagesize = NA, censorkeep = 0, 
-  censorRepeat = TRUE, censor = FALSE, spacing = NA, NAas0 = FALSE,
-  NRasRep = FALSE, reduce = TRUE, a2check = FALSE) {
+verticalize3 <- function(data, noyears, firstyear = 1, popidcol = 0,
+  patchidcol = 0, individcol= 0, blocksize = NA, xcol = 0, ycol = 0, juvcol = 0,
+  sizeacol, sizebcol = 0, sizeccol = 0, repstracol = 0, repstrbcol = 0,
+  fecacol = 0, fecbcol = 0, indcovacol = 0, indcovbcol = 0, indcovccol = 0,
+  aliveacol = 0, deadacol = 0, obsacol = 0, nonobsacol = 0, censorcol = 0,
+  repstrrel = 1, fecrel = 1, stagecol = 0, stageassign = NA, stagesize = NA,
+  censorkeep = 0, censorRepeat = TRUE, censor = FALSE,
+  coordsRepeat = FALSE, spacing = NA, NAas0 = FALSE, NRasRep = FALSE,
+  reduce = TRUE, a2check = FALSE) {
   
   stassign <- rowid <- alive2 <- indataset <- censor1 <- censor2 <- censor3 <- censbool <- NULL
   
@@ -315,6 +458,16 @@ verticalize3 <- function(data, noyears, firstyear, popidcol = 0, patchidcol = 0,
   RepasObs <- FALSE
   
   #This first section tests the input for valid entries
+  data.limits <- dim(data)
+  
+  if (length(blocksize) != 1) {
+    stop("The blocksize option must equal a single number, or NA.", call. = FALSE)
+  }
+  
+  if (is.na(blocksize)) {
+    blocksize <- 0
+  }
+  
   if (is.character(popidcol)) {
     if (is.element(popidcol, names(data))) {
       true.popidcol <- which(names(data) == popidcol)
@@ -336,130 +489,166 @@ verticalize3 <- function(data, noyears, firstyear, popidcol = 0, patchidcol = 0,
     } else {stop("Please enter individcol exactly as it appears in the dataset.", call. = FALSE)}
   }
   
-  if (is.character(xcol)) {
-    if (is.element(xcol, names(data))) {
-      true.xcol <- which(names(data) == xcol)
+  if (all(is.character(xcol))) {
+    if (all(is.element(xcol, names(data)))) {
+      true.xcol <- match(xcol, names(data))
       xcol <- true.xcol
     } else {stop("Please enter xcol exactly as it appears in the dataset.", call. = FALSE)}
+  } else if (any(xcol < 0) | any(xcol > data.limits[2])) {
+    stop("Variable xcol designation is out of bounds.", call. = FALSE)
   }
   
-  if (is.character(ycol)) {
-    if (is.element(ycol, names(data))) {
-      true.ycol <- which(names(data) == ycol)
+  if (all(is.character(ycol))) {
+    if (all(is.element(ycol, names(data)))) {
+      true.ycol <- match(ycol, names(data))
       ycol <- true.ycol
     } else {stop("Please enter ycol exactly as it appears in the dataset.", call. = FALSE)}
+  } else if (any(ycol < 0) | any(ycol > data.limits[2])) {
+    stop("Variable ycol designation is out of bounds.", call. = FALSE)
   }
   
-  if (is.character(juvcol)) {
-    if (is.element(juvcol, names(data))) {
-      true.juvcol <- which(names(data) == juvcol)
+  if (all(is.character(juvcol))) {
+    if (all(is.element(juvcol, names(data)))) {
+      true.juvcol <- match(juvcol, names(data))
       juvcol <- true.juvcol
     } else {stop("Please enter juvcol exactly as it appears in the dataset.", call. = FALSE)}
+  } else if (any(juvcol < 0) | any(juvcol > data.limits[2])) {
+    stop("Variable juvcol designation is out of bounds.", call. = FALSE)
   }
   
-  if (is.character(sizeacol)) {
-    if (is.element(sizeacol, names(data))) {
-      true.sizeacol <- which(names(data) == sizeacol)
+  if (all(is.character(sizeacol))) {
+    if (all(is.element(sizeacol, names(data)))) {
+      true.sizeacol <- match(sizeacol, names(data))
       sizeacol <- true.sizeacol
     } else {stop("Please enter sizeacol exactly as it appears in the dataset.", call. = FALSE)}
+  } else if (any(sizeacol < 0) | any(sizeacol > data.limits[2])) {
+    stop("Variable sizeacol designation is out of bounds.", call. = FALSE)
   }
   
-  if (is.character(sizebcol)) {
-    if (is.element(sizebcol, names(data))) {
-      true.sizebcol <- which(names(data) == sizebcol)
+  if (all(is.character(sizebcol))) {
+    if (all(is.element(sizebcol, names(data)))) {
+      true.sizebcol <- match(sizebcol, names(data))
       sizebcol <- true.sizebcol
     } else {stop("Please enter sizebcol exactly as it appears in the dataset.", call. = FALSE)}
+  } else if (any(sizebcol < 0) | any(sizebcol > data.limits[2])) {
+    stop("Variable sizebcol designation is out of bounds.", call. = FALSE)
   }
   
-  if (is.character(sizeccol)) {
-    if (is.element(sizeccol, names(data))) {
-      true.sizeccol <- which(names(data) == sizeccol)
+  if (all(is.character(sizeccol))) {
+    if (all(is.element(sizeccol, names(data)))) {
+      true.sizeccol <- match(sizeccol, names(data))
       sizeccol <- true.sizeccol
     } else {stop("Please enter sizeccol exactly as it appears in the dataset.", call. = FALSE)}
+  } else if (any(sizeccol < 0) | any(sizeccol > data.limits[2])) {
+    stop("Variable sizeccol designation is out of bounds.", call. = FALSE)
   }
   
-  if (is.character(repstracol)) {
-    if (is.element(repstracol, names(data))) {
-      true.repstracol <- which(names(data) == repstracol)
+  if (all(is.character(repstracol))) {
+    if (all(is.element(repstracol, names(data)))) {
+      true.repstracol <- match(repstracol, names(data))
       repstracol <- true.repstracol
     } else {stop("Please enter repstracol exactly as it appears in the dataset.", call. = FALSE)}
+  } else if (any(repstracol < 0) | any(repstracol > data.limits[2])) {
+    stop("Variable repstracol designation is out of bounds.", call. = FALSE)
   }
   
-  if (is.character(repstrbcol)) {
-    if (is.element(repstrbcol, names(data))) {
-      true.repstrbcol <- which(names(data) == repstrbcol)
+  if (all(is.character(repstrbcol))) {
+    if (all(is.element(repstrbcol, names(data)))) {
+      true.repstrbcol <- match(repstrbcol, names(data))
       repstrbcol <- true.repstrbcol
     } else {stop("Please enter repstrbcol exactly as it appears in the dataset.", call. = FALSE)}
+  } else if (any(repstrbcol < 0) | any(repstrbcol > data.limits[2])) {
+    stop("Variable repstrbcol designation is out of bounds.", call. = FALSE)
   }
   
-  if (is.character(fecacol)) {
-    if (is.element(fecacol, names(data))) {
-      true.fecacol <- which(names(data) == fecacol)
+  if (all(is.character(fecacol))) {
+    if (all(is.element(fecacol, names(data)))) {
+      true.fecacol <- match(fecacol, names(data))
       fecacol <- true.fecacol
     } else {stop("Please enter fecacol exactly as it appears in the dataset.", call. = FALSE)}
+  } else if (any(fecacol < 0) | any(fecacol > data.limits[2])) {
+    stop("Variable fecacol designation is out of bounds.", call. = FALSE)
   }
   
-  if (is.character(fecbcol)) {
-    if (is.element(fecbcol, names(data))) {
-      true.fecbcol <- which(names(data) == fecbcol)
+  if (all(is.character(fecbcol))) {
+    if (all(is.element(fecbcol, names(data)))) {
+      true.fecbcol <- match(fecbcol, names(data))
       fecbcol <- true.fecbcol
     } else {stop("Please enter fecbcol exactly as it appears in the dataset.", call. = FALSE)}
+  } else if (any(fecbcol < 0) | any(fecbcol > data.limits[2])) {
+    stop("Variable fecbcol designation is out of bounds.", call. = FALSE)
   }
   
-  if (is.character(indcovacol)) {
-    if (is.element(indcovacol, names(data))) {
-      true.indcovacol <- which(names(data) == indcovacol)
+  if (all(is.character(indcovacol))) {
+    if (all(is.element(indcovacol, names(data)))) {
+      true.indcovacol <- match(indcovacol, names(data))
       indcovacol <- true.indcovacol
     } else {stop("Please enter indcovacol exactly as it appears in the dataset.", call. = FALSE)}
+  } else if (any(indcovacol < 0) | any(indcovacol > data.limits[2])) {
+    stop("Variable indcovacol designation is out of bounds.", call. = FALSE)
   }
   
-  if (is.character(indcovbcol)) {
-    if (is.element(indcovbcol, names(data))) {
-      true.indcovbcol <- which(names(data) == indcovbcol)
+  if (all(is.character(indcovbcol))) {
+    if (all(is.element(indcovbcol, names(data)))) {
+      true.indcovbcol <- match(indcovbcol, names(data))
       indcovbcol <- true.indcovbcol
     } else {stop("Please enter indcovbcol exactly as it appears in the dataset.", call. = FALSE)}
+  } else if (any(indcovbcol < 0) | any(indcovbcol > data.limits[2])) {
+    stop("Variable indcovbcol designation is out of bounds.", call. = FALSE)
   }
   
-  if (is.character(indcovccol)) {
-    if (is.element(indcovccol, names(data))) {
-      true.indcovccol <- which(names(data) == indcovccol)
+  if (all(is.character(indcovccol))) {
+    if (all(is.element(indcovccol, names(data)))) {
+      true.indcovccol <- match(indcovccol, names(data))
       indcovccol <- true.indcovccol
     } else {stop("Please enter indcovccol exactly as it appears in the dataset.", call. = FALSE)}
+  } else if (any(indcovccol < 0) | any(indcovccol > data.limits[2])) {
+    stop("Variable indcovccol designation is out of bounds.", call. = FALSE)
   }
   
-  if (is.character(aliveacol)) {
-    if (is.element(aliveacol, names(data))) {
-      true.aliveacol <- which(names(data) == aliveacol)
+  if (all(is.character(aliveacol))) {
+    if (all(is.element(aliveacol, names(data)))) {
+      true.aliveacol <- match(aliveacol, names(data))
       aliveacol <- true.aliveacol
     } else {stop("Please enter aliveacol exactly as it appears in the dataset.", call. = FALSE)}
+  } else if (any(aliveacol < 0) | any(aliveacol > data.limits[2])) {
+    stop("Variable aliveacol designation is out of bounds.", call. = FALSE)
   }
   
-  if (is.character(deadacol)) {
-    if (is.element(deadacol, names(data))) {
-      true.deadacol <- which(names(data) == deadacol)
+  if (all(is.character(deadacol))) {
+    if (all(is.element(deadacol, names(data)))) {
+      true.deadacol <- match(deadacol, names(data))
       deadacol <- true.deadacol
     } else {stop("Please enter deadacol exactly as it appears in the dataset.", call. = FALSE)}
+  } else if (any(deadacol < 0) | any(deadacol > data.limits[2])) {
+    stop("Variable deadacol designation is out of bounds.", call. = FALSE)
   }
   
-  if (is.character(obsacol)) {
-    if (is.element(obsacol, names(data))) {
-      true.obsacol <- which(names(data) == obsacol)
+  if (all(is.character(obsacol))) {
+    if (all(is.element(obsacol, names(data)))) {
+      true.obsacol <- match(obsacol, names(data))
       obsacol <- true.obsacol
     } else {stop("Please enter obsacol exactly as it appears in the dataset.", call. = FALSE)}
+  } else if (any(obsacol < 0) | any(obsacol > data.limits[2])) {
+    stop("Variable obsacol designation is out of bounds.", call. = FALSE)
   }
   
-  if (is.character(nonobsacol)) {
-    if (is.element(nonobsacol, names(data))) {
-      true.nonobsacol <- which(names(data) == nonobsacol)
+  if (all(is.character(nonobsacol))) {
+    if (all(is.element(nonobsacol, names(data)))) {
+      true.nonobsacol <- match(nonobsacol, names(data))
       nonobsacol <- true.nonobsacol
     } else {stop("Please enter nonobsacol exactly as it appears in the dataset.", call. = FALSE)}
+  } else if (any(nonobsacol < 0) | any(nonobsacol > data.limits[2])) {
+    stop("Variable nonobsacol designation is out of bounds.", call. = FALSE)
   }
   
-  if (is.character(censorcol)) {
-    if (is.element(censorcol, names(data))) {
-      true.censorcol <- which(names(data) == censorcol)
+  if (all(is.character(censorcol))) {
+    if (all(is.element(censorcol, names(data)))) {
+      true.censorcol <- match(censorcol, names(data))
       censorcol <- true.censorcol
     } else {stop("Please enter censorcol exactly as it appears in the dataset.", call. = FALSE)}
+  } else if (any(censorcol < 0) | any(censorcol > data.limits[2])) {
+    stop("Variable censorcol designation is out of bounds.", call. = FALSE)
   }
   
   if(!all(is.na(stageassign))) {
@@ -467,15 +656,27 @@ verticalize3 <- function(data, noyears, firstyear, popidcol = 0, patchidcol = 0,
       stop("The stageassign option can only take NA or a stageframe object as input.", call. = FALSE)
     }
     if(length(intersect(stagesize, c("sizea", "sizeb", "sizec", "sizeadded"))) == 0) {
-      stop("The stagesize option must equal NA, 'sizea', 'sizeb', 'sizec', or 'sizeadded'. No other values are permitted.", call. = FALSE)
+      stop("The stagesize option must equal 'NA', 'sizea', 'sizeb', 'sizec', or 'sizeadded'.", call. = FALSE)
     }
   }
   
-  if (is.character(stagecol)) {
-    if (is.element(stagecol, names(data))) {
-      true.stagecol <- which(names(data) == stagecol)
+  if (all(is.character(stagecol))) {
+    if (all(is.element(stagecol, names(data)))) {
+      true.stagecol <- match(stagecol, names(data))
       stagecol <- true.stagecol
     } else {stop("Please enter stagecol exactly as it appears in the dataset.", call. = FALSE)}
+  } else if (any(stagecol < 0) | any(stagecol > data.limits[2])) {
+    stop("Variable stagecol designation is out of bounds.", call. = FALSE)
+  }
+  
+  input.lengths <- c(length(xcol), length(ycol), length(juvcol), length(sizeacol),
+    length(sizebcol), length(sizeccol), length(repstracol), length(repstrbcol),
+    length(fecacol), length(fecbcol), length(indcovacol), length(indcovbcol),
+    length(indcovccol), length(aliveacol), length(deadacol), length(obsacol),
+    length(nonobsacol), length(censorcol), length(stagecol))
+  
+  if (any(!is.element(input.lengths, c(1, noyears)))) {
+    stop("All input variables must be either single constants, or vectors of length noyears.", call. = FALSE)
   }
   
   # Here we will modify our approach to verticalization based on the input stageframe
@@ -508,15 +709,15 @@ verticalize3 <- function(data, noyears, firstyear, popidcol = 0, patchidcol = 0,
     
     stageassign <- as.data.frame(matrix(c(NA, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, NA), ncol = 16),
       stringsAsFactors = FALSE)
-    names(stageassign) <- c("stage", "size", "repstatus", "obsstatus", "propstatus", "immstatus",
-                            "matstatus", "indataset", "binhalfwidth_raw", "min_age", "max_age", "sizebin_min",
-                            "sizebin_max", "sizebin_center", "sizebin_width", "comments")
+    names(stageassign) <- c("stage", "size", "repstatus", "obsstatus", "propstatus", 
+      "immstatus", "matstatus", "indataset", "binhalfwidth_raw", "min_age", "max_age",
+      "sizebin_min", "sizebin_max", "sizebin_center", "sizebin_width", "comments")
     
     stagesizecol <- 0
   }
   
   if (!is.na(spacing)) {
-    if (xcol == 0 | ycol == 0) {
+    if (any(xcol == 0) | any(ycol == 0)) {
       stop("Density estimation cannot proceed without valid x and y coordinates.")
     }
     
@@ -525,14 +726,17 @@ verticalize3 <- function(data, noyears, firstyear, popidcol = 0, patchidcol = 0,
     }
   }
   
+  
   if (censor) {
-    if (!is.element(censorkeep, data[,censorcol])) {
+    if (length(censorcol) == 1 & blocksize != 0) {
       fullcenvec <- as.vector(apply(as.matrix(c(1:noyears)), 1, function(X) {c(data[,(censorcol + (X - 1) * blocksize)])}))
-      
-      if (!is.element(censorkeep, fullcenvec)) {
-        stop("Please enter a valid value for censorkeep. This value should occur in the censor variable within the dataset.", 
-             call. = FALSE)
-      }
+    } else {
+      fullcenvec <- unlist(data[,censorcol])
+    }
+    
+    if (!is.element(censorkeep, fullcenvec)) {
+      stop("Please enter a valid value for censorkeep. This value should occur in the censor variable within the dataset.", 
+        call. = FALSE)
     }
   }
   
@@ -550,7 +754,7 @@ verticalize3 <- function(data, noyears, firstyear, popidcol = 0, patchidcol = 0,
     (indcovacol - 1), (indcovbcol - 1), (indcovccol - 1), (aliveacol - 1),
     (deadacol - 1), (obsacol - 1), (nonobsacol - 1), (censorcol - 1),
     (stagecol - 1), repstrrel, fecrel, NAas0, NRasRep, RepasObs, stassign,
-    stagesizecol, censorkeep, censbool, censorRepeat)
+    stagesizecol, censorkeep, censbool, censorRepeat, coordsRepeat)
   
   popdata <- do.call("cbind.data.frame", c(popdatalist.new, stringsAsFactors = FALSE))
   
@@ -601,33 +805,33 @@ verticalize3 <- function(data, noyears, firstyear, popidcol = 0, patchidcol = 0,
     if (all(is.na(popdatareal$ypos3)) | length(unique(popdatareal$ypos3)) == 1) {popdatareal <- popdatareal[,-c(which(names(popdatareal) =="ypos3"))]}
     
     if (!is.na(censorkeep)) {
-      if (censorcol > 0 & censor) {
+      if (censorcol[1] > 0 & censor) {
         if (all(popdatareal$censor1 == popdatareal$censor1[1])) {
           popdatareal <- popdatareal[,-c(which(names(popdatareal) =="censor1"))]
         }
       }
-      if (censorcol > 0 & censor) {
+      if (censorcol[1] > 0 & censor) {
         if (all(popdatareal$censor2 == popdatareal$censor2[1])) {
           popdatareal <- popdatareal[,-c(which(names(popdatareal) =="censor2"))]
         }
       }
-      if (censorcol > 0 & censor) {
+      if (censorcol[1] > 0 & censor) {
         if (all(popdatareal$censor3 == popdatareal$censor3[1])) {
           popdatareal <- popdatareal[,-c(which(names(popdatareal) =="censor3"))]
         }
       }
     } else {
-      if (censorcol > 0 & censor) {
+      if (censorcol[1] > 0 & censor) {
         if (all(is.na(popdatareal$censor1))) {
           popdatareal <- popdatareal[,-c(which(names(popdatareal) =="censor1"))]
         }
       }
-      if (censorcol > 0 & censor) {
+      if (censorcol[1] > 0 & censor) {
         if (all(is.na(popdatareal$censor2))) {
           popdatareal <- popdatareal[,-c(which(names(popdatareal) =="censor2"))]
         }
       }
-      if (censorcol > 0 & censor) {
+      if (censorcol[1] > 0 & censor) {
         if (all(is.na(popdatareal$censor3))) {
           popdatareal <- popdatareal[,-c(which(names(popdatareal) =="censor3"))]
         }

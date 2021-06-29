@@ -140,7 +140,9 @@ patches, and years. All matrices output in the \code{matrix} class.}
 matrices output in the \code{matrix} class.}
 \item{F}{A list of fecundity matrices sorted as in \code{A}. All matrices 
 output in the \code{matrix} class.}
-\item{hstages}{Null for ahistorical matrices.}
+\item{hstages}{Set to NA for ahistorical matrices.}
+\item{agestages}{Set to NA. Only used in output to function
+\code{aflefko2}().}
 \item{ahstages}{A data frame detailing the characteristics of associated
 ahistorical stages, in the form of a modified stageframe that includes
 status as an entry stage through reproduction.}

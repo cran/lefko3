@@ -75,8 +75,6 @@ ehrlen_elas <- elasticity3(ehrlen3)
 image3(ehrlen_elas, used = 1, type = "h")
 
 # Cypripedium example
-rm(list=ls(all=TRUE))
-
 data(cypdata)
 
 sizevector <- c(0, 0, 0, 0, 0, 0, 1, 2.5, 4.5, 8, 17.5)

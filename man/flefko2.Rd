@@ -244,7 +244,9 @@ years. All matrices output in the \code{matrix} class.}
 matrices output in the \code{matrix} class.}
 \item{F}{A list of fecundity matrices sorted as in \code{A}. All matrices 
 output in the \code{matrix} class.}
-\item{hstages}{Null for ahistorical matrices.}
+\item{hstages}{Set to NA for ahistorical matrices.}
+\item{agestages}{Set to NA. Only used in output to function
+\code{aflefko2}().}
 \item{ahstages}{A data frame detailing the characteristics of associated
 ahistorical stages, in the form of a modified stageframe that includes
 status as an entry stage through reproduction.}
@@ -265,8 +267,8 @@ patches and years given, including the associated component transition and
 fecundity matrices, a data frame detailing the characteristics of the
 ahistorical stages used, and a data frame characterizing the patch and year
 combinations corresponding to these matrices. Unlike \code{\link{rlefko2}()}
-and \code{\link{rlefko3}()}, this function currently does not currently
-distinguish populations.
+and \code{\link{rlefko3}()}, this function does not currently distinguish
+populations.
 }
 \section{Notes}{
 
@@ -382,74 +384,6 @@ lathmat2ln_alt <- flefko2(year = "all", patch = "all",
   reduce = FALSE)
 
 summary(lathmat2ln_alt)
-
-# Cypripedium example
-rm(list = ls(all=TRUE))
-
-data(cypdata)
-
-sizevector <- c(0, 0, 0, 0, 0, seq(from = 0, t = 24), seq(from = 1, to = 24))
-stagevector <- c("SD", "P1", "P2", "P3", "SL", "D", "V1", "V2", "V3", "V4", "V5", 
-  "V6", "V7", "V8", "V9", "V10", "V11", "V12", "V13", "V14", "V15", "V16", "V17", 
-  "V18", "V19", "V20", "V21", "V22", "V23", "V24", "F1", "F2", "F3", "F4", "F5",
-  "F6", "F7", "F8", "F9", "F10", "F11", "F12", "F13", "F14", "F15", "F16", "F17",
-  "F18", "F19", "F20", "F21", "F22", "F23", "F24")
-repvector <- c(0, 0, 0, 0, 0, rep(0, 25), rep(1, 24))
-obsvector <- c(0, 0, 0, 0, 0, 0, rep(1, 48))
-matvector <- c(0, 0, 0, 0, 0, rep(1, 49))
-immvector <- c(0, 1, 1, 1, 1, rep(0, 49))
-propvector <- c(1, rep(0, 53))
-indataset <- c(0, 0, 0, 0, 0, rep(1, 49))
-
-cypframe <- sf_create(sizes = sizevector, stagenames = stagevector, 
-  repstatus = repvector, obsstatus = obsvector, matstatus = matvector, 
-  propstatus = propvector, immstatus = immvector, indataset = indataset)
-
-vertdata <- verticalize3(data = cypdata, noyears = 6, firstyear = 2004, 
-  patchidcol = "patch", individcol = "plantid", blocksize = 4, 
-  sizeacol = "Inf2.04", sizebcol = "Inf.04", sizeccol = "Veg.04", 
-  repstracol = "Inf.04", repstrbcol = "Inf2.04", fecacol = "Pod.04", 
-  stageassign = cypframe, stagesize = "sizeadded", NAas0 = TRUE)
-
-cypmodels2 <- modelsearch(vertdata, historical = FALSE, approach = "mixed", 
-  vitalrates = c("surv", "obs", "size", "repst", "fec"), sizedist = "negbin", 
-  size.trunc = TRUE, fecdist = "poisson", fec.zero = TRUE, suite = "full", 
-  size = c("size3added", "size2added"), quiet = TRUE)
-
-cypsupp2 <- supplemental(stage3 = c("SD", "P1", "P2", "P3", "SL", "SL", "D",
-    "V1", "V2", "V3", "SD", "P1"), 
-  stage2 = c("SD", "SD", "P1", "P2", "P3", "SL", "SL", "SL", "SL", "SL", "rep",
-    "rep"), 
-  eststage3 = c(NA, NA, NA, NA, NA, NA, "D", "V1", "V2", "V3", NA, NA), 
-  eststage2 = c(NA, NA, NA, NA, NA, NA, "D", "D", "D", "D", NA, NA), 
-  givenrate = c(0.08, 0.1, 0.1, 0.1, 0.125, 0.2, NA, NA, NA, NA, NA, NA), 
-  multiplier = c(NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, 0.5, 0.5),
-  type = c("S", "S", "S", "S", "S", "S", "S", "S", "S", "S", "R", "R"),
-  stageframe = cypframe, historical = FALSE)
-
-cypmatrix2 <- flefko2(stageframe = cypframe, supplement = cypsupp2, 
-  modelsuite = cypmodels2, data = vertdata, year.as.random = TRUE)
-
-summary(cypmatrix2)
-
-# Here is a version using a reproductive matrix and overwrite table instead
-
-rep.assumptions <- matrix(0, 54, 54)
-rep.assumptions[1:2,31:54] <- 0.5
-
-cypover2 <- overwrite(stage3 = c("SD", "P1", "P2", "P3", "SL", "SL", "D", "V1",
-    "V2", "V3"), 
-  stage2 = c("SD", "SD", "P1", "P2", "P3", "SL", "SL", "SL", "SL", "SL"), 
-  eststage3 = c(NA, NA, NA, NA, NA, NA, "D", "V1", "V2", "V3"), 
-  eststage2 = c(NA, NA, NA, NA, NA, NA, "D", "D", "D", "D"), 
-  givenrate = c(0.08, 0.1, 0.1, 0.1, 0.125, 0.2, NA, NA, NA, NA), 
-  type = c("S", "S", "S", "S", "S", "S", "S", "S", "S", "S"))
-
-cypmatrix2_alt <- flefko2(stageframe = cypframe, overwrite = cypover2,
-  repmatrix = rep.assumptions, modelsuite = cypmodels2, data = vertdata,
-  year.as.random = TRUE)
-
-summary(cypmatrix2_alt)
 }
 
 }

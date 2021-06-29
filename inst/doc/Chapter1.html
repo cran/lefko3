@@ -70,7 +70,7 @@ div.csl-indent {
 
 
 
-<p>This document was built in Markdown in R 4.0.4 and compiled on 01 April 2021. It covers package <code>lefko3</code> version 3.4.0.</p>
+<p>This document was built in Markdown in R 4.1.0 and compiled on 29 June 2021. It covers package <code>lefko3</code> version 3.5.0.</p>
 <div id="introduction-to-package-lefko3" class="section level2">
 <h2>INTRODUCTION TO PACKAGE <code>LEFKO3</code></h2>
 <p style="text-indent: 20px">
@@ -270,10 +270,100 @@ In principle, everything just noted about function-based ahMPMs also applies to 
 de Vries and Caswell <span class="citation">(2018)</span> detail different approaches to the development of hMPMs, differing in how state or stage in time <em>t</em>-1 is incorporated into the matrix. <b>Full prior stage dependence models</b> deal with history by incorporating prior condition as the exact stage of an organism in time <em>t</em>-1, yielding a 2d matrix showing stage pairs in time <em>t</em>-1 and <em>t</em> along the columns of the matrix, and stage pairs in time <em>t</em> and <em>t</em>+1 along the rows of the matrix. <b>Prior condition models</b> deal with history by making the transition from stage <em>t</em> to stage <em>t</em>+1 a function of stage at time <em>t</em> and condition in time <em>t</em>-1. Prior condition can be determined in the same way that current stage is determined (e.g. size classification), or a different measure of condition can be used, such as growth (i.e. the change in size between times <em>t</em>-1 and <em>t</em>).
 </p>
 <p style="text-indent: 20px">
-Package <code>lefko3</code> generally implements the <b>full prior dependence model</b> approach, particularly in the development of raw matrices. However, in principle, function-based matrices developed with <code>lefko3</code> can be seen as falling within the <b>prior condition model</b> approach where prior condition is determined in the same way as current stage. We do not currently implement the addition of a new prior stage to account for the previous condition of individuals newly born or added to the population in time <em>t</em>+1, as proposed in de Vries and Caswell <span class="citation">(2018)</span>. We believe that allowing the survival of newborns to vary with the prior condition of the mother leads to a more general interpretation of individual history and its potential impacts on population dynamics, since the literature suggests that maternal condition can have long-term effects on offspring survival, for example through maternal care and epigenetic influences <span class="citation">(Descamps et al. 2008; Beamonte-Barrientos et al. 2010; Dogra and Dani 2019)</span>.
+One key feature proposed by de Vries and Caswell <span class="citation">(2018)</span> is the addition of a new stage to account for the prior status of newborn individuals. This reflects a different interpretation from Ehrlén <span class="citation">(2000)</span> of the historical transition. In Ehrlén <span class="citation">(2000)</span>, all matrix simply reflect the order of the events in a single transition, including both fecundity and survival-transition events. However, in de Vries and Caswell <span class="citation">(2018)</span>, these matrix elements must also reflect the history of specific individuals. In the latter case, the fact that a newborn in time <em>t</em> did not exist in time <em>t</em>-1 means that a new prior stage is constructed and used in the matrix. This new stage only exists in the prior time, and is only used for newborns, particularly in fecundity transitions, and in the first survival transition from birth. So, for example, in a 3 stage MPM where the 1st stage is the newborn stage and only the 3rd stage is reproductive, we add a 4th stage to the prior portion of the row and column. Thus, we may start with the following hMPM in Ehrlén <span class="citation">(2000)</span> format:
+</p>
+<p><span class="math display">\[\begin{equation}
+\tag{8}
+\tiny
+\left[\begin{array}
+{rrr}
+n _{2,AA} \\
+n _{2,BA} \\
+n _{2,CA} \\
+n _{2,AB} \\
+n _{2,BB} \\
+n _{2,CB} \\
+n _{2,AC} \\
+n _{2,BC} \\
+n _{2,CC}
+\end{array}\right] = \left[\begin{array}
+{rrr}
+S _{AAA} &amp; 0 &amp; 0 &amp; S _{AAB} &amp; 0 &amp; 0 &amp; S _{AAC} &amp; 0 &amp; 0 \\
+S _{BAA} &amp; 0 &amp; 0 &amp; S _{BAB} &amp; 0 &amp; 0 &amp; S _{BAC} &amp; 0 &amp; 0 \\
+S _{CAA} &amp; 0 &amp; 0 &amp; S _{CAB} &amp; 0 &amp; 0 &amp; S _{CAC} &amp; 0 &amp; 0 \\
+0 &amp; S _{ABA} &amp; 0 &amp; 0 &amp; S _{ABB} &amp; 0 &amp; 0 &amp; S _{ABC} &amp; 0 \\
+0 &amp; S _{BBA} &amp; 0 &amp; 0 &amp; S _{BBB} &amp; 0 &amp; 0 &amp; S _{BBC} &amp; 0 \\
+0 &amp; S _{CBA} &amp; 0 &amp; 0 &amp; S _{CBB} &amp; 0 &amp; 0 &amp; S _{CBC} &amp; 0 \\
+0 &amp; 0 &amp; S _{ACA} + F _{ACA} &amp; 0 &amp; 0 &amp; S _{ACB} + F _{ACB} &amp; 0 &amp; 0 &amp; S _{ACC} + F _{ACC} \\
+0 &amp; 0 &amp; S _{BCA} &amp; 0 &amp; 0 &amp; S _{BCB} &amp; 0 &amp; 0 &amp; S _{BCC} \\
+0 &amp; 0 &amp; S _{CCA} &amp; 0 &amp; 0 &amp; S _{CCB} &amp; 0 &amp; 0 &amp; S _{CCC} \\
+\end{array}\right] \left[\begin{array}
+{rrr}
+n _{1,AA} \\
+n _{1,BA} \\
+n _{1,CA} \\
+n _{1,AB} \\
+n _{1,BB} \\
+n _{1,CB} \\
+n _{1,AC} \\
+n _{1,BC} \\
+n _{1,CC}
+\end{array}\right]  
+\end{equation}\]</span></p>
+<p>This hMPM becomes as follows in de Vries and Caswell <span class="citation">(2018)</span> format:</p>
+<p><span class="math display">\[\begin{equation}
+\tag{9}
+\tiny
+\left[\begin{array}
+{rrr}
+n _{2,AA} \\
+n _{2,BA} \\
+n _{2,CA} \\
+n _{2,AB} \\
+n _{2,BB} \\
+n _{2,CB} \\
+n _{2,AC} \\
+n _{2,BC} \\
+n _{2,CC} \\
+n _{2,AP} \\
+n _{2,BP} \\
+n _{2,CP}
+\end{array}\right] = \left[\begin{array}
+{rrr}
+S _{AAA} &amp; 0 &amp; 0 &amp; S _{AAB} &amp; 0 &amp; 0 &amp; S _{AAC} &amp; 0 &amp; 0 &amp; S _{AA,AP} &amp; 0 &amp; 0 \\
+S _{BAA} &amp; 0 &amp; 0 &amp; S _{BAB} &amp; 0 &amp; 0 &amp; S _{BAC} &amp; 0 &amp; 0 &amp; S _{BA,AP} &amp; 0 &amp; 0 \\
+S _{CAA} &amp; 0 &amp; 0 &amp; S _{CAB} &amp; 0 &amp; 0 &amp; S _{CAC} &amp; 0 &amp; 0 &amp; S _{CA,AP} &amp; 0 &amp; 0 \\
+0 &amp; S _{ABA} &amp; 0 &amp; 0 &amp; S _{ABB} &amp; 0 &amp; 0 &amp; S _{ABC} &amp; 0 &amp; 0 &amp; 0 &amp; 0 \\
+0 &amp; S _{BBA} &amp; 0 &amp; 0 &amp; S _{BBB} &amp; 0 &amp; 0 &amp; S _{BBC} &amp; 0 &amp; 0 &amp; 0 &amp; 0 \\
+0 &amp; S _{CBA} &amp; 0 &amp; 0 &amp; S _{CBB} &amp; 0 &amp; 0 &amp; S _{CBC} &amp; 0 &amp; 0 &amp; 0 &amp; 0 \\
+0 &amp; 0 &amp; S _{ACA} &amp; 0 &amp; 0 &amp; S _{ACB} &amp; 0 &amp; 0 &amp; S _{ACC} &amp; 0 &amp; 0 &amp; 0 \\
+0 &amp; 0 &amp; S _{BCA} &amp; 0 &amp; 0 &amp; S _{BCB} &amp; 0 &amp; 0 &amp; S _{BCC} &amp; 0 &amp; 0 &amp; 0 \\
+0 &amp; 0 &amp; S _{CCA} &amp; 0 &amp; 0 &amp; S _{CCB} &amp; 0 &amp; 0 &amp; S _{CCC} &amp; 0 &amp; 0 &amp; 0 \\
+0 &amp; 0 &amp; F _{AP,CA} &amp; 0 &amp; 0 &amp; F _{AP,CB} &amp; 0 &amp; 0 &amp; F _{AP,CC} &amp; 0 &amp; 0 &amp; 0\\
+0 &amp; 0 &amp; 0 &amp; 0 &amp; 0 &amp; 0 &amp; 0 &amp; 0 &amp; 0 &amp; 0 &amp; 0 &amp; 0 \\
+0 &amp; 0 &amp; 0 &amp; 0 &amp; 0 &amp; 0 &amp; 0 &amp; 0 &amp; 0 &amp; 0 &amp; 0 &amp; 0 \\
+\end{array}\right] \left[\begin{array}
+{rrr}
+n _{1,AA} \\
+n _{1,BA} \\
+n _{1,CA} \\
+n _{1,AB} \\
+n _{1,BB} \\
+n _{1,CB} \\
+n _{1,AC} \\
+n _{1,BC} \\
+n _{1,CC} \\
+n _{1,AP} \\
+n _{1,BP} \\
+n _{1,CP}
+\end{array}\right]  
+\end{equation}\]</span></p>
+<p>Note that matrix 9 above can be reduced by two rows and 2 columns, since transitions from the newborn prior stage (P) can only be to the newborn stage (A).</p>
+<p style="text-indent: 20px">
+Package <code>lefko3</code> generally implements the <b>full prior dependence model</b> approach, particularly in the development of raw matrices. However, in principle, function-based matrices developed with <code>lefko3</code> can be seen as falling within the <b>prior condition model</b> approach where prior condition is determined in the same way as current stage. We also implement both the Ehrlén <span class="citation">(2000)</span> format and the de Vries and Caswell <span class="citation">(2018)</span> format, and use the former as the default. We leave it to the user to decide which approach to use, and point out only that the literature suggests that maternal condition can have long-term effects on offspring survival, for example through maternal care and epigenetic influences <span class="citation">(Descamps et al. 2008; Beamonte-Barrientos et al. 2010; Dogra and Dani 2019)</span>.
 </p>
 <p style="text-indent: 20px">
-de Vries and Caswell <span class="citation">(2018)</span> also show that hMPMs can be organized differently to yield more intuitive models. In particular, they organize their matrices as block matrices where the component blocks are essentially matrices showing the transitions from all stages in time <em>t</em> to stages in time <em>t</em>+1 conditioned on individuals having been in the same stage in time <em>t</em>-1. We refer to these block component matrices as <strong>conditional matrices</strong>, since they show transitions from time <em>t</em> to time <em>t</em>+1 conditional on the same previous stage in time <em>t</em>-1. We have developed function <code>cond_hmpm()</code> to take full hMPMs and decompose them into their associated conditional matrices, and are currently working on updating the key historical MPM estimation functions, <code>flefko3()</code> and <code>rlefko3()</code>, to allow this organization of the full output hMPMs.
+de Vries and Caswell <span class="citation">(2018)</span> also suggest that hMPMs can be organized differently to yield more intuitive models. In particular, matrices may be as organized as block matrices where the component blocks are essentially matrices showing the transitions from all stages in time <em>t</em> to stages in time <em>t</em>+1 conditioned on individuals having been in the same stage in time <em>t</em>-1. We refer to these block component matrices as <strong>conditional matrices</strong>, since they show transitions from time <em>t</em> to time <em>t</em>+1 conditional on the same previous stage in time <em>t</em>-1. We have developed function <code>cond_hmpm()</code> to take full hMPMs and decompose them into their associated conditional matrices.
 </p>
 </div>
 </div>
@@ -404,7 +494,7 @@ Package <code>lefko3</code> allows the estimation of both the deterministic and 
 The function <code>slambda3()</code> estimates the log stochastic population growth rate in its instantaneous form (<span class="math inline">\(a = \text{log} \lambda _{S}\)</span>). This is estimated as the mean log discrete population growth rate across a user-specified number of random draws of the supplied annual matrices, where the default number of draws is 10,000:
 </p>
 <p><span class="math display">\[\begin{equation}
-  \tag{8}
+  \tag{10}
   a = \text{log} \lambda _{S} = \frac{1}{T} \sum _{t=1}^{T} \text{log} \frac{N _{t}}{N _{t-1}}
   \end{equation}\]</span></p>
 <p>where <span class="math inline">\(N _t\)</span> is the population size in time <span class="math inline">\(t\)</span>, and <span class="math inline">\(T\)</span> is the number of time steps projected, set to 10,000 by default. Function <code>slambda3()</code> does not shuffle across patches or populations, instead shuffling within patches, or shuffling annual matrices calculated as element-wise means of patch matrices within the same population and the same time. The methodology is based on Morris and Doak <span class="citation">(2002)</span>, though accounts for spatial averaging of patches and corrects for the geometric nature of growth rates.</p>
@@ -418,12 +508,12 @@ In ahistorical analyses, the stable stage distribution and the reproductive valu
 The methods mentioned above apply to historical matrices as well. However, as described, they only provide the stable stage distribution and reproductive values of stage pairs. We provide two functions, <code>stablestage3()</code> and <code>repvalue3()</code> to allow the estimation of these vectors for both ahistorical and historical MPMs. When provided with a historical MPM, these functions also estimate <strong>historically-corrected</strong> stable stage distributions and reproductive value vectors, which correspond to the original stages in the associated life history model rather than the stage pairs, and so are comparable against the ahistorical stable stage distributions and reproductive value vectors. The historically-corrected stable stage proportion for stage <em>j</em> is estimated as the sum of all stable stage proportions for stage <em>j</em> in time <em>t</em> across all stages in time <em>t</em>-1, as in:
 </p>
 <p><span class="math display">\[\begin{equation}
-  \tag{9}
+  \tag{11}
   SS _j = \sum _{l=1}^{m} w _{jl}
   \end{equation}\]</span></p>
 <p>where <span class="math inline">\(l\)</span> is stage in time <em>t</em>-1, <span class="math inline">\(m\)</span> is the number of stages, <span class="math inline">\(SS_j\)</span> is the stable stage proportion of stage <em>j</em>, and <span class="math inline">\(w _{jl}\)</span> is the stable stage proportion of stage pair <span class="math inline">\(jl\)</span> given as the standardized right eigenvector corresponding to the dominant eigenvalue of the hMPM. The historically-corrected reproductive value of stage <em>j</em> is calculated as the sum of all reproductive values for stage <em>j</em> in time <em>t</em> across all stages in time <em>t</em>-1, weighted by the stable stage proportion of the respective stage pair divided by the stable stage proportion of stage <span class="math inline">\(j\)</span> at time <em>t</em> <span class="citation">(Ehrlen 2000)</span>, as in:</p>
 <p><span class="math display">\[\begin{equation}
-  \tag{10}
+  \tag{12}
   RV _j = \sum _{l=1}^{m} v _{jl} (w _{jl} /  SS _{j})
   \end{equation}\]</span></p>
 where <span class="math inline">\(RV _j\)</span> refers to reproductive value of stage <span class="math inline">\(j\)</span>, and <span class="math inline">\(v _{jl}\)</span> refers to the reproductive value of the stage pair as given by the standardized left eigenvector of the dominant eigenvalue of the historical MPM. The influence of history can make these numbers differ quite dramatically from those produced by ahistorical matrices.
@@ -441,28 +531,28 @@ Package <code>lefko3</code> contains functions allowing users to conduct determi
 The sensitivity of <span class="math inline">\(\lambda\)</span>, the deterministic population growth rate, to a specific element in a projection matrix can be calculated using eigen analysis as
 </p>
 <p><span class="math display">\[\begin{equation}
-  \tag{11}
+  \tag{13}
   \frac{\partial \lambda}{\partial a _{kj}} = \frac{\bar{v} _{k} w _{j}}{&lt;\mathbf{w}, \mathbf{v}&gt;}
   \end{equation}\]</span></p>
 <p>Here, <span class="math inline">\(\mathbf{w}\)</span> is the stable stage distribution vector calculated as the right eigenvector of the dominant eigenvalue of the matrix (standardized to sum to 1.0), <span class="math inline">\(\mathbf{v}\)</span> is the reproductive value vector calculated as the associated left eigenvector (standardized by dividing by the value of the first non-zero value), and <span class="math inline">\(\bar{v} _{k}\)</span> is the complex conjugate of element <span class="math inline">\(k\)</span> of <span class="math inline">\(\mathbf{v}\)</span>. <span class="math inline">\(k\)</span> is also the stage in time <em>t</em>+1 and in the ahMPM refers to the corresponding row, while <span class="math inline">\(j\)</span> refers to stage in time <em>t</em> and in an ahMPM refers to the corresponding column. The term <span class="math inline">\(&lt;\mathbf{w}, \mathbf{v}&gt;\)</span> refers to the scalar product of these vectors.</p>
 <p style="text-indent: 20px">
-In the hMPM case, the basic method is essentially the same as in equation 10, although the equation itself changes somewhat, with the sensitivity of <span class="math inline">\(\lambda\)</span> to each matrix element given as
+In the hMPM case, the basic method is essentially the same as in equation 13, although the equation itself changes somewhat, with the sensitivity of <span class="math inline">\(\lambda\)</span> to each matrix element given as
 </p>
 <p><span class="math display">\[\begin{equation}
-  \tag{12}
+  \tag{14}
   \frac{\partial \lambda}{\partial a _{kjl}} = \frac{\bar{v} _{kj} w _{jl}}{&lt;\mathbf{w}, \mathbf{v}&gt;}
   \end{equation}\]</span></p>
-<p>Here, <span class="math inline">\(k\)</span> is stage in time <em>t</em>+1, <span class="math inline">\(j\)</span> is stage in time <em>t</em>, <span class="math inline">\(l\)</span> is stage in time <em>t</em>-1, <span class="math inline">\(kj\)</span> refers both to the stage pair in times <em>t</em>+1 and <em>t</em> as well as the corresponding row in the historical matrix, and <span class="math inline">\(jl\)</span> refers both to the stage pair in times <em>t</em> and <em>t</em>-1 as well as the corresponding column in the historical matrix. Historically-corrected sensitivities may also be estimated for the basic stages of the life history model using the historically-corrected stable stage distributions and reproductive values given in equations 9 and 10 as input in equation 11.</p>
+<p>Here, <span class="math inline">\(k\)</span> is stage in time <em>t</em>+1, <span class="math inline">\(j\)</span> is stage in time <em>t</em>, <span class="math inline">\(l\)</span> is stage in time <em>t</em>-1, <span class="math inline">\(kj\)</span> refers both to the stage pair in times <em>t</em>+1 and <em>t</em> as well as the corresponding row in the historical matrix, and <span class="math inline">\(jl\)</span> refers both to the stage pair in times <em>t</em> and <em>t</em>-1 as well as the corresponding column in the historical matrix. Historically-corrected sensitivities may also be estimated for the basic stages of the life history model using the historically-corrected stable stage distributions and reproductive values given in equations 11 and 12 as input in equation 13.</p>
 <p style="text-indent: 20px">
 Sensitivities show how much a small change in a matrix element can alter <span class="math inline">\(\lambda\)</span>, but do so by estimating the local slope of <span class="math inline">\(\lambda\)</span> given in terms of the matrix element <span class="citation">(Caswell 2001)</span>. This makes it difficult to compare the sensitivities of transition probabilities to fecundity rates, because they are given on different scales. Sensitivities are also typically non-zero even for impossible transitions represented by 0s in the matrix. Elasticities avoid these problems by showing the influence of a proportional change in a matrix element on <span class="math inline">\(\lambda\)</span>. In the ahistorical case, the elasticity, <span class="math inline">\(e _{kj}\)</span>, of <span class="math inline">\(\lambda\)</span> to change in a matrix element <span class="math inline">\(a _{kj}\)</span> is given as
 </p>
 <p><span class="math display">\[\begin{equation}
-  \tag{13}
+  \tag{15}
   e _{kj} = \frac{a _{kj}}{\lambda} \frac{\partial \lambda}{\partial a _{kj}}
   \end{equation}\]</span></p>
 <p>The historical case is just an extension of the above.</p>
 <p><span class="math display">\[\begin{equation}
-  \tag{14}
+  \tag{16}
   e _{kjl} = \frac{a _{kjl}}{\lambda} \frac{\partial \lambda}{\partial a _{kjl}}
   \end{equation}\]</span></p>
 <p>Here, we use row and column definitions equivalent to those used in the historical sensitivity case. This makes the elasticity a function of the sensitivity of <span class="math inline">\(\lambda\)</span> to the matrix element, as well as of the value of the matrix element itself. Thus, structural 0s in the hMPM must have elasticity equal to 0, although it is entirely possible that they have non-zero sensitivities.</p>
@@ -470,7 +560,7 @@ Sensitivities show how much a small change in a matrix element can alter <span c
 Elasticities calculated for hMPMs can be compared to those calculated in ahMPMs easily because elasticities are additive, with all elasticities corresponding to a specific matrix necessarily summing to 1.0. Thus, we can calculate the stage pair elasticities resulting from a historical MPM analysis as
 </p>
 <p><span class="math display">\[\begin{equation}
-  \tag{15}
+  \tag{17}
   e _{kj} = \sum_{i=1}^{m} e _{kji}
   \end{equation}\]</span></p>
 <p>with all symbol definitions as before. We have provided a <code>summary()</code> function for elasticity output in <code>lefko3</code> that automatically groups the resulting elasticities by the kind of ahistorical or historical transition.</p>
@@ -478,15 +568,15 @@ Elasticities calculated for hMPMs can be compared to those calculated in ahMPMs 
 Stochastic sensitivity and elasticity analysis are also available. Per Caswell <span class="citation">(2001)</span>, the sensitivity of <span class="math inline">\(a = \text{log} \lambda _{S}\)</span> to changes in a specific element is given as:
 </p>
 <p><span class="math display">\[\begin{equation}
-  \tag{16}
+  \tag{18}
   \frac{\partial \text{log} \lambda _S}{\partial a _{kj}} = \lim_{T \to \infty} \frac{1}{T} \sum_{t=0}^{T-1} \frac{\mathbf{v}(t+1) \mathbf{w}^\top(t)}{\mathbf{v}^\top(t+1) \mathbf{w}(t+1)}
   \end{equation}\]</span></p>
 <p>where <span class="math inline">\(t\)</span> refers to a specific time and <span class="math inline">\(T\)</span> refers to the number of times simulated. Similarly, the stochastic elasticity of <span class="math inline">\(a = \text{log} \lambda _{S}\)</span> to changes in a specific element is given as:</p>
 <p><span class="math display">\[\begin{equation}
-  \tag{17}
+  \tag{19}
   \frac{\partial \text{log} \lambda _S}{\partial \text{log} a _{kj}} = \lim_{T \to \infty} \frac{1}{T} \sum_{t=0}^{T-1} \frac{\bigl(\mathbf{v}(t+1) \mathbf{w}^\top(t) \bigr) \circ \mathbf{A_t}}{\mathbf{v}^\top(t+1) \mathbf{w}(t+1)}
   \end{equation}\]</span></p>
-<p>where <span class="math inline">\(\mathbf{A_t}\)</span> refers to the A matrix corresponding to time <em>t</em>.</p>
+<p>where <span class="math inline">\(\mathbf{A_t}\)</span> refers to the A matrix corresponding to time <em>t</em>. Stochastic sensitivities for hMPMs may be converted to historically-corrected format as in the deterministic case, and stochastic elasticities may be summed as before.</p>
 <p style="text-indent: 20px">
 Users working with elasticities, whether deterministic or stochastic, may find the <code>summary.lefkoElas</code> function useful. If an elasticity analysis is conducted on a <code>lefkoMat</code> object, then the information in that object can be used to summarize summed elasticity according to different sorts of transitions. In the ahistorical case, elasticities are sorted by growth, stasis, shrinkage, and fecundity. In the historical case, they are sorted by transition pairs across three times (e.g. stasis followed growth vs. shrinkage followed by stasis vs. growth followed by reproduction).
 </p>

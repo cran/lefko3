@@ -50,12 +50,13 @@ lathvert <- verticalize3(lathyrus, noyears = 4, firstyear = 1988,
   nonobsacol = "Dormant1988", stageassign = lathframe, stagesize = "sizea",
   censorcol = "Missing1988", censorkeep = NA, censor = TRUE)
 
-lathsupp3 <- supplemental(stage3 = c("Sd", "Sd", "Sdl", "Sd", "Sdl"), 
-  stage2 = c("Sd", "Sd", "Sd", "rep", "rep"),
-  stage1 = c("Sd", "rep", "rep", "all", "all"), 
-  givenrate = c(0.345, 0.345, 0.054, NA, NA),
-  multiplier = c(NA, NA, NA, 0.345, 0.054),
-  type = c(1, 1, 1, 3, 3), stageframe = lathframe, historical = TRUE)
+lathsupp3 <- supplemental(stage3 = c("Sd", "Sd", "Sdl", "Sdl", "Sd", "Sdl"), 
+  stage2 = c("Sd", "Sd", "Sd", "Sd", "rep", "rep"),
+  stage1 = c("Sd", "rep", "Sd", "rep", "all", "all"), 
+  givenrate = c(0.345, 0.345, 0.054, 0.054, NA, NA),
+  multiplier = c(NA, NA, NA, NA, 0.345, 0.054),
+  type = c(1, 1, 1, 1, 3, 3), type_t12 = c(1, 2, 1, 2, 1, 1),
+  stageframe = lathframe, historical = TRUE)
 
 lathsupp2 <- supplemental(stage3 = c("Sd", "Sdl", "Sd", "Sdl"), 
   stage2 = c("Sd", "Sd", "rep", "rep"),

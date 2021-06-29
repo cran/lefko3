@@ -1,9 +1,9 @@
 #' Summary of Class "lefkoCondMat"
 #' 
 #' This function provides basic information summarizing the characteristics of
-#' conditional matrices derived from a \code{lefkoMat} object.
+#' conditional matrices derived from a \code{lefkoCondMat} object.
 #' 
-#' @param object An object of class \code{lefkoMat}.
+#' @param object An object of class \code{lefkoCondMat}.
 #' @param ... Other parameters.
 #' 
 #' @return A summary of the object, showing the number of historical matrices,
@@ -36,12 +36,13 @@
 #'   nonobsacol = "Dormant1988", stageassign = lathframe, stagesize = "sizea",
 #'   censorcol = "Missing1988", censorkeep = NA, censor = TRUE)
 #' 
-#' lathsupp3 <- supplemental(stage3 = c("Sd", "Sd", "Sdl", "Sd", "Sdl"), 
-#'   stage2 = c("Sd", "Sd", "Sd", "rep", "rep"),
-#'   stage1 = c("Sd", "rep", "rep", "all", "all"), 
-#'   givenrate = c(0.345, 0.345, 0.054, NA, NA),
-#'   multiplier = c(NA, NA, NA, 0.345, 0.054),
-#'   type = c(1, 1, 1, 3, 3), stageframe = lathframe, historical = TRUE)
+#' lathsupp3 <- supplemental(stage3 = c("Sd", "Sd", "Sdl", "Sdl", "Sd", "Sdl"), 
+#'   stage2 = c("Sd", "Sd", "Sd", "Sd", "rep", "rep"),
+#'   stage1 = c("Sd", "rep", "Sd", "rep", "all", "all"), 
+#'   givenrate = c(0.345, 0.345, 0.054, 0.054, NA, NA),
+#'   multiplier = c(NA, NA, NA, NA, 0.345, 0.054),
+#'   type = c(1, 1, 1, 1, 3, 3), type_t12 = c(1, 2, 1, 2, 1, 1),
+#'   stageframe = lathframe, historical = TRUE)
 #' 
 #' ehrlen3 <- rlefko3(data = lathvert, stageframe = lathframe, year = "all", 
 #'   stages = c("stage3", "stage2", "stage1"), supplement = lathsupp3,
@@ -51,8 +52,6 @@
 #' summary(lathcondmats)
 #' 
 #' # Cypripedium  example
-#' rm(list=ls(all=TRUE))
-#' 
 #' data(cypdata)
 #'  
 #' sizevector <- c(0, 0, 0, 0, 0, 0, 1, 2.5, 4.5, 8, 17.5)
@@ -78,23 +77,24 @@
 #'   stageassign = cypframe_raw, stagesize = "sizeadded", NAas0 = TRUE,
 #'   NRasRep = TRUE)
 #' 
-#' cypsupp3r <- supplemental(stage3 = c("SD", "P1", "SD", "P1", "P2", "P2",
-#'   "P3", "SL", "SL", "SL", "D", "XSm", "Sm", "D", "XSm", "Sm", "SD", "P1"),
-#'   stage2 = c("SD", "SD", "SD", "SD", "P1", "P1", "P2", "P3", "SL", "SL",
-#'     "SL", "SL", "SL", "SL", "SL", "SL", "rep", "rep"),
-#'   stage1 = c("SD", "rep", "SD", "rep", "SD", "rep", "P1", "P2", "P3", "SL",
-#'     "SL", "SL", "SL", "P3", "P3", "P3", "mat", "mat"),
-#'   eststage3 = c(NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, "D", "XSm", "Sm",
-#'     "D", "XSm", "Sm", NA, NA),
-#'   eststage2 = c(NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, "XSm", "XSm", "XSm",
+#' cypsupp3r <- supplemental(stage3 = c("SD", "SD", "P1", "P1", "P2", "P3",
+#'     "SL", "SL", "SL", "D", "XSm", "Sm", "D", "XSm", "Sm", "SD", "P1"),
+#'   stage2 = c("SD", "SD", "SD", "SD", "P1", "P2", "P3", "SL", "SL", "SL",
+#'     "SL", "SL", "SL", "SL", "SL", "rep", "rep"),
+#'   stage1 = c("SD", "rep", "SD", "rep", "SD", "P1", "P2", "P3", "SL", "P3",
+#'     "P3", "P3", "SL", "SL", "SL", "all", "all"),
+#'   eststage3 = c(NA, NA, NA, NA, NA, NA, NA, NA, NA, "D", "XSm", "Sm", "D",
+#'     "XSm", "Sm", NA, NA),
+#'   eststage2 = c(NA, NA, NA, NA, NA, NA, NA, NA, NA, "XSm", "XSm", "XSm",
 #'     "XSm", "XSm", "XSm", NA, NA),
-#'   eststage1 = c(NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, "XSm", "XSm", "XSm",
+#'   eststage1 = c(NA, NA, NA, NA, NA, NA, NA, NA, NA, "XSm", "XSm", "XSm",
 #'     "XSm", "XSm", "XSm", NA, NA),
-#'   givenrate = c(0.10, 0.20, 0.10, 0.20, 0.20, 0.20, 0.20, 0.25, 0.40, 0.40,
-#'     NA, NA, NA, NA, NA, NA, NA, NA),
+#'   givenrate = c(0.1, 0.1, 0.2, 0.2, 0.2, 0.2, 0.25, 0.4, 0.4, NA, NA, NA, NA,
+#'     NA, NA, NA, NA),
 #'   multiplier = c(NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA,
-#'     NA, 0.5, 0.5),
-#'   type =c(1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,1, 1, 1, 3, 3),
+#'     0.5, 0.5),
+#'   type = c(1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 3, 3),
+#'   type_t12 = c(1, 2, 1, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1),
 #'   stageframe = cypframe_raw, historical = TRUE)
 #' 
 #' cypmatrix3r <- rlefko3(data = cypraw_v1, stageframe = cypframe_raw, 
@@ -174,12 +174,13 @@ summary.lefkoCondMat <- function(object, ...) {
 #'   nonobsacol = "Dormant1988", stageassign = lathframe, stagesize = "sizea",
 #'   censorcol = "Missing1988", censorkeep = NA, censor = TRUE)
 #' 
-#' lathsupp3 <- supplemental(stage3 = c("Sd", "Sd", "Sdl", "Sd", "Sdl"), 
-#'   stage2 = c("Sd", "Sd", "Sd", "rep", "rep"),
-#'   stage1 = c("Sd", "rep", "rep", "all", "all"), 
-#'   givenrate = c(0.345, 0.345, 0.054, NA, NA),
-#'   multiplier = c(NA, NA, NA, 0.345, 0.054),
-#'   type = c(1, 1, 1, 3, 3), stageframe = lathframe, historical = TRUE)
+#' lathsupp3 <- supplemental(stage3 = c("Sd", "Sd", "Sdl", "Sdl", "Sd", "Sdl"), 
+#'   stage2 = c("Sd", "Sd", "Sd", "Sd", "rep", "rep"),
+#'   stage1 = c("Sd", "rep", "Sd", "rep", "all", "all"), 
+#'   givenrate = c(0.345, 0.345, 0.054, 0.054, NA, NA),
+#'   multiplier = c(NA, NA, NA, NA, 0.345, 0.054),
+#'   type = c(1, 1, 1, 1, 3, 3), type_t12 = c(1, 2, 1, 2, 1, 1),
+#'   stageframe = lathframe, historical = TRUE)
 #' 
 #' ehrlen3 <- rlefko3(data = lathvert, stageframe = lathframe, year = "all", 
 #'   stages = c("stage3", "stage2", "stage1"), supplement = lathsupp3,
@@ -282,12 +283,13 @@ image3 <- function(mats, ...) UseMethod("image3")
 #'   nonobsacol = "Dormant1988", stageassign = lathframe, stagesize = "sizea",
 #'   censorcol = "Missing1988", censorkeep = NA, censor = TRUE)
 #' 
-#' lathsupp3 <- supplemental(stage3 = c("Sd", "Sd", "Sdl", "Sd", "Sdl"), 
-#'   stage2 = c("Sd", "Sd", "Sd", "rep", "rep"),
-#'   stage1 = c("Sd", "rep", "rep", "all", "all"), 
-#'   givenrate = c(0.345, 0.345, 0.054, NA, NA),
-#'   multiplier = c(NA, NA, NA, 0.345, 0.054),
-#'   type = c(1, 1, 1, 3, 3), stageframe = lathframe, historical = TRUE)
+#' lathsupp3 <- supplemental(stage3 = c("Sd", "Sd", "Sdl", "Sdl", "Sd", "Sdl"), 
+#'   stage2 = c("Sd", "Sd", "Sd", "Sd", "rep", "rep"),
+#'   stage1 = c("Sd", "rep", "Sd", "rep", "all", "all"), 
+#'   givenrate = c(0.345, 0.345, 0.054, 0.054, NA, NA),
+#'   multiplier = c(NA, NA, NA, NA, 0.345, 0.054),
+#'   type = c(1, 1, 1, 1, 3, 3), type_t12 = c(1, 2, 1, 2, 1, 1),
+#'   stageframe = lathframe, historical = TRUE)
 #' 
 #' ehrlen3 <- rlefko3(data = lathvert, stageframe = lathframe, year = "all", 
 #'   stages = c("stage3", "stage2", "stage1"), supplement = lathsupp3,
@@ -296,8 +298,6 @@ image3 <- function(mats, ...) UseMethod("image3")
 #' image3(ehrlen3, used = 1, type = "U")
 #' 
 #' # Cypripedium example
-#' rm(list=ls(all=TRUE))
-#' 
 #' data(cypdata)
 #' 
 #' sizevector <- c(0, 0, 0, 0, 0, 0, 1, 2.5, 4.5, 8, 17.5)
@@ -421,12 +421,13 @@ image3.lefkoMat <- function(mats, used = "all", type = "A", ...) {
 #'   nonobsacol = "Dormant1988", stageassign = lathframe, stagesize = "sizea",
 #'   censorcol = "Missing1988", censorkeep = NA, censor = TRUE)
 #' 
-#' lathsupp3 <- supplemental(stage3 = c("Sd", "Sd", "Sdl", "Sd", "Sdl"), 
-#'   stage2 = c("Sd", "Sd", "Sd", "rep", "rep"),
-#'   stage1 = c("Sd", "rep", "rep", "all", "all"), 
-#'   givenrate = c(0.345, 0.345, 0.054, NA, NA),
-#'   multiplier = c(NA, NA, NA, 0.345, 0.054),
-#'   type = c(1, 1, 1, 3, 3), stageframe = lathframe, historical = TRUE)
+#' lathsupp3 <- supplemental(stage3 = c("Sd", "Sd", "Sdl", "Sdl", "Sd", "Sdl"), 
+#'   stage2 = c("Sd", "Sd", "Sd", "Sd", "rep", "rep"),
+#'   stage1 = c("Sd", "rep", "Sd", "rep", "all", "all"), 
+#'   givenrate = c(0.345, 0.345, 0.054, 0.054, NA, NA),
+#'   multiplier = c(NA, NA, NA, NA, 0.345, 0.054),
+#'   type = c(1, 1, 1, 1, 3, 3), type_t12 = c(1, 2, 1, 2, 1, 1),
+#'   stageframe = lathframe, historical = TRUE)
 #' 
 #' ehrlen3 <- rlefko3(data = lathvert, stageframe = lathframe, year = "all", 
 #'   stages = c("stage3", "stage2", "stage1"), supplement = lathsupp3,
@@ -435,8 +436,6 @@ image3.lefkoMat <- function(mats, used = "all", type = "A", ...) {
 #' image3(ehrlen3$U[[1]])
 #' 
 #' # Cypripedium example
-#' rm(list=ls(all=TRUE))
-#' 
 #' data(cypdata)
 #' 
 #' sizevector <- c(0, 0, 0, 0, 0, 0, 1, 2.5, 4.5, 8, 17.5)
@@ -532,12 +531,13 @@ image3.matrix <- function(mats, ...) {
 #'   nonobsacol = "Dormant1988", stageassign = lathframe, stagesize = "sizea",
 #'   censorcol = "Missing1988", censorkeep = NA, censor = TRUE)
 #' 
-#' lathsupp3 <- supplemental(stage3 = c("Sd", "Sd", "Sdl", "Sd", "Sdl"), 
-#'   stage2 = c("Sd", "Sd", "Sd", "rep", "rep"),
-#'   stage1 = c("Sd", "rep", "rep", "all", "all"), 
-#'   givenrate = c(0.345, 0.345, 0.054, NA, NA),
-#'   multiplier = c(NA, NA, NA, 0.345, 0.054),
-#'   type = c(1, 1, 1, 3, 3), stageframe = lathframe, historical = TRUE)
+#' lathsupp3 <- supplemental(stage3 = c("Sd", "Sd", "Sdl", "Sdl", "Sd", "Sdl"), 
+#'   stage2 = c("Sd", "Sd", "Sd", "Sd", "rep", "rep"),
+#'   stage1 = c("Sd", "rep", "Sd", "rep", "all", "all"), 
+#'   givenrate = c(0.345, 0.345, 0.054, 0.054, NA, NA),
+#'   multiplier = c(NA, NA, NA, NA, 0.345, 0.054),
+#'   type = c(1, 1, 1, 1, 3, 3), type_t12 = c(1, 2, 1, 2, 1, 1),
+#'   stageframe = lathframe, historical = TRUE)
 #' 
 #' ehrlen3 <- rlefko3(data = lathvert, stageframe = lathframe, year = "all", 
 #'   stages = c("stage3", "stage2", "stage1"), supplement = lathsupp3,
@@ -546,8 +546,6 @@ image3.matrix <- function(mats, ...) {
 #' image3(ehrlen3$A, used = 1)
 #' 
 #' # Cypripedium example
-#' rm(list=ls(all=TRUE))
-#' 
 #' data(cypdata)
 #' 
 #' sizevector <- c(0, 0, 0, 0, 0, 0, 1, 2.5, 4.5, 8, 17.5)
@@ -687,8 +685,6 @@ image3.list <- function(mats, used = "all", ...) {
 #' image3(ehrlen_sens, used = 1, type = "h")
 #' 
 #' # Cypripedium example
-#' rm(list=ls(all=TRUE))
-#' 
 #' data(cypdata)
 #' 
 #' sizevector <- c(0, 0, 0, 0, 0, 0, 1, 2.5, 4.5, 8, 17.5)
@@ -851,8 +847,6 @@ image3.lefkoSens <- function(mats, used = "all", type = "a", ...) {
 #' image3(ehrlen_elas, used = 1, type = "h")
 #' 
 #' # Cypripedium example
-#' rm(list=ls(all=TRUE))
-#' 
 #' data(cypdata)
 #' 
 #' sizevector <- c(0, 0, 0, 0, 0, 0, 1, 2.5, 4.5, 8, 17.5)

@@ -1,5 +1,7 @@
 #' Develop Best-fit Vital Rate Estimation Models For MPM Development
 #' 
+#' Develop Best-fit Vital Rate Estimation Models For MPM Development
+#' 
 #' Function \code{modelsearch()} returns both a best-fit model for each vital
 #' rate, and a model table showing all models tested. The final output can be
 #' used as input in other functions within this package.
@@ -196,7 +198,9 @@
 #' \code{\link[lme4]{glmer}()} (mixed model with binomial or Poisson response),
 #' \code{\link[glmmTMB]{glmmTMB}()} (mixed model with negative binomial,
 #' zero-inflated negative binomial, or zero-inflated Poisson response).
-#' See documentation related to these functions for further information.
+#' See documentation related to these functions for further information. Any
+#' response term that is invariable in the dataset will lead to a best-fit model
+#' for that response represented by a single constant value.
 #' 
 #' Exhaustive model building and selection proceeds via the
 #' \code{\link[MuMIn]{dredge}()} function in package \code{MuMIn}. This function
@@ -295,12 +299,13 @@
 #'   patch.as.random = TRUE, show.model.tables = TRUE, quiet = TRUE)
 #' 
 #' # Here we use supplemental() to provide overwrite and reproductive info
-#' lathsupp3 <- supplemental(stage3 = c("Sd", "Sd", "Sdl", "Sd", "Sdl"), 
-#'   stage2 = c("Sd", "Sd", "Sd", "rep", "rep"),
-#'   stage1 = c("Sd", "rep", "rep", "all", "all"), 
-#'   givenrate = c(0.345, 0.345, 0.054, NA, NA),
-#'   multiplier = c(NA, NA, NA, 0.345, 0.054),
-#'   type = c(1, 1, 1, 3, 3), stageframe = lathframeln, historical = TRUE)
+#' lathsupp3 <- supplemental(stage3 = c("Sd", "Sd", "Sdl", "Sdl", "Sd", "Sdl"), 
+#'   stage2 = c("Sd", "Sd", "Sd", "Sd", "rep", "rep"),
+#'   stage1 = c("Sd", "rep", "Sd", "rep", "all", "all"), 
+#'   givenrate = c(0.345, 0.345, 0.054, 0.054, NA, NA),
+#'   multiplier = c(NA, NA, NA, NA, 0.345, 0.054),
+#'   type = c(1, 1, 1, 1, 3, 3), type_t12 = c(1, 2, 1, 2, 1, 1),
+#'   stageframe = lathframeln, historical = TRUE)
 #' 
 #' lathmat3ln <- flefko3(year = "all", patch = "all", stageframe = lathframeln, 
 #'   modelsuite = lathmodelsln3, data = lathvertln, supplement = lathsupp3, 
@@ -308,64 +313,6 @@
 #'   patch.as.random = FALSE, reduce = FALSE)
 #' 
 #' summary(lathmat3ln)
-#' 
-#' # Cypripedium example
-#' rm(list = ls(all=TRUE))
-#' 
-#' data(cypdata)
-#' 
-#' sizevector <- c(0, 0, 0, 0, 0, seq(from = 0, t = 24), seq(from = 1, to = 24))
-#' stagevector <- c("SD", "P1", "P2", "P3", "SL", "D", "V1", "V2", "V3", "V4", "V5", 
-#'   "V6", "V7", "V8", "V9", "V10", "V11", "V12", "V13", "V14", "V15", "V16", "V17", 
-#'   "V18", "V19", "V20", "V21", "V22", "V23", "V24", "F1", "F2", "F3", "F4", "F5",
-#'   "F6", "F7", "F8", "F9", "F10", "F11", "F12", "F13", "F14", "F15", "F16", "F17",
-#'   "F18", "F19", "F20", "F21", "F22", "F23", "F24")
-#' repvector <- c(0, 0, 0, 0, 0, rep(0, 25), rep(1, 24))
-#' obsvector <- c(0, 0, 0, 0, 0, 0, rep(1, 48))
-#' matvector <- c(0, 0, 0, 0, 0, rep(1, 49))
-#' immvector <- c(0, 1, 1, 1, 1, rep(0, 49))
-#' propvector <- c(1, rep(0, 53))
-#' indataset <- c(0, 0, 0, 0, 0, rep(1, 49))
-#' 
-#' cypframe <- sf_create(sizes = sizevector, stagenames = stagevector, 
-#'   repstatus = repvector, obsstatus = obsvector, matstatus = matvector, 
-#'   propstatus = propvector, immstatus = immvector, indataset = indataset)
-#' 
-#' vertdata <- verticalize3(data = cypdata, noyears = 6, firstyear = 2004, 
-#'   patchidcol = "patch", individcol = "plantid", blocksize = 4, 
-#'   sizeacol = "Inf2.04", sizebcol = "Inf.04", sizeccol = "Veg.04", 
-#'   repstracol = "Inf.04", repstrbcol = "Inf2.04", fecacol = "Pod.04", 
-#'   stageassign = cypframe, stagesize = "sizeadded", NAas0 = TRUE)
-#' 
-#' cypmodels3 <- modelsearch(vertdata, historical = TRUE, approach = "mixed", 
-#'   vitalrates = c("surv", "obs", "size", "repst", "fec"), sizedist = "negbin", 
-#'   size.trunc = TRUE, fecdist = "poisson", fec.zero = TRUE, suite = "main", 
-#'   size = c("size3added", "size2added", "size1added"), quiet = TRUE)
-#' 
-#' cypsupp3 <- supplemental(stage3 = c("SD", "SD", "P1", "P1", "P2", "P3", "SL",
-#'     "SL", "SL", "D", "V1", "V2", "V3", "D", "V1", "V2", "V3", "SD", "P1"), 
-#'   stage2 = c("SD", "SD", "SD", "SD", "P1", "P2", "P3", "SL", "SL", "SL", "SL", 
-#'     "SL", "SL", "SL", "SL", "SL", "SL", "rep", "rep"), 
-#'   stage1 = c("SD", "rep", "SD", "rep", "SD", "P1", "P2", "P3", "SL", "P3", "P3",
-#'     "P3", "P3", "SL", "SL", "SL", "SL", "mat", "mat"), 
-#'   eststage3 = c(NA, NA, NA, NA, NA, NA, NA, NA, NA, "D", "V1", "V2", "V3", "D",
-#'     "V1", "V2", "V3", NA, NA), 
-#'   eststage2 = c(NA, NA, NA, NA, NA, NA, NA, NA, NA, "D", "D", "D", "D", "D", 
-#'     "D", "D", "D", NA, NA), 
-#'   eststage1 = c(NA, NA, NA, NA, NA, NA, NA, NA, NA, "D", "D", "D", "D", "D", 
-#'     "D", "D", "D", NA, NA), 
-#'   givenrate = c(0.08, 0.08, 0.1, 0.1, 0.1, 0.1, 0.125, 0.2, 0.2, NA, NA, NA, NA, 
-#'     NA, NA, NA, NA, NA, NA),
-#'   multiplier = c(NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA,
-#'     NA, 0.5, 0.5),
-#'   type = c("S", "S", "S", "S", "S", "S", "S", "S", "S", "S", "S", "S", "S", "S",
-#'     "S", "S", "S", "R", "R"), stageframe = cypframe)
-#' 
-#' cypmatrix3 <- flefko3(stageframe = cypframe, supplement = cypsupp3, 
-#'   modelsuite = cypmodels3, data = vertdata, yearcol = "year2",
-#'   year.as.random = TRUE)
-#' 
-#' summary(cypmatrix3)
 #' }
 #' 
 #' @export
@@ -416,19 +363,40 @@ modelsearch <- function(data, historical = TRUE, approach = "mixed",
     if (sizedist == "negbin" & !requireNamespace("glmmTMB", quietly = TRUE)) {stop("Package glmmTMB needed to develop mixed size models with a negative binomial distribution.")}
     if (fecdist == "negbin" & !requireNamespace("glmmTMB", quietly = TRUE)) {stop("Package glmmTMB needed to develop mixed fecundity models with a negative binomial distribution.")}
     stop("Package lme4 needed for this function to work. Please install it.", call. = FALSE)
+    
+    if (sizedist != "gaussian") {
+      if (size.trunc & !requireNamespace("glmmTMB", quietly = TRUE)) {stop("Package glmmTMB needed to develop mixed size models with zero-truncated distribution.")}
+      if (size.zero & !requireNamespace("glmmTMB", quietly = TRUE)) {stop("Package glmmTMB needed to develop mixed size models with zero-inflated distribution.")}
+    }
+    if (fecdist != "gaussian") {
+      if (fec.trunc & !requireNamespace("glmmTMB", quietly = TRUE)) {stop("Package glmmTMB needed to develop mixed fecundity models with zero-truncated distribution.")}
+      if (fec.zero & !requireNamespace("glmmTMB", quietly = TRUE)) {stop("Package glmmTMB needed to develop mixed fecundity models with zero-inflated distribution.")}
+    }
   }
+  
+  if (approach == "glm") {
+    if (sizedist != "gaussian") {
+      if (size.trunc & !requireNamespace("VGAM", quietly = TRUE)) {stop("Package VGAM needed to develop non-Gaussian size GLMs with zero-truncated distribution.")}
+      if (size.zero & !requireNamespace("pscl", quietly = TRUE)) {stop("Package pscl needed to develop non-Gaussian size GLMs with zero-inflated distribution.")}
+    }
+    if (fecdist != "gaussian") {
+      if (fec.trunc & !requireNamespace("VGAM", quietly = TRUE)) {stop("Package VGAM needed to develop non-Gaussian fecundity GLMs with zero-truncated distribution.")}
+      if (fec.zero & !requireNamespace("pscl", quietly = TRUE)) {stop("Package pscl needed to develop non-Gaussian fecundity GLMs with zero-inflated distribution.")}
+    }
+  }
+ 
   distoptions <- c("gaussian", "poisson", "negbin")
   packoptions <- c("mixed", "glm") #The mixed option now handles all mixed models
   
   if (!is.element(approach, packoptions)) {stop("Please enter a valid approach, currently either 'mixed' or 'glm'.", call. = FALSE)}
-  if (!is.element(sizedist, distoptions)) {stop("Please enter a valid assumed size distribution, currently either gaussian, poisson, or negbin.", call. = FALSE)}
-  if (!is.element(fecdist, distoptions)) {stop("Please enter a valid assumed fecundity distribution, currently either gaussian, poisson, or negbin.", call. = FALSE)}
+  if (!is.element(sizedist, distoptions)) {stop("Please enter a valid assumed size distribution, currently limited to gaussian, poisson, or negbin.", call. = FALSE)}
+  if (!is.element(fecdist, distoptions)) {stop("Please enter a valid assumed fecundity distribution, currently limited to gaussian, poisson, or negbin.", call. = FALSE)}
   
   if (length(censor) > 3) {
-    stop("Censor variables should be included either as 1 variable per row in the historical data file (1 variable in the dataset), or as 1 variable per timestep within each historical data file (2 or 3 variables in the dataset). No more than 3 variables are allowed, and if more than one are supplied, then they are assumed to be in order of time t+1, time t, and time t-1, respectively.", call. = FALSE)
+    stop("Censor variables should be included either as 1 variable per row in the historical data file (1 variable in the dataset), or as 1 variable per for each of times t+1, t, and, if historical, t-1 (2 or 3 variables in the dataset). No more than 3 variables are allowed. If more than one are supplied, then they are assumed to be in order of time t+1, time t, and time t-1, respectively.", call. = FALSE)
   }
   if (length(indiv) > 1) {stop("Only one individual identification variable is allowed.", call. = FALSE)}
-  if (length(year) > 1) {stop("Only one time variable is allowed, and it must refer to time t.", call. = FALSE)}
+  if (length(year) > 1) {stop("Only one census time variable is allowed, and it must refer to time t.", call. = FALSE)}
   if (length(patch) > 1) {stop("Only one patch variable is allowed.", call. = FALSE)}
   
   if (is.element("surv", vitalrates)) {
@@ -448,12 +416,12 @@ modelsearch <- function(data, historical = TRUE, approach = "mixed",
   }
   
   if (fectime != 2 & fectime != 3) {
-    stop("The fectime option must equal either 2 or 3, depending on whether the fecundity response term is for time t or time t+1, respectively.", call. = FALSE)
+    stop("The fectime option must equal either 2 or 3, depending on whether the fecundity response term is for time t or time t+1, respectively. The default is 2, corresponding to time t.", call. = FALSE)
   }
   
   if (!is.na(age)) {
     if (length(which(names(data) == age)) == 0) {
-      stop("Variable age must equal either NA or the exact name of the variable denoting age in the dataset.", call. = FALSE)
+      stop("Variable age must either equal the exact name of the variable denoting age in the dataset, or be set to NA.", call. = FALSE)
     } else {
       agecol <- which(names(data) == age)
     }
@@ -461,21 +429,21 @@ modelsearch <- function(data, historical = TRUE, approach = "mixed",
   
   if (any(!is.na(indcova))) {
     if (length(indcova) > 3) {
-      warning("Vector indcova holds the names of an individual covariate across times t+1, t, and t-1. Will use only the first three elements.")
+      warning("Vector indcova holds the exact names of an individual covariate across times t+1, t, and t-1. Only the first three elements will be used.")
       indcova <- indcova[1:3]
     } else if (length(indcova) == 1) {
-      warning("Vector indcova requires the names of an individual covariate across times t+1, t, and t-1. Since only 1 name was supplied, will assume that this name corresponds to status in time t+1 and not use the variable.")
+      warning("Vector indcova requires the names of an individual covariate across times t+1, t, and, if historical t-1. Only 1 variable name was supplied, so this individual covariate will not be used.")
       indcova <- c("none", "none", "none")
     } else {
       if (length(which(names(data) == indcova[2])) == 0 && indcova[2] != "none") {
-        stop("Variable indcova must equal either NA or a vector of up to 3 exact names of an individual covariate across times t+1, t, and t-1 in the dataset.", call. = FALSE)
+        stop("Variable indcova must either equal either the exact names of an individual covariate across times t+1, t, and t-1, or be set to NA.", call. = FALSE)
       } else {
         indcova2col <- which(names(data) == indcova[2])
       }
       
       if (length(indcova) == 3) {
         if (length(which(names(data) == indcova[3])) == 0 && indcova[3] != "none") {
-          stop("Variable indcova must equal either NA or a vector of up to 3 exact names of an individual covariate across times t+1, t, and t-1 in the dataset.", call. = FALSE)
+          stop("Variable indcova must either equal either the exact names of an individual covariate across times t+1, t, and t-1, or be set to NA.", call. = FALSE)
         } else {
           indcova1col <- which(names(data) == indcova[3])
         }
@@ -487,21 +455,21 @@ modelsearch <- function(data, historical = TRUE, approach = "mixed",
   
   if (any(!is.na(indcovb))) {
     if (length(indcovb) > 3) {
-      warning("Vector indcovb holds the names of an individual covariate across times t+1, t, and t-1. Will use only the first three elements.")
+      warning("Vector indcovb holds the exact names of an individual covariate across times t+1, t, and t-1. Only the first three elements will be used.")
       indcovb <- indcovb[1:3]
     } else if (length(indcovb) == 1) {
-      warning("Vector indcovb requires the names of an individual covariate across times t+1, t, and t-1. Since only 1 name was supplied, will assume that this name corresponds to status in time t+1 and not use the variable.")
+      warning("Vector indcovb requires the names of an individual covariate across times t+1, t, and, if historical t-1. Only 1 variable name was supplied, so this individual covariate will not be used.")
       indcovb <- c("none", "none", "none")
     } else {
       if (length(which(names(data) == indcovb[2])) == 0 && indcovb[2] != "none") {
-        stop("Variable indcovb must equal either NA or a vector of up to 3 exact names of an individual covariate across times t+1, t, and t-1 in the dataset.", call. = FALSE)
+        stop("Variable indcovb must either equal either the exact names of an individual covariate across times t+1, t, and t-1, or be set to NA.", call. = FALSE)
       } else {
         indcovb2col <- which(names(data) == indcovb[2])
       }
       
       if (length(indcovb) == 3) {
         if (length(which(names(data) == indcovb[3])) == 0 && indcovb[3] != "none") {
-          stop("Variable indcovb must equal either NA or a vector of up to 3 exact names of an individual covariate across times t+1, t, and t-1 in the dataset.", call. = FALSE)
+          stop("Variable indcovb must either equal either the exact names of an individual covariate across times t+1, t, and t-1, or be set to NA.", call. = FALSE)
         } else {
           indcovb1col <- which(names(data) == indcovb[3])
         }
@@ -513,21 +481,21 @@ modelsearch <- function(data, historical = TRUE, approach = "mixed",
   
   if (any(!is.na(indcovc))) {
     if (length(indcovc) > 3) {
-      warning("Vector indcovc holds the names of an individual covariate across times t+1, t, and t-1. Will use only the first three elements.")
+      warning("Vector indcovc holds the exact names of an individual covariate across times t+1, t, and t-1. Only the first three elements will be used.")
       indcovc <- indcovc[1:3]
     } else if (length(indcovc) == 1) {
-      warning("Vector indcovc requires the names of an individual covariate across times t+1, t, and t-1. Since only 1 name was supplied, will assume that this name corresponds to status in time t+1 and not use the variable.")
+      warning("Vector indcovc requires the names of an individual covariate across times t+1, t, and, if historical t-1. Only 1 variable name was supplied, so this individual covariate will not be used.")
       indcovc <- c("none", "none", "none")
     } else {
       if (length(which(names(data) == indcovc[2])) == 0 && indcovc[2] != "none") {
-        stop("Variable indcovc must equal either NA or a vector of up to 3 exact names of an individual covariate across times t+1, t, and t-1 in the dataset.", call. = FALSE)
+        stop("Variable indcovc must either equal either the exact names of an individual covariate across times t+1, t, and t-1, or be set to NA.", call. = FALSE)
       } else {
         indcovc2col <- which(names(data) == indcovc[2])
       }
       
       if (length(indcovc) == 3) {
         if (length(which(names(data) == indcovc[3])) == 0 && indcovc[3] != "none") {
-          stop("Variable indcovc must equal either NA or a vector of up to 3 exact names of an individual covariate across times t+1, t, and t-1 in the dataset.", call. = FALSE)
+          stop("Variable indcovc must either equal either the exact names of an individual covariate across times t+1, t, and t-1, or be set to NA.", call. = FALSE)
         } else {
           indcovc1col <- which(names(data) == indcovc[3])
         }
@@ -539,21 +507,19 @@ modelsearch <- function(data, historical = TRUE, approach = "mixed",
   
   if (!is.na(indiv)) {
     if (length(which(names(data) == indiv)) == 0) {
-      stop("Variable indiv must equal either NA or the exact name of the variable denoting individual identity in the dataset.", 
-           call. = FALSE)
+      stop("Variable indiv must either equal the exact name of the variable denoting individual identity in the dataset, or be set to NA.", call. = FALSE)
     } else {
       indivcol <- which(names(data) == indiv)
       
       if (any(is.na(data[,indivcol])) & approach == "mixed") {
-        warning("NAs in individual ID variable may cause unexpected behavior in mixed model building. Please rename all individuals qith unique names, avoiding NAs.",
-          call. = FALSE)
+        warning("NAs in individual ID variable may cause unexpected behavior in mixed model building. Please rename all individuals with unique names, avoiding NAs.", call. = FALSE)
       }
     }
   } else {indiv <- "none"}
   
   if (!is.na(patch)) {
     if (length(which(names(data) == patch)) == 0) {
-      stop("Variable patch must equal either NA or the exact name of the variable denoting patch identity in the dataset.", 
+      stop("Variable patch must either equal the exact name of the variable denoting patch identity in the dataset, or be set to NA.", 
            call. = FALSE)
     } else {
       patchcol <- which(names(data) == patch)
@@ -562,7 +528,7 @@ modelsearch <- function(data, historical = TRUE, approach = "mixed",
   
   if (!is.na(year)) {
     if (length(which(names(data) == year)) == 0) {
-      stop("Variable year must equal either NA or the exact name of the variable denoting time t in the dataset.", 
+      stop("Variable year must either equal the exact name of the variable denoting time t in the dataset, or be set to NA.", 
            call. = FALSE)
     } else {
       yearcol <- which(names(data) == year)
@@ -571,14 +537,14 @@ modelsearch <- function(data, historical = TRUE, approach = "mixed",
   
   # Here we test the dataset for appropriate stage names
   if (!is.na(juvestimate)) {
-    if (!any(is.element(stage, names(data)))) {stop("Names of stage variables do not match dataset.", call. = FALSE)}
+    if (!any(is.element(stage, names(data)))) {stop("Names of stage variables do not match the dataset.", call. = FALSE)}
     
     stage3col <- which(names(data) == stage[1])
     stage2col <- which(names(data) == stage[2])
     if (length(stage) == 3) {stage1col <- which(names(data) == stage[3])} else {stage1col <- 0}
     
     if (!is.element(juvestimate, unique(data[,stage2col]))) {
-      stop("Stage input in juvestimate not recognized in stage2 variable in dataset", call. = FALSE)
+      stop("The stage declared as juvenile via juvestimate is not recognized within the stage2 variable in the dataset.", call. = FALSE)
     }
   }
   
@@ -687,6 +653,9 @@ modelsearch <- function(data, historical = TRUE, approach = "mixed",
   surv.ind <- length(unique(surv.data[, which(names(surv.data) == indiv)]))
   surv.trans <- dim(surv.data)[1]
   
+  if(any(!suppressWarnings(!is.na(as.numeric(as.character(surv.data[, which(names(surv.data) == size[1])])))))) {
+    warning("Modelsearch(), flefko3(), flefko2(), and aflefko2() are made to work with numeric size variables. Use of categorical variables may result in errors and unexpected behavior.")
+  }
   if (suite == "full" | suite == "main" | suite == "size") {
     if (any(is.na(surv.data[, which(names(surv.data) == size[2])]))) {
       warning("NAs in size variables may cause model selection to fail.")
@@ -698,7 +667,6 @@ modelsearch <- function(data, historical = TRUE, approach = "mixed",
       }
     }
   }
-  
   if (suite == "full" | suite == "main" | suite == "rep") {
     if (any(is.na(surv.data[, which(names(surv.data) == repst[2])]))) {
       warning("NAs in reproductive status variables may cause model selection to fail.")
@@ -710,19 +678,28 @@ modelsearch <- function(data, historical = TRUE, approach = "mixed",
       }
     }
   }
-  
   if (dim(surv.data)[1] < 100) {
     warning("Dataset is very small, and some models may fail given the size.")
   }
   
-  if(any(!suppressWarnings(!is.na(as.numeric(as.character(surv.data[, which(names(surv.data) == size[1])])))))) {
-    warning("Modelsearch(), flefko3(), flefko2(), and aflefko2() are made to work with numeric size variables. Use of categorical variables may result in errors and unexpected behavior.")
+  surv.uns <- unique(surv.data[,which(names(surv.data) == surv[1])])
+  if (length(surv.uns) == 1) {
+    warning("Survival to time t+1 appears to be constant, and so will be set to a constant.")
+    formulae$full.surv.model <- surv.uns[1]
   }
   
   obs.data <- subset(surv.data, surv.data[, which(names(surv.data) == surv[1])] == 1)
   obs.ind <- length(unique(obs.data[, which(names(obs.data) == indiv)]))
   obs.trans <- dim(obs.data)[1]
   
+  if (formulae$full.obs.model != 1) {
+    obs.uns <- unique(obs.data[,which(names(obs.data) == obs[1])])
+    if (length(obs.uns) == 1) {
+      warning("Observation in time t+1 appears to be constant, and so will be set to a constant.")
+    formulae$full.obs.model <- obs.uns[1]
+    }
+  }
+
   if (formulae$full.obs.model != 1) {
     size.data <- subset(obs.data, obs.data[, which(names(obs.data) == obs[1])] == 1)
     size.data <- size.data[which(!is.na(size.data[, which(names(size.data) == size[1])])),]
@@ -733,9 +710,25 @@ modelsearch <- function(data, historical = TRUE, approach = "mixed",
   size.ind <- length(unique(size.data[, which(names(size.data) == indiv)]))
   size.trans <- dim(size.data)[1]
   
+  if (formulae$full.size.model != 1) {
+    size.uns <- unique(size.data[,which(names(size.data) == size[1])])
+    if (length(size.uns) == 1) {
+      warning("Size in time t+1 appears to be constant, and so will be set to a constant.")
+    formulae$full.size.model <- size.uns[1]
+    }
+  }
+  
   repst.data <- size.data
   repst.ind <- length(unique(repst.data[, which(names(repst.data) == indiv)]))
   repst.trans <- dim(repst.data)[1]
+  
+  if (formulae$full.repst.model != 1) {
+    repst.uns <- unique(repst.data[,which(names(repst.data) == repst[1])])
+    if (length(repst.uns) == 1) {
+      warning("Reproductive status in time t+1 appears to be constant, and so will be set to a constant.")
+      formulae$full.repst.model <- repst.uns[1]
+    }
+  }
   
   if (formulae$full.repst.model != 1) {
     fec.data <- subset(surv.data, surv.data[, which(names(repst.data) == repst[2])] == 1)
@@ -757,8 +750,21 @@ modelsearch <- function(data, historical = TRUE, approach = "mixed",
   fec.ind <- length(unique(fec.data[, which(names(fec.data) == indiv)]))
   fec.trans <- dim(fec.data)[1]
   
-  #Now we check for exceptions to size in the dataset
-  if (sizedist == "poisson") {
+  if (formulae$full.fec.model != 1) {
+    if (fectime == 2) {
+      fec.uns <- unique(fec.data[,which(names(fec.data) == fec[2])])
+    } else {
+      fec.uns <- unique(fec.data[,which(names(fec.data) == fec[1])])
+    }
+    
+    if (length(fec.uns) == 1) {
+      warning("Fecundity appears to be constant, and so will be set to a constant.", call. = FALSE)
+      formulae$full.fec.model <- fec.uns[1]
+    }
+  }
+  
+  #Now we check for exceptions to size and fecundity in the dataset
+  if (sizedist == "poisson" & !is.numeric(formulae$full.size.model)) {
     
     if (any(size.data[, which(names(size.data) == size[1])] != round(size.data[, which(names(size.data) == size[1])]))) {
       stop("Size variables must be composed only of integers for the Poisson distribution to be used.")
@@ -770,7 +776,7 @@ modelsearch <- function(data, historical = TRUE, approach = "mixed",
       }
     }
     
-  } else if (sizedist == "negbin") {
+  } else if (sizedist == "negbin" & !is.numeric(formulae$full.size.model)) {
     
     if (any(size.data[, which(names(size.data) == size[1])] != round(size.data[, which(names(size.data) == size[1])]))) {
       stop("Size variables must be composed only of integers for the negative binomial distribution to be used.")
@@ -783,7 +789,7 @@ modelsearch <- function(data, historical = TRUE, approach = "mixed",
     }
   }
   
-  if (fecdist == "poisson") {
+  if (fecdist == "poisson" & !is.numeric(formulae$full.fec.model)) {
     if (fectime == 2) {
       usedfec <- which(names(fec.data) == fec[2])
     } else if (fectime == 3) {
@@ -793,7 +799,7 @@ modelsearch <- function(data, historical = TRUE, approach = "mixed",
     if (any(fec.data[, usedfec] != round(fec.data[, usedfec]))) {
       stop("Fecundity variables must be composed only of integers for the Poisson distribution to be used.")
     }
-  } else if (fecdist == "negbin") {
+  } else if (fecdist == "negbin" & !is.numeric(formulae$full.fec.model)) {
     if (fectime == 2) {
       usedfec <- which(names(fec.data) == fec[2])
     } else if (fectime == 3) {
@@ -806,21 +812,16 @@ modelsearch <- function(data, historical = TRUE, approach = "mixed",
   }
   
   #Now we run the modeling exercises
-  if (formulae$full.surv.model == 1) {surv.global.model <- 1}
-  if (formulae$full.obs.model == 1) {obs.global.model <- 1}
-  if (formulae$full.size.model == 1) {size.global.model <- 1}
-  if (formulae$full.repst.model == 1) {repst.global.model <- 1}
-  if (formulae$full.fec.model == 1) {fec.global.model <- 1}
+  if (is.numeric(formulae$full.surv.model)) {surv.global.model <- formulae$full.surv.model}
+  if (is.numeric(formulae$full.obs.model)) {obs.global.model <- formulae$full.obs.model}
+  if (is.numeric(formulae$full.size.model)) {size.global.model <- formulae$full.size.model}
+  if (is.numeric(formulae$full.repst.model)) {repst.global.model <- formulae$full.repst.model}
+  if (is.numeric(formulae$full.fec.model)) {fec.global.model <- formulae$full.fec.model}
   
-  if (formulae$juv.surv.model == 1) {juv.surv.global.model <- 1}
-  if (formulae$juv.obs.model == 1) {juv.obs.global.model <- 1}
-  if (formulae$juv.size.model == 1) {juv.size.global.model <- 1}
-  if (formulae$juv.repst.model == 1) {juv.repst.global.model <- 1}
-  
-  if (formulae$juv.surv.model == 0) {juv.surv.global.model <- 0}
-  if (formulae$juv.obs.model == 0) {juv.obs.global.model <- 0}
-  if (formulae$juv.size.model == 0) {juv.size.global.model <- 0}
-  if (formulae$juv.repst.model == 0) {juv.repst.global.model <- 0}
+  if (is.numeric(formulae$juv.surv.model)) {juv.surv.global.model <- formulae$juv.surv.model}
+  if (is.numeric(formulae$juv.obs.model)) {juv.obs.global.model <- formulae$juv.obs.model}
+  if (is.numeric(formulae$juv.size.model)) {juv.size.global.model <- formulae$juv.size.model}
+  if (is.numeric(formulae$juv.repst.model)) {juv.repst.global.model <- formulae$juv.repst.model}
   
   surv.table <- NA
   obs.table <- NA
@@ -884,9 +885,7 @@ modelsearch <- function(data, historical = TRUE, approach = "mixed",
   }
   
   #Here we run the global models
-  #if (approach == "mixed") {
-    
-  if (formulae$full.surv.model != 1) {
+  if (!is.numeric(formulae$full.surv.model)) {
     
     if (is.element(0, surv.data$alive3) & is.element(1, surv.data$alive3)) {
       
@@ -929,7 +928,7 @@ modelsearch <- function(data, historical = TRUE, approach = "mixed",
     surv.trans <- 0
   }
   
-  if (formulae$full.obs.model != 1) {
+  if (!is.numeric(formulae$full.obs.model)) {
     if (is.element(0, obs.data$obsstatus3) & is.element(1, obs.data$obsstatus3)) {
         
       obs.global.list <- .headmaster_ritual(vrate = 2, approach = approach, 
@@ -971,7 +970,7 @@ modelsearch <- function(data, historical = TRUE, approach = "mixed",
     obs.trans <- 0
   }
   
-  if (formulae$full.size.model != 1) {
+  if (!is.numeric(formulae$full.size.model)) {
     
     size.global.list <- .headmaster_ritual(vrate = 3, approach = approach, 
       dist = sizedist, zero = size.zero, truncz = size.trunc, quiet = quiet, 
@@ -997,7 +996,7 @@ modelsearch <- function(data, historical = TRUE, approach = "mixed",
     size.trans <- 0
   }
   
-  if (formulae$full.repst.model != 1) {
+  if (!is.numeric(formulae$full.repst.model)) {
     if (is.element(0, repst.data$repstatus3) & is.element(1, repst.data$repstatus3)) {
       repst.global.list <- .headmaster_ritual(vrate = 4, approach = approach, 
         dist = "binom", zero = FALSE, truncz = FALSE, quiet = quiet, 
@@ -1038,7 +1037,7 @@ modelsearch <- function(data, historical = TRUE, approach = "mixed",
     repst.trans <- 0
   }
   
-  if (formulae$full.fec.model != 1) {
+  if (!is.numeric(formulae$full.fec.model)) {
     
     fec.global.list <- .headmaster_ritual(vrate = 5, approach = approach, 
       dist = fecdist, zero = fec.zero, truncz = fec.trunc, quiet = quiet, 
@@ -1064,7 +1063,7 @@ modelsearch <- function(data, historical = TRUE, approach = "mixed",
     fec.trans <- 0
   }
   
-  if (formulae$juv.surv.model != 1 & formulae$juv.surv.model != 0) {
+  if (!is.numeric(formulae$juv.surv.model)) {
     
     if (is.element(0, juvsurv.data$alive3) & is.element(1, juvsurv.data$alive3)) {
       
@@ -1107,7 +1106,7 @@ modelsearch <- function(data, historical = TRUE, approach = "mixed",
     juvsurv.trans <- 0
   }
   
-  if (formulae$juv.obs.model != 1 & formulae$juv.obs.model != 0) {
+  if (!is.numeric(formulae$juv.obs.model)) {
     
     if (is.element(0, juvobs.data$obsstatus3) & is.element(1, juvobs.data$obsstatus3)) {
       
@@ -1150,7 +1149,7 @@ modelsearch <- function(data, historical = TRUE, approach = "mixed",
     juvobs.trans <- 0
   }
   
-  if (formulae$juv.size.model != 1 & formulae$juv.size.model != 0) {
+  if (!is.numeric(formulae$juv.size.model)) {
     
     juv.size.global.list <- .headmaster_ritual(vrate = 8, approach = approach, 
       dist = sizedist, zero = jsize.zero, truncz = jsize.trunc, quiet = quiet, 
@@ -1176,7 +1175,7 @@ modelsearch <- function(data, historical = TRUE, approach = "mixed",
     juvsize.trans <- 0
   }
   
-  if (formulae$juv.repst.model != 1 & formulae$juv.repst.model != 0) {
+  if (!is.numeric(formulae$juv.repst.model)) {
     if (is.element(0, juvrepst.data$repstatus3) & is.element(1, juvrepst.data$repstatus3)) {
       juv.repst.global.list <- .headmaster_ritual(vrate = 9, approach = approach, 
         dist = "binom", zero = FALSE, truncz = FALSE, quiet = quiet, 
@@ -2004,41 +2003,6 @@ modelsearch <- function(data, historical = TRUE, approach = "mixed",
 #'   quiet = TRUE)
 #' 
 #' summary(lathmodelsln2)
-#' 
-#' # Cypripedium example
-#' rm(list = ls(all=TRUE))
-#' 
-#' data(cypdata)
-#' 
-#' sizevector <- c(0, 0, 0, 0, 0, seq(from = 0, t = 24), seq(from = 1, to = 24))
-#' stagevector <- c("SD", "P1", "P2", "P3", "SL", "D", "V1", "V2", "V3", "V4", "V5", 
-#'   "V6", "V7", "V8", "V9", "V10", "V11", "V12", "V13", "V14", "V15", "V16", "V17", 
-#'   "V18", "V19", "V20", "V21", "V22", "V23", "V24", "F1", "F2", "F3", "F4", "F5",
-#'   "F6", "F7", "F8", "F9", "F10", "F11", "F12", "F13", "F14", "F15", "F16", "F17",
-#'   "F18", "F19", "F20", "F21", "F22", "F23", "F24")
-#' repvector <- c(0, 0, 0, 0, 0, rep(0, 25), rep(1, 24))
-#' obsvector <- c(0, 0, 0, 0, 0, 0, rep(1, 48))
-#' matvector <- c(0, 0, 0, 0, 0, rep(1, 49))
-#' immvector <- c(0, 1, 1, 1, 1, rep(0, 49))
-#' propvector <- c(1, rep(0, 53))
-#' indataset <- c(0, 0, 0, 0, 0, rep(1, 49))
-#' 
-#' cypframe <- sf_create(sizes = sizevector, stagenames = stagevector, 
-#'   repstatus = repvector, obsstatus = obsvector, matstatus = matvector, 
-#'   propstatus = propvector, immstatus = immvector, indataset = indataset)
-#' 
-#' vertdata <- verticalize3(data = cypdata, noyears = 6, firstyear = 2004, 
-#'   patchidcol = "patch", individcol = "plantid", blocksize = 4, 
-#'   sizeacol = "Inf2.04", sizebcol = "Inf.04", sizeccol = "Veg.04", 
-#'   repstracol = "Inf.04", repstrbcol = "Inf2.04", fecacol = "Pod.04", 
-#'   stageassign = cypframe, stagesize = "sizeadded", NAas0 = TRUE)
-#' 
-#' cypmodels2 <- modelsearch(vertdata, historical = FALSE, approach = "mixed", 
-#'   vitalrates = c("surv", "obs", "size", "repst", "fec"), sizedist = "negbin", 
-#'   size.trunc = TRUE, fecdist = "poisson", fec.zero = TRUE, suite = "full", 
-#'   size = c("size3added", "size2added"), quiet = TRUE)
-#' 
-#' summary(cypmodels2)
 #' }
 #' 
 #' @export
@@ -2047,10 +2011,10 @@ summary.lefkoMod <- function(object, ...) {
   modelsuite <- object
 
   totalmodels <- length(which(c(is.numeric(modelsuite$survival_model),
-      is.numeric(modelsuite$observation_model), is.numeric(modelsuite$size_model),
-      is.numeric(modelsuite$repstatus_model), is.numeric(modelsuite$fecundity_model),
-      is.numeric(modelsuite$juv_survival_model), is.numeric(modelsuite$juv_observation_model),
-      is.numeric(modelsuite$juv_size_model), is.numeric(modelsuite$juv_reproduction_model)) == FALSE))
+    is.numeric(modelsuite$observation_model), is.numeric(modelsuite$size_model),
+    is.numeric(modelsuite$repstatus_model), is.numeric(modelsuite$fecundity_model),
+    is.numeric(modelsuite$juv_survival_model), is.numeric(modelsuite$juv_observation_model),
+    is.numeric(modelsuite$juv_size_model), is.numeric(modelsuite$juv_reproduction_model)) == FALSE))
   
   writeLines(paste0("This LefkoMod object includes ", totalmodels, " linear models."))
   writeLines(paste0("Best-fit model criterion used: ", modelsuite$criterion))

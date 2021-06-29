@@ -14,6 +14,7 @@ supplemental(
   givenrate = NA,
   multiplier = NA,
   type = NA,
+  type_t12 = NA,
   stageframe,
   historical = TRUE
 )
@@ -48,12 +49,19 @@ described by \code{stage3}, \code{stage2}, and \code{stage1}.}
 \item{multiplier}{A vector of numeric multipliers for fecundity, and NA
 entries for all other terms.}
 
-\item{type}{A vector denoting the kind of replacement to be performed. This
-should be entered as \code{1}, \code{S}, or \code{s} for the replacement of a
-survival transition; \code{2}, \code{F}, or \code{f} for the replacement of a
-fecundity transition; or \code{3}, \code{R}, or \code{r} for a fecundity
-multiplier. If empty or not provided, then defaults to 1 for survival
-transition.}
+\item{type}{A vector denoting the kind of transition between times \emph{t}
+and \emph{t}+1 to be replaced. This should be entered as \code{1}, \code{S},
+or \code{s} for the replacement of a survival transition; \code{2}, \code{F},
+or \code{f} for the replacement of a fecundity transition; or \code{3},
+\code{R}, or \code{r} for a fecundity multiplier. If empty or not provided,
+then defaults to \code{1} for survival transition.}
+
+\item{type_t12}{An optional vector denoting the kind of transition between
+times \emph{t}-1 and \emph{t}. Only necessary if a historical MPM in deVries
+format is desired. This should be entered as \code{1}, \code{S}, or \code{s}
+for a survival transition; or \code{2}, \code{F}, or \code{f} for a fecundity
+transitions. Defaults to \code{1} for survival transition, with impacts only
+on the construction of deVries-format hMPMs.}
 
 \item{stageframe}{The stageframe being used to produce the MPMs in the study.}
 
@@ -77,8 +85,11 @@ transition designated by \code{stage3}, \code{stage2}, and \code{stage1}.}
 \item{eststage1}{Stage at time \emph{t}-1 in the transition to replace the
 transition designated by \code{stage3}, \code{stage2}, and \code{stage1}.}
 \item{givenrate}{A constant to be used as the value of the transition.}
-\item{convtype}{Designates whether the transition is a survival transition
-probability (1), a fecundity rate (2), or a fecundity multiplier (3).}
+\item{convtype}{Designates whether the transition from time \emph{t} to time
+\emph{t}+1 is a survival transition probability (1), a fecundity rate (2), or
+a fecundity multiplier (3).}
+\item{convtype_t12}{Designates whether the transition from time \emph{t}-1 to
+time \emph{t} is a survival transition probability (1), a fecundity rate (2).}
 }
 \description{
 \code{supplemental()} provides all necessary supplemental data for matrix
@@ -121,12 +132,13 @@ lathvert <- verticalize3(lathyrus, noyears = 4, firstyear = 1988,
   nonobsacol = "Dormant1988", stageassign = lathframe, stagesize = "sizea",
   censorcol = "Missing1988", censorkeep = NA, censor = TRUE)
 
-lathsupp3 <- supplemental(stage3 = c("Sd", "Sd", "Sdl", "Sd", "Sdl"), 
-  stage2 = c("Sd", "Sd", "Sd", "rep", "rep"),
-  stage1 = c("Sd", "rep", "rep", "all", "all"), 
-  givenrate = c(0.345, 0.345, 0.054, NA, NA),
-  multiplier = c(NA, NA, NA, 0.345, 0.054),
-  type = c(1, 1, 1, 3, 3), stageframe = lathframe, historical = TRUE)
+lathsupp3 <- supplemental(stage3 = c("Sd", "Sd", "Sdl", "Sdl", "Sd", "Sdl"), 
+  stage2 = c("Sd", "Sd", "Sd", "Sd", "rep", "rep"),
+  stage1 = c("Sd", "rep", "Sd", "rep", "all", "all"), 
+  givenrate = c(0.345, 0.345, 0.054, 0.054, NA, NA),
+  multiplier = c(NA, NA, NA, NA, 0.345, 0.054),
+  type = c(1, 1, 1, 1, 3, 3), type_t12 = c(1, 2, 1, 2, 1, 1),
+  stageframe = lathframe, historical = TRUE)
 
 ehrlen3 <- rlefko3(data = lathvert, stageframe = lathframe, year = "all", 
   stages = c("stage3", "stage2", "stage1"), supplement = lathsupp3,

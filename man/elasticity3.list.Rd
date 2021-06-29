@@ -4,7 +4,14 @@
 \alias{elasticity3.list}
 \title{Estimate Elasticity of Population Growth Rate of a List of Matrices}
 \usage{
-\method{elasticity3}{list}(mats, stochastic = FALSE, steps = 10000, time_weights = NA, ...)
+\method{elasticity3}{list}(
+  mats,
+  stochastic = FALSE,
+  steps = 10000,
+  time_weights = NA,
+  historical = FALSE,
+  ...
+)
 }
 \arguments{
 \item{mats}{A list of objects of class \code{matrix}.}
@@ -19,18 +26,20 @@ Defaults to 10,000.}
 \item{time_weights}{Numeric vector denoting the probabilistic weightings of
 annual matrices. Defaults to equal weighting among times.}
 
+\item{historical}{A logical value denoting whether the input matrices are
+historical. Defaults to FALSE.}
+
 \item{...}{Other parameters.}
 }
 \value{
 This function returns an object of class \code{lefkoElas}, which is a
-list with 7 elements. The first, h_elasmats, is a list of historical
+list with 8 elements. The first, \code{h_elasmats}, is a list of historical
 elasticity matrices, though in the standard list case it returns a NULL
-value. The second, ah_elasmats, is a list of either ahistorical elasticity
-matrices. Since the list used as input contains no stage information, all
-matrices are assumed to be ahistorical and elasticities are provided via this
-element. The third element, h_stages, and the fourth element, ah_stages, are
-NULL. The last 3 elements are the original A matrices in element A, followed
-by NULL values for the U and F elements.
+value. The second, \code{ah_elasmats}, is a list of ahistorical elasticity
+matrices. The third element, \code{h_stages}, the fourth element,
+\code{agestages}, and the fifth element, \code{ah_stages}, are set to NULL.
+The last 3 elements are the original A matrices in element A, followed by
+NULL values for the U and F elements.
 }
 \description{
 \code{elasticity3.list()} returns the elasticities of lambda to elements
@@ -73,12 +82,13 @@ lathvert <- verticalize3(lathyrus, noyears = 4, firstyear = 1988,
   nonobsacol = "Dormant1988", stageassign = lathframe, stagesize = "sizea",
   censorcol = "Missing1988", censorkeep = NA, censor = TRUE)
 
-lathsupp3 <- supplemental(stage3 = c("Sd", "Sd", "Sdl", "Sd", "Sdl"), 
-  stage2 = c("Sd", "Sd", "Sd", "rep", "rep"),
-  stage1 = c("Sd", "rep", "rep", "all", "all"), 
-  givenrate = c(0.345, 0.345, 0.054, NA, NA),
-  multiplier = c(NA, NA, NA, 0.345, 0.054),
-  type = c(1, 1, 1, 3, 3), stageframe = lathframe, historical = TRUE)
+lathsupp3 <- supplemental(stage3 = c("Sd", "Sd", "Sdl", "Sdl", "Sd", "Sdl"), 
+  stage2 = c("Sd", "Sd", "Sd", "Sd", "rep", "rep"),
+  stage1 = c("Sd", "rep", "Sd", "rep", "all", "all"), 
+  givenrate = c(0.345, 0.345, 0.054, 0.054, NA, NA),
+  multiplier = c(NA, NA, NA, NA, 0.345, 0.054),
+  type = c(1, 1, 1, 1, 3, 3), type_t12 = c(1, 2, 1, 2, 1, 1),
+  stageframe = lathframe, historical = TRUE)
 
 ehrlen3 <- rlefko3(data = lathvert, stageframe = lathframe, year = "all", 
   stages = c("stage3", "stage2", "stage1"), supplement = lathsupp3,

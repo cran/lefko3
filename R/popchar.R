@@ -115,12 +115,13 @@
 #'   nonobsacol = "Dormant1988", stageassign = lathframe, stagesize = "sizea",
 #'   censorcol = "Missing1988", censorkeep = NA, censor = TRUE)
 #' 
-#' lathsupp3 <- supplemental(stage3 = c("Sd", "Sd", "Sdl", "Sd", "Sdl"), 
-#'   stage2 = c("Sd", "Sd", "Sd", "rep", "rep"),
-#'   stage1 = c("Sd", "rep", "rep", "all", "all"), 
-#'   givenrate = c(0.345, 0.345, 0.054, NA, NA),
-#'   multiplier = c(NA, NA, NA, 0.345, 0.054),
-#'   type = c(1, 1, 1, 3, 3), stageframe = lathframe, historical = TRUE)
+#' lathsupp3 <- supplemental(stage3 = c("Sd", "Sd", "Sdl", "Sdl", "Sd", "Sdl"), 
+#'   stage2 = c("Sd", "Sd", "Sd", "Sd", "rep", "rep"),
+#'   stage1 = c("Sd", "rep", "Sd", "rep", "all", "all"), 
+#'   givenrate = c(0.345, 0.345, 0.054, 0.054, NA, NA),
+#'   multiplier = c(NA, NA, NA, NA, 0.345, 0.054),
+#'   type = c(1, 1, 1, 1, 3, 3), type_t12 = c(1, 2, 1, 2, 1, 1),
+#'   stageframe = lathframe, historical = TRUE)
 #' 
 #' ehrlen3 <- rlefko3(data = lathvert, stageframe = lathframe, year = "all", 
 #'   stages = c("stage3", "stage2", "stage1"), supplement = lathsupp3,
@@ -482,6 +483,9 @@ sf_create <- function(sizes, stagenames = NA, repstatus = 1, obsstatus = 1,
 #' @param overwrite The original overwrite table, as supplied by the
 #' \code{\link{overwrite}()} function. Can also equal NA.
 #' @param agemat A logical value indicating whether the MPM is age-by-stage
+#' @param format An integer indicating whether matrices will be in Ehrlen format
+#' (if set to 1), or deVries format (if set to 2). Setting to deVries format
+#' adds one extra stage to account for the prior status of newborns.
 #' 
 #' @return This function returns a list with a modified stageframe usable in MPM
 #' construction, and an associated reproduction matrix. Note that if a
@@ -490,7 +494,8 @@ sf_create <- function(sizes, stagenames = NA, repstatus = 1, obsstatus = 1,
 #' 
 #' @keywords internal
 #' @noRd
-.sf_reassess <- function(stageframe, supplement, repmatrix, overwrite, agemat = FALSE) {
+.sf_reassess <- function(stageframe, supplement, repmatrix, overwrite,
+  agemat = FALSE, format = 1) {
   
   skiprepmat <- FALSE
   
@@ -519,7 +524,8 @@ sf_create <- function(sizes, stagenames = NA, repstatus = 1, obsstatus = 1,
     size.max <- 1
     size.width <- 1
     
-    warning("Not certain which column in the input stageframe provides size information so using the first.");
+    warning("Uncertain which column in stageframe provides size info, so using the first.",
+      call. = FALSE);
   }
   orig.size.vec <- stageframe[,orig.size.column]
   size.min.vec <- stageframe[,size.min]
@@ -836,8 +842,16 @@ sf_create <- function(sizes, stagenames = NA, repstatus = 1, obsstatus = 1,
   
   stageframe.reassessed$alive <- 1
   
+  if (format == 2) {
+    stageframe.reassessed <- rbind.data.frame(stageframe.reassessed, 
+    c((dim(stageframe.reassessed)[1] + 1), "AlmostBorn", 0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 1,
+       0, 0, 0), stringsAsFactors = FALSE)
+    
+    com.vec.r <- c(com.vec.r, "Almost born")
+  }
+  
   stageframe.reassessed <- rbind.data.frame(stageframe.reassessed, 
-    c((length(orig.stage.vec.r) + 1), "Dead", 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 1,
+    c((dim(stageframe.reassessed)[1] + 1), "Dead", 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 1,
        0, 0, 0), stringsAsFactors = FALSE)
   
   if (age) {
@@ -940,9 +954,17 @@ sf_create <- function(sizes, stagenames = NA, repstatus = 1, obsstatus = 1,
 #' matrix to be estimated is historical.
 #' @param givenrate A fixed rate or probability to replace for the transition
 #' described by \code{stage3}, \code{stage2}, and \code{stage1}.
-#' @param type A vector denoting the kind of transition that will be replaced.
-#' Should be entered as 1, S, or s for survival, or 2, F, or f for fecundity.
-#' Defaults to 1, for survival transition.
+#' @param type A vector denoting the kind of transition between times \emph{t}
+#' and \emph{t}+1 to be replaced. This should be entered as \code{1}, \code{S},
+#' or \code{s} for the replacement of a survival transition; or \code{2},
+#' \code{F}, or \code{f} for the replacement of a fecundity transition. If empty
+#' or not provided, then defaults to \code{1} for survival transition.
+#' @param type_t12 An optional vector denoting the kind of transition between
+#' times \emph{t}-1 and \emph{t}. Only necessary if a historical MPM in deVries
+#' format is desired. This should be entered as \code{1}, \code{S}, or \code{s}
+#' for a survival transition; or \code{2}, \code{F}, or \code{f} for a fecundity
+#' transitions. Defaults to \code{1} for survival transition, with impacts only
+#' on the construction of deVries-format hMPMs.
 #'
 #' @return A data frame that puts the above vectors together and can be used as
 #' input in \code{\link{flefko3}()}, \code{\link{flefko2}()},
@@ -960,8 +982,10 @@ sf_create <- function(sizes, stagenames = NA, repstatus = 1, obsstatus = 1,
 #' \item{eststage1}{Stage at time \emph{t}-1 in the transition to replace the
 #' transition designated by \code{stage3}, \code{stage2}, and \code{stage1}.}
 #' \item{givenrate}{A constant to be used as the value of the transition.}
-#' \item{convtype}{Designates whether the transition is a survival-transition
-#' probability (1) or a fecundity rate (2).}
+#' \item{convtype}{Designates whether the transition from time \emph{t} to time
+#' \emph{t}+1 is a survival-transition probability (1) or a fecundity rate (2).}
+#' \item{convtype_t12}{Designates whether the transition from time \emph{t}-1 to
+#' time \emph{t} is a survival transition probability (1), a fecundity rate (2).}
 #' 
 #' @examples
 #' cypover2r <- overwrite(stage3 = c("SD", "P1", "P2", "P3", "SL", "SL", "D", 
@@ -995,7 +1019,7 @@ sf_create <- function(sizes, stagenames = NA, repstatus = 1, obsstatus = 1,
 #' 
 #' @export
 overwrite <- function(stage3, stage2, stage1 = NA, eststage3 = NA, 
-  eststage2 = NA, eststage1 = NA, givenrate = NA, type = NA) {
+  eststage2 = NA, eststage1 = NA, givenrate = NA, type = NA, type_t12 = NA) {
   
   if (length(stage3) != length(stage2)) {
     stop("All transitions to overwrite require information at least for stage2 and stage3. These inputs must also be of equal length.",
@@ -1033,6 +1057,10 @@ overwrite <- function(stage3, stage2, stage1 = NA, eststage3 = NA,
     missinglength <- fulllength - length(type)
     type <- as.character(append(type, rep(NA, missinglength)))
   }
+  if (length(type_t12) < fulllength) {
+    missinglength <- fulllength - length(type_t12)
+    type_t12 <- as.character(append(type_t12, rep(NA, missinglength)))
+  }
   
   if(!all(is.na(type))) {
     convtype <- rep(1, length(type))
@@ -1041,9 +1069,17 @@ overwrite <- function(stage3, stage2, stage1 = NA, eststage3 = NA,
   } else {
     convtype <- rep(1, length(stage3))
   }
+  if(!all(is.na(type_t12))) {
+    convtype_t12 <- rep(1, length(type_t12))
+    convtype_t12[which(type_t12 == "F")] <- 2
+    convtype_t12[which(type_t12 == "f")] <- 2
+    convtype_t12[which(type_t12 == "2")] <- 2
+  } else {
+    convtype_t12 <- rep(1, length(stage3))
+  }
   
   fullpack <- cbind.data.frame(stage3, stage2, stage1, eststage3, eststage2,
-    eststage1, givenrate, convtype, stringsAsFactors = FALSE)
+    eststage1, givenrate, convtype, convtype_t12, stringsAsFactors = FALSE)
   
   return(fullpack)
 }
@@ -1127,8 +1163,6 @@ overwrite <- function(stage3, stage2, stage1 = NA, eststage3 = NA,
           call. = FALSE)
       }
       
-      #checknaestvec <- c(shrubbery[X, "eststage3"], shrubbery[X, "eststage2"], shrubbery[X, "eststage1"])
-      
       if (!is.na(shrubbery[X, "stage1"]) & !is.na(shrubbery[X, "eststage1"])) {
         if (is.element(shrubbery[X, "stage1"], stageframe$stage) & is.element(shrubbery[X, "eststage1"], stageframe$stage)) {
           return(shrubbery[X,])
@@ -1138,7 +1172,8 @@ overwrite <- function(stage3, stage2, stage1 = NA, eststage3 = NA,
             eststage3 = shrubbery[X, "eststage3"], eststage2 = shrubbery[X, "eststage2"], 
             eststage1 = stageframe$stage[which(stageframe$repstatus == 1)],
             givenrate = shrubbery[X, "givenrate"], multiplier = shrubbery[X, "multiplier"],
-            convtype = shrubbery[X, "convtype"], stringsAsFactors = FALSE)
+            convtype = shrubbery[X, "convtype"], convtype_t12 = shrubbery[X, "convtype_t12"],
+            stringsAsFactors = FALSE)
           
           return(shrubbery.small)
           
@@ -1147,8 +1182,8 @@ overwrite <- function(stage3, stage2, stage1 = NA, eststage3 = NA,
             stage2 = shrubbery[X, "stage2"], stage1 = stageframe$stage[which(stageframe$repstatus == 1)], 
             eststage3 = shrubbery[X, "eststage3"], eststage2 = shrubbery[X, "eststage2"], 
             eststage1 = shrubbery[X, "eststage1"], givenrate = shrubbery[X, "givenrate"],
-            multiplier = shrubbery[X, "multiplier"], convtype = shrubbery[X, "convtype"], 
-            stringsAsFactors = FALSE)
+            multiplier = shrubbery[X, "multiplier"], convtype = shrubbery[X, "convtype"],
+            convtype_t12 = shrubbery[X, "convtype_t12"], stringsAsFactors = FALSE)
           
           return(shrubbery.small)
           
@@ -1158,7 +1193,8 @@ overwrite <- function(stage3, stage2, stage1 = NA, eststage3 = NA,
             eststage3 = shrubbery[X, "eststage3"], eststage2 = shrubbery[X, "eststage2"], 
             eststage1 = stageframe$stage[which(stageframe$immstatus == 1)],
             givenrate = shrubbery[X, "givenrate"], multiplier = shrubbery[X, "multiplier"],
-            convtype = shrubbery[X, "convtype"], stringsAsFactors = FALSE)
+            convtype = shrubbery[X, "convtype"], convtype_t12 = shrubbery[X, "convtype_t12"],
+            stringsAsFactors = FALSE)
           
           return(shrubbery.small)
           
@@ -1167,8 +1203,8 @@ overwrite <- function(stage3, stage2, stage1 = NA, eststage3 = NA,
             stage2 = shrubbery[X, "stage2"], stage1 = stageframe$stage[which(stageframe$immstatus == 1)], 
             eststage3 = shrubbery[X, "eststage3"], eststage2 = shrubbery[X, "eststage2"], 
             eststage1 = shrubbery[X, "eststage1"], givenrate = shrubbery[X, "givenrate"],
-            multiplier = shrubbery[X, "multiplier"], convtype = shrubbery[X, "convtype"], 
-            stringsAsFactors = FALSE)
+            multiplier = shrubbery[X, "multiplier"], convtype = shrubbery[X, "convtype"],
+            convtype_t12 = shrubbery[X, "convtype_t12"], stringsAsFactors = FALSE)
           
           return(shrubbery.small)
           
@@ -1178,7 +1214,8 @@ overwrite <- function(stage3, stage2, stage1 = NA, eststage3 = NA,
             eststage3 = shrubbery[X, "eststage3"], eststage2 = shrubbery[X, "eststage2"], 
             eststage1 = stageframe$stage[which(stageframe$matstatus == 1)],
             givenrate = shrubbery[X, "givenrate"], multiplier = shrubbery[X, "multiplier"],
-            convtype = shrubbery[X, "convtype"], stringsAsFactors = FALSE)
+            convtype = shrubbery[X, "convtype"], convtype_t12 = shrubbery[X, "convtype_t12"],
+            stringsAsFactors = FALSE)
           
           return(shrubbery.small)
           
@@ -1187,8 +1224,8 @@ overwrite <- function(stage3, stage2, stage1 = NA, eststage3 = NA,
             stage2 = shrubbery[X, "stage2"], stage1 = stageframe$stage[which(stageframe$matstatus == 1)], 
             eststage3 = shrubbery[X, "eststage3"], eststage2 = shrubbery[X, "eststage2"], 
             eststage1 = shrubbery[X, "eststage1"], givenrate = shrubbery[X, "givenrate"],
-            multiplier = shrubbery[X, "multiplier"], convtype = shrubbery[X, "convtype"], 
-            stringsAsFactors = FALSE)
+            multiplier = shrubbery[X, "multiplier"], convtype = shrubbery[X, "convtype"],
+            convtype_t12 = shrubbery[X, "convtype_t12"], stringsAsFactors = FALSE)
           
           return(shrubbery.small)
           
@@ -1198,7 +1235,8 @@ overwrite <- function(stage3, stage2, stage1 = NA, eststage3 = NA,
             eststage3 = shrubbery[X, "eststage3"], eststage2 = shrubbery[X, "eststage2"], 
             eststage1 = stageframe$stage[which(stageframe$propstatus == 1)],
             givenrate = shrubbery[X, "givenrate"], multiplier = shrubbery[X, "multiplier"],
-            convtype = shrubbery[X, "convtype"], stringsAsFactors = FALSE)
+            convtype = shrubbery[X, "convtype"], convtype_t12 = shrubbery[X, "convtype_t12"],
+            stringsAsFactors = FALSE)
           
           return(shrubbery.small)
           
@@ -1207,8 +1245,8 @@ overwrite <- function(stage3, stage2, stage1 = NA, eststage3 = NA,
             stage2 = shrubbery[X, "stage2"], stage1 = stageframe$stage[which(stageframe$propstatus == 1)], 
             eststage3 = shrubbery[X, "eststage3"], eststage2 = shrubbery[X, "eststage2"], 
             eststage1 = shrubbery[X, "eststage1"], givenrate = shrubbery[X, "givenrate"],
-            multiplier = shrubbery[X, "multiplier"], convtype = shrubbery[X, "convtype"], 
-            stringsAsFactors = FALSE)
+            multiplier = shrubbery[X, "multiplier"], convtype = shrubbery[X, "convtype"],
+            convtype_t12 = shrubbery[X, "convtype_t12"], stringsAsFactors = FALSE)
           
           return(shrubbery.small)
           
@@ -1218,7 +1256,7 @@ overwrite <- function(stage3, stage2, stage1 = NA, eststage3 = NA,
             eststage3 = shrubbery[X, "eststage3"], eststage2 = shrubbery[X, "eststage2"], 
             eststage1 = stageframe$stage, givenrate = shrubbery[X, "givenrate"],
             multiplier = shrubbery[X, "multiplier"], convtype = shrubbery[X, "convtype"],
-            stringsAsFactors = FALSE)
+            convtype_t12 = shrubbery[X, "convtype_t12"], stringsAsFactors = FALSE)
           
           return(shrubbery.small)
           
@@ -1227,8 +1265,8 @@ overwrite <- function(stage3, stage2, stage1 = NA, eststage3 = NA,
             stage2 = shrubbery[X, "stage2"], stage1 = stageframe$stage, 
             eststage3 = shrubbery[X, "eststage3"], eststage2 = shrubbery[X, "eststage2"], 
             eststage1 = shrubbery[X, "eststage1"], givenrate = shrubbery[X, "givenrate"],
-            multiplier = shrubbery[X, "multiplier"], convtype = shrubbery[X, "convtype"], 
-            stringsAsFactors = FALSE)
+            multiplier = shrubbery[X, "multiplier"], convtype = shrubbery[X, "convtype"],
+            convtype_t12 = shrubbery[X, "convtype_t12"], stringsAsFactors = FALSE)
           
           return(shrubbery.small)
           
@@ -1241,8 +1279,8 @@ overwrite <- function(stage3, stage2, stage1 = NA, eststage3 = NA,
             stage2 = shrubbery[X, "stage2"], stage1 = stageframe$stage[which(stageframe$repstatus == 1)], 
             eststage3 = shrubbery[X, "eststage3"], eststage2 = shrubbery[X, "eststage2"], 
             eststage1 = shrubbery[X, "eststage1"], givenrate = shrubbery[X, "givenrate"],
-            multiplier = shrubbery[X, "multiplier"], convtype = shrubbery[X, "convtype"], 
-            stringsAsFactors = FALSE)
+            multiplier = shrubbery[X, "multiplier"], convtype = shrubbery[X, "convtype"],
+            convtype_t12 = shrubbery[X, "convtype_t12"], stringsAsFactors = FALSE)
           
           return(shrubbery.small)
           
@@ -1251,8 +1289,8 @@ overwrite <- function(stage3, stage2, stage1 = NA, eststage3 = NA,
             stage2 = shrubbery[X, "stage2"], stage1 = stageframe$stage[which(stageframe$immstatus == 1)], 
             eststage3 = shrubbery[X, "eststage3"], eststage2 = shrubbery[X, "eststage2"], 
             eststage1 = shrubbery[X, "eststage1"], givenrate = shrubbery[X, "givenrate"],
-            multiplier = shrubbery[X, "multiplier"], convtype = shrubbery[X, "convtype"], 
-            stringsAsFactors = FALSE)
+            multiplier = shrubbery[X, "multiplier"], convtype = shrubbery[X, "convtype"],
+            convtype_t12 = shrubbery[X, "convtype_t12"], stringsAsFactors = FALSE)
           
           return(shrubbery.small)
           
@@ -1261,8 +1299,8 @@ overwrite <- function(stage3, stage2, stage1 = NA, eststage3 = NA,
             stage2 = shrubbery[X, "stage2"], stage1 = stageframe$stage[which(stageframe$matstatus == 1)], 
             eststage3 = shrubbery[X, "eststage3"], eststage2 = shrubbery[X, "eststage2"], 
             eststage1 = shrubbery[X, "eststage1"], givenrate = shrubbery[X, "givenrate"],
-            multiplier = shrubbery[X, "multiplier"], convtype = shrubbery[X, "convtype"], 
-            stringsAsFactors = FALSE)
+            multiplier = shrubbery[X, "multiplier"], convtype = shrubbery[X, "convtype"],
+            convtype_t12 = shrubbery[X, "convtype_t12"], stringsAsFactors = FALSE)
           
           return(shrubbery.small)
           
@@ -1271,8 +1309,8 @@ overwrite <- function(stage3, stage2, stage1 = NA, eststage3 = NA,
             stage2 = shrubbery[X, "stage2"], stage1 = stageframe$stage[which(stageframe$propstatus == 1)], 
             eststage3 = shrubbery[X, "eststage3"], eststage2 = shrubbery[X, "eststage2"], 
             eststage1 = shrubbery[X, "eststage1"], givenrate = shrubbery[X, "givenrate"],
-            multiplier = shrubbery[X, "multiplier"], convtype = shrubbery[X, "convtype"], 
-            stringsAsFactors = FALSE)
+            multiplier = shrubbery[X, "multiplier"], convtype = shrubbery[X, "convtype"],
+            convtype_t12 = shrubbery[X, "convtype_t12"], stringsAsFactors = FALSE)
           
           return(shrubbery.small)
           
@@ -1281,8 +1319,8 @@ overwrite <- function(stage3, stage2, stage1 = NA, eststage3 = NA,
             stage2 = shrubbery[X, "stage2"], stage1 = stageframe$stage, 
             eststage3 = shrubbery[X, "eststage3"], eststage2 = shrubbery[X, "eststage2"], 
             eststage1 = shrubbery[X, "eststage1"], givenrate = shrubbery[X, "givenrate"],
-            multiplier = shrubbery[X, "multiplier"], convtype = shrubbery[X, "convtype"], 
-            stringsAsFactors = FALSE)
+            multiplier = shrubbery[X, "multiplier"], convtype = shrubbery[X, "convtype"],
+            convtype_t12 = shrubbery[X, "convtype_t12"], stringsAsFactors = FALSE)
           
           return(shrubbery.small)
           
@@ -1304,7 +1342,7 @@ overwrite <- function(stage3, stage2, stage1 = NA, eststage3 = NA,
             eststage3 = shrubbery[X, "eststage3"], eststage2 = stageframe$stage[which(stageframe$repstatus == 1)], 
             eststage1 = shrubbery[X, "eststage1"], givenrate = shrubbery[X, "givenrate"],
             multiplier = shrubbery[X, "multiplier"], convtype = shrubbery[X, "convtype"],
-            stringsAsFactors = FALSE)
+            convtype_t12 = shrubbery[X, "convtype_t12"], stringsAsFactors = FALSE)
           
           return(shrubbery.small)
           
@@ -1313,8 +1351,8 @@ overwrite <- function(stage3, stage2, stage1 = NA, eststage3 = NA,
             stage2 = stageframe$stage[which(stageframe$repstatus == 1)], stage1 = shrubbery[X, "stage1"], 
             eststage3 = shrubbery[X, "eststage3"], eststage2 = shrubbery[X, "eststage2"], 
             eststage1 = shrubbery[X, "eststage1"], givenrate = shrubbery[X, "givenrate"],
-            multiplier = shrubbery[X, "multiplier"], convtype = shrubbery[X, "convtype"], 
-            stringsAsFactors = FALSE)
+            multiplier = shrubbery[X, "multiplier"], convtype = shrubbery[X, "convtype"],
+            convtype_t12 = shrubbery[X, "convtype_t12"], stringsAsFactors = FALSE)
           
           return(shrubbery.small)
           
@@ -1324,7 +1362,7 @@ overwrite <- function(stage3, stage2, stage1 = NA, eststage3 = NA,
             eststage3 = shrubbery[X, "eststage3"], eststage2 = stageframe$stage[which(stageframe$immstatus == 1)], 
             eststage1 = shrubbery[X, "eststage1"], givenrate = shrubbery[X, "givenrate"],
             multiplier = shrubbery[X, "multiplier"], convtype = shrubbery[X, "convtype"],
-            stringsAsFactors = FALSE)
+            convtype_t12 = shrubbery[X, "convtype_t12"], stringsAsFactors = FALSE)
           
           return(shrubbery.small)
           
@@ -1333,8 +1371,8 @@ overwrite <- function(stage3, stage2, stage1 = NA, eststage3 = NA,
             stage2 = stageframe$stage[which(stageframe$immstatus == 1)], stage1 = shrubbery[X, "stage1"], 
             eststage3 = shrubbery[X, "eststage3"], eststage2 = shrubbery[X, "eststage2"], 
             eststage1 = shrubbery[X, "eststage1"], givenrate = shrubbery[X, "givenrate"],
-            multiplier = shrubbery[X, "multiplier"], convtype = shrubbery[X, "convtype"], 
-            stringsAsFactors = FALSE)
+            multiplier = shrubbery[X, "multiplier"], convtype = shrubbery[X, "convtype"],
+            convtype_t12 = shrubbery[X, "convtype_t12"], stringsAsFactors = FALSE)
           
           return(shrubbery.small)
           
@@ -1344,7 +1382,7 @@ overwrite <- function(stage3, stage2, stage1 = NA, eststage3 = NA,
             eststage3 = shrubbery[X, "eststage3"], eststage2 = stageframe$stage[which(stageframe$matstatus == 1)], 
             eststage1 = shrubbery[X, "eststage1"], givenrate = shrubbery[X, "givenrate"],
             multiplier = shrubbery[X, "multiplier"], convtype = shrubbery[X, "convtype"],
-            stringsAsFactors = FALSE)
+            convtype_t12 = shrubbery[X, "convtype_t12"], stringsAsFactors = FALSE)
           
           return(shrubbery.small)
           
@@ -1353,8 +1391,8 @@ overwrite <- function(stage3, stage2, stage1 = NA, eststage3 = NA,
             stage2 = stageframe$stage[which(stageframe$matstatus == 1)], stage1 = shrubbery[X, "stage1"], 
             eststage3 = shrubbery[X, "eststage3"], eststage2 = shrubbery[X, "eststage2"], 
             eststage1 = shrubbery[X, "eststage1"], givenrate = shrubbery[X, "givenrate"],
-            multiplier = shrubbery[X, "multiplier"], convtype = shrubbery[X, "convtype"], 
-            stringsAsFactors = FALSE)
+            multiplier = shrubbery[X, "multiplier"], convtype = shrubbery[X, "convtype"],
+            convtype_t12 = shrubbery[X, "convtype_t12"], stringsAsFactors = FALSE)
           
           return(shrubbery.small)
           
@@ -1364,7 +1402,7 @@ overwrite <- function(stage3, stage2, stage1 = NA, eststage3 = NA,
             eststage3 = shrubbery[X, "eststage3"], eststage2 = stageframe$stage[which(stageframe$propstatus == 1)], 
             eststage1 = shrubbery[X, "eststage1"], givenrate = shrubbery[X, "givenrate"],
             multiplier = shrubbery[X, "multiplier"], convtype = shrubbery[X, "convtype"],
-            stringsAsFactors = FALSE)
+            convtype_t12 = shrubbery[X, "convtype_t12"], stringsAsFactors = FALSE)
           
           return(shrubbery.small)
           
@@ -1373,8 +1411,8 @@ overwrite <- function(stage3, stage2, stage1 = NA, eststage3 = NA,
             stage2 = stageframe$stage[which(stageframe$propstatus == 1)], stage1 = shrubbery[X, "stage1"], 
             eststage3 = shrubbery[X, "eststage3"], eststage2 = shrubbery[X, "eststage2"], 
             eststage1 = shrubbery[X, "eststage1"], givenrate = shrubbery[X, "givenrate"],
-            multiplier = shrubbery[X, "multiplier"], convtype = shrubbery[X, "convtype"], 
-            stringsAsFactors = FALSE)
+            multiplier = shrubbery[X, "multiplier"], convtype = shrubbery[X, "convtype"],
+            convtype_t12 = shrubbery[X, "convtype_t12"], stringsAsFactors = FALSE)
           
           return(shrubbery.small)
           
@@ -1384,7 +1422,7 @@ overwrite <- function(stage3, stage2, stage1 = NA, eststage3 = NA,
             eststage3 = shrubbery[X, "eststage3"], eststage2 = stageframe$stage, 
             eststage1 = shrubbery[X, "eststage1"], givenrate = shrubbery[X, "givenrate"],
             multiplier = shrubbery[X, "multiplier"], convtype = shrubbery[X, "convtype"],
-            stringsAsFactors = FALSE)
+            convtype_t12 = shrubbery[X, "convtype_t12"], stringsAsFactors = FALSE)
           
           return(shrubbery.small)
           
@@ -1393,8 +1431,8 @@ overwrite <- function(stage3, stage2, stage1 = NA, eststage3 = NA,
             stage2 = stageframe$stage, stage1 = shrubbery[X, "stage1"], 
             eststage3 = shrubbery[X, "eststage3"], eststage2 = shrubbery[X, "eststage2"], 
             eststage1 = shrubbery[X, "eststage1"], givenrate = shrubbery[X, "givenrate"],
-            multiplier = shrubbery[X, "multiplier"], convtype = shrubbery[X, "convtype"], 
-            stringsAsFactors = FALSE)
+            multiplier = shrubbery[X, "multiplier"], convtype = shrubbery[X, "convtype"],
+            convtype_t12 = shrubbery[X, "convtype_t12"], stringsAsFactors = FALSE)
           
           return(shrubbery.small)
           
@@ -1407,8 +1445,8 @@ overwrite <- function(stage3, stage2, stage1 = NA, eststage3 = NA,
             stage2 = stageframe$stage[which(stageframe$repstatus == 1)], stage1 = shrubbery[X, "stage1"], 
             eststage3 = shrubbery[X, "eststage3"], eststage2 = shrubbery[X, "eststage2"], 
             eststage1 = shrubbery[X, "eststage1"], givenrate = shrubbery[X, "givenrate"],
-            multiplier = shrubbery[X, "multiplier"], convtype = shrubbery[X, "convtype"], 
-            stringsAsFactors = FALSE)
+            multiplier = shrubbery[X, "multiplier"], convtype = shrubbery[X, "convtype"],
+            convtype_t12 = shrubbery[X, "convtype_t12"], stringsAsFactors = FALSE)
           
           return(shrubbery.small)
           
@@ -1417,8 +1455,8 @@ overwrite <- function(stage3, stage2, stage1 = NA, eststage3 = NA,
             stage2 = stageframe$stage[which(stageframe$immstatus == 1)], stage1 = shrubbery[X, "stage1"], 
             eststage3 = shrubbery[X, "eststage3"], eststage2 = shrubbery[X, "eststage2"], 
             eststage1 = shrubbery[X, "eststage1"], givenrate = shrubbery[X, "givenrate"],
-            multiplier = shrubbery[X, "multiplier"], convtype = shrubbery[X, "convtype"], 
-            stringsAsFactors = FALSE)
+            multiplier = shrubbery[X, "multiplier"], convtype = shrubbery[X, "convtype"],
+            convtype_t12 = shrubbery[X, "convtype_t12"], stringsAsFactors = FALSE)
           
           return(shrubbery.small)
           
@@ -1427,8 +1465,8 @@ overwrite <- function(stage3, stage2, stage1 = NA, eststage3 = NA,
             stage2 = stageframe$stage[which(stageframe$matstatus == 1)], stage1 = shrubbery[X, "stage1"], 
             eststage3 = shrubbery[X, "eststage3"], eststage2 = shrubbery[X, "eststage2"], 
             eststage1 = shrubbery[X, "eststage1"], givenrate = shrubbery[X, "givenrate"],
-            multiplier = shrubbery[X, "multiplier"], convtype = shrubbery[X, "convtype"], 
-            stringsAsFactors = FALSE)
+            multiplier = shrubbery[X, "multiplier"], convtype = shrubbery[X, "convtype"],
+            convtype_t12 = shrubbery[X, "convtype_t12"], stringsAsFactors = FALSE)
           
           return(shrubbery.small)
           
@@ -1437,8 +1475,8 @@ overwrite <- function(stage3, stage2, stage1 = NA, eststage3 = NA,
             stage2 = stageframe$stage[which(stageframe$propstatus == 1)], stage1 = shrubbery[X, "stage1"], 
             eststage3 = shrubbery[X, "eststage3"], eststage2 = shrubbery[X, "eststage2"], 
             eststage1 = shrubbery[X, "eststage1"], givenrate = shrubbery[X, "givenrate"],
-            multiplier = shrubbery[X, "multiplier"], convtype = shrubbery[X, "convtype"], 
-            stringsAsFactors = FALSE)
+            multiplier = shrubbery[X, "multiplier"], convtype = shrubbery[X, "convtype"],
+            convtype_t12 = shrubbery[X, "convtype_t12"], stringsAsFactors = FALSE)
           
           return(shrubbery.small)
           
@@ -1447,8 +1485,8 @@ overwrite <- function(stage3, stage2, stage1 = NA, eststage3 = NA,
             stage2 = stageframe$stage, stage1 = shrubbery[X, "stage1"], 
             eststage3 = shrubbery[X, "eststage3"], eststage2 = shrubbery[X, "eststage2"], 
             eststage1 = shrubbery[X, "eststage1"], givenrate = shrubbery[X, "givenrate"],
-            multiplier = shrubbery[X, "multiplier"], convtype = shrubbery[X, "convtype"], 
-            stringsAsFactors = FALSE)
+            multiplier = shrubbery[X, "multiplier"], convtype = shrubbery[X, "convtype"],
+            convtype_t12 = shrubbery[X, "convtype_t12"], stringsAsFactors = FALSE)
           
           return(shrubbery.small)
           
@@ -1470,7 +1508,7 @@ overwrite <- function(stage3, stage2, stage1 = NA, eststage3 = NA,
             eststage3 = stageframe$stage[which(stageframe$repstatus == 1)], eststage2 = shrubbery[X, "eststage2"], 
             eststage1 = shrubbery[X, "eststage1"], givenrate = shrubbery[X, "givenrate"],
             multiplier = shrubbery[X, "multiplier"], convtype = shrubbery[X, "convtype"],
-            stringsAsFactors = FALSE)
+            convtype_t12 = shrubbery[X, "convtype_t12"], stringsAsFactors = FALSE)
           
           return(shrubbery.small)
           
@@ -1479,8 +1517,8 @@ overwrite <- function(stage3, stage2, stage1 = NA, eststage3 = NA,
             stage2 = shrubbery[X, "stage2"], stage1 = shrubbery[X, "stage1"], 
             eststage3 = shrubbery[X, "eststage3"], eststage2 = shrubbery[X, "eststage2"], 
             eststage1 = shrubbery[X, "eststage1"], givenrate = shrubbery[X, "givenrate"],
-            multiplier = shrubbery[X, "multiplier"], convtype = shrubbery[X, "convtype"], 
-            stringsAsFactors = FALSE)
+            multiplier = shrubbery[X, "multiplier"], convtype = shrubbery[X, "convtype"],
+            convtype_t12 = shrubbery[X, "convtype_t12"], stringsAsFactors = FALSE)
           
           return(shrubbery.small)
           
@@ -1490,7 +1528,7 @@ overwrite <- function(stage3, stage2, stage1 = NA, eststage3 = NA,
             eststage3 = stageframe$stage[which(stageframe$immstatus == 1)], eststage2 = shrubbery[X, "eststage2"], 
             eststage1 = shrubbery[X, "eststage1"], givenrate = shrubbery[X, "givenrate"],
             multiplier = shrubbery[X, "multiplier"], convtype = shrubbery[X, "convtype"],
-            stringsAsFactors = FALSE)
+            convtype_t12 = shrubbery[X, "convtype_t12"], stringsAsFactors = FALSE)
           
           return(shrubbery.small)
           
@@ -1499,8 +1537,8 @@ overwrite <- function(stage3, stage2, stage1 = NA, eststage3 = NA,
             stage2 = shrubbery[X, "stage2"], stage1 = shrubbery[X, "stage1"], 
             eststage3 = shrubbery[X, "eststage3"], eststage2 = shrubbery[X, "eststage2"], 
             eststage1 = shrubbery[X, "eststage1"], givenrate = shrubbery[X, "givenrate"],
-            multiplier = shrubbery[X, "multiplier"], convtype = shrubbery[X, "convtype"], 
-            stringsAsFactors = FALSE)
+            multiplier = shrubbery[X, "multiplier"], convtype = shrubbery[X, "convtype"],
+            convtype_t12 = shrubbery[X, "convtype_t12"], stringsAsFactors = FALSE)
           
           return(shrubbery.small)
           
@@ -1510,7 +1548,7 @@ overwrite <- function(stage3, stage2, stage1 = NA, eststage3 = NA,
             eststage3 = stageframe$stage[which(stageframe$matstatus == 1)], eststage2 = shrubbery[X, "eststage2"], 
             eststage1 = shrubbery[X, "eststage1"], givenrate = shrubbery[X, "givenrate"],
             multiplier = shrubbery[X, "multiplier"], convtype = shrubbery[X, "convtype"],
-            stringsAsFactors = FALSE)
+            convtype_t12 = shrubbery[X, "convtype_t12"], stringsAsFactors = FALSE)
           
           return(shrubbery.small)
           
@@ -1519,8 +1557,8 @@ overwrite <- function(stage3, stage2, stage1 = NA, eststage3 = NA,
             stage2 = shrubbery[X, "stage2"], stage1 = shrubbery[X, "stage1"], 
             eststage3 = shrubbery[X, "eststage3"], eststage2 = shrubbery[X, "eststage2"], 
             eststage1 = shrubbery[X, "eststage1"], givenrate = shrubbery[X, "givenrate"],
-            multiplier = shrubbery[X, "multiplier"], convtype = shrubbery[X, "convtype"], 
-            stringsAsFactors = FALSE)
+            multiplier = shrubbery[X, "multiplier"], convtype = shrubbery[X, "convtype"],
+            convtype_t12 = shrubbery[X, "convtype_t12"], stringsAsFactors = FALSE)
           
           return(shrubbery.small)
           
@@ -1530,7 +1568,7 @@ overwrite <- function(stage3, stage2, stage1 = NA, eststage3 = NA,
             eststage3 = stageframe$stage[which(stageframe$propstatus == 1)], eststage2 = shrubbery[X, "eststage2"], 
             eststage1 = shrubbery[X, "eststage1"], givenrate = shrubbery[X, "givenrate"],
             multiplier = shrubbery[X, "multiplier"], convtype = shrubbery[X, "convtype"],
-            stringsAsFactors = FALSE)
+            convtype_t12 = shrubbery[X, "convtype_t12"], stringsAsFactors = FALSE)
           
           return(shrubbery.small)
           
@@ -1539,8 +1577,8 @@ overwrite <- function(stage3, stage2, stage1 = NA, eststage3 = NA,
             stage2 = shrubbery[X, "stage2"], stage1 = shrubbery[X, "stage1"], 
             eststage3 = shrubbery[X, "eststage3"], eststage2 = shrubbery[X, "eststage2"], 
             eststage1 = shrubbery[X, "eststage1"], givenrate = shrubbery[X, "givenrate"],
-            multiplier = shrubbery[X, "multiplier"], convtype = shrubbery[X, "convtype"], 
-            stringsAsFactors = FALSE)
+            multiplier = shrubbery[X, "multiplier"], convtype = shrubbery[X, "convtype"],
+            convtype_t12 = shrubbery[X, "convtype_t12"], stringsAsFactors = FALSE)
           
           return(shrubbery.small)
           
@@ -1550,7 +1588,7 @@ overwrite <- function(stage3, stage2, stage1 = NA, eststage3 = NA,
             eststage3 = stageframe$stage, eststage2 = shrubbery[X, "eststage2"], 
             eststage1 = shrubbery[X, "eststage1"], givenrate = shrubbery[X, "givenrate"],
             multiplier = shrubbery[X, "multiplier"], convtype = shrubbery[X, "convtype"],
-            stringsAsFactors = FALSE)
+            convtype_t12 = shrubbery[X, "convtype_t12"], stringsAsFactors = FALSE)
           
           return(shrubbery.small)
           
@@ -1559,8 +1597,8 @@ overwrite <- function(stage3, stage2, stage1 = NA, eststage3 = NA,
             stage2 = shrubbery[X, "stage2"], stage1 = shrubbery[X, "stage1"], 
             eststage3 = shrubbery[X, "eststage3"], eststage2 = shrubbery[X, "eststage2"], 
             eststage1 = shrubbery[X, "eststage1"], givenrate = shrubbery[X, "givenrate"],
-            multiplier = shrubbery[X, "multiplier"], convtype = shrubbery[X, "convtype"], 
-            stringsAsFactors = FALSE)
+            multiplier = shrubbery[X, "multiplier"], convtype = shrubbery[X, "convtype"],
+            convtype_t12 = shrubbery[X, "convtype_t12"], stringsAsFactors = FALSE)
           
           return(shrubbery.small)
           
@@ -1573,8 +1611,8 @@ overwrite <- function(stage3, stage2, stage1 = NA, eststage3 = NA,
             stage2 = shrubbery[X, "stage2"], stage1 = shrubbery[X, "stage1"], 
             eststage3 = shrubbery[X, "eststage3"], eststage2 = shrubbery[X, "eststage2"], 
             eststage1 = shrubbery[X, "eststage1"], givenrate = shrubbery[X, "givenrate"],
-            multiplier = shrubbery[X, "multiplier"], convtype = shrubbery[X, "convtype"], 
-            stringsAsFactors = FALSE)
+            multiplier = shrubbery[X, "multiplier"], convtype = shrubbery[X, "convtype"],
+            convtype_t12 = shrubbery[X, "convtype_t12"], stringsAsFactors = FALSE)
           
           return(shrubbery.small)
           
@@ -1583,8 +1621,8 @@ overwrite <- function(stage3, stage2, stage1 = NA, eststage3 = NA,
             stage2 = shrubbery[X, "stage2"], stage1 = shrubbery[X, "stage1"], 
             eststage3 = shrubbery[X, "eststage3"], eststage2 = shrubbery[X, "eststage2"], 
             eststage1 = shrubbery[X, "eststage1"], givenrate = shrubbery[X, "givenrate"],
-            multiplier = shrubbery[X, "multiplier"], convtype = shrubbery[X, "convtype"], 
-            stringsAsFactors = FALSE)
+            multiplier = shrubbery[X, "multiplier"], convtype = shrubbery[X, "convtype"],
+            convtype_t12 = shrubbery[X, "convtype_t12"], stringsAsFactors = FALSE)
           
           return(shrubbery.small)
           
@@ -1593,8 +1631,8 @@ overwrite <- function(stage3, stage2, stage1 = NA, eststage3 = NA,
             stage2 = shrubbery[X, "stage2"], stage1 = shrubbery[X, "stage1"], 
             eststage3 = shrubbery[X, "eststage3"], eststage2 = shrubbery[X, "eststage2"], 
             eststage1 = shrubbery[X, "eststage1"], givenrate = shrubbery[X, "givenrate"],
-            multiplier = shrubbery[X, "multiplier"], convtype = shrubbery[X, "convtype"], 
-            stringsAsFactors = FALSE)
+            multiplier = shrubbery[X, "multiplier"], convtype = shrubbery[X, "convtype"],
+            convtype_t12 = shrubbery[X, "convtype_t12"], stringsAsFactors = FALSE)
           
           return(shrubbery.small)
           
@@ -1603,8 +1641,8 @@ overwrite <- function(stage3, stage2, stage1 = NA, eststage3 = NA,
             stage2 = shrubbery[X, "stage2"], stage1 = shrubbery[X, "stage1"], 
             eststage3 = shrubbery[X, "eststage3"], eststage2 = shrubbery[X, "eststage2"], 
             eststage1 = shrubbery[X, "eststage1"], givenrate = shrubbery[X, "givenrate"],
-            multiplier = shrubbery[X, "multiplier"], convtype = shrubbery[X, "convtype"], 
-            stringsAsFactors = FALSE)
+            multiplier = shrubbery[X, "multiplier"], convtype = shrubbery[X, "convtype"],
+            convtype_t12 = shrubbery[X, "convtype_t12"], stringsAsFactors = FALSE)
           
           return(shrubbery.small)
           
@@ -1613,8 +1651,8 @@ overwrite <- function(stage3, stage2, stage1 = NA, eststage3 = NA,
             stage2 = shrubbery[X, "stage2"], stage1 = shrubbery[X, "stage1"], 
             eststage3 = shrubbery[X, "eststage3"], eststage2 = shrubbery[X, "eststage2"], 
             eststage1 = shrubbery[X, "eststage1"], givenrate = shrubbery[X, "givenrate"],
-            multiplier = shrubbery[X, "multiplier"], convtype = shrubbery[X, "convtype"], 
-            stringsAsFactors = FALSE)
+            multiplier = shrubbery[X, "multiplier"], convtype = shrubbery[X, "convtype"],
+            convtype_t12 = shrubbery[X, "convtype_t12"], stringsAsFactors = FALSE)
           
           return(shrubbery.small)
           
@@ -1624,12 +1662,24 @@ overwrite <- function(stage3, stage2, stage1 = NA, eststage3 = NA,
       }
     })
     shrubbery <- do.call(rbind.data.frame, reassessed)
+    
+    #Now a bit of a check to remove entries that are not allowed
+    stufftoremove <- unique(c(which(shrubbery$stage1 == "Dead"),
+      which(shrubbery$stage2 == "Dead"), which(shrubbery$stage3 == "Dead"),
+      which(shrubbery$eststage1 == "Dead"), which(shrubbery$eststage2 == "Dead"),
+      which(shrubbery$stage3 == "AlmostBorn"), which(shrubbery$eststage3 == "AlmostBorn")))
+    
+    if (length(stufftoremove) > 0) {
+      if (stufftoremove[1] > 0) {
+        shrubbery <- shrubbery[-stufftoremove,]
+      }
+    }
   }
   
   if (all(is.na(overwritetable)) & all(is.na(supplement))) {
     shrubbery <- data.frame(stage3 = NA, stage2 = NA, stage1 = NA,
       eststage3 = NA, eststage2 = NA, eststage1 = NA, givenrate = NA,
-      multiplier = NA, convtype = -1)
+      multiplier = NA, convtype = -1, convtype_t12 = -1)
   }
   
   return(shrubbery)
@@ -1663,12 +1713,18 @@ overwrite <- function(stage3, stage2, stage1 = NA, eststage3 = NA,
 #' described by \code{stage3}, \code{stage2}, and \code{stage1}.
 #' @param multiplier A vector of numeric multipliers for fecundity, and NA
 #' entries for all other terms.
-#' @param type A vector denoting the kind of replacement to be performed. This
-#' should be entered as \code{1}, \code{S}, or \code{s} for the replacement of a
-#' survival transition; \code{2}, \code{F}, or \code{f} for the replacement of a
-#' fecundity transition; or \code{3}, \code{R}, or \code{r} for a fecundity
-#' multiplier. If empty or not provided, then defaults to 1 for survival
-#' transition.
+#' @param type A vector denoting the kind of transition between times \emph{t}
+#' and \emph{t}+1 to be replaced. This should be entered as \code{1}, \code{S},
+#' or \code{s} for the replacement of a survival transition; \code{2}, \code{F},
+#' or \code{f} for the replacement of a fecundity transition; or \code{3},
+#' \code{R}, or \code{r} for a fecundity multiplier. If empty or not provided,
+#' then defaults to \code{1} for survival transition.
+#' @param type_t12 An optional vector denoting the kind of transition between
+#' times \emph{t}-1 and \emph{t}. Only necessary if a historical MPM in deVries
+#' format is desired. This should be entered as \code{1}, \code{S}, or \code{s}
+#' for a survival transition; or \code{2}, \code{F}, or \code{f} for a fecundity
+#' transitions. Defaults to \code{1} for survival transition, with impacts only
+#' on the construction of deVries-format hMPMs.
 #' @param stageframe The stageframe being used to produce the MPMs in the study.
 #' @param historical A logical value indicating whether the MPMs intended will
 #' be historical or ahistorical. Defaults to TRUE.
@@ -1689,8 +1745,11 @@ overwrite <- function(stage3, stage2, stage1 = NA, eststage3 = NA,
 #' \item{eststage1}{Stage at time \emph{t}-1 in the transition to replace the
 #' transition designated by \code{stage3}, \code{stage2}, and \code{stage1}.}
 #' \item{givenrate}{A constant to be used as the value of the transition.}
-#' \item{convtype}{Designates whether the transition is a survival transition
-#' probability (1), a fecundity rate (2), or a fecundity multiplier (3).}
+#' \item{convtype}{Designates whether the transition from time \emph{t} to time
+#' \emph{t}+1 is a survival transition probability (1), a fecundity rate (2), or
+#' a fecundity multiplier (3).}
+#' \item{convtype_t12}{Designates whether the transition from time \emph{t}-1 to
+#' time \emph{t} is a survival transition probability (1), a fecundity rate (2).}
 #' 
 #' @section Notes:
 #' Fecundity multiplier data supplied via the \code{supplemental()} function
@@ -1725,12 +1784,13 @@ overwrite <- function(stage3, stage2, stage1 = NA, eststage3 = NA,
 #'   nonobsacol = "Dormant1988", stageassign = lathframe, stagesize = "sizea",
 #'   censorcol = "Missing1988", censorkeep = NA, censor = TRUE)
 #' 
-#' lathsupp3 <- supplemental(stage3 = c("Sd", "Sd", "Sdl", "Sd", "Sdl"), 
-#'   stage2 = c("Sd", "Sd", "Sd", "rep", "rep"),
-#'   stage1 = c("Sd", "rep", "rep", "all", "all"), 
-#'   givenrate = c(0.345, 0.345, 0.054, NA, NA),
-#'   multiplier = c(NA, NA, NA, 0.345, 0.054),
-#'   type = c(1, 1, 1, 3, 3), stageframe = lathframe, historical = TRUE)
+#' lathsupp3 <- supplemental(stage3 = c("Sd", "Sd", "Sdl", "Sdl", "Sd", "Sdl"), 
+#'   stage2 = c("Sd", "Sd", "Sd", "Sd", "rep", "rep"),
+#'   stage1 = c("Sd", "rep", "Sd", "rep", "all", "all"), 
+#'   givenrate = c(0.345, 0.345, 0.054, 0.054, NA, NA),
+#'   multiplier = c(NA, NA, NA, NA, 0.345, 0.054),
+#'   type = c(1, 1, 1, 1, 3, 3), type_t12 = c(1, 2, 1, 2, 1, 1),
+#'   stageframe = lathframe, historical = TRUE)
 #' 
 #' ehrlen3 <- rlefko3(data = lathvert, stageframe = lathframe, year = "all", 
 #'   stages = c("stage3", "stage2", "stage1"), supplement = lathsupp3,
@@ -1788,7 +1848,7 @@ overwrite <- function(stage3, stage2, stage1 = NA, eststage3 = NA,
 #' @export
 supplemental <- function(stage3, stage2, stage1 = NA, eststage3 = NA,
   eststage2 = NA, eststage1 = NA, givenrate = NA, multiplier = NA, type = NA,
-  stageframe, historical = TRUE) {
+  type_t12 = NA, stageframe, historical = TRUE) {
   
   if (all(class(stageframe) != "stageframe")) {
     stop("A regular stageframe, as output from the sf_create() function, is required for function supplemental().", call. = FALSE)
@@ -1839,11 +1899,20 @@ supplemental <- function(stage3, stage2, stage1 = NA, eststage3 = NA,
     missinglength <- fulllength - length(type)
     type <- as.character(append(type, rep(NA, missinglength)))
   }
+  if (length(type_t12) < fulllength) {
+    missinglength <- fulllength - length(type_t12)
+    type_t12 <- as.character(append(type_t12, rep(NA, missinglength)))
+  }
   
   ltype <- tolower(type)
   typeall <- unique(ltype)
   if (!all(is.element(typeall, c(NA, "1", "2", "3", "f", "r", "s")))) {
     stop("Variable type must include only 1, 2, 3, s, r, and f. All other entries are not allowed.", call. = FALSE)
+  }
+  ltype_t12 <- tolower(type_t12)
+  typeall_t12 <- unique(ltype_t12)
+  if (!all(is.element(typeall_t12, c(NA, "1", "2", "f", "s")))) {
+    stop("Variable type_t12 must include only 1, 2, s, and f. All other entries are not allowed.", call. = FALSE)
   }
   
   convtype <- rep(1, length(type))
@@ -1852,6 +1921,10 @@ supplemental <- function(stage3, stage2, stage1 = NA, eststage3 = NA,
   convtype[which(ltype == "f")] <- 2
   convtype[which(ltype == "r")] <- 3
   
+  convtype_t12 <- rep(1, length(type_t12))
+  convtype_t12[which(ltype_t12 == "2")] <- 2
+  convtype_t12[which(ltype_t12 == "f")] <- 2
+
   all.stages.sf <- stageframe$stage
   
   all.stages.inp <- unique(c(stage3, stage2, stage1, eststage3, eststage2, eststage1))
@@ -1861,13 +1934,17 @@ supplemental <- function(stage3, stage2, stage1 = NA, eststage3 = NA,
   if (length(which(mismatches)) > 0) {
     extrastuff <- tolower(all.stages.inp[which(mismatches)])
     
+    unaccountedfor <- extrastuff[which(!is.element(extrastuff, c("all", "rep", "mat", "immat", "prop")))]
+    
     if (!all(is.element(extrastuff, c("all", "rep", "mat", "immat", "prop")))) {
-      stop("Some stage names used in supplemental() input do not match those in the stageframe used.", call. = FALSE)
+      stop(paste("The following stage names input in supplemental() do not match the stageframe:", 
+        paste(unaccountedfor, collapse = ' ')), call. = FALSE)
     }
   }
   
   output <- cbind.data.frame(stage3, stage2, stage1, eststage3, eststage2,
-    eststage1, givenrate, multiplier, convtype, stringsAsFactors = FALSE)
+    eststage1, givenrate, multiplier, convtype, convtype_t12,
+    stringsAsFactors = FALSE)
   
   class(output) <- append(class(output), "lefkoSD")
   

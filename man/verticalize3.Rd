@@ -7,11 +7,11 @@
 verticalize3(
   data,
   noyears,
-  firstyear,
+  firstyear = 1,
   popidcol = 0,
   patchidcol = 0,
   individcol = 0,
-  blocksize,
+  blocksize = NA,
   xcol = 0,
   ycol = 0,
   juvcol = 0,
@@ -38,6 +38,7 @@ verticalize3(
   censorkeep = 0,
   censorRepeat = TRUE,
   censor = FALSE,
+  coordsRepeat = FALSE,
   spacing = NA,
   NAas0 = FALSE,
   NRasRep = FALSE,
@@ -46,11 +47,13 @@ verticalize3(
 )
 }
 \arguments{
-\item{data}{The horizontal data file.}
+\item{data}{The horizontal data file. A valid data frame is required as
+input.}
 
-\item{noyears}{The number of years or observation periods in the dataset.}
+\item{noyears}{The number of years or observation periods in the dataset. A
+valid integer is required as input.}
 
-\item{firstyear}{The first year or time of observation.}
+\item{firstyear}{The first year or time of observation. Defaults to 1.}
 
 \item{popidcol}{A variable name or column number corresponding to the 
 identity of the population for each individual.}
@@ -63,80 +66,120 @@ within populations.}
 identity of each individual.}
 
 \item{blocksize}{The number of variables corresponding to each time in the
-input dataset designated in \code{data}.}
+input dataset designated in \code{data}, if a set pattern of variables is
+used for each observation time in the data frame used as input. If such a
+pattern is not used, and all variable names are properly noted as character
+vectors in the other input variables, then this may be set to NA. Defaults to
+NA.}
 
-\item{xcol}{A variable name or column number corresponding to the x 
-coordinate of each individual in Cartesian space.}
+\item{xcol}{A variable name(s) or column number(s) corresponding to the x 
+coordinate of each individual, or each individual-time combination, in
+Cartesian space. Can refer to the only instance, the first instance, or all
+instances of x variables. In the last case, the values should be entered as
+a vector.}
 
-\item{ycol}{A variable name or column number corresponding to the y
-coordinate of each individual in Cartesian space.}
+\item{ycol}{A variable name(s) or column number(s) corresponding to the y
+coordinate of each individual, or each individual-time combination, in
+Cartesian space. Can refer to the only instance, the first instance, or all
+instances of y variables. In the last case, the values should be entered as
+a vector.}
 
-\item{juvcol}{A variable name or column number that marks individuals in
-immature stages within the dataset. The \code{verticalize3()} function 
+\item{juvcol}{A variable name(s) or column number(s) that marks individuals
+in immature stages within the dataset. The \code{verticalize3()} function 
 assumes that immature individuals are identified in this variable marked with
 a number equal to or greater than 1, and that mature individuals are marked
-as 0 or NA.}
+as 0 or NA. Can refer to the first instance, or all instances of these
+variables. In the latter case, the values should be entered as a vector.}
 
-\item{sizeacol}{A variable name or column number corresponding to the
-size entry associated with the first year or observation time in the dataset.}
+\item{sizeacol}{A variable name(s) or column number(s) corresponding to the
+size entry associated with the first year or observation time in the dataset.
+Can refer to the first instance, or all instances of these variables. In the
+latter case, the values should be entered as a vector.}
 
-\item{sizebcol}{A second variable name or column number corresponding to the
-size entry associated with the first year or observation time in the dataset.}
+\item{sizebcol}{A second variable name(s) or column number(s) corresponding
+tp the size entry associated with the first year or observation time in the
+dataset. Can refer to the first instance, or all instances of these
+variables. In the latter case, the values should be entered as a vector.}
 
-\item{sizeccol}{A third variable name or column number corresponding to the
-size entry associated with the first year or observation time in the dataset.}
+\item{sizeccol}{A third variable name(s) or column number(s) corresponding to
+the size entry associated with the first year or observation time in the
+dataset. Can refer to the first instance, or all instances of these variables.
+In the latter case, the values should be entered as a vector.}
 
-\item{repstracol}{A variable name or column number corresponding to the
+\item{repstracol}{A variable name(s) or column number(s) corresponding to the
 production of reproductive structures, such as flowers, associated with the 
 first year or observation period in the input dataset. This can be binomial 
-or count data, and is used to in analysis of the probability of reproduction.}
+or count data, and is used to in analysis of the probability of reproduction.
+Can refer to the first instance, or all instances of these variables. In the
+latter case, the values should be entered as a vector.}
 
-\item{repstrbcol}{A second variable name or column number corresponding to
-the production of reproductive structures, such as flowers, associated with
-the first year or observation period in the input dataset. This can be 
+\item{repstrbcol}{A second variable name(s) or column number(s) corresponding
+to the production of reproductive structures, such as flowers, associated
+with the first year or observation period in the input dataset. This can be 
 binomial or count data, and is used to in analysis of the probability of
-reproduction.}
+reproduction. Can refer to the first instance, or all instances of these
+variables. In the latter case, the values should be entered as a vector.}
 
-\item{fecacol}{A variable name or column number denoting fecundity associated
-with the first year or observation time in the input dataset. This may 
-represent egg counts, fruit counts, seed production, etc.}
+\item{fecacol}{A variable name(s) or column number(s) denoting fecundity
+associated with the first year or observation time in the input dataset. This
+may represent egg counts, fruit counts, seed production, etc. Can refer to
+the first instance, or all instances of these variables. In the latter case,
+the values should be entered as a vector.}
 
-\item{fecbcol}{A second variable name or column number denoting fecundity
-associated with the first year or observation time in the input dataset. This 
-may represent egg counts, fruit counts, seed production, etc.}
+\item{fecbcol}{A second variable name(s) or column number(s) denoting
+fecundity associated with the first year or observation time in the input
+dataset. This may represent egg counts, fruit counts, seed production, etc.
+Can refer to the first instance, or all instances of these variables. In the
+latter case, the values should be entered as a vector.}
 
-\item{indcovacol}{A variable name or column number corresponding to an
-individual covariate to be used in analysis.}
+\item{indcovacol}{A variable name(s) or column number(s) corresponding to an
+individual covariate to be used in analysis. Can refer to the only instance,
+the first instance, or all instances of these variables. In the last case,
+the values should be entered as a vector.}
 
-\item{indcovbcol}{A variable name or column number corresponding to an
-individual covariate to be used in analysis.}
+\item{indcovbcol}{A variable name(s) or column number(s) corresponding to an
+individual covariate to be used in analysis. Can refer to the only instance,
+the first instance, or all instances of these variables. In the last case,
+the values should be entered as a vector.}
 
-\item{indcovccol}{A second variable name or column number corresponding to an
-individual covariate to be used in analysis.}
+\item{indcovccol}{A second variable name(s) or column number(s) corresponding
+to an individual covariate to be used in analysis. Can refer to the only
+instance, the first instance, or all instances of these variables. In the
+last case, the values should be entered as a vector.}
 
-\item{aliveacol}{A variable name or column number that provides information
+\item{aliveacol}{Variable name(s) or column number(s) providing information
 on whether an individual is alive at a given time. If used, living status
-must be designated as binomial (living = 1, dead = 0).}
+must be designated as binomial (living = 1, dead = 0). Can refer to the first
+instance of a living status variable in the dataset, or equal a full vector
+of all living status variables in temporal order.}
 
-\item{deadacol}{A variable name or column number that provides information on
+\item{deadacol}{Variable name(s) or column number(s) providing information on
 whether an individual is alive at a given time. If used, dead status must be
-designated as binomial (dead = 1, living = 0).}
+designated as binomial (dead = 1, living = 0).  Can refer to the first
+instance of a dead status variable in the dataset, or equal a full vector
+of all dead status variables in temporal order.}
 
-\item{obsacol}{A variable name or column number providing information on 
-whether an individual is in an observable stage at a given time. If used, 
+\item{obsacol}{A variable name(s) or column number(s) providing information
+on whether an individual is in an observable stage at a given time. If used, 
 observation status must be designated as binomial (observed = 1, not 
-observed = 0).}
+observed = 0). Can refer to the first instance of an observation status
+variable in the dataset, or equal a full vector of all observation status
+variables in temporal order.}
 
-\item{nonobsacol}{A variable name or column number providing information on
-whether an individual is in an unobservable stage at a given time. If used,
-observation status must be designated as binomial (not observed = 1, 
-observed = 0).}
+\item{nonobsacol}{A variable name(s) or column number(s) providing
+information on whether an individual is in an unobservable stage at a given
+time. If used, observation status must be designated as binomial (not
+observed = 1, observed = 0). Can refer to the first instance of a
+non-observation status variable in the dataset, or equal a full vector of all
+non-observation status variables in temporal order.}
 
-\item{censorcol}{A variable name or column number corresponding to the first
-entry of a censor variable, used to distinguish between entries to use and
-entries not to use, or to designate entries with special issues that require
-further attention. If used, this should be associated with the first year or
-observation time, and all other years or times must also have censor columns.}
+\item{censorcol}{A variable name(s) or column number(s) corresponding to the
+first entry of a censor variable, used to distinguish between entries to use
+and entries not to use, or to designate entries with special issues that
+require further attention. Can refer to the first instance of a censor status
+variable in the dataset, or equal a full vector of all censor status
+variables in temporal order. Can also refer to a single censor status
+variable used for the entire individual, if \code{singlecensor = TRUE}.}
 
 \item{repstrrel}{This is a scalar multiplier on variable \code{repstrbcol} to
 make it equivalent to \code{repstracol}. This can be useful if two 
@@ -148,8 +191,10 @@ to two-flowered stems. Defaults to 1.}
 it equivalent to \code{fecacol}. This can be useful if two fecundity 
 variables have related but unequal units. Defaults to 1.}
 
-\item{stagecol}{Optional variable name or column number corresponding to life
-history stage at a given time.}
+\item{stagecol}{Optional variable name(s) or column number(s) corresponding
+to life history stage at a given time. Can refer to the first instance of a
+stage identity variable in the dataset, or equal a full vector of all
+stage identity variables in temporal order.}
 
 \item{stageassign}{The stageframe object identifying the life history model
 being operationalized. Note that if \code{stagecol} is provided, then this
@@ -172,6 +217,10 @@ TRUE.}
 \item{censor}{A logical variable determining whether the output data should 
 be censored using the variable defined in \code{censorcol}. Defaults to 
 FALSE.}
+
+\item{coordsRepeat}{A logical value indicating whether x and y coordinates
+correspond to a single x and a single y column. If TRUE, then each
+observation time has its own x and y variables. Defaults to FALSE.}
 
 \item{spacing}{The spacing at which density should be estimated, if density
 estimation is desired and x and y coordinates are supplied. Given in the same
@@ -298,7 +347,8 @@ difficult to predict.
 }
 
 \examples{
-# Lathyrus example
+# Lathyrus example using blocksize - when repeated patterns exist in variable
+# order
 data(lathyrus)
 
 sizevector <- c(0, 100, 13, 127, 3730, 3800, 0)
@@ -323,12 +373,13 @@ lathvert <- verticalize3(lathyrus, noyears = 4, firstyear = 1988,
   nonobsacol = "Dormant1988", stageassign = lathframe, stagesize = "sizea",
   censorcol = "Missing1988", censorkeep = NA, censor = TRUE)
 
-lathsupp3 <- supplemental(stage3 = c("Sd", "Sd", "Sdl", "Sd", "Sdl"), 
-  stage2 = c("Sd", "Sd", "Sd", "rep", "rep"),
-  stage1 = c("Sd", "rep", "rep", "all", "all"), 
-  givenrate = c(0.345, 0.345, 0.054, NA, NA),
-  multiplier = c(NA, NA, NA, 0.345, 0.054),
-  type = c(1, 1, 1, 3, 3), stageframe = lathframe, historical = TRUE)
+lathsupp3 <- supplemental(stage3 = c("Sd", "Sd", "Sdl", "Sdl", "Sd", "Sdl"), 
+  stage2 = c("Sd", "Sd", "Sd", "Sd", "rep", "rep"),
+  stage1 = c("Sd", "rep", "Sd", "rep", "all", "all"), 
+  givenrate = c(0.345, 0.345, 0.054, 0.054, NA, NA),
+  multiplier = c(NA, NA, NA, NA, 0.345, 0.054),
+  type = c(1, 1, 1, 1, 3, 3), type_t12 = c(1, 2, 1, 2, 1, 1),
+  stageframe = lathframe, historical = TRUE)
 
 ehrlen3 <- rlefko3(data = lathvert, stageframe = lathframe, year = "all", 
   stages = c("stage3", "stage2", "stage1"), supplement = lathsupp3,
@@ -337,7 +388,53 @@ ehrlen3 <- rlefko3(data = lathvert, stageframe = lathframe, year = "all",
 ehrlen3mean <- lmean(ehrlen3)
 ehrlen3mean$A[[1]]
 
-# Cypripedium example
+# Lathyrus example without blocksize - when no repeated patterns exist in
+# variable order and all variables names are specified
+data(lathyrus)
+
+sizevector <- c(0, 100, 13, 127, 3730, 3800, 0)
+stagevector <- c("Sd", "Sdl", "VSm", "Sm", "VLa", "Flo", "Dorm")
+repvector <- c(0, 0, 0, 0, 0, 1, 0)
+obsvector <- c(0, 1, 1, 1, 1, 1, 0)
+matvector <- c(0, 0, 1, 1, 1, 1, 1)
+immvector <- c(1, 1, 0, 0, 0, 0, 0)
+propvector <- c(1, 0, 0, 0, 0, 0, 0)
+indataset <- c(0, 1, 1, 1, 1, 1, 1)
+binvec <- c(0, 100, 11, 103, 3500, 3800, 0.5)
+
+lathframe <- sf_create(sizes = sizevector, stagenames = stagevector,
+  repstatus = repvector, obsstatus = obsvector, matstatus = matvector,
+  immstatus = immvector, indataset = indataset, binhalfwidth = binvec,
+  propstatus = propvector)
+
+lathvert <- verticalize3(lathyrus, noyears = 4, firstyear = 1988,
+  patchidcol = "SUBPLOT", individcol = "GENET",
+  juvcol = c("Seedling1988", "Seedling1989", "Seedling1990", "Seedling1991"),
+  sizeacol = c("Volume88", "Volume89", "Volume90", "Volume91"),
+  repstracol = c("FCODE88", "FCODE89", "FCODE90", "FCODE91"),
+  fecacol = c("Intactseed88", "Intactseed89", "Intactseed90", "Intactseed91"),
+  deadacol = c("Dead1988", "Dead1989", "Dead1990", "Dead1991"),
+  nonobsacol = c("Dormant1988", "Dormant1989", "Dormant1990", "Dormant1991"),
+  censorcol = c("Missing1988", "Missing1989", "Missing1990", "Missing1991"), 
+  stageassign = lathframe, stagesize = "sizea",
+  censorkeep = NA, censor = TRUE)
+
+lathsupp3 <- supplemental(stage3 = c("Sd", "Sd", "Sdl", "Sdl", "Sd", "Sdl"), 
+  stage2 = c("Sd", "Sd", "Sd", "Sd", "rep", "rep"),
+  stage1 = c("Sd", "rep", "Sd", "rep", "all", "all"), 
+  givenrate = c(0.345, 0.345, 0.054, 0.054, NA, NA),
+  multiplier = c(NA, NA, NA, NA, 0.345, 0.054),
+  type = c(1, 1, 1, 1, 3, 3), type_t12 = c(1, 2, 1, 2, 1, 1),
+  stageframe = lathframe, historical = TRUE)
+
+ehrlen3 <- rlefko3(data = lathvert, stageframe = lathframe, year = "all", 
+  stages = c("stage3", "stage2", "stage1"), supplement = lathsupp3,
+  yearcol = "year2", indivcol = "individ")
+
+ehrlen3mean <- lmean(ehrlen3)
+ehrlen3mean$A[[1]]
+
+# Cypripedium example using blocksize
 rm(list=ls(all=TRUE))
 
 data(cypdata)
@@ -364,6 +461,53 @@ cypraw_v1 <- verticalize3(data = cypdata, noyears = 6, firstyear = 2004,
   repstracol = "Inf.04", repstrbcol = "Inf2.04", fecacol = "Pod.04",
   stageassign = cypframe_raw, stagesize = "sizeadded", NAas0 = TRUE,
   NRasRep = TRUE)
+
+cypsupp2r <- supplemental(stage3 = c("SD", "P1", "P2", "P3", "SL", "SL", "D", 
+    "XSm", "Sm", "SD", "P1"),
+  stage2 = c("SD", "SD", "P1", "P2", "P3", "SL", "SL", "SL", "SL", "rep",
+    "rep"),
+  eststage3 = c(NA, NA, NA, NA, NA, NA, "D", "XSm", "Sm", NA, NA),
+  eststage2 = c(NA, NA, NA, NA, NA, NA, "XSm", "XSm", "XSm", NA, NA),
+  givenrate = c(0.10, 0.20, 0.20, 0.20, 0.25, 0.40, NA, NA, NA, NA, NA),
+  multiplier = c(NA, NA, NA, NA, NA, NA, NA, NA, NA, 0.5, 0.5),
+  type =c(1, 1, 1, 1, 1, 1, 1, 1, 1, 3, 3),
+  stageframe = cypframe_raw, historical = FALSE)
+
+cypmatrix2r <- rlefko2(data = cypraw_v1, stageframe = cypframe_raw, 
+  year = "all", patch = "all", stages = c("stage3", "stage2", "stage1"),
+  size = c("size3added", "size2added"), supplement = cypsupp2r,
+  yearcol = "year2", patchcol = "patchid", indivcol = "individ")
+                       
+cyp2mean <- lmean(cypmatrix2r)
+cyp2mean
+
+# Cypripedium example using partial repeat patterns with blocksize and part
+# explicit variable name cast
+data(cypdata)
+
+sizevector <- c(0, 0, 0, 0, 0, 0, 1, 2.5, 4.5, 8, 17.5)
+stagevector <- c("SD", "P1", "P2", "P3", "SL", "D", "XSm", "Sm", "Md", "Lg",
+  "XLg")
+repvector <- c(0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1)
+obsvector <- c(0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1)
+matvector <- c(0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1)
+immvector <- c(0, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0)
+propvector <- c(1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)
+indataset <- c(0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1)
+binvec <- c(0, 0, 0, 0, 0, 0.5, 0.5, 1, 1, 2.5, 7)
+
+cypframe_raw <- sf_create(sizes = sizevector, stagenames = stagevector,
+  repstatus = repvector, obsstatus = obsvector, matstatus = matvector,
+  propstatus = propvector, immstatus = immvector, indataset = indataset,
+  binhalfwidth = binvec)
+
+cypraw_v1 <- verticalize3(data = cypdata, noyears = 6, firstyear = 2004,
+  patchidcol = "patch", individcol = "plantid", blocksize = 4,
+  sizeacol = "Inf2.04", sizebcol = "Inf.04", sizeccol = "Veg.04",
+  repstracol = c("Inf.04", "Inf.05", "Inf.06", "Inf.07", "Inf.08", "Inf.09"),
+  repstrbcol = c("Inf2.04", "Inf2.05", "Inf2.06", "Inf2.07", "Inf2.08", "Inf2.09"), 
+  fecacol = "Pod.04", stageassign = cypframe_raw, stagesize = "sizeadded",
+  NAas0 = TRUE, NRasRep = TRUE)
 
 cypsupp2r <- supplemental(stage3 = c("SD", "P1", "P2", "P3", "SL", "SL", "D", 
     "XSm", "Sm", "SD", "P1"),

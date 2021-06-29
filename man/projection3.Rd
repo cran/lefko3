@@ -100,13 +100,17 @@ lathrepm <- matrix(0, 7, 7)
 lathrepm[1, 6] <- 0.345
 lathrepm[2, 6] <- 0.054
 
-lathover3 <- overwrite(stage3 = c("Sd", "Sd", "Sdl"),
-  stage2 = c("Sd", "Sd", "Sd"), stage1 = c("Sd", "rep", "rep"),
-  givenrate = c(0.345, 0.345, 0.054))
+lathsupp3 <- supplemental(stage3 = c("Sd", "Sd", "Sdl", "Sdl", "Sd", "Sdl"), 
+  stage2 = c("Sd", "Sd", "Sd", "Sd", "rep", "rep"),
+  stage1 = c("Sd", "rep", "Sd", "rep", "all", "all"), 
+  givenrate = c(0.345, 0.345, 0.054, 0.054, NA, NA),
+  multiplier = c(NA, NA, NA, NA, 0.345, 0.054),
+  type = c(1, 1, 1, 1, 3, 3), type_t12 = c(1, 2, 1, 2, 1, 1),
+  stageframe = lathframe, historical = TRUE)
 
 ehrlen3 <- rlefko3(data = lathvert, stageframe = lathframe,
   year = c(1989, 1990), stages = c("stage3", "stage2", "stage1"),
-  repmatrix = lathrepm, overwrite = lathover3, yearcol = "year2",
+  repmatrix = lathrepm, supplement = lathsupp3, yearcol = "year2",
   indivcol = "individ")
 
 lathproj <- projection3(ehrlen3, stochastic = TRUE)
@@ -141,27 +145,30 @@ cypraw_v1 <- verticalize3(data = cypdata, noyears = 6, firstyear = 2004,
 rep_cyp_raw <- matrix(0, 11, 11)
 rep_cyp_raw[1:2,7:11] <- 0.5
 
-cypover3r <- overwrite(stage3 = c("SD", "SD", "P1", "P1", "P2", "P3", "SL", 
-    "SL", "SL", "D", "XSm", "Sm", "D", "XSm", "Sm"), 
-  stage2 = c("SD", "SD", "SD", "SD", "P1", "P2", "P3", "SL", "SL", "SL", 
-    "SL", "SL", "SL", "SL", "SL"),
-  stage1 = c("SD", "rep", "SD", "rep", "SD", "P1", "P2", "P3", "SL", "P3", 
-    "P3", "P3", "SL", "SL", "SL"),
-  eststage3 = c(NA, NA, NA, NA, NA, NA, NA, NA, NA, "D", "XSm", "Sm", "D", 
-    "XSm", "Sm"), 
-  eststage2 = c(NA, NA, NA, NA, NA, NA, NA, NA, NA, "XSm", "XSm", "XSm", 
-    "XSm", "XSm", "XSm"), 
-  eststage1 = c(NA, NA, NA, NA, NA, NA, NA, NA, NA, "XSm", "XSm", "XSm", 
-    "XSm", "XSm", "XSm"), 
-  givenrate = c(0.1, 0.1, 0.2, 0.2, 0.2, 0.2, 0.25, 0.4, 0.4, NA, NA, NA, 
-    NA, NA, NA), 
-  type = c("S", "S", "S", "S", "S", "S", "S", "S", "S", "S", "S", "S", "S", 
-    "S", "S"))
+cypsupp3r <- supplemental(stage3 = c("SD", "SD", "P1", "P1", "P2", "P3",
+    "SL", "SL", "SL", "D", "XSm", "Sm", "D", "XSm", "Sm", "SD", "P1"),
+  stage2 = c("SD", "SD", "SD", "SD", "P1", "P2", "P3", "SL", "SL", "SL",
+    "SL", "SL", "SL", "SL", "SL", "rep", "rep"),
+  stage1 = c("SD", "rep", "SD", "rep", "SD", "P1", "P2", "P3", "SL", "P3",
+    "P3", "P3", "SL", "SL", "SL", "all", "all"),
+  eststage3 = c(NA, NA, NA, NA, NA, NA, NA, NA, NA, "D", "XSm", "Sm", "D",
+    "XSm", "Sm", NA, NA),
+  eststage2 = c(NA, NA, NA, NA, NA, NA, NA, NA, NA, "XSm", "XSm", "XSm",
+    "XSm", "XSm", "XSm", NA, NA),
+  eststage1 = c(NA, NA, NA, NA, NA, NA, NA, NA, NA, "XSm", "XSm", "XSm",
+    "XSm", "XSm", "XSm", NA, NA),
+  givenrate = c(0.1, 0.1, 0.2, 0.2, 0.2, 0.2, 0.25, 0.4, 0.4, NA, NA, NA, NA,
+    NA, NA, NA, NA),
+  multiplier = c(NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA,
+    0.5, 0.5),
+  type = c(1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 3, 3),
+  type_t12 = c(1, 2, 1, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1),
+  stageframe = cypframe_raw, historical = TRUE)
 
 cypmatrix3r <- rlefko3(data = cypraw_v1, stageframe = cypframe_raw, 
   year = "all", patch = "all", stages = c("stage3", "stage2", "stage1"),
   size = c("size3added", "size2added", "size1added"), 
-  repmatrix = rep_cyp_raw, overwrite = cypover3r, yearcol = "year2", 
+  repmatrix = rep_cyp_raw, supplement = cypsupp3r, yearcol = "year2", 
   patchcol = "patchid", indivcol = "individ")
 
 cypstoch <- projection3(cypmatrix3r, stochastic = TRUE)

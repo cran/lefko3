@@ -4,7 +4,7 @@
 using namespace Rcpp;
 using namespace arma;
 
-//' Core Engine for dv_hmpm
+//' Core Engine for cond_hmpm()
 //' 
 //' Creates a list of conditional ahistorical matrices in the style noted in
 //' deVries and Caswell (2018).
@@ -36,7 +36,8 @@ List hoffmannofstuttgart(arma::mat mainmat, DataFrame indices, int ahstages,
   int condlength = condidx.n_elem;
   
   for (int i = 0; i < condlength; i++) {
-    newmatrix(new_index(condidx(i))) = mainmat(main_index(condidx(i)));
+    if (mainmat(main_index(condidx(i))) > 0) newmatrix(new_index(condidx(i))) = 
+      newmatrix(new_index(condidx(i))) + mainmat(main_index(condidx(i)));
   }
   
   Rcpp::List condlist = List::create(Named("1") = newmatrix);
@@ -48,7 +49,8 @@ List hoffmannofstuttgart(arma::mat mainmat, DataFrame indices, int ahstages,
     condlength = condidx.n_elem;
     
     for (int j = 0; j < condlength; j++) {
-      newmatrix(new_index(condidx(j))) = mainmat(main_index(condidx(j)));
+      if (mainmat(main_index(condidx(j))) > 0) newmatrix(new_index(condidx(j))) = 
+        newmatrix(new_index(condidx(j))) + mainmat(main_index(condidx(j)));
     }
     
     condlist.push_back(newmatrix);
@@ -67,6 +69,10 @@ List hoffmannofstuttgart(arma::mat mainmat, DataFrame indices, int ahstages,
 //' 
 //' @param hmpm A historical matrix projection model of class \code{lefkoMat}.
 //' @param matchoice A character denoting whether to use A, U, or F matrices.
+//' Defaults to A matrices.
+//' @param err_check A logical value denoting whether to include a data frame
+//' of element equivalence from the conditional matrices to the original
+//' matrices. Used only for debugging purposes. Defaults to FALSE.
 //' 
 //' @return A \code{lefkoCondMat} object, with the following elements:
 //' 
@@ -86,8 +92,8 @@ List hoffmannofstuttgart(arma::mat mainmat, DataFrame indices, int ahstages,
 //' data(cypdata)
 //'  
 //' sizevector <- c(0, 0, 0, 0, 0, 0, 1, 2.5, 4.5, 8, 17.5)
-//' stagevector <- c("SD", "P1", "P2", "P3", "SL", "D", "XSm", 
-//'                  "Sm", "Md", "Lg", "XLg")
+//' stagevector <- c("SD", "P1", "P2", "P3", "SL", "D", "XSm", "Sm", "Md",
+//'   "Lg", "XLg")
 //' repvector <- c(0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1)
 //' obsvector <- c(0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1)
 //' matvector <- c(0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1)
@@ -139,10 +145,13 @@ List hoffmannofstuttgart(arma::mat mainmat, DataFrame indices, int ahstages,
 //' 
 //' @export cond_hmpm
 // [[Rcpp::export]]
-List cond_hmpm(List hmpm, Nullable<CharacterVector> matchoice = R_NilValue) {
+Rcpp::List cond_hmpm(List hmpm, Nullable<CharacterVector> matchoice = R_NilValue,
+  Nullable<LogicalVector> err_check = R_NilValue) {
   
   CharacterVector usedmats("a");
   int iusedmats {1};
+  LogicalVector err_v = {false};
+  bool err_c = false;
   
   if (matchoice.isNotNull()) {
     usedmats = matchoice;
@@ -159,6 +168,13 @@ List cond_hmpm(List hmpm, Nullable<CharacterVector> matchoice = R_NilValue) {
     }
   }
   
+  if (err_check.isNotNull()) {
+    err_v = err_check;
+    if (err_v(0)) {
+      err_c = true;
+    }
+  }
+  
   List amats = hmpm["A"];
   List umats = hmpm["U"];
   List fmats = hmpm["F"];
@@ -171,10 +187,18 @@ List cond_hmpm(List hmpm, Nullable<CharacterVector> matchoice = R_NilValue) {
   arma::uvec hstage2 = hstages["stage_id_2"];
   arma::uvec ahstages = stageframe["stage_id"];
   StringVector stagenames = stageframe["stage"];
+  StringVector matnames(numofmats);
   
-  int hmpm_rows = hstage1.n_elem;
+  for (int i = 0; i < numofmats; i++) {
+    matnames(i) = i + 1;
+  }
+  
   int ahmpm_rows = ahstages.n_elem;
-  int hmpm_elems = hmpm_rows * ahmpm_rows;
+  int hmpm_rows = hstage1.n_elem;
+  int hmpm_elems = 2 * ahmpm_rows * ahmpm_rows * ahmpm_rows;
+  
+  int format_int {0};
+  if (stagenames(ahmpm_rows - 1) == "AlmostBorn") format_int = 1;
   
   arma::uvec stage1(hmpm_elems);
   arma::uvec stage2(hmpm_elems);
@@ -187,26 +211,81 @@ List cond_hmpm(List hmpm, Nullable<CharacterVector> matchoice = R_NilValue) {
   main_index.fill(-1);
   new_index.fill(-1);
   
+  int stage1_proxy {0};
+  int stage2o_proxy {0};
+  int stage2n_proxy {0};
+  int stage3_proxy {0};
+  
   int counter = 0;
   
-  for (int i = 0; i < hmpm_rows; i++) {
-    for (int j = 0; j < hmpm_rows; j++) {
-      if (hstage2[i] == hstage1[j]) {
-        stage1[counter] = hstage1[i];
-        stage2[counter] = hstage2[i];
-        stage3[counter] = hstage2[j];
+  // This next section creates an index of matrix elements in the original matrices
+  // and the new conditional matrices. It must be run on the hstages inputs in
+  // order to handle reduced matrices properly.
+  if (format_int == 0) {
+    // This portion handles Ehrlen-format hMPMs
+    for (int prior = 0; prior < hmpm_rows; prior++) {
+      for (int post = 0; post < hmpm_rows; post++) {
+        stage1_proxy = hstage1[prior];
+        stage2o_proxy = hstage2[prior];
+        stage2n_proxy = hstage1[post];
+        stage3_proxy = hstage2[post];
         
-        main_index[counter] = j + (i * hmpm_rows);
-        new_index[counter] = (stage3[counter] - 1) + ((stage2[counter] - 1) * ahmpm_rows);
+        if (stage2o_proxy == stage2n_proxy) {
+          stage1[counter] = stage1_proxy;
+          stage2[counter] = stage2n_proxy;
+          stage3[counter] = stage3_proxy;
+              
+          main_index[counter] = post + (prior * hmpm_rows);
+          new_index[counter] = (stage3[counter] - 1) + ((stage2[counter] - 1) * ahmpm_rows);
+          
+          counter++;
+        }
+      }
+    }
+  } else {
+    // This section deals with deVries-format hMPMs
+    for (int prior = 0; prior < hmpm_rows; prior++) {
+      for (int post = 0; post < hmpm_rows; post++) {
+        stage1_proxy = hstage1[prior];
+        stage2o_proxy = hstage2[prior];
+        stage2n_proxy = hstage1[post];
+        stage3_proxy = hstage2[post];
         
-        counter++;
+        if (stage2o_proxy == stage2n_proxy) {
+          stage1[counter] = stage1_proxy;
+          stage2[counter] = stage2o_proxy;
+          stage3[counter] = stage3_proxy;
+              
+          main_index[counter] = post + (prior * hmpm_rows);
+          new_index[counter] = (stage3[counter] - 1) + ((stage2[counter] - 1) * ahmpm_rows);
+          
+          counter++;
+        } else if (stage2n_proxy == ahmpm_rows && stage1_proxy < ahmpm_rows) {
+          stage1[counter] = stage1_proxy;
+          stage2[counter] = stage2o_proxy;
+          stage3[counter] = stage3_proxy;
+              
+          main_index[counter] = post + (prior * hmpm_rows);
+          new_index[counter] = (stage3[counter] - 1) + ((stage2[counter] - 1) * ahmpm_rows);
+              
+          counter++;
+        }
       }
     }
   }
   
-  DataFrame loveontherocks = DataFrame::create(Named("stage1") = stage1, _["stage2"] = stage2, _["stage3"] = stage3, 
-                                               _["main_index"] = main_index, _["new_index"] = new_index);
+  arma::uvec elements_to_use = find(stage1 > 0);
+  stage1 = stage1.elem(elements_to_use);
+  stage2 = stage2.elem(elements_to_use);
+  stage3 = stage3.elem(elements_to_use);
+  main_index = main_index.elem(elements_to_use);
+  new_index = new_index.elem(elements_to_use);
   
+  DataFrame loveontherocks = DataFrame::create(Named("stage1") = stage1,
+    _["stage2"] = stage2, _["stage3"] = stage3, _["main_index"] = main_index,
+    _["new_index"] = new_index);
+  
+  // This next line creates the conditional matrices in list form
   List mats1 = hoffmannofstuttgart(amats(0), loveontherocks, ahmpm_rows, stagenames);
   
   if (iusedmats == 3) {
@@ -236,10 +315,16 @@ List cond_hmpm(List hmpm, Nullable<CharacterVector> matchoice = R_NilValue) {
       allout.push_back(mats1);
     }
   }
+  allout.names() = matnames;
   
   List panama = List::create(Named("Acond") = allout, _["hstages"] = hstages,
     _["ahstages"] = stageframe, _["labels"] = labels);
+  
+  if (err_c) {
+    Rcpp::List morestuff = List::create(_["err_check"] = loveontherocks);
+    panama.push_back(morestuff);
+  }
   panama.attr("class") = "lefkoCondMat";
   
-  return (panama);
+  return panama;
 }

@@ -23,15 +23,17 @@ annual matrices. Defaults to equal weighting among times.}
 }
 \value{
 This function returns an object of class \code{lefkoSens}, which is a
-list of 7 elements. The first, h_sensmats, is a list of historical sensitivity
-matrices (NULL if an ahMPM is used as input). The second, ah_elasmats, is a
-list of either ahistorical sensitivity matrices if an ahMPM is used as input,
-or, if an hMPM is used as input, then the result is a list of ahistorical
-matrices based on the equivalent historical dependencies assumed in the
-input historical matrices. The third element, h_stages, is a data frame
-showing historical stage pairs (NULL if ahMPM used as input). The fourth
-element, ah_stages, is a data frame showing the order of ahistorical stages.
-The last 3 elements are the A, U, and F portions of the input.
+list of 8 elements. The first, \code{h_sensmats}, is a list of historical
+sensitivity matrices (NULL if an ahMPM is used as input). The second,
+\code{ah_elasmats}, is a list of either ahistorical sensitivity matrices if
+an ahMPM is used as input, or, if an hMPM is used as input, then the result
+is a list of ahistorical matrices based on the equivalent historical
+dependencies assumed in the input historical matrices. The third element,
+\code{h_stages}, is a data frame showing historical stage pairs (NULL if
+ahMPM used as input). The fourth element, \code{agestages}, show the order of
+age-stage combinations, if age-by-stage MPMs have been supplied. The fifth
+element, \code{ah_stages}, is a data frame showing the order of ahistorical
+stages. The last 3 elements are the A, U, and F portions of the input.
 }
 \description{
 \code{sensitivity3.lefkoMat()} returns the sensitivities of population growth
@@ -49,9 +51,6 @@ Deterministic sensitivities are estimated as eqn. 9.14 in Caswell (2001,
 Matrix Population Models). Stochastic sensitivities are estimated as eqn.
 14.97 in Caswell (2001). Note that stochastic sensitivities are of the log of
 the stochastic \eqn{\lambda}.
-
-Currently, this function does not estimate equivalent ahistorical stochastic
-sensitivities for input historical matrices.
 }
 
 \examples{
@@ -80,12 +79,13 @@ lathvert <- verticalize3(lathyrus, noyears = 4, firstyear = 1988,
   nonobsacol = "Dormant1988", stageassign = lathframe, stagesize = "sizea",
   censorcol = "Missing1988", censorkeep = NA, censor = TRUE)
 
-lathsupp3 <- supplemental(stage3 = c("Sd", "Sd", "Sdl", "Sd", "Sdl"), 
-  stage2 = c("Sd", "Sd", "Sd", "rep", "rep"),
-  stage1 = c("Sd", "rep", "rep", "all", "all"), 
-  givenrate = c(0.345, 0.345, 0.054, NA, NA),
-  multiplier = c(NA, NA, NA, 0.345, 0.054),
-  type = c(1, 1, 1, 3, 3), stageframe = lathframe, historical = TRUE)
+lathsupp3 <- supplemental(stage3 = c("Sd", "Sd", "Sdl", "Sdl", "Sd", "Sdl"), 
+  stage2 = c("Sd", "Sd", "Sd", "Sd", "rep", "rep"),
+  stage1 = c("Sd", "rep", "Sd", "rep", "all", "all"), 
+  givenrate = c(0.345, 0.345, 0.054, 0.054, NA, NA),
+  multiplier = c(NA, NA, NA, NA, 0.345, 0.054),
+  type = c(1, 1, 1, 1, 3, 3), type_t12 = c(1, 2, 1, 2, 1, 1),
+  stageframe = lathframe, historical = TRUE)
 
 ehrlen3 <- rlefko3(data = lathvert, stageframe = lathframe, year = "all", 
   stages = c("stage3", "stage2", "stage1"), supplement = lathsupp3,

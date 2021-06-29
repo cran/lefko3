@@ -1,6 +1,41 @@
 LEFKO3 NEWS
 -----------
 
+CHANGES IN VERSION 3.5.0 (2021-06-29)
+-------------------------------------
+  NEW FEATURES
+    1. Historical MPM estimating functions can now estimate hMPMs in deVries
+       format, in which newborns have an unique prior stage. All population
+       dynamics functions have also been reworked to handle this format.
+    2. New output has been added showing the exact order of age-stage
+       combinations across all rows in estimated age-by-stage MPMs, as output
+       from function aflefko2().
+    3. Stochastic sensitivities of historical MPMs now yield ahistorical
+       equivalents in all output.
+    4. Added manual designation of ahistorical vs. historical output in
+       functions sensitivity3.list() and elasticity3.list().
+
+  USER-VISIBLE CHANGES
+    1. Function modelsearch() can now handle invariant response terms.
+    2. Functions flefko3() and flefko2() can now handle invariant fecundity.
+    3. Function verticalize3() can now handle horizontal datasets without clear
+       patterns in order.
+    4. Amended overwrite() and supplemental() functions to account for possible
+       prior newborn stage in deVries formatted hMPMs.
+    5. Function supplemental() now details stage names not accounted for in the
+       input stageframe in error messages.
+    6. Some error and warning messages have been clarified for better
+       understanding.
+    7. Many examples have been expanded to include extra conditions.
+
+  BUG FIXES
+    1. Function rlefko3() now handles dimension reduction properly.
+    2. Function cond_hmpm() now produces conditional matrices from all
+       combinations of population, subpopulation, and year, and also properly
+       labels them.
+    3. Typos and other issues corrected in vignettes.
+
+
 CHANGES IN VERSION 3.4.0 (2021-03-31)
 -------------------------------------
   NEW FEATURES

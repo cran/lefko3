@@ -12,7 +12,8 @@ overwrite(
   eststage2 = NA,
   eststage1 = NA,
   givenrate = NA,
-  type = NA
+  type = NA,
+  type_t12 = NA
 )
 }
 \arguments{
@@ -40,9 +41,18 @@ matrix to be estimated is historical.}
 \item{givenrate}{A fixed rate or probability to replace for the transition
 described by \code{stage3}, \code{stage2}, and \code{stage1}.}
 
-\item{type}{A vector denoting the kind of transition that will be replaced.
-Should be entered as 1, S, or s for survival, or 2, F, or f for fecundity.
-Defaults to 1, for survival transition.}
+\item{type}{A vector denoting the kind of transition between times \emph{t}
+and \emph{t}+1 to be replaced. This should be entered as \code{1}, \code{S},
+or \code{s} for the replacement of a survival transition; or \code{2},
+\code{F}, or \code{f} for the replacement of a fecundity transition. If empty
+or not provided, then defaults to \code{1} for survival transition.}
+
+\item{type_t12}{An optional vector denoting the kind of transition between
+times \emph{t}-1 and \emph{t}. Only necessary if a historical MPM in deVries
+format is desired. This should be entered as \code{1}, \code{S}, or \code{s}
+for a survival transition; or \code{2}, \code{F}, or \code{f} for a fecundity
+transitions. Defaults to \code{1} for survival transition, with impacts only
+on the construction of deVries-format hMPMs.}
 }
 \value{
 A data frame that puts the above vectors together and can be used as
@@ -61,8 +71,10 @@ transition designated by \code{stage3}, \code{stage2}, and \code{stage1}.}
 \item{eststage1}{Stage at time \emph{t}-1 in the transition to replace the
 transition designated by \code{stage3}, \code{stage2}, and \code{stage1}.}
 \item{givenrate}{A constant to be used as the value of the transition.}
-\item{convtype}{Designates whether the transition is a survival-transition
-probability (1) or a fecundity rate (2).}
+\item{convtype}{Designates whether the transition from time \emph{t} to time
+\emph{t}+1 is a survival-transition probability (1) or a fecundity rate (2).}
+\item{convtype_t12}{Designates whether the transition from time \emph{t}-1 to
+time \emph{t} is a survival transition probability (1), a fecundity rate (2).}
 }
 \description{
 \code{overwrite()} returns a data frame describing which particular

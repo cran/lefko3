@@ -26,7 +26,9 @@ rlefko3(
   indivcol = NA,
   censorcol = NA,
   censorkeep = 0,
-  reduce = FALSE
+  format = "ehrlen",
+  reduce = FALSE,
+  err_check = FALSE
 )
 }
 \arguments{
@@ -131,9 +133,18 @@ status. Only needed if \code{censor = TRUE}.}
 \item{censorkeep}{The value of the censor variable denoting data elements to
 keep. Defaults to 0.}
 
+\item{format}{A string indicating whether to estimate matrices in
+\code{ehrlen} format or \code{deVries} format. The latter adds one extra
+prior stage to account for the prior state of newborns. Defaults to
+\code{ehrlen} format.}
+
 \item{reduce}{A logical value denoting whether to remove historical stages
 associated exclusively with zero transitions. These are removed only if all
 row and column sums in ALL matrices estimated equal 0. Defaults to FALSE.}
+
+\item{err_check}{A logical value indicating whether to append extra
+information used in matrix calculation within the output list. Used for
+development debugging purposes.}
 }
 \value{
 If all inputs are properly formatted, then this function will return
@@ -147,6 +158,8 @@ matrices output in the \code{matrix} class.}
 output in the \code{matrix} class.}
 \item{hstages}{A data frame matrix showing the pairing of ahistorical stages
 used to create historical stage pairs.}
+\item{agestages}{Set to NA. Only used in output to function
+\code{aflefko2}().}
 \item{ahstages}{A data frame detailing the characteristics of associated
 ahistorical stages, in the form of a modified stageframe that includes
 status as an entry stage through reproduction.}
@@ -220,12 +233,13 @@ lathvert <- verticalize3(lathyrus, noyears = 4, firstyear = 1988,
   stageassign = lathframe, stagesize = "sizea", censorcol = "Missing1988", 
   censorkeep = NA, censor = TRUE)
 
-lathsupp3 <- supplemental(stage3 = c("Sd", "Sd", "Sdl", "Sd", "Sdl"), 
-  stage2 = c("Sd", "Sd", "Sd", "rep", "rep"),
-  stage1 = c("Sd", "rep", "rep", "all", "all"), 
-  givenrate = c(0.345, 0.345, 0.054, NA, NA),
-  multiplier = c(NA, NA, NA, 0.345, 0.054),
-  type = c(1, 1, 1, 3, 3), stageframe = lathframe, historical = TRUE)
+lathsupp3 <- supplemental(stage3 = c("Sd", "Sd", "Sdl", "Sdl", "Sd", "Sdl"), 
+  stage2 = c("Sd", "Sd", "Sd", "Sd", "rep", "rep"),
+  stage1 = c("Sd", "rep", "Sd", "rep", "all", "all"), 
+  givenrate = c(0.345, 0.345, 0.054, 0.054, NA, NA),
+  multiplier = c(NA, NA, NA, NA, 0.345, 0.054),
+  type = c(1, 1, 1, 1, 3, 3), type_t12 = c(1, 2, 1, 2, 1, 1),
+  stageframe = lathframe, historical = TRUE)
 
 ehrlen3 <- rlefko3(data = lathvert, stageframe = lathframe, year = "all", 
   stages = c("stage3", "stage2", "stage1"), supplement = lathsupp3,
@@ -277,7 +291,8 @@ cypsupp3r <- supplemental(stage3 = c("SD", "SD", "P1", "P1", "P2", "P3",
     NA, NA, NA, NA),
   multiplier = c(NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA,
     0.5, 0.5),
-  type =c(1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 3, 3),
+  type = c(1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 3, 3),
+  type_t12 = c(1, 2, 1, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1),
   stageframe = cypframe_raw, historical = TRUE)
 
 cypmatrix3r <- rlefko3(data = cypraw_v1, stageframe = cypframe_raw,
