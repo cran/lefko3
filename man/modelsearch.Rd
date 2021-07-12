@@ -261,9 +261,6 @@ of individuals used to model that vital rate, and 3) number of individual
 transitions used to model that vital rate.}
 }
 \description{
-Develop Best-fit Vital Rate Estimation Models For MPM Development
-}
-\details{
 Function \code{modelsearch()} returns both a best-fit model for each vital
 rate, and a model table showing all models tested. The final output can be
 used as input in other functions within this package.
@@ -278,12 +275,17 @@ through the functions \code{\link[stats]{lm}()} (GLM with Gaussian response),
 \code{\link[MASS]{glm.nb}()} (GLM with negative binomial response),
 \code{\link[pscl]{zeroinfl}()} (zero-inflated Poisson or negative binomial
 response), \code{\link[lme4]{lmer}()} (mixed model with Gaussian response),
-\code{\link[lme4]{glmer}()} (mixed model with binomial or Poisson response),
-\code{\link[glmmTMB]{glmmTMB}()} (mixed model with negative binomial,
-zero-inflated negative binomial, or zero-inflated Poisson response).
-See documentation related to these functions for further information. Any
-response term that is invariable in the dataset will lead to a best-fit model
-for that response represented by a single constant value.
+and \code{\link[lme4]{glmer}()} (mixed model with binomial, Poisson, or
+negative binomial response). See documentation related to these functions for
+further information. Any response term that is invariable in the dataset will
+lead to a best-fit model for that response represented by a single constant
+value.
+
+The current version of \code{modelsearch()} does not allow zero-inflated or
+zero-truncated distributions in mixed models, nor does it allow the negative
+binomial distribution. When current issues are resolved with package
+\code{glmmTMB}, which was originally used for this purpose, we will reinstate
+these special response distributions.
 
 Exhaustive model building and selection proceeds via the
 \code{\link[MuMIn]{dredge}()} function in package \code{MuMIn}. This function
@@ -382,13 +384,15 @@ lathmodelsln3 <- modelsearch(lathvertln, historical = TRUE,
   indiv = "individ", patch = "patchid", year = "year2",year.as.random = TRUE,
   patch.as.random = TRUE, show.model.tables = TRUE, quiet = TRUE)
 
-# Here we use supplemental() to provide overwrite and reproductive info
-lathsupp3 <- supplemental(stage3 = c("Sd", "Sd", "Sdl", "Sdl", "Sd", "Sdl"), 
-  stage2 = c("Sd", "Sd", "Sd", "Sd", "rep", "rep"),
-  stage1 = c("Sd", "rep", "Sd", "rep", "all", "all"), 
-  givenrate = c(0.345, 0.345, 0.054, 0.054, NA, NA),
-  multiplier = c(NA, NA, NA, NA, 0.345, 0.054),
-  type = c(1, 1, 1, 1, 3, 3), type_t12 = c(1, 2, 1, 2, 1, 1),
+lathsupp3 <- supplemental(stage3 = c("Sd", "Sd", "Sdl", "Sdl", "mat", "Sd", "Sdl"), 
+  stage2 = c("Sd", "Sd", "Sd", "Sd", "Sdl", "rep", "rep"),
+  stage1 = c("Sd", "rep", "Sd", "rep", "Sd", "mat", "mat"),
+  eststage3 = c(NA, NA, NA, NA, "mat", NA, NA),
+  eststage2 = c(NA, NA, NA, NA, "Sdl", NA, NA),
+  eststage1 = c(NA, NA, NA, NA, "Sdl", NA, NA),
+  givenrate = c(0.345, 0.345, 0.054, 0.054, NA, NA, NA),
+  multiplier = c(NA, NA, NA, NA, NA, 0.345, 0.054),
+  type = c(1, 1, 1, 1, 1, 3, 3), type_t12 = c(1, 2, 1, 2, 1, 1, 1),
   stageframe = lathframeln, historical = TRUE)
 
 lathmat3ln <- flefko3(year = "all", patch = "all", stageframe = lathframeln, 

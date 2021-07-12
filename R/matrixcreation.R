@@ -272,13 +272,15 @@
 #'   indiv = "individ", patch = "patchid", year = "year2",year.as.random = TRUE,
 #'   patch.as.random = TRUE, show.model.tables = TRUE, quiet = TRUE)
 #' 
-#' # Here we use supplemental() to provide overwrite and reproductive info
-#' lathsupp3 <- supplemental(stage3 = c("Sd", "Sd", "Sdl", "Sdl", "Sd", "Sdl"), 
-#'   stage2 = c("Sd", "Sd", "Sd", "Sd", "rep", "rep"),
-#'   stage1 = c("Sd", "rep", "Sd", "rep", "all", "all"), 
-#'   givenrate = c(0.345, 0.345, 0.054, 0.054, NA, NA),
-#'   multiplier = c(NA, NA, NA, NA, 0.345, 0.054),
-#'   type = c(1, 1, 1, 1, 3, 3), type_t12 = c(1, 2, 1, 2, 1, 1),
+#' lathsupp3 <- supplemental(stage3 = c("Sd", "Sd", "Sdl", "Sdl", "mat", "Sd", "Sdl"), 
+#'   stage2 = c("Sd", "Sd", "Sd", "Sd", "Sdl", "rep", "rep"),
+#'   stage1 = c("Sd", "rep", "Sd", "rep", "Sd", "mat", "mat"),
+#'   eststage3 = c(NA, NA, NA, NA, "mat", NA, NA),
+#'   eststage2 = c(NA, NA, NA, NA, "Sdl", NA, NA),
+#'   eststage1 = c(NA, NA, NA, NA, "Sdl", NA, NA),
+#'   givenrate = c(0.345, 0.345, 0.054, 0.054, NA, NA, NA),
+#'   multiplier = c(NA, NA, NA, NA, NA, 0.345, 0.054),
+#'   type = c(1, 1, 1, 1, 1, 3, 3), type_t12 = c(1, 2, 1, 2, 1, 1, 1),
 #'   stageframe = lathframeln, historical = TRUE)
 #' 
 #' lathmat3ln <- flefko3(year = "all", patch = "all", stageframe = lathframeln, 
@@ -287,25 +289,6 @@
 #'   patch.as.random = FALSE, reduce = FALSE)
 #' 
 #' summary(lathmat3ln)
-#' 
-#' # Alternatively, we can use overwrite() and a reproductive matrix to provide
-#' # supplemental info
-#' 
-#' lathrepmln <- matrix(0, 21, 21)
-#' lathrepmln[1, c(13:21)] <- 0.345
-#' lathrepmln[2, c(13:21)] <- 0.054
-#' 
-#' lathover3 <- overwrite(stage3 = c("Sd", "Sd", "Sdl"), 
-#'   stage2 = c("Sd", "Sd", "Sd"), stage1 = c("Sd", "rep", "rep"), 
-#'   givenrate = c(0.345, 0.345, 0.054))
-#' 
-#' lathmat3ln_alt <- flefko3(year = "all", patch = "all",
-#'   stageframe = lathframeln, modelsuite = lathmodelsln3, data = lathvertln,
-#'   repmatrix = lathrepmln, overwrite = lathover3, patchcol = "patchid",
-#'   yearcol = "year2", year.as.random = FALSE, patch.as.random = FALSE,
-#'   reduce = FALSE)
-#' 
-#' summary(lathmat3ln_alt)
 #' }
 #' 
 #' @export
@@ -444,6 +427,9 @@ flefko3 <- function(year = "all", patch = "all", stageframe, supplement = NA,
   instages <- length(stageframe$stage_id)
   
   ovtable <- .overwrite_reassess(stageframe, supplement, overwrite, historical = TRUE)
+  
+  flubbleindices <- which(tolower(ovtable$eststage1) == "notalive")
+  if (length(flubbleindices) > 0) {ovtable <- ovtable[-flubbleindices,]}
   
   # Next the data frame carrying all raw values and element indices for matrix element estimation
   allstages.list <- theoldpizzle(stageframe, ovtable, repmatrix, finalage = 0,
@@ -938,23 +924,6 @@ flefko3 <- function(year = "all", patch = "all", stageframe, supplement = NA,
 #'   patch.as.random = FALSE, reduce = FALSE)
 #' 
 #' summary(lathmat2ln)
-#' 
-#' # Alternatively, we can use overwrite() and a reproductive matrix instead of
-#' # supplemental()
-#' lathrepmln <- matrix(0, 21, 21)
-#' lathrepmln[1, c(13:21)] <- 0.345
-#' lathrepmln[2, c(13:21)] <- 0.054
-#' 
-#' lathover2 <- overwrite(stage3 = c("Sd", "Sdl"), stage2 = c("Sd", "Sd"),
-#'   givenrate = c(0.345, 0.054))
-#' 
-#' lathmat2ln_alt <- flefko2(year = "all", patch = "all",
-#'   stageframe = lathframeln, modelsuite = lathmodelsln2, data = lathvertln,
-#'   repmatrix = lathrepmln, overwrite = lathover2, patchcol = "patchid",
-#'   yearcol = "year2", year.as.random = FALSE, patch.as.random = FALSE,
-#'   reduce = FALSE)
-#' 
-#' summary(lathmat2ln_alt)
 #' }
 #' 
 #' @export
@@ -1463,12 +1432,15 @@ flefko2 <- function(year = "all", patch = "all", stageframe, supplement = NA,
 #'   stageassign = lathframe, stagesize = "sizea", censorcol = "Missing1988", 
 #'   censorkeep = NA, censor = TRUE)
 #' 
-#' lathsupp3 <- supplemental(stage3 = c("Sd", "Sd", "Sdl", "Sdl", "Sd", "Sdl"), 
-#'   stage2 = c("Sd", "Sd", "Sd", "Sd", "rep", "rep"),
-#'   stage1 = c("Sd", "rep", "Sd", "rep", "all", "all"), 
-#'   givenrate = c(0.345, 0.345, 0.054, 0.054, NA, NA),
-#'   multiplier = c(NA, NA, NA, NA, 0.345, 0.054),
-#'   type = c(1, 1, 1, 1, 3, 3), type_t12 = c(1, 2, 1, 2, 1, 1),
+#' lathsupp3 <- supplemental(stage3 = c("Sd", "Sd", "Sdl", "Sdl", "Sd", "Sdl", "mat"),
+#'   stage2 = c("Sd", "Sd", "Sd", "Sd", "rep", "rep", "Sdl"),
+#'   stage1 = c("Sd", "rep", "Sd", "rep", "npr", "npr", "Sd"),
+#'   eststage3 = c(NA, NA, NA, NA, NA, NA, "mat"),
+#'   eststage2 = c(NA, NA, NA, NA, NA, NA, "Sdl"),
+#'   eststage1 = c(NA, NA, NA, NA, NA, NA, "NotAlive"),
+#'   givenrate = c(0.345, 0.345, 0.054, 0.054, NA, NA, NA),
+#'   multiplier = c(NA, NA, NA, NA, 0.345, 0.054, NA),
+#'   type = c(1, 1, 1, 1, 3, 3, 1), type_t12 = c(1, 2, 1, 2, 1, 1, 1),
 #'   stageframe = lathframe, historical = TRUE)
 #' 
 #' ehrlen3 <- rlefko3(data = lathvert, stageframe = lathframe, year = "all", 
@@ -1504,7 +1476,6 @@ flefko2 <- function(year = "all", patch = "all", stageframe, supplement = NA,
 #'   stageassign = cypframe_raw, stagesize = "sizeadded", NAas0 = TRUE,
 #'   NRasRep = TRUE)
 #' 
-#' # Here we use supplemental() to provide overwrite() and reproductive info
 #' cypsupp3r <- supplemental(stage3 = c("SD", "SD", "P1", "P1", "P2", "P3",
 #'     "SL", "SL", "SL", "D", "XSm", "Sm", "D", "XSm", "Sm", "SD", "P1"),
 #'   stage2 = c("SD", "SD", "SD", "SD", "P1", "P2", "P3", "SL", "SL", "SL",
@@ -1532,37 +1503,6 @@ flefko2 <- function(year = "all", patch = "all", stageframe, supplement = NA,
 #'   indivcol = "individ")
 #' 
 #' summary(cypmatrix3r)
-#' 
-#' # Alternatively, we can use overwrite() and a reproductive matrix instead of
-#' # supplemental()
-#' 
-#' rep_cyp_raw <- matrix(0, 11, 11)
-#' rep_cyp_raw[1:2,7:11] <- 0.5
-#' 
-#' cypover3r <- overwrite(stage3 = c("SD", "SD", "P1", "P1", "P2", "P3", "SL", 
-#'     "SL", "SL", "D", "XSm", "Sm", "D", "XSm", "Sm"), 
-#'   stage2 = c("SD", "SD", "SD", "SD", "P1", "P2", "P3", "SL", "SL", "SL",
-#'    "SL", "SL", "SL", "SL", "SL"),
-#'   stage1 = c("SD", "rep", "SD", "rep", "SD", "P1", "P2", "P3", "SL", "P3",
-#'    "P3", "P3", "SL", "SL", "SL"),
-#'   eststage3 = c(NA, NA, NA, NA, NA, NA, NA, NA, NA, "D", "XSm", "Sm", "D",
-#'    "XSm", "Sm"), 
-#'   eststage2 = c(NA, NA, NA, NA, NA, NA, NA, NA, NA, "XSm", "XSm", "XSm",
-#'    "XSm", "XSm", "XSm"), 
-#'   eststage1 = c(NA, NA, NA, NA, NA, NA, NA, NA, NA, "XSm", "XSm", "XSm",
-#'     "XSm", "XSm", "XSm"),
-#'   givenrate = c(0.1, 0.1, 0.2, 0.2, 0.2, 0.2, 0.25, 0.4, 0.4, NA, NA, NA, NA,
-#'     NA, NA),
-#'   type = c("S", "S", "S", "S", "S", "S", "S", "S", "S", "S", "S", "S", "S",
-#'     "S", "S"))
-#' 
-#' cypmatrix3r_alt <- rlefko3(data = cypraw_v1, stageframe = cypframe_raw,
-#'   year = "all", patch = "all", stages = c("stage3", "stage2", "stage1"),
-#'   size = c("size3added", "size2added", "size1added"),
-#'   repmatrix = rep_cyp_raw, overwrite = cypover3r, yearcol = "year2",
-#'   patchcol = "patchid", indivcol = "individ")
-#' 
-#' summary(cypmatrix3r_alt)
 #' 
 #' @export
 rlefko3 <- function(data, stageframe, year = "all", pop = NA, patch = NA,
@@ -1923,6 +1863,27 @@ rlefko3 <- function(data, stageframe, year = "all", pop = NA, patch = NA,
   } 
   
   ovtable <- .overwrite_reassess(stageframe, supplement, overwrite, historical = TRUE)
+  
+  #Here we search for NotAlive entries and then alter the dataset accordingly
+  #Then we remove the NotAlive entries from the supplement table
+  flubbleindices <- which(tolower(ovtable$eststage1) == "notalive")
+  flubble <- ovtable[flubbleindices,]
+  if (length(flubbleindices) > 0) {
+    for (i in c(1:dim(flubble)[1])) {
+      datamatch_t1 <- which(tolower(data$stage1) == "notalive")
+      datamatch_t2 <- which(data$usedstage2 == flubble$eststage2[i])
+      datamatch_t3 <- which(data$usedstage3 == flubble$eststage3[i])
+      
+      finalshowdown <- intersect(intersect(datamatch_t1, datamatch_t2), datamatch_t3)
+      
+      if (length(finalshowdown) > 0) {
+        data$usedstage1[finalshowdown] <- flubble$stage1[i]
+        data$usedstage2[finalshowdown] <- flubble$stage2[i]
+        data$usedstage3[finalshowdown] <- flubble$stage3[i]
+      }
+    }
+    ovtable <- ovtable[-flubbleindices,]
+  }
   
   # This section creates stageexpansion9, which is a data frame that holds values for stage transitions from paired stages
   # in times t and t-1 to paired stages in times t and t+1
@@ -2298,28 +2259,6 @@ rlefko3 <- function(data, stageframe, year = "all", pop = NA, patch = NA,
 #'   yearcol = "year2", patchcol = "patchid", indivcol = "individ")
 #'                        
 #' cypmatrix2r$A[[1]]
-#' 
-#' # Alternatively, we can use overwrite() and a reproductive matrix instead of
-#' # supplemental()
-#' 
-#' rep_cyp_raw <- matrix(0, 11, 11)
-#' rep_cyp_raw[1:2,7:11] <- 0.5
-#' 
-#' cypover2r <- overwrite(stage3 = c("SD", "P1", "P2", "P3", "SL", "SL", "D", 
-#'     "XSm", "Sm"),
-#'   stage2 = c("SD", "SD", "P1", "P2", "P3", "SL", "SL", "SL", "SL"),
-#'   eststage3 = c(NA, NA, NA, NA, NA, NA, "D", "XSm", "Sm"),
-#'   eststage2 = c(NA, NA, NA, NA, NA, NA, "XSm", "XSm", "XSm"),
-#'   givenrate = c(0.1, 0.2, 0.2, 0.2, 0.25, 0.4, NA, NA, NA),
-#'   type = c("S", "S", "S", "S", "S", "S", "S", "S", "S"))
-#' 
-#' cypmatrix2r_alt <- rlefko2(data = cypraw_v1, stageframe = cypframe_raw,
-#'   year = "all", patch = "all", stages = c("stage3", "stage2", "stage1"),
-#'   size = c("size3added", "size2added"), repmatrix = rep_cyp_raw,
-#'   overwrite = cypover2r, yearcol = "year2", patchcol = "patchid",
-#'   indivcol = "individ")
-#' 
-#' cypmatrix2r_alt$A[[1]]
 #' 
 #' @export
 rlefko2 <- function(data, stageframe, year = "all", pop = NA, patch = NA,
@@ -3021,23 +2960,6 @@ rlefko2 <- function(data, stageframe, year = "all", pop = NA, patch = NA,
 #' 
 #' summary(lathmat2age)
 #' 
-#' # Here we use overwrite() and a reproductive matrix to provide info instead
-#' # of supplemental()
-#' 
-#' lathrepmln <- matrix(0, 21, 21)
-#' lathrepmln[1, c(13:21)] <- 0.345
-#' lathrepmln[2, c(13:21)] <- 0.054
-#' 
-#' lathover2 <- overwrite(stage3 = c("Sd", "Sdl"), stage2 = c("Sd", "Sd"),
-#'   givenrate = c(0.345, 0.054))
-#' 
-#' lathmat2age_alt <- aflefko2(year = "all", patch = "all", 
-#'   stageframe = lathframeln, modelsuite = lathmodelsln2, data = lathvertln,
-#'   repmatrix = lathrepmln, overwrite = lathover2, patchcol = "patchid",
-#'   yearcol = "year2", year.as.random = FALSE, patch.as.random = FALSE,
-#'   final_age = 2, continue = TRUE, reduce = FALSE)
-#'   
-#' summary(lathmat2age_alt)
 #' }
 #' @export
 aflefko2 <- function(year = "all", patch = "all", stageframe, supplement = NA,
@@ -3383,22 +3305,22 @@ aflefko2 <- function(year = "all", patch = "all", stageframe, supplement = NA,
 #'   stageassign = cypframe_raw, stagesize = "sizeadded", NAas0 = TRUE,
 #'   NRasRep = TRUE)
 #' 
-#' rep_cyp_raw <- matrix(0, 11, 11)
-#' rep_cyp_raw[1:2,7:11] <- 0.5
+#' # Here we use supplemental() to provide overwrite and reproductive info
+#' cypsupp2r <- supplemental(stage3 = c("SD", "P1", "P2", "P3", "SL", "SL", "D", 
+#'     "XSm", "Sm", "SD", "P1"),
+#'   stage2 = c("SD", "SD", "P1", "P2", "P3", "SL", "SL", "SL", "SL", "rep",
+#'     "rep"),
+#'   eststage3 = c(NA, NA, NA, NA, NA, NA, "D", "XSm", "Sm", NA, NA),
+#'   eststage2 = c(NA, NA, NA, NA, NA, NA, "XSm", "XSm", "XSm", NA, NA),
+#'   givenrate = c(0.10, 0.20, 0.20, 0.20, 0.25, 0.40, NA, NA, NA, NA, NA),
+#'   multiplier = c(NA, NA, NA, NA, NA, NA, NA, NA, NA, 0.5, 0.5),
+#'   type =c(1, 1, 1, 1, 1, 1, 1, 1, 1, 3, 3),
+#'   stageframe = cypframe_raw, historical = FALSE)
 #' 
-#' cypover2r <- overwrite(stage3 = c("SD", "P1", "P2", "P3", "SL", "SL", "D", 
-#'     "XSm", "Sm"),
-#'   stage2 = c("SD", "SD", "P1", "P2", "P3", "SL", "SL", "SL", "SL"),
-#'   eststage3 = c(NA, NA, NA, NA, NA, NA, "D", "XSm", "Sm"),
-#'   eststage2 = c(NA, NA, NA, NA, NA, NA, "XSm", "XSm", "XSm"),
-#'   givenrate = c(0.1, 0.2, 0.2, 0.2, 0.25, 0.4, NA, NA, NA),
-#'   type = c("S", "S", "S", "S", "S", "S", "S", "S", "S"))
-#' 
-#' cypmatrix2r <- rlefko2(data = cypraw_v1, stageframe = cypframe_raw,
+#' cypmatrix2r <- rlefko2(data = cypraw_v1, stageframe = cypframe_raw, 
 #'   year = "all", patch = "all", stages = c("stage3", "stage2", "stage1"),
-#'   size = c("size3added", "size2added"), repmatrix = rep_cyp_raw,
-#'   overwrite = cypover2r, yearcol = "year2", patchcol = "patchid",
-#'   indivcol = "individ")
+#'   size = c("size3added", "size2added"), supplement = cypsupp2r,
+#'   yearcol = "year2", patchcol = "patchid", indivcol = "individ")
 #' 
 #' summary(cypmatrix2r)
 #' 

@@ -115,12 +115,15 @@
 #'   nonobsacol = "Dormant1988", stageassign = lathframe, stagesize = "sizea",
 #'   censorcol = "Missing1988", censorkeep = NA, censor = TRUE)
 #' 
-#' lathsupp3 <- supplemental(stage3 = c("Sd", "Sd", "Sdl", "Sdl", "Sd", "Sdl"), 
-#'   stage2 = c("Sd", "Sd", "Sd", "Sd", "rep", "rep"),
-#'   stage1 = c("Sd", "rep", "Sd", "rep", "all", "all"), 
-#'   givenrate = c(0.345, 0.345, 0.054, 0.054, NA, NA),
-#'   multiplier = c(NA, NA, NA, NA, 0.345, 0.054),
-#'   type = c(1, 1, 1, 1, 3, 3), type_t12 = c(1, 2, 1, 2, 1, 1),
+#' lathsupp3 <- supplemental(stage3 = c("Sd", "Sd", "Sdl", "Sdl", "Sd", "Sdl", "mat"),
+#'   stage2 = c("Sd", "Sd", "Sd", "Sd", "rep", "rep", "Sdl"),
+#'   stage1 = c("Sd", "rep", "Sd", "rep", "npr", "npr", "Sd"),
+#'   eststage3 = c(NA, NA, NA, NA, NA, NA, "mat"),
+#'   eststage2 = c(NA, NA, NA, NA, NA, NA, "Sdl"),
+#'   eststage1 = c(NA, NA, NA, NA, NA, NA, "NotAlive"),
+#'   givenrate = c(0.345, 0.345, 0.054, 0.054, NA, NA, NA),
+#'   multiplier = c(NA, NA, NA, NA, 0.345, 0.054, NA),
+#'   type = c(1, 1, 1, 1, 3, 3, 1), type_t12 = c(1, 2, 1, 2, 1, 1, 1),
 #'   stageframe = lathframe, historical = TRUE)
 #' 
 #' ehrlen3 <- rlefko3(data = lathvert, stageframe = lathframe, year = "all", 
@@ -683,12 +686,13 @@ sf_create <- function(sizes, stagenames = NA, repstatus = 1, obsstatus = 1,
       rep.entry.stages[which(rep.entry.stages > 0)] <- 1
     } else {
       rep.entry.stages <- c(1, rep(0, (length(orig.size.vec) - 1)))
-      warning("No information on reproductive entry stages provided. Assuming the first stage is the entry stage into the life cycle.")
+      warning("No information on reproductive entry stages provided. Assuming the first stage is the entry stage into the life cycle.", call. = FALSE)
     }
     
     if (!exists("rep.vec")) {
       rep.vec <- mat.vec
-      warning("No information on reproductive stages given. Assuming all mature stages are reproductive.")
+      warning("No information on reproductive stages given. Assuming all mature stages are reproductive.",
+        call. = FALSE)
     }
     repmatrix <- matrix(0, ncol = length(rep.vec), nrow = length(rep.vec))
     repmatrix[which(rep.entry.stages > 0),which(rep.vec == 1)] <- 1
@@ -700,12 +704,13 @@ sf_create <- function(sizes, stagenames = NA, repstatus = 1, obsstatus = 1,
       rep.entry.stages[which(rep.entry.stages > 0)] <- 1
     } else {
       rep.entry.stages <- c(1, rep(0, (length(orig.size.vec) - 1)))
-      warning("No information on reproductive entry stages provided. Assuming the first stage is the entry stage into the life cycle.")
+      warning("No information on reproductive entry stages provided. Assuming the first stage is the entry stage into the life cycle.", call. = FALSE)
     }
     
     if (!exists("rep.vec")) {
       rep.vec <- mat.vec
-      warning("No information on reproductive stages given. Assuming all mature stages are reproductive.")
+      warning("No information on reproductive stages given. Assuming all mature stages are reproductive.",
+              call. = FALSE)
     }
     repmatrix <- matrix(0, ncol = length(rep.vec), nrow = length(rep.vec))
     repmatrix[which(rep.entry.stages > 0),which(rep.vec == 1)] <- 1
@@ -872,53 +877,65 @@ sf_create <- function(sizes, stagenames = NA, repstatus = 1, obsstatus = 1,
   }
   
   if(!all(is.na(overwrite))) {
-    if (length(setdiff(unique(na.omit(overwrite$stage3)), c(stageframe.reassessed$stage, "rep", "immat", "mat", "prop", "all"))) > 0) {
+    if (length(setdiff(unique(na.omit(tolower(overwrite$stage3))),
+        tolower(c(stageframe.reassessed$stage, "rep", "immat", "mat", "prop", "all")))) > 0) {
       stop("Stage names in overwrite table (stage3) must match stages in stageframe.", call. = FALSE)
     }
     
-    if (length(setdiff(unique(na.omit(overwrite$stage2)), c(stageframe.reassessed$stage, "rep", "immat", "mat", "prop", "all"))) > 0) {
+    if (length(setdiff(unique(na.omit(tolower(overwrite$stage2))),
+        tolower(c(stageframe.reassessed$stage, "rep", "immat", "mat", "prop", "all")))) > 0) {
       stop("Stage names in overwrite table (stage2) must match stages in stageframe.", call. = FALSE)
     }
     
-    if (length(setdiff(unique(na.omit(overwrite$stage1)), c(stageframe.reassessed$stage, "rep", "immat", "mat", "prop", "all"))) > 0) {
+    if (length(setdiff(unique(na.omit(tolower(overwrite$stage1))),
+        tolower(c(stageframe.reassessed$stage, "rep", "immat", "mat", "prop", "all")))) > 0) {
       stop("Stage names in overwrite table (stage1) must match stages in stageframe.", call. = FALSE)
     }
     
-    if (length(setdiff(unique(na.omit(overwrite$eststage3)), c(stageframe.reassessed$stage, "rep", "immat", "mat", "prop", "all"))) > 0) {
+    if (length(setdiff(unique(na.omit(tolower(overwrite$eststage3))),
+        tolower(c(stageframe.reassessed$stage, "rep", "immat", "mat", "prop", "all")))) > 0) {
       stop("Stage names in overwrite table (eststage3) must match stages in stageframe.", call. = FALSE)
     }
     
-    if (length(setdiff(unique(na.omit(overwrite$eststage2)), c(stageframe.reassessed$stage, "rep", "immat", "mat", "prop", "all"))) > 0) {
+    if (length(setdiff(unique(na.omit(tolower(overwrite$eststage2))),
+        tolower(c(stageframe.reassessed$stage, "rep", "immat", "mat", "prop", "all")))) > 0) {
       stop("Stage names in overwrite table (eststage2) must match stages in stageframe.", call. = FALSE)
     }
     
-    if (length(setdiff(unique(na.omit(overwrite$eststage1)), c(stageframe.reassessed$stage, "rep", "immat", "mat", "prop", "all"))) > 0) {
+    if (length(setdiff(unique(na.omit(tolower(overwrite$eststage1))),
+        tolower(c(stageframe.reassessed$stage, "rep", "immat", "mat", "prop", "all")))) > 0) {
       stop("Stage names in overwrite table (eststage1) must match stages in stageframe.", call. = FALSE)
     }
   }
   
   if(!all(is.na(supplement))) {
-    if (length(setdiff(unique(na.omit(supplement$stage3)), c(stageframe.reassessed$stage, "rep", "immat", "mat", "prop", "all"))) > 0) {
+    if (length(setdiff(unique(na.omit(tolower(supplement$stage3))), 
+        c(tolower(stageframe.reassessed$stage), "rep", "immat", "mat", "prop", "npr", "all"))) > 0) {
       stop("Stage names in supplement table (stage3) must match stages in stageframe.", call. = FALSE)
     }
     
-    if (length(setdiff(unique(na.omit(supplement$stage2)), c(stageframe.reassessed$stage, "rep", "immat", "mat", "prop", "all"))) > 0) {
+    if (length(setdiff(unique(na.omit(tolower(supplement$stage2))),
+        c(tolower(stageframe.reassessed$stage), "rep", "immat", "mat", "prop", "npr", "all"))) > 0) {
       stop("Stage names in supplement table (stage2) must match stages in stageframe.", call. = FALSE)
     }
     
-    if (length(setdiff(unique(na.omit(supplement$stage1)), c(stageframe.reassessed$stage, "rep", "immat", "mat", "prop", "all"))) > 0) {
+    if (length(setdiff(unique(na.omit(tolower(supplement$stage1))),
+        c(tolower(stageframe.reassessed$stage), "rep", "immat", "mat", "prop", "all", "npr"))) > 0) {
       stop("Stage names in supplement table (stage1) must match stages in stageframe.", call. = FALSE)
     }
     
-    if (length(setdiff(unique(na.omit(supplement$eststage3)), c(stageframe.reassessed$stage, "rep", "immat", "mat", "prop", "all"))) > 0) {
+    if (length(setdiff(unique(na.omit(tolower(supplement$eststage3))),
+        c(tolower(stageframe.reassessed$stage), "rep", "immat", "mat", "prop", "all", "npr"))) > 0) {
       stop("Stage names in supplement table (eststage3) must match stages in stageframe.", call. = FALSE)
     }
     
-    if (length(setdiff(unique(na.omit(supplement$eststage2)), c(stageframe.reassessed$stage, "rep", "immat", "mat", "prop", "all"))) > 0) {
+    if (length(setdiff(unique(na.omit(tolower(supplement$eststage2))),
+        c(tolower(stageframe.reassessed$stage), "rep", "immat", "mat", "prop", "all", "npr"))) > 0) {
       stop("Stage names in supplement table (eststage2) must match stages in stageframe.", call. = FALSE)
     }
     
-    if (length(setdiff(unique(na.omit(supplement$eststage1)), c(stageframe.reassessed$stage, "rep", "immat", "mat", "prop", "all"))) > 0) {
+    if (length(setdiff(unique(na.omit(tolower(supplement$eststage1))),
+        c(tolower(stageframe.reassessed$stage), "rep", "immat", "mat", "prop", "all", "npr", "notalive"))) > 0) {
       stop("Stage names in supplement table (eststage1) must match stages in stageframe.", call. = FALSE)
     }
   }
@@ -1117,7 +1134,7 @@ overwrite <- function(stage3, stage2, stage1 = NA, eststage3 = NA,
     shrubbery <- unique(rbind(supplement, overwritetable))
     
     if(any(duplicated(shrubbery[,1:3]))) {
-      stop("Multiple entries with different values for the same stage transition are not allowed in the supplemental data frame and overwrite table. If performing an ahistorical analysis, then this may be due to different given rates of substitutions caused by dropping stage at time t-1, if historical transitions are used as input.",
+      stop("Multiple entries with different values for the same stage transition are not allowed in the supplemental or overwrite table. If modifying a historical table to perform an ahistorical analysis, then this may be due to different given rates of substitutions caused by dropping stage at time t-1. Please eliminate duplicate transitions.",
         call. = FALSE)
     }
     
@@ -1127,7 +1144,7 @@ overwrite <- function(stage3, stage2, stage1 = NA, eststage3 = NA,
     shrubbery$multiplier <- NA
     
     if(any(duplicated(shrubbery[,1:3]))) {
-      stop("Multiple entries with different values for the same stage transition are not allowed in the overwrite table. If performing an ahistorical analysis, then this may be due to different given rates of substitutions caused by dropping stage at time t-1, if historical transitions are used as input.",
+      stop("Multiple entries with different values for the same stage transition are not allowed in the overwrite table. If modifying a historical table to perform an ahistorical analysis, then this may be due to different given rates of substitutions caused by dropping stage at time t-1. Please eliminate duplicate transitions.",
         call. = FALSE)
     }
     
@@ -1136,7 +1153,7 @@ overwrite <- function(stage3, stage2, stage1 = NA, eststage3 = NA,
     shrubbery <- unique(supplement)
     
     if(any(duplicated(shrubbery[,1:3]))) {
-      stop("Multiple entries with different values for the same stage transition are not allowed in the supplemental data frame. If performing an ahistorical analysis, then this may be due to different given rates of substitutions caused by dropping stage at time t-1, if historical transitions are used as input.",
+      stop("Multiple entries with different values for the same stage transition are not allowed in the supplemental table. If modifying a historical table to perform an ahistorical analysis, then this may be due to different given rates of substitutions caused by dropping stage at time t-1. Please eliminate duplicate transitions.",
         call. = FALSE)
     }
     
@@ -1164,7 +1181,7 @@ overwrite <- function(stage3, stage2, stage1 = NA, eststage3 = NA,
       }
       
       if (!is.na(shrubbery[X, "stage1"]) & !is.na(shrubbery[X, "eststage1"])) {
-        if (is.element(shrubbery[X, "stage1"], stageframe$stage) & is.element(shrubbery[X, "eststage1"], stageframe$stage)) {
+        if (is.element(shrubbery[X, "stage1"], stageframe$stage) & is.element(shrubbery[X, "eststage1"], c(stageframe$stage, "NotAlive", "Notalive", "notalive", "NOTALIVE"))) {
           return(shrubbery[X,])
         } else if (shrubbery[X, "stage1"] == "rep" & shrubbery[X, "eststage1"] == "rep") {
           shrubbery.small <- cbind.data.frame(stage3 = shrubbery[X, "stage3"], 
@@ -1180,6 +1197,32 @@ overwrite <- function(stage3, stage2, stage1 = NA, eststage3 = NA,
         } else if (shrubbery[X, "stage1"] == "rep") {
           shrubbery.small <- cbind.data.frame(stage3 = shrubbery[X, "stage3"], 
             stage2 = shrubbery[X, "stage2"], stage1 = stageframe$stage[which(stageframe$repstatus == 1)], 
+            eststage3 = shrubbery[X, "eststage3"], eststage2 = shrubbery[X, "eststage2"], 
+            eststage1 = shrubbery[X, "eststage1"], givenrate = shrubbery[X, "givenrate"],
+            multiplier = shrubbery[X, "multiplier"], convtype = shrubbery[X, "convtype"],
+            convtype_t12 = shrubbery[X, "convtype_t12"], stringsAsFactors = FALSE)
+          
+          return(shrubbery.small)
+          
+        } else if (shrubbery[X, "stage1"] == "nrep" & shrubbery[X, "eststage1"] == "nrep") {
+          shrubbery.small <- cbind.data.frame(stage3 = shrubbery[X, "stage3"], 
+            stage2 = shrubbery[X, "stage2"], 
+            stage1 = stageframe$stage[intersect(which(stageframe$repstatus == 0), 
+                which(stageframe$matstatus == 1))], 
+            eststage3 = shrubbery[X, "eststage3"], eststage2 = shrubbery[X, "eststage2"], 
+            eststage1 = stageframe$stage[intersect(which(stageframe$repstatus == 0, 
+                which(stageframe$matstatus == 1)))],
+            givenrate = shrubbery[X, "givenrate"], multiplier = shrubbery[X, "multiplier"],
+            convtype = shrubbery[X, "convtype"], convtype_t12 = shrubbery[X, "convtype_t12"],
+            stringsAsFactors = FALSE)
+          
+          return(shrubbery.small)
+          
+        } else if (shrubbery[X, "stage1"] == "nrep") {
+          shrubbery.small <- cbind.data.frame(stage3 = shrubbery[X, "stage3"], 
+            stage2 = shrubbery[X, "stage2"], 
+            stage1 = stageframe$stage[intersect(which(stageframe$repstatus == 0), 
+                which(stageframe$matstatus == 1))], 
             eststage3 = shrubbery[X, "eststage3"], eststage2 = shrubbery[X, "eststage2"], 
             eststage1 = shrubbery[X, "eststage1"], givenrate = shrubbery[X, "givenrate"],
             multiplier = shrubbery[X, "multiplier"], convtype = shrubbery[X, "convtype"],
@@ -1250,6 +1293,27 @@ overwrite <- function(stage3, stage2, stage1 = NA, eststage3 = NA,
           
           return(shrubbery.small)
           
+        } else if (shrubbery[X, "stage1"] == "npr" & shrubbery[X, "eststage1"] == "npr") {
+          shrubbery.small <- cbind.data.frame(stage3 = shrubbery[X, "stage3"], 
+            stage2 = shrubbery[X, "stage2"], stage1 = stageframe$stage[which(stageframe$propstatus == 0)], 
+            eststage3 = shrubbery[X, "eststage3"], eststage2 = shrubbery[X, "eststage2"], 
+            eststage1 = stageframe$stage[which(stageframe$propstatus == 0)],
+            givenrate = shrubbery[X, "givenrate"], multiplier = shrubbery[X, "multiplier"],
+            convtype = shrubbery[X, "convtype"], convtype_t12 = shrubbery[X, "convtype_t12"],
+            stringsAsFactors = FALSE)
+          
+          return(shrubbery.small)
+          
+        } else if (shrubbery[X, "stage1"] == "npr") {
+          shrubbery.small <- cbind.data.frame(stage3 = shrubbery[X, "stage3"], 
+            stage2 = shrubbery[X, "stage2"], stage1 = stageframe$stage[which(stageframe$propstatus == 0)], 
+            eststage3 = shrubbery[X, "eststage3"], eststage2 = shrubbery[X, "eststage2"], 
+            eststage1 = shrubbery[X, "eststage1"], givenrate = shrubbery[X, "givenrate"],
+            multiplier = shrubbery[X, "multiplier"], convtype = shrubbery[X, "convtype"],
+            convtype_t12 = shrubbery[X, "convtype_t12"], stringsAsFactors = FALSE)
+          
+          return(shrubbery.small)
+          
         } else if (shrubbery[X, "stage1"] == "all" & shrubbery[X, "eststage1"] == "all") {
           shrubbery.small <- cbind.data.frame(stage3 = shrubbery[X, "stage3"], 
             stage2 = shrubbery[X, "stage2"], stage1 = stageframe$stage, 
@@ -1284,6 +1348,18 @@ overwrite <- function(stage3, stage2, stage1 = NA, eststage3 = NA,
           
           return(shrubbery.small)
           
+        } else if (shrubbery[X, "stage1"] == "nrep") {
+          shrubbery.small <- cbind.data.frame(stage3 = shrubbery[X, "stage3"], 
+            stage2 = shrubbery[X, "stage2"], 
+            stage1 = stageframe$stage[intersect(which(stageframe$repstatus == 0), 
+                which(stageframe$matstatus == 1))], 
+            eststage3 = shrubbery[X, "eststage3"], eststage2 = shrubbery[X, "eststage2"], 
+            eststage1 = shrubbery[X, "eststage1"], givenrate = shrubbery[X, "givenrate"],
+            multiplier = shrubbery[X, "multiplier"], convtype = shrubbery[X, "convtype"],
+            convtype_t12 = shrubbery[X, "convtype_t12"], stringsAsFactors = FALSE)
+          
+          return(shrubbery.small)
+          
         } else if (shrubbery[X, "stage1"] == "immat") {
           shrubbery.small <- cbind.data.frame(stage3 = shrubbery[X, "stage3"], 
             stage2 = shrubbery[X, "stage2"], stage1 = stageframe$stage[which(stageframe$immstatus == 1)], 
@@ -1307,6 +1383,16 @@ overwrite <- function(stage3, stage2, stage1 = NA, eststage3 = NA,
         } else if (shrubbery[X, "stage1"] == "prop") {
           shrubbery.small <- cbind.data.frame(stage3 = shrubbery[X, "stage3"], 
             stage2 = shrubbery[X, "stage2"], stage1 = stageframe$stage[which(stageframe$propstatus == 1)], 
+            eststage3 = shrubbery[X, "eststage3"], eststage2 = shrubbery[X, "eststage2"], 
+            eststage1 = shrubbery[X, "eststage1"], givenrate = shrubbery[X, "givenrate"],
+            multiplier = shrubbery[X, "multiplier"], convtype = shrubbery[X, "convtype"],
+            convtype_t12 = shrubbery[X, "convtype_t12"], stringsAsFactors = FALSE)
+          
+          return(shrubbery.small)
+          
+        } else if (shrubbery[X, "stage1"] == "npr") {
+          shrubbery.small <- cbind.data.frame(stage3 = shrubbery[X, "stage3"], 
+            stage2 = shrubbery[X, "stage2"], stage1 = stageframe$stage[which(stageframe$propstatus == 0)], 
             eststage3 = shrubbery[X, "eststage3"], eststage2 = shrubbery[X, "eststage2"], 
             eststage1 = shrubbery[X, "eststage1"], givenrate = shrubbery[X, "givenrate"],
             multiplier = shrubbery[X, "multiplier"], convtype = shrubbery[X, "convtype"],
@@ -1353,6 +1439,31 @@ overwrite <- function(stage3, stage2, stage1 = NA, eststage3 = NA,
             eststage1 = shrubbery[X, "eststage1"], givenrate = shrubbery[X, "givenrate"],
             multiplier = shrubbery[X, "multiplier"], convtype = shrubbery[X, "convtype"],
             convtype_t12 = shrubbery[X, "convtype_t12"], stringsAsFactors = FALSE)
+          
+          return(shrubbery.small)
+          
+        } else if (shrubbery[X, "stage2"] == "nrep" & shrubbery[X, "eststage2"] == "nrep") {
+          shrubbery.small <- cbind.data.frame(stage3 = shrubbery[X, "stage3"], 
+            stage2 = stageframe$stage[intersect(which(stageframe$repstatus == 0),
+                which(stageframe$matstatus == 1))],
+            stage1 = shrubbery[X, "stage1"], eststage3 = shrubbery[X, "eststage3"],
+            eststage2 = stageframe$stage[intersect(which(stageframe$repstatus == 0),
+                which(stageframe$matstatus == 1))], 
+            eststage1 = shrubbery[X, "eststage1"], givenrate = shrubbery[X, "givenrate"],
+            multiplier = shrubbery[X, "multiplier"], convtype = shrubbery[X, "convtype"],
+            convtype_t12 = shrubbery[X, "convtype_t12"], stringsAsFactors = FALSE)
+          
+          return(shrubbery.small)
+          
+        } else if (shrubbery[X, "stage2"] == "nrep") {
+          shrubbery.small <- cbind.data.frame(stage3 = shrubbery[X, "stage3"], 
+            stage2 = stageframe$stage[intersect(which(stageframe$repstatus == 0),
+                which(stageframe$matstatus == 1))],
+            stage1 = shrubbery[X, "stage1"], eststage3 = shrubbery[X, "eststage3"],
+            eststage2 = shrubbery[X, "eststage2"], eststage1 = shrubbery[X, "eststage1"],
+            givenrate = shrubbery[X, "givenrate"], multiplier = shrubbery[X, "multiplier"],
+            convtype = shrubbery[X, "convtype"], convtype_t12 = shrubbery[X, "convtype_t12"],
+            stringsAsFactors = FALSE)
           
           return(shrubbery.small)
           
@@ -1416,6 +1527,26 @@ overwrite <- function(stage3, stage2, stage1 = NA, eststage3 = NA,
           
           return(shrubbery.small)
           
+        } else if (shrubbery[X, "stage2"] == "npr" & shrubbery[X, "eststage2"] == "npr") {
+          shrubbery.small <- cbind.data.frame(stage3 = shrubbery[X, "stage3"], 
+            stage2 = stageframe$stage[which(stageframe$propstatus == 0)], stage1 = shrubbery[X, "stage1"], 
+            eststage3 = shrubbery[X, "eststage3"], eststage2 = stageframe$stage[which(stageframe$propstatus == 0)], 
+            eststage1 = shrubbery[X, "eststage1"], givenrate = shrubbery[X, "givenrate"],
+            multiplier = shrubbery[X, "multiplier"], convtype = shrubbery[X, "convtype"],
+            convtype_t12 = shrubbery[X, "convtype_t12"], stringsAsFactors = FALSE)
+          
+          return(shrubbery.small)
+          
+        } else if (shrubbery[X, "stage2"] == "npr") {
+          shrubbery.small <- cbind.data.frame(stage3 = shrubbery[X, "stage3"], 
+            stage2 = stageframe$stage[which(stageframe$propstatus == 0)], stage1 = shrubbery[X, "stage1"], 
+            eststage3 = shrubbery[X, "eststage3"], eststage2 = shrubbery[X, "eststage2"], 
+            eststage1 = shrubbery[X, "eststage1"], givenrate = shrubbery[X, "givenrate"],
+            multiplier = shrubbery[X, "multiplier"], convtype = shrubbery[X, "convtype"],
+            convtype_t12 = shrubbery[X, "convtype_t12"], stringsAsFactors = FALSE)
+          
+          return(shrubbery.small)
+          
         } else if (shrubbery[X, "stage2"] == "all" & shrubbery[X, "eststage2"] == "all") {
           shrubbery.small <- cbind.data.frame(stage3 = shrubbery[X, "stage3"], 
             stage2 = stageframe$stage, stage1 = shrubbery[X, "stage1"], 
@@ -1450,6 +1581,18 @@ overwrite <- function(stage3, stage2, stage1 = NA, eststage3 = NA,
           
           return(shrubbery.small)
           
+        } else if (shrubbery[X, "stage2"] == "nrep") {
+          shrubbery.small <- cbind.data.frame(stage3 = shrubbery[X, "stage3"], 
+            stage2 = stageframe$stage[intersect(which(stageframe$repstatus == 0),
+                which(stageframe$matstatus == 1))],
+            stage1 = shrubbery[X, "stage1"], eststage3 = shrubbery[X, "eststage3"],
+            eststage2 = shrubbery[X, "eststage2"], eststage1 = shrubbery[X, "eststage1"],
+            givenrate = shrubbery[X, "givenrate"], multiplier = shrubbery[X, "multiplier"],
+            convtype = shrubbery[X, "convtype"], convtype_t12 = shrubbery[X, "convtype_t12"],
+            stringsAsFactors = FALSE)
+          
+          return(shrubbery.small)
+          
         } else if (shrubbery[X, "stage2"] == "immat") {
           shrubbery.small <- cbind.data.frame(stage3 = shrubbery[X, "stage3"], 
             stage2 = stageframe$stage[which(stageframe$immstatus == 1)], stage1 = shrubbery[X, "stage1"], 
@@ -1473,6 +1616,16 @@ overwrite <- function(stage3, stage2, stage1 = NA, eststage3 = NA,
         } else if (shrubbery[X, "stage2"] == "prop") {
           shrubbery.small <- cbind.data.frame(stage3 = shrubbery[X, "stage3"], 
             stage2 = stageframe$stage[which(stageframe$propstatus == 1)], stage1 = shrubbery[X, "stage1"], 
+            eststage3 = shrubbery[X, "eststage3"], eststage2 = shrubbery[X, "eststage2"], 
+            eststage1 = shrubbery[X, "eststage1"], givenrate = shrubbery[X, "givenrate"],
+            multiplier = shrubbery[X, "multiplier"], convtype = shrubbery[X, "convtype"],
+            convtype_t12 = shrubbery[X, "convtype_t12"], stringsAsFactors = FALSE)
+          
+          return(shrubbery.small)
+          
+        } else if (shrubbery[X, "stage2"] == "npr") {
+          shrubbery.small <- cbind.data.frame(stage3 = shrubbery[X, "stage3"], 
+            stage2 = stageframe$stage[which(stageframe$propstatus == 0)], stage1 = shrubbery[X, "stage1"], 
             eststage3 = shrubbery[X, "eststage3"], eststage2 = shrubbery[X, "eststage2"], 
             eststage1 = shrubbery[X, "eststage1"], givenrate = shrubbery[X, "givenrate"],
             multiplier = shrubbery[X, "multiplier"], convtype = shrubbery[X, "convtype"],
@@ -1514,6 +1667,29 @@ overwrite <- function(stage3, stage2, stage1 = NA, eststage3 = NA,
           
         } else if (shrubbery[X, "stage3"] == "rep") {
           shrubbery.small <- cbind.data.frame(stage3 = stageframe$stage[which(stageframe$repstatus == 1)], 
+            stage2 = shrubbery[X, "stage2"], stage1 = shrubbery[X, "stage1"], 
+            eststage3 = shrubbery[X, "eststage3"], eststage2 = shrubbery[X, "eststage2"], 
+            eststage1 = shrubbery[X, "eststage1"], givenrate = shrubbery[X, "givenrate"],
+            multiplier = shrubbery[X, "multiplier"], convtype = shrubbery[X, "convtype"],
+            convtype_t12 = shrubbery[X, "convtype_t12"], stringsAsFactors = FALSE)
+          
+          return(shrubbery.small)
+          
+        } else if (shrubbery[X, "stage3"] == "nrep" & shrubbery[X, "eststage3"] == "nrep") {
+          shrubbery.small <- cbind.data.frame(stage3 = stageframe$stage[intersect(which(stageframe$repstatus == 0),
+                which(stageframe$matstatus == 1))], 
+            stage2 = shrubbery[X, "stage2"], stage1 = shrubbery[X, "stage1"], 
+            eststage3 = stageframe$stage[intersect(which(stageframe$repstatus == 0),
+                which(stageframe$matstatus == 1))], eststage2 = shrubbery[X, "eststage2"], 
+            eststage1 = shrubbery[X, "eststage1"], givenrate = shrubbery[X, "givenrate"],
+            multiplier = shrubbery[X, "multiplier"], convtype = shrubbery[X, "convtype"],
+            convtype_t12 = shrubbery[X, "convtype_t12"], stringsAsFactors = FALSE)
+          
+          return(shrubbery.small)
+          
+        } else if (shrubbery[X, "stage3"] == "nrep") {
+          shrubbery.small <- cbind.data.frame(stage3 = stageframe$stage[intersect(which(stageframe$repstatus == 0),
+                which(stageframe$matstatus == 1))], 
             stage2 = shrubbery[X, "stage2"], stage1 = shrubbery[X, "stage1"], 
             eststage3 = shrubbery[X, "eststage3"], eststage2 = shrubbery[X, "eststage2"], 
             eststage1 = shrubbery[X, "eststage1"], givenrate = shrubbery[X, "givenrate"],
@@ -1582,6 +1758,26 @@ overwrite <- function(stage3, stage2, stage1 = NA, eststage3 = NA,
           
           return(shrubbery.small)
           
+        } else if (shrubbery[X, "stage3"] == "npr" & shrubbery[X, "eststage3"] == "npr") {
+          shrubbery.small <- cbind.data.frame(stage3 = stageframe$stage[which(stageframe$propstatus == 0)], 
+            stage2 = shrubbery[X, "stage2"], stage1 = shrubbery[X, "stage1"], 
+            eststage3 = stageframe$stage[which(stageframe$propstatus == 0)], eststage2 = shrubbery[X, "eststage2"], 
+            eststage1 = shrubbery[X, "eststage1"], givenrate = shrubbery[X, "givenrate"],
+            multiplier = shrubbery[X, "multiplier"], convtype = shrubbery[X, "convtype"],
+            convtype_t12 = shrubbery[X, "convtype_t12"], stringsAsFactors = FALSE)
+          
+          return(shrubbery.small)
+          
+        } else if (shrubbery[X, "stage3"] == "npr") {
+          shrubbery.small <- cbind.data.frame(stage3 = stageframe$stage[which(stageframe$propstatus == 0)], 
+            stage2 = shrubbery[X, "stage2"], stage1 = shrubbery[X, "stage1"], 
+            eststage3 = shrubbery[X, "eststage3"], eststage2 = shrubbery[X, "eststage2"], 
+            eststage1 = shrubbery[X, "eststage1"], givenrate = shrubbery[X, "givenrate"],
+            multiplier = shrubbery[X, "multiplier"], convtype = shrubbery[X, "convtype"],
+            convtype_t12 = shrubbery[X, "convtype_t12"], stringsAsFactors = FALSE)
+          
+          return(shrubbery.small)
+          
         } else if (shrubbery[X, "stage3"] == "all" & shrubbery[X, "eststage3"] == "all") {
           shrubbery.small <- cbind.data.frame(stage3 = stageframe$stage, 
             stage2 = shrubbery[X, "stage2"], stage1 = shrubbery[X, "stage1"], 
@@ -1616,6 +1812,17 @@ overwrite <- function(stage3, stage2, stage1 = NA, eststage3 = NA,
           
           return(shrubbery.small)
           
+        } else if (shrubbery[X, "stage3"] == "nrep") {
+          shrubbery.small <- cbind.data.frame(stage3 = stageframe$stage[intersect(which(stageframe$repstatus == 0),
+                which(stageframe$matstatus == 1))], 
+            stage2 = shrubbery[X, "stage2"], stage1 = shrubbery[X, "stage1"], 
+            eststage3 = shrubbery[X, "eststage3"], eststage2 = shrubbery[X, "eststage2"], 
+            eststage1 = shrubbery[X, "eststage1"], givenrate = shrubbery[X, "givenrate"],
+            multiplier = shrubbery[X, "multiplier"], convtype = shrubbery[X, "convtype"],
+            convtype_t12 = shrubbery[X, "convtype_t12"], stringsAsFactors = FALSE)
+          
+          return(shrubbery.small)
+          
         } else if (shrubbery[X, "stage3"] == "immat") {
           shrubbery.small <- cbind.data.frame(stage3 = stageframe$stage[which(stageframe$immstatus == 1)], 
             stage2 = shrubbery[X, "stage2"], stage1 = shrubbery[X, "stage1"], 
@@ -1637,6 +1844,16 @@ overwrite <- function(stage3, stage2, stage1 = NA, eststage3 = NA,
           return(shrubbery.small)
           
         } else if (shrubbery[X, "stage3"] == "prop") {
+          shrubbery.small <- cbind.data.frame(stage3 = stageframe$stage[which(stageframe$propstatus == 1)], 
+            stage2 = shrubbery[X, "stage2"], stage1 = shrubbery[X, "stage1"], 
+            eststage3 = shrubbery[X, "eststage3"], eststage2 = shrubbery[X, "eststage2"], 
+            eststage1 = shrubbery[X, "eststage1"], givenrate = shrubbery[X, "givenrate"],
+            multiplier = shrubbery[X, "multiplier"], convtype = shrubbery[X, "convtype"],
+            convtype_t12 = shrubbery[X, "convtype_t12"], stringsAsFactors = FALSE)
+          
+          return(shrubbery.small)
+          
+        } else if (shrubbery[X, "stage3"] == "npr") {
           shrubbery.small <- cbind.data.frame(stage3 = stageframe$stage[which(stageframe$propstatus == 1)], 
             stage2 = shrubbery[X, "stage2"], stage1 = shrubbery[X, "stage1"], 
             eststage3 = shrubbery[X, "eststage3"], eststage2 = shrubbery[X, "eststage2"], 
@@ -1693,22 +1910,21 @@ overwrite <- function(stage3, stage2, stage1 = NA, eststage3 = NA,
 #' fecundity multipliers.
 #'
 #' @param stage3 The name of the stage in time \emph{t}+1 in the transition to
-#' be replaced.
+#' be replaced. Abbreviations for groups of stages are also useable (see Notes).
 #' @param stage2 The name of the stage in time \emph{t} in the transition to be 
-#' replaced.
+#' replaced. Abbreviations for groups of stages are also useable (see Notes).
 #' @param stage1 The name of the stage in time \emph{t}-1 in the transition to
-#' be replaced. Only needed if a historical matrix is to be produced. Use
-#' \code{rep} if all reproductive stages are to be used, \code{mat} if all
-#' mature stages are to be used, \code{immat} if all immature stages are to be
-#' used, \code{prop} if all propagule stages are to be used, and leave empty or
-#' use \code{all} if all stages in stageframe are to be used.
+#' be replaced. Only needed if a historical matrix is to be produced.
+#' Abbreviations for groups of stages are also useable (see Notes).
 #' @param eststage3 The name of the stage to replace \code{stage3}. Only needed
 #' if a transition will be replaced by another estimated transition.
 #' @param eststage2 The name of the stage to replace \code{stage2}. Only needed
 #' if a transition will be replaced by another estimated transition.
 #' @param eststage1 The name of the stage to replace \code{stage1}. Only needed
 #' if a transition will be replaced by another estimated transition, and the
-#' matrix to be estimated is historical.
+#' matrix to be estimated is historical. Stage \code{NotAlive} is also possible
+#' for raw hMPMs, as a means of handling the prior stage for individuals
+#' entering the population in time \emph{t}.
 #' @param givenrate A fixed rate or probability to replace for the transition
 #' described by \code{stage3}, \code{stage2}, and \code{stage1}.
 #' @param multiplier A vector of numeric multipliers for fecundity, and NA
@@ -1758,6 +1974,14 @@ overwrite <- function(stage3, stage2, stage1 = NA, eststage3 = NA,
 #' multipliers are provided for the same function via the reproductive matrix
 #' and function \code{supplemental()}, the latter is used.
 #' 
+#' Entries in \code{stage3}, \code{stage2}, and \code{stage1} can include
+#' abbreviations for groups of stages. Use \code{rep} if all reproductive stages
+#' are to be used, \code{nrep} if all mature but non-reproductive stages are to
+#' be used, \code{mat} if all mature stages are to be used, \code{immat} if all
+#' immature stages are to be used, \code{prop} if all propagule stages are to be
+#' used, \code{npr} if all non-propagule stages are to be used, and leave empty
+#' or use \code{all} if all stages in stageframe are to be used.
+#' 
 #' @examples
 #' # Lathyrus example
 #' data(lathyrus)
@@ -1784,12 +2008,15 @@ overwrite <- function(stage3, stage2, stage1 = NA, eststage3 = NA,
 #'   nonobsacol = "Dormant1988", stageassign = lathframe, stagesize = "sizea",
 #'   censorcol = "Missing1988", censorkeep = NA, censor = TRUE)
 #' 
-#' lathsupp3 <- supplemental(stage3 = c("Sd", "Sd", "Sdl", "Sdl", "Sd", "Sdl"), 
-#'   stage2 = c("Sd", "Sd", "Sd", "Sd", "rep", "rep"),
-#'   stage1 = c("Sd", "rep", "Sd", "rep", "all", "all"), 
-#'   givenrate = c(0.345, 0.345, 0.054, 0.054, NA, NA),
-#'   multiplier = c(NA, NA, NA, NA, 0.345, 0.054),
-#'   type = c(1, 1, 1, 1, 3, 3), type_t12 = c(1, 2, 1, 2, 1, 1),
+#' lathsupp3 <- supplemental(stage3 = c("Sd", "Sd", "Sdl", "Sdl", "Sd", "Sdl", "mat"),
+#'   stage2 = c("Sd", "Sd", "Sd", "Sd", "rep", "rep", "Sdl"),
+#'   stage1 = c("Sd", "rep", "Sd", "rep", "npr", "npr", "Sd"),
+#'   eststage3 = c(NA, NA, NA, NA, NA, NA, "mat"),
+#'   eststage2 = c(NA, NA, NA, NA, NA, NA, "Sdl"),
+#'   eststage1 = c(NA, NA, NA, NA, NA, NA, "NotAlive"),
+#'   givenrate = c(0.345, 0.345, 0.054, 0.054, NA, NA, NA),
+#'   multiplier = c(NA, NA, NA, NA, 0.345, 0.054, NA),
+#'   type = c(1, 1, 1, 1, 3, 3, 1), type_t12 = c(1, 2, 1, 2, 1, 1, 1),
 #'   stageframe = lathframe, historical = TRUE)
 #' 
 #' ehrlen3 <- rlefko3(data = lathvert, stageframe = lathframe, year = "all", 
@@ -1934,12 +2161,17 @@ supplemental <- function(stage3, stage2, stage1 = NA, eststage3 = NA,
   if (length(which(mismatches)) > 0) {
     extrastuff <- tolower(all.stages.inp[which(mismatches)])
     
-    unaccountedfor <- extrastuff[which(!is.element(extrastuff, c("all", "rep", "mat", "immat", "prop")))]
+    unaccountedfor <- extrastuff[which(!is.element(extrastuff, 
+          c("all", "rep", "nrep", "mat", "immat", "prop", "npr", "notalive")))]
     
-    if (!all(is.element(extrastuff, c("all", "rep", "mat", "immat", "prop")))) {
+    if (!all(is.element(extrastuff, c("all", "rep", "nrep", "mat", "immat", "prop", "npr", "notalive")))) {
       stop(paste("The following stage names input in supplemental() do not match the stageframe:", 
         paste(unaccountedfor, collapse = ' ')), call. = FALSE)
     }
+  }
+  
+  if (is.element("notalive", tolower(c(stage1, stage2, stage3, eststage2, eststage3)))) {
+    stop("Stage NotAlive is only allowed in the input for eststage1.", call. = FALSE)
   }
   
   output <- cbind.data.frame(stage3, stage2, stage1, eststage3, eststage2,

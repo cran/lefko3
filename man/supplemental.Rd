@@ -21,17 +21,14 @@ supplemental(
 }
 \arguments{
 \item{stage3}{The name of the stage in time \emph{t}+1 in the transition to
-be replaced.}
+be replaced. Abbreviations for groups of stages are also useable (see Notes).}
 
 \item{stage2}{The name of the stage in time \emph{t} in the transition to be 
-replaced.}
+replaced. Abbreviations for groups of stages are also useable (see Notes).}
 
 \item{stage1}{The name of the stage in time \emph{t}-1 in the transition to
-be replaced. Only needed if a historical matrix is to be produced. Use
-\code{rep} if all reproductive stages are to be used, \code{mat} if all
-mature stages are to be used, \code{immat} if all immature stages are to be
-used, \code{prop} if all propagule stages are to be used, and leave empty or
-use \code{all} if all stages in stageframe are to be used.}
+be replaced. Only needed if a historical matrix is to be produced.
+Abbreviations for groups of stages are also useable (see Notes).}
 
 \item{eststage3}{The name of the stage to replace \code{stage3}. Only needed
 if a transition will be replaced by another estimated transition.}
@@ -41,7 +38,9 @@ if a transition will be replaced by another estimated transition.}
 
 \item{eststage1}{The name of the stage to replace \code{stage1}. Only needed
 if a transition will be replaced by another estimated transition, and the
-matrix to be estimated is historical.}
+matrix to be estimated is historical. Stage \code{NotAlive} is also possible
+for raw hMPMs, as a means of handling the prior stage for individuals
+entering the population in time \emph{t}.}
 
 \item{givenrate}{A fixed rate or probability to replace for the transition
 described by \code{stage3}, \code{stage2}, and \code{stage1}.}
@@ -104,6 +103,14 @@ acts in the same way as non-zero entries supplied via a reproductive matrix,
 but gets priority in all matrix creations. Thus, in cases where fecundity
 multipliers are provided for the same function via the reproductive matrix
 and function \code{supplemental()}, the latter is used.
+
+Entries in \code{stage3}, \code{stage2}, and \code{stage1} can include
+abbreviations for groups of stages. Use \code{rep} if all reproductive stages
+are to be used, \code{nrep} if all mature but non-reproductive stages are to
+be used, \code{mat} if all mature stages are to be used, \code{immat} if all
+immature stages are to be used, \code{prop} if all propagule stages are to be
+used, \code{npr} if all non-propagule stages are to be used, and leave empty
+or use \code{all} if all stages in stageframe are to be used.
 }
 
 \examples{
@@ -132,12 +139,15 @@ lathvert <- verticalize3(lathyrus, noyears = 4, firstyear = 1988,
   nonobsacol = "Dormant1988", stageassign = lathframe, stagesize = "sizea",
   censorcol = "Missing1988", censorkeep = NA, censor = TRUE)
 
-lathsupp3 <- supplemental(stage3 = c("Sd", "Sd", "Sdl", "Sdl", "Sd", "Sdl"), 
-  stage2 = c("Sd", "Sd", "Sd", "Sd", "rep", "rep"),
-  stage1 = c("Sd", "rep", "Sd", "rep", "all", "all"), 
-  givenrate = c(0.345, 0.345, 0.054, 0.054, NA, NA),
-  multiplier = c(NA, NA, NA, NA, 0.345, 0.054),
-  type = c(1, 1, 1, 1, 3, 3), type_t12 = c(1, 2, 1, 2, 1, 1),
+lathsupp3 <- supplemental(stage3 = c("Sd", "Sd", "Sdl", "Sdl", "Sd", "Sdl", "mat"),
+  stage2 = c("Sd", "Sd", "Sd", "Sd", "rep", "rep", "Sdl"),
+  stage1 = c("Sd", "rep", "Sd", "rep", "npr", "npr", "Sd"),
+  eststage3 = c(NA, NA, NA, NA, NA, NA, "mat"),
+  eststage2 = c(NA, NA, NA, NA, NA, NA, "Sdl"),
+  eststage1 = c(NA, NA, NA, NA, NA, NA, "NotAlive"),
+  givenrate = c(0.345, 0.345, 0.054, 0.054, NA, NA, NA),
+  multiplier = c(NA, NA, NA, NA, 0.345, 0.054, NA),
+  type = c(1, 1, 1, 1, 3, 3, 1), type_t12 = c(1, 2, 1, 2, 1, 1, 1),
   stageframe = lathframe, historical = TRUE)
 
 ehrlen3 <- rlefko3(data = lathvert, stageframe = lathframe, year = "all", 

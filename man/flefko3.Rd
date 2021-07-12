@@ -363,13 +363,15 @@ lathmodelsln3 <- modelsearch(lathvertln, historical = TRUE,
   indiv = "individ", patch = "patchid", year = "year2",year.as.random = TRUE,
   patch.as.random = TRUE, show.model.tables = TRUE, quiet = TRUE)
 
-# Here we use supplemental() to provide overwrite and reproductive info
-lathsupp3 <- supplemental(stage3 = c("Sd", "Sd", "Sdl", "Sdl", "Sd", "Sdl"), 
-  stage2 = c("Sd", "Sd", "Sd", "Sd", "rep", "rep"),
-  stage1 = c("Sd", "rep", "Sd", "rep", "all", "all"), 
-  givenrate = c(0.345, 0.345, 0.054, 0.054, NA, NA),
-  multiplier = c(NA, NA, NA, NA, 0.345, 0.054),
-  type = c(1, 1, 1, 1, 3, 3), type_t12 = c(1, 2, 1, 2, 1, 1),
+lathsupp3 <- supplemental(stage3 = c("Sd", "Sd", "Sdl", "Sdl", "mat", "Sd", "Sdl"), 
+  stage2 = c("Sd", "Sd", "Sd", "Sd", "Sdl", "rep", "rep"),
+  stage1 = c("Sd", "rep", "Sd", "rep", "Sd", "mat", "mat"),
+  eststage3 = c(NA, NA, NA, NA, "mat", NA, NA),
+  eststage2 = c(NA, NA, NA, NA, "Sdl", NA, NA),
+  eststage1 = c(NA, NA, NA, NA, "Sdl", NA, NA),
+  givenrate = c(0.345, 0.345, 0.054, 0.054, NA, NA, NA),
+  multiplier = c(NA, NA, NA, NA, NA, 0.345, 0.054),
+  type = c(1, 1, 1, 1, 1, 3, 3), type_t12 = c(1, 2, 1, 2, 1, 1, 1),
   stageframe = lathframeln, historical = TRUE)
 
 lathmat3ln <- flefko3(year = "all", patch = "all", stageframe = lathframeln, 
@@ -378,25 +380,6 @@ lathmat3ln <- flefko3(year = "all", patch = "all", stageframe = lathframeln,
   patch.as.random = FALSE, reduce = FALSE)
 
 summary(lathmat3ln)
-
-# Alternatively, we can use overwrite() and a reproductive matrix to provide
-# supplemental info
-
-lathrepmln <- matrix(0, 21, 21)
-lathrepmln[1, c(13:21)] <- 0.345
-lathrepmln[2, c(13:21)] <- 0.054
-
-lathover3 <- overwrite(stage3 = c("Sd", "Sd", "Sdl"), 
-  stage2 = c("Sd", "Sd", "Sd"), stage1 = c("Sd", "rep", "rep"), 
-  givenrate = c(0.345, 0.345, 0.054))
-
-lathmat3ln_alt <- flefko3(year = "all", patch = "all",
-  stageframe = lathframeln, modelsuite = lathmodelsln3, data = lathvertln,
-  repmatrix = lathrepmln, overwrite = lathover3, patchcol = "patchid",
-  yearcol = "year2", year.as.random = FALSE, patch.as.random = FALSE,
-  reduce = FALSE)
-
-summary(lathmat3ln_alt)
 }
 
 }

@@ -6,6 +6,11 @@
 
 using namespace Rcpp;
 
+#ifdef RCPP_USE_GLOBAL_ROSTREAM
+Rcpp::Rostream<true>&  Rcpp::Rcout = Rcpp::Rcpp_cout_get();
+Rcpp::Rostream<false>& Rcpp::Rcerr = Rcpp::Rcpp_cerr_get();
+#endif
+
 // ovreplace
 arma::mat ovreplace(arma::vec allst321, arma::vec idx321old, arma::vec idx321new, arma::vec convtype, arma::vec eststag3, arma::vec gvnrate, arma::vec multipl);
 RcppExport SEXP _lefko3_ovreplace(SEXP allst321SEXP, SEXP idx321oldSEXP, SEXP idx321newSEXP, SEXP convtypeSEXP, SEXP eststag3SEXP, SEXP gvnrateSEXP, SEXP multiplSEXP) {

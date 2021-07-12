@@ -1,7 +1,5 @@
 #' Develop Best-fit Vital Rate Estimation Models For MPM Development
 #' 
-#' Develop Best-fit Vital Rate Estimation Models For MPM Development
-#' 
 #' Function \code{modelsearch()} returns both a best-fit model for each vital
 #' rate, and a model table showing all models tested. The final output can be
 #' used as input in other functions within this package.
@@ -195,12 +193,17 @@
 #' \code{\link[MASS]{glm.nb}()} (GLM with negative binomial response),
 #' \code{\link[pscl]{zeroinfl}()} (zero-inflated Poisson or negative binomial
 #' response), \code{\link[lme4]{lmer}()} (mixed model with Gaussian response),
-#' \code{\link[lme4]{glmer}()} (mixed model with binomial or Poisson response),
-#' \code{\link[glmmTMB]{glmmTMB}()} (mixed model with negative binomial,
-#' zero-inflated negative binomial, or zero-inflated Poisson response).
-#' See documentation related to these functions for further information. Any
-#' response term that is invariable in the dataset will lead to a best-fit model
-#' for that response represented by a single constant value.
+#' and \code{\link[lme4]{glmer}()} (mixed model with binomial, Poisson, or
+#' negative binomial response). See documentation related to these functions for
+#' further information. Any response term that is invariable in the dataset will
+#' lead to a best-fit model for that response represented by a single constant
+#' value.
+#' 
+#' The current version of \code{modelsearch()} does not allow zero-inflated or
+#' zero-truncated distributions in mixed models, nor does it allow the negative
+#' binomial distribution. When current issues are resolved with package
+#' \code{glmmTMB}, which was originally used for this purpose, we will reinstate
+#' these special response distributions.
 #' 
 #' Exhaustive model building and selection proceeds via the
 #' \code{\link[MuMIn]{dredge}()} function in package \code{MuMIn}. This function
@@ -298,13 +301,15 @@
 #'   indiv = "individ", patch = "patchid", year = "year2",year.as.random = TRUE,
 #'   patch.as.random = TRUE, show.model.tables = TRUE, quiet = TRUE)
 #' 
-#' # Here we use supplemental() to provide overwrite and reproductive info
-#' lathsupp3 <- supplemental(stage3 = c("Sd", "Sd", "Sdl", "Sdl", "Sd", "Sdl"), 
-#'   stage2 = c("Sd", "Sd", "Sd", "Sd", "rep", "rep"),
-#'   stage1 = c("Sd", "rep", "Sd", "rep", "all", "all"), 
-#'   givenrate = c(0.345, 0.345, 0.054, 0.054, NA, NA),
-#'   multiplier = c(NA, NA, NA, NA, 0.345, 0.054),
-#'   type = c(1, 1, 1, 1, 3, 3), type_t12 = c(1, 2, 1, 2, 1, 1),
+#' lathsupp3 <- supplemental(stage3 = c("Sd", "Sd", "Sdl", "Sdl", "mat", "Sd", "Sdl"), 
+#'   stage2 = c("Sd", "Sd", "Sd", "Sd", "Sdl", "rep", "rep"),
+#'   stage1 = c("Sd", "rep", "Sd", "rep", "Sd", "mat", "mat"),
+#'   eststage3 = c(NA, NA, NA, NA, "mat", NA, NA),
+#'   eststage2 = c(NA, NA, NA, NA, "Sdl", NA, NA),
+#'   eststage1 = c(NA, NA, NA, NA, "Sdl", NA, NA),
+#'   givenrate = c(0.345, 0.345, 0.054, 0.054, NA, NA, NA),
+#'   multiplier = c(NA, NA, NA, NA, NA, 0.345, 0.054),
+#'   type = c(1, 1, 1, 1, 1, 3, 3), type_t12 = c(1, 2, 1, 2, 1, 1, 1),
 #'   stageframe = lathframeln, historical = TRUE)
 #' 
 #' lathmat3ln <- flefko3(year = "all", patch = "all", stageframe = lathframeln, 
@@ -335,44 +340,56 @@ modelsearch <- function(data, historical = TRUE, approach = "mixed",
   juvsize.data <- juvrepst.data <- NULL
   
   #Input testing, input standardization, and exception handling
-  if (all(class(data) != "hfvdata")) {warning("This function was made to work with standardized historically-formatted vertical datasets, as provided by the verticalize() and historicalize() functions. Failure to format the input data properly and designate needed variables appropriately may result in nonsensical output.")}
+  if (all(class(data) != "hfvdata")) {warning("This function was made to work with standardized historically-formatted vertical datasets, as provided by the verticalize() and historicalize() functions. Failure to format the input data properly and designate needed variables appropriately may result in nonsensical output.", call. = FALSE)}
   
   if (!requireNamespace("MuMIn", quietly = TRUE)) {stop("Package MuMIn needed for this function to work. Please install it.", call. = FALSE)}
   if (!requireNamespace("stringr", quietly = TRUE)) {stop("Package stringr needed for this function to work. Please install it.", call. = FALSE)}
   
   if (size.zero & size.trunc) {
-    stop("Size distribution cannot be both zero-inflated and zero-truncated. Please set size.zero, size.trunc, or both to FALSE.",
-      call. = FALSE)
+    stop("Size distribution cannot be both zero-inflated and zero-truncated. Please set size.zero, size.trunc, or both to FALSE.", call. = FALSE)
   }
   if (fec.zero & fec.trunc) {
-    stop("Fecundity distribution cannot be both zero-inflated and zero-truncated. Please set fec.zero, fec.trunc, or both to FALSE.",
-      call. = FALSE)
+    stop("Fecundity distribution cannot be both zero-inflated and zero-truncated. Please set fec.zero, fec.trunc, or both to FALSE.", call. = FALSE)
   }
   if (jsize.zero & jsize.trunc) {
-    stop("Juvenile size distribution cannot be both zero-inflated and zero-truncated. Please set jsize.zero, jsize.trunc, or both to FALSE.",
-      call. = FALSE)
+    stop("Juvenile size distribution cannot be both zero-inflated and zero-truncated. Please set jsize.zero, jsize.trunc, or both to FALSE.", call. = FALSE)
   }
   
   approach <- tolower(approach)
   sizedist <- tolower(sizedist)
   fecdist <- tolower(fecdist)
   
-  if (approach == "lme4") {approach <- "mixed"}
+  if (is.element(approach, c("lme4", "glmmtmb", "mixed"))) {approach <- "mixed"}
   
   if (approach == "mixed" & !requireNamespace("lme4", quietly = TRUE)) {
-    if (sizedist == "negbin" & !requireNamespace("glmmTMB", quietly = TRUE)) {stop("Package glmmTMB needed to develop mixed size models with a negative binomial distribution.")}
-    if (fecdist == "negbin" & !requireNamespace("glmmTMB", quietly = TRUE)) {stop("Package glmmTMB needed to develop mixed fecundity models with a negative binomial distribution.")}
+#    if (sizedist == "negbin" & !requireNamespace("glmmTMB", quietly = TRUE)) {stop("Package glmmTMB needed to develop mixed size models with a negative binomial distribution.", call. = FALSE)}
+#    if (fecdist == "negbin" & !requireNamespace("glmmTMB", quietly = TRUE)) {stop("Package glmmTMB needed to develop mixed fecundity models with a negative binomial distribution.", call. = FALSE)}
     stop("Package lme4 needed for this function to work. Please install it.", call. = FALSE)
     
-    if (sizedist != "gaussian") {
-      if (size.trunc & !requireNamespace("glmmTMB", quietly = TRUE)) {stop("Package glmmTMB needed to develop mixed size models with zero-truncated distribution.")}
-      if (size.zero & !requireNamespace("glmmTMB", quietly = TRUE)) {stop("Package glmmTMB needed to develop mixed size models with zero-inflated distribution.")}
+#    if (sizedist != "gaussian") {
+#      if (size.trunc & !requireNamespace("glmmTMB", quietly = TRUE)) {stop("Package glmmTMB needed to develop mixed size models with zero-truncated distribution.", call. = FALSE)}
+#      if (size.zero & !requireNamespace("glmmTMB", quietly = TRUE)) {stop("Package glmmTMB needed to develop mixed size models with zero-inflated distribution.", call. = FALSE)}
+#    }
+#    if (fecdist != "gaussian") {
+#      if (fec.trunc & !requireNamespace("glmmTMB", quietly = TRUE)) {stop("Package glmmTMB needed to develop mixed fecundity models with zero-truncated distribution.", call. = FALSE)}
+#      if (fec.zero & !requireNamespace("glmmTMB", quietly = TRUE)) {stop("Package glmmTMB needed to develop mixed fecundity models with zero-inflated distribution.", call. = FALSE)}
+#    }
+  }
+  
+  if (approach == "mixed") {
+    if (sizedist == "negbin") {
+      stop("Mixed modeling currently only functions with Gaussian, binomial, and Poisson distributions. Please use the glm approach to use the negative binomial distribution.", call. = FALSE)
     }
-    if (fecdist != "gaussian") {
-      if (fec.trunc & !requireNamespace("glmmTMB", quietly = TRUE)) {stop("Package glmmTMB needed to develop mixed fecundity models with zero-truncated distribution.")}
-      if (fec.zero & !requireNamespace("glmmTMB", quietly = TRUE)) {stop("Package glmmTMB needed to develop mixed fecundity models with zero-inflated distribution.")}
+    if (fecdist == "negbin") {
+      stop("Mixed modeling currently only functions with Gaussian, binomial, and Poisson distributions. Please use the glm approach to use the negative binomial distribution.", call. = FALSE)
     }
   }
+  
+  # This section should be removed once glmmTMB is back online
+  if (approach == "mixed" & size.trunc) {stop("Zero-truncated distributions are currently allowed only for GLMs, not for mixed models. Please set approach option to glm.", call. = FALSE)}
+  if (approach == "mixed" & fec.trunc) {stop("Zero-truncated distributions are currently allowed only for GLMs, not for mixed models. Please set approach option to glm.", call. = FALSE)}
+  if (approach == "mixed" & size.zero) {stop("Zero-inflated distributions are currently allowed only for GLMs, not for mixed models. Please set approach option to glm.", call. = FALSE)}
+  if (approach == "mixed" & fec.zero) {stop("Zero-inflated distributions are currently allowed only for GLMs, not for mixed models. Please set approach option to glm.", call. = FALSE)}
   
   if (approach == "glm") {
     if (sizedist != "gaussian") {
@@ -598,30 +615,30 @@ modelsearch <- function(data, historical = TRUE, approach = "mixed",
     
     if (suite == "full" | suite == "main" | suite == "size") {
       if (any(is.na(juvsurv.data[, which(names(juvsurv.data) == size[2])]))) {
-        warning("NAs in size variables may cause model selection to fail.")
+        warning("NAs in size variables may cause model selection to fail.", call. = FALSE)
       }
       
       if (historical == TRUE) {
         if (any(is.na(juvsurv.data[, which(names(juvsurv.data) == size[3])]))) {
-          warning("NAs in size variables may cause model selection to fail.")
+          warning("NAs in size variables may cause model selection to fail.", call. = FALSE)
         }
       }
     }
     
     if (suite == "full" | suite == "main" | suite == "rep") {
       if (any(is.na(juvsurv.data[, which(names(juvsurv.data) == repst[2])]))) {
-        warning("NAs in reproductive status variables may cause model selection to fail.")
+        warning("NAs in reproductive status variables may cause model selection to fail.", call. = FALSE)
       }
       
       if (historical == TRUE) {
         if (any(is.na(juvsurv.data[, which(names(juvsurv.data) == repst[3])]))) {
-          warning("NAs in reproductive status variables may cause model selection to fail.")
+          warning("NAs in reproductive status variables may cause model selection to fail.", call. = FALSE)
         }
       }
     }
     
     if (is.element(0, juvsurv.data$matstatus3)) {
-      warning("Function modelsearch() assumes that all juveniles either die or transition to maturity within 1 year. Some individuals in this dataset appear to live longer as juveniles than assumptions allow.")
+      warning("Function modelsearch() assumes that all juveniles either die or transition to maturity within 1 year. Some individuals in this dataset appear to live longer as juveniles than assumptions allow.", call. = FALSE)
     }
     
     juvobs.data <- subset(juvsurv.data, juvsurv.data[, which(names(juvsurv.data) == surv[1])] == 1)
@@ -643,7 +660,7 @@ modelsearch <- function(data, historical = TRUE, approach = "mixed",
     juvrepst.trans <- dim(juvrepst.data)[1]
     
     if (dim(juvsurv.data)[1] < 100) {
-      warning("Juvenile dataset is very small, and some models may fail given the size.")
+      warning("Juvenile dataset is very small, and some models may fail given the size.", call. = FALSE)
     }
     
     data <- data[adultindivs,] #This line resets the main dataset to adults only
@@ -654,37 +671,37 @@ modelsearch <- function(data, historical = TRUE, approach = "mixed",
   surv.trans <- dim(surv.data)[1]
   
   if(any(!suppressWarnings(!is.na(as.numeric(as.character(surv.data[, which(names(surv.data) == size[1])])))))) {
-    warning("Modelsearch(), flefko3(), flefko2(), and aflefko2() are made to work with numeric size variables. Use of categorical variables may result in errors and unexpected behavior.")
+    warning("Modelsearch(), flefko3(), flefko2(), and aflefko2() are made to work with numeric size variables. Use of categorical variables may result in errors and unexpected behavior.", call. = FALSE)
   }
   if (suite == "full" | suite == "main" | suite == "size") {
     if (any(is.na(surv.data[, which(names(surv.data) == size[2])]))) {
-      warning("NAs in size variables may cause model selection to fail.")
+      warning("NAs in size variables may cause model selection to fail.", call. = FALSE)
     }
     
     if (historical == TRUE) {
       if (any(is.na(surv.data[, which(names(surv.data) == size[3])]))) {
-        warning("NAs in size variables may cause model selection to fail.")
+        warning("NAs in size variables may cause model selection to fail.", call. = FALSE)
       }
     }
   }
   if (suite == "full" | suite == "main" | suite == "rep") {
     if (any(is.na(surv.data[, which(names(surv.data) == repst[2])]))) {
-      warning("NAs in reproductive status variables may cause model selection to fail.")
+      warning("NAs in reproductive status variables may cause model selection to fail.", call. = FALSE)
     }
     
     if (historical == TRUE) {
       if (any(is.na(surv.data[, which(names(surv.data) == repst[3])]))) {
-        warning("NAs in reproductive status variables may cause model selection to fail.")
+        warning("NAs in reproductive status variables may cause model selection to fail.", call. = FALSE)
       }
     }
   }
   if (dim(surv.data)[1] < 100) {
-    warning("Dataset is very small, and some models may fail given the size.")
+    warning("Dataset is very small, and some models may fail given the size.", call. = FALSE)
   }
   
   surv.uns <- unique(surv.data[,which(names(surv.data) == surv[1])])
   if (length(surv.uns) == 1) {
-    warning("Survival to time t+1 appears to be constant, and so will be set to a constant.")
+    warning("Survival to time t+1 appears to be constant, and so will be set to a constant.", call. = FALSE)
     formulae$full.surv.model <- surv.uns[1]
   }
   
@@ -695,7 +712,7 @@ modelsearch <- function(data, historical = TRUE, approach = "mixed",
   if (formulae$full.obs.model != 1) {
     obs.uns <- unique(obs.data[,which(names(obs.data) == obs[1])])
     if (length(obs.uns) == 1) {
-      warning("Observation in time t+1 appears to be constant, and so will be set to a constant.")
+      warning("Observation in time t+1 appears to be constant, and so will be set to a constant.", call. = FALSE)
     formulae$full.obs.model <- obs.uns[1]
     }
   }
@@ -713,7 +730,7 @@ modelsearch <- function(data, historical = TRUE, approach = "mixed",
   if (formulae$full.size.model != 1) {
     size.uns <- unique(size.data[,which(names(size.data) == size[1])])
     if (length(size.uns) == 1) {
-      warning("Size in time t+1 appears to be constant, and so will be set to a constant.")
+      warning("Size in time t+1 appears to be constant, and so will be set to a constant.", call. = FALSE)
     formulae$full.size.model <- size.uns[1]
     }
   }
@@ -725,7 +742,7 @@ modelsearch <- function(data, historical = TRUE, approach = "mixed",
   if (formulae$full.repst.model != 1) {
     repst.uns <- unique(repst.data[,which(names(repst.data) == repst[1])])
     if (length(repst.uns) == 1) {
-      warning("Reproductive status in time t+1 appears to be constant, and so will be set to a constant.")
+      warning("Reproductive status in time t+1 appears to be constant, and so will be set to a constant.", call. = FALSE)
       formulae$full.repst.model <- repst.uns[1]
     }
   }
@@ -767,24 +784,24 @@ modelsearch <- function(data, historical = TRUE, approach = "mixed",
   if (sizedist == "poisson" & !is.numeric(formulae$full.size.model)) {
     
     if (any(size.data[, which(names(size.data) == size[1])] != round(size.data[, which(names(size.data) == size[1])]))) {
-      stop("Size variables must be composed only of integers for the Poisson distribution to be used.")
+      stop("Size variables must be composed only of integers for the Poisson distribution to be used.", call. = FALSE)
     }
     
     if (!is.na(juvestimate)) {
       if (any(juvsize.data[, which(names(juvsize.data) == size[1])] != round(juvsize.data[, which(names(juvsize.data) == size[1])]))) {
-        stop("Size variables must be composed only of integers for the Poisson distribution to be used.")
+        stop("Size variables must be composed only of integers for the Poisson distribution to be used.", call. = FALSE)
       }
     }
     
   } else if (sizedist == "negbin" & !is.numeric(formulae$full.size.model)) {
     
     if (any(size.data[, which(names(size.data) == size[1])] != round(size.data[, which(names(size.data) == size[1])]))) {
-      stop("Size variables must be composed only of integers for the negative binomial distribution to be used.")
+      stop("Size variables must be composed only of integers for the negative binomial distribution to be used.", call. = FALSE)
     }
     
     if (!is.na(juvestimate)) {
       if (any(juvsize.data[, which(names(juvsize.data) == size[1])] != round(juvsize.data[, which(names(juvsize.data) == size[1])]))) {
-        stop("Size variables must be composed only of integers for the negative binomial distribution to be used.")
+        stop("Size variables must be composed only of integers for the negative binomial distribution to be used.", call. = FALSE)
       }
     }
   }
@@ -797,7 +814,7 @@ modelsearch <- function(data, historical = TRUE, approach = "mixed",
     }
     
     if (any(fec.data[, usedfec] != round(fec.data[, usedfec]))) {
-      stop("Fecundity variables must be composed only of integers for the Poisson distribution to be used.")
+      stop("Fecundity variables must be composed only of integers for the Poisson distribution to be used.", call. = FALSE)
     }
   } else if (fecdist == "negbin" & !is.numeric(formulae$full.fec.model)) {
     if (fectime == 2) {
@@ -807,7 +824,7 @@ modelsearch <- function(data, historical = TRUE, approach = "mixed",
     }
     
     if (any(fec.data[, usedfec] != round(fec.data[, usedfec]))) {
-      stop("Fecundity variables must be composed only of integers for the negative binomial distribution to be used.")
+      stop("Fecundity variables must be composed only of integers for the negative binomial distribution to be used.", call. = FALSE)
     }
   }
   
@@ -1378,77 +1395,8 @@ modelsearch <- function(data, historical = TRUE, approach = "mixed",
     stop("Parameter to model not recognized.", call. = FALSE)
   }
   
-  if (approach == "mixed") {
-    if (binom.model) {
-      global.model <- try(lme4::glmer(formula = stats::as.formula(usedformula), 
-          data = subdata, family = "binomial"), silent = TRUE)
-    } else {
-      if (dist == "gaussian") {
-        global.model <- try(lme4::lmer(formula = stats::as.formula(usedformula),
-            data = subdata), silent = TRUE)
-      } else if (!truncz) {
-        if (dist == "poisson" & !zero) {
-          global.model <- try(lme4::glmer(formula = stats::as.formula(usedformula),
-              data = subdata, family = "poisson"), silent = TRUE)
-        } else if (dist == "poisson" & zero) {
-          global.model <- try(glmmTMB::glmmTMB(formula = stats::as.formula(usedformula),
-              data = subdata, ziformula=~., family = "poisson"), silent = TRUE)
-        } else if (dist == "negbin" & !zero) {
-          global.model <- try(glmmTMB::glmmTMB(formula = stats::as.formula(usedformula),
-              data = subdata, ziformula=~0, family = glmmTMB::nbinom2), silent = TRUE)
-        } else if (dist == "negbin" & zero) {
-          global.model <- try(glmmTMB::glmmTMB(formula = stats::as.formula(usedformula),
-              data = subdata, ziformula=~., family = glmmTMB::nbinom2), silent = TRUE)
-        }
-      } else if (truncz) {
-        if (dist == "poisson" & !zero) {
-          global.model <- try(glmmTMB::glmmTMB(formula = stats::as.formula(usedformula),
-              data = subdata, family = glmmTMB::truncated_poisson), silent = TRUE)
-        } else if (dist == "negbin" & !zero) {
-          global.model <- try(glmmTMB::glmmTMB(formula = stats::as.formula(usedformula),
-              data = subdata, ziformula=~0, family = glmmTMB::truncated_nbinom2), silent = TRUE)
-        }
-      }
-    }
-    
-  } else if (approach == "glm") {
-    if (binom.model) {
-      global.model <- try(stats::glm(formula = stats::as.formula(usedformula),
-          data = subdata, family = "binomial"), silent = TRUE)
-    } else {
-      if (dist == "gaussian") {
-        global.model <- try(stats::lm(formula = stats::as.formula(usedformula),
-            data = subdata), silent = TRUE)
-      } else if (!truncz) {
-        if (dist == "poisson" & !zero) {
-          global.model <- try(stats::glm(formula = stats::as.formula(usedformula),
-              data = subdata, family = "poisson"), silent = TRUE)
-        } else if (dist == "poisson" & zero) {
-          global.model <- try(pscl::zeroinfl(formula = stats::as.formula(usedformula),
-              data = subdata, dist = "poisson"), silent = TRUE)
-        } else if (dist == "negbin" & !zero) {
-          global.model <- try(MASS::glm.nb(formula = stats::as.formula(usedformula),
-              data = subdata), silent = TRUE)
-        } else if (dist == "negbin" & zero) {
-          global.model <- try(pscl::zeroinfl(formula = stats::as.formula(usedformula), 
-              data = subdata, dist = "negbin"), silent = TRUE)
-        }
-      } else if (truncz) {
-        usedformula <- gsub(" + 1", "", usedformula, fixed = TRUE)
-        
-        if (dist == "poisson" & !zero) {
-          global.model <- try(VGAM::vglm(formula = stats::as.formula(usedformula),
-              data = subdata, family = VGAM::pospoisson()), silent = TRUE)
-        } else if (dist == "negbin" & !zero) {
-          global.model <- try(VGAM::vglm(formula = stats::as.formula(usedformula),
-              data = subdata, family = VGAM::posnegbinomial()), silent = TRUE)
-        }
-      }
-    }
-    
-  } else {
-    stop("Modeling approach not recognized.", call. = FALSE)
-  }
+  global.model <- .levindurosier(usedformula, subdata, approach, binom.model,
+    dist, truncz, zero)
   
   if (any(class(global.model) == "try-error")) {
     nox.model <- usedformula
@@ -1483,71 +1431,8 @@ modelsearch <- function(data, historical = TRUE, approach = "mixed",
         message("\nInitial global model estimation failed. Attempting a global model without interaction terms.\n")
       }
       
-      if (approach == "mixed") {
-        if (binom.model) {
-          global.model <- try(lme4::glmer(formula = stats::as.formula(nox.model), 
-              data = subdata, family = "binomial"), silent = TRUE)
-        } else {
-          if (dist == "gaussian") {
-            global.model <- try(lme4::lmer(formula = stats::as.formula(nox.model),
-                data = subdata), silent = TRUE)
-          } else if (!truncz) {
-            if (dist == "poisson" & !zero) {
-              global.model <- try(lme4::glmer(formula = stats::as.formula(nox.model),
-                  data = subdata, family = "poisson"), silent = TRUE)
-            } else if (dist == "poisson" & zero) {
-              global.model <- try(glmmTMB::glmmTMB(formula = stats::as.formula(nox.model),
-                  data = subdata, ziformula=~., family = "poisson"), silent = TRUE)
-            } else if (dist == "negbin" & !zero) {
-              global.model <- try(glmmTMB::glmmTMB(formula = stats::as.formula(nox.model),
-                  data = subdata, ziformula=~0, family = glmmTMB::nbinom2), silent = TRUE)
-            } else if (dist == "negbin" & zero) {
-              global.model <- try(glmmTMB::glmmTMB(formula = stats::as.formula(nox.model),
-                  data = subdata, ziformula=~., family = glmmTMB::nbinom2), silent = TRUE)
-            }
-          } else if (truncz) {
-            if (dist == "poisson" & !zero) {
-              global.model <- try(glmmTMB::glmmTMB(formula = stats::as.formula(nox.model),
-                  data = subdata, family = glmmTMB::truncated_poisson), silent = TRUE)
-            } else if (dist == "negbin" & !zero) {
-              global.model <- try(glmmTMB::glmmTMB(formula = stats::as.formula(nox.model),
-                  data = subdata, ziformula=~0, family = glmmTMB::truncated_nbinom2), silent = TRUE)
-            }
-          }
-        }
-      } else if (approach == "glm") {
-        if (binom.model) {
-          global.model <- try(stats::glm(formula = stats::as.formula(nox.model),
-              data = subdata, family = "binomial"), silent = TRUE)
-        } else {
-          if (dist == "gaussian") {
-            global.model <- try(stats::lm(formula = stats::as.formula(nox.model),
-                data = subdata), silent = TRUE)
-          } else if (!truncz) {
-            if (dist == "poisson" & !zero) {
-              global.model <- try(stats::glm(formula = stats::as.formula(nox.model),
-                  data = subdata, family = "poisson"), silent = TRUE)
-            } else if (dist == "poisson" & zero) {
-              global.model <- try(pscl::zeroinfl(formula = stats::as.formula(nox.model),
-                  data = subdata, dist = "poisson"), silent = TRUE)
-            } else if (dist == "negbin" & !zero) {
-              global.model <- try(MASS::glm.nb(formula = stats::as.formula(nox.model),
-                  data = subdata), silent = TRUE)
-            } else if (dist == "negbin" & zero) {
-              global.model <- try(pscl::zeroinfl(formula = stats::as.formula(nox.model), 
-                  data = subdata, dist = "negbin"), silent = TRUE)
-            }
-          } else if (truncz) {
-            if (dist == "poisson" & !zero) {
-              global.model <- try(VGAM::vglm(formula = stats::as.formula(nox.model),
-                  data = subdata, family = VGAM::pospoisson()), silent = TRUE)
-            } else if (dist == "negbin" & !zero) {
-              global.model <- try(VGAM::vglm(formula = stats::as.formula(nox.model),
-                  data = subdata, family = VGAM::posnegbinomial()), silent = TRUE)
-            }
-          }
-        }
-      }
+      global.model <- .levindurosier(nox.model, subdata, approach, binom.model,
+        dist, truncz, zero)
     }
     
     if (any(class(global.model) == "try-error")) {
@@ -1562,71 +1447,8 @@ modelsearch <- function(data, historical = TRUE, approach = "mixed",
           message("\nGlobal model estimation difficulties. Attempting a global model without a patch term.")
         }
         
-        if (approach == "mixed") {
-          if (binom.model) {
-            global.model <- try(lme4::glmer(formula = stats::as.formula(nopat.model), 
-                data = subdata, family = "binomial"), silent = TRUE)
-          } else {
-            if (dist == "gaussian") {
-              global.model <- try(lme4::lmer(formula = stats::as.formula(nopat.model),
-                  data = subdata), silent = TRUE)
-            } else if (!truncz) {
-              if (dist == "poisson" & !zero) {
-                global.model <- try(lme4::glmer(formula = stats::as.formula(nopat.model),
-                    data = subdata, family = "poisson"), silent = TRUE)
-              } else if (dist == "poisson" & zero) {
-                global.model <- try(glmmTMB::glmmTMB(formula = stats::as.formula(nopat.model),
-                    data = subdata, ziformula=~., family = "poisson"), silent = TRUE)
-              } else if (dist == "negbin" & !zero) {
-                global.model <- try(glmmTMB::glmmTMB(formula = stats::as.formula(nopat.model),
-                    data = subdata, ziformula=~0, family = glmmTMB::nbinom2), silent = TRUE)
-              } else if (dist == "negbin" & zero) {
-                global.model <- try(glmmTMB::glmmTMB(formula = stats::as.formula(nopat.model),
-                    data = subdata, ziformula=~., family = glmmTMB::nbinom2), silent = TRUE)
-              }
-            } else if (truncz) {
-              if (dist == "poisson" & !zero) {
-                global.model <- try(glmmTMB::glmmTMB(formula = stats::as.formula(nopat.model),
-                    data = subdata, family = glmmTMB::truncated_poisson), silent = TRUE)
-              } else if (dist == "negbin" & !zero) {
-                global.model <- try(glmmTMB::glmmTMB(formula = stats::as.formula(nopat.model),
-                    data = subdata, ziformula=~0, family = glmmTMB::truncated_nbinom2), silent = TRUE)
-              }
-            }
-          }
-        } else if (approach == "glm") {
-          if (binom.model) {
-            global.model <- try(stats::glm(formula = stats::as.formula(nopat.model),
-                data = subdata, family = "binomial"), silent = TRUE)
-          } else {
-            if (dist == "gaussian") {
-              global.model <- try(stats::lm(formula = stats::as.formula(nopat.model),
-                  data = subdata), silent = TRUE)
-            } else if (!truncz) {
-              if (dist == "poisson" & !zero) {
-                global.model <- try(stats::glm(formula = stats::as.formula(nopat.model),
-                    data = subdata, family = "poisson"), silent = TRUE)
-              } else if (dist == "poisson" & zero) {
-                global.model <- try(pscl::zeroinfl(formula = stats::as.formula(nopat.model),
-                    data = subdata, dist = "poisson"), silent = TRUE)
-              } else if (dist == "negbin" & !zero) {
-                global.model <- try(MASS::glm.nb(formula = stats::as.formula(nopat.model),
-                    data = subdata), silent = TRUE)
-              } else if (dist == "negbin" & zero) {
-                global.model <- try(pscl::zeroinfl(formula = stats::as.formula(nopat.model), 
-                    data = subdata, dist = "negbin"), silent = TRUE)
-              }
-            } else if (truncz) {
-              if (dist == "poisson" & !zero) {
-                global.model <- try(VGAM::vglm(formula = stats::as.formula(nopat.model),
-                    data = subdata, family = VGAM::pospoisson()), silent = TRUE)
-              } else if (dist == "negbin" & !zero) {
-                global.model <- try(VGAM::vglm(formula = stats::as.formula(nopat.model),
-                    data = subdata, family = VGAM::posnegbinomial()), silent = TRUE)
-              }
-            }
-          }
-        }
+        global.model <- .levindurosier(nopat.model, subdata, approach, binom.model,
+          dist, truncz, zero)
       }
     }
     
@@ -1641,72 +1463,8 @@ modelsearch <- function(data, historical = TRUE, approach = "mixed",
         if (!quiet) {
           message("\nGlobal model estimation difficulties. Attempting a global model without a year term.")
         }
-        
-        if (approach == "mixed") {
-          if (binom.model) {
-            global.model <- try(lme4::glmer(formula = stats::as.formula(noyr.model), 
-                data = subdata, family = "binomial"), silent = TRUE)
-          } else {
-            if (dist == "gaussian") {
-              global.model <- try(lme4::lmer(formula = stats::as.formula(noyr.model),
-                  data = subdata), silent = TRUE)
-            } else if (!truncz) {
-              if (dist == "poisson" & !zero) {
-                global.model <- try(lme4::glmer(formula = stats::as.formula(noyr.model),
-                    data = subdata, family = "poisson"), silent = TRUE)
-              } else if (dist == "poisson" & zero) {
-                global.model <- try(glmmTMB::glmmTMB(formula = stats::as.formula(noyr.model),
-                    data = subdata, ziformula=~., family = "poisson"), silent = TRUE)
-              } else if (dist == "negbin" & !zero) {
-                global.model <- try(glmmTMB::glmmTMB(formula = stats::as.formula(noyr.model),
-                    data = subdata, ziformula=~0, family = glmmTMB::nbinom2), silent = TRUE)
-              } else if (dist == "negbin" & zero) {
-                global.model <- try(glmmTMB::glmmTMB(formula = stats::as.formula(noyr.model),
-                    data = subdata, ziformula=~., family = glmmTMB::nbinom2), silent = TRUE)
-              }
-            } else if (truncz) {
-              if (dist == "poisson" & !zero) {
-                global.model <- try(glmmTMB::glmmTMB(formula = stats::as.formula(noyr.model),
-                    data = subdata, family = glmmTMB::truncated_poisson), silent = TRUE)
-              } else if (dist == "negbin" & !zero) {
-                global.model <- try(glmmTMB::glmmTMB(formula = stats::as.formula(noyr.model),
-                    data = subdata, ziformula=~0, family = glmmTMB::truncated_nbinom2), silent = TRUE)
-              }
-            }
-          }
-        } else if (approach == "glm") {
-          if (binom.model) {
-            global.model <- try(stats::glm(formula = stats::as.formula(noyr.model),
-                data = subdata, family = "binomial"), silent = TRUE)
-          } else {
-            if (dist == "gaussian") {
-              global.model <- try(stats::lm(formula = stats::as.formula(noyr.model),
-                  data = subdata), silent = TRUE)
-            } else if (!truncz) {
-              if (dist == "poisson" & !zero) {
-                global.model <- try(stats::glm(formula = stats::as.formula(noyr.model),
-                    data = subdata, family = "poisson"), silent = TRUE)
-              } else if (dist == "poisson" & zero) {
-                global.model <- try(pscl::zeroinfl(formula = stats::as.formula(noyr.model),
-                    data = subdata, dist = "poisson"), silent = TRUE)
-              } else if (dist == "negbin" & !zero) {
-                global.model <- try(MASS::glm.nb(formula = stats::as.formula(noyr.model),
-                    data = subdata), silent = TRUE)
-              } else if (dist == "negbin" & zero) {
-                global.model <- try(pscl::zeroinfl(formula = stats::as.formula(noyr.model), 
-                    data = subdata, dist = "negbin"), silent = TRUE)
-              }
-            } else if (truncz) {
-              if (dist == "poisson" & !zero) {
-                global.model <- try(VGAM::vglm(formula = stats::as.formula(noyr.model),
-                    data = subdata, family = VGAM::pospoisson()), silent = TRUE)
-              } else if (dist == "negbin" & !zero) {
-                global.model <- try(VGAM::vglm(formula = stats::as.formula(noyr.model),
-                    data = subdata, family = VGAM::posnegbinomial()), silent = TRUE)
-              }
-            }
-          }
-        }
+        global.model <- .levindurosier(noyr.model, subdata, approach, binom.model,
+          dist, truncz, zero)
       }
     }
     
@@ -1722,71 +1480,8 @@ modelsearch <- function(data, historical = TRUE, approach = "mixed",
           message("\nGlobal model estimation difficulties. Attempting a global model without an individual identity term.")
         }
         
-        if (approach == "mixed") {
-          if (binom.model) {
-            global.model <- try(lme4::glmer(formula = stats::as.formula(noind.model), 
-                data = subdata, family = "binomial"), silent = TRUE)
-          } else {
-            if (dist == "gaussian") {
-              global.model <- try(lme4::lmer(formula = stats::as.formula(noind.model),
-                  data = subdata), silent = TRUE)
-            } else if (!truncz) {
-              if (dist == "poisson" & !zero) {
-                global.model <- try(lme4::glmer(formula = stats::as.formula(noind.model),
-                    data = subdata, family = "poisson"), silent = TRUE)
-              } else if (dist == "poisson" & zero) {
-                global.model <- try(glmmTMB::glmmTMB(formula = stats::as.formula(noind.model),
-                    data = subdata, ziformula=~., family = "poisson"), silent = TRUE)
-              } else if (dist == "negbin" & !zero) {
-                global.model <- try(glmmTMB::glmmTMB(formula = stats::as.formula(noind.model),
-                    data = subdata, ziformula=~0, family = glmmTMB::nbinom2), silent = TRUE)
-              } else if (dist == "negbin" & zero) {
-                global.model <- try(glmmTMB::glmmTMB(formula = stats::as.formula(noind.model),
-                    data = subdata, ziformula=~., family = glmmTMB::nbinom2), silent = TRUE)
-              }
-            } else if (truncz) {
-              if (dist == "poisson" & !zero) {
-                global.model <- try(glmmTMB::glmmTMB(formula = stats::as.formula(noind.model),
-                    data = subdata, family = glmmTMB::truncated_poisson), silent = TRUE)
-              } else if (dist == "negbin" & !zero) {
-                global.model <- try(glmmTMB::glmmTMB(formula = stats::as.formula(noind.model),
-                    data = subdata, ziformula=~0, family = glmmTMB::truncated_nbinom2), silent = TRUE)
-              }
-            }
-          }
-        } else if (approach == "glm") {
-          if (binom.model) {
-            global.model <- try(stats::glm(formula = stats::as.formula(noind.model),
-                data = subdata, family = "binomial"), silent = TRUE)
-          } else {
-            if (dist == "gaussian") {
-              global.model <- try(stats::lm(formula = stats::as.formula(noind.model),
-                  data = subdata), silent = TRUE)
-            } else if (!truncz) {
-              if (dist == "poisson" & !zero) {
-                global.model <- try(stats::glm(formula = stats::as.formula(noind.model),
-                    data = subdata, family = "poisson"), silent = TRUE)
-              } else if (dist == "poisson" & zero) {
-                global.model <- try(pscl::zeroinfl(formula = stats::as.formula(noind.model),
-                    data = subdata, dist = "poisson"), silent = TRUE)
-              } else if (dist == "negbin" & !zero) {
-                global.model <- try(MASS::glm.nb(formula = stats::as.formula(noind.model),
-                    data = subdata), silent = TRUE)
-              } else if (dist == "negbin" & zero) {
-                global.model <- try(pscl::zeroinfl(formula = stats::as.formula(noind.model), 
-                    data = subdata, dist = "negbin"), silent = TRUE)
-              }
-            } else if (truncz) {
-              if (dist == "poisson" & !zero) {
-                global.model <- try(VGAM::vglm(formula = stats::as.formula(noind.model),
-                    data = subdata, family = VGAM::pospoisson()), silent = TRUE)
-              } else if (dist == "negbin" & !zero) {
-                global.model <- try(VGAM::vglm(formula = stats::as.formula(noind.model),
-                    data = subdata, family = VGAM::posnegbinomial()), silent = TRUE)
-              }
-            }
-          }
-        }
+        global.model <- .levindurosier(noind.model, subdata, approach, binom.model,
+          dist, truncz, zero)
       }
     }
     
@@ -1937,6 +1632,104 @@ modelsearch <- function(data, historical = TRUE, approach = "mixed",
     bf.model = model.bf, table = model.table)
   
   return(output)
+}
+
+#' Core Global Model Builder for .headmaster_ritual()
+#' 
+#' A function that gets used repeatedly within .headmaster_ritual() to build the
+#' global model to be dredged in function \code{modelsearch()}.
+#' 
+#' @param usedformula The formula to be used in the linear modeling call.
+#' @param subdata The data subset to be used in the linear modeling call.
+#' @param approach Statistical approach, currently either "mixed" or "glm".
+#' @param binom.model A logical value indicating whether to fit a binomial
+#' distribution.
+#' @param dist A string indicating whether the response is "gaussian",
+#' "poisson", or "negbin", if it is not binomial.
+#' @param truncz A logical value indicating whether to use a zero-truncated
+#' distribution.
+#' @param zero A logical value indicating whether to use a zero-inflated
+#' distribution.
+#' 
+#' @return This function returns a fit linear model of class generated by the
+#' appropriate linear modeling function.
+#' 
+#' @keywords internal
+#' @noRd
+.levindurosier <- function(usedformula, subdata, approach, binom.model, dist,
+  truncz, zero) {
+  if (approach == "mixed") {
+    if (binom.model) {
+      global.model <- try(lme4::glmer(formula = stats::as.formula(usedformula), 
+          data = subdata, family = "binomial"), silent = TRUE)
+    } else {
+      if (dist == "gaussian") {
+        global.model <- try(lme4::lmer(formula = stats::as.formula(usedformula),
+            data = subdata), silent = TRUE)
+      } else if (!truncz) {
+        if (dist == "poisson" & !zero) {
+          global.model <- try(lme4::glmer(formula = stats::as.formula(usedformula),
+              data = subdata, family = "poisson"), silent = TRUE)
+        } # else if (dist == "poisson" & zero) {
+#          global.model <- try(glmmTMB::glmmTMB(formula = stats::as.formula(usedformula),
+#              data = subdata, ziformula=~., family = "poisson"), silent = TRUE)
+#        } else if (dist == "negbin" & !zero) {
+#          global.model <- try(glmmTMB::glmmTMB(formula = stats::as.formula(usedformula),
+#              data = subdata, ziformula=~0, family = glmmTMB::nbinom2), silent = TRUE)
+#        } else if (dist == "negbin" & zero) {
+#          global.model <- try(glmmTMB::glmmTMB(formula = stats::as.formula(usedformula),
+#              data = subdata, ziformula=~., family = glmmTMB::nbinom2), silent = TRUE)
+#        }
+#      } else if (truncz) {
+#        if (dist == "poisson" & !zero) {
+#          global.model <- try(glmmTMB::glmmTMB(formula = stats::as.formula(usedformula),
+#              data = subdata, family = glmmTMB::truncated_poisson), silent = TRUE)
+#        } else if (dist == "negbin" & !zero) {
+#          global.model <- try(glmmTMB::glmmTMB(formula = stats::as.formula(usedformula),
+#              data = subdata, ziformula=~0, family = glmmTMB::truncated_nbinom2), silent = TRUE)
+#        }
+      }
+    }
+    
+  } else if (approach == "glm") {
+    if (binom.model) {
+      global.model <- try(stats::glm(formula = stats::as.formula(usedformula),
+          data = subdata, family = "binomial"), silent = TRUE)
+    } else {
+      if (dist == "gaussian") {
+        global.model <- try(stats::lm(formula = stats::as.formula(usedformula),
+            data = subdata), silent = TRUE)
+      } else if (!truncz) {
+        if (dist == "poisson" & !zero) {
+          global.model <- try(stats::glm(formula = stats::as.formula(usedformula),
+              data = subdata, family = "poisson"), silent = TRUE)
+        } else if (dist == "poisson" & zero) {
+          global.model <- try(pscl::zeroinfl(formula = stats::as.formula(usedformula),
+              data = subdata, dist = "poisson"), silent = TRUE)
+        } else if (dist == "negbin" & !zero) {
+          global.model <- try(MASS::glm.nb(formula = stats::as.formula(usedformula),
+              data = subdata), silent = TRUE)
+        } else if (dist == "negbin" & zero) {
+          global.model <- try(pscl::zeroinfl(formula = stats::as.formula(usedformula), 
+              data = subdata, dist = "negbin"), silent = TRUE)
+        }
+      } else if (truncz) {
+        usedformula <- gsub(" + 1", "", usedformula, fixed = TRUE)
+        
+        if (dist == "poisson" & !zero) {
+          global.model <- try(VGAM::vglm(formula = stats::as.formula(usedformula),
+              data = subdata, family = VGAM::pospoisson()), silent = TRUE)
+        } else if (dist == "negbin" & !zero) {
+          global.model <- try(VGAM::vglm(formula = stats::as.formula(usedformula),
+              data = subdata, family = VGAM::posnegbinomial()), silent = TRUE)
+        }
+      }
+    }
+    
+  } else {
+    stop("Modeling approach not recognized.", call. = FALSE)
+  }
+
 }
 
 #' Summary of Class "lefkoMod"
@@ -2197,7 +1990,6 @@ summary.lefkoMod <- function(object, ...) {
 #' @return This function typically returns a list with elements corresponding to
 #' different classes of coefficients.
 #' 
-#' @seealso \code{\link{.modelextract.glmmTMB}()}
 #' @seealso \code{\link{.modelextract.merMod}()}
 #' @seealso \code{\link{.modelextract.lmerMod}()}
 #' @seealso \code{\link{.modelextract.vglm}()}
@@ -2209,440 +2001,6 @@ summary.lefkoMod <- function(object, ...) {
 #' @keywords internal
 #' @noRd
 .modelextract <- function(model, ...) UseMethod(".modelextract")
-
-#' Extract Coefficients From glmmTMB-estimated Linear Vital Rate Models
-#' 
-#' \code{.modelextract.glmmTMB()} extracts coefficient values from linear models
-#' estimated through the \code{\link[glmmTMB]{glmmTMB}()} function, to estimate
-#' vital rates in \code{'lefko3'}. Used to supply coefficients to
-#' \code{\link{flefko3}()}, \code{\link{flefko2}()}, and
-#' \code{\link{aflefko2}()}.
-#' 
-#' @param model Model estimated through \code{\link[glmmTMB]{glmmTMB}()}.
-#' @param paramnames Data frame giving the names of standard coefficients
-#' required by matrix creation functions.
-#' 
-#' @return This function returns a list with the following elements:
-#' \item{coefficients}{Vector of fixed effect coefficients.}
-#' \item{years}{Vector of time coefficients, typically random.}
-#' \item{patches}{Vector of patch coefficients, typically random.}
-#' \item{variances}{Residual variance terms associated with model.}
-#' \item{family}{Distribution of response term.}
-#' \item{sigma}{Standard deviation or disperson parameter of response.}
-#' \item{trunc}{A binomial value indicating whether the model is from a
-#' truncated distribution (1) or not (0).}
-#' 
-#' @seealso \code{\link{.modelextract}()}
-#' @seealso \code{\link{.modelextract.merMod}()}
-#' @seealso \code{\link{.modelextract.lmerMod}()}
-#' @seealso \code{\link{.modelextract.vglm}()}
-#' @seealso \code{\link{.modelextract.glm}()}
-#' @seealso \code{\link{.modelextract.lm}()}
-#' @seealso \code{\link{.modelextract.numeric}()}
-#' @seealso \code{\link{.modelextract.logical}()}
-#' 
-#' @keywords internal
-#' @noRd
-.modelextract.glmmTMB <- function(model, paramnames, mainyears, mainpatches,
-  year.as.random, patch.as.random) {
-  
-  size2.coef <- 0
-  size1.coef <- 0
-  flw2.coef <- 0
-  flw1.coef <- 0
-  
-  size1.size2.coef <- 0
-  flw1.flw2.coef <- 0
-  size1.flw1.coef <- 0
-  size2.flw2.coef <- 0
-  size1.flw2.coef <- 0
-  size2.flw1.coef <- 0
-  
-  age.coef <- 0
-  age.size1.coef <- 0
-  age.size2.coef <- 0
-  age.flw1.coef <- 0
-  age.flw2.coef <- 0
-  
-  inda2.coef <- 0
-  indb2.coef <- 0
-  indc2.coef <- 0
-  
-  inda1.coef <- 0
-  indb1.coef <- 0
-  indc1.coef <- 0
-  
-  inda2.size2.coef <- 0
-  indb2.size2.coef <- 0
-  indc2.size2.coef <- 0
-  inda2.flw2.coef <- 0
-  indb2.flw2.coef <- 0
-  indc2.flw2.coef <- 0
-  
-  inda1.size1.coef <- 0
-  indb1.size1.coef <- 0
-  indc1.size1.coef <- 0
-  inda1.flw1.coef <- 0
-  indb1.flw1.coef <- 0
-  indc1.flw1.coef <- 0
-  
-  inda2.indb2.coef <- 0
-  inda2.indc2.coef <- 0
-  indb2.indc2.coef <- 0
-  inda1.indb1.coef <- 0
-  inda1.indc1.coef <- 0
-  indb1.indc1.coef <- 0
-  
-  inda2.indb1.coef <- 0
-  inda1.indb2.coef <- 0
-  inda2.indc1.coef <- 0
-  inda1.indc2.coef <- 0
-  indb2.indc1.coef <- 0
-  indb1.indc2.coef <- 0
-  
-  yintercept <- glmmTMB::fixef(model)[["cond"]]["(Intercept)"]
-  
-  if (!is.na(glmmTMB::fixef(model)[["cond"]][paramnames[(which(paramnames$mainparams == "repst2")), "modelparams"]])) {flw2.coef <- glmmTMB::fixef(model)[["cond"]][paramnames[(which(paramnames$mainparams == "repst2")), "modelparams"]]}
-  if (!is.na(glmmTMB::fixef(model)[["cond"]][paramnames[(which(paramnames$mainparams == "repst1")), "modelparams"]])) {flw1.coef <- glmmTMB::fixef(model)[["cond"]][paramnames[(which(paramnames$mainparams == "repst1")), "modelparams"]]}
-  
-  if (!is.na(glmmTMB::fixef(model)[["cond"]][paste0(paramnames[(which(paramnames$mainparams == "repst1")), "modelparams"], ":", paramnames[(which(paramnames$mainparams == "repst2")), "modelparams"])])) {flw1.flw2.coef <- glmmTMB::fixef(model)[["cond"]][paste0(paramnames[(which(paramnames$mainparams == "repst1")), "modelparams"], ":", paramnames[(which(paramnames$mainparams == "repst2")), "modelparams"])]}
-  if (!is.na(glmmTMB::fixef(model)[["cond"]][paste0(paramnames[(which(paramnames$mainparams == "repst2")), "modelparams"], ":", paramnames[(which(paramnames$mainparams == "repst1")), "modelparams"])])) {flw1.flw2.coef <- glmmTMB::fixef(model)[["cond"]][paste0(paramnames[(which(paramnames$mainparams == "repst2")), "modelparams"], ":", paramnames[(which(paramnames$mainparams == "repst1")), "modelparams"])]}
-  
-  if (!is.na(glmmTMB::fixef(model)[["cond"]][paramnames[(which(paramnames$mainparams == "size2")), "modelparams"]])) {size2.coef <- glmmTMB::fixef(model)[["cond"]][paramnames[(which(paramnames$mainparams == "size2")), "modelparams"]]}
-  if (!is.na(glmmTMB::fixef(model)[["cond"]][paramnames[(which(paramnames$mainparams == "size1")), "modelparams"]])) {size1.coef <- glmmTMB::fixef(model)[["cond"]][paramnames[(which(paramnames$mainparams == "size1")), "modelparams"]]}
-  
-  if (!is.na(glmmTMB::fixef(model)[["cond"]][paste0(paramnames[(which(paramnames$mainparams == "size1")), "modelparams"], ":", paramnames[(which(paramnames$mainparams == "size2")), "modelparams"])])) {size1.size2.coef <- glmmTMB::fixef(model)[["cond"]][paste0(paramnames[(which(paramnames$mainparams == "size1")), "modelparams"], ":", paramnames[(which(paramnames$mainparams == "size2")), "modelparams"])]}
-  if (!is.na(glmmTMB::fixef(model)[["cond"]][paste0(paramnames[(which(paramnames$mainparams == "size2")), "modelparams"], ":", paramnames[(which(paramnames$mainparams == "size1")), "modelparams"])])) {size1.size2.coef <- glmmTMB::fixef(model)[["cond"]][paste0(paramnames[(which(paramnames$mainparams == "size2")), "modelparams"], ":", paramnames[(which(paramnames$mainparams == "size1")), "modelparams"])]}
-  
-  if (!is.na(glmmTMB::fixef(model)[["cond"]][paste0(paramnames[(which(paramnames$mainparams == "size1")), "modelparams"], ":", paramnames[(which(paramnames$mainparams == "repst1")), "modelparams"])])) {size1.flw1.coef <- glmmTMB::fixef(model)[["cond"]][paste0(paramnames[(which(paramnames$mainparams == "size1")), "modelparams"], ":", paramnames[(which(paramnames$mainparams == "repst1")), "modelparams"])]}
-  if (!is.na(glmmTMB::fixef(model)[["cond"]][paste0(paramnames[(which(paramnames$mainparams == "size2")), "modelparams"], ":", paramnames[(which(paramnames$mainparams == "repst2")), "modelparams"])])) {size2.flw2.coef <- glmmTMB::fixef(model)[["cond"]][paste0(paramnames[(which(paramnames$mainparams == "size2")), "modelparams"], ":", paramnames[(which(paramnames$mainparams == "repst2")), "modelparams"])]}
-  
-  if (!is.na(glmmTMB::fixef(model)[["cond"]][paste0(paramnames[(which(paramnames$mainparams == "repst1")), "modelparams"], ":", paramnames[(which(paramnames$mainparams == "size1")), "modelparams"])])) {size1.flw1.coef <- glmmTMB::fixef(model)[["cond"]][paste0(paramnames[(which(paramnames$mainparams == "repst1")), "modelparams"], ":", paramnames[(which(paramnames$mainparams == "size1")), "modelparams"])]}
-  if (!is.na(glmmTMB::fixef(model)[["cond"]][paste0(paramnames[(which(paramnames$mainparams == "repst2")), "modelparams"], ":", paramnames[(which(paramnames$mainparams == "size2")), "modelparams"])])) {size2.flw2.coef <- glmmTMB::fixef(model)[["cond"]][paste0(paramnames[(which(paramnames$mainparams == "repst2")), "modelparams"], ":", paramnames[(which(paramnames$mainparams == "size2")), "modelparams"])]}
-  
-  if (!is.na(glmmTMB::fixef(model)[["cond"]][paste0(paramnames[(which(paramnames$mainparams == "repst1")), "modelparams"], ":", paramnames[(which(paramnames$mainparams == "size2")), "modelparams"])])) {size2.flw1.coef <- glmmTMB::fixef(model)[["cond"]][paste0(paramnames[(which(paramnames$mainparams == "repst1")), "modelparams"], ":", paramnames[(which(paramnames$mainparams == "size2")), "modelparams"])]}
-  if (!is.na(glmmTMB::fixef(model)[["cond"]][paste0(paramnames[(which(paramnames$mainparams == "repst2")), "modelparams"], ":", paramnames[(which(paramnames$mainparams == "size1")), "modelparams"])])) {size1.flw2.coef <- glmmTMB::fixef(model)[["cond"]][paste0(paramnames[(which(paramnames$mainparams == "repst2")), "modelparams"], ":", paramnames[(which(paramnames$mainparams == "size1")), "modelparams"])]}
-  
-  if (!is.na(glmmTMB::fixef(model)[["cond"]][paste0(paramnames[(which(paramnames$mainparams == "size2")), "modelparams"], ":", paramnames[(which(paramnames$mainparams == "repst1")), "modelparams"])])) {size2.flw1.coef <- glmmTMB::fixef(model)[["cond"]][paste0(paramnames[(which(paramnames$mainparams == "size2")), "modelparams"], ":", paramnames[(which(paramnames$mainparams == "repst1")), "modelparams"])]}
-  if (!is.na(glmmTMB::fixef(model)[["cond"]][paste0(paramnames[(which(paramnames$mainparams == "size1")), "modelparams"], ":", paramnames[(which(paramnames$mainparams == "repst2")), "modelparams"])])) {size1.flw2.coef <- glmmTMB::fixef(model)[["cond"]][paste0(paramnames[(which(paramnames$mainparams == "size1")), "modelparams"], ":", paramnames[(which(paramnames$mainparams == "repst2")), "modelparams"])]}
-  
-  if (!is.na(glmmTMB::fixef(model)[["cond"]][paramnames[(which(paramnames$mainparams == "age")), "modelparams"]])) {age.coef <- glmmTMB::fixef(model)[["cond"]][paramnames[(which(paramnames$mainparams == "age")), "modelparams"]]}
-  
-  if (!is.na(glmmTMB::fixef(model)[["cond"]][paste0(paramnames[(which(paramnames$mainparams == "age")), "modelparams"], ":", paramnames[(which(paramnames$mainparams == "size1")), "modelparams"])])) {age.size1.coef <- glmmTMB::fixef(model)[["cond"]][paste0(paramnames[(which(paramnames$mainparams == "age")), "modelparams"], ":", paramnames[(which(paramnames$mainparams == "size1")), "modelparams"])]}
-  if (!is.na(glmmTMB::fixef(model)[["cond"]][paste0(paramnames[(which(paramnames$mainparams == "size1")), "modelparams"], ":", paramnames[(which(paramnames$mainparams == "age")), "modelparams"])])) {age.size1.coef <- glmmTMB::fixef(model)[["cond"]][paste0(paramnames[(which(paramnames$mainparams == "size1")), "modelparams"], ":", paramnames[(which(paramnames$mainparams == "age")), "modelparams"])]}
-  
-  if (!is.na(glmmTMB::fixef(model)[["cond"]][paste0(paramnames[(which(paramnames$mainparams == "age")), "modelparams"], ":", paramnames[(which(paramnames$mainparams == "size2")), "modelparams"])])) {age.size2.coef <- glmmTMB::fixef(model)[["cond"]][paste0(paramnames[(which(paramnames$mainparams == "age")), "modelparams"], ":", paramnames[(which(paramnames$mainparams == "size2")), "modelparams"])]}
-  if (!is.na(glmmTMB::fixef(model)[["cond"]][paste0(paramnames[(which(paramnames$mainparams == "size2")), "modelparams"], ":", paramnames[(which(paramnames$mainparams == "age")), "modelparams"])])) {age.size2.coef <- glmmTMB::fixef(model)[["cond"]][paste0(paramnames[(which(paramnames$mainparams == "size2")), "modelparams"], ":", paramnames[(which(paramnames$mainparams == "age")), "modelparams"])]}
-  
-  if (!is.na(glmmTMB::fixef(model)[["cond"]][paste0(paramnames[(which(paramnames$mainparams == "age")), "modelparams"], ":", paramnames[(which(paramnames$mainparams == "repst1")), "modelparams"])])) {age.flw1.coef <- glmmTMB::fixef(model)[["cond"]][paste0(paramnames[(which(paramnames$mainparams == "age")), "modelparams"], ":", paramnames[(which(paramnames$mainparams == "repst1")), "modelparams"])]}
-  if (!is.na(glmmTMB::fixef(model)[["cond"]][paste0(paramnames[(which(paramnames$mainparams == "repst1")), "modelparams"], ":", paramnames[(which(paramnames$mainparams == "age")), "modelparams"])])) {age.flw1.coef <- glmmTMB::fixef(model)[["cond"]][paste0(paramnames[(which(paramnames$mainparams == "repst1")), "modelparams"], ":", paramnames[(which(paramnames$mainparams == "age")), "modelparams"])]}
-  
-  if (!is.na(glmmTMB::fixef(model)[["cond"]][paste0(paramnames[(which(paramnames$mainparams == "age")), "modelparams"], ":", paramnames[(which(paramnames$mainparams == "repst2")), "modelparams"])])) {age.flw2.coef <- glmmTMB::fixef(model)[["cond"]][paste0(paramnames[(which(paramnames$mainparams == "age")), "modelparams"], ":", paramnames[(which(paramnames$mainparams == "repst2")), "modelparams"])]}
-  if (!is.na(glmmTMB::fixef(model)[["cond"]][paste0(paramnames[(which(paramnames$mainparams == "repst2")), "modelparams"], ":", paramnames[(which(paramnames$mainparams == "age")), "modelparams"])])) {age.flw2.coef <- glmmTMB::fixef(model)[["cond"]][paste0(paramnames[(which(paramnames$mainparams == "repst2")), "modelparams"], ":", paramnames[(which(paramnames$mainparams == "age")), "modelparams"])]}
-  
-  #Here are the individual covariate bits
-  if (!is.na(glmmTMB::fixef(model)[["cond"]][paramnames[(which(paramnames$mainparams == "indcova2")), "modelparams"]])) {inda2.coef <- glmmTMB::fixef(model)[["cond"]][paramnames[(which(paramnames$mainparams == "indcova2")), "modelparams"]]}
-  if (!is.na(glmmTMB::fixef(model)[["cond"]][paramnames[(which(paramnames$mainparams == "indcovb2")), "modelparams"]])) {indb2.coef <- glmmTMB::fixef(model)[["cond"]][paramnames[(which(paramnames$mainparams == "indcovb2")), "modelparams"]]}
-  if (!is.na(glmmTMB::fixef(model)[["cond"]][paramnames[(which(paramnames$mainparams == "indcovc2")), "modelparams"]])) {indc2.coef <- glmmTMB::fixef(model)[["cond"]][paramnames[(which(paramnames$mainparams == "indcovc2")), "modelparams"]]}
-  if (!is.na(glmmTMB::fixef(model)[["cond"]][paramnames[(which(paramnames$mainparams == "indcova1")), "modelparams"]])) {inda1.coef <- glmmTMB::fixef(model)[["cond"]][paramnames[(which(paramnames$mainparams == "indcova1")), "modelparams"]]}
-  if (!is.na(glmmTMB::fixef(model)[["cond"]][paramnames[(which(paramnames$mainparams == "indcovb1")), "modelparams"]])) {indb1.coef <- glmmTMB::fixef(model)[["cond"]][paramnames[(which(paramnames$mainparams == "indcovb1")), "modelparams"]]}
-  if (!is.na(glmmTMB::fixef(model)[["cond"]][paramnames[(which(paramnames$mainparams == "indcovc1")), "modelparams"]])) {indc1.coef <- glmmTMB::fixef(model)[["cond"]][paramnames[(which(paramnames$mainparams == "indcovc1")), "modelparams"]]}
-  
-  if (!is.na(glmmTMB::fixef(model)[["cond"]][paste0(paramnames[(which(paramnames$mainparams == "indcova2")), "modelparams"], ":", paramnames[(which(paramnames$mainparams == "size2")), "modelparams"])])) {inda2.size2.coef <- glmmTMB::fixef(model)[["cond"]][paste0(paramnames[(which(paramnames$mainparams == "indcova2")), "modelparams"], ":", paramnames[(which(paramnames$mainparams == "size2")), "modelparams"])]}
-  if (!is.na(glmmTMB::fixef(model)[["cond"]][paste0(paramnames[(which(paramnames$mainparams == "indcovb2")), "modelparams"], ":", paramnames[(which(paramnames$mainparams == "size2")), "modelparams"])])) {indb2.size2.coef <- glmmTMB::fixef(model)[["cond"]][paste0(paramnames[(which(paramnames$mainparams == "indcovb2")), "modelparams"], ":", paramnames[(which(paramnames$mainparams == "size2")), "modelparams"])]}
-  if (!is.na(glmmTMB::fixef(model)[["cond"]][paste0(paramnames[(which(paramnames$mainparams == "indcovc2")), "modelparams"], ":", paramnames[(which(paramnames$mainparams == "size2")), "modelparams"])])) {indc2.size2.coef <- glmmTMB::fixef(model)[["cond"]][paste0(paramnames[(which(paramnames$mainparams == "indcovc2")), "modelparams"], ":", paramnames[(which(paramnames$mainparams == "size2")), "modelparams"])]}
-  if (!is.na(glmmTMB::fixef(model)[["cond"]][paste0(paramnames[(which(paramnames$mainparams == "indcova2")), "modelparams"], ":", paramnames[(which(paramnames$mainparams == "repst2")), "modelparams"])])) {inda2.flw2.coef <- glmmTMB::fixef(model)[["cond"]][paste0(paramnames[(which(paramnames$mainparams == "indcova2")), "modelparams"], ":", paramnames[(which(paramnames$mainparams == "repst2")), "modelparams"])]}
-  if (!is.na(glmmTMB::fixef(model)[["cond"]][paste0(paramnames[(which(paramnames$mainparams == "indcovb2")), "modelparams"], ":", paramnames[(which(paramnames$mainparams == "repst2")), "modelparams"])])) {indb2.flw2.coef <- glmmTMB::fixef(model)[["cond"]][paste0(paramnames[(which(paramnames$mainparams == "indcovb2")), "modelparams"], ":", paramnames[(which(paramnames$mainparams == "repst2")), "modelparams"])]}
-  if (!is.na(glmmTMB::fixef(model)[["cond"]][paste0(paramnames[(which(paramnames$mainparams == "indcovc2")), "modelparams"], ":", paramnames[(which(paramnames$mainparams == "repst2")), "modelparams"])])) {indc2.flw2.coef <- glmmTMB::fixef(model)[["cond"]][paste0(paramnames[(which(paramnames$mainparams == "indcovc2")), "modelparams"], ":", paramnames[(which(paramnames$mainparams == "repst2")), "modelparams"])]}
-  if (!is.na(glmmTMB::fixef(model)[["cond"]][paste0(paramnames[(which(paramnames$mainparams == "indcova1")), "modelparams"], ":", paramnames[(which(paramnames$mainparams == "size1")), "modelparams"])])) {inda1.size1.coef <- glmmTMB::fixef(model)[["cond"]][paste0(paramnames[(which(paramnames$mainparams == "indcova1")), "modelparams"], ":", paramnames[(which(paramnames$mainparams == "size1")), "modelparams"])]}
-  if (!is.na(glmmTMB::fixef(model)[["cond"]][paste0(paramnames[(which(paramnames$mainparams == "indcovb1")), "modelparams"], ":", paramnames[(which(paramnames$mainparams == "size1")), "modelparams"])])) {indb1.size1.coef <- glmmTMB::fixef(model)[["cond"]][paste0(paramnames[(which(paramnames$mainparams == "indcovb1")), "modelparams"], ":", paramnames[(which(paramnames$mainparams == "size1")), "modelparams"])]}
-  if (!is.na(glmmTMB::fixef(model)[["cond"]][paste0(paramnames[(which(paramnames$mainparams == "indcovc1")), "modelparams"], ":", paramnames[(which(paramnames$mainparams == "size1")), "modelparams"])])) {indc1.size1.coef <- glmmTMB::fixef(model)[["cond"]][paste0(paramnames[(which(paramnames$mainparams == "indcovc1")), "modelparams"], ":", paramnames[(which(paramnames$mainparams == "size1")), "modelparams"])]}
-  if (!is.na(glmmTMB::fixef(model)[["cond"]][paste0(paramnames[(which(paramnames$mainparams == "indcova1")), "modelparams"], ":", paramnames[(which(paramnames$mainparams == "repst1")), "modelparams"])])) {inda1.flw1.coef <- glmmTMB::fixef(model)[["cond"]][paste0(paramnames[(which(paramnames$mainparams == "indcova1")), "modelparams"], ":", paramnames[(which(paramnames$mainparams == "repst1")), "modelparams"])]}
-  if (!is.na(glmmTMB::fixef(model)[["cond"]][paste0(paramnames[(which(paramnames$mainparams == "indcovb1")), "modelparams"], ":", paramnames[(which(paramnames$mainparams == "repst1")), "modelparams"])])) {indb1.flw1.coef <- glmmTMB::fixef(model)[["cond"]][paste0(paramnames[(which(paramnames$mainparams == "indcovb1")), "modelparams"], ":", paramnames[(which(paramnames$mainparams == "repst1")), "modelparams"])]}
-  if (!is.na(glmmTMB::fixef(model)[["cond"]][paste0(paramnames[(which(paramnames$mainparams == "indcovc1")), "modelparams"], ":", paramnames[(which(paramnames$mainparams == "repst1")), "modelparams"])])) {indc1.flw1.coef <- glmmTMB::fixef(model)[["cond"]][paste0(paramnames[(which(paramnames$mainparams == "indcovc1")), "modelparams"], ":", paramnames[(which(paramnames$mainparams == "repst1")), "modelparams"])]}
-  
-  if (!is.na(glmmTMB::fixef(model)[["cond"]][paste0(paramnames[(which(paramnames$mainparams == "indcova2")), "modelparams"], ":", paramnames[(which(paramnames$mainparams == "indcovb2")), "modelparams"])])) {inda2.indb2.coef <- glmmTMB::fixef(model)[["cond"]][paste0(paramnames[(which(paramnames$mainparams == "indcova2")), "modelparams"], ":", paramnames[(which(paramnames$mainparams == "indcovb2")), "modelparams"])]}
-  if (!is.na(glmmTMB::fixef(model)[["cond"]][paste0(paramnames[(which(paramnames$mainparams == "indcova2")), "modelparams"], ":", paramnames[(which(paramnames$mainparams == "indcovc2")), "modelparams"])])) {inda2.indc2.coef <- glmmTMB::fixef(model)[["cond"]][paste0(paramnames[(which(paramnames$mainparams == "indcova2")), "modelparams"], ":", paramnames[(which(paramnames$mainparams == "indcovc2")), "modelparams"])]}
-  if (!is.na(glmmTMB::fixef(model)[["cond"]][paste0(paramnames[(which(paramnames$mainparams == "indcovb2")), "modelparams"], ":", paramnames[(which(paramnames$mainparams == "indcovc2")), "modelparams"])])) {indb2.indc2.coef <- glmmTMB::fixef(model)[["cond"]][paste0(paramnames[(which(paramnames$mainparams == "indcovb2")), "modelparams"], ":", paramnames[(which(paramnames$mainparams == "indcovc2")), "modelparams"])]}
-  if (!is.na(glmmTMB::fixef(model)[["cond"]][paste0(paramnames[(which(paramnames$mainparams == "indcova1")), "modelparams"], ":", paramnames[(which(paramnames$mainparams == "indcovb1")), "modelparams"])])) {inda1.indb1.coef <- glmmTMB::fixef(model)[["cond"]][paste0(paramnames[(which(paramnames$mainparams == "indcova1")), "modelparams"], ":", paramnames[(which(paramnames$mainparams == "indcovb1")), "modelparams"])]}
-  if (!is.na(glmmTMB::fixef(model)[["cond"]][paste0(paramnames[(which(paramnames$mainparams == "indcova1")), "modelparams"], ":", paramnames[(which(paramnames$mainparams == "indcovc1")), "modelparams"])])) {inda1.indc1.coef <- glmmTMB::fixef(model)[["cond"]][paste0(paramnames[(which(paramnames$mainparams == "indcova1")), "modelparams"], ":", paramnames[(which(paramnames$mainparams == "indcovc1")), "modelparams"])]}
-  if (!is.na(glmmTMB::fixef(model)[["cond"]][paste0(paramnames[(which(paramnames$mainparams == "indcovb1")), "modelparams"], ":", paramnames[(which(paramnames$mainparams == "indcovc1")), "modelparams"])])) {indb1.indc1.coef <- glmmTMB::fixef(model)[["cond"]][paste0(paramnames[(which(paramnames$mainparams == "indcovb1")), "modelparams"], ":", paramnames[(which(paramnames$mainparams == "indcovc1")), "modelparams"])]}
-  
-  if (!is.na(glmmTMB::fixef(model)[["cond"]][paste0(paramnames[(which(paramnames$mainparams == "indcova2")), "modelparams"], ":", paramnames[(which(paramnames$mainparams == "indcovb1")), "modelparams"])])) {inda2.indb1.coef <- glmmTMB::fixef(model)[["cond"]][paste0(paramnames[(which(paramnames$mainparams == "indcova2")), "modelparams"], ":", paramnames[(which(paramnames$mainparams == "indcovb1")), "modelparams"])]}
-  if (!is.na(glmmTMB::fixef(model)[["cond"]][paste0(paramnames[(which(paramnames$mainparams == "indcova1")), "modelparams"], ":", paramnames[(which(paramnames$mainparams == "indcovb2")), "modelparams"])])) {inda1.indb2.coef <- glmmTMB::fixef(model)[["cond"]][paste0(paramnames[(which(paramnames$mainparams == "indcova1")), "modelparams"], ":", paramnames[(which(paramnames$mainparams == "indcovb2")), "modelparams"])]}
-  if (!is.na(glmmTMB::fixef(model)[["cond"]][paste0(paramnames[(which(paramnames$mainparams == "indcova2")), "modelparams"], ":", paramnames[(which(paramnames$mainparams == "indcovc1")), "modelparams"])])) {inda2.indc1.coef <- glmmTMB::fixef(model)[["cond"]][paste0(paramnames[(which(paramnames$mainparams == "indcova2")), "modelparams"], ":", paramnames[(which(paramnames$mainparams == "indcovc1")), "modelparams"])]}
-  if (!is.na(glmmTMB::fixef(model)[["cond"]][paste0(paramnames[(which(paramnames$mainparams == "indcova1")), "modelparams"], ":", paramnames[(which(paramnames$mainparams == "indcovc2")), "modelparams"])])) {inda1.indc2.coef <- glmmTMB::fixef(model)[["cond"]][paste0(paramnames[(which(paramnames$mainparams == "indcova1")), "modelparams"], ":", paramnames[(which(paramnames$mainparams == "indcovc2")), "modelparams"])]}
-  if (!is.na(glmmTMB::fixef(model)[["cond"]][paste0(paramnames[(which(paramnames$mainparams == "indcovb2")), "modelparams"], ":", paramnames[(which(paramnames$mainparams == "indcovc1")), "modelparams"])])) {indb2.indc1.coef <- glmmTMB::fixef(model)[["cond"]][paste0(paramnames[(which(paramnames$mainparams == "indcovb2")), "modelparams"], ":", paramnames[(which(paramnames$mainparams == "indcovc1")), "modelparams"])]}
-  if (!is.na(glmmTMB::fixef(model)[["cond"]][paste0(paramnames[(which(paramnames$mainparams == "indcovb1")), "modelparams"], ":", paramnames[(which(paramnames$mainparams == "indcovc2")), "modelparams"])])) {indb1.indc2.coef <- glmmTMB::fixef(model)[["cond"]][paste0(paramnames[(which(paramnames$mainparams == "indcovb1")), "modelparams"], ":", paramnames[(which(paramnames$mainparams == "indcovc2")), "modelparams"])]}
-  
-  #These are zero-inflated
-  size2.zi <- 0
-  size1.zi <- 0
-  flw2.zi <- 0
-  flw1.zi <- 0
-  
-  size1.size2.zi <- 0
-  flw1.flw2.zi <- 0
-  size1.flw1.zi <- 0
-  size2.flw2.zi <- 0
-  size1.flw2.zi <- 0
-  size2.flw1.zi <- 0
-  
-  age.zi <- 0
-  age.size1.zi <- 0
-  age.size2.zi <- 0
-  age.flw1.zi <- 0
-  age.flw2.zi <- 0
-  
-  inda2.zi <- 0
-  indb2.zi <- 0
-  indc2.zi <- 0
-  
-  inda1.zi <- 0
-  indb1.zi <- 0
-  indc1.zi <- 0
-  
-  inda2.size2.zi <- 0
-  indb2.size2.zi <- 0
-  indc2.size2.zi <- 0
-  inda2.flw2.zi <- 0
-  indb2.flw2.zi <- 0
-  indc2.flw2.zi <- 0
-  
-  inda1.size1.zi <- 0
-  indb1.size1.zi <- 0
-  indc1.size1.zi <- 0
-  inda1.flw1.zi <- 0
-  indb1.flw1.zi <- 0
-  indc1.flw1.zi <- 0
-  
-  inda2.indb2.zi <- 0
-  inda2.indc2.zi <- 0
-  indb2.indc2.zi <- 0
-  inda1.indb1.zi <- 0
-  inda1.indc1.zi <- 0
-  indb1.indc1.zi <- 0
-  
-  inda2.indb1.zi <- 0
-  inda1.indb2.zi <- 0
-  inda2.indc1.zi <- 0
-  inda1.indc2.zi <- 0
-  indb2.indc1.zi <- 0
-  indb1.indc2.zi <- 0
-  
-  if(is.na(glmmTMB::fixef(model)[["zi"]]["(Intercept)"])) {
-    yintercept.zi <- 0
-  } else {
-    yintercept.zi <-glmmTMB::fixef(model)[["zi"]]["(Intercept)"]
-  }
-  
-  if (!is.na(glmmTMB::fixef(model)[["zi"]][paramnames[(which(paramnames$mainparams == "repst2")), "modelparams"]])) {flw2.zi <- glmmTMB::fixef(model)[["zi"]][paramnames[(which(paramnames$mainparams == "repst2")), "modelparams"]]}
-  if (!is.na(glmmTMB::fixef(model)[["zi"]][paramnames[(which(paramnames$mainparams == "repst1")), "modelparams"]])) {flw1.zi <- glmmTMB::fixef(model)[["zi"]][paramnames[(which(paramnames$mainparams == "repst1")), "modelparams"]]}
-  
-  if (!is.na(glmmTMB::fixef(model)[["zi"]][paste0(paramnames[(which(paramnames$mainparams == "repst1")), "modelparams"], ":", paramnames[(which(paramnames$mainparams == "repst2")), "modelparams"])])) {flw1.flw2.zi <- glmmTMB::fixef(model)[["zi"]][paste0(paramnames[(which(paramnames$mainparams == "repst1")), "modelparams"], ":", paramnames[(which(paramnames$mainparams == "repst2")), "modelparams"])]}
-  if (!is.na(glmmTMB::fixef(model)[["zi"]][paste0(paramnames[(which(paramnames$mainparams == "repst2")), "modelparams"], ":", paramnames[(which(paramnames$mainparams == "repst1")), "modelparams"])])) {flw1.flw2.zi <- glmmTMB::fixef(model)[["zi"]][paste0(paramnames[(which(paramnames$mainparams == "repst2")), "modelparams"], ":", paramnames[(which(paramnames$mainparams == "repst1")), "modelparams"])]}
-  
-  if (!is.na(glmmTMB::fixef(model)[["zi"]][paramnames[(which(paramnames$mainparams == "size2")), "modelparams"]])) {size2.zi <- glmmTMB::fixef(model)[["zi"]][paramnames[(which(paramnames$mainparams == "size2")), "modelparams"]]}
-  if (!is.na(glmmTMB::fixef(model)[["zi"]][paramnames[(which(paramnames$mainparams == "size1")), "modelparams"]])) {size1.zi <- glmmTMB::fixef(model)[["zi"]][paramnames[(which(paramnames$mainparams == "size1")), "modelparams"]]}
-  
-  if (!is.na(glmmTMB::fixef(model)[["zi"]][paste0(paramnames[(which(paramnames$mainparams == "size1")), "modelparams"], ":", paramnames[(which(paramnames$mainparams == "size2")), "modelparams"])])) {size1.size2.zi <- glmmTMB::fixef(model)[["zi"]][paste0(paramnames[(which(paramnames$mainparams == "size1")), "modelparams"], ":", paramnames[(which(paramnames$mainparams == "size2")), "modelparams"])]}
-  if (!is.na(glmmTMB::fixef(model)[["zi"]][paste0(paramnames[(which(paramnames$mainparams == "size2")), "modelparams"], ":", paramnames[(which(paramnames$mainparams == "size1")), "modelparams"])])) {size1.size2.zi <- glmmTMB::fixef(model)[["zi"]][paste0(paramnames[(which(paramnames$mainparams == "size2")), "modelparams"], ":", paramnames[(which(paramnames$mainparams == "size1")), "modelparams"])]}
-  
-  if (!is.na(glmmTMB::fixef(model)[["zi"]][paste0(paramnames[(which(paramnames$mainparams == "size1")), "modelparams"], ":", paramnames[(which(paramnames$mainparams == "repst1")), "modelparams"])])) {size1.flw1.zi <- glmmTMB::fixef(model)[["zi"]][paste0(paramnames[(which(paramnames$mainparams == "size1")), "modelparams"], ":", paramnames[(which(paramnames$mainparams == "repst1")), "modelparams"])]}
-  if (!is.na(glmmTMB::fixef(model)[["zi"]][paste0(paramnames[(which(paramnames$mainparams == "size2")), "modelparams"], ":", paramnames[(which(paramnames$mainparams == "repst2")), "modelparams"])])) {size2.flw2.zi <- glmmTMB::fixef(model)[["zi"]][paste0(paramnames[(which(paramnames$mainparams == "size2")), "modelparams"], ":", paramnames[(which(paramnames$mainparams == "repst2")), "modelparams"])]}
-  
-  if (!is.na(glmmTMB::fixef(model)[["zi"]][paste0(paramnames[(which(paramnames$mainparams == "repst1")), "modelparams"], ":", paramnames[(which(paramnames$mainparams == "size1")), "modelparams"])])) {size1.flw1.zi <- glmmTMB::fixef(model)[["zi"]][paste0(paramnames[(which(paramnames$mainparams == "repst1")), "modelparams"], ":", paramnames[(which(paramnames$mainparams == "size1")), "modelparams"])]}
-  if (!is.na(glmmTMB::fixef(model)[["zi"]][paste0(paramnames[(which(paramnames$mainparams == "repst2")), "modelparams"], ":", paramnames[(which(paramnames$mainparams == "size2")), "modelparams"])])) {size2.flw2.zi <- glmmTMB::fixef(model)[["zi"]][paste0(paramnames[(which(paramnames$mainparams == "repst2")), "modelparams"], ":", paramnames[(which(paramnames$mainparams == "size2")), "modelparams"])]}
-  
-  if (!is.na(glmmTMB::fixef(model)[["zi"]][paste0(paramnames[(which(paramnames$mainparams == "repst1")), "modelparams"], ":", paramnames[(which(paramnames$mainparams == "size2")), "modelparams"])])) {size2.flw1.zi <- glmmTMB::fixef(model)[["zi"]][paste0(paramnames[(which(paramnames$mainparams == "repst1")), "modelparams"], ":", paramnames[(which(paramnames$mainparams == "size2")), "modelparams"])]}
-  if (!is.na(glmmTMB::fixef(model)[["zi"]][paste0(paramnames[(which(paramnames$mainparams == "repst2")), "modelparams"], ":", paramnames[(which(paramnames$mainparams == "size1")), "modelparams"])])) {size1.flw2.zi <- glmmTMB::fixef(model)[["zi"]][paste0(paramnames[(which(paramnames$mainparams == "repst2")), "modelparams"], ":", paramnames[(which(paramnames$mainparams == "size1")), "modelparams"])]}
-  
-  if (!is.na(glmmTMB::fixef(model)[["zi"]][paste0(paramnames[(which(paramnames$mainparams == "size2")), "modelparams"], ":", paramnames[(which(paramnames$mainparams == "repst1")), "modelparams"])])) {size2.flw1.zi <- glmmTMB::fixef(model)[["zi"]][paste0(paramnames[(which(paramnames$mainparams == "size2")), "modelparams"], ":", paramnames[(which(paramnames$mainparams == "repst1")), "modelparams"])]}
-  if (!is.na(glmmTMB::fixef(model)[["zi"]][paste0(paramnames[(which(paramnames$mainparams == "size1")), "modelparams"], ":", paramnames[(which(paramnames$mainparams == "repst2")), "modelparams"])])) {size1.flw2.zi <- glmmTMB::fixef(model)[["zi"]][paste0(paramnames[(which(paramnames$mainparams == "size1")), "modelparams"], ":", paramnames[(which(paramnames$mainparams == "repst2")), "modelparams"])]}
-  
-  if (!is.na(glmmTMB::fixef(model)[["zi"]][paramnames[(which(paramnames$mainparams == "age")), "modelparams"]])) {age.zi <- glmmTMB::fixef(model)[["zi"]][paramnames[(which(paramnames$mainparams == "age")), "modelparams"]]}
-  
-  if (!is.na(glmmTMB::fixef(model)[["zi"]][paste0(paramnames[(which(paramnames$mainparams == "age")), "modelparams"], ":", paramnames[(which(paramnames$mainparams == "size1")), "modelparams"])])) {age.size1.zi <- glmmTMB::fixef(model)[["zi"]][paste0(paramnames[(which(paramnames$mainparams == "age")), "modelparams"], ":", paramnames[(which(paramnames$mainparams == "size1")), "modelparams"])]}
-  if (!is.na(glmmTMB::fixef(model)[["zi"]][paste0(paramnames[(which(paramnames$mainparams == "size1")), "modelparams"], ":", paramnames[(which(paramnames$mainparams == "age")), "modelparams"])])) {age.size1.zi <- glmmTMB::fixef(model)[["zi"]][paste0(paramnames[(which(paramnames$mainparams == "size1")), "modelparams"], ":", paramnames[(which(paramnames$mainparams == "age")), "modelparams"])]}
-  
-  if (!is.na(glmmTMB::fixef(model)[["zi"]][paste0(paramnames[(which(paramnames$mainparams == "age")), "modelparams"], ":", paramnames[(which(paramnames$mainparams == "size2")), "modelparams"])])) {age.size2.zi <- glmmTMB::fixef(model)[["zi"]][paste0(paramnames[(which(paramnames$mainparams == "age")), "modelparams"], ":", paramnames[(which(paramnames$mainparams == "size2")), "modelparams"])]}
-  if (!is.na(glmmTMB::fixef(model)[["zi"]][paste0(paramnames[(which(paramnames$mainparams == "size2")), "modelparams"], ":", paramnames[(which(paramnames$mainparams == "age")), "modelparams"])])) {age.size2.zi <- glmmTMB::fixef(model)[["zi"]][paste0(paramnames[(which(paramnames$mainparams == "size2")), "modelparams"], ":", paramnames[(which(paramnames$mainparams == "age")), "modelparams"])]}
-  
-  if (!is.na(glmmTMB::fixef(model)[["zi"]][paste0(paramnames[(which(paramnames$mainparams == "age")), "modelparams"], ":", paramnames[(which(paramnames$mainparams == "repst1")), "modelparams"])])) {age.flw1.zi <- glmmTMB::fixef(model)[["zi"]][paste0(paramnames[(which(paramnames$mainparams == "age")), "modelparams"], ":", paramnames[(which(paramnames$mainparams == "repst1")), "modelparams"])]}
-  if (!is.na(glmmTMB::fixef(model)[["zi"]][paste0(paramnames[(which(paramnames$mainparams == "repst1")), "modelparams"], ":", paramnames[(which(paramnames$mainparams == "age")), "modelparams"])])) {age.flw1.zi <- glmmTMB::fixef(model)[["zi"]][paste0(paramnames[(which(paramnames$mainparams == "repst1")), "modelparams"], ":", paramnames[(which(paramnames$mainparams == "age")), "modelparams"])]}
-  
-  if (!is.na(glmmTMB::fixef(model)[["zi"]][paste0(paramnames[(which(paramnames$mainparams == "age")), "modelparams"], ":", paramnames[(which(paramnames$mainparams == "repst2")), "modelparams"])])) {age.flw2.zi <- glmmTMB::fixef(model)[["zi"]][paste0(paramnames[(which(paramnames$mainparams == "age")), "modelparams"], ":", paramnames[(which(paramnames$mainparams == "repst2")), "modelparams"])]}
-  if (!is.na(glmmTMB::fixef(model)[["zi"]][paste0(paramnames[(which(paramnames$mainparams == "repst2")), "modelparams"], ":", paramnames[(which(paramnames$mainparams == "age")), "modelparams"])])) {age.flw2.zi <- glmmTMB::fixef(model)[["zi"]][paste0(paramnames[(which(paramnames$mainparams == "repst2")), "modelparams"], ":", paramnames[(which(paramnames$mainparams == "age")), "modelparams"])]}
-  
-  #Here are the individual covariate bits
-  if (!is.na(glmmTMB::fixef(model)[["zi"]][paramnames[(which(paramnames$mainparams == "indcova2")), "modelparams"]])) {inda2.zi <- glmmTMB::fixef(model)[["zi"]][paramnames[(which(paramnames$mainparams == "indcova2")), "modelparams"]]}
-  if (!is.na(glmmTMB::fixef(model)[["zi"]][paramnames[(which(paramnames$mainparams == "indcovb2")), "modelparams"]])) {indb2.zi <- glmmTMB::fixef(model)[["zi"]][paramnames[(which(paramnames$mainparams == "indcovb2")), "modelparams"]]}
-  if (!is.na(glmmTMB::fixef(model)[["zi"]][paramnames[(which(paramnames$mainparams == "indcovc2")), "modelparams"]])) {indc2.zi <- glmmTMB::fixef(model)[["zi"]][paramnames[(which(paramnames$mainparams == "indcovc2")), "modelparams"]]}
-  if (!is.na(glmmTMB::fixef(model)[["zi"]][paramnames[(which(paramnames$mainparams == "indcova1")), "modelparams"]])) {inda1.zi <- glmmTMB::fixef(model)[["zi"]][paramnames[(which(paramnames$mainparams == "indcova1")), "modelparams"]]}
-  if (!is.na(glmmTMB::fixef(model)[["zi"]][paramnames[(which(paramnames$mainparams == "indcovb1")), "modelparams"]])) {indb1.zi <- glmmTMB::fixef(model)[["zi"]][paramnames[(which(paramnames$mainparams == "indcovb1")), "modelparams"]]}
-  if (!is.na(glmmTMB::fixef(model)[["zi"]][paramnames[(which(paramnames$mainparams == "indcovc1")), "modelparams"]])) {indc1.zi <- glmmTMB::fixef(model)[["zi"]][paramnames[(which(paramnames$mainparams == "indcovc1")), "modelparams"]]}
-  
-  if (!is.na(glmmTMB::fixef(model)[["zi"]][paste0(paramnames[(which(paramnames$mainparams == "indcova2")), "modelparams"], ":", paramnames[(which(paramnames$mainparams == "size2")), "modelparams"])])) {inda2.size2.zi <- glmmTMB::fixef(model)[["zi"]][paste0(paramnames[(which(paramnames$mainparams == "indcova2")), "modelparams"], ":", paramnames[(which(paramnames$mainparams == "size2")), "modelparams"])]}
-  if (!is.na(glmmTMB::fixef(model)[["zi"]][paste0(paramnames[(which(paramnames$mainparams == "indcovb2")), "modelparams"], ":", paramnames[(which(paramnames$mainparams == "size2")), "modelparams"])])) {indb2.size2.zi <- glmmTMB::fixef(model)[["zi"]][paste0(paramnames[(which(paramnames$mainparams == "indcovb2")), "modelparams"], ":", paramnames[(which(paramnames$mainparams == "size2")), "modelparams"])]}
-  if (!is.na(glmmTMB::fixef(model)[["zi"]][paste0(paramnames[(which(paramnames$mainparams == "indcovc2")), "modelparams"], ":", paramnames[(which(paramnames$mainparams == "size2")), "modelparams"])])) {indc2.size2.zi <- glmmTMB::fixef(model)[["zi"]][paste0(paramnames[(which(paramnames$mainparams == "indcovc2")), "modelparams"], ":", paramnames[(which(paramnames$mainparams == "size2")), "modelparams"])]}
-  if (!is.na(glmmTMB::fixef(model)[["zi"]][paste0(paramnames[(which(paramnames$mainparams == "indcova2")), "modelparams"], ":", paramnames[(which(paramnames$mainparams == "repst2")), "modelparams"])])) {inda2.flw2.zi <- glmmTMB::fixef(model)[["zi"]][paste0(paramnames[(which(paramnames$mainparams == "indcova2")), "modelparams"], ":", paramnames[(which(paramnames$mainparams == "repst2")), "modelparams"])]}
-  if (!is.na(glmmTMB::fixef(model)[["zi"]][paste0(paramnames[(which(paramnames$mainparams == "indcovb2")), "modelparams"], ":", paramnames[(which(paramnames$mainparams == "repst2")), "modelparams"])])) {indb2.flw2.zi <- glmmTMB::fixef(model)[["zi"]][paste0(paramnames[(which(paramnames$mainparams == "indcovb2")), "modelparams"], ":", paramnames[(which(paramnames$mainparams == "repst2")), "modelparams"])]}
-  if (!is.na(glmmTMB::fixef(model)[["zi"]][paste0(paramnames[(which(paramnames$mainparams == "indcovc2")), "modelparams"], ":", paramnames[(which(paramnames$mainparams == "repst2")), "modelparams"])])) {indc2.flw2.zi <- glmmTMB::fixef(model)[["zi"]][paste0(paramnames[(which(paramnames$mainparams == "indcovc2")), "modelparams"], ":", paramnames[(which(paramnames$mainparams == "repst2")), "modelparams"])]}
-  if (!is.na(glmmTMB::fixef(model)[["zi"]][paste0(paramnames[(which(paramnames$mainparams == "indcova1")), "modelparams"], ":", paramnames[(which(paramnames$mainparams == "size1")), "modelparams"])])) {inda1.size1.zi <- glmmTMB::fixef(model)[["zi"]][paste0(paramnames[(which(paramnames$mainparams == "indcova1")), "modelparams"], ":", paramnames[(which(paramnames$mainparams == "size1")), "modelparams"])]}
-  if (!is.na(glmmTMB::fixef(model)[["zi"]][paste0(paramnames[(which(paramnames$mainparams == "indcovb1")), "modelparams"], ":", paramnames[(which(paramnames$mainparams == "size1")), "modelparams"])])) {indb1.size1.zi <- glmmTMB::fixef(model)[["zi"]][paste0(paramnames[(which(paramnames$mainparams == "indcovb1")), "modelparams"], ":", paramnames[(which(paramnames$mainparams == "size1")), "modelparams"])]}
-  if (!is.na(glmmTMB::fixef(model)[["zi"]][paste0(paramnames[(which(paramnames$mainparams == "indcovc1")), "modelparams"], ":", paramnames[(which(paramnames$mainparams == "size1")), "modelparams"])])) {indc1.size1.zi <- glmmTMB::fixef(model)[["zi"]][paste0(paramnames[(which(paramnames$mainparams == "indcovc1")), "modelparams"], ":", paramnames[(which(paramnames$mainparams == "size1")), "modelparams"])]}
-  if (!is.na(glmmTMB::fixef(model)[["zi"]][paste0(paramnames[(which(paramnames$mainparams == "indcova1")), "modelparams"], ":", paramnames[(which(paramnames$mainparams == "repst1")), "modelparams"])])) {inda1.flw1.zi <- glmmTMB::fixef(model)[["zi"]][paste0(paramnames[(which(paramnames$mainparams == "indcova1")), "modelparams"], ":", paramnames[(which(paramnames$mainparams == "repst1")), "modelparams"])]}
-  if (!is.na(glmmTMB::fixef(model)[["zi"]][paste0(paramnames[(which(paramnames$mainparams == "indcovb1")), "modelparams"], ":", paramnames[(which(paramnames$mainparams == "repst1")), "modelparams"])])) {indb1.flw1.zi <- glmmTMB::fixef(model)[["zi"]][paste0(paramnames[(which(paramnames$mainparams == "indcovb1")), "modelparams"], ":", paramnames[(which(paramnames$mainparams == "repst1")), "modelparams"])]}
-  if (!is.na(glmmTMB::fixef(model)[["zi"]][paste0(paramnames[(which(paramnames$mainparams == "indcovc1")), "modelparams"], ":", paramnames[(which(paramnames$mainparams == "repst1")), "modelparams"])])) {indc1.flw1.zi <- glmmTMB::fixef(model)[["zi"]][paste0(paramnames[(which(paramnames$mainparams == "indcovc1")), "modelparams"], ":", paramnames[(which(paramnames$mainparams == "repst1")), "modelparams"])]}
-  
-  if (!is.na(glmmTMB::fixef(model)[["zi"]][paste0(paramnames[(which(paramnames$mainparams == "indcova2")), "modelparams"], ":", paramnames[(which(paramnames$mainparams == "indcovb2")), "modelparams"])])) {inda2.indb2.zi <- glmmTMB::fixef(model)[["zi"]][paste0(paramnames[(which(paramnames$mainparams == "indcova2")), "modelparams"], ":", paramnames[(which(paramnames$mainparams == "indcovb2")), "modelparams"])]}
-  if (!is.na(glmmTMB::fixef(model)[["zi"]][paste0(paramnames[(which(paramnames$mainparams == "indcova2")), "modelparams"], ":", paramnames[(which(paramnames$mainparams == "indcovc2")), "modelparams"])])) {inda2.indc2.zi <- glmmTMB::fixef(model)[["zi"]][paste0(paramnames[(which(paramnames$mainparams == "indcova2")), "modelparams"], ":", paramnames[(which(paramnames$mainparams == "indcovc2")), "modelparams"])]}
-  if (!is.na(glmmTMB::fixef(model)[["zi"]][paste0(paramnames[(which(paramnames$mainparams == "indcovb2")), "modelparams"], ":", paramnames[(which(paramnames$mainparams == "indcovc2")), "modelparams"])])) {indb2.indc2.zi <- glmmTMB::fixef(model)[["zi"]][paste0(paramnames[(which(paramnames$mainparams == "indcovb2")), "modelparams"], ":", paramnames[(which(paramnames$mainparams == "indcovc2")), "modelparams"])]}
-  if (!is.na(glmmTMB::fixef(model)[["zi"]][paste0(paramnames[(which(paramnames$mainparams == "indcova1")), "modelparams"], ":", paramnames[(which(paramnames$mainparams == "indcovb1")), "modelparams"])])) {inda1.indb1.zi <- glmmTMB::fixef(model)[["zi"]][paste0(paramnames[(which(paramnames$mainparams == "indcova1")), "modelparams"], ":", paramnames[(which(paramnames$mainparams == "indcovb1")), "modelparams"])]}
-  if (!is.na(glmmTMB::fixef(model)[["zi"]][paste0(paramnames[(which(paramnames$mainparams == "indcova1")), "modelparams"], ":", paramnames[(which(paramnames$mainparams == "indcovc1")), "modelparams"])])) {inda1.indc1.zi <- glmmTMB::fixef(model)[["zi"]][paste0(paramnames[(which(paramnames$mainparams == "indcova1")), "modelparams"], ":", paramnames[(which(paramnames$mainparams == "indcovc1")), "modelparams"])]}
-  if (!is.na(glmmTMB::fixef(model)[["zi"]][paste0(paramnames[(which(paramnames$mainparams == "indcovb1")), "modelparams"], ":", paramnames[(which(paramnames$mainparams == "indcovc1")), "modelparams"])])) {indb1.indc1.zi <- glmmTMB::fixef(model)[["zi"]][paste0(paramnames[(which(paramnames$mainparams == "indcovb1")), "modelparams"], ":", paramnames[(which(paramnames$mainparams == "indcovc1")), "modelparams"])]}
-  
-  if (!is.na(glmmTMB::fixef(model)[["zi"]][paste0(paramnames[(which(paramnames$mainparams == "indcova2")), "modelparams"], ":", paramnames[(which(paramnames$mainparams == "indcovb1")), "modelparams"])])) {inda2.indb1.zi <- glmmTMB::fixef(model)[["zi"]][paste0(paramnames[(which(paramnames$mainparams == "indcova2")), "modelparams"], ":", paramnames[(which(paramnames$mainparams == "indcovb1")), "modelparams"])]}
-  if (!is.na(glmmTMB::fixef(model)[["zi"]][paste0(paramnames[(which(paramnames$mainparams == "indcova1")), "modelparams"], ":", paramnames[(which(paramnames$mainparams == "indcovb2")), "modelparams"])])) {inda1.indb2.zi <- glmmTMB::fixef(model)[["zi"]][paste0(paramnames[(which(paramnames$mainparams == "indcova1")), "modelparams"], ":", paramnames[(which(paramnames$mainparams == "indcovb2")), "modelparams"])]}
-  if (!is.na(glmmTMB::fixef(model)[["zi"]][paste0(paramnames[(which(paramnames$mainparams == "indcova2")), "modelparams"], ":", paramnames[(which(paramnames$mainparams == "indcovc1")), "modelparams"])])) {inda2.indc1.zi <- glmmTMB::fixef(model)[["zi"]][paste0(paramnames[(which(paramnames$mainparams == "indcova2")), "modelparams"], ":", paramnames[(which(paramnames$mainparams == "indcovc1")), "modelparams"])]}
-  if (!is.na(glmmTMB::fixef(model)[["zi"]][paste0(paramnames[(which(paramnames$mainparams == "indcova1")), "modelparams"], ":", paramnames[(which(paramnames$mainparams == "indcovc2")), "modelparams"])])) {inda1.indc2.zi <- glmmTMB::fixef(model)[["zi"]][paste0(paramnames[(which(paramnames$mainparams == "indcova1")), "modelparams"], ":", paramnames[(which(paramnames$mainparams == "indcovc2")), "modelparams"])]}
-  if (!is.na(glmmTMB::fixef(model)[["zi"]][paste0(paramnames[(which(paramnames$mainparams == "indcovb2")), "modelparams"], ":", paramnames[(which(paramnames$mainparams == "indcovc1")), "modelparams"])])) {indb2.indc1.zi <- glmmTMB::fixef(model)[["zi"]][paste0(paramnames[(which(paramnames$mainparams == "indcovb2")), "modelparams"], ":", paramnames[(which(paramnames$mainparams == "indcovc1")), "modelparams"])]}
-  if (!is.na(glmmTMB::fixef(model)[["zi"]][paste0(paramnames[(which(paramnames$mainparams == "indcovb1")), "modelparams"], ":", paramnames[(which(paramnames$mainparams == "indcovc2")), "modelparams"])])) {indb1.indc2.zi <- glmmTMB::fixef(model)[["zi"]][paste0(paramnames[(which(paramnames$mainparams == "indcovb1")), "modelparams"], ":", paramnames[(which(paramnames$mainparams == "indcovc2")), "modelparams"])]}
-  
-  #Here are the time and location bits
-  year.coefs <- glmmTMB::ranef(model)[["cond"]][[paramnames[(which(paramnames$mainparams == "year2")), "modelparams"]]]
-  if (!all(is.na(glmmTMB::ranef(model)[["zi"]][[paramnames[(which(paramnames$mainparams == "year2")), "modelparams"]]]))) {
-    year.zi <- glmmTMB::ranef(model)[["zi"]][[paramnames[(which(paramnames$mainparams == "year2")), "modelparams"]]]
-  } else {
-    year.zi <- 0
-  }
-  
-  if (!all(is.na(glmmTMB::fixef(model)[["cond"]][paramnames[(which(paramnames$mainparams == "patch")), "modelparams"]]))) {
-    patch.coefs <- glmmTMB::fixef(model)[["cond"]][paramnames[(which(paramnames$mainparams == "patch")), "modelparams"]]
-  } else if (!all(is.na(glmmTMB::ranef(model)[["cond"]][[paramnames[(which(paramnames$mainparams == "patch")), "modelparams"]]]))) {
-    patch.coefs <- glmmTMB::ranef(model)[["cond"]][[paramnames[(which(paramnames$mainparams == "patch")), "modelparams"]]]
-  } else {
-    patch.coefs <- 0
-  }
-  
-  if (!all(is.na(glmmTMB::fixef(model)[["zi"]][paramnames[(which(paramnames$mainparams == "patch")), "modelparams"]]))) {
-    patch.zi <- glmmTMB::fixef(model)[["zi"]][paramnames[(which(paramnames$mainparams == "patch")), "modelparams"]]
-  } else if (!all(is.na(glmmTMB::ranef(model)[["zi"]][[paramnames[(which(paramnames$mainparams == "patch")), "modelparams"]]]))) {
-    patch.zi <- glmmTMB::ranef(model)[["zi"]][[paramnames[(which(paramnames$mainparams == "patch")), "modelparams"]]]
-  } else {
-    patch.zi <- 0
-  }
-  
-  coef.vec <- c(yintercept, flw1.coef, flw2.coef, size1.coef, size2.coef,
-    flw1.flw2.coef, size1.size2.coef, size1.flw1.coef, size2.flw2.coef,
-    size2.flw1.coef, size1.flw2.coef, age.coef, age.size1.coef, age.size2.coef,
-    age.flw1.coef, age.flw2.coef, inda2.coef, indb2.coef, indc2.coef, inda1.coef,
-    indb1.coef, indc1.coef, inda2.size2.coef, indb2.size2.coef, indc2.size2.coef,
-    inda2.flw2.coef, indb2.flw2.coef, indc2.flw2.coef, inda1.size1.coef,
-    indb1.size1.coef, indc1.size1.coef, inda1.flw1.coef, indb1.flw1.coef,
-    indc1.flw1.coef, inda2.indb2.coef, inda2.indc2.coef, indb2.indc2.coef,
-    inda1.indb1.coef, inda1.indc1.coef, indb1.indc1.coef, inda2.indb1.coef, 
-    inda1.indb2.coef, inda2.indc1.coef, inda1.indc2.coef, indb2.indc1.coef,
-    indb1.indc2.coef, 
-    
-    yintercept.zi, flw1.zi, flw2.zi, size1.zi, size2.zi, flw1.flw2.zi, size1.size2.zi, 
-    size1.flw1.zi, size2.flw2.zi, size2.flw1.zi, size1.flw2.zi, age.zi, age.size1.zi, 
-    age.size2.zi, age.flw1.zi, age.flw2.zi, inda2.zi, indb2.zi, indc2.zi, inda1.zi,
-    indb1.zi, indc1.zi, inda2.size2.zi, indb2.size2.zi, indc2.size2.zi, inda2.flw2.zi,
-    indb2.flw2.zi, indc2.flw2.zi, inda1.size1.zi, indb1.size1.zi, indc1.size1.zi,
-    inda1.flw1.zi, indb1.flw1.zi, indc1.flw1.zi, inda2.indb2.zi, inda2.indc2.zi, 
-    indb2.indc2.zi, inda1.indb1.zi, inda1.indc1.zi, indb1.indc1.zi, inda2.indb1.zi, 
-    inda1.indb2.zi, inda2.indc1.zi, inda1.indc2.zi, indb2.indc1.zi, indb1.indc2.zi)
-  
-  rvars <- NA
-  
-  trunc0 <- 0
-  viewedfamily <- stats::family(model)$family
-  
-  if (viewedfamily == "truncated_nbinom2") {
-    viewedfamily <- "nbinom2"
-    trunc0 <- 1
-  } else if (viewedfamily == "truncated_poisson") {
-    viewedfamily <- "poisson"
-    trunc0 <- 1
-  }
-  
-  coef.list <- list(coefficients = coef.vec, years = year.coefs,
-    patches = patch.coefs, variances = rvars, family = viewedfamily,
-    sigma = glmmTMB::sigma(model), zeroyear = year.zi, zeropatch = patch.zi,
-    trunc = trunc0)
-  
-  #Here we correct for missing years
-  if (!all(is.null(coef.list$years))) {
-    yeardiff <- setdiff(mainyears, rownames(coef.list$years))
-  
-    if (length(yeardiff) > 0) {
-      if (year.as.random == TRUE) {
-        newdevs <- rnorm(length(yeardiff), mean = 0, sd = sd(coef.list$years[,1]))
-        newdevs.zi <- rnorm(length(yeardiff), mean = 0, sd = sd(coef.list$zeroyear[,1]))
-      } else {
-        newdevs <- rep(0, (length(yeardiff)))
-        newdevs.zi <- rep(0, (length(yeardiff)))
-      }
-      coef.list$years <- rbind.data.frame(setNames(as.data.frame(as.matrix(newdevs, ncol = 1)), names(coef.list$years)), coef.list$years)
-      yearlabels <- c(yeardiff, rownames(coef.list$years)[(length(yeardiff) + 1):(length(coef.list$years[,1]))])
-      coef.list$years <- as.data.frame(coef.list$years[order(yearlabels),])
-      rownames(coef.list$years) <- sort(yearlabels)
-      
-      coef.list$zeroyear <- rbind.data.frame(setNames(as.data.frame(as.matrix(newdevs.zi, ncol = 1)), 
-        names(coef.list$zeroyear)), coef.list$zeroyear)
-      yearlabels.zi <- c(yeardiff, rownames(coef.list$zeroyear)[(length(yeardiff) + 1):(length(coef.list$zeroyear[,1]))])
-      coef.list$zeroyear <- as.data.frame(coef.list$zeroyear[order(yearlabels.zi),])
-      rownames(coef.list$zeroyear) <- sort(yearlabels.zi)
-    }
-  
-    coef.list$years <- coef.list$years[,1]
-  } else if (!all(is.na(mainyears))) {
-    coef.list$years <- rep(0, length(mainyears))
-    
-    if(length(year.zi) == 1) {
-      coef.list$zeroyear <- rep(0, length(mainyears))
-    }
-  } else {
-    coef.list$years <- 0
-  }
-  
-  #This next part addresses missing patches
-  if (class(coef.list$patches) == "data.frame") {
-    patchdiff <- setdiff(mainpatches, rownames(coef.list$patches))
-    
-    if (length(patchdiff) > 0) {
-      if (patch.as.random == TRUE) {
-        newdevs <- rnorm(length(patchdiff), mean = 0, sd = sd(coef.list$patches[,1]))
-        newdevs.zi <- rnorm(length(patchdiff), mean = 0, sd = sd(coef.list$zeropatch[,1]))
-      } else {
-        newdevs <- rep(0, (length(patchdiff)))
-        newdevs.zi <- rep(0, (length(patchdiff)))
-      }
-      coef.list$patches <- rbind.data.frame(setNames(as.data.frame(as.matrix(newdevs, ncol = 1)), names(coef.list$patches)), 
-                                            coef.list$patches)
-      patchlabels <- c(patchdiff, rownames(coef.list$patches)[(length(patchdiff) + 1):(length(coef.list$patches[,1]))])
-      coef.list$patches <- as.data.frame(coef.list$patches[order(patchlabels),])
-      rownames(coef.list$patches) <- sort(patchlabels)
-      
-      coef.list$zeropatch <- rbind.data.frame(setNames(as.data.frame(as.matrix(newdevs.zi, ncol = 1)), names(coef.list$zeropatch)), 
-                                              coef.list$zeropatch)
-      patchlabels.zi <- c(patchdiff, rownames(coef.list$zeropatch)[(length(patchdiff) + 1):(length(coef.list$zeropatch[,1]))])
-      coef.list$zeropatch <- as.data.frame(coef.list$zeropatch[order(patchlabels.zi),])
-      rownames(coef.list$zeropatch) <- sort(patchlabels.zi)
-    }
-    coef.list$patches <- coef.list$patches[,1]
-  }
-  
-  if (length(patch.zi) == 1 & length(coef.list$patches) > 1) {
-    coef.list$zeropatch <- rep(0, length(coef.list$patches))
-  }
-  
-  if (class(coef.list$zeroyear) == "data.frame") coef.list$zeroyear <- coef.list$zeroyear[,1]
-  if (class(coef.list$zeropatch) == "data.frame") coef.list$zeropatch <- coef.list$zeropatch[,1]
-  
-  return(coef.list)
-}
 
 #' Extract Coefficients From glmer-estimated Linear Vital Rate Models
 #' 
@@ -2667,7 +2025,6 @@ summary.lefkoMod <- function(object, ...) {
 #' truncated distribution (1) or not (0).}
 #' 
 #' @seealso \code{\link{.modelextract}()}
-#' @seealso \code{\link{.modelextract.glmmTMB}()}
 #' @seealso \code{\link{.modelextract.lmerMod}()}
 #' @seealso \code{\link{.modelextract.vglm}()}
 #' @seealso \code{\link{.modelextract.glm}()}
@@ -2904,7 +2261,6 @@ summary.lefkoMod <- function(object, ...) {
 #' truncated distribution (1) or not (0).}
 #' 
 #' @seealso \code{\link{.modelextract}()}
-#' @seealso \code{\link{.modelextract.glmmTMB}()}
 #' @seealso \code{\link{.modelextract.merMod}()}
 #' @seealso \code{\link{.modelextract.vglm}()}
 #' @seealso \code{\link{.modelextract.glm}()}
@@ -3120,7 +2476,7 @@ summary.lefkoMod <- function(object, ...) {
   return(coef.list)
 }
 
-#' Extract Coefficients From glmmTMB-estimated Linear Vital Rate Models
+#' Extract Coefficients From zeroinfl-estimated Linear Vital Rate Models
 #' 
 #' \code{.modelextract.zeroinfl()} extracts coefficient values from linear models 
 #' estimated through the \code{\link[pscl]{zeroinfl}()} function, to estimate
@@ -3585,7 +2941,6 @@ summary.lefkoMod <- function(object, ...) {
 #' truncated distribution (1) or not (0).}
 #' 
 #' @seealso \code{\link{.modelextract}()}
-#' @seealso \code{\link{.modelextract.glmmTMB}()}
 #' @seealso \code{\link{.modelextract.merMod}()}
 #' @seealso \code{\link{.modelextract.lmerMod}()}
 #' @seealso \code{\link{.modelextract.glm}()}
@@ -3834,7 +3189,6 @@ summary.lefkoMod <- function(object, ...) {
 #' truncated distribution (1) or not (0).}
 #' 
 #' @seealso \code{\link{.modelextract}()}
-#' @seealso \code{\link{.modelextract.glmmTMB}()}
 #' @seealso \code{\link{.modelextract.merMod}()}
 #' @seealso \code{\link{.modelextract.lmerMod}()}
 #' @seealso \code{\link{.modelextract.vglm}()}
@@ -4086,7 +3440,6 @@ summary.lefkoMod <- function(object, ...) {
 #' truncated distribution (1) or not (0).}
 #' 
 #' @seealso \code{\link{.modelextract}()}
-#' @seealso \code{\link{.modelextract.glmmTMB}()}
 #' @seealso \code{\link{.modelextract.merMod}()}
 #' @seealso \code{\link{.modelextract.lmerMod}()}
 #' @seealso \code{\link{.modelextract.vglm}()}
@@ -4321,7 +3674,6 @@ summary.lefkoMod <- function(object, ...) {
 #' truncated distribution (1) or not (0).}
 #' 
 #' @seealso \code{\link{.modelextract}()}
-#' @seealso \code{\link{.modelextract.glmmTMB}()}
 #' @seealso \code{\link{.modelextract.merMod}()}
 #' @seealso \code{\link{.modelextract.lmerMod}()}
 #' @seealso \code{\link{.modelextract.vglm}()}
@@ -4363,7 +3715,6 @@ summary.lefkoMod <- function(object, ...) {
 #' truncated distribution (1) or not (0).}
 #' 
 #' @seealso \code{\link{.modelextract}()}
-#' @seealso \code{\link{.modelextract.glmmTMB}()}
 #' @seealso \code{\link{.modelextract.merMod}()}
 #' @seealso \code{\link{.modelextract.lmerMod}()}
 #' @seealso \code{\link{.modelextract.vglm}()}

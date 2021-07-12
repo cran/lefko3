@@ -126,12 +126,15 @@ lathsupp2 <- supplemental(stage3 = c("Sd", "Sdl", "Sd", "Sdl"),
   givenrate = c(0.345, 0.054, NA, NA),
   multiplier = c(NA, NA, 0.345, 0.054),
   type = c(1, 1, 3, 3), stageframe = lathframeipm, historical = FALSE)
-lathsupp3 <- supplemental(stage3 = c("Sd", "Sd", "Sdl", "Sdl", "Sd", "Sdl"), 
-  stage2 = c("Sd", "Sd", "Sd", "Sd", "rep", "rep"),
-  stage1 = c("Sd", "rep", "Sd", "rep", "all", "all"), 
-  givenrate = c(0.345, 0.345, 0.054, 0.054, NA, NA),
-  multiplier = c(NA, NA, NA, NA, 0.345, 0.054),
-  type = c(1, 1, 1, 1, 3, 3), type_t12 = c(1, 2, 1, 2, 1, 1),
+lathsupp3 <- supplemental(stage3 = c("Sd", "Sd", "Sdl", "Sdl", "mat", "Sd", "Sdl"), 
+  stage2 = c("Sd", "Sd", "Sd", "Sd", "Sdl", "rep", "rep"),
+  stage1 = c("Sd", "rep", "Sd", "rep", "Sd", "mat", "mat"),
+  eststage3 = c(NA, NA, NA, NA, "mat", NA, NA),
+  eststage2 = c(NA, NA, NA, NA, "Sdl", NA, NA),
+  eststage1 = c(NA, NA, NA, NA, "Sdl", NA, NA),
+  givenrate = c(0.345, 0.345, 0.054, 0.054, NA, NA, NA),
+  multiplier = c(NA, NA, NA, NA, NA, 0.345, 0.054),
+  type = c(1, 1, 1, 1, 1, 3, 3), type_t12 = c(1, 2, 1, 2, 1, 1, 1),
   stageframe = lathframeipm, historical = TRUE)
 #lathsupp2
 #lathsupp3
@@ -193,12 +196,14 @@ lathsupp3 <- supplemental(stage3 = c("Sd", "Sd", "Sdl", "Sdl", "Sd", "Sdl"),
   
   <p style="text-indent: 20px">This function is useful not just because it develops the vital rate models necessary for function-based MPM estimation, but because it provides a test of whether individual history affects demography. Setting `historical = TRUE` fits size and/or reproductive status in time *t*-1 into global models, while setting `historical = FALSE` prevents testing of the impacts of state in time *t*-1. The model building and selection protocols can then be used to see if history has a significant impact on a vital rate, by assessing whether a historical term is retained in the best-fit model.</p>
 
+  <p style="text-indent: 20px">At the time of writing, mixed modeling of the negative binomial distribution, as well as of zero-truncated and zero-inflated versions of the Poisson and negative binomial distributions, have been deactivated due to core issues with package `glmmTMB`. So, here we utilize a mixed approach but with a standard Poisson response for fecundity. We will update this section again once mixed models with these response distributions are enabled again.</p>
+  
   <p style="text-indent: 20px">First, we will create the historical models to assess whether history is a significant influence on vital rates. Please remove the hashtag from the `summary` call to see details of the best-fit models.</p>
 ```{r Ch6.8}
 lathmodels3ipm <- modelsearch(lathvertipm, historical = TRUE, approach = "mixed", 
   suite = "size", vitalrates = c("surv", "obs", "size", "fec"), 
   juvestimate = "Sdl", bestfit = "AICc&k", sizedist = "gaussian", 
-  fecdist = "negbin", fec.zero = TRUE, indiv = "individ", year = "year2", 
+  fecdist = "poisson", fec.zero = FALSE, indiv = "individ", year = "year2", 
   year.as.random = TRUE, juvsize = TRUE, show.model.tables = TRUE, quiet = TRUE)
 #summary(lathmodels3ipm)
 ```
@@ -208,8 +213,8 @@ lathmodels3ipm <- modelsearch(lathvertipm, historical = TRUE, approach = "mixed"
 lathmodels2ipm <- modelsearch(lathvertipm, historical = FALSE, 
   approach = "mixed", suite = "size", 
   vitalrates = c("surv", "obs", "size", "fec"), juvestimate = "Sdl", 
-  bestfit = "AICc&k", sizedist = "gaussian", fecdist = "negbin", 
-  fec.zero = TRUE, indiv = "individ", year = "year2", year.as.random = TRUE, 
+  bestfit = "AICc&k", sizedist = "gaussian", fecdist = "poisson", 
+  fec.zero = FALSE, indiv = "individ", year = "year2", year.as.random = TRUE, 
   juvsize = TRUE, show.model.tables = TRUE, quiet = TRUE)
 #summary(lathmodels2ipm)
 ```
@@ -225,7 +230,7 @@ lathmat3ipm <- flefko3(stageframe = lathframeipm, modelsuite = lathmodels3ipm,
 summary(lathmat3ipm)
 ```
 
-  <p style="text-indent: 20px">These are giant matrices. With 10,609 rows and columns, there are a total of 112,550,881 elements per matrix. But they are also amazingly sparse - with 1,061,308 elements estimated, only 0.9% of elements per matrix are non-zero. Let's now build the ahistorical IPMs.</p>
+  <p style="text-indent: 20px">These are giant matrices. With 10,609 rows and columns, there are a total of 112,550,881 elements per matrix. But they are also amazingly sparse - with 1,060,912 elements estimated, only 0.9% of elements per matrix are non-zero. Let's now build the ahistorical IPMs.</p>
 ```{r Ch6.11}
 lathmat2ipm <- flefko2(stageframe = lathframeipm, modelsuite = lathmodels2ipm,
   supplement = lathsupp2, data = lathvertipm, year.as.random = FALSE,
@@ -343,7 +348,7 @@ legend("topleft", c("det ahist", "det hist", "sto ahist", "sto hist"),
 par(lty = lty.o)
 ```
 
-  <p style="text-indent: 20px">A quick scan through these values shows that the highest reproductive values in the deterministic ahistorical analysis are for the largest adults. However, historically-corrected deterministic reproductive values drop off once adults get somewhat large, with the largest value associated with plants with a leaf volume of 5076 (the maximum is >7000). Stochastic analysis shows a general build-up of reproductive value with increasing size, similarly to the deterministic ahistorical projection. However, the ahistorical stochastic analyses match the deterministic analyses fairly strongly, while the historical stochastic analyses show a larger hump of reproductive value associated with medium sizes and a slower build-up to the largest sizes. So, individual history and temporal environmental stochasticity both have strong impacts here.</p>
+  <p style="text-indent: 20px">A quick scan through these values shows that the highest reproductive values in the deterministic ahistorical analysis are for the largest adults. However, historically-corrected deterministic reproductive values drop off once adults get somewhat large, with the largest value associated with plants with a leaf volume of 5076 (the maximum is >7000). Stochastic analyses shows a general build-up of reproductive value with increasing size, similarly to the deterministic ahistorical projection. However, the ahistorical stochastic analyses match the deterministic analyses fairly strongly, while the historical stochastic analyses show a larger hump of reproductive value associated with medium sizes and a slower build-up to the largest sizes. So, individual history and temporal environmental stochasticity both have strong impacts here.</p>
   
   <p style="text-indent: 20px">Let's now try a sensitivity analysis. We will conduct both deterministic and stochastic analyses of ahistorical and historical MPMs. Because of the size of the hMPMs, we will limit run time of the stochastic sensitivity analysis to 200 time steps (this may take several hours even with reduced time steps). We will also limit our analysis to biologically possible transitions by ignoring the sensitivities of zero elements.</p>
 ```{r Ch6.21}
@@ -370,9 +375,9 @@ which(lath3ipmsens_s$h_sensmats[[1]] == max(lath3ipmsens_s$h_sensmats[[1]][which
 
   <p style="text-indent: 20px">Our sensitivity analyses generally suggest that population growth rate is most sensitive to element 309, which is the third column (309 / 103 = 3) and the 103rd row and so is associated with the transition from vegetative dormancy to the largest adult stage. However, deterministic analysis of the hMPM differs, suggesting that population growth rate is most elastic to element 283, which is in the third column and 77th row. This transition is from vegetative dormancy to a medium-to-large size adult. Historical deterministic and stochastic sensitivity analyses both suggest that population growth rate is most sensitive to changes in element 2,206,981, which is in the 209th column (2,206,981 / 10,609 = 208.0291) and the 309th row. That element corresponds to the transition from vegetative dormancy in times *t*-1 and *t* to the largest adult in time *t*+1. So, sensitivity analysis strongly suggests that vegetative dormance has strong impacts on population growth rate.</p>
 
-  <p style="text-indent: 20px">We will now move on to elasticity analysis. We will reduce the number of time steps simulated in the stochastic historical analysis to reduce the amount of computer processing time (this might take several hours even with the number of steps reduced). We will also remove the sensitivity analyses from memory.</p>
+  <p style="text-indent: 20px">We will now move on to elasticity analysis. We will reduce the number of time steps simulated in the stochastic historical analysis to reduce the amount of computer processing time (this might take several hours even with the number of steps reduced). We will also remove the sensitivity analyses from memory, because these sensitivity and elasticity matrices are quite large.</p>
 ```{r Ch6.22}
-rm(c("lath2ipmsens", "lath3ipmsens", "lath2ipmsens_s", "lath3ipmsens_s"))
+rm("lath2ipmsens", "lath3ipmsens", "lath2ipmsens_s", "lath3ipmsens_s")
 lath2ipmelas <- elasticity3(lath2ipmmean)
 lath3ipmelas <- elasticity3(lath3ipmmean)
 set.seed(42)

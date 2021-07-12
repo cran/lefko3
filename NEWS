@@ -1,6 +1,35 @@
 LEFKO3 NEWS
 -----------
 
+CHANGES IN VERSION 3.5.2 (2021-07-12)
+-------------------------------------
+  USER-VISIBLE CHANGES
+    1. Negative binomial response, zero-truncated, and zero-inflated
+       have been temporarily disabled in function modelsearch() while package
+       glmmTMB() is being reprogrammed for compatibility with R 4.1.0. These
+       distributions are still available through the glm approach.
+    2. Examples have been updated for clarity and consistency.
+
+
+CHANGES IN VERSION 3.5.1 (2021-07-07)
+-------------------------------------
+  NEW FEATURES
+    1. Function supplemental() now allows entry stage proxies to be marked for
+       raw historical MPMs.
+    2. Shortcuts included covering non-propagule stages and non-reproductive
+       mature stages for functions overwrite() and supplemental().
+
+  USER-VISIBLE CHANGES
+    1. Updated Lathyrus vignettes to correct improper handling of entry stages.
+    2. Negative binomial response in mixed modeling has been moved to package
+       lme4, and zero-truncated and zero-inflated distributions are available
+       only through the glm approach in modelsearch() for the time being.
+
+  BUG FIXES
+    1. Corrected improper handling of prior forms of entry stages in raw
+       historical MPMs.
+
+
 CHANGES IN VERSION 3.5.0 (2021-06-29)
 -------------------------------------
   NEW FEATURES

@@ -30,7 +30,7 @@ knitr::opts_chunk$set(
 
 ### OVERALL GOALS AND INITIAL CONSIDERATIONS
 
-  <p style="text-indent: 20px">Here we will estimate raw matrices similar to and based on the dataset used in Ehrlén [-@ehrlen_dynamics_2000]. These matrices will not be the same, as the dataset included in this package includes data for more individuals as well as an extra year of monitoring. It also includes differences in classification due to different assumptions regarding transitions to and from vegetative dormancy, which is an unobservable life history stage in which herbaceous perennial plants spend the growing season belowground, without aboveground structures. Particularly, we have changed the classification such that plants must have been observed aboveground after a period of of one or more years without producing aboveground sprouts in order to be considered as having been vegetatively dormant (this has the impact of making the survival probability estimated for vegetative dormancy be equal to 1.0 in our analyses). However, the matrices will be very similar.</p>
+  <p style="text-indent: 20px">Here we will estimate raw matrices similar to and based on the dataset used in Ehrlén [-@ehrlen_dynamics_2000]. These matrices will not be the same, as the dataset included in this package includes data for more individuals as well as an extra year of monitoring. It also includes differences in classification due to different assumptions regarding transitions to and from vegetative dormancy, which is an unobservable life history stage in which herbaceous perennial plants spend the growing season belowground, without aboveground structures. Particularly, we have changed the classification such that plants must have been observed aboveground after a period of one or more years without producing aboveground sprouts in order to be considered as having been vegetatively dormant (this has the impact of making the survival probability estimated for vegetative dormancy be equal to 1.0 in our analyses). However, the matrices will be very similar.</p>
   
   <p style="text-indent: 20px">The dataset that we have provided is organized in horizontal format, meaning that rows correspond to unique individuals and columns correspond to individual condition in particular observation times (which we refer to as years here, since there was one main census in each year). The original spreadsheet file used to keep the dataset has a repeating pattern to these columns, with each year having a similarly arranged group of variables. Package `lefko3` includes functions to handle data in horizontal format, as well as functions to handle vertically formatted data (i.e. data for individuals is broken up across rows, where each row is a unique combination of individual and year in time *t*).</p>
 
@@ -75,7 +75,7 @@ lathframe <- sf_create(sizes = sizevector, stagenames = stagevector,
 
 #### Step 2a. Data reorganization
 
-  <p style="text-indent: 20px">Next, we need to reorganize the dataset into *vertical format*. Vertically formatted datasets are structured such that each row corresponds to the state of a single individual in two (if ahistorical) or three (if historical) consecutive times. The `verticalize3()` function handles this, creaing a *historical vertical dataset*. We can use one of two approaches for this task, both using this function. In the most general case, we may input all column names from the original dataset in each input option in the same order (corresponding to monitoring time). This allows any format of dataset to be used. However, an easier approach may be used in datasets with strictly repeating sets of columns. In this case, most of the inputs to this function's options constitute the names of the first variables coding for particular states. For example, `Seedling1988` is the first variable in the dataset coding for status as a juvenile, `Volume88` is the first variable coding for the main size metric, and `Intactseed88` is the first variable coding for fecundity. The dataset includes a repeating pattern of such variables organized as blocks of 9 variables for each year (noted as `blocksize`). There are 4 observation times (noted as `noyears`). We also have a repeated censor variable, the first of which is `Missing1988`, and we note here that we wish to censor the data and to keep data points with `NA` values in the censor term. The `patchidcol` and `individcol` terms are variables denoting which patch/subpopulation and individual each row of data belongs to, respectively. Finally, `stageassign` ties the dataset to the correct stageframe.</p>
+  <p style="text-indent: 20px">Next, we need to reorganize the dataset into *vertical format*. Vertically formatted datasets are structured such that each row corresponds to the state of a single individual in two (if ahistorical) or three (if historical) consecutive times. The `verticalize3()` function handles this, creating a *historical vertical dataset*. We can use one of two approaches for this task, both using this function. In the most general case, we may input all column names from the original dataset in each input option in the same order (corresponding to monitoring time). This allows any format of dataset to be used. However, an easier approach may be used in datasets with strictly repeating sets of columns. In this case, most of the inputs to this function's options constitute the names of the first variables coding for particular states. For example, `Seedling1988` is the first variable in the dataset coding for status as a juvenile, `Volume88` is the first variable coding for the main size metric, and `Intactseed88` is the first variable coding for fecundity. The dataset includes a repeating pattern of such variables organized as blocks of 9 variables for each year (noted as `blocksize`). There are 4 observation times (noted as `noyears`). We also have a repeated censor variable, the first of which is `Missing1988`, and we note here that we wish to censor the data and to keep data points with `NA` values in the censor term. The `patchidcol` and `individcol` terms are variables denoting which patch/subpopulation and individual each row of data belongs to, respectively. Finally, `stageassign` ties the dataset to the correct stageframe.</p>
 ```{r Ch2.2}
 lathvert <- verticalize3(lathyrus, noyears = 4, firstyear = 1988, 
   patchidcol = "SUBPLOT", individcol = "GENET", blocksize = 9, 
@@ -108,7 +108,7 @@ dim(lathvert[which(lathvert$stage2 == "Dorm"),])
 
   <p style="text-indent: 20px">The `verticalize3()` function has made stage assignments for all individuals at each time. This can be seen in the subset summary in the `stage2index` column, which shows all individuals that are alive and have a size of 0 in time *t* to be in the 7th stage. Type `lathframe` and enter at the prompt to check that the 7th stage in the stageframe is really vegetative dormancy.</p>
 
-  <p style="text-indent: 20px">A further subset summary can teach us how reproduction is handled here. The reproductive status of flowering adults is set as reproductive in `lathframe`, and a subset summary of just those individuals flowerig in time *t* shows all of those individuals set to reproductive (see the distribution of values for `repstatus2` in the output below). However, fecundity ranges from 0 to above 60 (see `feca2`, which codes for fecundity in time *t*), meaning that some flowering adults do not actually produce any offspring. In fact, only `r 100 * signif(mean(lathvert[which(lathvert$stage2 == "Flo"),]$fecstatus2), 3)`% of flowering plants produced seed in time *t*. This has happened because our reproductive status variable, `FCODE88`, notes whether these individuals flowered but not whether they produced seed. Since this plant must be pollinated by an appropriate insect vector, some flowers should yield no seed. This issue does not cause problems in the creation of raw matrices, but it might cause difficulties in the creation of function-based matrices under some conditions. It helps to consider whether the definitions used for stages are appropriate, and so whether reproductive status must necessarily be associated with *successful* reproduction or merely the attempt. Here, we associate it with the latter, but in other vignettes we will reconsider this assumption.</p>
+  <p style="text-indent: 20px">A further subset summary can teach us how reproduction is handled here. The reproductive status of flowering adults is set as reproductive in `lathframe`, and a subset summary of just those individuals flowering in time *t* shows all of those individuals set to reproductive (see the distribution of values for `repstatus2` in the output below). However, fecundity ranges from 0 to above 60 (see `feca2`, which codes for fecundity in time *t*), meaning that some flowering adults do not actually produce any offspring. In fact, only `r 100 * signif(mean(lathvert[which(lathvert$stage2 == "Flo"),]$fecstatus2), 3)`% of flowering plants produced seed in time *t*. This has happened because our reproductive status variable, `FCODE88`, notes whether these individuals flowered but not whether they produced seed. Since this plant must be pollinated by an appropriate insect vector, some flowers should yield no seed. This issue does not cause problems in the creation of raw matrices, but it might cause difficulties in the creation of function-based matrices under some conditions. It helps to consider whether the definitions used for stages are appropriate, and so whether reproductive status must necessarily be associated with *successful* reproduction or merely the attempt. Here, we associate it with the latter, but in other vignettes we will reconsider this assumption.</p>
 ```{r Ch2.5}
 summary(lathvert[which(lathvert$stage2 == "Flo"),c(22:27)])
 summary(lathvert[which(lathvert$stage2 == "Flo"),c(28:33)])
@@ -126,14 +126,17 @@ lathsupp2 <- supplemental(stage3 = c("Sd", "Sdl", "Sd", "Sdl"),
 #lathsupp2
 ```
   
-  <p style="text-indent: 20px">The supplemental table above will only work with ahistorical MPMs. The next supplemental table will work for historical MPMs. The primary difference is the incorporation of stage in time *t*-1. Going back a further step to look at time *t*-1 shows us that there are two ways that a dormant seed in time *t* can be a dormant seed in time *t*+1 - it could have been a dormant seed in time *t*-1, or it could have been produced by a flowering adult in time *t*-1. Likewise, a seed in time *t* could have become a seedling in time *t*+1 after being produced by a flowering adult in time *t*-1, or remaining in the seed bank in time *t*-1. So, we will enter 4 given transitions in the historical case, rather than 2 transitions as in the ahistorical case. Note the use of the `"rep"` and `"all"` designations in `Stage1` - these are abbreviations telling R to use all reproductive stages, or all stages in general, respectively.</p>
+  <p style="text-indent: 20px">The supplemental table above will only work with ahistorical MPMs. The next supplemental table will work for historical MPMs. The primary difference is the incorporation of stage in time *t*-1. Going back a further step to look at time *t*-1 shows us that there are two ways that a dormant seed in time *t* can be a dormant seed in time *t*+1 - it could have been a dormant seed in time *t*-1, or it could have been produced by a flowering adult in time *t*-1. Likewise, a seed in time *t* could have become a seedling in time *t*+1 after being produced by a flowering adult in time *t*-1, or remaining in the seed bank in time *t*-1. So, we will enter 4 given transitions in the historical case, rather than 2 transitions as in the ahistorical case. We will also designate that transitions from seed in time *t*-1 and seedling in time *t* to mature stages in time *t*+1 should actually originate from the `NotAlive` stage in time *t*-1, because the seed stage does not actually occur in the dataset and so function `rlefko3()` will not estimate these transitions without knowing the appropriate proxy set. Finally, note the use of the `"rep"`, `"mat"`, and `"npr"` designations in `Stage1` - these are abbreviations telling R to use all reproductive stages, all mature stages, or all non-propagule stages in general, respectively.</p>
 ```{r Ch2.7}
-lathsupp3 <- supplemental(stage3 = c("Sd", "Sd", "Sdl", "Sdl", "Sd", "Sdl"), 
-  stage2 = c("Sd", "Sd", "Sd", "Sd", "rep", "rep"),
-  stage1 = c("Sd", "rep", "Sd", "rep", "all", "all"), 
-  givenrate = c(0.345, 0.345, 0.054, 0.054, NA, NA),
-  multiplier = c(NA, NA, NA, NA, 0.345, 0.054),
-  type = c(1, 1, 1, 1, 3, 3), type_t12 = c(1, 2, 1, 2, 1, 1),
+lathsupp3 <- supplemental(stage3 = c("Sd", "Sd", "Sdl", "Sdl", "Sd", "Sdl", "mat"),
+  stage2 = c("Sd", "Sd", "Sd", "Sd", "rep", "rep", "Sdl"),
+  stage1 = c("Sd", "rep", "Sd", "rep", "npr", "npr", "Sd"),
+  eststage3 = c(NA, NA, NA, NA, NA, NA, "mat"),
+  eststage2 = c(NA, NA, NA, NA, NA, NA, "Sdl"),
+  eststage1 = c(NA, NA, NA, NA, NA, NA, "NotAlive"),
+  givenrate = c(0.345, 0.345, 0.054, 0.054, NA, NA, NA),
+  multiplier = c(NA, NA, NA, NA, 0.345, 0.054, NA),
+  type = c(1, 1, 1, 1, 3, 3, 1), type_t12 = c(1, 2, 1, 2, 1, 1, 1),
   stageframe = lathframe, historical = TRUE)
 #lathsupp3
 ```
@@ -146,7 +149,7 @@ lathsupp3 <- supplemental(stage3 = c("Sd", "Sd", "Sdl", "Sdl", "Sd", "Sdl"),
   
   <p style="text-indent: 20px">In `lefko3`, we provide a function that can be used to test for the effects of history directly from the historical vertical dataset: `modelsearch()`. This function is described in detail in the *Basic theory and concepts* vignette and in vignettes focused on function-based MPMs and IPMs. We provide only a barebones description here, focusing on how to test for the effects of history on demography.</p>
   
-  <p style="text-indent: 20px">Function `modelsearch()` estimates best-fit linear models of the key vital rates used to propagate elements in function-based MPMs. There are up to 9 different vital rates possible to test, of which 5 are adult vital rates and 4 are juvenile vital rates. The standard vital rates that we may wish to test are survival (marked as `surv` in `vitalrates`), size (`size`), and fecundity (`fec`), which are the default vital rates assumed by the function. Here, we also test observation status (`obs`), which can serve as a proxy for sprouting probability in cases where plants do not necessarily sprout. This dataset also includes juveniles whose vital rates we wish to estimate. We designate this by setting `juvestimate` to the correct juvenile stage to focus juvenile vital rate estimation on. Because size varies in juveniles, we set `juvsize = TRUE` (this setting defaults to FALSE, in which case size is not tested in juvenile vital rate models). To test history with function `modelsearch`: 1) use the historical vertical dataset as input, 2) set `historical = TRUE`, 3) input the relevant vital rates to estimate, 4) set the suite of independent factors to test (size and reproductive status in times *t* and *t*-1 and all interactions, or some subset thereof), 5) set the name of the juvenile stage (if juvenile vital rates are to be estimated and such stages occur in the dataset), 6) set the proper distributions to use for size and fecundity, and 7) note which variables code for individual identity (used to treat identity as a random factor in mixed linear models), patch identity (if multiple patches occur in the dataset and vital rates should be estimated with patch as a factor), and observation time. We also set `quiet = TRUE` to limit the amount of text output while the function runs.</p>
+  <p style="text-indent: 20px">Function `modelsearch()` estimates best-fit linear models of the key vital rates used to propagate elements in function-based MPMs. There are up to 9 different vital rates possible to test, of which 5 are adult vital rates and 4 are juvenile vital rates. The standard vital rates that we may wish to test are survival (marked as `surv` in `vitalrates`), size (`size`), and fecundity (`fec`), which are the default vital rates assumed by the function. Here, we also test observation status (`obs`), which can serve as a proxy for sprouting probability in cases where plants do not necessarily sprout, and reproductive status (`repst`), which assesses the probability of reproduction in cases where reproduction is not certain. This dataset also includes juveniles whose vital rates we wish to estimate. We designate this by setting `juvestimate` to the correct juvenile stage to focus juvenile vital rate estimation on. Because size varies in juveniles, we set `juvsize = TRUE` (this setting defaults to FALSE, in which case size is not tested in juvenile vital rate models). To test history with function `modelsearch`: 1) use the historical vertical dataset as input, 2) set `historical = TRUE`, 3) input the relevant vital rates to estimate, 4) set the suite of independent factors to test (size and reproductive status in times *t* and *t*-1 and all interactions, or some subset thereof), 5) set the name of the juvenile stage (if juvenile vital rates are to be estimated and such stages occur in the dataset), 6) set the proper distributions to use for size and fecundity, and 7) note which variables code for individual identity (used to treat identity as a random factor in mixed linear models), patch identity (if multiple patches occur in the dataset and vital rates should be estimated with patch as a factor), and observation time. We also set `quiet = TRUE` to limit the amount of text output while the function runs.</p>
 ```{r Ch2.8}
 histtest <- modelsearch(lathvert, historical = TRUE, suite = "size", 
   vitalrates = c("surv", "obs", "size", "repst", "fec"), juvestimate = "Sdl", 
@@ -342,8 +345,9 @@ rownames(ss_put_together) <- ehrlen2mss$stage
 
 barplot(t(ss_put_together), beside=T, ylab = "Proportion", xlab = "Stage",
   ylim = c(0, 0.35), col = c("black", "orangered", "grey", "darkred"), bty = "n")
-legend("topright", c("det ahistorical", "det historical", "stoc ahistorical", "stoc historical"),
-  col = c("black", "orangered", "grey", "darkred"), pch = 15, bty = "n")
+legend("topright", c("det ahistorical", "det historical", "stoc ahistorical", 
+    "stoc historical"), pch = 22, col = "black",
+  pt.bg = c("black", "orangered", "grey", "darkred"), bty = "n")
 ```
 
   <p style="text-indent: 20px">Let's take the deterministic portion first. Accounting for individual history increased the prevalence of dormant seeds and small and large adults, but decreased the prevalence of dormant and tiny adults. For example, dormant seeds are now expected to compose 33% of the population (29% in the pure ahistorical case), and small and large adults together compose 28% of the population instead of 26%. Now when we also take in the impact of temporal stochasticity, we can see differences in the proportion of dormant seeds, seedlings, and all adult stages, with the greatest differences in dormant seeds and small and flowering adults.</p>
@@ -364,8 +368,9 @@ rownames(rv_put_together) <- ehrlen2mrv$stage
 barplot(t(rv_put_together), beside=T, ylab = "Relative reproductive value",
   ylim = c(0, 1.2), xlab = "Stage", col = c("black", "orangered", "grey", "darkred"),
   bty = "n")
-legend("topright", c("det ahist", "det hist", "stoc ahist", "stoc hist"),
-  col = c("black", "orangered", "grey", "darkred"), pch = 15, bty = "n")
+legend("topleft", c("det ahistorical", "det historical", "stoc ahistorical", 
+    "stoc historical"), pch = 22, col = "black",
+  pt.bg = c("black", "orangered", "grey", "darkred"), bty = "n")
 ```
 
   <p style="text-indent: 20px">Both deterministic and stochastic analyses show that flowering adults have the greatest reproductive value in both ahistorical and historical analysis, while dormant seeds have the least. However, the historical MPM suggests a greater contribution of non-flowering but sprouting adult stages, and lower contributions of dormant seeds, seedlings, and vegetative dormancy.</p>
@@ -382,17 +387,6 @@ text(cex=0.5, y = -0.18, x = seq(from = 0,
 ```
 
   <p style="text-indent: 20px">In the bar plot, the labels show the stages in the order of stage in time *t* followed by stage in time *t*-1. Examining these values reveals that the largest reproductive value is associated with flowering adults that were previously flowering, while the next largest reproductive value is associated with flowering adults that were previously small, and flowering adults that were previously very large. Interestingly, historical transitions to very large adult have lower reproductive value here than we might expect given the ahistorical analysis, in which they were predicted to have the second highest reproductive value.</p>
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
   
   <p style="text-indent: 20px">Now we will look at the sensitivities of $\lambda$ to the matrix elements. Here we conduct a deterministic sensitivity analysis on the ahistorical mean matrix.</p>
 ```{r Ch2.31}
@@ -517,8 +511,9 @@ rownames(elas_put_together) <- ehrlen2elas$ah_stages$stage
 
 barplot(t(elas_put_together), beside=T, ylab = "Elasticity", xlab = "Stage",
   col = c("black", "orangered", "grey", "darkred"), bty = "n")
-legend("topleft", c("det ahist", "det hist", "sto ahist", "sto hist"), 
-  col = c("black", "orangered", "grey", "darkred"), pch = 15, bty = "n")
+legend("topleft", c("det ahistorical", "det historical", "stoc ahistorical", 
+    "stoc historical"), pch = 22, col = "black",
+  pt.bg = c("black", "orangered", "grey", "darkred"), bty = "n")
 ```
 
   <p style="text-indent: 20px">We see the overall importance of both history and temporal environmental stochasticity here. Historical analyses generally find that population growth rate is less elastic in response to dormant seeds, seedlings, and dormant adults, and more elastic to small adults than in ahistorical analyses. Stochastic analyses suggest that population growth rate is barely elastic in response to dormant seeds and seedlings, and more elastic in response to tiny and small adults.</p>
@@ -538,8 +533,9 @@ rownames(elas_sums_together) <- ehrlen2elas_sums$ahist$category
 
 barplot(t(elas_sums_together), beside=T, ylab = "Elasticity",
   xlab = "Transition", col = c("black", "orangered", "grey", "darkred"), bty = "n")
-legend("topright", c("det ahist", "det hist", "sto ahist", "sto hist"),
-  col = c("black", "orangered", "grey", "darkred"), pch = 15, bty = "n")
+legend("topright", c("det ahistorical", "det historical", "stoc ahistorical", 
+    "stoc historical"), pch = 22, col = "black",
+  pt.bg = c("black", "orangered", "grey", "darkred"), bty = "n")
 ```
 
   <p style="text-indent: 20px">We see similar patterns across types of elasticity analysis. Particularly, population growth rate is most elastic in response to changes in stasis transitions, and least elastic to changes in fecundity.</p>

@@ -31,7 +31,6 @@
 #' \emph{lefko3}: analyzing individual history through size-classified matrix 
 #' population models. \emph{Methods in Ecology and Evolution} 12(2): 378-382.
 #' @import Rcpp
-#' @importFrom glmmTMB fixef glmmTMB nbinom2 ranef truncated_nbinom2 truncated_poisson
 #' @importFrom lme4 fixef glmer lmer ranef VarCorr
 #' @importFrom MASS glm.nb
 #' @importFrom MuMIn dredge

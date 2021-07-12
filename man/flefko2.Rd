@@ -367,23 +367,6 @@ lathmat2ln <- flefko2(year = "all", patch = "all", stageframe = lathframeln,
   patch.as.random = FALSE, reduce = FALSE)
 
 summary(lathmat2ln)
-
-# Alternatively, we can use overwrite() and a reproductive matrix instead of
-# supplemental()
-lathrepmln <- matrix(0, 21, 21)
-lathrepmln[1, c(13:21)] <- 0.345
-lathrepmln[2, c(13:21)] <- 0.054
-
-lathover2 <- overwrite(stage3 = c("Sd", "Sdl"), stage2 = c("Sd", "Sd"),
-  givenrate = c(0.345, 0.054))
-
-lathmat2ln_alt <- flefko2(year = "all", patch = "all",
-  stageframe = lathframeln, modelsuite = lathmodelsln2, data = lathvertln,
-  repmatrix = lathrepmln, overwrite = lathover2, patchcol = "patchid",
-  yearcol = "year2", year.as.random = FALSE, patch.as.random = FALSE,
-  reduce = FALSE)
-
-summary(lathmat2ln_alt)
 }
 
 }

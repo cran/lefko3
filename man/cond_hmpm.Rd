@@ -63,31 +63,31 @@ cypraw_v1 <- verticalize3(data = cypdata, noyears = 6, firstyear = 2004,
   stageassign = cypframe_raw, stagesize = "sizeadded", NAas0 = TRUE, 
   NRasRep = TRUE)
 
-rep_cyp_raw <- matrix(0, 11, 11)
-rep_cyp_raw[1:2,7:11] <- 0.5
+cypsupp3r <- supplemental(stage3 = c("SD", "SD", "P1", "P1", "P2", "P3",
+    "SL", "SL", "SL", "D", "XSm", "Sm", "D", "XSm", "Sm", "SD", "P1"),
+  stage2 = c("SD", "SD", "SD", "SD", "P1", "P2", "P3", "SL", "SL", "SL",
+    "SL", "SL", "SL", "SL", "SL", "rep", "rep"),
+  stage1 = c("SD", "rep", "SD", "rep", "SD", "P1", "P2", "P3", "SL", "P3",
+    "P3", "P3", "SL", "SL", "SL", "all", "all"),
+  eststage3 = c(NA, NA, NA, NA, NA, NA, NA, NA, NA, "D", "XSm", "Sm", "D",
+    "XSm", "Sm", NA, NA),
+  eststage2 = c(NA, NA, NA, NA, NA, NA, NA, NA, NA, "XSm", "XSm", "XSm",
+    "XSm", "XSm", "XSm", NA, NA),
+  eststage1 = c(NA, NA, NA, NA, NA, NA, NA, NA, NA, "XSm", "XSm", "XSm",
+    "XSm", "XSm", "XSm", NA, NA),
+  givenrate = c(0.1, 0.1, 0.2, 0.2, 0.2, 0.2, 0.25, 0.4, 0.4, NA, NA, NA, NA,
+    NA, NA, NA, NA),
+  multiplier = c(NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA,
+    0.5, 0.5),
+  type = c(1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 3, 3),
+  type_t12 = c(1, 2, 1, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1),
+  stageframe = cypframe_raw, historical = TRUE)
 
-cypover3r <- overwrite(stage3 = c("SD", "SD", "P1", "P1", "P2", "P3", "SL", 
-    "SL", "SL", "D", "XSm", "Sm", "D", "XSm", "Sm"), 
-  stage2 = c("SD", "SD", "SD", "SD", "P1", "P2", "P3", "SL", "SL", "SL", 
-    "SL", "SL", "SL", "SL", "SL"),
-  stage1 = c("SD", "rep", "SD", "rep", "SD", "P1", "P2", "P3", "SL", "P3", 
-    "P3", "P3", "SL", "SL", "SL"),
-  eststage3 = c(NA, NA, NA, NA, NA, NA, NA, NA, NA, "D", "XSm", "Sm", "D", 
-    "XSm", "Sm"), 
-  eststage2 = c(NA, NA, NA, NA, NA, NA, NA, NA, NA, "XSm", "XSm", "XSm", 
-    "XSm", "XSm", "XSm"), 
-  eststage1 = c(NA, NA, NA, NA, NA, NA, NA, NA, NA, "XSm", "XSm", "XSm", 
-    "XSm", "XSm", "XSm"), 
-  givenrate = c(0.1, 0.1, 0.2, 0.2, 0.2, 0.2, 0.25, 0.4, 0.4, NA, NA, NA, 
-    NA, NA, NA), 
-  type = c("S", "S", "S", "S", "S", "S", "S", "S", "S", "S", "S", "S", "S",
-    "S", "S"))
-
-cypmatrix3r <- rlefko3(data = cypraw_v1, stageframe = cypframe_raw, 
+cypmatrix3r <- rlefko3(data = cypraw_v1, stageframe = cypframe_raw,
   year = "all", patch = "all", stages = c("stage3", "stage2", "stage1"),
-  size = c("size3added", "size2added", "size1added"), 
-  repmatrix = rep_cyp_raw, overwrite = cypover3r, yearcol = "year2", 
-  patchcol = "patchid", indivcol = "individ")
+  size = c("size3added", "size2added", "size1added"),
+  supplement = cypsupp3r, yearcol = "year2", patchcol = "patchid",
+  indivcol = "individ")
 
 cypcondmats <- cond_hmpm(cypmatrix3r)
 summary(cypcondmats)

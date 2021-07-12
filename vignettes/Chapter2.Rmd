@@ -11,7 +11,7 @@ vignette: >
 
 
 
-  <p style="text-indent: 20px">This document was built in Markdown in R 4.1.0 and compiled on 28 June 2021. It covers package `lefko3` version 3.5.0. Please note that this vignette was written with space considerations in mind. To reduce output size, we have prevented some statements from running if they produce long stretches of output. Examples include most `summary()` calls. In these cases, we include hashtagged versions of these calls, and ask the user to run these statements without hashtags. We have also written this vignette using the default Ehrlén format as the output format for all historical MPMs. All examples work with deVries format as well.</p>
+  <p style="text-indent: 20px">This document was built in Markdown in R 4.1.0 and compiled on 12 July 2021. It covers package `lefko3` version 3.5.2. Please note that this vignette was written with space considerations in mind. To reduce output size, we have prevented some statements from running if they produce long stretches of output. Examples include most `summary()` calls. In these cases, we include hashtagged versions of these calls, and ask the user to run these statements without hashtags. We have also written this vignette using the default Ehrlén format as the output format for all historical MPMs. All examples work with deVries format as well.</p>
 
 ## CASE STUDIES OF SWEDISH *Lathyrus vernus* POPULATION
 
@@ -25,7 +25,7 @@ vignette: >
 
 ### OVERALL GOALS AND INITIAL CONSIDERATIONS
 
-  <p style="text-indent: 20px">Here we will estimate raw matrices similar to and based on the dataset used in Ehrlén [-@ehrlen_dynamics_2000]. These matrices will not be the same, as the dataset included in this package includes data for more individuals as well as an extra year of monitoring. It also includes differences in classification due to different assumptions regarding transitions to and from vegetative dormancy, which is an unobservable life history stage in which herbaceous perennial plants spend the growing season belowground, without aboveground structures. Particularly, we have changed the classification such that plants must have been observed aboveground after a period of of one or more years without producing aboveground sprouts in order to be considered as having been vegetatively dormant (this has the impact of making the survival probability estimated for vegetative dormancy be equal to 1.0 in our analyses). However, the matrices will be very similar.</p>
+  <p style="text-indent: 20px">Here we will estimate raw matrices similar to and based on the dataset used in Ehrlén [-@ehrlen_dynamics_2000]. These matrices will not be the same, as the dataset included in this package includes data for more individuals as well as an extra year of monitoring. It also includes differences in classification due to different assumptions regarding transitions to and from vegetative dormancy, which is an unobservable life history stage in which herbaceous perennial plants spend the growing season belowground, without aboveground structures. Particularly, we have changed the classification such that plants must have been observed aboveground after a period of one or more years without producing aboveground sprouts in order to be considered as having been vegetatively dormant (this has the impact of making the survival probability estimated for vegetative dormancy be equal to 1.0 in our analyses). However, the matrices will be very similar.</p>
   
   <p style="text-indent: 20px">The dataset that we have provided is organized in horizontal format, meaning that rows correspond to unique individuals and columns correspond to individual condition in particular observation times (which we refer to as years here, since there was one main census in each year). The original spreadsheet file used to keep the dataset has a repeating pattern to these columns, with each year having a similarly arranged group of variables. Package `lefko3` includes functions to handle data in horizontal format, as well as functions to handle vertically formatted data (i.e. data for individuals is broken up across rows, where each row is a unique combination of individual and year in time *t*).</p>
 
@@ -73,7 +73,7 @@ lathframe <- sf_create(sizes = sizevector, stagenames = stagevector,
 
 #### Step 2a. Data reorganization
 
-  <p style="text-indent: 20px">Next, we need to reorganize the dataset into *vertical format*. Vertically formatted datasets are structured such that each row corresponds to the state of a single individual in two (if ahistorical) or three (if historical) consecutive times. The `verticalize3()` function handles this, creaing a *historical vertical dataset*. We can use one of two approaches for this task, both using this function. In the most general case, we may input all column names from the original dataset in each input option in the same order (corresponding to monitoring time). This allows any format of dataset to be used. However, an easier approach may be used in datasets with strictly repeating sets of columns. In this case, most of the inputs to this function's options constitute the names of the first variables coding for particular states. For example, `Seedling1988` is the first variable in the dataset coding for status as a juvenile, `Volume88` is the first variable coding for the main size metric, and `Intactseed88` is the first variable coding for fecundity. The dataset includes a repeating pattern of such variables organized as blocks of 9 variables for each year (noted as `blocksize`). There are 4 observation times (noted as `noyears`). We also have a repeated censor variable, the first of which is `Missing1988`, and we note here that we wish to censor the data and to keep data points with `NA` values in the censor term. The `patchidcol` and `individcol` terms are variables denoting which patch/subpopulation and individual each row of data belongs to, respectively. Finally, `stageassign` ties the dataset to the correct stageframe.</p>
+  <p style="text-indent: 20px">Next, we need to reorganize the dataset into *vertical format*. Vertically formatted datasets are structured such that each row corresponds to the state of a single individual in two (if ahistorical) or three (if historical) consecutive times. The `verticalize3()` function handles this, creating a *historical vertical dataset*. We can use one of two approaches for this task, both using this function. In the most general case, we may input all column names from the original dataset in each input option in the same order (corresponding to monitoring time). This allows any format of dataset to be used. However, an easier approach may be used in datasets with strictly repeating sets of columns. In this case, most of the inputs to this function's options constitute the names of the first variables coding for particular states. For example, `Seedling1988` is the first variable in the dataset coding for status as a juvenile, `Volume88` is the first variable coding for the main size metric, and `Intactseed88` is the first variable coding for fecundity. The dataset includes a repeating pattern of such variables organized as blocks of 9 variables for each year (noted as `blocksize`). There are 4 observation times (noted as `noyears`). We also have a repeated censor variable, the first of which is `Missing1988`, and we note here that we wish to censor the data and to keep data points with `NA` values in the censor term. The `patchidcol` and `individcol` terms are variables denoting which patch/subpopulation and individual each row of data belongs to, respectively. Finally, `stageassign` ties the dataset to the correct stageframe.</p>
 
 ```r
 lathvert <- verticalize3(lathyrus, noyears = 4, firstyear = 1988, 
@@ -130,7 +130,7 @@ dim(lathvert[which(lathvert$stage2 == "Dorm"),])
 
   <p style="text-indent: 20px">The `verticalize3()` function has made stage assignments for all individuals at each time. This can be seen in the subset summary in the `stage2index` column, which shows all individuals that are alive and have a size of 0 in time *t* to be in the 7th stage. Type `lathframe` and enter at the prompt to check that the 7th stage in the stageframe is really vegetative dormancy.</p>
 
-  <p style="text-indent: 20px">A further subset summary can teach us how reproduction is handled here. The reproductive status of flowering adults is set as reproductive in `lathframe`, and a subset summary of just those individuals flowerig in time *t* shows all of those individuals set to reproductive (see the distribution of values for `repstatus2` in the output below). However, fecundity ranges from 0 to above 60 (see `feca2`, which codes for fecundity in time *t*), meaning that some flowering adults do not actually produce any offspring. In fact, only 44.2% of flowering plants produced seed in time *t*. This has happened because our reproductive status variable, `FCODE88`, notes whether these individuals flowered but not whether they produced seed. Since this plant must be pollinated by an appropriate insect vector, some flowers should yield no seed. This issue does not cause problems in the creation of raw matrices, but it might cause difficulties in the creation of function-based matrices under some conditions. It helps to consider whether the definitions used for stages are appropriate, and so whether reproductive status must necessarily be associated with *successful* reproduction or merely the attempt. Here, we associate it with the latter, but in other vignettes we will reconsider this assumption.</p>
+  <p style="text-indent: 20px">A further subset summary can teach us how reproduction is handled here. The reproductive status of flowering adults is set as reproductive in `lathframe`, and a subset summary of just those individuals flowering in time *t* shows all of those individuals set to reproductive (see the distribution of values for `repstatus2` in the output below). However, fecundity ranges from 0 to above 60 (see `feca2`, which codes for fecundity in time *t*), meaning that some flowering adults do not actually produce any offspring. In fact, only 44.2% of flowering plants produced seed in time *t*. This has happened because our reproductive status variable, `FCODE88`, notes whether these individuals flowered but not whether they produced seed. Since this plant must be pollinated by an appropriate insect vector, some flowers should yield no seed. This issue does not cause problems in the creation of raw matrices, but it might cause difficulties in the creation of function-based matrices under some conditions. It helps to consider whether the definitions used for stages are appropriate, and so whether reproductive status must necessarily be associated with *successful* reproduction or merely the attempt. Here, we associate it with the latter, but in other vignettes we will reconsider this assumption.</p>
 
 ```r
 summary(lathvert[which(lathvert$stage2 == "Flo"),c(22:27)])
@@ -164,15 +164,18 @@ lathsupp2 <- supplemental(stage3 = c("Sd", "Sdl", "Sd", "Sdl"),
 #lathsupp2
 ```
   
-  <p style="text-indent: 20px">The supplemental table above will only work with ahistorical MPMs. The next supplemental table will work for historical MPMs. The primary difference is the incorporation of stage in time *t*-1. Going back a further step to look at time *t*-1 shows us that there are two ways that a dormant seed in time *t* can be a dormant seed in time *t*+1 - it could have been a dormant seed in time *t*-1, or it could have been produced by a flowering adult in time *t*-1. Likewise, a seed in time *t* could have become a seedling in time *t*+1 after being produced by a flowering adult in time *t*-1, or remaining in the seed bank in time *t*-1. So, we will enter 4 given transitions in the historical case, rather than 2 transitions as in the ahistorical case. Note the use of the `"rep"` and `"all"` designations in `Stage1` - these are abbreviations telling R to use all reproductive stages, or all stages in general, respectively.</p>
+  <p style="text-indent: 20px">The supplemental table above will only work with ahistorical MPMs. The next supplemental table will work for historical MPMs. The primary difference is the incorporation of stage in time *t*-1. Going back a further step to look at time *t*-1 shows us that there are two ways that a dormant seed in time *t* can be a dormant seed in time *t*+1 - it could have been a dormant seed in time *t*-1, or it could have been produced by a flowering adult in time *t*-1. Likewise, a seed in time *t* could have become a seedling in time *t*+1 after being produced by a flowering adult in time *t*-1, or remaining in the seed bank in time *t*-1. So, we will enter 4 given transitions in the historical case, rather than 2 transitions as in the ahistorical case. We will also designate that transitions from seed in time *t*-1 and seedling in time *t* to mature stages in time *t*+1 should actually originate from the `NotAlive` stage in time *t*-1, because the seed stage does not actually occur in the dataset and so function `rlefko3()` will not estimate these transitions without knowing the appropriate proxy set. Finally, note the use of the `"rep"`, `"mat"`, and `"npr"` designations in `Stage1` - these are abbreviations telling R to use all reproductive stages, all mature stages, or all non-propagule stages in general, respectively.</p>
 
 ```r
-lathsupp3 <- supplemental(stage3 = c("Sd", "Sd", "Sdl", "Sdl", "Sd", "Sdl"), 
-  stage2 = c("Sd", "Sd", "Sd", "Sd", "rep", "rep"),
-  stage1 = c("Sd", "rep", "Sd", "rep", "all", "all"), 
-  givenrate = c(0.345, 0.345, 0.054, 0.054, NA, NA),
-  multiplier = c(NA, NA, NA, NA, 0.345, 0.054),
-  type = c(1, 1, 1, 1, 3, 3), type_t12 = c(1, 2, 1, 2, 1, 1),
+lathsupp3 <- supplemental(stage3 = c("Sd", "Sd", "Sdl", "Sdl", "Sd", "Sdl", "mat"),
+  stage2 = c("Sd", "Sd", "Sd", "Sd", "rep", "rep", "Sdl"),
+  stage1 = c("Sd", "rep", "Sd", "rep", "npr", "npr", "Sd"),
+  eststage3 = c(NA, NA, NA, NA, NA, NA, "mat"),
+  eststage2 = c(NA, NA, NA, NA, NA, NA, "Sdl"),
+  eststage1 = c(NA, NA, NA, NA, NA, NA, "NotAlive"),
+  givenrate = c(0.345, 0.345, 0.054, 0.054, NA, NA, NA),
+  multiplier = c(NA, NA, NA, NA, 0.345, 0.054, NA),
+  type = c(1, 1, 1, 1, 3, 3, 1), type_t12 = c(1, 2, 1, 2, 1, 1, 1),
   stageframe = lathframe, historical = TRUE)
 #lathsupp3
 ```
@@ -185,7 +188,7 @@ lathsupp3 <- supplemental(stage3 = c("Sd", "Sd", "Sdl", "Sdl", "Sd", "Sdl"),
   
   <p style="text-indent: 20px">In `lefko3`, we provide a function that can be used to test for the effects of history directly from the historical vertical dataset: `modelsearch()`. This function is described in detail in the *Basic theory and concepts* vignette and in vignettes focused on function-based MPMs and IPMs. We provide only a barebones description here, focusing on how to test for the effects of history on demography.</p>
   
-  <p style="text-indent: 20px">Function `modelsearch()` estimates best-fit linear models of the key vital rates used to propagate elements in function-based MPMs. There are up to 9 different vital rates possible to test, of which 5 are adult vital rates and 4 are juvenile vital rates. The standard vital rates that we may wish to test are survival (marked as `surv` in `vitalrates`), size (`size`), and fecundity (`fec`), which are the default vital rates assumed by the function. Here, we also test observation status (`obs`), which can serve as a proxy for sprouting probability in cases where plants do not necessarily sprout. This dataset also includes juveniles whose vital rates we wish to estimate. We designate this by setting `juvestimate` to the correct juvenile stage to focus juvenile vital rate estimation on. Because size varies in juveniles, we set `juvsize = TRUE` (this setting defaults to FALSE, in which case size is not tested in juvenile vital rate models). To test history with function `modelsearch`: 1) use the historical vertical dataset as input, 2) set `historical = TRUE`, 3) input the relevant vital rates to estimate, 4) set the suite of independent factors to test (size and reproductive status in times *t* and *t*-1 and all interactions, or some subset thereof), 5) set the name of the juvenile stage (if juvenile vital rates are to be estimated and such stages occur in the dataset), 6) set the proper distributions to use for size and fecundity, and 7) note which variables code for individual identity (used to treat identity as a random factor in mixed linear models), patch identity (if multiple patches occur in the dataset and vital rates should be estimated with patch as a factor), and observation time. We also set `quiet = TRUE` to limit the amount of text output while the function runs.</p>
+  <p style="text-indent: 20px">Function `modelsearch()` estimates best-fit linear models of the key vital rates used to propagate elements in function-based MPMs. There are up to 9 different vital rates possible to test, of which 5 are adult vital rates and 4 are juvenile vital rates. The standard vital rates that we may wish to test are survival (marked as `surv` in `vitalrates`), size (`size`), and fecundity (`fec`), which are the default vital rates assumed by the function. Here, we also test observation status (`obs`), which can serve as a proxy for sprouting probability in cases where plants do not necessarily sprout, and reproductive status (`repst`), which assesses the probability of reproduction in cases where reproduction is not certain. This dataset also includes juveniles whose vital rates we wish to estimate. We designate this by setting `juvestimate` to the correct juvenile stage to focus juvenile vital rate estimation on. Because size varies in juveniles, we set `juvsize = TRUE` (this setting defaults to FALSE, in which case size is not tested in juvenile vital rate models). To test history with function `modelsearch`: 1) use the historical vertical dataset as input, 2) set `historical = TRUE`, 3) input the relevant vital rates to estimate, 4) set the suite of independent factors to test (size and reproductive status in times *t* and *t*-1 and all interactions, or some subset thereof), 5) set the name of the juvenile stage (if juvenile vital rates are to be estimated and such stages occur in the dataset), 6) set the proper distributions to use for size and fecundity, and 7) note which variables code for individual identity (used to treat identity as a random factor in mixed linear models), patch identity (if multiple patches occur in the dataset and vital rates should be estimated with patch as a factor), and observation time. We also set `quiet = TRUE` to limit the amount of text output while the function runs.</p>
 
 ```r
 histtest <- modelsearch(lathvert, historical = TRUE, suite = "size", 
@@ -193,8 +196,8 @@ histtest <- modelsearch(lathvert, historical = TRUE, suite = "size",
   sizedist = "gaussian", fecdist = "gaussian", indiv = "individ", 
   year = "year2", juvsize = TRUE, quiet = TRUE)
 #> Warning: Some predictor variables are on very different scales: consider rescaling
-#> Warning in checkConv(attr(opt, "derivs"), opt$par, ctrl = control$checkConv, : Model failed to converge with max|
-#> grad| = 0.0158034 (tol = 0.002, component 1)
+#> Warning in checkConv(attr(opt, "derivs"), opt$par, ctrl = control$checkConv, : Model failed to converge with max|grad| =
+#> 0.0158034 (tol = 0.002, component 1)
 #> Warning in checkConv(attr(opt, "derivs"), opt$par, ctrl = control$checkConv, : Model is nearly unidentifiable: very large eigenvalue
 #>  - Rescale variables?;Model is nearly unidentifiable: large eigenvalue ratio
 #>  - Rescale variables?
@@ -203,8 +206,8 @@ histtest <- modelsearch(lathvert, historical = TRUE, suite = "size",
 #> Warning: Some predictor variables are on very different scales: consider rescaling
 #> boundary (singular) fit: see ?isSingular
 #> Warning: Some predictor variables are on very different scales: consider rescaling
-#> Warning in checkConv(attr(opt, "derivs"), opt$par, ctrl = control$checkConv, : Model failed to converge with max|
-#> grad| = 0.0171506 (tol = 0.002, component 1)
+#> Warning in checkConv(attr(opt, "derivs"), opt$par, ctrl = control$checkConv, : Model failed to converge with max|grad| =
+#> 0.0171506 (tol = 0.002, component 1)
 #> Warning in checkConv(attr(opt, "derivs"), opt$par, ctrl = control$checkConv, : Model is nearly unidentifiable: very large eigenvalue
 #>  - Rescale variables?;Model is nearly unidentifiable: large eigenvalue ratio
 #>  - Rescale variables?
@@ -279,7 +282,7 @@ summary(ehrlen3)
 #> This historical lefkoMat object contains 2 matrices.
 #> 
 #> Each matrix is a square matrix with 49 rows and columns, and a total of 2401 elements.
-#> A total of 153 survival transitions were estimated, with 76.5 per matrix.
+#> A total of 158 survival transitions were estimated, with 79 per matrix.
 #> A total of 14 fecundity transitions were estimated, with 7 per matrix.
 #> 
 #> The dataset contains a total of 276 unique individuals and 2527 unique transitions.
@@ -377,7 +380,7 @@ ehrlen3mean$hstages
 ```r
 print(summary(colSums(ehrlen3mean$U[[1]])), digits = 3)
 #>    Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
-#>   0.000   0.500   0.922   0.726   1.000   1.000
+#>   0.000   0.500   0.952   0.759   1.000   1.000
 ```
 
   <p style="text-indent: 20px">Let's try another approach, looking at some conditional historical matrices. Conditional matrices are matrices showing transitions from stage at time *t* to time *t*+1, conditional on all individuals having been in the same stage in time *t*-1. They are calculated from historical MPMs, and the output below shows all conditional matrices developed from the first `$A` matrix of `ehrlen3mean`. The first matrix, for example, shows all transitions involving individuals that had been in the dormant seed stage `Sd` in time *t*-1, while the last matrix shows transitions involving individuals that had been vegetatively dormant in time *t*-1.</p>
@@ -451,19 +454,19 @@ writeLines("Deterministic historical: ")
 #> Deterministic historical:
 lambda3(ehrlen3red)
 #>   pop patch    lambda
-#> 1   1     1 0.8859389
-#> 2   1     1 0.9743043
+#> 1   1     1 0.8863882
+#> 2   1     1 0.9852582
 writeLines("Deterministic mean historical: ")
 #> Deterministic mean historical:
 lambda3(ehrlen3mean)
 #>   pop patch    lambda
-#> 1   1     1 0.9045179
+#> 1   1     1 0.9180775
 writeLines("Stochastic historical: ")
 #> Stochastic historical:
 set.seed(42)
 slambda3(ehrlen3red)
-#>   pop patch          a        var        sd          se
-#> 1   1     1 -0.1034961 0.02699276 0.1642947 0.001642947
+#>   pop patch           a        var        sd          se
+#> 1   1     1 -0.08893348 0.01748712 0.1322389 0.001322389
 ```
 
   <p style="text-indent: 20px">We can also examine the stable stage distributions, as follows for the ahistorical case. Our numbers here match those produced by package `popbio`'s `stable.stage()` function.</p>
@@ -494,8 +497,8 @@ ehrlen3mss <- stablestage3(ehrlen3mean)
 
 ```r
 ehrlen3mss$hist[which(ehrlen3mss$hist$ss_prop == max(ehrlen3mss$hist$ss_prop)),]
-#>    matrix stage_id_2 stage_id_1 stage_2 stage_1   ss_prop
-#> 20      1          1          6      Sd     Flo 0.2054264
+#>   matrix stage_id_2 stage_id_1 stage_2 stage_1   ss_prop
+#> 6      1          3          3      Tm      Tm 0.2406242
 ```
   
   <p style="text-indent: 20px">Here we see that about 21% of the population is expected to be composed of dormant seeds just produced in the preceding year. This provides an added nuance to the ahistorical results, since dormant seeds could also have been dormant in the preceding year. However, the population is expected to be composed of 13% dormant seeds that were previously dormant, suggesting that new dormant seeds should be more common. This very likely reflects the mortality of dormant seeds, which is assumed to be 65.5% annually.</p>
@@ -505,13 +508,13 @@ ehrlen3mss$hist[which(ehrlen3mss$hist$ss_prop == max(ehrlen3mss$hist$ss_prop)),]
 ```r
 ehrlen3mss$ahist
 #>   matrix stage_id stage    ss_prop
-#> 1      1        1    Sd 0.33209283
-#> 2      1        2   Sdl 0.05197975
-#> 3      1        3    Tm 0.17756451
-#> 4      1        4    Sm 0.19390999
-#> 5      1        5    La 0.08060995
-#> 6      1        6   Flo 0.11378527
-#> 7      1        7  Dorm 0.05005770
+#> 1      1        1    Sd 0.26017180
+#> 2      1        2   Sdl 0.04072254
+#> 3      1        3    Tm 0.29495112
+#> 4      1        4    Sm 0.19905587
+#> 5      1        5    La 0.06610243
+#> 6      1        6   Flo 0.09222965
+#> 7      1        7  Dorm 0.04676659
 ```
 
   <p style="text-indent: 20px">To see the impact of history on the stable stage distribution, let's plot the ahistorical and historically-corrected stable stage distributions together. We will also include the stochastic long-run stage distribution in our output, which is estimated with the same function (`stablestage3()`) but using the `stochastic = TRUE` option. This will allow us to see the impact of random temporal variation. We will also set the random seed to make our output reproducible.</p>
@@ -526,8 +529,9 @@ rownames(ss_put_together) <- ehrlen2mss$stage
 
 barplot(t(ss_put_together), beside=T, ylab = "Proportion", xlab = "Stage",
   ylim = c(0, 0.35), col = c("black", "orangered", "grey", "darkred"), bty = "n")
-legend("topright", c("det ahistorical", "det historical", "stoc ahistorical", "stoc historical"),
-  col = c("black", "orangered", "grey", "darkred"), pch = 15, bty = "n")
+legend("topright", c("det ahistorical", "det historical", "stoc ahistorical", 
+    "stoc historical"), pch = 22, col = "black",
+  pt.bg = c("black", "orangered", "grey", "darkred"), bty = "n")
 ```
 
 ![Figure 2.3. Deterministic and stochastic ahistorical vs. historically-corrected stable stage distributions](Ch2.28-1.png)
@@ -551,8 +555,9 @@ rownames(rv_put_together) <- ehrlen2mrv$stage
 barplot(t(rv_put_together), beside=T, ylab = "Relative reproductive value",
   ylim = c(0, 1.2), xlab = "Stage", col = c("black", "orangered", "grey", "darkred"),
   bty = "n")
-legend("topright", c("det ahist", "det hist", "stoc ahist", "stoc hist"),
-  col = c("black", "orangered", "grey", "darkred"), pch = 15, bty = "n")
+legend("topleft", c("det ahistorical", "det historical", "stoc ahistorical", 
+    "stoc historical"), pch = 22, col = "black",
+  pt.bg = c("black", "orangered", "grey", "darkred"), bty = "n")
 ```
 
 ![Figure 2.4. Ahistorical vs. historically-corrected reproductive values](Ch2.29-1.png)
@@ -574,17 +579,6 @@ text(cex=0.5, y = -0.18, x = seq(from = 0,
 ![Figure 2.5. Historical reproductive values](Ch2.30-1.png)
 
   <p style="text-indent: 20px">In the bar plot, the labels show the stages in the order of stage in time *t* followed by stage in time *t*-1. Examining these values reveals that the largest reproductive value is associated with flowering adults that were previously flowering, while the next largest reproductive value is associated with flowering adults that were previously small, and flowering adults that were previously very large. Interestingly, historical transitions to very large adult have lower reproductive value here than we might expect given the ahistorical analysis, in which they were predicted to have the second highest reproductive value.</p>
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
   
   <p style="text-indent: 20px">Now we will look at the sensitivities of $\lambda$ to the matrix elements. Here we conduct a deterministic sensitivity analysis on the ahistorical mean matrix.</p>
 
@@ -641,23 +635,23 @@ writeLines("\nThe highest sensitivity value among biologically plausible element
 #> 
 #> The highest sensitivity value among biologically plausible elements:
 max(ehrlen3sens$h_sensmats[[1]][which(ehrlen3mean$A[[1]] > 0)])
-#> [1] 0.2756227
+#> [1] 0.3139377
 writeLines("\nThis value is associated with element: ")
 #> 
 #> This value is associated with element:
 which(ehrlen3sens$h_sensmats[[1]] == max(ehrlen3sens$h_sensmats[[1]][which(ehrlen3mean$A[[1]] > 0)]))
-#> [1] 313
+#> [1] 157
 
 writeLines("\nThe highest historically-corrected sensitivity value among biologically plausible elements is: ")
 #> 
 #> The highest historically-corrected sensitivity value among biologically plausible elements is:
 max(ehrlen3sens$ah_sensmats[[1]][which(ehrlen2mean$A[[1]] > 0)])
-#> [1] 0.4885032
+#> [1] 0.6219494
 writeLines("\nThis occurs in element ")
 #> 
 #> This occurs in element
 which(ehrlen3sens$ah_sensmats[[1]] == max(ehrlen3sens$ah_sensmats[[1]][which(ehrlen2mean$A[[1]] > 0)]))
-#> [1] 27
+#> [1] 19
 ```
 
   <p style="text-indent: 20px">The maximum biologically plausible sensitivity value in the historical matrix appears to be element 313, which is associated with column 11 (small adult in time *t*-1 to small adult in time *t*) and row 13 (small adult in time *t* to flowering in time *t*+1). This transition is from small adult in times *t*-1 and *t* to flowering adult in *t*+1. The historically-corrected sensitivity analysis finds the $\lambda$ is most sensitive to the same element as in the ahistorical MPM. So, once again we see the importance of these two stages, but with greater resolution than was possible in the ahistorical case.</p>
@@ -684,7 +678,7 @@ writeLines("\nHighest stochastic sensitivity among biologically plausible elemen
 #> 
 #> Highest stochastic sensitivity among biologically plausible elements (historical):
 max(ehrlen3sens_s$h_sensmats[[1]][which(ehrlen3red$A[[1]] > 0)])
-#> [1] 0.3331156
+#> [1] 0.4041625
 writeLines("\nThis value is associated with element: ")
 #> 
 #> This value is associated with element:
@@ -695,12 +689,12 @@ writeLines("\nHighest stochastic sensitivity among biologically plausible elemen
 #> 
 #> Highest stochastic sensitivity among biologically plausible elements (historically-corrected):
 max(ehrlen3sens_s$ah_sensmats[[1]][which(ehrlen2mean$A[[1]] > 0)])
-#> [1] 0.5590864
+#> [1] 0.7965663
 writeLines("\nThis value is associated with element: ")
 #> 
 #> This value is associated with element:
 which(ehrlen3sens_s$ah_sensmats[[1]] == max(ehrlen3sens_s$ah_sensmats[[1]][which(ehrlen2mean$A[[1]] > 0)]))
-#> [1] 27
+#> [1] 19
 ```
 
   <p style="text-indent: 20px">Intriguingly, we find complete agreement in these baseline inferences between deterministic vs. stochastic analyses, and ahistorical vs. historical analyses.</p>
@@ -752,7 +746,7 @@ writeLines("\nThe highest deterministic elasticity value: ")
 #> 
 #> The highest deterministic elasticity value:
 max(ehrlen3elas$h_elasmats[[1]])
-#> [1] 0.1429071
+#> [1] 0.1716148
 writeLines("\nThis value is associated with element: ")
 #> 
 #> This value is associated with element:
@@ -767,33 +761,33 @@ which(ehrlen3elas$h_elasmats[[1]] == max(ehrlen3elas$h_elasmats[[1]]))
 ```r
 print(ehrlen3elas$ah_elasmats, digits = 3)
 #> [[1]]
-#>      [,1] [,2]    [,3]   [,4]    [,5]   [,6]    [,7]
-#> [1,]    0    0 0.00000 0.0000 0.00000 0.0000 0.00000
-#> [2,]    0    0 0.00000 0.0000 0.00000 0.0000 0.00000
-#> [3,]    0    0 0.16285 0.0369 0.00013 0.0000 0.00261
-#> [4,]    0    0 0.03816 0.1778 0.03268 0.0347 0.02064
-#> [5,]    0    0 0.00000 0.0342 0.05415 0.0653 0.01057
-#> [6,]    0    0 0.00000 0.0374 0.06812 0.1758 0.00532
-#> [7,]    0    0 0.00152 0.0177 0.00906 0.0108 0.00349
+#>         [,1]     [,2]    [,3]   [,4]     [,5]    [,6]    [,7]
+#> [1,] 0.00691 0.000000 0.00000 0.0000 0.00e+00 0.01148 0.00000
+#> [2,] 0.01148 0.000000 0.00000 0.0000 0.00e+00 0.00000 0.00000
+#> [3,] 0.00000 0.010613 0.19850 0.0344 8.31e-05 0.00000 0.00219
+#> [4,] 0.00000 0.000288 0.04493 0.1617 2.56e-02 0.02788 0.01908
+#> [5,] 0.00000 0.000000 0.00000 0.0306 4.54e-02 0.05420 0.00920
+#> [6,] 0.00000 0.000000 0.00000 0.0367 6.08e-02 0.16439 0.00498
+#> [7,] 0.00000 0.000576 0.00237 0.0162 7.43e-03 0.00891 0.00315
 ```
   
   <p style="text-indent: 20px">The historical matrices we used as input are reduced, but the historically-corrected output is in the original dimensions corresponding to the number of stages listed in the stageframe. This makes it easy to compare against the actual ahistorical elasticity matrix, for example by subtracting one matrix from the other to see the differences. We can also subtract the column sums in this exercise to assess overall shifts in the importance of stages.</p>
 
 ```r
 print((ehrlen3elas$ah_elasmats[[1]] - ehrlen2elas$ah_elasmats[[1]]), digits = 3)
-#>          [,1]     [,2]      [,3]     [,4]      [,5]     [,6]     [,7]
-#> [1,] -0.00655  0.00000  0.000000  0.00000  0.000000 -0.01162  0.00000
-#> [2,] -0.01162  0.00000  0.000000  0.00000  0.000000 -0.02063  0.00000
-#> [3,]  0.00000 -0.02784  0.011174  0.02056 -0.000390  0.00000 -0.00154
-#> [4,]  0.00000 -0.00127 -0.002939  0.01928  0.010574  0.01801 -0.00120
-#> [5,]  0.00000  0.00000 -0.000604  0.00518  0.005642  0.01208 -0.00687
-#> [6,]  0.00000  0.00000  0.000000  0.00208 -0.000497  0.00849 -0.00356
-#> [7,]  0.00000 -0.00315 -0.005658 -0.00464  0.000100  0.00018 -0.00279
+#>           [,1]      [,2]      [,3]     [,4]      [,5]      [,6]     [,7]
+#> [1,]  0.000361  0.000000  0.000000  0.00000  0.000000 -0.000146  0.00000
+#> [2,] -0.000146  0.000000  0.000000  0.00000  0.000000 -0.020630  0.00000
+#> [3,]  0.000000 -0.017223  0.046820  0.01803 -0.000437  0.000000 -0.00196
+#> [4,]  0.000000 -0.000979  0.003827  0.00309  0.003531  0.011179 -0.00275
+#> [5,]  0.000000  0.000000 -0.000604  0.00158 -0.003081  0.001022 -0.00824
+#> [6,]  0.000000  0.000000  0.000000  0.00138 -0.007814 -0.002951 -0.00389
+#> [7,]  0.000000 -0.002574 -0.004807 -0.00618 -0.001527 -0.001748 -0.00313
 writeLines("\nColumn sums of differences:")
 #> 
 #> Column sums of differences:
 colSums((ehrlen3elas$ah_elasmats[[1]] - ehrlen2elas$ah_elasmats[[1]]))
-#> [1] -0.018169024 -0.032252189  0.001972272  0.042457907  0.015428755  0.006513259 -0.015950980
+#> [1]  0.0002153035 -0.0207764215  0.0452352007  0.0178973180 -0.0093278680 -0.0132751497 -0.0199683829
 ```
 
   <p style="text-indent: 20px">Accounting for history shows $\lambda$ to be less elastic in response to early-life transitions, transitions from vegetative dormancy, and fecundity than suggested by ahistorical matrices, but more elastic in response to changes in survival-transitions in small, very large, and flowering adults.</p>
@@ -811,8 +805,9 @@ rownames(elas_put_together) <- ehrlen2elas$ah_stages$stage
 
 barplot(t(elas_put_together), beside=T, ylab = "Elasticity", xlab = "Stage",
   col = c("black", "orangered", "grey", "darkred"), bty = "n")
-legend("topleft", c("det ahist", "det hist", "sto ahist", "sto hist"), 
-  col = c("black", "orangered", "grey", "darkred"), pch = 15, bty = "n")
+legend("topleft", c("det ahistorical", "det historical", "stoc ahistorical", 
+    "stoc historical"), pch = 22, col = "black",
+  pt.bg = c("black", "orangered", "grey", "darkred"), bty = "n")
 ```
 
 ![Figure 2.6. Ahistorical vs. historically-corrected deterministic and stochastic elasticity to stages](Ch2.40-1.png)
@@ -835,8 +830,9 @@ rownames(elas_sums_together) <- ehrlen2elas_sums$ahist$category
 
 barplot(t(elas_sums_together), beside=T, ylab = "Elasticity",
   xlab = "Transition", col = c("black", "orangered", "grey", "darkred"), bty = "n")
-legend("topright", c("det ahist", "det hist", "sto ahist", "sto hist"),
-  col = c("black", "orangered", "grey", "darkred"), pch = 15, bty = "n")
+legend("topright", c("det ahistorical", "det historical", "stoc ahistorical", 
+    "stoc historical"), pch = 22, col = "black",
+  pt.bg = c("black", "orangered", "grey", "darkred"), bty = "n")
 ```
 
 ![Figure 2.7. Ahistorical vs. historically-corrected deterministic and stochastic elasticity to transitions](Ch2.41-1.png)
