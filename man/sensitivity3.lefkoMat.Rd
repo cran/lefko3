@@ -4,7 +4,14 @@
 \alias{sensitivity3.lefkoMat}
 \title{Estimate Sensitivity of Population Growth Rate of a lefkoMat Object}
 \usage{
-\method{sensitivity3}{lefkoMat}(mats, stochastic = FALSE, steps = 10000, time_weights = NA, ...)
+\method{sensitivity3}{lefkoMat}(
+  mats,
+  stochastic = FALSE,
+  steps = 10000,
+  time_weights = NA,
+  sparse = "auto",
+  ...
+)
 }
 \arguments{
 \item{mats}{An object of class \code{lefkoMat}.}
@@ -18,6 +25,10 @@ Defaults to 10,000.}
 
 \item{time_weights}{Numeric vector denoting the probabilistic weightings of
 annual matrices. Defaults to equal weighting among times.}
+
+\item{sparse}{A text string indicating whether to use sparse matrix encoding
+(\code{"yes"}) or dense matrix encoding (\code{"no"}). Defaults to
+\code{"auto"}.}
 
 \item{...}{Other parameters.}
 }

@@ -4,22 +4,20 @@
 \alias{stablestage3.matrix}
 \title{Estimate Stable Stage Distribution of a Single Population Projection Matrix}
 \usage{
-\method{stablestage3}{matrix}(mats, ...)
+\method{stablestage3}{matrix}(mats, sparse = "auto", ...)
 }
 \arguments{
 \item{mats}{A population projection matrix of class \code{matrix}.}
+
+\item{sparse}{A text string indicating whether to use sparse matrix encoding
+(\code{"yes"}) or dense matrix encoding (\code{"no"}). Defaults to
+\code{"auto"}.}
 
 \item{...}{Other parameters.}
 }
 \value{
 This function returns the stable stage distribution corresponding to
-the input matrix. For square matrices with fewer than 400 rows, the stable
-stage distribution is given as the right eigenvector associated with largest
-real part of the eigenvalues estimated for the matrix via the
-\code{eig_gen}() function in the C++ Armadillo library, divided by the sum of
-the associated right eigenvector. For larger matrices, the matrix is assumed
-to be sparse and the calculation is conducted similarly but using
-\code{eig_gens}() instead.
+the input matrix.
 }
 \description{
 \code{stablestage3.matrix()} returns the stable stage distribution for a 

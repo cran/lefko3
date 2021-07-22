@@ -4,21 +4,23 @@
 \alias{lambda3.lefkoMat}
 \title{Estimate Deterministic Population Growth Rates of lefkoMat Matrices}
 \usage{
-\method{lambda3}{lefkoMat}(mats)
+\method{lambda3}{lefkoMat}(mats, sparse = "auto", ...)
 }
 \arguments{
 \item{mats}{An object of class \code{lefkoMat}.}
+
+\item{sparse}{A text string indicating whether to use sparse matrix encoding
+(\code{"yes"}) or dense matrix encoding (\code{"no"}). Defaults to
+\code{"auto"}.}
+
+\item{...}{Other parameters.}
 }
 \value{
 This function returns the dominant eigenvalue of each \code{$A}
-matrix in \code{mats}. For square matrices with fewer than 400 rows, this is
-given as the largest real part of all eigenvalues estimated via the
-\code{eig_gen}() function in the C++ Armadillo library. For larger matrices,
-the function assumes that matrices are sparse and uses \code{eigs_gen}()
-instead (the function handles all conversions automatically). The output
-includes a data frame showing the population, patch, and lambda estimate for
-each \code{$A} matrix. Row names correspond to the order of the matrix within
-the \code{$A} element of \code{mats}.
+matrix in \code{mats}. The output includes a data frame showing the
+population, patch, and lambda estimate for each \code{$A} matrix. Row names
+correspond to the order of the matrix within the \code{$A} element of
+\code{mats}.
 }
 \description{
 \code{lambda3.lefkoMat()} returns the dominant eigenvalues of all projection
@@ -26,6 +28,17 @@ matrices supplied within \code{lefkoMat} objects. This function can handle
 large and sparse matrices, and so can be used with large historical matrices,
 IPMs, age x stage matrices, as well as smaller ahistorical matrices.
 }
+\section{Notes}{
+
+The \code{sparse} option allows the function to utilize underlying methods
+of either dense or sparse matrix manipulation in order to speed up processing
+time and prevent memory shortages. Under the \code{auto} setting, the
+function will determine whether the matrix is sparse and act accordingly.
+For extremely large, sparse matrices, the user may simply set
+\code{sparse = "yes"} to save time further and force the use of sparse format
+in calculations.
+}
+
 \examples{
 # Lathyrus example
 data(lathyrus)
@@ -121,4 +134,6 @@ lambda3(cypmatrix2r)
 \code{\link{lambda3}()}
 
 \code{\link{lambda3.matrix}()}
+
+\code{\link{slambda3}()}
 }

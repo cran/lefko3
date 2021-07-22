@@ -657,72 +657,55 @@ List decomp3sp(arma::mat Amat) {
   return output;
 }
 
-//' Estimate Deterministic Population Growth Rate of a Dense Matrix
+//' Estimate Deterministic Population Growth Rate of Any Matrix
 //' 
 //' \code{lambda3matrix()} returns the dominant eigenvalue of a single
-//' dense projection matrix.
+//' dense or sparse projection matrix.
 //' 
 //' @param Amat A population projection matrix of class \code{matrix}.
+//' @param sparse A logical value indicating whether to use sparse matrix
+//' format.
 //'
 //' @return This function returns the dominant eigenvalue of the matrix. This
 //' is given as the largest real part of all eigenvalues estimated via the 
-//' \code{eig_gen}() function in the C++ Armadillo library.
+//' \code{eig_gen}() and \code{eigs_gen}() functions in the C++ Armadillo
+//' library.
 //' 
 //' @keywords internal
 //' @noRd
 // [[Rcpp::export]]
-double lambda3matrix(arma::mat Amat) {
+double lambda3matrix(arma::mat Amat, bool sparse) {
   
-  List eigenstuff = decomp3(Amat);
+  double lambda {0};
   
-  cx_vec Eigenvals = eigenstuff["eigenvalues"];
-  arma::vec realeigenvals = real(Eigenvals);
-  
-  double lambda = max(realeigenvals);
-  
-  return lambda;
-}
-
-//' Estimate Deterministic Population Growth Rate of a Sparse Matrix
-//' 
-//' \code{lambda3matrixsp()} returns the dominant eigenvalue of a single
-//' sparse projection matrix. This function can handle large and sparse 
-//' matrices, and so can be used with large historical matrices, IPMs, 
-//' age x stage matrices, as well as smaller ahistorical matrices.
-//' 
-//' @param Amat A population projection matrix of class \code{matrix}.
-//'
-//' @return This function returns the dominant eigenvalue of the matrix. This
-//' is given as the largest real part of all eigenvalues estimated via the 
-//' \code{eigs_gen}() function in the C++ Armadillo library.
-//' 
-//' @keywords internal
-//' @noRd
-// [[Rcpp::export]]
-double lambda3matrixsp(arma::mat Amat) {
-  
-  List eigenstuff = decomp3sp(Amat);
-  
-  cx_vec Eigenvals = eigenstuff["eigenvalues"];
-  arma::vec realeigenvals = real(Eigenvals);
-  
-  double lambda = max(realeigenvals);
+  if (!sparse) {
+    List eigenstuff = decomp3(Amat);
+    
+    arma::vec realeigenvals = real(as<arma::cx_vec>(eigenstuff["eigenvalues"]));
+    
+    lambda = max(realeigenvals);
+  } else {
+    List eigenstuff = decomp3sp(Amat);
+    
+    arma::vec realeigenvals = real(as<arma::cx_vec>(eigenstuff["eigenvalues"]));
+    
+    lambda = max(realeigenvals);
+  }
   
   return lambda;
 }
 
-//' Estimate Stable Stage Distribution of a Dense Population Matrix
+//' Estimate Stable Stage Distribution of Any Population Matrix
 //' 
 //' \code{ss3matrix()} returns the stable stage distribution for a 
-//' dense population matrix.
+//' dense or sparse population matrix.
 //' 
 //' @param Amat A population projection matrix of class \code{matrix}.
+//' @param sparse A logical value indicating whether to use sparse or dense
+//' format in matrix calculations.
 //' 
 //' @return This function returns the stable stage distribution corresponding to
-//' the input matrix. The stable stage distribution is given as the right 
-//' eigenvector associated with largest real part of the eigenvalues estimated 
-//' for the matrix via the \code{eig_gen}() function in the C++ Armadillo 
-//' library, divided by the sum of the associated right eigenvector. 
+//' the input matrix.
 //' 
 //' @seealso \code{\link{stablestage3}()}
 //' @seealso \code{\link{stablestage3.lefkoMat}()}
@@ -730,95 +713,44 @@ double lambda3matrixsp(arma::mat Amat) {
 //' @keywords internal
 //' @noRd
 // [[Rcpp::export]]
-arma::vec ss3matrix(arma::mat Amat) {
+arma::vec ss3matrix(arma::mat Amat, bool sparse) {
+  List eigenstuff;
   
-  List eigenstuff = decomp3(Amat);
+  if (sparse) {
+    eigenstuff = decomp3sp(Amat);
+  } else {
+    eigenstuff = decomp3(Amat);
+  }
   
-  cx_vec Eigenvals = eigenstuff["eigenvalues"];
-  arma::vec realeigenvals = real(Eigenvals);
+  arma::vec realeigenvals = real(as<arma::cx_vec>(eigenstuff["eigenvalues"]));
   
   int lambda1 = realeigenvals.index_max();
   
-  cx_mat rightvec = eigenstuff["right_eigenvectors"];
-  arma::vec realrightvec = real(rightvec.col(lambda1));
+  arma::vec realrightvec = real(as<arma::cx_mat>(eigenstuff["right_eigenvectors"]).col(lambda1));
   realrightvec.clean(0.0000000001); // This line replaces all numbers lower than 1 x 10-10 with 0
   
   double rvsum = sum(realrightvec);
-  int rvel = realrightvec.n_elem;
+  realrightvec = realrightvec / rvsum;
   
-  arma::vec wcorr (rvel);
-  
-  for (int i = 0; i < rvel; i++) {
-    wcorr(i) = realrightvec(i) / rvsum;
-  }
-  
-  return wcorr;
+  return realrightvec;
 }
 
-//' Estimate Stable Stage Distribution of a Sparse Population Matrix
-//' 
-//' \code{ss3matrixsp()} returns the stable stage distribution for a 
-//' sparse population matrix. This function can handle large and sparse 
-//' matrices, and so can be used with large historical matrices, IPMs, 
-//' age x stage matrices, as well as smaller ahistorical matrices.
-//' 
-//' @param Amat A population projection matrix of class \code{matrix}.
-//' 
-//' @return This function returns the stable stage distribution corresponding to
-//' the input matrix. The stable stage distribution is given as the right
-//' eigenvector associated with largest real part of the eigenvalues estimated
-//' for the matrix via the \code{eigs_gen}() function in the C++ Armadillo
-//' library, divided by the sum of the associated right eigenvector. 
-//' 
-//' @seealso \code{\link{stablestage3}()}
-//' @seealso \code{\link{stablestage3.lefkoMat}()}
-//' 
-//' @keywords internal
-//' @noRd
-// [[Rcpp::export]]
-arma::vec ss3matrixsp(arma::mat Amat) {
-  
-  List eigenstuff = decomp3sp(Amat);
-  
-  cx_vec Eigenvals = eigenstuff["eigenvalues"];
-  arma::vec realeigenvals = real(Eigenvals);
-  
-  int lambda1 = realeigenvals.index_max();
-  
-  cx_mat rightvec = eigenstuff["right_eigenvectors"];
-  arma::vec realrightvec = real(rightvec.col(lambda1));
-  realrightvec.clean(0.0000000001); // This line replaces all numbers lower than 1 x 10-10 with 0
-  
-  double rvsum = sum(realrightvec);
-  int rvel = realrightvec.n_elem;
-  
-  arma::vec wcorr (rvel);
-  
-  for (int i = 0; i < rvel; i++) {
-    wcorr(i) = realrightvec(i) / rvsum;
-  }
-  
-  return wcorr;
-}
-
-//' Estimate Reproductive Value of a Dense Population Matrix
+//' Estimate Reproductive Value of Any Population Matrix
 //' 
 //' \code{rv3matrix()} returns the reproductive values for stages in a
-//' dense population matrix. The function provides standard reproductive
-//' values, meaning that the overall reproductive values of basic life
-//' history stages in a historical matrix are not provided (the
+//' dense or sparse population matrix. The function provides standard
+//' reproductive values, meaning that the overall reproductive values of basic
+//' life history stages in a historical matrix are not provided (the
 //' \code{\link{repvalue3.lefkoMat}()} function estimates these on the basis
 //' of stage description information provided in the \code{lefkoMat} object
 //' used as input in that function).
 //' 
 //' @param Amat A population projection matrix.
+//' @param sparse A logical value indicating whether to use sparse or dense
+//' format in matrix calculations.
 //' 
 //' @return This function returns a vector characterizing the
-//' reproductive values for stages of a population projection matrix. This is
-//' given as the left eigenvector associated with largest real part of the
-//' dominant eigenvalue estimated via the \code{eig_gen}() function in the C++
-//' Armadillo library, divided by the first non-zero element of the left
-//' eigenvector. 
+//' reproductive values for stages of a population projection matrix.
 //' 
 //' @seealso \code{\link{repvalue3}()}
 //' @seealso \code{\link{repvalue3.lefkoMat}()}
@@ -826,222 +758,91 @@ arma::vec ss3matrixsp(arma::mat Amat) {
 //' @keywords internal
 //' @noRd
 // [[Rcpp::export]]
-arma::vec rv3matrix(arma::mat Amat) {
+arma::vec rv3matrix(arma::mat Amat, bool sparse) {
+  List eigenstuff;
   
-  List eigenstuff = decomp3(Amat);
+  if (sparse) {
+    eigenstuff = decomp3sp(Amat);
+  } else {
+    eigenstuff = decomp3(Amat);
+  }
   
-  cx_vec Eigenvals = eigenstuff["eigenvalues"];
-  arma::vec realeigenvals = real(Eigenvals);
+  arma::vec realeigenvals = real(as<arma::cx_vec>(eigenstuff["eigenvalues"]));
   
   int lambda1 = realeigenvals.index_max();
   
-  cx_mat leftvec = eigenstuff["left_eigenvectors"];
-  arma::vec realleftvec = real(leftvec.col(lambda1));
+  arma::vec realleftvec = real(as<arma::cx_mat>(eigenstuff["left_eigenvectors"]).col(lambda1));
   realleftvec.clean(0.0000000001); // This line replaces all numbers lower than 1 x 10-10 with 0
-  arma::vec rlvabs = abs(realleftvec);
-  
+
   // This section identifies the first non-zero element of the reproductive value vector
-  arma::uvec rlvabsalt = find(rlvabs);
-  int rlvminelem = rlvabsalt(0);
-  double rlvmin = realleftvec(rlvminelem);
+  arma::uvec rlvabsalt = find(realleftvec);
+  double rlvmin = realleftvec(static_cast<unsigned long long>(rlvabsalt(0)));
   
-  int lvel = realleftvec.n_elem;
+  realleftvec = realleftvec / rlvmin;
   
-  arma::vec vcorr (lvel);
-  
-  for (int i = 0; i < lvel; i++) {
-    vcorr(i) = realleftvec(i) / rlvmin;
-  }
-  
-  return vcorr;
+  return realleftvec;
 }
 
-//' Estimate Reproductive Value of a Sparse Population Matrix
-//' 
-//' \code{rv3matrixsp()} returns the reproductive values for stages in a 
-//' sparse population matrix. The function provides standard reproductive 
-//' values, meaning that the overall reproductive values of basic life 
-//' history stages in a historical matrix are not provided (the 
-//' \code{\link{repvalue3.lefkoMat}()} function estimates these on the basis 
-//' of stage description information provided in the \code{lefkoMat} object 
-//' used as input in that function). This function can handle large and 
-//' sparse matrices, and so can be used with large historical matrices, IPMs, 
-//' age x stage matrices, as well as smaller ahistorical 
-//' matrices.
-//' 
-//' @param Amat A population projection matrix.
-//' 
-//' @return This function returns a vector characterizing the
-//' reproductive values for stages of a population projection matrix. This is
-//' given as the left eigenvector associated with largest real part of the
-//' dominant eigenvalue estimated via the \code{eigs_gen}() function in the C++
-//' Armadillo library, divided by the first non-zero element of the left
-//' eigenvector. 
-//' 
-//' @seealso \code{\link{repvalue3}()}
-//' @seealso \code{\link{repvalue3.lefkoMat}()}
-//' 
-//' @keywords internal
-//' @noRd
-// [[Rcpp::export]]
-arma::vec rv3matrixsp(arma::mat Amat) {
-  
-  List eigenstuff = decomp3sp(Amat);
-  
-  cx_vec Eigenvals = eigenstuff["eigenvalues"];
-  arma::vec realeigenvals = real(Eigenvals);
-  
-  int lambda1 = realeigenvals.index_max();
-  
-  cx_mat leftvec = eigenstuff["left_eigenvectors"];
-  arma::vec realleftvec = real(leftvec.col(lambda1));
-  realleftvec.clean(0.0000000001); // This line replaces all numbers lower than 1 x 10-10 with 0
-  arma::vec rlvabs = abs(realleftvec);
-  
-  // This section identifies the first non-zero element of the reproductive value vector
-  arma::uvec rlvabsalt = find(rlvabs);
-  int rlvminelem = rlvabsalt(0);
-  double rlvmin = realleftvec(rlvminelem);
-  
-  int lvel = realleftvec.n_elem;
-  
-  arma::vec vcorr (lvel);
-  
-  for (int i = 0; i < lvel; i++) {
-    vcorr(i) = realleftvec(i) / rlvmin;
-  }
-  
-  return vcorr;
-}
-
-//' Estimate Deterministic Sensitivities of a Dense Population Matrix
+//' Estimate Deterministic Sensitivities of Any Population Matrix
 //' 
 //' \code{sens3matrix()} returns the sensitivity of lambda with respect
-//' to each element in a dense matrix. This is accomplished via the
-//' \code{eig_gen}() function in the C++ Armadillo library.
+//' to each element in a dense or sparse matrix. This is accomplished via the
+//' \code{eig_gen}() and \code{eigs_gen}() functions in the C++ Armadillo
+//' library.
 //' 
 //' @param Amat A population projection matrix.
+//' @param sparse A logical value indicating whether to use sparse or dense
+//' format in matrix calculations.
 //' 
 //' @return This function returns a matrix of sensitivities. 
 //' 
 //' @keywords internal
 //' @noRd
 // [[Rcpp::export]]
-arma::mat sens3matrix(arma::mat Amat) {
+arma::mat sens3matrix(arma::mat Amat, bool sparse) {
+  List eigenstuff;
   
-  List eigenstuff = decomp3(Amat);
+  if (sparse) {
+    eigenstuff = decomp3sp(Amat);
+  } else {
+    eigenstuff = decomp3(Amat);
+  }
   
-  cx_vec Eigenvals = eigenstuff["eigenvalues"];
-  arma::vec realeigenvals = real(Eigenvals);
+  arma::vec realeigenvals = real(as<arma::cx_vec>(eigenstuff["eigenvalues"]));
   
   int lambda1 = realeigenvals.index_max();
   
   // This is the w vector
-  cx_mat rightvec = eigenstuff["right_eigenvectors"];
-  arma::vec realrightvec = real(rightvec.col(lambda1));
-  realrightvec.clean(0.00000000000001); // This line replaces all numbers lower than 1 x 10-14 with 0
+  arma::vec realrightvec = real(as<arma::cx_mat>(eigenstuff["right_eigenvectors"]).col(lambda1));
+  realrightvec.clean(0.00000000000001); // This line replaces all numbers lower than 1 x 10-10 with 0
   
   double rvsum = sum(realrightvec);
   int rvel = realrightvec.n_elem;
+  realrightvec = realrightvec / rvsum;
   
   // This is the v vector
-  cx_mat leftvec = eigenstuff["left_eigenvectors"];
-  arma::vec realleftvec = real(leftvec.col(lambda1));
-  realleftvec.clean(0.00000000000001); // This line replaces all numbers lower than 1 x 10-14 with 0
-  arma::vec rlvabs = abs(realleftvec);
-  
-  arma::uvec rlvabsalt = find(rlvabs);
-  int rlvminelem = rlvabsalt(0);
-  double rlvmin = realleftvec(rlvminelem);
-  
-  arma::vec wcorr (rvel);
-  arma::vec vcorr (rvel);
-  arma::vec vwprod (rvel);
-  arma::mat smat (rvel, rvel);
-  smat.zeros();
-  
-  // This loop and the following line create the scalar product vw
-  for (int i = 0; i < rvel; i++) {
-    wcorr(i) = realrightvec(i) / rvsum;
-    vcorr(i) = realleftvec(i) / rlvmin;
-    
-    vwprod(i) = wcorr(i) * vcorr(i);
-  }
-  
-  double vwscalar = sum(vwprod);
-  
-  // This loop populates the sensitivity matrix
-  for (int i = 0; i < rvel; i++) {
-    for (int j = 0; j < rvel; j++) {
-      
-      smat(i, j) = vcorr(i) * wcorr(j) / vwscalar;
-    }
-  }
-  
-  return smat;
-}
+  arma::vec realleftvec = real(as<arma::cx_mat>(eigenstuff["left_eigenvectors"]).col(lambda1));
+  realleftvec.clean(0.00000000000001); // This line replaces all numbers lower than 1 x 10-10 with 0
 
-//' Estimate Deterministic Sensitivities of a Sparse Population Matrix
-//' 
-//' \code{sens3matrixsp()} returns the sensitivity of lambda with respect
-//' to each element in a sparse matrix. This is accomplished via the
-//' \code{eig_gen}() function in the C++ Armadillo library.
-//' 
-//' @param Amat A population projection matrix.
-//' 
-//' @return This function returns a matrix of sensitivities. 
-//' 
-//' @keywords internal
-//' @noRd
-// [[Rcpp::export]]
-arma::mat sens3matrixsp(arma::mat Amat) {
+  // This section identifies the first non-zero element of the reproductive value vector
+  arma::uvec rlvabsalt = find(realleftvec);
+  double rlvmin = realleftvec(static_cast<unsigned long long>(rlvabsalt(0)));
+  realleftvec = realleftvec / rlvmin;
   
-  List eigenstuff = decomp3sp(Amat);
-  
-  cx_vec Eigenvals = eigenstuff["eigenvalues"];
-  arma::vec realeigenvals = real(Eigenvals);
-  
-  int lambda1 = realeigenvals.index_max();
-  
-  // This is the w vector
-  cx_mat rightvec = eigenstuff["right_eigenvectors"];
-  arma::vec realrightvec = real(rightvec.col(lambda1));
-  realrightvec.clean(0.00000000000001); // This line replaces all numbers lower than 1 x 10-14 with 0
-  
-  double rvsum = sum(realrightvec);
-  int rvel = realrightvec.n_elem;
-  
-  // This is the v vector
-  cx_mat leftvec = eigenstuff["left_eigenvectors"];
-  arma::vec realleftvec = real(leftvec.col(lambda1));
-  realleftvec.clean(0.00000000000001); // This line replaces all numbers lower than 1 x 10-14 with 0
-  arma::vec rlvabs = abs(realleftvec);
-  
-  arma::uvec rlvabsalt = find(rlvabs);
-  int rlvminelem = rlvabsalt(0);
-  double rlvmin = realleftvec(rlvminelem);
-  
-  arma::vec wcorr (rvel);
-  arma::vec vcorr (rvel);
   arma::vec vwprod (rvel);
   arma::mat smat (rvel, rvel);
   smat.zeros();
   
   // This loop and the following line create the scalar product vw
   for (int i = 0; i < rvel; i++) {
-    wcorr(i) = realrightvec(i) / rvsum;
-    vcorr(i) = realleftvec(i) / rlvmin;
-    
-    vwprod(i) = wcorr(i) * vcorr(i);
+    vwprod(i) = realrightvec(i) * realleftvec(i);
   }
-  
   double vwscalar = sum(vwprod);
   
   // This loop populates the sensitivity matrix
   for (int i = 0; i < rvel; i++) {
     for (int j = 0; j < rvel; j++) {
-      
-      smat(i, j) = vcorr(i) * wcorr(j) / vwscalar;
+      smat(i, j) = realleftvec(i) * realrightvec(j) / vwscalar;
     }
   }
   
@@ -1076,35 +877,29 @@ List sens3hlefko(arma::mat Amat, DataFrame ahstages, DataFrame hstages) {
   
   List eigenstuff = decomp3sp(Amat);
   
-  cx_vec Eigenvals = eigenstuff["eigenvalues"];
-  arma::vec realeigenvals = real(Eigenvals);
+  arma::vec realeigenvals = real(as<arma::cx_vec>(eigenstuff["eigenvalues"]));
   
-  //double lambda = max(realeigenvals);
   int lambda1 = realeigenvals.index_max();
   
   // This is the w vector
-  cx_mat rightvec = eigenstuff["right_eigenvectors"];
-  arma::vec realrightvec = real(rightvec.col(lambda1));
-  arma::vec rrvabs = abs(realrightvec);
-  rrvabs.clean(0.00000000000001); // This line replaces all numbers lower than 1 x 10-14 with 0
-
-  double rvsum = sum(rrvabs);
-  int rvel = rrvabs.n_elem;
+  arma::vec realrightvec = real(as<arma::cx_mat>(eigenstuff["right_eigenvectors"]).col(lambda1));
+  realrightvec.clean(0.00000000000001); // Using a lower threshold than previously here
+  
+  double rvsum = sum(realrightvec);
+  int rvel = realrightvec.n_elem;
+  realrightvec = realrightvec / rvsum;
   
   // This is the v vector
-  cx_mat leftvec = eigenstuff["left_eigenvectors"];
-  arma::vec realleftvec = real(leftvec.col(lambda1));
-  arma::vec rlvabs = abs(realleftvec);
-  rlvabs.clean(0.00000000000001); // This line replaces all numbers lower than 1 x 10-14 with 0
-  
-  arma::uvec rlvabsalt = find(rlvabs);
-  int rlvminelem = rlvabsalt(0);
-  double rlvmin = realleftvec(rlvminelem);
+  arma::vec realleftvec = real(as<arma::cx_mat>(eigenstuff["left_eigenvectors"]).col(lambda1));
+  realleftvec.clean(0.00000000000001); // Using a lower threshold than previously here
+
+  // This section identifies the first non-zero element of the reproductive value vector
+  arma::uvec rlvabsalt = find(realleftvec);
+  double rlvmin = realleftvec(static_cast<unsigned long long>(rlvabsalt(0)));
+  realleftvec = realleftvec / rlvmin;
   
   int ahstagelength = stage_id.n_elem;
   
-  arma::vec wcorr (rvel);
-  arma::vec vcorr (rvel);
   arma::vec vwprod (rvel);
   arma::mat smat (rvel, rvel);
   smat.zeros();
@@ -1119,23 +914,19 @@ List sens3hlefko(arma::mat Amat, DataFrame ahstages, DataFrame hstages) {
   ahsens.zeros();
   
   int ahrows {0};
-  //int ahcols {0};
-  
+
   // This loop and the following line create the scalar product vw and the ahistorical stable stage distribution w
   for (int i = 0; i < rvel; i++) {
-    wcorr(i) = rrvabs(i) / rvsum;
-    vcorr(i) = rlvabs(i) / rlvmin;
-    
-    vwprod(i) = wcorr(i) * vcorr(i);
+    vwprod(i) = realrightvec(i) * realleftvec(i);
     
     ahrows = h_stage_2(i) - 1;
     
-    wcorrah(ahrows) = wcorrah(ahrows) + wcorr(i);
+    wcorrah(ahrows) = wcorrah(ahrows) + realrightvec(i);
   }
   
   double vwscalar = sum(vwprod);
   
-  // This loop and the following line create the scalar product vw and the ahistorical stable stage distribution w
+  // This loop creates a corrected reproductive value vector
   for (int i = 0; i < rvel; i++) {
     ahrows = h_stage_2(i) - 1;
     
@@ -1147,18 +938,17 @@ List sens3hlefko(arma::mat Amat, DataFrame ahstages, DataFrame hstages) {
     }
   }
   
-  // These next two loops populate the historical and ahistorical sensitivity matrices
+  // This loop populates the sensitivity matrix
   for (int i = 0; i < rvel; i++) {
     for (int j = 0; j < rvel; j++) {
-      
-      smat(i, j) = vcorr(i) * wcorr(j) / vwscalar;
+      smat(i, j) = realleftvec(i) * realrightvec(j) / vwscalar;
     }
   }
   
+  // This next section creates the ahistorical sensitivity matrix
   for (int i = 0; i < ahstagelength; i++) {
     vwprodah(i) = wcorrah(i) * vcorrah(i);
   }
-  
   double vwscalarah = sum(vwprodah);
   
   for (int i = 0; i < ahstagelength; i++) {
@@ -1172,143 +962,74 @@ List sens3hlefko(arma::mat Amat, DataFrame ahstages, DataFrame hstages) {
   return output;
 }
 
-//' Estimate Deterministic Elasticities of a Dense Population Matrix
+//' Estimate Deterministic Elasticities of Any Population Matrix
 //' 
 //' \code{elas3matrix()} returns the elasticity of lambda with respect
-//' to each element in a dense matrix. This is accomplished via the
-//' \code{eig_gen}() function in the C++ Armadillo library.
+//' to each element in a dense or sparse matrix. This is accomplished via the
+//' \code{eig_gen}() and \code{eigs_gen}() functions in the C++ Armadillo
+//' library.
 //' 
 //' @param Amat A population projection matrix.
+//' @param sparse A logical value indicating whether to use sparse or dense
+//' format in matrix calculations.
 //' 
 //' @return This function returns a matrix of elasticities. 
 //' 
 //' @keywords internal
 //' @noRd
 // [[Rcpp::export]]
-arma::mat elas3matrix(arma::mat Amat) {
+arma::mat elas3matrix(arma::mat Amat, bool sparse) {
+  List eigenstuff;
   
-  List eigenstuff = decomp3(Amat);
+  if (sparse) {
+    eigenstuff = decomp3sp(Amat);
+  } else {
+    eigenstuff = decomp3(Amat);
+  }
   
-  cx_vec Eigenvals = eigenstuff["eigenvalues"];
-  arma::vec realeigenvals = real(Eigenvals);
+  arma::vec realeigenvals = real(as<arma::cx_vec>(eigenstuff["eigenvalues"]));
   
-  double lambda = max(realeigenvals);
   int lambda1 = realeigenvals.index_max();
-  
+  double lambda = max(realeigenvals);
+
   // This is the w vector
-  cx_mat rightvec = eigenstuff["right_eigenvectors"];
-  arma::vec realrightvec = real(rightvec.col(lambda1));
-  realrightvec.clean(0.00000000000001); // This line replaces all numbers lower than 1 x 10-14 with 0
+  arma::vec realrightvec = real(as<arma::cx_mat>(eigenstuff["right_eigenvectors"]).col(lambda1));
+  realrightvec.clean(0.00000000000001); // Lower threshold than used in w and v
   
   double rvsum = sum(realrightvec);
   int rvel = realrightvec.n_elem;
-  
+  realrightvec = realrightvec / rvsum;
+
   // This is the v vector
-  cx_mat leftvec = eigenstuff["left_eigenvectors"];
-  arma::vec realleftvec = real(leftvec.col(lambda1));
-  realleftvec.clean(0.00000000000001); // This line replaces all numbers lower than 1 x 10-14 with 0
-  arma::vec rlvabs = abs(realleftvec);
-  
-  arma::uvec rlvabsalt = find(rlvabs);
-  int rlvminelem = rlvabsalt(0);
-  double rlvmin = realleftvec(rlvminelem);
-  
-  arma::vec wcorr (rvel);
-  arma::vec vcorr (rvel);
+  arma::vec realleftvec = real(as<arma::cx_mat>(eigenstuff["left_eigenvectors"]).col(lambda1));
+  realleftvec.clean(0.00000000000001); // Lower threshold than used in w and v
+
+  // This section identifies the first non-zero element of the reproductive value vector
+  arma::uvec rlvabsalt = find(realleftvec);
+  double rlvmin = realleftvec(static_cast<unsigned long long>(rlvabsalt(0)));
+  realleftvec = realleftvec / rlvmin;
+
   arma::vec vwprod (rvel);
   arma::mat emat (rvel, rvel);
   emat.zeros();
   
   // This loop and the following line create the scalar product vw
   for (int i = 0; i < rvel; i++) {
-    wcorr(i) = realrightvec(i) / rvsum;
-    vcorr(i) = realleftvec(i) / rlvmin;
-    
-    vwprod(i) = wcorr(i) * vcorr(i);
+    vwprod(i) = realrightvec(i) * realleftvec(i);
   }
-  
   double vwscalar = sum(vwprod);
   
   // This loop populates the elasticity matrix
   for (int i = 0; i < rvel; i++) {
     for (int j = 0; j < rvel; j++) {
-      
-      emat(i, j) = (vcorr(i) * wcorr(j) * Amat(i, j)) / (vwscalar * lambda);
+      emat(i, j) = (realleftvec(i) * realrightvec(j) * Amat(i, j)) / (vwscalar * lambda);
     }
   }
   
   return emat;
 }
 
-//' Estimate Deterministic Elasticities of a Sparse Population Matrix
-//' 
-//' \code{elas3matrixsp()} returns the elasticity of lambda with respect
-//' to each element in a sparse matrix. This is accomplished via the
-//' \code{eigs_gen}() function in the C++ Armadillo library.
-//' 
-//' @param Amat A population projection matrix.
-//' 
-//' @return This function returns a matrix of elasticities. 
-//' 
-//' @keywords internal
-//' @noRd
-// [[Rcpp::export]]
-arma::mat elas3matrixsp(arma::mat Amat) {
-  
-  List eigenstuff = decomp3sp(Amat);
-  
-  cx_vec Eigenvals = eigenstuff["eigenvalues"];
-  arma::vec realeigenvals = real(Eigenvals);
-  
-  double lambda = max(realeigenvals);
-  int lambda1 = realeigenvals.index_max();
-  
-  // This is the w vector
-  cx_mat rightvec = eigenstuff["right_eigenvectors"];
-  arma::vec realrightvec = real(rightvec.col(lambda1));
-  realrightvec.clean(0.00000000000001); // This line replaces all numbers lower than 1 x 10-14 with 0
-  
-  double rvsum = sum(realrightvec);
-  int rvel = realrightvec.n_elem;
-  
-  // This is the v vector
-  cx_mat leftvec = eigenstuff["left_eigenvectors"];
-  arma::vec realleftvec = real(leftvec.col(lambda1));
-  realleftvec.clean(0.00000000000001); // This line replaces all numbers lower than 1 x 10-14 with 0
-  arma::vec rlvabs = abs(realleftvec);
-  
-  arma::uvec rlvabsalt = find(rlvabs);
-  int rlvminelem = rlvabsalt(0);
-  double rlvmin = realleftvec(rlvminelem);
-  
-  arma::vec wcorr (rvel);
-  arma::vec vcorr (rvel);
-  arma::vec vwprod (rvel);
-  arma::mat emat (rvel, rvel);
-  emat.zeros();
-  
-  // This loop and the following line create the scalar product vw
-  for (int i = 0; i < rvel; i++) {
-    wcorr(i) = realrightvec(i) / rvsum;
-    vcorr(i) = realleftvec(i) / rlvmin;
-    
-    vwprod(i) = wcorr(i) * vcorr(i);
-  }
-  
-  double vwscalar = sum(vwprod);
-  
-  // This loop populates the elasticity matrix
-  for (int i = 0; i < rvel; i++) {
-    for (int j = 0; j < rvel; j++) {
-      
-      emat(i, j) = (vcorr(i) * wcorr(j) * Amat(i, j)) / (vwscalar * lambda);
-    }
-  }
-  
-  return emat;
-}
-
-//' Estimate Deterministic Elasticities of a Historical LefkoMod Object
+//' Estimate Deterministic Elasticities of a Historical LefkoMat Object
 //' 
 //' \code{elas3hlefko()} returns the elasticity of lambda with respect
 //' to each historical stage-pair in the matrix, and the summed elasticities
@@ -1335,67 +1056,53 @@ List elas3hlefko(arma::mat Amat, DataFrame ahstages, DataFrame hstages) {
   
   List eigenstuff = decomp3sp(Amat);
   
-  cx_vec Eigenvals = eigenstuff["eigenvalues"];
-  arma::vec realeigenvals = real(Eigenvals);
-  
-  double lambda = max(realeigenvals);
+  arma::vec realeigenvals = real(as<arma::cx_vec>(eigenstuff["eigenvalues"]));
   int lambda1 = realeigenvals.index_max();
+  double lambda = max(realeigenvals);
   
   // This is the w vector
-  cx_mat rightvec = eigenstuff["right_eigenvectors"];
-  arma::vec realrightvec = real(rightvec.col(lambda1));
-  realrightvec.clean(0.00000000000001); // This line replaces all numbers lower than 1 x 10-14 with 0
+  arma::vec realrightvec = real(as<arma::cx_mat>(eigenstuff["right_eigenvectors"]).col(lambda1));
+  realrightvec.clean(0.00000000000001);
   
   double rvsum = sum(realrightvec);
   int rvel = realrightvec.n_elem;
-  
+  realrightvec = realrightvec / rvsum;
+
   // This is the v vector
-  cx_mat leftvec = eigenstuff["left_eigenvectors"];
-  arma::vec realleftvec = real(leftvec.col(lambda1));
-  realleftvec.clean(0.00000000000001); // This line replaces all numbers lower than 1 x 10-14 with 0
-  arma::vec rlvabs = abs(realleftvec);
-  
-  arma::uvec rlvabsalt = find(rlvabs);
-  int rlvminelem = rlvabsalt(0);
-  double rlvmin = realleftvec(rlvminelem);
-  
-  arma::vec wcorr (rvel);
-  arma::vec vcorr (rvel);
+  arma::vec realleftvec = real(as<arma::cx_mat>(eigenstuff["left_eigenvectors"]).col(lambda1));
+  realleftvec.clean(0.00000000000001);
+
+  // This section identifies the first non-zero element of the reproductive value vector
+  arma::uvec rlvabsalt = find(realleftvec);
+  double rlvmin = realleftvec(static_cast<unsigned long long>(rlvabsalt(0)));
+  realleftvec = realleftvec / rlvmin;
+
   arma::vec vwprod (rvel);
   arma::mat emat (rvel, rvel);
   emat.zeros();
   
   // This loop and the following line create the scalar product vw
   for (int i = 0; i < rvel; i++) {
-    wcorr(i) = realrightvec(i) / rvsum;
-    vcorr(i) = realleftvec(i) / rlvmin;
-    
-    vwprod(i) = wcorr(i) * vcorr(i);
+    vwprod(i) = realrightvec(i) * realleftvec(i);
   }
-  
   double vwscalar = sum(vwprod);
   
   // The next few lines set up the empty ahistorical matrix
   int ahstagelength = stage_id.n_elem;
-  
-  int ahrows {0};
-  int ahcols {0};
-  
+
   arma::mat ahelas(ahstagelength, ahstagelength);
   ahelas.zeros();
   
-  // This loop populates the historical and ahistorical elasticity matrices
+  // This loop populates the elasticity matrix
   for (int i = 0; i < rvel; i++) {
     for (int j = 0; j < rvel; j++) {
       
-      emat(i, j) = (vcorr(i) * wcorr(j) * Amat(i, j)) / (vwscalar * lambda);
+      emat(i, j) = (realleftvec(i) * realrightvec(j) * Amat(i, j)) / (vwscalar * lambda);
       
-      ahrows = h_stage_2(i) - 1;
-      ahcols = h_stage_1(i) - 1;
-      
-      ahelas(ahrows, ahcols) = ahelas(ahrows, ahcols) + emat(i, j);
+      ahelas((h_stage_2(i) - 1), (h_stage_1(i) - 1)) = ahelas((h_stage_2(i) - 1), (h_stage_1(i) - 1)) + emat(i, j);
     }
   }
+  
   List output = List::create(Named("h_emat") = emat, _["ah_emat"] = ahelas);
   
   return output;
@@ -1404,7 +1111,7 @@ List elas3hlefko(arma::mat Amat, DataFrame ahstages, DataFrame hstages) {
 //' Core Time-based Population Matrix Projection Function
 //' 
 //' Function \code{proj3()} runs the matrix projections used in other functions
-//' in package \code{lefko3}. Provides the population vector output only.
+//' in package \code{lefko3}.
 //' 
 //' @param start_mat The starting matrix for the projection.
 //' @param start_vec The starting population vector for the projection.
@@ -1431,8 +1138,6 @@ List elas3hlefko(arma::mat Amat, DataFrame ahstages, DataFrame hstages) {
 //' projection).
 //' 
 //' @section Notes:
-//' This function uses dense matrix approaches except for sparse matrices with
-//' over 400 rows, which are projected using sparse matrix multiplication.
 //' 
 //' @keywords internal
 //' @noRd
@@ -1444,10 +1149,8 @@ arma::mat proj3(arma::vec start_vec, List core_list, arma::uvec mat_order,
   
   int nostages = start_vec.n_elem;
   int theclairvoyant = mat_order.n_elem;
-  arma::vec thechosenone;
-  arma::rowvec thechosentwo;
   arma::vec theseventhson;
-  arma::vec theseventhgrandson;
+  arma::rowvec theseventhgrandson;
   arma::mat theprophecy;
   arma::mat thesecondprophecy;
   
@@ -1460,19 +1163,17 @@ arma::mat proj3(arma::vec start_vec, List core_list, arma::uvec mat_order,
   vpopproj.zeros();
   Rvecmat.zeros();
   
-  thechosenone = start_vec;
-  thechosentwo = start_vec.as_row();
+  theseventhson = start_vec;
+  theseventhgrandson = start_vec.as_row();
   
   arma::mat finaloutput;
   
   // Here we will check if the matrix is large and sparse
-  arma::mat testmat = core_list(0);
-  int test_rows = testmat.n_rows;
-  int test_elems = testmat.n_elem;
-  arma::uvec nonzero_elems = find(testmat);
+  int test_elems = as<arma::mat>(core_list(0)).n_elem;
+  arma::uvec nonzero_elems = find(as<arma::mat>(core_list(0)));
   int all_nonzeros = nonzero_elems.n_elem;
   double sparse_check = static_cast<double>(all_nonzeros) / static_cast<double>(test_elems);
-  if (sparse_check <= 0.5 && test_rows > 400) {
+  if (sparse_check <= 0.5) {
     sparse_switch = 1;
   } else sparse_switch = 0;
   
@@ -1488,30 +1189,29 @@ arma::mat proj3(arma::vec start_vec, List core_list, arma::uvec mat_order,
     for (int i = 0; i < theclairvoyant; i++) {
       theprophecy = as<arma::mat>(core_list[(mat_order(i))]);
       
-      theseventhson = theprophecy * thechosenone;
+      theseventhson = theprophecy * theseventhson; // thechosenone
       if (integeronly) {
         theseventhson = floor(theseventhson);
       }
       popproj.col(i+1) = theseventhson;
       
+      if (!growthonly) Rvecmat(i+1) = sum(theseventhson);
+      
       if (standardize) {
-        thechosenone = theseventhson / sum(theseventhson);
-      } else {
-        thechosenone = theseventhson;
+        theseventhson = theseventhson / sum(theseventhson);
       }
       
       if (!growthonly) {
-        wpopproj.col(i+1) = thechosenone;
-        Rvecmat(i+1) = sum(theseventhson);
+        wpopproj.col(i+1) = theseventhson;
         
         thesecondprophecy = as<arma::mat>(core_list[(mat_order(theclairvoyant - (i+1)))]);
-        arma::rowvec theseventhrow = thechosentwo * thesecondprophecy;
+        theseventhgrandson = theseventhgrandson * thesecondprophecy;
         
-        theseventhgrandson = theseventhrow.as_col();
+        double seventhgrandsum = sum(theseventhgrandson);
+        arma::vec midwife = theseventhgrandson.as_col() / seventhgrandsum;
         
-        thechosentwo = theseventhrow / sum(theseventhrow);
+        theseventhgrandson = theseventhgrandson / seventhgrandsum;
         
-        arma::vec  midwife = theseventhgrandson / sum(theseventhgrandson);
         vpopproj.col(theclairvoyant - (i+1)) = midwife;
       }
     }
@@ -1534,30 +1234,29 @@ arma::mat proj3(arma::vec start_vec, List core_list, arma::uvec mat_order,
     for (int i = 0; i < theclairvoyant; i++) {
       sparse_prophecy = as<arma::sp_mat>(sparse_list[(mat_order(i))]);
       
-      theseventhson = sparse_prophecy * thechosenone;
+      theseventhson = sparse_prophecy * theseventhson;
       if (integeronly) {
         theseventhson = floor(theseventhson);
       }
       popproj.col(i+1) = theseventhson;
       
+      if (!growthonly) Rvecmat(i+1) = sum(theseventhson);
+      
       if (standardize) {
-        thechosenone = theseventhson / sum(theseventhson);
-      } else {
-        thechosenone = theseventhson;
+        theseventhson = theseventhson / sum(theseventhson);
       }
       
       if (!growthonly) {
-        wpopproj.col(i+1) = thechosenone;
-        Rvecmat(i+1) = sum(theseventhson);
+        wpopproj.col(i+1) = theseventhson;
         
         sparse_secondprophecy = as<arma::sp_mat>(sparse_list[(mat_order(theclairvoyant - (i+1)))]);
-        arma::rowvec theseventhrow = thechosentwo * sparse_secondprophecy;
+        theseventhgrandson = theseventhgrandson * sparse_secondprophecy;
         
-        theseventhgrandson = theseventhrow.as_col();
+        double seventhgrandsum = sum(theseventhgrandson);
+        arma::vec  midwife = theseventhgrandson.as_col() / seventhgrandsum;
         
-        thechosentwo = theseventhrow / sum(theseventhrow);
+        theseventhgrandson = theseventhgrandson / seventhgrandsum;
         
-        arma::vec  midwife = theseventhgrandson / sum(theseventhgrandson);
         vpopproj.col(theclairvoyant - (i+1)) = midwife;
       }
     }
@@ -1577,9 +1276,9 @@ arma::mat proj3(arma::vec start_vec, List core_list, arma::uvec mat_order,
 //' 
 //' Function \code{projection3()} projects the population forward in time by
 //' a user-defined number of time steps. Projections may be deterministic or
-//' stochastic. If deterministic, then projections will be cyclical if mjultiple
-//' years of matrices exist for each population or patch. If stochastic, then
-//' annual matrices will be shuffled within patches and populations.
+//' stochastic. If deterministic, then projections will be cyclical if matrices
+//' exist covering multiple times for each population or patch. If stochastic,
+//' then annual matrices will be shuffled within patches and populations.
 //' 
 //' @param mpm A matrix projection model of class \code{lefkoMat}, or a list of
 //' full matrix projection matrices.
@@ -1734,7 +1433,7 @@ Rcpp::List projection3(List mpm, int times = 10000, bool stochastic = false,
   theclairvoyant = times;
   
   if (theclairvoyant < 1) {
-    stop("Option times must equal a positive integer.");
+    throw Rcpp::exception("Option times must equal a positive integer.", false);
   }
   
   arma::uvec theprophecy(theclairvoyant);
@@ -1761,7 +1460,7 @@ Rcpp::List projection3(List mpm, int times = 10000, bool stochastic = false,
     }
     
     if (labels.length() < 3) {
-      stop("Function 'slambda3' requires annual matrices. This lefkoMat object appears to be a set of mean matrices, and lacks annual matrices.");
+      throw Rcpp::exception("Function 'slambda3' requires annual matrices. This lefkoMat object appears to be a set of mean matrices, and lacks annual matrices.", false);
     }
     
     StringVector poporder = labels["pop"];
@@ -1788,7 +1487,7 @@ Rcpp::List projection3(List mpm, int times = 10000, bool stochastic = false,
     
     if (tweights.isNotNull()) {
       if (as<NumericVector>(tweights).length() != yl) {
-        stop("Time weight vector must be the same length as the number of times represented in the lefkoMat object used as input.");
+        throw Rcpp::exception("Time weight vector must be the same length as the number of times represented in the lefkoMat object used as input.", false);
       }
       twinput = as<arma::vec>(tweights);
     } else {
@@ -1835,8 +1534,8 @@ Rcpp::List projection3(List mpm, int times = 10000, bool stochastic = false,
         agestages, stageframe, 1, 1);
     }
     
-    // Here we take the matrices corresponding to each individual patch, run the simulation, and
-    // estimate all descriptive metrics
+    // Here we take the matrices corresponding to each individual patch, run the
+    // simulation, and estimate all descriptive metrics
     List meanamats = mean_lefkomat["A"];
     List mmlabels = mean_lefkomat["labels"];
     StringVector mmpops = mmlabels["pop"];
@@ -1854,7 +1553,7 @@ Rcpp::List projection3(List mpm, int times = 10000, bool stochastic = false,
     
     if (start_vec.isNotNull()) {
       if (as<NumericVector>(start_vec).length() != meanmatrows) {
-        stop("Start vector must be the same length as the number of rows in each matrix.");
+        throw Rcpp::exception("Start vector must be the same length as the number of rows in each matrix.", false);
       }
       startvec = as<arma::vec>(start_vec);
     } else {
@@ -1998,12 +1697,12 @@ Rcpp::List projection3(List mpm, int times = 10000, bool stochastic = false,
     arma::vec twinput;
     
     if (matrows != matcols) {
-      stop("Supplied matrices must be square. Please check matrix dimensions and fix.");
+      throw Rcpp::exception("Supplied matrices must be square. Please check matrix dimensions and fix.", false);
     }
     
     if (tweights.isNotNull()) {
       if (as<NumericVector>(tweights).length() != yl) {
-        stop("Time weight vector must be the same length as the number of times represented in the lefkoMat object used as input.");
+        throw Rcpp::exception("Time weight vector must be the same length as the number of times represented in the lefkoMat object used as input.", false);
       }
       twinput = as<arma::vec>(tweights);
     } else {
@@ -2013,7 +1712,7 @@ Rcpp::List projection3(List mpm, int times = 10000, bool stochastic = false,
     
     if (start_vec.isNotNull()) {
       if (as<NumericVector>(start_vec).length() != matrows) {
-        stop("Start vector must be the same length as the number of rows in each matrix.");
+        throw Rcpp::exception("Start vector must be the same length as the number of rows in each matrix.", false);
       }
       startvec = as<arma::vec>(start_vec);
     } else {
@@ -2193,11 +1892,12 @@ DataFrame slambda3(List mpm, int times = 10000,
   Nullable<NumericVector> tweights = R_NilValue) {
   
   int theclairvoyant {0};
+  int sparse_switch {0};
   
   theclairvoyant = times;
   
   if (theclairvoyant < 1) {
-    stop("Option must equal a positive integer.");
+    throw Rcpp::exception("Option must equal a positive integer.", false);
   }
   
   if (!Rf_isMatrix(mpm[0])) {
@@ -2217,8 +1917,17 @@ DataFrame slambda3(List mpm, int times = 10000,
       historical = false;
     }
     
+    // Here we will check if the matrix is large and sparse
+    int test_elems = as<arma::mat>(amats(0)).n_elem;
+    arma::uvec nonzero_elems = find(as<arma::mat>(amats(0)));
+    int all_nonzeros = nonzero_elems.n_elem;
+    double sparse_check = static_cast<double>(all_nonzeros) / static_cast<double>(test_elems);
+    if (sparse_check <= 0.5) {
+      sparse_switch = 1;
+    } else sparse_switch = 0;
+  
     if (labels.length() < 3) {
-      stop("Function 'slambda3' requires annual matrices. This lefkoMat object appears to be a set of mean matrices, and lacks annual matrices.");
+      throw Rcpp::exception("Function 'slambda3' requires annual matrices. This lefkoMat object appears to be a set of mean matrices, and lacks annual matrices.", false);
     }
     
     StringVector poporder = labels["pop"];
@@ -2245,7 +1954,7 @@ DataFrame slambda3(List mpm, int times = 10000,
     
     if (tweights.isNotNull()) {
       if (as<NumericVector>(tweights).length() != yl) {
-        stop("Time weight vector must be the same length as the number of times represented in the lefkoMat object used as input.");
+        throw Rcpp::exception("Time weight vector must be the same length as the number of times represented in the lefkoMat object used as input.", false);
       }
       twinput = as<arma::vec>(tweights);
     } else {
@@ -2299,9 +2008,8 @@ DataFrame slambda3(List mpm, int times = 10000,
     StringVector mmpops = mmlabels["pop"];
     StringVector mmpatches = mmlabels["patch"];
     
-    arma::mat thechosenone = as<arma::mat>(meanamats[0]);
-    int meanmatsize = thechosenone.n_elem;
-    int meanmatrows = thechosenone.n_rows;
+    int meanmatsize = as<arma::mat>(meanamats[0]).n_elem; // thechosenone
+    int meanmatrows = as<arma::mat>(meanamats[0]).n_rows; // thechosenone
     arma::vec startvec;
     int trials = meanamats.length();
     
@@ -2324,16 +2032,10 @@ DataFrame slambda3(List mpm, int times = 10000,
     arma::vec tweights_corr = twinput / sum(twinput);
     
     for (int i= 0; i < allppcsnem; i++) {
-      thechosenone = as<arma::mat>(meanamats[i]);
-      
       arma::uvec thenumbersofthebeast = find(ppcindex == allppcs(i));
       arma::uvec theprophecy = Rcpp::RcppArmadillo::sample(thenumbersofthebeast, theclairvoyant, true, tweights_corr);
       
-      if (historical == true) {
-        startvec = ss3matrixsp(thechosenone);
-      } else {
-        startvec = ss3matrix(thechosenone);
-      }
+      startvec = ss3matrix(as<arma::mat>(meanamats[i]), sparse_switch); // thechosenone
       
       arma::mat projection = proj3(startvec, amats, theprophecy, 1, 1, 0);
       
@@ -2360,13 +2062,7 @@ DataFrame slambda3(List mpm, int times = 10000,
       pop_est = trials - allppcsnem;
       
       for (int i = 0; i < pop_est; i++) { // This loop goes through each population
-        thechosenone = as<arma::mat>(meanamats[allppcsnem + i]);
-        
-        if (historical == true) {
-          startvec = ss3matrixsp(thechosenone);
-        } else {
-          startvec = ss3matrix(thechosenone);
-        }
+        startvec = ss3matrix(as<arma::mat>(meanamats[allppcsnem + i]), sparse_switch); // thechosenone
         
         for (int j = 0; j < loysize; j++) { // This checks which A matrices match the current population in the loop
           if (poporder(j) == allpops(i)) {
@@ -2439,6 +2135,15 @@ DataFrame slambda3(List mpm, int times = 10000,
     
     List amats = mpm;
     
+    // Here we will check if the matrix is large and sparse
+    int test_elems = as<arma::mat>(amats(0)).n_elem;
+    arma::uvec nonzero_elems = find(as<arma::mat>(amats(0)));
+    int all_nonzeros = nonzero_elems.n_elem;
+    double sparse_check = static_cast<double>(all_nonzeros) / static_cast<double>(test_elems);
+    if (sparse_check <= 0.5) {
+      sparse_switch = 1;
+    } else sparse_switch = 0;
+  
     int yl = amats.length();
     arma::mat firstmat = as<arma::mat>(amats[0]);
     int matrows = firstmat.n_rows;
@@ -2460,26 +2165,25 @@ DataFrame slambda3(List mpm, int times = 10000,
     arma::vec twinput;
     
     if (matrows != matcols) {
-      stop("Supplied matrices must be square. Please check matrix dimensions and fix.");
+      throw Rcpp::exception("Supplied matrices must be square. Please check matrix dimensions and fix.", false);
     }
     
     if (tweights.isNotNull()) {
       if (as<NumericVector>(tweights).length() != yl) {
-        stop("Time weight vector must be the same length as the number of times represented in the lefkoMat object used as input.");
+        throw Rcpp::exception("Time weight vector must be the same length as the number of times represented in the lefkoMat object used as input.", false);
       }
       twinput = as<arma::vec>(tweights);
     } else {
       twinput.resize(yl);
       twinput.ones();
-    } // At the end of this, we have an arma::vec holding with whatever the user supplied, or a 1 for each time
+    } // At the end of this, we have an arma::vec holding whatever the user supplied, or a 1 for each time
     
     // Now we create the mean matrix
     arma::mat thechosenone(matrows, matcols);
     thechosenone.zeros();
     
     for (int i = 0; i < yl; i++) {
-      arma::mat columnified = as<arma::mat>(amats[i]);
-      thechosenone = thechosenone + (columnified / yl);
+      thechosenone = thechosenone + (as<arma::mat>(amats[i]) / yl);
     }
     
     // Here we take the matrices corresponding to each individual patch, run the simulation, and
@@ -2504,11 +2208,7 @@ DataFrame slambda3(List mpm, int times = 10000,
     arma::uvec thenumbersofthebeast = uniqueyears;
     arma::uvec theprophecy = Rcpp::RcppArmadillo::sample(thenumbersofthebeast, theclairvoyant, true, tweights_corr);
     
-    if (historical == true) {
-      startvec = ss3matrixsp(thechosenone);
-    } else {
-      startvec = ss3matrix(thechosenone);
-    }
+    startvec = ss3matrix(thechosenone, sparse_switch);
     
     arma::mat projection = proj3(startvec, amats, theprophecy, 1, 1, 0);
     
@@ -2552,8 +2252,8 @@ DataFrame slambda3(List mpm, int times = 10000,
 //' pop-patches occur in the input). Two such cubes are only provided when a
 //' historical lefkoMat object is used as input, in which case the first
 //' element is the historical sensitivity/elasticity matrix, and the second is
-// the ahistorical sensitivity/elasticity matrix.
-//'
+//' the ahistorical sensitivity/elasticity matrix.
+//' 
 //' @section Notes:
 //' Weightings given in \code{tweights} do not need to sum to 1. Final
 //' weightings used will be based on the proportion per element of the sum of
@@ -2574,7 +2274,7 @@ Rcpp::List stoch_senselas(List mpm, int times = 10000, int style = 1,
   theclairvoyant = times;
   
   if (theclairvoyant < 1) {
-    stop("Option must equal a positive integer.");
+    throw Rcpp::exception("Option must equal a positive integer.", false);
   }
   
   List projlist = List::create(Named("delete") = 1);
@@ -2594,9 +2294,7 @@ Rcpp::List stoch_senselas(List mpm, int times = 10000, int style = 1,
     StringVector ahstages_name = stageframe["stage"];
     int ahstages_num = ahstages_id.n_elem;
     
-    // arma::uvec hstages_id1(ahstages_num * ahstages_num);
     arma::uvec hstages_id2(ahstages_num * ahstages_num);
-    // hstages_id1.zeros();
     hstages_id2.zeros();
     int hstages_num {0};
     
@@ -2617,7 +2315,7 @@ Rcpp::List stoch_senselas(List mpm, int times = 10000, int style = 1,
     }
     
     if (labels.length() < 3) {
-      warning("This function requires annual matrices as input. This lefkoMat object appears to be a set of mean matrices, and may lack annual matrices.");
+      Rf_warningcall(R_NilValue, "This function requires annual matrices as input. This lefkoMat object appears to be a set of mean matrices, and may lack annual matrices.");
     }
     
     StringVector poporder = labels["pop"];
@@ -2646,7 +2344,7 @@ Rcpp::List stoch_senselas(List mpm, int times = 10000, int style = 1,
     
     if (tweights.isNotNull()) {
       if (as<NumericVector>(tweights).length() != yl) {
-        stop("Time weight vector must be the same length as the number of times represented in the lefkoMat object used as input.");
+        throw Rcpp::exception("Time weight vector must be the same length as the number of times represented in the lefkoMat object used as input.", false);
       }
       twinput = as<arma::vec>(tweights);
     } else {
@@ -2703,10 +2401,8 @@ Rcpp::List stoch_senselas(List mpm, int times = 10000, int style = 1,
     StringVector mmpops = mmlabels["pop"];
     StringVector mmpatches = mmlabels["patch"];
     
-    arma::mat thechosenone = as<arma::mat>(meanamats[0]); // This sets the size of the matrix, using the first mean matrix as a proxy only
-    arma::mat thechosentwo = as<arma::mat>(meanamats[0]);
-    int meanmatsize = thechosenone.n_elem;
-    int meanmatrows = thechosenone.n_rows;
+    int meanmatsize = as<arma::mat>(meanamats[0]).n_elem; // thechosenone
+    int meanmatrows = as<arma::mat>(meanamats[0]).n_rows; // thechosenone
     arma::vec startvec(meanmatrows);
     startvec.ones();
     startvec = startvec / meanmatrows; // This is the start vector for w and v calculations
@@ -2738,8 +2434,6 @@ Rcpp::List stoch_senselas(List mpm, int times = 10000, int style = 1,
     arma::vec tweights_corr = twinput_corr;
     
     for (int i= 0; i < allppcsnem; i++) { // This loop goes through each pop-patch
-      thechosenone = as<arma::mat>(meanamats[i]);
-
       arma::uvec theprophecy = theprophecy_allyears;
       theprophecy.zeros();
       
@@ -2774,37 +2468,21 @@ Rcpp::List stoch_senselas(List mpm, int times = 10000, int style = 1,
       vprojection_ah.zeros();
       
       // Here we run the control loop to create the w and v values we need
-      arma::vec theprophesizedvector;
-      arma::vec theprophesizedsecondvector;
-      arma::vec theseventhson; // This is for w calculation
-      arma::vec theseventhgrandson; // This is for v calculation
-      
-      theprophesizedvector = startvec;
-      theprophesizedsecondvector = startvec;
-      
       arma::mat crazy_prophet = proj3(startvec, amats, theprophecy, 1, 0, 0);
       wprojection = crazy_prophet.submat(startvec.n_elem, 0, ((startvec.n_elem * 2) - 1), theclairvoyant);
       vprojection = crazy_prophet.submat((startvec.n_elem * 2), 0, ((startvec.n_elem * 3) - 1), theclairvoyant);
-      arma::mat Rvec = crazy_prophet.submat((startvec.n_elem * 3), 1, (startvec.n_elem * 3), theclairvoyant);
-      Rvecmat.row(i) = Rvec;
+      Rvecmat.row(i) = crazy_prophet.submat((startvec.n_elem * 3), 1, (startvec.n_elem * 3), theclairvoyant); // Rvec
       
       // All references should go to senscube, which is a 3d array designed to hold the sensitivity matrices
       for (int j = 0; j < theclairvoyant; j++) { // This is the main time loop for the sensitivity matrices, 
                                                  // adding each time to the respective matrix for each pop-patch
         arma::vec vtplus1 = vprojection.col(j+1);
-        arma::rowvec vtplus1_tpose = vtplus1.as_row();
-        
         arma::vec wtplus1 = wprojection.col(j+1);
-        
         arma::vec wt = wprojection.col(j);
-        arma::rowvec wt_tpose = wt.as_row();
         
-        arma::mat currentsens_num = vtplus1 * wt_tpose; // This is the numerator of the key matrix equation
-        arma::mat currentsens_den = (Rvecmat(i, j) * vtplus1_tpose * wtplus1); // This is the denominator of the key matrix equation
+        arma::mat currentsens_num = vtplus1 * wt.as_row(); // This is the numerator of the key matrix equation
+        arma::mat currentsens_den = (Rvecmat(i, j) * vtplus1.as_row() * wtplus1); // This is the denominator of the key matrix equation
         double cd_double = currentsens_den(0,0);
-        
-        thechosenone = as<arma::mat>(amats[(theprophecy(j))]); // This is only for elasticity estimation
-        
         arma::mat currentsens = currentsens_num / (cd_double * theclairvoyant);
         
         // This creates the sensitivity matrices
@@ -2842,12 +2520,10 @@ Rcpp::List stoch_senselas(List mpm, int times = 10000, int style = 1,
             double cdah_double = csah_den(0,0);
             arma::mat csah = csah_num / (cdah_double * theclairvoyant);
             senscube_ah.slice(i) += csah;
-
           } // if historical statement
-          
         } else {
           // This creates the elasticity matrices
-          senscube.slice(i) += currentsens % thechosenone ;
+          senscube.slice(i) += currentsens % as<arma::mat>(amats[(theprophecy(j))]);
         }
       }
     }
@@ -2862,7 +2538,6 @@ Rcpp::List stoch_senselas(List mpm, int times = 10000, int style = 1,
     List meanmatyearlist(yl);
     
     IntegerVector tnotb_all = seq(0, (yl - 1));
-    
     arma::uvec theprophecy = theprophecy_allyears;
     theprophecy.zeros();
     
@@ -2878,8 +2553,6 @@ Rcpp::List stoch_senselas(List mpm, int times = 10000, int style = 1,
       pop_est = trials - allppcsnem;
       
       for (int i = 0; i < pop_est; i++) { // This loop goes through each population
-        thechosenone = as<arma::mat>(meanamats[allppcsnem + i]);
-        
         for (int j = 0; j < loysize; j++) { // This checks which A matrices match the current population in the loop
           if (poporder(j) == allpops(i)) {
             popmatch(j) = 1;
@@ -2938,19 +2611,10 @@ Rcpp::List stoch_senselas(List mpm, int times = 10000, int style = 1,
         vprojection_ah.zeros();
         
         // Here we run the control loop to create the w and v values we need
-        arma::vec theprophesizedvector;
-        arma::vec theprophesizedsecondvector;
-        arma::vec theseventhson; // This is for w calculation
-        arma::vec theseventhgrandson; // This is for v calculation
-        
-        theprophesizedvector = startvec;
-        theprophesizedsecondvector = startvec;
-        
         arma::mat crazy_prophet = proj3(startvec, meanmatyearlist, theprophecy, 1, 0, 0);
         wprojection = crazy_prophet.submat(startvec.n_elem, 0, ((startvec.n_elem * 2) - 1), theclairvoyant);
         vprojection = crazy_prophet.submat((startvec.n_elem * 2), 0, ((startvec.n_elem * 3) - 1), theclairvoyant);
-        arma::mat Rvec = crazy_prophet.submat((startvec.n_elem * 3), 1, (startvec.n_elem * 3), theclairvoyant);
-        Rvecmat.row(allppcsnem + i) = Rvec;
+        Rvecmat.row(allppcsnem + i) = crazy_prophet.submat((startvec.n_elem * 3), 1, (startvec.n_elem * 3), theclairvoyant); // Rvec
         
         // All references should go to senscube, which is a 3d array designed to
         // hold the sensitivity matrices
@@ -2960,19 +2624,12 @@ Rcpp::List stoch_senselas(List mpm, int times = 10000, int style = 1,
         for (int j = 0; j < theclairvoyant; j++) {  
           
           arma::vec vtplus1 = vprojection.col(j+1);
-          arma::rowvec vtplus1_tpose = vtplus1.as_row();
-          
           arma::vec wtplus1 = wprojection.col(j+1);
-          
           arma::vec wt = wprojection.col(j);
-          arma::rowvec wt_tpose = wt.as_row();
           
-          arma::mat currentsens_num = vtplus1 * wt_tpose; // This is the numerator of the key matrix equation
-          arma::mat currentsens_den = (Rvecmat((allppcsnem + i), j) * vtplus1_tpose * wtplus1); // This is the denominator of the key matrix equation
+          arma::mat currentsens_num = vtplus1 * wt.as_row(); // This is the numerator of the key matrix equation
+          arma::mat currentsens_den = (Rvecmat((allppcsnem + i), j) * vtplus1.as_row() * wtplus1); // This is the denominator of the key matrix equation
           double cd_double = currentsens_den(0,0);
-          
-          thechosenone = as<arma::mat>(meanmatyearlist[(theprophecy(j))]); // This is only for elasticity
-          
           arma::mat currentsens = currentsens_num / (cd_double * theclairvoyant);
           
           if (style == 1) {
@@ -3014,12 +2671,11 @@ Rcpp::List stoch_senselas(List mpm, int times = 10000, int style = 1,
             } // if historical statement
           } else {
             // This is the elasticity matrix
-            senscube.slice(allppcsnem + i) += currentsens % thechosenone ; 
+            senscube.slice(allppcsnem + i) += currentsens % as<arma::mat>(meanmatyearlist[(theprophecy(j))]); 
           }
         }
       } // for loop i, for populations
-    } // if statement, checking if more than one patch and thus determining if 
-      // population means need to be dealt with
+    } // if statement, checking if more than one patch and thus determining if population means need to be dealt with
     
     if (historical && style == 2) {
       for (int k = 0; k < trials; k++) {
@@ -3065,12 +2721,12 @@ Rcpp::List stoch_senselas(List mpm, int times = 10000, int style = 1,
     arma::vec twinput;
     
     if (matrows != matcols) {
-      stop("Supplied matrices must be square. Please check matrix dimensions and fix.");
+      throw Rcpp::exception("Supplied matrices must be square. Please check matrix dimensions and fix.", false);
     }
     
     if (tweights.isNotNull()) {
       if (as<NumericVector>(tweights).length() != yl) {
-        stop("Time weight vector must be the same length as the number of times represented in the lefkoMat object used as input.");
+        throw Rcpp::exception("Time weight vector must be the same length as the number of times represented in the lefkoMat object used as input.", false);
       }
       twinput = as<arma::vec>(tweights);
     } else {
@@ -3084,10 +2740,6 @@ Rcpp::List stoch_senselas(List mpm, int times = 10000, int style = 1,
     
     // Here we initialize a core empty matrix and start vector for w and v calculations.
     // The matrix will be changed at each time.
-    arma::mat thechosenone(matrows, matcols);
-    arma::mat thechosentwo(matrows, matcols);
-    thechosenone.zeros();
-    thechosentwo.zeros();
     arma::vec startvec(matrows);
     startvec.ones();
     startvec = startvec / matrows; // The is the start vector for w and v calculations
@@ -3109,44 +2761,26 @@ Rcpp::List stoch_senselas(List mpm, int times = 10000, int style = 1,
     vprojection.zeros();
     
     // Here we run the control loop to create the w and v values we need
-    arma::vec theprophesizedvector;
-    arma::vec theprophesizedsecondvector;
-    arma::vec theseventhson; // This is for w calculation
-    arma::vec theseventhgrandson; // This is for v calculation
-    
-    theprophesizedvector = startvec;
-    theprophesizedsecondvector = startvec;
-    
     arma::mat crazy_prophet = proj3(startvec, amats, theprophecy, 1, 0, 0);
     wprojection = crazy_prophet.submat(startvec.n_elem, 0, ((startvec.n_elem * 2) - 1), theclairvoyant);
     vprojection = crazy_prophet.submat((startvec.n_elem * 2), 0, ((startvec.n_elem * 3) - 1), theclairvoyant);
-    arma::mat Rvec = crazy_prophet.submat((startvec.n_elem * 3), 1, (startvec.n_elem * 3), theclairvoyant);
-    Rvecmat.row(0) = Rvec;
-      
+    Rvecmat.row(0) = crazy_prophet.submat((startvec.n_elem * 3), 1, (startvec.n_elem * 3), theclairvoyant); // Rvec
     
     // All references should go to senscube, which is a 3d array designed to hold the sensitivity matrices
     for (int j = 0; j < theclairvoyant; j++) { // This is the main time loop for the sensitivity matrices, 
                                                // adding each time to the respective matrix for each pop-patch
       arma::vec vtplus1 = vprojection.col(j+1); // used to be j+1
-      arma::rowvec vtplus1_tpose = vtplus1.as_row();
-      
-      arma::vec wtplus1 = wprojection.col(j+1);
-      
       arma::vec wt = wprojection.col(j);
-      arma::rowvec wt_tpose = wt.as_row();
       
-      arma::mat currentsens_num = vtplus1 * wt_tpose; // This is the numerator of the key matrix equation
-      arma::mat currentsens_den = (Rvecmat(0, j) * vtplus1_tpose * wtplus1); // This is the denominator of the key matrix equation
+      arma::mat currentsens_num = vtplus1 * wt.as_row(); // This is the numerator of the key matrix equation
+      arma::mat currentsens_den = (Rvecmat(0, j) * vtplus1.as_row() * wprojection.col(j+1)); // This is the denominator of the key matrix equation
       double cd_double = currentsens_den(0,0);
-      
-      thechosenone = as<arma::mat>(amats[(theprophecy(j))]); // This is only for elasticity - remove this and the accompanying bit lower down for sensitivity
-      
       arma::mat currentsens = currentsens_num / (cd_double * theclairvoyant);
       
       if (style == 1) {
         senscube.slice(0) += currentsens; // This is the sensitivity matrix
       } else {
-        senscube.slice(0) += currentsens % thechosenone ; // This is the elasticity matrix
+        senscube.slice(0) += currentsens % as<arma::mat>(amats[(theprophecy(j))]); // This is the elasticity matrix
       }
     }
     
@@ -3199,13 +2833,10 @@ DataFrame bambi3(DataFrame stages, DataFrame hstages) {
   
   arma::uvec hstage3in = hstages["stage_id_2"];
   arma::uvec hstage2nin = hstages["stage_id_1"];
-  //StringVector hstagenames3 = hstages["stage_2"];
-  //StringVector hstagenames2 = hstages["stage_1"];
   int numhstages = hstage3in.n_elem;
   
-  arma::uvec stages_order = astages - 1;
-  arma::uvec hstage3_order = hstage3in - 1;
-  arma::uvec hstage2_order = hstage2nin - 1;
+  hstage3in = hstage3in - 1;
+  hstage2nin = hstage2nin - 1;
   
   int predictedsize = numstages * numstages * numstages;
   
@@ -3244,23 +2875,23 @@ DataFrame bambi3(DataFrame stages, DataFrame hstages) {
   
   for (int i1 = 0; i1 < numhstages; i1++) {
     for (int i2 = 0; i2 < numhstages; i2++) {
-      if (hstage3in(i1) == hstage2nin(i2)) {
+      if (hstage3in(i1) == (hstage2nin(i2) + 1)) {
         
         hsindexl(counter) = (i1 * numhstages) + i2;
         
-        int stage1 = hstage2_order(i2);
+        int stage1 = hstage2nin(i2);
         longnames1(counter) = stagenames(stage1);
         size1(counter) = sizes(stage1);
         repstatus1(counter) = repstatus(stage1);
         entrystatus1(counter) = entrystage(stage1);
         
-        int stage2 = hstage2_order(i1);
+        int stage2 = hstage2nin(i1);
         longnames2(counter) = stagenames(stage2);
         size2(counter) = sizes(stage2);
         repstatus2(counter) = repstatus(stage2);
         entrystatus2(counter) = entrystage(stage2);
         
-        int stage3 = hstage3_order(i2);
+        int stage3 = hstage3in(i2);
         longnames3(counter) = stagenames(stage3);
         size3(counter) = sizes(stage3);
         repstatus3(counter) = repstatus(stage3);
@@ -3375,7 +3006,7 @@ DataFrame bambi2(DataFrame stages) {
   arma::uvec entrystage = stages["entrystage"];
   int numstages = astages.n_elem;
   
-  arma::uvec stages_order = astages - 1;
+  astages = astages - 1;
   
   int predictedsize = numstages * numstages;
   
@@ -3410,13 +3041,13 @@ DataFrame bambi2(DataFrame stages) {
       
       ahsindexl(counter) = (i1 * numstages) + i2;
       
-      int stage2 = stages_order(i1);
+      int stage2 =  astages(i1);
       longstages2(counter) = stagenames(stage2);
       size2(counter) = sizes(stage2);
       repstatus2(counter) = repstatus(stage2);
       entrystatus2(counter) = entrystage(stage2);
       
-      int stage3 = stages_order(i2);
+      int stage3 = astages(i2);
       longstages3(counter) = stagenames(stage3);
       size3(counter) = sizes(stage3);
       repstatus3(counter) = repstatus(stage3);
@@ -3479,7 +3110,7 @@ List demolition3(arma::mat e_amat, arma::mat amat, arma::mat fmat,
   int minindex = static_cast<int>(categories.min());
   
   if (maxelem > e_amatsize) {
-    stop("Supplied info does not seem to correspond to current matrix inputs.");
+    throw Rcpp::exception("Supplied info does not seem to correspond to current matrix inputs.", false);
   }
   
   arma::mat corr_mat = amat;
@@ -3512,8 +3143,6 @@ List demolition3(arma::mat e_amat, arma::mat amat, arma::mat fmat,
   arma::uvec ahistcatnums {1, 2, 3, 4};
   arma::vec ahistsums(4);
   ahistsums.zeros();
-  
-  //double summerator {0};
   
   if (minindex > 9) {
     
@@ -3611,9 +3240,7 @@ List demolition3(arma::mat e_amat, arma::mat amat, arma::mat fmat,
     }
     
     histout = DataFrame::create(Named("category") = histcats, _["elas"] = histsums);
-    
     ahistout = DataFrame::create(Named("category") = ahistcats, _["elas"] = hc_ahistsums);
-    
   } else {
     histout = R_NilValue;
     
@@ -3630,4 +3257,3 @@ List demolition3(arma::mat e_amat, arma::mat amat, arma::mat fmat,
   
   return output;
 }
-

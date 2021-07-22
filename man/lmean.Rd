@@ -9,10 +9,10 @@ lmean(mats, matsout = "all")
 \arguments{
 \item{mats}{A \code{lefkoMat} object.}
 
-\item{matsout}{A string identifying which means to estimate. Option "pop"
-indicates population-level only, "patch" indicates patch-level only, and
-"all" indicates that both patch- and population-level means should be
-estimated.}
+\item{matsout}{A string identifying which means to estimate. Option
+\code{"pop"} indicates population-level only, \code{"patch"} indicates
+patch-level only, and \code{"all"} indicates that both patch- and
+population-level means should be estimated. Defaults to \code{"all"}.}
 }
 \value{
 Yields a \code{lefkoMat} object with the following characteristics:

@@ -4,17 +4,19 @@
 \alias{lambda3.matrix}
 \title{Estimate Deterministic Population Growth Rate of Single Projection Matrix}
 \usage{
-\method{lambda3}{matrix}(mats)
+\method{lambda3}{matrix}(mats, sparse = "auto", ...)
 }
 \arguments{
 \item{mats}{A population projection matrix of class \code{matrix}.}
+
+\item{sparse}{A text string indicating whether to use sparse matrix encoding
+(\code{"yes"}) or dense matrix encoding (\code{"no"}). Defaults to
+\code{"auto"}.}
+
+\item{...}{Other parameters.}
 }
 \value{
-This function returns the dominant eigenvalue of the matrix. For
-square matrices with fewer than 400 rows, this is given as the largest real
-part of all eigenvalues estimated via the \code{eig_gen}() function in
-package the C++ Armadillo library. For larger matrices, the matrix is assumed
-to be sparse and \code{eigs_gen}() is used instead.
+This function returns the dominant eigenvalue of the matrix.
 }
 \description{
 \code{lambda3.matrix()} returns the dominant eigenvalue of a single
@@ -22,6 +24,17 @@ projection matrix. This function can handle large and sparse matrices, so can
 be used with large historical matrices, IPMs, age x stage matrices, as well
 as smaller ahistorical matrices.
 }
+\section{Notes}{
+
+The \code{sparse} option allows the function to utilize underlying methods
+of either dense or sparse matrix manipulation in order to speed up processing
+time and prevent memory shortages. Under the \code{auto} setting, the
+function will determine whether the matrix is sparse and act accordingly.
+For extremely largem sparse matrices, the user may simply set
+\code{sparse = "yes"} to save time further and force the use of sparse format
+in calculations.
+}
+
 \examples{
 # Lathyrus example
 data(lathyrus)
@@ -117,4 +130,6 @@ lambda3(cypmatrix2r$A[[1]])
 \code{\link{lambda3}()}
 
 \code{\link{lambda3.lefkoMat}()}
+
+\code{\link{slambda3}()}
 }

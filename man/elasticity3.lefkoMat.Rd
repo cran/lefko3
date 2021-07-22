@@ -4,7 +4,14 @@
 \alias{elasticity3.lefkoMat}
 \title{Estimate Elasticity of Population Growth Rate of a lefkoMat Object}
 \usage{
-\method{elasticity3}{lefkoMat}(mats, stochastic = FALSE, steps = 10000, time_weights = NA, ...)
+\method{elasticity3}{lefkoMat}(
+  mats,
+  stochastic = FALSE,
+  steps = 10000,
+  time_weights = NA,
+  sparse = "auto",
+  ...
+)
 }
 \arguments{
 \item{mats}{An object of class \code{lefkoMat}.}
@@ -18,6 +25,10 @@ Defaults to 10,000.}
 
 \item{time_weights}{Numeric vector denoting the probabilistic weightings of
 annual matrices. Defaults to equal weighting among times.}
+
+\item{sparse}{A text string indicating whether to use sparse matrix encoding
+(\code{"yes"}) or dense matrix encoding (\code{"no"}). Defaults to
+\code{"auto"}.}
 
 \item{...}{Other parameters.}
 }

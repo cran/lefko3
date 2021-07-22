@@ -837,7 +837,7 @@ List jerzeibalowski(DataFrame ppy, DataFrame AllStages, DataFrame stageframe,
                   sizepatchzi(patchnumber) + sizeyearzi(yearnumber) + sizedev + (summedvars / 2));
                 
                 if (lambda_preexp > 700) {
-                  lambda = exp(700);
+                  lambda = exp(static_cast<double>(700));
                 } else lambda = exp(lambda_preexp);
                 out(i, 3) = (lambda) / (1 + (lambda));
                 
@@ -869,7 +869,7 @@ List jerzeibalowski(DataFrame ppy, DataFrame AllStages, DataFrame stageframe,
                   (summedvars / 2));
                 
                 if (lambda_preexp > 500) {
-                  lambda = exp(500);
+                  lambda = exp(static_cast<double>(500));
                 } else lambda = exp(lambda_preexp);
                 
                 if (sizetrunc == 1) {
@@ -909,7 +909,7 @@ List jerzeibalowski(DataFrame ppy, DataFrame AllStages, DataFrame stageframe,
                   (summedvars / 2));
                 
                 if (mu_preexp > 700) {
-                  mu = exp(700);
+                  mu = exp(static_cast<double>(700));
                 } else mu = exp(mu_preexp);
                 
                 out(i, 3) = (mu) / (1 + (mu));
@@ -939,7 +939,7 @@ List jerzeibalowski(DataFrame ppy, DataFrame AllStages, DataFrame stageframe,
                   sizepatch(patchnumber) + sizeyear(yearnumber) + sizedev);
                 
                 if (mu_preexp > 500) {
-                  mu = exp(500);
+                  mu = exp(static_cast<double>(500));
                 } else mu = exp(mu_preexp);
                 
                 double theta = sizesigma;
@@ -1098,7 +1098,7 @@ List jerzeibalowski(DataFrame ppy, DataFrame AllStages, DataFrame stageframe,
                   jsizeyearzi(yearnumber) + jsizedev + (jsummedvars / 2));
                 
                 if (lambda_preexp > 700) {
-                  lambda = exp(700);
+                  lambda = exp(static_cast<double>(700));
                 } else lambda = exp(lambda_preexp);
                 
                 out(i, 3) = (lambda) / (1 + (lambda));
@@ -1109,7 +1109,7 @@ List jerzeibalowski(DataFrame ppy, DataFrame AllStages, DataFrame stageframe,
                   jsizeyear(yearnumber) + jsizedev + (jsummedvars / 2));
                 
                 if (lambda_preexp > 500) {
-                  lambda = exp(500);
+                  lambda = exp(static_cast<double>(500));
                 } else lambda = exp(lambda_preexp);
                 
                 if (jsizetrunc == 1) {
@@ -1125,7 +1125,7 @@ List jerzeibalowski(DataFrame ppy, DataFrame AllStages, DataFrame stageframe,
                 mu_preexp = (jsizecoefs(46) + jsizepatchzi(patchnumber) + jsizeyearzi(yearnumber) + jsizedev);
                 
                 if (mu_preexp > 700) {
-                  mu = exp(700);
+                  mu = exp(static_cast<double>(700));
                 } else mu = exp(mu_preexp);
                 
                 out(i, 3) = (mu) / (1 + (mu));
@@ -1133,7 +1133,7 @@ List jerzeibalowski(DataFrame ppy, DataFrame AllStages, DataFrame stageframe,
                 mu = (jsizecoefs(0) + jsizepatch(patchnumber) + jsizeyear(yearnumber) + jsizedev);
                 
                 if (mu_preexp > 500) {
-                  mu = exp(500);
+                  mu = exp(static_cast<double>(500));
                 } else mu = exp(mu_preexp);
                 
                 double theta = jsizesigma;

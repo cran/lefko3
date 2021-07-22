@@ -11,7 +11,7 @@ vignette: >
 
 
 
-  <p style="text-indent: 20px">This document was built in Markdown in R 4.1.0 and compiled on 12 July 2021. It covers package `lefko3` version 3.5.2. Please note that this vignette was written with space considerations in mind. To reduce output size, we have prevented some statements from running if they produce long stretches of output. Examples include most `summary()` calls. In these cases, we include hashtagged versions of these calls, and our text assumes that the user runs these statements without hashtags.</p>
+  <p style="text-indent: 20px">This document was built in Markdown in R 4.1.0 and compiled on 14 July 2021. It covers package `lefko3` version 3.5.3. Please note that this vignette was written with space considerations in mind. To reduce output size, we have prevented some statements from running if they produce long stretches of output. Examples include most `summary()` calls. In these cases, we include hashtagged versions of these calls, and our text assumes that the user runs these statements without hashtags.</p>
 
 ## CASE STUDIES OF SWEDISH *Lathyrus vernus* POPULATION
 
@@ -255,27 +255,25 @@ lathsupp2 <- supplemental(stage3 = c("Sd", "Sdl", "Sd", "Sdl"),
   
   <p style="text-indent: 20px">In addition, there are other options that provide flexibility in handling datasets with different designations for key variables, and allowing manual designation of stages.</p>
   
-  <p style="text-indent: 20px">At the time of writing, mixed modeling of the negative binomial distribution, as well as of zero-truncated and zero-inflated versions of the Poisson and negative binomial distributions, have been deactivated due to core issues with package `glmmTMB`. So, here we utilize a mixed approach but with a standard Poisson response for fecundity. We will update this section again once mixed models with these response distributions are enabled again.</p>
-  
   <p style="text-indent: 20px">Here, we will create two ahistorical model sets. The first will be a model set for the entire population, without separating patches. The second will include patch as a random factor, and will thus allow us to explore patch dynamics as well as population dynamics. We will not create a historical set this time because we are producing an age x stage MPM only - `lefko3` does not currently estimate or support historical age x stage MPMs.</p>
 
 ```r
 lathmodelsln2 <- modelsearch(lathvertln, historical = FALSE,
   approach = "mixed", suite = "main",
   vitalrates = c("surv", "obs", "size", "repst", "fec"), juvestimate = "Sdl",
-  bestfit = "AICc&k", sizedist = "gaussian", fecdist = "poisson",
+  bestfit = "AICc&k", sizedist = "gaussian", fecdist = "negbin",
   indiv = "individ", year = "year2", age = "obsage", year.as.random = TRUE,
-  patch.as.random = TRUE, show.model.tables = TRUE, fec.zero = FALSE, quiet = TRUE)
+  patch.as.random = TRUE, show.model.tables = TRUE, fec.zero = TRUE, quiet = TRUE)
 #> boundary (singular) fit: see ?isSingular
 #> boundary (singular) fit: see ?isSingular
 #> boundary (singular) fit: see ?isSingular
 lathmodelsln2p <- modelsearch(lathvertln, historical = FALSE,
   approach = "mixed", suite = "main",
   vitalrates = c("surv", "obs", "size", "repst", "fec"), juvestimate = "Sdl",
-  bestfit = "AICc&k", sizedist = "gaussian", fecdist = "poisson",
+  bestfit = "AICc&k", sizedist = "gaussian", fecdist = "negbin",
   indiv = "individ", patch = "patchid", year = "year2", age = "obsage",
   year.as.random = TRUE, patch.as.random = TRUE, show.model.tables = TRUE,
-  fec.zero = FALSE, quiet = TRUE)
+  fec.zero = TRUE, quiet = TRUE)
 #> boundary (singular) fit: see ?isSingular
 #> boundary (singular) fit: see ?isSingular
 #> boundary (singular) fit: see ?isSingular
@@ -285,7 +283,7 @@ lathmodelsln2p <- modelsearch(lathvertln, historical = FALSE,
 #summary(lathmodelsln2p)
 ```
 
-  <p style="text-indent: 20px">The output can be rather verbose, and so we have limited it with the `quiet = TRUE` option. The function was developed to provide text marker posts of what the function is doing and what it has accomplished, as well as to show all warnings from all workhorse functions used. With the `mixed` approach used, this includes warnings originating from estimating mixed linear models with package `lme4` [@bates_fitting_2015] and, in the case of fecundity, the package `glmmTMB` [@brooks_glmmtmb_2017]. With `glm` used, we would see warnings from package `pscl`, as well as from the core `stats` package. It also shows warnings originating from the `dredge()` function of package `MuMIn` [@barton_mumin_2014], which is the core function used in model building and AICc estimation. We encourage users to get familiar with interpreting these warnings and assessing the degree to which they impact their own analyses.</p>
+  <p style="text-indent: 20px">The output can be rather verbose, and so we have limited it with the `quiet = TRUE` option. The function was developed to provide text marker posts of what the function is doing and what it has accomplished, as well as to show all warnings from all workhorse functions used. Because we used the `mixed` approach here, this includes warnings originating from estimating mixed linear models with package `lme4` [@bates_fitting_2015] and, in the case of fecundity, the package `glmmTMB` [@brooks_glmmtmb_2017]. It also shows warnings originating from the `dredge()` function of package `MuMIn` [@barton_mumin_2014], which is the core function used in model building and AICc estimation. We encourage users to get familiar with interpreting these warnings and assessing the degree to which they impact their own analyses.</p>
 
   <p style="text-indent: 20px">In developing these linear models, the `modelsearch()` function created a series of nested datasets to estimate vital rates as conditional rates and probabilities. The exact subsets created depend on which parameters were called for. It is important to consider which are required, and particular attention needs to be paid if there are size classes with sizes of 0. In these situations, it is best to consider a size of 0 as unobservable, and so to introduce observation status as a vital rate to absorb these sizes. This sets up datasets for size estimation that do not include 0 in the response term, because all 0 responses are already absorbed by observation status.</p>
   
@@ -323,6 +321,15 @@ summary(lathmat2age)
 #> Juvenile observation estimated with 154 individuals and 210 individual transitions.
 #> Juvenile size estimated with 144 individuals and 193 individual transitions.
 #> Juvenile reproduction probability not estimated.
+#> 
+#> Survival probability sum check (each matrix represented by column in order):
+#>          [,1]  [,2]  [,3]
+#> Min.    0.000 0.000 0.000
+#> 1st Qu. 0.000 0.000 0.000
+#> Median  0.960 0.949 0.909
+#> Mean    0.604 0.603 0.588
+#> 3rd Qu. 0.985 0.982 0.967
+#> Max.    0.997 0.995 0.990
 #> NULL
 summary(lathmat2agep)
 #> 
@@ -343,10 +350,28 @@ summary(lathmat2agep)
 #> Juvenile observation estimated with 154 individuals and 210 individual transitions.
 #> Juvenile size estimated with 144 individuals and 193 individual transitions.
 #> Juvenile reproduction probability not estimated.
+#> 
+#> Survival probability sum check (each matrix represented by column in order):
+#>          [,1]  [,2]  [,3]  [,4]  [,5]  [,6]  [,7]  [,8]  [,9] [,10] [,11] [,12]
+#> Min.    0.000 0.000 0.000 0.000 0.000 0.000 0.000 0.000 0.000 0.000 0.000 0.000
+#> 1st Qu. 0.000 0.000 0.000 0.000 0.000 0.000 0.000 0.000 0.000 0.000 0.000 0.000
+#> Median  0.966 0.957 0.924 0.959 0.948 0.906 0.960 0.956 0.918 0.958 0.935 0.887
+#> Mean    0.607 0.606 0.594 0.603 0.602 0.586 0.604 0.604 0.591 0.605 0.599 0.581
+#> 3rd Qu. 0.987 0.985 0.973 0.984 0.982 0.966 0.986 0.984 0.970 0.983 0.980 0.964
+#> Max.    0.997 0.996 0.992 0.997 0.994 0.990 0.997 0.995 0.991 0.996 0.994 0.988
+#>         [,13] [,14] [,15] [,16] [,17] [,18]
+#> Min.    0.000 0.000 0.000 0.000 0.000 0.000
+#> 1st Qu. 0.000 0.000 0.000 0.000 0.000 0.000
+#> Median  0.961 0.939 0.894 0.963 0.950 0.910
+#> Mean    0.606 0.600 0.583 0.605 0.603 0.588
+#> 3rd Qu. 0.984 0.981 0.966 0.985 0.983 0.968
+#> Max.    0.996 0.994 0.989 0.997 0.995 0.990
 #> NULL
 ```
 
-  <p style="text-indent: 20px">The first model set led to the development of 3 matrices, reflecting the 4 years of data. The second model set led to the development of 18 matrices, reflecting 4 years and 6 patches. We can get a sense of what these matrices look like by visualizing them. Let's use the `image3()` function to look at just one.</p>
+  <p style="text-indent: 20px">The first model set led to the development of 3 matrices, reflecting the 4 years of data. The second model set led to the development of 18 matrices, reflecting 4 years and 6 patches. The quality control section gives us a sense of the amount of data used to model each vital rate, and also shows us that the survival-transition (U) matrices are composed entirely of proper probabilities yielding stage survival probability falling between 0.0 and 1.0. Matrix estimation can sometimes create spurious values, such as stage survival greater than 1.0. Such values can occur for a variety of reasons, but the most common is the inclusion through a supplemental table or overwrite table of externally-determined survival probabilities that are too high. Make sure to check your matrix column sums each time you estimate MPMs to prevent this problem. Survival greater than 1.0 can lead to strange effects on metrics of population dynamics.</p>
+  
+  <p style="text-indent: 20px">We can get a sense of what these matrices look like by visualizing them. Let's use the `image3()` function to look at just one.</p>
 
 ```r
 image3(lathmat2age, used = 1)
@@ -366,30 +391,6 @@ image3(lathmat2age, used = 1)
 #lathmat2age$agestages
 ```
 
-  <p style="text-indent: 20px">Next let's take a look at the column sums from the `U` matrices, which represent the survival probabilities of all age-stage combinations and so should equal numbers ranging from 0 to 1. </p>
-
-```r
-writeLines("Stage survival in matrix 1")
-#> Stage survival in matrix 1
-summary(colSums(lathmat2age$U[[1]]))
-#>    Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
-#>  0.0000  0.0000  0.9605  0.6040  0.9849  0.9970
-writeLines("\nStage survival in matrix 2")
-#> 
-#> Stage survival in matrix 2
-summary(colSums(lathmat2age$U[[2]]))
-#>    Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
-#>  0.0000  0.0000  0.9490  0.6026  0.9825  0.9950
-writeLines("\nStage survival in matrix 3")
-#> 
-#> Stage survival in matrix 3
-summary(colSums(lathmat2age$U[[3]]))
-#>    Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
-#>  0.0000  0.0000  0.9088  0.5876  0.9671  0.9902
-```
-
-  <p style="text-indent: 20px">Matrix estimation can sometimes create spurious values, such as stage survival greater than 1.0. Such values can occur for a variety of reasons, but the most common is the inclusion through a supplemental table or overwrite table of externally-determined survival probabilities that are too high. Make sure to check your matrix column sums each time you estimate MPMs to prevent this problem. Survival greater than 1.0 can lead to strange effects on metrics of population dynamics.</p>
-  
   <p style="text-indent: 20px">Now let's estimate the element-wise mean matrices. The first lefkoMat object created will include a single mean matrix, while the second will include 6 mean matrices for the patches, followed by a grand mean matrix, yielding a total of 7 matrices.</p>
 
 ```r
@@ -402,6 +403,15 @@ summary(lathmat2mean)
 #> Each matrix is a square matrix with 63 rows and columns, and a total of 3969 elements.
 #> A total of 726 survival transitions were estimated, with 726 per matrix.
 #> A total of 36 fecundity transitions were estimated, with 36 per matrix.
+#> 
+#> Survival probability sum check (each matrix represented by column in order):
+#>          [,1]
+#> Min.    0.000
+#> 1st Qu. 0.000
+#> Median  0.941
+#> Mean    0.598
+#> 3rd Qu. 0.973
+#> Max.    0.993
 #> NULL
 summary(lathmat2pmean)
 #> 
@@ -410,6 +420,15 @@ summary(lathmat2pmean)
 #> Each matrix is a square matrix with 63 rows and columns, and a total of 3969 elements.
 #> A total of 5082 survival transitions were estimated, with 726 per matrix.
 #> A total of 252 fecundity transitions were estimated, with 36 per matrix.
+#> 
+#> Survival probability sum check (each matrix represented by column in order):
+#>          [,1]  [,2]  [,3]  [,4]  [,5]  [,6]  [,7]
+#> Min.    0.000 0.000 0.000 0.000 0.000 0.000 0.000
+#> 1st Qu. 0.000 0.000 0.000 0.000 0.000 0.000 0.000
+#> Median  0.952 0.938 0.947 0.932 0.936 0.942 0.940
+#> Mean    0.602 0.597 0.599 0.595 0.597 0.599 0.598
+#> 3rd Qu. 0.978 0.971 0.975 0.973 0.974 0.974 0.973
+#> Max.    0.994 0.993 0.994 0.992 0.992 0.993 0.993
 #> NULL
 ```
 
@@ -433,7 +452,7 @@ abline(a = sl2$expa[1], b = 0, lty = 2, lwd= 3, col = "darkred")
 legend("bottomright", c("det annual", "det mean", "stochastic"), lty = c(1, 2, 2),
   col = c("black", "orangered", "darkred"), lwd = c(2, 2, 3), bty = "n")
 
-plot(lambda ~ patch, data = lambda2mp[1:6,], ylim = c(0.96, 0.975), xlab = "Patch",
+plot(lambda ~ patch, data = lambda2mp[1:6,], ylim = c(0.92, 0.98), xlab = "Patch",
   ylab = expression(lambda), type = "l", lty= 1, lwd = 2, bty = "n")
 abline(a = lambda2m$lambda[1], b = 0, lty = 2, lwd= 2, col = "orangered")
 abline(a = sl2$expa[1], b = 0, lty = 2, lwd= 2, col = "darkred")
@@ -441,7 +460,7 @@ legend("bottomleft", c("patch det mean", "pop det mean", "pop sto"), lty = c(1, 
   col = c("black", "orangered", "darkred"), lwd = 2, bty = "n")
 ```
 
-![Figure 8.4. Deterministic vs. stochastic lambda](Ch8.16-1.png)
+![Figure 8.4. Deterministic vs. stochastic lambda](Ch8.15-1.png)
 
   <p style="text-indent: 20px">Deterministic and stochastic analyses suggest that the population and all patches are declining. Qualitatively, they agree with the $\lambda$ estimates from our other *Lathyrus* vignettes.</p>
   
@@ -463,9 +482,9 @@ legend("topright", c("deterministic", "stochastic"), col = c("black", "red"),
   pch = 15, bty = "n")
 ```
 
-![Figure 8.5. Stable and long-run age-stage distribution](Ch8.17-1.png)
+![Figure 8.5. Stable and long-run age-stage distribution](Ch8.16-1.png)
 
-  <p style="text-indent: 20px">The distribution is actually a stable age-stage distribution, and the deterministic and stochastic approaches generally agree. The population is dominated by seedlings and mid-sized adults. To explore further, it may be useful to collapse age and only look at stage, as below.</p>
+  <p style="text-indent: 20px">The distribution is actually a stable age-stage distribution, and the deterministic and stochastic approaches generally agree. The population is dominated by seedlings and mid-sized adults (both flowering and non-flowering). To explore further, it may be useful to collapse age and only look at stage, as below.</p>
 
 ```r
 det_dist <- apply(as.matrix(c(1:21)), 1, function(X) {
@@ -485,9 +504,9 @@ legend("topright", c("deterministic", "stochastic"), col = c("black", "red"),
   pch = 15, bty = "n")
 ```
 
-![Figure 8.6. Stable and long-run stage distribution](Ch8.18-1.png)
+![Figure 8.6. Stable and long-run stage distribution](Ch8.17-1.png)
 
-  <p style="text-indent: 20px">The stable stage distribution shows very high levels of seedlings and dormant seeds, and also of non-flowering and flowering mid-size adults. So, the same patterns as before, but without age to make us squint at the x-axis labels.</p>
+  <p style="text-indent: 20px">The stable stage distribution shows very high levels of seedlings and dormant seeds, and also of non-flowering and flowering mid-size adults. So, we see the same patterns as before, but without age to make us squint at the x-axis labels.</p>
 
   <p style="text-indent: 20px">Now let's take look at the reproductive values. We'll go straight to the plots, as with the stable stage distribution.</p>
 
@@ -504,7 +523,7 @@ legend("topleft", c("deterministic", "stochastic"), col = c("black", "red"),
   pch = 15, bty = "n")
 ```
 
-![Figure 8.7. Age-stage reproductive values](Ch8.19-1.png)
+![Figure 8.7. Age-stage reproductive values](Ch8.18-1.png)
 
   <p style="text-indent: 20px">We see reproductive values above 0 starting with non-reproductive adults in age 1, and the highest reproductive values associated with flowering, medium to large adults in ages 1 and 2. These patterns hold in both deterministic and stochastic analyses.</p>
 
@@ -529,7 +548,7 @@ writeLines("\nThe highest deterministic sensitivity value: ")
 #> 
 #> The highest deterministic sensitivity value:
 max(lathmat2msens_s$ah_sensmats[[1]][which(lathmat2mean$A[[1]] > 0)])
-#> [1] 0.1287917
+#> [1] 0.1288112
 writeLines("\nThis value is associated with element: ")
 #> 
 #> This value is associated with element:
@@ -537,7 +556,7 @@ which(lathmat2msens_s$ah_sensmats[[1]] == max(lathmat2msens_s$ah_sensmats[[1]][w
 #> [1] 3838
 ```
 
-  <p style="text-indent: 20px">The highest sensitivity value in both analyses appears to be associated with the transition from flowering adult age 2 and up in size class 7, to flowering adult age 2 and up in size class 4 (element 3838 is in column 61, row 58). Inspecting the sensitivity matrix (type `lathmat2msens$ah_sensmats[[1]]` to inspect the full deterministic sensitivity matrix, or `lathmat2msens_s$ah_sensmats[[1]]` to inspect the full stochastic sensitivity matrix) also shows that transitions near that element in the matrix are also associated with rather high sensitivities.</p>
+  <p style="text-indent: 20px">The highest sensitivity value in both analyses appears to be associated with the transition from flowering adult age 2 and up in size class 7, to flowering adult age 2 and up in size class 4 (element 3838, in column 61, row 58). Inspecting the sensitivity matrix (type `lathmat2msens$ah_sensmats[[1]]` to view the full deterministic sensitivity matrix, or `lathmat2msens_s$ah_sensmats[[1]]` to view the full stochastic sensitivity matrix) also shows that transitions near that element in the matrix are associated with rather high sensitivities.</p>
 
   <p style="text-indent: 20px">Let's now assess the elasticity of $\lambda$ or $\text{log} \lambda$ to matrix elements.</p>
 
@@ -560,7 +579,7 @@ writeLines("\nThe highest stochastic elasticity value: ")
 #> 
 #> The highest stochastic elasticity value:
 max(lathmat2melas_s$ah_elasmats[[1]][which(lathmat2mean$A[[1]] > 0)])
-#> [1] 0.02841645
+#> [1] 0.02841286
 writeLines("\nThe largest stochastic elasticity is associated with element: ")
 #> 
 #> The largest stochastic elasticity is associated with element:

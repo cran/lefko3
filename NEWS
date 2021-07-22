@@ -1,6 +1,39 @@
 LEFKO3 NEWS
 -----------
 
+CHANGES IN VERSION 3.6.0 (2021-07-XX)
+-------------------------------------
+  NEW FEATURES
+    1. 
+
+  USER-VISIBLE CHANGES
+    1. All population dynamics analysis functions have been substantially sped
+       up through better memory management techniques.
+
+  BUG FIXES
+    1. 
+
+
+CHANGES IN VERSION 3.5.3 (2021-07-14)
+-------------------------------------
+  NEW FEATURES
+    1. Function summary.lefkoMat() now also displays column sums from all
+       U (survival-transition) matrices as a quality control check.
+
+  USER-VISIBLE CHANGES
+    1. Package glmmTMB has been reintegrated, allowing mixed modeling of
+       negative binomial, zero-inflated, and zero-truncated response
+       distributions again.
+    2. Error and warning messages from compiled functions provide cleaner
+       messages.
+
+  BUG FIXES
+    1. Corrected incorrect handling of missing patch terms in lm, glm, vglm, and
+       zeroinfl objects.
+    2. Corrected static_cast issue that might prevent package installation in
+       Solaris systems.
+
+
 CHANGES IN VERSION 3.5.2 (2021-07-12)
 -------------------------------------
   USER-VISIBLE CHANGES

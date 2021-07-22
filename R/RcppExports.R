@@ -583,29 +583,6 @@ stovokor <- function(surv, obs, size, repst, fec, vitalrates, historical, suite,
     .Call('_lefko3_stovokor', PACKAGE = 'lefko3', surv, obs, size, repst, fec, vitalrates, historical, suite, approach, sizedist, fecdist, nojuvs, age, indcova, indcovb, indcovc, indiv, patch, year, pasrand, yasrand, fectime, juvsize, size0, fec0)
 }
 
-#' Estimate Stochastic Sensitivity or Elasticity of Matrix Set
-#' 
-#' Function \code{stoch_senselas()} estimates the sensitivity and elasticity to
-#' matrix elements of \eqn{a}, defined as the long-term arithmetic mean of the
-#' log population growth estimated per simulated time (as given in equation 2
-#' in Tuljapurkar, Horvitz, and Pascarella 2003). 
-#' 
-#' @param mpm A matrix projection model of class \code{lefkoMat}, or a list of
-#' full matrix projection matrices.
-#' @param times Number of iterations to random samples. Defaults to 10,000.
-#' @param style An integer designating whether to estimate sensitivity matrices
-#' (\code{1}) or elasticity matrices (\code{2}). Defaults to 1.
-#' @param tweights Numeric vector denoting the probabilistic weightings of
-#' annual matrices. Defaults to equal weighting among times.
-#' 
-#' @return A list of one or two cubes (3d array) where each slice corresponds
-#' to sensitivity or elasticity matrix for a specific pop-patch, followed by
-#' the sensitivity or elasticity matrices of all populations (only if multiple
-#' pop-patches occur in the input). Two such cubes are only provided when a
-#' historical lefkoMat object is used as input, in which case the first
-#' element is the historical sensitivity/elasticity matrix, and the second is
-NULL
-
 #' Vectorize Matrix for Historical Mean Matrix Estimation
 #' 
 #' Function \code{flagrantcrap()} vectorizes core indices of matrices
@@ -726,177 +703,90 @@ decomp3sp <- function(Amat) {
     .Call('_lefko3_decomp3sp', PACKAGE = 'lefko3', Amat)
 }
 
-#' Estimate Deterministic Population Growth Rate of a Dense Matrix
+#' Estimate Deterministic Population Growth Rate of Any Matrix
 #' 
 #' \code{lambda3matrix()} returns the dominant eigenvalue of a single
-#' dense projection matrix.
+#' dense or sparse projection matrix.
 #' 
 #' @param Amat A population projection matrix of class \code{matrix}.
+#' @param sparse A logical value indicating whether to use sparse matrix
+#' format.
 #'
 #' @return This function returns the dominant eigenvalue of the matrix. This
 #' is given as the largest real part of all eigenvalues estimated via the 
-#' \code{eig_gen}() function in the C++ Armadillo library.
+#' \code{eig_gen}() and \code{eigs_gen}() functions in the C++ Armadillo
+#' library.
 #' 
 #' @keywords internal
 #' @noRd
-lambda3matrix <- function(Amat) {
-    .Call('_lefko3_lambda3matrix', PACKAGE = 'lefko3', Amat)
+lambda3matrix <- function(Amat, sparse) {
+    .Call('_lefko3_lambda3matrix', PACKAGE = 'lefko3', Amat, sparse)
 }
 
-#' Estimate Deterministic Population Growth Rate of a Sparse Matrix
-#' 
-#' \code{lambda3matrixsp()} returns the dominant eigenvalue of a single
-#' sparse projection matrix. This function can handle large and sparse 
-#' matrices, and so can be used with large historical matrices, IPMs, 
-#' age x stage matrices, as well as smaller ahistorical matrices.
-#' 
-#' @param Amat A population projection matrix of class \code{matrix}.
-#'
-#' @return This function returns the dominant eigenvalue of the matrix. This
-#' is given as the largest real part of all eigenvalues estimated via the 
-#' \code{eigs_gen}() function in the C++ Armadillo library.
-#' 
-#' @keywords internal
-#' @noRd
-lambda3matrixsp <- function(Amat) {
-    .Call('_lefko3_lambda3matrixsp', PACKAGE = 'lefko3', Amat)
-}
-
-#' Estimate Stable Stage Distribution of a Dense Population Matrix
+#' Estimate Stable Stage Distribution of Any Population Matrix
 #' 
 #' \code{ss3matrix()} returns the stable stage distribution for a 
-#' dense population matrix.
+#' dense or sparse population matrix.
 #' 
 #' @param Amat A population projection matrix of class \code{matrix}.
+#' @param sparse A logical value indicating whether to use sparse or dense
+#' format in matrix calculations.
 #' 
 #' @return This function returns the stable stage distribution corresponding to
-#' the input matrix. The stable stage distribution is given as the right 
-#' eigenvector associated with largest real part of the eigenvalues estimated 
-#' for the matrix via the \code{eig_gen}() function in the C++ Armadillo 
-#' library, divided by the sum of the associated right eigenvector. 
+#' the input matrix.
 #' 
 #' @seealso \code{\link{stablestage3}()}
 #' @seealso \code{\link{stablestage3.lefkoMat}()}
 #' 
 #' @keywords internal
 #' @noRd
-ss3matrix <- function(Amat) {
-    .Call('_lefko3_ss3matrix', PACKAGE = 'lefko3', Amat)
+ss3matrix <- function(Amat, sparse) {
+    .Call('_lefko3_ss3matrix', PACKAGE = 'lefko3', Amat, sparse)
 }
 
-#' Estimate Stable Stage Distribution of a Sparse Population Matrix
-#' 
-#' \code{ss3matrixsp()} returns the stable stage distribution for a 
-#' sparse population matrix. This function can handle large and sparse 
-#' matrices, and so can be used with large historical matrices, IPMs, 
-#' age x stage matrices, as well as smaller ahistorical matrices.
-#' 
-#' @param Amat A population projection matrix of class \code{matrix}.
-#' 
-#' @return This function returns the stable stage distribution corresponding to
-#' the input matrix. The stable stage distribution is given as the right
-#' eigenvector associated with largest real part of the eigenvalues estimated
-#' for the matrix via the \code{eigs_gen}() function in the C++ Armadillo
-#' library, divided by the sum of the associated right eigenvector. 
-#' 
-#' @seealso \code{\link{stablestage3}()}
-#' @seealso \code{\link{stablestage3.lefkoMat}()}
-#' 
-#' @keywords internal
-#' @noRd
-ss3matrixsp <- function(Amat) {
-    .Call('_lefko3_ss3matrixsp', PACKAGE = 'lefko3', Amat)
-}
-
-#' Estimate Reproductive Value of a Dense Population Matrix
+#' Estimate Reproductive Value of Any Population Matrix
 #' 
 #' \code{rv3matrix()} returns the reproductive values for stages in a
-#' dense population matrix. The function provides standard reproductive
-#' values, meaning that the overall reproductive values of basic life
-#' history stages in a historical matrix are not provided (the
+#' dense or sparse population matrix. The function provides standard
+#' reproductive values, meaning that the overall reproductive values of basic
+#' life history stages in a historical matrix are not provided (the
 #' \code{\link{repvalue3.lefkoMat}()} function estimates these on the basis
 #' of stage description information provided in the \code{lefkoMat} object
 #' used as input in that function).
 #' 
 #' @param Amat A population projection matrix.
+#' @param sparse A logical value indicating whether to use sparse or dense
+#' format in matrix calculations.
 #' 
 #' @return This function returns a vector characterizing the
-#' reproductive values for stages of a population projection matrix. This is
-#' given as the left eigenvector associated with largest real part of the
-#' dominant eigenvalue estimated via the \code{eig_gen}() function in the C++
-#' Armadillo library, divided by the first non-zero element of the left
-#' eigenvector. 
+#' reproductive values for stages of a population projection matrix.
 #' 
 #' @seealso \code{\link{repvalue3}()}
 #' @seealso \code{\link{repvalue3.lefkoMat}()}
 #' 
 #' @keywords internal
 #' @noRd
-rv3matrix <- function(Amat) {
-    .Call('_lefko3_rv3matrix', PACKAGE = 'lefko3', Amat)
+rv3matrix <- function(Amat, sparse) {
+    .Call('_lefko3_rv3matrix', PACKAGE = 'lefko3', Amat, sparse)
 }
 
-#' Estimate Reproductive Value of a Sparse Population Matrix
-#' 
-#' \code{rv3matrixsp()} returns the reproductive values for stages in a 
-#' sparse population matrix. The function provides standard reproductive 
-#' values, meaning that the overall reproductive values of basic life 
-#' history stages in a historical matrix are not provided (the 
-#' \code{\link{repvalue3.lefkoMat}()} function estimates these on the basis 
-#' of stage description information provided in the \code{lefkoMat} object 
-#' used as input in that function). This function can handle large and 
-#' sparse matrices, and so can be used with large historical matrices, IPMs, 
-#' age x stage matrices, as well as smaller ahistorical 
-#' matrices.
-#' 
-#' @param Amat A population projection matrix.
-#' 
-#' @return This function returns a vector characterizing the
-#' reproductive values for stages of a population projection matrix. This is
-#' given as the left eigenvector associated with largest real part of the
-#' dominant eigenvalue estimated via the \code{eigs_gen}() function in the C++
-#' Armadillo library, divided by the first non-zero element of the left
-#' eigenvector. 
-#' 
-#' @seealso \code{\link{repvalue3}()}
-#' @seealso \code{\link{repvalue3.lefkoMat}()}
-#' 
-#' @keywords internal
-#' @noRd
-rv3matrixsp <- function(Amat) {
-    .Call('_lefko3_rv3matrixsp', PACKAGE = 'lefko3', Amat)
-}
-
-#' Estimate Deterministic Sensitivities of a Dense Population Matrix
+#' Estimate Deterministic Sensitivities of Any Population Matrix
 #' 
 #' \code{sens3matrix()} returns the sensitivity of lambda with respect
-#' to each element in a dense matrix. This is accomplished via the
-#' \code{eig_gen}() function in the C++ Armadillo library.
+#' to each element in a dense or sparse matrix. This is accomplished via the
+#' \code{eig_gen}() and \code{eigs_gen}() functions in the C++ Armadillo
+#' library.
 #' 
 #' @param Amat A population projection matrix.
+#' @param sparse A logical value indicating whether to use sparse or dense
+#' format in matrix calculations.
 #' 
 #' @return This function returns a matrix of sensitivities. 
 #' 
 #' @keywords internal
 #' @noRd
-sens3matrix <- function(Amat) {
-    .Call('_lefko3_sens3matrix', PACKAGE = 'lefko3', Amat)
-}
-
-#' Estimate Deterministic Sensitivities of a Sparse Population Matrix
-#' 
-#' \code{sens3matrixsp()} returns the sensitivity of lambda with respect
-#' to each element in a sparse matrix. This is accomplished via the
-#' \code{eig_gen}() function in the C++ Armadillo library.
-#' 
-#' @param Amat A population projection matrix.
-#' 
-#' @return This function returns a matrix of sensitivities. 
-#' 
-#' @keywords internal
-#' @noRd
-sens3matrixsp <- function(Amat) {
-    .Call('_lefko3_sens3matrixsp', PACKAGE = 'lefko3', Amat)
+sens3matrix <- function(Amat, sparse) {
+    .Call('_lefko3_sens3matrix', PACKAGE = 'lefko3', Amat, sparse)
 }
 
 #' Estimate Deterministic Sensitivities of a Historical LefkoMat Object
@@ -922,39 +812,26 @@ sens3hlefko <- function(Amat, ahstages, hstages) {
     .Call('_lefko3_sens3hlefko', PACKAGE = 'lefko3', Amat, ahstages, hstages)
 }
 
-#' Estimate Deterministic Elasticities of a Dense Population Matrix
+#' Estimate Deterministic Elasticities of Any Population Matrix
 #' 
 #' \code{elas3matrix()} returns the elasticity of lambda with respect
-#' to each element in a dense matrix. This is accomplished via the
-#' \code{eig_gen}() function in the C++ Armadillo library.
+#' to each element in a dense or sparse matrix. This is accomplished via the
+#' \code{eig_gen}() and \code{eigs_gen}() functions in the C++ Armadillo
+#' library.
 #' 
 #' @param Amat A population projection matrix.
+#' @param sparse A logical value indicating whether to use sparse or dense
+#' format in matrix calculations.
 #' 
 #' @return This function returns a matrix of elasticities. 
 #' 
 #' @keywords internal
 #' @noRd
-elas3matrix <- function(Amat) {
-    .Call('_lefko3_elas3matrix', PACKAGE = 'lefko3', Amat)
+elas3matrix <- function(Amat, sparse) {
+    .Call('_lefko3_elas3matrix', PACKAGE = 'lefko3', Amat, sparse)
 }
 
-#' Estimate Deterministic Elasticities of a Sparse Population Matrix
-#' 
-#' \code{elas3matrixsp()} returns the elasticity of lambda with respect
-#' to each element in a sparse matrix. This is accomplished via the
-#' \code{eigs_gen}() function in the C++ Armadillo library.
-#' 
-#' @param Amat A population projection matrix.
-#' 
-#' @return This function returns a matrix of elasticities. 
-#' 
-#' @keywords internal
-#' @noRd
-elas3matrixsp <- function(Amat) {
-    .Call('_lefko3_elas3matrixsp', PACKAGE = 'lefko3', Amat)
-}
-
-#' Estimate Deterministic Elasticities of a Historical LefkoMod Object
+#' Estimate Deterministic Elasticities of a Historical LefkoMat Object
 #' 
 #' \code{elas3hlefko()} returns the elasticity of lambda with respect
 #' to each historical stage-pair in the matrix, and the summed elasticities
@@ -979,7 +856,7 @@ elas3hlefko <- function(Amat, ahstages, hstages) {
 #' Core Time-based Population Matrix Projection Function
 #' 
 #' Function \code{proj3()} runs the matrix projections used in other functions
-#' in package \code{lefko3}. Provides the population vector output only.
+#' in package \code{lefko3}.
 #' 
 #' @param start_mat The starting matrix for the projection.
 #' @param start_vec The starting population vector for the projection.
@@ -1006,8 +883,6 @@ elas3hlefko <- function(Amat, ahstages, hstages) {
 #' projection).
 #' 
 #' @section Notes:
-#' This function uses dense matrix approaches except for sparse matrices with
-#' over 400 rows, which are projected using sparse matrix multiplication.
 #' 
 #' @keywords internal
 #' @noRd
@@ -1019,9 +894,9 @@ proj3 <- function(start_vec, core_list, mat_order, standardize, growthonly, inte
 #' 
 #' Function \code{projection3()} projects the population forward in time by
 #' a user-defined number of time steps. Projections may be deterministic or
-#' stochastic. If deterministic, then projections will be cyclical if mjultiple
-#' years of matrices exist for each population or patch. If stochastic, then
-#' annual matrices will be shuffled within patches and populations.
+#' stochastic. If deterministic, then projections will be cyclical if matrices
+#' exist covering multiple times for each population or patch. If stochastic,
+#' then annual matrices will be shuffled within patches and populations.
 #' 
 #' @param mpm A matrix projection model of class \code{lefkoMat}, or a list of
 #' full matrix projection matrices.
@@ -1304,7 +1179,29 @@ slambda3 <- function(mpm, times = 10000L, tweights = NULL) {
     .Call('_lefko3_slambda3', PACKAGE = 'lefko3', mpm, times, tweights)
 }
 
-#'
+#' Estimate Stochastic Sensitivity or Elasticity of Matrix Set
+#' 
+#' Function \code{stoch_senselas()} estimates the sensitivity and elasticity to
+#' matrix elements of \eqn{a}, defined as the long-term arithmetic mean of the
+#' log population growth estimated per simulated time (as given in equation 2
+#' in Tuljapurkar, Horvitz, and Pascarella 2003). 
+#' 
+#' @param mpm A matrix projection model of class \code{lefkoMat}, or a list of
+#' full matrix projection matrices.
+#' @param times Number of iterations to random samples. Defaults to 10,000.
+#' @param style An integer designating whether to estimate sensitivity matrices
+#' (\code{1}) or elasticity matrices (\code{2}). Defaults to 1.
+#' @param tweights Numeric vector denoting the probabilistic weightings of
+#' annual matrices. Defaults to equal weighting among times.
+#' 
+#' @return A list of one or two cubes (3d array) where each slice corresponds
+#' to sensitivity or elasticity matrix for a specific pop-patch, followed by
+#' the sensitivity or elasticity matrices of all populations (only if multiple
+#' pop-patches occur in the input). Two such cubes are only provided when a
+#' historical lefkoMat object is used as input, in which case the first
+#' element is the historical sensitivity/elasticity matrix, and the second is
+#' the ahistorical sensitivity/elasticity matrix.
+#' 
 #' @section Notes:
 #' Weightings given in \code{tweights} do not need to sum to 1. Final
 #' weightings used will be based on the proportion per element of the sum of

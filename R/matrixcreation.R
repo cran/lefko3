@@ -3010,7 +3010,7 @@ aflefko2 <- function(year = "all", patch = "all", stageframe, supplement = NA,
   }
   
   if (all(is.na(patch)) & !is.na(patchcol)) {
-    warning("Matrix creation may not proceed properly without input in the patch option when using a modelsuite in which patch is designated.")
+    warning("Matrix creation may not proceed properly without input in the patch option when using a modelsuite in which patch is designated.", call. = FALSE)
   }
   
   if (is.character(patchcol)) {
@@ -3091,8 +3091,7 @@ aflefko2 <- function(year = "all", patch = "all", stageframe, supplement = NA,
   stageframe$min_age[which(is.na(stageframe$min_age))] <- 0
   
   if (final_age < max(stageframe$max_age, na.rm = TRUE)) {
-    warning("Value of final_age will be adjusted to equal the maximum max_age value in the stageframe supplied.",
-      call. = FALSE)
+    warning("Value of final_age will be adjusted to equal the maximum max_age value in the stageframe supplied.", call. = FALSE)
     final_age <- max(stageframe$max_age, na.rm = TRUE)
   }
   
@@ -3277,7 +3276,8 @@ aflefko2 <- function(year = "all", patch = "all", stageframe, supplement = NA,
 #' @return A summary of the object, showing the number of each type of matrix,
 #' the number of annual matrices, the number of estimated (non-zero) elements
 #' across all matrices and per matrix, the number of unique transitions in the
-#' dataset, and the number of individuals.
+#' dataset, the number of individuals, and summaries of the column sums of the
+#' survival-transition matrices.
 #' 
 #' @examples
 #' data(cypdata)
@@ -3442,6 +3442,13 @@ summary.lefkoMat <- function(object, ...) {
       writeLines("Juvenile reproduction probability not estimated.")
     }
   }
+  
+  writeLines("\nSurvival probability sum check (each matrix represented by column in order):")
+  
+  dethontoilt <- apply(as.matrix(c(1:length(matrices$U))), 1,
+    function(X) {summary(colSums(matrices$U[[X]]))})
+  print(dethontoilt, digits = 3)
+  
   return()
 }
 

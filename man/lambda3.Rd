@@ -4,15 +4,16 @@
 \alias{lambda3}
 \title{Estimate Dominant Eigenvalue and Deterministic Population Growth Rate}
 \usage{
-lambda3(mats)
+lambda3(mats, ...)
 }
 \arguments{
 \item{mats}{A lefkoMat object, or a single projection matrix, for which the
 dominant eigenvalue is desired.}
+
+\item{...}{Other parameters.}
 }
 \value{
 The value returned depends on the class of the \code{mats} argument.
-See related functions for more details.
 }
 \description{
 \code{lambda3()} is a generic function that returns the dominant eigenvalue
@@ -116,4 +117,6 @@ lambda3(cypmatrix2r)
 \code{\link{lambda3.lefkoMat}()}
 
 \code{\link{lambda3.matrix}()}
+
+\code{\link{slambda3}()}
 }

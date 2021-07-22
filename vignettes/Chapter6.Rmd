@@ -11,7 +11,7 @@ vignette: >
 
 
 
-  <p style="text-indent: 20px">This document was built in Markdown in R 4.1.0 and compiled on 12 July 2021. It covers package `lefko3` version 3.5.2. Please note that this vignette was written with space considerations in mind. To reduce output size, we have prevented some statements from running if they produce long stretches of output. Examples include most `summary()` calls. In these cases, we include hashtagged versions of these calls, and our text assumes that the user runs these statements without hashtags. We have also written this vignette using the default Ehrlén format as the output format for all historical MPMs. All examples work with deVries format as well.</p>
+  <p style="text-indent: 20px">This document was built in Markdown in R 4.1.0 and compiled on 14 July 2021. It covers package `lefko3` version 3.5.3. Please note that this vignette was written with space considerations in mind. To reduce output size, we have prevented some statements from running if they produce long stretches of output. Examples include most `summary()` calls. In these cases, we include hashtagged versions of these calls, and our text assumes that the user runs these statements without hashtags. We have also written this vignette using the default Ehrlén format as the output format for all historical MPMs. All examples work with deVries format as well.</p>
 
 ## CASE STUDIES OF SWEDISH *Lathyrus vernus* POPULATION
 
@@ -146,7 +146,7 @@ sf_distrib(lathvertipm, size2 = "sizea2", fec = "feca2", repst = "repstatus2")
 
 #### Step 2b: Develop supplemental information for matrix estimation
 
-  <p style="text-indent: 20px">Now we will create **supplemental tables**, which provide extra data for matrix estimation that is not included in the main demographic dataset. Specifically, we will provide the seed dormancy probability and germination rate, which are given as transitions from the dormant seed stage to another year of seed dormancy or to the germinated seedling stage, respectively. We assume that the germination rate is the same regardless of whether seed was produced in the previous year or has been in the seedbank for longer. We will incorporate these terms both as fixed constants for specific transitions within the resulting matrices, and as multipliers for fecundity, since ultimately fecundity will be estimated as the production of seed multiplied by the seed germination rate or the seed dormancy rate. We will start with the ahistorical case, and then move on to the historical case, where we also need to input the corresponding stages in time *t*-1 and transition types from time *t*-1 to *t* for each transition.</p>
+  <p style="text-indent: 20px">Now we will create **supplemental tables**, which provide extra data for matrix estimation that is not included in the main demographic dataset. Specifically, we will provide the seed dormancy probability and germination rate, which are given as transitions from the dormant seed stage to another year of seed dormancy or to the germinated seedling stage, respectively. We assume that the germination rate is the same regardless of whether seed was produced in the previous year or has been in the seedbank for longer. We will incorporate these terms both as fixed constants for specific transitions within the resulting matrices, and as multipliers for fecundity, since ultimately fecundity will be estimated as the production of seed multiplied by the seed germination rate or the seed dormancy rate. Because some individuals stay in the seedling stage for only 1 year, and the seed stage itself cannot be observed and so does not exist in the dataset, we will also set a proxy set of transitions so that R assumes that the transitions from seed in time *t*-1 to seedling in time *t* to all mature stages in time *t*+1 are equal to the equivalent transitions from seedling in both times *t*-1 and *t*. We will start with the ahistorical case, and then move on to the historical case, where we also need to input the corresponding stages in time *t*-1 and transition types from time *t*-1 to *t* for each transition. Note the use of the `"rep"` and `"npr"` designations in `Stage1` - these are abbreviations telling R to use all reproductive stages, or all non-propagule stages (mature stages plus the seedling stage) in general, respectively.</p>
 
 ```r
 lathsupp2 <- supplemental(stage3 = c("Sd", "Sdl", "Sd", "Sdl"), 
@@ -154,10 +154,10 @@ lathsupp2 <- supplemental(stage3 = c("Sd", "Sdl", "Sd", "Sdl"),
   givenrate = c(0.345, 0.054, NA, NA),
   multiplier = c(NA, NA, 0.345, 0.054),
   type = c(1, 1, 3, 3), stageframe = lathframeipm, historical = FALSE)
-lathsupp3 <- supplemental(stage3 = c("Sd", "Sd", "Sdl", "Sdl", "mat", "Sd", "Sdl"), 
+lathsupp3 <- supplemental(stage3 = c("Sd", "Sd", "Sdl", "Sdl", "npr", "Sd", "Sdl"), 
   stage2 = c("Sd", "Sd", "Sd", "Sd", "Sdl", "rep", "rep"),
   stage1 = c("Sd", "rep", "Sd", "rep", "Sd", "mat", "mat"),
-  eststage3 = c(NA, NA, NA, NA, "mat", NA, NA),
+  eststage3 = c(NA, NA, NA, NA, "npr", NA, NA),
   eststage2 = c(NA, NA, NA, NA, "Sdl", NA, NA),
   eststage1 = c(NA, NA, NA, NA, "Sdl", NA, NA),
   givenrate = c(0.345, 0.345, 0.054, 0.054, NA, NA, NA),
@@ -224,32 +224,29 @@ lathsupp3 <- supplemental(stage3 = c("Sd", "Sd", "Sdl", "Sdl", "mat", "Sd", "Sdl
   
   <p style="text-indent: 20px">This function is useful not just because it develops the vital rate models necessary for function-based MPM estimation, but because it provides a test of whether individual history affects demography. Setting `historical = TRUE` fits size and/or reproductive status in time *t*-1 into global models, while setting `historical = FALSE` prevents testing of the impacts of state in time *t*-1. The model building and selection protocols can then be used to see if history has a significant impact on a vital rate, by assessing whether a historical term is retained in the best-fit model.</p>
 
-  <p style="text-indent: 20px">At the time of writing, mixed modeling of the negative binomial distribution, as well as of zero-truncated and zero-inflated versions of the Poisson and negative binomial distributions, have been deactivated due to core issues with package `glmmTMB`. So, here we utilize a mixed approach but with a standard Poisson response for fecundity. We will update this section again once mixed models with these response distributions are enabled again.</p>
-  
   <p style="text-indent: 20px">First, we will create the historical models to assess whether history is a significant influence on vital rates. Please remove the hashtag from the `summary` call to see details of the best-fit models.</p>
 
 ```r
 lathmodels3ipm <- modelsearch(lathvertipm, historical = TRUE, approach = "mixed", 
   suite = "size", vitalrates = c("surv", "obs", "size", "fec"), 
   juvestimate = "Sdl", bestfit = "AICc&k", sizedist = "gaussian", 
-  fecdist = "poisson", fec.zero = FALSE, indiv = "individ", year = "year2", 
+  fecdist = "negbin", fec.zero = TRUE, indiv = "individ", year = "year2", 
   year.as.random = TRUE, juvsize = TRUE, show.model.tables = TRUE, quiet = TRUE)
-#> Warning: Some predictor variables are on very different scales: consider rescaling
-#> Warning in checkConv(attr(opt, "derivs"), opt$par, ctrl = control$checkConv, : Model failed to converge with max|grad| =
-#> 0.0158034 (tol = 0.002, component 1)
+#> Warning: Some predictor variables are on very different scales: consider
+#> rescaling
+#> Warning in checkConv(attr(opt, "derivs"), opt$par, ctrl = control$checkConv, :
+#> Model failed to converge with max|grad| = 0.0158034 (tol = 0.002, component 1)
 #> Warning in checkConv(attr(opt, "derivs"), opt$par, ctrl = control$checkConv, : Model is nearly unidentifiable: very large eigenvalue
 #>  - Rescale variables?;Model is nearly unidentifiable: large eigenvalue ratio
 #>  - Rescale variables?
-#> Warning: Some predictor variables are on very different scales: consider rescaling
+#> Warning: Some predictor variables are on very different scales: consider
+#> rescaling
 #> boundary (singular) fit: see ?isSingular
-#> Warning: Some predictor variables are on very different scales: consider rescaling
+#> Warning: Some predictor variables are on very different scales: consider
+#> rescaling
 #> boundary (singular) fit: see ?isSingular
-#> Warning: Some predictor variables are on very different scales: consider rescaling
-#> Warning in checkConv(attr(opt, "derivs"), opt$par, ctrl = control$checkConv, : Model failed to converge with max|grad| =
-#> 0.06446 (tol = 0.002, component 1)
-#> Warning in checkConv(attr(opt, "derivs"), opt$par, ctrl = control$checkConv, : Model is nearly unidentifiable: very large eigenvalue
-#>  - Rescale variables?;Model is nearly unidentifiable: large eigenvalue ratio
-#>  - Rescale variables?
+#> Warning in fitTMB(TMBStruc): Model convergence problem; non-positive-definite
+#> Hessian matrix. See vignette('troubleshooting')
 #> boundary (singular) fit: see ?isSingular
 #> boundary (singular) fit: see ?isSingular
 #summary(lathmodels3ipm)
@@ -261,17 +258,12 @@ lathmodels3ipm <- modelsearch(lathvertipm, historical = TRUE, approach = "mixed"
 lathmodels2ipm <- modelsearch(lathvertipm, historical = FALSE, 
   approach = "mixed", suite = "size", 
   vitalrates = c("surv", "obs", "size", "fec"), juvestimate = "Sdl", 
-  bestfit = "AICc&k", sizedist = "gaussian", fecdist = "poisson", 
-  fec.zero = FALSE, indiv = "individ", year = "year2", year.as.random = TRUE, 
+  bestfit = "AICc&k", sizedist = "gaussian", fecdist = "negbin", 
+  fec.zero = TRUE, indiv = "individ", year = "year2", year.as.random = TRUE, 
   juvsize = TRUE, show.model.tables = TRUE, quiet = TRUE)
 #> boundary (singular) fit: see ?isSingular
 #> boundary (singular) fit: see ?isSingular
 #> boundary (singular) fit: see ?isSingular
-#> Warning in checkConv(attr(opt, "derivs"), opt$par, ctrl = control$checkConv, : Model failed to converge with max|grad| =
-#> 0.10384 (tol = 0.002, component 1)
-#> Warning in checkConv(attr(opt, "derivs"), opt$par, ctrl = control$checkConv, : Model is nearly unidentifiable: very large eigenvalue
-#>  - Rescale variables?;Model is nearly unidentifiable: large eigenvalue ratio
-#>  - Rescale variables?
 #> boundary (singular) fit: see ?isSingular
 #> boundary (singular) fit: see ?isSingular
 #summary(lathmodels2ipm)
@@ -305,10 +297,19 @@ summary(lathmat3ipm)
 #> Juvenile observation estimated with 154 individuals and 210 individual transitions.
 #> Juvenile size estimated with 144 individuals and 193 individual transitions.
 #> Juvenile reproduction probability not estimated.
+#> 
+#> Survival probability sum check (each matrix represented by column in order):
+#>          [,1]  [,2]  [,3]
+#> Min.    0.000 0.000 0.000
+#> 1st Qu. 0.996 0.983 0.988
+#> Median  1.000 0.999 1.000
+#> Mean    0.969 0.952 0.960
+#> 3rd Qu. 1.000 1.000 1.000
+#> Max.    1.000 1.000 1.000
 #> NULL
 ```
 
-  <p style="text-indent: 20px">These are giant matrices. With 10,609 rows and columns, there are a total of 112,550,881 elements per matrix. But they are also amazingly sparse - with 1,060,912 elements estimated, only 0.9% of elements per matrix are non-zero. Let's now build the ahistorical IPMs.</p>
+  <p style="text-indent: 20px">These are giant matrices. With 10,609 rows and columns, there are a total of 112,550,881 elements per matrix. But they are also amazingly sparse - with 1,060,912 elements estimated, only 0.9% of elements per matrix are non-zero. The survival probability sums all look good, so we appear to have no problems with overly large given and proxy survival transitions provided through our supplemental tables. Let's now build the ahistorical IPMs.</p>
 
 ```r
 lathmat2ipm <- flefko2(stageframe = lathframeipm, modelsuite = lathmodels2ipm,
@@ -333,23 +334,19 @@ summary(lathmat2ipm)
 #> Juvenile observation estimated with 154 individuals and 210 individual transitions.
 #> Juvenile size estimated with 144 individuals and 193 individual transitions.
 #> Juvenile reproduction probability not estimated.
+#> 
+#> Survival probability sum check (each matrix represented by column in order):
+#>             [,1]     [,2]     [,3]
+#> Min.    4.87e-05 1.35e-05 0.000059
+#> 1st Qu. 9.84e-01 9.61e-01 0.985057
+#> Median  9.99e-01 9.99e-01 0.998781
+#> Mean    9.54e-01 9.24e-01 0.956967
+#> 3rd Qu. 1.00e+00 1.00e+00 0.999866
+#> Max.    1.00e+00 1.00e+00 0.999985
 #> NULL
 ```
 
   <p style="text-indent: 20px">The ahistorical IPMs are certainly smaller than the historical IPMs, but are nonetheless quiet large. Although huge, these matrices are not sparse - 10,407 elements out of 10,609 per matrix are estimated (98.1%). Fortunately, we can assume that neither IPM is overparameterized, since ultimately the elements in an IPM and any other function-based matrix reflect the statistical power of the underlying vital rate models. In `lefko3`, the vital rate models used are the best-fit models from exhaustive model selection, and so are already the most parsimonious from within the suite of tested models.</p>
-
-  <p style="text-indent: 20px">Let's take a look at the column sums of the first ahistorical `U` matrix and the first historical `U` matrix, to make sure that all column sums look like survival probabilities.</p>
-
-```r
-summary(colSums(lathmat2ipm$U[[1]]))
-#>      Min.   1st Qu.    Median      Mean   3rd Qu.      Max. 
-#> 0.0000487 0.9838110 0.9987809 0.9540850 0.9998662 0.9999848
-summary(colSums(lathmat3ipm$U[[1]]))
-#>    Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
-#>  0.0000  0.9963  0.9999  0.9690  1.0000  1.0000
-```
-
-  <p style="text-indent: 20px">Everything looks OK, with stage survival probabilities all falling between 0 and 1.</p>
 
   <p style="text-indent: 20px">Let's do a further comparison - let's view a matrix plot of each kind of MPM, ahistorical and then historical. First, the ahistorical plot.</p>
 
@@ -357,7 +354,7 @@ summary(colSums(lathmat3ipm$U[[1]]))
 image3(lathmat2ipm, used = 1)
 ```
 
-![Figure 6.2. Image of ahistorical projection matrix](Ch6.13-1.png)
+![Figure 6.2. Image of ahistorical projection matrix](Ch6.12-1.png)
 
 ```
 #> NULL
@@ -369,7 +366,7 @@ image3(lathmat2ipm, used = 1)
 image3(lathmat3ipm, used = 1)
 ```
 
-![Figure 6.3. Image of historical projection matrix](Ch6.14-1.png)
+![Figure 6.3. Image of historical projection matrix](Ch6.13-1.png)
 
 ```
 #> NULL
@@ -419,7 +416,7 @@ legend("bottomleft", c("ahistorical", "historical"), lty = c(1, 2),
   col = c("black", "red"), lwd = 2, bty = "n")
 ```
 
-![Figure 6.4. Ahistorical vs. historical lambda](Ch6.17-1.png)
+![Figure 6.4. Ahistorical vs. historical lambda](Ch6.16-1.png)
 
   <p style="text-indent: 20px">Ahistorical estimates of $\lambda$ are lower than historical estimates, and the historical $\lambda$ values are more in line with estimates from the other *Lathyrus* vignettes.</p>
 
@@ -427,18 +424,18 @@ legend("bottomleft", c("ahistorical", "historical"), lty = c(1, 2),
 
 ```r
 lambda3(lath2ipmmean)
-#>   pop patch    lambda
-#> 1   1     1 0.8154364
+#>   pop patch   lambda
+#> 1   1     1 0.815444
 lambda3(lath3ipmmean)
 #>   pop patch    lambda
-#> 1   1     1 0.8719854
+#> 1   1     1 0.8719855
 set.seed(42)
 slambda3(lathmat2ipm)
-#>   pop patch          a         var         sd           se
-#> 1   1     1 -0.2112523 0.005695228 0.07546673 0.0007546673
+#>   pop patch          a        var        sd          se
+#> 1   1     1 -0.2112375 0.01050791 0.1025081 0.001025081
 slambda3(lathmat3ipm, times = 1000)
 #>   pop patch          a         var         sd          se
-#> 1   1     1 -0.1501336 0.006138368 0.07834774 0.002477573
+#> 1   1     1 -0.1501268 0.007987215 0.08937122 0.002826166
 ```
 
   <p style="text-indent: 20px">The historical growth rate is larger than the ahistorical in both deterministic and stochastic analyses, although all four numbers suggest a declining population. Now let's compare the stable stage distribution from both the ahistorical and historical mean MPMs.</p>
@@ -462,13 +459,13 @@ legend("topright", c("det ahist", "det hist", "sto ahist", "sto hist"),
   col = c("black", "orangered", "grey", "darkred"), pch = 15, bty = "n")
 ```
 
-![Figure 6.5. Ahistorical vs. historically-corrected stable stage distribution](Ch6.19-1.png)
+![Figure 6.5. Ahistorical vs. historically-corrected stable stage distribution](Ch6.18-1.png)
 
 ```r
 par(lty = lty.o)
 ```
 
-  <p style="text-indent: 20px">Both ahistorical and historical approaches show the stable stage distribution dominated by the first stage, which is the dormant seed stage. However, the deterministic historic analysis suggests roughly equal weighting to the seedling stage, and increases the importance of larger adult stages. Stochastic analysis shows similar patterns. The importance of the seed bank to the population is quite clear in this analysis!</p>
+  <p style="text-indent: 20px">Both ahistorical and historical approaches show the stable stage distribution dominated by the first stage, which is the dormant seed stage. However, the deterministic historic analysis suggests roughly equal weighting to the seedling stage, and increases the importance of small adult stages. Stochastic analysis shows similar patterns. The importance of the seed bank to the population is quite clear in this analysis!</p>
 
   <p style="text-indent: 20px">Next, we will estimate the reproductive values associated with the element-wise mean matrices.</p>
 
@@ -493,13 +490,13 @@ legend("topleft", c("det ahist", "det hist", "sto ahist", "sto hist"),
   col = c("black", "orangered", "grey", "darkred"), pch = 15, bty = "n")
 ```
 
-![Figure 6.6. Ahistorical vs. historically-corrected reproductive values](Ch6.20-1.png)
+![Figure 6.6. Ahistorical vs. historically-corrected reproductive values](Ch6.19-1.png)
 
 ```r
 par(lty = lty.o)
 ```
 
-  <p style="text-indent: 20px">A quick scan through these values shows that the highest reproductive values in the deterministic ahistorical analysis are for the largest adults. However, historically-corrected deterministic reproductive values drop off once adults get somewhat large, with the largest value associated with plants with a leaf volume of 5076 (the maximum is >7000). Stochastic analyses shows a general build-up of reproductive value with increasing size, similarly to the deterministic ahistorical projection. However, the ahistorical stochastic analyses match the deterministic analyses fairly strongly, while the historical stochastic analyses show a larger hump of reproductive value associated with medium sizes and a slower build-up to the largest sizes. So, individual history and temporal environmental stochasticity both have strong impacts here.</p>
+  <p style="text-indent: 20px">A quick scan through these values shows that the highest reproductive values in the deterministic ahistorical analysis are for the largest adults. However, historically-corrected deterministic reproductive values drop off once adults get somewhat large, with the largest value associated with plants with a leaf volume of 5076 (the maximum is >7000). Stochastic analysis shows a general build-up of reproductive value with increasing size, similarly to the deterministic ahistorical projection. However, the ahistorical stochastic analyses match the deterministic analyses fairly strongly, while the historical stochastic analyses show a larger hump of reproductive value associated with medium sizes and a slower build-up to the largest sizes. So, individual history and temporal environmental stochasticity both have strong impacts here.</p>
   
   <p style="text-indent: 20px">Let's now try a sensitivity analysis. We will conduct both deterministic and stochastic analyses of ahistorical and historical MPMs. Because of the size of the hMPMs, we will limit run time of the stochastic sensitivity analysis to 200 time steps (this may take several hours even with reduced time steps). We will also limit our analysis to biologically possible transitions by ignoring the sensitivities of zero elements.</p>
 
@@ -544,7 +541,7 @@ which(lath3ipmsens_s$h_sensmats[[1]] == max(lath3ipmsens_s$h_sensmats[[1]][which
 
   <p style="text-indent: 20px">Our sensitivity analyses generally suggest that population growth rate is most sensitive to element 309, which is the third column (309 / 103 = 3) and the 103rd row and so is associated with the transition from vegetative dormancy to the largest adult stage. However, deterministic analysis of the hMPM differs, suggesting that population growth rate is most elastic to element 283, which is in the third column and 77th row. This transition is from vegetative dormancy to a medium-to-large size adult. Historical deterministic and stochastic sensitivity analyses both suggest that population growth rate is most sensitive to changes in element 2,206,981, which is in the 209th column (2,206,981 / 10,609 = 208.0291) and the 309th row. That element corresponds to the transition from vegetative dormancy in times *t*-1 and *t* to the largest adult in time *t*+1. So, sensitivity analysis strongly suggests that vegetative dormance has strong impacts on population growth rate.</p>
 
-  <p style="text-indent: 20px">We will now move on to elasticity analysis. We will reduce the number of time steps simulated in the stochastic historical analysis to reduce the amount of computer processing time (this might take several hours even with the number of steps reduced). We will also remove the sensitivity analyses from memory, because these sensitivity and elasticity matrices are quite large.</p>
+  <p style="text-indent: 20px">We will now move on to elasticity analysis. We will reduce the number of time steps simulated in the stochastic historical analysis to reduce the amount of computer processing time (this might take several hours even with the number of steps reduced). We will also remove the sensitivity analyses from memory.</p>
 
 ```r
 rm("lath2ipmsens", "lath3ipmsens", "lath2ipmsens_s", "lath3ipmsens_s")
@@ -603,7 +600,7 @@ legend("topright", c("det ahist", "det hist", "sto ahist", "sto hist"),
   col = c("black", "orangered", "grey", "darkred"), pch = 15, bty = "n")
 ```
 
-![Figure 6.7. Ahistorical vs. historically-corrected elasticity of lambda to stage](Ch6.23-1.png)
+![Figure 6.7. Ahistorical vs. historically-corrected elasticity of lambda to stage](Ch6.22-1.png)
 
 ```r
 par(lty = lty.o)
@@ -630,7 +627,7 @@ legend("topright", c("det ahist", "det hist", "sto ahist", "sto hist"),
   col = c("black", "orangered", "grey", "darkred"), pch = 15, bty = "n")
 ```
 
-![Figure 6.8. Ahistorical vs. historically-corrected elasticity of lambda to transitions](Ch6.24-1.png)
+![Figure 6.8. Ahistorical vs. historically-corrected elasticity of lambda to transitions](Ch6.23-1.png)
 
   <p style="text-indent: 20px">We see similar transition elasticities between ahistorical and historical analyses, with growth and shrinkage the most influential on $\lambda$, while fecundity is by far the least influential.</p>
 

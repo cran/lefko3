@@ -10,6 +10,7 @@
   steps = 10000,
   time_weights = NA,
   historical = FALSE,
+  sparse = "auto",
   ...
 )
 }
@@ -28,6 +29,10 @@ annual matrices. Defaults to equal weighting among times.}
 
 \item{historical}{A logical value indicating whether matrices are historical.
 Defaults to FALSE.}
+
+\item{sparse}{A text string indicating whether to use sparse matrix encoding
+(\code{"yes"}) or dense matrix encoding (\code{"no"}). Defaults to
+\code{"auto"}.}
 
 \item{...}{Other parameters.}
 }
@@ -59,7 +64,8 @@ to the log of the stochastic \eqn{\lambda}.
 
 Currently, this function does not estimate equivalent ahistorical stochastic
 sensitivities for input historical matrices, due to the lack of guidance
-input on the order of stages.
+input on the order of stages (such guidance is provided within
+\code{lefkoMat} objects).
 }
 
 \examples{

@@ -371,90 +371,50 @@ BEGIN_RCPP
 END_RCPP
 }
 // lambda3matrix
-double lambda3matrix(arma::mat Amat);
-RcppExport SEXP _lefko3_lambda3matrix(SEXP AmatSEXP) {
+double lambda3matrix(arma::mat Amat, bool sparse);
+RcppExport SEXP _lefko3_lambda3matrix(SEXP AmatSEXP, SEXP sparseSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< arma::mat >::type Amat(AmatSEXP);
-    rcpp_result_gen = Rcpp::wrap(lambda3matrix(Amat));
-    return rcpp_result_gen;
-END_RCPP
-}
-// lambda3matrixsp
-double lambda3matrixsp(arma::mat Amat);
-RcppExport SEXP _lefko3_lambda3matrixsp(SEXP AmatSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< arma::mat >::type Amat(AmatSEXP);
-    rcpp_result_gen = Rcpp::wrap(lambda3matrixsp(Amat));
+    Rcpp::traits::input_parameter< bool >::type sparse(sparseSEXP);
+    rcpp_result_gen = Rcpp::wrap(lambda3matrix(Amat, sparse));
     return rcpp_result_gen;
 END_RCPP
 }
 // ss3matrix
-arma::vec ss3matrix(arma::mat Amat);
-RcppExport SEXP _lefko3_ss3matrix(SEXP AmatSEXP) {
+arma::vec ss3matrix(arma::mat Amat, bool sparse);
+RcppExport SEXP _lefko3_ss3matrix(SEXP AmatSEXP, SEXP sparseSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< arma::mat >::type Amat(AmatSEXP);
-    rcpp_result_gen = Rcpp::wrap(ss3matrix(Amat));
-    return rcpp_result_gen;
-END_RCPP
-}
-// ss3matrixsp
-arma::vec ss3matrixsp(arma::mat Amat);
-RcppExport SEXP _lefko3_ss3matrixsp(SEXP AmatSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< arma::mat >::type Amat(AmatSEXP);
-    rcpp_result_gen = Rcpp::wrap(ss3matrixsp(Amat));
+    Rcpp::traits::input_parameter< bool >::type sparse(sparseSEXP);
+    rcpp_result_gen = Rcpp::wrap(ss3matrix(Amat, sparse));
     return rcpp_result_gen;
 END_RCPP
 }
 // rv3matrix
-arma::vec rv3matrix(arma::mat Amat);
-RcppExport SEXP _lefko3_rv3matrix(SEXP AmatSEXP) {
+arma::vec rv3matrix(arma::mat Amat, bool sparse);
+RcppExport SEXP _lefko3_rv3matrix(SEXP AmatSEXP, SEXP sparseSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< arma::mat >::type Amat(AmatSEXP);
-    rcpp_result_gen = Rcpp::wrap(rv3matrix(Amat));
-    return rcpp_result_gen;
-END_RCPP
-}
-// rv3matrixsp
-arma::vec rv3matrixsp(arma::mat Amat);
-RcppExport SEXP _lefko3_rv3matrixsp(SEXP AmatSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< arma::mat >::type Amat(AmatSEXP);
-    rcpp_result_gen = Rcpp::wrap(rv3matrixsp(Amat));
+    Rcpp::traits::input_parameter< bool >::type sparse(sparseSEXP);
+    rcpp_result_gen = Rcpp::wrap(rv3matrix(Amat, sparse));
     return rcpp_result_gen;
 END_RCPP
 }
 // sens3matrix
-arma::mat sens3matrix(arma::mat Amat);
-RcppExport SEXP _lefko3_sens3matrix(SEXP AmatSEXP) {
+arma::mat sens3matrix(arma::mat Amat, bool sparse);
+RcppExport SEXP _lefko3_sens3matrix(SEXP AmatSEXP, SEXP sparseSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< arma::mat >::type Amat(AmatSEXP);
-    rcpp_result_gen = Rcpp::wrap(sens3matrix(Amat));
-    return rcpp_result_gen;
-END_RCPP
-}
-// sens3matrixsp
-arma::mat sens3matrixsp(arma::mat Amat);
-RcppExport SEXP _lefko3_sens3matrixsp(SEXP AmatSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< arma::mat >::type Amat(AmatSEXP);
-    rcpp_result_gen = Rcpp::wrap(sens3matrixsp(Amat));
+    Rcpp::traits::input_parameter< bool >::type sparse(sparseSEXP);
+    rcpp_result_gen = Rcpp::wrap(sens3matrix(Amat, sparse));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -472,24 +432,14 @@ BEGIN_RCPP
 END_RCPP
 }
 // elas3matrix
-arma::mat elas3matrix(arma::mat Amat);
-RcppExport SEXP _lefko3_elas3matrix(SEXP AmatSEXP) {
+arma::mat elas3matrix(arma::mat Amat, bool sparse);
+RcppExport SEXP _lefko3_elas3matrix(SEXP AmatSEXP, SEXP sparseSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< arma::mat >::type Amat(AmatSEXP);
-    rcpp_result_gen = Rcpp::wrap(elas3matrix(Amat));
-    return rcpp_result_gen;
-END_RCPP
-}
-// elas3matrixsp
-arma::mat elas3matrixsp(arma::mat Amat);
-RcppExport SEXP _lefko3_elas3matrixsp(SEXP AmatSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< arma::mat >::type Amat(AmatSEXP);
-    rcpp_result_gen = Rcpp::wrap(elas3matrixsp(Amat));
+    Rcpp::traits::input_parameter< bool >::type sparse(sparseSEXP);
+    rcpp_result_gen = Rcpp::wrap(elas3matrix(Amat, sparse));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -622,17 +572,12 @@ static const R_CallMethodDef CallEntries[] = {
     {"_lefko3_geodiesel", (DL_FUNC) &_lefko3_geodiesel, 7},
     {"_lefko3_decomp3", (DL_FUNC) &_lefko3_decomp3, 1},
     {"_lefko3_decomp3sp", (DL_FUNC) &_lefko3_decomp3sp, 1},
-    {"_lefko3_lambda3matrix", (DL_FUNC) &_lefko3_lambda3matrix, 1},
-    {"_lefko3_lambda3matrixsp", (DL_FUNC) &_lefko3_lambda3matrixsp, 1},
-    {"_lefko3_ss3matrix", (DL_FUNC) &_lefko3_ss3matrix, 1},
-    {"_lefko3_ss3matrixsp", (DL_FUNC) &_lefko3_ss3matrixsp, 1},
-    {"_lefko3_rv3matrix", (DL_FUNC) &_lefko3_rv3matrix, 1},
-    {"_lefko3_rv3matrixsp", (DL_FUNC) &_lefko3_rv3matrixsp, 1},
-    {"_lefko3_sens3matrix", (DL_FUNC) &_lefko3_sens3matrix, 1},
-    {"_lefko3_sens3matrixsp", (DL_FUNC) &_lefko3_sens3matrixsp, 1},
+    {"_lefko3_lambda3matrix", (DL_FUNC) &_lefko3_lambda3matrix, 2},
+    {"_lefko3_ss3matrix", (DL_FUNC) &_lefko3_ss3matrix, 2},
+    {"_lefko3_rv3matrix", (DL_FUNC) &_lefko3_rv3matrix, 2},
+    {"_lefko3_sens3matrix", (DL_FUNC) &_lefko3_sens3matrix, 2},
     {"_lefko3_sens3hlefko", (DL_FUNC) &_lefko3_sens3hlefko, 3},
-    {"_lefko3_elas3matrix", (DL_FUNC) &_lefko3_elas3matrix, 1},
-    {"_lefko3_elas3matrixsp", (DL_FUNC) &_lefko3_elas3matrixsp, 1},
+    {"_lefko3_elas3matrix", (DL_FUNC) &_lefko3_elas3matrix, 2},
     {"_lefko3_elas3hlefko", (DL_FUNC) &_lefko3_elas3hlefko, 3},
     {"_lefko3_proj3", (DL_FUNC) &_lefko3_proj3, 6},
     {"_lefko3_projection3", (DL_FUNC) &_lefko3_projection3, 8},

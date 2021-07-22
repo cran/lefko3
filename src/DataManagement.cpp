@@ -1423,15 +1423,15 @@ Rcpp::List pfj(DataFrame data, DataFrame stageframe, int noyears, int firstyear,
           
           stage3[(i + (j * noindivs))] = "NoMatch";
           
-          Rcpp::warning("Some stages occurring in the dataset do not match any characteristics in the input stageframe.");
+          Rf_warningcall(R_NilValue, "Some stages occurring in the dataset do not match any characteristics in the input stageframe.");
           
         } else if (cs4.n_elem > 1) {
           
-          Rcpp::warning("Some stages in the input stageframe appear to have the same description. Please make sure that all stages included in the stageframe are defined with unique sets of characteristics.");
+          Rf_warningcall(R_NilValue, "Some stages in the input stageframe appear to have the same description. Please make sure that all stages included in the stageframe are defined with unique sets of characteristics.");
           
         } else {
           
-          Rcpp::stop("Stage assignment error.");
+          throw Rcpp::exception("Stage assignment error.", false);
           
         }
       } // stassign if statement
@@ -2586,15 +2586,15 @@ Rcpp::List jpf(DataFrame data, DataFrame stageframe, int popidcol,
           
           stage3[i] = "NoMatch";
           
-          Rcpp::warning("Some stages occurring in the dataset do not match any characteristics in the input stageframe.");
+          Rf_warningcall(R_NilValue, "Some stages occurring in the dataset do not match any characteristics in the input stageframe.");
           
         } else if (cs4.n_elem > 1) {
           
-          Rcpp::warning("Some stages in the input stageframe appear to have the same description. Please make sure that all stages included in the stageframe are defined with unique sets of characteristics.");
+          Rf_warningcall(R_NilValue, "Some stages in the input stageframe appear to have the same description. Please make sure that all stages included in the stageframe are defined with unique sets of characteristics.");
           
         } else {
           
-          Rcpp::stop("Stage assignment error.");
+          throw Rcpp::exception("Stage assignment error.", false);
           
         }
       } // stassign if statement

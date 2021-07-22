@@ -4,10 +4,14 @@
 \alias{elasticity3.matrix}
 \title{Estimate Elasticity of Population Growth Rate of a Single Matrix}
 \usage{
-\method{elasticity3}{matrix}(mats, ...)
+\method{elasticity3}{matrix}(mats, sparse = "auto", ...)
 }
 \arguments{
 \item{mats}{An object of class \code{matrix}.}
+
+\item{sparse}{A text string indicating whether to use sparse matrix encoding
+(\code{"yes"}) or dense matrix encoding (\code{"no"}). Defaults to
+\code{"auto"}.}
 
 \item{...}{Other parameters.}
 }

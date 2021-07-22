@@ -4,10 +4,10 @@
 #' means.
 #' 
 #' @param mats A \code{lefkoMat} object.
-#' @param matsout A string identifying which means to estimate. Option "pop"
-#' indicates population-level only, "patch" indicates patch-level only, and
-#' "all" indicates that both patch- and population-level means should be
-#' estimated.
+#' @param matsout A string identifying which means to estimate. Option
+#' \code{"pop"} indicates population-level only, \code{"patch"} indicates
+#' patch-level only, and \code{"all"} indicates that both patch- and
+#' population-level means should be estimated. Defaults to \code{"all"}.
 #' 
 #' @return Yields a \code{lefkoMat} object with the following characteristics:
 #' 
@@ -211,12 +211,13 @@ lmean <- function(mats, matsout = "all") {
 #' 
 #' @param mats A lefkoMat object, or a single projection matrix, for which the
 #' dominant eigenvalue is desired.
+#' @param ... Other parameters.
 #' 
 #' @return The value returned depends on the class of the \code{mats} argument.
-#' See related functions for more details.
 #' 
 #' @seealso \code{\link{lambda3.lefkoMat}()}
 #' @seealso \code{\link{lambda3.matrix}()}
+#' @seealso \code{\link{slambda3}()}
 #' 
 #' @examples
 #' # Lathyrus example
@@ -309,7 +310,7 @@ lmean <- function(mats, matsout = "all") {
 #' lambda3(cypmatrix2r)
 #' 
 #' @export
-lambda3 <- function(mats) UseMethod("lambda3")
+lambda3 <- function(mats, ...) UseMethod("lambda3")
 
 #' Estimate Deterministic Population Growth Rates of lefkoMat Matrices
 #' 
@@ -319,19 +320,29 @@ lambda3 <- function(mats) UseMethod("lambda3")
 #' IPMs, age x stage matrices, as well as smaller ahistorical matrices.
 #' 
 #' @param mats An object of class \code{lefkoMat}.
+#' @param sparse A text string indicating whether to use sparse matrix encoding
+#' (\code{"yes"}) or dense matrix encoding (\code{"no"}). Defaults to
+#' \code{"auto"}.
+#' @param ... Other parameters.
 #' 
 #' @return This function returns the dominant eigenvalue of each \code{$A}
-#' matrix in \code{mats}. For square matrices with fewer than 400 rows, this is
-#' given as the largest real part of all eigenvalues estimated via the
-#' \code{eig_gen}() function in the C++ Armadillo library. For larger matrices,
-#' the function assumes that matrices are sparse and uses \code{eigs_gen}()
-#' instead (the function handles all conversions automatically). The output
-#' includes a data frame showing the population, patch, and lambda estimate for
-#' each \code{$A} matrix. Row names correspond to the order of the matrix within
-#' the \code{$A} element of \code{mats}.
+#' matrix in \code{mats}. The output includes a data frame showing the
+#' population, patch, and lambda estimate for each \code{$A} matrix. Row names
+#' correspond to the order of the matrix within the \code{$A} element of
+#' \code{mats}.
+#' 
+#' @section Notes:
+#' The \code{sparse} option allows the function to utilize underlying methods
+#' of either dense or sparse matrix manipulation in order to speed up processing
+#' time and prevent memory shortages. Under the \code{auto} setting, the
+#' function will determine whether the matrix is sparse and act accordingly.
+#' For extremely large, sparse matrices, the user may simply set
+#' \code{sparse = "yes"} to save time further and force the use of sparse format
+#' in calculations.
 #' 
 #' @seealso \code{\link{lambda3}()}
 #' @seealso \code{\link{lambda3.matrix}()}
+#' @seealso \code{\link{slambda3}()}
 #' 
 #' @examples
 #' # Lathyrus example
@@ -424,27 +435,29 @@ lambda3 <- function(mats) UseMethod("lambda3")
 #' lambda3(cypmatrix2r)
 #' 
 #' @export
-lambda3.lefkoMat <- function(mats) {
-  baldrick <- if (any(class(mats$A) == "matrix")) {
-    
-    if (dim(mats$A)[1] > 400) {
-      lambda3matrixsp(mats$A)
-    } else {
-      lambda3matrix(mats$A)
-    }
-    
-  } else if (class(mats$A) == "list") {
-    
-    if (dim(mats$A[[1]])[1] > 400) {
-      unlist(lapply(mats$A, lambda3matrixsp))
-    } else {
-      unlist(lapply(mats$A, lambda3matrix))
-    }
-    
+lambda3.lefkoMat <- function(mats, sparse = "auto", ...) {
+  
+  if (is.element(tolower(sparse), c("y", "yes", "yea", "yeah", "t", "true"))) {
+    sparsemethod <- 1
+  } else if (is.element(tolower(sparse), c("n", "no", "non", "nah", "f", "false"))) {
+    sparsemethod <- 0
   } else {
+    elements_total <- length(mats$A[[1]])
+    dense_elements <- length(which(mats$A[[1]] != 0))
     
+    if ((dense_elements / elements_total) < 0.5) {
+      sparsemethod <- 1
+    } else sparsemethod <- 0
+  }
+  
+  baldrick <- if (any(class(mats$A) == "matrix")) {
+    lambda3matrix(mats$A, sparsemethod)
+
+  } else if (class(mats$A) == "list") {
+    unlist(lapply(mats$A, lambda3matrix, sparsemethod))
+
+  } else {
     stop("Input not recognized.")
-    
   }
   
   if (length(mats$labels$pop) == 2 & length(baldrick == 1)) {
@@ -467,15 +480,25 @@ lambda3.lefkoMat <- function(mats) {
 #' as smaller ahistorical matrices.
 #' 
 #' @param mats A population projection matrix of class \code{matrix}.
+#' @param sparse A text string indicating whether to use sparse matrix encoding
+#' (\code{"yes"}) or dense matrix encoding (\code{"no"}). Defaults to
+#' \code{"auto"}.
+#' @param ... Other parameters.
 #'
-#' @return This function returns the dominant eigenvalue of the matrix. For
-#' square matrices with fewer than 400 rows, this is given as the largest real
-#' part of all eigenvalues estimated via the \code{eig_gen}() function in
-#' package the C++ Armadillo library. For larger matrices, the matrix is assumed
-#' to be sparse and \code{eigs_gen}() is used instead.
+#' @return This function returns the dominant eigenvalue of the matrix.
+#' 
+#' @section Notes:
+#' The \code{sparse} option allows the function to utilize underlying methods
+#' of either dense or sparse matrix manipulation in order to speed up processing
+#' time and prevent memory shortages. Under the \code{auto} setting, the
+#' function will determine whether the matrix is sparse and act accordingly.
+#' For extremely largem sparse matrices, the user may simply set
+#' \code{sparse = "yes"} to save time further and force the use of sparse format
+#' in calculations.
 #' 
 #' @seealso \code{\link{lambda3}()}
 #' @seealso \code{\link{lambda3.lefkoMat}()}
+#' @seealso \code{\link{slambda3}()}
 #' 
 #' @examples
 #' # Lathyrus example
@@ -568,14 +591,23 @@ lambda3.lefkoMat <- function(mats) {
 #' lambda3(cypmatrix2r$A[[1]])
 #' 
 #' @export
-lambda3.matrix <- function(mats)
+lambda3.matrix <- function(mats, sparse = "auto", ...)
 {
-  if (dim(mats)[1] > 400) {
-    lambda <- lambda3matrixsp(mats);
+  if (is.element(tolower(sparse), c("y", "yes", "yea", "yeah", "t", "true"))) {
+    sparsemethod <- 1
+  } else if (is.element(tolower(sparse), c("n", "no", "non", "nah", "f", "false"))) {
+    sparsemethod <- 0
   } else {
-    lambda <- lambda3matrix(mats);
+    elements_total <- length(mats)
+    dense_elements <- length(which(mats != 0))
+    
+    if ((dense_elements / elements_total) < 0.5) {
+      sparsemethod <- 1
+    } else sparsemethod <- 0
   }
   
+  lambda <- lambda3matrix(mats, sparsemethod);
+
   return(lambda)
 }
 
@@ -710,6 +742,9 @@ stablestage3 <- function(mats, ...) UseMethod("stablestage3")
 #' use for each matrix in stochastic simulations. If not given, then defaults to
 #' equal weighting.
 #' @param seed A number to use as a random number seed.
+#' @param sparse A text string indicating whether to use sparse matrix encoding
+#' (\code{"yes"}) or dense matrix encoding (\code{"no"}). Defaults to
+#' \code{"auto"}.
 #' @param ... Other parameters.
 #' 
 #' @return This function returns the stable stage distributions (and long-run
@@ -744,21 +779,13 @@ stablestage3 <- function(mats, ...) UseMethod("stablestage3")
 #' population-patch combinations in the \code{lefkoMat} input.
 #'
 #' @section Notes:
-#' For square matrices with fewer than 400 rows, the stable stage distribution
-#' is given as the right eigenvector associated with largest real part of all
-#' eigenvalues estimated via the \code{eig_gen}() function in the C++ Armadillo
-#' library divided by the sum of the associated right eigenvector. For larger
-#' matrices, the function assumes that the matrix is sparse and conducts a
-#' similar calculation but using the \code{eigs_gen}() for sparse matrix eigen
-#' analysis.
-#' 
 #' In stochastic analysis, the projected mean distribution is the arithmetic
 #' mean across the final 1000 projected times if the simulation is at least 2000
 #' projected times long. If between 500 and 2000 projected times long, then only
 #' the final 200 are used, and if fewer than 500 times are used, then all are
 #' used. Note that because stage distributions in stochastic simulations can
 #' change greatly in the initial portion of the run, we encourage a minimum of
-#' 2000 projected times per simulation, with 10,000 preferred.
+#' 2000 projected times per simulation, with 10000 preferred.
 #' 
 #' @seealso \code{\link{stablestage3}()}
 #' @seealso \code{\link{stablestage3.matrix}()}
@@ -855,27 +882,29 @@ stablestage3 <- function(mats, ...) UseMethod("stablestage3")
 #' 
 #' @export
 stablestage3.lefkoMat <- function(mats, stochastic = FALSE, times = 10000,
-  tweights = NA, seed = NA, ...) {
+  tweights = NA, seed = NA, sparse = "auto", ...) {
+  
+  if (is.element(tolower(sparse), c("y", "yes", "yea", "yeah", "t", "true"))) {
+    sparsemethod <- 1
+  } else if (is.element(tolower(sparse), c("n", "no", "non", "nah", "f", "false"))) {
+    sparsemethod <- 0
+  } else {
+    elements_total <- length(mats$A[[1]])
+    dense_elements <- length(which(mats$A[[1]] != 0))
+    
+    if ((dense_elements / elements_total) < 0.5) {
+      sparsemethod <- 1
+    } else sparsemethod <- 0
+  }
   
   if (!stochastic) {
     baldrick <- if (any(class(mats$A) == "matrix")) {
-      
-      if (dim(mats$A)[1] > 400) {
-        ss3matrixsp(mats$A)
-      } else {
-        ss3matrix(mats$A)
-      }
+      ss3matrix(mats$A, sparsemethod)
       
     } else if (class(mats$A) == "list") {
-      
-      if (dim(mats$A[[1]])[1] > 400) {
-        unlist(lapply(mats$A, ss3matrixsp))
-      } else {
-        unlist(lapply(mats$A, ss3matrix))
-      }
+      unlist(lapply(mats$A, ss3matrix, sparsemethod))
       
     } else {
-      
       stop("Input not recognized.")
     }
   } else {
@@ -912,11 +941,7 @@ stablestage3.lefkoMat <- function(mats, stochastic = FALSE, times = 10000,
       }
       
       theprophecy <- sample(used_slots, times, replace = TRUE, prob = used_weights) - 1
-      starter <- if (dim(mats$A[[1]])[1] > 400) {
-        ss3matrixsp(mats$A[[used_slots[1]]])
-      } else {
-        ss3matrix(mats$A[[used_slots[1]]])
-      }
+      starter <- ss3matrix(mats$A[[used_slots[1]]], sparsemethod)
       
       theseventhmatrix <- proj3(starter, mats$A, theprophecy, 1, 0, 0)
       
@@ -1030,16 +1055,13 @@ stablestage3.lefkoMat <- function(mats, stochastic = FALSE, times = 10000,
 #' age x stage matrices, as well as smaller ahistorical matrices.
 #' 
 #' @param mats A population projection matrix of class \code{matrix}.
+#' @param sparse A text string indicating whether to use sparse matrix encoding
+#' (\code{"yes"}) or dense matrix encoding (\code{"no"}). Defaults to
+#' \code{"auto"}.
 #' @param ... Other parameters.
 #' 
 #' @return This function returns the stable stage distribution corresponding to
-#' the input matrix. For square matrices with fewer than 400 rows, the stable
-#' stage distribution is given as the right eigenvector associated with largest
-#' real part of the eigenvalues estimated for the matrix via the
-#' \code{eig_gen}() function in the C++ Armadillo library, divided by the sum of
-#' the associated right eigenvector. For larger matrices, the matrix is assumed
-#' to be sparse and the calculation is conducted similarly but using
-#' \code{eig_gens}() instead.
+#' the input matrix.
 #' 
 #' @seealso \code{\link{stablestage3}()}
 #' @seealso \code{\link{stablestage3.lefkoMat}()}
@@ -1135,13 +1157,22 @@ stablestage3.lefkoMat <- function(mats, stochastic = FALSE, times = 10000,
 #' stablestage3(cypmatrix2r$A[[1]])
 #' 
 #' @export
-stablestage3.matrix <- function(mats, ...)
+stablestage3.matrix <- function(mats, sparse = "auto", ...)
 {
-  if (dim(mats)[1] > 400) {
-    wcorr <- ss3matrixsp(mats)
+  if (is.element(tolower(sparse), c("y", "yes", "yea", "yeah", "t", "true"))) {
+    sparsemethod <- 1
+  } else if (is.element(tolower(sparse), c("n", "no", "non", "nah", "f", "false"))) {
+    sparsemethod <- 0
   } else {
-    wcorr <- ss3matrix(mats)
+    elements_total <- length(mats)
+    dense_elements <- length(which(mats != 0))
+    
+    if ((dense_elements / elements_total) < 0.5) {
+      sparsemethod <- 1
+    } else sparsemethod <- 0
   }
+  
+  wcorr <- ss3matrix(mats, sparsemethod)
   
   return(wcorr)
 }
@@ -1276,6 +1307,9 @@ repvalue3 <- function(mats, ...) UseMethod("repvalue3")
 #' use for each matrix in stochastic simulations. If not given, then defaults to
 #' equal weighting.
 #' @param seed A number to use as a random number seed.
+#' @param sparse A text string indicating whether to use sparse matrix encoding
+#' (\code{"yes"}) or dense matrix encoding (\code{"no"}). Defaults to
+#' \code{"auto"}.
 #' @param ... Other parameters.
 #' 
 #' @return This function returns the asymptotic reproductive value vectors if
@@ -1313,21 +1347,13 @@ repvalue3 <- function(mats, ...) UseMethod("repvalue3")
 #' of population-patch combinations in the \code{lefkoMat} input.
 #'
 #' @section Notes:
-#' For square matrices with fewer than 400 rows, the reproductive value vector
-#' is given as the right eigenvector associated with largest real part of all
-#' eigenvalues estimated via the \code{eig_gen}() function in the C++ Armadillo
-#' library divided by the sum of the associated right eigenvector. For larger
-#' matrices, the function assumes that the matrix is sparse and conducts a
-#' similar calculation but using the \code{eigs_gen}() for sparse matrix eigen
-#' analysis.
-#' 
 #' In stochastic analysis, the projected mean reproductive value vector is the
 #' arithmetic mean across the final projected 1000 times if the simulation is at
 #' least 2000 projected times long. If between 500 and 2000 projected times
 #' long, then only the final 200 are used, and if fewer than 500 times are used,
 #' then all are used. Note that because reproductive values in stochastic
 #' simulations can change greatly in the initial portion of the run, we
-#' encourage a minimum 2000 projected times per simulation, with 10,000
+#' encourage a minimum 2000 projected times per simulation, with 10000
 #' preferred.
 #' 
 #' @seealso \code{\link{repvalue3}()}
@@ -1425,39 +1451,36 @@ repvalue3 <- function(mats, ...) UseMethod("repvalue3")
 #' 
 #' @export
 repvalue3.lefkoMat <- function(mats, stochastic = FALSE, times = 10000,
-  tweights = NA, seed = NA, ...) {
+  tweights = NA, seed = NA, sparse = "auto", ...) {
   
   poppatch <- NULL
+  
+  if (is.element(tolower(sparse), c("y", "yes", "yea", "yeah", "t", "true"))) {
+    sparsemethod <- 1
+  } else if (is.element(tolower(sparse), c("n", "no", "non", "nah", "f", "false"))) {
+    sparsemethod <- 0
+  } else {
+    elements_total <- length(mats$A[[1]])
+    dense_elements <- length(which(mats$A[[1]] != 0))
+    
+    if ((dense_elements / elements_total) < 0.5) {
+      sparsemethod <- 1
+    } else sparsemethod <- 0
+  }
   
   if (!stochastic) {
     baldrick <- if (any(class(mats$A) == "matrix")) {
       
-      if (dim(mats$A)[1] > 400) {
-        almost_final <- rv3matrixsp(mats$A)
-      } else {
-        almost_final <- rv3matrix(mats$A)
-      }
+      almost_final <- rv3matrix(mats$A, sparsemethod)
       
     } else if (class(mats$A) == "list") {
-      
-      final <- if (dim(mats$A[[1]])[1] > 400) {
-        unlist(lapply(mats$A, function(X) {
-            almost_final <- rv3matrixsp(X)
+      final <- unlist(lapply(mats$A, function(X) {
+            almost_final <- rv3matrix(X, sparsemethod)
             return(almost_final/almost_final[which(almost_final == (almost_final[which(almost_final > 0)])[1])])
-            }
-          )
+          }
         )
-      } else {
-        unlist(lapply(mats$A, function(X) {
-            almost_final <- rv3matrix(X)
-            return(almost_final/almost_final[which(almost_final == (almost_final[which(almost_final > 0)])[1])])
-            }
-          )
-        )
-      }
-      
+      )
     } else {
-      
       stop("Input not recognized.")
     }
   } else {
@@ -1495,14 +1518,9 @@ repvalue3.lefkoMat <- function(mats, stochastic = FALSE, times = 10000,
       }
       
       theprophecy <- sample(used_slots, times, replace = TRUE, prob = used_weights) - 1
-      starter <- if (dim(mats$A[[1]])[1] > 400) {
-        ss3matrixsp(mats$A[[used_slots[1]]])
-      } else {
-        ss3matrix(mats$A[[used_slots[1]]])
-      }
+      starter <- ss3matrix(mats$A[[used_slots[1]]], sparsemethod)
       
       theseventhmatrix <- proj3(starter, mats$A, theprophecy, 1, 0, 0)
-      
       almostall <- theseventhmatrix[((dim(mats$A[[1]])[1]) + 1):(3 * (dim(mats$A[[1]])[1])),]
       
       return(almostall)
@@ -1525,7 +1543,6 @@ repvalue3.lefkoMat <- function(mats, stochastic = FALSE, times = 10000,
         meanX2 <- apply(usedX2, 1, mean)
         meanX2 <- zapsmall(meanX2)
         meanX2 <- meanX2 / meanX2[(which(meanX2 > 0)[1])]
-        
         meanX <- c(meanX1, meanX2)
         
         return(meanX)
@@ -1591,7 +1608,7 @@ repvalue3.lefkoMat <- function(mats, stochastic = FALSE, times = 10000,
     
     # This section translates historical results to ahistorical and then cleans everything up
     if (!stochastic) {
-      ss3 <- stablestage3.lefkoMat(mats) #stablestage3.lefkoMat
+      ss3 <- stablestage3.lefkoMat(mats, sparse = sparse) #stablestage3.lefkoMat
       rahist <- ss3$ahist
       rhist <-ss3$hist
       rhist$ss3sum <- apply(as.matrix(c(1:dim(rhist)[1])), 1, function(X) {
@@ -1636,7 +1653,6 @@ repvalue3.lefkoMat <- function(mats, stochastic = FALSE, times = 10000,
       })
       
       ss_sums <- apply(as.matrix(c(1:multiplier)), 1, function(X) {
-        
         sum_vecs <- apply(as.matrix(mats$hstages$stage_id_2), 1, function(Y) {
           sum(ss_unlisted[(which(mats$hstages$stage_id_2 == Y)) + ((X - 1) * dim(mats$hstages)[1]), 1])
         })
@@ -1707,15 +1723,16 @@ repvalue3.lefkoMat <- function(mats, stochastic = FALSE, times = 10000,
 #' matrices, as well as smaller ahistorical matrices.
 #' 
 #' @param mats A population projection matrix.
+#' @param sparse A text string indicating whether to use sparse matrix encoding
+#' (\code{"yes"}) or dense matrix encoding (\code{"no"}). Defaults to
+#' \code{"auto"}.
 #' @param ... Other parameters.
 #' 
 #' @return This function returns a vector data frame characterizing the 
 #' reproductive values for stages of a population projection matrix. This is 
 #' given as the left eigenvector associated with largest real part of the
 #' dominant eigenvalue, divided by the first non-zero element of the left 
-#' eigenvector. Eigen analysis is handled by the \code{eig_gen}() function in
-#' the C++ Armadillo library for square matrices with fewer than 400 rows, and
-#' using the \code{eigs_gen}() function for larger matrices.
+#' eigenvector.
 #' 
 #' @seealso \code{\link{repvalue3}()}
 #' @seealso \code{\link{repvalue3.lefkoMat}()}
@@ -1811,14 +1828,23 @@ repvalue3.lefkoMat <- function(mats, stochastic = FALSE, times = 10000,
 #' repvalue3(cypmatrix2r$A[[1]])
 #' 
 #' @export
-repvalue3.matrix <- function(mats, ...)
+repvalue3.matrix <- function(mats, sparse = "auto", ...)
 {
-  if (dim(mats)[1] > 400) {
-    v <- rv3matrixsp(mats)
+  if (is.element(tolower(sparse), c("y", "yes", "yea", "yeah", "t", "true"))) {
+    sparsemethod <- 1
+  } else if (is.element(tolower(sparse), c("n", "no", "non", "nah", "f", "false"))) {
+    sparsemethod <- 0
   } else {
-    v <- rv3matrix(mats)
+    elements_total <- length(mats)
+    dense_elements <- length(which(mats != 0))
+    
+    if ((dense_elements / elements_total) < 0.5) {
+      sparsemethod <- 1
+    } else sparsemethod <- 0
   }
   
+  v <- rv3matrix(mats, sparsemethod)
+
   return(v)
 }
 
@@ -1953,6 +1979,9 @@ sensitivity3 <- function(mats, ...) UseMethod("sensitivity3")
 #' Defaults to 10,000.
 #' @param time_weights Numeric vector denoting the probabilistic weightings of
 #' annual matrices. Defaults to equal weighting among times.
+#' @param sparse A text string indicating whether to use sparse matrix encoding
+#' (\code{"yes"}) or dense matrix encoding (\code{"no"}). Defaults to
+#' \code{"auto"}.
 #' @param ... Other parameters.
 #' 
 #' @return This function returns an object of class \code{lefkoSens}, which is a
@@ -2068,7 +2097,20 @@ sensitivity3 <- function(mats, ...) UseMethod("sensitivity3")
 #' 
 #' @export
 sensitivity3.lefkoMat <- function(mats, stochastic = FALSE, steps = 10000,
-  time_weights = NA, ...) {
+  time_weights = NA, sparse = "auto", ...) {
+  
+  if (is.element(tolower(sparse), c("y", "yes", "yea", "yeah", "t", "true"))) {
+    sparsemethod <- 1
+  } else if (is.element(tolower(sparse), c("n", "no", "non", "nah", "f", "false"))) {
+    sparsemethod <- 0
+  } else {
+    elements_total <- length(mats$A[[1]])
+    dense_elements <- length(which(mats$A[[1]] != 0))
+    
+    if ((dense_elements / elements_total) < 0.5) {
+      sparsemethod <- 1
+    } else sparsemethod <- 0
+  }
   
   if (stochastic & length(mats$A) < 2) {
     stop("Stochastic sensitivity estimation cannot be completed with fewer than 2 annual matrices.", call. = FALSE)
@@ -2082,29 +2124,15 @@ sensitivity3.lefkoMat <- function(mats, stochastic = FALSE, steps = 10000,
     # Deterministic sensitivity analysis
     
     baldrick <- if (any(class(mats$A) == "matrix")) {
-      
-      if (dim(mats$A)[1] > 400 & ((length(mats$A[which(mats$A[[1]] > 0)]) / length(mats$A)) <= 0.5)) {
-        sens3matrixsp(mats$A)
-      } else {
-        sens3matrix(mats$A)
-      }
+      sens3matrix(mats$A, sparsemethod)
       
     } else if (class(mats$A) == "list") {
-      
       if (all(is.na(mats$hstages))) {
-        
-        if (dim(mats$A[[1]])[1] > 400 & ((length(mats$A[[1]][which(mats$A[[1]] > 0)]) / length(mats$A[[1]])) <= 0.5)) {
-          lapply(mats$A, sens3matrixsp)
-        } else {
-          lapply(mats$A, sens3matrix)
-        }
-        
+        lapply(mats$A, sens3matrix, sparsemethod)
       } else {
-        
         lapply(mats$A, sens3hlefko, mats$ahstages, mats$hstages)
       }
     } else {
-      
       stop("Input not recognized.")
     }
     
@@ -2121,7 +2149,6 @@ sensitivity3.lefkoMat <- function(mats, stochastic = FALSE, steps = 10000,
       ahe_list <- lapply(baldrick, function(X) {X$ah_smat})
       
       hlabels <- mats$hstages
-      
       ahlabels <- mats$ahstages
       
       output <- list(h_sensmats = he_list, ah_sensmats = ahe_list,
@@ -2176,6 +2203,9 @@ sensitivity3.lefkoMat <- function(mats, stochastic = FALSE, steps = 10000,
 #' matrices.
 #' 
 #' @param mats An object of class \code{matrix}.
+#' @param sparse A text string indicating whether to use sparse matrix encoding
+#' (\code{"yes"}) or dense matrix encoding (\code{"no"}). Defaults to
+#' \code{"auto"}.
 #' @param ... Other parameters.
 #' 
 #' @return This function returns a single deterministic sensitivity matrix.
@@ -2274,17 +2304,21 @@ sensitivity3.lefkoMat <- function(mats, stochastic = FALSE, steps = 10000,
 #' sensitivity3(cypmatrix2r$A[[1]])
 #' 
 #' @export
-sensitivity3.matrix <- function(mats, ...)
+sensitivity3.matrix <- function(mats, sparse = "auto", ...)
 {
-  allelems <- length(mats)
-  allnzs <- length(which(mats > 0))
-  nzprop <- allnzs / allelems
-  
-  if (nzprop <= 0.5) {
-    wcorr <- sens3matrixsp(mats)
+  if (is.element(tolower(sparse), c("y", "yes", "yea", "yeah", "t", "true"))) {
+    sparsemethod <- 1
+  } else if (is.element(tolower(sparse), c("n", "no", "non", "nah", "f", "false"))) {
+    sparsemethod <- 0
   } else {
-    wcorr <- sens3matrix(mats)
+    elements_total <- length(mats)
+    dense_elements <- length(which(mats != 0))
+    
+    if ((dense_elements / elements_total) < 0.5) {
+      sparsemethod <- 1
+    } else sparsemethod <- 0
   }
+  wcorr <- sens3matrix(mats, sparsemethod)
   
   return(wcorr)
 }
@@ -2308,6 +2342,9 @@ sensitivity3.matrix <- function(mats, ...)
 #' annual matrices. Defaults to equal weighting among times.
 #' @param historical A logical value indicating whether matrices are historical.
 #' Defaults to FALSE.
+#' @param sparse A text string indicating whether to use sparse matrix encoding
+#' (\code{"yes"}) or dense matrix encoding (\code{"no"}). Defaults to
+#' \code{"auto"}.
 #' @param ... Other parameters.
 #' 
 #' @return This function returns an object of class \code{lefkoSens}, which is a
@@ -2328,7 +2365,8 @@ sensitivity3.matrix <- function(mats, ...)
 #'
 #' Currently, this function does not estimate equivalent ahistorical stochastic
 #' sensitivities for input historical matrices, due to the lack of guidance
-#' input on the order of stages.
+#' input on the order of stages (such guidance is provided within
+#' \code{lefkoMat} objects).
 #'
 #' @seealso \code{\link{sensitivity3}()}
 #' @seealso \code{\link{sensitivity3.lefkoMat}()}
@@ -2424,7 +2462,20 @@ sensitivity3.matrix <- function(mats, ...)
 #' 
 #' @export
 sensitivity3.list <- function(mats, stochastic = FALSE, steps = 10000,
-  time_weights = NA, historical = FALSE, ...) {
+  time_weights = NA, historical = FALSE, sparse = "auto", ...) {
+  
+  if (is.element(tolower(sparse), c("y", "yes", "yea", "yeah", "t", "true"))) {
+    sparsemethod <- 1
+  } else if (is.element(tolower(sparse), c("n", "no", "non", "nah", "f", "false"))) {
+    sparsemethod <- 0
+  } else {
+    elements_total <- length(mats[[1]])
+    dense_elements <- length(which(mats[[1]] != 0))
+    
+    if ((dense_elements / elements_total) < 0.5) {
+      sparsemethod <- 1
+    } else sparsemethod <- 0
+  }
   
   if(length(setdiff(unlist(lapply(mats, class)), c("matrix", "array"))) > 0) {
     stop("Input list must be composed only of numeric matrices.", call. = FALSE)
@@ -2435,16 +2486,7 @@ sensitivity3.list <- function(mats, stochastic = FALSE, steps = 10000,
   
   if (!stochastic) {
     # Deterministic sensitivity analysis
-    
-    allelems <- length(mats[[1]])
-    allnzs <- length(which(mats[[1]] > 0))
-    nzprop <- allnzs / allelems
-    
-    if (nzprop <= 0.5) {
-      baldrick <- lapply(mats, sens3matrixsp)
-    } else {
-      baldrick <- lapply(mats, sens3matrix)
-    }
+    baldrick <- lapply(mats, sens3matrix, sparsemethod)
     
     if (historical) {
       output <- list(h_sensmats = baldrick, ah_sensmats = NULL, h_stages = NULL,
@@ -2615,6 +2657,9 @@ elasticity3 <- function(mats, ...) UseMethod("elasticity3")
 #' Defaults to 10,000.
 #' @param time_weights Numeric vector denoting the probabilistic weightings of
 #' annual matrices. Defaults to equal weighting among times.
+#' @param sparse A text string indicating whether to use sparse matrix encoding
+#' (\code{"yes"}) or dense matrix encoding (\code{"no"}). Defaults to
+#' \code{"auto"}.
 #' @param ... Other parameters.
 #' 
 #' @return This function returns an object of class \code{lefkoElas}, which is a
@@ -2735,7 +2780,20 @@ elasticity3 <- function(mats, ...) UseMethod("elasticity3")
 #' 
 #' @export
 elasticity3.lefkoMat <- function(mats, stochastic = FALSE, steps = 10000,
-  time_weights = NA, ...) {
+  time_weights = NA, sparse = "auto", ...) {
+  
+  if (is.element(tolower(sparse), c("y", "yes", "yea", "yeah", "t", "true"))) {
+    sparsemethod <- 1
+  } else if (is.element(tolower(sparse), c("n", "no", "non", "nah", "f", "false"))) {
+    sparsemethod <- 0
+  } else {
+    elements_total <- length(mats$A[[1]])
+    dense_elements <- length(which(mats$A[[1]] != 0))
+    
+    if ((dense_elements / elements_total) < 0.5) {
+      sparsemethod <- 1
+    } else sparsemethod <- 0
+  }
   
   if (!is.element("agestages", names(mats))) {
     mats$agestages <- NULL
@@ -2745,30 +2803,15 @@ elasticity3.lefkoMat <- function(mats, stochastic = FALSE, steps = 10000,
     # Deterministic elasticity analysis
     
     baldrick <- if (any(class(mats$A) == "matrix")) {
-      
-      if (dim(mats$A)[1] > 400 & ((length(mats$A[which(mats$A[[1]] > 0)]) / length(mats$A)) <= 0.5)) {
-        elas3matrixsp(mats$A)
-      } else {
-        elas3matrix(mats$A)
-      }
-      
+      elas3matrix(mats$A, sparsemethod)
     } else if (class(mats$A) == "list") {
       
       if (all(is.na(mats$hstages))) {
-        
-        if (dim(mats$A[[1]])[1] > 400 & ((length(mats$A[[1]][which(mats$A[[1]] > 0)]) / length(mats$A[[1]])) <= 0.5)) {
-          lapply(mats$A, elas3matrixsp)
-        } else {
-          lapply(mats$A, elas3matrix)
-        }
-        
+        lapply(mats$A, elas3matrix, sparsemethod)
       } else {
-        
         lapply(mats$A, elas3hlefko, mats$ahstages, mats$hstages)
       }
-      
     } else {
-      
       stop("Input not recognized.")
     }
     
@@ -2789,7 +2832,6 @@ elasticity3.lefkoMat <- function(mats, stochastic = FALSE, steps = 10000,
       ahe_list <- lapply(baldrick, function(X) {X$ah_emat})
       
       hlabels <- mats$hstages
-      
       ahlabels <- mats$ahstages #Originally only the first two columns
       
       output <- list(h_elasmats = he_list, ah_elasmats = ahe_list, 
@@ -2798,7 +2840,6 @@ elasticity3.lefkoMat <- function(mats, stochastic = FALSE, steps = 10000,
     }
   } else {
     # Stochastic elasticity analysis
-    
     if(!any(is.na(time_weights))) {
       returned_cubes <- stoch_senselas(mats, times = steps, style = 2,
         tweights = time_weights) 
@@ -2844,6 +2885,9 @@ elasticity3.lefkoMat <- function(mats, stochastic = FALSE, steps = 10000,
 #' age x stage matrices, as well as smaller ahistorical matrices.
 #' 
 #' @param mats An object of class \code{matrix}.
+#' @param sparse A text string indicating whether to use sparse matrix encoding
+#' (\code{"yes"}) or dense matrix encoding (\code{"no"}). Defaults to
+#' \code{"auto"}.
 #' @param ... Other parameters.
 #' 
 #' @return This function returns a single elasticity matrix.
@@ -2942,17 +2986,21 @@ elasticity3.lefkoMat <- function(mats, stochastic = FALSE, steps = 10000,
 #' elasticity3(cypmatrix2r$A[[1]])
 #' 
 #' @export
-elasticity3.matrix <- function(mats, ...)
+elasticity3.matrix <- function(mats, sparse = "auto", ...)
 {
-  allelems <- length(mats)
-  allnzs <- length(which(mats > 0))
-  nzprop <- allnzs / allelems
-  
-  if (nzprop <= 0.5) {
-    wcorr <- elas3matrixsp(mats)
+  if (is.element(tolower(sparse), c("y", "yes", "yea", "yeah", "t", "true"))) {
+    sparsemethod <- 1
+  } else if (is.element(tolower(sparse), c("n", "no", "non", "nah", "f", "false"))) {
+    sparsemethod <- 0
   } else {
-    wcorr <- elas3matrix(mats)
+    elements_total <- length(mats)
+    dense_elements <- length(which(mats != 0))
+    
+    if ((dense_elements / elements_total) < 0.5) {
+      sparsemethod <- 1
+    } else sparsemethod <- 0
   }
+  wcorr <- elas3matrix(mats, sparsemethod)
   
   return(wcorr)
 }
@@ -2974,6 +3022,9 @@ elasticity3.matrix <- function(mats, ...)
 #' annual matrices. Defaults to equal weighting among times.
 #' @param historical A logical value denoting whether the input matrices are
 #' historical. Defaults to FALSE.
+#' @param sparse A text string indicating whether to use sparse matrix encoding
+#' (\code{"yes"}) or dense matrix encoding (\code{"no"}). Defaults to
+#' \code{"auto"}.
 #' @param ... Other parameters.
 #' 
 #' @return This function returns an object of class \code{lefkoElas}, which is a
@@ -3086,7 +3137,20 @@ elasticity3.matrix <- function(mats, ...)
 #' 
 #' @export
 elasticity3.list <- function(mats, stochastic = FALSE, steps = 10000,
-  time_weights = NA, historical = FALSE, ...) {
+  time_weights = NA, historical = FALSE, sparse = "auto", ...) {
+  
+  if (is.element(tolower(sparse), c("y", "yes", "yea", "yeah", "t", "true"))) {
+    sparsemethod <- 1
+  } else if (is.element(tolower(sparse), c("n", "no", "non", "nah", "f", "false"))) {
+    sparsemethod <- 0
+  } else {
+    elements_total <- length(mats[[1]])
+    dense_elements <- length(which(mats[[1]] != 0))
+    
+    if ((dense_elements / elements_total) < 0.5) {
+      sparsemethod <- 1
+    } else sparsemethod <- 0
+  }
   
   if(length(setdiff(unlist(lapply(mats, class)), c("matrix", "array"))) > 0) {
     stop("Input list must be composed only of numeric matrices.", call. = FALSE)
@@ -3101,12 +3165,8 @@ elasticity3.list <- function(mats, stochastic = FALSE, steps = 10000,
     allelems <- length(mats[[1]])
     allnzs <- length(which(mats[[1]] > 0))
     nzprop <- allnzs / allelems
-  
-    if (nzprop <= 0.5) {
-      baldrick <- lapply(mats, elas3matrixsp)
-    } else {
-      baldrick <- lapply(mats, elas3matrix)
-    }
+    
+    baldrick <- lapply(mats, elas3matrix, sparsemethod)
     
     if (historical) {
       output <- list(h_elasmats = baldrick, ah_elasmats = NULL, h_stages = NULL,

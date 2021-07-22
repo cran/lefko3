@@ -40,9 +40,7 @@ knitr::opts_chunk$set(
   <p style="text-indent: 20px">The horizontal dataset `cypdata`, and the ahistorical vertical dataset `cypvert` which is the same as `cypdata` but is structured differently, both include only data for the adult stages, and so later we will need to set juvenile transitions to constants. Let's begin by clearing the memory, loading the package, and loading the horizontal dataset.</p>
 ```{r Ch5.0}
 rm(list=ls(all=TRUE))
-
 library(lefko3)
-
 data(cypdata)
 ```
 
@@ -191,8 +189,8 @@ cypsupp3 <- supplemental(stage3 = c("SD", "SD", "P1", "P1", "P2", "P3", "SL",
     NA, 0.5, 0.5),
   type = c("S", "S", "S", "S", "S", "S", "S", "S", "S", "S", "S", "S", "S", "S",
     "S", "S", "S", "R", "R"), 
-  type_t12 = c("S", "F", "S", "F", "S", "S", "S", "S", "S", "S", "S", "S", "S", "S",
-    "S", "S", "S", "S", "S"), stageframe = cypframe)
+  type_t12 = c("S", "F", "S", "F", "S", "S", "S", "S", "S", "S", "S", "S", "S",
+    "S", "S", "S", "S", "S", "S"), stageframe = cypframe)
 cypsupp2 <- supplemental(stage3 = c("SD", "P1", "P2", "P3", "SL", "SL", "D",
     "V1", "V2", "V3", "SD", "P1"), 
   stage2 = c("SD", "SD", "P1", "P2", "P3", "SL", "SL", "SL", "SL", "SL", "rep",
@@ -305,13 +303,11 @@ cypover2 <- overwrite(stage3 = c("SD", "P1", "P2", "P3", "SL", "SL", "D", "V1",
   
   <p style="text-indent: 20px">Finally, we need to determine the proper strategy for the determination of the best-fit model. Model building proceeds through the `dredge` function in package `MuMIn` [@barton_mumin_2014], and each model has an associated AICc value. The default setting in `lefko3` (`bestfit = "AICc&k"`) will compare all models within 2.0 AICc units of the model with $\Delta AICc = 0$, and choose the one with the lowest degrees of freedom. This approach is generally better than the alternative, which simply uses the model with $\Delta AICc = 0$ (`bestfit = "AICc"`), as all models within 2.0 AICc units of that model are equally parsimonious and so fewer degrees of freedom result from fewer parameters estimated [@burnham_model_2002].</p>
   
-  <p style="text-indent: 20px">At the time of writing, mixed modeling of the negative binomial distribution, as well as of zero-truncated and zero-inflated versions of the Poisson and negative binomial distributions, have been deactivated due to core issues with package `glmmTMB`. So, here we utilize a mixed approach but with a standard Poisson response for size and fecundity. We will update this section again once mixed models with these response distributions are enabled again.</p>
-  
   <p style="text-indent: 20px">In the model building exercise below, we will use the `suite = "full"` option to run all main effects and their two-way interactions. Once done, we can summarize the output with the `summary()` function.</p>
 ```{r Ch5.12}
 cypmodels3 <- modelsearch(vertdata, historical = TRUE, approach = "mixed", 
-  vitalrates = c("surv", "obs", "size", "repst", "fec"), sizedist = "poisson", 
-  size.trunc = FALSE, fecdist = "poisson", fec.zero = FALSE, suite = "full", 
+  vitalrates = c("surv", "obs", "size", "repst", "fec"), sizedist = "negbin", 
+  size.trunc = TRUE, fecdist = "poisson", fec.zero = TRUE, suite = "full", 
   size = c("size3added", "size2added", "size1added"), quiet = TRUE)
 #summary(cypmodels3)
 ```
@@ -323,8 +319,8 @@ cypmodels3 <- modelsearch(vertdata, historical = TRUE, approach = "mixed",
   <p style="text-indent: 20px">Before moving on, we note that the models created above are actually only usable for the construction of historical models. For comparison, we may wish to estimate ahistorical models. In that case, we also need linear models in which the global models tested do not include state at time *t*-1, as below.</p>
 ```{r Ch5.13}
 cypmodels2 <- modelsearch(vertdata, historical = FALSE, approach = "mixed", 
-  vitalrates = c("surv", "obs", "size", "repst", "fec"), sizedist = "poisson", 
-  size.trunc = FALSE, fecdist = "poisson", fec.zero = FALSE, suite = "full", 
+  vitalrates = c("surv", "obs", "size", "repst", "fec"), sizedist = "negbin", 
+  size.trunc = TRUE, fecdist = "poisson", fec.zero = TRUE, suite = "full", 
   size = c("size3added", "size2added"), quiet = TRUE)
 #summary(cypmodels2)
 ```
@@ -342,6 +338,8 @@ summary(cypmatrix2)
   
   <p style="text-indent: 20px">A quick glance at the summary output will highlight that many more elements are estimated for function-based matrices than for raw matrices - here, 2,459 out of 2,916 total elements (84.3%). In raw matrices, elements associated with transitions from specific stages are only estimated when individuals actually exist within those particular stages, and so the number of stages is strongly limited by the size of the dataset. In function-based matrices, in contrast, the linear models estimated allow the estimation of all elements that are theoretically possible (i.e. only structural 0s are not estimated), and so stages may be developed for the full range of sizes experienced by individuals.</p>
  
+  <p style="text-indent: 20px">The survival probability summaries at the bottom of the output are also very important. Column sums are very useful tools in checking yourself, because they are equal to the overall annual survival of the stage or stage pair, in ahMPMs and hMPMs, respectively. The use of externally-supplied rates and probabilities, as supplied via the supplement and overwrite tables, can result in some stages or stage-pairs having survival probabilities greater than 1.0, and if that occurs, then the supplement/overwrite tables need to be corrected to reduce survival to something reasonable.</p>
+  
   <p style="text-indent: 20px">The output of the `flefko2()` call includes several key elements. One of the most important is a data frame showing the order of matrices produced. Let's take a look at this object.</p>
 ```{r Ch5.15}
 cypmatrix2$labels
@@ -375,8 +373,6 @@ tmeans2r <- lmean(cypmatrix2)
 summary(colSums(tmeans2r$U[[1]]))
 ```
 
-  <p style="text-indent: 20px">Column sums are very useful tools in checking yourself, because they are equal to the overall annual survival of the stage or stage pair, in ahMPMs and hMPMs, respectively. The use of externally-supplied rates and probabilities, as supplied via the supplement and overwrite tables, can result in some stages or stage-pairs having survival probabilities greater than 1.0, and if that occurs, then the supplement/overwrite tables need to be corrected to reduce survival to something reasonable.</p>
-  
   <p style="text-indent: 20px">Next we will estimate the historical element-wise mean matrix, along with its column sums (these represent the survival of stage pairs in time *t*-1 and time *t*).</p>
 ```{r Ch5.19}
 tmeans3r <- lmean(cypmatrix3)
@@ -420,12 +416,12 @@ cypann3s
 cypann3 <- lambda3(cypmatrix3)
 cypann2 <- lambda3(cypmatrix2)
 
-plot(lambda ~ year2, data = cypann2, xlab = "Year", ylab = "Lambda", ylim = c(0.8, 0.98), type = "l", lty= 1, lwd = 2, bty = "n")
+plot(lambda ~ year2, data = cypann2, xlab = "Year", ylab = "Lambda", ylim = c(0.93, 0.98), type = "l", lty= 1, lwd = 2, bty = "n")
 lines(lambda ~ year2, data = cypann3, lty = 2, lwd= 2, col = "red")
 legend("bottomright", c("ahistorical", "historical"), lty = c(1, 2), col = c("black", "red"), lwd = 2, bty = "n")
 ```
 
-  <p style="text-indent: 20px">We find some intriguing differences in annual $\lambda$ estimates differ only slightly between ahistorical and historical analyses.</p>
+  <p style="text-indent: 20px">We find that annual $\lambda$ estimates differ only slightly between ahistorical and historical analyses.</p>
 
   <p style="text-indent: 20px">Now let's take a look at the stable stage distributions. We will look at deterministic and stochastic versions of the ahistorical and historical MPMs.</p>
 ```{r Ch5.25, fig.cap = "Figure 5.7. Ahistorical vs. historically-corrected stable and long-run mean stage distribution"}
@@ -445,7 +441,7 @@ legend("topright", c("det ahist", "det hist", "sto ahist", "sto hist"),
   col = c("black", "orangered", "grey", "darkred"), pch = 15, bty = "n")
 ```
 
-  <p style="text-indent: 20px">Overall, all analyses suggest that small non-reproductive adults take up the greatest share of the stable stage structure, with dormant seed and 1st-year protocorms coming next. However, historical analyses then show a strong importance of small adults, particularly reproductive adults. So, history makes a big difference here.</p>
+  <p style="text-indent: 20px">Overall, these are very similar patterns. Both suggest that small non-reproductive adults take up the greatest share of the stable stage structure, with dormant seed and 1st-year protocorms coming next, and then reproductive adults. The main differences appear to be a decreased presence of protocorms and increased presence of flowering adults in historical analysis. Stochastic analyses also reduce the importance of most stages with high proportions, while increasing the importance of rarer stages.</p>
 
   <p style="text-indent: 20px">Next let's look at the reproductive values associated with both ahistorical and historical approaches. We will standardize against the maximum value in each case to make these comparable.</p>
 ```{r Ch5.26, fig.cap = "Figure 5.8. Ahistorical vs. historically-corrected deterministic and stochastic reproductive values"}
@@ -467,7 +463,7 @@ legend("topleft", c("det ahist", "det hist", "sto ahist", "sto hist"),
   col = c("black", "orangered", "grey", "darkred"), pch = 15, bty = "n")
 ```
 
-  <p style="text-indent: 20px">We see some big differences here. The historical case predicts a greater importance of small and medium-sized flowering adults, and a lower importance of all other stages than the ahistorical case. In the ahistorical analyses, the highest reproductive values are in the largest flowering adults. So, both history and temporal stochasticity have large effects here. Interesting results in need of further study!</p>
+  <p style="text-indent: 20px">We see some big differences here. In the deterministic analyses, the historical case predicts a greater importance of small and medium-sized flowering adults, and a lower importance of all other stages than the ahistorical case. In the stochastic analyses, the highest reproductive values are in the largest flowering adults. So, both history and temporal stochasticity have large effects here. Interesting results in need of further study!</p>
   
   <p style="text-indent: 20px">Let's now do a sensitivity analysis, again using both deterministic and stochastic approaches. First we will look at the ahistorical MPM.</p>
 ```{r Ch5.27}
@@ -486,7 +482,7 @@ writeLines("\nThis value is associated with element: ")
 which(tm2sens_s$ah_sensmats[[1]] == max(tm2sens_s$ah_sensmats[[1]][which(tmeans2r$A[[1]] > 0)]))
 ```
 
-  <p style="text-indent: 20px">The highest sensitivity value in both cases appears to be associated with the transition from 3-sprouted non-flowering adult to the largest flowering adult. Inspecting each sensitivity matrix also shows that transitions near that element in both matrices are also associated with rather high sensitivities.</p>
+  <p style="text-indent: 20px">The highest sensitivity value in both cases appears to be associated with the transition from 1-sprouted non-flowering adult to the largest flowering adult (element 378, which is in the 7th column and 54th row). Inspecting each sensitivity matrix also shows that transitions near that element in both matrices are also associated with rather high sensitivities.</p>
 
   <p style="text-indent: 20px">Now let's compare with the historical case. We will compare both the full historical sensitivity matrices, and also look at the historically-corrected deterministic sensitivities.</p>
 ```{r Ch5.28}
@@ -513,7 +509,7 @@ writeLines("\nThis value is associated with element: ")
 which(tm3sens_s$ah_sensmats[[1]] == max(tm3sens_s$ah_sensmats[[1]][which(tmeans2r$A[[1]] > 0)]))
 ```
 
-  <p style="text-indent: 20px">Here, we see both deterministic sensitivity analyses supporting the transition from 2-sprouted vegetative adult in times *t*-1 and *t* to 9-sprouted flowering adult in time *t*+1. The stochastic sensitivity analyses supported the transition from 3-sprouted flowering adult in times *t*-1 and *t* to 13-sprouted flowering adult in time *t*+1. The highest historically-corrected deterministic sensitivity value is associated with the transition from 8-sprouted non-flowering adult to 13-sprouted flowering adults, while the historically-corrected stochastic sensitivity value is associated with the transitions from 9-sprouted non-flowering adult to the 13-sprouted flowering adult stage.</p>
+  <p style="text-indent: 20px">Here, we see both deterministic and stochastic sensitivity analyses supporting the transition from 1-sprouted vegetative adult in times *t*-1 and *t* to the largest flowering adult in time *t*+1. The highest historically-corrected deterministic sensitivity value is associated with the transition from 1-sprouted non-flowering adult to 20-sprouted flowering adults, while the historically-corrected stochastic sensitivity value is associated with the transitions from 1-sprouted non-flowering adult to the largest flowering adult stage. Thus, our results generally reinforce the results of the ahistorical case.</p>
 
   <p style="text-indent: 20px">Let's now assess the elasticity of $\lambda$ to matrix elements, comparing the ahistorical to the historically-corrected case in both deterministic and stochastic analyses.</p>
 ```{r Ch5.29}
@@ -538,7 +534,7 @@ writeLines("\nThe largest historical stochastic elasticity is associated with el
 which(tm3elas_s$h_elasmats[[1]] == max(tm3elas_s$h_elasmats[[1]]))
 ```
   
-  <p style="text-indent: 20px">Ahistorical deterministic and stochastic analyses supported the transition from 2-sprouted to 3-sprouted non-flowering adults. Historical deterministic and stochastic analyses suggest that population growth rate is most elastic in response to stasis as an 8-sprouted non-flowering adult. The highest elasticity in historically-corrected matrices occurred in stasis in 13-sprouted flowering adults in the deterministic case, and in stasis in 14-sprouted flowering adults in the stochastic case.</p>
+  <p style="text-indent: 20px">Ahistorical and historical, deterministic and stochastic analyses suggest that population growth rate is most elastic in response to stasis as 1-sprouted non-flowering adult. This is a remarkably consistent result, reinforcing the importance of this stage as seen in sensitivity analyses.</p>
   
   <p style="text-indent: 20px">Now let's compare the elasticity of population growth rate in relation to the core life history stages, via a barplot comparison.</p>
 ```{r Ch5.30, fig.cap = "Figure 5.9. Ahistorical vs. historically-corrected deterministic and stochastic elasticity to stage"}
@@ -554,7 +550,7 @@ legend("topright", c("det ahist", "det hist", "sto ahist", "sto hist"),
   col = c("black", "orangered", "grey", "darkred"), pch = 15, bty = "n")
 ```
 
-  <p style="text-indent: 20px">Elasticity analyses suggest very strong differences between ahistorical and historical analyses here, with smaller adult stages being most important in ahistorical analyses and intermediate-sized stages in historical analyses.</p>
+  <p style="text-indent: 20px">Elasticity analyses in these plots look fairly similar, with most of the differences appearing to lie in elasticity of small non-flowering vs. flowering adults in the ahistorical vs. historical comparison.</p>
 
   <p style="text-indent: 20px">Finally, let's take a look at how the importance of different kinds of transitions changes, by looking at elasticity sums.</p>
 ```{r Ch5.31, fig.cap = "Figure 5.10. Ahistorical vs. historically-corrected elasticity of lambda to transitions"}
@@ -584,11 +580,11 @@ par(mar = c(7, 4, 2, 2) + 0.2)
 barplot(t(elas_hist2plot), beside = T, ylab = "Elasticity", xlab = "", xaxt = "n",
   col = c("orangered", "darkred"), bty = "n")
 text(cex=1, x=seq(from = -0.5, to = 2.8*length(tm3elas_sums$hist$category), by = 2.85),
-  y=-0.075, tm3elas_sums$hist$category, xpd=TRUE, srt=45)
+  y=-0.06, tm3elas_sums$hist$category, xpd=TRUE, srt=45)
 legend("topright", c("det ahist", "det hist", "sto ahist", "sto hist"),
   col = c("orangered", "darkred"), pch = 15, bty = "n")
 ```
-  <p style="text-indent: 20px">We can see that growth from time *t*-1 to *t* followed by shrinkage to time *t*+1, and the reverse, are associated with the greatest summed elasticities. Transitions associated with fecundity are associated with the lowest summed elasticities.</p>
+  <p style="text-indent: 20px">We can see that growth from time *t*-1 to *t* followed by shrinkage to time *t*+1 is associated with the greatest summed elasticities, while the inverse, shrinkage from *t*-1 to time *t* followed by growth to time *t*+1 is the next most important. Transitions associated with fecundity are associated with the lowest summed elasticities.</p>
   
   <p style="text-indent: 20px">Further analytical tools are being planned for `lefko3`, but packages that handle projection matrices can typically handle the individual matrices produced and saved in `lefkoMat` objects in this package. Differences, obscure results, and errors sometimes arise when packages are not made to handle large and/or sparse matrices - historical matrices are both, and so care must be taken with their analysis.</p>
 

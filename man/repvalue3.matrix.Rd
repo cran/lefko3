@@ -4,10 +4,14 @@
 \alias{repvalue3.matrix}
 \title{Estimate Reproductive Value Vector for a Single Population Projection Matrix}
 \usage{
-\method{repvalue3}{matrix}(mats, ...)
+\method{repvalue3}{matrix}(mats, sparse = "auto", ...)
 }
 \arguments{
 \item{mats}{A population projection matrix.}
+
+\item{sparse}{A text string indicating whether to use sparse matrix encoding
+(\code{"yes"}) or dense matrix encoding (\code{"no"}). Defaults to
+\code{"auto"}.}
 
 \item{...}{Other parameters.}
 }
@@ -16,9 +20,7 @@ This function returns a vector data frame characterizing the
 reproductive values for stages of a population projection matrix. This is 
 given as the left eigenvector associated with largest real part of the
 dominant eigenvalue, divided by the first non-zero element of the left 
-eigenvector. Eigen analysis is handled by the \code{eig_gen}() function in
-the C++ Armadillo library for square matrices with fewer than 400 rows, and
-using the \code{eigs_gen}() function for larger matrices.
+eigenvector.
 }
 \description{
 \code{repvalue3.matrix()} returns the reproductive values for stages in a 

@@ -59,9 +59,9 @@ data frame with 0 entries for patch designation.
 \description{
 Function \code{projection3()} projects the population forward in time by
 a user-defined number of time steps. Projections may be deterministic or
-stochastic. If deterministic, then projections will be cyclical if mjultiple
-years of matrices exist for each population or patch. If stochastic, then
-annual matrices will be shuffled within patches and populations.
+stochastic. If deterministic, then projections will be cyclical if matrices
+exist covering multiple times for each population or patch. If stochastic,
+then annual matrices will be shuffled within patches and populations.
 }
 \section{Notes}{
 

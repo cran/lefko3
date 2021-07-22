@@ -10,6 +10,7 @@
   times = 10000,
   tweights = NA,
   seed = NA,
+  sparse = "auto",
   ...
 )
 }
@@ -28,6 +29,10 @@ use for each matrix in stochastic simulations. If not given, then defaults to
 equal weighting.}
 
 \item{seed}{A number to use as a random number seed.}
+
+\item{sparse}{A text string indicating whether to use sparse matrix encoding
+(\code{"yes"}) or dense matrix encoding (\code{"no"}). Defaults to
+\code{"auto"}.}
 
 \item{...}{Other parameters.}
 }
@@ -73,21 +78,13 @@ well as smaller ahistorical matrices.
 }
 \section{Notes}{
 
-For square matrices with fewer than 400 rows, the stable stage distribution
-is given as the right eigenvector associated with largest real part of all
-eigenvalues estimated via the \code{eig_gen}() function in the C++ Armadillo
-library divided by the sum of the associated right eigenvector. For larger
-matrices, the function assumes that the matrix is sparse and conducts a
-similar calculation but using the \code{eigs_gen}() for sparse matrix eigen
-analysis.
-
 In stochastic analysis, the projected mean distribution is the arithmetic
 mean across the final 1000 projected times if the simulation is at least 2000
 projected times long. If between 500 and 2000 projected times long, then only
 the final 200 are used, and if fewer than 500 times are used, then all are
 used. Note that because stage distributions in stochastic simulations can
 change greatly in the initial portion of the run, we encourage a minimum of
-2000 projected times per simulation, with 10,000 preferred.
+2000 projected times per simulation, with 10000 preferred.
 }
 
 \examples{

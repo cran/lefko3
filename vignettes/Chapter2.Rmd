@@ -11,7 +11,7 @@ vignette: >
 
 
 
-  <p style="text-indent: 20px">This document was built in Markdown in R 4.1.0 and compiled on 12 July 2021. It covers package `lefko3` version 3.5.2. Please note that this vignette was written with space considerations in mind. To reduce output size, we have prevented some statements from running if they produce long stretches of output. Examples include most `summary()` calls. In these cases, we include hashtagged versions of these calls, and ask the user to run these statements without hashtags. We have also written this vignette using the default Ehrlén format as the output format for all historical MPMs. All examples work with deVries format as well.</p>
+  <p style="text-indent: 20px">This document was built in Markdown in R 4.1.0 and compiled on 14 July 2021. It covers package `lefko3` version 3.5.3. Please note that this vignette was written with space considerations in mind. To reduce output size, we have prevented some statements from running if they produce long stretches of output. Examples include most `summary()` calls. In these cases, we include hashtagged versions of these calls, and ask the user to run these statements without hashtags. We have also written this vignette using the default Ehrlén format as the output format for all historical MPMs. All examples work with deVries format as well.</p>
 
 ## CASE STUDIES OF SWEDISH *Lathyrus vernus* POPULATION
 
@@ -217,7 +217,7 @@ histtest <- modelsearch(lathvert, historical = TRUE, suite = "size",
 #histtest
 ```
 
-  <p style="text-indent: 20px">The object generated is quite long, and likely resulted in a series of warnings from the model-building functions utilized. For our purposes, we need only look at elements corresponding to the best-fit models for our tested vital rates, which are the 9 elements marked `$survival_model`, `$observation_model`, `$size_model`, `$repstatus_model`, `$fecundity_model`, `$juv_survival_model`, `$juv_observation _model`, `$juv_size_model`, and `$juv_reproduction_model`. The line beginning `Formula:` in each of these sections shows the best-fit model, in standard R formula notation (i.e. $y = ax + b$ is given as `y ~ x`). The independent terms tested include variables coding for size in times *t* and *t*-1,given as `sizea2` and `sizea1`, respectively. Since several vital rates show `sizea1` as a term in the best-fit model, particularly adult survival, size, and reproductive status, we see that history has a significant impact on the demography of this population.</p>
+  <p style="text-indent: 20px">The object generated is quite long, and likely resulted in a series of warnings from the model-building functions utilized. For our purposes, we need only look at elements corresponding to the best-fit models for our tested vital rates, which are the 9 elements marked `$survival_model`, `$observation_model`, `$size_model`, `$repstatus_model`, `$fecundity_model`, `$juv_survival_model`, `$juv_observation _model`, `$juv_size_model`, and `$juv_reproduction_model`. The line beginning `Formula:` in each of these sections shows the best-fit model, in standard R formula notation (i.e. $y = ax + b$ is given as `y ~ x`). The independent terms tested include variables coding for size in times *t* and *t*-1, given as `sizea2` and `sizea1`, respectively. Since several vital rates show `sizea1` as a term in the best-fit model, particularly adult survival, size, and reproductive status, we see that history has a significant impact on the demography of this population.</p>
 
 #### Step 4. MPM estimation
 
@@ -266,10 +266,19 @@ summary(ehrlen2)
 #> A total of 6 fecundity transitions were estimated, with 2 per matrix.
 #> 
 #> The dataset contains a total of 276 unique individuals and 2527 unique transitions.
+#> 
+#> Survival probability sum check (each matrix represented by column in order):
+#>          [,1]  [,2]  [,3]
+#> Min.    0.000 0.399 0.399
+#> 1st Qu. 0.576 0.811 0.777
+#> Median  0.938 0.921 0.947
+#> Mean    0.713 0.841 0.837
+#> 3rd Qu. 0.955 0.973 0.980
+#> Max.    0.996 1.000 1.000
 #> NULL
 ```
 
-  <p style="text-indent: 20px">We start off learning that 3 full `A` matrices were estimated (as well as their `U` and `F` decompositions), and that they are ahistorical. This is expected given that there are 4 consecutive years of data, yielding 3 time steps, and an ahistorical matrix requires two consecutive years to estimate transitions. The following line notes the dimensions of those matrices. The third, fourth, and fifth lines of the summary show how many survival transition and fecundity elements were actually estimated, both overall and per matrix, and the number of individuals and transitions the matrices are based on. These numbers can be used to understand matrix quality. For example, a raw ahistorical matrix with many zero elements suggests that the dataset may be too small for the developed stageframe.</p>
+  <p style="text-indent: 20px">We start off learning that 3 full `A` matrices were estimated (as well as their `U` and `F` decompositions), and that they are ahistorical. This is expected given that there are 4 consecutive years of data, yielding 3 time steps, and an ahistorical matrix requires two consecutive years to estimate transitions. The following line notes the dimensions of those matrices. The third, fourth, and fifth lines of the summary show how many survival transition and fecundity elements were actually estimated, both overall and per matrix, and the number of individuals and transitions the matrices are based on. These numbers can be used to understand matrix quality. For example, a raw ahistorical matrix with many zero elements suggests that the dataset may be too small for the developed stageframe. Finally, the last section shows us summaries of the column sums form the survival-transition (U) matrices in this lefkoMat object. These column sums correspond to the survival probabilities of the different life stages, and so the summaries must show numbers ranging from 0.0 to 1.0. All of these values are within the realm of possibility for survival probabilities. If we look back at the stageframe for this analysis to get the order of stages, we find that they are also reasonably similar to the values published in Ehrlén [-@ehrlen_dynamics_2000]. Additional error-checking can be accomplished by checking specific elements within each matrix to see if they match expectation.</p>
   
   <p style="text-indent: 20px">Now we'll estimate historical matrices. Because of the size of these matrices, we will only show the `lefkoMat` summary. Note that we will only create Ehrlén-format matrices - users wishing to create deVries-format hMPMs should add `format = "deVries"` to the input options (the resulting matrices will be bigger, but contain the same number of estimated elements).</p>
 
@@ -286,12 +295,21 @@ summary(ehrlen3)
 #> A total of 14 fecundity transitions were estimated, with 7 per matrix.
 #> 
 #> The dataset contains a total of 276 unique individuals and 2527 unique transitions.
+#> 
+#> Survival probability sum check (each matrix represented by column in order):
+#>          [,1]  [,2]
+#> Min.    0.000 0.000
+#> 1st Qu. 0.000 0.000
+#> Median  0.000 0.679
+#> Mean    0.411 0.518
+#> 3rd Qu. 0.980 1.000
+#> Max.    1.000 1.000
 #> NULL
 ```
 
-  <p style="text-indent: 20px">The summary output shows several differences from the ahistorical case. First, there is one less matrix estimated in the historical case than in the ahistorical case, because raw historical matrices require three consecutive times to estimate each transition instead of two. Second, these matrices are larger than ahistorical matrices, with the numbers of rows and columns generally equaling the number of ahistorical rows and columns squared (although deVries-format increases the dimensions through the addition of a prior stage for newborns, and in both Ehrlén and deVries formats the numbers of rows and columns may be reduced under some circumstances as shown in the next block). Finally, a much greater proportion of each matrix is composed of 0s in the historical case than in the ahistorical case, although there are certainly more non-zero elements as well. This sparseness results from historical matrices being composed primarily of structural 0s. As a result, the historical matrices in this example have non-zero entries in 83.5 / 2401 = 3.5% of matrix elements, while the equivalent ahistorical matrices have non-zero entries in 26.667 / 49 = 54.45% of matrix elements.</p>
+  <p style="text-indent: 20px">The summary output shows several differences from the ahistorical case. First, there is one less matrix estimated in the historical case than in the ahistorical case, because raw historical matrices require three consecutive times to estimate each transition instead of two. Second, these matrices are larger than ahistorical matrices, with the numbers of rows and columns generally equaling the number of ahistorical rows and columns squared (although deVries-format increases the dimensions through the addition of a prior stage for newborns, and in both Ehrlén and deVries formats the numbers of rows and columns may be reduced under some circumstances as shown in the next block). Finally, a much greater proportion of each matrix is composed of 0s in the historical case than in the ahistorical case, although there are certainly more non-zero elements as well. This sparseness results from historical matrices being composed primarily of structural 0s. As a result, the historical matrices in this example have non-zero entries in 86 / 2401 = 3.6% of matrix elements, while the equivalent ahistorical matrices have non-zero entries in 26.667 / 49 = 54.45% of matrix elements.</p>
 
-  <p style="text-indent: 20px">We can see the impact of structural 0s by eliminating some of them in the process of matrix estimation. This can be done by setting `reduce = TRUE`, which tells `rlefko3()` to eliminate stage pairs in which both column and row are zero vectors. Here, we now have matrices with 19 fewer rows and columns, and 82.5 / 900 = 9.2% of elements as potentially non-zero.</p>
+  <p style="text-indent: 20px">We can see the impact of structural 0s by eliminating some of them in the process of matrix estimation. This can be done by setting `reduce = TRUE`, which tells `rlefko3()` to eliminate stage pairs in which both column and row are zero vectors. Here, we now have matrices with 19 fewer rows and columns, and 86 / 900 = 9.6% of elements as potentially non-zero.</p>
 
 ```r
 ehrlen3red <- rlefko3(data = lathvert, stageframe = lathframe, 
@@ -319,15 +337,6 @@ ehrlen2mean$labels
 ```
 
   <p style="text-indent: 20px">The `1` designation is the default numbering used for population and patch when no designations are supplied. This scenario is typical when no such division is made in the dataset, or no such division is provided to the matrix-estimating functions generating the MPM.</p>
-
-  <p style="text-indent: 20px">We may wish to check for errors by assessing the survival of ahistorical stages. The following shows us stage survival as the column sums for the main survival-transition matrix (contained within the `U` element of our mean `lefkoMat` object).</p>
-
-```r
-print(colSums(ehrlen2mean$U[[1]]), digits = 3)
-#> [1] 0.399 0.745 0.877 0.937 0.966 0.991 0.667
-```
-
-  <p style="text-indent: 20px">All of these values are within the realm of possibility for survival probabilities. If we look back at the stageframe for this analysis to get the order of stages, we find that they are also reasonably similar to the values published in Ehrlén [-@ehrlen_dynamics_2000]. Additional error-checking can be accomplished by checking specific elements within each matrix to see if they match expectation.</p>
 
   <p style="text-indent: 20px">Now we will estimate the historical element-wise mean matrix. We will use the reduced matrix to simplify later analyses, and show only the top-left corner of the rather large matrix (a section comprised of the first 20 rows and 8 columns of the 30 x 30 matrix - unhashtag the `print` statement to see).</p>
 
@@ -400,7 +409,7 @@ ehrlen3condmn <- cond_hmpm(ehrlen3mean)
 image3(ehrlen2mean, used = 1)
 ```
 
-![Figure 2.1. Image of mean ahistorical matrix](Ch2.20-1.png)
+![Figure 2.1. Image of mean ahistorical matrix](Ch2.19-1.png)
 
 ```
 #> NULL
@@ -414,7 +423,7 @@ image3(ehrlen2mean, used = 1)
 image3(ehrlen3mean, used = 1)
 ```
 
-![Figure 2.2. Image of mean historical matrix](Ch2.21-1.png)
+![Figure 2.2. Image of mean historical matrix](Ch2.20-1.png)
 
 ```
 #> NULL
@@ -501,9 +510,9 @@ ehrlen3mss$hist[which(ehrlen3mss$hist$ss_prop == max(ehrlen3mss$hist$ss_prop)),]
 #> 6      1          3          3      Tm      Tm 0.2406242
 ```
   
-  <p style="text-indent: 20px">Here we see that about 21% of the population is expected to be composed of dormant seeds just produced in the preceding year. This provides an added nuance to the ahistorical results, since dormant seeds could also have been dormant in the preceding year. However, the population is expected to be composed of 13% dormant seeds that were previously dormant, suggesting that new dormant seeds should be more common. This very likely reflects the mortality of dormant seeds, which is assumed to be 65.5% annually.</p>
+  <p style="text-indent: 20px">Here we see that about 24% of the population is expected to be composed of tiny adults just produced in the preceding year, and that this stage pair is more numerous than any involving dormant seeds.</p>
   
-  <p style="text-indent: 20px">The longer format of the historical stable stage output makes it a bit hard to read. However, these historical values can also be combined by stage at time *t* (`stage_2`) to estimate the **historically-corrected stable stage distribution**, which allows comparison to a stable stage distribution estimated from a purely ahistorical MPM. We can do this by examining the `$ahist` element of the historical stable stage distribution object. Notice below that the `ss_prop` column shows values that are a bit different from the ahistorical case, suggesting the influence of individual history.</p>
+  <p style="text-indent: 20px">The longer format of the historical stable stage output makes it a bit hard to read. However, these historical values can also be combined by stage at time *t* (`stage_2`) to estimate the **historically-corrected stable stage distribution**, which allows comparison to a stable stage distribution estimated from a purely ahistorical MPM. We can do this by examining the `$ahist` element of the historical stable stage distribution object. Notice below that the `ss_prop` column shows values that are a bit different from the ahistorical case, suggesting the influence of individual history, particularly showing that tiny adults are a larger share of the stage stage structure.</p>
 
 ```r
 ehrlen3mss$ahist
@@ -534,9 +543,9 @@ legend("topright", c("det ahistorical", "det historical", "stoc ahistorical",
   pt.bg = c("black", "orangered", "grey", "darkred"), bty = "n")
 ```
 
-![Figure 2.3. Deterministic and stochastic ahistorical vs. historically-corrected stable stage distributions](Ch2.28-1.png)
+![Figure 2.3. Deterministic and stochastic ahistorical vs. historically-corrected stable stage distributions](Ch2.27-1.png)
 
-  <p style="text-indent: 20px">Let's take the deterministic portion first. Accounting for individual history increased the prevalence of dormant seeds and small and large adults, but decreased the prevalence of dormant and tiny adults. For example, dormant seeds are now expected to compose 33% of the population (29% in the pure ahistorical case), and small and large adults together compose 28% of the population instead of 26%. Now when we also take in the impact of temporal stochasticity, we can see differences in the proportion of dormant seeds, seedlings, and all adult stages, with the greatest differences in dormant seeds and small and flowering adults.</p>
+  <p style="text-indent: 20px">Let's take the deterministic portion first. Accounting for individual history increased the prevalence of tiny and small adults, but decreased the prevalence of dormant seeds, and dormant, large, and flowering adults. Now when we also take in the impact of temporal stochasticity, we can see differences in the proportion of dormant seeds, seedlings, and all adult stages, with the greatest differences in dormant seeds and tiny adults.</p>
 
   <p style="text-indent: 20px">Let's take a look at the reproductive values now, in similar order to the stable stage distribution case. Initially, we will create all sets of reproductive value objects, and then we will plot them. The structure of these objects is the same as that of the stable stage structure outputs, and, in the case of the ahistorical MPM, the reproductive values are also the same as those produced by `popbio`'s `reproductive.value()` function. Because the four vectors are all standardized such that the first non-zero reproductive value is set to 1.0, they are on slightly different scales, and so we will make them comparable for plotting purposes by standardizing them relative to their respective maxima.</p>
 
@@ -560,9 +569,9 @@ legend("topleft", c("det ahistorical", "det historical", "stoc ahistorical",
   pt.bg = c("black", "orangered", "grey", "darkred"), bty = "n")
 ```
 
-![Figure 2.4. Ahistorical vs. historically-corrected reproductive values](Ch2.29-1.png)
+![Figure 2.4. Ahistorical vs. historically-corrected reproductive values](Ch2.28-1.png)
 
-  <p style="text-indent: 20px">Both deterministic and stochastic analyses show that flowering adults have the greatest reproductive value in both ahistorical and historical analysis, while dormant seeds have the least. However, the historical MPM suggests a greater contribution of non-flowering but sprouting adult stages, and lower contributions of dormant seeds, seedlings, and vegetative dormancy.</p>
+  <p style="text-indent: 20px">Both deterministic and stochastic analyses show that flowering adults have the greatest reproductive value in both ahistorical and historical analysis, while dormant seeds have the least. However, the historical MPM suggests lower contributions of dormant seeds, seedlings, and vegetative dormancy.</p>
   
   <p style="text-indent: 20px">Next we will look at the reproductive values of paired stages. Note that package `popbio` and R's `eigen()` function may fail to estimate reproductive values in the historical case if analysis is attempted, because these approaches were not made to handle extremely large, sparse matrices. The final column (`rep_value`) of the `$hist` element is the reproductive value of the stage pair. We will plot these reproductive values. Here is the deterministic case.</p>
 
@@ -572,11 +581,11 @@ labels <- apply(as.matrix(ehrlen3mrv$hist[, c("stage_2", "stage_1")]), 1, functi
 })
 barplot(ehrlen3mrv$hist$rep_value, main = "Historical", xaxt = "n", 
   ylab = "Reproductive value", xlab = "Stage")
-text(cex=0.5, y = -0.18, x = seq(from = 0,
+text(cex=0.5, y = -2.5, x = seq(from = 0,
   to = 1.19*length(ehrlen3mrv$hist$stage_2), by = 1.2), labels, xpd=TRUE, srt=45)
 ```
 
-![Figure 2.5. Historical reproductive values](Ch2.30-1.png)
+![Figure 2.5. Historical reproductive values](Ch2.29-1.png)
 
   <p style="text-indent: 20px">In the bar plot, the labels show the stages in the order of stage in time *t* followed by stage in time *t*-1. Examining these values reveals that the largest reproductive value is associated with flowering adults that were previously flowering, while the next largest reproductive value is associated with flowering adults that were previously small, and flowering adults that were previously very large. Interestingly, historical transitions to very large adult have lower reproductive value here than we might expect given the ahistorical analysis, in which they were predicted to have the second highest reproductive value.</p>
   
@@ -654,7 +663,7 @@ which(ehrlen3sens$ah_sensmats[[1]] == max(ehrlen3sens$ah_sensmats[[1]][which(ehr
 #> [1] 19
 ```
 
-  <p style="text-indent: 20px">The maximum biologically plausible sensitivity value in the historical matrix appears to be element 313, which is associated with column 11 (small adult in time *t*-1 to small adult in time *t*) and row 13 (small adult in time *t* to flowering in time *t*+1). This transition is from small adult in times *t*-1 and *t* to flowering adult in *t*+1. The historically-corrected sensitivity analysis finds the $\lambda$ is most sensitive to the same element as in the ahistorical MPM. So, once again we see the importance of these two stages, but with greater resolution than was possible in the ahistorical case.</p>
+  <p style="text-indent: 20px">The maximum biologically plausible sensitivity value in the historical matrix appears to be element 157, which is associated with column 6 (tiny adult in times *t*-1 and *t*) and row 7 (tiny adult in time *t* to small adult in time *t*+1). This transition is from tiny adult in times *t*-1 and *t* to small adult in *t*+1. The historically-corrected sensitivity analysis finds that $\lambda$ is most sensitive to element 19, which is the transition from tiny adult to large adult. This is a little different from the ahistorical MPM, which suggested element 27 (small adult to flowering adult).</p>
   
   <p style="text-indent: 20px">Before moving on, let's repeat the above exercise with stochastic sensitivities. We will compare ahistorical vs. historical/historically-corrected analyses.</p>
 
@@ -697,7 +706,7 @@ which(ehrlen3sens_s$ah_sensmats[[1]] == max(ehrlen3sens_s$ah_sensmats[[1]][which
 #> [1] 19
 ```
 
-  <p style="text-indent: 20px">Intriguingly, we find complete agreement in these baseline inferences between deterministic vs. stochastic analyses, and ahistorical vs. historical analyses.</p>
+  <p style="text-indent: 20px">Intriguingly, we find complete agreement in these baseline inferences between deterministic vs. stochastic analyses, and the major disagreement comes from differences between ahistorical vs. historical analyses.</p>
 
   <p style="text-indent: 20px">An alternative, or complementary, approach to perturbation analysis is elasticity analysis. Elasticities are easier to interpret because 0 elements produce 0 elasticity values, thus eliminating biologically impossible transitions from consideration, and because they are scaled to sum to 1.0. This scaling eliminates the units of the transition type, making elasticities of survival transitions comparable to those of fecundity. However, they are also interpreted differently, because while sensitivity analysis shows the impact of a tiny but *absolute* change to a matrix element on $\lambda$, elasticity analysis shows the impact of a tiny but *proportional* change to a matrix element on $\lambda$. It is therefore not unusual for sensitivity and elasticity analysis to yield different inferences.</p>
   
@@ -810,9 +819,9 @@ legend("topleft", c("det ahistorical", "det historical", "stoc ahistorical",
   pt.bg = c("black", "orangered", "grey", "darkred"), bty = "n")
 ```
 
-![Figure 2.6. Ahistorical vs. historically-corrected deterministic and stochastic elasticity to stages](Ch2.40-1.png)
+![Figure 2.6. Ahistorical vs. historically-corrected deterministic and stochastic elasticity to stages](Ch2.39-1.png)
 
-  <p style="text-indent: 20px">We see the overall importance of both history and temporal environmental stochasticity here. Historical analyses generally find that population growth rate is less elastic in response to dormant seeds, seedlings, and dormant adults, and more elastic to small adults than in ahistorical analyses. Stochastic analyses suggest that population growth rate is barely elastic in response to dormant seeds and seedlings, and more elastic in response to tiny and small adults.</p>
+  <p style="text-indent: 20px">We see the overall importance of both history and temporal environmental stochasticity here. Historical analyses generally find that population growth rate is less elastic in response to seedlings, and large and dormant adults, and more elastic to tiny and small adults than in ahistorical analyses. Stochastic analyses suggest that population growth rate is barely elastic in response to dormant seeds and seedlings, and more elastic in response to tiny and small adults.</p>
 
   <p style="text-indent: 20px">Let's now look at the elasticities of different kinds of transitions. We will use the `summary.lefkoElas()` function, which outputs data frames summarizing elasticity sums by the kind of transition. First, we will compare ahistorical against historically-corrected transitions.</p>
 
@@ -835,7 +844,7 @@ legend("topright", c("det ahistorical", "det historical", "stoc ahistorical",
   pt.bg = c("black", "orangered", "grey", "darkred"), bty = "n")
 ```
 
-![Figure 2.7. Ahistorical vs. historically-corrected deterministic and stochastic elasticity to transitions](Ch2.41-1.png)
+![Figure 2.7. Ahistorical vs. historically-corrected deterministic and stochastic elasticity to transitions](Ch2.40-1.png)
 
   <p style="text-indent: 20px">We see similar patterns across types of elasticity analysis. Particularly, population growth rate is most elastic in response to changes in stasis transitions, and least elastic to changes in fecundity.</p>
   

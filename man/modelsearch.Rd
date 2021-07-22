@@ -275,17 +275,12 @@ through the functions \code{\link[stats]{lm}()} (GLM with Gaussian response),
 \code{\link[MASS]{glm.nb}()} (GLM with negative binomial response),
 \code{\link[pscl]{zeroinfl}()} (zero-inflated Poisson or negative binomial
 response), \code{\link[lme4]{lmer}()} (mixed model with Gaussian response),
-and \code{\link[lme4]{glmer}()} (mixed model with binomial, Poisson, or
-negative binomial response). See documentation related to these functions for
-further information. Any response term that is invariable in the dataset will
-lead to a best-fit model for that response represented by a single constant
-value.
-
-The current version of \code{modelsearch()} does not allow zero-inflated or
-zero-truncated distributions in mixed models, nor does it allow the negative
-binomial distribution. When current issues are resolved with package
-\code{glmmTMB}, which was originally used for this purpose, we will reinstate
-these special response distributions.
+\code{\link[lme4]{glmer}()} (mixed model with binomial or Poisson response),
+and \code{\link[glmmTMB]{glmmTMB}()} (mixed model with negative binomial,
+or zero-truncated or zero-inflated Poisson or negative binomial response).
+See documentation related to these functions for further information. Any
+response term that is invariable in the dataset will lead to a best-fit model
+for that response represented by a single constant value.
 
 Exhaustive model building and selection proceeds via the
 \code{\link[MuMIn]{dredge}()} function in package \code{MuMIn}. This function
@@ -378,12 +373,13 @@ lathvertln$feca1 <- round(lathvertln$feca1)
 lathvertln$feca3 <- round(lathvertln$feca3)
 
 lathmodelsln3 <- modelsearch(lathvertln, historical = TRUE, 
-  approach = "mixed", suite = "main", 
+  approach = "glm", suite = "main", 
   vitalrates = c("surv", "obs", "size", "repst", "fec"), juvestimate = "Sdl",
   bestfit = "AICc&k", sizedist = "gaussian", fecdist = "poisson", 
   indiv = "individ", patch = "patchid", year = "year2",year.as.random = TRUE,
   patch.as.random = TRUE, show.model.tables = TRUE, quiet = TRUE)
 
+# Here we use supplemental() to provide overwrite and reproductive info
 lathsupp3 <- supplemental(stage3 = c("Sd", "Sd", "Sdl", "Sdl", "mat", "Sd", "Sdl"), 
   stage2 = c("Sd", "Sd", "Sd", "Sd", "Sdl", "rep", "rep"),
   stage1 = c("Sd", "rep", "Sd", "rep", "Sd", "mat", "mat"),
