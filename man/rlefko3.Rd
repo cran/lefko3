@@ -40,7 +40,7 @@ observation status, propagule status, immaturity status, and maturity status
 of each ahistorical stage. Should also incorporate bin widths if size is
 continuous.}
 
-\item{year}{A variable corresponding to year or observation time, or a set of
+\item{year}{A variable corresponding to observation occasion, or a set of
 such values, given in values associated with the year term used in linear
 model development. Can also equal \code{all}, in which case matrices will be
 estimated for all years. Defaults to \code{all}.}
@@ -58,31 +58,31 @@ set in \code{censorcol}, such that only data with censor values equal to 1
 will remain. Defaults to FALSE.}
 
 \item{stages}{An optional vector denoting the names of the variables within
-the main vertical dataset coding for the stages of each individual in times
-\emph{t}+1, \emph{t}, and \emph{t}-1. The names of stages in these variables
-should match those used in the \code{stageframe} exactly. If left blank, then
-\code{rlefko3()} will attempt to infer stages by matching values of 
-\code{alive}, \code{size}, \code{repst}, and \code{matst} to characteristics
-noted in the associated \code{stageframe}.}
+the main vertical dataset coding for the stages of each individual in
+occasions \emph{t}+1, \emph{t}, and \emph{t}-1. The names of stages in these
+variables should match those used in the \code{stageframe} exactly. If left
+blank, then \code{rlefko3()} will attempt to infer stages by matching values
+of \code{alive}, \code{size}, \code{repst}, and \code{matst} to
+characteristics noted in the associated \code{stageframe}.}
 
 \item{alive}{A vector of names of binomial variables corresponding to status
-as alive (1) or dead (0) in times \emph{t}+1, \emph{t}, and \emph{t}-1,
+as alive (1) or dead (0) in occasions \emph{t}+1, \emph{t}, and \emph{t}-1,
 respectively.}
 
-\item{size}{A vector of names of variables coding size in times \emph{t}+1,
-\emph{t}, and \emph{t}-1, respectively. Defaults to 
+\item{size}{A vector of names of variables coding size in occasions
+\emph{t}+1, \emph{t}, and \emph{t}-1, respectively. Defaults to 
 \code{c("sizea3", "sizea2", "sizea1")}.}
 
 \item{repst}{A vector of names of variables coding reproductive status in
-times \emph{t}+1, \emph{t}, and \emph{t}-1, respectively. Defaults to 
+occasions \emph{t}+1, \emph{t}, and \emph{t}-1, respectively. Defaults to 
 \code{c("repstatus3", "repstatus2", "repstatus1")}.}
 
-\item{matst}{A vector of names of variables coding maturity status in times
-\emph{t}+1, \emph{t}, and \emph{t}-1, respectively. Defaults to
+\item{matst}{A vector of names of variables coding maturity status in
+occasions \emph{t}+1, \emph{t}, and \emph{t}-1, respectively. Defaults to
 \code{c("matstatus3", "matstatus2", "matstatus1")}. Must be supplied if
 \code{stages} is not provided.}
 
-\item{fec}{A vector of names of variables coding fecundity in times
+\item{fec}{A vector of names of variables coding fecundity in occasions
 \emph{t}+1, \emph{t}, and \emph{t}-1, respectively. Defaults to
 \code{c("feca3", "feca2", "feca1")}.}
 
@@ -107,7 +107,7 @@ linear models, and that fecundity will be into the first stage noted as
 propagule or immature. To prevent this behavior, input just \code{0}, which
 will result in fecundity being estimated only for transitions noted in
 \code{supplement} above. May be the dimensions of either a historical or an
-ahistorical matrix. If the latter, then all stages will be used in time
+ahistorical matrix. If the latter, then all stages will be used in occasion
 \emph{t}-1 for each suggested ahistorical transition.}
 
 \item{overwrite}{An optional data frame developed with the
@@ -115,8 +115,8 @@ ahistorical matrix. If the latter, then all stages will be used in time
 either with given values or with other estimated transitions. Note that this
 function supplements overwrite data provided in \code{supplement}.}
 
-\item{yearcol}{The variable name or column number corresponding to time in
-time \emph{t} in the dataset.}
+\item{yearcol}{The variable name or column number corresponding to occasion
+\emph{t} in the dataset.}
 
 \item{popcol}{The variable name or column number corresponding to the
 identity of the population.}
@@ -148,7 +148,9 @@ development debugging purposes.}
 }
 \value{
 If all inputs are properly formatted, then this function will return
-either an object of class \code{lefkoMat}. Output includes:
+an object of class \code{lefkoMat}, which is a list that holds the matrix
+projection model and all of its metadata. Its structure is a list with the
+following elements:
 
 \item{A}{A list of full projection matrices in order of sorted populations,
 patches, and years. All matrices output in the \code{matrix} class.}
@@ -158,8 +160,8 @@ matrices output in the \code{matrix} class.}
 output in the \code{matrix} class.}
 \item{hstages}{A data frame matrix showing the pairing of ahistorical stages
 used to create historical stage pairs.}
-\item{agestages}{Set to NA. Only used in output to function
-\code{aflefko2}().}
+\item{agestages}{A data frame showing age-stage pairs. In this function, it
+is set to NA. Only used in output to function \code{aflefko2}().}
 \item{ahstages}{A data frame detailing the characteristics of associated
 ahistorical stages, in the form of a modified stageframe that includes
 status as an entry stage through reproduction.}
@@ -192,9 +194,9 @@ input those given and proxy transitions through the \code{overwrite} option.
 
 The reproduction matrix (field \code{repmatrix}) may be supplied as either
 historical or ahistorical. If provided as ahistorical, then \code{flefko3()}
-will assume that all historical transitions involving stages noted for times
-\emph{t} and \emph{t}+1 should be set to the respective fecundity multipliers
-noted.
+will assume that all historical transitions involving stages noted for
+occasions \emph{t} and \emph{t}+1 should be set to the respective fecundity
+multipliers noted.
 
 Users may at times wish to estimate MPMs using a dataset incorporating
 multiple patches or subpopulations. Should the aim of analysis be a general
@@ -202,8 +204,8 @@ MPM that does not distinguish these patches or subpopulations, the
 \code{patchcol} variable should be left to NA, which is the default.
 
 Input options including multiple variable names must be entered in the order
-of variables in time \emph{t}+1, \emph{t}, and \emph{t}-1. Rearranging the
-order WILL lead to erroneous calculations, and will probably also lead to
+of variables in occasion \emph{t}+1, \emph{t}, and \emph{t}-1. Rearranging
+the order WILL lead to erroneous calculations, and will probably also lead to
 fatal errors.
 }
 
@@ -277,24 +279,23 @@ cypraw_v1 <- verticalize3(data = cypdata, noyears = 6, firstyear = 2004,
   stageassign = cypframe_raw, stagesize = "sizeadded", NAas0 = TRUE,
   NRasRep = TRUE)
 
-cypsupp3r <- supplemental(stage3 = c("SD", "SD", "P1", "P1", "P2", "P3",
-    "SL", "SL", "SL", "D", "XSm", "Sm", "D", "XSm", "Sm", "SD", "P1"),
-  stage2 = c("SD", "SD", "SD", "SD", "P1", "P2", "P3", "SL", "SL", "SL",
-    "SL", "SL", "SL", "SL", "SL", "rep", "rep"),
-  stage1 = c("SD", "rep", "SD", "rep", "SD", "P1", "P2", "P3", "SL", "P3",
-    "P3", "P3", "SL", "SL", "SL", "all", "all"),
-  eststage3 = c(NA, NA, NA, NA, NA, NA, NA, NA, NA, "D", "XSm", "Sm", "D",
-    "XSm", "Sm", NA, NA),
-  eststage2 = c(NA, NA, NA, NA, NA, NA, NA, NA, NA, "XSm", "XSm", "XSm",
-    "XSm", "XSm", "XSm", NA, NA),
-  eststage1 = c(NA, NA, NA, NA, NA, NA, NA, NA, NA, "XSm", "XSm", "XSm",
-    "XSm", "XSm", "XSm", NA, NA),
-  givenrate = c(0.1, 0.1, 0.2, 0.2, 0.2, 0.2, 0.25, 0.4, 0.4, NA, NA, NA, NA,
-    NA, NA, NA, NA),
-  multiplier = c(NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA,
-    0.5, 0.5),
-  type = c(1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 3, 3),
-  type_t12 = c(1, 2, 1, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1),
+cypsupp3r <- supplemental(stage3 = c("SD", "SD", "P1", "P1", "P2", "P3", "SL",
+    "D", "XSm", "Sm", "D", "XSm", "Sm", "SD", "P1"),
+  stage2 = c("SD", "SD", "SD", "SD", "P1", "P2", "P3", "SL", "SL", "SL", "SL",
+    "SL", "SL", "rep", "rep"),
+  stage1 = c("SD", "rep", "SD", "rep", "SD", "P1", "P2", "P3", "P3", "P3",
+    "SL", "SL", "SL", "mat", "mat"),
+  eststage3 = c(NA, NA, NA, NA, NA, NA, NA, "D", "XSm", "Sm", "D", "XSm", "Sm",
+    NA, NA),
+  eststage2 = c(NA, NA, NA, NA, NA, NA, NA, "XSm", "XSm", "XSm", "XSm", "XSm",
+    "XSm", NA, NA),
+  eststage1 = c(NA, NA, NA, NA, NA, NA, NA, "XSm", "XSm", "XSm", "XSm", "XSm",
+    "XSm", NA, NA),
+  givenrate = c(0.1, 0.1, 0.2, 0.2, 0.2, 0.2, 0.25, NA, NA, NA, NA, NA, NA,
+    NA, NA),
+  multiplier = c(NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, 0.5, 0.5),
+  type = c(1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 3, 3),
+  type_t12 = c(1, 2, 1, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1),
   stageframe = cypframe_raw, historical = TRUE)
 
 cypmatrix3r <- rlefko3(data = cypraw_v1, stageframe = cypframe_raw,

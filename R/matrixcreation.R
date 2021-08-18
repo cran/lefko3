@@ -8,7 +8,7 @@
 #' corresponding to these matrices. Unlike \code{\link{rlefko3}()}, this
 #' function currently does not distinguish populations within the same dataset.
 #'
-#' @param year A variable corresponding to year or observation time, or a set
+#' @param year A variable corresponding to the observation occasion, or a set
 #' of such values, given in values associated with the year term used in linear 
 #' model development. Can also equal \code{all}, in which case matrices will
 #' be estimated for all years. Defaults to \code{all}.
@@ -39,7 +39,7 @@
 #' propagule or immature. To prevent this behavior, input just \code{0}, which
 #' will result in fecundity being estimated only for transitions noted in
 #' \code{supplement} above. May be the dimensions of either a historical or an
-#' ahistorical matrix. If the latter, then all stages will be used in time
+#' ahistorical matrix. If the latter, then all stages will be used in occasion
 #' \emph{t}-1 for each suggested ahistorical transition.
 #' @param overwrite An optional data frame developed with the
 #' \code{\link{overwrite}()} function describing transitions to be overwritten
@@ -53,63 +53,63 @@
 #' \code{size_model}, \code{repst_model}, \code{fec_model}, \code{jsurv_model},
 #' \code{jobs_model}, \code{jsize_model}, \code{jrepst_model},
 #' \code{paramnames}, \code{yearcol}, and \code{patchcol} are not required. One
-#' or more of these models should include size or reproductive status in time
+#' or more of these models should include size or reproductive status in occasion
 #' \emph{t}-1.
 #' @param surv_model A linear model predicting survival probability. This can 
 #' be a model of class \code{glm} or \code{glmer}, and requires a predicted
 #' binomial variable under a logit link. If given, then will overwrite any
 #' survival probability model given in \code{modelsuite}. This model must have
-#' been developed in a modeling exercise testing the impacts of times \emph{t}
-#' and \emph{t}-1.
+#' been developed in a modeling exercise testing the impacts of occasions
+#' \emph{t} and \emph{t}-1.
 #' @param obs_model A linear model predicting sprouting or observation
 #' probability. This can be a model of class \code{glm} or \code{glmer}, and
 #' requires a predicted binomial variable under a logit link. If given, then 
 #' will overwrite any observation probability model given in \code{modelsuite}.
 #' This model must have been developed in a modeling exercise testing the
-#' impacts of times \emph{t} and \emph{t}-1.
+#' impacts of occasions \emph{t} and \emph{t}-1.
 #' @param size_model A linear model predicting size. This can be a model of
 #' class \code{glm} or \code{glmer}, both of which require a predicted poisson
 #' variable under a log link, or a model of class \code{lm} or \code{lmer}, in
 #' which a Gaussian response is assumed. If given, then will overwrite any size
 #' model given in \code{modelsuite}.This model must have been developed in a
-#' modeling exercise testing the impacts of times \emph{t} and \emph{t}-1.
+#' modeling exercise testing the impacts of occasions \emph{t} and \emph{t}-1.
 #' @param repst_model A linear model predicting reproduction probability. This 
 #' can be a model of class \code{glm} or \code{glmer}, and requires a predicted
 #' binomial variable under a logit link. If given, then will overwrite any
 #' reproduction probability model given in \code{modelsuite}. This model must
-#' have been developed in a modeling exercise testing the impacts of times
+#' have been developed in a modeling exercise testing the impacts of occasions
 #' \emph{t} and \emph{t}-1.
 #' @param fec_model A linear model predicting fecundity. This can be a model of
 #' class \code{glm} or \code{glmer}, and requires a predicted poisson variable
 #' under a log link. If given, then will overwrite any fecundity model given in 
 #' \code{modelsuite}. This model must have been developed in a modeling exercise 
-#' testing the impacts of times \emph{t} and \emph{t}-1.
+#' testing the impacts of occasions \emph{t} and \emph{t}-1.
 #' @param jsurv_model A linear model predicting juvenile survival probability.
 #' This can be a model of class \code{glm} or \code{glmer}, and requires a
 #' predicted binomial variable under a logit link. If given, then will overwrite
 #' any juvenile survival probability model given in \code{modelsuite}. This
 #' model must have been developed in a modeling exercise testing the impacts of
-#' times \emph{t} and \emph{t}-1.
+#' occasions \emph{t} and \emph{t}-1.
 #' @param jobs_model A linear model predicting juvenile sprouting or observation
 #' probability. This can be a model of class \code{glm} or \code{glmer}, and
 #' requires a predicted binomial variable under a logit link. If given, then
 #' will overwrite any juvenile observation probability model given in 
 #' \code{modelsuite}. This model must have been developed in a modeling exercise
-#' testing the impacts of times \emph{t} and \emph{t}-1.
+#' testing the impacts of occasions \emph{t} and \emph{t}-1.
 #' @param jsize_model A linear model predicting juvenile size. This can be a
 #' model of class \code{glm} or \code{glmer}, both of which require a predicted
 #' poisson variable under a log link, or a model of class \code{lm} or 
 #' \code{lmer}, in which a Gaussian response is assumed. If given, then will
 #' overwrite any juvenile size model given in \code{modelsuite}. This model must
-#' have been developed in a modeling exercise testing the impacts of times
+#' have been developed in a modeling exercise testing the impacts of occasions
 #' \emph{t} and \emph{t}-1.
 #' @param jrepst_model A linear model predicting reproduction probability of a 
 #' mature individual that was immature in the previous year. This can be a model
 #' of class \code{glm} or \code{glmer}, and requires a predicted binomial
 #' variable under a logit link. If given, then will overwrite any reproduction
 #' probability model given in \code{modelsuite}. This model must have been
-#' developed in a modeling exercise testing the impacts of times \emph{t} and
-#' \emph{t}-1.
+#' developed in a modeling exercise testing the impacts of occasions \emph{t}
+#' and \emph{t}-1.
 #' @param paramnames A dataframe with two columns, the first showing the general
 #' model terms that will be used in matrix creation, and the second showing the
 #' equivalent terms used in modeling. Only required if \code{modelsuite} is not 
@@ -137,19 +137,20 @@
 #' linear model for juvenile reproduction probability.
 #' @param repmod A scalar multiplier of fecundity. Defaults to 1.
 #' @param yearcol The variable name or column number corresponding to year 
-#' in time \emph{t} in the dataset. Not needed if \code{modelsuite} is supplied.
+#' in occasion \emph{t} in the dataset. Not needed if \code{modelsuite} is
+#' supplied.
 #' @param patchcol The variable name or column number corresponding to patch in 
 #' the dataset. Not needed if \code{modelsuite} is supplied.
 #' @param year.as.random A logical term indicating whether coefficients for
 #' missing patches within vital rate models should be estimated as random
-#' intercepts. Defaults to FALSE, in which case missing time step coefficients 
-#' are set to 0.
+#' intercepts. Defaults to FALSE, in which case missing coefficients
+#' corresponding to observation occasions are set to 0.
 #' @param patch.as.random A logical term indicating whether coefficients for
 #' missing patches within vital rate models should be estimated as random
 #' intercepts. Defaults to FALSE, in which case missing patch coefficients 
 #' are set to 0.
 #' @param randomseed A numeric value used as a seed to generate random estimates
-#' for missing time step and patch coefficients, if either \code{year.as.random}
+#' for missing occasion and patch coefficients, if either \code{year.as.random}
 #' or \code{patch.as.random} is set to TRUE. Defaults to 
 #' \code{\link{set.seed}()} default.
 #' @param negfec A logical value denoting whether fecundity values estimated to
@@ -167,8 +168,9 @@
 #' developed internally and can be used for erroc checking. Defaults to FALSE.
 #'
 #' @return If all inputs are properly formatted, then this function will return
-#' an object of class \code{lefkoMat}, which is a list with the following
-#' elements:
+#' an object of class \code{lefkoMat}, which is a list that holds the matrix
+#' projection model and all of its metadata. Its structure is a list with the
+#' following elements:
 #' 
 #' \item{A}{A list of full projection matrices in order of sorted patches and
 #' years. All matrices output in the \code{matrix} class.}
@@ -178,8 +180,8 @@
 #' output in the \code{matrix} class.}
 #' \item{hstages}{A data frame matrix showing the pairing of ahistorical stages
 #' used to create historical stage pairs.}
-#' \item{agestages}{Set to NA. Only used in output to function
-#' \code{aflefko2}().}
+#' \item{agestages}{A data frame showing age-stage pairs. In this function, it
+#' is set to NA. Only used in output to function \code{aflefko2}().}
 #' \item{ahstages}{A data frame detailing the characteristics of associated
 #' ahistorical stages, in the form of a modified stageframe that includes
 #' status as an entry stage through reproduction.}
@@ -209,9 +211,9 @@
 #' 
 #' The reproduction matrix (field \code{repmatrix}) may be supplied as either
 #' historical or ahistorical. If provided as ahistorical, then \code{flefko3()}
-#' will assume that all historical transitions involving stages noted for times
-#' \emph{t} and \emph{t}+1 should be set to the respective fecundity multipliers
-#' noted.
+#' will assume that all historical transitions involving stages noted for
+#' occasions \emph{t} and \emph{t}+1 should be set to the respective fecundity
+#' multipliers noted.
 #' 
 #' Users may at times wish to estimate MPMs using a dataset incorporating
 #' multiple patches or subpopulations. Should the aim of analysis be a general
@@ -219,8 +221,8 @@
 #' \code{patchcol} variable should be left to NA, which is the default.
 #' 
 #' Input options including multiple variable names must be entered in the order
-#' of variables in time \emph{t}+1, \emph{t}, and \emph{t}-1. Rearranging the
-#' order WILL lead to erroneous calculations, and will probably also lead to
+#' of variables in occasion \emph{t}+1, \emph{t}, and \emph{t}-1. Rearranging
+#' the order WILL lead to erroneous calculations, and will probably also lead to
 #' fatal errors.
 #' 
 #' Using the \code{err_check} option will produce a matrix of 4 columns, each
@@ -343,7 +345,7 @@ flefko3 <- function(year = "all", patch = "all", stageframe, supplement = NA,
   }
   
   if (length(year) == 0 | all(is.na(year) == TRUE) | any(is.na(year))) {
-    stop("This function cannot proceed without a specific time, or a suite of times, designated via the year option. NA entries are not allowed.", call. = FALSE)
+    stop("This function cannot proceed without a specific occasion, or a suite of occasions, designated via the year option. NA entries are not allowed.", call. = FALSE)
   }
   
   if (all(is.na(patch)) & !is.na(patchcol)) {
@@ -654,7 +656,7 @@ flefko3 <- function(year = "all", patch = "all", stageframe, supplement = NA,
 #' and \code{\link{rlefko3}()}, this function does not currently distinguish
 #' populations.
 #'
-#' @param year A variable corresponding to year or observation time, or a set of
+#' @param year A variable corresponding to observation occasion, or a set of
 #' such values, given in values associated with the year term used in linear
 #' model development. Can also equal \code{all}, in which case matrices will be
 #' estimated for all years. Defaults to \code{all}.
@@ -697,61 +699,62 @@ flefko3 <- function(year = "all", patch = "all", stageframe, supplement = NA,
 #' \code{size_model}, \code{repst_model}, \code{fec_model}, \code{jsurv_model},
 #' \code{jobs_model}, \code{jsize_model}, \code{jrepst_model}, 
 #' \code{paramnames}, \code{yearcol}, and \code{patchcol} are not required. No
-#' models should include size or reproductive status in time \emph{t}-1.
+#' models should include size or reproductive status in occasion \emph{t}-1.
 #' @param surv_model A linear model predicting survival probability. This can
 #' be a model of class \code{glm} or \code{glmer}, and requires a predicted
 #' binomial variable under a logit link. If given, then will overwrite any
 #' survival probability model given in \code{modelsuite}. This model must have
-#' been developed in a modeling exercise testing only the impacts of time 
+#' been developed in a modeling exercise testing only the impacts of occasion 
 #' \emph{t}.
 #' @param obs_model A linear model predicting sprouting or observation
 #' probability. This can be a model of class \code{glm} or \code{glmer}, and
 #' requires a predicted binomial variable under a logit link. If given, then
 #' will overwrite any observation probability model given in \code{modelsuite}.
 #' This model must have been developed in a modeling exercise testing only the
-#' impacts of time \emph{t}.
+#' impacts of occasion \emph{t}.
 #' @param size_model A linear model predicting size. This can be a model of
 #' class \code{glm} or \code{glmer}, both of which require a predicted poisson
 #' variable under a log link, or a model of class \code{lm} or \code{lmer}, in
 #' which a Gaussian response is assumed. If given, then will overwrite any size
 #' model given in \code{modelsuite}. This model must have been developed in a
-#' modeling exercise testing only the impacts of time \emph{t}.
+#' modeling exercise testing only the impacts of occasion \emph{t}.
 #' @param repst_model A linear model predicting reproduction probability. This
 #' can be a model of class \code{glm} or \code{glmer}, and requires a predicted
 #' binomial variable under a logit link. If given, then will overwrite any
 #' reproduction probability model given in \code{modelsuite}. This model must
-#' have been developed in a modeling exercise testing only the impacts of time
-#' \emph{t}.
+#' have been developed in a modeling exercise testing only the impacts of
+#' occasion \emph{t}.
 #' @param fec_model A linear model predicting fecundity. This can be a model of
 #' class \code{glm} or \code{glmer}, and requires a predicted poisson variable
 #' under a log link. If given, then will overwrite any fecundity model given in
 #' \code{modelsuite}. This model must have been developed in a modeling exercise
-#' testing only the impacts of time \emph{t}.
+#' testing only the impacts of occasion \emph{t}.
 #' @param jsurv_model A linear model predicting juvenile survival probability.
 #' This can be a model of class \code{glm} or \code{glmer}, and requires a
 #' predicted binomial variable under a logit link. If given, then will overwrite
 #' any juvenile survival probability model given in \code{modelsuite}. This
 #' model must have been developed in a modeling exercise testing only the
-#' impacts of time \emph{t}.
+#' impacts of occasion \emph{t}.
 #' @param jobs_model A linear model predicting juvenile sprouting or observation
 #' probability. This can be a model of class \code{glm} or \code{glmer}, and
 #' requires a predicted binomial variable under a logit link. If given, then
 #' will overwrite any juvenile observation probability model given in 
 #' \code{modelsuite}. This model must have been developed in a modeling exercise
-#' testing only the impacts of time \emph{t}.
+#' testing only the impacts of occasion \emph{t}.
 #' @param jsize_model A linear model predicting juvenile size. This can be a
 #' model of class \code{glm} or \code{glmer}, both of which require a predicted
 #' poisson variable under a log link, or a model of class \code{lm} or 
 #' \code{lmer}, in which a Gaussian response is assumed. If given, then will
 #' overwrite any juvenile size model given in \code{modelsuite}. This model must
-#' have been developed in a modeling exercise testing only the impacts of time
-#' \emph{t}.
+#' have been developed in a modeling exercise testing only the impacts of
+#' occasion \emph{t}.
 #' @param jrepst_model A linear model predicting reproduction probability of a 
 #' mature individual that was immature in the previous year. This can be a model 
 #' of class \code{glm} or \code{glmer}, and requires a predicted binomial
 #' variable under a logit link. If given, then will overwrite any reproduction
 #' probability model given in \code{modelsuite}. This model must have been
-#' developed in a modeling exercise testing only the impacts of time \emph{t}.
+#' developed in a modeling exercise testing only the impacts of occasion
+#' \emph{t}.
 #' @param paramnames A dataframe with two columns, the first showing the general
 #' model terms that will be used in matrix creation, and the second showing the
 #' equivalent terms used in modeling. Only required if \code{modelsuite} is not 
@@ -779,19 +782,20 @@ flefko3 <- function(year = "all", patch = "all", stageframe, supplement = NA,
 #' linear model for juvenile reproduction probability.
 #' @param repmod A scalar multiplier of fecundity. Defaults to 1.
 #' @param yearcol The variable name or column number corresponding to year in
-#' time \emph{t} in the dataset. Not needed if a \code{modelsuite} is supplied.
+#' occasion \emph{t} in the dataset. Not needed if a \code{modelsuite} is
+#' supplied.
 #' @param patchcol The variable name or column number corresponding to patch in
 #' the dataset. Not needed if a \code{modelsuite} is supplied.
 #' @param year.as.random A logical term indicating whether coefficients for
 #' missing patches within vital rate models should be estimated as random
-#' intercepts. Defaults to FALSE, in which case missing time step coefficients
-#' are set to 0.
+#' intercepts. Defaults to FALSE, in which case missing monitoring occasion
+#' coefficients are set to 0.
 #' @param patch.as.random A logical term indicating whether coefficients for
 #' missing patches within vital rate models should be estimated as random
 #' intercepts. Defaults to FALSE, in which case missing patch coefficients are
 #' set to 0.
 #' @param randomseed A numeric value used as a seed to generate random estimates
-#' for missing time step and patch coefficients, if either \code{year.as.random}
+#' for missing occasion and patch coefficients, if either \code{year.as.random}
 #' or \code{patch.as.random} is set to TRUE. Defaults to
 #' \code{\link{set.seed}()} default.
 #' @param negfec A logical value denoting whether fecundity values estimated to
@@ -804,7 +808,9 @@ flefko3 <- function(year = "all", patch = "all", stageframe, supplement = NA,
 #' rate probabilities associated with each matrix. Defaults to FALSE.
 #'
 #' @return If all inputs are properly formatted, then this function will return
-#' either an object of class \code{lefkoMat}. Output includes:
+#' an object of class \code{lefkoMat}, which is a list that holds the matrix
+#' projection model and all of its metadata. Its structure is a list with the
+#' following elements:
 #'
 #' \item{A}{A list of full projection matrices in order of sorted patches and
 #' years. All matrices output in the \code{matrix} class.}
@@ -812,9 +818,10 @@ flefko3 <- function(year = "all", patch = "all", stageframe, supplement = NA,
 #' matrices output in the \code{matrix} class.}
 #' \item{F}{A list of fecundity matrices sorted as in \code{A}. All matrices 
 #' output in the \code{matrix} class.}
-#' \item{hstages}{Set to NA for ahistorical matrices.}
-#' \item{agestages}{Set to NA. Only used in output to function
-#' \code{aflefko2}().}
+#' \item{hstages}{A data frame matrix showing the pairing of ahistorical stages
+#' used to create historical stage pairs. Set to NA for ahistorical matrices.}
+#' \item{agestages}{A data frame showing age-stage pairs. In this function, it
+#' is set to NA. Only used in output to function \code{aflefko2}().}
 #' \item{ahstages}{A data frame detailing the characteristics of associated
 #' ahistorical stages, in the form of a modified stageframe that includes
 #' status as an entry stage through reproduction.}
@@ -831,8 +838,8 @@ flefko3 <- function(year = "all", patch = "all", stageframe, supplement = NA,
 #' 
 #' @section Notes:
 #' This function will yield incorrect estimates if the models utilized
-#' incorporate state in time \emph{t}-1. Only use models developed testing for
-#' ahistorical effects.
+#' incorporate state in occasion \emph{t}-1. Only use models developed testing
+#' for ahistorical effects.
 #' 
 #' The default behavior of this function is to estimate fecundity with regards
 #' to transitions specified via associated fecundity multipliers in either
@@ -851,14 +858,14 @@ flefko3 <- function(year = "all", patch = "all", stageframe, supplement = NA,
 #' ahistorical. If provided as historical, then \code{flefko2()} will fail and
 #' produce an error.
 #' 
-#' Users may at times wish to estimate MPMs using a dataset incorporating
+#' Users may at occasions wish to estimate MPMs using a dataset incorporating
 #' multiple patches or subpopulations. Should the aim of analysis be a general
 #' MPM that does not distinguish these patches or subpopulations, the
 #' \code{patchcol} variable should be left to NA, which is the default.
 #'
 #' Input options including multiple variable names must be entered in the order
-#' of variables in time \emph{t}+1 and \emph{t}. Rearranging the order WILL lead
-#' to erroneous calculations, and will probably also lead to fatal errors.
+#' of variables in occasion \emph{t}+1 and \emph{t}. Rearranging the order WILL
+#' lead to erroneous calculations, and will probably also lead to fatal errors.
 #'
 #' Using the \code{err_check} option will produce a matrix of 4 columns, each
 #' characterizing a different vital rate. The product of each row yields an
@@ -970,7 +977,7 @@ flefko2 <- function(year = "all", patch = "all", stageframe, supplement = NA,
   }
   
   if (length(year) == 0 | all(is.na(year) == TRUE) | any(is.na(year))) {
-    stop("This function cannot proceed without a specific time, or a suite of times, designated via the year option. NA entries are not allowed.", call. = FALSE)
+    stop("This function cannot proceed without a specific occasion, or a suite of occasions, designated via the year option. NA entries are not allowed.", call. = FALSE)
   }
   
   if (all(is.na(patch)) & !is.na(patchcol)) {
@@ -1269,7 +1276,7 @@ flefko2 <- function(year = "all", patch = "all", stageframe, supplement = NA,
 #' observation status, propagule status, immaturity status, and maturity status
 #' of each ahistorical stage. Should also incorporate bin widths if size is
 #' continuous.
-#' @param year A variable corresponding to year or observation time, or a set of
+#' @param year A variable corresponding to observation occasion, or a set of
 #' such values, given in values associated with the year term used in linear
 #' model development. Can also equal \code{all}, in which case matrices will be
 #' estimated for all years. Defaults to \code{all}.
@@ -1283,26 +1290,26 @@ flefko2 <- function(year = "all", patch = "all", stageframe, supplement = NA,
 #' set in \code{censorcol}, such that only data with censor values equal to 1
 #' will remain. Defaults to FALSE.
 #' @param stages An optional vector denoting the names of the variables within
-#' the main vertical dataset coding for the stages of each individual in times
-#' \emph{t}+1, \emph{t}, and \emph{t}-1. The names of stages in these variables
-#' should match those used in the \code{stageframe} exactly. If left blank, then
-#' \code{rlefko3()} will attempt to infer stages by matching values of 
-#' \code{alive}, \code{size}, \code{repst}, and \code{matst} to characteristics
-#' noted in the associated \code{stageframe}.
+#' the main vertical dataset coding for the stages of each individual in
+#' occasions \emph{t}+1, \emph{t}, and \emph{t}-1. The names of stages in these
+#' variables should match those used in the \code{stageframe} exactly. If left
+#' blank, then \code{rlefko3()} will attempt to infer stages by matching values
+#' of \code{alive}, \code{size}, \code{repst}, and \code{matst} to
+#' characteristics noted in the associated \code{stageframe}.
 #' @param alive A vector of names of binomial variables corresponding to status
-#' as alive (1) or dead (0) in times \emph{t}+1, \emph{t}, and \emph{t}-1,
+#' as alive (1) or dead (0) in occasions \emph{t}+1, \emph{t}, and \emph{t}-1,
 #' respectively.
-#' @param size A vector of names of variables coding size in times \emph{t}+1,
-#' \emph{t}, and \emph{t}-1, respectively. Defaults to 
+#' @param size A vector of names of variables coding size in occasions
+#' \emph{t}+1, \emph{t}, and \emph{t}-1, respectively. Defaults to 
 #' \code{c("sizea3", "sizea2", "sizea1")}.
 #' @param repst A vector of names of variables coding reproductive status in
-#' times \emph{t}+1, \emph{t}, and \emph{t}-1, respectively. Defaults to 
+#' occasions \emph{t}+1, \emph{t}, and \emph{t}-1, respectively. Defaults to 
 #' \code{c("repstatus3", "repstatus2", "repstatus1")}.
-#' @param matst A vector of names of variables coding maturity status in times
-#' \emph{t}+1, \emph{t}, and \emph{t}-1, respectively. Defaults to
+#' @param matst A vector of names of variables coding maturity status in
+#' occasions \emph{t}+1, \emph{t}, and \emph{t}-1, respectively. Defaults to
 #' \code{c("matstatus3", "matstatus2", "matstatus1")}. Must be supplied if
 #' \code{stages} is not provided.
-#' @param fec A vector of names of variables coding fecundity in times
+#' @param fec A vector of names of variables coding fecundity in occasions
 #' \emph{t}+1, \emph{t}, and \emph{t}-1, respectively. Defaults to
 #' \code{c("feca3", "feca2", "feca1")}.
 #' @param supplement An optional data frame of class \code{lefkoSD} that
@@ -1325,14 +1332,14 @@ flefko2 <- function(year = "all", patch = "all", stageframe, supplement = NA,
 #' propagule or immature. To prevent this behavior, input just \code{0}, which
 #' will result in fecundity being estimated only for transitions noted in
 #' \code{supplement} above. May be the dimensions of either a historical or an
-#' ahistorical matrix. If the latter, then all stages will be used in time
+#' ahistorical matrix. If the latter, then all stages will be used in occasion
 #' \emph{t}-1 for each suggested ahistorical transition.
 #' @param overwrite An optional data frame developed with the
 #' \code{\link{overwrite}()} function describing transitions to be overwritten
 #' either with given values or with other estimated transitions. Note that this
 #' function supplements overwrite data provided in \code{supplement}.
-#' @param yearcol The variable name or column number corresponding to time in
-#' time \emph{t} in the dataset.
+#' @param yearcol The variable name or column number corresponding to occasion
+#' \emph{t} in the dataset.
 #' @param popcol The variable name or column number corresponding to the
 #' identity of the population.
 #' @param patchcol The variable name or column number corresponding to patch in 
@@ -1355,7 +1362,9 @@ flefko2 <- function(year = "all", patch = "all", stageframe, supplement = NA,
 #' development debugging purposes.
 #'
 #' @return If all inputs are properly formatted, then this function will return
-#' either an object of class \code{lefkoMat}. Output includes:
+#' an object of class \code{lefkoMat}, which is a list that holds the matrix
+#' projection model and all of its metadata. Its structure is a list with the
+#' following elements:
 #'
 #' \item{A}{A list of full projection matrices in order of sorted populations,
 #' patches, and years. All matrices output in the \code{matrix} class.}
@@ -1365,8 +1374,8 @@ flefko2 <- function(year = "all", patch = "all", stageframe, supplement = NA,
 #' output in the \code{matrix} class.}
 #' \item{hstages}{A data frame matrix showing the pairing of ahistorical stages
 #' used to create historical stage pairs.}
-#' \item{agestages}{Set to NA. Only used in output to function
-#' \code{aflefko2}().}
+#' \item{agestages}{A data frame showing age-stage pairs. In this function, it
+#' is set to NA. Only used in output to function \code{aflefko2}().}
 #' \item{ahstages}{A data frame detailing the characteristics of associated
 #' ahistorical stages, in the form of a modified stageframe that includes
 #' status as an entry stage through reproduction.}
@@ -1392,9 +1401,9 @@ flefko2 <- function(year = "all", patch = "all", stageframe, supplement = NA,
 #' 
 #' The reproduction matrix (field \code{repmatrix}) may be supplied as either
 #' historical or ahistorical. If provided as ahistorical, then \code{flefko3()}
-#' will assume that all historical transitions involving stages noted for times
-#' \emph{t} and \emph{t}+1 should be set to the respective fecundity multipliers
-#' noted.
+#' will assume that all historical transitions involving stages noted for
+#' occasions \emph{t} and \emph{t}+1 should be set to the respective fecundity
+#' multipliers noted.
 #' 
 #' Users may at times wish to estimate MPMs using a dataset incorporating
 #' multiple patches or subpopulations. Should the aim of analysis be a general
@@ -1402,8 +1411,8 @@ flefko2 <- function(year = "all", patch = "all", stageframe, supplement = NA,
 #' \code{patchcol} variable should be left to NA, which is the default.
 #'
 #' Input options including multiple variable names must be entered in the order
-#' of variables in time \emph{t}+1, \emph{t}, and \emph{t}-1. Rearranging the
-#' order WILL lead to erroneous calculations, and will probably also lead to
+#' of variables in occasion \emph{t}+1, \emph{t}, and \emph{t}-1. Rearranging
+#' the order WILL lead to erroneous calculations, and will probably also lead to
 #' fatal errors.
 #'
 #' @examples
@@ -1476,24 +1485,23 @@ flefko2 <- function(year = "all", patch = "all", stageframe, supplement = NA,
 #'   stageassign = cypframe_raw, stagesize = "sizeadded", NAas0 = TRUE,
 #'   NRasRep = TRUE)
 #' 
-#' cypsupp3r <- supplemental(stage3 = c("SD", "SD", "P1", "P1", "P2", "P3",
-#'     "SL", "SL", "SL", "D", "XSm", "Sm", "D", "XSm", "Sm", "SD", "P1"),
-#'   stage2 = c("SD", "SD", "SD", "SD", "P1", "P2", "P3", "SL", "SL", "SL",
-#'     "SL", "SL", "SL", "SL", "SL", "rep", "rep"),
-#'   stage1 = c("SD", "rep", "SD", "rep", "SD", "P1", "P2", "P3", "SL", "P3",
-#'     "P3", "P3", "SL", "SL", "SL", "all", "all"),
-#'   eststage3 = c(NA, NA, NA, NA, NA, NA, NA, NA, NA, "D", "XSm", "Sm", "D",
-#'     "XSm", "Sm", NA, NA),
-#'   eststage2 = c(NA, NA, NA, NA, NA, NA, NA, NA, NA, "XSm", "XSm", "XSm",
-#'     "XSm", "XSm", "XSm", NA, NA),
-#'   eststage1 = c(NA, NA, NA, NA, NA, NA, NA, NA, NA, "XSm", "XSm", "XSm",
-#'     "XSm", "XSm", "XSm", NA, NA),
-#'   givenrate = c(0.1, 0.1, 0.2, 0.2, 0.2, 0.2, 0.25, 0.4, 0.4, NA, NA, NA, NA,
-#'     NA, NA, NA, NA),
-#'   multiplier = c(NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA,
-#'     0.5, 0.5),
-#'   type = c(1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 3, 3),
-#'   type_t12 = c(1, 2, 1, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1),
+#' cypsupp3r <- supplemental(stage3 = c("SD", "SD", "P1", "P1", "P2", "P3", "SL",
+#'     "D", "XSm", "Sm", "D", "XSm", "Sm", "SD", "P1"),
+#'   stage2 = c("SD", "SD", "SD", "SD", "P1", "P2", "P3", "SL", "SL", "SL", "SL",
+#'     "SL", "SL", "rep", "rep"),
+#'   stage1 = c("SD", "rep", "SD", "rep", "SD", "P1", "P2", "P3", "P3", "P3",
+#'     "SL", "SL", "SL", "mat", "mat"),
+#'   eststage3 = c(NA, NA, NA, NA, NA, NA, NA, "D", "XSm", "Sm", "D", "XSm", "Sm",
+#'     NA, NA),
+#'   eststage2 = c(NA, NA, NA, NA, NA, NA, NA, "XSm", "XSm", "XSm", "XSm", "XSm",
+#'     "XSm", NA, NA),
+#'   eststage1 = c(NA, NA, NA, NA, NA, NA, NA, "XSm", "XSm", "XSm", "XSm", "XSm",
+#'     "XSm", NA, NA),
+#'   givenrate = c(0.1, 0.1, 0.2, 0.2, 0.2, 0.2, 0.25, NA, NA, NA, NA, NA, NA,
+#'     NA, NA),
+#'   multiplier = c(NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, 0.5, 0.5),
+#'   type = c(1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 3, 3),
+#'   type_t12 = c(1, 2, 1, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1),
 #'   stageframe = cypframe_raw, historical = TRUE)
 #' 
 #' cypmatrix3r <- rlefko3(data = cypraw_v1, stageframe = cypframe_raw,
@@ -1539,32 +1547,32 @@ rlefko3 <- function(data, stageframe, year = "all", pop = NA, patch = NA,
   
   if (all(is.na(stages))) {
     if ((length(alive) != 3)) {
-      stop("This function requires stage information for each of times t+1, t, and t-1. In the absence of stage columns in the dataset, it requires the input of data for living/dead status, size, reproductive status, and maturity status, for each of times t+1, t, and t-1.", call. = FALSE)
+      stop("This function requires stage information for each of occasions t+1, t, and t-1. In the absence of stage columns in the dataset, it requires the input of data for living/dead status, size, reproductive status, and maturity status, for each of occasions t+1, t, and t-1.", call. = FALSE)
     }
     if ((length(size) != 3)) {
-      stop("This function requires stage information for each of times t+1, t, and t-1. In the absence of stage columns in the dataset, it requires the input of data for living/dead status, size, reproductive status, and maturity status, for each of times t+1, t, and t-1.", call. = FALSE)
+      stop("This function requires stage information for each of occasions t+1, t, and t-1. In the absence of stage columns in the dataset, it requires the input of data for living/dead status, size, reproductive status, and maturity status, for each of occasions t+1, t, and t-1.", call. = FALSE)
     }
     if (!all(is.na(repst))) {
       if ((length(repst) != 3)) {
-        stop("This function requires stage information for each of times t+1, t, and t-1. In the absence of stage columns in the dataset, it requires the input of data for living/dead status, size, reproductive status, and maturity status, for each of times t+1, t, and t-1.", call. = FALSE)
+        stop("This function requires stage information for each of occasions t+1, t, and t-1. In the absence of stage columns in the dataset, it requires the input of data for living/dead status, size, reproductive status, and maturity status, for each of occasions t+1, t, and t-1.", call. = FALSE)
       }
     }   
     if (!all(is.na(matst))) {
       if ((length(matst) != 3)) {
-        stop("This function requires stage information for each of times t+1, t, and t-1. In the absence of stage columns in the dataset, it requires the input of data for living/dead status, size, reproductive status, and maturity status, for each of times t+1, t, and t-1.", call. = FALSE)
+        stop("This function requires stage information for each of occasions t+1, t, and t-1. In the absence of stage columns in the dataset, it requires the input of data for living/dead status, size, reproductive status, and maturity status, for each of occasions t+1, t, and t-1.", call. = FALSE)
       }
     }   
   } else if (length(stages) != 3) {
-    stop("This function requires stage information for each of times t+1, t, and t-1.", call. = FALSE)
+    stop("This function requires stage information for each of occasions t+1, t, and t-1.", call. = FALSE)
   }
   
   if ((length(fec) != 3)) {
-    stop("This function requires three variables for fecundity, for each of times t+1, t, and t-1.", call. = FALSE)
+    stop("This function requires three variables for fecundity, for each of occasions t+1, t, and t-1.", call. = FALSE)
   }
   
   if (is.character(yearcol)) {
     choicevar <- which(names(data) == yearcol);
-    mainyears <- sort(unique(data[,choicevar]))[-1] #Here we remove the 1st year because it has no time t-1 in the dataset
+    mainyears <- sort(unique(data[,choicevar]))[-1] #Here we remove the 1st year because it has no occasion t-1 in the dataset
   } else if (is.numeric(yearcol)) {
     mainyears <- sort(unique(data[, yearcol]))[-1]
   } else {
@@ -1886,7 +1894,7 @@ rlefko3 <- function(data, stageframe, year = "all", pop = NA, patch = NA,
   }
   
   # This section creates stageexpansion9, which is a data frame that holds values for stage transitions from paired stages
-  # in times t and t-1 to paired stages in times t and t+1
+  # in occasions t and t-1 to paired stages in occasions t and t+1
   majortrial <- theoldpizzle(stageframe, ovtable, repmatrix, finalage = 0,
     format = format_int, style = 0, cont = 0)
   stageexpansion9 <- do.call("cbind.data.frame", c(majortrial, stringsAsFactors = FALSE))
@@ -1900,7 +1908,7 @@ rlefko3 <- function(data, stageframe, year = "all", pop = NA, patch = NA,
     harpoon <- cbind(rbind(repmatrix, 0), 0)
   }
   
-  # Stageexpansion3 is a dataframe created to hold values for paired stages in times t and t-1 only
+  # Stageexpansion3 is a dataframe created to hold values for paired stages in occasions t and t-1 only
   stageexpansion3 <- cbind.data.frame(expand.grid(size3 = stageframe$bin_size_ctr, 
     size2n = stageframe$bin_size_ctr), expand.grid(rep3 = stageframe$repstatus, 
     rep2n = stageframe$repstatus), expand.grid(indata3 = stageframe$indataset, 
@@ -1952,13 +1960,13 @@ rlefko3 <- function(data, stageframe, year = "all", pop = NA, patch = NA,
   data$usedfec2[which(is.na(data$usedfec2))] <- 0
   
   if(is.element(0, unique(data$index1))) {
-    warning("Data (stage at time t-1) contains some stages not identified in stageframe. Note that all stage characteristics must match, including reproductive status.", call. = FALSE)
+    warning("Data (stage at occasion t-1) contains some stages not identified in stageframe. Note that all stage characteristics must match, including reproductive status.", call. = FALSE)
   }
   if(is.element(0, unique(data$index2))) {
-    warning("Data (stage at time t) contains some stages not identified in stageframe. Note that all stage characteristics must match, including reproductive status.", call. = FALSE)
+    warning("Data (stage at occasion t) contains some stages not identified in stageframe. Note that all stage characteristics must match, including reproductive status.", call. = FALSE)
   }
   if(is.element(0, unique(data$index3))) {
-    warning("Data (stage at time t+1) contains some stages not identified in stageframe. Note that all stage characteristics must match, including reproductive status.", call. = FALSE)
+    warning("Data (stage at occasion t+1) contains some stages not identified in stageframe. Note that all stage characteristics must match, including reproductive status.", call. = FALSE)
   }
   
   madsexmadrigal <- lapply(yearlist, function(X) {
@@ -2054,7 +2062,7 @@ rlefko3 <- function(data, stageframe, year = "all", pop = NA, patch = NA,
 #' observation status, propagule status, immaturity status, and maturity status
 #' of each ahistorical stage. Should also incorporate bin widths if size is
 #' continuous.
-#' @param year A variable corresponding to year or observation time, or a set
+#' @param year A variable corresponding to observation occasion, or a set
 #' of such values, given in values associated with the year term used in linear 
 #' model development. Can also equal \code{all}, in which case matrices will
 #' be estimated for all years. Defaults to \code{all}.
@@ -2068,24 +2076,26 @@ rlefko3 <- function(data, stageframe, year = "all", pop = NA, patch = NA,
 #' set in \code{censorcol}, such that only data with censor values equal to 1
 #' will remain. Defaults to FALSE.
 #' @param stages An optional vector denoting the names of the variables within
-#' the main vertical dataset coding for the stages of each individual in times
-#' \emph{t}+1, \emph{t}, and \emph{t}-1. The names of stages in these variables
-#' should match those used in the \code{stageframe} exactly. If left blank, then
-#' \code{rlefko3()} will attempt to infer stages by matching values of
-#' \code{alive}, \code{size}, \code{repst}, and \code{matst} to characteristics
-#' noted in the associated \code{stageframe}.
+#' the main vertical dataset coding for the stages of each individual in
+#' occasions \emph{t}+1, \emph{t}, and \emph{t}-1. The names of stages in these
+#' variables should match those used in the \code{stageframe} exactly. If left
+#' blank, then \code{rlefko3()} will attempt to infer stages by matching values
+#' of \code{alive}, \code{size}, \code{repst}, and \code{matst} to
+#' characteristics noted in the associated \code{stageframe}.
 #' @param alive A vector of names of binomial variables corresponding to status
-#' as alive (1) or dead (0) in times \emph{t}+1, \emph{t}, and \emph{t}-1,
+#' as alive (1) or dead (0) in occasions \emph{t}+1, \emph{t}, and \emph{t}-1,
 #' respectively.
-#' @param size A vector of names of variables coding size in times \emph{t}+1
-#' and \emph{t}, respectively. Defaults to \code{c("sizea3", "sizea2")}.
+#' @param size A vector of names of variables coding size in occasions
+#' \emph{t}+1 and \emph{t}, respectively. Defaults to
+#' \code{c("sizea3", "sizea2")}.
 #' @param repst A vector of names of variables coding reproductive status in
-#' times \emph{t}+1 and \emph{t}, respectively. Defaults to 
+#' occasions \emph{t}+1 and \emph{t}, respectively. Defaults to 
 #' \code{c("repstatus3", "repstatus2")}.
-#' @param matst A vector of names of variables coding maturity status in times
-#' \emph{t}+1 and \emph{t}, respectively. Defaults to \code{c("matstatus3", 
-#' "matstatus2")}. Must be supplied if \code{stages} is not provided.
-#' @param fec A vector of names of variables coding fecundity in times
+#' @param matst A vector of names of variables coding maturity status in
+#' occasions \emph{t}+1 and \emph{t}, respectively. Defaults to
+#' \code{c("matstatus3", "matstatus2")}. Must be supplied if \code{stages} is
+#' not provided.
+#' @param fec A vector of names of variables coding fecundity in occasions
 #' \emph{t}+1 and \emph{t}, respectively. Defaults to \code{c("feca3", "feca2")}.
 #' @param supplement An optional data frame of class \code{lefkoSD} that
 #' provides supplemental data that should be incorporated into the MPM. Three
@@ -2111,8 +2121,8 @@ rlefko3 <- function(data, stageframe, year = "all", pop = NA, patch = NA,
 #' \code{\link{overwrite}()} function describing transitions to be overwritten
 #' either with given values or with other estimated transitions. Note that this
 #' function supplements overwrite data provided in \code{supplement}.
-#' @param yearcol The variable name or column number corresponding to time in
-#' time \emph{t} in the dataset.
+#' @param yearcol The variable name or column number corresponding to occasion 
+#' \emph{t} in the dataset.
 #' @param popcol The variable name or column number corresponding to the
 #' identity of the population.
 #' @param patchcol The variable name or column number corresponding to patch in
@@ -2128,7 +2138,9 @@ rlefko3 <- function(data, stageframe, year = "all", pop = NA, patch = NA,
 #' column sums in ALL matrices estimated equal 0. Defaults to FALSE.
 #' 
 #' @return If all inputs are properly formatted, then this function will return
-#' an object of class \code{lefkoMat}. This includes:
+#' an object of class \code{lefkoMat}, which is a list that holds the matrix
+#' projection model and all of its metadata. Its structure is a list with the
+#' following elements:
 #' 
 #' \item{A}{A list of full projection matrices in order of sorted populations,
 #' patches, and years. All matrices output in the \code{matrix} class.}
@@ -2136,9 +2148,10 @@ rlefko3 <- function(data, stageframe, year = "all", pop = NA, patch = NA,
 #' matrices output in the \code{matrix} class.}
 #' \item{F}{A list of fecundity matrices sorted as in \code{A}. All matrices 
 #' output in the \code{matrix} class.}
-#' \item{hstages}{Set to NA for ahistorical matrices.}
-#' \item{agestages}{Set to NA. Only used in output to function
-#' \code{aflefko2}().}
+#' \item{hstages}{A data frame matrix showing the pairing of ahistorical stages
+#' used to create historical stage pairs. Set to NA for ahistorical matrices.}
+#' \item{agestages}{A data frame showing age-stage pairs. In this function, it
+#' is set to NA. Only used in output to function \code{aflefko2}().}
 #' \item{ahstages}{A data frame detailing the characteristics of associated
 #' ahistorical stages, in the form of a modified stageframe that includes
 #' status as an entry stage through reproduction.}
@@ -2173,8 +2186,8 @@ rlefko3 <- function(data, stageframe, year = "all", pop = NA, patch = NA,
 #' \code{patchcol} variable should be left to NA, which is the default.
 #'
 #' Input options including multiple variable names must be entered in the order
-#' of variables in time \emph{t}+1 and \emph{t}. Rearranging the order WILL lead
-#' to erroneous calculations, and will probably also lead to fatal errors.
+#' of variables in occasion \emph{t}+1 and \emph{t}. Rearranging the order WILL
+#' lead to erroneous calculations, and will probably also lead to fatal errors.
 #'
 #' @examples
 #' # Lathyrus example
@@ -2242,22 +2255,22 @@ rlefko3 <- function(data, stageframe, year = "all", pop = NA, patch = NA,
 #'   NRasRep = TRUE)
 #' 
 #' # Here we use supplemental() to provide overwrite and reproductive info
-#' cypsupp2r <- supplemental(stage3 = c("SD", "P1", "P2", "P3", "SL", "SL", "D", 
+#' cypsupp2r <- supplemental(stage3 = c("SD", "P1", "P2", "P3", "SL", "D", 
 #'     "XSm", "Sm", "SD", "P1"),
-#'   stage2 = c("SD", "SD", "P1", "P2", "P3", "SL", "SL", "SL", "SL", "rep",
+#'   stage2 = c("SD", "SD", "P1", "P2", "P3", "SL", "SL", "SL", "rep",
 #'     "rep"),
-#'   eststage3 = c(NA, NA, NA, NA, NA, NA, "D", "XSm", "Sm", NA, NA),
-#'   eststage2 = c(NA, NA, NA, NA, NA, NA, "XSm", "XSm", "XSm", NA, NA),
-#'   givenrate = c(0.10, 0.20, 0.20, 0.20, 0.25, 0.40, NA, NA, NA, NA, NA),
-#'   multiplier = c(NA, NA, NA, NA, NA, NA, NA, NA, NA, 0.5, 0.5),
-#'   type =c(1, 1, 1, 1, 1, 1, 1, 1, 1, 3, 3),
+#'   eststage3 = c(NA, NA, NA, NA, NA, "D", "XSm", "Sm", NA, NA),
+#'   eststage2 = c(NA, NA, NA, NA, NA, "XSm", "XSm", "XSm", NA, NA),
+#'   givenrate = c(0.10, 0.20, 0.20, 0.20, 0.25, NA, NA, NA, NA, NA),
+#'   multiplier = c(NA, NA, NA, NA, NA, NA, NA, NA, 0.5, 0.5),
+#'   type =c(1, 1, 1, 1, 1, 1, 1, 1, 3, 3),
 #'   stageframe = cypframe_raw, historical = FALSE)
 #' 
 #' cypmatrix2r <- rlefko2(data = cypraw_v1, stageframe = cypframe_raw, 
 #'   year = "all", patch = "all", stages = c("stage3", "stage2", "stage1"),
 #'   size = c("size3added", "size2added"), supplement = cypsupp2r,
 #'   yearcol = "year2", patchcol = "patchid", indivcol = "individ")
-#'                        
+#' 
 #' cypmatrix2r$A[[1]]
 #' 
 #' @export
@@ -2284,25 +2297,25 @@ rlefko2 <- function(data, stageframe, year = "all", pop = NA, patch = NA,
   
   if (all(is.na(stages))) {
     if (!(length(alive) > 1)) {
-      stop("This function requires stage information for each of times t+1 and t. In the absence of stage columns in the dataset, it requires two variables for living/dead status, size, reproductive status, and maturity status, for each of times t+1 and t.", call. = FALSE)
+      stop("This function requires stage information for each of occasions t+1 and t. In the absence of stage columns in the dataset, it requires two variables for living/dead status, size, reproductive status, and maturity status, for each of occasions t+1 and t.", call. = FALSE)
     }
     if (!(length(size) > 1)) {
-      stop("This function requires stage information for each of times t+1 and t. In the absence of stage columns in the dataset, it requires two variables for living/dead status, size, reproductive status, and maturity status, for each of times t+1 and t.", call. = FALSE)
+      stop("This function requires stage information for each of occasions t+1 and t. In the absence of stage columns in the dataset, it requires two variables for living/dead status, size, reproductive status, and maturity status, for each of occasions t+1 and t.", call. = FALSE)
     }
     if (!all(is.na(repst))) {
       if (!(length(repst) > 1)) {
-        stop("This function requires stage information for each of times t+1 and t. In the absence of stage columns in the dataset, it requires two variables for living/dead status, size, reproductive status, and maturity status, for each of times t+1 and t.", call. = FALSE)
+        stop("This function requires stage information for each of occasions t+1 and t. In the absence of stage columns in the dataset, it requires two variables for living/dead status, size, reproductive status, and maturity status, for each of occasions t+1 and t.", call. = FALSE)
       }
     }   
     if (!all(is.na(matst))) {
       if (!(length(matst) > 1)) {
-        stop("This function requires stage information for each of times t+1 and t. In the absence of stage columns in the dataset, it requires two variables for living/dead status, size, reproductive status, and maturity status, for each of times t+1 and t.", call. = FALSE)
+        stop("This function requires stage information for each of occasions t+1 and t. In the absence of stage columns in the dataset, it requires two variables for living/dead status, size, reproductive status, and maturity status, for each of occasions t+1 and t.", call. = FALSE)
       }
     }   
   }
   
   if (!(length(fec) > 1)) {
-    stop("This function requires two variables for fecundity, for each of times t+1 and t.", call. = FALSE)
+    stop("This function requires two variables for fecundity, for each of occasions t+1 and t.", call. = FALSE)
   }
   
   if (is.character(yearcol)) {
@@ -2578,12 +2591,12 @@ rlefko2 <- function(data, stageframe, year = "all", pop = NA, patch = NA,
   
   ovtable <- .overwrite_reassess(stageframe, supplement, overwrite, historical = FALSE)
   
-  # This section creates stageexpansion3, a data frame with stage transition values from time t to t+1
+  # This section creates stageexpansion3, a data frame with stage transition values from occasion t to t+1
   majortrial <- theoldpizzle(stageframe, ovtable, repmatrix, finalage = 0, 
     format = 1, style = 1, cont = 0)
   stageexpansion3 <- do.call("cbind.data.frame", c(majortrial, stringsAsFactors = FALSE))
   
-  # Stageexpansion2 is a dataframe created to hold values for stages in time t only
+  # Stageexpansion2 is a dataframe created to hold values for stages in occasion t only
   stageexpansion2 <- cbind.data.frame(stage2 = as.numeric(stageframe$stageno),
     size2 = as.numeric(stageframe$bin_size_ctr), rep2 = as.numeric(stageframe$repstatus),
     indata2 = as.numeric(stageframe$indataset), index2 = (as.numeric(stageframe$stageno) - 1),
@@ -2605,10 +2618,10 @@ rlefko2 <- function(data, stageframe, year = "all", pop = NA, patch = NA,
   })
   
   if(is.element(0, unique(data$index2))) {
-    warning("Data (stage at time t) contains some stages not identified in stageframe. Note that all stage characteristics must match, including reproductive status.", call. = FALSE)
+    warning("Data (stage at occasion t) contains some stages not identified in stageframe. Note that all stage characteristics must match, including reproductive status.", call. = FALSE)
   }
   if(is.element(0, unique(data$index3))) {
-    warning("Data (stage at time t+1) contains some stages not identified in stageframe. Note that all stage characteristics must match, including reproductive status.", call. = FALSE)
+    warning("Data (stage at occasion t+1) contains some stages not identified in stageframe. Note that all stage characteristics must match, including reproductive status.", call. = FALSE)
   }
   
   # This section runs the core matrix estimator
@@ -2681,7 +2694,7 @@ rlefko2 <- function(data, stageframe, year = "all", pop = NA, patch = NA,
 #' \code{\link{rlefko2}()} and \code{\link{rlefko3}()}, this function does not
 #' currently distinguish populations.
 #'
-#' @param year A variable corresponding to year or observation time, or a set
+#' @param year A variable corresponding to observation occasion, or a set
 #' of such values, given in values associated with the year term used in linear 
 #' model development. Can also equal \code{all}, in which case matrices will
 #' be estimated for all years. Defaults to \code{all}.
@@ -2724,61 +2737,62 @@ rlefko2 <- function(data, stageframe, year = "all", pop = NA, patch = NA,
 #' \code{size_model}, \code{repst_model}, \code{fec_model}, \code{jsurv_model},
 #' \code{jobs_model}, \code{jsize_model}, \code{jrepst_model}, 
 #' \code{paramnames}, \code{yearcol}, and \code{patchcol} are not required. No
-#' models should include size or reproductive status in time \emph{t}-1.
+#' models should include size or reproductive status in occasion \emph{t}-1.
 #' @param surv_model A linear model predicting survival probability. This can be
 #' a model of class \code{glm} or \code{glmer}, and requires a predicted
 #' binomial variable under a logit link. If given, then will overwrite any
 #' survival probability model given in \code{modelsuite}. This model must have
-#' been developed in a modeling exercise testing only the impacts of time
+#' been developed in a modeling exercise testing only the impacts of occasion
 #' \emph{t}.
 #' @param obs_model A linear model predicting sprouting or observation
 #' probability. This can be a model of class \code{glm} or \code{glmer}, and
 #' requires a predicted binomial variable under a logit link. If given, then
 #' will overwrite any observation probability model given in \code{modelsuite}.
 #' This model must have been developed in a modeling exercise testing only the
-#' impacts of time \emph{t}.
+#' impacts of occasion \emph{t}.
 #' @param size_model A linear model predicting size. This can be a model of
 #' class \code{glm} or \code{glmer}, both of which require a predicted poisson
 #' variable under a log link, or a model of class \code{lm} or \code{lmer}, in
 #' which a Gaussian response is assumed. If given, then will overwrite any size
 #' model given in \code{modelsuite}. This model must have been developed in a
-#' modeling exercise testing only the impacts of time \emph{t}.
+#' modeling exercise testing only the impacts of occasion \emph{t}.
 #' @param repst_model A linear model predicting reproduction probability. This
 #' can be a model of class \code{glm} or \code{glmer}, and requires a predicted
 #' binomial variable under a logit link. If given, then will overwrite any
 #' reproduction probability model given in \code{modelsuite}. This model must
-#' have been developed in a modeling exercise testing only the impacts of time
-#' \emph{t}.
+#' have been developed in a modeling exercise testing only the impacts of
+#' occasion \emph{t}.
 #' @param fec_model A linear model predicting fecundity. This can be a model of
 #' class \code{glm} or \code{glmer}, and requires a predicted poisson variable
 #' under a log link. If given, then will overwrite any fecundity model given in
 #' \code{modelsuite}. This model must have been developed in a modeling exercise
-#' testing only the impacts of time \emph{t}.
+#' testing only the impacts of occasion \emph{t}.
 #' @param jsurv_model A linear model predicting juvenile survival probability.
 #' This can be a model of class \code{glm} or \code{glmer}, and requires a
 #' predicted binomial variable under a logit link. If given, then will overwrite
 #' any juvenile survival probability model given in \code{modelsuite}. This
 #' model must have been developed in a modeling exercise testing only the
-#' impacts of time \emph{t}.
+#' impacts of occasion \emph{t}.
 #' @param jobs_model A linear model predicting juvenile sprouting or observation
 #' probability. This can be a model of class \code{glm} or \code{glmer}, and
 #' requires a predicted binomial variable under a logit link. If given, then
 #' will overwrite any juvenile observation probability model given in
 #' \code{modelsuite}. This model must have been developed in a modeling exercise
-#' testing only the impacts of time \emph{t}.
+#' testing only the impacts of occasion \emph{t}.
 #' @param jsize_model A linear model predicting juvenile size. This can be a
 #' model of class \code{glm} or \code{glmer}, both of which require a predicted
 #' poisson variable under a log link, or a model of class \code{lm} or
 #' \code{lmer}, in which a Gaussian response is assumed. If given, then will
 #' overwrite any juvenile size model given in \code{modelsuite}. This model must
-#' have been developed in a modeling exercise testing only the impacts of time
-#' \emph{t}.
+#' have been developed in a modeling exercise testing only the impacts of
+#' occasion \emph{t}.
 #' @param jrepst_model A linear model predicting reproduction probability of a 
 #' mature individual that was immature in the previous year. This can be a model
 #' of class \code{glm} or \code{glmer}, and requires a predicted binomial
 #' variable under a logit link. If given, then will overwrite any reproduction
 #' probability model given in \code{modelsuite}. This model must have been
-#' developed in a modeling exercise testing only the impacts of time \emph{t}.
+#' developed in a modeling exercise testing only the impacts of occasion
+#' \emph{t}.
 #' @param paramnames A dataframe with two columns, the first showing the general
 #' model terms that will be used in matrix creation, and the second showing the
 #' equivalent terms used in modeling. Only required if \code{modelsuite} is not 
@@ -2806,12 +2820,13 @@ rlefko2 <- function(data, stageframe, year = "all", pop = NA, patch = NA,
 #' linear model for juvenile reproduction probability.
 #' @param repmod A scalar multiplier of fecundity. Defaults to 1.
 #' @param yearcol The variable name or column number corresponding to year in
-#' time \emph{t} in the dataset. Not needed if a \code{modelsuite} is supplied.
+#' occasion \emph{t} in the dataset. Not needed if a \code{modelsuite} is
+#' supplied.
 #' @param patchcol The variable name or column number corresponding to patch in 
 #' the dataset. Not needed if a \code{modelsuite} is supplied.
 #' @param year.as.random A logical term indicating whether coefficients for
 #' missing patches within vital rate models should be estimated as random
-#' intercepts. Defaults to FALSE, in which case missing time step coefficients
+#' intercepts. Defaults to FALSE, in which case missing occasion coefficients
 #' are set to 0.
 #' @param patch.as.random A logical term indicating whether coefficients for
 #' missing patches within vital rate models should be estimated as random
@@ -2823,7 +2838,7 @@ rlefko2 <- function(data, stageframe, year = "all", pop = NA, patch = NA,
 #' survival of individuals going past the final age, using the demographic
 #' characteristics of the final age.
 #' @param randomseed A numeric value used as a seed to generate random estimates
-#' for missing time step and patch coefficients, if either \code{year.as.random}
+#' for missing occasion and patch coefficients, if either \code{year.as.random}
 #' or \code{patch.as.random} is set to TRUE. Defaults to
 #' \code{\link{set.seed}()} default.
 #' @param negfec A logical value denoting whether fecundity values estimated to
@@ -2836,13 +2851,16 @@ rlefko2 <- function(data, stageframe, year = "all", pop = NA, patch = NA,
 #' rate probabilities associated with each matrix. Defaults to FALSE.
 #'
 #' @return If all inputs are properly formatted, then this function will return
-#' an object of class \code{lefkoMat}. Output includes:
+#' an object of class \code{lefkoMat}, which is a list that holds the matrix
+#' projection model and all of its metadata. Its structure is a list with the
+#' following elements:
 #'
 #' \item{A}{A list of full projection matrices in order of sorted patches and
 #' years.}
 #' \item{U}{A list of survival transition matrices sorted as in \code{A}.}
 #' \item{F}{A list of fecundity matrices sorted as in \code{A}.}
-#' \item{hstages}{Null for ahistorical matrices.}
+#' \item{hstages}{A data frame matrix showing the pairing of ahistorical stages
+#' used to create historical stage pairs. Set to NA for ahistorical matrices.}
 #' \item{agestages}{A data frame showing the stage number and stage name
 #' corresponding to \code{ahstages}, as well as the associated age, of each
 #' actual row in each age-by-stage matrix.}
@@ -2862,8 +2880,8 @@ rlefko2 <- function(data, stageframe, year = "all", pop = NA, patch = NA,
 #' 
 #' @section Notes:
 #' This function will yield incorrect estimates if the models utilized
-#' incorporate state in time \emph{t}-1. Only use models developed testing for
-#' ahistorical effects.
+#' incorporate state in occasion \emph{t}-1. Only use models developed testing
+#' for ahistorical effects.
 #' 
 #' The default behavior of this function is to estimate fecundity with regards
 #' to transitions specified via associated fecundity multipliers in either
@@ -2888,8 +2906,8 @@ rlefko2 <- function(data, stageframe, year = "all", pop = NA, patch = NA,
 #' \code{patchcol} variable should be left to NA, which is the default.
 #'
 #' Input options including multiple variable names must be entered in the order
-#' of variables in time \emph{t}+1, \emph{t}, and \emph{t}-1. Rearranging the
-#' order WILL lead to erroneous calculations, and will probably also lead to
+#' of variables in occasion \emph{t}+1, \emph{t}, and \emph{t}-1. Rearranging
+#' the order WILL lead to erroneous calculations, and will probably also lead to
 #' fatal errors.
 #'
 #' Using the \code{err_check} option will produce a matrix of 4 columns, each
@@ -3271,6 +3289,9 @@ aflefko2 <- function(year = "all", patch = "all", stageframe, supplement = NA,
 #' \code{\link{flefko2}()}, \code{\link{rlefko3}()}, and \code{\link{rlefko2}()}.
 #' 
 #' @param object An object of class \code{lefkoMat}.
+#' @param colsums A logical value indicating whether column sums should be shown
+#' for U matrices, allowing users to check stage survival probabilities.
+#' Defaults to TRUE.
 #' @param ... Other parameters.
 #' 
 #' @return A summary of the object, showing the number of each type of matrix,
@@ -3306,15 +3327,15 @@ aflefko2 <- function(year = "all", patch = "all", stageframe, supplement = NA,
 #'   NRasRep = TRUE)
 #' 
 #' # Here we use supplemental() to provide overwrite and reproductive info
-#' cypsupp2r <- supplemental(stage3 = c("SD", "P1", "P2", "P3", "SL", "SL", "D", 
+#' cypsupp2r <- supplemental(stage3 = c("SD", "P1", "P2", "P3", "SL", "D", 
 #'     "XSm", "Sm", "SD", "P1"),
-#'   stage2 = c("SD", "SD", "P1", "P2", "P3", "SL", "SL", "SL", "SL", "rep",
+#'   stage2 = c("SD", "SD", "P1", "P2", "P3", "SL", "SL", "SL", "rep",
 #'     "rep"),
-#'   eststage3 = c(NA, NA, NA, NA, NA, NA, "D", "XSm", "Sm", NA, NA),
-#'   eststage2 = c(NA, NA, NA, NA, NA, NA, "XSm", "XSm", "XSm", NA, NA),
-#'   givenrate = c(0.10, 0.20, 0.20, 0.20, 0.25, 0.40, NA, NA, NA, NA, NA),
-#'   multiplier = c(NA, NA, NA, NA, NA, NA, NA, NA, NA, 0.5, 0.5),
-#'   type =c(1, 1, 1, 1, 1, 1, 1, 1, 1, 3, 3),
+#'   eststage3 = c(NA, NA, NA, NA, NA, "D", "XSm", "Sm", NA, NA),
+#'   eststage2 = c(NA, NA, NA, NA, NA, "XSm", "XSm", "XSm", NA, NA),
+#'   givenrate = c(0.10, 0.20, 0.20, 0.20, 0.25, NA, NA, NA, NA, NA),
+#'   multiplier = c(NA, NA, NA, NA, NA, NA, NA, NA, 0.5, 0.5),
+#'   type =c(1, 1, 1, 1, 1, 1, 1, 1, 3, 3),
 #'   stageframe = cypframe_raw, historical = FALSE)
 #' 
 #' cypmatrix2r <- rlefko2(data = cypraw_v1, stageframe = cypframe_raw, 
@@ -3325,7 +3346,7 @@ aflefko2 <- function(year = "all", patch = "all", stageframe, supplement = NA,
 #' summary(cypmatrix2r)
 #' 
 #' @export
-summary.lefkoMat <- function(object, ...) {
+summary.lefkoMat <- function(object, colsums = TRUE, ...) {
   
   matrices <- object
   
@@ -3341,22 +3362,31 @@ summary.lefkoMat <- function(object, ...) {
     histmark <- "ahistorical"
   }
   
+  if (mqcc == 1) {
+    writeLines(paste0("\nThis ", histmark, " lefkoMat object contains ", mqcc,
+        " matrix."))
+  } else {
+    writeLines(paste0("\nThis ", histmark, " lefkoMat object contains ", mqcc,
+        " matrices."))
+  }
+  writeLines(paste0("\nEach matrix is a square matrix with ", matdim,
+    " rows and columns, and a total of ", matdim*matdim, " elements."))
+  
   mqac <- mqca / mqcc
   if (mqac != floor(mqac)) mqac <- round(mqac, digits = 3)
-
-  mqbc <- mqcb / mqcc
-  if (mqbc != floor(mqbc)) mqbc <- round(mqbc, digits = 3)
   
-  if (mqcc == 1) {
-    writeLines(paste0("\nThis ", histmark, " lefkoMat object contains ", mqcc, " matrix."))
+  if (!all(is.na(mqac))) {
+    mqbc <- mqcb / mqcc
+    if (mqbc != floor(mqbc)) mqbc <- round(mqbc, digits = 3)
+    
+    writeLines(paste0("A total of ", mqca, " survival transitions were estimated, with ", 
+        mqac, " per matrix."))
+    writeLines(paste0("A total of ", mqcb, " fecundity transitions were estimated, with ", 
+        mqbc, " per matrix."))
   } else {
-    writeLines(paste0("\nThis ", histmark, " lefkoMat object contains ", mqcc, " matrices."))
+    writeLines(paste0("A total of ", mqca, " transitions were estimated, with ", 
+        mqac, " per matrix. Positions of survival vs fecundity transitions are not known."))
   }
-  writeLines(paste0("\nEach matrix is a square matrix with ", matdim, " rows and columns, and a total of ", matdim*matdim, " elements."))
-  writeLines(paste0("A total of ", mqca, " survival transitions were estimated, with ", 
-                    mqac, " per matrix."))
-  writeLines(paste0("A total of ", mqcb, " fecundity transitions were estimated, with ", 
-                    mqbc, " per matrix."))
   
   if (is.element("dataqc", names(matrices))) {
     dqca <- matrices$dataqc[1]
@@ -3443,11 +3473,22 @@ summary.lefkoMat <- function(object, ...) {
     }
   }
   
-  writeLines("\nSurvival probability sum check (each matrix represented by column in order):")
+  dethonthetoilet <- apply(as.matrix(c(1:length(matrices$U))), 1,
+      function(X) {summary(colSums(matrices$U[[X]]))}
+  )
   
-  dethontoilt <- apply(as.matrix(c(1:length(matrices$U))), 1,
-    function(X) {summary(colSums(matrices$U[[X]]))})
-  print(dethontoilt, digits = 3)
+  if (colsums) {
+    writeLines("\nSurvival probability sum check (each matrix represented by column in order):")
+    print(dethonthetoilet, digits = 3)
+  }
+  
+  if (max(dethonthetoilet) > 1) {
+    warning("Some matrices include stages with survival probability greater than 1.0.", call. = FALSE)
+  }
+  
+  if (min(dethonthetoilet) < 0) {
+    warning("Some matrices include stages with survival probability less than 0.0.", call. = FALSE)
+  }
   
   return()
 }

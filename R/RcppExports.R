@@ -591,7 +591,8 @@ stovokor <- function(surv, obs, size, repst, fec, vitalrates, historical, suite,
 #' @param Xmat A matrix originally a part of a list object.
 #' @param allindices A vector of indices to remove from the matrix
 #' 
-#' @return A column vector of certain elements from the input matrix.
+#' @return A column vector of specifically called elements from the input
+#' matrix.
 #' 
 #' @keywords internal
 #' @noRd
@@ -614,13 +615,32 @@ moreflagrantcrap <- function(Xmat) {
     .Call('_lefko3_moreflagrantcrap', PACKAGE = 'lefko3', Xmat)
 }
 
+#' Calculate Logarithms of Non-Zero Elements of Sparse Matrix
+#' 
+#' Function \code{spmat_log} finds the non-zero elements in a sparse matrix,
+#' calculates their logs, and inserts them back into the matrix and returns it.
+#' Based on code developed by Coatless Professor and posted by him on
+#' StackOverflow.
+#' 
+#' @param B A sparse matrix. Note that this is assumed to be a population
+#' projection matrix, meaning that all values are either 0 or positive.
+#' 
+#' @return A sparse matrix with non-zero values as logs of the elements in the
+#' input matrix.
+#' 
+#' @keywords internal
+#' @noRd
+spmat_log <- function(coremat) {
+    .Call('_lefko3_spmat_log', PACKAGE = 'lefko3', coremat)
+}
+
 #' Estimates Mean LefkoMat Object for Historical MPM
 #' 
 #' Function \code{turbogeodiesel()} estimates mean historical population
 #' projection matrices, treating the mean as element-wise arithmetic.
 #' 
-#' @param loy A data frame denoting the population, patch, and time step
-#' designation of each matrix. Includes a total of 9 variables.
+#' @param loy A data frame denoting the population, patch, and occasion
+#' designation for each matrix. Includes a total of 9 variables.
 #' @param Umats A matrix with all U matrices turned into columns.
 #' @param Fmats A matrix with all F matrices turned into columns.
 #' @param hstages This is the \code{hstages} object held by \code{mats}.
@@ -632,7 +652,7 @@ moreflagrantcrap <- function(Xmat) {
 #' @param popmats A logical value stating whether to estimate population-level
 #' means.
 #' 
-#' @return A list using the basic blueprint of a lefkoMat object.
+#' @return A list using the structure of a lefkoMat object.
 #' 
 #' @keywords internal
 #' @noRd
@@ -647,7 +667,7 @@ turbogeodiesel <- function(loy, Umats, Fmats, hstages, agestages, stages, patchm
 #' function can handle both normal ahistorical MPMs and age x stage ahistorical
 #' MPMs.
 #' 
-#' @param loy A data frame denoting the population, patch, and time step
+#' @param loy A data frame denoting the population, patch, and occasion
 #' designation of each matrix. Includes a total of 9 variables.
 #' @param Umats A matrix with all U matrices turned into columns.
 #' @param Fmats A matrix with all F matrices turned into columns.
@@ -659,7 +679,7 @@ turbogeodiesel <- function(loy, Umats, Fmats, hstages, agestages, stages, patchm
 #' @param popmats A logical value stating whether to estimate population-level
 #' means.
 #' 
-#' @return A list using the basic blueprint of a LefkoMat object.
+#' @return A list using the structure of a LefkoMat object.
 #' 
 #' @keywords internal
 #' @noRd
@@ -669,8 +689,8 @@ geodiesel <- function(loy, Umats, Fmats, agestages, stages, patchmats, popmats) 
 
 #' Full Eigen Analysis of a Single Dense Matrix
 #' 
-#' \code{decomp3()} returns all eigenvalues, right eigenvectors, and left
-#' eigenvectors estimated for a matrix by the \code{eig_gen}() function
+#' Function \code{decomp3()} returns all eigenvalues, right eigenvectors, and
+#' left eigenvectors estimated for a matrix by the \code{eig_gen}() function
 #' in the C++ Armadillo library. Works with dense matrices.
 #' 
 #' @param Amat A population projection matrix of class \code{matrix}.
@@ -687,8 +707,8 @@ decomp3 <- function(Amat) {
 
 #' Full Eigen Analysis of a Single Sparse Matrix
 #' 
-#' \code{decomp3sp()} returns all eigenvalues, right eigenvectors, and left
-#' eigenvectors estimated for a matrix by the \code{eigs_gen}() function
+#' Function \code{decomp3sp()} returns all eigenvalues, right eigenvectors, and
+#' left eigenvectors estimated for a matrix by the \code{eigs_gen}() function
 #' in the C++ Armadillo library. Works with sparse matrices.
 #' 
 #' @param Amat A population projection matrix of class \code{matrix}.
@@ -703,10 +723,33 @@ decomp3sp <- function(Amat) {
     .Call('_lefko3_decomp3sp', PACKAGE = 'lefko3', Amat)
 }
 
+#' Full Eigen Analysis of a Single Sparse Matrix, with Sparse Input
+#' 
+#' \code{decomp3sp_inp()} returns all eigenvalues, right eigenvectors, and left
+#' eigenvectors estimated for a matrix by the \code{eigs_gen}() function
+#' in the C++ Armadillo library. Works with sparse matrices.
+#' 
+#' @param Amat A population projection matrix of class \code{matrix}.
+#'
+#' @return This function returns all estimated eigenvalues, right
+#' eigenvectors, and left eigenvectors of a single matrix. This output is
+#' provided as a list with three parts, named appropriately.
+#' 
+#' @section Notes:
+#' This function works slightly differently from function \code{decomp3sp()} in
+#' that the latter function requires a sparse matrix provided in dense format,
+#' while this function requires a sparse matrix in sparse format.
+#' 
+#' @keywords internal
+#' @noRd
+decomp3sp_inp <- function(spAmat) {
+    .Call('_lefko3_decomp3sp_inp', PACKAGE = 'lefko3', spAmat)
+}
+
 #' Estimate Deterministic Population Growth Rate of Any Matrix
 #' 
 #' \code{lambda3matrix()} returns the dominant eigenvalue of a single
-#' dense or sparse projection matrix.
+#' dense or sparse projection matrix, provided in dense matrix format.
 #' 
 #' @param Amat A population projection matrix of class \code{matrix}.
 #' @param sparse A logical value indicating whether to use sparse matrix
@@ -747,19 +790,19 @@ ss3matrix <- function(Amat, sparse) {
 #' Estimate Reproductive Value of Any Population Matrix
 #' 
 #' \code{rv3matrix()} returns the reproductive values for stages in a
-#' dense or sparse population matrix. The function provides standard
-#' reproductive values, meaning that the overall reproductive values of basic
-#' life history stages in a historical matrix are not provided (the
-#' \code{\link{repvalue3.lefkoMat}()} function estimates these on the basis
-#' of stage description information provided in the \code{lefkoMat} object
-#' used as input in that function).
+#' dense or sparse population matrix (both provided in dense matrix format).
+#' The function provides standard reproductive values, meaning that the overall
+#' reproductive values of basic life history stages in a historical matrix are
+#' not provided (the \code{\link{repvalue3.lefkoMat}()} function estimates
+#' these on the basis of stage description information provided in the
+#' \code{lefkoMat} object used as input in that function).
 #' 
-#' @param Amat A population projection matrix.
+#' @param Amat A population projection matrix of class \code{matrix}.
 #' @param sparse A logical value indicating whether to use sparse or dense
 #' format in matrix calculations.
 #' 
-#' @return This function returns a vector characterizing the
-#' reproductive values for stages of a population projection matrix.
+#' @return This function returns a vector characterizing the reproductive
+#' values for stages of a population projection matrix.
 #' 
 #' @seealso \code{\link{repvalue3}()}
 #' @seealso \code{\link{repvalue3.lefkoMat}()}
@@ -773,20 +816,42 @@ rv3matrix <- function(Amat, sparse) {
 #' Estimate Deterministic Sensitivities of Any Population Matrix
 #' 
 #' \code{sens3matrix()} returns the sensitivity of lambda with respect
-#' to each element in a dense or sparse matrix. This is accomplished via the
-#' \code{eig_gen}() and \code{eigs_gen}() functions in the C++ Armadillo
-#' library.
+#' to each element in a dense or sparse matrix (provided in dense matrix
+#' format). This is accomplished via the \code{eig_gen}() and \code{eigs_gen}()
+#' functions in the C++ Armadillo library.
 #' 
-#' @param Amat A population projection matrix.
+#' @param Amat A population projection matrix of class \code{matrix}.
 #' @param sparse A logical value indicating whether to use sparse or dense
 #' format in matrix calculations.
 #' 
-#' @return This function returns a matrix of sensitivities. 
+#' @return This function returns a matrix of deterministic sensitivities. 
 #' 
 #' @keywords internal
 #' @noRd
 sens3matrix <- function(Amat, sparse) {
     .Call('_lefko3_sens3matrix', PACKAGE = 'lefko3', Amat, sparse)
+}
+
+#' Estimate Deterministic Sensitivities of A Spars Matrixe
+#' 
+#' \code{sens3sp_matrix()} returns the sensitivity of lambda with respect
+#' to each element in a sparse matrix, provided in sparse matrix format. This
+#' is accomplished via the \code{eigs_gen}() function in the C++ Armadillo
+#' library.
+#' 
+#' @param Aspmat A population projection matrix in sparse matrix format.
+#' @param refmat A sparse matrix used for reference to create associated 0s in
+#' the sensitivity matrix.
+#' 
+#' @return This function returns a sparse matrix of deterministic
+#' sensitivities. Zeroes are derived from the reference matrix, and replace
+#' non-zero entries that will be zeroed out in the following math. Currently
+#' used in LTRE estimation.
+#' 
+#' @keywords internal
+#' @noRd
+sens3sp_matrix <- function(Aspmat, refmat) {
+    .Call('_lefko3_sens3sp_matrix', PACKAGE = 'lefko3', Aspmat, refmat)
 }
 
 #' Estimate Deterministic Sensitivities of a Historical LefkoMat Object
@@ -796,11 +861,12 @@ sens3matrix <- function(Amat, sparse) {
 #' sensitivity for each life history stage. This is accomplished via the 
 #' \code{eigs_gen}() function in the C++ Armadillo library.
 #' 
-#' @param Amat A population projection matrix.
+#' @param Amat A population projection matrix of class \code{matrix}.
 #' @param ahstages An integar vector of unique ahistorical stages.
 #' @param hstages An integar vector of unique historical stage pairs.
 #' 
-#' @return This function returns a list with two sensitivity matrices:
+#' @return This function returns a list with two deterministic sensitivity
+#' matrices:
 #' \item{h_smat}{Matrix of sensitivities corresponding to the historical
 #' matrix.}
 #' \item{ah_smat}{Matrix of sensitivities corresponding to the ahistorical
@@ -815,15 +881,15 @@ sens3hlefko <- function(Amat, ahstages, hstages) {
 #' Estimate Deterministic Elasticities of Any Population Matrix
 #' 
 #' \code{elas3matrix()} returns the elasticity of lambda with respect
-#' to each element in a dense or sparse matrix. This is accomplished via the
-#' \code{eig_gen}() and \code{eigs_gen}() functions in the C++ Armadillo
-#' library.
+#' to each element in a dense or sparse matrix, both provided in dense matrix
+#' format. This is accomplished via the \code{eig_gen}() and \code{eigs_gen}()
+#' functions in the C++ Armadillo library.
 #' 
-#' @param Amat A population projection matrix.
+#' @param Amat A population projection matrix of class \code{matrix}.
 #' @param sparse A logical value indicating whether to use sparse or dense
 #' format in matrix calculations.
 #' 
-#' @return This function returns a matrix of elasticities. 
+#' @return This function returns a matrix of deterministic elasticities. 
 #' 
 #' @keywords internal
 #' @noRd
@@ -842,7 +908,8 @@ elas3matrix <- function(Amat, sparse) {
 #' @param ahstages An integar vector of unique ahistorical stages.
 #' @param hstages An integar vector of unique historical stage pairs.
 #' 
-#' @return This function returns a list with two elasticity matrices:
+#' @return This function returns a list with two deterministic elasticity
+#' matrices:
 #' \item{h_emat}{Matrix of elasticities corresponding to the historical matrix.}
 #' \item{ah_emat}{Matrix of elasticities corresponding to the ahistorical
 #' matrix, but using summed historical elasticities as the basis of estimation.}
@@ -858,31 +925,28 @@ elas3hlefko <- function(Amat, ahstages, hstages) {
 #' Function \code{proj3()} runs the matrix projections used in other functions
 #' in package \code{lefko3}.
 #' 
-#' @param start_mat The starting matrix for the projection.
 #' @param start_vec The starting population vector for the projection.
 #' @param core_list A list of full projection matrices, corresponding to the 
 #' \code{$A} list within a \code{lefkoMat} object.
-#' @param mat_order A vector giving the order of matrices to use at each time.
+#' @param mat_order A vector giving the order of matrices to use at each occasion.
 #' @param standardize A logical value stating whether to standardize population
-#' size vector to sum to 1 at each estimated time.
-#' @param growthonly A logical value stating whether to output a matrix
+#' size vector to sum to 1 at each estimated occasion.
+#' @param growthonly A logical value stating whether to output only a matrix
 #' showing the change in population size from one year to the next for use in
-#' stochastic population growth rate estimation (TRUE), or a matrix containing
-#' the w and v projections for stochastic perturbation analysis, stage
-#' distribution estimation, and reproductive value estimation.
+#' stochastic population growth rate estimation (TRUE), or a larger matrix also
+#' containing the w and v projections for stochastic perturbation analysis,
+#' stage distribution estimation, and reproductive value estimation.
 #' @param integeronly A logical value indicating whether to round all projected
 #' numbers of individuals to the nearest integer.
 #' 
 #' @return A matrix in which, if \code{growthonly = TRUE}, each row is the
-#' population vector at each projected time, and if \code{growthonly = FALSE},
+#' population vector at each projected occasion, and if \code{growthonly = FALSE},
 #' the top half of the matrix is the w projection (stage distribution) and the
 #' bottom half is the v projection (reproductive values) for use in estimation
 #' of stochastic sensitivities and elasticities (in addition, a further row is
 #' appended to the bottom, corresponding to the R vector, which is the
-#' sum of the unstandardized w vector resulting from each time step's
+#' sum of the unstandardized w vector resulting from each occasion's
 #' projection).
-#' 
-#' @section Notes:
 #' 
 #' @keywords internal
 #' @noRd
@@ -890,47 +954,83 @@ proj3 <- function(start_vec, core_list, mat_order, standardize, growthonly, inte
     .Call('_lefko3_proj3', PACKAGE = 'lefko3', start_vec, core_list, mat_order, standardize, growthonly, integeronly)
 }
 
+#' Slimmed-down Time-based Population Sparse Matrix Projection Function
+#' 
+#' Function \code{proj3sp()} runs the matrix projections used in some other
+#' functions in package \code{lefko3}, but only when the input is sparse. This
+#' is a slimmed down version of function \code{proj3()}
+#' 
+#' @param start_vec The starting population vector for the projection.
+#' @param core_list A list of full projection matrices, corresponding to
+#' the \code{$A} list within a \code{lefkoMat} object. Matrices must be in
+#' \code{arma::sp_mat} format.
+#' @param mat_order A vector giving the order of matrices to use at each occasion.
+#' @param standardize A logical value stating whether to standardize population
+#' size vector to sum to 1 at each estimated occasion.
+#' @param growthonly A logical value stating whether to output only a matrix
+#' showing the change in population size from one year to the next for use in
+#' stochastic population growth rate estimation (TRUE), or a larger matrix also
+#' containing the w and v projections for stochastic perturbation analysis,
+#' stage distribution estimation, and reproductive value estimation.
+#' @param integeronly A logical value indicating whether to round all projected
+#' numbers of individuals to the nearest integer.
+#' 
+#' @return A matrix in which, if \code{growthonly = TRUE}, each row is the
+#' population vector at each projected occasion, and if \code{growthonly = FALSE},
+#' the top half of the matrix is the w projection (stage distribution) and the
+#' bottom half is the v projection (reproductive values) for use in estimation
+#' of stochastic sensitivities and elasticities (in addition, a further row is
+#' appended to the bottom, corresponding to the R vector, which is the
+#' sum of the unstandardized w vector resulting from each occasion's
+#' projection).
+#' 
+#' @keywords internal
+#' @noRd
+proj3sp <- function(start_vec, core_list, mat_order, standardize, growthonly, integeronly) {
+    .Call('_lefko3_proj3sp', PACKAGE = 'lefko3', start_vec, core_list, mat_order, standardize, growthonly, integeronly)
+}
+
 #' Estimate Stochastic Population Growth Rate
 #' 
 #' Function \code{projection3()} projects the population forward in time by
-#' a user-defined number of time steps. Projections may be deterministic or
+#' a user-defined number of occasions. Projections may be deterministic or
 #' stochastic. If deterministic, then projections will be cyclical if matrices
-#' exist covering multiple times for each population or patch. If stochastic,
+#' exist covering multiple occasions for each population or patch. If stochastic,
 #' then annual matrices will be shuffled within patches and populations.
 #' 
 #' @param mpm A matrix projection model of class \code{lefkoMat}, or a list of
 #' full matrix projection matrices.
-#' @param times Number of iterations to random samples. Defaults to 10,000.
+#' @param times Number of occasions to iterate. Defaults to 10,000.
 #' @param stochastic A logical value denoting whether to conduct a stochastic
 #' projection or a deterministic / cyclical projection.
 #' @param standardize A logical value denoting whether to re-standardize the
-#' population size to 1.0 at each time step. Defaults to FALSE.
+#' population size to 1.0 at each occasion. Defaults to FALSE.
 #' @param growthonly A logical value indicating whether to produce only the
-#' projected population size at each time step, or a vector showing the stage
+#' projected population size at each occasion, or a vector showing the stage
 #' distribution followed by the reproductive value vector followed by the full
-#' population size at each time step. Defaults to TRUE.
+#' population size at each occasion. Defaults to TRUE.
 #' @param integeronly A logical value indicating whether to round the number of
-#' individuals projected in each stage at each time step to the nearest
+#' individuals projected in each stage at each occasion to the nearest
 #' integer. Defaults to FALSE.
 #' @param start_vec An optional numeric vector denoting the starting stage
 #' distribution for the projection. Defaults to a single individual of each
 #' stage.
 #' @param tweights An optional numeric vector denoting the probabilistic
-#' weightings of annual matrices. Defaults to equal weighting among times.
+#' weightings of annual matrices. Defaults to equal weighting among occasions.
 #' 
 #' @return A list with two elements:
 #' \item{projection}{A list of matrices showing the total number of individuals
-#' per stage per time step, or showing the former with the projected stage 
-#' distribution and reproductive value per stage per time step followed by
-#' the total population size per time step (all row-bound in order).}
+#' per stage per occasion, or showing the former with the projected stage 
+#' distribution and reproductive value per stage per occasion followed by
+#' the total population size per occasion (all row-bound in order).}
 #' \item{labels}{A data frame showing the order of populations and patches in
 #' item \code{projection}.}
 #' 
+#' @section Notes:
 #' Projections are run both at the patch level and at the population level.
 #' Population level estimates will be noted at the end of the
 #' data frame with 0 entries for patch designation.
 #' 
-#' @section Notes:
 #' Weightings given in \code{tweights} do not need to sum to 1. Final
 #' weightings used will be based on the proportion per element of the sum of
 #' elements in the user-supplied vector.
@@ -1007,33 +1107,29 @@ proj3 <- function(start_vec, core_list, mat_order, standardize, growthonly, inte
 #'   stageassign = cypframe_raw, stagesize = "sizeadded", NAas0 = TRUE, 
 #'   NRasRep = TRUE)
 #' 
-#' rep_cyp_raw <- matrix(0, 11, 11)
-#' rep_cyp_raw[1:2,7:11] <- 0.5
-#' 
-#' cypsupp3r <- supplemental(stage3 = c("SD", "SD", "P1", "P1", "P2", "P3",
-#'     "SL", "SL", "SL", "D", "XSm", "Sm", "D", "XSm", "Sm", "SD", "P1"),
-#'   stage2 = c("SD", "SD", "SD", "SD", "P1", "P2", "P3", "SL", "SL", "SL",
-#'     "SL", "SL", "SL", "SL", "SL", "rep", "rep"),
-#'   stage1 = c("SD", "rep", "SD", "rep", "SD", "P1", "P2", "P3", "SL", "P3",
-#'     "P3", "P3", "SL", "SL", "SL", "all", "all"),
-#'   eststage3 = c(NA, NA, NA, NA, NA, NA, NA, NA, NA, "D", "XSm", "Sm", "D",
-#'     "XSm", "Sm", NA, NA),
-#'   eststage2 = c(NA, NA, NA, NA, NA, NA, NA, NA, NA, "XSm", "XSm", "XSm",
-#'     "XSm", "XSm", "XSm", NA, NA),
-#'   eststage1 = c(NA, NA, NA, NA, NA, NA, NA, NA, NA, "XSm", "XSm", "XSm",
-#'     "XSm", "XSm", "XSm", NA, NA),
-#'   givenrate = c(0.1, 0.1, 0.2, 0.2, 0.2, 0.2, 0.25, 0.4, 0.4, NA, NA, NA, NA,
-#'     NA, NA, NA, NA),
-#'   multiplier = c(NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA,
-#'     0.5, 0.5),
-#'   type = c(1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 3, 3),
-#'   type_t12 = c(1, 2, 1, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1),
+#' cypsupp3r <- supplemental(stage3 = c("SD", "SD", "P1", "P1", "P2", "P3", "SL",
+#'     "D", "XSm", "Sm", "D", "XSm", "Sm", "SD", "P1"),
+#'   stage2 = c("SD", "SD", "SD", "SD", "P1", "P2", "P3", "SL", "SL", "SL", "SL",
+#'     "SL", "SL", "rep", "rep"),
+#'   stage1 = c("SD", "rep", "SD", "rep", "SD", "P1", "P2", "P3", "P3", "P3",
+#'     "SL", "SL", "SL", "mat", "mat"),
+#'   eststage3 = c(NA, NA, NA, NA, NA, NA, NA, "D", "XSm", "Sm", "D", "XSm", "Sm",
+#'     NA, NA),
+#'   eststage2 = c(NA, NA, NA, NA, NA, NA, NA, "XSm", "XSm", "XSm", "XSm", "XSm",
+#'     "XSm", NA, NA),
+#'   eststage1 = c(NA, NA, NA, NA, NA, NA, NA, "XSm", "XSm", "XSm", "XSm", "XSm",
+#'     "XSm", NA, NA),
+#'   givenrate = c(0.1, 0.1, 0.2, 0.2, 0.2, 0.2, 0.25, NA, NA, NA, NA, NA, NA,
+#'     NA, NA),
+#'   multiplier = c(NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, 0.5, 0.5),
+#'   type = c(1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 3, 3),
+#'   type_t12 = c(1, 2, 1, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1),
 #'   stageframe = cypframe_raw, historical = TRUE)
 #' 
 #' cypmatrix3r <- rlefko3(data = cypraw_v1, stageframe = cypframe_raw, 
 #'   year = "all", patch = "all", stages = c("stage3", "stage2", "stage1"),
 #'   size = c("size3added", "size2added", "size1added"), 
-#'   repmatrix = rep_cyp_raw, supplement = cypsupp3r, yearcol = "year2", 
+#'   supplement = cypsupp3r, yearcol = "year2", 
 #'   patchcol = "patchid", indivcol = "individ")
 #' 
 #' cypstoch <- projection3(cypmatrix3r, stochastic = TRUE)
@@ -1047,7 +1143,7 @@ projection3 <- function(mpm, times = 10000L, stochastic = FALSE, standardize = F
 #' 
 #' Function \code{slambda3()} estimates the stochastic population growth rate,
 #' \eqn{a}, defined as the long-term arithmetic mean of the log population 
-#' growth rate estimated per simulated time (as given in equation 2 in
+#' growth rate estimated per simulated occasion (as given in equation 2 in
 #' Tuljapurkar, Horvitz, and Pascarella 2003). This term is estimated via
 #' projection of randomly sampled matrices, similarly to the procedure outlined
 #' in Box 7.4 of Morris and Doak (2002). Can handle both lefkoMat objects and
@@ -1055,25 +1151,25 @@ projection3 <- function(mpm, times = 10000L, stochastic = FALSE, standardize = F
 #' 
 #' @param mpm A matrix projection model of class \code{lefkoMat}, or a list of
 #' full matrix projection matrices.
-#' @param times Number of iterations to random samples. Defaults to 10,000.
+#' @param times Number of occasions to iterate. Defaults to 10,000.
 #' @param tweights Numeric vector denoting the probabilistic weightings of
-#' annual matrices. Defaults to equal weighting among times.
+#' annual matrices. Defaults to equal weighting among occasions.
 #' 
 #' @return A data frame with the following variables:
 #' 
 #' \item{pop}{The identity of the population.}
 #' \item{patch}{The identity of the patch.}
 #' \item{a}{Estimate of stochastic growth rate, estimated as the arithmetic
-#' mean of the log population growth rate across simulated times.}
+#' mean of the log population growth rate across simulated occasions.}
 #' \item{var}{The estimated variance of a.}
 #' \item{sd}{The standard deviation of a.}
 #' \item{se}{The standard error of a.}
 #'
+#' @section Notes:
 #' Stochastic growth rate is estimated both at the patch level and at the
 #' population level. Population level estimates will be noted at the end of the
 #' data frame with 0 entries for patch designation.
 #' 
-#' @section Notes:
 #' Weightings given in \code{tweights} do not need to sum to 1. Final
 #' weightings used will be based on the proportion per element of the sum of
 #' elements in the user-supplied vector.
@@ -1145,30 +1241,29 @@ projection3 <- function(mpm, times = 10000L, stochastic = FALSE, standardize = F
 #'   stageassign = cypframe_raw, stagesize = "sizeadded", NAas0 = TRUE, 
 #'   NRasRep = TRUE)
 #' 
-#' rep_cyp_raw <- matrix(0, 11, 11)
-#' rep_cyp_raw[1:2,7:11] <- 0.5
-#' 
-#' cypover3r <- overwrite(stage3 = c("SD", "SD", "P1", "P1", "P2", "P3", "SL", 
-#'     "SL", "SL", "D", "XSm", "Sm", "D", "XSm", "Sm"), 
-#'   stage2 = c("SD", "SD", "SD", "SD", "P1", "P2", "P3", "SL", "SL", "SL", 
-#'     "SL", "SL", "SL", "SL", "SL"),
-#'   stage1 = c("SD", "rep", "SD", "rep", "SD", "P1", "P2", "P3", "SL", "P3", 
-#'     "P3", "P3", "SL", "SL", "SL"),
-#'   eststage3 = c(NA, NA, NA, NA, NA, NA, NA, NA, NA, "D", "XSm", "Sm", "D", 
-#'     "XSm", "Sm"), 
-#'   eststage2 = c(NA, NA, NA, NA, NA, NA, NA, NA, NA, "XSm", "XSm", "XSm", 
-#'     "XSm", "XSm", "XSm"), 
-#'   eststage1 = c(NA, NA, NA, NA, NA, NA, NA, NA, NA, "XSm", "XSm", "XSm", 
-#'     "XSm", "XSm", "XSm"), 
-#'   givenrate = c(0.1, 0.1, 0.2, 0.2, 0.2, 0.2, 0.25, 0.4, 0.4, NA, NA, NA, 
-#'     NA, NA, NA), 
-#'   type = c("S", "S", "S", "S", "S", "S", "S", "S", "S", "S", "S", "S", "S", 
-#'     "S", "S"))
+#' cypsupp3r <- supplemental(stage3 = c("SD", "SD", "P1", "P1", "P2", "P3", "SL",
+#'     "D", "XSm", "Sm", "D", "XSm", "Sm", "SD", "P1"),
+#'   stage2 = c("SD", "SD", "SD", "SD", "P1", "P2", "P3", "SL", "SL", "SL", "SL",
+#'     "SL", "SL", "rep", "rep"),
+#'   stage1 = c("SD", "rep", "SD", "rep", "SD", "P1", "P2", "P3", "P3", "P3",
+#'     "SL", "SL", "SL", "mat", "mat"),
+#'   eststage3 = c(NA, NA, NA, NA, NA, NA, NA, "D", "XSm", "Sm", "D", "XSm", "Sm",
+#'     NA, NA),
+#'   eststage2 = c(NA, NA, NA, NA, NA, NA, NA, "XSm", "XSm", "XSm", "XSm", "XSm",
+#'     "XSm", NA, NA),
+#'   eststage1 = c(NA, NA, NA, NA, NA, NA, NA, "XSm", "XSm", "XSm", "XSm", "XSm",
+#'     "XSm", NA, NA),
+#'   givenrate = c(0.1, 0.1, 0.2, 0.2, 0.2, 0.2, 0.25, NA, NA, NA, NA, NA, NA,
+#'     NA, NA),
+#'   multiplier = c(NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, 0.5, 0.5),
+#'   type = c(1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 3, 3),
+#'   type_t12 = c(1, 2, 1, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1),
+#'   stageframe = cypframe_raw, historical = TRUE)
 #' 
 #' cypmatrix3r <- rlefko3(data = cypraw_v1, stageframe = cypframe_raw, 
 #'   year = "all", patch = "all", stages = c("stage3", "stage2", "stage1"),
 #'   size = c("size3added", "size2added", "size1added"), 
-#'   repmatrix = rep_cyp_raw, overwrite = cypover3r, yearcol = "year2", 
+#'   supplement = cypsupp3r, yearcol = "year2", 
 #'   patchcol = "patchid", indivcol = "individ")
 #' 
 #' cypstoch <- slambda3(cypmatrix3r)
@@ -1183,19 +1278,19 @@ slambda3 <- function(mpm, times = 10000L, tweights = NULL) {
 #' 
 #' Function \code{stoch_senselas()} estimates the sensitivity and elasticity to
 #' matrix elements of \eqn{a}, defined as the long-term arithmetic mean of the
-#' log population growth estimated per simulated time (as given in equation 2
+#' log population growth estimated per simulated occasion (as given in equation 2
 #' in Tuljapurkar, Horvitz, and Pascarella 2003). 
 #' 
 #' @param mpm A matrix projection model of class \code{lefkoMat}, or a list of
 #' full matrix projection matrices.
-#' @param times Number of iterations to random samples. Defaults to 10,000.
+#' @param times Number of occasions to iterate. Defaults to 10,000.
 #' @param style An integer designating whether to estimate sensitivity matrices
 #' (\code{1}) or elasticity matrices (\code{2}). Defaults to 1.
 #' @param tweights Numeric vector denoting the probabilistic weightings of
-#' annual matrices. Defaults to equal weighting among times.
+#' annual matrices. Defaults to equal weighting among occasions.
 #' 
 #' @return A list of one or two cubes (3d array) where each slice corresponds
-#' to sensitivity or elasticity matrix for a specific pop-patch, followed by
+#' to a sensitivity or elasticity matrix for a specific pop-patch, followed by
 #' the sensitivity or elasticity matrices of all populations (only if multiple
 #' pop-patches occur in the input). Two such cubes are only provided when a
 #' historical lefkoMat object is used as input, in which case the first
@@ -1207,9 +1302,9 @@ slambda3 <- function(mpm, times = 10000L, tweights = NULL) {
 #' weightings used will be based on the proportion per element of the sum of
 #' elements in the user-supplied vector.
 #' 
-#' This function currently requires all patches to have the same times, if a
-#' \code{lefkoMat} object is used as input. Asymmetry in times across patches
-#' and/or populations will likely cause errors.
+#' This function currently requires all patches to have the same occasions, if
+#' a \code{lefkoMat} object is used as input. Asymmetry in the number of
+#' occasions across patches and/or populations will likely cause errors.
 #'
 #' @keywords internal
 #' @noRd
@@ -1229,15 +1324,15 @@ stoch_senselas <- function(mpm, times = 10000L, style = 1L, tweights = NULL) {
 #' @return A data frame with the following elements:
 #' \item{index}{Vector index of matrix element in C++ terms.}
 #' \item{transition}{Category of transition.}
-#' \item{size3}{Size in time \emph{t}+1.}
-#' \item{repstatus3}{Reproductive status in time \emph{t}+1.}
-#' \item{entrystatus3}{Entry status in time \emph{t}+1.}
-#' \item{size2}{Size in time \emph{t}.}
-#' \item{repstatus2}{Reproductive status in time \emph{t}.}
-#' \item{entrystatus2}{Entry status in time \emph{t}.}
-#' \item{size1}{Size in time \emph{t}-1.}
-#' \item{repstatus1}{Reproductive status in time \emph{t}11.}
-#' \item{entrystatus1}{Entry status in time \emph{t}-1.}
+#' \item{size3}{Size in occasion \emph{t}+1.}
+#' \item{repstatus3}{Reproductive status in occasion \emph{t}+1.}
+#' \item{entrystatus3}{Entry status in occasion \emph{t}+1.}
+#' \item{size2}{Size in occasion \emph{t}.}
+#' \item{repstatus2}{Reproductive status in occasion \emph{t}.}
+#' \item{entrystatus2}{Entry status in occasion \emph{t}.}
+#' \item{size1}{Size in occasion \emph{t}-1.}
+#' \item{repstatus1}{Reproductive status in occasion \emph{t}11.}
+#' \item{entrystatus1}{Entry status in occasion \emph{t}-1.}
 #'
 #' The kind of transitions conforms to the following code: \code{10}: full
 #' stasis, \code{11}: stasis to growth, \code{12}: full growth, \code{13}:
@@ -1265,14 +1360,14 @@ bambi3 <- function(stages, hstages) {
 #' @return A data frame with the following elements:
 #' \item{index}{Vector index of matrix element in C++ terms.}
 #' \item{transition}{Category of transition.}
-#' \item{stage3}{Stage in time \emph{t}+1.}
-#' \item{size3}{Size in time \emph{t}+1.}
-#' \item{repstatus3}{Reproductive status in time \emph{t}+1.}
-#' \item{entrystatus3}{Entry status in time \emph{t}+1.}
-#' \item{stage2}{Stage in time \emph{t}.}
-#' \item{size2}{Size in time \emph{t}.}
-#' \item{repstatus2}{Reproductive status in time \emph{t}.}
-#' \item{entrystatus2}{Entry status in time \emph{t}.}
+#' \item{stage3}{Stage in occasion \emph{t}+1.}
+#' \item{size3}{Size in occasion \emph{t}+1.}
+#' \item{repstatus3}{Reproductive status in occasion \emph{t}+1.}
+#' \item{entrystatus3}{Entry status in occasion \emph{t}+1.}
+#' \item{stage2}{Stage in occasion \emph{t}.}
+#' \item{size2}{Size in occasion \emph{t}.}
+#' \item{repstatus2}{Reproductive status in occasion \emph{t}.}
+#' \item{entrystatus2}{Entry status in occasion \emph{t}.}
 #'
 #' The kind of transitions conforms to the following code: \code{1}: stasis, 
 #' \code{2}: growth, \code{3}: shrinkage, \code{4}: fecundity.
@@ -1286,25 +1381,103 @@ bambi2 <- function(stages) {
 #' Creates Summary Data for Elasticity Matrix Inputs
 #' 
 #' Function \code{demolition3()} sums elasticity values from elasticity
-#' matrices according to the categories developed by functions \code{bambi2()}
-#' and \code{bambi3()}.
+#' matrices, and LTRE contributions from LTRE and sLTRE matrices, according to
+#' the categories developed by functions \code{bambi2()} and \code{bambi3()}.
 #' 
-#' @param e_amat A single elasticity matrix.
-#' @param amat The A matrix corresponding to \code{e_amat}.
-#' @param fmat The F matrix corresponding to \code{e_amat}.
+#' @param e_amat A single elasticity, LTRE, or sLTRE matrix.
 #' @param bambesque This is the output from \code{bambi2()} or \code{bambi3()}
-#' corresponding to the current lefkoMat object.
+#' corresponding to the current lefkoMat object. The format is a data frame
+#' giving the indices and characteristics of all predicted potential non-zero
+#' elements in the supplied matrix.
+#' @param amat_ The A matrix corresponding to \code{e_amat}. If not supplied,
+#' then only \code{bambesque} is used to determine transition categories. If
+#' provided, then fecundity transitions may be split between fecundity and
+#' survival portions.
+#' @param fmat_ The F matrix corresponding to \code{e_amat}. If not supplied,
+#' then only \code{bambesque} is used to determine transition categories. If
+#' provided, then fecundity transitions may be split between fecundity and
+#' survival portions.
 #' 
 #' @return A list with two data frames, one showing the summed elasticities for
 #' the historical matrix supplied (if supplied), and the other showing the
 #' ahistorical summary of the historical matrix or the summed elasticities of
-#' a supplied ahistorical elasticity matrix. Note that the elasticity of
-#' fecundity transitions will be split with any co-occurring survival
-#' transition proportionately.
+#' a supplied ahistorical elasticity matrix. Also includes sums of only the
+#' positive elements and only the negative elements, in all cases.
+#' 
+#' @section Notes:
+#' If the original matrices are provided, then this function was made to split
+#' co-occurring survival-fecundity elasticities according to the ratio of the
+#' fecundity portion of the element to the survival portion of that element.
+#' However, this transition splitting capability developed using the original
+#' matrices does not currently work properly, and so it is better to use this
+#' function without objects \code{amat_} and \code{fmat_}, forcing co-occurring
+#' survival-fecundity transitions to be treated as fecundity only.
 #' 
 #' @keywords internal
 #' @noRd
-demolition3 <- function(e_amat, amat, fmat, bambesque) {
-    .Call('_lefko3_demolition3', PACKAGE = 'lefko3', e_amat, amat, fmat, bambesque)
+demolition3 <- function(e_amat, bambesque, amat_ = NULL, fmat_ = NULL) {
+    .Call('_lefko3_demolition3', PACKAGE = 'lefko3', e_amat, bambesque, amat_, fmat_)
+}
+
+#' Estimate LTRE of Any Population Matrix
+#' 
+#' \code{ltre3matrix()} returns the one-way fixed deterministic LTRE matrix of
+#' a dense or sparse set of input matrices.
+#' 
+#' @param Amats A list of population projection matrices (not an entire
+#' \code{lefkoMat} object.
+#' @param refnum An integer vector giving the numbers of the matrices to use as
+#' reference from_ \code{refmats}.
+#' @param refmats_ A list of reference population projection matrices.
+#' @param mean A logical value indicating whether to use the element-wise mean
+#' matrix as the reference.
+#' @param sparse A logical value indicating whether to use sparse or dense
+#' format in matrix calculations.
+#' 
+#' @return This function returns a cube of LTRE contributions, with each slice
+#' corresponding to each input matrix in Amats. 
+#' 
+#' @keywords internal
+#' @noRd
+ltre3matrix <- function(Amats, refnum, refmats_ = NULL, mean = TRUE, sparse = FALSE) {
+    .Call('_lefko3_ltre3matrix', PACKAGE = 'lefko3', Amats, refnum, refmats_, mean, sparse)
+}
+
+#' Estimate sLTRE of Any Population Matrix
+#' 
+#' \code{sltre3matrix()} returns the one-way stochastic LTRE matrix of
+#' a dense or sparse set of input matrices.
+#' 
+#' @param Amats A list of population projection matrices (not an entire
+#' \code{lefkoMat} object).
+#' @param loy A data frame showing the order of populations, patches, and
+#' occasions of the matrices provided in object \code{Amats}.
+#' @param refnum An integer vector giving the numbers of the matrices to use as
+#' reference from \code{refmats}.
+#' @param refmats_ A list of reference population projection matrices.
+#' @param tweights_ Numeric vector denoting the probabilistic weightings of
+#' annual matrices. Defaults to equal weighting among occasions.
+#' @param steps The number of occasions to project the stochastic simulation
+#' forward, if performing an sLTRE. Defaults to 10,000. Note that the total
+#' number of occasions projected equals this number plus the number given in
+#' object \code{burnin}.
+#' @param burnin The number of initial occasions to project the population
+#' without calculating population metrics. Defaults to 3000.
+#' @param sparse A logical value indicating whether to use sparse or dense
+#' format in matrix calculations.
+#' 
+#' @return This function returns a list of two lists of matrices. The first,
+#' \code{cont_mean}, holds the sLTRE contributions of shifts in mean elements.
+#' The second, \code{cont_sd}, holds the sLTRE contributions of shifts in
+#' temporal standard deviations of matrix elements.
+#' 
+#' @section Notes:
+#' This function uses the simulation approach developed in Davison et al.
+#' (2010), which is a good approximation though not an analytical solution.
+#' 
+#' @keywords internal
+#' @noRd
+sltre3matrix <- function(Amats, loy, refnum, refmats_ = NULL, tweights_ = NULL, steps = 10000L, burnin = 3000L, sparse = FALSE) {
+    .Call('_lefko3_sltre3matrix', PACKAGE = 'lefko3', Amats, loy, refnum, refmats_, tweights_, steps, burnin, sparse)
 }
 

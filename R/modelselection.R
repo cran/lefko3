@@ -10,8 +10,8 @@
 #' \code{\link{historicalize3}()}, as long as all needed variables are properly
 #' designated.
 #' @param historical A logical variable denoting whether to assess the effects
-#' of state in time \emph{t}-1 in addition to state in time \emph{t}. Defaults
-#' to TRUE.
+#' of state in occasion \emph{t}-1 in addition to state in occasion \emph{t}.
+#' Defaults to TRUE.
 #' @param approach The statistical approach to be taken for model building. The 
 #' default is \code{mixed}, which uses the mixed model approach utilized in 
 #' packages \code{lme4} and \code{glmmTMB}. Other options include \code{glm},
@@ -39,21 +39,21 @@
 #' \code{repst}, probability of reproducing; and \code{fec}, amount of
 #' reproduction (overall fecundity). Defaults to \code{c("surv", "size", "fec")}.
 #' @param surv A vector indicating the variable names coding for status as alive
-#' or dead in times \emph{t}+1, \emph{t}, and \emph{t}-1, respectively. Defaults
-#' to \code{c("alive3", "alive2", "alive1")}.
+#' or dead in occasions \emph{t}+1, \emph{t}, and \emph{t}-1, respectively.
+#' Defaults to \code{c("alive3", "alive2", "alive1")}.
 #' @param obs A vector indicating the variable names coding for observation
-#' status in times \emph{t}+1, \emph{t}, and \emph{t}-1, respectively. Defaults
-#' to \code{c("obsstatus3", "obsstatus2", "obsstatus1")}.
-#' @param size A vector indicating the variable names coding for size in times
-#' \emph{t}+1, \emph{t}, and \emph{t}-1, respectively. Defaults to
+#' status in occasions \emph{t}+1, \emph{t}, and \emph{t}-1, respectively.
+#' Defaults to \code{c("obsstatus3", "obsstatus2", "obsstatus1")}.
+#' @param size A vector indicating the variable names coding for size in
+#' occasions \emph{t}+1, \emph{t}, and \emph{t}-1, respectively. Defaults to
 #' \code{c("sizea3", "sizea2", "sizea1")}.
 #' @param repst A vector indicating the variable names coding for reproductive
-#' status in times \emph{t}+1, \emph{t}, and \emph{t}-1, respectively. Defaults
-#' to \code{c("repstatus3", "repstatus2", "repstatus1")}.
+#' status in occasions \emph{t}+1, \emph{t}, and \emph{t}-1, respectively.
+#' Defaults to \code{c("repstatus3", "repstatus2", "repstatus1")}.
 #' @param fec A vector indicating the variable names coding for fecundity in
-#' times \emph{t}+1, \emph{t}, and \emph{t}-1, respectively. Defaults to
+#' occasions \emph{t}+1, \emph{t}, and \emph{t}-1, respectively. Defaults to
 #' \code{c("feca3", "feca2", "feca1")}.
-#' @param stage A vector indicating the variables coding for stage in times
+#' @param stage A vector indicating the variables coding for stage in occasions
 #' \emph{t}+1, \emph{t}, and \emph{t}-1. Defaults to \code{c("stage3", "stage2",
 #' "stage1")}.
 #' @param indiv A variable indicating the variable name coding individual
@@ -61,16 +61,16 @@
 #' @param patch A variable indicating the variable name coding for patch, where
 #' patches are defined as permanent subgroups within the study population.
 #' Defaults to NA.
-#' @param year A variable indicating the variable coding for observation time in 
-#' time \emph{t}. Defaults to \code{year2}.
+#' @param year A variable indicating the variable coding for observation
+#' occasion \emph{t}. Defaults to \code{year2}.
 #' @param sizedist The probability distribution used to model size. Options
 #' include \code{gaussian} for the Normal distribution (default), \code{poisson}
 #' for the Poisson distribution, and \code{negbin} for the negative binomial
-#' distribution.
+#' distribution (quadratic parameterization).
 #' @param fecdist The probability distribution used to model fecundity. Options
 #' include \code{gaussian} for the Normal distribution (default), \code{poisson}
 #' for the Poisson distribution, and \code{negbin} for the negative binomial
-#' distribution.
+#' distribution (quadratic parameterization).
 #' @param size.zero A logical variable indicating whether size distribution 
 #' should be zero-inflated. Only applies to Poisson and negative binomial 
 #' distributions. Defaults to FALSE.
@@ -108,20 +108,20 @@
 #' \code{jsize.zero = TRUE}.
 #' @param fectime A variable indicating which year of fecundity to use as the
 #' response term in fecundity models. Options include \code{2}, which refers to
-#' time \emph{t}, and \code{3}, which refers to time \emph{t}+1. Defaults to
-#' \code{2}.
+#' occasion \emph{t}, and \code{3}, which refers to occasion \emph{t}+1.
+#' Defaults to \code{2}.
 #' @param censor A vector denoting the names of censoring variables in the
-#' dataset, in order from time \emph{t}+1, followed by time \emph{t}, and lastly
-#' followed by time \emph{t}-1. Defaults to NA.
+#' dataset, in order from occasion \emph{t}+1, followed by occasion \emph{t},
+#' and lastly followed by occasion \emph{t}-1. Defaults to NA.
 #' @param age Designates the name of the variable corresponding to age in the
 #' vertical dataset. Defaults to NA, in which case age is not included in linear
 #' models. Should only be used if building age x stage matrices.
-#' @param indcova Vector designating the names in times \emph{t}+1, \emph{t},
-#' and \emph{t}-1 of an individual covariate. Defaults to NA.
-#' @param indcovb Vector designating the names in times \emph{t}+1, \emph{t},
-#' and \emph{t}-1 of an individual covariate. Defaults to NA.
-#' @param indcovc Vector designating the names in times \emph{t}+1, \emph{t},
-#' and \emph{t}-1 of an individual covariate. Defaults to NA.
+#' @param indcova Vector designating the names in occasions \emph{t}+1,
+#' \emph{t}, and \emph{t}-1 of an individual covariate. Defaults to NA.
+#' @param indcovb Vector designating the names in occasions \emph{t}+1,
+#' \emph{t}, and \emph{t}-1 of an individual covariate. Defaults to NA.
+#' @param indcovc Vector designating the names in occasions \emph{t}+1,
+#' \emph{t}, and \emph{t}-1 of an individual covariate. Defaults to NA.
 #' @param show.model.tables If set to TRUE, then includes full modeling tables
 #' in the output. Defaults to TRUE.
 #' @param global.only If set to TRUE, then only global models will be built and
@@ -141,31 +141,34 @@
 #' control vector:
 #' 
 #' \item{survival_model}{Best-fit model of the binomial probability of survival
-#' from time \emph{t} to time \emph{t}+1. Defaults to 1.}
+#' from occasion \emph{t} to occasion \emph{t}+1. Defaults to 1.}
 #' \item{observation_model}{Best-fit model of the binomial probability of 
-#' observation in time \emph{t}+1 given survival to that time. Defaults to 1.}
-#' \item{size_model}{Best-fit model of size in time \emph{t}+1 given survival to
-#' and observation in that time. Defaults to 1.}
-#' \item{repstatus_model}{Best-fit model of the binomial probability of
-#' reproduction in time \emph{t}+1, given survival to and observation in that
-#' time. Defaults to 1.}
-#' \item{fecundity_model}{Best-fit model of fecundity in time \emph{t}+1 given 
-#' survival to, and observation and reproduction in that time. Defaults to 1.}
-#' \item{juv_survival_model}{Best-fit model of the binomial probability of
-#' survival from time \emph{t} to time \emph{t}+1 of an immature individual.
-#' Defaults to 1.}
-#' \item{juv_observation_model}{Best-fit model of the binomial probability of 
-#' observation in time \emph{t}+1 given survival to that time of an immature
-#' individual. Defaults to 1.}
-#' \item{juv_size_model}{Best-fit model of size in time \emph{t}+1 given
-#' survival to and observation in that time of an immature individual. Defaults
+#' observation in occasion \emph{t}+1 given survival to that occasion. Defaults
 #' to 1.}
+#' \item{size_model}{Best-fit model of size in occasion \emph{t}+1 given
+#' survival to and observation in that occasion. Defaults to 1.}
+#' \item{repstatus_model}{Best-fit model of the binomial probability of
+#' reproduction in occasion \emph{t}+1, given survival to and observation in
+#' that occasion. Defaults to 1.}
+#' \item{fecundity_model}{Best-fit model of fecundity in occasion \emph{t}+1
+#' given survival to, and observation and reproduction in that occasion.
+#' Defaults to 1.}
+#' \item{juv_survival_model}{Best-fit model of the binomial probability of
+#' survival from occasion \emph{t} to occasion \emph{t}+1 of an immature
+#' individual. Defaults to 1.}
+#' \item{juv_observation_model}{Best-fit model of the binomial probability of 
+#' observation in occasion \emph{t}+1 given survival to that occasion of an
+#' immature individual. Defaults to 1.}
+#' \item{juv_size_model}{Best-fit model of size in occasion \emph{t}+1 given
+#' survival to and observation in that occasion of an immature individual.
+#' Defaults to 1.}
 #' \item{juv_reproduction_model}{Best-fit model of the binomial probability of
-#' reproduction in time \emph{t}+1, given survival to and observation in that
-#' time of an individual that was immature in time \emph{t}. This model is
-#' technically not a model of reproduction probability for individuals that are
-#' immature, rather reproduction probability here is given for individuals that
-#' are mature in time \emph{t}+1 but immature in time \emph{t}. Defaults to 1.}
+#' reproduction in occasion \emph{t}+1, given survival to and observation in
+#' that occasion of an individual that was immature in occasion \emph{t}. This
+#' model is technically not a model of reproduction probability for individuals
+#' that are immature, rather reproduction probability here is given for
+#' individuals that are mature in occasion \emph{t}+1 but immature in occasion
+#' \emph{t}. Defaults to 1.}
 #' \item{survival_table}{Full dredge model table of survival probability.}
 #' \item{observation_table}{Full dredge model table of observation probability.}
 #' \item{size_table}{Full dredge model table of size.}
@@ -227,7 +230,7 @@
 #' plan to offer one in the future to speed this process up for particularly
 #' large global models.
 #'
-#' Care must be taken to build models that test the impacts of state in time
+#' Care must be taken to build models that test the impacts of state in occasion
 #' \emph{t}-1 for historical models, and that do not test these impacts for
 #' ahistorical models. Ahistorical matrix modeling particularly will yield
 #' biased transition estimates if historical terms from models are ignored. This
@@ -391,10 +394,10 @@ modelsearch <- function(data, historical = TRUE, approach = "mixed",
   if (!is.element(fecdist, distoptions)) {stop("Please enter a valid assumed fecundity distribution, currently limited to gaussian, poisson, or negbin.", call. = FALSE)}
   
   if (length(censor) > 3) {
-    stop("Censor variables should be included either as 1 variable per row in the historical data file (1 variable in the dataset), or as 1 variable per for each of times t+1, t, and, if historical, t-1 (2 or 3 variables in the dataset). No more than 3 variables are allowed. If more than one are supplied, then they are assumed to be in order of time t+1, time t, and time t-1, respectively.", call. = FALSE)
+    stop("Censor variables should be included either as 1 variable per row in the historical data file (1 variable in the dataset), or as 1 variable per for each of occasions t+1, t, and, if historical, t-1 (2 or 3 variables in the dataset). No more than 3 variables are allowed. If more than one are supplied, then they are assumed to be in order of occasion t+1, occasion t, and occasion t-1, respectively.", call. = FALSE)
   }
   if (length(indiv) > 1) {stop("Only one individual identification variable is allowed.", call. = FALSE)}
-  if (length(year) > 1) {stop("Only one census time variable is allowed, and it must refer to time t.", call. = FALSE)}
+  if (length(year) > 1) {stop("Only one observation occasion variable is allowed, and it must refer to occasion t.", call. = FALSE)}
   if (length(patch) > 1) {stop("Only one patch variable is allowed.", call. = FALSE)}
   
   if (is.element("surv", vitalrates)) {
@@ -414,7 +417,7 @@ modelsearch <- function(data, historical = TRUE, approach = "mixed",
   }
   
   if (fectime != 2 & fectime != 3) {
-    stop("The fectime option must equal either 2 or 3, depending on whether the fecundity response term is for time t or time t+1, respectively. The default is 2, corresponding to time t.", call. = FALSE)
+    stop("The fectime option must equal either 2 or 3, depending on whether the fecundity response term is for occasion t or occasion t+1, respectively. The default is 2, corresponding to occasion t.", call. = FALSE)
   }
   
   if (!is.na(age)) {
@@ -427,21 +430,21 @@ modelsearch <- function(data, historical = TRUE, approach = "mixed",
   
   if (any(!is.na(indcova))) {
     if (length(indcova) > 3) {
-      warning("Vector indcova holds the exact names of an individual covariate across times t+1, t, and t-1. Only the first three elements will be used.", call. = FALSE)
+      warning("Vector indcova holds the exact names of an individual covariate across occasions t+1, t, and t-1. Only the first three elements will be used.", call. = FALSE)
       indcova <- indcova[1:3]
     } else if (length(indcova) == 1) {
-      warning("Vector indcova requires the names of an individual covariate across times t+1, t, and, if historical t-1. Only 1 variable name was supplied, so this individual covariate will not be used.", call. = FALSE)
+      warning("Vector indcova requires the names of an individual covariate across occasions t+1, t, and, if historical t-1. Only 1 variable name was supplied, so this individual covariate will not be used.", call. = FALSE)
       indcova <- c("none", "none", "none")
     } else {
       if (length(which(names(data) == indcova[2])) == 0 && indcova[2] != "none") {
-        stop("Variable indcova must either equal either the exact names of an individual covariate across times t+1, t, and t-1, or be set to NA.", call. = FALSE)
+        stop("Variable indcova must either equal either the exact names of an individual covariate across occasions t+1, t, and t-1, or be set to NA.", call. = FALSE)
       } else {
         indcova2col <- which(names(data) == indcova[2])
       }
       
       if (length(indcova) == 3) {
         if (length(which(names(data) == indcova[3])) == 0 && indcova[3] != "none") {
-          stop("Variable indcova must either equal either the exact names of an individual covariate across times t+1, t, and t-1, or be set to NA.", call. = FALSE)
+          stop("Variable indcova must either equal either the exact names of an individual covariate across occasions t+1, t, and t-1, or be set to NA.", call. = FALSE)
         } else {
           indcova1col <- which(names(data) == indcova[3])
         }
@@ -453,21 +456,21 @@ modelsearch <- function(data, historical = TRUE, approach = "mixed",
   
   if (any(!is.na(indcovb))) {
     if (length(indcovb) > 3) {
-      warning("Vector indcovb holds the exact names of an individual covariate across times t+1, t, and t-1. Only the first three elements will be used.", call. = FALSE)
+      warning("Vector indcovb holds the exact names of an individual covariate across occasions t+1, t, and t-1. Only the first three elements will be used.", call. = FALSE)
       indcovb <- indcovb[1:3]
     } else if (length(indcovb) == 1) {
-      warning("Vector indcovb requires the names of an individual covariate across times t+1, t, and, if historical t-1. Only 1 variable name was supplied, so this individual covariate will not be used.", call. = FALSE)
+      warning("Vector indcovb requires the names of an individual covariate across occasions t+1, t, and, if historical t-1. Only 1 variable name was supplied, so this individual covariate will not be used.", call. = FALSE)
       indcovb <- c("none", "none", "none")
     } else {
       if (length(which(names(data) == indcovb[2])) == 0 && indcovb[2] != "none") {
-        stop("Variable indcovb must either equal either the exact names of an individual covariate across times t+1, t, and t-1, or be set to NA.", call. = FALSE)
+        stop("Variable indcovb must either equal either the exact names of an individual covariate across occasions t+1, t, and t-1, or be set to NA.", call. = FALSE)
       } else {
         indcovb2col <- which(names(data) == indcovb[2])
       }
       
       if (length(indcovb) == 3) {
         if (length(which(names(data) == indcovb[3])) == 0 && indcovb[3] != "none") {
-          stop("Variable indcovb must either equal either the exact names of an individual covariate across times t+1, t, and t-1, or be set to NA.", call. = FALSE)
+          stop("Variable indcovb must either equal either the exact names of an individual covariate across occasions t+1, t, and t-1, or be set to NA.", call. = FALSE)
         } else {
           indcovb1col <- which(names(data) == indcovb[3])
         }
@@ -479,21 +482,21 @@ modelsearch <- function(data, historical = TRUE, approach = "mixed",
   
   if (any(!is.na(indcovc))) {
     if (length(indcovc) > 3) {
-      warning("Vector indcovc holds the exact names of an individual covariate across times t+1, t, and t-1. Only the first three elements will be used.", call. = FALSE)
+      warning("Vector indcovc holds the exact names of an individual covariate across occasions t+1, t, and t-1. Only the first three elements will be used.", call. = FALSE)
       indcovc <- indcovc[1:3]
     } else if (length(indcovc) == 1) {
-      warning("Vector indcovc requires the names of an individual covariate across times t+1, t, and, if historical t-1. Only 1 variable name was supplied, so this individual covariate will not be used.", call. = FALSE)
+      warning("Vector indcovc requires the names of an individual covariate across occasions t+1, t, and, if historical t-1. Only 1 variable name was supplied, so this individual covariate will not be used.", call. = FALSE)
       indcovc <- c("none", "none", "none")
     } else {
       if (length(which(names(data) == indcovc[2])) == 0 && indcovc[2] != "none") {
-        stop("Variable indcovc must either equal either the exact names of an individual covariate across times t+1, t, and t-1, or be set to NA.", call. = FALSE)
+        stop("Variable indcovc must either equal either the exact names of an individual covariate across occasions t+1, t, and t-1, or be set to NA.", call. = FALSE)
       } else {
         indcovc2col <- which(names(data) == indcovc[2])
       }
       
       if (length(indcovc) == 3) {
         if (length(which(names(data) == indcovc[3])) == 0 && indcovc[3] != "none") {
-          stop("Variable indcovc must either equal either the exact names of an individual covariate across times t+1, t, and t-1, or be set to NA.", call. = FALSE)
+          stop("Variable indcovc must either equal either the exact names of an individual covariate across occasions t+1, t, and t-1, or be set to NA.", call. = FALSE)
         } else {
           indcovc1col <- which(names(data) == indcovc[3])
         }
@@ -525,7 +528,7 @@ modelsearch <- function(data, historical = TRUE, approach = "mixed",
   
   if (!is.na(year)) {
     if (length(which(names(data) == year)) == 0) {
-      stop("Variable year must either equal the exact name of the variable denoting time t in the dataset, or be set to NA.", call. = FALSE)
+      stop("Variable year must either equal the exact name of the variable denoting occasion t in the dataset, or be set to NA.", call. = FALSE)
     } else {
       yearcol <- which(names(data) == year)
     }
@@ -680,7 +683,7 @@ modelsearch <- function(data, historical = TRUE, approach = "mixed",
   
   surv.uns <- unique(surv.data[,which(names(surv.data) == surv[1])])
   if (length(surv.uns) == 1) {
-    warning("Survival to time t+1 appears to be constant, and so will be set to a constant.", call. = FALSE)
+    warning("Survival to occasion t+1 appears to be constant, and so will be set to a constant.", call. = FALSE)
     formulae$full.surv.model <- surv.uns[1]
   }
   
@@ -691,7 +694,7 @@ modelsearch <- function(data, historical = TRUE, approach = "mixed",
   if (formulae$full.obs.model != 1) {
     obs.uns <- unique(obs.data[,which(names(obs.data) == obs[1])])
     if (length(obs.uns) == 1) {
-      warning("Observation in time t+1 appears to be constant, and so will be set to a constant.", call. = FALSE)
+      warning("Observation in occasion t+1 appears to be constant, and so will be set to a constant.", call. = FALSE)
     formulae$full.obs.model <- obs.uns[1]
     }
   }
@@ -709,7 +712,7 @@ modelsearch <- function(data, historical = TRUE, approach = "mixed",
   if (formulae$full.size.model != 1) {
     size.uns <- unique(size.data[,which(names(size.data) == size[1])])
     if (length(size.uns) == 1) {
-      warning("Size in time t+1 appears to be constant, and so will be set to a constant.", call. = FALSE)
+      warning("Size in occasion t+1 appears to be constant, and so will be set to a constant.", call. = FALSE)
     formulae$full.size.model <- size.uns[1]
     }
   }
@@ -721,7 +724,7 @@ modelsearch <- function(data, historical = TRUE, approach = "mixed",
   if (formulae$full.repst.model != 1) {
     repst.uns <- unique(repst.data[,which(names(repst.data) == repst[1])])
     if (length(repst.uns) == 1) {
-      warning("Reproductive status in time t+1 appears to be constant, and so will be set to a constant.", call. = FALSE)
+      warning("Reproductive status in occasion t+1 appears to be constant, and so will be set to a constant.", call. = FALSE)
       formulae$full.repst.model <- repst.uns[1]
     }
   }
@@ -1990,7 +1993,7 @@ summary.lefkoMod <- function(object, ...) {
 #' 
 #' @return This function returns a list with the following elements:
 #' \item{coefficients}{Vector of fixed effect coefficients.}
-#' \item{years}{Vector of time coefficients, typically random.}
+#' \item{years}{Vector of occasion coefficients, typically random.}
 #' \item{patches}{Vector of patch coefficients, typically random.}
 #' \item{variances}{Residual variance terms associated with model.}
 #' \item{family}{Distribution of response term.}
@@ -2275,7 +2278,7 @@ summary.lefkoMod <- function(object, ...) {
   if (!is.na(glmmTMB::fixef(model)[["zi"]][paste0(paramnames[(which(paramnames$mainparams == "indcovb2")), "modelparams"], ":", paramnames[(which(paramnames$mainparams == "indcovc1")), "modelparams"])])) {indb2.indc1.zi <- glmmTMB::fixef(model)[["zi"]][paste0(paramnames[(which(paramnames$mainparams == "indcovb2")), "modelparams"], ":", paramnames[(which(paramnames$mainparams == "indcovc1")), "modelparams"])]}
   if (!is.na(glmmTMB::fixef(model)[["zi"]][paste0(paramnames[(which(paramnames$mainparams == "indcovb1")), "modelparams"], ":", paramnames[(which(paramnames$mainparams == "indcovc2")), "modelparams"])])) {indb1.indc2.zi <- glmmTMB::fixef(model)[["zi"]][paste0(paramnames[(which(paramnames$mainparams == "indcovb1")), "modelparams"], ":", paramnames[(which(paramnames$mainparams == "indcovc2")), "modelparams"])]}
   
-  #Here are the time and location bits
+  #Here are the occasion and location bits
   year.coefs <- glmmTMB::ranef(model)[["cond"]][[paramnames[(which(paramnames$mainparams == "year2")), "modelparams"]]]
   if (!all(is.na(glmmTMB::ranef(model)[["zi"]][[paramnames[(which(paramnames$mainparams == "year2")), "modelparams"]]]))) {
     year.zi <- glmmTMB::ranef(model)[["zi"]][[paramnames[(which(paramnames$mainparams == "year2")), "modelparams"]]]
@@ -2425,7 +2428,7 @@ summary.lefkoMod <- function(object, ...) {
 #' 
 #' @return This function returns a list with the following elements:
 #' \item{coefficients}{Vector of fixed effect coefficients.}
-#' \item{years}{Vector of time coefficients, typically random.}
+#' \item{years}{Vector of occasion coefficients, typically random.}
 #' \item{patches}{Vector of patch coefficients, typically random.}
 #' \item{variances}{Residual variance terms associated with model.}
 #' \item{family}{Distribution of response term.}
@@ -2576,7 +2579,7 @@ summary.lefkoMod <- function(object, ...) {
   if (!is.na(lme4::fixef(model)[paste0(paramnames[(which(paramnames$mainparams == "indcovb2")), "modelparams"], ":", paramnames[(which(paramnames$mainparams == "indcovc1")), "modelparams"])])) {indb2.indc1.coef <- lme4::fixef(model)[paste0(paramnames[(which(paramnames$mainparams == "indcovb2")), "modelparams"], ":", paramnames[(which(paramnames$mainparams == "indcovc1")), "modelparams"])]}
   if (!is.na(lme4::fixef(model)[paste0(paramnames[(which(paramnames$mainparams == "indcovb1")), "modelparams"], ":", paramnames[(which(paramnames$mainparams == "indcovc2")), "modelparams"])])) {indb1.indc2.coef <- lme4::fixef(model)[paste0(paramnames[(which(paramnames$mainparams == "indcovb1")), "modelparams"], ":", paramnames[(which(paramnames$mainparams == "indcovc2")), "modelparams"])]}
   
-  #These are the final bits related to time and location
+  #These are the final bits related to occasion and location
   year.coefs <- lme4::ranef(model)[[paramnames[(which(paramnames$mainparams == "year2")), "modelparams"]]]
   
   if (!all(is.na(lme4::fixef(model)[paramnames[(which(paramnames$mainparams == "patch")), "modelparams"]]))) {
@@ -2662,7 +2665,7 @@ summary.lefkoMod <- function(object, ...) {
 #' 
 #' @return This function returns a list with the following elements:
 #' \item{coefficients}{Vector of fixed effect coefficients.}
-#' \item{years}{Vector of time coefficients, typically random.}
+#' \item{years}{Vector of occasion coefficients, typically random.}
 #' \item{patches}{Vector of patch coefficients, typically random.}
 #' \item{variances}{Residual variance terms associated with model.}
 #' \item{family}{Distribution of response term.}
@@ -2813,7 +2816,7 @@ summary.lefkoMod <- function(object, ...) {
   if (!is.na(lme4::fixef(model)[paste0(paramnames[(which(paramnames$mainparams == "indcovb2")), "modelparams"], ":", paramnames[(which(paramnames$mainparams == "indcovc1")), "modelparams"])])) {indb2.indc1.coef <- lme4::fixef(model)[paste0(paramnames[(which(paramnames$mainparams == "indcovb2")), "modelparams"], ":", paramnames[(which(paramnames$mainparams == "indcovc1")), "modelparams"])]}
   if (!is.na(lme4::fixef(model)[paste0(paramnames[(which(paramnames$mainparams == "indcovb1")), "modelparams"], ":", paramnames[(which(paramnames$mainparams == "indcovc2")), "modelparams"])])) {indb1.indc2.coef <- lme4::fixef(model)[paste0(paramnames[(which(paramnames$mainparams == "indcovb1")), "modelparams"], ":", paramnames[(which(paramnames$mainparams == "indcovc2")), "modelparams"])]}
   
-  #Here are the time and location bits
+  #Here are the occasion and location bits
   year.coefs <- lme4::ranef(model)[[paramnames[(which(paramnames$mainparams == "year2")), "modelparams"]]]
   
   if (!all(is.na(lme4::fixef(model)[paramnames[(which(paramnames$mainparams == "patch")), "modelparams"]]))) {
@@ -2903,7 +2906,7 @@ summary.lefkoMod <- function(object, ...) {
 #' 
 #' @return This function returns a list with the following elements:
 #' \item{coefficients}{Vector of fixed effect coefficients.}
-#' \item{years}{Vector of time coefficients, typically random.}
+#' \item{years}{Vector of occasion coefficients, typically random.}
 #' \item{patches}{Vector of patch coefficients, typically random.}
 #' \item{variances}{Residual variance terms associated with model.}
 #' \item{family}{Distribution of response term.}
@@ -3196,7 +3199,7 @@ summary.lefkoMod <- function(object, ...) {
   if (!is.na(model$coefficients$zero[paste0(paramnames[(which(paramnames$mainparams == "indcovb2")), "modelparams"], ":", paramnames[(which(paramnames$mainparams == "indcovc1")), "modelparams"])])) {indb2.indc1.zi <- model$coefficients$zero[paste0(paramnames[(which(paramnames$mainparams == "indcovb2")), "modelparams"], ":", paramnames[(which(paramnames$mainparams == "indcovc1")), "modelparams"])]}
   if (!is.na(model$coefficients$zero[paste0(paramnames[(which(paramnames$mainparams == "indcovb1")), "modelparams"], ":", paramnames[(which(paramnames$mainparams == "indcovc2")), "modelparams"])])) {indb1.indc2.zi <- model$coefficients$zero[paste0(paramnames[(which(paramnames$mainparams == "indcovb1")), "modelparams"], ":", paramnames[(which(paramnames$mainparams == "indcovc2")), "modelparams"])]}
   
-  #These are the time and location bits
+  #These are the occasion and location bits
   year.coef <- 0
   year.trace <- apply(as.matrix(names(model$coefficients$count)), 1, function(X) {grepl(paramnames[(which(paramnames$mainparams == "year2")), "modelparams"], X)})
   
@@ -3383,7 +3386,7 @@ summary.lefkoMod <- function(object, ...) {
 #' 
 #' @return This function returns a list with the following elements:
 #' \item{coefficients}{Vector of fixed effect coefficients.}
-#' \item{years}{Vector of time coefficients.}
+#' \item{years}{Vector of occasion coefficients.}
 #' \item{patches}{Vector of patch coefficients.}
 #' \item{variances}{Residual variance terms associated with model.}
 #' \item{family}{Distribution of response term.}
@@ -3541,7 +3544,7 @@ summary.lefkoMod <- function(object, ...) {
   if (!is.na(model@coefficients[paste0(paramnames[(which(paramnames$mainparams == "indcovb2")), "modelparams"], ":", paramnames[(which(paramnames$mainparams == "indcovc1")), "modelparams"])])) {indb2.indc1.coef <- model@coefficients[paste0(paramnames[(which(paramnames$mainparams == "indcovb2")), "modelparams"], ":", paramnames[(which(paramnames$mainparams == "indcovc1")), "modelparams"])]}
   if (!is.na(model@coefficients[paste0(paramnames[(which(paramnames$mainparams == "indcovb1")), "modelparams"], ":", paramnames[(which(paramnames$mainparams == "indcovc2")), "modelparams"])])) {indb1.indc2.coef <- model@coefficients[paste0(paramnames[(which(paramnames$mainparams == "indcovb1")), "modelparams"], ":", paramnames[(which(paramnames$mainparams == "indcovc2")), "modelparams"])]}
   
-  #These are the time and location bits
+  #These are the occasion and location bits
   year.coef <- 0
   year.trace <- apply(as.matrix(names(model@coefficients)), 1, function(X) {grepl(paramnames[(which(paramnames$mainparams == "year2")), "modelparams"], X)})
   
@@ -3651,7 +3654,7 @@ summary.lefkoMod <- function(object, ...) {
 #' 
 #' @return This function returns a list with the following elements:
 #' \item{coefficients}{Vector of fixed effect coefficients.}
-#' \item{years}{Vector of time coefficients.}
+#' \item{years}{Vector of occasion coefficients.}
 #' \item{patches}{Vector of patch coefficients.}
 #' \item{variances}{Residual variance terms associated with model.}
 #' \item{family}{Distribution of response term.}
@@ -3810,7 +3813,7 @@ summary.lefkoMod <- function(object, ...) {
   if (!is.na(model$coefficients[paste0(paramnames[(which(paramnames$mainparams == "indcovb2")), "modelparams"], ":", paramnames[(which(paramnames$mainparams == "indcovc1")), "modelparams"])])) {indb2.indc1.coef <- model$coefficients[paste0(paramnames[(which(paramnames$mainparams == "indcovb2")), "modelparams"], ":", paramnames[(which(paramnames$mainparams == "indcovc1")), "modelparams"])]}
   if (!is.na(model$coefficients[paste0(paramnames[(which(paramnames$mainparams == "indcovb1")), "modelparams"], ":", paramnames[(which(paramnames$mainparams == "indcovc2")), "modelparams"])])) {indb1.indc2.coef <- model$coefficients[paste0(paramnames[(which(paramnames$mainparams == "indcovb1")), "modelparams"], ":", paramnames[(which(paramnames$mainparams == "indcovc2")), "modelparams"])]}
   
-  #These are the time and location bits
+  #These are the occasion and location bits
   year.coef <- 0
   year.trace <- apply(as.matrix(names(model$coefficients)), 1, function(X) {grepl(paramnames[(which(paramnames$mainparams == "year2")), "modelparams"], X)})
   
@@ -3922,7 +3925,7 @@ summary.lefkoMod <- function(object, ...) {
 #' 
 #' @return This function returns a list with the following elements:
 #' \item{coefficients}{Vector of fixed effect coefficients.}
-#' \item{years}{Vector of time coefficients.}
+#' \item{years}{Vector of occasion coefficients.}
 #' \item{patches}{Vector of patch coefficients.}
 #' \item{variances}{Residual variance terms associated with model.}
 #' \item{family}{Distribution of response term.}
@@ -4073,7 +4076,7 @@ summary.lefkoMod <- function(object, ...) {
   if (!is.na(model$coefficients[paste0(paramnames[(which(paramnames$mainparams == "indcovb2")), "modelparams"], ":", paramnames[(which(paramnames$mainparams == "indcovc1")), "modelparams"])])) {indb2.indc1.coef <- model$coefficients[paste0(paramnames[(which(paramnames$mainparams == "indcovb2")), "modelparams"], ":", paramnames[(which(paramnames$mainparams == "indcovc1")), "modelparams"])]}
   if (!is.na(model$coefficients[paste0(paramnames[(which(paramnames$mainparams == "indcovb1")), "modelparams"], ":", paramnames[(which(paramnames$mainparams == "indcovc2")), "modelparams"])])) {indb1.indc2.coef <- model$coefficients[paste0(paramnames[(which(paramnames$mainparams == "indcovb1")), "modelparams"], ":", paramnames[(which(paramnames$mainparams == "indcovc2")), "modelparams"])]}
   
-  #These are the time and location bits
+  #These are the occasion and location bits
   year.coef <- 0
   year.trace <- apply(as.matrix(names(model$coefficients)), 1, function(X) {grepl(paramnames[(which(paramnames$mainparams == "year2")), "modelparams"], X)})
   
@@ -4179,7 +4182,7 @@ summary.lefkoMod <- function(object, ...) {
 #' @return This function returns a list with single values or NAs for matrix
 #' estimation, with these falling within the following list elements:
 #' \item{coefficients}{Vector of fixed effect coefficients.}
-#' \item{years}{Vector of time coefficients.}
+#' \item{years}{Vector of occasion coefficients.}
 #' \item{patches}{Vector of patch coefficients.}
 #' \item{variances}{Residual variance terms associated with model.}
 #' \item{family}{Distribution of response term.}
@@ -4221,7 +4224,7 @@ summary.lefkoMod <- function(object, ...) {
 #' @return This function returns a list with single values or NAs for matrix
 #' estimation, with these falling within the following list elements:
 #' \item{coefficients}{Vector of fixed effect coefficients.}
-#' \item{years}{Vector of time coefficients.}
+#' \item{years}{Vector of occasion coefficients.}
 #' \item{patches}{Vector of patch coefficients.}
 #' \item{variances}{Residual variance terms associated with model.}
 #' \item{family}{Distribution of response term.}

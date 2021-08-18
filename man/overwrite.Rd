@@ -17,14 +17,14 @@ overwrite(
 )
 }
 \arguments{
-\item{stage3}{The name of the stage in time \emph{t}+1 in the transition to
+\item{stage3}{The name of the stage in occasion \emph{t}+1 in the transition
+to be replaced.}
+
+\item{stage2}{The name of the stage in occasion \emph{t} in the transition to
 be replaced.}
 
-\item{stage2}{The name of the stage in time \emph{t} in the transition to be 
-replaced.}
-
-\item{stage1}{The name of the stage in time \emph{t}-1 in the transition to
-be replaced. Only needed if a historical matrix is to be produced. Use
+\item{stage1}{The name of the stage in occasion \emph{t}-1 in the transition
+to be replaced. Only needed if a historical matrix is to be produced. Use
 \code{rep} if all reproductive stages are to be used, and leave empty or use
 \code{all} if all stages in stageframe are to be used.}
 
@@ -41,18 +41,19 @@ matrix to be estimated is historical.}
 \item{givenrate}{A fixed rate or probability to replace for the transition
 described by \code{stage3}, \code{stage2}, and \code{stage1}.}
 
-\item{type}{A vector denoting the kind of transition between times \emph{t}
-and \emph{t}+1 to be replaced. This should be entered as \code{1}, \code{S},
-or \code{s} for the replacement of a survival transition; or \code{2},
-\code{F}, or \code{f} for the replacement of a fecundity transition. If empty
-or not provided, then defaults to \code{1} for survival transition.}
+\item{type}{A vector denoting the kind of transition between occasions
+\emph{t} and \emph{t}+1 to be replaced. This should be entered as \code{1},
+\code{S}, or \code{s} for the replacement of a survival transition; or
+\code{2}, \code{F}, or \code{f} for the replacement of a fecundity
+transition. If empty or not provided, then defaults to \code{1} for survival
+transition.}
 
 \item{type_t12}{An optional vector denoting the kind of transition between
-times \emph{t}-1 and \emph{t}. Only necessary if a historical MPM in deVries
-format is desired. This should be entered as \code{1}, \code{S}, or \code{s}
-for a survival transition; or \code{2}, \code{F}, or \code{f} for a fecundity
-transitions. Defaults to \code{1} for survival transition, with impacts only
-on the construction of deVries-format hMPMs.}
+occasions \emph{t}-1 and \emph{t}. Only necessary if a historical MPM in
+deVries format is desired. This should be entered as \code{1}, \code{S}, or
+\code{s} for a survival transition; or \code{2}, \code{F}, or \code{f} for a
+fecundity transitions. Defaults to \code{1} for survival transition, with
+impacts only on the construction of deVries-format hMPMs.}
 }
 \value{
 A data frame that puts the above vectors together and can be used as
@@ -61,20 +62,22 @@ input in \code{\link{flefko3}()}, \code{\link{flefko2}()},
 \code{\link{aflefko2}()}.
 
 Variables in this data frame include the following:
-\item{stage3}{Stage at time \emph{t}+1 in the transition to be replaced.}
-\item{stage2}{Stage at time \emph{t} in the transition to be replaced.}
-\item{stage1}{Stage at time \emph{t}-1 in the transition to be replaced.}
-\item{eststage3}{Stage at time \emph{t}+1 in the transition to replace the
+\item{stage3}{Stage at occasion \emph{t}+1 in the transition to be replaced.}
+\item{stage2}{Stage at occasion \emph{t} in the transition to be replaced.}
+\item{stage1}{Stage at occasion \emph{t}-1 in the transition to be replaced.}
+\item{eststage3}{Stage at occasion \emph{t}+1 in the transition to replace
+the transition designated by \code{stage3}, \code{stage2}, and \code{stage1}.}
+\item{eststage2}{Stage at occasion \emph{t} in the transition to replace the
 transition designated by \code{stage3}, \code{stage2}, and \code{stage1}.}
-\item{eststage2}{Stage at time \emph{t} in the transition to replace the
-transition designated by \code{stage3}, \code{stage2}, and \code{stage1}.}
-\item{eststage1}{Stage at time \emph{t}-1 in the transition to replace the
-transition designated by \code{stage3}, \code{stage2}, and \code{stage1}.}
+\item{eststage1}{Stage at occasion \emph{t}-1 in the transition to replace
+the transition designated by \code{stage3}, \code{stage2}, and \code{stage1}.}
 \item{givenrate}{A constant to be used as the value of the transition.}
-\item{convtype}{Designates whether the transition from time \emph{t} to time
-\emph{t}+1 is a survival-transition probability (1) or a fecundity rate (2).}
-\item{convtype_t12}{Designates whether the transition from time \emph{t}-1 to
-time \emph{t} is a survival transition probability (1), a fecundity rate (2).}
+\item{convtype}{Designates whether the transition from occasion \emph{t} to
+occasion \emph{t}+1 is a survival-transition probability (1) or a fecundity
+rate (2).}
+\item{convtype_t12}{Designates whether the transition from occasion
+\emph{t}-1 to occasion \emph{t} is a survival transition probability (1), a
+fecundity rate (2).}
 }
 \description{
 \code{overwrite()} returns a data frame describing which particular
@@ -83,32 +86,30 @@ overwrite with either given rates and probabilities, or other estimated
 transitions.
 }
 \examples{
-cypover2r <- overwrite(stage3 = c("SD", "P1", "P2", "P3", "SL", "SL", "D", 
+cypover2r <- overwrite(stage3 = c("SD", "P1", "P2", "P3", "SL", "D", 
     "XSm", "Sm"),
-  stage2 = c("SD", "SD", "P1", "P2", "P3", "SL", "SL", "SL", "SL"),
-  eststage3 = c(NA, NA, NA, NA, NA, NA, "D", "XSm", "Sm"),
-  eststage2 = c(NA, NA, NA, NA, NA, NA, "XSm", "XSm", "XSm"),
-  givenrate = c(0.1, 0.2, 0.2, 0.2, 0.25, 0.4, NA, NA, NA),
-  type = c("S", "S", "S","S", "S", "S", "S", "S", "S"))
+  stage2 = c("SD", "SD", "P1", "P2", "P3", "SL", "SL", "SL"),
+  eststage3 = c(NA, NA, NA, NA, NA, "D", "XSm", "Sm"),
+  eststage2 = c(NA, NA, NA, NA, NA, "XSm", "XSm", "XSm"),
+  givenrate = c(0.1, 0.2, 0.2, 0.2, 0.25, NA, NA, NA),
+  type = c("S", "S", "S", "S", "S", "S", "S", "S"))
 
 cypover2r
 
 cypover3r <- overwrite(stage3 = c("SD", "SD", "P1", "P1", "P2", "P3", "SL", 
-    "SL", "SL", "D", "XSm", "Sm", "D", "XSm", "Sm"),
+    "D", "XSm", "Sm", "D", "XSm", "Sm"),
   stage2 = c("SD", "SD", "SD", "SD", "P1", "P2", "P3", "SL", "SL", "SL",
-    "SL", "SL", "SL", "SL", "SL"),
-  stage1 = c("SD", "rep", "SD", "rep", "SD", "P1", "P2", "P3", "SL", "P3",
-    "P3", "P3", "SL", "SL", "SL"),
-  eststage3 = c(NA, NA, NA, NA, NA, NA, NA, NA, NA, "D", "XSm", "Sm", "D",
-    "XSm", "Sm"),
-  eststage2 = c(NA, NA, NA, NA, NA, NA, NA, NA, NA, "XSm", "XSm", "XSm",
-    "XSm", "XSm", "XSm"),
-  eststage1 = c(NA, NA, NA, NA, NA, NA, NA, NA, NA, "XSm", "XSm", "XSm",
-    "XSm", "XSm", "XSm"),
-  givenrate = c(0.1, 0.1, 0.2, 0.2, 0.2, 0.2, 0.25, 0.4, 0.4, NA, NA, NA, NA,
-    NA, NA),
-  type = c("S", "S", "S", "S", "S", "S", "S", "S", "S", "S", "S", "S", "S",
-    "S", "S"))
+    "SL", "SL", "SL"),
+  stage1 = c("SD", "rep", "SD", "rep", "SD", "P1", "P2", "P3", "P3", "P3",
+    "SL", "SL", "SL"),
+  eststage3 = c(NA, NA, NA, NA, NA, NA, NA, "D", "XSm", "Sm", "D", "XSm",
+    "Sm"),
+  eststage2 = c(NA, NA, NA, NA, NA, NA, NA, "XSm", "XSm", "XSm", "XSm",
+    "XSm", "XSm"),
+  eststage1 = c(NA, NA, NA, NA, NA, NA, NA, "XSm", "XSm", "XSm", "XSm",
+    "XSm", "XSm"),
+  givenrate = c(0.1, 0.1, 0.2, 0.2, 0.2, 0.2, 0.25, NA, NA, NA, NA, NA, NA),
+  type = c("S", "S", "S", "S", "S", "S", "S", "S", "S", "S", "S", "S", "S"))
 
 cypover3r
 

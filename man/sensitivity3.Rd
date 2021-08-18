@@ -19,9 +19,9 @@ The value returned depends on the class of the \code{mats} argument.
 \code{sensitivity3()} is a generic function that returns the sensitivity of
 the population growth rate to the elements of the matrices in a matrix
 population model. Currently, this function estimates both deterministic and
-stochastic sensitivities, where the growth rate is \eqn{\lambda} in the former
-case and the log of the stochastic \eqn{\lambda} in the latter case. This
-function is made to handle very large and sparse matrices supplied as
+stochastic sensitivities, where the growth rate is \eqn{\lambda} in the
+former case and the log of the stochastic \eqn{\lambda} in the latter case.
+This function is made to handle very large and sparse matrices supplied as
 \code{lefkoMat} objects, as lists of matrices, and as individual matrices.
 }
 \examples{
@@ -95,15 +95,15 @@ cypraw_v1 <- verticalize3(data = cypdata, noyears = 6, firstyear = 2004,
   stageassign = cypframe_raw, stagesize = "sizeadded", NAas0 = TRUE,
   NRasRep = TRUE)
 
-cypsupp2r <- supplemental(stage3 = c("SD", "P1", "P2", "P3", "SL", "SL", "D", 
+cypsupp2r <- supplemental(stage3 = c("SD", "P1", "P2", "P3", "SL", "D", 
     "XSm", "Sm", "SD", "P1"),
-  stage2 = c("SD", "SD", "P1", "P2", "P3", "SL", "SL", "SL", "SL", "rep",
+  stage2 = c("SD", "SD", "P1", "P2", "P3", "SL", "SL", "SL", "rep",
     "rep"),
-  eststage3 = c(NA, NA, NA, NA, NA, NA, "D", "XSm", "Sm", NA, NA),
-  eststage2 = c(NA, NA, NA, NA, NA, NA, "XSm", "XSm", "XSm", NA, NA),
-  givenrate = c(0.10, 0.20, 0.20, 0.20, 0.25, 0.40, NA, NA, NA, NA, NA),
-  multiplier = c(NA, NA, NA, NA, NA, NA, NA, NA, NA, 0.5, 0.5),
-  type =c(1, 1, 1, 1, 1, 1, 1, 1, 1, 3, 3),
+  eststage3 = c(NA, NA, NA, NA, NA, "D", "XSm", "Sm", NA, NA),
+  eststage2 = c(NA, NA, NA, NA, NA, "XSm", "XSm", "XSm", NA, NA),
+  givenrate = c(0.10, 0.20, 0.20, 0.20, 0.25, NA, NA, NA, NA, NA),
+  multiplier = c(NA, NA, NA, NA, NA, NA, NA, NA, 0.5, 0.5),
+  type =c(1, 1, 1, 1, 1, 1, 1, 1, 3, 3),
   stageframe = cypframe_raw, historical = FALSE)
 
 cypmatrix2r <- rlefko2(data = cypraw_v1, stageframe = cypframe_raw, 

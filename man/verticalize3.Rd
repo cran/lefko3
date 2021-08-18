@@ -53,7 +53,7 @@ input.}
 \item{noyears}{The number of years or observation periods in the dataset. A
 valid integer is required as input.}
 
-\item{firstyear}{The first year or time of observation. Defaults to 1.}
+\item{firstyear}{The first year or occasion of observation. Defaults to 1.}
 
 \item{popidcol}{A variable name or column number corresponding to the 
 identity of the population for each individual.}
@@ -65,21 +65,21 @@ within populations.}
 \item{individcol}{A variable name or column number corresponding to the 
 identity of each individual.}
 
-\item{blocksize}{The number of variables corresponding to each time in the
-input dataset designated in \code{data}, if a set pattern of variables is
-used for each observation time in the data frame used as input. If such a
+\item{blocksize}{The number of variables corresponding to each occasion in
+the input dataset designated in \code{data}, if a set pattern of variables is
+used for each observation occasion in the data frame used as input. If such a
 pattern is not used, and all variable names are properly noted as character
 vectors in the other input variables, then this may be set to NA. Defaults to
 NA.}
 
 \item{xcol}{A variable name(s) or column number(s) corresponding to the x 
-coordinate of each individual, or each individual-time combination, in
+coordinate of each individual, or each individual-occasion combination, in
 Cartesian space. Can refer to the only instance, the first instance, or all
 instances of x variables. In the last case, the values should be entered as
 a vector.}
 
 \item{ycol}{A variable name(s) or column number(s) corresponding to the y
-coordinate of each individual, or each individual-time combination, in
+coordinate of each individual, or each individual-occasion combination, in
 Cartesian space. Can refer to the only instance, the first instance, or all
 instances of y variables. In the last case, the values should be entered as
 a vector.}
@@ -92,17 +92,17 @@ as 0 or NA. Can refer to the first instance, or all instances of these
 variables. In the latter case, the values should be entered as a vector.}
 
 \item{sizeacol}{A variable name(s) or column number(s) corresponding to the
-size entry associated with the first year or observation time in the dataset.
-Can refer to the first instance, or all instances of these variables. In the
-latter case, the values should be entered as a vector.}
-
-\item{sizebcol}{A second variable name(s) or column number(s) corresponding
-tp the size entry associated with the first year or observation time in the
+size entry associated with the first year or observation occasion in the
 dataset. Can refer to the first instance, or all instances of these
 variables. In the latter case, the values should be entered as a vector.}
 
+\item{sizebcol}{A second variable name(s) or column number(s) corresponding
+tp the size entry associated with the first year or observation occasion in
+the dataset. Can refer to the first instance, or all instances of these
+variables. In the latter case, the values should be entered as a vector.}
+
 \item{sizeccol}{A third variable name(s) or column number(s) corresponding to
-the size entry associated with the first year or observation time in the
+the size entry associated with the first year or observation occasion in the
 dataset. Can refer to the first instance, or all instances of these variables.
 In the latter case, the values should be entered as a vector.}
 
@@ -121,13 +121,13 @@ reproduction. Can refer to the first instance, or all instances of these
 variables. In the latter case, the values should be entered as a vector.}
 
 \item{fecacol}{A variable name(s) or column number(s) denoting fecundity
-associated with the first year or observation time in the input dataset. This
-may represent egg counts, fruit counts, seed production, etc. Can refer to
-the first instance, or all instances of these variables. In the latter case,
-the values should be entered as a vector.}
+associated with the first year or observation occasion in the input dataset.
+This may represent egg counts, fruit counts, seed production, etc. Can refer
+to the first instance, or all instances of these variables. In the latter
+case, the values should be entered as a vector.}
 
 \item{fecbcol}{A second variable name(s) or column number(s) denoting
-fecundity associated with the first year or observation time in the input
+fecundity associated with the first year or observation occasion in the input
 dataset. This may represent egg counts, fruit counts, seed production, etc.
 Can refer to the first instance, or all instances of these variables. In the
 latter case, the values should be entered as a vector.}
@@ -148,27 +148,27 @@ instance, the first instance, or all instances of these variables. In the
 last case, the values should be entered as a vector.}
 
 \item{aliveacol}{Variable name(s) or column number(s) providing information
-on whether an individual is alive at a given time. If used, living status
+on whether an individual is alive at a given occasion. If used, living status
 must be designated as binomial (living = 1, dead = 0). Can refer to the first
 instance of a living status variable in the dataset, or equal a full vector
 of all living status variables in temporal order.}
 
 \item{deadacol}{Variable name(s) or column number(s) providing information on
-whether an individual is alive at a given time. If used, dead status must be
-designated as binomial (dead = 1, living = 0).  Can refer to the first
+whether an individual is alive at a given occasion. If used, dead status must
+be designated as binomial (dead = 1, living = 0).  Can refer to the first
 instance of a dead status variable in the dataset, or equal a full vector
 of all dead status variables in temporal order.}
 
 \item{obsacol}{A variable name(s) or column number(s) providing information
-on whether an individual is in an observable stage at a given time. If used, 
-observation status must be designated as binomial (observed = 1, not 
+on whether an individual is in an observable stage at a given occasion. If
+used, observation status must be designated as binomial (observed = 1, not 
 observed = 0). Can refer to the first instance of an observation status
 variable in the dataset, or equal a full vector of all observation status
 variables in temporal order.}
 
 \item{nonobsacol}{A variable name(s) or column number(s) providing
 information on whether an individual is in an unobservable stage at a given
-time. If used, observation status must be designated as binomial (not
+occasion. If used, observation status must be designated as binomial (not
 observed = 1, observed = 0). Can refer to the first instance of a
 non-observation status variable in the dataset, or equal a full vector of all
 non-observation status variables in temporal order.}
@@ -192,8 +192,8 @@ it equivalent to \code{fecacol}. This can be useful if two fecundity
 variables have related but unequal units. Defaults to 1.}
 
 \item{stagecol}{Optional variable name(s) or column number(s) corresponding
-to life history stage at a given time. Can refer to the first instance of a
-stage identity variable in the dataset, or equal a full vector of all
+to life history stage at a given occasion. Can refer to the first instance of
+a stage identity variable in the dataset, or equal a full vector of all
 stage identity variables in temporal order.}
 
 \item{stageassign}{The stageframe object identifying the life history model
@@ -211,7 +211,7 @@ Note that if NA is the value to keep, then this function will alter all NAs
 to 0 values, and all other values to 1, treating 0 as the value to keep.}
 
 \item{censorRepeat}{A logical value indicating whether the censor variable
-is a single column, or whether it repeats across time blocks. Defaults to
+is a single column, or whether it repeats across occasion blocks. Defaults to
 TRUE.}
 
 \item{censor}{A logical variable determining whether the output data should 
@@ -220,7 +220,7 @@ FALSE.}
 
 \item{coordsRepeat}{A logical value indicating whether x and y coordinates
 correspond to a single x and a single y column. If TRUE, then each
-observation time has its own x and y variables. Defaults to FALSE.}
+observation occasion has its own x and y variables. Defaults to FALSE.}
 
 \item{spacing}{The spacing at which density should be estimated, if density
 estimation is desired and x and y coordinates are supplied. Given in the same
@@ -243,68 +243,68 @@ some invariant state variables should be removed from the output dataset.
 Defaults to TRUE.}
 
 \item{a2check}{A logical variable indicating whether to retain all data with
-living status at time \emph{t} equal to 0. Defaults to FALSE, and should be
-kept on FALSE except to inspect potential errors in the dataset.}
+living status at occasion \emph{t} equal to 0. Defaults to FALSE, and should
+be kept on FALSE except to inspect potential errors in the dataset.}
 }
 \value{
 If all inputs are properly formatted, then this function will output
 a historical vertical data frame (class \code{hfvdata}), meaning that the
-output data frame will have three consecutive times of size and reproductive
-data per individual per row. This data frame is in standard format for all
-functions used in \code{lefko3}, and so can be used without further
-modification.
+output data frame will have three consecutive occasions of size and
+reproductive data per individual per row. This data frame is in standard
+format for all functions used in \code{lefko3}, and so can be used without
+further modification.
 
 Variables in this data frame include the following:
 \item{rowid}{Unique identifier for the row of the data frame.}
 \item{popid}{Unique identifier for the population, if given.}
 \item{patchid}{Unique identifier for patch within population, if given.}
 \item{individ}{Unique identifier for the individual.}
-\item{year2}{Year or time at time \emph{t}.}
-\item{firstseen}{Year or time of first observation.}
-\item{lastseen}{Year or time of last observation.}
-\item{obsage}{Observed age in time \emph{t}, assuming first observation
+\item{year2}{Year or time at occasion \emph{t}.}
+\item{firstseen}{Occasion of first observation.}
+\item{lastseen}{Occasion of last observation.}
+\item{obsage}{Observed age in occasion \emph{t}, assuming first observation
 corresponds to age = 0.}
 \item{obslifespan}{Observed lifespan, given as \code{lastseen - firstseen + 1}.}
-\item{xpos1,xpos2,xpos3}{X position in Cartesian space in times \emph{t}-1,
-\emph{t}, and \emph{t}+1, respectively, if provided.}
-\item{ypos1,ypos2,ypos3}{Y position in Cartesian space in times \emph{t}-1, 
-\emph{t}, and \emph{t}+1, respectively, if provided.}
-\item{sizea1,sizea2,sizea3}{Main size measurement in times \emph{t}-1, 
+\item{xpos1,xpos2,xpos3}{X position in Cartesian space in occasions
+\emph{t}-1, \emph{t}, and \emph{t}+1, respectively, if provided.}
+\item{ypos1,ypos2,ypos3}{Y position in Cartesian space in occasions
+\emph{t}-1, \emph{t}, and \emph{t}+1, respectively, if provided.}
+\item{sizea1,sizea2,sizea3}{Main size measurement in occasions \emph{t}-1, 
 \emph{t}, and \emph{t}+1, respectively.}
-\item{sizeb1,sizeb2,sizeb3}{Secondary size measurement in times \emph{t}-1, 
-\emph{t}, and \emph{t}+1, respectively.}
-\item{sizec1,sizec2,sizec3}{Tertiary measurement in times \emph{t}-1, 
+\item{sizeb1,sizeb2,sizeb3}{Secondary size measurement in occasions
+\emph{t}-1, \emph{t}, and \emph{t}+1, respectively.}
+\item{sizec1,sizec2,sizec3}{Tertiary measurement in occasions \emph{t}-1, 
 \emph{t}, and \emph{t}+1, respectively.}
 \item{size1added,size2added,size3added}{Sum of primary, secondary, and 
-tertiary size measurements in times \emph{t}-1, \emph{t}, and \emph{t}+1, 
+tertiary size measurements in occasions \emph{t}-1, \emph{t}, and \emph{t}+1, 
 respectively.}
 \item{repstra1,repstra2,repstra3}{Main numbers of reproductive structures in
-times \emph{t}-1, \emph{t}, and \emph{t}+1, respectively.}
+occasions \emph{t}-1, \emph{t}, and \emph{t}+1, respectively.}
 \item{repstrb1,repstrb2,repstrb3}{Secondary numbers of reproductive 
-structures in times \emph{t}-1, \emph{t}, and \emph{t}+1, respectively.}
+structures in occasions \emph{t}-1, \emph{t}, and \emph{t}+1, respectively.}
 \item{repstr1added,repstr2added,repstr3added}{Sum of primary and secondary
-reproductive structures in times \emph{t}-1, \emph{t}, and \emph{t}+1, 
+reproductive structures in occasions \emph{t}-1, \emph{t}, and \emph{t}+1, 
 respectively.}
-\item{feca1,feca2,feca3}{Main numbers of offspring in times \emph{t}-1, 
+\item{feca1,feca2,feca3}{Main numbers of offspring in occasions \emph{t}-1, 
 \emph{t}, and \emph{t}+1, respectively.}
-\item{fecb1,fecb2, fecb3}{Secondary numbers of offspring in times \emph{t}-1,
-\emph{t}, and \emph{t}+1, respectively.}
+\item{fecb1,fecb2, fecb3}{Secondary numbers of offspring in occasions
+\emph{t}-1, \emph{t}, and \emph{t}+1, respectively.}
 \item{fec1added,fec2added,fec3added}{Sum of primary and secondary fecundity
-in times \emph{t}-1, \emph{t}, and \emph{t}+1, respectively.}
-\item{censor1,censor2,censor3}{Censor state values in times \emph{t}-1, 
+in occasions \emph{t}-1, \emph{t}, and \emph{t}+1, respectively.}
+\item{censor1,censor2,censor3}{Censor state values in occasions \emph{t}-1, 
 \emph{t}, and \emph{t}+1, respectively.}
 \item{juvgiven1,juvgiven2,juvgiven3}{Binomial variable indicating whether
-individual is juvenile in times \emph{t}-1, \emph{t}, and \emph{t}+1. Only 
-given if \code{juvcol} is provided.}
-\item{obsstatus1,obsstatus2,obsstatus3}{Binomial observation state in times
-\emph{t}-1, \emph{t}, and \emph{t}+1, respectively.}
-\item{repstatus1,repstatus2,repstatus3}{Binomial reproductive state in times 
-\emph{t}-1, \emph{t}, and \emph{t}+1, respectively.}
+individual is juvenile in occasions \emph{t}-1, \emph{t}, and \emph{t}+1.
+Only given if \code{juvcol} is provided.}
+\item{obsstatus1,obsstatus2,obsstatus3}{Binomial observation state in
+occasions \emph{t}-1, \emph{t}, and \emph{t}+1, respectively.}
+\item{repstatus1,repstatus2,repstatus3}{Binomial reproductive state in
+occasions \emph{t}-1, \emph{t}, and \emph{t}+1, respectively.}
 \item{fecstatus1,fecstatus2,fecstatus3}{Binomial offspring production state
-in times \emph{t}-1, \emph{t}, and \emph{t}+1, respectively.}
-\item{matstatus1,matstatus2,matstatus3}{Binomial maturity state in times
+in occasions \emph{t}-1, \emph{t}, and \emph{t}+1, respectively.}
+\item{matstatus1,matstatus2,matstatus3}{Binomial maturity state in occasions
 \emph{t}-1, \emph{t}, and \emph{t}+1, respectively.}
-\item{alive1,alive2,alive3}{Binomial state as alive in times \emph{t}-1,
+\item{alive1,alive2,alive3}{Binomial state as alive in occasions \emph{t}-1,
  \emph{t}, and \emph{t}+1, respectively.}
 \item{density}{Density of individuals per unit designated in \code{spacing}.
 Only given if spacing is not NA.}
@@ -335,7 +335,7 @@ working with a dataset. Typically, these situations can be identified as
 arise with no concurrent \code{NoMatch} entries, which indicates that the
 input dataset contained conflicting state data at once suggesting that the
 individual is in some stage but is also dead. The latter is removed if the
-conflict occurs in time \emph{t} or time \emph{t}-1, as only living entries
+conflict occurs in occasion \emph{t} or \emph{t}-1, as only living entries
 are allowed in these times.
 
 Care should be taken to avoid variables with negative values indicating size,
@@ -468,15 +468,15 @@ cypraw_v1 <- verticalize3(data = cypdata, noyears = 6, firstyear = 2004,
   stageassign = cypframe_raw, stagesize = "sizeadded", NAas0 = TRUE,
   NRasRep = TRUE)
 
-cypsupp2r <- supplemental(stage3 = c("SD", "P1", "P2", "P3", "SL", "SL", "D", 
+cypsupp2r <- supplemental(stage3 = c("SD", "P1", "P2", "P3", "SL", "D", 
     "XSm", "Sm", "SD", "P1"),
-  stage2 = c("SD", "SD", "P1", "P2", "P3", "SL", "SL", "SL", "SL", "rep",
+  stage2 = c("SD", "SD", "P1", "P2", "P3", "SL", "SL", "SL", "rep",
     "rep"),
-  eststage3 = c(NA, NA, NA, NA, NA, NA, "D", "XSm", "Sm", NA, NA),
-  eststage2 = c(NA, NA, NA, NA, NA, NA, "XSm", "XSm", "XSm", NA, NA),
-  givenrate = c(0.10, 0.20, 0.20, 0.20, 0.25, 0.40, NA, NA, NA, NA, NA),
-  multiplier = c(NA, NA, NA, NA, NA, NA, NA, NA, NA, 0.5, 0.5),
-  type =c(1, 1, 1, 1, 1, 1, 1, 1, 1, 3, 3),
+  eststage3 = c(NA, NA, NA, NA, NA, "D", "XSm", "Sm", NA, NA),
+  eststage2 = c(NA, NA, NA, NA, NA, "XSm", "XSm", "XSm", NA, NA),
+  givenrate = c(0.10, 0.20, 0.20, 0.20, 0.25, NA, NA, NA, NA, NA),
+  multiplier = c(NA, NA, NA, NA, NA, NA, NA, NA, 0.5, 0.5),
+  type =c(1, 1, 1, 1, 1, 1, 1, 1, 3, 3),
   stageframe = cypframe_raw, historical = FALSE)
 
 cypmatrix2r <- rlefko2(data = cypraw_v1, stageframe = cypframe_raw, 
@@ -515,15 +515,15 @@ cypraw_v1 <- verticalize3(data = cypdata, noyears = 6, firstyear = 2004,
   fecacol = "Pod.04", stageassign = cypframe_raw, stagesize = "sizeadded",
   NAas0 = TRUE, NRasRep = TRUE)
 
-cypsupp2r <- supplemental(stage3 = c("SD", "P1", "P2", "P3", "SL", "SL", "D", 
+cypsupp2r <- supplemental(stage3 = c("SD", "P1", "P2", "P3", "SL", "D", 
     "XSm", "Sm", "SD", "P1"),
-  stage2 = c("SD", "SD", "P1", "P2", "P3", "SL", "SL", "SL", "SL", "rep",
+  stage2 = c("SD", "SD", "P1", "P2", "P3", "SL", "SL", "SL", "rep",
     "rep"),
-  eststage3 = c(NA, NA, NA, NA, NA, NA, "D", "XSm", "Sm", NA, NA),
-  eststage2 = c(NA, NA, NA, NA, NA, NA, "XSm", "XSm", "XSm", NA, NA),
-  givenrate = c(0.10, 0.20, 0.20, 0.20, 0.25, 0.40, NA, NA, NA, NA, NA),
-  multiplier = c(NA, NA, NA, NA, NA, NA, NA, NA, NA, 0.5, 0.5),
-  type =c(1, 1, 1, 1, 1, 1, 1, 1, 1, 3, 3),
+  eststage3 = c(NA, NA, NA, NA, NA, "D", "XSm", "Sm", NA, NA),
+  eststage2 = c(NA, NA, NA, NA, NA, "XSm", "XSm", "XSm", NA, NA),
+  givenrate = c(0.10, 0.20, 0.20, 0.20, 0.25, NA, NA, NA, NA, NA),
+  multiplier = c(NA, NA, NA, NA, NA, NA, NA, NA, 0.5, 0.5),
+  type =c(1, 1, 1, 1, 1, 1, 1, 1, 3, 3),
   stageframe = cypframe_raw, historical = FALSE)
 
 cypmatrix2r <- rlefko2(data = cypraw_v1, stageframe = cypframe_raw, 

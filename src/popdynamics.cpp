@@ -13,7 +13,8 @@ using namespace arma;
 //' @param Xmat A matrix originally a part of a list object.
 //' @param allindices A vector of indices to remove from the matrix
 //' 
-//' @return A column vector of certain elements from the input matrix.
+//' @return A column vector of specifically called elements from the input
+//' matrix.
 //' 
 //' @keywords internal
 //' @noRd
@@ -44,13 +45,64 @@ arma::vec moreflagrantcrap(arma::mat Xmat) {
   return newcol;
 }
 
+//' Calculate Logarithms of Non-Zero Elements of Sparse Matrix
+//' 
+//' Function \code{spmat_log} finds the non-zero elements in a sparse matrix,
+//' calculates their logs, and inserts them back into the matrix and returns it.
+//' Based on code developed by Coatless Professor and posted by him on
+//' StackOverflow.
+//' 
+//' @param B A sparse matrix. Note that this is assumed to be a population
+//' projection matrix, meaning that all values are either 0 or positive.
+//' 
+//' @return A sparse matrix with non-zero values as logs of the elements in the
+//' input matrix.
+//' 
+//' @keywords internal
+//' @noRd
+// [[Rcpp::export]]
+arma::sp_mat spmat_log(arma::sp_mat coremat)
+{
+  arma::sp_mat::const_iterator start = coremat.begin();
+  arma::sp_mat::const_iterator end   = coremat.end();
+  arma::sp_mat::const_iterator it = start; 
+  
+  int n = std::distance(start, end);
+  
+  if (n <= 0) {
+    Rcpp::stop("No values found!", false);
+  }
+  
+  arma::umat locs(2, n);
+  arma::uvec temp(2);
+  arma::vec vals(n);
+  arma::vec logvals(n);
+  locs.zeros();
+  temp.zeros();
+  vals.zeros();
+  logvals.zeros();
+  
+  for(int i = 0; i < n; ++i) {
+    temp(0) = it.row();
+    temp(1) = it.col();
+    locs.col(i) = temp;
+    vals(i) = coremat(temp(0), temp(1));
+    logvals(i) = log(vals(i));
+    ++it; // increment
+  }
+  
+  coremat = arma::sp_mat(locs, logvals, coremat.n_rows, coremat.n_cols);
+  
+  return coremat;
+}
+
 //' Estimates Mean LefkoMat Object for Historical MPM
 //' 
 //' Function \code{turbogeodiesel()} estimates mean historical population
 //' projection matrices, treating the mean as element-wise arithmetic.
 //' 
-//' @param loy A data frame denoting the population, patch, and time step
-//' designation of each matrix. Includes a total of 9 variables.
+//' @param loy A data frame denoting the population, patch, and occasion
+//' designation for each matrix. Includes a total of 9 variables.
 //' @param Umats A matrix with all U matrices turned into columns.
 //' @param Fmats A matrix with all F matrices turned into columns.
 //' @param hstages This is the \code{hstages} object held by \code{mats}.
@@ -62,7 +114,7 @@ arma::vec moreflagrantcrap(arma::mat Xmat) {
 //' @param popmats A logical value stating whether to estimate population-level
 //' means.
 //' 
-//' @return A list using the basic blueprint of a lefkoMat object.
+//' @return A list using the structure of a lefkoMat object.
 //' 
 //' @keywords internal
 //' @noRd
@@ -215,7 +267,7 @@ List turbogeodiesel(DataFrame loy, List Umats, List Fmats, DataFrame hstages,
   zerovec.zeros();
   arma::uvec allindices = join_cols(zerovec, hsindex);
   
-  // Now we build a U and F matrices of element-wise arithmetic means, where
+  // Now we build U and F matrices of element-wise arithmetic means, where
   // each column corresponds to the predicted non-zero elements of each mean
   // matrix, and each matrix is presented as a column vector within the 
   // overall matrix. The A matrix is the sum of U and F.
@@ -320,7 +372,6 @@ List turbogeodiesel(DataFrame loy, List Umats, List Fmats, DataFrame hstages,
   }
   
   // Matrix QC output
-  
   arma::uvec utrans = find(umatvec);
   arma::uvec ftrans = find(fmatvec);
   int totalutrans = utrans.n_elem;
@@ -347,7 +398,7 @@ List turbogeodiesel(DataFrame loy, List Umats, List Fmats, DataFrame hstages,
 //' function can handle both normal ahistorical MPMs and age x stage ahistorical
 //' MPMs.
 //' 
-//' @param loy A data frame denoting the population, patch, and time step
+//' @param loy A data frame denoting the population, patch, and occasion
 //' designation of each matrix. Includes a total of 9 variables.
 //' @param Umats A matrix with all U matrices turned into columns.
 //' @param Fmats A matrix with all F matrices turned into columns.
@@ -359,7 +410,7 @@ List turbogeodiesel(DataFrame loy, List Umats, List Fmats, DataFrame hstages,
 //' @param popmats A logical value stating whether to estimate population-level
 //' means.
 //' 
-//' @return A list using the basic blueprint of a LefkoMat object.
+//' @return A list using the structure of a LefkoMat object.
 //' 
 //' @keywords internal
 //' @noRd
@@ -467,7 +518,7 @@ List geodiesel(DataFrame loy, List Umats, List Fmats, DataFrame agestages,
   
   int numstages = astages.n_elem * agemultiplier;
   
-  // Now we build a U and F matrices of element-wise arithmetic means, where
+  // Now we build U and F matrices of element-wise arithmetic means, where
   // each column corresponds to the predicted non-zero elements of each mean
   // matrix, and each matrix is presented as a column vector within the 
   // overall matrix. The A matrix is the sum of U and F.
@@ -538,8 +589,7 @@ List geodiesel(DataFrame loy, List Umats, List Fmats, DataFrame agestages,
   DataFrame cheatsheet = DataFrame::create(Named("pop") = poporder_redone, 
     _["patch"] = patchorder_redone);
   
-  // Now we will create the main list objects holding the matrices
-  
+  // Now we will create the main list objects to hold the matrices
   arma::mat umat_base = umatvec.col(0);
   umat_base.reshape(numstages, numstages);
   
@@ -580,8 +630,8 @@ List geodiesel(DataFrame loy, List Umats, List Fmats, DataFrame agestages,
   int totalftrans = ftrans.n_elem;
   
   arma::vec matrixqc(3);
-  matrixqc(0) = totalutrans; // summed number of u transitions
-  matrixqc(1) = totalftrans; // summed number of f transitions
+  matrixqc(0) = totalutrans; // summed number of U transitions
+  matrixqc(1) = totalftrans; // summed number of F transitions
   matrixqc(2) = totalmatrices;
   
   // Final output
@@ -595,8 +645,8 @@ List geodiesel(DataFrame loy, List Umats, List Fmats, DataFrame agestages,
 
 //' Full Eigen Analysis of a Single Dense Matrix
 //' 
-//' \code{decomp3()} returns all eigenvalues, right eigenvectors, and left
-//' eigenvectors estimated for a matrix by the \code{eig_gen}() function
+//' Function \code{decomp3()} returns all eigenvalues, right eigenvectors, and
+//' left eigenvectors estimated for a matrix by the \code{eig_gen}() function
 //' in the C++ Armadillo library. Works with dense matrices.
 //' 
 //' @param Amat A population projection matrix of class \code{matrix}.
@@ -624,8 +674,8 @@ List decomp3(arma::mat Amat) {
 
 //' Full Eigen Analysis of a Single Sparse Matrix
 //' 
-//' \code{decomp3sp()} returns all eigenvalues, right eigenvectors, and left
-//' eigenvectors estimated for a matrix by the \code{eigs_gen}() function
+//' Function \code{decomp3sp()} returns all eigenvalues, right eigenvectors, and
+//' left eigenvectors estimated for a matrix by the \code{eigs_gen}() function
 //' in the C++ Armadillo library. Works with sparse matrices.
 //' 
 //' @param Amat A population projection matrix of class \code{matrix}.
@@ -657,10 +707,49 @@ List decomp3sp(arma::mat Amat) {
   return output;
 }
 
+//' Full Eigen Analysis of a Single Sparse Matrix, with Sparse Input
+//' 
+//' \code{decomp3sp_inp()} returns all eigenvalues, right eigenvectors, and left
+//' eigenvectors estimated for a matrix by the \code{eigs_gen}() function
+//' in the C++ Armadillo library. Works with sparse matrices.
+//' 
+//' @param Amat A population projection matrix of class \code{matrix}.
+//'
+//' @return This function returns all estimated eigenvalues, right
+//' eigenvectors, and left eigenvectors of a single matrix. This output is
+//' provided as a list with three parts, named appropriately.
+//' 
+//' @section Notes:
+//' This function works slightly differently from function \code{decomp3sp()} in
+//' that the latter function requires a sparse matrix provided in dense format,
+//' while this function requires a sparse matrix in sparse format.
+//' 
+//' @keywords internal
+//' @noRd
+// [[Rcpp::export]]
+List decomp3sp_inp(arma::sp_mat spAmat) {
+  
+  arma::sp_mat t_spAmat = spAmat.t();
+  
+  arma::cx_vec Aeigval;
+  arma::cx_vec Aeigvall;
+  arma::cx_mat Aeigvecl;
+  arma::cx_mat Aeigvecr;
+  
+  eigs_gen(Aeigval, Aeigvecr, spAmat, 1);
+  
+  eigs_gen(Aeigvall, Aeigvecl, t_spAmat, 1);
+  
+  List output = List::create(Named("eigenvalues") = Aeigval,
+    _["left_eigenvectors"] = Aeigvecl, _["right_eigenvectors"] = Aeigvecr);
+  
+  return output;
+}
+
 //' Estimate Deterministic Population Growth Rate of Any Matrix
 //' 
 //' \code{lambda3matrix()} returns the dominant eigenvalue of a single
-//' dense or sparse projection matrix.
+//' dense or sparse projection matrix, provided in dense matrix format.
 //' 
 //' @param Amat A population projection matrix of class \code{matrix}.
 //' @param sparse A logical value indicating whether to use sparse matrix
@@ -738,19 +827,19 @@ arma::vec ss3matrix(arma::mat Amat, bool sparse) {
 //' Estimate Reproductive Value of Any Population Matrix
 //' 
 //' \code{rv3matrix()} returns the reproductive values for stages in a
-//' dense or sparse population matrix. The function provides standard
-//' reproductive values, meaning that the overall reproductive values of basic
-//' life history stages in a historical matrix are not provided (the
-//' \code{\link{repvalue3.lefkoMat}()} function estimates these on the basis
-//' of stage description information provided in the \code{lefkoMat} object
-//' used as input in that function).
+//' dense or sparse population matrix (both provided in dense matrix format).
+//' The function provides standard reproductive values, meaning that the overall
+//' reproductive values of basic life history stages in a historical matrix are
+//' not provided (the \code{\link{repvalue3.lefkoMat}()} function estimates
+//' these on the basis of stage description information provided in the
+//' \code{lefkoMat} object used as input in that function).
 //' 
-//' @param Amat A population projection matrix.
+//' @param Amat A population projection matrix of class \code{matrix}.
 //' @param sparse A logical value indicating whether to use sparse or dense
 //' format in matrix calculations.
 //' 
-//' @return This function returns a vector characterizing the
-//' reproductive values for stages of a population projection matrix.
+//' @return This function returns a vector characterizing the reproductive
+//' values for stages of a population projection matrix.
 //' 
 //' @seealso \code{\link{repvalue3}()}
 //' @seealso \code{\link{repvalue3.lefkoMat}()}
@@ -786,15 +875,15 @@ arma::vec rv3matrix(arma::mat Amat, bool sparse) {
 //' Estimate Deterministic Sensitivities of Any Population Matrix
 //' 
 //' \code{sens3matrix()} returns the sensitivity of lambda with respect
-//' to each element in a dense or sparse matrix. This is accomplished via the
-//' \code{eig_gen}() and \code{eigs_gen}() functions in the C++ Armadillo
-//' library.
+//' to each element in a dense or sparse matrix (provided in dense matrix
+//' format). This is accomplished via the \code{eig_gen}() and \code{eigs_gen}()
+//' functions in the C++ Armadillo library.
 //' 
-//' @param Amat A population projection matrix.
+//' @param Amat A population projection matrix of class \code{matrix}.
 //' @param sparse A logical value indicating whether to use sparse or dense
 //' format in matrix calculations.
 //' 
-//' @return This function returns a matrix of sensitivities. 
+//' @return This function returns a matrix of deterministic sensitivities. 
 //' 
 //' @keywords internal
 //' @noRd
@@ -849,6 +938,72 @@ arma::mat sens3matrix(arma::mat Amat, bool sparse) {
   return smat;
 }
 
+//' Estimate Deterministic Sensitivities of A Spars Matrixe
+//' 
+//' \code{sens3sp_matrix()} returns the sensitivity of lambda with respect
+//' to each element in a sparse matrix, provided in sparse matrix format. This
+//' is accomplished via the \code{eigs_gen}() function in the C++ Armadillo
+//' library.
+//' 
+//' @param Aspmat A population projection matrix in sparse matrix format.
+//' @param refmat A sparse matrix used for reference to create associated 0s in
+//' the sensitivity matrix.
+//' 
+//' @return This function returns a sparse matrix of deterministic
+//' sensitivities. Zeroes are derived from the reference matrix, and replace
+//' non-zero entries that will be zeroed out in the following math. Currently
+//' used in LTRE estimation.
+//' 
+//' @keywords internal
+//' @noRd
+// [[Rcpp::export]]
+arma::sp_mat sens3sp_matrix(arma::sp_mat Aspmat, arma::sp_mat refmat) {
+  
+  List eigenstuff = decomp3sp_inp(Aspmat);
+
+  arma::vec realeigenvals = real(as<arma::cx_vec>(eigenstuff["eigenvalues"]));
+  
+  int lambda1 = realeigenvals.index_max();
+  
+  // This is the w vector
+  arma::vec realrightvec = real(as<arma::cx_mat>(eigenstuff["right_eigenvectors"]).col(lambda1));
+  realrightvec.clean(0.00000000000001); // This line replaces all numbers lower than 1 x 10-10 with 0
+  
+  double rvsum = sum(realrightvec);
+  int rvel = realrightvec.n_elem;
+  realrightvec = realrightvec / rvsum;
+  
+  // This is the v vector
+  arma::vec realleftvec = real(as<arma::cx_mat>(eigenstuff["left_eigenvectors"]).col(lambda1));
+  realleftvec.clean(0.00000000000001); // This line replaces all numbers lower than 1 x 10-10 with 0
+
+  // This section identifies the first non-zero element of the reproductive value vector
+  arma::uvec rlvabsalt = find(realleftvec);
+  double rlvmin = realleftvec(static_cast<unsigned long long>(rlvabsalt(0)));
+  realleftvec = realleftvec / rlvmin;
+  
+  arma::vec vwprod (rvel);
+  arma::sp_mat smat (rvel, rvel);
+  smat.zeros();
+  
+  // This loop and the following line create the scalar product vw
+  for (int i = 0; i < rvel; i++) {
+    vwprod(i) = realrightvec(i) * realleftvec(i);
+  }
+  double vwscalar = sum(vwprod);
+  
+  // This loop populates the sensitivity matrix
+  for (int i = 0; i < rvel; i++) {
+    for (int j = 0; j < rvel; j++) {
+      if (refmat(i, j) != 0) {
+        smat(i, j) = realleftvec(i) * realrightvec(j) / vwscalar;
+      }
+    }
+  }
+  
+  return smat;
+}
+
 //' Estimate Deterministic Sensitivities of a Historical LefkoMat Object
 //' 
 //' \code{sens3hlefko()} returns the sensitivity of lambda with respect
@@ -856,11 +1011,12 @@ arma::mat sens3matrix(arma::mat Amat, bool sparse) {
 //' sensitivity for each life history stage. This is accomplished via the 
 //' \code{eigs_gen}() function in the C++ Armadillo library.
 //' 
-//' @param Amat A population projection matrix.
+//' @param Amat A population projection matrix of class \code{matrix}.
 //' @param ahstages An integar vector of unique ahistorical stages.
 //' @param hstages An integar vector of unique historical stage pairs.
 //' 
-//' @return This function returns a list with two sensitivity matrices:
+//' @return This function returns a list with two deterministic sensitivity
+//' matrices:
 //' \item{h_smat}{Matrix of sensitivities corresponding to the historical
 //' matrix.}
 //' \item{ah_smat}{Matrix of sensitivities corresponding to the ahistorical
@@ -914,7 +1070,7 @@ List sens3hlefko(arma::mat Amat, DataFrame ahstages, DataFrame hstages) {
   ahsens.zeros();
   
   int ahrows {0};
-
+  
   // This loop and the following line create the scalar product vw and the ahistorical stable stage distribution w
   for (int i = 0; i < rvel; i++) {
     vwprod(i) = realrightvec(i) * realleftvec(i);
@@ -923,7 +1079,6 @@ List sens3hlefko(arma::mat Amat, DataFrame ahstages, DataFrame hstages) {
     
     wcorrah(ahrows) = wcorrah(ahrows) + realrightvec(i);
   }
-  
   double vwscalar = sum(vwprod);
   
   // This loop creates a corrected reproductive value vector
@@ -965,15 +1120,15 @@ List sens3hlefko(arma::mat Amat, DataFrame ahstages, DataFrame hstages) {
 //' Estimate Deterministic Elasticities of Any Population Matrix
 //' 
 //' \code{elas3matrix()} returns the elasticity of lambda with respect
-//' to each element in a dense or sparse matrix. This is accomplished via the
-//' \code{eig_gen}() and \code{eigs_gen}() functions in the C++ Armadillo
-//' library.
+//' to each element in a dense or sparse matrix, both provided in dense matrix
+//' format. This is accomplished via the \code{eig_gen}() and \code{eigs_gen}()
+//' functions in the C++ Armadillo library.
 //' 
-//' @param Amat A population projection matrix.
+//' @param Amat A population projection matrix of class \code{matrix}.
 //' @param sparse A logical value indicating whether to use sparse or dense
 //' format in matrix calculations.
 //' 
-//' @return This function returns a matrix of elasticities. 
+//' @return This function returns a matrix of deterministic elasticities. 
 //' 
 //' @keywords internal
 //' @noRd
@@ -1040,7 +1195,8 @@ arma::mat elas3matrix(arma::mat Amat, bool sparse) {
 //' @param ahstages An integar vector of unique ahistorical stages.
 //' @param hstages An integar vector of unique historical stage pairs.
 //' 
-//' @return This function returns a list with two elasticity matrices:
+//' @return This function returns a list with two deterministic elasticity
+//' matrices:
 //' \item{h_emat}{Matrix of elasticities corresponding to the historical matrix.}
 //' \item{ah_emat}{Matrix of elasticities corresponding to the ahistorical
 //' matrix, but using summed historical elasticities as the basis of estimation.}
@@ -1113,31 +1269,28 @@ List elas3hlefko(arma::mat Amat, DataFrame ahstages, DataFrame hstages) {
 //' Function \code{proj3()} runs the matrix projections used in other functions
 //' in package \code{lefko3}.
 //' 
-//' @param start_mat The starting matrix for the projection.
 //' @param start_vec The starting population vector for the projection.
 //' @param core_list A list of full projection matrices, corresponding to the 
 //' \code{$A} list within a \code{lefkoMat} object.
-//' @param mat_order A vector giving the order of matrices to use at each time.
+//' @param mat_order A vector giving the order of matrices to use at each occasion.
 //' @param standardize A logical value stating whether to standardize population
-//' size vector to sum to 1 at each estimated time.
-//' @param growthonly A logical value stating whether to output a matrix
+//' size vector to sum to 1 at each estimated occasion.
+//' @param growthonly A logical value stating whether to output only a matrix
 //' showing the change in population size from one year to the next for use in
-//' stochastic population growth rate estimation (TRUE), or a matrix containing
-//' the w and v projections for stochastic perturbation analysis, stage
-//' distribution estimation, and reproductive value estimation.
+//' stochastic population growth rate estimation (TRUE), or a larger matrix also
+//' containing the w and v projections for stochastic perturbation analysis,
+//' stage distribution estimation, and reproductive value estimation.
 //' @param integeronly A logical value indicating whether to round all projected
 //' numbers of individuals to the nearest integer.
 //' 
 //' @return A matrix in which, if \code{growthonly = TRUE}, each row is the
-//' population vector at each projected time, and if \code{growthonly = FALSE},
+//' population vector at each projected occasion, and if \code{growthonly = FALSE},
 //' the top half of the matrix is the w projection (stage distribution) and the
 //' bottom half is the v projection (reproductive values) for use in estimation
 //' of stochastic sensitivities and elasticities (in addition, a further row is
 //' appended to the bottom, corresponding to the R vector, which is the
-//' sum of the unstandardized w vector resulting from each time step's
+//' sum of the unstandardized w vector resulting from each occasion's
 //' projection).
-//' 
-//' @section Notes:
 //' 
 //' @keywords internal
 //' @noRd
@@ -1155,8 +1308,8 @@ arma::mat proj3(arma::vec start_vec, List core_list, arma::uvec mat_order,
   arma::mat thesecondprophecy;
   
   arma::mat popproj(nostages, (theclairvoyant + 1)); // This is the population vector
-  arma::mat wpopproj(nostages, (theclairvoyant + 1)); // This is the population vector
-  arma::mat vpopproj(nostages, (theclairvoyant + 1)); // This is the population vector
+  arma::mat wpopproj(nostages, (theclairvoyant + 1)); // This is the population w vector
+  arma::mat vpopproj(nostages, (theclairvoyant + 1)); // This is the population v vector
   arma::mat Rvecmat(1, (theclairvoyant+1));
   popproj.zeros();
   wpopproj.zeros();
@@ -1186,6 +1339,7 @@ arma::mat proj3(arma::vec start_vec, List core_list, arma::uvec mat_order,
   
   if (sparse_switch == 0) {
     // Dense matrix projection
+    
     for (int i = 0; i < theclairvoyant; i++) {
       theprophecy = as<arma::mat>(core_list[(mat_order(i))]);
       
@@ -1217,6 +1371,9 @@ arma::mat proj3(arma::vec start_vec, List core_list, arma::uvec mat_order,
     }
   } else {
     // Sparse matrix projection
+    
+    arma::sp_mat sparse_seventhson = arma::sp_mat(theseventhson);
+    
     int matlist_length = core_list.size();
     arma::mat first_mat = core_list(0);
     arma::sp_mat new_sparse = arma::sp_mat(first_mat);
@@ -1234,26 +1391,26 @@ arma::mat proj3(arma::vec start_vec, List core_list, arma::uvec mat_order,
     for (int i = 0; i < theclairvoyant; i++) {
       sparse_prophecy = as<arma::sp_mat>(sparse_list[(mat_order(i))]);
       
-      theseventhson = sparse_prophecy * theseventhson;
+      sparse_seventhson = sparse_prophecy * sparse_seventhson;
       if (integeronly) {
-        theseventhson = floor(theseventhson);
+        sparse_seventhson = floor(sparse_seventhson);
       }
-      popproj.col(i+1) = theseventhson;
+      popproj.col(i+1) = arma::vec(arma::mat(sparse_seventhson));
       
-      if (!growthonly) Rvecmat(i+1) = sum(theseventhson);
+      if (!growthonly) Rvecmat(i+1) = sum(popproj.col(i+1));
       
       if (standardize) {
-        theseventhson = theseventhson / sum(theseventhson);
+        sparse_seventhson = sparse_seventhson / sum(popproj.col(i+1));
       }
       
       if (!growthonly) {
-        wpopproj.col(i+1) = theseventhson;
+        wpopproj.col(i+1) = arma::vec(arma::mat(sparse_seventhson));
         
         sparse_secondprophecy = as<arma::sp_mat>(sparse_list[(mat_order(theclairvoyant - (i+1)))]);
         theseventhgrandson = theseventhgrandson * sparse_secondprophecy;
         
         double seventhgrandsum = sum(theseventhgrandson);
-        arma::vec  midwife = theseventhgrandson.as_col() / seventhgrandsum;
+        arma::vec midwife = theseventhgrandson.as_col() / seventhgrandsum;
         
         theseventhgrandson = theseventhgrandson / seventhgrandsum;
         
@@ -1272,47 +1429,157 @@ arma::mat proj3(arma::vec start_vec, List core_list, arma::uvec mat_order,
   }
 }
 
+//' Slimmed-down Time-based Population Sparse Matrix Projection Function
+//' 
+//' Function \code{proj3sp()} runs the matrix projections used in some other
+//' functions in package \code{lefko3}, but only when the input is sparse. This
+//' is a slimmed down version of function \code{proj3()}
+//' 
+//' @param start_vec The starting population vector for the projection.
+//' @param core_list A list of full projection matrices, corresponding to
+//' the \code{$A} list within a \code{lefkoMat} object. Matrices must be in
+//' \code{arma::sp_mat} format.
+//' @param mat_order A vector giving the order of matrices to use at each occasion.
+//' @param standardize A logical value stating whether to standardize population
+//' size vector to sum to 1 at each estimated occasion.
+//' @param growthonly A logical value stating whether to output only a matrix
+//' showing the change in population size from one year to the next for use in
+//' stochastic population growth rate estimation (TRUE), or a larger matrix also
+//' containing the w and v projections for stochastic perturbation analysis,
+//' stage distribution estimation, and reproductive value estimation.
+//' @param integeronly A logical value indicating whether to round all projected
+//' numbers of individuals to the nearest integer.
+//' 
+//' @return A matrix in which, if \code{growthonly = TRUE}, each row is the
+//' population vector at each projected occasion, and if \code{growthonly = FALSE},
+//' the top half of the matrix is the w projection (stage distribution) and the
+//' bottom half is the v projection (reproductive values) for use in estimation
+//' of stochastic sensitivities and elasticities (in addition, a further row is
+//' appended to the bottom, corresponding to the R vector, which is the
+//' sum of the unstandardized w vector resulting from each occasion's
+//' projection).
+//' 
+//' @keywords internal
+//' @noRd
+// [[Rcpp::export]]
+arma::mat proj3sp(arma::vec start_vec, List core_list, arma::uvec mat_order,
+  bool standardize, bool growthonly, bool integeronly) {
+  
+  int nostages = start_vec.n_elem;
+  int theclairvoyant = mat_order.n_elem;
+  arma::vec theseventhson;
+  arma::rowvec theseventhgrandson;
+  arma::mat theprophecy;
+  arma::mat thesecondprophecy;
+  
+  arma::mat popproj(nostages, (theclairvoyant + 1)); // This is the population vector
+  arma::mat wpopproj(nostages, (theclairvoyant + 1)); // This is the population w vector
+  arma::mat vpopproj(nostages, (theclairvoyant + 1)); // This is the population v vector
+  arma::mat Rvecmat(1, (theclairvoyant+1));
+  popproj.zeros();
+  wpopproj.zeros();
+  vpopproj.zeros();
+  Rvecmat.zeros();
+  
+  theseventhson = start_vec;
+  theseventhgrandson = start_vec.as_row();
+  
+  arma::sp_mat sparse_seventhson = arma::sp_mat(theseventhson);
+    
+  arma::mat finaloutput;
+  
+  // Now the projection
+  popproj.col(0) = start_vec;
+  if (!growthonly) {
+    wpopproj.col(0) = start_vec / sum(start_vec);
+    vpopproj.col(theclairvoyant) = start_vec / sum(start_vec);
+  }
+  
+  // Sparse matrix projection
+  arma::sp_mat sparse_prophecy;
+  arma::sp_mat sparse_secondprophecy;
+    
+  for (int i = 0; i < theclairvoyant; i++) {
+    sparse_prophecy = as<arma::sp_mat>(core_list[(mat_order(i))]);
+      
+    sparse_seventhson = sparse_prophecy * sparse_seventhson;
+    if (integeronly) {
+      sparse_seventhson = floor(sparse_seventhson);
+    }
+    popproj.col(i+1) = arma::vec(arma::mat(sparse_seventhson));
+    
+    if (!growthonly) Rvecmat(i+1) = sum(popproj.col(i+1));
+    
+    if (standardize) {
+      sparse_seventhson = sparse_seventhson / sum(popproj.col(i+1));
+    }
+    
+    if (!growthonly) {
+      wpopproj.col(i+1) = arma::vec(arma::mat(sparse_seventhson));
+      
+      sparse_secondprophecy = as<arma::sp_mat>(core_list[(mat_order(theclairvoyant - (i+1)))]);
+      theseventhgrandson = theseventhgrandson * sparse_secondprophecy;
+      
+      double seventhgrandsum = sum(theseventhgrandson);
+      arma::vec  midwife = theseventhgrandson.as_col() / seventhgrandsum;
+      
+      theseventhgrandson = theseventhgrandson / seventhgrandsum;
+      
+      vpopproj.col(theclairvoyant - (i+1)) = midwife;
+    }
+  }
+  
+  if (growthonly) {
+    return popproj;
+  } else {
+    arma::mat revised_vproj = join_cols(vpopproj, Rvecmat);
+    arma::mat expanded_proj = join_cols(wpopproj, revised_vproj);
+    
+    return join_cols(popproj, expanded_proj);
+  }
+}
+
 //' Estimate Stochastic Population Growth Rate
 //' 
 //' Function \code{projection3()} projects the population forward in time by
-//' a user-defined number of time steps. Projections may be deterministic or
+//' a user-defined number of occasions. Projections may be deterministic or
 //' stochastic. If deterministic, then projections will be cyclical if matrices
-//' exist covering multiple times for each population or patch. If stochastic,
+//' exist covering multiple occasions for each population or patch. If stochastic,
 //' then annual matrices will be shuffled within patches and populations.
 //' 
 //' @param mpm A matrix projection model of class \code{lefkoMat}, or a list of
 //' full matrix projection matrices.
-//' @param times Number of iterations to random samples. Defaults to 10,000.
+//' @param times Number of occasions to iterate. Defaults to 10,000.
 //' @param stochastic A logical value denoting whether to conduct a stochastic
 //' projection or a deterministic / cyclical projection.
 //' @param standardize A logical value denoting whether to re-standardize the
-//' population size to 1.0 at each time step. Defaults to FALSE.
+//' population size to 1.0 at each occasion. Defaults to FALSE.
 //' @param growthonly A logical value indicating whether to produce only the
-//' projected population size at each time step, or a vector showing the stage
+//' projected population size at each occasion, or a vector showing the stage
 //' distribution followed by the reproductive value vector followed by the full
-//' population size at each time step. Defaults to TRUE.
+//' population size at each occasion. Defaults to TRUE.
 //' @param integeronly A logical value indicating whether to round the number of
-//' individuals projected in each stage at each time step to the nearest
+//' individuals projected in each stage at each occasion to the nearest
 //' integer. Defaults to FALSE.
 //' @param start_vec An optional numeric vector denoting the starting stage
 //' distribution for the projection. Defaults to a single individual of each
 //' stage.
 //' @param tweights An optional numeric vector denoting the probabilistic
-//' weightings of annual matrices. Defaults to equal weighting among times.
+//' weightings of annual matrices. Defaults to equal weighting among occasions.
 //' 
 //' @return A list with two elements:
 //' \item{projection}{A list of matrices showing the total number of individuals
-//' per stage per time step, or showing the former with the projected stage 
-//' distribution and reproductive value per stage per time step followed by
-//' the total population size per time step (all row-bound in order).}
+//' per stage per occasion, or showing the former with the projected stage 
+//' distribution and reproductive value per stage per occasion followed by
+//' the total population size per occasion (all row-bound in order).}
 //' \item{labels}{A data frame showing the order of populations and patches in
 //' item \code{projection}.}
 //' 
+//' @section Notes:
 //' Projections are run both at the patch level and at the population level.
 //' Population level estimates will be noted at the end of the
 //' data frame with 0 entries for patch designation.
 //' 
-//' @section Notes:
 //' Weightings given in \code{tweights} do not need to sum to 1. Final
 //' weightings used will be based on the proportion per element of the sum of
 //' elements in the user-supplied vector.
@@ -1389,33 +1656,29 @@ arma::mat proj3(arma::vec start_vec, List core_list, arma::uvec mat_order,
 //'   stageassign = cypframe_raw, stagesize = "sizeadded", NAas0 = TRUE, 
 //'   NRasRep = TRUE)
 //' 
-//' rep_cyp_raw <- matrix(0, 11, 11)
-//' rep_cyp_raw[1:2,7:11] <- 0.5
-//' 
-//' cypsupp3r <- supplemental(stage3 = c("SD", "SD", "P1", "P1", "P2", "P3",
-//'     "SL", "SL", "SL", "D", "XSm", "Sm", "D", "XSm", "Sm", "SD", "P1"),
-//'   stage2 = c("SD", "SD", "SD", "SD", "P1", "P2", "P3", "SL", "SL", "SL",
-//'     "SL", "SL", "SL", "SL", "SL", "rep", "rep"),
-//'   stage1 = c("SD", "rep", "SD", "rep", "SD", "P1", "P2", "P3", "SL", "P3",
-//'     "P3", "P3", "SL", "SL", "SL", "all", "all"),
-//'   eststage3 = c(NA, NA, NA, NA, NA, NA, NA, NA, NA, "D", "XSm", "Sm", "D",
-//'     "XSm", "Sm", NA, NA),
-//'   eststage2 = c(NA, NA, NA, NA, NA, NA, NA, NA, NA, "XSm", "XSm", "XSm",
-//'     "XSm", "XSm", "XSm", NA, NA),
-//'   eststage1 = c(NA, NA, NA, NA, NA, NA, NA, NA, NA, "XSm", "XSm", "XSm",
-//'     "XSm", "XSm", "XSm", NA, NA),
-//'   givenrate = c(0.1, 0.1, 0.2, 0.2, 0.2, 0.2, 0.25, 0.4, 0.4, NA, NA, NA, NA,
-//'     NA, NA, NA, NA),
-//'   multiplier = c(NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA,
-//'     0.5, 0.5),
-//'   type = c(1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 3, 3),
-//'   type_t12 = c(1, 2, 1, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1),
+//' cypsupp3r <- supplemental(stage3 = c("SD", "SD", "P1", "P1", "P2", "P3", "SL",
+//'     "D", "XSm", "Sm", "D", "XSm", "Sm", "SD", "P1"),
+//'   stage2 = c("SD", "SD", "SD", "SD", "P1", "P2", "P3", "SL", "SL", "SL", "SL",
+//'     "SL", "SL", "rep", "rep"),
+//'   stage1 = c("SD", "rep", "SD", "rep", "SD", "P1", "P2", "P3", "P3", "P3",
+//'     "SL", "SL", "SL", "mat", "mat"),
+//'   eststage3 = c(NA, NA, NA, NA, NA, NA, NA, "D", "XSm", "Sm", "D", "XSm", "Sm",
+//'     NA, NA),
+//'   eststage2 = c(NA, NA, NA, NA, NA, NA, NA, "XSm", "XSm", "XSm", "XSm", "XSm",
+//'     "XSm", NA, NA),
+//'   eststage1 = c(NA, NA, NA, NA, NA, NA, NA, "XSm", "XSm", "XSm", "XSm", "XSm",
+//'     "XSm", NA, NA),
+//'   givenrate = c(0.1, 0.1, 0.2, 0.2, 0.2, 0.2, 0.25, NA, NA, NA, NA, NA, NA,
+//'     NA, NA),
+//'   multiplier = c(NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, 0.5, 0.5),
+//'   type = c(1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 3, 3),
+//'   type_t12 = c(1, 2, 1, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1),
 //'   stageframe = cypframe_raw, historical = TRUE)
 //' 
 //' cypmatrix3r <- rlefko3(data = cypraw_v1, stageframe = cypframe_raw, 
 //'   year = "all", patch = "all", stages = c("stage3", "stage2", "stage1"),
 //'   size = c("size3added", "size2added", "size1added"), 
-//'   repmatrix = rep_cyp_raw, supplement = cypsupp3r, yearcol = "year2", 
+//'   supplement = cypsupp3r, yearcol = "year2", 
 //'   patchcol = "patchid", indivcol = "individ")
 //' 
 //' cypstoch <- projection3(cypmatrix3r, stochastic = TRUE)
@@ -1487,13 +1750,13 @@ Rcpp::List projection3(List mpm, int times = 10000, bool stochastic = false,
     
     if (tweights.isNotNull()) {
       if (as<NumericVector>(tweights).length() != yl) {
-        throw Rcpp::exception("Time weight vector must be the same length as the number of times represented in the lefkoMat object used as input.", false);
+        throw Rcpp::exception("Time weight vector must be the same length as the number of occasions represented in the lefkoMat object used as input.", false);
       }
       twinput = as<arma::vec>(tweights);
     } else {
       twinput.resize(yl);
       twinput.ones();
-    } // At the end of this, we have an arma::vec holding with whatever the user supplied, or a 1 for each time
+    } // At the end of this, we have an arma::vec holding with whatever the user supplied, or a 1 for each occasion
     
     arma::uvec armapopc = as<arma::uvec>(popc);
     arma::uvec armapoppatchc = as<arma::uvec>(poppatchc);
@@ -1561,7 +1824,7 @@ Rcpp::List projection3(List mpm, int times = 10000, bool stochastic = false,
       startvec.ones();
     } // At the end of this, we have an arma::vec holding with whatever the user supplied, or a 1 for each stage
     
-    arma::vec tweights_corr = twinput / sum(twinput);
+    twinput = twinput / sum(twinput);
     
     for (int i= 0; i < allppcsnem; i++) {
       thechosenone = as<arma::mat>(meanamats[i]);
@@ -1570,7 +1833,7 @@ Rcpp::List projection3(List mpm, int times = 10000, bool stochastic = false,
       int chosen_yl = thenumbersofthebeast.n_elem;
       
       if (stochastic) {
-        theprophecy = Rcpp::RcppArmadillo::sample(thenumbersofthebeast, theclairvoyant, true, tweights_corr);
+        theprophecy = Rcpp::RcppArmadillo::sample(thenumbersofthebeast, theclairvoyant, true, twinput);
       } else {
         theprophecy.set_size(theclairvoyant);
         theprophecy.zeros();
@@ -1654,7 +1917,7 @@ Rcpp::List projection3(List mpm, int times = 10000, bool stochastic = false,
         int chosen_yl = choicevec.n_elem;
         
         if (stochastic) {
-          theprophecy = Rcpp::RcppArmadillo::sample(choicevec, theclairvoyant, true, tweights_corr);
+          theprophecy = Rcpp::RcppArmadillo::sample(choicevec, theclairvoyant, true, twinput);
         } else {
           theprophecy.zeros();
           
@@ -1702,13 +1965,13 @@ Rcpp::List projection3(List mpm, int times = 10000, bool stochastic = false,
     
     if (tweights.isNotNull()) {
       if (as<NumericVector>(tweights).length() != yl) {
-        throw Rcpp::exception("Time weight vector must be the same length as the number of times represented in the lefkoMat object used as input.", false);
+        throw Rcpp::exception("Time weight vector must be the same length as the number of occasions represented in the lefkoMat object used as input.", false);
       }
       twinput = as<arma::vec>(tweights);
     } else {
       twinput.resize(yl);
       twinput.ones();
-    } // At the end of this, we have an arma::vec holding with whatever the user supplied, or a 1 for each time
+    } // At the end of this, we have an arma::vec holding with whatever the user supplied, or a 1 for each occasion
     
     if (start_vec.isNotNull()) {
       if (as<NumericVector>(start_vec).length() != matrows) {
@@ -1731,12 +1994,12 @@ Rcpp::List projection3(List mpm, int times = 10000, bool stochastic = false,
     
     // Here we take the matrices corresponding to each individual patch, run the simulation, and
     // estimate all descriptive metrics
-    arma::vec tweights_corr = twinput / sum(twinput);
+    twinput = twinput / sum(twinput);
     
     arma::uvec thenumbersofthebeast = uniqueyears;
     
     if (stochastic) {
-      theprophecy = Rcpp::RcppArmadillo::sample(thenumbersofthebeast, theclairvoyant, true, tweights_corr);
+      theprophecy = Rcpp::RcppArmadillo::sample(thenumbersofthebeast, theclairvoyant, true, twinput);
     } else {
       theprophecy.zeros();
       
@@ -1759,7 +2022,7 @@ Rcpp::List projection3(List mpm, int times = 10000, bool stochastic = false,
 //' 
 //' Function \code{slambda3()} estimates the stochastic population growth rate,
 //' \eqn{a}, defined as the long-term arithmetic mean of the log population 
-//' growth rate estimated per simulated time (as given in equation 2 in
+//' growth rate estimated per simulated occasion (as given in equation 2 in
 //' Tuljapurkar, Horvitz, and Pascarella 2003). This term is estimated via
 //' projection of randomly sampled matrices, similarly to the procedure outlined
 //' in Box 7.4 of Morris and Doak (2002). Can handle both lefkoMat objects and
@@ -1767,25 +2030,25 @@ Rcpp::List projection3(List mpm, int times = 10000, bool stochastic = false,
 //' 
 //' @param mpm A matrix projection model of class \code{lefkoMat}, or a list of
 //' full matrix projection matrices.
-//' @param times Number of iterations to random samples. Defaults to 10,000.
+//' @param times Number of occasions to iterate. Defaults to 10,000.
 //' @param tweights Numeric vector denoting the probabilistic weightings of
-//' annual matrices. Defaults to equal weighting among times.
+//' annual matrices. Defaults to equal weighting among occasions.
 //' 
 //' @return A data frame with the following variables:
 //' 
 //' \item{pop}{The identity of the population.}
 //' \item{patch}{The identity of the patch.}
 //' \item{a}{Estimate of stochastic growth rate, estimated as the arithmetic
-//' mean of the log population growth rate across simulated times.}
+//' mean of the log population growth rate across simulated occasions.}
 //' \item{var}{The estimated variance of a.}
 //' \item{sd}{The standard deviation of a.}
 //' \item{se}{The standard error of a.}
 //'
+//' @section Notes:
 //' Stochastic growth rate is estimated both at the patch level and at the
 //' population level. Population level estimates will be noted at the end of the
 //' data frame with 0 entries for patch designation.
 //' 
-//' @section Notes:
 //' Weightings given in \code{tweights} do not need to sum to 1. Final
 //' weightings used will be based on the proportion per element of the sum of
 //' elements in the user-supplied vector.
@@ -1857,30 +2120,29 @@ Rcpp::List projection3(List mpm, int times = 10000, bool stochastic = false,
 //'   stageassign = cypframe_raw, stagesize = "sizeadded", NAas0 = TRUE, 
 //'   NRasRep = TRUE)
 //' 
-//' rep_cyp_raw <- matrix(0, 11, 11)
-//' rep_cyp_raw[1:2,7:11] <- 0.5
-//' 
-//' cypover3r <- overwrite(stage3 = c("SD", "SD", "P1", "P1", "P2", "P3", "SL", 
-//'     "SL", "SL", "D", "XSm", "Sm", "D", "XSm", "Sm"), 
-//'   stage2 = c("SD", "SD", "SD", "SD", "P1", "P2", "P3", "SL", "SL", "SL", 
-//'     "SL", "SL", "SL", "SL", "SL"),
-//'   stage1 = c("SD", "rep", "SD", "rep", "SD", "P1", "P2", "P3", "SL", "P3", 
-//'     "P3", "P3", "SL", "SL", "SL"),
-//'   eststage3 = c(NA, NA, NA, NA, NA, NA, NA, NA, NA, "D", "XSm", "Sm", "D", 
-//'     "XSm", "Sm"), 
-//'   eststage2 = c(NA, NA, NA, NA, NA, NA, NA, NA, NA, "XSm", "XSm", "XSm", 
-//'     "XSm", "XSm", "XSm"), 
-//'   eststage1 = c(NA, NA, NA, NA, NA, NA, NA, NA, NA, "XSm", "XSm", "XSm", 
-//'     "XSm", "XSm", "XSm"), 
-//'   givenrate = c(0.1, 0.1, 0.2, 0.2, 0.2, 0.2, 0.25, 0.4, 0.4, NA, NA, NA, 
-//'     NA, NA, NA), 
-//'   type = c("S", "S", "S", "S", "S", "S", "S", "S", "S", "S", "S", "S", "S", 
-//'     "S", "S"))
+//' cypsupp3r <- supplemental(stage3 = c("SD", "SD", "P1", "P1", "P2", "P3", "SL",
+//'     "D", "XSm", "Sm", "D", "XSm", "Sm", "SD", "P1"),
+//'   stage2 = c("SD", "SD", "SD", "SD", "P1", "P2", "P3", "SL", "SL", "SL", "SL",
+//'     "SL", "SL", "rep", "rep"),
+//'   stage1 = c("SD", "rep", "SD", "rep", "SD", "P1", "P2", "P3", "P3", "P3",
+//'     "SL", "SL", "SL", "mat", "mat"),
+//'   eststage3 = c(NA, NA, NA, NA, NA, NA, NA, "D", "XSm", "Sm", "D", "XSm", "Sm",
+//'     NA, NA),
+//'   eststage2 = c(NA, NA, NA, NA, NA, NA, NA, "XSm", "XSm", "XSm", "XSm", "XSm",
+//'     "XSm", NA, NA),
+//'   eststage1 = c(NA, NA, NA, NA, NA, NA, NA, "XSm", "XSm", "XSm", "XSm", "XSm",
+//'     "XSm", NA, NA),
+//'   givenrate = c(0.1, 0.1, 0.2, 0.2, 0.2, 0.2, 0.25, NA, NA, NA, NA, NA, NA,
+//'     NA, NA),
+//'   multiplier = c(NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, 0.5, 0.5),
+//'   type = c(1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 3, 3),
+//'   type_t12 = c(1, 2, 1, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1),
+//'   stageframe = cypframe_raw, historical = TRUE)
 //' 
 //' cypmatrix3r <- rlefko3(data = cypraw_v1, stageframe = cypframe_raw, 
 //'   year = "all", patch = "all", stages = c("stage3", "stage2", "stage1"),
 //'   size = c("size3added", "size2added", "size1added"), 
-//'   repmatrix = rep_cyp_raw, overwrite = cypover3r, yearcol = "year2", 
+//'   supplement = cypsupp3r, yearcol = "year2", 
 //'   patchcol = "patchid", indivcol = "individ")
 //' 
 //' cypstoch <- slambda3(cypmatrix3r)
@@ -1954,13 +2216,13 @@ DataFrame slambda3(List mpm, int times = 10000,
     
     if (tweights.isNotNull()) {
       if (as<NumericVector>(tweights).length() != yl) {
-        throw Rcpp::exception("Time weight vector must be the same length as the number of times represented in the lefkoMat object used as input.", false);
+        throw Rcpp::exception("Time weight vector must be the same length as the number of occasions represented in the lefkoMat object used as input.", false);
       }
       twinput = as<arma::vec>(tweights);
     } else {
       twinput.resize(yl);
       twinput.ones();
-    } // At the end of this, we have an arma::vec holding with whatever the user supplied, or a 1 for each time
+    } // At the end of this, we have an arma::vec holding with whatever the user supplied, or a 1 for each occasion
     
     arma::uvec armapopc = as<arma::uvec>(popc);
     arma::uvec armapoppatchc = as<arma::uvec>(poppatchc);
@@ -2029,11 +2291,11 @@ DataFrame slambda3(List mpm, int times = 10000,
     sl_sd.zeros();
     sl_se.zeros();
     
-    arma::vec tweights_corr = twinput / sum(twinput);
+    twinput = twinput / sum(twinput);
     
     for (int i= 0; i < allppcsnem; i++) {
       arma::uvec thenumbersofthebeast = find(ppcindex == allppcs(i));
-      arma::uvec theprophecy = Rcpp::RcppArmadillo::sample(thenumbersofthebeast, theclairvoyant, true, tweights_corr);
+      arma::uvec theprophecy = Rcpp::RcppArmadillo::sample(thenumbersofthebeast, theclairvoyant, true, twinput);
       
       startvec = ss3matrix(as<arma::mat>(meanamats[i]), sparse_switch); // thechosenone
       
@@ -2113,7 +2375,7 @@ DataFrame slambda3(List mpm, int times = 10000,
         
         int numyearsused = meanmatyearlist.length();
         arma::uvec choicevec = linspace<arma::uvec>(0, (numyearsused - 1), numyearsused);
-        arma::uvec theprophecy = Rcpp::RcppArmadillo::sample(choicevec, theclairvoyant, true, tweights_corr);
+        arma::uvec theprophecy = Rcpp::RcppArmadillo::sample(choicevec, theclairvoyant, true, twinput);
         
         arma::mat projection = proj3(startvec, meanmatyearlist, theprophecy, 1, 1, 0);
         
@@ -2170,13 +2432,13 @@ DataFrame slambda3(List mpm, int times = 10000,
     
     if (tweights.isNotNull()) {
       if (as<NumericVector>(tweights).length() != yl) {
-        throw Rcpp::exception("Time weight vector must be the same length as the number of times represented in the lefkoMat object used as input.", false);
+        throw Rcpp::exception("Time weight vector must be the same length as the number of occasions represented in the lefkoMat object used as input.", false);
       }
       twinput = as<arma::vec>(tweights);
     } else {
       twinput.resize(yl);
       twinput.ones();
-    } // At the end of this, we have an arma::vec holding whatever the user supplied, or a 1 for each time
+    } // At the end of this, we have an arma::vec holding whatever the user supplied, or a 1 for each occasion
     
     // Now we create the mean matrix
     arma::mat thechosenone(matrows, matcols);
@@ -2203,10 +2465,10 @@ DataFrame slambda3(List mpm, int times = 10000,
     sl_sd.zeros();
     sl_se.zeros();
     
-    arma::vec tweights_corr = twinput / sum(twinput);
+    twinput = twinput / sum(twinput);
     
     arma::uvec thenumbersofthebeast = uniqueyears;
-    arma::uvec theprophecy = Rcpp::RcppArmadillo::sample(thenumbersofthebeast, theclairvoyant, true, tweights_corr);
+    arma::uvec theprophecy = Rcpp::RcppArmadillo::sample(thenumbersofthebeast, theclairvoyant, true, twinput);
     
     startvec = ss3matrix(thechosenone, sparse_switch);
     
@@ -2235,19 +2497,19 @@ DataFrame slambda3(List mpm, int times = 10000,
 //' 
 //' Function \code{stoch_senselas()} estimates the sensitivity and elasticity to
 //' matrix elements of \eqn{a}, defined as the long-term arithmetic mean of the
-//' log population growth estimated per simulated time (as given in equation 2
+//' log population growth estimated per simulated occasion (as given in equation 2
 //' in Tuljapurkar, Horvitz, and Pascarella 2003). 
 //' 
 //' @param mpm A matrix projection model of class \code{lefkoMat}, or a list of
 //' full matrix projection matrices.
-//' @param times Number of iterations to random samples. Defaults to 10,000.
+//' @param times Number of occasions to iterate. Defaults to 10,000.
 //' @param style An integer designating whether to estimate sensitivity matrices
 //' (\code{1}) or elasticity matrices (\code{2}). Defaults to 1.
 //' @param tweights Numeric vector denoting the probabilistic weightings of
-//' annual matrices. Defaults to equal weighting among times.
+//' annual matrices. Defaults to equal weighting among occasions.
 //' 
 //' @return A list of one or two cubes (3d array) where each slice corresponds
-//' to sensitivity or elasticity matrix for a specific pop-patch, followed by
+//' to a sensitivity or elasticity matrix for a specific pop-patch, followed by
 //' the sensitivity or elasticity matrices of all populations (only if multiple
 //' pop-patches occur in the input). Two such cubes are only provided when a
 //' historical lefkoMat object is used as input, in which case the first
@@ -2259,9 +2521,9 @@ DataFrame slambda3(List mpm, int times = 10000,
 //' weightings used will be based on the proportion per element of the sum of
 //' elements in the user-supplied vector.
 //' 
-//' This function currently requires all patches to have the same times, if a
-//' \code{lefkoMat} object is used as input. Asymmetry in times across patches
-//' and/or populations will likely cause errors.
+//' This function currently requires all patches to have the same occasions, if
+//' a \code{lefkoMat} object is used as input. Asymmetry in the number of
+//' occasions across patches and/or populations will likely cause errors.
 //'
 //' @keywords internal
 //' @noRd
@@ -2269,9 +2531,7 @@ DataFrame slambda3(List mpm, int times = 10000,
 Rcpp::List stoch_senselas(List mpm, int times = 10000, int style = 1,
   Nullable<NumericVector> tweights = R_NilValue) {
   
-  int theclairvoyant {0};
-  
-  theclairvoyant = times;
+  int theclairvoyant = times;
   
   if (theclairvoyant < 1) {
     throw Rcpp::exception("Option must equal a positive integer.", false);
@@ -2344,13 +2604,13 @@ Rcpp::List stoch_senselas(List mpm, int times = 10000, int style = 1,
     
     if (tweights.isNotNull()) {
       if (as<NumericVector>(tweights).length() != yl) {
-        throw Rcpp::exception("Time weight vector must be the same length as the number of times represented in the lefkoMat object used as input.", false);
+        throw Rcpp::exception("Time weight vector must be the same length as the number of occasions represented in the lefkoMat object used as input.", false);
       }
       twinput = as<arma::vec>(tweights);
     } else {
       twinput.resize(yl);
       twinput.ones();
-    } // At the end of this, we have an arma::vec holding with whatever the user supplied, or a 1 for each time
+    } // At the end of this, we have an arma::vec holding with whatever the user supplied, or a 1 for each occasion
     
     arma::vec twinput_corr = twinput / sum(twinput);
     arma::uvec theprophecy_allyears = Rcpp::RcppArmadillo::sample(uniqueyears_arma, theclairvoyant, true, twinput_corr);
@@ -2431,8 +2691,6 @@ Rcpp::List stoch_senselas(List mpm, int times = 10000, int style = 1,
     arma::mat Rvecmat(trials, theclairvoyant);
     Rvecmat.zeros();
     
-    arma::vec tweights_corr = twinput_corr;
-    
     for (int i= 0; i < allppcsnem; i++) { // This loop goes through each pop-patch
       arma::uvec theprophecy = theprophecy_allyears;
       theprophecy.zeros();
@@ -2475,7 +2733,7 @@ Rcpp::List stoch_senselas(List mpm, int times = 10000, int style = 1,
       
       // All references should go to senscube, which is a 3d array designed to hold the sensitivity matrices
       for (int j = 0; j < theclairvoyant; j++) { // This is the main time loop for the sensitivity matrices, 
-                                                 // adding each time to the respective matrix for each pop-patch
+                                                 // adding each occasion to the respective matrix for each pop-patch
         arma::vec vtplus1 = vprojection.col(j+1);
         arma::vec wtplus1 = wprojection.col(j+1);
         arma::vec wt = wprojection.col(j);
@@ -2494,14 +2752,14 @@ Rcpp::List stoch_senselas(List mpm, int times = 10000, int style = 1,
             vprojection_ah.zeros();
             
             // This loop creates the ahistorical stable stage distribution for projected
-            // time j+1
+            // occasion j+1
             for (int k1 = 0; k1 < hstages_num; k1++) {
               int current_stage2 = hstages_id2(k1);
               wprojection_ah(current_stage2 - 1) = wprojection_ah(current_stage2 - 1)  +
                 wtplus1(k1);
             } // k1 loop
             
-            // Now the ahistorical reproductive value vector for time j+1
+            // Now the ahistorical reproductive value vector for occasion j+1
             for (int k2 = 0; k2 < hstages_num; k2++) {
               int current_stage2 = hstages_id2(k2);
               
@@ -2620,7 +2878,7 @@ Rcpp::List stoch_senselas(List mpm, int times = 10000, int style = 1,
         // hold the sensitivity matrices
         
         // Next is the main time loop for the sensitivity matrices, adding each
-        // time to the respective matrix for each pop-patch
+        // occasion to the respective matrix for each pop-patch
         for (int j = 0; j < theclairvoyant; j++) {  
           
           arma::vec vtplus1 = vprojection.col(j+1);
@@ -2641,14 +2899,14 @@ Rcpp::List stoch_senselas(List mpm, int times = 10000, int style = 1,
               vprojection_ah.zeros();
               
               // This loop creates the ahistorical stable stage distribution for projected
-              // time j+1
+              // occasion j+1
               for (int k1 = 0; k1 < hstages_num; k1++) {
                 int current_stage2 = hstages_id2(k1);
                 wprojection_ah(current_stage2 - 1) = wprojection_ah(current_stage2 - 1)  +
                   wtplus1(k1);
               } // k1 loop
               
-              // Now the ahistorical reproductive value vector for time j+1
+              // Now the ahistorical reproductive value vector for occasion j+1
               for (int k2 = 0; k2 < hstages_num; k2++) {
                 int current_stage2 = hstages_id2(k2);
                 
@@ -2726,20 +2984,20 @@ Rcpp::List stoch_senselas(List mpm, int times = 10000, int style = 1,
     
     if (tweights.isNotNull()) {
       if (as<NumericVector>(tweights).length() != yl) {
-        throw Rcpp::exception("Time weight vector must be the same length as the number of times represented in the lefkoMat object used as input.", false);
+        throw Rcpp::exception("Time weight vector must be the same length as the number of occasions represented in the lefkoMat object used as input.", false);
       }
       twinput = as<arma::vec>(tweights);
     } else {
       twinput.resize(yl);
       twinput.ones();
-    } // At the end of this, we have an arma::vec holding with whatever the user supplied, or a 1 for each time
+    } // At the end of this, we have an arma::vec holding with whatever the user supplied, or a 1 for each occasion
     
-    // Here we set up the vector of chosen times, sampled from all possible times
+    // Here we set up the vector of chosen occasions, sampled from all possible occasions
     arma::vec twinput_corr = twinput / sum(twinput);
     arma::uvec theprophecy = Rcpp::RcppArmadillo::sample(uniqueyears_arma, theclairvoyant, true, twinput_corr);
     
     // Here we initialize a core empty matrix and start vector for w and v calculations.
-    // The matrix will be changed at each time.
+    // The matrix will be changed at each occasion.
     arma::vec startvec(matrows);
     startvec.ones();
     startvec = startvec / matrows; // The is the start vector for w and v calculations
@@ -2752,8 +3010,6 @@ Rcpp::List stoch_senselas(List mpm, int times = 10000, int style = 1,
     // These matrices and vectors will hold R values
     arma::mat Rvecmat(trials, theclairvoyant);
     Rvecmat.zeros();
-    
-    arma::vec tweights_corr = twinput_corr;
     
     arma::mat wprojection(startvec.n_elem, (theclairvoyant + 1));
     arma::mat vprojection(startvec.n_elem, (theclairvoyant + 1));
@@ -2768,7 +3024,7 @@ Rcpp::List stoch_senselas(List mpm, int times = 10000, int style = 1,
     
     // All references should go to senscube, which is a 3d array designed to hold the sensitivity matrices
     for (int j = 0; j < theclairvoyant; j++) { // This is the main time loop for the sensitivity matrices, 
-                                               // adding each time to the respective matrix for each pop-patch
+                                               // adding each occasion to the respective matrix for each pop-patch
       arma::vec vtplus1 = vprojection.col(j+1); // used to be j+1
       arma::vec wt = wprojection.col(j);
       
@@ -2800,15 +3056,15 @@ Rcpp::List stoch_senselas(List mpm, int times = 10000, int style = 1,
 //' @return A data frame with the following elements:
 //' \item{index}{Vector index of matrix element in C++ terms.}
 //' \item{transition}{Category of transition.}
-//' \item{size3}{Size in time \emph{t}+1.}
-//' \item{repstatus3}{Reproductive status in time \emph{t}+1.}
-//' \item{entrystatus3}{Entry status in time \emph{t}+1.}
-//' \item{size2}{Size in time \emph{t}.}
-//' \item{repstatus2}{Reproductive status in time \emph{t}.}
-//' \item{entrystatus2}{Entry status in time \emph{t}.}
-//' \item{size1}{Size in time \emph{t}-1.}
-//' \item{repstatus1}{Reproductive status in time \emph{t}11.}
-//' \item{entrystatus1}{Entry status in time \emph{t}-1.}
+//' \item{size3}{Size in occasion \emph{t}+1.}
+//' \item{repstatus3}{Reproductive status in occasion \emph{t}+1.}
+//' \item{entrystatus3}{Entry status in occasion \emph{t}+1.}
+//' \item{size2}{Size in occasion \emph{t}.}
+//' \item{repstatus2}{Reproductive status in occasion \emph{t}.}
+//' \item{entrystatus2}{Entry status in occasion \emph{t}.}
+//' \item{size1}{Size in occasion \emph{t}-1.}
+//' \item{repstatus1}{Reproductive status in occasion \emph{t}11.}
+//' \item{entrystatus1}{Entry status in occasion \emph{t}-1.}
 //'
 //' The kind of transitions conforms to the following code: \code{10}: full
 //' stasis, \code{11}: stasis to growth, \code{12}: full growth, \code{13}:
@@ -2875,7 +3131,7 @@ DataFrame bambi3(DataFrame stages, DataFrame hstages) {
   
   for (int i1 = 0; i1 < numhstages; i1++) {
     for (int i2 = 0; i2 < numhstages; i2++) {
-      if (hstage3in(i1) == (hstage2nin(i2) + 1)) {
+      if (hstage3in(i1) == (hstage2nin(i2))) { // Originally this was: if (hstage3in(i1) == (hstage2nin(i2) + 1))
         
         hsindexl(counter) = (i1 * numhstages) + i2;
         
@@ -2901,7 +3157,13 @@ DataFrame bambi3(DataFrame stages, DataFrame hstages) {
           if (entrystatus2(counter) == 1 && repstatus1(counter) == 1) {
             transition_type(counter) = 26; // Fecundity to fecundity
           } else if (size2(counter) == size1(counter)) {
-            transition_type(counter) = 20; // Stasis to fecundity
+            if (repstatus2(counter) > repstatus1(counter) || entrystatus3(counter) < entrystatus2(counter)) {
+              transition_type(counter) = 21; // Growth to fecundity
+            } else if (repstatus2(counter) < repstatus1(counter) || entrystatus2(counter) > entrystatus1(counter)) {
+              transition_type(counter) = 22; // Shrinkage to fecundity
+            } else {
+              transition_type(counter) = 20; // Stasis to fecundity
+            }
           } else if (size2(counter) > size1(counter)) {
             transition_type(counter) = 21; // Growth to fecundity
           } else if (size2(counter) < size1(counter)) {
@@ -2909,32 +3171,85 @@ DataFrame bambi3(DataFrame stages, DataFrame hstages) {
           }
         } else if (entrystatus2(counter) == 1 && repstatus1(counter) == 1) {
           if (size3(counter) == size2(counter)) {
-            transition_type(counter) = 23; // Fecundity to stasis
+            if (repstatus3(counter) > repstatus2(counter) || entrystatus3(counter) < entrystatus2(counter)) {
+              transition_type(counter) = 24; // Fecundity to growth
+            } else if (repstatus3(counter) < repstatus2(counter) || entrystatus3(counter) > entrystatus2(counter)) {
+              transition_type(counter) = 25; // Fecundity to shrinkage
+            } else {
+              transition_type(counter) = 23; // Fecundity to stasis
+            }
           } else if (size3(counter) > size2(counter)) {
             transition_type(counter) = 24; // Fecundity to growth
           } else if (size3(counter) < size2(counter)) {
             transition_type(counter) = 25; // Fecundity to shrinkage
           }
         } else if (size3(counter) == size2(counter) && size2(counter) == size1(counter)) {
-          transition_type(counter) = 10; // Full stasis
+          if (repstatus2(counter) > repstatus1(counter) || entrystatus2(counter) < entrystatus1(counter)) {
+            if (repstatus3(counter) > repstatus2(counter) || entrystatus3(counter) < entrystatus2(counter)) {
+              transition_type(counter) = 12; // Full growth
+            } else if (repstatus3(counter) < repstatus2(counter) || entrystatus3(counter) > entrystatus2(counter)) {
+              transition_type(counter) = 17; // Growth to shrinkage
+            } else {
+              transition_type(counter) = 13; // Growth to stasis
+            }
+          } else if (repstatus2(counter) < repstatus1(counter)) {
+            if (repstatus3(counter) > repstatus2(counter) || entrystatus3(counter) < entrystatus2(counter)) {
+              transition_type(counter) = 18; // Shrinkage to growth
+            } else if (repstatus3(counter) < repstatus2(counter) || entrystatus3(counter) > entrystatus2(counter)) {
+              transition_type(counter) = 15; // Full shrinkage
+            } else {
+              transition_type(counter) = 16; // Shrinkage to stasis
+            }
+          } else {
+            if (repstatus3(counter) > repstatus2(counter) || entrystatus3(counter) < entrystatus2(counter)) {
+              transition_type(counter) = 11; // Stasis to growth
+            } else if (repstatus3(counter) < repstatus2(counter) || entrystatus3(counter) > entrystatus2(counter)) {
+              transition_type(counter) = 14; // Stasis to shrinkage
+            } else {
+              transition_type(counter) = 10; // Full stasis
+            }
+          }
         } else if (size3(counter) > size2(counter) && size2(counter) == size1(counter)) {
-          transition_type(counter) = 11; // Stasis to growth
+          if (repstatus2(counter) > repstatus1(counter) || entrystatus2(counter) < entrystatus1(counter)) {
+            transition_type(counter) = 12; // Full growth
+          } else if (repstatus2(counter) < repstatus1(counter) || entrystatus2(counter) > entrystatus1(counter)) {
+            transition_type(counter) = 18; // Shrinkage to growth
+          } else {
+            transition_type(counter) = 11; // Stasis to growth
+          }
         } else if (size3(counter) > size2(counter) && size2(counter) > size1(counter)) {
           transition_type(counter) = 12; // Full growth
         } else if (size3(counter) == size2(counter) && size2(counter) > size1(counter)) {
-          transition_type(counter) = 13; // Growth to stasis
+          if (repstatus3(counter) > repstatus2(counter) || entrystatus3(counter) < entrystatus2(counter)) {
+            transition_type(counter) = 12; // Full growth
+          } else if (repstatus3(counter) < repstatus2(counter) || entrystatus3(counter) > entrystatus2(counter)) {
+            transition_type(counter) = 17; // Growth to shrinkage
+          } else {
+            transition_type(counter) = 13; // Growth to stasis
+          }
         } else if (size3(counter) < size2(counter) && size2(counter) == size1(counter)) {
-          transition_type(counter) = 14; // Stasis to shrinkage
+          if (repstatus2(counter) > repstatus1(counter) || entrystatus2(counter) < entrystatus1(counter)) {
+            transition_type(counter) = 17; // Growth to shrinkage
+          } else if (repstatus2(counter) < repstatus1(counter) || entrystatus2(counter) > entrystatus1(counter)) {
+            transition_type(counter) = 15; // Full shrinkage
+          } else {
+            transition_type(counter) = 14; // Stasis to shrinkage
+          }
         } else if (size3(counter) < size2(counter) && size2(counter) < size1(counter)) {
           transition_type(counter) = 15; // Full shrinkage
         } else if (size3(counter) == size2(counter) && size2(counter) < size1(counter)) {
-          transition_type(counter) = 16; // Shrinkage to stasis
+          if (repstatus3(counter) > repstatus2(counter) || entrystatus3(counter) < entrystatus2(counter)) {
+            transition_type(counter) = 18; // Shrinkage to growth
+          } else if (repstatus3(counter) < repstatus2(counter) || entrystatus3(counter) > entrystatus2(counter)) {
+            transition_type(counter) = 15; // Full shrinkage
+          } else {
+            transition_type(counter) = 16; // Shrinkage to stasis
+          }
         } else if (size3(counter) < size2(counter) && size2(counter) > size1(counter)) {
           transition_type(counter) = 17; // Growth to shrinkage
         } else if (size3(counter) > size2(counter) && size2(counter) < size1(counter)) {
           transition_type(counter) = 18; // Shrinkage to growth
         }
-        
         counter++;
       }
     }
@@ -2982,14 +3297,14 @@ DataFrame bambi3(DataFrame stages, DataFrame hstages) {
 //' @return A data frame with the following elements:
 //' \item{index}{Vector index of matrix element in C++ terms.}
 //' \item{transition}{Category of transition.}
-//' \item{stage3}{Stage in time \emph{t}+1.}
-//' \item{size3}{Size in time \emph{t}+1.}
-//' \item{repstatus3}{Reproductive status in time \emph{t}+1.}
-//' \item{entrystatus3}{Entry status in time \emph{t}+1.}
-//' \item{stage2}{Stage in time \emph{t}.}
-//' \item{size2}{Size in time \emph{t}.}
-//' \item{repstatus2}{Reproductive status in time \emph{t}.}
-//' \item{entrystatus2}{Entry status in time \emph{t}.}
+//' \item{stage3}{Stage in occasion \emph{t}+1.}
+//' \item{size3}{Size in occasion \emph{t}+1.}
+//' \item{repstatus3}{Reproductive status in occasion \emph{t}+1.}
+//' \item{entrystatus3}{Entry status in occasion \emph{t}+1.}
+//' \item{stage2}{Stage in occasion \emph{t}.}
+//' \item{size2}{Size in occasion \emph{t}.}
+//' \item{repstatus2}{Reproductive status in occasion \emph{t}.}
+//' \item{entrystatus2}{Entry status in occasion \emph{t}.}
 //'
 //' The kind of transitions conforms to the following code: \code{1}: stasis, 
 //' \code{2}: growth, \code{3}: shrinkage, \code{4}: fecundity.
@@ -3056,7 +3371,13 @@ DataFrame bambi2(DataFrame stages) {
       if (entrystatus3(counter) == 1 && repstatus2(counter) == 1) {
         transition_type(counter) = 4; // Fecundity
       } else if (size3(counter) == size2(counter)) {
-        transition_type(counter) = 1; // Stasis
+        if (repstatus3(counter) > repstatus2(counter) || entrystatus3(counter) < entrystatus2(counter)) {
+          transition_type(counter) = 2; // Growth
+        } else if (repstatus3(counter) < repstatus2(counter) || entrystatus3(counter) > entrystatus2(counter)) {
+          transition_type(counter) = 3; // Shrinkage
+        } else {
+          transition_type(counter) = 1; // Stasis
+        }
       } else if (size3(counter) > size2(counter)) {
         transition_type(counter) = 2; // Growth
       } else if (size3(counter) < size2(counter)) {
@@ -3080,39 +3401,100 @@ DataFrame bambi2(DataFrame stages) {
 //' Creates Summary Data for Elasticity Matrix Inputs
 //' 
 //' Function \code{demolition3()} sums elasticity values from elasticity
-//' matrices according to the categories developed by functions \code{bambi2()}
-//' and \code{bambi3()}.
+//' matrices, and LTRE contributions from LTRE and sLTRE matrices, according to
+//' the categories developed by functions \code{bambi2()} and \code{bambi3()}.
 //' 
-//' @param e_amat A single elasticity matrix.
-//' @param amat The A matrix corresponding to \code{e_amat}.
-//' @param fmat The F matrix corresponding to \code{e_amat}.
+//' @param e_amat A single elasticity, LTRE, or sLTRE matrix.
 //' @param bambesque This is the output from \code{bambi2()} or \code{bambi3()}
-//' corresponding to the current lefkoMat object.
+//' corresponding to the current lefkoMat object. The format is a data frame
+//' giving the indices and characteristics of all predicted potential non-zero
+//' elements in the supplied matrix.
+//' @param amat_ The A matrix corresponding to \code{e_amat}. If not supplied,
+//' then only \code{bambesque} is used to determine transition categories. If
+//' provided, then fecundity transitions may be split between fecundity and
+//' survival portions.
+//' @param fmat_ The F matrix corresponding to \code{e_amat}. If not supplied,
+//' then only \code{bambesque} is used to determine transition categories. If
+//' provided, then fecundity transitions may be split between fecundity and
+//' survival portions.
 //' 
 //' @return A list with two data frames, one showing the summed elasticities for
 //' the historical matrix supplied (if supplied), and the other showing the
 //' ahistorical summary of the historical matrix or the summed elasticities of
-//' a supplied ahistorical elasticity matrix. Note that the elasticity of
-//' fecundity transitions will be split with any co-occurring survival
-//' transition proportionately.
+//' a supplied ahistorical elasticity matrix. Also includes sums of only the
+//' positive elements and only the negative elements, in all cases.
+//' 
+//' @section Notes:
+//' If the original matrices are provided, then this function was made to split
+//' co-occurring survival-fecundity elasticities according to the ratio of the
+//' fecundity portion of the element to the survival portion of that element.
+//' However, this transition splitting capability developed using the original
+//' matrices does not currently work properly, and so it is better to use this
+//' function without objects \code{amat_} and \code{fmat_}, forcing co-occurring
+//' survival-fecundity transitions to be treated as fecundity only.
 //' 
 //' @keywords internal
 //' @noRd
 // [[Rcpp::export]]
-List demolition3(arma::mat e_amat, arma::mat amat, arma::mat fmat, 
-  DataFrame bambesque) {
+List demolition3(arma::mat e_amat, DataFrame bambesque,
+  Nullable<Rcpp::NumericVector> amat_ = R_NilValue,
+  Nullable<Rcpp::NumericVector> fmat_ = R_NilValue) {
   
   arma::uvec eindices = bambesque["index"];
   arma::uvec categories = bambesque["transition"];
   
   int e_amatsize = e_amat.n_elem;
+  int e_amatrows = e_amat.n_rows;
   int maxelem = static_cast<int>(eindices.max());
   int minindex = static_cast<int>(categories.min());
+  
+  arma::mat amat(e_amatrows, e_amatrows);
+  arma::mat fmat(e_amatrows, e_amatrows);
   
   if (maxelem > e_amatsize) {
     throw Rcpp::exception("Supplied info does not seem to correspond to current matrix inputs.", false);
   }
   
+  if (amat_.isNotNull() && fmat_.isNotNull()) {
+    amat = Rcpp::as<arma::mat>(amat_);
+    fmat = Rcpp::as<arma::mat>(fmat_);
+  } else {
+    amat.ones();
+    fmat.zeros();
+    
+    arma::uvec fec_trans = find(categories == 4);
+    if (fec_trans.n_elem > 0) {
+      for (int i = 0; i < fec_trans.n_elem; i ++) {
+        fmat(eindices(fec_trans(i))) = 1;
+      }
+    }
+    fec_trans = find(categories == 20);
+    if (fec_trans.n_elem > 0) {
+      for (int i = 0; i < fec_trans.n_elem; i ++) {
+        fmat(eindices(fec_trans(i))) = 1;
+      }
+    }
+    fec_trans = find(categories == 21);
+    if (fec_trans.n_elem > 0) {
+      for (int i = 0; i < fec_trans.n_elem; i ++) {
+        fmat(eindices(fec_trans(i))) = 1;
+      }
+    }
+    fec_trans = find(categories == 22);
+    if (fec_trans.n_elem > 0) {
+      for (int i = 0; i < fec_trans.n_elem; i ++) {
+        fmat(eindices(fec_trans(i))) = 1;
+      }
+    }
+    fec_trans = find(categories == 26);
+    if (fec_trans.n_elem > 0) {
+      for (int i = 0; i < fec_trans.n_elem; i ++) {
+        fmat(eindices(fec_trans(i))) = 1;
+      }
+    }
+  }
+  
+  // The next portion allows fecundity transitions to be split, if they include survival portions
   arma::mat corr_mat = amat;
   arma::uvec z_indices = find(corr_mat == 0);
   int z_indicesnem = z_indices.n_elem;
@@ -3135,17 +3517,29 @@ List demolition3(arma::mat e_amat, arma::mat amat, arma::mat fmat,
   arma::uvec histcatnums {10, 11, 12, 13, 14, 15, 16, 17, 18, 20, 21, 22, 23,
     24, 25, 26};
   arma::vec histsums(16);
-  histsums.zeros();
+  arma::vec histpos(16);
+  arma::vec histneg(16);
   arma::vec hc_ahistsums(4);
+  arma::vec hc_ahistpos(4);
+  arma::vec hc_ahistneg(4);
+  histsums.zeros();
+  histpos.zeros();
+  histneg.zeros();
   hc_ahistsums.zeros();
+  hc_ahistpos.zeros();
+  hc_ahistneg.zeros();
   
   StringVector ahistcats {"Stasis", "Growth", "Shrinkage", "Fecundity"};
   arma::uvec ahistcatnums {1, 2, 3, 4};
   arma::vec ahistsums(4);
+  arma::vec ahistpos(4);
+  arma::vec ahistneg(4);
   ahistsums.zeros();
+  ahistpos.zeros();
+  ahistneg.zeros();
   
   if (minindex > 9) {
-    
+    // Object minindex will only be above 9 if the supplied object is historical
     arma::vec size3 = bambesque["size3"];
     arma::vec size2 = bambesque["size2"];
     arma::vec size1 = bambesque["size1"];
@@ -3163,97 +3557,1467 @@ List demolition3(arma::mat e_amat, arma::mat amat, arma::mat fmat,
       int currentguysnem = currentguys.n_elem;
       
       if (histcatnums(i) == 20 || histcatnums(i) == 21 || histcatnums(i) == 22 || histcatnums(i) == 26) { // Fecundity transitions
-
+      
         // Some transitions may be combinations of fecundity and survival, requiring
         // the associated elasticities to be split. This next section does that
         for (int j = 0; j < currentguysnem; j++) {
-          double this_guy = eindices(currentguys(j));
+          int this_guy = eindices(currentguys(j));
           
           if (fec_fraction(this_guy) == 1) {
             hc_ahistsums(3) += (e_amat(this_guy));
             histsums(i) += (e_amat(this_guy));
+            
+            if (e_amat(this_guy) > 0) {
+              hc_ahistpos(3) += (e_amat(this_guy));
+              histpos(i) += (e_amat(this_guy));
+            } else if (e_amat(this_guy) < 0) {
+              hc_ahistneg(3) += (e_amat(this_guy));
+              histneg(i) += (e_amat(this_guy));
+            }
           } else {
             hc_ahistsums(3) += (e_amat(this_guy) * fec_fraction(this_guy));
             histsums(i) += (e_amat(this_guy) * fec_fraction(this_guy));
             
+            if (e_amat(this_guy) > 0) {
+              hc_ahistpos(3) += (e_amat(this_guy) * (fec_fraction(this_guy)));
+              histpos(i) += (e_amat(this_guy) * (fec_fraction(this_guy)));
+            } else if (e_amat(this_guy) < 0) {
+              hc_ahistneg(3) += (e_amat(this_guy) * (fec_fraction(this_guy)));
+              histneg(i) += (e_amat(this_guy) * (fec_fraction(this_guy)));
+            }
+            
             arma::uvec counter = find(eindices == this_guy);
             
             if (entrystatus2(counter(0)) == 1 && repstatus1(counter(0)) == 1) {
-              if (size3(counter(0)) == size2(counter(0))) {
+              if (size3(counter(0)) == size2(counter(0)) && repstatus3(counter(0)) == repstatus2(counter(0)) &&
+                  entrystatus3(counter(0)) == entrystatus2(counter(0))) {
                 hc_ahistsums(0) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
                 histsums(12) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
+                
+                if (e_amat(this_guy) > 0) {
+                  hc_ahistpos(0) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
+                  histpos(12) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
+                } else if (e_amat(this_guy) < 0) {
+                  hc_ahistneg(0) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
+                  histneg(12) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
+                }
               } else if (size3(counter(0)) > size2(counter(0))) {
                 hc_ahistsums(1) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
                 histsums(13) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
+                
+                if (e_amat(this_guy) > 0) {
+                  hc_ahistpos(1) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
+                  histpos(13) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
+                } else if (e_amat(this_guy) < 0) {
+                  hc_ahistneg(1) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
+                  histneg(13) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
+                }
               } else if (size3(counter(0)) < size2(counter(0))) {
                 hc_ahistsums(2) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
                 histsums(14) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
+                
+                if (e_amat(this_guy) > 0) {
+                  hc_ahistpos(2) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
+                  histpos(14) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
+                } else if (e_amat(this_guy) < 0) {
+                  hc_ahistneg(2) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
+                  histneg(14) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
+                }
+              } else if (repstatus3(counter(0)) > repstatus2(counter(0))) {
+                hc_ahistsums(1) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
+                histsums(13) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
+                
+                if (e_amat(this_guy) > 0) {
+                  hc_ahistpos(1) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
+                  histpos(13) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
+                } else if (e_amat(this_guy) < 0) {
+                  hc_ahistneg(1) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
+                  histneg(13) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
+                }
+              } else if (repstatus3(counter(0)) < repstatus2(counter(0))) {
+                hc_ahistsums(2) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
+                histsums(14) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
+                
+                if (e_amat(this_guy) > 0) {
+                  hc_ahistpos(2) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
+                  histpos(14) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
+                } else if (e_amat(this_guy) < 0) {
+                  hc_ahistneg(2) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
+                  histneg(14) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
+                }
+              } else if (entrystatus3(counter(0)) < entrystatus2(counter(0))) {
+                hc_ahistsums(1) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
+                histsums(13) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
+                
+                if (e_amat(this_guy) > 0) {
+                  hc_ahistpos(1) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
+                  histpos(13) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
+                } else if (e_amat(this_guy) < 0) {
+                  hc_ahistneg(1) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
+                  histneg(13) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
+                }
+              } else if (entrystatus3(counter(0)) > entrystatus2(counter(0))) {
+                hc_ahistsums(2) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
+                histsums(14) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
+                
+                if (e_amat(this_guy) > 0) {
+                  hc_ahistpos(2) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
+                  histpos(14) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
+                } else if (e_amat(this_guy) < 0) {
+                  hc_ahistneg(2) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
+                  histneg(14) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
+                }
               }
             } else if (size3(counter(0)) == size2(counter(0)) && size2(counter(0)) == size1(counter(0))) {
-              hc_ahistsums(0) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-              histsums(0) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
+              if (repstatus3(counter(0)) > repstatus2(counter(0))) {
+                if (repstatus2(counter(0)) > repstatus1(counter(0))) {
+                  hc_ahistsums(1) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
+                  histsums(2) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
+                
+                  if (e_amat(this_guy) > 0) {
+                    hc_ahistpos(1) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
+                    histpos(2) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
+                  } else if (e_amat(this_guy) < 0) {
+                    hc_ahistneg(1) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
+                    histneg(2) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
+                  }
+                } else if (repstatus2(counter(0)) < repstatus1(counter(0))) {
+                  hc_ahistsums(1) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
+                  histsums(8) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
+                
+                  if (e_amat(this_guy) > 0) {
+                    hc_ahistpos(1) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
+                    histpos(8) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
+                  } else if (e_amat(this_guy) < 0) {
+                    hc_ahistneg(1) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
+                    histneg(8) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
+                  }
+                } else if (entrystatus2(counter(0)) < entrystatus1(counter(0))) {
+                  hc_ahistsums(1) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
+                  histsums(2) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
+                
+                  if (e_amat(this_guy) > 0) {
+                    hc_ahistpos(1) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
+                    histpos(2) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
+                  } else if (e_amat(this_guy) < 0) {
+                    hc_ahistneg(1) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
+                    histneg(2) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
+                  }
+                } else if (entrystatus2(counter(0)) > entrystatus1(counter(0))) {
+                  hc_ahistsums(1) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
+                  histsums(8) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
+                
+                  if (e_amat(this_guy) > 0) {
+                    hc_ahistpos(1) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
+                    histpos(8) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
+                  } else if (e_amat(this_guy) < 0) {
+                    hc_ahistneg(1) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
+                    histneg(8) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
+                  }
+                } else {
+                  hc_ahistsums(1) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
+                  histsums(1) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
+                
+                  if (e_amat(this_guy) > 0) {
+                    hc_ahistpos(1) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
+                    histpos(1) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
+                  } else if (e_amat(this_guy) < 0) {
+                    hc_ahistneg(1) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
+                    histneg(1) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
+                  }
+                }
+              } else if (repstatus3(counter(0)) < repstatus2(counter(0))) {
+                if (repstatus2(counter(0)) > repstatus1(counter(0))) {
+                  hc_ahistsums(2) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
+                  histsums(7) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
+                
+                  if (e_amat(this_guy) > 0) {
+                    hc_ahistpos(2) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
+                    histpos(7) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
+                  } else if (e_amat(this_guy) < 0) {
+                    hc_ahistneg(2) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
+                    histneg(7) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
+                  }
+                } else if (repstatus2(counter(0)) < repstatus1(counter(0))) {
+                  hc_ahistsums(2) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
+                  histsums(5) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
+                
+                  if (e_amat(this_guy) > 0) {
+                    hc_ahistpos(2) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
+                    histpos(5) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
+                  } else if (e_amat(this_guy) < 0) {
+                    hc_ahistneg(2) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
+                    histneg(5) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
+                  }
+                } else if (entrystatus2(counter(0)) < entrystatus1(counter(0))) {
+                  hc_ahistsums(2) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
+                  histsums(7) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
+                
+                  if (e_amat(this_guy) > 0) {
+                    hc_ahistpos(2) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
+                    histpos(7) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
+                  } else if (e_amat(this_guy) < 0) {
+                    hc_ahistneg(2) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
+                    histneg(7) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
+                  }
+                } else if (entrystatus2(counter(0)) > entrystatus1(counter(0))) {
+                  hc_ahistsums(2) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
+                  histsums(5) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
+                
+                  if (e_amat(this_guy) > 0) {
+                    hc_ahistpos(2) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
+                    histpos(5) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
+                  } else if (e_amat(this_guy) < 0) {
+                    hc_ahistneg(2) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
+                    histneg(5) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
+                  }
+                } else {
+                  hc_ahistsums(2) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
+                  histsums(4) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
+                
+                  if (e_amat(this_guy) > 0) {
+                    hc_ahistpos(2) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
+                    histpos(4) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
+                  } else if (e_amat(this_guy) < 0) {
+                    hc_ahistneg(2) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
+                    histneg(4) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
+                  }
+                }
+              } else if (entrystatus3(counter(0)) < entrystatus2(counter(0))) {
+                if (repstatus2(counter(0)) > repstatus1(counter(0))) {
+                  hc_ahistsums(1) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
+                  histsums(2) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
+                
+                  if (e_amat(this_guy) > 0) {
+                    hc_ahistpos(1) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
+                    histpos(2) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
+                  } else if (e_amat(this_guy) < 0) {
+                    hc_ahistneg(1) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
+                    histneg(2) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
+                  }
+                } else if (repstatus2(counter(0)) < repstatus1(counter(0))) {
+                  hc_ahistsums(1) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
+                  histsums(8) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
+                
+                  if (e_amat(this_guy) > 0) {
+                    hc_ahistpos(1) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
+                    histpos(8) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
+                  } else if (e_amat(this_guy) < 0) {
+                    hc_ahistneg(1) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
+                    histneg(8) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
+                  }
+                } else if (entrystatus2(counter(0)) < entrystatus1(counter(0))) {
+                  hc_ahistsums(1) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
+                  histsums(2) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
+                
+                  if (e_amat(this_guy) > 0) {
+                    hc_ahistpos(1) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
+                    histpos(2) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
+                  } else if (e_amat(this_guy) < 0) {
+                    hc_ahistneg(1) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
+                    histneg(2) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
+                  }
+                } else if (entrystatus2(counter(0)) > entrystatus1(counter(0))) {
+                  hc_ahistsums(1) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
+                  histsums(8) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
+                
+                  if (e_amat(this_guy) > 0) {
+                    hc_ahistpos(1) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
+                    histpos(8) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
+                  } else if (e_amat(this_guy) < 0) {
+                    hc_ahistneg(1) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
+                    histneg(8) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
+                  }
+                } else {
+                  hc_ahistsums(1) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
+                  histsums(1) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
+                
+                  if (e_amat(this_guy) > 0) {
+                    hc_ahistpos(1) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
+                    histpos(1) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
+                  } else if (e_amat(this_guy) < 0) {
+                    hc_ahistneg(1) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
+                    histneg(1) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
+                  }
+                }
+              } else if (entrystatus3(counter(0)) > entrystatus2(counter(0))) {
+                if (repstatus2(counter(0)) > repstatus1(counter(0))) {
+                  hc_ahistsums(2) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
+                  histsums(7) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
+                
+                  if (e_amat(this_guy) > 0) {
+                    hc_ahistpos(2) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
+                    histpos(7) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
+                  } else if (e_amat(this_guy) < 0) {
+                    hc_ahistneg(2) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
+                    histneg(7) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
+                  }
+                } else if (repstatus2(counter(0)) < repstatus1(counter(0))) {
+                  hc_ahistsums(2) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
+                  histsums(5) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
+                
+                  if (e_amat(this_guy) > 0) {
+                    hc_ahistpos(2) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
+                    histpos(5) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
+                  } else if (e_amat(this_guy) < 0) {
+                    hc_ahistneg(2) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
+                    histneg(5) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
+                  }
+                } else if (entrystatus2(counter(0)) < entrystatus1(counter(0))) {
+                  hc_ahistsums(2) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
+                  histsums(7) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
+                
+                  if (e_amat(this_guy) > 0) {
+                    hc_ahistpos(2) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
+                    histpos(7) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
+                  } else if (e_amat(this_guy) < 0) {
+                    hc_ahistneg(2) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
+                    histneg(7) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
+                  }
+                } else if (entrystatus2(counter(0)) > entrystatus1(counter(0))) {
+                  hc_ahistsums(2) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
+                  histsums(5) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
+                
+                  if (e_amat(this_guy) > 0) {
+                    hc_ahistpos(2) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
+                    histpos(5) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
+                  } else if (e_amat(this_guy) < 0) {
+                    hc_ahistneg(2) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
+                    histneg(5) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
+                  }
+                } else {
+                  hc_ahistsums(2) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
+                  histsums(4) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
+                
+                  if (e_amat(this_guy) > 0) {
+                    hc_ahistpos(2) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
+                    histpos(4) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
+                  } else if (e_amat(this_guy) < 0) {
+                    hc_ahistneg(2) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
+                    histneg(4) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
+                  }
+                }
+              } else {
+                hc_ahistsums(0) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
+                histsums(0) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
+                
+                if (e_amat(this_guy) > 0) {
+                  hc_ahistpos(0) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
+                  histpos(0) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
+                } else if (e_amat(this_guy) < 0) {
+                  hc_ahistneg(0) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
+                  histneg(0) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
+                }
+              }
             } else if (size3(counter(0)) > size2(counter(0)) && size2(counter(0)) == size1(counter(0))) {
-              hc_ahistsums(1) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-              histsums(1) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
+              if (repstatus2(counter(0)) > repstatus1(counter(0))) {
+                hc_ahistsums(1) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
+                histsums(2) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
+                
+                if (e_amat(this_guy) > 0) {
+                  hc_ahistpos(1) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
+                  histpos(2) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
+                } else if (e_amat(this_guy) < 0) {
+                  hc_ahistneg(1) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
+                  histneg(2) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
+                }
+              } else if (repstatus2(counter(0)) < repstatus1(counter(0))) {
+                hc_ahistsums(1) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
+                histsums(8) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
+                
+                if (e_amat(this_guy) > 0) {
+                  hc_ahistpos(1) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
+                  histpos(8) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
+                } else if (e_amat(this_guy) < 0) {
+                  hc_ahistneg(1) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
+                  histneg(8) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
+                }
+              } else if (entrystatus2(counter(0)) < entrystatus1(counter(0))) {
+                hc_ahistsums(1) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
+                histsums(2) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
+                
+                if (e_amat(this_guy) > 0) {
+                  hc_ahistpos(1) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
+                  histpos(2) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
+                } else if (e_amat(this_guy) < 0) {
+                  hc_ahistneg(1) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
+                  histneg(2) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
+                }
+              } else if (entrystatus2(counter(0)) > entrystatus1(counter(0))) {
+                hc_ahistsums(1) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
+                histsums(8) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
+                
+                if (e_amat(this_guy) > 0) {
+                  hc_ahistpos(1) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
+                  histpos(8) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
+                } else if (e_amat(this_guy) < 0) {
+                  hc_ahistneg(1) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
+                  histneg(8) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
+                }
+              } else {
+                hc_ahistsums(1) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
+                histsums(1) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
+                
+                if (e_amat(this_guy) > 0) {
+                  hc_ahistpos(1) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
+                  histpos(1) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
+                } else if (e_amat(this_guy) < 0) {
+                  hc_ahistneg(1) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
+                  histneg(1) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
+                }
+              }
             } else if (size3(counter(0)) > size2(counter(0)) && size2(counter(0)) > size1(counter(0))) {
               hc_ahistsums(1) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
               histsums(2) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
+              
+              if (e_amat(this_guy) > 0) {
+                hc_ahistpos(1) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
+                histpos(2) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
+              } else if (e_amat(this_guy) < 0) {
+                hc_ahistneg(1) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
+                histneg(2) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
+              }
             } else if (size3(counter(0)) == size2(counter(0)) && size2(counter(0)) > size1(counter(0))) {
-              hc_ahistsums(0) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-              histsums(3) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
+              if (repstatus3(counter(0)) > repstatus2(counter(0))) {
+                hc_ahistsums(1) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
+                histsums(2) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
+                
+                if (e_amat(this_guy) > 0) {
+                  hc_ahistpos(1) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
+                  histpos(2) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
+                } else if (e_amat(this_guy) < 0) {
+                  hc_ahistneg(1) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
+                  histneg(2) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
+                }
+              } else if (repstatus3(counter(0)) < repstatus2(counter(0))) {
+                hc_ahistsums(2) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
+                histsums(7) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
+                
+                if (e_amat(this_guy) > 0) {
+                  hc_ahistpos(2) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
+                  histpos(7) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
+                } else if (e_amat(this_guy) < 0) {
+                  hc_ahistneg(2) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
+                  histneg(7) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
+                }
+              } else if (entrystatus3(counter(0)) < entrystatus2(counter(0))) {
+                hc_ahistsums(1) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
+                histsums(2) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
+                
+                if (e_amat(this_guy) > 0) {
+                  hc_ahistpos(1) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
+                  histpos(2) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
+                } else if (e_amat(this_guy) < 0) {
+                  hc_ahistneg(1) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
+                  histneg(2) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
+                }
+              } else if (entrystatus3(counter(0)) > entrystatus2(counter(0))) {
+                hc_ahistsums(2) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
+                histsums(7) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
+                
+                if (e_amat(this_guy) > 0) {
+                  hc_ahistpos(2) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
+                  histpos(7) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
+                } else if (e_amat(this_guy) < 0) {
+                  hc_ahistneg(2) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
+                  histneg(7) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
+                }
+              } else {
+                hc_ahistsums(0) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
+                histsums(0) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
+                
+                if (e_amat(this_guy) > 0) {
+                  hc_ahistpos(0) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
+                  histpos(0) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
+                } else if (e_amat(this_guy) < 0) {
+                  hc_ahistneg(0) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
+                  histneg(0) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
+                }
+              }
             } else if (size3(counter(0)) < size2(counter(0)) && size2(counter(0)) == size1(counter(0))) {
-              hc_ahistsums(2) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-              histsums(4) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
+              if (repstatus2(counter(0)) > repstatus1(counter(0))) {
+                hc_ahistsums(2) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
+                histsums(7) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
+                
+                if (e_amat(this_guy) > 0) {
+                  hc_ahistpos(2) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
+                  histpos(7) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
+                } else if (e_amat(this_guy) < 0) {
+                  hc_ahistneg(2) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
+                  histneg(7) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
+                }
+              } else if (repstatus2(counter(0)) < repstatus1(counter(0))) {
+                hc_ahistsums(2) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
+                histsums(5) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
+                
+                if (e_amat(this_guy) > 0) {
+                  hc_ahistpos(2) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
+                  histpos(5) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
+                } else if (e_amat(this_guy) < 0) {
+                  hc_ahistneg(2) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
+                  histneg(5) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
+                }
+              } else if (entrystatus2(counter(0)) < entrystatus1(counter(0))) {
+                hc_ahistsums(2) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
+                histsums(7) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
+                
+                if (e_amat(this_guy) > 0) {
+                  hc_ahistpos(2) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
+                  histpos(7) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
+                } else if (e_amat(this_guy) < 0) {
+                  hc_ahistneg(2) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
+                  histneg(7) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
+                }
+              } else if (entrystatus2(counter(0)) > entrystatus1(counter(0))) {
+                hc_ahistsums(2) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
+                histsums(5) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
+                
+                if (e_amat(this_guy) > 0) {
+                  hc_ahistpos(2) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
+                  histpos(5) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
+                } else if (e_amat(this_guy) < 0) {
+                  hc_ahistneg(2) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
+                  histneg(5) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
+                }
+              } else {
+                hc_ahistsums(2) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
+                histsums(4) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
+                
+                if (e_amat(this_guy) > 0) {
+                  hc_ahistpos(2) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
+                  histpos(4) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
+                } else if (e_amat(this_guy) < 0) {
+                  hc_ahistneg(2) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
+                  histneg(4) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
+                }
+              }
             } else if (size3(counter(0)) < size2(counter(0)) && size2(counter(0)) < size1(counter(0))) {
               hc_ahistsums(2) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
               histsums(5) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
+              
+              if (e_amat(this_guy) > 0) {
+                hc_ahistpos(2) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
+                histpos(5) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
+              } else if (e_amat(this_guy) < 0) {
+                hc_ahistneg(2) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
+                histneg(5) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
+              }
             } else if (size3(counter(0)) == size2(counter(0)) && size2(counter(0)) < size1(counter(0))) {
-              hc_ahistsums(0) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-              histsums(6) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
+              if (repstatus3(counter(0)) > repstatus2(counter(0))) {
+                hc_ahistsums(1) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
+                histsums(8) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
+                
+                if (e_amat(this_guy) > 0) {
+                  hc_ahistpos(1) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
+                  histpos(8) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
+                } else if (e_amat(this_guy) < 0) {
+                  hc_ahistneg(1) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
+                  histneg(8) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
+                }
+              } else if (repstatus3(counter(0)) < repstatus2(counter(0))) {
+                hc_ahistsums(2) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
+                histsums(5) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
+                
+                if (e_amat(this_guy) > 0) {
+                  hc_ahistpos(2) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
+                  histpos(5) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
+                } else if (e_amat(this_guy) < 0) {
+                  hc_ahistneg(2) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
+                  histneg(5) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
+                }
+              } else if (entrystatus3(counter(0)) < entrystatus2(counter(0))) {
+                hc_ahistsums(1) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
+                histsums(8) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
+                
+                if (e_amat(this_guy) > 0) {
+                  hc_ahistpos(1) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
+                  histpos(8) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
+                } else if (e_amat(this_guy) < 0) {
+                  hc_ahistneg(1) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
+                  histneg(8) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
+                }
+              } else if (entrystatus3(counter(0)) > entrystatus2(counter(0))) {
+                hc_ahistsums(2) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
+                histsums(5) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
+                
+                if (e_amat(this_guy) > 0) {
+                  hc_ahistpos(2) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
+                  histpos(5) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
+                } else if (e_amat(this_guy) < 0) {
+                  hc_ahistneg(2) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
+                  histneg(5) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
+                }
+              } else {
+                hc_ahistsums(0) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
+                histsums(6) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
+                
+                if (e_amat(this_guy) > 0) {
+                  hc_ahistpos(0) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
+                  histpos(86) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
+                } else if (e_amat(this_guy) < 0) {
+                  hc_ahistneg(0) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
+                  histneg(6) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
+                }
+              }
             } else if (size3(counter(0)) < size2(counter(0)) && size2(counter(0)) > size1(counter(0))) {
               hc_ahistsums(2) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
               histsums(7) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
+              
+              if (e_amat(this_guy) > 0) {
+                hc_ahistpos(2) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
+                histpos(7) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
+              } else if (e_amat(this_guy) < 0) {
+                hc_ahistneg(2) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
+                histneg(7) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
+              }
             } else if (size3(counter(0)) > size2(counter(0)) && size2(counter(0)) < size1(counter(0))) {
-              hc_ahistsums(1) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-              histsums(8) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
+              hc_ahistsums(2) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
+              histsums(7) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
             }
           }
         }
       } else if (histcatnums(i) == 14 || histcatnums(i) == 15 || histcatnums(i) == 17 || histcatnums(i) == 25) { // Shrinkage transitions
         
-        double getoutofdodge = sum(e_amat.elem(eindices(currentguys)));
+        arma::vec all_es = e_amat.elem(eindices(currentguys));
+        arma::uvec all_es_pos = find(all_es > 0);
+        arma::uvec all_es_neg = find(all_es < 0);
+        
+        int all_es_pos_num = all_es_pos.n_elem;
+        int all_es_neg_num = all_es_neg.n_elem;
+        
+        double getoutofdodge = sum(all_es);
         histsums(i) += getoutofdodge;
         hc_ahistsums(2) += getoutofdodge;
         
+        if (all_es_pos_num > 0) {
+          histpos(i) += sum(all_es.elem(all_es_pos));
+          hc_ahistpos(2) += sum(all_es.elem(all_es_pos));
+        }
+        if (all_es_neg_num > 0) {
+          histneg(i) += sum(all_es.elem(all_es_neg));
+          hc_ahistneg(2) += sum(all_es.elem(all_es_neg));
+        }
+        
       } else if (histcatnums(i) == 10 || histcatnums(i) == 13 || histcatnums(i) == 16 || histcatnums(i) == 23) { // Stasis transitions
         
-        double getoutofdodge = sum(e_amat.elem(eindices(currentguys)));
+        arma::vec all_es = e_amat.elem(eindices(currentguys));
+        arma::uvec all_es_pos = find(all_es > 0);
+        arma::uvec all_es_neg = find(all_es < 0);
+        
+        int all_es_pos_num = all_es_pos.n_elem;
+        int all_es_neg_num = all_es_neg.n_elem;
+        
+        double getoutofdodge = sum(all_es);
         histsums(i) += getoutofdodge;
         hc_ahistsums(0) += getoutofdodge;
         
+        if (all_es_pos_num > 0) {
+          histpos(i) += sum(all_es.elem(all_es_pos));
+          hc_ahistpos(0) += sum(all_es.elem(all_es_pos));
+        }
+        if (all_es_neg_num > 0) {
+          histneg(i) += sum(all_es.elem(all_es_neg));
+          hc_ahistneg(0) += sum(all_es.elem(all_es_neg));
+        }
+        
       } else if (histcatnums(i) == 11 || histcatnums(i) == 12 || histcatnums(i) == 18 || histcatnums(i) == 24) { // Growth transitions
         
-        double getoutofdodge = sum(e_amat.elem(eindices(currentguys)));
+        arma::vec all_es = e_amat.elem(eindices(currentguys));
+        arma::uvec all_es_pos = find(all_es > 0);
+        arma::uvec all_es_neg = find(all_es < 0);
+        
+        int all_es_pos_num = all_es_pos.n_elem;
+        int all_es_neg_num = all_es_neg.n_elem;
+        
+        double getoutofdodge = sum(all_es);
         histsums(i) += getoutofdodge;
         hc_ahistsums(1) += getoutofdodge;
+        
+        if (all_es_pos_num > 0) {
+          histpos(i) += sum(all_es.elem(all_es_pos));
+          hc_ahistpos(1) += sum(all_es.elem(all_es_pos));
+        }
+        if (all_es_neg_num > 0) {
+          histneg(i) += sum(all_es.elem(all_es_neg));
+          hc_ahistneg(1) += sum(all_es.elem(all_es_neg));
+        }
       }
     }
     
-    histout = DataFrame::create(Named("category") = histcats, _["elas"] = histsums);
-    ahistout = DataFrame::create(Named("category") = ahistcats, _["elas"] = hc_ahistsums);
+    histout = DataFrame::create(Named("category") = histcats, _["elas"] = histsums,
+      _["elas_pos"] = histpos, _["elas_neg"] = histneg);
+    ahistout = DataFrame::create(Named("category") = ahistcats, _["elas"] = hc_ahistsums,
+      _["elas_pos"] = hc_ahistpos, _["elas_neg"] = hc_ahistneg);
   } else {
     histout = R_NilValue;
     
     for (int i = 0; i < 4; i++) {
       arma::uvec currentguys = find(categories == ahistcatnums(i));
-      double getoutofdodge = sum(e_amat.elem(eindices(currentguys)));
+      
+      arma::vec all_es = e_amat.elem(eindices(currentguys));
+      arma::uvec all_es_pos = find(all_es > 0);
+      arma::uvec all_es_neg = find(all_es < 0);
+      
+      int all_es_pos_num = all_es_pos.n_elem;
+      int all_es_neg_num = all_es_neg.n_elem;
+      
+      double getoutofdodge = sum(all_es);
       ahistsums(i) += getoutofdodge;
+      
+      if (all_es_pos_num > 0) {
+        ahistpos(i) += sum(all_es.elem(all_es_pos));
+      }
+      if (all_es_neg_num > 0) {
+        ahistneg(i) += sum(all_es.elem(all_es_neg));
+      }
     }
     
-    ahistout = DataFrame::create(Named("category") = ahistcats, _["elas"] = ahistsums);
+    ahistout = DataFrame::create(Named("category") = ahistcats, _["elas"] = ahistsums,
+      _["elas_pos"] = ahistpos, _["elas_neg"] = ahistneg);
   }
   
   List output = List::create(Named("hist") = histout, _["ahist"] = ahistout);
   
   return output;
 }
+
+//' Estimate LTRE of Any Population Matrix
+//' 
+//' \code{ltre3matrix()} returns the one-way fixed deterministic LTRE matrix of
+//' a dense or sparse set of input matrices.
+//' 
+//' @param Amats A list of population projection matrices (not an entire
+//' \code{lefkoMat} object.
+//' @param refnum An integer vector giving the numbers of the matrices to use as
+//' reference from_ \code{refmats}.
+//' @param refmats_ A list of reference population projection matrices.
+//' @param mean A logical value indicating whether to use the element-wise mean
+//' matrix as the reference.
+//' @param sparse A logical value indicating whether to use sparse or dense
+//' format in matrix calculations.
+//' 
+//' @return This function returns a cube of LTRE contributions, with each slice
+//' corresponding to each input matrix in Amats. 
+//' 
+//' @keywords internal
+//' @noRd
+// [[Rcpp::export]]
+arma::cube ltre3matrix(List Amats, Rcpp::IntegerVector refnum,
+  Nullable<Rcpp::List> refmats_ = R_NilValue, bool mean = true,
+  bool sparse = false) {
+  
+  int Amatnum = Amats.length();
+  int matdim = as<arma::mat>(Amats(0)).n_rows;
+  
+  List eigenstuff;
+  List mean_set;
+  
+  arma::cube senscube(matdim, matdim, Amatnum);
+  senscube.zeros();
+  
+  if (!sparse) {
+    // Dense matrix analysis
+    arma::mat finalrefmat(matdim, matdim);
+    finalrefmat.zeros();
+      
+    int refmatnum = refnum.length();
+    
+    if (refmats_.isNotNull()) {
+      Rcpp::List refmats(refmats_);
+      
+      if (mean && refmatnum > 1) {
+        for (int i = 0; i < refmatnum; i++) {
+          finalrefmat = finalrefmat + (as<arma::mat>(refmats(refnum(i))) / static_cast<double>(refmatnum));
+        }
+      } else {
+        finalrefmat = as<arma::mat>(refmats(refnum(0)));
+      }
+    } else {
+      if (mean && refmatnum > 1) {
+        for (int i = 0; i < Amatnum; i++) {
+          finalrefmat = finalrefmat + (as<arma::mat>(Amats(refnum(i))) / static_cast<double>(Amatnum));
+        }
+      } else {
+        finalrefmat = as<arma::mat>(Amats(refnum(0)));
+      }
+    }
+    
+    // Now we create the halfway matrices and run the sensitivities
+    arma::mat halfmat(matdim, matdim);
+    arma::mat diffmat(matdim, matdim);
+    halfmat.zeros();
+    diffmat.zeros();
+    
+    for (int i = 0; i < Amatnum; i++) {
+      halfmat = (finalrefmat + (as<arma::mat>(Amats(i)))) / static_cast<double>(2.0);
+      diffmat = (as<arma::mat>(Amats(i))) - finalrefmat;
+      
+      senscube.slice(i) = diffmat % sens3matrix(halfmat, 0);
+    }
+    
+    return senscube;
+    
+  } else {
+    // Sparse matrix analysis
+    arma::sp_mat finalrefmat(matdim, matdim);
+    finalrefmat.zeros();
+      
+    int refmatnum = refnum.length();
+    
+    if (refmats_.isNotNull()) {
+      Rcpp::List refmats(refmats_);
+      
+      if (mean && refmatnum > 1) {
+        for (int i = 0; i < refmatnum; i++) {
+          finalrefmat = finalrefmat + (arma::sp_mat(as<arma::mat>(refmats(refnum(i)))) / static_cast<double>(refmatnum));
+        }
+      } else {
+        finalrefmat = (arma::sp_mat(as<arma::mat>(refmats(refnum(0)))));
+      }
+    } else {
+      if (mean && refmatnum > 1) {
+        for (int i = 0; i < Amatnum; i++) {
+          finalrefmat = finalrefmat + (arma::sp_mat(as<arma::mat>(Amats(refnum(i)))) / static_cast<double>(Amatnum));
+        }
+      } else {
+        finalrefmat = (arma::sp_mat(as<arma::mat>(Amats(refnum(0)))));
+      }
+    }
+    
+    // Now we create the halfway matrices and run the sensitivities
+    arma::sp_mat halfmat(matdim, matdim);
+    arma::sp_mat diffmat(matdim, matdim);
+    halfmat.zeros();
+    diffmat.zeros();
+    
+    for (int i = 0; i < Amatnum; i++) {
+      halfmat = (finalrefmat + (arma::sp_mat(as<arma::mat>(Amats(i))))) / static_cast<double>(2.0);
+      diffmat = (arma::sp_mat(as<arma::mat>(Amats(i)))) - finalrefmat;
+      
+      senscube.slice(i) = arma::mat(diffmat % sens3sp_matrix(halfmat, diffmat));
+    }
+    
+    return senscube;
+  }
+}
+
+//' Estimate sLTRE of Any Population Matrix
+//' 
+//' \code{sltre3matrix()} returns the one-way stochastic LTRE matrix of
+//' a dense or sparse set of input matrices.
+//' 
+//' @param Amats A list of population projection matrices (not an entire
+//' \code{lefkoMat} object).
+//' @param loy A data frame showing the order of populations, patches, and
+//' occasions of the matrices provided in object \code{Amats}.
+//' @param refnum An integer vector giving the numbers of the matrices to use as
+//' reference from \code{refmats}.
+//' @param refmats_ A list of reference population projection matrices.
+//' @param tweights_ Numeric vector denoting the probabilistic weightings of
+//' annual matrices. Defaults to equal weighting among occasions.
+//' @param steps The number of occasions to project the stochastic simulation
+//' forward, if performing an sLTRE. Defaults to 10,000. Note that the total
+//' number of occasions projected equals this number plus the number given in
+//' object \code{burnin}.
+//' @param burnin The number of initial occasions to project the population
+//' without calculating population metrics. Defaults to 3000.
+//' @param sparse A logical value indicating whether to use sparse or dense
+//' format in matrix calculations.
+//' 
+//' @return This function returns a list of two lists of matrices. The first,
+//' \code{cont_mean}, holds the sLTRE contributions of shifts in mean elements.
+//' The second, \code{cont_sd}, holds the sLTRE contributions of shifts in
+//' temporal standard deviations of matrix elements.
+//' 
+//' @section Notes:
+//' This function uses the simulation approach developed in Davison et al.
+//' (2010), which is a good approximation though not an analytical solution.
+//' 
+//' @keywords internal
+//' @noRd
+// [[Rcpp::export]]
+Rcpp::List sltre3matrix(List Amats, DataFrame loy, Rcpp::IntegerVector refnum,
+  Nullable<Rcpp::List> refmats_ = R_NilValue,
+  Nullable<arma::vec> tweights_ = R_NilValue, int steps = 10000,
+  int burnin = 3000, bool sparse = false) {
+  
+  int theclairvoyant = steps + burnin;
+  arma::vec tweights;
+  
+  int Amatnum = Amats.length();
+  int matdim = as<arma::mat>(Amats(0)).n_rows;
+  int matlength = as<arma::mat>(Amats(0)).n_elem;
+  int refmatnum = refnum.length();
+  
+  List eigenstuff;
+  List mean_set;
+  
+  List poppatch_meanmat;
+  List poppatch_sdmat;
+  List ref_byyear;
+  List elas_mean;
+  List elas_sd;
+  List diff_meanmat;
+  List diff_sdmat;
+  List cont_meanmat;
+  List cont_sdmat;
+  
+  // This section creates the order vectors for pop-patch-year
+  StringVector pops = loy["pop"];
+  arma::uvec pop_num = loy["popc"];
+  StringVector patches = loy["patch"];
+  arma::uvec year2c = loy["year2c"];
+  arma::uvec poppatchc = loy["poppatchc"];
+  arma::uvec patchesinpop = loy["patchesinpop"];
+  arma::uvec yearsinpatch = loy["yearsinpatch"];
+  arma::uvec uniquepops = unique(pop_num);
+  arma::uvec uniquepoppatches = unique(poppatchc);
+  arma::uvec uniqueyears = unique(year2c);
+  
+  int numpoppatches = uniquepoppatches.n_elem;
+  int numyears = uniqueyears.n_elem;
+  
+  arma::vec twinput_corr;
+  arma::uvec theprophecy;
+  
+  // The main loop
+  if (!sparse) {
+    // Dense matrix analysis
+    arma::mat mat_mean(matdim, matdim);
+    arma::mat mat_sd(matdim, matdim);
+    arma::mat ref_matmean(matdim, matdim);
+    arma::mat ref_matsd(matdim, matdim);
+    mat_mean.zeros();
+    mat_sd.zeros();
+    ref_matmean.zeros();
+    ref_matsd.zeros();
+    
+    // First the pop/patch means and sds
+    for (int i = 0; i < numpoppatches; i++) {
+      arma::uvec poppatch_chosen = find(poppatchc == uniquepoppatches(i));
+      int numpoppatch_chosen = poppatch_chosen.n_elem;
+      
+      for (int j = 0; j < numpoppatch_chosen; j++) {
+        mat_mean = mat_mean + (as<arma::mat>(Amats(poppatch_chosen(j))) / static_cast<double>(numpoppatch_chosen));
+      }
+      if (i == 0) {
+        poppatch_meanmat = List::create(mat_mean);
+      } else {
+        poppatch_meanmat.push_back(mat_mean);
+      }
+      mat_mean.zeros();
+    }
+    
+    for (int i = 0; i < numpoppatches; i++) {
+      arma::uvec poppatch_chosen = find(poppatchc == uniquepoppatches(i));
+      int numpoppatch_chosen = poppatch_chosen.n_elem;
+      arma::vec mat_elems(numpoppatch_chosen);
+      
+      for (int j = 0; j < matlength; j++) {
+        mat_elems.zeros();
+        
+        for (int k = 0; k < numpoppatch_chosen; k++) {
+          mat_elems(k) = as<arma::mat>(Amats(poppatch_chosen(k)))(j);
+        }
+        
+        if (sum(mat_elems) != 0) {
+          mat_sd(j) = stddev(mat_elems, 1);
+        }
+      }
+      if (i == 0) {
+        poppatch_sdmat = List::create(mat_sd);
+      } else {
+        poppatch_sdmat.push_back(mat_sd);
+      }
+      mat_sd.zeros();
+    }
+    
+    // Here we create the reference matrix sets
+    if (refmats_.isNotNull()) {
+      Rcpp::List refmats(refmats_);
+      
+      mat_mean.zeros();
+      mat_sd.zeros();
+      
+      ref_byyear = List::create(refmats);
+      
+      for (int i = 0; i < refmatnum; i++) {
+        mat_mean = mat_mean + (as<arma::mat>(refmats(refnum(i))) / static_cast<double>(refmatnum));
+      }
+      
+      for (int i = 0; i < matlength; i++) {
+        arma::vec mat_elems(refmatnum);
+        mat_elems.zeros();
+        
+        for (int j = 0; j < refmatnum; j++) {
+          mat_elems(j) = as<arma::mat>(refmats(refnum(j)))(i);
+        }
+        
+        if (sum(mat_elems) != 0) {
+          mat_sd(i) = stddev(mat_elems, 1);
+        }
+      }
+      ref_matmean = mat_mean;
+      ref_matsd = mat_sd;
+      
+      mat_mean.zeros();
+      mat_sd.zeros();
+      
+    } else {
+      if (refmatnum == Amatnum) {
+        
+        // Reference by year
+        for (int i = 0; i < numyears; i++) {
+          arma::uvec year_chosen = find(year2c == uniqueyears(i));
+          int numyear_chosen = year_chosen.n_elem;
+          
+          for (int j = 0; j < numyear_chosen; j++) {
+            mat_mean = mat_mean + (as<arma::mat>(Amats(year_chosen(j))) / static_cast<double>(numyear_chosen));
+          }
+          if (i == 0) {
+            ref_byyear = List::create(mat_mean);
+          } else {
+            ref_byyear.push_back(mat_mean);
+          }
+          mat_mean.zeros();
+        }
+        
+        // Reference mean and sd
+        for (int i = 0; i < numyears; i++) {
+          mat_mean = mat_mean + (as<arma::mat>(ref_byyear(i)) / static_cast<double>(numyears));
+        }
+        for (int i = 0; i < matlength; i++) {
+          arma::vec mat_elems(refmatnum);
+          mat_elems.zeros();
+          
+          for (int j = 0; j < numyears; j++) {
+            mat_elems(j) = as<arma::mat>(ref_byyear(j))(i);
+          }
+          
+          if (sum(mat_elems) != 0) {
+            mat_sd(i) = stddev(mat_elems, 1);
+          }
+        }
+        ref_matmean = mat_mean;
+        ref_matsd = mat_sd;
+        
+        mat_mean.zeros();
+        mat_sd.zeros();
+      } else {
+        
+        // Reference by year
+        for (int i = 0; i < refmatnum; i++) {
+          if (i == 0) {
+            ref_byyear = List::create(as<arma::mat>(Amats(i)));
+          } else {
+            ref_byyear.push_back(as<arma::mat>(Amats(i)));
+          }
+          mat_mean.zeros();
+          mat_sd.zeros();
+        }
+        
+        // Reference mean and sd
+        for (int i = 0; i < refmatnum; i++) {
+          mat_mean = mat_mean + (as<arma::mat>(ref_byyear(i)) / static_cast<double>(refmatnum));
+        }
+        for (int i = 0; i < matlength; i++) {
+          arma::vec mat_elems(refmatnum);
+          mat_elems.zeros();
+          
+          for (int j = 0; j < refmatnum; j++) {
+            mat_elems(j) = as<arma::mat>(ref_byyear(j))(i);
+          }
+          
+          if (sum(mat_elems) != 0) {
+            mat_sd(i) = stddev(mat_elems, 1);
+          }
+        }
+        ref_matmean = mat_mean;
+        ref_matsd = mat_sd;
+        
+        mat_mean.zeros();
+        mat_sd.zeros();
+      }
+    }
+    
+    // Time weights
+    if (tweights_.isNotNull()) {
+      if (as<NumericVector>(tweights_).length() != numyears) {
+        throw Rcpp::exception("Time weight vector must be the same length as the number of occasions in the reference matrix set.", false);
+      }
+      tweights = as<arma::vec>(tweights_);
+    } else {
+      tweights.resize(numyears);
+      tweights.ones();
+    } // At the end of this, we have an arma::vec holding with whatever the user supplied, or a 1 for each occasion
+    
+    // Here we set up the vector of chosen occasions, sampled from all possible occasions
+    tweights = tweights / sum(tweights);
+    theprophecy = Rcpp::RcppArmadillo::sample(uniqueyears, theclairvoyant, true, tweights);
+    
+    arma::vec startvec(matdim);
+    startvec.ones();
+    startvec = startvec / matdim; // This is the start vector for w and v calculations
+    
+    // Stochastic elasticities
+    
+    // The next section creates stable stage and rep value vectors arranged in
+    // matrix format. The first two are general for whatever has been input,
+    // whether historical or ahistorical, while the next two are specifically
+    // for ahistorical versions of historical inputs
+    arma::mat wprojection(startvec.n_elem, (theclairvoyant + 1));
+    arma::mat vprojection(startvec.n_elem, (theclairvoyant + 1));
+    wprojection.zeros();
+    vprojection.zeros();
+    
+    arma::rowvec Rvecmat(theclairvoyant);
+    Rvecmat.zeros();
+    
+    // Here we run the control loop to create the w and v values we need from the reference annual matrices
+    arma::mat crazy_prophet = proj3(startvec, ref_byyear, theprophecy, 1, 0, 0);
+    wprojection = crazy_prophet.submat(startvec.n_elem, 0, ((startvec.n_elem * 2) - 1), theclairvoyant);
+    vprojection = crazy_prophet.submat((startvec.n_elem * 2), 0, ((startvec.n_elem * 3) - 1), theclairvoyant);
+    Rvecmat = crazy_prophet.submat((startvec.n_elem * 3), 1, (startvec.n_elem * 3), theclairvoyant); // Rvec
+    
+    arma::mat sensmat(matdim, matdim);
+    arma::mat elasmean1(matdim, matdim);
+    arma::mat elassd1(matdim, matdim);
+    sensmat.zeros();
+    elasmean1.zeros();
+    elassd1.zeros();
+    
+    // All references should go to elasmat
+    for (int j = burnin; j < theclairvoyant; j++) { // This is the main time loop for the sensitivity matrices, 
+      arma::vec vtplus1 = vprojection.col(j+1);
+      arma::vec wtplus1 = wprojection.col(j+1);
+      arma::vec wt = wprojection.col(j);
+      
+      arma::mat currentsens_num = vtplus1 * wt.as_row(); // This is the numerator of the key matrix equation
+      arma::mat currentsens_den = (Rvecmat(j) * vtplus1.as_row() * wtplus1); // This is the denominator of the key matrix equation
+      double cd_double = currentsens_den(0,0);
+      sensmat = currentsens_num / (cd_double);
+      
+      elasmean1 = elasmean1 + ((sensmat % ref_matmean) / static_cast<double>(theclairvoyant - burnin));
+      elassd1 = elassd1 + ((sensmat % ((as<arma::mat>(ref_byyear(theprophecy(j)))) - ref_matmean)) / static_cast<double>(theclairvoyant - burnin));
+    }
+    elas_mean = List::create(elasmean1);
+    elas_sd = List::create(elassd1);
+    
+    // Now the difference matrix estimation
+    arma::mat diffmean1(matdim, matdim);
+    arma::mat diffsd1(matdim, matdim);
+    diffmean1.zeros();
+    diffsd1.zeros();
+    
+    // This creates indices of 0 elements for use in the next control loop
+    diffmean1 = log(ref_matmean);
+    diffsd1 = log(ref_matsd);
+    diffmean1.elem(find_nonfinite(diffmean1)).zeros();
+    diffsd1.elem(find_nonfinite(diffsd1)).zeros();
+    
+    ref_matmean = diffmean1;
+    ref_matsd = diffsd1;
+    
+    for (int i = 0; i < numpoppatches; i++) {
+      diffmean1.zeros();
+      diffsd1.zeros();
+      
+      diffmean1 = log(as<arma::mat>(poppatch_meanmat(i)));
+      diffsd1 = log(as<arma::mat>(poppatch_sdmat(i)));
+      diffmean1.elem(find_nonfinite(diffmean1)).zeros();
+      diffsd1.elem(find_nonfinite(diffsd1)).zeros();
+      
+      poppatch_meanmat(i) = diffmean1;
+      poppatch_sdmat(i) = diffsd1;
+      
+      diffmean1.zeros();
+      diffsd1.zeros();
+      
+      diffmean1 = as<arma::mat>(poppatch_meanmat(i)) - ref_matmean;
+      diffsd1 = as<arma::mat>(poppatch_sdmat(i)) - ref_matsd;
+      
+      // In Davison's original code, all elements equal to 0 in the reference
+      // matrices must also be 0s in the difference matrices
+      
+      /*if (i == 0) {
+        diff_meanmat = List::create(diffmean1);
+        diff_sdmat = List::create(diffsd1);
+      } else {
+        diff_meanmat.push_back(diffmean1);
+        diff_sdmat.push_back(diffsd1);
+      }*/
+      
+      // Now the contributions
+      diffmean1 = diffmean1 % as<arma::mat>(elas_mean(0));
+      diffsd1 = diffsd1 % as<arma::mat>(elas_sd(0));
+      
+      if (i == 0) {
+        cont_meanmat = List::create(diffmean1);
+        cont_sdmat = List::create(diffsd1);
+      } else {
+        cont_meanmat.push_back(diffmean1);
+        cont_sdmat.push_back(diffsd1);
+      }
+    }
+  } else {
+    // Sparse matrix analysis
+    arma::sp_mat mat_mean(matdim, matdim);
+    arma::sp_mat mat_sd(matdim, matdim);
+    arma::sp_mat ref_matmean(matdim, matdim);
+    arma::sp_mat ref_matsd(matdim, matdim);
+    mat_mean.zeros();
+    mat_sd.zeros();
+    ref_matmean.zeros();
+    ref_matsd.zeros();
+    
+    // First the pop/patch means and sds
+    for (int i = 0; i < numpoppatches; i++) {
+      arma::uvec poppatch_chosen = find(poppatchc == uniquepoppatches(i));
+      int numpoppatch_chosen = poppatch_chosen.n_elem;
+      
+      for (int j = 0; j < numpoppatch_chosen; j++) {
+        mat_mean = mat_mean + (arma::sp_mat(as<arma::mat>(Amats(poppatch_chosen(j)))) / static_cast<double>(numpoppatch_chosen));
+      }
+      if (i == 0) {
+        poppatch_meanmat = List::create(mat_mean);
+      } else {
+        poppatch_meanmat.push_back(mat_mean);
+      }
+      mat_mean.zeros();
+    }
+    
+    for (int i = 0; i < numpoppatches; i++) {
+      arma::uvec poppatch_chosen = find(poppatchc == uniquepoppatches(i));
+      int numpoppatch_chosen = poppatch_chosen.n_elem;
+      arma::vec mat_elems(numpoppatch_chosen);
+      
+      for (int j = 0; j < matlength; j++) {
+        mat_elems.zeros();
+        
+        for (int k = 0; k < numpoppatch_chosen; k++) {
+          mat_elems(k) = as<arma::mat>(Amats(poppatch_chosen(k)))(j);
+        }
+        
+        if (sum(mat_elems) != 0) {
+          mat_sd(j) = stddev(mat_elems, 1);
+        }
+      }
+      if (i == 0) {
+        poppatch_sdmat = List::create(mat_sd);
+      } else {
+        poppatch_sdmat.push_back(mat_sd);
+      }
+      mat_sd.zeros();
+    }
+    
+    // Here we create the reference matrix sets
+    if (refmats_.isNotNull()) {
+      Rcpp::List refmats(refmats_);
+      
+      mat_mean.zeros();
+      mat_sd.zeros();
+      
+      ref_byyear = List::create(refmats);
+      
+      for (int i = 0; i < refmatnum; i++) {
+        mat_mean = mat_mean + (arma::sp_mat(as<arma::mat>(refmats(refnum(i)))) / static_cast<double>(refmatnum));
+      }
+      
+      for (int i = 0; i < matlength; i++) {
+        arma::vec mat_elems(refmatnum);
+        mat_elems.zeros();
+        
+        for (int j = 0; j < refmatnum; j++) {
+          mat_elems(j) = arma::sp_mat(as<arma::mat>(refmats(refnum(j))))(i);
+        }
+        
+        if (sum(mat_elems) != 0) {
+          mat_sd(i) = stddev(mat_elems, 1);
+        }
+      }
+      
+      ref_matmean = mat_mean;
+      ref_matsd = mat_sd;
+      
+    } else {
+      
+      if (refmatnum == Amatnum) {
+        
+        // Reference by year
+        for (int i = 0; i < numyears; i++) {
+          arma::uvec year_chosen = find(year2c == uniqueyears(i));
+          int numyear_chosen = year_chosen.n_elem;
+          
+        for (int j = 0; j < numyear_chosen; j++) {
+          mat_mean = mat_mean + (arma::sp_mat(as<arma::mat>(Amats(year_chosen(j)))) / static_cast<double>(numyear_chosen));
+        }
+        if (i == 0) {
+          ref_byyear = List::create(mat_mean);
+        } else {
+          ref_byyear.push_back(mat_mean);
+        }
+        mat_mean.zeros();
+        }
+        
+        // Reference mean and sd
+        for (int i = 0; i < numyears; i++) {
+          mat_mean = mat_mean + (as<arma::sp_mat>(ref_byyear(i)) / static_cast<double>(numyears));
+        }
+        for (int i = 0; i < matlength; i++) {
+          arma::vec mat_elems(refmatnum);
+          mat_elems.zeros();
+          
+          for (int j = 0; j < numyears; j++) {
+            mat_elems(j) = as<arma::sp_mat>(ref_byyear(j))(i);
+          }
+          
+          if (sum(mat_elems) != 0) {
+            mat_sd(i) = stddev(mat_elems, 1);
+          }
+        }
+        ref_matmean = mat_mean;
+        ref_matsd = mat_sd;
+        
+        mat_mean.zeros();
+        mat_sd.zeros();
+      } else {
+        
+        // Reference by year
+        for (int i = 0; i < refmatnum; i++) {
+          if (i == 0) {
+            ref_byyear = List::create(arma::sp_mat(as<arma::mat>(Amats(i))));
+          } else {
+            ref_byyear.push_back(arma::sp_mat(as<arma::mat>(Amats(i))));
+          }
+          mat_mean.zeros();
+        }
+        
+        // Reference mean and sd
+        for (int i = 0; i < refmatnum; i++) {
+          mat_mean = mat_mean + (as<arma::sp_mat>(ref_byyear(i)) / static_cast<double>(refmatnum));
+        }
+        for (int i = 0; i < matlength; i++) {
+          arma::vec mat_elems(refmatnum);
+          mat_elems.zeros();
+          
+          for (int j = 0; j < refmatnum; j++) {
+            mat_elems(j) = as<arma::sp_mat>(ref_byyear(j))(i);
+          }
+          
+          if (sum(mat_elems) != 0) {
+            mat_sd(i) = stddev(mat_elems, 1);
+          }
+        }
+        ref_matmean = mat_mean;
+        ref_matsd = mat_sd;
+        
+        mat_mean.zeros();
+        mat_sd.zeros();
+      }
+    }
+    
+    // Time weights
+    if (tweights_.isNotNull()) {
+      if (as<NumericVector>(tweights_).length() != numyears) {
+        throw Rcpp::exception("Time weight vector must be the same length as the number of occasions in the reference matrix set.", false);
+      }
+      tweights = as<arma::vec>(tweights_);
+    } else {
+      tweights.resize(numyears);
+      tweights.ones();
+    } // At the end of this, we have an arma::vec holding with whatever the user supplied, or a 1 for each occasion
+    
+    // Here we set up the vector of chosen occasions, sampled from all possible occasions
+    tweights = tweights / sum(tweights);
+    theprophecy = Rcpp::RcppArmadillo::sample(uniqueyears, theclairvoyant, true, tweights);
+    
+    arma::vec startvec(matdim);
+    startvec.ones();
+    startvec = startvec / matdim; // This is the start vector for w and v calculations
+    
+    // Stochastic elasticities
+    
+    // The next section creates stable stage and rep value vectors arranged in
+    // matrix format. The first two are general for whatever has been input,
+    // whether historical or ahistorical, while the next two are specifically
+    // for ahistorical versions of historical inputs
+    arma::mat wprojection(startvec.n_elem, (theclairvoyant + 1));
+    arma::mat vprojection(startvec.n_elem, (theclairvoyant + 1));
+    wprojection.zeros();
+    vprojection.zeros();
+    
+    arma::rowvec Rvecmat(theclairvoyant);
+    Rvecmat.zeros();
+    
+    // Here we run the control loop to create the w and v values we need from the reference annual matrices
+    arma::mat crazy_prophet = proj3sp(startvec, ref_byyear, theprophecy, 1, 0, 0);
+    wprojection = crazy_prophet.submat(startvec.n_elem, 0, ((startvec.n_elem * 2) - 1), theclairvoyant);
+    vprojection = crazy_prophet.submat((startvec.n_elem * 2), 0, ((startvec.n_elem * 3) - 1), theclairvoyant);
+    Rvecmat = crazy_prophet.submat((startvec.n_elem * 3), 1, (startvec.n_elem * 3), theclairvoyant); // Rvec
+    
+    arma::sp_mat sensmat(matdim, matdim);
+    arma::sp_mat elasmean1(matdim, matdim);
+    arma::sp_mat elassd1(matdim, matdim);
+    sensmat.zeros();
+    elasmean1.zeros();
+    elassd1.zeros();
+    
+    // All references should go to elasmat
+    for (int j = burnin; j < theclairvoyant; j++) { // This is the main time loop for the sensitivity matrices, 
+      arma::vec vtplus1 = vprojection.col(j+1);
+      arma::vec wtplus1 = wprojection.col(j+1);
+      arma::vec wt = wprojection.col(j);
+      
+      arma::mat currentsens_num = vtplus1 * wt.as_row(); // This is the numerator of the key matrix equation
+      arma::mat currentsens_den = (Rvecmat(j) * vtplus1.as_row() * wtplus1); // This is the denominator of the key matrix equation
+      double cd_double = currentsens_den(0,0);
+      sensmat = arma::sp_mat(currentsens_num / (cd_double));
+      
+      elasmean1 = elasmean1 + ((sensmat % ref_matmean) / (static_cast<double>(theclairvoyant - burnin)));
+      elassd1 = elassd1 + ((sensmat % ((as<arma::sp_mat>(ref_byyear(theprophecy(j)))) - ref_matmean)) / (static_cast<double>(theclairvoyant - burnin)));
+    }
+    elas_mean = List::create(elasmean1);
+    elas_sd = List::create(elassd1);
+    
+    // Now the difference and contribution matrix estimation
+    ref_matmean = spmat_log(ref_matmean);
+    ref_matsd = spmat_log(ref_matsd);
+    
+    arma::sp_mat diffmean1(matdim, matdim);
+    arma::sp_mat diffsd1(matdim, matdim);
+    
+    for (int i = 0; i < numpoppatches; i++) {
+      diffmean1.zeros();
+      diffsd1.zeros();
+      
+      poppatch_meanmat(i) = spmat_log(as<arma::sp_mat>(poppatch_meanmat(i)));
+      poppatch_sdmat(i) = spmat_log(as<arma::sp_mat>(poppatch_sdmat(i)));
+      
+      diffmean1 = as<arma::sp_mat>(poppatch_meanmat(i)) - ref_matmean;
+      diffsd1 = as<arma::sp_mat>(poppatch_sdmat(i)) - ref_matsd;
+      
+      /*if (i == 0) {
+        diff_meanmat = List::create(diffmean1);
+        diff_sdmat = List::create(diffsd1);
+      } else {
+        diff_meanmat.push_back(diffmean1);
+        diff_sdmat.push_back(diffsd1);
+      }*/
+      
+      // Now the contributions
+      diffmean1 = diffmean1 % as<arma::sp_mat>(elas_mean(0));
+      diffsd1 = diffsd1 % as<arma::sp_mat>(elas_sd(0));
+      
+      if (i == 0) {
+        cont_meanmat = List::create(arma::mat(diffmean1));
+        cont_sdmat = List::create(arma::mat(diffsd1));
+      } else {
+        cont_meanmat.push_back(arma::mat(diffmean1));
+        cont_sdmat.push_back(arma::mat(diffsd1));
+      }
+    }
+  }
+  return List::create(Named("cont_mean") = cont_meanmat,
+    _["cont_sd"] = cont_sdmat);
+}
+

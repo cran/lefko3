@@ -7,12 +7,13 @@ citEntry(entry="Manual",
          title = "lefko3: Historical and Ahistorical Population Projection Matrix Analysis",
          author = personList(as.person("Richard P. Shefferson"),
                              as.person("Shun Kurokawa"),
-                             as.person("Johan Ehrlen")),
+                             as.person("Johan Ehrlen"),
+                             as.person("Raziel Davison")),
          year = year,
          note = vers,
          
          textVersion =
-           paste("Richard P. Shefferson, Shun Kurokawa, and Johan Ehrlen (",
+           paste("Richard P. Shefferson, Shun Kurokawa, Johan Ehrlen, and Raziel Davison (",
                  year,
                  "). lefko3: Historical and Ahistorical Population Projection Matrix Analysis. ",
                  vers, ".", sep=""))

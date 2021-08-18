@@ -78,15 +78,15 @@
 #'   stageassign = cypframe_raw, stagesize = "sizeadded", NAas0 = TRUE,
 #'   NRasRep = TRUE)
 #' 
-#' cypsupp2r <- supplemental(stage3 = c("SD", "P1", "P2", "P3", "SL", "SL", "D", 
+#' cypsupp2r <- supplemental(stage3 = c("SD", "P1", "P2", "P3", "SL", "D", 
 #'     "XSm", "Sm", "SD", "P1"),
-#'   stage2 = c("SD", "SD", "P1", "P2", "P3", "SL", "SL", "SL", "SL", "rep",
+#'   stage2 = c("SD", "SD", "P1", "P2", "P3", "SL", "SL", "SL", "rep",
 #'     "rep"),
-#'   eststage3 = c(NA, NA, NA, NA, NA, NA, "D", "XSm", "Sm", NA, NA),
-#'   eststage2 = c(NA, NA, NA, NA, NA, NA, "XSm", "XSm", "XSm", NA, NA),
-#'   givenrate = c(0.10, 0.20, 0.20, 0.20, 0.25, 0.40, NA, NA, NA, NA, NA),
-#'   multiplier = c(NA, NA, NA, NA, NA, NA, NA, NA, NA, 0.5, 0.5),
-#'   type =c(1, 1, 1, 1, 1, 1, 1, 1, 1, 3, 3),
+#'   eststage3 = c(NA, NA, NA, NA, NA, "D", "XSm", "Sm", NA, NA),
+#'   eststage2 = c(NA, NA, NA, NA, NA, "XSm", "XSm", "XSm", NA, NA),
+#'   givenrate = c(0.10, 0.20, 0.20, 0.20, 0.25, NA, NA, NA, NA, NA),
+#'   multiplier = c(NA, NA, NA, NA, NA, NA, NA, NA, 0.5, 0.5),
+#'   type =c(1, 1, 1, 1, 1, 1, 1, 1, 3, 3),
 #'   stageframe = cypframe_raw, historical = FALSE)
 #' 
 #' cypmatrix2r <- rlefko2(data = cypraw_v1, stageframe = cypframe_raw, 
@@ -127,15 +127,15 @@
 #'   fecacol = "Pod.04", stageassign = cypframe_raw, stagesize = "sizeadded",
 #'   NAas0 = TRUE, NRasRep = TRUE)
 #' 
-#' cypsupp2r <- supplemental(stage3 = c("SD", "P1", "P2", "P3", "SL", "SL", "D", 
+#' cypsupp2r <- supplemental(stage3 = c("SD", "P1", "P2", "P3", "SL", "D", 
 #'     "XSm", "Sm", "SD", "P1"),
-#'   stage2 = c("SD", "SD", "P1", "P2", "P3", "SL", "SL", "SL", "SL", "rep",
+#'   stage2 = c("SD", "SD", "P1", "P2", "P3", "SL", "SL", "SL", "rep",
 #'     "rep"),
-#'   eststage3 = c(NA, NA, NA, NA, NA, NA, "D", "XSm", "Sm", NA, NA),
-#'   eststage2 = c(NA, NA, NA, NA, NA, NA, "XSm", "XSm", "XSm", NA, NA),
-#'   givenrate = c(0.10, 0.20, 0.20, 0.20, 0.25, 0.40, NA, NA, NA, NA, NA),
-#'   multiplier = c(NA, NA, NA, NA, NA, NA, NA, NA, NA, 0.5, 0.5),
-#'   type =c(1, 1, 1, 1, 1, 1, 1, 1, 1, 3, 3),
+#'   eststage3 = c(NA, NA, NA, NA, NA, "D", "XSm", "Sm", NA, NA),
+#'   eststage2 = c(NA, NA, NA, NA, NA, "XSm", "XSm", "XSm", NA, NA),
+#'   givenrate = c(0.10, 0.20, 0.20, 0.20, 0.25, NA, NA, NA, NA, NA),
+#'   multiplier = c(NA, NA, NA, NA, NA, NA, NA, NA, 0.5, 0.5),
+#'   type =c(1, 1, 1, 1, 1, 1, 1, 1, 3, 3),
 #'   stageframe = cypframe_raw, historical = FALSE)
 #' 
 #' cypmatrix2r <- rlefko2(data = cypraw_v1, stageframe = cypframe_raw, 
@@ -165,7 +165,7 @@
 #' @format A data frame with 77 individuals, 331 rows, and 12 variables. Each
 #' row corresponds to a specific two-year transition for a specific individual.
 #' Variable codes are similar to those for \code{cypdata}, but use \code{.2} to
-#' identify time \emph{t} and \code{.3} to identify time \emph{t}+1.
+#' identify occasion \emph{t} and \code{.3} to identify occasion \emph{t}+1.
 #' 
 #' \describe{
 #'   \item{plantid}{A numeric variable giving a unique number to each 
@@ -173,15 +173,15 @@
 #'   \item{patch}{A variable refering to patch within the population.}
 #'   \item{censor}{A variable coding for whether the data point is valid. An
 #'   entry of 1 means that it is so.}
-#'   \item{year2}{Year in time \emph{t}.}
-#'   \item{Inf2.2}{Number of double inflorescences in time \emph{t}.}
-#'   \item{Inf.2}{Number of inflorescences in time \emph{t}.}
-#'   \item{Veg.2}{Number of stems without inflorescences in time \emph{t}.}
-#'   \item{Pod.2}{Number of fruits in time \emph{t}.}
-#'   \item{Inf2.3}{Number of double inflorescences in time \emph{t}+1.}
-#'   \item{Inf.3}{Number of inflorescences in time \emph{t}+1.}
-#'   \item{Veg.3}{Number of stems without inflorescences in time \emph{t}+1.}
-#'   \item{Pod.3}{Number of fruits in time \emph{t}+1.}
+#'   \item{year2}{Year in occasion \emph{t}.}
+#'   \item{Inf2.2}{Number of double inflorescences in occasion \emph{t}.}
+#'   \item{Inf.2}{Number of inflorescences in occasion \emph{t}.}
+#'   \item{Veg.2}{Number of stems without inflorescences in occasion \emph{t}.}
+#'   \item{Pod.2}{Number of fruits in occasion \emph{t}.}
+#'   \item{Inf2.3}{Number of double inflorescences in occasion \emph{t}+1.}
+#'   \item{Inf.3}{Number of inflorescences in occasion \emph{t}+1.}
+#'   \item{Veg.3}{Number of stems without inflorescences in occasion \emph{t}+1.}
+#'   \item{Pod.3}{Number of fruits in occasion \emph{t}+1.}
 #' }
 #' 
 #' @source Shefferson, R.P., R. Mizuta, and M.J. Hutchings. 2017. Predicting
@@ -219,15 +219,15 @@
 #'   stageassign = cypframe_raw, stagesize = "sizeadded", censorcol = "censor",
 #'   censor = FALSE, NAas0 = TRUE, NRasRep = TRUE, reduce = TRUE)
 #'   
-#' cypsupp2r <- supplemental(stage3 = c("SD", "P1", "P2", "P3", "SL", "SL", "D", 
+#' cypsupp2r <- supplemental(stage3 = c("SD", "P1", "P2", "P3", "SL", "D", 
 #'     "XSm", "Sm", "SD", "P1"),
-#'   stage2 = c("SD", "SD", "P1", "P2", "P3", "SL", "SL", "SL", "SL", "rep",
+#'   stage2 = c("SD", "SD", "P1", "P2", "P3", "SL", "SL", "SL", "rep",
 #'     "rep"),
-#'   eststage3 = c(NA, NA, NA, NA, NA, NA, "D", "XSm", "Sm", NA, NA),
-#'   eststage2 = c(NA, NA, NA, NA, NA, NA, "XSm", "XSm", "XSm", NA, NA),
-#'   givenrate = c(0.10, 0.20, 0.20, 0.20, 0.25, 0.40, NA, NA, NA, NA, NA),
-#'   multiplier = c(NA, NA, NA, NA, NA, NA, NA, NA, NA, 0.5, 0.5),
-#'   type =c(1, 1, 1, 1, 1, 1, 1, 1, 1, 3, 3),
+#'   eststage3 = c(NA, NA, NA, NA, NA, "D", "XSm", "Sm", NA, NA),
+#'   eststage2 = c(NA, NA, NA, NA, NA, "XSm", "XSm", "XSm", NA, NA),
+#'   givenrate = c(0.10, 0.20, 0.20, 0.20, 0.25, NA, NA, NA, NA, NA),
+#'   multiplier = c(NA, NA, NA, NA, NA, NA, NA, NA, 0.5, 0.5),
+#'   type =c(1, 1, 1, 1, 1, 1, 1, 1, 3, 3),
 #'   stageframe = cypframe_raw, historical = FALSE)
 #' 
 #' cypmatrix2r <- rlefko2(data = cypraw_v2, stageframe = cypframe_raw, 

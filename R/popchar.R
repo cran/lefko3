@@ -161,15 +161,15 @@
 #'   stageassign = cypframe_raw, stagesize = "sizeadded", NAas0 = TRUE,
 #'   NRasRep = TRUE)
 #' 
-#' cypsupp2r <- supplemental(stage3 = c("SD", "P1", "P2", "P3", "SL", "SL", "D", 
+#' cypsupp2r <- supplemental(stage3 = c("SD", "P1", "P2", "P3", "SL", "D", 
 #'     "XSm", "Sm", "SD", "P1"),
-#'   stage2 = c("SD", "SD", "P1", "P2", "P3", "SL", "SL", "SL", "SL", "rep",
+#'   stage2 = c("SD", "SD", "P1", "P2", "P3", "SL", "SL", "SL", "rep",
 #'     "rep"),
-#'   eststage3 = c(NA, NA, NA, NA, NA, NA, "D", "XSm", "Sm", NA, NA),
-#'   eststage2 = c(NA, NA, NA, NA, NA, NA, "XSm", "XSm", "XSm", NA, NA),
-#'   givenrate = c(0.10, 0.20, 0.20, 0.20, 0.25, 0.40, NA, NA, NA, NA, NA),
-#'   multiplier = c(NA, NA, NA, NA, NA, NA, NA, NA, NA, 0.5, 0.5),
-#'   type =c(1, 1, 1, 1, 1, 1, 1, 1, 1, 3, 3),
+#'   eststage3 = c(NA, NA, NA, NA, NA, "D", "XSm", "Sm", NA, NA),
+#'   eststage2 = c(NA, NA, NA, NA, NA, "XSm", "XSm", "XSm", NA, NA),
+#'   givenrate = c(0.10, 0.20, 0.20, 0.20, 0.25, NA, NA, NA, NA, NA),
+#'   multiplier = c(NA, NA, NA, NA, NA, NA, NA, NA, 0.5, 0.5),
+#'   type =c(1, 1, 1, 1, 1, 1, 1, 1, 3, 3),
 #'   stageframe = cypframe_raw, historical = FALSE)
 #' 
 #' cypmatrix2r <- rlefko2(data = cypraw_v1, stageframe = cypframe_raw, 
@@ -954,12 +954,12 @@ sf_create <- function(sizes, stagenames = NA, repstatus = 1, obsstatus = 1,
 #' overwrite with either given rates and probabilities, or other estimated
 #' transitions.
 #'
-#' @param stage3 The name of the stage in time \emph{t}+1 in the transition to
+#' @param stage3 The name of the stage in occasion \emph{t}+1 in the transition
+#' to be replaced.
+#' @param stage2 The name of the stage in occasion \emph{t} in the transition to
 #' be replaced.
-#' @param stage2 The name of the stage in time \emph{t} in the transition to be 
-#' replaced.
-#' @param stage1 The name of the stage in time \emph{t}-1 in the transition to
-#' be replaced. Only needed if a historical matrix is to be produced. Use
+#' @param stage1 The name of the stage in occasion \emph{t}-1 in the transition
+#' to be replaced. Only needed if a historical matrix is to be produced. Use
 #' \code{rep} if all reproductive stages are to be used, and leave empty or use
 #' \code{all} if all stages in stageframe are to be used.
 #' @param eststage3 The name of the stage to replace \code{stage3}. Only needed
@@ -971,17 +971,18 @@ sf_create <- function(sizes, stagenames = NA, repstatus = 1, obsstatus = 1,
 #' matrix to be estimated is historical.
 #' @param givenrate A fixed rate or probability to replace for the transition
 #' described by \code{stage3}, \code{stage2}, and \code{stage1}.
-#' @param type A vector denoting the kind of transition between times \emph{t}
-#' and \emph{t}+1 to be replaced. This should be entered as \code{1}, \code{S},
-#' or \code{s} for the replacement of a survival transition; or \code{2},
-#' \code{F}, or \code{f} for the replacement of a fecundity transition. If empty
-#' or not provided, then defaults to \code{1} for survival transition.
+#' @param type A vector denoting the kind of transition between occasions
+#' \emph{t} and \emph{t}+1 to be replaced. This should be entered as \code{1},
+#' \code{S}, or \code{s} for the replacement of a survival transition; or
+#' \code{2}, \code{F}, or \code{f} for the replacement of a fecundity
+#' transition. If empty or not provided, then defaults to \code{1} for survival
+#' transition.
 #' @param type_t12 An optional vector denoting the kind of transition between
-#' times \emph{t}-1 and \emph{t}. Only necessary if a historical MPM in deVries
-#' format is desired. This should be entered as \code{1}, \code{S}, or \code{s}
-#' for a survival transition; or \code{2}, \code{F}, or \code{f} for a fecundity
-#' transitions. Defaults to \code{1} for survival transition, with impacts only
-#' on the construction of deVries-format hMPMs.
+#' occasions \emph{t}-1 and \emph{t}. Only necessary if a historical MPM in
+#' deVries format is desired. This should be entered as \code{1}, \code{S}, or
+#' \code{s} for a survival transition; or \code{2}, \code{F}, or \code{f} for a
+#' fecundity transitions. Defaults to \code{1} for survival transition, with
+#' impacts only on the construction of deVries-format hMPMs.
 #'
 #' @return A data frame that puts the above vectors together and can be used as
 #' input in \code{\link{flefko3}()}, \code{\link{flefko2}()},
@@ -989,48 +990,48 @@ sf_create <- function(sizes, stagenames = NA, repstatus = 1, obsstatus = 1,
 #' \code{\link{aflefko2}()}.
 #' 
 #' Variables in this data frame include the following:
-#' \item{stage3}{Stage at time \emph{t}+1 in the transition to be replaced.}
-#' \item{stage2}{Stage at time \emph{t} in the transition to be replaced.}
-#' \item{stage1}{Stage at time \emph{t}-1 in the transition to be replaced.}
-#' \item{eststage3}{Stage at time \emph{t}+1 in the transition to replace the
+#' \item{stage3}{Stage at occasion \emph{t}+1 in the transition to be replaced.}
+#' \item{stage2}{Stage at occasion \emph{t} in the transition to be replaced.}
+#' \item{stage1}{Stage at occasion \emph{t}-1 in the transition to be replaced.}
+#' \item{eststage3}{Stage at occasion \emph{t}+1 in the transition to replace
+#' the transition designated by \code{stage3}, \code{stage2}, and \code{stage1}.}
+#' \item{eststage2}{Stage at occasion \emph{t} in the transition to replace the
 #' transition designated by \code{stage3}, \code{stage2}, and \code{stage1}.}
-#' \item{eststage2}{Stage at time \emph{t} in the transition to replace the
-#' transition designated by \code{stage3}, \code{stage2}, and \code{stage1}.}
-#' \item{eststage1}{Stage at time \emph{t}-1 in the transition to replace the
-#' transition designated by \code{stage3}, \code{stage2}, and \code{stage1}.}
+#' \item{eststage1}{Stage at occasion \emph{t}-1 in the transition to replace
+#' the transition designated by \code{stage3}, \code{stage2}, and \code{stage1}.}
 #' \item{givenrate}{A constant to be used as the value of the transition.}
-#' \item{convtype}{Designates whether the transition from time \emph{t} to time
-#' \emph{t}+1 is a survival-transition probability (1) or a fecundity rate (2).}
-#' \item{convtype_t12}{Designates whether the transition from time \emph{t}-1 to
-#' time \emph{t} is a survival transition probability (1), a fecundity rate (2).}
+#' \item{convtype}{Designates whether the transition from occasion \emph{t} to
+#' occasion \emph{t}+1 is a survival-transition probability (1) or a fecundity
+#' rate (2).}
+#' \item{convtype_t12}{Designates whether the transition from occasion
+#' \emph{t}-1 to occasion \emph{t} is a survival transition probability (1), a
+#' fecundity rate (2).}
 #' 
 #' @examples
-#' cypover2r <- overwrite(stage3 = c("SD", "P1", "P2", "P3", "SL", "SL", "D", 
+#' cypover2r <- overwrite(stage3 = c("SD", "P1", "P2", "P3", "SL", "D", 
 #'     "XSm", "Sm"),
-#'   stage2 = c("SD", "SD", "P1", "P2", "P3", "SL", "SL", "SL", "SL"),
-#'   eststage3 = c(NA, NA, NA, NA, NA, NA, "D", "XSm", "Sm"),
-#'   eststage2 = c(NA, NA, NA, NA, NA, NA, "XSm", "XSm", "XSm"),
-#'   givenrate = c(0.1, 0.2, 0.2, 0.2, 0.25, 0.4, NA, NA, NA),
-#'   type = c("S", "S", "S","S", "S", "S", "S", "S", "S"))
+#'   stage2 = c("SD", "SD", "P1", "P2", "P3", "SL", "SL", "SL"),
+#'   eststage3 = c(NA, NA, NA, NA, NA, "D", "XSm", "Sm"),
+#'   eststage2 = c(NA, NA, NA, NA, NA, "XSm", "XSm", "XSm"),
+#'   givenrate = c(0.1, 0.2, 0.2, 0.2, 0.25, NA, NA, NA),
+#'   type = c("S", "S", "S", "S", "S", "S", "S", "S"))
 #' 
 #' cypover2r
 #' 
 #' cypover3r <- overwrite(stage3 = c("SD", "SD", "P1", "P1", "P2", "P3", "SL", 
-#'     "SL", "SL", "D", "XSm", "Sm", "D", "XSm", "Sm"),
+#'     "D", "XSm", "Sm", "D", "XSm", "Sm"),
 #'   stage2 = c("SD", "SD", "SD", "SD", "P1", "P2", "P3", "SL", "SL", "SL",
-#'     "SL", "SL", "SL", "SL", "SL"),
-#'   stage1 = c("SD", "rep", "SD", "rep", "SD", "P1", "P2", "P3", "SL", "P3",
-#'     "P3", "P3", "SL", "SL", "SL"),
-#'   eststage3 = c(NA, NA, NA, NA, NA, NA, NA, NA, NA, "D", "XSm", "Sm", "D",
-#'     "XSm", "Sm"),
-#'   eststage2 = c(NA, NA, NA, NA, NA, NA, NA, NA, NA, "XSm", "XSm", "XSm",
-#'     "XSm", "XSm", "XSm"),
-#'   eststage1 = c(NA, NA, NA, NA, NA, NA, NA, NA, NA, "XSm", "XSm", "XSm",
-#'     "XSm", "XSm", "XSm"),
-#'   givenrate = c(0.1, 0.1, 0.2, 0.2, 0.2, 0.2, 0.25, 0.4, 0.4, NA, NA, NA, NA,
-#'     NA, NA),
-#'   type = c("S", "S", "S", "S", "S", "S", "S", "S", "S", "S", "S", "S", "S",
-#'     "S", "S"))
+#'     "SL", "SL", "SL"),
+#'   stage1 = c("SD", "rep", "SD", "rep", "SD", "P1", "P2", "P3", "P3", "P3",
+#'     "SL", "SL", "SL"),
+#'   eststage3 = c(NA, NA, NA, NA, NA, NA, NA, "D", "XSm", "Sm", "D", "XSm",
+#'     "Sm"),
+#'   eststage2 = c(NA, NA, NA, NA, NA, NA, NA, "XSm", "XSm", "XSm", "XSm",
+#'     "XSm", "XSm"),
+#'   eststage1 = c(NA, NA, NA, NA, NA, NA, NA, "XSm", "XSm", "XSm", "XSm",
+#'     "XSm", "XSm"),
+#'   givenrate = c(0.1, 0.1, 0.2, 0.2, 0.2, 0.2, 0.25, NA, NA, NA, NA, NA, NA),
+#'   type = c("S", "S", "S", "S", "S", "S", "S", "S", "S", "S", "S", "S", "S"))
 #' 
 #' cypover3r
 #' 
@@ -1134,7 +1135,7 @@ overwrite <- function(stage3, stage2, stage1 = NA, eststage3 = NA,
     shrubbery <- unique(rbind(supplement, overwritetable))
     
     if(any(duplicated(shrubbery[,1:3]))) {
-      stop("Multiple entries with different values for the same stage transition are not allowed in the supplemental or overwrite table. If modifying a historical table to perform an ahistorical analysis, then this may be due to different given rates of substitutions caused by dropping stage at time t-1. Please eliminate duplicate transitions.",
+      stop("Multiple entries with different values for the same stage transition are not allowed in the supplemental or overwrite table. If modifying a historical table to perform an ahistorical analysis, then this may be due to different given rates of substitutions caused by dropping stage at occasion t-1. Please eliminate duplicate transitions.",
         call. = FALSE)
     }
     
@@ -1144,7 +1145,7 @@ overwrite <- function(stage3, stage2, stage1 = NA, eststage3 = NA,
     shrubbery$multiplier <- NA
     
     if(any(duplicated(shrubbery[,1:3]))) {
-      stop("Multiple entries with different values for the same stage transition are not allowed in the overwrite table. If modifying a historical table to perform an ahistorical analysis, then this may be due to different given rates of substitutions caused by dropping stage at time t-1. Please eliminate duplicate transitions.",
+      stop("Multiple entries with different values for the same stage transition are not allowed in the overwrite table. If modifying a historical table to perform an ahistorical analysis, then this may be due to different given rates of substitutions caused by dropping stage at occasion t-1. Please eliminate duplicate transitions.",
         call. = FALSE)
     }
     
@@ -1153,7 +1154,7 @@ overwrite <- function(stage3, stage2, stage1 = NA, eststage3 = NA,
     shrubbery <- unique(supplement)
     
     if(any(duplicated(shrubbery[,1:3]))) {
-      stop("Multiple entries with different values for the same stage transition are not allowed in the supplemental table. If modifying a historical table to perform an ahistorical analysis, then this may be due to different given rates of substitutions caused by dropping stage at time t-1. Please eliminate duplicate transitions.",
+      stop("Multiple entries with different values for the same stage transition are not allowed in the supplemental table. If modifying a historical table to perform an ahistorical analysis, then this may be due to different given rates of substitutions caused by dropping stage at occasion t-1. Please eliminate duplicate transitions.",
         call. = FALSE)
     }
     
@@ -1171,7 +1172,7 @@ overwrite <- function(stage3, stage2, stage1 = NA, eststage3 = NA,
     shrubbery$eststage2 <- as.character(shrubbery$eststage2)
     shrubbery$eststage1 <- as.character(shrubbery$eststage1)
     
-    #Stage at time t-1
+    #Stage at occasion t-1
     reassessed <- apply(as.matrix(c(1:dim(shrubbery)[1])), 1, function(X) {
       checkna2vec <- c(shrubbery[X, "stage3"], shrubbery[X, "stage2"])
       
@@ -1417,7 +1418,7 @@ overwrite <- function(stage3, stage2, stage1 = NA, eststage3 = NA,
     })
     shrubbery <- do.call(rbind.data.frame, reassessed)
     
-    #Stage at time t
+    #Stage at occasion t
     reassessed <- apply(as.matrix(c(1:dim(shrubbery)[1])), 1, function(X) {
       if (!is.na(shrubbery[X, "stage2"]) & !is.na(shrubbery[X, "eststage2"])) {
         if (is.element(shrubbery[X, "stage2"], stageframe$stage) & is.element(shrubbery[X, "eststage2"], stageframe$stage)) {
@@ -1650,7 +1651,7 @@ overwrite <- function(stage3, stage2, stage1 = NA, eststage3 = NA,
     })
     shrubbery <- do.call(rbind.data.frame, reassessed)
     
-    #Stage at time t+1
+    #Stage at occasion t+1
     reassessed <- apply(as.matrix(c(1:dim(shrubbery)[1])), 1, function(X) {
       if (!is.na(shrubbery[X, "stage3"]) & !is.na(shrubbery[X, "eststage3"])) {
         if (is.element(shrubbery[X, "stage3"], stageframe$stage) & is.element(shrubbery[X, "eststage3"], stageframe$stage)) {
@@ -1909,12 +1910,12 @@ overwrite <- function(stage3, stage2, stage1 = NA, eststage3 = NA,
 #' overwrite existing rates, identified reproductive transitions complete, and
 #' fecundity multipliers.
 #'
-#' @param stage3 The name of the stage in time \emph{t}+1 in the transition to
+#' @param stage3 The name of the stage in occasion \emph{t}+1 in the transition
+#' to be replaced. Abbreviations for groups of stages are also useable (see Notes).
+#' @param stage2 The name of the stage in occasion \emph{t} in the transition to
 #' be replaced. Abbreviations for groups of stages are also useable (see Notes).
-#' @param stage2 The name of the stage in time \emph{t} in the transition to be 
-#' replaced. Abbreviations for groups of stages are also useable (see Notes).
-#' @param stage1 The name of the stage in time \emph{t}-1 in the transition to
-#' be replaced. Only needed if a historical matrix is to be produced.
+#' @param stage1 The name of the stage in occasion \emph{t}-1 in the transition
+#' to be replaced. Only needed if a historical matrix is to be produced.
 #' Abbreviations for groups of stages are also useable (see Notes).
 #' @param eststage3 The name of the stage to replace \code{stage3}. Only needed
 #' if a transition will be replaced by another estimated transition.
@@ -1924,23 +1925,23 @@ overwrite <- function(stage3, stage2, stage1 = NA, eststage3 = NA,
 #' if a transition will be replaced by another estimated transition, and the
 #' matrix to be estimated is historical. Stage \code{NotAlive} is also possible
 #' for raw hMPMs, as a means of handling the prior stage for individuals
-#' entering the population in time \emph{t}.
+#' entering the population in occasion \emph{t}.
 #' @param givenrate A fixed rate or probability to replace for the transition
 #' described by \code{stage3}, \code{stage2}, and \code{stage1}.
 #' @param multiplier A vector of numeric multipliers for fecundity, and NA
 #' entries for all other terms.
-#' @param type A vector denoting the kind of transition between times \emph{t}
-#' and \emph{t}+1 to be replaced. This should be entered as \code{1}, \code{S},
-#' or \code{s} for the replacement of a survival transition; \code{2}, \code{F},
-#' or \code{f} for the replacement of a fecundity transition; or \code{3},
-#' \code{R}, or \code{r} for a fecundity multiplier. If empty or not provided,
-#' then defaults to \code{1} for survival transition.
+#' @param type A vector denoting the kind of transition between occasions
+#' \emph{t} and \emph{t}+1 to be replaced. This should be entered as \code{1},
+#' \code{S}, or \code{s} for the replacement of a survival transition; \code{2},
+#' \code{F}, or \code{f} for the replacement of a fecundity transition; or
+#' \code{3}, \code{R}, or \code{r} for a fecundity multiplier. If empty or not
+#' provided, then defaults to \code{1} for survival transition.
 #' @param type_t12 An optional vector denoting the kind of transition between
-#' times \emph{t}-1 and \emph{t}. Only necessary if a historical MPM in deVries
-#' format is desired. This should be entered as \code{1}, \code{S}, or \code{s}
-#' for a survival transition; or \code{2}, \code{F}, or \code{f} for a fecundity
-#' transitions. Defaults to \code{1} for survival transition, with impacts only
-#' on the construction of deVries-format hMPMs.
+#' occasions \emph{t}-1 and \emph{t}. Only necessary if a historical MPM in
+#' deVries format is desired. This should be entered as \code{1}, \code{S}, or
+#' \code{s} for a survival transition; or \code{2}, \code{F}, or \code{f} for a
+#' fecundity transitions. Defaults to \code{1} for survival transition, with
+#' impacts only on the construction of deVries-format hMPMs.
 #' @param stageframe The stageframe being used to produce the MPMs in the study.
 #' @param historical A logical value indicating whether the MPMs intended will
 #' be historical or ahistorical. Defaults to TRUE.
@@ -1951,21 +1952,22 @@ overwrite <- function(stage3, stage2, stage1 = NA, eststage3 = NA,
 #' \code{\link{aflefko2}()}.
 #' 
 #' Variables in this object include the following:
-#' \item{stage3}{Stage at time \emph{t}+1 in the transition to be replaced.}
-#' \item{stage2}{Stage at time \emph{t} in the transition to be replaced.}
-#' \item{stage1}{Stage at time \emph{t}-1 in the transition to be replaced.}
-#' \item{eststage3}{Stage at time \emph{t}+1 in the transition to replace the
+#' \item{stage3}{Stage at occasion \emph{t}+1 in the transition to be replaced.}
+#' \item{stage2}{Stage at occasion \emph{t} in the transition to be replaced.}
+#' \item{stage1}{Stage at occasion \emph{t}-1 in the transition to be replaced.}
+#' \item{eststage3}{Stage at occasion \emph{t}+1 in the transition to replace
+#' the transition designated by \code{stage3}, \code{stage2}, and \code{stage1}.}
+#' \item{eststage2}{Stage at occasion \emph{t} in the transition to replace the
 #' transition designated by \code{stage3}, \code{stage2}, and \code{stage1}.}
-#' \item{eststage2}{Stage at time \emph{t} in the transition to replace the
-#' transition designated by \code{stage3}, \code{stage2}, and \code{stage1}.}
-#' \item{eststage1}{Stage at time \emph{t}-1 in the transition to replace the
-#' transition designated by \code{stage3}, \code{stage2}, and \code{stage1}.}
+#' \item{eststage1}{Stage at occasion \emph{t}-1 in the transition to replace
+#' the transition designated by \code{stage3}, \code{stage2}, and \code{stage1}.}
 #' \item{givenrate}{A constant to be used as the value of the transition.}
-#' \item{convtype}{Designates whether the transition from time \emph{t} to time
-#' \emph{t}+1 is a survival transition probability (1), a fecundity rate (2), or
-#' a fecundity multiplier (3).}
-#' \item{convtype_t12}{Designates whether the transition from time \emph{t}-1 to
-#' time \emph{t} is a survival transition probability (1), a fecundity rate (2).}
+#' \item{convtype}{Designates whether the transition from occasion \emph{t} to
+#' occasion \emph{t}+1 is a survival transition probability (1), a fecundity
+#' rate (2), or a fecundity multiplier (3).}
+#' \item{convtype_t12}{Designates whether the transition from occasion
+#' \emph{t}-1 tooccasion \emph{t} is a survival transition probability (1), a
+#' fecundity rate (2).}
 #' 
 #' @section Notes:
 #' Fecundity multiplier data supplied via the \code{supplemental()} function
@@ -2053,15 +2055,15 @@ overwrite <- function(stage3, stage2, stage1 = NA, eststage3 = NA,
 #'   stageassign = cypframe_raw, stagesize = "sizeadded", NAas0 = TRUE,
 #'   NRasRep = TRUE)
 #' 
-#' cypsupp2r <- supplemental(stage3 = c("SD", "P1", "P2", "P3", "SL", "SL", "D", 
+#' cypsupp2r <- supplemental(stage3 = c("SD", "P1", "P2", "P3", "SL", "D", 
 #'     "XSm", "Sm", "SD", "P1"),
-#'   stage2 = c("SD", "SD", "P1", "P2", "P3", "SL", "SL", "SL", "SL", "rep",
+#'   stage2 = c("SD", "SD", "P1", "P2", "P3", "SL", "SL", "SL", "rep",
 #'     "rep"),
-#'   eststage3 = c(NA, NA, NA, NA, NA, NA, "D", "XSm", "Sm", NA, NA),
-#'   eststage2 = c(NA, NA, NA, NA, NA, NA, "XSm", "XSm", "XSm", NA, NA),
-#'   givenrate = c(0.10, 0.20, 0.20, 0.20, 0.25, 0.40, NA, NA, NA, NA, NA),
-#'   multiplier = c(NA, NA, NA, NA, NA, NA, NA, NA, NA, 0.5, 0.5),
-#'   type =c(1, 1, 1, 1, 1, 1, 1, 1, 1, 3, 3),
+#'   eststage3 = c(NA, NA, NA, NA, NA, "D", "XSm", "Sm", NA, NA),
+#'   eststage2 = c(NA, NA, NA, NA, NA, "XSm", "XSm", "XSm", NA, NA),
+#'   givenrate = c(0.10, 0.20, 0.20, 0.20, 0.25, NA, NA, NA, NA, NA),
+#'   multiplier = c(NA, NA, NA, NA, NA, NA, NA, NA, 0.5, 0.5),
+#'   type =c(1, 1, 1, 1, 1, 1, 1, 1, 3, 3),
 #'   stageframe = cypframe_raw, historical = FALSE)
 #' 
 #' cypmatrix2r <- rlefko2(data = cypraw_v1, stageframe = cypframe_raw, 
@@ -2212,18 +2214,18 @@ supplemental <- function(stage3, stage2, stage1 = NA, eststage3 = NA,
 #' @param data A historical vertical data file, which is a data frame of class
 #' \code{hfvdata}.
 #' @param size3 The name or column number of the variable corresponding to size
-#' in time *t+1*.
+#' in occasion *t+1*.
 #' @param size2 The name or column number of the variable corresponding to size
-#' in time *t*. This term is required for both size and fecundity tests.
+#' in occasion *t*. This term is required for both size and fecundity tests.
 #' @param obs3 The name or column number of the variable corresponding to
-#' observation status in time *t+1*. This should be used if observation status
-#' will be used as a vital rate to absorb states of size = 0.
+#' observation status in occasion *t+1*. This should be used if observation
+#' status will be used as a vital rate to absorb states of size = 0.
 #' @param fec The name or column number of the variable corresponding to
-#' fecundity. The name of the variable should correspond to the proper time,
-#' either time *t* or time *t*-1.
+#' fecundity. The name of the variable should correspond to the proper occasion,
+#' either occasion *t* or occasion *t*-1.
 #' @param repst The name or column number of the variable corresponding to
-#' reproductive status in time *t*. Required if fecundity distribution will be
-#' tested.
+#' reproductive status in occasion *t*. Required if fecundity distribution will
+#' be tested.
 #' @param zisize A logical value indicating whether to conduct a test of zero
 #' inflation in size. Defaults to TRUE.
 #' @param zifec A logical value indicating whether to conduct a test of zero
@@ -2243,7 +2245,7 @@ supplemental <- function(stage3, stage2, stage1 = NA, eststage3 = NA,
 #' 
 #' The specific test used for overdispersion is a chi-squared test of the
 #' dispersion parameter estimated using a generalized linear model predicting
-#' the response given size in time *t*, under a quasi-Poisson distribution.
+#' the response given size in occasion *t*, under a quasi-Poisson distribution.
 #' 
 #' The specific test used for zero-inflation is the chi-squared test presented
 #' in van der Broek (1995).
@@ -2342,7 +2344,7 @@ sf_distrib <- function(data, size3 = NA, size2 = NA, obs3 = NA, fec = NA,
   }
   
   if (is.na(size2)) {
-    stop("Function sf_distrib requires size in time t to function. Please designate this variable",
+    stop("Function sf_distrib requires size in occasion t to function. Please designate this variable",
          call. = FALSE)
   }
   

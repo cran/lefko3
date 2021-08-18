@@ -101,15 +101,15 @@
 #'   stageassign = cypframe_raw, stagesize = "sizeadded", NAas0 = TRUE,
 #'   NRasRep = TRUE)
 #' 
-#' cypsupp2r <- supplemental(stage3 = c("SD", "P1", "P2", "P3", "SL", "SL", "D", 
+#' cypsupp2r <- supplemental(stage3 = c("SD", "P1", "P2", "P3", "SL", "D", 
 #'     "XSm", "Sm", "SD", "P1"),
-#'   stage2 = c("SD", "SD", "P1", "P2", "P3", "SL", "SL", "SL", "SL", "rep",
+#'   stage2 = c("SD", "SD", "P1", "P2", "P3", "SL", "SL", "SL", "rep",
 #'     "rep"),
-#'   eststage3 = c(NA, NA, NA, NA, NA, NA, "D", "XSm", "Sm", NA, NA),
-#'   eststage2 = c(NA, NA, NA, NA, NA, NA, "XSm", "XSm", "XSm", NA, NA),
-#'   givenrate = c(0.10, 0.20, 0.20, 0.20, 0.25, 0.40, NA, NA, NA, NA, NA),
-#'   multiplier = c(NA, NA, NA, NA, NA, NA, NA, NA, NA, 0.5, 0.5),
-#'   type =c(1, 1, 1, 1, 1, 1, 1, 1, 1, 3, 3),
+#'   eststage3 = c(NA, NA, NA, NA, NA, "D", "XSm", "Sm", NA, NA),
+#'   eststage2 = c(NA, NA, NA, NA, NA, "XSm", "XSm", "XSm", NA, NA),
+#'   givenrate = c(0.10, 0.20, 0.20, 0.20, 0.25, NA, NA, NA, NA, NA),
+#'   multiplier = c(NA, NA, NA, NA, NA, NA, NA, NA, 0.5, 0.5),
+#'   type =c(1, 1, 1, 1, 1, 1, 1, 1, 3, 3),
 #'   stageframe = cypframe_raw, historical = FALSE)
 #' 
 #' cypmatrix2r <- rlefko2(data = cypraw_v1, stageframe = cypframe_raw, 
@@ -291,22 +291,22 @@ lmean <- function(mats, matsout = "all") {
 #'   NRasRep = TRUE)
 #' 
 #' # Here we use supplemental() to provide overwrite and reproductive info
-#' cypsupp2r <- supplemental(stage3 = c("SD", "P1", "P2", "P3", "SL", "SL", "D", 
+#' cypsupp2r <- supplemental(stage3 = c("SD", "P1", "P2", "P3", "SL", "D", 
 #'     "XSm", "Sm", "SD", "P1"),
-#'   stage2 = c("SD", "SD", "P1", "P2", "P3", "SL", "SL", "SL", "SL", "rep",
+#'   stage2 = c("SD", "SD", "P1", "P2", "P3", "SL", "SL", "SL", "rep",
 #'     "rep"),
-#'   eststage3 = c(NA, NA, NA, NA, NA, NA, "D", "XSm", "Sm", NA, NA),
-#'   eststage2 = c(NA, NA, NA, NA, NA, NA, "XSm", "XSm", "XSm", NA, NA),
-#'   givenrate = c(0.10, 0.20, 0.20, 0.20, 0.25, 0.40, NA, NA, NA, NA, NA),
-#'   multiplier = c(NA, NA, NA, NA, NA, NA, NA, NA, NA, 0.5, 0.5),
-#'   type =c(1, 1, 1, 1, 1, 1, 1, 1, 1, 3, 3),
+#'   eststage3 = c(NA, NA, NA, NA, NA, "D", "XSm", "Sm", NA, NA),
+#'   eststage2 = c(NA, NA, NA, NA, NA, "XSm", "XSm", "XSm", NA, NA),
+#'   givenrate = c(0.10, 0.20, 0.20, 0.20, 0.25, NA, NA, NA, NA, NA),
+#'   multiplier = c(NA, NA, NA, NA, NA, NA, NA, NA, 0.5, 0.5),
+#'   type =c(1, 1, 1, 1, 1, 1, 1, 1, 3, 3),
 #'   stageframe = cypframe_raw, historical = FALSE)
 #' 
 #' cypmatrix2r <- rlefko2(data = cypraw_v1, stageframe = cypframe_raw, 
 #'   year = "all", patch = "all", stages = c("stage3", "stage2", "stage1"),
 #'   size = c("size3added", "size2added"), supplement = cypsupp2r,
 #'   yearcol = "year2", patchcol = "patchid", indivcol = "individ")
-#'                        
+#' 
 #' lambda3(cypmatrix2r)
 #' 
 #' @export
@@ -416,22 +416,22 @@ lambda3 <- function(mats, ...) UseMethod("lambda3")
 #'   NRasRep = TRUE)
 #' 
 #' # Here we use supplemental() to provide overwrite and reproductive info
-#' cypsupp2r <- supplemental(stage3 = c("SD", "P1", "P2", "P3", "SL", "SL", "D", 
+#' cypsupp2r <- supplemental(stage3 = c("SD", "P1", "P2", "P3", "SL", "D", 
 #'     "XSm", "Sm", "SD", "P1"),
-#'   stage2 = c("SD", "SD", "P1", "P2", "P3", "SL", "SL", "SL", "SL", "rep",
+#'   stage2 = c("SD", "SD", "P1", "P2", "P3", "SL", "SL", "SL", "rep",
 #'     "rep"),
-#'   eststage3 = c(NA, NA, NA, NA, NA, NA, "D", "XSm", "Sm", NA, NA),
-#'   eststage2 = c(NA, NA, NA, NA, NA, NA, "XSm", "XSm", "XSm", NA, NA),
-#'   givenrate = c(0.10, 0.20, 0.20, 0.20, 0.25, 0.40, NA, NA, NA, NA, NA),
-#'   multiplier = c(NA, NA, NA, NA, NA, NA, NA, NA, NA, 0.5, 0.5),
-#'   type =c(1, 1, 1, 1, 1, 1, 1, 1, 1, 3, 3),
+#'   eststage3 = c(NA, NA, NA, NA, NA, "D", "XSm", "Sm", NA, NA),
+#'   eststage2 = c(NA, NA, NA, NA, NA, "XSm", "XSm", "XSm", NA, NA),
+#'   givenrate = c(0.10, 0.20, 0.20, 0.20, 0.25, NA, NA, NA, NA, NA),
+#'   multiplier = c(NA, NA, NA, NA, NA, NA, NA, NA, 0.5, 0.5),
+#'   type =c(1, 1, 1, 1, 1, 1, 1, 1, 3, 3),
 #'   stageframe = cypframe_raw, historical = FALSE)
 #' 
 #' cypmatrix2r <- rlefko2(data = cypraw_v1, stageframe = cypframe_raw, 
 #'   year = "all", patch = "all", stages = c("stage3", "stage2", "stage1"),
 #'   size = c("size3added", "size2added"), supplement = cypsupp2r,
 #'   yearcol = "year2", patchcol = "patchid", indivcol = "individ")
-#'                        
+#' 
 #' lambda3(cypmatrix2r)
 #' 
 #' @export
@@ -484,7 +484,7 @@ lambda3.lefkoMat <- function(mats, sparse = "auto", ...) {
 #' (\code{"yes"}) or dense matrix encoding (\code{"no"}). Defaults to
 #' \code{"auto"}.
 #' @param ... Other parameters.
-#'
+#' 
 #' @return This function returns the dominant eigenvalue of the matrix.
 #' 
 #' @section Notes:
@@ -572,22 +572,22 @@ lambda3.lefkoMat <- function(mats, sparse = "auto", ...) {
 #'   NRasRep = TRUE)
 #' 
 #' # Here we use supplemental() to provide overwrite and reproductive info
-#' cypsupp2r <- supplemental(stage3 = c("SD", "P1", "P2", "P3", "SL", "SL", "D", 
+#' cypsupp2r <- supplemental(stage3 = c("SD", "P1", "P2", "P3", "SL", "D", 
 #'     "XSm", "Sm", "SD", "P1"),
-#'   stage2 = c("SD", "SD", "P1", "P2", "P3", "SL", "SL", "SL", "SL", "rep",
+#'   stage2 = c("SD", "SD", "P1", "P2", "P3", "SL", "SL", "SL", "rep",
 #'     "rep"),
-#'   eststage3 = c(NA, NA, NA, NA, NA, NA, "D", "XSm", "Sm", NA, NA),
-#'   eststage2 = c(NA, NA, NA, NA, NA, NA, "XSm", "XSm", "XSm", NA, NA),
-#'   givenrate = c(0.10, 0.20, 0.20, 0.20, 0.25, 0.40, NA, NA, NA, NA, NA),
-#'   multiplier = c(NA, NA, NA, NA, NA, NA, NA, NA, NA, 0.5, 0.5),
-#'   type =c(1, 1, 1, 1, 1, 1, 1, 1, 1, 3, 3),
+#'   eststage3 = c(NA, NA, NA, NA, NA, "D", "XSm", "Sm", NA, NA),
+#'   eststage2 = c(NA, NA, NA, NA, NA, "XSm", "XSm", "XSm", NA, NA),
+#'   givenrate = c(0.10, 0.20, 0.20, 0.20, 0.25, NA, NA, NA, NA, NA),
+#'   multiplier = c(NA, NA, NA, NA, NA, NA, NA, NA, 0.5, 0.5),
+#'   type =c(1, 1, 1, 1, 1, 1, 1, 1, 3, 3),
 #'   stageframe = cypframe_raw, historical = FALSE)
 #' 
 #' cypmatrix2r <- rlefko2(data = cypraw_v1, stageframe = cypframe_raw, 
 #'   year = "all", patch = "all", stages = c("stage3", "stage2", "stage1"),
 #'   size = c("size3added", "size2added"), supplement = cypsupp2r,
 #'   yearcol = "year2", patchcol = "patchid", indivcol = "individ")
-#'                        
+#' 
 #' lambda3(cypmatrix2r$A[[1]])
 #' 
 #' @export
@@ -702,22 +702,22 @@ lambda3.matrix <- function(mats, sparse = "auto", ...)
 #'   NRasRep = TRUE)
 #' 
 #' # Here we use supplemental() to provide overwrite and reproductive info
-#' cypsupp2r <- supplemental(stage3 = c("SD", "P1", "P2", "P3", "SL", "SL", "D", 
+#' cypsupp2r <- supplemental(stage3 = c("SD", "P1", "P2", "P3", "SL", "D", 
 #'     "XSm", "Sm", "SD", "P1"),
-#'   stage2 = c("SD", "SD", "P1", "P2", "P3", "SL", "SL", "SL", "SL", "rep",
+#'   stage2 = c("SD", "SD", "P1", "P2", "P3", "SL", "SL", "SL", "rep",
 #'     "rep"),
-#'   eststage3 = c(NA, NA, NA, NA, NA, NA, "D", "XSm", "Sm", NA, NA),
-#'   eststage2 = c(NA, NA, NA, NA, NA, NA, "XSm", "XSm", "XSm", NA, NA),
-#'   givenrate = c(0.10, 0.20, 0.20, 0.20, 0.25, 0.40, NA, NA, NA, NA, NA),
-#'   multiplier = c(NA, NA, NA, NA, NA, NA, NA, NA, NA, 0.5, 0.5),
-#'   type =c(1, 1, 1, 1, 1, 1, 1, 1, 1, 3, 3),
+#'   eststage3 = c(NA, NA, NA, NA, NA, "D", "XSm", "Sm", NA, NA),
+#'   eststage2 = c(NA, NA, NA, NA, NA, "XSm", "XSm", "XSm", NA, NA),
+#'   givenrate = c(0.10, 0.20, 0.20, 0.20, 0.25, NA, NA, NA, NA, NA),
+#'   multiplier = c(NA, NA, NA, NA, NA, NA, NA, NA, 0.5, 0.5),
+#'   type =c(1, 1, 1, 1, 1, 1, 1, 1, 3, 3),
 #'   stageframe = cypframe_raw, historical = FALSE)
 #' 
 #' cypmatrix2r <- rlefko2(data = cypraw_v1, stageframe = cypframe_raw, 
 #'   year = "all", patch = "all", stages = c("stage3", "stage2", "stage1"),
 #'   size = c("size3added", "size2added"), supplement = cypsupp2r,
 #'   yearcol = "year2", patchcol = "patchid", indivcol = "individ")
-#'                        
+#' 
 #' stablestage3(cypmatrix2r, stochastic = TRUE)
 #' 
 #' @export
@@ -736,7 +736,7 @@ stablestage3 <- function(mats, ...) UseMethod("stablestage3")
 #' @param stochastic A logical value indicating whether to use deterministic
 #' (\code{FALSE}) or stochastic (\code{TRUE}) analysis. Defaults to
 #' \code{FALSE}.
-#' @param times An integer variable indicating number of times to project if
+#' @param times An integer variable indicating number of occasions to project if
 #' using stochastic analysis. Defaults to 10000.
 #' @param tweights An optional vector indicating the probability weighting to
 #' use for each matrix in stochastic simulations. If not given, then defaults to
@@ -763,29 +763,30 @@ stablestage3 <- function(mats, ...) UseMethod("stablestage3")
 #' into a list object. The \code{$hist} element contains a data frame in which 
 #' the stable stage distribution is given in terms of across-year stage pairs.
 #' The structure includes the matrix number, the numeric stage designations for
-#' stages in times \emph{t} and \emph{t}-1, respectively, followed by the
+#' stages in occasions \emph{t} and \emph{t}-1, respectively, followed by the
 #' respective stage names, and ending with the estimated proportion of the
 #' stable stage distribution for that stage within its matrix (\code{ss_prop}).
 #' The \code{$ahist} element contains the stable stage distribution in stages
 #' as given in the original stageframe. It includes a data frame with the matrix 
 #' of origin, the numeric stage designation, stage name, and the stable stage
 #' distribution estimated as the sum of distribution elements from \code{$hist}
-#' corresponding to the equivalent stage in time \emph{t}, irrespective of stage
-#' in time \emph{t}-1.
+#' corresponding to the equivalent stage in occasion \emph{t}, irrespective of
+#' stage in occasion \emph{t}-1.
 #'
 #' In addition to the data frames noted above, stochastic analysis will result
 #' in the additional output of a list of matrices containing the actual
-#' projected stage distributions across all projected times, in the order of
+#' projected stage distributions across all projected occasions, in the order of
 #' population-patch combinations in the \code{lefkoMat} input.
 #'
 #' @section Notes:
 #' In stochastic analysis, the projected mean distribution is the arithmetic
-#' mean across the final 1000 projected times if the simulation is at least 2000
-#' projected times long. If between 500 and 2000 projected times long, then only
-#' the final 200 are used, and if fewer than 500 times are used, then all are
-#' used. Note that because stage distributions in stochastic simulations can
-#' change greatly in the initial portion of the run, we encourage a minimum of
-#' 2000 projected times per simulation, with 10000 preferred.
+#' mean across the final 1000 projected occasions if the simulation is at least
+#' 2000 projected occasions long. If between 500 and 2000 projected occasions
+#' long, then only the final 200 are used, and if fewer than 500 occasions are
+#' used, then all are used. Note that because stage distributions in stochastic
+#' simulations can change greatly in the initial portion of the run, we
+#' encourage a minimum of 2000 projected occasions per simulation, with 10000
+#' preferred.
 #' 
 #' @seealso \code{\link{stablestage3}()}
 #' @seealso \code{\link{stablestage3.matrix}()}
@@ -862,22 +863,22 @@ stablestage3 <- function(mats, ...) UseMethod("stablestage3")
 #'   NRasRep = TRUE)
 #' 
 #' # Here we use supplemental() to provide overwrite and reproductive info
-#' cypsupp2r <- supplemental(stage3 = c("SD", "P1", "P2", "P3", "SL", "SL", "D", 
+#' cypsupp2r <- supplemental(stage3 = c("SD", "P1", "P2", "P3", "SL", "D", 
 #'     "XSm", "Sm", "SD", "P1"),
-#'   stage2 = c("SD", "SD", "P1", "P2", "P3", "SL", "SL", "SL", "SL", "rep",
+#'   stage2 = c("SD", "SD", "P1", "P2", "P3", "SL", "SL", "SL", "rep",
 #'     "rep"),
-#'   eststage3 = c(NA, NA, NA, NA, NA, NA, "D", "XSm", "Sm", NA, NA),
-#'   eststage2 = c(NA, NA, NA, NA, NA, NA, "XSm", "XSm", "XSm", NA, NA),
-#'   givenrate = c(0.10, 0.20, 0.20, 0.20, 0.25, 0.40, NA, NA, NA, NA, NA),
-#'   multiplier = c(NA, NA, NA, NA, NA, NA, NA, NA, NA, 0.5, 0.5),
-#'   type =c(1, 1, 1, 1, 1, 1, 1, 1, 1, 3, 3),
+#'   eststage3 = c(NA, NA, NA, NA, NA, "D", "XSm", "Sm", NA, NA),
+#'   eststage2 = c(NA, NA, NA, NA, NA, "XSm", "XSm", "XSm", NA, NA),
+#'   givenrate = c(0.10, 0.20, 0.20, 0.20, 0.25, NA, NA, NA, NA, NA),
+#'   multiplier = c(NA, NA, NA, NA, NA, NA, NA, NA, 0.5, 0.5),
+#'   type =c(1, 1, 1, 1, 1, 1, 1, 1, 3, 3),
 #'   stageframe = cypframe_raw, historical = FALSE)
 #' 
 #' cypmatrix2r <- rlefko2(data = cypraw_v1, stageframe = cypframe_raw, 
 #'   year = "all", patch = "all", stages = c("stage3", "stage2", "stage1"),
 #'   size = c("size3added", "size2added"), supplement = cypsupp2r,
 #'   yearcol = "year2", patchcol = "patchid", indivcol = "individ")
-#'                        
+#' 
 #' stablestage3(cypmatrix2r, stochastic = TRUE)
 #' 
 #' @export
@@ -916,7 +917,7 @@ stablestage3.lefkoMat <- function(mats, stochastic = FALSE, times = 10000,
     mats$labels$poppatch <- paste(mats$labels$pop, mats$labels$patch)
     used_poppatches <- as.list(unique(mats$labels$poppatch))
     
-    #Here we get the full stage distribution series for all times, as a list
+    #Here we get the full stage distribution series for all occasions, as a list
     princegeorge <- lapply(used_poppatches, function(X) {
       used_slots <- which(mats$labels$poppatch == X)
       
@@ -1138,22 +1139,22 @@ stablestage3.lefkoMat <- function(mats, stochastic = FALSE, times = 10000,
 #'   NRasRep = TRUE)
 #' 
 #' # Here we use supplemental() to provide overwrite and reproductive info
-#' cypsupp2r <- supplemental(stage3 = c("SD", "P1", "P2", "P3", "SL", "SL", "D", 
+#' cypsupp2r <- supplemental(stage3 = c("SD", "P1", "P2", "P3", "SL", "D", 
 #'     "XSm", "Sm", "SD", "P1"),
-#'   stage2 = c("SD", "SD", "P1", "P2", "P3", "SL", "SL", "SL", "SL", "rep",
+#'   stage2 = c("SD", "SD", "P1", "P2", "P3", "SL", "SL", "SL", "rep",
 #'     "rep"),
-#'   eststage3 = c(NA, NA, NA, NA, NA, NA, "D", "XSm", "Sm", NA, NA),
-#'   eststage2 = c(NA, NA, NA, NA, NA, NA, "XSm", "XSm", "XSm", NA, NA),
-#'   givenrate = c(0.10, 0.20, 0.20, 0.20, 0.25, 0.40, NA, NA, NA, NA, NA),
-#'   multiplier = c(NA, NA, NA, NA, NA, NA, NA, NA, NA, 0.5, 0.5),
-#'   type =c(1, 1, 1, 1, 1, 1, 1, 1, 1, 3, 3),
+#'   eststage3 = c(NA, NA, NA, NA, NA, "D", "XSm", "Sm", NA, NA),
+#'   eststage2 = c(NA, NA, NA, NA, NA, "XSm", "XSm", "XSm", NA, NA),
+#'   givenrate = c(0.10, 0.20, 0.20, 0.20, 0.25, NA, NA, NA, NA, NA),
+#'   multiplier = c(NA, NA, NA, NA, NA, NA, NA, NA, 0.5, 0.5),
+#'   type =c(1, 1, 1, 1, 1, 1, 1, 1, 3, 3),
 #'   stageframe = cypframe_raw, historical = FALSE)
 #' 
 #' cypmatrix2r <- rlefko2(data = cypraw_v1, stageframe = cypframe_raw, 
 #'   year = "all", patch = "all", stages = c("stage3", "stage2", "stage1"),
 #'   size = c("size3added", "size2added"), supplement = cypsupp2r,
 #'   yearcol = "year2", patchcol = "patchid", indivcol = "individ")
-#'                        
+#' 
 #' stablestage3(cypmatrix2r$A[[1]])
 #' 
 #' @export
@@ -1268,22 +1269,22 @@ stablestage3.matrix <- function(mats, sparse = "auto", ...)
 #'   NRasRep = TRUE)
 #' 
 #' # Here we use supplemental() to provide overwrite and reproductive info
-#' cypsupp2r <- supplemental(stage3 = c("SD", "P1", "P2", "P3", "SL", "SL", "D", 
+#' cypsupp2r <- supplemental(stage3 = c("SD", "P1", "P2", "P3", "SL", "D", 
 #'     "XSm", "Sm", "SD", "P1"),
-#'   stage2 = c("SD", "SD", "P1", "P2", "P3", "SL", "SL", "SL", "SL", "rep",
+#'   stage2 = c("SD", "SD", "P1", "P2", "P3", "SL", "SL", "SL", "rep",
 #'     "rep"),
-#'   eststage3 = c(NA, NA, NA, NA, NA, NA, "D", "XSm", "Sm", NA, NA),
-#'   eststage2 = c(NA, NA, NA, NA, NA, NA, "XSm", "XSm", "XSm", NA, NA),
-#'   givenrate = c(0.10, 0.20, 0.20, 0.20, 0.25, 0.40, NA, NA, NA, NA, NA),
-#'   multiplier = c(NA, NA, NA, NA, NA, NA, NA, NA, NA, 0.5, 0.5),
-#'   type =c(1, 1, 1, 1, 1, 1, 1, 1, 1, 3, 3),
+#'   eststage3 = c(NA, NA, NA, NA, NA, "D", "XSm", "Sm", NA, NA),
+#'   eststage2 = c(NA, NA, NA, NA, NA, "XSm", "XSm", "XSm", NA, NA),
+#'   givenrate = c(0.10, 0.20, 0.20, 0.20, 0.25, NA, NA, NA, NA, NA),
+#'   multiplier = c(NA, NA, NA, NA, NA, NA, NA, NA, 0.5, 0.5),
+#'   type =c(1, 1, 1, 1, 1, 1, 1, 1, 3, 3),
 #'   stageframe = cypframe_raw, historical = FALSE)
 #' 
 #' cypmatrix2r <- rlefko2(data = cypraw_v1, stageframe = cypframe_raw, 
 #'   year = "all", patch = "all", stages = c("stage3", "stage2", "stage1"),
 #'   size = c("size3added", "size2added"), supplement = cypsupp2r,
 #'   yearcol = "year2", patchcol = "patchid", indivcol = "individ")
-#'                        
+#' 
 #' repvalue3(cypmatrix2r, stochastic = TRUE)
 #' 
 #' @export
@@ -1301,7 +1302,7 @@ repvalue3 <- function(mats, ...) UseMethod("repvalue3")
 #' @param stochastic A logical value indicating whether to use deterministic
 #' (\code{FALSE}) or stochastic (\code{TRUE}) analysis. Defaults to
 #' \code{FALSE}.
-#' @param times An integer variable indicating number of times to project if
+#' @param times An integer variable indicating number of occasions to project if
 #' using stochastic analysis. Defaults to 10000.
 #' @param tweights An optional vector indicating the probability weighting to
 #' use for each matrix in stochastic simulations. If not given, then defaults to
@@ -1329,32 +1330,32 @@ repvalue3 <- function(mats, ...) UseMethod("repvalue3")
 #' into a list object. The \code{$hist} element contains a data frame in which 
 #' the stable stage distribution is given in terms of across-year stage pairs.
 #' The structure includes the matrix number, the numeric stage designations for
-#' stages in times \emph{t} and \emph{t}-1, respectively, followed by the
+#' stages in occasions \emph{t} and \emph{t}-1, respectively, followed by the
 #' respective stage names, and ending with the estimated reproductive value for
 #' that stage within its matrix (\code{rep_value}). The \code{$ahist} element is
 #' a data frame showing the reproductive values of the basic stages in the
 #' associated stageframe. The reproductive values in this second data frame are
 #' estimated via the approach developed in Ehrlen (2000), in which each
 #' ahistorical stage's reproductive value is the average of the RVs summed by
-#' stage at time \emph{t} weighted by the proportion of that stage pair within
-#' the historical stable stage distribution associated with the matrix. Both
-#' historical and ahistorical reproductive values are scaled to the first non-
-#' zero reproductive value in each case.
+#' stage at occasion \emph{t} weighted by the proportion of that stage pair
+#' within the historical stable stage distribution associated with the matrix.
+#' Both historical and ahistorical reproductive values are scaled to the first
+#' non-zero reproductive value in each case.
 #'
 #' In addition to the data frames noted above, stochastic analysis will result
 #' in the additional output of a list of matrices containing the actual
-#' projected reproductive value vectors across all projected times, in the order
-#' of population-patch combinations in the \code{lefkoMat} input.
+#' projected reproductive value vectors across all projected occasions, in the
+#' order of population-patch combinations in the \code{lefkoMat} input.
 #'
 #' @section Notes:
 #' In stochastic analysis, the projected mean reproductive value vector is the
-#' arithmetic mean across the final projected 1000 times if the simulation is at
-#' least 2000 projected times long. If between 500 and 2000 projected times
-#' long, then only the final 200 are used, and if fewer than 500 times are used,
-#' then all are used. Note that because reproductive values in stochastic
-#' simulations can change greatly in the initial portion of the run, we
-#' encourage a minimum 2000 projected times per simulation, with 10000
-#' preferred.
+#' arithmetic mean across the final projected 1000 occasions if the simulation
+#' is at least 2000 projected occasions long. If between 500 and 2000 projected
+#' occasions long, then only the final 200 are used, and if fewer than 500
+#' occasions are used, then all are used. Note that because reproductive values
+#' in stochastic simulations can change greatly in the initial portion of the
+#' run, we encourage a minimum 2000 projected occasions per simulation, with
+#' 10000 preferred.
 #' 
 #' @seealso \code{\link{repvalue3}()}
 #' @seealso \code{\link{repvalue3.matrix}()}
@@ -1431,22 +1432,22 @@ repvalue3 <- function(mats, ...) UseMethod("repvalue3")
 #'   NRasRep = TRUE)
 #' 
 #' # Here we use supplemental() to provide overwrite and reproductive info
-#' cypsupp2r <- supplemental(stage3 = c("SD", "P1", "P2", "P3", "SL", "SL", "D", 
+#' cypsupp2r <- supplemental(stage3 = c("SD", "P1", "P2", "P3", "SL", "D", 
 #'     "XSm", "Sm", "SD", "P1"),
-#'   stage2 = c("SD", "SD", "P1", "P2", "P3", "SL", "SL", "SL", "SL", "rep",
+#'   stage2 = c("SD", "SD", "P1", "P2", "P3", "SL", "SL", "SL", "rep",
 #'     "rep"),
-#'   eststage3 = c(NA, NA, NA, NA, NA, NA, "D", "XSm", "Sm", NA, NA),
-#'   eststage2 = c(NA, NA, NA, NA, NA, NA, "XSm", "XSm", "XSm", NA, NA),
-#'   givenrate = c(0.10, 0.20, 0.20, 0.20, 0.25, 0.40, NA, NA, NA, NA, NA),
-#'   multiplier = c(NA, NA, NA, NA, NA, NA, NA, NA, NA, 0.5, 0.5),
-#'   type =c(1, 1, 1, 1, 1, 1, 1, 1, 1, 3, 3),
+#'   eststage3 = c(NA, NA, NA, NA, NA, "D", "XSm", "Sm", NA, NA),
+#'   eststage2 = c(NA, NA, NA, NA, NA, "XSm", "XSm", "XSm", NA, NA),
+#'   givenrate = c(0.10, 0.20, 0.20, 0.20, 0.25, NA, NA, NA, NA, NA),
+#'   multiplier = c(NA, NA, NA, NA, NA, NA, NA, NA, 0.5, 0.5),
+#'   type =c(1, 1, 1, 1, 1, 1, 1, 1, 3, 3),
 #'   stageframe = cypframe_raw, historical = FALSE)
 #' 
 #' cypmatrix2r <- rlefko2(data = cypraw_v1, stageframe = cypframe_raw, 
 #'   year = "all", patch = "all", stages = c("stage3", "stage2", "stage1"),
 #'   size = c("size3added", "size2added"), supplement = cypsupp2r,
 #'   yearcol = "year2", patchcol = "patchid", indivcol = "individ")
-#'                        
+#' 
 #' repvalue3(cypmatrix2r, stochastic = TRUE)
 #' 
 #' @export
@@ -1492,7 +1493,7 @@ repvalue3.lefkoMat <- function(mats, stochastic = FALSE, times = 10000,
     mats$labels$poppatch <- paste(mats$labels$pop, mats$labels$patch)
     used_poppatches <- as.list(unique(mats$labels$poppatch))
     
-    # Here we get the full stage distribution and reproductive value vector series for all times, as a list
+    # Here we get the full stage distribution and reproductive value vector series for all occasions, as a list
     # Stage distributions are the top half the matrix, and reproductive value is at the bottom
     princegeorge <- lapply(used_poppatches, function(X) {
       used_slots <- which(mats$labels$poppatch == X)
@@ -1809,22 +1810,22 @@ repvalue3.lefkoMat <- function(mats, stochastic = FALSE, times = 10000,
 #'   NRasRep = TRUE)
 #' 
 #' # Here we use supplemental() to provide overwrite and reproductive info
-#' cypsupp2r <- supplemental(stage3 = c("SD", "P1", "P2", "P3", "SL", "SL", "D", 
+#' cypsupp2r <- supplemental(stage3 = c("SD", "P1", "P2", "P3", "SL", "D", 
 #'     "XSm", "Sm", "SD", "P1"),
-#'   stage2 = c("SD", "SD", "P1", "P2", "P3", "SL", "SL", "SL", "SL", "rep",
+#'   stage2 = c("SD", "SD", "P1", "P2", "P3", "SL", "SL", "SL", "rep",
 #'     "rep"),
-#'   eststage3 = c(NA, NA, NA, NA, NA, NA, "D", "XSm", "Sm", NA, NA),
-#'   eststage2 = c(NA, NA, NA, NA, NA, NA, "XSm", "XSm", "XSm", NA, NA),
-#'   givenrate = c(0.10, 0.20, 0.20, 0.20, 0.25, 0.40, NA, NA, NA, NA, NA),
-#'   multiplier = c(NA, NA, NA, NA, NA, NA, NA, NA, NA, 0.5, 0.5),
-#'   type =c(1, 1, 1, 1, 1, 1, 1, 1, 1, 3, 3),
+#'   eststage3 = c(NA, NA, NA, NA, NA, "D", "XSm", "Sm", NA, NA),
+#'   eststage2 = c(NA, NA, NA, NA, NA, "XSm", "XSm", "XSm", NA, NA),
+#'   givenrate = c(0.10, 0.20, 0.20, 0.20, 0.25, NA, NA, NA, NA, NA),
+#'   multiplier = c(NA, NA, NA, NA, NA, NA, NA, NA, 0.5, 0.5),
+#'   type =c(1, 1, 1, 1, 1, 1, 1, 1, 3, 3),
 #'   stageframe = cypframe_raw, historical = FALSE)
 #' 
 #' cypmatrix2r <- rlefko2(data = cypraw_v1, stageframe = cypframe_raw, 
 #'   year = "all", patch = "all", stages = c("stage3", "stage2", "stage1"),
 #'   size = c("size3added", "size2added"), supplement = cypsupp2r,
 #'   yearcol = "year2", patchcol = "patchid", indivcol = "individ")
-#'                        
+#' 
 #' repvalue3(cypmatrix2r$A[[1]])
 #' 
 #' @export
@@ -1853,9 +1854,9 @@ repvalue3.matrix <- function(mats, sparse = "auto", ...)
 #' \code{sensitivity3()} is a generic function that returns the sensitivity of
 #' the population growth rate to the elements of the matrices in a matrix
 #' population model. Currently, this function estimates both deterministic and
-#' stochastic sensitivities, where the growth rate is \eqn{\lambda} in the former
-#' case and the log of the stochastic \eqn{\lambda} in the latter case. This
-#' function is made to handle very large and sparse matrices supplied as
+#' stochastic sensitivities, where the growth rate is \eqn{\lambda} in the
+#' former case and the log of the stochastic \eqn{\lambda} in the latter case.
+#' This function is made to handle very large and sparse matrices supplied as
 #' \code{lefkoMat} objects, as lists of matrices, and as individual matrices.
 #' 
 #' @param mats A lefkoMat object, or population projection matrix, for which
@@ -1939,15 +1940,15 @@ repvalue3.matrix <- function(mats, sparse = "auto", ...)
 #'   stageassign = cypframe_raw, stagesize = "sizeadded", NAas0 = TRUE,
 #'   NRasRep = TRUE)
 #' 
-#' cypsupp2r <- supplemental(stage3 = c("SD", "P1", "P2", "P3", "SL", "SL", "D", 
+#' cypsupp2r <- supplemental(stage3 = c("SD", "P1", "P2", "P3", "SL", "D", 
 #'     "XSm", "Sm", "SD", "P1"),
-#'   stage2 = c("SD", "SD", "P1", "P2", "P3", "SL", "SL", "SL", "SL", "rep",
+#'   stage2 = c("SD", "SD", "P1", "P2", "P3", "SL", "SL", "SL", "rep",
 #'     "rep"),
-#'   eststage3 = c(NA, NA, NA, NA, NA, NA, "D", "XSm", "Sm", NA, NA),
-#'   eststage2 = c(NA, NA, NA, NA, NA, NA, "XSm", "XSm", "XSm", NA, NA),
-#'   givenrate = c(0.10, 0.20, 0.20, 0.20, 0.25, 0.40, NA, NA, NA, NA, NA),
-#'   multiplier = c(NA, NA, NA, NA, NA, NA, NA, NA, NA, 0.5, 0.5),
-#'   type =c(1, 1, 1, 1, 1, 1, 1, 1, 1, 3, 3),
+#'   eststage3 = c(NA, NA, NA, NA, NA, "D", "XSm", "Sm", NA, NA),
+#'   eststage2 = c(NA, NA, NA, NA, NA, "XSm", "XSm", "XSm", NA, NA),
+#'   givenrate = c(0.10, 0.20, 0.20, 0.20, 0.25, NA, NA, NA, NA, NA),
+#'   multiplier = c(NA, NA, NA, NA, NA, NA, NA, NA, 0.5, 0.5),
+#'   type =c(1, 1, 1, 1, 1, 1, 1, 1, 3, 3),
 #'   stageframe = cypframe_raw, historical = FALSE)
 #' 
 #' cypmatrix2r <- rlefko2(data = cypraw_v1, stageframe = cypframe_raw, 
@@ -1964,24 +1965,26 @@ sensitivity3 <- function(mats, ...) UseMethod("sensitivity3")
 #' 
 #' \code{sensitivity3.lefkoMat()} returns the sensitivities of population growth
 #' rate to elements of all \code{$A} matrices in an object of class
-#' \code{lefkoMat}. If deterministic, then \eqn{\lambda} is taken as the population
-#' growth rate. If stochastic, then the log of stochastic \eqn{\lambda}, or
-#' the log stochastic growth rate, is taken as the population growth rate. This
-#' function can handle large and sparse matrices, and so can be used with large
-#' historical matrices, IPMs, age x stage matrices, as well as smaller
-#' ahistorical matrices.
+#' \code{lefkoMat}. If deterministic, then \eqn{\lambda} is taken as the
+#' population growth rate. If stochastic, then the log of stochastic
+#' \eqn{\lambda}, or the log stochastic growth rate, is taken as the population
+#' growth rate. This function can handle large and sparse matrices, and so can
+#' be used with large historical matrices, IPMs, age x stage matrices, as well
+#' as smaller ahistorical matrices.
 #' 
 #' @param mats An object of class \code{lefkoMat}.
 #' @param stochastic A logical value determining whether to conduct a
 #' deterministic (FALSE) or stochastic (TRUE) sensitivity analysis. Defaults to
 #' FALSE.
-#' @param steps The number of times to project forward in stochastic simulation.
-#' Defaults to 10,000.
+#' @param steps The number of occasions to project forward in stochastic
+#' simulation. Defaults to 10,000.
 #' @param time_weights Numeric vector denoting the probabilistic weightings of
-#' annual matrices. Defaults to equal weighting among times.
+#' annual matrices. Defaults to equal weighting among occasions.
 #' @param sparse A text string indicating whether to use sparse matrix encoding
 #' (\code{"yes"}) or dense matrix encoding (\code{"no"}). Defaults to
 #' \code{"auto"}.
+#' @param append_mats A logical value indicating whether to include the original
+#' A, U, and F matrices in the output \code{lefkoSens} object.
 #' @param ... Other parameters.
 #' 
 #' @return This function returns an object of class \code{lefkoSens}, which is a
@@ -2077,15 +2080,15 @@ sensitivity3 <- function(mats, ...) UseMethod("sensitivity3")
 #'   stageassign = cypframe_raw, stagesize = "sizeadded", NAas0 = TRUE,
 #'   NRasRep = TRUE)
 #' 
-#' cypsupp2r <- supplemental(stage3 = c("SD", "P1", "P2", "P3", "SL", "SL", "D", 
+#' cypsupp2r <- supplemental(stage3 = c("SD", "P1", "P2", "P3", "SL", "D", 
 #'     "XSm", "Sm", "SD", "P1"),
-#'   stage2 = c("SD", "SD", "P1", "P2", "P3", "SL", "SL", "SL", "SL", "rep",
+#'   stage2 = c("SD", "SD", "P1", "P2", "P3", "SL", "SL", "SL", "rep",
 #'     "rep"),
-#'   eststage3 = c(NA, NA, NA, NA, NA, NA, "D", "XSm", "Sm", NA, NA),
-#'   eststage2 = c(NA, NA, NA, NA, NA, NA, "XSm", "XSm", "XSm", NA, NA),
-#'   givenrate = c(0.10, 0.20, 0.20, 0.20, 0.25, 0.40, NA, NA, NA, NA, NA),
-#'   multiplier = c(NA, NA, NA, NA, NA, NA, NA, NA, NA, 0.5, 0.5),
-#'   type =c(1, 1, 1, 1, 1, 1, 1, 1, 1, 3, 3),
+#'   eststage3 = c(NA, NA, NA, NA, NA, "D", "XSm", "Sm", NA, NA),
+#'   eststage2 = c(NA, NA, NA, NA, NA, "XSm", "XSm", "XSm", NA, NA),
+#'   givenrate = c(0.10, 0.20, 0.20, 0.20, 0.25, NA, NA, NA, NA, NA),
+#'   multiplier = c(NA, NA, NA, NA, NA, NA, NA, NA, 0.5, 0.5),
+#'   type =c(1, 1, 1, 1, 1, 1, 1, 1, 3, 3),
 #'   stageframe = cypframe_raw, historical = FALSE)
 #' 
 #' cypmatrix2r <- rlefko2(data = cypraw_v1, stageframe = cypframe_raw, 
@@ -2097,7 +2100,7 @@ sensitivity3 <- function(mats, ...) UseMethod("sensitivity3")
 #' 
 #' @export
 sensitivity3.lefkoMat <- function(mats, stochastic = FALSE, steps = 10000,
-  time_weights = NA, sparse = "auto", ...) {
+  time_weights = NA, sparse = "auto", append_mats = FALSE, ...) {
   
   if (is.element(tolower(sparse), c("y", "yes", "yea", "yeah", "t", "true"))) {
     sparsemethod <- 1
@@ -2141,7 +2144,7 @@ sensitivity3.lefkoMat <- function(mats, stochastic = FALSE, steps = 10000,
       ahlabels <- mats$ahstages
       
       output <- list(h_sensmats = NULL, ah_sensmats = baldrick, h_stages = NULL, 
-        ah_stages = ahlabels, A = mats$A, U = mats$U, F = mats$F)
+        ah_stages = ahlabels)
       
     } else {
       
@@ -2152,8 +2155,7 @@ sensitivity3.lefkoMat <- function(mats, stochastic = FALSE, steps = 10000,
       ahlabels <- mats$ahstages
       
       output <- list(h_sensmats = he_list, ah_sensmats = ahe_list,
-        h_stages = hlabels, ah_stages = ahlabels, A = mats$A, U = mats$U,
-        F = mats$F)
+        h_stages = hlabels, ah_stages = ahlabels)
     }
   } else {
     # Stochastic sensitivity analysis
@@ -2180,13 +2182,20 @@ sensitivity3.lefkoMat <- function(mats, stochastic = FALSE, steps = 10000,
       )
       output <- list(h_sensmats = returned_main, ah_sensmats = returned_ah,
         h_stages = mats$hstages, agestages = mats$agestages,
-        ah_stages = mats$ahstages, A = mats$A, U = mats$U, F = mats$F)
+        ah_stages = mats$ahstages)
     } else {
       output <- list(h_sensmats = NULL, ah_sensmats = returned_main,
         h_stages = mats$hstages, agestages = mats$agestages,
-        ah_stages = mats$ahstages, A = mats$A, U = mats$U, F = mats$F)
+        ah_stages = mats$ahstages)
     }
   }
+  
+  if (append_mats) {
+    output$A <- mats$A
+    output$U <- mats$U
+    output$F <- mats$F
+  }
+  
   class(output) <- "lefkoSens"
   
   return(output)
@@ -2285,15 +2294,15 @@ sensitivity3.lefkoMat <- function(mats, stochastic = FALSE, steps = 10000,
 #'   stageassign = cypframe_raw, stagesize = "sizeadded", NAas0 = TRUE,
 #'   NRasRep = TRUE)
 #' 
-#' cypsupp2r <- supplemental(stage3 = c("SD", "P1", "P2", "P3", "SL", "SL", "D", 
+#' cypsupp2r <- supplemental(stage3 = c("SD", "P1", "P2", "P3", "SL", "D", 
 #'     "XSm", "Sm", "SD", "P1"),
-#'   stage2 = c("SD", "SD", "P1", "P2", "P3", "SL", "SL", "SL", "SL", "rep",
+#'   stage2 = c("SD", "SD", "P1", "P2", "P3", "SL", "SL", "SL", "rep",
 #'     "rep"),
-#'   eststage3 = c(NA, NA, NA, NA, NA, NA, "D", "XSm", "Sm", NA, NA),
-#'   eststage2 = c(NA, NA, NA, NA, NA, NA, "XSm", "XSm", "XSm", NA, NA),
-#'   givenrate = c(0.10, 0.20, 0.20, 0.20, 0.25, 0.40, NA, NA, NA, NA, NA),
-#'   multiplier = c(NA, NA, NA, NA, NA, NA, NA, NA, NA, 0.5, 0.5),
-#'   type =c(1, 1, 1, 1, 1, 1, 1, 1, 1, 3, 3),
+#'   eststage3 = c(NA, NA, NA, NA, NA, "D", "XSm", "Sm", NA, NA),
+#'   eststage2 = c(NA, NA, NA, NA, NA, "XSm", "XSm", "XSm", NA, NA),
+#'   givenrate = c(0.10, 0.20, 0.20, 0.20, 0.25, NA, NA, NA, NA, NA),
+#'   multiplier = c(NA, NA, NA, NA, NA, NA, NA, NA, 0.5, 0.5),
+#'   type =c(1, 1, 1, 1, 1, 1, 1, 1, 3, 3),
 #'   stageframe = cypframe_raw, historical = FALSE)
 #' 
 #' cypmatrix2r <- rlefko2(data = cypraw_v1, stageframe = cypframe_raw, 
@@ -2336,15 +2345,18 @@ sensitivity3.matrix <- function(mats, sparse = "auto", ...)
 #' @param stochastic A logical value determining whether to conduct a
 #' deterministic (FALSE) or stochastic (TRUE) sensitivity analysis. Defaults to
 #' FALSE.
-#' @param steps The number of times to project forward in stochastic simulation.
-#' Defaults to 10,000.
+#' @param steps The number of occasions to project forward in stochastic
+#' simulation. Defaults to 10,000.
 #' @param time_weights Numeric vector denoting the probabilistic weightings of
-#' annual matrices. Defaults to equal weighting among times.
+#' annual matrices. Defaults to equal weighting among occasions.
 #' @param historical A logical value indicating whether matrices are historical.
 #' Defaults to FALSE.
 #' @param sparse A text string indicating whether to use sparse matrix encoding
 #' (\code{"yes"}) or dense matrix encoding (\code{"no"}). Defaults to
 #' \code{"auto"}.
+#' @param append_mats A logical value indicating whether to include the original
+#' matrices input as object \code{mats} in the output \code{lefkoSense} object.
+#' Defaults to FALSE.
 #' @param ... Other parameters.
 #' 
 #' @return This function returns an object of class \code{lefkoSens}, which is a
@@ -2442,15 +2454,15 @@ sensitivity3.matrix <- function(mats, sparse = "auto", ...)
 #'   stageassign = cypframe_raw, stagesize = "sizeadded", NAas0 = TRUE,
 #'   NRasRep = TRUE)
 #' 
-#' cypsupp2r <- supplemental(stage3 = c("SD", "P1", "P2", "P3", "SL", "SL", "D", 
+#' cypsupp2r <- supplemental(stage3 = c("SD", "P1", "P2", "P3", "SL", "D", 
 #'     "XSm", "Sm", "SD", "P1"),
-#'   stage2 = c("SD", "SD", "P1", "P2", "P3", "SL", "SL", "SL", "SL", "rep",
+#'   stage2 = c("SD", "SD", "P1", "P2", "P3", "SL", "SL", "SL", "rep",
 #'     "rep"),
-#'   eststage3 = c(NA, NA, NA, NA, NA, NA, "D", "XSm", "Sm", NA, NA),
-#'   eststage2 = c(NA, NA, NA, NA, NA, NA, "XSm", "XSm", "XSm", NA, NA),
-#'   givenrate = c(0.10, 0.20, 0.20, 0.20, 0.25, 0.40, NA, NA, NA, NA, NA),
-#'   multiplier = c(NA, NA, NA, NA, NA, NA, NA, NA, NA, 0.5, 0.5),
-#'   type =c(1, 1, 1, 1, 1, 1, 1, 1, 1, 3, 3),
+#'   eststage3 = c(NA, NA, NA, NA, NA, "D", "XSm", "Sm", NA, NA),
+#'   eststage2 = c(NA, NA, NA, NA, NA, "XSm", "XSm", "XSm", NA, NA),
+#'   givenrate = c(0.10, 0.20, 0.20, 0.20, 0.25, NA, NA, NA, NA, NA),
+#'   multiplier = c(NA, NA, NA, NA, NA, NA, NA, NA, 0.5, 0.5),
+#'   type =c(1, 1, 1, 1, 1, 1, 1, 1, 3, 3),
 #'   stageframe = cypframe_raw, historical = FALSE)
 #' 
 #' cypmatrix2r <- rlefko2(data = cypraw_v1, stageframe = cypframe_raw, 
@@ -2462,7 +2474,8 @@ sensitivity3.matrix <- function(mats, sparse = "auto", ...)
 #' 
 #' @export
 sensitivity3.list <- function(mats, stochastic = FALSE, steps = 10000,
-  time_weights = NA, historical = FALSE, sparse = "auto", ...) {
+  time_weights = NA, historical = FALSE, sparse = "auto", append_mats = FALSE,
+  ...) {
   
   if (is.element(tolower(sparse), c("y", "yes", "yea", "yeah", "t", "true"))) {
     sparsemethod <- 1
@@ -2513,14 +2526,17 @@ sensitivity3.list <- function(mats, stochastic = FALSE, steps = 10000,
     
     if (historical) {
       output <- list(h_sensmats = returned_list, ah_sensmats = NULL,
-        h_stages = NULL, agestages = NULL, ah_stages = NULL, A = mats, U = NULL,
-        F = NULL)
+        h_stages = NULL, agestages = NULL, ah_stages = NULL)
     } else {
       output <- list(h_sensmats = NULL, ah_sensmats = returned_list,
-        h_stages = NULL, agestages = NULL, ah_stages = NULL, A = mats, U = NULL,
-        F = NULL)
+        h_stages = NULL, agestages = NULL, ah_stages = NULL)
     }
   }
+  
+  if (append_mats) {
+    output$A <- mats
+  }
+  
   class(output) <- "lefkoSens"
   
   return(output)
@@ -2617,15 +2633,15 @@ sensitivity3.list <- function(mats, stochastic = FALSE, steps = 10000,
 #'   stageassign = cypframe_raw, stagesize = "sizeadded", NAas0 = TRUE,
 #'   NRasRep = TRUE)
 #' 
-#' cypsupp2r <- supplemental(stage3 = c("SD", "P1", "P2", "P3", "SL", "SL", "D", 
+#' cypsupp2r <- supplemental(stage3 = c("SD", "P1", "P2", "P3", "SL", "D", 
 #'     "XSm", "Sm", "SD", "P1"),
-#'   stage2 = c("SD", "SD", "P1", "P2", "P3", "SL", "SL", "SL", "SL", "rep",
+#'   stage2 = c("SD", "SD", "P1", "P2", "P3", "SL", "SL", "SL", "rep",
 #'     "rep"),
-#'   eststage3 = c(NA, NA, NA, NA, NA, NA, "D", "XSm", "Sm", NA, NA),
-#'   eststage2 = c(NA, NA, NA, NA, NA, NA, "XSm", "XSm", "XSm", NA, NA),
-#'   givenrate = c(0.10, 0.20, 0.20, 0.20, 0.25, 0.40, NA, NA, NA, NA, NA),
-#'   multiplier = c(NA, NA, NA, NA, NA, NA, NA, NA, NA, 0.5, 0.5),
-#'   type =c(1, 1, 1, 1, 1, 1, 1, 1, 1, 3, 3),
+#'   eststage3 = c(NA, NA, NA, NA, NA, "D", "XSm", "Sm", NA, NA),
+#'   eststage2 = c(NA, NA, NA, NA, NA, "XSm", "XSm", "XSm", NA, NA),
+#'   givenrate = c(0.10, 0.20, 0.20, 0.20, 0.25, NA, NA, NA, NA, NA),
+#'   multiplier = c(NA, NA, NA, NA, NA, NA, NA, NA, 0.5, 0.5),
+#'   type =c(1, 1, 1, 1, 1, 1, 1, 1, 3, 3),
 #'   stageframe = cypframe_raw, historical = FALSE)
 #' 
 #' cypmatrix2r <- rlefko2(data = cypraw_v1, stageframe = cypframe_raw, 
@@ -2653,13 +2669,15 @@ elasticity3 <- function(mats, ...) UseMethod("elasticity3")
 #' @param stochastic A logical value determining whether to conduct a
 #' deterministic (FALSE) or stochastic (TRUE) elasticity analysis. Defaults to
 #' FALSE.
-#' @param steps The number of times to project forward in stochastic simulation.
-#' Defaults to 10,000.
+#' @param steps The number of occasions to project forward in stochastic
+#' simulation. Defaults to 10,000.
 #' @param time_weights Numeric vector denoting the probabilistic weightings of
-#' annual matrices. Defaults to equal weighting among times.
+#' annual matrices. Defaults to equal weighting among occasions.
 #' @param sparse A text string indicating whether to use sparse matrix encoding
 #' (\code{"yes"}) or dense matrix encoding (\code{"no"}). Defaults to
 #' \code{"auto"}.
+#' @param append_mats A logical value indicating whether to include the original
+#' A, U, and F matrices in the output \code{lefkoElas} object.
 #' @param ... Other parameters.
 #' 
 #' @return This function returns an object of class \code{lefkoElas}, which is a
@@ -2668,12 +2686,12 @@ elasticity3 <- function(mats, ...) UseMethod("elasticity3")
 #' \code{ah_elasmats}, is a list of either ahistorical elasticity matrices if an
 #' ahMPM is used as input, or, if an hMPM is used as input, then the result is a
 #' list of elasticity matrices in which historical elasticities have been summed
-#' by the stage in times \emph{t} and \emph{t}+1 to produce
+#' by the stage in occasions \emph{t} and \emph{t}+1 to produce
 #' historically-corrected elasticity matrices, which are equivalent in dimension
-#' to ahistorical elasticity matrices but reflect the effects of stage in time
-#' \emph{t}-1. The third element, \code{h_stages}, is a data frame showing
-#' historical stage pairs (NULL if ahMPM used as input). The fourth element,
-#' \code{agestages}, shows age-stage combinations in the order used in
+#' to ahistorical elasticity matrices but reflect the effects of stage in
+#' occasion \emph{t}-1. The third element, \code{h_stages}, is a data frame
+#' showing historical stage pairs (NULL if ahMPM used as input). The fourth
+#' element, \code{agestages}, shows age-stage combinations in the order used in
 #' age-by-stage MPMs, if suppled. The fifth element, \code{ah_stages}, is a data
 #' frame showing the order of ahistorical stages. The last 3 elements are the A,
 #' U, and F portions of the input.
@@ -2760,15 +2778,15 @@ elasticity3 <- function(mats, ...) UseMethod("elasticity3")
 #'   stageassign = cypframe_raw, stagesize = "sizeadded", NAas0 = TRUE,
 #'   NRasRep = TRUE)
 #' 
-#' cypsupp2r <- supplemental(stage3 = c("SD", "P1", "P2", "P3", "SL", "SL", "D", 
+#' cypsupp2r <- supplemental(stage3 = c("SD", "P1", "P2", "P3", "SL", "D", 
 #'     "XSm", "Sm", "SD", "P1"),
-#'   stage2 = c("SD", "SD", "P1", "P2", "P3", "SL", "SL", "SL", "SL", "rep",
+#'   stage2 = c("SD", "SD", "P1", "P2", "P3", "SL", "SL", "SL", "rep",
 #'     "rep"),
-#'   eststage3 = c(NA, NA, NA, NA, NA, NA, "D", "XSm", "Sm", NA, NA),
-#'   eststage2 = c(NA, NA, NA, NA, NA, NA, "XSm", "XSm", "XSm", NA, NA),
-#'   givenrate = c(0.10, 0.20, 0.20, 0.20, 0.25, 0.40, NA, NA, NA, NA, NA),
-#'   multiplier = c(NA, NA, NA, NA, NA, NA, NA, NA, NA, 0.5, 0.5),
-#'   type =c(1, 1, 1, 1, 1, 1, 1, 1, 1, 3, 3),
+#'   eststage3 = c(NA, NA, NA, NA, NA, "D", "XSm", "Sm", NA, NA),
+#'   eststage2 = c(NA, NA, NA, NA, NA, "XSm", "XSm", "XSm", NA, NA),
+#'   givenrate = c(0.10, 0.20, 0.20, 0.20, 0.25, NA, NA, NA, NA, NA),
+#'   multiplier = c(NA, NA, NA, NA, NA, NA, NA, NA, 0.5, 0.5),
+#'   type =c(1, 1, 1, 1, 1, 1, 1, 1, 3, 3),
 #'   stageframe = cypframe_raw, historical = FALSE)
 #' 
 #' cypmatrix2r <- rlefko2(data = cypraw_v1, stageframe = cypframe_raw, 
@@ -2780,7 +2798,7 @@ elasticity3 <- function(mats, ...) UseMethod("elasticity3")
 #' 
 #' @export
 elasticity3.lefkoMat <- function(mats, stochastic = FALSE, steps = 10000,
-  time_weights = NA, sparse = "auto", ...) {
+  time_weights = NA, sparse = "auto", append_mats = FALSE, ...) {
   
   if (is.element(tolower(sparse), c("y", "yes", "yea", "yeah", "t", "true"))) {
     sparsemethod <- 1
@@ -2824,8 +2842,7 @@ elasticity3.lefkoMat <- function(mats, stochastic = FALSE, steps = 10000,
       ahlabels <- mats$ahstages #Originally only the first two columns
       
       output <- list(h_elasmats = NULL, ah_elasmats = baldrick, h_stages = NULL,
-        agestages = mats$agestages, ah_stages = ahlabels, A = mats$A,
-        U = mats$U, F = mats$F)
+        agestages = mats$agestages, ah_stages = ahlabels)
     } else {
       
       he_list <- lapply(baldrick, function(X) {X$h_emat})
@@ -2835,8 +2852,7 @@ elasticity3.lefkoMat <- function(mats, stochastic = FALSE, steps = 10000,
       ahlabels <- mats$ahstages #Originally only the first two columns
       
       output <- list(h_elasmats = he_list, ah_elasmats = ahe_list, 
-        h_stages = hlabels, agestages = mats$agestages, ah_stages = ahlabels,
-        A = mats$A, U = mats$U, F = mats$F)
+        h_stages = hlabels, agestages = mats$agestages, ah_stages = ahlabels)
     }
   } else {
     # Stochastic elasticity analysis
@@ -2863,13 +2879,20 @@ elasticity3.lefkoMat <- function(mats, stochastic = FALSE, steps = 10000,
       
       output <- list(h_elasmats = returned_list, ah_elasmats = ah_list,
         h_stages = mats$hstages, agestages = mats$agestages, 
-        ah_stages = mats$ahstages, A = mats$A, U = mats$U, F = mats$F)
+        ah_stages = mats$ahstages)
     } else {
       output <- list(h_elasmats = NULL, ah_elasmats = returned_list,
         h_stages = mats$hstages, agestages = mats$agestages, 
-        ah_stages = mats$ahstages, A = mats$A, U = mats$U, F = mats$F)
+        ah_stages = mats$ahstages)
     }
   }
+  
+  if (append_mats) {
+    output$A <- mats$A
+    output$U <- mats$U
+    output$F <- mats$F
+  }
+  
   class(output) <- "lefkoElas"
   
   return(output)
@@ -2967,15 +2990,15 @@ elasticity3.lefkoMat <- function(mats, stochastic = FALSE, steps = 10000,
 #'   stageassign = cypframe_raw, stagesize = "sizeadded", NAas0 = TRUE,
 #'   NRasRep = TRUE)
 #' 
-#' cypsupp2r <- supplemental(stage3 = c("SD", "P1", "P2", "P3", "SL", "SL", "D", 
+#' cypsupp2r <- supplemental(stage3 = c("SD", "P1", "P2", "P3", "SL", "D", 
 #'     "XSm", "Sm", "SD", "P1"),
-#'   stage2 = c("SD", "SD", "P1", "P2", "P3", "SL", "SL", "SL", "SL", "rep",
+#'   stage2 = c("SD", "SD", "P1", "P2", "P3", "SL", "SL", "SL", "rep",
 #'     "rep"),
-#'   eststage3 = c(NA, NA, NA, NA, NA, NA, "D", "XSm", "Sm", NA, NA),
-#'   eststage2 = c(NA, NA, NA, NA, NA, NA, "XSm", "XSm", "XSm", NA, NA),
-#'   givenrate = c(0.10, 0.20, 0.20, 0.20, 0.25, 0.40, NA, NA, NA, NA, NA),
-#'   multiplier = c(NA, NA, NA, NA, NA, NA, NA, NA, NA, 0.5, 0.5),
-#'   type =c(1, 1, 1, 1, 1, 1, 1, 1, 1, 3, 3),
+#'   eststage3 = c(NA, NA, NA, NA, NA, "D", "XSm", "Sm", NA, NA),
+#'   eststage2 = c(NA, NA, NA, NA, NA, "XSm", "XSm", "XSm", NA, NA),
+#'   givenrate = c(0.10, 0.20, 0.20, 0.20, 0.25, NA, NA, NA, NA, NA),
+#'   multiplier = c(NA, NA, NA, NA, NA, NA, NA, NA, 0.5, 0.5),
+#'   type =c(1, 1, 1, 1, 1, 1, 1, 1, 3, 3),
 #'   stageframe = cypframe_raw, historical = FALSE)
 #' 
 #' cypmatrix2r <- rlefko2(data = cypraw_v1, stageframe = cypframe_raw, 
@@ -3016,15 +3039,17 @@ elasticity3.matrix <- function(mats, sparse = "auto", ...)
 #' @param stochastic A logical value determining whether to conduct a
 #' deterministic (FALSE) or stochastic (TRUE) elasticity analysis. Defaults to
 #' FALSE.
-#' @param steps The number of times to project forward in stochastic simulation.
-#' Defaults to 10,000.
+#' @param steps The number of occasions to project forward in stochastic
+#' simulation. Defaults to 10,000.
 #' @param time_weights Numeric vector denoting the probabilistic weightings of
-#' annual matrices. Defaults to equal weighting among times.
+#' annual matrices. Defaults to equal weighting among occasions.
 #' @param historical A logical value denoting whether the input matrices are
 #' historical. Defaults to FALSE.
 #' @param sparse A text string indicating whether to use sparse matrix encoding
 #' (\code{"yes"}) or dense matrix encoding (\code{"no"}). Defaults to
 #' \code{"auto"}.
+#' @param append_mats A logical value indicating whether to include the original
+#' matrices input as object \code{mats} in the output \code{lefkoElas} object.
 #' @param ... Other parameters.
 #' 
 #' @return This function returns an object of class \code{lefkoElas}, which is a
@@ -3117,15 +3142,15 @@ elasticity3.matrix <- function(mats, sparse = "auto", ...)
 #'   stageassign = cypframe_raw, stagesize = "sizeadded", NAas0 = TRUE,
 #'   NRasRep = TRUE)
 #' 
-#' cypsupp2r <- supplemental(stage3 = c("SD", "P1", "P2", "P3", "SL", "SL", "D", 
+#' cypsupp2r <- supplemental(stage3 = c("SD", "P1", "P2", "P3", "SL", "D", 
 #'     "XSm", "Sm", "SD", "P1"),
-#'   stage2 = c("SD", "SD", "P1", "P2", "P3", "SL", "SL", "SL", "SL", "rep",
+#'   stage2 = c("SD", "SD", "P1", "P2", "P3", "SL", "SL", "SL", "rep",
 #'     "rep"),
-#'   eststage3 = c(NA, NA, NA, NA, NA, NA, "D", "XSm", "Sm", NA, NA),
-#'   eststage2 = c(NA, NA, NA, NA, NA, NA, "XSm", "XSm", "XSm", NA, NA),
-#'   givenrate = c(0.10, 0.20, 0.20, 0.20, 0.25, 0.40, NA, NA, NA, NA, NA),
-#'   multiplier = c(NA, NA, NA, NA, NA, NA, NA, NA, NA, 0.5, 0.5),
-#'   type =c(1, 1, 1, 1, 1, 1, 1, 1, 1, 3, 3),
+#'   eststage3 = c(NA, NA, NA, NA, NA, "D", "XSm", "Sm", NA, NA),
+#'   eststage2 = c(NA, NA, NA, NA, NA, "XSm", "XSm", "XSm", NA, NA),
+#'   givenrate = c(0.10, 0.20, 0.20, 0.20, 0.25, NA, NA, NA, NA, NA),
+#'   multiplier = c(NA, NA, NA, NA, NA, NA, NA, NA, 0.5, 0.5),
+#'   type =c(1, 1, 1, 1, 1, 1, 1, 1, 3, 3),
 #'   stageframe = cypframe_raw, historical = FALSE)
 #' 
 #' cypmatrix2r <- rlefko2(data = cypraw_v1, stageframe = cypframe_raw, 
@@ -3137,7 +3162,8 @@ elasticity3.matrix <- function(mats, sparse = "auto", ...)
 #' 
 #' @export
 elasticity3.list <- function(mats, stochastic = FALSE, steps = 10000,
-  time_weights = NA, historical = FALSE, sparse = "auto", ...) {
+  time_weights = NA, historical = FALSE, sparse = "auto", append_mats = FALSE,
+  ...) {
   
   if (is.element(tolower(sparse), c("y", "yes", "yea", "yeah", "t", "true"))) {
     sparsemethod <- 1
@@ -3170,10 +3196,10 @@ elasticity3.list <- function(mats, stochastic = FALSE, steps = 10000,
     
     if (historical) {
       output <- list(h_elasmats = baldrick, ah_elasmats = NULL, h_stages = NULL,
-        ah_stages = NULL, A = mats, U = NULL, F = NULL)
+        ah_stages = NULL)
     } else {
       output <- list(h_elasmats = NULL, ah_elasmats = baldrick, h_stages = NULL,
-        ah_stages = NULL, A = mats, U = NULL, F = NULL)
+        ah_stages = NULL)
     }
   } else {
     # Stochastic elasticity analysis
@@ -3192,13 +3218,451 @@ elasticity3.list <- function(mats, stochastic = FALSE, steps = 10000,
     
     if (historical) {
       output <- list(h_elasmats = returned_list, ah_elasmats = NULL,
-        h_stages = NULL, ah_stages = NULL, A = mats, U = NULL, F = NULL)
+        h_stages = NULL, ah_stages = NULL)
     } else {
       output <- list(h_elasmats = NULL, ah_elasmats = returned_list,
-        h_stages = NULL, ah_stages = NULL, A = mats, U = NULL, F = NULL)
+        h_stages = NULL, ah_stages = NULL)
     }
   }
+  
+  if (append_mats) {
+    output$A <- mats
+  }
+  
   class(output) <- "lefkoElas"
+  
+  return(output)
+}
+
+#' Conduct a Life Table Response Experiment
+#' 
+#' \code{ltre3()} is a generic function that returns life table response
+#' experiment (LTRE) or stochastic LTRE matrices for the input projection
+#' matrices.
+#' 
+#' @param mats A lefkoMat object, population projection matrix, or list of
+#' population projection matrices.
+#' @param refmats A reference lefkoMat object, or matrix, for use as the
+#' control. If missing, then is set to the same object as \code{mats}.
+#' @param ... Other parameters.
+#' 
+#' @return The value returned depends on the class of the \code{mats} argument.
+#' 
+#' @section Notes:
+#' Deterministic LTRE is one-way, fixed, and based on the sensitivities of the
+#' matrix midway between each input matrix and the reference matrix, per Caswell
+#' (2001, Matrix Population Models, Sinauer Associates, MA, USA). Stochastic
+#' LTRE is per Davison et al. (2010, doi: 10.1111/j.1365-2745.2009.01611.x).
+#' 
+#' @seealso \code{\link{ltre3.lefkoMat}()}
+#' @seealso \code{\link{summary.lefkoLTRE}()}
+#' 
+#' @examples
+#' # Lathyrus example
+#' data(lathyrus)
+#' 
+#' sizevector <- c(0, 100, 13, 127, 3730, 3800, 0)
+#' stagevector <- c("Sd", "Sdl", "VSm", "Sm", "VLa", "Flo", "Dorm")
+#' repvector <- c(0, 0, 0, 0, 0, 1, 0)
+#' obsvector <- c(0, 1, 1, 1, 1, 1, 0)
+#' matvector <- c(0, 0, 1, 1, 1, 1, 1)
+#' immvector <- c(1, 1, 0, 0, 0, 0, 0)
+#' propvector <- c(1, 0, 0, 0, 0, 0, 0)
+#' indataset <- c(0, 1, 1, 1, 1, 1, 1)
+#' binvec <- c(0, 100, 11, 103, 3500, 3800, 0.5)
+#' 
+#' lathframe <- sf_create(sizes = sizevector, stagenames = stagevector,
+#'   repstatus = repvector, obsstatus = obsvector, matstatus = matvector,
+#'   immstatus = immvector, indataset = indataset, binhalfwidth = binvec,
+#'   propstatus = propvector)
+#' 
+#' lathvert <- verticalize3(lathyrus, noyears = 4, firstyear = 1988,
+#'   patchidcol = "SUBPLOT", individcol = "GENET", blocksize = 9,
+#'   juvcol = "Seedling1988", sizeacol = "Volume88", repstracol = "FCODE88",
+#'   fecacol = "Intactseed88", deadacol = "Dead1988",
+#'   nonobsacol = "Dormant1988", stageassign = lathframe, stagesize = "sizea",
+#'   censorcol = "Missing1988", censorkeep = NA, censor = TRUE)
+#' 
+#' lathsupp3 <- supplemental(stage3 = c("Sd", "Sd", "Sdl", "Sdl", "Sd", "Sdl", "mat"),
+#'   stage2 = c("Sd", "Sd", "Sd", "Sd", "rep", "rep", "Sdl"),
+#'   stage1 = c("Sd", "rep", "Sd", "rep", "npr", "npr", "Sd"),
+#'   eststage3 = c(NA, NA, NA, NA, NA, NA, "mat"),
+#'   eststage2 = c(NA, NA, NA, NA, NA, NA, "Sdl"),
+#'   eststage1 = c(NA, NA, NA, NA, NA, NA, "NotAlive"),
+#'   givenrate = c(0.345, 0.345, 0.054, 0.054, NA, NA, NA),
+#'   multiplier = c(NA, NA, NA, NA, 0.345, 0.054, NA),
+#'   type = c(1, 1, 1, 1, 3, 3, 1), type_t12 = c(1, 2, 1, 2, 1, 1, 1),
+#'   stageframe = lathframe, historical = TRUE)
+#' 
+#' ehrlen3 <- rlefko3(data = lathvert, stageframe = lathframe, year = "all", 
+#'   stages = c("stage3", "stage2", "stage1"), supplement = lathsupp3,
+#'   yearcol = "year2", indivcol = "individ")
+#' 
+#' ltre3(ehrlen3)
+#' 
+#' # Cypripedium example
+#' rm(list=ls(all=TRUE))
+#' data(cypdata)
+#' 
+#' sizevector <- c(0, 0, 0, 0, 0, 0, 1, 2.5, 4.5, 8, 17.5)
+#' stagevector <- c("SD", "P1", "P2", "P3", "SL", "D", "XSm", "Sm", "Md", "Lg",
+#'   "XLg")
+#' repvector <- c(0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1)
+#' obsvector <- c(0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1)
+#' matvector <- c(0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1)
+#' immvector <- c(0, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0)
+#' propvector <- c(1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)
+#' indataset <- c(0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1)
+#' binvec <- c(0, 0, 0, 0, 0, 0.5, 0.5, 1, 1, 2.5, 7)
+#' 
+#' cypframe_raw <- sf_create(sizes = sizevector, stagenames = stagevector,
+#'   repstatus = repvector, obsstatus = obsvector, matstatus = matvector,
+#'   propstatus = propvector, immstatus = immvector, indataset = indataset,
+#'   binhalfwidth = binvec)
+#' 
+#' cypraw_v1 <- verticalize3(data = cypdata, noyears = 6, firstyear = 2004,
+#'   patchidcol = "patch", individcol = "plantid", blocksize = 4,
+#'   sizeacol = "Inf2.04", sizebcol = "Inf.04", sizeccol = "Veg.04",
+#'   repstracol = "Inf.04", repstrbcol = "Inf2.04", fecacol = "Pod.04",
+#'   stageassign = cypframe_raw, stagesize = "sizeadded", NAas0 = TRUE,
+#'   NRasRep = TRUE)
+#' 
+#' cypsupp2r <- supplemental(stage3 = c("SD", "P1", "P2", "P3", "SL", "D", 
+#'     "XSm", "Sm", "SD", "P1"),
+#'   stage2 = c("SD", "SD", "P1", "P2", "P3", "SL", "SL", "SL", "rep",
+#'     "rep"),
+#'   eststage3 = c(NA, NA, NA, NA, NA, "D", "XSm", "Sm", NA, NA),
+#'   eststage2 = c(NA, NA, NA, NA, NA, "XSm", "XSm", "XSm", NA, NA),
+#'   givenrate = c(0.10, 0.20, 0.20, 0.20, 0.25, NA, NA, NA, NA, NA),
+#'   multiplier = c(NA, NA, NA, NA, NA, NA, NA, NA, 0.5, 0.5),
+#'   type =c(1, 1, 1, 1, 1, 1, 1, 1, 3, 3),
+#'   stageframe = cypframe_raw, historical = FALSE)
+#' 
+#' cypmatrix2r <- rlefko2(data = cypraw_v1, stageframe = cypframe_raw, 
+#'   year = "all", patch = "all", stages = c("stage3", "stage2", "stage1"),
+#'   size = c("size3added", "size2added"), supplement = cypsupp2r,
+#'   yearcol = "year2", patchcol = "patchid", indivcol = "individ")
+#' 
+#' ltre3(cypmatrix2r)
+#' 
+#' @export
+ltre3 <- function(mats, refmats, ...) UseMethod("ltre3")
+
+#' Conduct a Life Table Response Experiment of a lefkoMat Object
+#' 
+#' \code{ltre3.lefkoMat()} returns a set of matrices of one-way LTRE (life table
+#' response experiment) or stochastic LTRE matrices contributions.
+#' 
+#' @param mats An object of class \code{lefkoMat}.
+#' @param refmats A reference lefkoMat object, or matrix, for use as the
+#' control. If missing, then is set to the same object as \code{mats}.
+#' @param ref A numeric value indicating which matrix or matrices in
+#' \code{refmats} to use as the control. The numbers used must correspond to the
+#' number of the matrices in the \code{labels} element of the associated
+#' \code{lefkoMat} object. The default setting, NA, uses all entries in
+#' \code{refmats}.
+#' @param stochastic A logical value determining whether to conduct a
+#' deterministic (FALSE) or stochastic (TRUE) elasticity analysis. Defaults to
+#' FALSE.
+#' @param steps The number of occasions to project forward in stochastic
+#' simulation. Defaults to 10,000.
+#' @param burnin The number of initial steps to ignore in stochastic projection
+#' when calculating stochastic elasticities. Must be smaller than \code{steps}.
+#' Defaults to 3000.
+#' @param time_weights Numeric vector denoting the probabilistic weightings of
+#' all matrices. Defaults to equal weighting among matrices.
+#' @param sparse A string indicating whether to use sparse matrix encoding
+#' (\code{"yes"}) or dense matrix encoding (\code{"no"}). Defaults to
+#' \code{"auto"}.
+#' @param rseed Optional numeric value corresponding to the random seed for
+#' stochastic simulation.
+#' @param append_mats A logical value denoting whether to include the original
+#' A, U, and F matrices in the returned \code{lefkoLTRE} object. Defaults to
+#' FALSE.
+#' @param ... Other parameters.
+#' 
+#' @return This function returns an object of class \code{lefkoLTRE}. This
+#' includes a list of LTRE matrices as object \code{ltre_det} if a deterministic
+#' LTRE is called for, or a list of mean-value LTRE matrices as object
+#' \code{ltre_mean} and a list of SD-value LTRE matrices as object
+#' \code{ltre_sd} if a stochastic LTRE is called for. This is followed by the
+#' stageframe as object \code{ahstages}, the order of historical stages as
+#' object \code{hstages}, the age-by-stage order as object \code{agestages}, the
+#' order of matrices as object \code{labels}, and, if requested, the original A,
+#' U, and F matrices.
+#' 
+#' @section Notes:
+#' Deterministic LTRE is one-way, fixed, and based on the sensitivities of the
+#' matrix midway between each input matrix and the reference matrix, per Caswell
+#' (2001, Matrix Population Models, Sinauer Associates, MA, USA). Stochastic
+#' LTRE is simulated per Davison et al. (2010) Journal of Ecology 98:255-267
+#' (doi: 10.1111/j.1365-2745.2009.01611.x).
+#'
+#' Default behavior for stochastic LTRE uses the full population provided in
+#' \code{mats} as the reference if no \code{refmats} and \code{ref} is provided.
+#' If no \code{refmats} is provided but \code{ref} is, then the matrices noted
+#' in \code{ref} are used as the reference matrix set. Year and patch order is
+#' utilized from object \code{mats}, but not from object \code{refmats}, in
+#' which each matrix is assumed to represent a different year from one
+#' population. This function cannot currently handle multiple populations within
+#' the same \code{mats} object (although such analysis is possible if these
+#' populations are designated as patches instead).
+#' 
+#' @seealso \code{\link{ltre3}()}
+#' @seealso \code{\link{summary.lefkoLTRE}()}
+#' 
+#' @examples
+#' # Lathyrus example
+#' data(lathyrus)
+#' 
+#' sizevector <- c(0, 100, 13, 127, 3730, 3800, 0)
+#' stagevector <- c("Sd", "Sdl", "VSm", "Sm", "VLa", "Flo", "Dorm")
+#' repvector <- c(0, 0, 0, 0, 0, 1, 0)
+#' obsvector <- c(0, 1, 1, 1, 1, 1, 0)
+#' matvector <- c(0, 0, 1, 1, 1, 1, 1)
+#' immvector <- c(1, 1, 0, 0, 0, 0, 0)
+#' propvector <- c(1, 0, 0, 0, 0, 0, 0)
+#' indataset <- c(0, 1, 1, 1, 1, 1, 1)
+#' binvec <- c(0, 100, 11, 103, 3500, 3800, 0.5)
+#' 
+#' lathframe <- sf_create(sizes = sizevector, stagenames = stagevector,
+#'   repstatus = repvector, obsstatus = obsvector, matstatus = matvector,
+#'   immstatus = immvector, indataset = indataset, binhalfwidth = binvec,
+#'   propstatus = propvector)
+#' 
+#' lathvert <- verticalize3(lathyrus, noyears = 4, firstyear = 1988,
+#'   patchidcol = "SUBPLOT", individcol = "GENET", blocksize = 9,
+#'   juvcol = "Seedling1988", sizeacol = "Volume88", repstracol = "FCODE88",
+#'   fecacol = "Intactseed88", deadacol = "Dead1988",
+#'   nonobsacol = "Dormant1988", stageassign = lathframe, stagesize = "sizea",
+#'   censorcol = "Missing1988", censorkeep = NA, censor = TRUE)
+#' 
+#' lathsupp3 <- supplemental(stage3 = c("Sd", "Sd", "Sdl", "Sdl", "Sd", "Sdl", "mat"),
+#'   stage2 = c("Sd", "Sd", "Sd", "Sd", "rep", "rep", "Sdl"),
+#'   stage1 = c("Sd", "rep", "Sd", "rep", "npr", "npr", "Sd"),
+#'   eststage3 = c(NA, NA, NA, NA, NA, NA, "mat"),
+#'   eststage2 = c(NA, NA, NA, NA, NA, NA, "Sdl"),
+#'   eststage1 = c(NA, NA, NA, NA, NA, NA, "NotAlive"),
+#'   givenrate = c(0.345, 0.345, 0.054, 0.054, NA, NA, NA),
+#'   multiplier = c(NA, NA, NA, NA, 0.345, 0.054, NA),
+#'   type = c(1, 1, 1, 1, 3, 3, 1), type_t12 = c(1, 2, 1, 2, 1, 1, 1),
+#'   stageframe = lathframe, historical = TRUE)
+#' 
+#' ehrlen3 <- rlefko3(data = lathvert, stageframe = lathframe, year = "all", 
+#'   stages = c("stage3", "stage2", "stage1"), supplement = lathsupp3,
+#'   yearcol = "year2", indivcol = "individ")
+#' 
+#' ltre3(ehrlen3, stochastic = TRUE)
+#' 
+#' # Cypripedium example
+#' rm(list=ls(all=TRUE))
+#' data(cypdata)
+#' 
+#' sizevector <- c(0, 0, 0, 0, 0, 0, 1, 2.5, 4.5, 8, 17.5)
+#' stagevector <- c("SD", "P1", "P2", "P3", "SL", "D", "XSm", "Sm", "Md", "Lg",
+#'   "XLg")
+#' repvector <- c(0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1)
+#' obsvector <- c(0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1)
+#' matvector <- c(0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1)
+#' immvector <- c(0, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0)
+#' propvector <- c(1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)
+#' indataset <- c(0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1)
+#' binvec <- c(0, 0, 0, 0, 0, 0.5, 0.5, 1, 1, 2.5, 7)
+#' 
+#' cypframe_raw <- sf_create(sizes = sizevector, stagenames = stagevector,
+#'   repstatus = repvector, obsstatus = obsvector, matstatus = matvector,
+#'   propstatus = propvector, immstatus = immvector, indataset = indataset,
+#'   binhalfwidth = binvec)
+#' 
+#' cypraw_v1 <- verticalize3(data = cypdata, noyears = 6, firstyear = 2004,
+#'   patchidcol = "patch", individcol = "plantid", blocksize = 4,
+#'   sizeacol = "Inf2.04", sizebcol = "Inf.04", sizeccol = "Veg.04",
+#'   repstracol = "Inf.04", repstrbcol = "Inf2.04", fecacol = "Pod.04",
+#'   stageassign = cypframe_raw, stagesize = "sizeadded", NAas0 = TRUE,
+#'   NRasRep = TRUE)
+#' 
+#' cypsupp2r <- supplemental(stage3 = c("SD", "P1", "P2", "P3", "SL", "D", 
+#'     "XSm", "Sm", "SD", "P1"),
+#'   stage2 = c("SD", "SD", "P1", "P2", "P3", "SL", "SL", "SL", "rep",
+#'     "rep"),
+#'   eststage3 = c(NA, NA, NA, NA, NA, "D", "XSm", "Sm", NA, NA),
+#'   eststage2 = c(NA, NA, NA, NA, NA, "XSm", "XSm", "XSm", NA, NA),
+#'   givenrate = c(0.10, 0.20, 0.20, 0.20, 0.25, NA, NA, NA, NA, NA),
+#'   multiplier = c(NA, NA, NA, NA, NA, NA, NA, NA, 0.5, 0.5),
+#'   type =c(1, 1, 1, 1, 1, 1, 1, 1, 3, 3),
+#'   stageframe = cypframe_raw, historical = FALSE)
+#' 
+#' cypmatrix2r <- rlefko2(data = cypraw_v1, stageframe = cypframe_raw, 
+#'   year = "all", patch = "all", stages = c("stage3", "stage2", "stage1"),
+#'   size = c("size3added", "size2added"), supplement = cypsupp2r,
+#'   yearcol = "year2", patchcol = "patchid", indivcol = "individ")
+#' 
+#' ltre3(cypmatrix2r)
+#' 
+#' @export
+ltre3.lefkoMat <- function(mats, refmats = NA, ref = NA, stochastic = FALSE,
+  steps = 10000, burnin = 3000, time_weights = NA, sparse = "auto", rseed = NA,
+  append_mats = FALSE, ...) {
+  
+  if (!all(is.na(rseed))) set.seed(rseed);
+  
+  if (is.element(tolower(sparse), c("y", "yes", "yea", "yeah", "t", "true"))) {
+    sparsemethod <- 1
+  } else if (is.element(tolower(sparse), c("n", "no", "non", "nah", "f", "false"))) {
+    sparsemethod <- 0
+  } else {
+    elements_total <- length(mats$A[[1]])
+    dense_elements <- length(which(mats$A[[1]] != 0))
+    
+    if ((dense_elements / elements_total) < 0.5) {
+      sparsemethod <- 1
+    } else sparsemethod <- 0
+  }
+  
+  if (!is.element("agestages", names(mats))) {
+    mats$agestages <- NULL
+  }
+  
+  if (all(is.na(refmats))) {
+    warning("Matrices input as mats will also be used as reference matrices.", call. = FALSE)
+  } else if (is.element("lefkoMat", class(refmats))) {
+    refmats <- refmats$A
+  } else if (is.element("matrix", class(refmats))) {
+    refmats <- list(refmats)
+  } else {
+    stop("Object refmats not recognized. Use only objects of class lefkoMat, list, or matrix.", call. = FALSE)
+  }
+  
+  if (all(is.numeric(ref))) {
+    if (length(ref) > 1) {
+      if (!stochastic) {
+        message("This function currently conducts deterministic LTREs against only single matrices, or mean matrices. Will use the mean.")
+      }
+    }
+  } else if (all(is.na(ref))) {
+    message("Using all refmats matrices as reference matrices.")
+    
+    if (!all(is.na(refmats))) {
+      ref <- c(1:length(refmats))
+    } else {
+      ref <- c(1:length(mats$A))
+    }
+  }
+  
+  if (!stochastic & length(ref) > 1) {
+    meanout <- 1
+  } else if (stochastic & length(ref) == 1) {
+    stop("Stochastic LTRE requires multiple matrices in object refmats.", call. = FALSE)
+  } else if (stochastic & length(mats$A) == 1) {
+    stop("Stochastic LTRE requires multiple matrices in object mats.", call. = FALSE)
+  } else {
+    meanout <- 0;
+  }
+  
+  if (all(is.na(refmats))) {
+    if (any(ref > length(mats$A)) | any(ref < 1)) {
+      stop("Numbers of matrices provided in object ref must be integers between 1 and the total number of matrices in object mats (or refmats, if given).", call. = FALSE)
+    }
+  } else {
+    
+    if (dim(mats$A[[1]])[1] != dim(refmats[[1]])[1] | dim(mats$A[[1]])[2] != dim(refmats[[1]])[2]) {
+      stop("Matrices used in objects mats and refmats must be of equal dimension.", call. = FALSE)
+    }
+  }
+  
+  ref <- ref - 1;
+  
+  if (!stochastic) {
+    # Deterministic LTRE analysis
+    
+    if (all(is.na(refmats))) {
+      baldrick <- ltre3matrix(mats$A, refnum = ref, mean = meanout,
+        sparse = sparsemethod)
+    } else {
+      baldrick <- ltre3matrix(mats$A, refnum = ref, refmats_ = refmats,
+        mean = meanout, sparse = sparsemethod)
+    }
+    
+    returned_list <- lapply(as.list(c(1:dim(baldrick)[3])), function(X) {
+      return(baldrick[,,X])
+    })
+    output <- list(ltre_det = returned_list, ahstages = mats$ahstages,
+      agestages = mats$agestages, hstages = mats$hstages, labels = mats$labels)
+    
+  } else {
+    # Stochastic LTRE analysis
+    
+    if (burnin >= steps) {
+      stop("Option burnin must be smaller than option steps.", call. = FALSE)
+    }
+    
+    #LOY table development
+    listofyears <- mats$labels
+    
+    if (all(is.na(listofyears$pop))) {
+      listofyears$pop <- "1"
+    }
+    
+    if (all(is.na(listofyears$patch))) {
+      listofyears$patch <- "1"
+    }
+    
+    if (all(is.na(listofyears$year2))) {
+      listofyears$year2 <- 1
+    }
+    
+    listofyears$poppatch <- apply(as.matrix(c(1:dim(listofyears)[1])), 1, function(X) {
+      paste(listofyears$pop[X], listofyears$patch[X])
+    })
+    
+    listofyears$popc <- apply(as.matrix(listofyears$pop), 1, function(X) {which(unique(listofyears$pop) == X)-1})
+    listofyears$poppatchc <- apply(as.matrix(listofyears$poppatch), 1, function(X) {which(unique(listofyears$poppatch) == X)-1})
+    listofyears$year2c <- apply(as.matrix(listofyears$year2), 1, function(X) {which(unique(listofyears$year2) == X)-1})
+    
+    listofyears$patchesinpop <- apply(as.matrix(c(1:length(listofyears$poppatchc))), 1, function(X) {length(unique(listofyears$poppatchc[which(listofyears$popc == listofyears$popc[X])]))})
+    listofyears$yearsinpatch <- apply(as.matrix(c(1:length(listofyears$year2c))), 1, function(X) {length(unique(listofyears$year2c[which(listofyears$poppatchc == listofyears$poppatchc[X])]))})
+    
+    numofpops <- length(unique(listofyears$popc))
+    numofpatches <- length(unique(listofyears$poppatchc))
+    numofyears <- length(unique(listofyears$year2c))
+    
+    listofyears$poppatchc <- as.numeric(listofyears$poppatchc)
+    
+    if (all(is.na(refmats))) {
+      if (all(is.na(time_weights))) {
+        baldrick <- sltre3matrix(mats$A, loy = listofyears, refnum = ref,
+          steps = steps, burnin = burnin, sparse = sparsemethod)
+      } else {
+        baldrick <- sltre3matrix(mats$A, loy = listofyears, refnum = ref,
+          tweights_ = time_weights, steps = steps, burnin = burnin,
+          sparse = sparsemethod)
+      }
+    } else {
+      if (all(is.na(time_weights))) {
+        baldrick <- sltre3matrix(mats$A, loy = listofyears, refnum = ref,
+          refmats_ = refmats, steps = steps, burnin = burnin,
+          sparse = sparsemethod)
+      } else {
+        baldrick <- sltre3matrix(mats$A, loy = listofyears, refnum = ref,
+          refmats_ = refmats, tweights_ = time_weights, steps = steps,
+          burnin = burnin, sparse = sparsemethod)
+      }
+    }
+    
+    alabels <- mats$labels[,c("pop", "patch")]
+    alabels <- unique(alabels)
+    
+    output <- list(ltre_mean = baldrick$cont_mean, ltre_sd = baldrick$cont_sd,
+      ahstages = mats$ahstages, agestages = mats$agestages,
+      hstages = mats$hstages, labels = alabels)
+  }
+  
+  if (append_mats) {
+    output$A <- mats$A
+    output$U <- mats$U
+    output$F <- mats$F
+  }
+  class(output) <- "lefkoLTRE"
   
   return(output)
 }
@@ -3288,17 +3752,36 @@ summary.lefkoElas <- function(object, ...) {
   used_iterations <- if(num_h_mats > 0) num_h_mats else num_ah_mats
   
   if (num_h_mats == 0) {
-    indices <- bambi2(elasmats$ah_stages)
+    if (!all(is.null(elasmats$agestages))) {
+      if (!all(is.na(elasmats$agestages))) {
+        if (is.element("stage_id", names(elasmats$agestages))) {
+          new_ahstages_list <- apply(as.matrix(c(1:length(elasmats$agestages$stage_id))), 
+            1, function(X) {
+              return(elasmats$ah_stages[which(elasmats$ah_stages$stage_id == elasmats$agestages$stage_id[X]),])
+            })
+          new_ahstages <- do.call("rbind.data.frame", new_ahstages_list)
+          indices <- bambi2(new_ahstages)
+        } else {
+          indices <- bambi2(elasmats$ah_stages)
+        }
+      } else {
+        indices <- bambi2(elasmats$ah_stages)
+      }
+    } else {
+      indices <- bambi2(elasmats$ah_stages)
+    }
+    
   } else {
     indices <- bambi3(elasmats$ah_stages, elasmats$h_stages)
   }
   
   for (i in c(1:used_iterations)) {
-    trialguy <- demolition3(used_emats[[i]], elasmats$A[[i]], elasmats$F[[i]], indices)
+    trialguy <- demolition3(used_emats[[i]], indices)
     
     if (i == 1) {
-      hist <- trialguy$hist
-      ahist <- trialguy$ahist
+      if (num_h_mats > 0) hist <- trialguy$hist[,c(1,2)]
+      ahist <- trialguy$ahist[,c(1,2)]
+      
       if (num_h_mats > 0) names(hist)[2] <- "matrix1"
       names(ahist)[2] <- "matrix1"
     } else {
@@ -3309,7 +3792,209 @@ summary.lefkoElas <- function(object, ...) {
     }
   }
   
-  output <- list(hist = hist, ahist = ahist)
+  if (num_h_mats > 0) {
+    output <- list(hist = hist, ahist = ahist)
+  } else {
+    output <- list(hist = NULL, ahist = ahist)
+  }
+  
+  return (output)
+}
+
+#' Summarize lefkoLTRE Objects
+#' 
+#' Function \code{summary.lefkoLTRE()} summarizes \code{lefkoLTRE} objects.
+#' Particularly, it breaks down LTRE contributions by the kind of ahistorical
+#' and, if applicable, historical transition.
+#'
+#' @param object A \code{lefkoLTRE} object.
+#' @param ... Other parameters.
+#' 
+#' @return A list composed of 2 (if deterministic) or 4 (if stochastic) data
+#' frames. If deterministic, then \code{hist_det} is a data
+#' frame showing the summed LTRE contributions for all 16 kinds of historical
+#' transition per matrix, with each column corresponding to each A matrix in
+#' order, followed by all summed positive and all summed negative contributions.
+#' Object \code{ahist_det} is a data frame showing the summed LTRE
+#' contributions for all 4 kinds of ahistorical transition per matrix, with
+#' order as before, followed by summed positive and summed negative
+#' contributions. If stochastic, then \code{hist_mean} and \code{hist_sd} are
+#' the summed LTRE contributions for the mean vital rates and variability in
+#' vital rates, respectively, according to all 16 historical transition types,
+#' followed by summed positive and negative contributions, and \code{ahist_mean}
+#' and \code{ahist_sd} are the equivalent ahistorical versions.
+#' 
+#' @examples
+#' # Lathyrus example
+#' data(lathyrus)
+#' 
+#' sizevector <- c(0, 100, 13, 127, 3730, 3800, 0)
+#' stagevector <- c("Sd", "Sdl", "VSm", "Sm", "VLa", "Flo", "Dorm")
+#' repvector <- c(0, 0, 0, 0, 0, 1, 0)
+#' obsvector <- c(0, 1, 1, 1, 1, 1, 0)
+#' matvector <- c(0, 0, 1, 1, 1, 1, 1)
+#' immvector <- c(1, 1, 0, 0, 0, 0, 0)
+#' propvector <- c(1, 0, 0, 0, 0, 0, 0)
+#' indataset <- c(0, 1, 1, 1, 1, 1, 1)
+#' binvec <- c(0, 100, 11, 103, 3500, 3800, 0.5)
+#' 
+#' lathframe <- sf_create(sizes = sizevector, stagenames = stagevector,
+#'   repstatus = repvector, obsstatus = obsvector, matstatus = matvector,
+#'   immstatus = immvector, indataset = indataset, binhalfwidth = binvec,
+#'   propstatus = propvector)
+#' 
+#' lathvert <- verticalize3(lathyrus, noyears = 4, firstyear = 1988,
+#'   patchidcol = "SUBPLOT", individcol = "GENET", blocksize = 9,
+#'   juvcol = "Seedling1988", sizeacol = "Volume88", repstracol = "FCODE88",
+#'   fecacol = "Intactseed88", deadacol = "Dead1988",
+#'   nonobsacol = "Dormant1988", stageassign = lathframe, stagesize = "sizea",
+#'   censorcol = "Missing1988", censorkeep = NA, censor = TRUE)
+#' 
+#' lathsupp3 <- supplemental(stage3 = c("Sd", "Sd", "Sdl", "Sdl", "Sd", "Sdl", "mat"),
+#'   stage2 = c("Sd", "Sd", "Sd", "Sd", "rep", "rep", "Sdl"),
+#'   stage1 = c("Sd", "rep", "Sd", "rep", "npr", "npr", "Sd"),
+#'   eststage3 = c(NA, NA, NA, NA, NA, NA, "mat"),
+#'   eststage2 = c(NA, NA, NA, NA, NA, NA, "Sdl"),
+#'   eststage1 = c(NA, NA, NA, NA, NA, NA, "NotAlive"),
+#'   givenrate = c(0.345, 0.345, 0.054, 0.054, NA, NA, NA),
+#'   multiplier = c(NA, NA, NA, NA, 0.345, 0.054, NA),
+#'   type = c(1, 1, 1, 1, 3, 3, 1), type_t12 = c(1, 2, 1, 2, 1, 1, 1),
+#'   stageframe = lathframe, historical = TRUE)
+#' 
+#' lathsupp2 <- supplemental(stage3 = c("Sd", "Sdl", "Sd", "Sdl"), 
+#'   stage2 = c("Sd", "Sd", "rep", "rep"),
+#'   givenrate = c(0.345, 0.054, NA, NA),
+#'   multiplier = c(NA, NA, 0.345, 0.054),
+#'   type = c(1, 1, 3, 3), stageframe = lathframe, historical = FALSE)
+#'   
+#' ehrlen3 <- rlefko3(data = lathvert, stageframe = lathframe, year = "all", 
+#'   stages = c("stage3", "stage2", "stage1"), supplement = lathsupp3,
+#'   yearcol = "year2", indivcol = "individ")
+#' 
+#' ehrlen2 <- rlefko2(data = lathvert, stageframe = lathframe, year = "all",
+#'   stages = c("stage3", "stage2"), supplement = lathsupp2,
+#'   yearcol = "year2", indivcol = "individ")
+#' 
+#' ehrlen3ltre <- ltre3(ehrlen3)
+#' summary(ehrlen3ltre)
+#' 
+#' @export
+summary.lefkoLTRE <- function(object, ...) {
+  
+  ltremats <- object
+  
+  if (is.element("ltre_det", names(object))) {
+    ltretype <- 1 # Deterministic LTRE
+  } else if (is.element("ltre_sd", names(object))) {
+    ltretype <- 2
+  } else {
+    stop("Input object is of unrecognized type. Use only lefkoLTRE obects with this function.", call. = FALSE)
+  }
+  
+  numstages <- if (ltretype == 1) {
+    dim(object$ltre_det[[1]])[1]
+  } else {
+    dim(object$ltre_sd[[1]])[1]
+  }
+  
+  if(!all(is.na(object$hstages))) {
+    if(numstages == dim(object$hstages)[1]) {
+      historical <- TRUE
+    } else {
+      historical <- FALSE
+    }
+  } else {
+    historical <- FALSE
+  }
+  
+  if (!historical) {
+    if (!all(is.null(object$agestages))) {
+      if (!all(is.na(object$agestages))) {
+        if (is.element("stage_id", names(object$agestages))) {
+          new_ahstages_list <- apply(as.matrix(c(1:length(object$agestages$stage_id))), 
+            1, function(X) {
+              return(object$ahstages[which(object$ahstages$stage_id == object$agestages$stage_id[X]),])
+            })
+          new_ahstages <- do.call("rbind.data.frame", new_ahstages_list)
+          indices <- bambi2(new_ahstages)
+        } else {
+          indices <- bambi2(object$ahstages)
+        }
+      } else {
+        indices <- bambi2(object$ahstages)
+      }
+    } else {
+      indices <- bambi2(object$ahstages)
+    }
+  } else {
+    indices <- bambi3(object$ahstages, object$hstages)
+  }
+  
+  used_iterations <- if(ltretype == 1) {
+    length(object$ltre_det)
+  } else {
+    length(object$ltre_sd)
+  }
+  
+  for (i in c(1:used_iterations)) {
+    trialguy1 <- if (ltretype == 1) {
+      demolition3(object$ltre_det[[i]], indices)
+    } else {
+      demolition3(object$ltre_mean[[i]], indices)
+    }
+    
+    if (ltretype == 2) {
+      trialguy2 <- demolition3(object$ltre_sd[[i]], indices)
+    }
+    
+    if (i == 1) {
+      hist1 <- trialguy1$hist
+      ahist1 <- trialguy1$ahist
+      if (historical) names(hist1)[2] <- "matrix1"
+      if (historical) names(hist1)[3] <- "matrix1_pos"
+      if (historical) names(hist1)[4] <- "matrix1_neg"
+      names(ahist1)[2] <- "matrix1"
+      names(ahist1)[3] <- "matrix1_pos"
+      names(ahist1)[4] <- "matrix1_neg"
+      
+      if (ltretype == 2) {
+        hist2 <- trialguy2$hist
+        ahist2 <- trialguy2$ahist
+        if (historical) names(hist2)[2] <- "matrix1"
+        if (historical) names(hist2)[3] <- "matrix1_pos"
+        if (historical) names(hist2)[4] <- "matrix1_neg"
+        names(ahist2)[2] <- "matrix1"
+        names(ahist2)[3] <- "matrix1_pos"
+        names(ahist2)[4] <- "matrix1_neg"
+      }
+    } else {
+      if (historical) hist1 <- cbind.data.frame(hist1, trialguy1$hist[,c(2:4)])
+      ahist1 <- cbind.data.frame(ahist1, trialguy1$ahist[,c(2:4)])
+      if (historical) names(hist1)[(((i-1)*3)+2)] <- paste0("matrix", i)
+      if (historical) names(hist1)[(((i-1)*3)+3)] <- paste0("matrix", i, "_pos")
+      if (historical) names(hist1)[(((i-1)*3)+4)] <- paste0("matrix", i, "_neg")
+      names(ahist1)[(((i-1)*3)+2)] <- paste0("matrix", i)
+      names(ahist1)[(((i-1)*3)+3)] <- paste0("matrix", i, "_pos")
+      names(ahist1)[(((i-1)*3)+4)] <- paste0("matrix", i, "_neg")
+      
+      if (ltretype == 2) {
+        if (historical) hist2 <- cbind.data.frame(hist2, trialguy2$hist[,c(2:4)])
+        ahist2 <- cbind.data.frame(ahist2, trialguy2$ahist[,c(2:4)])
+        if (historical) names(hist2)[(((i-1)*3)+2)] <- paste0("matrix", i)
+        if (historical) names(hist2)[(((i-1)*3)+3)] <- paste0("matrix", i, "_pos")
+        if (historical) names(hist2)[(((i-1)*3)+4)] <- paste0("matrix", i, "_neg")
+        names(ahist2)[(((i-1)*3)+2)] <- paste0("matrix", i)
+        names(ahist2)[(((i-1)*3)+3)] <- paste0("matrix", i, "_pos")
+        names(ahist2)[(((i-1)*3)+4)] <- paste0("matrix", i, "_neg")
+      }
+    }
+  }
+  
+  output <- if (ltretype == 1) {
+    list(hist_det = hist1, ahist_det = ahist1)
+  } else {
+    list(hist_mean = hist1, hist_sd = hist2, ahist_mean = ahist1, ahist_sd = ahist2)
+  }
   
   return (output)
 }

@@ -71,11 +71,11 @@ within populations.}
 \item{individcol}{A variable name or column number corresponding to the
 unique identity of each individual.}
 
-\item{year2col}{A variable name or column number corresponding to the year or
-time in time \emph{t}.}
+\item{year2col}{A variable name or column number corresponding to occasion
+\emph{t} (year or time).}
 
-\item{year3col}{A variable name or column number corresponding to the year or
-time in time \emph{t}+1.}
+\item{year3col}{A variable name or column number corresponding to occasion
+\emph{t}+1 (year or time).}
 
 \item{xcol}{A variable name or column number corresponding to the x
 coordinate of each individual in Cartesian space.}
@@ -84,108 +84,108 @@ coordinate of each individual in Cartesian space.}
 coordinate of each individual in Cartesian space.}
 
 \item{sizea2col}{A variable name or column number corresponding to the
-primary size entry in time \emph{t}.}
+primary size entry in occasion \emph{t}.}
 
 \item{sizea3col}{A variable name or column number corresponding to the
-primary size entry in time \emph{t}+1.}
+primary size entry in occasion \emph{t}+1.}
 
 \item{sizeb2col}{A variable name or column number corresponding to the
-secondary size entry in time \emph{t}.}
+secondary size entry in occasion \emph{t}.}
 
 \item{sizeb3col}{A variable name or column number corresponding to the
-secondary size entry in time \emph{t}+1.}
+secondary size entry in occasion \emph{t}+1.}
 
 \item{sizec2col}{A variable name or column number corresponding to the
-tertiary size entry in time \emph{t}.}
+tertiary size entry in occasion \emph{t}.}
 
 \item{sizec3col}{A variable name or column number corresponding to the
-tertiary size entry in time \emph{t}+1.}
+tertiary size entry in occasion \emph{t}+1.}
 
 \item{repstra2col}{A variable name or column number corresponding to the
-production of reproductive structures, such as flowers, in time \emph{t}.
+production of reproductive structures, such as flowers, in occasion \emph{t}.
 This can be binomial or count data, and is used to in analysis of the
 probability of reproduction.}
 
 \item{repstra3col}{A variable name or column number corresponding to the
-production of reproductive structures, such as flowers, in time \emph{t}+1.
-This can be binomial or count data, and is used to in analysis of the
-probability of reproduction.}
+production of reproductive structures, such as flowers, in occasion
+\emph{t}+1. This can be binomial or count data, and is used to in analysis
+of the probability of reproduction.}
 
 \item{repstrb2col}{A second variable name or column number corresponding to
-the production of reproductive structures, such as flowers, in time \emph{t}.
-This can be binomial or count data.}
+the production of reproductive structures, such as flowers, in occasion
+\emph{t}. This can be binomial or count data.}
 
 \item{repstrb3col}{A second variable name or column number corresponding to
-the production of reproductive structures, such as flowers, in time 
+the production of reproductive structures, such as flowers, in occasion 
 \emph{t}+1. This can be binomial or count data.}
 
 \item{feca2col}{A variable name or column number corresponding to fecundity
-in time \emph{t}. This may represent egg counts, fruit counts, seed 
+in occasion \emph{t}. This may represent egg counts, fruit counts, seed 
 production, etc.}
 
 \item{feca3col}{A variable name or column number corresponding to fecundity
-in time \emph{t}+1. This may represent egg counts, fruit counts, seed
+in occasion \emph{t}+1. This may represent egg counts, fruit counts, seed
 production, etc.}
 
 \item{fecb2col}{A second variable name or column number corresponding to 
-fecundity in time \emph{t}. This may represent egg counts, fruit counts, seed
-production, etc.}
-
-\item{fecb3col}{A second variable name or column number corresponding to 
-fecundity in time \emph{t}+1. This may represent egg counts, fruit counts,
+fecundity in occasion \emph{t}. This may represent egg counts, fruit counts,
 seed production, etc.}
 
+\item{fecb3col}{A second variable name or column number corresponding to 
+fecundity in occasion \emph{t}+1. This may represent egg counts, fruit
+counts, seed production, etc.}
+
 \item{indcova2col}{A variable name or column number corresponding to an
-individual covariate to be used in analysis, in time \emph{t}.}
+individual covariate to be used in analysis, in occasion \emph{t}.}
 
 \item{indcova3col}{A variable name or column number corresponding to an
-individual covariate to be used in analysis, in time \emph{t}+1.}
+individual covariate to be used in analysis, in occasion \emph{t}+1.}
 
 \item{indcovb2col}{A second variable name or column number corresponding to
-an individual covariate to be used in analysis, in time \emph{t}.}
+an individual covariate to be used in analysis, in occasion \emph{t}.}
 
 \item{indcovb3col}{A second variable name or column number corresponding to
-an individual covariate to be used in analysis, in time \emph{t}+1.}
+an individual covariate to be used in analysis, in occasion \emph{t}+1.}
 
 \item{indcovc2col}{A third variable name or column number corresponding to an
-individual covariate to be used in analysis, in time \emph{t}.}
+individual covariate to be used in analysis, in occasion \emph{t}.}
 
 \item{indcovc3col}{A third variable name or column number corresponding to an
-individual covariate to be used in analysis, in time \emph{t}+1.}
+individual covariate to be used in analysis, in occasion \emph{t}+1.}
 
 \item{alive2col}{A variable name or column number that provides information
-on whether an individual is alive in time \emph{t}. If used, living status
-must be designated as binomial (living = 1, dead = 0).}
+on whether an individual is alive in occasion \emph{t}. If used, living
+status must be designated as binomial (living = 1, dead = 0).}
 
 \item{alive3col}{A variable name or column number that provides information
-on whether an individual is alive in time \emph{t}+1. If used, living status
-must be designated as binomial (living = 1, dead = 0).}
+on whether an individual is alive in occasion \emph{t}+1. If used, living
+status must be designated as binomial (living = 1, dead = 0).}
 
 \item{dead2col}{A variable name or column number that provides information on
-whether an individual is dead in time \emph{t}. If used, dead status
+whether an individual is dead in occasion \emph{t}. If used, dead status
 must be designated as binomial (dead = 1, living = 0).}
 
 \item{dead3col}{A variable name or column number that provides information on
-whether an individual is dead in time \emph{t}+1. If used, dead status must
-be designated as binomial (dead = 1, living = 0).}
+whether an individual is dead in occasion \emph{t}+1. If used, dead status
+must be designated as binomial (dead = 1, living = 0).}
 
 \item{obs2col}{A variable name or column number providing information on
-whether an individual is in an observable stage in time \emph{t}. If used,
-observation status must be designated as binomial (observed = 1, not 
+whether an individual is in an observable stage in occasion \emph{t}. If
+used, observation status must be designated as binomial (observed = 1, not 
 observed = 0).}
 
 \item{obs3col}{A variable name or column number providing information on
-whether an individual is in an observable stage in time \emph{t}+1. If used,
-observation status must be designated as binomial (observed = 1, not 
+whether an individual is in an observable stage in occasion \emph{t}+1. If
+used, observation status must be designated as binomial (observed = 1, not 
 observed = 0).}
 
 \item{nonobs2col}{A variable name or column number providing information on
-whether an individual is in an unobservable stage in time \emph{t}. If used,
-observation status must be designated as binomial (not observed = 1,
+whether an individual is in an unobservable stage in occasion \emph{t}. If
+used, observation status must be designated as binomial (not observed = 1,
 observed = 0).}
 
 \item{nonobs3col}{A variable name or column number providing information on
-whether an individual is in an unobservable stage in time \emph{t}+1. If
+whether an individual is in an unobservable stage in occasion \emph{t}+1. If
 used, observation status must be designated as binomial (not observed = 1,
 observed = 0).}
 
@@ -200,19 +200,19 @@ by \code{fecb2col} equivalent to the variable represented by \code{feca2col}.
 This can be useful if two fecundity variables have related but unequal units.}
 
 \item{stage2col}{Optional variable name or column number corresponding to
-life history stage in time \emph{t}.}
+life history stage in occasion \emph{t}.}
 
 \item{stage3col}{Optional variable name or column number corresponding to
-life history stage in time \emph{t}+1.}
+life history stage in occasion \emph{t}+1.}
 
 \item{juv2col}{A variable name or column number that marks individuals in
-immature stages in time \emph{t}. The \code{historicalize3()} function
+immature stages in occasion \emph{t}. The \code{historicalize3()} function
 assumes that immature individuals are identified in this variable marked with
 a number equal to or greater than 1, and that mature individuals are marked
 as 0 or NA.}
 
 \item{juv3col}{A variable name or column number that marks individuals in
-immature stages in time \emph{t}+1. The \code{historicalize3()} function
+immature stages in occasion \emph{t}+1. The \code{historicalize3()} function
 assumes that immature individuals are identified in this variable marked with
 a number equal to or greater than 1, and that mature individuals are marked
 as 0 or NA.}
@@ -265,62 +265,62 @@ a historical vertical data frame (class \code{hfvdata}), meaning that the
 output data frame will have three consecutive years of size and reproductive
 data per individual per row. This data frame is in standard format for all
 functions used in \code{lefko3}, and so can be used without further 
-modification. Note that determination of state in times *t*-1 and *t*+1 gives
-preference to condition in time *t* within the input dataset. Conflicts in
-condition in input datasets that have both times *t* and *t*+1 listed per row
-are resolved by using condition in time *t*.
+modification. Note that determination of state in occasions *t*-1 and *t*+1
+gives preference to condition in occasion *t* within the input dataset.
+Conflicts in condition in input datasets that have both occasions *t* and
+*t*+1 listed per row are resolved by using condition in occasion *t*.
 
 Variables in this data frame include the following:
 \item{rowid}{Unique identifier for the row of the data frame.}
 \item{popid}{Unique identifier for the population, if given.}
 \item{patchid}{Unique identifier for patch within population, if given.}
 \item{individ}{Unique identifier for the individual.}
-\item{year2}{Year or time at time \emph{t}.}
-\item{firstseen}{Year or time of first observation.}
-\item{lastseen}{Year or time of last observation.}
-\item{obsage}{Observed age in time \emph{t}, assuming first observation
+\item{year2}{Year or time in occasion \emph{t}.}
+\item{firstseen}{Occasion of first observation.}
+\item{lastseen}{Occasion of last observation.}
+\item{obsage}{Observed age in occasion \emph{t}, assuming first observation
 corresponds to age = 0.}
 \item{obslifespan}{Observed lifespan, given as \code{lastseen - firstseen + 1}.}
-\item{xpos1,xpos2,xpos3}{X position in Cartesian space in times \emph{t}-1,
-\emph{t}, and \emph{t}+1, respectively, if provided.}
-\item{ypos1,ypos2,ypos3}{Y position in Cartesian space in times \emph{t}-1,
-\emph{t}, and \emph{t}+1, respectively, if provided.}
-\item{sizea1,sizea2,sizea3}{Main size measurement in times \emph{t}-1,
+\item{xpos1,xpos2,xpos3}{X position in Cartesian space in occasions
+\emph{t}-1, \emph{t}, and \emph{t}+1, respectively, if provided.}
+\item{ypos1,ypos2,ypos3}{Y position in Cartesian space in occasions
+\emph{t}-1, \emph{t}, and \emph{t}+1, respectively, if provided.}
+\item{sizea1,sizea2,sizea3}{Main size measurement in occasions \emph{t}-1,
 \emph{t}, and \emph{t}+1, respectively.}
-\item{sizeb1,sizeb2,sizeb3}{Secondary size measurement in times \emph{t}-1,
-\emph{t}, and \emph{t}+1, respectively.}
-\item{sizec1,sizec2,sizec3}{Tertiary measurement in times \emph{t}-1,
+\item{sizeb1,sizeb2,sizeb3}{Secondary size measurement in occasions
+\emph{t}-1, \emph{t}, and \emph{t}+1, respectively.}
+\item{sizec1,sizec2,sizec3}{Tertiary measurement in occasions \emph{t}-1,
 \emph{t}, and \emph{t}+1, respectively.}
 \item{size1added,size2added,size3added}{Sum of primary, secondary, and
-tertiary size measurements in times \emph{t}-1, \emph{t}, and \emph{t}+1,
+tertiary size measurements in occasions \emph{t}-1, \emph{t}, and \emph{t}+1,
 respectively.}
 \item{repstra1,repstra2,repstra3}{Main numbers of reproductive structures in
-times \emph{t}-1, \emph{t}, and \emph{t}+1, respectively.}
+occasions \emph{t}-1, \emph{t}, and \emph{t}+1, respectively.}
 \item{repstrb1,repstrb2,repstrb3}{Secondary numbers of reproductive
-structures in times \emph{t}-1, \emph{t}, and \emph{t}+1, respectively.}
+structures in occasions \emph{t}-1, \emph{t}, and \emph{t}+1, respectively.}
 \item{repstr1added,repstr2added,repstr3added}{Sum of primary and secondary
-reproductive structures in times \emph{t}-1, \emph{t}, and \emph{t}+1,
+reproductive structures in occasions \emph{t}-1, \emph{t}, and \emph{t}+1,
 respectively.}
-\item{feca1,feca2,feca3}{Main numbers of offspring in times \emph{t}-1,
+\item{feca1,feca2,feca3}{Main numbers of offspring in occasions \emph{t}-1,
 \emph{t}, and \emph{t}+1, respectively.}
-\item{fecb1,fecb2, fecb3}{Secondary numbers of offspring in times \emph{t}-1,
-\emph{t}, and \emph{t}+1, respectively.}
+\item{fecb1,fecb2, fecb3}{Secondary numbers of offspring in occasions
+\emph{t}-1, \emph{t}, and \emph{t}+1, respectively.}
 \item{fec1added,fec2added,fec3added}{Sum of primary and secondary fecundity
-in times \emph{t}-1, \emph{t}, and \emph{t}+1, respectively.}
-\item{censor1,censor2,censor3}{Censor state values in times \emph{t}-1,
+in occasions \emph{t}-1, \emph{t}, and \emph{t}+1, respectively.}
+\item{censor1,censor2,censor3}{Censor state values in occasions \emph{t}-1,
 \emph{t}, and \emph{t}+1, respectively.}
 \item{juvgiven1,juvgiven2,juvgiven3}{Binomial variable indicating whether
-individual is juvenile in times \emph{t}-1, \emph{t}, and \emph{t}+1. Only
-given if \code{juvcol} is provided.}
-\item{obsstatus1,obsstatus2,obsstatus3}{Binomial observation state in times
-\emph{t}-1, \emph{t}, and \emph{t}+1, respectively.}
-\item{repstatus1,repstatus2,repstatus3}{Binomial reproductive state in times
-\emph{t}-1, \emph{t}, and \emph{t}+1, respectively.}
+individual is juvenile in occasions \emph{t}-1, \emph{t}, and \emph{t}+1.
+Only given if \code{juvcol} is provided.}
+\item{obsstatus1,obsstatus2,obsstatus3}{Binomial observation state in
+occasions \emph{t}-1, \emph{t}, and \emph{t}+1, respectively.}
+\item{repstatus1,repstatus2,repstatus3}{Binomial reproductive state in
+occasions \emph{t}-1, \emph{t}, and \emph{t}+1, respectively.}
 \item{fecstatus1,fecstatus2,fecstatus3}{Binomial offspring production state
-in times \emph{t}-1, \emph{t}, and \emph{t}+1, respectively.}
-\item{matstatus1,matstatus2,matstatus3}{Binomial maturity state in times
+in occasions \emph{t}-1, \emph{t}, and \emph{t}+1, respectively.}
+\item{matstatus1,matstatus2,matstatus3}{Binomial maturity state in occasions
 \emph{t}-1, \emph{t}, and \emph{t}+1, respectively.}
-\item{alive1,alive2,alive3}{Binomial state as alive in times \emph{t}-1,
+\item{alive1,alive2,alive3}{Binomial state as alive in occasions \emph{t}-1,
  \emph{t}, and \emph{t}+1, respectively.}
 \item{density}{Density of individuals per unit designated in \code{spacing}.
 Only given if spacing is not NA.}
@@ -352,8 +352,8 @@ working with a dataset. Typically, these situations can be identified as
 arise with no concurrent \code{NoMatch} entries, which indicates that the
 input dataset contained conflicting state data at once suggesting that the
 individual is in some stage but is also dead. The latter is removed if the
-conflict occurs in time \emph{t} or time \emph{t}-1, as only living entries
-are allowed in these times.
+conflict occurs in occasion \emph{t} or occasion \emph{t}-1, as only living
+entries are allowed in these times.
 
 Care should be taken to avoid variables with negative values indicating size,
 fecundity, or reproductive or observation status. Negative values can be
@@ -393,15 +393,15 @@ cypraw_v2 <- historicalize3(data = cypvert, patchidcol = "patch",
   stageassign = cypframe_raw, stagesize = "sizeadded", censorcol = "censor",
   censor = FALSE, NAas0 = TRUE, NRasRep = TRUE, reduce = TRUE)
   
-cypsupp2r <- supplemental(stage3 = c("SD", "P1", "P2", "P3", "SL", "SL", "D", 
+cypsupp2r <- supplemental(stage3 = c("SD", "P1", "P2", "P3", "SL", "D", 
     "XSm", "Sm", "SD", "P1"),
-  stage2 = c("SD", "SD", "P1", "P2", "P3", "SL", "SL", "SL", "SL", "rep",
+  stage2 = c("SD", "SD", "P1", "P2", "P3", "SL", "SL", "SL", "rep",
     "rep"),
-  eststage3 = c(NA, NA, NA, NA, NA, NA, "D", "XSm", "Sm", NA, NA),
-  eststage2 = c(NA, NA, NA, NA, NA, NA, "XSm", "XSm", "XSm", NA, NA),
-  givenrate = c(0.10, 0.20, 0.20, 0.20, 0.25, 0.40, NA, NA, NA, NA, NA),
-  multiplier = c(NA, NA, NA, NA, NA, NA, NA, NA, NA, 0.5, 0.5),
-  type =c(1, 1, 1, 1, 1, 1, 1, 1, 1, 3, 3),
+  eststage3 = c(NA, NA, NA, NA, NA, "D", "XSm", "Sm", NA, NA),
+  eststage2 = c(NA, NA, NA, NA, NA, "XSm", "XSm", "XSm", NA, NA),
+  givenrate = c(0.10, 0.20, 0.20, 0.20, 0.25, NA, NA, NA, NA, NA),
+  multiplier = c(NA, NA, NA, NA, NA, NA, NA, NA, 0.5, 0.5),
+  type =c(1, 1, 1, 1, 1, 1, 1, 1, 3, 3),
   stageframe = cypframe_raw, historical = FALSE)
 
 cypmatrix2r <- rlefko2(data = cypraw_v2, stageframe = cypframe_raw, 

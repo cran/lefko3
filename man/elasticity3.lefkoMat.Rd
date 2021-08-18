@@ -10,6 +10,7 @@
   steps = 10000,
   time_weights = NA,
   sparse = "auto",
+  append_mats = FALSE,
   ...
 )
 }
@@ -20,15 +21,18 @@
 deterministic (FALSE) or stochastic (TRUE) elasticity analysis. Defaults to
 FALSE.}
 
-\item{steps}{The number of times to project forward in stochastic simulation.
-Defaults to 10,000.}
+\item{steps}{The number of occasions to project forward in stochastic
+simulation. Defaults to 10,000.}
 
 \item{time_weights}{Numeric vector denoting the probabilistic weightings of
-annual matrices. Defaults to equal weighting among times.}
+annual matrices. Defaults to equal weighting among occasions.}
 
 \item{sparse}{A text string indicating whether to use sparse matrix encoding
 (\code{"yes"}) or dense matrix encoding (\code{"no"}). Defaults to
 \code{"auto"}.}
+
+\item{append_mats}{A logical value indicating whether to include the original
+A, U, and F matrices in the output \code{lefkoElas} object.}
 
 \item{...}{Other parameters.}
 }
@@ -39,12 +43,12 @@ elasticity matrices (NULL if an ahMPM is used as input). The second,
 \code{ah_elasmats}, is a list of either ahistorical elasticity matrices if an
 ahMPM is used as input, or, if an hMPM is used as input, then the result is a
 list of elasticity matrices in which historical elasticities have been summed
-by the stage in times \emph{t} and \emph{t}+1 to produce
+by the stage in occasions \emph{t} and \emph{t}+1 to produce
 historically-corrected elasticity matrices, which are equivalent in dimension
-to ahistorical elasticity matrices but reflect the effects of stage in time
-\emph{t}-1. The third element, \code{h_stages}, is a data frame showing
-historical stage pairs (NULL if ahMPM used as input). The fourth element,
-\code{agestages}, shows age-stage combinations in the order used in
+to ahistorical elasticity matrices but reflect the effects of stage in
+occasion \emph{t}-1. The third element, \code{h_stages}, is a data frame
+showing historical stage pairs (NULL if ahMPM used as input). The fourth
+element, \code{agestages}, shows age-stage combinations in the order used in
 age-by-stage MPMs, if suppled. The fifth element, \code{ah_stages}, is a data
 frame showing the order of ahistorical stages. The last 3 elements are the A,
 U, and F portions of the input.
@@ -138,15 +142,15 @@ cypraw_v1 <- verticalize3(data = cypdata, noyears = 6, firstyear = 2004,
   stageassign = cypframe_raw, stagesize = "sizeadded", NAas0 = TRUE,
   NRasRep = TRUE)
 
-cypsupp2r <- supplemental(stage3 = c("SD", "P1", "P2", "P3", "SL", "SL", "D", 
+cypsupp2r <- supplemental(stage3 = c("SD", "P1", "P2", "P3", "SL", "D", 
     "XSm", "Sm", "SD", "P1"),
-  stage2 = c("SD", "SD", "P1", "P2", "P3", "SL", "SL", "SL", "SL", "rep",
+  stage2 = c("SD", "SD", "P1", "P2", "P3", "SL", "SL", "SL", "rep",
     "rep"),
-  eststage3 = c(NA, NA, NA, NA, NA, NA, "D", "XSm", "Sm", NA, NA),
-  eststage2 = c(NA, NA, NA, NA, NA, NA, "XSm", "XSm", "XSm", NA, NA),
-  givenrate = c(0.10, 0.20, 0.20, 0.20, 0.25, 0.40, NA, NA, NA, NA, NA),
-  multiplier = c(NA, NA, NA, NA, NA, NA, NA, NA, NA, 0.5, 0.5),
-  type =c(1, 1, 1, 1, 1, 1, 1, 1, 1, 3, 3),
+  eststage3 = c(NA, NA, NA, NA, NA, "D", "XSm", "Sm", NA, NA),
+  eststage2 = c(NA, NA, NA, NA, NA, "XSm", "XSm", "XSm", NA, NA),
+  givenrate = c(0.10, 0.20, 0.20, 0.20, 0.25, NA, NA, NA, NA, NA),
+  multiplier = c(NA, NA, NA, NA, NA, NA, NA, NA, 0.5, 0.5),
+  type =c(1, 1, 1, 1, 1, 1, 1, 1, 3, 3),
   stageframe = cypframe_raw, historical = FALSE)
 
 cypmatrix2r <- rlefko2(data = cypraw_v1, stageframe = cypframe_raw, 

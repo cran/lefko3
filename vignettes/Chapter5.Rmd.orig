@@ -20,7 +20,7 @@ knitr::opts_chunk$set(
 
 ## CASE STUDIES OF AMERICAN *Cypripedium candidum* POPULATION
 
-  <p style="text-indent: 20px">In this vignette, we use the `cypdata` dataset to illustrate the estimation of **function-based MPMs**. Please see the other vignettes included in package `lefko3`, as well as further vignettes posted online on <a href = "http://www.sheffersonlab.com/projects">the projects page</a> of the Shefferson lab website, for further demonstrations of raw MPMs, function-based MPMs, IPMs, and age-by-stage MPMs.
+  <p style="text-indent: 20px">In this vignette, we use the `cypdata` dataset to illustrate the estimation of **function-based MPMs**. Please see the other vignettes included in package `lefko3`, as well as further vignettes posted online on <a href = "http://www.sheffersonlab.com/projects">the projects page</a> of the Shefferson lab website, for further demonstrations of raw MPMs, function-based MPMs, IPMs, and age-by-stage MPMs.</p>
 
 ### ORGANISM AND POPULATION
 
@@ -33,7 +33,7 @@ knitr::opts_chunk$set(
   <p style="text-indent: 20px">Population matrix projection modeling requires an appropriate life history model showing how all stages and transitions are related. The figure below shows a very general life history model detailing these relationships in *Cypripedium candidum*. The first stage of life is a dormant seed stage, although an individual may germinate in the year following seed production. The first germinated stage is a protocorm, which is an underground, mycoheterotrophic stage unique to the families Orchidaceae and Pyrolaceae. There are three years of protocorm stages, followed by a seedling stage, and finally a set of stages that comprise the size-classified adult portion of life. The figure shows 49 such stages, each for a different number of stems (including 0 for vegetative dormancy) and one of two reproductive statuses. These stages may be reorganized for different circumstances (more on this later).</p>
   
 <img src = "lifhist1.png" width = "700"></img>
-**Figure 5.1.** Life history model of *Cypripedium candidum*.
+**Figure 5.1.** Life history model of *Cypripedium candidum*. Survival transitions are indicated with solid arrows, while fecundity transitions are indicated with dashed arrows.
 
   <p style="text-indent: 20px">We can see a variety of transitions within this figure. The juvenile stages have fairly simple transitions. New recruits may enter the population directly from germination of a seed produced the previous year, in which case they start in the protocorm 1 stage, or they may begin as dormant seed. Dormant seed may remain dormant, die, or germinate into the protocorm 1 stage. Protocorms exist for up to 3 years, yielding the protocorm 1, 2, and 3 stages, without any possibility of staying within each of these stages for more than a single year. Protocorm 3 leads to a seedling stage, in which the plant may persist for many years before becoming mature. Here, maturity does not really refer to reproduction *per se*, but rather to a morphology indistinguishable from a reproductive plant except for the lack of a flower. The first mature stage is usually either vegetative dormancy (dorm), during which time the plant does not sprout, or a small, non-flowering adult (1V). Once in this portion of the life history, the plant may transition among 49 mature stages, including vegetative dormancy, 1-24 shoots without flowers, or 1-24 shoots with at least one flower (theoretically, individual plants may be bigger than 24 sprouts, but we have never observed a plant bigger than this in the population).</p>
   
@@ -86,11 +86,11 @@ cypframe <- sf_create(sizes = sizevector, stagenames = stagevector,
 #cypframe
 ```
   
-  <p style="text-indent: 20px">A close look at the resulting object, `cypframe`, shows a data frame that includes in order for each stage: the stage's name, the associated size, its reproductive status, its status as an observable stage, its status as a propagule stage, its status as an immature stage, its status as a mature stage, whether it occurs in the dataset, the half-width of its size class bin, the minimum and maximum ages associated with the stage, the minimum and maximum of its size class bin, the centroid of its size class bin, its full size class bin width, and a comments field describing the stage. Stage names and combinations of characteristics must be unique to prevent estimation errors, and the comments field may be edited to include any information deemed pertinent.</p>
+  <p style="text-indent: 20px">A close look at the resulting object, `cypframe`, shows a data frame that includes the following information in order for each stage: the stage's name, the associated size, its reproductive status, its status as an observable stage, its status as a propagule stage, its status as an immature stage, its status as a mature stage, whether it occurs in the dataset, the half-width of its size class bin, the minimum and maximum ages associated with the stage, the minimum and maximum of its size class bin, the centroid of its size class bin (currently the arithmetic mean), its full size class bin width, and a comments field describing the stage. Stage names and combinations of characteristics must be unique to prevent estimation errors, and the comments field may be edited to include any information deemed pertinent.</p>
 
 #### Step 2a. Data organization
 
-  <p style="text-indent: 20px">Now we will transform our vertical dataset into a historically-formatted vertical file. The resulting dataset will have each individual's observed life history broken up into states corresponding to three consecutive years per row, with plant identity marked in each row. To handle this, we use the `verticalize3()` function, as below.</p>
+  <p style="text-indent: 20px">Now we will transform our vertical dataset into a historically-formatted vertical file. The resulting dataset will have each individual's observed life history broken up into states corresponding to three consecutive monitoring occasions (years) per row, with plant identity marked in each row. To handle this, we use the `verticalize3()` function, as below.</p>
 ```{r Ch5.2}
 vertdata <- verticalize3(data = cypdata, noyears = 6, firstyear = 2004, 
   patchidcol = "patch", individcol = "plantid", blocksize = 4, 
@@ -100,24 +100,24 @@ vertdata <- verticalize3(data = cypdata, noyears = 6, firstyear = 2004,
 #summary(vertdata)
 ```
   
-  <p style="text-indent: 20px">In the above code, we described the input dataset in a way that allows R to reorganize it appropriately.   Note that in the input to the function, we utilized a repeating pattern of variable names arranged in the same order for each observation time. This arrangement allows us to enter only the first variable in each set, as long as `noyears` and `blocksize` are set properly and no gaps or shuffles appear in the dataset. The data management functions that we have created for `lefko3` do not require such repeating patterns, but they do make the required input in the function much shorter and more succinct. Without these patterns, column names should be input as vectors in the correct temporal order for each input option, and the `blocksize` option should be omitted.</p>
+  <p style="text-indent: 20px">In the above code, we described the input dataset in a way that allows R to reorganize it appropriately. Note that in the input to the function, we utilized a repeating pattern of variable names arranged in the same order for each monitoring occasion. This arrangement allows us to enter only the first variable in each set, as long as `noyears` and `blocksize` are set properly and no gaps or shuffles appear in the dataset. The data management functions that we have created for `lefko3` do not require such repeating patterns, but they do make the required input in the function much shorter and more succinct. Without these patterns, column names should be input as vectors in the correct temporal order for each input option, and the `blocksize` option should be omitted.</p>
   
-  <p style="text-indent: 20px">The output dataset includes a number of summary variables, but the data is essentially broken down into groups of three consecutive monitoring occasions each (time *t*+1, *t*, and *t*-1, corresponding to `year3`, `year2`, and `year1` in the output, respectively), with individuals spread across multiple rows. The output dataset is further limited to those entries in which the individual is alive in time *t* (`year2`), meaning that all rows in which an individual is dead or not yet recruited in time *t* are dropped. Thus, we have `r dim(vertdata)[1]` rows of data and `r dim(vertdata)[2]` variables.</p>
-
-  <p style="text-indent: 20px">This reorganized dataset includes a set of interesting terms, the `sizeadded` group of three variables. These are sums of the size variables for each time, such that `size1added` is calculated as `sizea1 + sizeb1 + sizec1`. This may or may not make sense depending on the dataset. In this dataset, the full size of the individual in each time is this sum, because size is determined as the number of stems per plant, and the 3 original size columns give the numbers of 3 different kinds of stems: `Veg`, `Inf`, and `Inf2` are thes number of non-reproductive stems, single-flowered inflorescences, and double-flowered inflorescences, respectively, per plant per time-step (an inflorescence is a single stem, and no inflorescence has more than two flowers). Since size is given by the total stems in this example, we will use the `sizeadded` group of variables to code individual size.</p>
+  <p style="text-indent: 20px">The output dataset includes a number of summary variables, but the data is essentially broken down into groups of three consecutive monitoring occasions each (occasions *t*+1, *t*, and *t*-1, corresponding to `year3`, `year2`, and `year1` in the output, respectively), with individuals spread across multiple rows. The output dataset is further limited to those entries in which the individual is alive in occasion *t* (`year2`), meaning that all rows in which an individual is dead or not yet recruited in occasion *t* are dropped. Thus, we have `r dim(vertdata)[1]` rows of data and `r dim(vertdata)[2]` variables.</p>
   
-  <p style="text-indent: 20px">Size and fecundity are both count variables here, and we need to determine the appropriate distribution to use in both cases. Let's look at a histogram of size in time *t*.</p>
-```{r Ch5.3, fig.cap = "Figure 5.2. Histogram of Cypripedium candidum size in time t"}
-hist(vertdata$size2added, main = "Size in time t", xlab = "Number of stems in time t")
+  <p style="text-indent: 20px">This reorganized dataset includes a set of interesting terms, the `sizeadded` group of three variables. These are sums of the size variables for each occasion, such that `size1added` is calculated as `sizea1 + sizeb1 + sizec1`. This may or may not make sense depending on the dataset. In this dataset, the full size of the individual in each occasion is this sum, because size is determined as the number of stems per plant, and the 3 original size columns give the numbers of 3 different kinds of stems: `Veg`, `Inf`, and `Inf2` are the numbers of non-reproductive stems, single-flowered inflorescences, and double-flowered inflorescences, respectively, per plant per occasion (an inflorescence is a single flowering stem, and no inflorescence has more than two flowers). Since size is given by the total number of stems in this example, we will use the `sizeadded` group of variables to code individual size.</p>
+  
+  <p style="text-indent: 20px">Size and fecundity are both count variables here, and we need to determine the appropriate distribution to use in both cases. Let's look at a histogram of size in occasion *t*.</p>
+```{r Ch5.3, fig.cap = "Figure 5.2. Histogram of Cypripedium candidum size in occasion t"}
+hist(vertdata$size2added, main = "Size in occasion t", xlab = "Number of stems in occasion t")
+```
+  
+  <p style="text-indent: 20px">Stem number has a very low mean, and the curve declines fairly smoothly. The Poisson or negative binomial distribution might work for size. Before determining whether this is indeed the case, let's also look at the distribution of fecundity values. As we see below, fecundity appears to have many 0s, suggesting that we might need a zero-inflated distribution.</p>
+```{r Ch5.4, fig.cap = "Figure 5.3. Histogram of Cypripedium candidum fecundity in occasion t"}
+hist(subset(vertdata, repstatus2 == 1)$feca2, main = "Fecundity in occasion t", 
+  xlab = "Number of fruit pods in occasion t")
 ```
 
-  <p style="text-indent: 20px">Stem number has a very low mean, and the curve declines fairly smoothly. The Poisson or negative binomial distribution might work for size. Before determining whether this is indeed the case, let's also assess fecundity. As we see below, fecundity appears to have many 0s, suggesting that we might need a zero-inflated distribution.</p>
-```{r Ch5.4, fig.cap = "Figure 5.3. Histogram of Cypripedium candidum fecundity in time t"}
-hist(subset(vertdata, repstatus2 == 1)$feca2, main = "Fecundity in time t", 
-  xlab = "Number of fruit pods in time t")
-```
-
-  <p style="text-indent: 20px">Let's conduct a formal test to determine the appropriate distributions for size and fecundity. The size of 0 is actually absorbed in an unobservable stage, vegetative dormancy (stage D), so we will not test for zero-inflation in the size variable. However, we will test for zero-inflation in fecundity, since fecundity is measured as the number of fruit pods produced, while all flowering individuals are treated as reproductive and so some individuals must have fecundity of 0.</p>
+  <p style="text-indent: 20px">Let's conduct a formal set of tests to determine the appropriate distributions for size and fecundity. The size of 0 is actually absorbed in an unobservable stage, vegetative dormancy (stage D), so we will not test for zero-inflation in the size variable. However, we will test for zero-inflation in fecundity, since fecundity is measured as the number of fruit pods produced, while all flowering individuals are treated as reproductive and so some individuals must have fecundity of 0.</p>
 ```{r Ch5.5}
 sf_distrib(vertdata, size3 = "size3added", size2 = "size2added",
   obs3 = "obsstatus3", fec = "feca2", repst = "repstatus2", zisize = FALSE)
@@ -135,7 +135,7 @@ dim(cypvert)
 #summary(cypvert)
 ```
   
-  <p style="text-indent: 20px">This dataset is longer and narrower, with more rows and fewer columns. This is because we split data for each individual across multiple rows. After three columns of identifying information (`plantid`, `patch`, and `censor`), a single column designates time in year *t*, given as `year2`. This dataset then includes columns showing individual state in pairs of consecutive years corresponding to times *t* and *t*+1. State in time *t*-1 is not presented because this is an ahistorical dataset. This dataset includes the `plantid` variable, which is an individual identity term that allows us to associate rows with their individuals and so allows conversion. The `historicalize3()` function uses individual identity to reorganize datasets into historical vertical format.</p>
+  <p style="text-indent: 20px">This dataset is longer and narrower, with more rows and fewer columns. This is because we constructed the dataset by splitting the data for each individual across multiple rows. After three columns of identifying information (`plantid`, `patch`, and `censor`), a single column designates the time of occasion *t*, given as `year2`. This dataset then includes columns showing individual state in pairs of consecutive years corresponding to occasions *t* and *t*+1. State in occasion *t*-1 is not presented because this is an ahistorical dataset. This dataset includes the `plantid` variable, which is an individual identity term that allows us to associate rows with their individuals and so allows conversion. The `historicalize3()` function uses individual identity to reorganize datasets into historical vertical format.</p>
 ```{r Ch5.7}
 vertdata2 <- historicalize3(data = cypvert, patchidcol = "patch",
   individcol = "plantid", year2col = "year2", sizea2col = "Inf2.2", 
@@ -147,14 +147,14 @@ vertdata2 <- historicalize3(data = cypvert, patchidcol = "patch",
   NAas0 = TRUE, reduce = TRUE)
 #summary(vertdata2)
 ```
-
+  
   <p style="text-indent: 20px">We can compare the dimensions of the new vertical datasets. The lengths of the datasets are the same in terms of rows and columns, and the variables and data are the same although the order of the columns and rows might not match (see the summaries for comparison).</p>
 ```{r Ch5.8}
 dim(vertdata)
 dim(vertdata2)
 ```
-
-  <p style="text-indent: 20px">One important consideration is the use of censor variables. Censoring a demographic dataset refers to the elimination of suspect data points from analysis. It is typically accomplished by including a binary variable in the dataset denoting whether an individual datum is to be kept or excluded. The objects `vertdata` and `vertdata2` were both created without using censoring variables.However, because the datasets actually included censor variables (all data were set to be included, with no suspect data), we wished to incorporate those variables in the final datasets. Hence, although `censor = FALSE` in both the call to `verticalize3()` and the call to `verticalize3()`, we also noted `censorcol = "censor"` and `censorkeep = 1` in the call to `historicalize3()`. Failing to add these options to the call to `historicalize3()` will produce the same dataset but with some zeroes entering variables `censor1`, `censor2`, and `censor3`.</p>
+  
+  <p style="text-indent: 20px">One important consideration is the use of censor variables. Censoring a demographic dataset refers to the elimination of suspect data points from analysis. This is typically accomplished by including a binary variable in the dataset denoting whether an individual datum is to be kept or excluded. The objects `vertdata` and `vertdata2` were both created without using censoring variables. However, because the datasets actually included censor variables (all data were set to be included, with no suspect data), we wished to incorporate those variables in the final datasets. Hence, although `censor = FALSE` in both the call to `verticalize3()` and the call to `historicalize3()`, we also noted `censorcol = "censor"` and `censorkeep = 1` in the call to `historicalize3()`. Failing to add these options to the call to `historicalize3()` will produce approximately the same dataset, but with some zeroes entering variables `censor1`, `censor2`, and `censor3` in the historicalized dataset that do not exist in the first, verticalized dataset.</p>
 
 #### Step 2c. Provide supplemental information for matrix estimation
 
@@ -205,14 +205,14 @@ cypsupp2 <- supplemental(stage3 = c("SD", "P1", "P2", "P3", "SL", "SL", "D",
 #cypsupp2
 ```
  
-  <p style="text-indent: 20px">These supplemental tables provide the best means of adding external data to our MPMs because they allow both specific transitions to be isolated, and because they allow the use of shorthand to identify large groups of transitions (e.g. using `mat`, `rep`, `immat`, `prop`, or `all` to signify all mature stages, reproductive stages, immature stages, propagule stages, or simply all stages, respectively). However, an alternative means is through the creation of a reproductive matrix and an `overwrite` table. The reproductive matrix is an **ahistorical** matrix detailing where fecundity rates are set, and at what level. *Cypripedium candidum* produces seeds that germinate by the following growing season (stage P1, or a first year protocorm), or that remain dormant for the next year (stage SD). In the following matrix, we detail that the fecundity of each reproductive stage needs to be split into two between each of these output stages. The actual split places 50% of the fecundity of a reproductive stage into each category of recruit, where the full fecundity is estimated by linear models that we will create. This reproductive matrix can be used in historical MPM construction, and it is assumed that stage at time *t*-1 is set to `all`.</p>
+  <p style="text-indent: 20px">These supplemental tables provide the best means of adding external data to our MPMs because they allow both specific transitions to be isolated, and because they allow the use of shorthand to identify large groups of transitions (e.g. using `mat`, `rep`, `immat`, `prop`, or `all` to signify all mature stages, reproductive stages, immature stages, propagule stages, or simply all stages, respectively). However, an alternative means is through the creation of a reproductive matrix and an `overwrite` table. The reproductive matrix is an **ahistorical** matrix detailing where fecundity rates are set, and at what level. *Cypripedium candidum* produces seeds that germinate by the following growing season (stage P1, or a first year protocorm), or that remain dormant for the next year (stage SD). In the following matrix, we detail that the fecundity of each reproductive stage needs to be split into two between each of these output stages. The actual split places 50% of the fecundity of a reproductive stage into each category of recruit, where the full fecundity is estimated by linear models that we will create. This reproductive matrix can be used in historical MPM construction, and it is assumed that stage at occasion *t*-1 is set to `all`.</p>
 ```{r Ch5.10}
 rep.assumptions <- matrix(0, 54, 54)
 rep.assumptions[1:2,31:54] <- 0.5
 #rep.assumptions
 ```
 
-  <p style="text-indent: 20px">Next we will create an overwrite table, which outlines transitions that cannot be estimated from the data set and need to be set by other means. Here is an example of two overwrite tables for the *Cypripedium candidum* analysis. Note that they are fundamentally similar to supplemental tables, but do not allow the addition of fecundity multipliers and transition types from times *t*-1 to *t*, nor do they involve a check of entered stages against the stage frame.</p>
+  <p style="text-indent: 20px">Next we will create an overwrite table, which outlines transitions that cannot be estimated from the data set and need to be set by other means. Here is an example of two overwrite tables for the *Cypripedium candidum* analysis. Note that they are fundamentally similar to supplemental tables, but do not allow the addition of fecundity multipliers and transition types from occasion *t*-1 to *t*, nor do they involve a check of entered stages against the stage frame.</p>
 ```{r Ch5.11}
 cypover3 <- overwrite(stage3 = c("SD", "SD", "P1", "P1", "P2", "P3", "SL", "SL", 
     "SL", "D", "V1", "V2", "V3", "D", "V1", "V2", "V3"), 
@@ -251,11 +251,11 @@ cypover2 <- overwrite(stage3 = c("SD", "P1", "P2", "P3", "SL", "SL", "D", "V1",
   
 #### Step 3a. General modeling strategy
 
-  <p style="text-indent: 20px">Most function-based matrices, whether integral projection models or otherwise, use either a generalized linear modeling (GLM) strategy, or a generalized linear mixed modeling (GLMM) strategy. The former is more common and is simpler, but the latter is more theoretically sound because it provides a means of correcting the lack of independence inherent in datasets incorporating repeated sampling of the same individuals. The difference between the two with regards to vital rate modeling is strongly related to assumptions regarding the individual and spatiotemporal variation in vital rates.</p>
+  <p style="text-indent: 20px">Most function-based matrices, whether integral projection models or otherwise, are developed using either a generalized linear modeling (GLM) strategy, or a generalized linear mixed modeling (GLMM) strategy. The former is more common and is simpler, but the latter is more theoretically sound because it provides a means of correcting the lack of independence inherent in datasets incorporating repeated sampling of the same individuals. The difference between the two with regards to vital rate modeling is strongly related to assumptions regarding the individual and spatiotemporal variation in vital rates.</p>
   
-  <p style="text-indent: 20px">In both GLM and GLMM-based MPMs, the underlying dataset utilized is a vertical dataset. Each row of data gives the state of the individual in either two consecutive times (the ahistorical case), or three consecutive times (the historical case). Under a GLM framework, time is a fixed categorical variable, and individual identity is ignored. Treating time as fixed implies that the actual monitoring occasions are the only times for which inference is sought. Thus, if year is treated as fixed, then it would not be correct to infer future population dynamics after 2009 for a dataset collected between 2004 and 2009. Ignoring individual identity treats all transitions as independent, even though data originating from the same sampled individual is clearly not independent of that individual's previous transitions. This may be interpreted as a form of pseudoreplication because strongly related data is used to create matrices that are assumed to be statistically independent. This might impact demographic modeling by inflating Type 1 error in the linear modeling, yielding more significant terms in the chosen best-fit model and causing the retention of more terms than is warranted.</p>
+  <p style="text-indent: 20px">In both GLM and GLMM-based MPMs, the underlying dataset utilized is a vertical dataset. Each row of data gives the state of the individual in either two consecutive occasions (the ahistorical case), or three consecutive occasions (the historical case). Under a GLM framework, time in occasion *t* is a fixed categorical variable, and individual identity is ignored. Treating time as fixed implies that the actual monitoring occasions are the only times for which inference is sought. Thus, if time is treated as fixed, then it would not be correct to infer future population dynamics after 2009 for a dataset collected between 2004 and 2009. Ignoring individual identity treats all transitions as independent, even though data originating from the same sampled individual is clearly not independent of that individual's previous transitions. This may be interpreted as a form of pseudoreplication because strongly related data is used to create matrices that are assumed to be statistically independent. This might impact demographic modeling by inflating Type 1 error in the linear modeling, yielding more significant terms in the chosen best-fit model and causing the retention of more terms than is warranted.</p>
   
-  <p style="text-indent: 20px">Under a GLMM (generalized linear mixed model) framework, both time and individual identity can be treated as random categorical terms. This has two major implications. First, both time and individuals can be assumed to be random samples from a broader population of times and individuals for which inference is sought. Thus, sampled years represent a greater universe of years for which inference can be made, and so their associated coefficients can be assumed to come from a normal distribution with $mean = 0$. Second, treating individual as a random categorical term eliminates the pseudoreplication that is inherent in the GLM approach to vital rate estimation when individuals are monitored potentially many times, because each individual is assumed to be randomly drawn and associated with its own response distribution. Subpopulations may also be considered random, in which case they are assumed to have been sampled from all possible spaces that the species might occupy. We encourage researchers to use the GLMM approach in their demographic work, but we have also included easy-to-use GLM functionality, since many will find the GLM approach particularly useful in cases where mixed modeling breaks down.</p>
+  <p style="text-indent: 20px">Under a GLMM (generalized linear mixed model) framework, both time and individual identity can be treated as random categorical terms. This has two major implications. First, both time and individuals can be assumed to be random samples from a broader population of times and individuals for which inference is sought. Thus, sampled monitoring occasions represent a greater universe of years for which inference can be made, and so their associated coefficients can be assumed to come from a normal distribution with $mean = 0$. Second, treating individual as a random categorical term eliminates the pseudoreplication that is inherent in the GLM approach to vital rate estimation when individuals are monitored potentially many times, because each individual is assumed to be randomly drawn and associated with its own response distribution. Subpopulations may also be considered random, in which case they are assumed to have been sampled from all possible spaces that the species might occupy. We encourage researchers to use the GLMM approach in their demographic work, but we have also included easy-to-use GLM functionality, since many will find the GLM approach particularly useful in cases where mixed modeling breaks down.</p>
   
 #### Step 3b. Size and fecundity distributions
 
@@ -271,35 +271,35 @@ cypover2 <- overwrite(stage3 = c("SD", "P1", "P2", "P3", "SL", "SL", "D", "V1",
 
   <p style="text-indent: 20px">In *lefko3*, the `modelsearch` function is the workhorse that conducts vital rate model estimation. Here, we will create a full suite of vital rate models for the *Cypripedium candidum* dataset. Before proceeding, we need to decide on the linear model building strategy, the correct vital rates to model, the proper statistical distributions for estimated vital rates, the proper parameterizations for each vital rate, and the strategy for determination of the best-fit models.</p>
   
-  <p style="text-indent: 20px">First, we must determine the model building strategy. In most cases, the best procedure will be through mixed linear models in which monitoring occasion and individual identity are random terms. We will set monitoring occasion as random because we wish to make inferences for the population as a whole and do not wish to restrict ourselves to inference only for the years monitored (i.e. our distribution of years sampled is itself a sample of the population in time). We will set individual identity as random because many or most of the individuals that we have sampled to produce our dataset yield multiple observation data points across time. Thus, we will set `approach = "mixed"`. To make sure that time and individual identity are treated as random, we will set the proper variable names for `indiv` and `year`, corresponding to individual identity (`individ` by default), and to time *t* (`year2` by default). The `year.as.random` option is set to random by default, and leaving it this way also means that R will randomly draw coefficient values for years with inestimable coefficients. Setting `year.as.random` to FALSE would make time a fixed categorical variable.</p>
+  <p style="text-indent: 20px">First, we must determine the model building strategy. In most cases, the best procedure will be through mixed linear models in which monitoring occasion and individual identity are random terms. We will set monitoring occasion as random because we wish to make inferences for the population as a whole and do not wish to restrict ourselves to inference only for the years monitored (i.e. our distribution of monitoring occasions sampled is itself a sample of the population in time). We will set individual identity as random because many or most of the individuals that we have sampled to produce our dataset yield multiple observation data points across time. Thus, we will set `approach = "mixed"`. To make sure that time and individual identity are treated as random, we will set the proper variable names for `indiv` and `year`, corresponding to individual identity (`individ` by default), and to occasion *t* (`year2` by default). The `year.as.random` option is set to random by default, and leaving it this way also means that R will randomly draw coefficient values for years with inestimable coefficients. Setting `year.as.random` to FALSE would make time a fixed categorical variable.</p>
   
-  <p style="text-indent: 20px">The mixed modeling approach is usually preferable to the GLM approach. However, a mixed modeling strategy results in lower statistical power and a greater time used in estimating models. Users of package `lefko3` wishing to use a standard generalized linear modeling strategy can set `approach = "glm"`. In this case, individual identity is not used, time is a fixed factor, and all observed transitions are treated as independent.</p>
+  <p style="text-indent: 20px">The mixed modeling approach is usually preferable to the GLM approach. However, a mixed modeling strategy results in lower statistical power and a greater time used in estimating models (or, conversely, it yields truer statistical power while the GLM approach inflates Type I error). Users of package `lefko3` wishing to use a standard generalized linear modeling strategy can set `approach = "glm"`. In this case, individual identity is not used, time is a fixed factor, and all observed transitions are treated as independent.</p>
   
   <p style="text-indent: 20px">Next, we must determine which vital rates to model. Function `modelsearch()` estimates up to 9 vital rate models:</p>
   
-  1) survival probability from time *t* to time *t*+1,
+  1) survival probability from occasion *t* to occasion *t*+1,
   
-  2) observation probability in time *t*+1 assuming survival until that time, 
+  2) observation probability in occasion *t*+1 assuming survival until that time, 
   
-  3) size in time *t*+1 assuming survival and observation in that time, 
+  3) size in occasion *t*+1 assuming survival and observation in that time, 
   
-  4) reproduction status in time *t*+1 assuming survival and observation until that time,
+  4) reproduction status in occasion *t*+1 assuming survival and observation until that time,
   
-  5) fecundity rate assuming survival in time *t* and observation and reproduction in time *t*+1 (mature only),
+  5) fecundity rate assuming survival until and observation and reproduction in the occasion of production of offspring (occasion *t* or *t*+1; mature only),
   
-  6) juvenile survival probability from time *t* to time *t*+1,
+  6) juvenile survival probability from occasion *t* to occasion *t*+1,
   
-  7) juvenile observation probability in time *t*+1 assuming survival until that time, 
+  7) juvenile observation probability in occasion *t*+1 assuming survival until that time, 
   
-  8) juvenile size in time *t*+1 assuming survival and observation in that time, and
+  8) juvenile size in occasion *t*+1 assuming survival and observation in that time, and
   
-  9) reproduction status in time *t*+1 assuming survival and observation until that time of a juvenile in time *t* that is becoming mature in time *t*+1.
+  9) reproduction status in occasion *t*+1 assuming survival and observation until that time of a juvenile in occasion *t* that is becoming mature in occasion *t*+1.
   
   <p style="text-indent: 20px">The default settings for `modelsearch` estimate 1) survival probability, 3) size distribution, and 5) fecundity, which are the minimum 3 vital rates required for a full MPM. Observation probability (option `obs` in `vitalrates`) should only be included when a life history stage or size exists that cannot be observed. For example, in the case of a plant with vegetative dormancy, the observation probability can be thought of as the sprouting probability, which is a biologically meaningful vital rate [@shefferson_estimating_2001]. Further, reproduction status (option `repst` in `vitalrates`) should only be modeled if size classification needs to be stratified by the ability to reproduce, as when 0 fecundity occurs within stages that also produce offspring. Since *Cypripedium candidum* is capable of long bouts of vegetative dormancy, since we wish to stratify the population into reproductive and non-reproductive adults of the same size classes, and since we have no data derived from juvenile individuals, we will set `vitalrates = c("surv", "obs", "size", "repst", "fec")`.</p>
   
   <p style="text-indent: 20px">Third, we need to set the proper statistical distribution for each parameter. Survival probability, observation probability, and reproductive status are all modeled as binomial variables, and this cannot be changed. In the case of this population of *Cypripedium candidum*, size was measured as the number of stems and so is a count variable. Likewise, fecundity is actually estimated as the number of fruits produced per plant, and so is also a count variable. We have already performed tests for overdispersion and zero-inflation, and we are also aware that size in observed stages cannot be 0, requiring zero truncation in that parameter. So we will set size to the zero-truncated negative binomial distribution, and fecundity to the zero-inflated Poisson distribution.</p>
   
-  <p style="text-indent: 20px">Fourth, we need the proper model parameterizations for each vital rate, using the `suite` option. The default, `suite = "main"`, under the mixed model setting (`approach = "mixed"`) starts with the estimation of global models that include size and reproductive status in times *t* and *t*-1 as fixed factors, with individual identity and time *t* set as random categorical terms. Other terms can be specified, including individual covariates and age. Setting `suite = "full"` will yield global models that also include all two-way interactions. We will set it to the latter. The default under the GLM setting (`approach = "glm"`) makes time *t* a fixed term and drops individual identity from consideration. The global model under `suite = "full"` then includes all fixed factors noted before, plus time *t* and all two-way interactions with it. If the population is not stratified by reproductive status, then `suite = "size"` will eliminate reproductive status terms and use all others in the global model. If size is not important, then `suite = "rep"` will eliminate size but keep reproductive status and all other terms. Finally, `suite = "cons"` will result in a global model in which neither reproductive status nor size are considered.</p>
+  <p style="text-indent: 20px">Fourth, we need the proper model parameterizations for each vital rate, using the `suite` option. The default, `suite = "main"`, under the mixed model setting (`approach = "mixed"`) starts with the estimation of global models that include size and reproductive status in occasions *t* and *t*-1 as fixed factors, with individual identity and time in occasion *t* (year *t*) set as random categorical terms. Other terms can be specified, including individual covariates and age. Setting `suite = "full"` will yield global models that also include all two-way interactions. We will set it to the latter. The default under the GLM setting (`approach = "glm"`) makes time in occasion *t* a fixed term and drops individual identity from consideration. The global model under `suite = "full"` then includes all fixed factors noted before, plus time in occasion *t* and all two-way interactions between fixed factors ("full" is the only setting with interaction terms). If the population is not stratified by reproductive status, then `suite = "size"` will eliminate reproductive status terms and use all others in the global model. If size is not important, then `suite = "rep"` will eliminate size but keep reproductive status and all other terms. Finally, `suite = "cons"` will result in a global model in which neither reproductive status nor size are considered.</p>
   
   <p style="text-indent: 20px">Finally, we need to determine the proper strategy for the determination of the best-fit model. Model building proceeds through the `dredge` function in package `MuMIn` [@barton_mumin_2014], and each model has an associated AICc value. The default setting in `lefko3` (`bestfit = "AICc&k"`) will compare all models within 2.0 AICc units of the model with $\Delta AICc = 0$, and choose the one with the lowest degrees of freedom. This approach is generally better than the alternative, which simply uses the model with $\Delta AICc = 0$ (`bestfit = "AICc"`), as all models within 2.0 AICc units of that model are equally parsimonious and so fewer degrees of freedom result from fewer parameters estimated [@burnham_model_2002].</p>
   
@@ -311,12 +311,12 @@ cypmodels3 <- modelsearch(vertdata, historical = TRUE, approach = "mixed",
   size = c("size3added", "size2added", "size1added"), quiet = TRUE)
 #summary(cypmodels3)
 ```
-
-  <p style="text-indent: 20px">As `modelsearch` works, it produces text describing what is going on. It is actually quite likely that many warning messages will appear, and these may be of use in understanding the dataset and how well it conforms to analytical assumptions. We have silenced most of this with the `quiet = TRUE` option, although some red text still indicates a few warnings that have slipped through. These are not to be terribly concerned about. However, we encourage users to allow the function to run unsilenced in case of modeling problems. Please read the documentation for functions `lm`, `glm`, `glm.nb`, `lmer` (lme4 package), `glmer` (lme4 package), `glmmTMB` (glmmTMB package), `zeroinfl` (pscl package), `vglm` (VGAM package), and `dredge` (MuMIn package) for further information on the sources of problems in such models. Note, however, that some warnings are expected, and so are not cause for alarm.</p>
+  
+  <p style="text-indent: 20px">As `modelsearch` works, it produces text describing what is going on. It is actually quite likely that many warning messages will appear, and these may be of use in understanding the dataset and how well it conforms to analytical assumptions. We have silenced most of this with the `quiet = TRUE` option, although some red text still indicates a few warnings that have slipped through. These are not to be terribly concerned about. However, we encourage users to allow the function to run unsilenced in case of severe modeling problems. Please read the documentation for functions `lm`, `glm`, `glm.nb`, `lmer` (lme4 package), `glmer` (lme4 package), `glmmTMB` (glmmTMB package), `zeroinfl` (pscl package), `vglm` (VGAM package), and `dredge` (MuMIn package) for further information on the sources of problems in such models. Note, however, that some warnings are expected, and so are not cause for alarm.</p>
   
   <p style="text-indent: 20px">In the output, we see historical terms determining size, suggesting that we cannot ignore history. The `summary` function gives us a great deal of information about all of the models, but also hides a number of more technical details. For example, the complete model selection tables are actually included in the `modelsearch` output, and users can see these by calling them directly. For example, type `cypmodels3$survival_table` at the prompt to examine the model table for survival.</p>
-
-  <p style="text-indent: 20px">Before moving on, we note that the models created above are actually only usable for the construction of historical models. For comparison, we may wish to estimate ahistorical models. In that case, we also need linear models in which the global models tested do not include state at time *t*-1, as below.</p>
+  
+  <p style="text-indent: 20px">Before moving on, we note that the models created above are actually only usable for the construction of historical models. For comparison, we may wish to estimate ahistorical models. In that case, we also need linear models in which the global models tested do not include state at occasion *t*-1, as below.</p>
 ```{r Ch5.13}
 cypmodels2 <- modelsearch(vertdata, historical = FALSE, approach = "mixed", 
   vitalrates = c("surv", "obs", "size", "repst", "fec"), sizedist = "negbin", 
@@ -325,7 +325,7 @@ cypmodels2 <- modelsearch(vertdata, historical = FALSE, approach = "mixed",
 #summary(cypmodels2)
 ```
 
-  <p style="text-indent: 20px">Fewer models were estimated per dredge, since fewer parameters were tested in the global models (size and reproductive status in time *t*-1 were not included). So, the best-fit models should look a little bit different. However, a more thorough comparison will show that many of the best-fit models are similar between historical and ahistorical analysis. This is not guaranteed - in this case, it may be that the relatively small number of years and small overall sample size leaves too little power to find an impact of historical status on most vital rates. However, with size impacted by history, the choice of a historical model is better here.</p>
+  <p style="text-indent: 20px">Fewer models were estimated per dredge, since fewer parameters were tested in the global models (size and reproductive status in occasion *t*-1 were not included). So, the best-fit models should look a little bit different. However, a more thorough comparison will show that many of the best-fit models are similar between historical and ahistorical analysis. This is not guaranteed - in this case, it may be that the relatively small number of years and small overall sample size leaves too little power to find an impact of historical status on most vital rates. However, with size impacted by history, the choice of a historical model is better here.</p>
   
 #### Step 4. MPM estimation
 
@@ -338,14 +338,14 @@ summary(cypmatrix2)
   
   <p style="text-indent: 20px">A quick glance at the summary output will highlight that many more elements are estimated for function-based matrices than for raw matrices - here, 2,459 out of 2,916 total elements (84.3%). In raw matrices, elements associated with transitions from specific stages are only estimated when individuals actually exist within those particular stages, and so the number of stages is strongly limited by the size of the dataset. In function-based matrices, in contrast, the linear models estimated allow the estimation of all elements that are theoretically possible (i.e. only structural 0s are not estimated), and so stages may be developed for the full range of sizes experienced by individuals.</p>
  
-  <p style="text-indent: 20px">The survival probability summaries at the bottom of the output are also very important. Column sums are very useful tools in checking yourself, because they are equal to the overall annual survival of the stage or stage pair, in ahMPMs and hMPMs, respectively. The use of externally-supplied rates and probabilities, as supplied via the supplement and overwrite tables, can result in some stages or stage-pairs having survival probabilities greater than 1.0, and if that occurs, then the supplement/overwrite tables need to be corrected to reduce survival to something reasonable.</p>
+  <p style="text-indent: 20px">The survival probability summaries at the bottom of the output are also very important. Column sums are very useful tools to help you check your work, because they are equal to the overall annual survival of each ahMPM stage or each hMPM stage pair. The use of externally-supplied rates and probabilities, as supplied via the supplement and overwrite tables, can result in some stages or stage-pairs having survival probabilities greater than 1.0, and if that occurs, then the supplement/overwrite tables need to be corrected to reduce survival to something reasonable.</p>
   
   <p style="text-indent: 20px">The output of the `flefko2()` call includes several key elements. One of the most important is a data frame showing the order of matrices produced. Let's take a look at this object.</p>
 ```{r Ch5.15}
 cypmatrix2$labels
 ```
   
-  <p style="text-indent: 20px">Here we see that our 5 matrices are annual matrices all corresponding to the same population/patch. Other elements in this object include summaries of the stages used, in the order that they occur in the matrix. Since this is an ahistorical MPM, the key element here is `cypmatrix2$ahstages`. If this were a historical MPM, then this stages would give the order of stages, and `cypmatrix2$hstages` would include the order of stage-pairs corresponding to the rows and columns in such MPMs.</p>
+  <p style="text-indent: 20px">Here we see that our 5 matrices are annual matrices all corresponding to the same population/patch. Other elements in this object include summaries of the stages used, in the order that they occur in the matrix. Since this is an ahistorical MPM, the key element here is `cypmatrix2$ahstages`. If this were a historical MPM, then `cypmatrix2$ahstages` would give the order of stages, and `cypmatrix2$hstages` would include the order of stage-pairs corresponding to the rows and columns in such MPMs.</p>
   
   <p style="text-indent: 20px">Before moving on, we can also create the same matrices using the overwrite tables and reproduction matrix. Here is an example, with a summary.</p>
 ```{r Ch5.16}
@@ -354,9 +354,9 @@ cypmatrix2_alt <- flefko2(stageframe = cypframe, overwrite = cypover2,
   year.as.random = TRUE)
 summary(cypmatrix2_alt)
 ```
-
+  
   <p style="text-indent: 20px">The general details are essentially the same. However, it is important to note that the supplemental table approach allows both more flexibility and a greater detail in designating transitions, particularly historical fecundity. These differences may result in some differences in matrices between these approaches, particularly in historical MPMs. We encourage the use of supplemental tables instead of overwrite tables and reproduction matrices.</p>
-
+  
   <p style="text-indent: 20px">Next, we will create a set of historical Lefkovitch matrices.</p>
 ```{r Ch5.17}
 cypmatrix3 <- flefko3(stageframe = cypframe, supplement = cypsupp3, 
@@ -365,20 +365,20 @@ cypmatrix3 <- flefko3(stageframe = cypframe, supplement = cypsupp3,
 summary(cypmatrix3)
 ```
 
-  <p style="text-indent: 20px">Once again, we see many more total elements (over 8.5 million, in comparison to 2,916 in the ahistorical case), and many more rows and columns (54 rows and columns in the ahistorical case, and 54<sup>2</sup> = 2,916 rows and columns in the historical case). However, historical matrices are composed primarily of structural 0s. Thus, with only 120,064 elements estimated per matrix, only 1.4% of elements are non-zero (the equivalent percentage for the ahistorical case is 84.3%).</p>
+  <p style="text-indent: 20px">Once again, we see many more total elements (over 8.5 million, in comparison to 2,916 in the ahistorical case), and many more rows and columns (54 rows and columns in the ahistorical case, and 54<sup>2</sup> = 2,916 rows and columns in the historical case). However, historical matrices are composed primarily of structural 0s. Thus, with only 117,712 + 2,352 = 120,064 elements estimated per matrix, only 1.4% of elements are non-zero (the equivalent percentage for the ahistorical case is 84.3%).</p>
 
-  <p style="text-indent: 20px">Now let's estimate some element-wise mean matrices. First, we will create the ahistorical mean matrix. We will calculate the column sums, which represent the survival probabilities of stages from time *t* to time *t*+1.</p>
+  <p style="text-indent: 20px">Now let's estimate some element-wise mean matrices. First, we will create the ahistorical mean matrix and look at its summary.</p>
 ```{r Ch5.18}
 tmeans2r <- lmean(cypmatrix2)
-summary(colSums(tmeans2r$U[[1]]))
+summary(tmeans2r)
 ```
 
-  <p style="text-indent: 20px">Next we will estimate the historical element-wise mean matrix, along with its column sums (these represent the survival of stage pairs in time *t*-1 and time *t*).</p>
+  <p style="text-indent: 20px">Next we will estimate the historical element-wise mean matrix, along with its column sums (these represent the survival of stage pairs in occasion *t*-1 and occasion *t*).</p>
 ```{r Ch5.19}
 tmeans3r <- lmean(cypmatrix3)
-summary(colSums(tmeans3r$U[[1]]))
+summary(tmeans3r)
 ```
-
+  
   <p style="text-indent: 20px">It might help to do a more holistic comparison of the ahistorical vs. historical MPMs. Let's create matrix plots of the ahistorical and historical means. For this purpose, we will use the `image3()` function. Let's first view the ahistorical matrix image.</p>
 ```{r Ch5.20, fig.cap = "Figure 5.4. Image of ahistorical element-wise matrix mean"}
 image3(tmeans2r, used = 1)
@@ -391,7 +391,7 @@ image3(tmeans3r, used = 1)
 
   <p style="text-indent: 20px">Historical matrices are often huge and always sparse, just as our historical matrix is in the plot above. Although there are roughly 8.5 million elements, very few are non-zero and those are identified as the red streaks in the matrix image above.</p>
   
-  <p style="text-indent: 20px">For further comparison, let's decompose the mean historical matrix into conditional historical matrices. We'll take a look at the matrix conditional on vegetative dormancy in time *t*-1.</p>
+  <p style="text-indent: 20px">For further comparison, let's decompose the mean historical matrix into conditional historical matrices. We'll take a look at the matrix conditional on vegetative dormancy in occasion *t*-1.</p>
 ```{r Ch5.22}
 condm3r <- cond_hmpm(tmeans3r)
 #print(condm3r$Acond[[1]]$D, digits = 3)
@@ -403,6 +403,7 @@ condm3r <- cond_hmpm(tmeans3r)
 ```{r Ch5.23}
 set.seed(42)
 cypann2s <- slambda3(cypmatrix2)
+set.seed(42)
 cypann3s <- slambda3(cypmatrix3)
 
 lambda3(tmeans2r)
@@ -420,9 +421,9 @@ plot(lambda ~ year2, data = cypann2, xlab = "Year", ylab = "Lambda", ylim = c(0.
 lines(lambda ~ year2, data = cypann3, lty = 2, lwd= 2, col = "red")
 legend("bottomright", c("ahistorical", "historical"), lty = c(1, 2), col = c("black", "red"), lwd = 2, bty = "n")
 ```
-
+  
   <p style="text-indent: 20px">We find that annual $\lambda$ estimates differ only slightly between ahistorical and historical analyses.</p>
-
+  
   <p style="text-indent: 20px">Now let's take a look at the stable stage distributions. We will look at deterministic and stochastic versions of the ahistorical and historical MPMs.</p>
 ```{r Ch5.25, fig.cap = "Figure 5.7. Ahistorical vs. historically-corrected stable and long-run mean stage distribution"}
 tm2ss <- stablestage3(tmeans2r)
@@ -440,9 +441,9 @@ barplot(t(ss_put_together), beside=T, ylab = "Proportion", xlab = "Stage",
 legend("topright", c("det ahist", "det hist", "sto ahist", "sto hist"),
   col = c("black", "orangered", "grey", "darkred"), pch = 15, bty = "n")
 ```
-
-  <p style="text-indent: 20px">Overall, these are very similar patterns. Both suggest that small non-reproductive adults take up the greatest share of the stable stage structure, with dormant seed and 1st-year protocorms coming next, and then reproductive adults. The main differences appear to be a decreased presence of protocorms and increased presence of flowering adults in historical analysis. Stochastic analyses also reduce the importance of most stages with high proportions, while increasing the importance of rarer stages.</p>
-
+  
+  <p style="text-indent: 20px">Overall, these are very similar patterns. Whether ahistorical or historical, deterministic or stochastic, our analyses suggest that small non-reproductive adults take up the greatest share of the stable stage structure, with dormant seed and 1st-year protocorms coming next, and then reproductive adults. The main differences appear to be a decreased presence of protocorms and increased presence of flowering adults in historical analysis. Stochastic analyses also reduce the importance of most stages with high proportions, while increasing the importance of rarer stages.</p>
+  
   <p style="text-indent: 20px">Next let's look at the reproductive values associated with both ahistorical and historical approaches. We will standardize against the maximum value in each case to make these comparable.</p>
 ```{r Ch5.26, fig.cap = "Figure 5.8. Ahistorical vs. historically-corrected deterministic and stochastic reproductive values"}
 tm2rv <- repvalue3(tmeans2r)
@@ -509,7 +510,7 @@ writeLines("\nThis value is associated with element: ")
 which(tm3sens_s$ah_sensmats[[1]] == max(tm3sens_s$ah_sensmats[[1]][which(tmeans2r$A[[1]] > 0)]))
 ```
 
-  <p style="text-indent: 20px">Here, we see both deterministic and stochastic sensitivity analyses supporting the transition from 1-sprouted vegetative adult in times *t*-1 and *t* to the largest flowering adult in time *t*+1. The highest historically-corrected deterministic sensitivity value is associated with the transition from 1-sprouted non-flowering adult to 20-sprouted flowering adults, while the historically-corrected stochastic sensitivity value is associated with the transitions from 1-sprouted non-flowering adult to the largest flowering adult stage. Thus, our results generally reinforce the results of the ahistorical case.</p>
+  <p style="text-indent: 20px">Here, we see both deterministic and stochastic sensitivity analyses supporting the transition from 1-sprouted vegetative adult in occasions *t*-1 and *t* to the largest flowering adult in occasion *t*+1. The highest historically-corrected deterministic sensitivity value is associated with the transition from 1-sprouted non-flowering adult to 20-sprouted flowering adults (element 374), while the historically-corrected stochastic sensitivity value is associated with the transitions from 1-sprouted non-flowering adult to the largest flowering adult stage (element 378). Thus, our results generally reinforce the results of the ahistorical case.</p>
 
   <p style="text-indent: 20px">Let's now assess the elasticity of $\lambda$ to matrix elements, comparing the ahistorical to the historically-corrected case in both deterministic and stochastic analyses.</p>
 ```{r Ch5.29}
@@ -517,6 +518,7 @@ tm2elas <- elasticity3(tmeans2r)
 tm3elas <- elasticity3(tmeans3r)
 set.seed(42)
 tm2elas_s <- elasticity3(cypmatrix2, stochastic = TRUE)
+set.seed(42)
 tm3elas_s <- elasticity3(cypmatrix3, stochastic = TRUE)
 
 writeLines("\nThe largest ahistorical deterministic elasticity is associated with element: ")
@@ -534,7 +536,7 @@ writeLines("\nThe largest historical stochastic elasticity is associated with el
 which(tm3elas_s$h_elasmats[[1]] == max(tm3elas_s$h_elasmats[[1]]))
 ```
   
-  <p style="text-indent: 20px">Ahistorical and historical, deterministic and stochastic analyses suggest that population growth rate is most elastic in response to stasis as 1-sprouted non-flowering adult. This is a remarkably consistent result, reinforcing the importance of this stage as seen in sensitivity analyses.</p>
+  <p style="text-indent: 20px">Ahistorical and historical, deterministic and stochastic analyses suggest that population growth rate is most elastic in response to stasis as 1-sprouted non-flowering adult (element 331). This is a remarkably consistent result, reinforcing the importance of this stage as seen in sensitivity analyses.</p>
   
   <p style="text-indent: 20px">Now let's compare the elasticity of population growth rate in relation to the core life history stages, via a barplot comparison.</p>
 ```{r Ch5.30, fig.cap = "Figure 5.9. Ahistorical vs. historically-corrected deterministic and stochastic elasticity to stage"}
@@ -580,11 +582,13 @@ par(mar = c(7, 4, 2, 2) + 0.2)
 barplot(t(elas_hist2plot), beside = T, ylab = "Elasticity", xlab = "", xaxt = "n",
   col = c("orangered", "darkred"), bty = "n")
 text(cex=1, x=seq(from = -0.5, to = 2.8*length(tm3elas_sums$hist$category), by = 2.85),
-  y=-0.06, tm3elas_sums$hist$category, xpd=TRUE, srt=45)
+  y=-0.07, tm3elas_sums$hist$category, xpd=TRUE, srt=45)
 legend("topright", c("det ahist", "det hist", "sto ahist", "sto hist"),
   col = c("orangered", "darkred"), pch = 15, bty = "n")
 ```
-  <p style="text-indent: 20px">We can see that growth from time *t*-1 to *t* followed by shrinkage to time *t*+1 is associated with the greatest summed elasticities, while the inverse, shrinkage from *t*-1 to time *t* followed by growth to time *t*+1 is the next most important. Transitions associated with fecundity are associated with the lowest summed elasticities.</p>
+  <p style="text-indent: 20px">We can see that growth from occasion *t*-1 to *t* followed by shrinkage to occasion *t*+1 is associated with the greatest summed elasticities, while the inverse, shrinkage from occasion *t*-1 to *t* followed by growth to occasion *t*+1 is the next most important. Transitions associated with fecundity are associated with the lowest summed elasticities.</p>
+  
+  <p style="text-indent: 20px">Package `lefko3` also includes functions to conduct deterministic and stochastic life table response experiments. Users wishing to conduct these analyses should see our new vignette on this topic.</p>
   
   <p style="text-indent: 20px">Further analytical tools are being planned for `lefko3`, but packages that handle projection matrices can typically handle the individual matrices produced and saved in `lefkoMat` objects in this package. Differences, obscure results, and errors sometimes arise when packages are not made to handle large and/or sparse matrices - historical matrices are both, and so care must be taken with their analysis.</p>
 

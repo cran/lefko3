@@ -8,7 +8,7 @@
 #' input.
 #' @param noyears The number of years or observation periods in the dataset. A
 #' valid integer is required as input.
-#' @param firstyear The first year or time of observation. Defaults to 1.
+#' @param firstyear The first year or occasion of observation. Defaults to 1.
 #' @param popidcol A variable name or column number corresponding to the 
 #' identity of the population for each individual.
 #' @param patchidcol A variable name or column number corresponding to the 
@@ -16,19 +16,19 @@
 #' within populations.
 #' @param individcol A variable name or column number corresponding to the 
 #' identity of each individual.
-#' @param blocksize The number of variables corresponding to each time in the
-#' input dataset designated in \code{data}, if a set pattern of variables is
-#' used for each observation time in the data frame used as input. If such a
+#' @param blocksize The number of variables corresponding to each occasion in
+#' the input dataset designated in \code{data}, if a set pattern of variables is
+#' used for each observation occasion in the data frame used as input. If such a
 #' pattern is not used, and all variable names are properly noted as character
 #' vectors in the other input variables, then this may be set to NA. Defaults to
 #' NA.
 #' @param xcol A variable name(s) or column number(s) corresponding to the x 
-#' coordinate of each individual, or each individual-time combination, in
+#' coordinate of each individual, or each individual-occasion combination, in
 #' Cartesian space. Can refer to the only instance, the first instance, or all
 #' instances of x variables. In the last case, the values should be entered as
 #' a vector.
 #' @param ycol A variable name(s) or column number(s) corresponding to the y
-#' coordinate of each individual, or each individual-time combination, in
+#' coordinate of each individual, or each individual-occasion combination, in
 #' Cartesian space. Can refer to the only instance, the first instance, or all
 #' instances of y variables. In the last case, the values should be entered as
 #' a vector.
@@ -39,15 +39,15 @@
 #' as 0 or NA. Can refer to the first instance, or all instances of these
 #' variables. In the latter case, the values should be entered as a vector.
 #' @param sizeacol A variable name(s) or column number(s) corresponding to the
-#' size entry associated with the first year or observation time in the dataset.
-#' Can refer to the first instance, or all instances of these variables. In the
-#' latter case, the values should be entered as a vector.
-#' @param sizebcol A second variable name(s) or column number(s) corresponding
-#' tp the size entry associated with the first year or observation time in the
+#' size entry associated with the first year or observation occasion in the
 #' dataset. Can refer to the first instance, or all instances of these
 #' variables. In the latter case, the values should be entered as a vector.
+#' @param sizebcol A second variable name(s) or column number(s) corresponding
+#' tp the size entry associated with the first year or observation occasion in
+#' the dataset. Can refer to the first instance, or all instances of these
+#' variables. In the latter case, the values should be entered as a vector.
 #' @param sizeccol A third variable name(s) or column number(s) corresponding to
-#' the size entry associated with the first year or observation time in the
+#' the size entry associated with the first year or observation occasion in the
 #' dataset. Can refer to the first instance, or all instances of these variables.
 #' In the latter case, the values should be entered as a vector.
 #' @param repstracol A variable name(s) or column number(s) corresponding to the
@@ -63,12 +63,12 @@
 #' reproduction. Can refer to the first instance, or all instances of these
 #' variables. In the latter case, the values should be entered as a vector.
 #' @param fecacol A variable name(s) or column number(s) denoting fecundity
-#' associated with the first year or observation time in the input dataset. This
-#' may represent egg counts, fruit counts, seed production, etc. Can refer to
-#' the first instance, or all instances of these variables. In the latter case,
-#' the values should be entered as a vector.
+#' associated with the first year or observation occasion in the input dataset.
+#' This may represent egg counts, fruit counts, seed production, etc. Can refer
+#' to the first instance, or all instances of these variables. In the latter
+#' case, the values should be entered as a vector.
 #' @param fecbcol A second variable name(s) or column number(s) denoting
-#' fecundity associated with the first year or observation time in the input
+#' fecundity associated with the first year or observation occasion in the input
 #' dataset. This may represent egg counts, fruit counts, seed production, etc.
 #' Can refer to the first instance, or all instances of these variables. In the
 #' latter case, the values should be entered as a vector.
@@ -85,24 +85,24 @@
 #' instance, the first instance, or all instances of these variables. In the
 #' last case, the values should be entered as a vector.
 #' @param aliveacol Variable name(s) or column number(s) providing information
-#' on whether an individual is alive at a given time. If used, living status
+#' on whether an individual is alive at a given occasion. If used, living status
 #' must be designated as binomial (living = 1, dead = 0). Can refer to the first
 #' instance of a living status variable in the dataset, or equal a full vector
 #' of all living status variables in temporal order.
 #' @param deadacol Variable name(s) or column number(s) providing information on
-#' whether an individual is alive at a given time. If used, dead status must be
-#' designated as binomial (dead = 1, living = 0).  Can refer to the first
+#' whether an individual is alive at a given occasion. If used, dead status must
+#' be designated as binomial (dead = 1, living = 0).  Can refer to the first
 #' instance of a dead status variable in the dataset, or equal a full vector
 #' of all dead status variables in temporal order.
 #' @param obsacol A variable name(s) or column number(s) providing information
-#' on whether an individual is in an observable stage at a given time. If used, 
-#' observation status must be designated as binomial (observed = 1, not 
+#' on whether an individual is in an observable stage at a given occasion. If
+#' used, observation status must be designated as binomial (observed = 1, not 
 #' observed = 0). Can refer to the first instance of an observation status
 #' variable in the dataset, or equal a full vector of all observation status
 #' variables in temporal order.
 #' @param nonobsacol A variable name(s) or column number(s) providing
 #' information on whether an individual is in an unobservable stage at a given
-#' time. If used, observation status must be designated as binomial (not
+#' occasion. If used, observation status must be designated as binomial (not
 #' observed = 1, observed = 0). Can refer to the first instance of a
 #' non-observation status variable in the dataset, or equal a full vector of all
 #' non-observation status variables in temporal order.
@@ -122,8 +122,8 @@
 #' it equivalent to \code{fecacol}. This can be useful if two fecundity 
 #' variables have related but unequal units. Defaults to 1.
 #' @param stagecol Optional variable name(s) or column number(s) corresponding
-#' to life history stage at a given time. Can refer to the first instance of a
-#' stage identity variable in the dataset, or equal a full vector of all
+#' to life history stage at a given occasion. Can refer to the first instance of
+#' a stage identity variable in the dataset, or equal a full vector of all
 #' stage identity variables in temporal order.
 #' @param stageassign The stageframe object identifying the life history model
 #' being operationalized. Note that if \code{stagecol} is provided, then this
@@ -137,14 +137,14 @@
 #' Note that if NA is the value to keep, then this function will alter all NAs
 #' to 0 values, and all other values to 1, treating 0 as the value to keep.
 #' @param censorRepeat A logical value indicating whether the censor variable
-#' is a single column, or whether it repeats across time blocks. Defaults to
+#' is a single column, or whether it repeats across occasion blocks. Defaults to
 #' TRUE.
 #' @param censor A logical variable determining whether the output data should 
 #' be censored using the variable defined in \code{censorcol}. Defaults to 
 #' FALSE.
 #' @param coordsRepeat A logical value indicating whether x and y coordinates
 #' correspond to a single x and a single y column. If TRUE, then each
-#' observation time has its own x and y variables. Defaults to FALSE.
+#' observation occasion has its own x and y variables. Defaults to FALSE.
 #' @param spacing The spacing at which density should be estimated, if density
 #' estimation is desired and x and y coordinates are supplied. Given in the same
 #' units as those used in the x and y coordinates given in \code{xcol} and 
@@ -162,67 +162,67 @@
 #' some invariant state variables should be removed from the output dataset.
 #' Defaults to TRUE.
 #' @param a2check A logical variable indicating whether to retain all data with
-#' living status at time \emph{t} equal to 0. Defaults to FALSE, and should be
-#' kept on FALSE except to inspect potential errors in the dataset.
+#' living status at occasion \emph{t} equal to 0. Defaults to FALSE, and should
+#' be kept on FALSE except to inspect potential errors in the dataset.
 #' 
 #' @return If all inputs are properly formatted, then this function will output
 #' a historical vertical data frame (class \code{hfvdata}), meaning that the
-#' output data frame will have three consecutive times of size and reproductive
-#' data per individual per row. This data frame is in standard format for all
-#' functions used in \code{lefko3}, and so can be used without further
-#' modification.
+#' output data frame will have three consecutive occasions of size and
+#' reproductive data per individual per row. This data frame is in standard
+#' format for all functions used in \code{lefko3}, and so can be used without
+#' further modification.
 #' 
 #' Variables in this data frame include the following:
 #' \item{rowid}{Unique identifier for the row of the data frame.}
 #' \item{popid}{Unique identifier for the population, if given.}
 #' \item{patchid}{Unique identifier for patch within population, if given.}
 #' \item{individ}{Unique identifier for the individual.}
-#' \item{year2}{Year or time at time \emph{t}.}
-#' \item{firstseen}{Year or time of first observation.}
-#' \item{lastseen}{Year or time of last observation.}
-#' \item{obsage}{Observed age in time \emph{t}, assuming first observation
+#' \item{year2}{Year or time at occasion \emph{t}.}
+#' \item{firstseen}{Occasion of first observation.}
+#' \item{lastseen}{Occasion of last observation.}
+#' \item{obsage}{Observed age in occasion \emph{t}, assuming first observation
 #' corresponds to age = 0.}
 #' \item{obslifespan}{Observed lifespan, given as \code{lastseen - firstseen + 1}.}
-#' \item{xpos1,xpos2,xpos3}{X position in Cartesian space in times \emph{t}-1,
-#' \emph{t}, and \emph{t}+1, respectively, if provided.}
-#' \item{ypos1,ypos2,ypos3}{Y position in Cartesian space in times \emph{t}-1, 
-#' \emph{t}, and \emph{t}+1, respectively, if provided.}
-#' \item{sizea1,sizea2,sizea3}{Main size measurement in times \emph{t}-1, 
+#' \item{xpos1,xpos2,xpos3}{X position in Cartesian space in occasions
+#' \emph{t}-1, \emph{t}, and \emph{t}+1, respectively, if provided.}
+#' \item{ypos1,ypos2,ypos3}{Y position in Cartesian space in occasions
+#' \emph{t}-1, \emph{t}, and \emph{t}+1, respectively, if provided.}
+#' \item{sizea1,sizea2,sizea3}{Main size measurement in occasions \emph{t}-1, 
 #' \emph{t}, and \emph{t}+1, respectively.}
-#' \item{sizeb1,sizeb2,sizeb3}{Secondary size measurement in times \emph{t}-1, 
-#' \emph{t}, and \emph{t}+1, respectively.}
-#' \item{sizec1,sizec2,sizec3}{Tertiary measurement in times \emph{t}-1, 
+#' \item{sizeb1,sizeb2,sizeb3}{Secondary size measurement in occasions
+#' \emph{t}-1, \emph{t}, and \emph{t}+1, respectively.}
+#' \item{sizec1,sizec2,sizec3}{Tertiary measurement in occasions \emph{t}-1, 
 #' \emph{t}, and \emph{t}+1, respectively.}
 #' \item{size1added,size2added,size3added}{Sum of primary, secondary, and 
-#' tertiary size measurements in times \emph{t}-1, \emph{t}, and \emph{t}+1, 
+#' tertiary size measurements in occasions \emph{t}-1, \emph{t}, and \emph{t}+1, 
 #' respectively.}
 #' \item{repstra1,repstra2,repstra3}{Main numbers of reproductive structures in
-#' times \emph{t}-1, \emph{t}, and \emph{t}+1, respectively.}
+#' occasions \emph{t}-1, \emph{t}, and \emph{t}+1, respectively.}
 #' \item{repstrb1,repstrb2,repstrb3}{Secondary numbers of reproductive 
-#' structures in times \emph{t}-1, \emph{t}, and \emph{t}+1, respectively.}
+#' structures in occasions \emph{t}-1, \emph{t}, and \emph{t}+1, respectively.}
 #' \item{repstr1added,repstr2added,repstr3added}{Sum of primary and secondary
-#' reproductive structures in times \emph{t}-1, \emph{t}, and \emph{t}+1, 
+#' reproductive structures in occasions \emph{t}-1, \emph{t}, and \emph{t}+1, 
 #' respectively.}
-#' \item{feca1,feca2,feca3}{Main numbers of offspring in times \emph{t}-1, 
+#' \item{feca1,feca2,feca3}{Main numbers of offspring in occasions \emph{t}-1, 
 #' \emph{t}, and \emph{t}+1, respectively.}
-#' \item{fecb1,fecb2, fecb3}{Secondary numbers of offspring in times \emph{t}-1,
-#' \emph{t}, and \emph{t}+1, respectively.}
+#' \item{fecb1,fecb2, fecb3}{Secondary numbers of offspring in occasions
+#' \emph{t}-1, \emph{t}, and \emph{t}+1, respectively.}
 #' \item{fec1added,fec2added,fec3added}{Sum of primary and secondary fecundity
-#' in times \emph{t}-1, \emph{t}, and \emph{t}+1, respectively.}
-#' \item{censor1,censor2,censor3}{Censor state values in times \emph{t}-1, 
+#' in occasions \emph{t}-1, \emph{t}, and \emph{t}+1, respectively.}
+#' \item{censor1,censor2,censor3}{Censor state values in occasions \emph{t}-1, 
 #' \emph{t}, and \emph{t}+1, respectively.}
 #' \item{juvgiven1,juvgiven2,juvgiven3}{Binomial variable indicating whether
-#' individual is juvenile in times \emph{t}-1, \emph{t}, and \emph{t}+1. Only 
-#' given if \code{juvcol} is provided.}
-#' \item{obsstatus1,obsstatus2,obsstatus3}{Binomial observation state in times
-#' \emph{t}-1, \emph{t}, and \emph{t}+1, respectively.}
-#' \item{repstatus1,repstatus2,repstatus3}{Binomial reproductive state in times 
-#' \emph{t}-1, \emph{t}, and \emph{t}+1, respectively.}
+#' individual is juvenile in occasions \emph{t}-1, \emph{t}, and \emph{t}+1.
+#' Only given if \code{juvcol} is provided.}
+#' \item{obsstatus1,obsstatus2,obsstatus3}{Binomial observation state in
+#' occasions \emph{t}-1, \emph{t}, and \emph{t}+1, respectively.}
+#' \item{repstatus1,repstatus2,repstatus3}{Binomial reproductive state in
+#' occasions \emph{t}-1, \emph{t}, and \emph{t}+1, respectively.}
 #' \item{fecstatus1,fecstatus2,fecstatus3}{Binomial offspring production state
-#' in times \emph{t}-1, \emph{t}, and \emph{t}+1, respectively.}
-#' \item{matstatus1,matstatus2,matstatus3}{Binomial maturity state in times
+#' in occasions \emph{t}-1, \emph{t}, and \emph{t}+1, respectively.}
+#' \item{matstatus1,matstatus2,matstatus3}{Binomial maturity state in occasions
 #' \emph{t}-1, \emph{t}, and \emph{t}+1, respectively.}
-#' \item{alive1,alive2,alive3}{Binomial state as alive in times \emph{t}-1,
+#' \item{alive1,alive2,alive3}{Binomial state as alive in occasions \emph{t}-1,
 #'  \emph{t}, and \emph{t}+1, respectively.}
 #' \item{density}{Density of individuals per unit designated in \code{spacing}.
 #' Only given if spacing is not NA.}
@@ -247,7 +247,7 @@
 #' arise with no concurrent \code{NoMatch} entries, which indicates that the
 #' input dataset contained conflicting state data at once suggesting that the
 #' individual is in some stage but is also dead. The latter is removed if the
-#' conflict occurs in time \emph{t} or time \emph{t}-1, as only living entries
+#' conflict occurs in occasion \emph{t} or \emph{t}-1, as only living entries
 #' are allowed in these times.
 #' 
 #' Care should be taken to avoid variables with negative values indicating size,
@@ -379,15 +379,15 @@
 #'   stageassign = cypframe_raw, stagesize = "sizeadded", NAas0 = TRUE,
 #'   NRasRep = TRUE)
 #' 
-#' cypsupp2r <- supplemental(stage3 = c("SD", "P1", "P2", "P3", "SL", "SL", "D", 
+#' cypsupp2r <- supplemental(stage3 = c("SD", "P1", "P2", "P3", "SL", "D", 
 #'     "XSm", "Sm", "SD", "P1"),
-#'   stage2 = c("SD", "SD", "P1", "P2", "P3", "SL", "SL", "SL", "SL", "rep",
+#'   stage2 = c("SD", "SD", "P1", "P2", "P3", "SL", "SL", "SL", "rep",
 #'     "rep"),
-#'   eststage3 = c(NA, NA, NA, NA, NA, NA, "D", "XSm", "Sm", NA, NA),
-#'   eststage2 = c(NA, NA, NA, NA, NA, NA, "XSm", "XSm", "XSm", NA, NA),
-#'   givenrate = c(0.10, 0.20, 0.20, 0.20, 0.25, 0.40, NA, NA, NA, NA, NA),
-#'   multiplier = c(NA, NA, NA, NA, NA, NA, NA, NA, NA, 0.5, 0.5),
-#'   type =c(1, 1, 1, 1, 1, 1, 1, 1, 1, 3, 3),
+#'   eststage3 = c(NA, NA, NA, NA, NA, "D", "XSm", "Sm", NA, NA),
+#'   eststage2 = c(NA, NA, NA, NA, NA, "XSm", "XSm", "XSm", NA, NA),
+#'   givenrate = c(0.10, 0.20, 0.20, 0.20, 0.25, NA, NA, NA, NA, NA),
+#'   multiplier = c(NA, NA, NA, NA, NA, NA, NA, NA, 0.5, 0.5),
+#'   type =c(1, 1, 1, 1, 1, 1, 1, 1, 3, 3),
 #'   stageframe = cypframe_raw, historical = FALSE)
 #' 
 #' cypmatrix2r <- rlefko2(data = cypraw_v1, stageframe = cypframe_raw, 
@@ -426,15 +426,15 @@
 #'   fecacol = "Pod.04", stageassign = cypframe_raw, stagesize = "sizeadded",
 #'   NAas0 = TRUE, NRasRep = TRUE)
 #' 
-#' cypsupp2r <- supplemental(stage3 = c("SD", "P1", "P2", "P3", "SL", "SL", "D", 
+#' cypsupp2r <- supplemental(stage3 = c("SD", "P1", "P2", "P3", "SL", "D", 
 #'     "XSm", "Sm", "SD", "P1"),
-#'   stage2 = c("SD", "SD", "P1", "P2", "P3", "SL", "SL", "SL", "SL", "rep",
+#'   stage2 = c("SD", "SD", "P1", "P2", "P3", "SL", "SL", "SL", "rep",
 #'     "rep"),
-#'   eststage3 = c(NA, NA, NA, NA, NA, NA, "D", "XSm", "Sm", NA, NA),
-#'   eststage2 = c(NA, NA, NA, NA, NA, NA, "XSm", "XSm", "XSm", NA, NA),
-#'   givenrate = c(0.10, 0.20, 0.20, 0.20, 0.25, 0.40, NA, NA, NA, NA, NA),
-#'   multiplier = c(NA, NA, NA, NA, NA, NA, NA, NA, NA, 0.5, 0.5),
-#'   type =c(1, 1, 1, 1, 1, 1, 1, 1, 1, 3, 3),
+#'   eststage3 = c(NA, NA, NA, NA, NA, "D", "XSm", "Sm", NA, NA),
+#'   eststage2 = c(NA, NA, NA, NA, NA, "XSm", "XSm", "XSm", NA, NA),
+#'   givenrate = c(0.10, 0.20, 0.20, 0.20, 0.25, NA, NA, NA, NA, NA),
+#'   multiplier = c(NA, NA, NA, NA, NA, NA, NA, NA, 0.5, 0.5),
+#'   type =c(1, 1, 1, 1, 1, 1, 1, 1, 3, 3),
 #'   stageframe = cypframe_raw, historical = FALSE)
 #' 
 #' cypmatrix2r <- rlefko2(data = cypraw_v1, stageframe = cypframe_raw, 
@@ -1049,90 +1049,90 @@ verticalize3 <- function(data, noyears, firstyear = 1, popidcol = 0,
 #' within populations.
 #' @param individcol A variable name or column number corresponding to the
 #' unique identity of each individual.
-#' @param year2col A variable name or column number corresponding to the year or
-#' time in time \emph{t}.
-#' @param year3col A variable name or column number corresponding to the year or
-#' time in time \emph{t}+1.
+#' @param year2col A variable name or column number corresponding to occasion
+#' \emph{t} (year or time).
+#' @param year3col A variable name or column number corresponding to occasion
+#' \emph{t}+1 (year or time).
 #' @param xcol A variable name or column number corresponding to the x
 #' coordinate of each individual in Cartesian space.
 #' @param ycol A variable name or column number corresponding to the y
 #' coordinate of each individual in Cartesian space.
 #' @param sizea2col A variable name or column number corresponding to the
-#' primary size entry in time \emph{t}.
+#' primary size entry in occasion \emph{t}.
 #' @param sizea3col A variable name or column number corresponding to the
-#' primary size entry in time \emph{t}+1.
+#' primary size entry in occasion \emph{t}+1.
 #' @param sizeb2col A variable name or column number corresponding to the
-#' secondary size entry in time \emph{t}.
+#' secondary size entry in occasion \emph{t}.
 #' @param sizeb3col A variable name or column number corresponding to the
-#' secondary size entry in time \emph{t}+1.
+#' secondary size entry in occasion \emph{t}+1.
 #' @param sizec2col A variable name or column number corresponding to the
-#' tertiary size entry in time \emph{t}.
+#' tertiary size entry in occasion \emph{t}.
 #' @param sizec3col A variable name or column number corresponding to the
-#' tertiary size entry in time \emph{t}+1.
+#' tertiary size entry in occasion \emph{t}+1.
 #' @param repstra2col A variable name or column number corresponding to the
-#' production of reproductive structures, such as flowers, in time \emph{t}.
+#' production of reproductive structures, such as flowers, in occasion \emph{t}.
 #' This can be binomial or count data, and is used to in analysis of the
 #' probability of reproduction.
 #' @param repstra3col A variable name or column number corresponding to the
-#' production of reproductive structures, such as flowers, in time \emph{t}+1.
-#' This can be binomial or count data, and is used to in analysis of the
-#' probability of reproduction.
+#' production of reproductive structures, such as flowers, in occasion
+#' \emph{t}+1. This can be binomial or count data, and is used to in analysis
+#' of the probability of reproduction.
 #' @param repstrb2col A second variable name or column number corresponding to
-#' the production of reproductive structures, such as flowers, in time \emph{t}.
-#' This can be binomial or count data.
+#' the production of reproductive structures, such as flowers, in occasion
+#' \emph{t}. This can be binomial or count data.
 #' @param repstrb3col A second variable name or column number corresponding to
-#' the production of reproductive structures, such as flowers, in time 
+#' the production of reproductive structures, such as flowers, in occasion 
 #' \emph{t}+1. This can be binomial or count data.
 #' @param feca2col A variable name or column number corresponding to fecundity
-#' in time \emph{t}. This may represent egg counts, fruit counts, seed 
+#' in occasion \emph{t}. This may represent egg counts, fruit counts, seed 
 #' production, etc.
 #' @param feca3col A variable name or column number corresponding to fecundity
-#' in time \emph{t}+1. This may represent egg counts, fruit counts, seed
+#' in occasion \emph{t}+1. This may represent egg counts, fruit counts, seed
 #' production, etc.
 #' @param fecb2col A second variable name or column number corresponding to 
-#' fecundity in time \emph{t}. This may represent egg counts, fruit counts, seed
-#' production, etc.
-#' @param fecb3col A second variable name or column number corresponding to 
-#' fecundity in time \emph{t}+1. This may represent egg counts, fruit counts,
+#' fecundity in occasion \emph{t}. This may represent egg counts, fruit counts,
 #' seed production, etc.
+#' @param fecb3col A second variable name or column number corresponding to 
+#' fecundity in occasion \emph{t}+1. This may represent egg counts, fruit
+#' counts, seed production, etc.
 #' @param indcova2col A variable name or column number corresponding to an
-#' individual covariate to be used in analysis, in time \emph{t}.
+#' individual covariate to be used in analysis, in occasion \emph{t}.
 #' @param indcova3col A variable name or column number corresponding to an
-#' individual covariate to be used in analysis, in time \emph{t}+1.
+#' individual covariate to be used in analysis, in occasion \emph{t}+1.
 #' @param indcovb2col A second variable name or column number corresponding to
-#' an individual covariate to be used in analysis, in time \emph{t}.
+#' an individual covariate to be used in analysis, in occasion \emph{t}.
 #' @param indcovb3col A second variable name or column number corresponding to
-#' an individual covariate to be used in analysis, in time \emph{t}+1.
+#' an individual covariate to be used in analysis, in occasion \emph{t}+1.
 #' @param indcovc2col A third variable name or column number corresponding to an
-#' individual covariate to be used in analysis, in time \emph{t}.
+#' individual covariate to be used in analysis, in occasion \emph{t}.
 #' @param indcovc3col A third variable name or column number corresponding to an
-#' individual covariate to be used in analysis, in time \emph{t}+1.
+#' individual covariate to be used in analysis, in occasion \emph{t}+1.
 #' @param alive2col A variable name or column number that provides information
-#' on whether an individual is alive in time \emph{t}. If used, living status
-#' must be designated as binomial (living = 1, dead = 0).
+#' on whether an individual is alive in occasion \emph{t}. If used, living
+#' status must be designated as binomial (living = 1, dead = 0).
 #' @param alive3col A variable name or column number that provides information
-#' on whether an individual is alive in time \emph{t}+1. If used, living status
-#' must be designated as binomial (living = 1, dead = 0).
+#' on whether an individual is alive in occasion \emph{t}+1. If used, living
+#' status must be designated as binomial (living = 1, dead = 0).
 #' @param dead2col A variable name or column number that provides information on
-#' whether an individual is dead in time \emph{t}. If used, dead status
+#' whether an individual is dead in occasion \emph{t}. If used, dead status
 #' must be designated as binomial (dead = 1, living = 0).
 #' @param dead3col A variable name or column number that provides information on
-#' whether an individual is dead in time \emph{t}+1. If used, dead status must
-#' be designated as binomial (dead = 1, living = 0).
+#' whether an individual is dead in occasion \emph{t}+1. If used, dead status
+#' must be designated as binomial (dead = 1, living = 0).
 #' @param obs2col A variable name or column number providing information on
-#' whether an individual is in an observable stage in time \emph{t}. If used,
-#' observation status must be designated as binomial (observed = 1, not 
+#' whether an individual is in an observable stage in occasion \emph{t}. If
+#' used, observation status must be designated as binomial (observed = 1, not 
 #' observed = 0).
 #' @param obs3col A variable name or column number providing information on
-#' whether an individual is in an observable stage in time \emph{t}+1. If used,
-#' observation status must be designated as binomial (observed = 1, not 
+#' whether an individual is in an observable stage in occasion \emph{t}+1. If
+#' used, observation status must be designated as binomial (observed = 1, not 
 #' observed = 0).
 #' @param nonobs2col A variable name or column number providing information on
-#' whether an individual is in an unobservable stage in time \emph{t}. If used,
-#' observation status must be designated as binomial (not observed = 1,
+#' whether an individual is in an unobservable stage in occasion \emph{t}. If
+#' used, observation status must be designated as binomial (not observed = 1,
 #' observed = 0).
 #' @param nonobs3col A variable name or column number providing information on
-#' whether an individual is in an unobservable stage in time \emph{t}+1. If
+#' whether an individual is in an unobservable stage in occasion \emph{t}+1. If
 #' used, observation status must be designated as binomial (not observed = 1,
 #' observed = 0).
 #' @param repstrrel This is a scalar multiplier to make the variable represented
@@ -1144,16 +1144,16 @@ verticalize3 <- function(data, noyears, firstyear = 1, popidcol = 0,
 #' by \code{fecb2col} equivalent to the variable represented by \code{feca2col}.
 #' This can be useful if two fecundity variables have related but unequal units.
 #' @param stage2col Optional variable name or column number corresponding to
-#' life history stage in time \emph{t}.
+#' life history stage in occasion \emph{t}.
 #' @param stage3col Optional variable name or column number corresponding to
-#' life history stage in time \emph{t}+1.
+#' life history stage in occasion \emph{t}+1.
 #' @param juv2col A variable name or column number that marks individuals in
-#' immature stages in time \emph{t}. The \code{historicalize3()} function
+#' immature stages in occasion \emph{t}. The \code{historicalize3()} function
 #' assumes that immature individuals are identified in this variable marked with
 #' a number equal to or greater than 1, and that mature individuals are marked
 #' as 0 or NA.
 #' @param juv3col A variable name or column number that marks individuals in
-#' immature stages in time \emph{t}+1. The \code{historicalize3()} function
+#' immature stages in occasion \emph{t}+1. The \code{historicalize3()} function
 #' assumes that immature individuals are identified in this variable marked with
 #' a number equal to or greater than 1, and that mature individuals are marked
 #' as 0 or NA.
@@ -1196,62 +1196,62 @@ verticalize3 <- function(data, noyears, firstyear = 1, popidcol = 0,
 #' output data frame will have three consecutive years of size and reproductive
 #' data per individual per row. This data frame is in standard format for all
 #' functions used in \code{lefko3}, and so can be used without further 
-#' modification. Note that determination of state in times *t*-1 and *t*+1 gives
-#' preference to condition in time *t* within the input dataset. Conflicts in
-#' condition in input datasets that have both times *t* and *t*+1 listed per row
-#' are resolved by using condition in time *t*.
+#' modification. Note that determination of state in occasions *t*-1 and *t*+1
+#' gives preference to condition in occasion *t* within the input dataset.
+#' Conflicts in condition in input datasets that have both occasions *t* and
+#' *t*+1 listed per row are resolved by using condition in occasion *t*.
 #' 
 #' Variables in this data frame include the following:
 #' \item{rowid}{Unique identifier for the row of the data frame.}
 #' \item{popid}{Unique identifier for the population, if given.}
 #' \item{patchid}{Unique identifier for patch within population, if given.}
 #' \item{individ}{Unique identifier for the individual.}
-#' \item{year2}{Year or time at time \emph{t}.}
-#' \item{firstseen}{Year or time of first observation.}
-#' \item{lastseen}{Year or time of last observation.}
-#' \item{obsage}{Observed age in time \emph{t}, assuming first observation
+#' \item{year2}{Year or time in occasion \emph{t}.}
+#' \item{firstseen}{Occasion of first observation.}
+#' \item{lastseen}{Occasion of last observation.}
+#' \item{obsage}{Observed age in occasion \emph{t}, assuming first observation
 #' corresponds to age = 0.}
 #' \item{obslifespan}{Observed lifespan, given as \code{lastseen - firstseen + 1}.}
-#' \item{xpos1,xpos2,xpos3}{X position in Cartesian space in times \emph{t}-1,
-#' \emph{t}, and \emph{t}+1, respectively, if provided.}
-#' \item{ypos1,ypos2,ypos3}{Y position in Cartesian space in times \emph{t}-1,
-#' \emph{t}, and \emph{t}+1, respectively, if provided.}
-#' \item{sizea1,sizea2,sizea3}{Main size measurement in times \emph{t}-1,
+#' \item{xpos1,xpos2,xpos3}{X position in Cartesian space in occasions
+#' \emph{t}-1, \emph{t}, and \emph{t}+1, respectively, if provided.}
+#' \item{ypos1,ypos2,ypos3}{Y position in Cartesian space in occasions
+#' \emph{t}-1, \emph{t}, and \emph{t}+1, respectively, if provided.}
+#' \item{sizea1,sizea2,sizea3}{Main size measurement in occasions \emph{t}-1,
 #' \emph{t}, and \emph{t}+1, respectively.}
-#' \item{sizeb1,sizeb2,sizeb3}{Secondary size measurement in times \emph{t}-1,
-#' \emph{t}, and \emph{t}+1, respectively.}
-#' \item{sizec1,sizec2,sizec3}{Tertiary measurement in times \emph{t}-1,
+#' \item{sizeb1,sizeb2,sizeb3}{Secondary size measurement in occasions
+#' \emph{t}-1, \emph{t}, and \emph{t}+1, respectively.}
+#' \item{sizec1,sizec2,sizec3}{Tertiary measurement in occasions \emph{t}-1,
 #' \emph{t}, and \emph{t}+1, respectively.}
 #' \item{size1added,size2added,size3added}{Sum of primary, secondary, and
-#' tertiary size measurements in times \emph{t}-1, \emph{t}, and \emph{t}+1,
+#' tertiary size measurements in occasions \emph{t}-1, \emph{t}, and \emph{t}+1,
 #' respectively.}
 #' \item{repstra1,repstra2,repstra3}{Main numbers of reproductive structures in
-#' times \emph{t}-1, \emph{t}, and \emph{t}+1, respectively.}
+#' occasions \emph{t}-1, \emph{t}, and \emph{t}+1, respectively.}
 #' \item{repstrb1,repstrb2,repstrb3}{Secondary numbers of reproductive
-#' structures in times \emph{t}-1, \emph{t}, and \emph{t}+1, respectively.}
+#' structures in occasions \emph{t}-1, \emph{t}, and \emph{t}+1, respectively.}
 #' \item{repstr1added,repstr2added,repstr3added}{Sum of primary and secondary
-#' reproductive structures in times \emph{t}-1, \emph{t}, and \emph{t}+1,
+#' reproductive structures in occasions \emph{t}-1, \emph{t}, and \emph{t}+1,
 #' respectively.}
-#' \item{feca1,feca2,feca3}{Main numbers of offspring in times \emph{t}-1,
+#' \item{feca1,feca2,feca3}{Main numbers of offspring in occasions \emph{t}-1,
 #' \emph{t}, and \emph{t}+1, respectively.}
-#' \item{fecb1,fecb2, fecb3}{Secondary numbers of offspring in times \emph{t}-1,
-#' \emph{t}, and \emph{t}+1, respectively.}
+#' \item{fecb1,fecb2, fecb3}{Secondary numbers of offspring in occasions
+#' \emph{t}-1, \emph{t}, and \emph{t}+1, respectively.}
 #' \item{fec1added,fec2added,fec3added}{Sum of primary and secondary fecundity
-#' in times \emph{t}-1, \emph{t}, and \emph{t}+1, respectively.}
-#' \item{censor1,censor2,censor3}{Censor state values in times \emph{t}-1,
+#' in occasions \emph{t}-1, \emph{t}, and \emph{t}+1, respectively.}
+#' \item{censor1,censor2,censor3}{Censor state values in occasions \emph{t}-1,
 #' \emph{t}, and \emph{t}+1, respectively.}
 #' \item{juvgiven1,juvgiven2,juvgiven3}{Binomial variable indicating whether
-#' individual is juvenile in times \emph{t}-1, \emph{t}, and \emph{t}+1. Only
-#' given if \code{juvcol} is provided.}
-#' \item{obsstatus1,obsstatus2,obsstatus3}{Binomial observation state in times
-#' \emph{t}-1, \emph{t}, and \emph{t}+1, respectively.}
-#' \item{repstatus1,repstatus2,repstatus3}{Binomial reproductive state in times
-#' \emph{t}-1, \emph{t}, and \emph{t}+1, respectively.}
+#' individual is juvenile in occasions \emph{t}-1, \emph{t}, and \emph{t}+1.
+#' Only given if \code{juvcol} is provided.}
+#' \item{obsstatus1,obsstatus2,obsstatus3}{Binomial observation state in
+#' occasions \emph{t}-1, \emph{t}, and \emph{t}+1, respectively.}
+#' \item{repstatus1,repstatus2,repstatus3}{Binomial reproductive state in
+#' occasions \emph{t}-1, \emph{t}, and \emph{t}+1, respectively.}
 #' \item{fecstatus1,fecstatus2,fecstatus3}{Binomial offspring production state
-#' in times \emph{t}-1, \emph{t}, and \emph{t}+1, respectively.}
-#' \item{matstatus1,matstatus2,matstatus3}{Binomial maturity state in times
+#' in occasions \emph{t}-1, \emph{t}, and \emph{t}+1, respectively.}
+#' \item{matstatus1,matstatus2,matstatus3}{Binomial maturity state in occasions
 #' \emph{t}-1, \emph{t}, and \emph{t}+1, respectively.}
-#' \item{alive1,alive2,alive3}{Binomial state as alive in times \emph{t}-1,
+#' \item{alive1,alive2,alive3}{Binomial state as alive in occasions \emph{t}-1,
 #'  \emph{t}, and \emph{t}+1, respectively.}
 #' \item{density}{Density of individuals per unit designated in \code{spacing}.
 #' Only given if spacing is not NA.}
@@ -1276,8 +1276,8 @@ verticalize3 <- function(data, noyears, firstyear = 1, popidcol = 0,
 #' arise with no concurrent \code{NoMatch} entries, which indicates that the
 #' input dataset contained conflicting state data at once suggesting that the
 #' individual is in some stage but is also dead. The latter is removed if the
-#' conflict occurs in time \emph{t} or time \emph{t}-1, as only living entries
-#' are allowed in these times.
+#' conflict occurs in occasion \emph{t} or occasion \emph{t}-1, as only living
+#' entries are allowed in these times.
 #' 
 #' Care should be taken to avoid variables with negative values indicating size,
 #' fecundity, or reproductive or observation status. Negative values can be
@@ -1316,15 +1316,15 @@ verticalize3 <- function(data, noyears, firstyear = 1, popidcol = 0,
 #'   stageassign = cypframe_raw, stagesize = "sizeadded", censorcol = "censor",
 #'   censor = FALSE, NAas0 = TRUE, NRasRep = TRUE, reduce = TRUE)
 #'   
-#' cypsupp2r <- supplemental(stage3 = c("SD", "P1", "P2", "P3", "SL", "SL", "D", 
+#' cypsupp2r <- supplemental(stage3 = c("SD", "P1", "P2", "P3", "SL", "D", 
 #'     "XSm", "Sm", "SD", "P1"),
-#'   stage2 = c("SD", "SD", "P1", "P2", "P3", "SL", "SL", "SL", "SL", "rep",
+#'   stage2 = c("SD", "SD", "P1", "P2", "P3", "SL", "SL", "SL", "rep",
 #'     "rep"),
-#'   eststage3 = c(NA, NA, NA, NA, NA, NA, "D", "XSm", "Sm", NA, NA),
-#'   eststage2 = c(NA, NA, NA, NA, NA, NA, "XSm", "XSm", "XSm", NA, NA),
-#'   givenrate = c(0.10, 0.20, 0.20, 0.20, 0.25, 0.40, NA, NA, NA, NA, NA),
-#'   multiplier = c(NA, NA, NA, NA, NA, NA, NA, NA, NA, 0.5, 0.5),
-#'   type =c(1, 1, 1, 1, 1, 1, 1, 1, 1, 3, 3),
+#'   eststage3 = c(NA, NA, NA, NA, NA, "D", "XSm", "Sm", NA, NA),
+#'   eststage2 = c(NA, NA, NA, NA, NA, "XSm", "XSm", "XSm", NA, NA),
+#'   givenrate = c(0.10, 0.20, 0.20, 0.20, 0.25, NA, NA, NA, NA, NA),
+#'   multiplier = c(NA, NA, NA, NA, NA, NA, NA, NA, 0.5, 0.5),
+#'   type =c(1, 1, 1, 1, 1, 1, 1, 1, 3, 3),
 #'   stageframe = cypframe_raw, historical = FALSE)
 #' 
 #' cypmatrix2r <- rlefko2(data = cypraw_v2, stageframe = cypframe_raw, 
@@ -1357,7 +1357,7 @@ historicalize3 <- function(data, popidcol = 0, patchidcol = 0, individcol,
   }
   
   if (is.na(year2col) & is.na(year3col)) {
-    stop("Variable identifying either year2 (time t) or year3 (time t+1) is required.", call. = FALSE)
+    stop("Variable identifying either year2 (occasion t) or year3 (occasion t+1) is required.", call. = FALSE)
   }
   
   if (is.character(popidcol)) {
@@ -2055,7 +2055,8 @@ historicalize3 <- function(data, popidcol = 0, patchidcol = 0, individcol,
 #' @param data Demographic dataset in historical vertical format.
 #' @param xcol Number of column in \code{data} corresponding to x position.
 #' @param ycol Number of column in \code{data} corresponding to y position.
-#' @param yearcol Number of column in \code{data} corresponding to time.
+#' @param yearcol Number of column in \code{data} corresponding to occasion
+#' \emph{t}.
 #' @param spacing Resolution of density estimation, as a scalar numeric.
 #' 
 #' @return This function returns the original data frame supplied as \code{data}
@@ -2080,3 +2081,378 @@ historicalize3 <- function(data, popidcol = 0, patchidcol = 0, individcol,
   
   return(data)
 }
+
+#' Create lefkoMat Object from Given Input Matrices
+#' 
+#' Function \code{create_lM()} creates lefkoMat objects from supplied matrices
+#' and extra information.
+#' 
+#' @param mats A list of A matrices.
+#' @param stageframe A stageframe describing all stages utilized.
+#' @param hstages A dataframe outlining the order of historical stages, if
+#' matrices provided in \code{mats} are historical. Defaults to NA.
+#' @param historical A logical value indicating whether input matrices are
+#' historical or not. Defaults to FALSE.
+#' @param agebystage A logical value indicating whether input matrices are
+#' ahistorical age-by-stage matrices. Defaults to FALSE.
+#' @param UFdecomp A logical value indicating whether U and F matrices should be
+#' inferred. Defaults to TRUE.
+#' @param entrystage The stage or stages produced by reproductive individuals.
+#' Used to determine which transitions are reproductive for U-F decomposition.
+#' Defaults to \code{1}, which corresponds to the first stage in the stageframe.
+#' @param poporder The order of populations in the list supplied in object
+#' \code{mats}. Defaults to 1.
+#' @param patchorder The order of patches in the list supplied in object
+#' \code{mats}. Defaults to 1.
+#' @param yearorder The order of monitoring occasions in the list supplied in
+#' object \code{mats}. Defaults to NA, which leads to each matrix within each
+#' population-patch combination being a different monitoring occasion.
+#' 
+#' @return A \code{lefkoMat} object incorporating the matrices input in object
+#' \code{mats} as object \code{A}, their U and F decompositions in objects
+#' \code{U} and \code{F} (if requested), the provided stageframe as object
+#' \code{ahstages}, the order of historical stages as object \code{hstages} (if
+#' \code{historical = TRUE}), the order of matrices as object \code{labels}, and
+#' a short quality control section used by the \code{\link{summary.lefkoMat}()}
+#' function.
+#' 
+#' @section Notes:
+#' This function does not currently handle age-by-stage matrices.
+#' 
+#' @examples
+#' # These matrices are of 9 populations of the plant species Anthyllis
+#' # vulneraria, and were originally published in Davison et al. (2010) Journal
+#' # of Ecology98:255-267 (doi: 10.1111/j.1365-2745.2009.01611.x).
+#' 
+#' sizevector <- c(1, 1, 2, 3) # These sizes are not from the original paper
+#' stagevector <- c("Sdl", "Veg", "SmFlo", "LFlo")
+#' repvector <- c(0, 0, 1, 1)
+#' obsvector <- c(1, 1, 1, 1)
+#' matvector <- c(0, 1, 1, 1)
+#' immvector <- c(1, 0, 0, 0)
+#' propvector <- c(0, 0, 0, 0)
+#' indataset <- c(1, 1, 1, 1)
+#' binvec <- c(0.5, 0.5, 0.5, 0.5)
+#' 
+#' anthframe <- sf_create(sizes = sizevector, stagenames = stagevector,
+#'   repstatus = repvector, obsstatus = obsvector, matstatus = matvector,
+#'   immstatus = immvector, indataset = indataset, binhalfwidth = binvec,
+#'   propstatus = propvector)
+#' 
+#' # POPN C 2003-2004
+#' XC3 <- matrix(c(0, 0, 1.74, 1.74,
+#' 0.208333333, 0, 0, 0.057142857,
+#' 0.041666667, 0.076923077, 0, 0,
+#' 0.083333333, 0.076923077, 0.066666667, 0.028571429), 4, 4, byrow = TRUE)
+#' 
+#' # 2004-2005
+#' XC4 <- matrix(c(0, 0, 0.3, 0.6,
+#' 0.32183908, 0.142857143, 0, 0,
+#' 0.16091954, 0.285714286, 0, 0,
+#' 0.252873563, 0.285714286, 0.5, 0.6), 4, 4, byrow = TRUE)
+#' 
+#' # 2005-2006
+#' XC5 <- matrix(c(0, 0, 0.50625, 0.675,
+#' 0, 0, 0, 0.035714286,
+#' 0.1, 0.068965517, 0.0625, 0.107142857,
+#' 0.3, 0.137931034, 0, 0.071428571), 4, 4, byrow = TRUE)
+#' 
+#' # POPN E 2003-2004
+#' XE3 <- matrix(c(0, 0, 2.44, 6.569230769,
+#' 0.196428571, 0, 0, 0,
+#' 0.125, 0.5, 0, 0,
+#' 0.160714286, 0.5, 0.133333333, 0.076923077), 4, 4, byrow = TRUE)
+#' 
+#' XE4 <- matrix(c(0, 0, 0.45, 0.646153846,
+#' 0.06557377, 0.090909091, 0.125, 0,
+#' 0.032786885, 0, 0.125, 0.076923077,
+#' 0.049180328, 0, 0.125, 0.230769231), 4, 4, byrow = TRUE)
+#' 
+#' XE5 <- matrix(c(0, 0, 2.85, 3.99,
+#' 0.083333333, 0, 0, 0,
+#' 0, 0, 0, 0,
+#' 0.416666667, 0.1, 0, 0.1), 4, 4, byrow = TRUE)
+#' 
+#' # POPN F 2003-2004
+#' XF3 <- matrix(c(0, 0, 1.815, 7.058333333,
+#' 0.075949367, 0, 0.05, 0.083333333,
+#' 0.139240506, 0, 0, 0.25,
+#' 0.075949367, 0, 0, 0.083333333), 4, 4, byrow = TRUE)
+#' 
+#' XF4 <- matrix(c(0, 0, 1.233333333, 7.4,
+#' 0.223880597, 0, 0.111111111, 0.142857143,
+#' 0.134328358, 0.272727273, 0.166666667, 0.142857143,
+#' 0.119402985, 0.363636364, 0.055555556, 0.142857143), 4, 4, byrow = TRUE)
+#' 
+#' XF5 <- matrix(c(0, 0, 1.06, 3.372727273,
+#' 0.073170732, 0.025, 0.033333333, 0,
+#' 0.036585366, 0.15, 0.1, 0.136363636,
+#' 0.06097561, 0.225, 0.166666667, 0.272727273), 4, 4, byrow = TRUE)
+#' 
+#' # POPN G 2003-2004
+#' XG3 <- matrix(c(0, 0, 0.245454545, 2.1,
+#' 0, 0, 0.045454545, 0,
+#' 0.125, 0, 0.090909091, 0,
+#' 0.125, 0, 0.090909091, 0.333333333), 4, 4, byrow = TRUE)
+#' 
+#' XG4 <- matrix(c(0, 0, 1.1, 1.54,
+#' 0.111111111, 0, 0, 0,
+#' 0, 0, 0, 0,
+#' 0.111111111, 0, 0, 0), 4, 4, byrow = TRUE)
+#' 
+#' XG5 <- matrix(c(0, 0, 0, 1.5,
+#' 0, 0, 0, 0,
+#' 0.090909091, 0, 0, 0,
+#' 0.545454545, 0.5, 0, 0.5), 4, 4, byrow = TRUE)
+#' 
+#' # POPN L 2003-2004
+#' XL3 <- matrix(c(0, 0, 1.785365854, 1.856521739,
+#' 0.128571429, 0, 0, 0.010869565,
+#' 0.028571429, 0, 0, 0,
+#' 0.014285714, 0, 0, 0.02173913), 4, 4, byrow = TRUE)
+#' 
+#' XL4 <- matrix(c(0, 0, 14.25, 16.625,
+#' 0.131443299, 0.057142857, 0, 0.25,
+#' 0.144329897, 0, 0, 0,
+#' 0.092783505, 0.2, 0, 0.25), 4, 4, byrow = TRUE)
+#' 
+#' XL5 <- matrix(c(0, 0, 0.594642857, 1.765909091,
+#' 0, 0, 0.017857143, 0,
+#' 0.021052632, 0.018518519, 0.035714286, 0.045454545,
+#' 0.021052632, 0.018518519, 0.035714286, 0.068181818), 4, 4, byrow = TRUE)
+#' 
+#' # POPN O 2003-2004
+#' XO3 <- matrix(c(0, 0, 11.5, 2.775862069,
+#' 0.6, 0.285714286, 0.333333333, 0.24137931,
+#' 0.04, 0.142857143, 0, 0,
+#' 0.16, 0.285714286, 0, 0.172413793), 4, 4, byrow = TRUE)
+#' 
+#' XO4 <- matrix(c(0, 0, 3.78, 1.225,
+#' 0.28358209, 0.171052632, 0, 0.166666667,
+#' 0.084577114, 0.026315789, 0, 0.055555556,
+#' 0.139303483, 0.447368421, 0, 0.305555556), 4, 4, byrow = TRUE)
+#' 
+#' XO5 <- matrix(c(0, 0, 1.542857143, 1.035616438,
+#' 0.126984127, 0.105263158, 0.047619048, 0.054794521,
+#' 0.095238095, 0.157894737, 0.19047619, 0.082191781,
+#' 0.111111111, 0.223684211, 0, 0.356164384), 4, 4, byrow = TRUE)
+#' 
+#' # POPN Q 2003-2004
+#' XQ3 <- matrix(c(0, 0, 0.15, 0.175,
+#' 0, 0, 0, 0,
+#' 0, 0, 0, 0,
+#' 1, 0, 0, 0), 4, 4, byrow = TRUE)
+#' 
+#' XQ4 <- matrix(c(0, 0, 0, 0.25,
+#' 0, 0, 0, 0,
+#' 0, 0, 0, 0,
+#' 1, 0.666666667, 0, 1), 4, 4, byrow = TRUE)
+#' 
+#' XQ5 <- matrix(c(0, 0, 0, 1.428571429,
+#' 0, 0, 0, 0.142857143,
+#' 0.25, 0, 0, 0,
+#' 0.25, 0, 0, 0.571428571), 4, 4, byrow = TRUE)
+#' 
+#' # POPN R 2003-2004
+#' XR3 <- matrix(c(0, 0, 0.7, 0.6125,
+#' 0.25, 0, 0, 0.125,
+#' 0, 0, 0, 0,
+#' 0.25, 0.166666667, 0, 0.25), 4, 4, byrow = TRUE)
+#' 
+#' XR4 <- matrix(c(0, 0, 0, 0.6,
+#' 0.285714286, 0, 0, 0,
+#' 0.285714286, 0.333333333, 0, 0,
+#' 0.285714286, 0.333333333, 0, 1), 4, 4, byrow = TRUE)
+#' 
+#' XR5 <- matrix(c(0, 0, 0.7, 0.6125,
+#' 0, 0, 0, 0,
+#' 0, 0, 0, 0,
+#' 0.333333333, 0, 0.333333333, 0.625), 4, 4, byrow = TRUE)
+#' 
+#' # POPN S 2003-2004
+#' XS3 <- matrix(c(0, 0, 2.1, 0.816666667,
+#' 0.166666667, 0, 0, 0,
+#' 0, 0, 0, 0,
+#' 0, 0, 0, 0.166666667), 4, 4, byrow = TRUE)
+#' 
+#' XS4 <- matrix(c(0, 0, 0, 7,
+#' 0.333333333, 0.5, 0, 0,
+#' 0, 0, 0, 0,
+#' 0.333333333, 0, 0, 1), 4, 4, byrow = TRUE)
+#' 
+#' XS5 <- matrix(c(0, 0, 0, 1.4,
+#' 0, 0, 0, 0,
+#' 0, 0, 0, 0.2,
+#' 0.111111111, 0.75, 0, 0.2), 4, 4, byrow = TRUE)
+#' 
+#' mats_list <- list(XC3, XC4, XC5, XE3, XE4, XE5, XF3, XF4, XF5, XG3, XG4, XG5,
+#'   XL3, XL4, XL5, XO3, XO4, XO5, XQ3, XQ4, XQ5, XR3, XR4, XR5, XS3, XS4, XS5)
+#' mats_list
+#' 
+#' anth_lefkoMat <- create_lM(mats_list, anthframe, hstages = NA, historical = FALSE,
+#'   poporder = 1, patchorder = c(1, 1, 1, 2, 2, 2, 3, 3, 3, 4, 4, 4, 5, 5, 5, 6,
+#'     6, 6, 7, 7, 7, 8, 8, 8, 9, 9, 9),
+#'   yearorder = c(1, 2, 3, 1, 2, 3, 1, 2, 3, 1, 2, 3, 1, 2, 3, 1, 2, 3, 1, 2, 3,
+#'     1, 2, 3, 1, 2, 3))
+#' anth_lefkoMat
+#' 
+#' @export
+create_lM <- function(mats, stageframe, hstages = NA, historical = FALSE,
+  agebystage = FALSE, UFdecomp = TRUE, entrystage = 1, poporder = 1,
+  patchorder = 1, yearorder = NA) {
+  
+  #We do not currently handle age-by-stage. Remove this when we do.
+  if (agebystage) {
+    stop("This function does not currently handle age-by-stage matrices", call. = FALSE)
+  }
+  
+  if (class(mats) != "list") {
+    stop("Object mats must be an object of class list.", call. = FALSE)
+  }
+  if (!is.element("matrix", class(mats[[1]]))) {
+    stop("Object mats must be a list composed of objects of class matrix.", call. = FALSE)
+  }
+  mat_length <- length(mats)
+  
+  if (!is.element("stageframe", class(stageframe))) {
+    warning("Object stageframe is not of class stageframe.", call. = FALSE)
+  }
+  
+  numstages <- dim(stageframe)[1]
+  
+  if (!historical & !agebystage) {
+    dimtest <- apply(as.matrix(c(1:mat_length)), 1, function(X) {
+      dim(mats[[X]])
+    })
+    if (!all(unique(dimtest) == numstages)) {
+      stop("Supplied matrices must be of equal size, and, if ahistorical and not age-by-stage, equal in dimension to the number of stages provided in object stageframe.", call. = FALSE)
+    }
+  }
+  
+  if (historical & all(is.na(hstages))) {
+    stage_vec <- stageframe$stage
+    stageid_vec <- c(1:numstages)
+    hstages <- cbind.data.frame(stage_id_2 = rep(stageid_vec, numstages),
+      stage_id_1 = rep(stageid_vec, each = numstages),
+      stage_2 = rep(stage_vec, numstages),
+      stage_1 = rep(stage_vec, each = numstages))
+  }
+  true_poporder <- poporder
+  true_patchorder <- patchorder
+  true_yearorder <- yearorder
+  
+  if (length(poporder) == 1) {
+    if (!is.numeric(poporder)) poporder <- 1
+    true_poporder <- rep(poporder, mat_length)
+  }
+  if (length(patchorder) == 1) {
+    if (!is.numeric(patchorder)) patchorder <- 1
+    true_patchorder <- rep(patchorder, mat_length)
+  }
+  if (all(is.na(yearorder))) {
+    poppatch_combos <- apply(as.matrix(c(1:mat_length)), 1, function(X) {paste(true_poporder[X], true_patchorder[X])})
+    unique_poppatches <- unique(poppatch_combos)
+    total_poppatches <- length(unique_poppatches)
+    
+    true_yearorder <- apply(as.matrix(c(1:total_poppatches)), 1, function(X) {
+      total_years <- length(which(poppatch_combos == unique_poppatches[X]))
+      return(c(1:total_years))
+    })
+  }
+  
+  if (length(true_poporder) != length(true_patchorder)) {
+    stop("Objects poporder and patchorder are not of equal length.", call. = FALSE)
+  }
+  if (length(true_poporder) != length(true_yearorder)) {
+    stop("Objects poporder and yearorder are not of equal length.", call. = FALSE)
+  }
+  
+  labels <- cbind.data.frame(pop = true_poporder, patch = true_patchorder,
+    year2 = true_yearorder)
+  
+  if (!any(is.numeric(entrystage)) & UFdecomp) {
+    if (all(is.na(entrystage))) {
+      warning("No entry stage provided, so assuming that first stage is entry stage.", call. = FALSE)
+      entrystage <- 1
+    } else if (all(is.element(entrystage, stageframe$stage))) {
+      total_entries <- length(entrystage)
+      
+      entrystage_proxy <- apply(as.matrix(c(1:total_entries)), 1, function(X) {
+        which(stageframe$stage == entrystage[X])}
+      )
+      entrystage <- entrystage_proxy
+    } else {
+      stop("Unable to interpret entry stage designations.", call. = FALSE)
+    }
+  }
+  
+  matrixqc <- c(NA, NA, mat_length)
+  
+  if (UFdecomp) {
+    if (!historical) {
+      rep_from <- which(stageframe$repstatus == 1)
+      
+      for (i in c(1:length(rep_from))) {
+        for (j in c(1:length(entrystage))) {
+          if (i == 1 & j == 1) {
+            F_indices <- ((numstages * (rep_from[i] - 1)) + entrystage[j])
+          } else {
+            F_indices <- append(F_indices, ((numstages * (rep_from[i] - 1)) + entrystage[j]))
+          }
+        }
+      }
+      
+      U <- lapply(mats, function(X) {
+        newmat <- X
+        newmat[F_indices] <- 0
+        
+        return(newmat)
+      })
+      
+      F <- lapply(mats, function(X) {
+        newmat <- matrix(0, numstages, numstages)
+        newmat[F_indices] <- X[F_indices]
+        
+        return(newmat)
+      })
+    }
+    
+    Utrans <- sum(apply(as.matrix(c(1:mat_length)), 1, function(X) {
+      length(which(U[[X]] > 0))
+    }))
+    
+    Ftrans <- sum(apply(as.matrix(c(1:mat_length)), 1, function(X) {
+      length(which(F[[X]] > 0))
+    }))
+    
+    matrixqc[1] <- Utrans
+    matrixqc[2] <- Ftrans
+    
+  } else {
+    U <- NA
+    F <- NA
+    
+    Atrans <- sum(apply(as.matrix(c(1:mat_length)), 1, function(X) {
+      length(which(mats[[X]] > 0))
+    }))
+    
+    matrixqc[1] <- Atrans
+  }
+  
+  if (is.element("size", names(stageframe))) {
+    names(stageframe)[which(names(stageframe) == "size")] <- "original_size"
+  }
+  
+  if (!is.element("entrystage", names(stageframe))) {
+    stageframe$entrystage <- 0
+    stageframe$entrystage[entrystage] <- 1
+  }
+  
+  output <- list(A = mats, U = U, F = F, hstages = hstages, agestages = NA,
+    ahstages = cbind.data.frame(stage_id = c(1:numstages), stageframe),
+    labels = labels, matrixqc = matrixqc)
+  class(output) <- "lefkoMat"
+  
+  return(output)
+}
+

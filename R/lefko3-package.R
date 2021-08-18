@@ -2,10 +2,12 @@
 #' 
 #' @description This package creates population matrix projection models (MPMs)
 #' for use in population ecological analyses. Its specialty is the estimation
-#' of historical MPMs, which are 2-dimensional matrices comprising 3 time steps
-#' of demographic information. The package constructs both function-based and
-#' raw MPMs for both standard ahistorical (i.e. 2 time interval) and historical
-#' analyses.
+#' of historical MPMs, which are 2-dimensional matrices comprising 3 monitoring
+#' occasions (2 time steps or periods) of demographic information. The package
+#' constructs both function-based and raw MPMs for both standard ahistorical
+#' (i.e. 2 occasions, 1 period) and historical analyses, and can also produce
+#' age-by-stage MPMs and IPMs. It also includes powerful functions to
+#' standardize demographic datasets.
 #' 
 #' @details The lefko3 package provides six categories of functions:
 #' 

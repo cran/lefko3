@@ -51,8 +51,8 @@ to the output format provided by functions \code{\link{verticalize3}()} or
 designated.}
 
 \item{historical}{A logical variable denoting whether to assess the effects
-of state in time \emph{t}-1 in addition to state in time \emph{t}. Defaults
-to TRUE.}
+of state in occasion \emph{t}-1 in addition to state in occasion \emph{t}.
+Defaults to TRUE.}
 
 \item{approach}{The statistical approach to be taken for model building. The 
 default is \code{mixed}, which uses the mixed model approach utilized in 
@@ -85,26 +85,26 @@ probability; \code{obs}, observation probability; \code{size}, overall size;
 reproduction (overall fecundity). Defaults to \code{c("surv", "size", "fec")}.}
 
 \item{surv}{A vector indicating the variable names coding for status as alive
-or dead in times \emph{t}+1, \emph{t}, and \emph{t}-1, respectively. Defaults
-to \code{c("alive3", "alive2", "alive1")}.}
+or dead in occasions \emph{t}+1, \emph{t}, and \emph{t}-1, respectively.
+Defaults to \code{c("alive3", "alive2", "alive1")}.}
 
 \item{obs}{A vector indicating the variable names coding for observation
-status in times \emph{t}+1, \emph{t}, and \emph{t}-1, respectively. Defaults
-to \code{c("obsstatus3", "obsstatus2", "obsstatus1")}.}
+status in occasions \emph{t}+1, \emph{t}, and \emph{t}-1, respectively.
+Defaults to \code{c("obsstatus3", "obsstatus2", "obsstatus1")}.}
 
-\item{size}{A vector indicating the variable names coding for size in times
-\emph{t}+1, \emph{t}, and \emph{t}-1, respectively. Defaults to
+\item{size}{A vector indicating the variable names coding for size in
+occasions \emph{t}+1, \emph{t}, and \emph{t}-1, respectively. Defaults to
 \code{c("sizea3", "sizea2", "sizea1")}.}
 
 \item{repst}{A vector indicating the variable names coding for reproductive
-status in times \emph{t}+1, \emph{t}, and \emph{t}-1, respectively. Defaults
-to \code{c("repstatus3", "repstatus2", "repstatus1")}.}
+status in occasions \emph{t}+1, \emph{t}, and \emph{t}-1, respectively.
+Defaults to \code{c("repstatus3", "repstatus2", "repstatus1")}.}
 
 \item{fec}{A vector indicating the variable names coding for fecundity in
-times \emph{t}+1, \emph{t}, and \emph{t}-1, respectively. Defaults to
+occasions \emph{t}+1, \emph{t}, and \emph{t}-1, respectively. Defaults to
 \code{c("feca3", "feca2", "feca1")}.}
 
-\item{stage}{A vector indicating the variables coding for stage in times
+\item{stage}{A vector indicating the variables coding for stage in occasions
 \emph{t}+1, \emph{t}, and \emph{t}-1. Defaults to \code{c("stage3", "stage2",
 "stage1")}.}
 
@@ -115,18 +115,18 @@ identity. Defaults to \code{individ}.}
 patches are defined as permanent subgroups within the study population.
 Defaults to NA.}
 
-\item{year}{A variable indicating the variable coding for observation time in 
-time \emph{t}. Defaults to \code{year2}.}
+\item{year}{A variable indicating the variable coding for observation
+occasion \emph{t}. Defaults to \code{year2}.}
 
 \item{sizedist}{The probability distribution used to model size. Options
 include \code{gaussian} for the Normal distribution (default), \code{poisson}
 for the Poisson distribution, and \code{negbin} for the negative binomial
-distribution.}
+distribution (quadratic parameterization).}
 
 \item{fecdist}{The probability distribution used to model fecundity. Options
 include \code{gaussian} for the Normal distribution (default), \code{poisson}
 for the Poisson distribution, and \code{negbin} for the negative binomial
-distribution.}
+distribution (quadratic parameterization).}
 
 \item{size.zero}{A logical variable indicating whether size distribution 
 should be zero-inflated. Only applies to Poisson and negative binomial 
@@ -175,25 +175,25 @@ juveniles is zero-truncated. Defaults to FALSE. Cannot be TRUE if
 
 \item{fectime}{A variable indicating which year of fecundity to use as the
 response term in fecundity models. Options include \code{2}, which refers to
-time \emph{t}, and \code{3}, which refers to time \emph{t}+1. Defaults to
-\code{2}.}
+occasion \emph{t}, and \code{3}, which refers to occasion \emph{t}+1.
+Defaults to \code{2}.}
 
 \item{censor}{A vector denoting the names of censoring variables in the
-dataset, in order from time \emph{t}+1, followed by time \emph{t}, and lastly
-followed by time \emph{t}-1. Defaults to NA.}
+dataset, in order from occasion \emph{t}+1, followed by occasion \emph{t},
+and lastly followed by occasion \emph{t}-1. Defaults to NA.}
 
 \item{age}{Designates the name of the variable corresponding to age in the
 vertical dataset. Defaults to NA, in which case age is not included in linear
 models. Should only be used if building age x stage matrices.}
 
-\item{indcova}{Vector designating the names in times \emph{t}+1, \emph{t},
-and \emph{t}-1 of an individual covariate. Defaults to NA.}
+\item{indcova}{Vector designating the names in occasions \emph{t}+1,
+\emph{t}, and \emph{t}-1 of an individual covariate. Defaults to NA.}
 
-\item{indcovb}{Vector designating the names in times \emph{t}+1, \emph{t},
-and \emph{t}-1 of an individual covariate. Defaults to NA.}
+\item{indcovb}{Vector designating the names in occasions \emph{t}+1,
+\emph{t}, and \emph{t}-1 of an individual covariate. Defaults to NA.}
 
-\item{indcovc}{Vector designating the names in times \emph{t}+1, \emph{t},
-and \emph{t}-1 of an individual covariate. Defaults to NA.}
+\item{indcovc}{Vector designating the names in occasions \emph{t}+1,
+\emph{t}, and \emph{t}-1 of an individual covariate. Defaults to NA.}
 
 \item{show.model.tables}{If set to TRUE, then includes full modeling tables
 in the output. Defaults to TRUE.}
@@ -217,31 +217,34 @@ denoting the criterion used for model selection, and ending on a quality
 control vector:
 
 \item{survival_model}{Best-fit model of the binomial probability of survival
-from time \emph{t} to time \emph{t}+1. Defaults to 1.}
+from occasion \emph{t} to occasion \emph{t}+1. Defaults to 1.}
 \item{observation_model}{Best-fit model of the binomial probability of 
-observation in time \emph{t}+1 given survival to that time. Defaults to 1.}
-\item{size_model}{Best-fit model of size in time \emph{t}+1 given survival to
-and observation in that time. Defaults to 1.}
-\item{repstatus_model}{Best-fit model of the binomial probability of
-reproduction in time \emph{t}+1, given survival to and observation in that
-time. Defaults to 1.}
-\item{fecundity_model}{Best-fit model of fecundity in time \emph{t}+1 given 
-survival to, and observation and reproduction in that time. Defaults to 1.}
-\item{juv_survival_model}{Best-fit model of the binomial probability of
-survival from time \emph{t} to time \emph{t}+1 of an immature individual.
-Defaults to 1.}
-\item{juv_observation_model}{Best-fit model of the binomial probability of 
-observation in time \emph{t}+1 given survival to that time of an immature
-individual. Defaults to 1.}
-\item{juv_size_model}{Best-fit model of size in time \emph{t}+1 given
-survival to and observation in that time of an immature individual. Defaults
+observation in occasion \emph{t}+1 given survival to that occasion. Defaults
 to 1.}
+\item{size_model}{Best-fit model of size in occasion \emph{t}+1 given
+survival to and observation in that occasion. Defaults to 1.}
+\item{repstatus_model}{Best-fit model of the binomial probability of
+reproduction in occasion \emph{t}+1, given survival to and observation in
+that occasion. Defaults to 1.}
+\item{fecundity_model}{Best-fit model of fecundity in occasion \emph{t}+1
+given survival to, and observation and reproduction in that occasion.
+Defaults to 1.}
+\item{juv_survival_model}{Best-fit model of the binomial probability of
+survival from occasion \emph{t} to occasion \emph{t}+1 of an immature
+individual. Defaults to 1.}
+\item{juv_observation_model}{Best-fit model of the binomial probability of 
+observation in occasion \emph{t}+1 given survival to that occasion of an
+immature individual. Defaults to 1.}
+\item{juv_size_model}{Best-fit model of size in occasion \emph{t}+1 given
+survival to and observation in that occasion of an immature individual.
+Defaults to 1.}
 \item{juv_reproduction_model}{Best-fit model of the binomial probability of
-reproduction in time \emph{t}+1, given survival to and observation in that
-time of an individual that was immature in time \emph{t}. This model is
-technically not a model of reproduction probability for individuals that are
-immature, rather reproduction probability here is given for individuals that
-are mature in time \emph{t}+1 but immature in time \emph{t}. Defaults to 1.}
+reproduction in occasion \emph{t}+1, given survival to and observation in
+that occasion of an individual that was immature in occasion \emph{t}. This
+model is technically not a model of reproduction probability for individuals
+that are immature, rather reproduction probability here is given for
+individuals that are mature in occasion \emph{t}+1 but immature in occasion
+\emph{t}. Defaults to 1.}
 \item{survival_table}{Full dredge model table of survival probability.}
 \item{observation_table}{Full dredge model table of observation probability.}
 \item{size_table}{Full dredge model table of size.}
@@ -309,7 +312,7 @@ yet offer a parallelization option for function \code{modelsearch()}, but
 plan to offer one in the future to speed this process up for particularly
 large global models.
 
-Care must be taken to build models that test the impacts of state in time
+Care must be taken to build models that test the impacts of state in occasion
 \emph{t}-1 for historical models, and that do not test these impacts for
 ahistorical models. Ahistorical matrix modeling particularly will yield
 biased transition estimates if historical terms from models are ignored. This

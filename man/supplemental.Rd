@@ -20,14 +20,14 @@ supplemental(
 )
 }
 \arguments{
-\item{stage3}{The name of the stage in time \emph{t}+1 in the transition to
+\item{stage3}{The name of the stage in occasion \emph{t}+1 in the transition
+to be replaced. Abbreviations for groups of stages are also useable (see Notes).}
+
+\item{stage2}{The name of the stage in occasion \emph{t} in the transition to
 be replaced. Abbreviations for groups of stages are also useable (see Notes).}
 
-\item{stage2}{The name of the stage in time \emph{t} in the transition to be 
-replaced. Abbreviations for groups of stages are also useable (see Notes).}
-
-\item{stage1}{The name of the stage in time \emph{t}-1 in the transition to
-be replaced. Only needed if a historical matrix is to be produced.
+\item{stage1}{The name of the stage in occasion \emph{t}-1 in the transition
+to be replaced. Only needed if a historical matrix is to be produced.
 Abbreviations for groups of stages are also useable (see Notes).}
 
 \item{eststage3}{The name of the stage to replace \code{stage3}. Only needed
@@ -40,7 +40,7 @@ if a transition will be replaced by another estimated transition.}
 if a transition will be replaced by another estimated transition, and the
 matrix to be estimated is historical. Stage \code{NotAlive} is also possible
 for raw hMPMs, as a means of handling the prior stage for individuals
-entering the population in time \emph{t}.}
+entering the population in occasion \emph{t}.}
 
 \item{givenrate}{A fixed rate or probability to replace for the transition
 described by \code{stage3}, \code{stage2}, and \code{stage1}.}
@@ -48,19 +48,19 @@ described by \code{stage3}, \code{stage2}, and \code{stage1}.}
 \item{multiplier}{A vector of numeric multipliers for fecundity, and NA
 entries for all other terms.}
 
-\item{type}{A vector denoting the kind of transition between times \emph{t}
-and \emph{t}+1 to be replaced. This should be entered as \code{1}, \code{S},
-or \code{s} for the replacement of a survival transition; \code{2}, \code{F},
-or \code{f} for the replacement of a fecundity transition; or \code{3},
-\code{R}, or \code{r} for a fecundity multiplier. If empty or not provided,
-then defaults to \code{1} for survival transition.}
+\item{type}{A vector denoting the kind of transition between occasions
+\emph{t} and \emph{t}+1 to be replaced. This should be entered as \code{1},
+\code{S}, or \code{s} for the replacement of a survival transition; \code{2},
+\code{F}, or \code{f} for the replacement of a fecundity transition; or
+\code{3}, \code{R}, or \code{r} for a fecundity multiplier. If empty or not
+provided, then defaults to \code{1} for survival transition.}
 
 \item{type_t12}{An optional vector denoting the kind of transition between
-times \emph{t}-1 and \emph{t}. Only necessary if a historical MPM in deVries
-format is desired. This should be entered as \code{1}, \code{S}, or \code{s}
-for a survival transition; or \code{2}, \code{F}, or \code{f} for a fecundity
-transitions. Defaults to \code{1} for survival transition, with impacts only
-on the construction of deVries-format hMPMs.}
+occasions \emph{t}-1 and \emph{t}. Only necessary if a historical MPM in
+deVries format is desired. This should be entered as \code{1}, \code{S}, or
+\code{s} for a survival transition; or \code{2}, \code{F}, or \code{f} for a
+fecundity transitions. Defaults to \code{1} for survival transition, with
+impacts only on the construction of deVries-format hMPMs.}
 
 \item{stageframe}{The stageframe being used to produce the MPMs in the study.}
 
@@ -74,21 +74,22 @@ input in \code{\link{flefko3}()}, \code{\link{flefko2}()},
 \code{\link{aflefko2}()}.
 
 Variables in this object include the following:
-\item{stage3}{Stage at time \emph{t}+1 in the transition to be replaced.}
-\item{stage2}{Stage at time \emph{t} in the transition to be replaced.}
-\item{stage1}{Stage at time \emph{t}-1 in the transition to be replaced.}
-\item{eststage3}{Stage at time \emph{t}+1 in the transition to replace the
+\item{stage3}{Stage at occasion \emph{t}+1 in the transition to be replaced.}
+\item{stage2}{Stage at occasion \emph{t} in the transition to be replaced.}
+\item{stage1}{Stage at occasion \emph{t}-1 in the transition to be replaced.}
+\item{eststage3}{Stage at occasion \emph{t}+1 in the transition to replace
+the transition designated by \code{stage3}, \code{stage2}, and \code{stage1}.}
+\item{eststage2}{Stage at occasion \emph{t} in the transition to replace the
 transition designated by \code{stage3}, \code{stage2}, and \code{stage1}.}
-\item{eststage2}{Stage at time \emph{t} in the transition to replace the
-transition designated by \code{stage3}, \code{stage2}, and \code{stage1}.}
-\item{eststage1}{Stage at time \emph{t}-1 in the transition to replace the
-transition designated by \code{stage3}, \code{stage2}, and \code{stage1}.}
+\item{eststage1}{Stage at occasion \emph{t}-1 in the transition to replace
+the transition designated by \code{stage3}, \code{stage2}, and \code{stage1}.}
 \item{givenrate}{A constant to be used as the value of the transition.}
-\item{convtype}{Designates whether the transition from time \emph{t} to time
-\emph{t}+1 is a survival transition probability (1), a fecundity rate (2), or
-a fecundity multiplier (3).}
-\item{convtype_t12}{Designates whether the transition from time \emph{t}-1 to
-time \emph{t} is a survival transition probability (1), a fecundity rate (2).}
+\item{convtype}{Designates whether the transition from occasion \emph{t} to
+occasion \emph{t}+1 is a survival transition probability (1), a fecundity
+rate (2), or a fecundity multiplier (3).}
+\item{convtype_t12}{Designates whether the transition from occasion
+\emph{t}-1 tooccasion \emph{t} is a survival transition probability (1), a
+fecundity rate (2).}
 }
 \description{
 \code{supplemental()} provides all necessary supplemental data for matrix
@@ -184,15 +185,15 @@ cypraw_v1 <- verticalize3(data = cypdata, noyears = 6, firstyear = 2004,
   stageassign = cypframe_raw, stagesize = "sizeadded", NAas0 = TRUE,
   NRasRep = TRUE)
 
-cypsupp2r <- supplemental(stage3 = c("SD", "P1", "P2", "P3", "SL", "SL", "D", 
+cypsupp2r <- supplemental(stage3 = c("SD", "P1", "P2", "P3", "SL", "D", 
     "XSm", "Sm", "SD", "P1"),
-  stage2 = c("SD", "SD", "P1", "P2", "P3", "SL", "SL", "SL", "SL", "rep",
+  stage2 = c("SD", "SD", "P1", "P2", "P3", "SL", "SL", "SL", "rep",
     "rep"),
-  eststage3 = c(NA, NA, NA, NA, NA, NA, "D", "XSm", "Sm", NA, NA),
-  eststage2 = c(NA, NA, NA, NA, NA, NA, "XSm", "XSm", "XSm", NA, NA),
-  givenrate = c(0.10, 0.20, 0.20, 0.20, 0.25, 0.40, NA, NA, NA, NA, NA),
-  multiplier = c(NA, NA, NA, NA, NA, NA, NA, NA, NA, 0.5, 0.5),
-  type =c(1, 1, 1, 1, 1, 1, 1, 1, 1, 3, 3),
+  eststage3 = c(NA, NA, NA, NA, NA, "D", "XSm", "Sm", NA, NA),
+  eststage2 = c(NA, NA, NA, NA, NA, "XSm", "XSm", "XSm", NA, NA),
+  givenrate = c(0.10, 0.20, 0.20, 0.20, 0.25, NA, NA, NA, NA, NA),
+  multiplier = c(NA, NA, NA, NA, NA, NA, NA, NA, 0.5, 0.5),
+  type =c(1, 1, 1, 1, 1, 1, 1, 1, 3, 3),
   stageframe = cypframe_raw, historical = FALSE)
 
 cypmatrix2r <- rlefko2(data = cypraw_v1, stageframe = cypframe_raw, 

@@ -10,10 +10,10 @@ slambda3(mpm, times = 10000L, tweights = NULL)
 \item{mpm}{A matrix projection model of class \code{lefkoMat}, or a list of
 full matrix projection matrices.}
 
-\item{times}{Number of iterations to random samples. Defaults to 10,000.}
+\item{times}{Number of occasions to iterate. Defaults to 10,000.}
 
 \item{tweights}{Numeric vector denoting the probabilistic weightings of
-annual matrices. Defaults to equal weighting among times.}
+annual matrices. Defaults to equal weighting among occasions.}
 }
 \value{
 A data frame with the following variables:
@@ -21,25 +21,25 @@ A data frame with the following variables:
 \item{pop}{The identity of the population.}
 \item{patch}{The identity of the patch.}
 \item{a}{Estimate of stochastic growth rate, estimated as the arithmetic
-mean of the log population growth rate across simulated times.}
+mean of the log population growth rate across simulated occasions.}
 \item{var}{The estimated variance of a.}
 \item{sd}{The standard deviation of a.}
 \item{se}{The standard error of a.}
-
-Stochastic growth rate is estimated both at the patch level and at the
-population level. Population level estimates will be noted at the end of the
-data frame with 0 entries for patch designation.
 }
 \description{
 Function \code{slambda3()} estimates the stochastic population growth rate,
 \eqn{a}, defined as the long-term arithmetic mean of the log population 
-growth rate estimated per simulated time (as given in equation 2 in
+growth rate estimated per simulated occasion (as given in equation 2 in
 Tuljapurkar, Horvitz, and Pascarella 2003). This term is estimated via
 projection of randomly sampled matrices, similarly to the procedure outlined
 in Box 7.4 of Morris and Doak (2002). Can handle both lefkoMat objects and
 lists of full A matrices.
 }
 \section{Notes}{
+
+Stochastic growth rate is estimated both at the patch level and at the
+population level. Population level estimates will be noted at the end of the
+data frame with 0 entries for patch designation.
 
 Weightings given in \code{tweights} do not need to sum to 1. Final
 weightings used will be based on the proportion per element of the sum of
@@ -113,30 +113,29 @@ cypraw_v1 <- verticalize3(data = cypdata, noyears = 6, firstyear = 2004,
   stageassign = cypframe_raw, stagesize = "sizeadded", NAas0 = TRUE, 
   NRasRep = TRUE)
 
-rep_cyp_raw <- matrix(0, 11, 11)
-rep_cyp_raw[1:2,7:11] <- 0.5
-
-cypover3r <- overwrite(stage3 = c("SD", "SD", "P1", "P1", "P2", "P3", "SL", 
-    "SL", "SL", "D", "XSm", "Sm", "D", "XSm", "Sm"), 
-  stage2 = c("SD", "SD", "SD", "SD", "P1", "P2", "P3", "SL", "SL", "SL", 
-    "SL", "SL", "SL", "SL", "SL"),
-  stage1 = c("SD", "rep", "SD", "rep", "SD", "P1", "P2", "P3", "SL", "P3", 
-    "P3", "P3", "SL", "SL", "SL"),
-  eststage3 = c(NA, NA, NA, NA, NA, NA, NA, NA, NA, "D", "XSm", "Sm", "D", 
-    "XSm", "Sm"), 
-  eststage2 = c(NA, NA, NA, NA, NA, NA, NA, NA, NA, "XSm", "XSm", "XSm", 
-    "XSm", "XSm", "XSm"), 
-  eststage1 = c(NA, NA, NA, NA, NA, NA, NA, NA, NA, "XSm", "XSm", "XSm", 
-    "XSm", "XSm", "XSm"), 
-  givenrate = c(0.1, 0.1, 0.2, 0.2, 0.2, 0.2, 0.25, 0.4, 0.4, NA, NA, NA, 
-    NA, NA, NA), 
-  type = c("S", "S", "S", "S", "S", "S", "S", "S", "S", "S", "S", "S", "S", 
-    "S", "S"))
+cypsupp3r <- supplemental(stage3 = c("SD", "SD", "P1", "P1", "P2", "P3", "SL",
+    "D", "XSm", "Sm", "D", "XSm", "Sm", "SD", "P1"),
+  stage2 = c("SD", "SD", "SD", "SD", "P1", "P2", "P3", "SL", "SL", "SL", "SL",
+    "SL", "SL", "rep", "rep"),
+  stage1 = c("SD", "rep", "SD", "rep", "SD", "P1", "P2", "P3", "P3", "P3",
+    "SL", "SL", "SL", "mat", "mat"),
+  eststage3 = c(NA, NA, NA, NA, NA, NA, NA, "D", "XSm", "Sm", "D", "XSm", "Sm",
+    NA, NA),
+  eststage2 = c(NA, NA, NA, NA, NA, NA, NA, "XSm", "XSm", "XSm", "XSm", "XSm",
+    "XSm", NA, NA),
+  eststage1 = c(NA, NA, NA, NA, NA, NA, NA, "XSm", "XSm", "XSm", "XSm", "XSm",
+    "XSm", NA, NA),
+  givenrate = c(0.1, 0.1, 0.2, 0.2, 0.2, 0.2, 0.25, NA, NA, NA, NA, NA, NA,
+    NA, NA),
+  multiplier = c(NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, 0.5, 0.5),
+  type = c(1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 3, 3),
+  type_t12 = c(1, 2, 1, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1),
+  stageframe = cypframe_raw, historical = TRUE)
 
 cypmatrix3r <- rlefko3(data = cypraw_v1, stageframe = cypframe_raw, 
   year = "all", patch = "all", stages = c("stage3", "stage2", "stage1"),
   size = c("size3added", "size2added", "size1added"), 
-  repmatrix = rep_cyp_raw, overwrite = cypover3r, yearcol = "year2", 
+  supplement = cypsupp3r, yearcol = "year2", 
   patchcol = "patchid", indivcol = "individ")
 
 cypstoch <- slambda3(cypmatrix3r)

@@ -20,22 +20,22 @@ sf_distrib(
 \code{hfvdata}.}
 
 \item{size3}{The name or column number of the variable corresponding to size
-in time *t+1*.}
+in occasion *t+1*.}
 
 \item{size2}{The name or column number of the variable corresponding to size
-in time *t*. This term is required for both size and fecundity tests.}
+in occasion *t*. This term is required for both size and fecundity tests.}
 
 \item{obs3}{The name or column number of the variable corresponding to
-observation status in time *t+1*. This should be used if observation status
-will be used as a vital rate to absorb states of size = 0.}
+observation status in occasion *t+1*. This should be used if observation
+status will be used as a vital rate to absorb states of size = 0.}
 
 \item{fec}{The name or column number of the variable corresponding to
-fecundity. The name of the variable should correspond to the proper time,
-either time *t* or time *t*-1.}
+fecundity. The name of the variable should correspond to the proper occasion,
+either occasion *t* or occasion *t*-1.}
 
 \item{repst}{The name or column number of the variable corresponding to
-reproductive status in time *t*. Required if fecundity distribution will be
-tested.}
+reproductive status in occasion *t*. Required if fecundity distribution will
+be tested.}
 
 \item{zisize}{A logical value indicating whether to conduct a test of zero
 inflation in size. Defaults to TRUE.}
@@ -65,7 +65,7 @@ appropriate than a simple analysis of size and fecundity variables in
 
 The specific test used for overdispersion is a chi-squared test of the
 dispersion parameter estimated using a generalized linear model predicting
-the response given size in time *t*, under a quasi-Poisson distribution.
+the response given size in occasion *t*, under a quasi-Poisson distribution.
 
 The specific test used for zero-inflation is the chi-squared test presented
 in van der Broek (1995).

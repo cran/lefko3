@@ -21,7 +21,7 @@
 (\code{FALSE}) or stochastic (\code{TRUE}) analysis. Defaults to
 \code{FALSE}.}
 
-\item{times}{An integer variable indicating number of times to project if
+\item{times}{An integer variable indicating number of occasions to project if
 using stochastic analysis. Defaults to 10000.}
 
 \item{tweights}{An optional vector indicating the probability weighting to
@@ -54,22 +54,22 @@ If a historical matrix is used as input, then two data frames are output
 into a list object. The \code{$hist} element contains a data frame in which 
 the stable stage distribution is given in terms of across-year stage pairs.
 The structure includes the matrix number, the numeric stage designations for
-stages in times \emph{t} and \emph{t}-1, respectively, followed by the
+stages in occasions \emph{t} and \emph{t}-1, respectively, followed by the
 respective stage names, and ending with the estimated reproductive value for
 that stage within its matrix (\code{rep_value}). The \code{$ahist} element is
 a data frame showing the reproductive values of the basic stages in the
 associated stageframe. The reproductive values in this second data frame are
 estimated via the approach developed in Ehrlen (2000), in which each
 ahistorical stage's reproductive value is the average of the RVs summed by
-stage at time \emph{t} weighted by the proportion of that stage pair within
-the historical stable stage distribution associated with the matrix. Both
-historical and ahistorical reproductive values are scaled to the first non-
-zero reproductive value in each case.
+stage at occasion \emph{t} weighted by the proportion of that stage pair
+within the historical stable stage distribution associated with the matrix.
+Both historical and ahistorical reproductive values are scaled to the first
+non-zero reproductive value in each case.
 
 In addition to the data frames noted above, stochastic analysis will result
 in the additional output of a list of matrices containing the actual
-projected reproductive value vectors across all projected times, in the order
-of population-patch combinations in the \code{lefkoMat} input.
+projected reproductive value vectors across all projected occasions, in the
+order of population-patch combinations in the \code{lefkoMat} input.
 }
 \description{
 \code{repvalue3.lefkoMat()} returns the reproductive values for stages in a
@@ -81,13 +81,13 @@ ahistorical matrices.
 \section{Notes}{
 
 In stochastic analysis, the projected mean reproductive value vector is the
-arithmetic mean across the final projected 1000 times if the simulation is at
-least 2000 projected times long. If between 500 and 2000 projected times
-long, then only the final 200 are used, and if fewer than 500 times are used,
-then all are used. Note that because reproductive values in stochastic
-simulations can change greatly in the initial portion of the run, we
-encourage a minimum 2000 projected times per simulation, with 10000
-preferred.
+arithmetic mean across the final projected 1000 occasions if the simulation
+is at least 2000 projected occasions long. If between 500 and 2000 projected
+occasions long, then only the final 200 are used, and if fewer than 500
+occasions are used, then all are used. Note that because reproductive values
+in stochastic simulations can change greatly in the initial portion of the
+run, we encourage a minimum 2000 projected occasions per simulation, with
+10000 preferred.
 }
 
 \examples{
@@ -162,22 +162,22 @@ cypraw_v1 <- verticalize3(data = cypdata, noyears = 6, firstyear = 2004,
   NRasRep = TRUE)
 
 # Here we use supplemental() to provide overwrite and reproductive info
-cypsupp2r <- supplemental(stage3 = c("SD", "P1", "P2", "P3", "SL", "SL", "D", 
+cypsupp2r <- supplemental(stage3 = c("SD", "P1", "P2", "P3", "SL", "D", 
     "XSm", "Sm", "SD", "P1"),
-  stage2 = c("SD", "SD", "P1", "P2", "P3", "SL", "SL", "SL", "SL", "rep",
+  stage2 = c("SD", "SD", "P1", "P2", "P3", "SL", "SL", "SL", "rep",
     "rep"),
-  eststage3 = c(NA, NA, NA, NA, NA, NA, "D", "XSm", "Sm", NA, NA),
-  eststage2 = c(NA, NA, NA, NA, NA, NA, "XSm", "XSm", "XSm", NA, NA),
-  givenrate = c(0.10, 0.20, 0.20, 0.20, 0.25, 0.40, NA, NA, NA, NA, NA),
-  multiplier = c(NA, NA, NA, NA, NA, NA, NA, NA, NA, 0.5, 0.5),
-  type =c(1, 1, 1, 1, 1, 1, 1, 1, 1, 3, 3),
+  eststage3 = c(NA, NA, NA, NA, NA, "D", "XSm", "Sm", NA, NA),
+  eststage2 = c(NA, NA, NA, NA, NA, "XSm", "XSm", "XSm", NA, NA),
+  givenrate = c(0.10, 0.20, 0.20, 0.20, 0.25, NA, NA, NA, NA, NA),
+  multiplier = c(NA, NA, NA, NA, NA, NA, NA, NA, 0.5, 0.5),
+  type =c(1, 1, 1, 1, 1, 1, 1, 1, 3, 3),
   stageframe = cypframe_raw, historical = FALSE)
 
 cypmatrix2r <- rlefko2(data = cypraw_v1, stageframe = cypframe_raw, 
   year = "all", patch = "all", stages = c("stage3", "stage2", "stage1"),
   size = c("size3added", "size2added"), supplement = cypsupp2r,
   yearcol = "year2", patchcol = "patchid", indivcol = "individ")
-                       
+
 repvalue3(cypmatrix2r, stochastic = TRUE)
 
 }

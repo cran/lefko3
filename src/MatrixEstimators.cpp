@@ -836,8 +836,8 @@ List jerzeibalowski(DataFrame ppy, DataFrame AllStages, DataFrame stageframe,
                   (sizecoefs(90) * indb * indc) + (sizecoefs(91) * indb * indc) + 
                   sizepatchzi(patchnumber) + sizeyearzi(yearnumber) + sizedev + (summedvars / 2));
                 
-                if (lambda_preexp > 700) {
-                  lambda = exp(static_cast<double>(700));
+                if (lambda_preexp > 500) {
+                  lambda = exp(static_cast<double>(500));
                 } else lambda = exp(lambda_preexp);
                 out(i, 3) = (lambda) / (1 + (lambda));
                 
@@ -908,8 +908,8 @@ List jerzeibalowski(DataFrame ppy, DataFrame AllStages, DataFrame stageframe,
                   sizepatchzi(patchnumber) + sizeyearzi(yearnumber) + sizedev + 
                   (summedvars / 2));
                 
-                if (mu_preexp > 700) {
-                  mu = exp(static_cast<double>(700));
+                if (mu_preexp > 500) {
+                  mu = exp(static_cast<double>(500));
                 } else mu = exp(mu_preexp);
                 
                 out(i, 3) = (mu) / (1 + (mu));
@@ -943,8 +943,8 @@ List jerzeibalowski(DataFrame ppy, DataFrame AllStages, DataFrame stageframe,
                 } else mu = exp(mu_preexp);
                 
                 double theta = sizesigma;
-                if (theta > 1000000000) {
-                  theta = 1000000000;
+                if (theta > 100000000) {
+                  theta = 100000000;
                 }
                 double alpha = 1 / theta;
                 
@@ -1035,7 +1035,7 @@ List jerzeibalowski(DataFrame ppy, DataFrame AllStages, DataFrame stageframe,
               (repstcoefs(44) * indb * indc) + (repstcoefs(45) * indb * indc) + 
               repstpatch(patchnumber) + repstyear(yearnumber) + repstdev);
             
-            if (preout(2) > 700) preout(2) = 700;
+            if (preout(2) > 500) preout(2) = 500;
             
             out(i, 2) = exp(preout(2)) / (1 + exp(preout(2)));
             
@@ -1070,7 +1070,7 @@ List jerzeibalowski(DataFrame ppy, DataFrame AllStages, DataFrame stageframe,
         if (jsurvl > 1) {
           preout(0) = (jsurvcoefs(0) + jsurvpatch(patchnumber) + jsurvyear(yearnumber) + jsurvdev);
           
-          if (preout(0) > 700) preout(0) = 700;
+          if (preout(0) > 500) preout(0) = 500;
           
           out(i, 0) = exp(preout(0)) / (1 + exp(preout(0)));
         } else {
@@ -1080,7 +1080,7 @@ List jerzeibalowski(DataFrame ppy, DataFrame AllStages, DataFrame stageframe,
         if (jobsl > 1) {
           preout(1) = (jobscoefs(0) + jobspatch(patchnumber) + jobsyear(yearnumber) + jobsdev);
           
-          if (preout(1) > 700) preout(1) = 700;
+          if (preout(1) > 500) preout(1) = 500;
           
           out(i, 1) = exp(preout(1)) / (1 + exp(preout(1)));
           
@@ -1097,8 +1097,8 @@ List jerzeibalowski(DataFrame ppy, DataFrame AllStages, DataFrame stageframe,
                 lambda_preexp = (jsizecoefs(46) + jsizepatchzi(patchnumber) + 
                   jsizeyearzi(yearnumber) + jsizedev + (jsummedvars / 2));
                 
-                if (lambda_preexp > 700) {
-                  lambda = exp(static_cast<double>(700));
+                if (lambda_preexp > 500) {
+                  lambda = exp(static_cast<double>(500));
                 } else lambda = exp(lambda_preexp);
                 
                 out(i, 3) = (lambda) / (1 + (lambda));
@@ -1124,8 +1124,8 @@ List jerzeibalowski(DataFrame ppy, DataFrame AllStages, DataFrame stageframe,
               if (jsizezero == TRUE && sz3(i) == 0) {
                 mu_preexp = (jsizecoefs(46) + jsizepatchzi(patchnumber) + jsizeyearzi(yearnumber) + jsizedev);
                 
-                if (mu_preexp > 700) {
-                  mu = exp(static_cast<double>(700));
+                if (mu_preexp > 500) {
+                  mu = exp(static_cast<double>(500));
                 } else mu = exp(mu_preexp);
                 
                 out(i, 3) = (mu) / (1 + (mu));
@@ -1137,8 +1137,8 @@ List jerzeibalowski(DataFrame ppy, DataFrame AllStages, DataFrame stageframe,
                 } else mu = exp(mu_preexp);
                 
                 double theta = jsizesigma;
-                if (theta > 1000000000) {
-                  theta = 1000000000;
+                if (theta > 100000000) {
+                  theta = 100000000;
                 }
                 double alpha = 1 / theta;
                 
@@ -1182,7 +1182,7 @@ List jerzeibalowski(DataFrame ppy, DataFrame AllStages, DataFrame stageframe,
             
             preout(2) = (jrepstcoefs(0) + jrepstpatch(patchnumber) + jrepstyear(yearnumber) + jrepstdev);
             
-            if (preout(2) > 700) preout(2) = 700;
+            if (preout(2) > 500) preout(2) = 500;
             
             out(i, 2) = exp(preout(2)) / (1 + exp(preout(2)));
             
@@ -1281,13 +1281,13 @@ List jerzeibalowski(DataFrame ppy, DataFrame AllStages, DataFrame stageframe,
               
               if (feczero == TRUE && sz3(i) == 0) {
                 
-                if (preoutx > 700) preoutx = 700;
+                if (preoutx > 500) preoutx = 500;
                 
                 fectransmat(k) = (exp(preoutx) / (1+exp(preoutx))) * fecmod * repentry(i);
                 
               } else {
               
-                if (preoutx > 700) preoutx = 700;
+                if (preoutx > 500) preoutx = 500;
                 
                 fectransmat(k) = exp(preoutx) * fecmod * repentry(i);
               }
@@ -1368,13 +1368,13 @@ List jerzeibalowski(DataFrame ppy, DataFrame AllStages, DataFrame stageframe,
               
               if (feczero == TRUE && sz3(i) == 0) {
                 
-                if (preoutx > 700) preoutx = 700;
+                if (preoutx > 500) preoutx = 500;
                 
                 fectransmat(k) = (exp(preoutx) / (1+exp(preoutx))) * fecmod * repentry(i);
                 
               } else {
               
-                if (preoutx > 700) preoutx = 700;
+                if (preoutx > 500) preoutx = 500;
                 
                 fectransmat(k) = exp(preoutx) * fecmod * repentry(i);
               }

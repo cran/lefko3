@@ -48,7 +48,7 @@ flefko3(
 )
 }
 \arguments{
-\item{year}{A variable corresponding to year or observation time, or a set
+\item{year}{A variable corresponding to the observation occasion, or a set
 of such values, given in values associated with the year term used in linear 
 model development. Can also equal \code{all}, in which case matrices will
 be estimated for all years. Defaults to \code{all}.}
@@ -83,7 +83,7 @@ linear models, and that fecundity will be into the first stage noted as
 propagule or immature. To prevent this behavior, input just \code{0}, which
 will result in fecundity being estimated only for transitions noted in
 \code{supplement} above. May be the dimensions of either a historical or an
-ahistorical matrix. If the latter, then all stages will be used in time
+ahistorical matrix. If the latter, then all stages will be used in occasion
 \emph{t}-1 for each suggested ahistorical transition.}
 
 \item{overwrite}{An optional data frame developed with the
@@ -100,63 +100,63 @@ models. If given, then \code{surv_model}, \code{obs_model},
 \code{size_model}, \code{repst_model}, \code{fec_model}, \code{jsurv_model},
 \code{jobs_model}, \code{jsize_model}, \code{jrepst_model},
 \code{paramnames}, \code{yearcol}, and \code{patchcol} are not required. One
-or more of these models should include size or reproductive status in time
+or more of these models should include size or reproductive status in occasion
 \emph{t}-1.}
 
 \item{surv_model}{A linear model predicting survival probability. This can 
 be a model of class \code{glm} or \code{glmer}, and requires a predicted
 binomial variable under a logit link. If given, then will overwrite any
 survival probability model given in \code{modelsuite}. This model must have
-been developed in a modeling exercise testing the impacts of times \emph{t}
-and \emph{t}-1.}
+been developed in a modeling exercise testing the impacts of occasions
+\emph{t} and \emph{t}-1.}
 
 \item{obs_model}{A linear model predicting sprouting or observation
 probability. This can be a model of class \code{glm} or \code{glmer}, and
 requires a predicted binomial variable under a logit link. If given, then 
 will overwrite any observation probability model given in \code{modelsuite}.
 This model must have been developed in a modeling exercise testing the
-impacts of times \emph{t} and \emph{t}-1.}
+impacts of occasions \emph{t} and \emph{t}-1.}
 
 \item{size_model}{A linear model predicting size. This can be a model of
 class \code{glm} or \code{glmer}, both of which require a predicted poisson
 variable under a log link, or a model of class \code{lm} or \code{lmer}, in
 which a Gaussian response is assumed. If given, then will overwrite any size
 model given in \code{modelsuite}.This model must have been developed in a
-modeling exercise testing the impacts of times \emph{t} and \emph{t}-1.}
+modeling exercise testing the impacts of occasions \emph{t} and \emph{t}-1.}
 
 \item{repst_model}{A linear model predicting reproduction probability. This 
 can be a model of class \code{glm} or \code{glmer}, and requires a predicted
 binomial variable under a logit link. If given, then will overwrite any
 reproduction probability model given in \code{modelsuite}. This model must
-have been developed in a modeling exercise testing the impacts of times
+have been developed in a modeling exercise testing the impacts of occasions
 \emph{t} and \emph{t}-1.}
 
 \item{fec_model}{A linear model predicting fecundity. This can be a model of
 class \code{glm} or \code{glmer}, and requires a predicted poisson variable
 under a log link. If given, then will overwrite any fecundity model given in 
 \code{modelsuite}. This model must have been developed in a modeling exercise 
-testing the impacts of times \emph{t} and \emph{t}-1.}
+testing the impacts of occasions \emph{t} and \emph{t}-1.}
 
 \item{jsurv_model}{A linear model predicting juvenile survival probability.
 This can be a model of class \code{glm} or \code{glmer}, and requires a
 predicted binomial variable under a logit link. If given, then will overwrite
 any juvenile survival probability model given in \code{modelsuite}. This
 model must have been developed in a modeling exercise testing the impacts of
-times \emph{t} and \emph{t}-1.}
+occasions \emph{t} and \emph{t}-1.}
 
 \item{jobs_model}{A linear model predicting juvenile sprouting or observation
 probability. This can be a model of class \code{glm} or \code{glmer}, and
 requires a predicted binomial variable under a logit link. If given, then
 will overwrite any juvenile observation probability model given in 
 \code{modelsuite}. This model must have been developed in a modeling exercise
-testing the impacts of times \emph{t} and \emph{t}-1.}
+testing the impacts of occasions \emph{t} and \emph{t}-1.}
 
 \item{jsize_model}{A linear model predicting juvenile size. This can be a
 model of class \code{glm} or \code{glmer}, both of which require a predicted
 poisson variable under a log link, or a model of class \code{lm} or 
 \code{lmer}, in which a Gaussian response is assumed. If given, then will
 overwrite any juvenile size model given in \code{modelsuite}. This model must
-have been developed in a modeling exercise testing the impacts of times
+have been developed in a modeling exercise testing the impacts of occasions
 \emph{t} and \emph{t}-1.}
 
 \item{jrepst_model}{A linear model predicting reproduction probability of a 
@@ -164,8 +164,8 @@ mature individual that was immature in the previous year. This can be a model
 of class \code{glm} or \code{glmer}, and requires a predicted binomial
 variable under a logit link. If given, then will overwrite any reproduction
 probability model given in \code{modelsuite}. This model must have been
-developed in a modeling exercise testing the impacts of times \emph{t} and
-\emph{t}-1.}
+developed in a modeling exercise testing the impacts of occasions \emph{t}
+and \emph{t}-1.}
 
 \item{paramnames}{A dataframe with two columns, the first showing the general
 model terms that will be used in matrix creation, and the second showing the
@@ -208,15 +208,16 @@ linear model for juvenile reproduction probability.}
 \item{repmod}{A scalar multiplier of fecundity. Defaults to 1.}
 
 \item{yearcol}{The variable name or column number corresponding to year 
-in time \emph{t} in the dataset. Not needed if \code{modelsuite} is supplied.}
+in occasion \emph{t} in the dataset. Not needed if \code{modelsuite} is
+supplied.}
 
 \item{patchcol}{The variable name or column number corresponding to patch in 
 the dataset. Not needed if \code{modelsuite} is supplied.}
 
 \item{year.as.random}{A logical term indicating whether coefficients for
 missing patches within vital rate models should be estimated as random
-intercepts. Defaults to FALSE, in which case missing time step coefficients 
-are set to 0.}
+intercepts. Defaults to FALSE, in which case missing coefficients
+corresponding to observation occasions are set to 0.}
 
 \item{patch.as.random}{A logical term indicating whether coefficients for
 missing patches within vital rate models should be estimated as random
@@ -224,7 +225,7 @@ intercepts. Defaults to FALSE, in which case missing patch coefficients
 are set to 0.}
 
 \item{randomseed}{A numeric value used as a seed to generate random estimates
-for missing time step and patch coefficients, if either \code{year.as.random}
+for missing occasion and patch coefficients, if either \code{year.as.random}
 or \code{patch.as.random} is set to TRUE. Defaults to 
 \code{\link{set.seed}()} default.}
 
@@ -247,8 +248,9 @@ developed internally and can be used for erroc checking. Defaults to FALSE.}
 }
 \value{
 If all inputs are properly formatted, then this function will return
-an object of class \code{lefkoMat}, which is a list with the following
-elements:
+an object of class \code{lefkoMat}, which is a list that holds the matrix
+projection model and all of its metadata. Its structure is a list with the
+following elements:
 
 \item{A}{A list of full projection matrices in order of sorted patches and
 years. All matrices output in the \code{matrix} class.}
@@ -258,8 +260,8 @@ matrices output in the \code{matrix} class.}
 output in the \code{matrix} class.}
 \item{hstages}{A data frame matrix showing the pairing of ahistorical stages
 used to create historical stage pairs.}
-\item{agestages}{Set to NA. Only used in output to function
-\code{aflefko2}().}
+\item{agestages}{A data frame showing age-stage pairs. In this function, it
+is set to NA. Only used in output to function \code{aflefko2}().}
 \item{ahstages}{A data frame detailing the characteristics of associated
 ahistorical stages, in the form of a modified stageframe that includes
 status as an entry stage through reproduction.}
@@ -299,9 +301,9 @@ input those given and proxy transitions through the \code{overwrite} option.
 
 The reproduction matrix (field \code{repmatrix}) may be supplied as either
 historical or ahistorical. If provided as ahistorical, then \code{flefko3()}
-will assume that all historical transitions involving stages noted for times
-\emph{t} and \emph{t}+1 should be set to the respective fecundity multipliers
-noted.
+will assume that all historical transitions involving stages noted for
+occasions \emph{t} and \emph{t}+1 should be set to the respective fecundity
+multipliers noted.
 
 Users may at times wish to estimate MPMs using a dataset incorporating
 multiple patches or subpopulations. Should the aim of analysis be a general
@@ -309,8 +311,8 @@ MPM that does not distinguish these patches or subpopulations, the
 \code{patchcol} variable should be left to NA, which is the default.
 
 Input options including multiple variable names must be entered in the order
-of variables in time \emph{t}+1, \emph{t}, and \emph{t}-1. Rearranging the
-order WILL lead to erroneous calculations, and will probably also lead to
+of variables in occasion \emph{t}+1, \emph{t}, and \emph{t}-1. Rearranging
+the order WILL lead to erroneous calculations, and will probably also lead to
 fatal errors.
 
 Using the \code{err_check} option will produce a matrix of 4 columns, each

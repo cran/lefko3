@@ -10,6 +10,7 @@
   steps = 10000,
   time_weights = NA,
   sparse = "auto",
+  append_mats = FALSE,
   ...
 )
 }
@@ -20,15 +21,18 @@
 deterministic (FALSE) or stochastic (TRUE) sensitivity analysis. Defaults to
 FALSE.}
 
-\item{steps}{The number of times to project forward in stochastic simulation.
-Defaults to 10,000.}
+\item{steps}{The number of occasions to project forward in stochastic
+simulation. Defaults to 10,000.}
 
 \item{time_weights}{Numeric vector denoting the probabilistic weightings of
-annual matrices. Defaults to equal weighting among times.}
+annual matrices. Defaults to equal weighting among occasions.}
 
 \item{sparse}{A text string indicating whether to use sparse matrix encoding
 (\code{"yes"}) or dense matrix encoding (\code{"no"}). Defaults to
 \code{"auto"}.}
+
+\item{append_mats}{A logical value indicating whether to include the original
+A, U, and F matrices in the output \code{lefkoSens} object.}
 
 \item{...}{Other parameters.}
 }
@@ -49,12 +53,12 @@ stages. The last 3 elements are the A, U, and F portions of the input.
 \description{
 \code{sensitivity3.lefkoMat()} returns the sensitivities of population growth
 rate to elements of all \code{$A} matrices in an object of class
-\code{lefkoMat}. If deterministic, then \eqn{\lambda} is taken as the population
-growth rate. If stochastic, then the log of stochastic \eqn{\lambda}, or
-the log stochastic growth rate, is taken as the population growth rate. This
-function can handle large and sparse matrices, and so can be used with large
-historical matrices, IPMs, age x stage matrices, as well as smaller
-ahistorical matrices.
+\code{lefkoMat}. If deterministic, then \eqn{\lambda} is taken as the
+population growth rate. If stochastic, then the log of stochastic
+\eqn{\lambda}, or the log stochastic growth rate, is taken as the population
+growth rate. This function can handle large and sparse matrices, and so can
+be used with large historical matrices, IPMs, age x stage matrices, as well
+as smaller ahistorical matrices.
 }
 \section{Notes}{
 
@@ -134,15 +138,15 @@ cypraw_v1 <- verticalize3(data = cypdata, noyears = 6, firstyear = 2004,
   stageassign = cypframe_raw, stagesize = "sizeadded", NAas0 = TRUE,
   NRasRep = TRUE)
 
-cypsupp2r <- supplemental(stage3 = c("SD", "P1", "P2", "P3", "SL", "SL", "D", 
+cypsupp2r <- supplemental(stage3 = c("SD", "P1", "P2", "P3", "SL", "D", 
     "XSm", "Sm", "SD", "P1"),
-  stage2 = c("SD", "SD", "P1", "P2", "P3", "SL", "SL", "SL", "SL", "rep",
+  stage2 = c("SD", "SD", "P1", "P2", "P3", "SL", "SL", "SL", "rep",
     "rep"),
-  eststage3 = c(NA, NA, NA, NA, NA, NA, "D", "XSm", "Sm", NA, NA),
-  eststage2 = c(NA, NA, NA, NA, NA, NA, "XSm", "XSm", "XSm", NA, NA),
-  givenrate = c(0.10, 0.20, 0.20, 0.20, 0.25, 0.40, NA, NA, NA, NA, NA),
-  multiplier = c(NA, NA, NA, NA, NA, NA, NA, NA, NA, 0.5, 0.5),
-  type =c(1, 1, 1, 1, 1, 1, 1, 1, 1, 3, 3),
+  eststage3 = c(NA, NA, NA, NA, NA, "D", "XSm", "Sm", NA, NA),
+  eststage2 = c(NA, NA, NA, NA, NA, "XSm", "XSm", "XSm", NA, NA),
+  givenrate = c(0.10, 0.20, 0.20, 0.20, 0.25, NA, NA, NA, NA, NA),
+  multiplier = c(NA, NA, NA, NA, NA, NA, NA, NA, 0.5, 0.5),
+  type =c(1, 1, 1, 1, 1, 1, 1, 1, 3, 3),
   stageframe = cypframe_raw, historical = FALSE)
 
 cypmatrix2r <- rlefko2(data = cypraw_v1, stageframe = cypframe_raw, 
