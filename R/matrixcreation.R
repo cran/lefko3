@@ -1671,6 +1671,8 @@ rlefko3 <- function(data, stageframe, year = "all", pop = NA, patch = NA,
     
     if (length(listofyears) > 1) {
       listofyears <- do.call(rbind.data.frame, listofyears)
+    } else {
+      listofyears <- listofyears[[1]]
     }
   } else if (!all(is.na(pop)) & all(is.na(patch))) {
     if (is.na(popcol)) {stop("Need population designation variable to proceed.", call. = FALSE)}
@@ -1691,6 +1693,8 @@ rlefko3 <- function(data, stageframe, year = "all", pop = NA, patch = NA,
     
     if (length(listofyears) > 1) {
       listofyears <- do.call(rbind.data.frame, listofyears)
+    } else {
+      listofyears <- listofyears[[1]]
     }
   } else if (all(is.na(pop)) & all(is.na(patch))) {
     listofyears <- cbind.data.frame("1", "1", year, stringsAsFactors = FALSE)
@@ -2421,6 +2425,8 @@ rlefko2 <- function(data, stageframe, year = "all", pop = NA, patch = NA,
     
     if (length(listofyears) > 1) {
       listofyears <- do.call(rbind.data.frame, listofyears)
+    } else {
+      listofyears <- listofyears[[1]]
     }
   } else if (!all(is.na(pop)) & all(is.na(patch))) {
     if (is.na(popcol)) {
@@ -2442,6 +2448,8 @@ rlefko2 <- function(data, stageframe, year = "all", pop = NA, patch = NA,
     
     if (length(listofyears) > 1) {
       listofyears <- do.call(rbind.data.frame, listofyears)
+    } else {
+      listofyears <- listofyears[[1]]
     }
   } else if (all(is.na(pop)) & all(is.na(patch))) {
     listofyears <- cbind.data.frame("1", "1", year, stringsAsFactors = FALSE)
@@ -2897,7 +2905,7 @@ rlefko2 <- function(data, stageframe, year = "all", pop = NA, patch = NA,
 #' \code{overwrite} option.
 #' 
 #' The reproduction matrix (field \code{repmatrix}) may only be supplied as
-#' ahistorical. If provided as historical, then \code{flefko2()} will fail and
+#' ahistorical. If provided as historical, then \code{aflefko2()} will fail and
 #' produce an error.
 #' 
 #' Users may at times wish to estimate MPMs using a dataset incorporating
@@ -2915,6 +2923,11 @@ rlefko2 <- function(data, stageframe, year = "all", pop = NA, patch = NA,
 #' element in the associated \code{$U} matrix. The number and order of elements
 #' in each column of this matrix matches the associated matrix in column vector
 #' format. Use of this option is generally for the purposes of debugging code.
+#' 
+#' Users may produce age-based (Leslie) MPMs using this function. In that case,
+#' stages must be defined as occurring serially within single ages in the
+#' \code{stageframe}, with the possible exception of the final stage (which
+#' sometimes involves a perpetual stasis transition)..
 #'
 #' @examples
 #' \donttest{
@@ -3286,7 +3299,8 @@ aflefko2 <- function(year = "all", patch = "all", stageframe, supplement = NA,
 #'
 #' A function to simplify the viewing of basic information describing the
 #' matrices produced through functions \code{\link{flefko3}()},
-#' \code{\link{flefko2}()}, \code{\link{rlefko3}()}, and \code{\link{rlefko2}()}.
+#' \code{\link{flefko2}()}, \code{\link{rlefko3}()}, \code{\link{rlefko2}()},
+#' and \code{\link{aflefko2}()}.
 #' 
 #' @param object An object of class \code{lefkoMat}.
 #' @param colsums A logical value indicating whether column sums should be shown

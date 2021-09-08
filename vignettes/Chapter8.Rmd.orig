@@ -48,7 +48,8 @@ data(lathyrus)
 
   <p style="text-indent: 20px">To begin, we will create a **stageframe** for this dataset. A stageframe is a data frame that describes all stages in the life history of the organism, in a way usable by the functions in this package and using stage names and classifications that completely match those used in the dataset. It links the dataset and our analyses to our life history model. In this case, the life history model is a life cycle graph (Fig. 8.1). This model is based on the life history model provided in Ehrlén [-@ehrlen_dynamics_2000], but we utilize a different size classification based on the log leaf volume to make the size distribution more closely match a symmetric and somewhat normal distribution.</p>
   
-<img src = "lathfun3.png" width = "700"></img>
+<img src = "lathfun3.png" width = "700"></img>  
+
 **Figure 8.1.** Life history model of *Lathyrus vernus* using the log leaf volume as the size classification metric.
   
   <p style="text-indent: 20px">Our stageframe needs to include complete descriptions of all stages that occur in the dataset, with each stage defined uniquely, and also needs to describe for each stage portrayed in our life history model. Since this object can be used for automated classification of individuals, all sizes, reproductive states, and other characteristics defining each stage in the dataset need to be accounted for explicitly. This can be difficult if a few data points exist outside the range of sizes specified in the stageframe, because such situations generally lead to errors down the line. So, great care must be taken to include all size values and values of other descriptor variables occurring within the dataset. The final description of each stage occurring in the dataset must not completely overlap with any other stage also found in the dataset, although partial overlap is allowed and expected.</p>

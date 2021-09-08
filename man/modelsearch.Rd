@@ -2,7 +2,7 @@
 % Please edit documentation in R/modelselection.R
 \name{modelsearch}
 \alias{modelsearch}
-\title{Develop Best-fit Vital Rate Estimation Models For MPM Development}
+\title{Develop Best-fit Vital Rate Estimation Models for MPM Development}
 \usage{
 modelsearch(
   data,

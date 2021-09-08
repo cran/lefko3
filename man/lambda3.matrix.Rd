@@ -22,7 +22,7 @@ This function returns the dominant eigenvalue of the matrix.
 \code{lambda3.matrix()} returns the dominant eigenvalue of a single
 projection matrix. This function can handle large and sparse matrices, so can
 be used with large historical matrices, IPMs, age x stage matrices, as well
-as smaller ahistorical matrices.
+as ahistorical matrices.
 }
 \section{Notes}{
 
@@ -30,7 +30,7 @@ The \code{sparse} option allows the function to utilize underlying methods
 of either dense or sparse matrix manipulation in order to speed up processing
 time and prevent memory shortages. Under the \code{auto} setting, the
 function will determine whether the matrix is sparse and act accordingly.
-For extremely largem sparse matrices, the user may simply set
+For extremely large sparse matrices, the user may simply set
 \code{sparse = "yes"} to save time further and force the use of sparse format
 in calculations.
 }

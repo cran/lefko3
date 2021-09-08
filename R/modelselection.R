@@ -1,4 +1,4 @@
-#' Develop Best-fit Vital Rate Estimation Models For MPM Development
+#' Develop Best-fit Vital Rate Estimation Models for MPM Development
 #' 
 #' Function \code{modelsearch()} returns both a best-fit model for each vital
 #' rate, and a model table showing all models tested. The final output can be
@@ -1614,8 +1614,9 @@ modelsearch <- function(data, historical = TRUE, approach = "mixed",
 
 #' Core Global Model Builder for .headmaster_ritual()
 #' 
-#' A function that gets used repeatedly within .headmaster_ritual() to build the
-#' global model to be dredged in function \code{modelsearch()}.
+#' A function that gets used repeatedly within 
+#' \code{\link{.headmaster_ritual}()} to build the global model to be dredged in
+#' function \code{modelsearch()}.
 #' 
 #' @param usedformula The formula to be used in the linear modeling call.
 #' @param subdata The data subset to be used in the linear modeling call.

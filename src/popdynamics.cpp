@@ -1539,17 +1539,21 @@ arma::mat proj3sp(arma::vec start_vec, List core_list, arma::uvec mat_order,
   }
 }
 
-//' Estimate Stochastic Population Growth Rate
+//' Conduct Population Projection Simulations
 //' 
-//' Function \code{projection3()} projects the population forward in time by
-//' a user-defined number of occasions. Projections may be deterministic or
+//' Function \code{projection3()} runs projection simulations. It projects the
+//' population forward in time by a user-defined number of occasions, and can
+//' perform these projections as replicates. Projections may be deterministic or
 //' stochastic. If deterministic, then projections will be cyclical if matrices
-//' exist covering multiple occasions for each population or patch. If stochastic,
-//' then annual matrices will be shuffled within patches and populations.
+//' exist covering multiple occasions for each population or patch. If
+//' stochastic, then annual matrices will be shuffled within patches and
+//' populations. There is no limit to the number of replicates.
 //' 
 //' @param mpm A matrix projection model of class \code{lefkoMat}, or a list of
 //' full matrix projection matrices.
-//' @param times Number of occasions to iterate. Defaults to 10,000.
+//' @param nreps The number of replicate projections.
+//' @param times Number of occasions to iterate per replicate. Defaults to
+//' 10,000.
 //' @param stochastic A logical value denoting whether to conduct a stochastic
 //' projection or a deterministic / cyclical projection.
 //' @param standardize A logical value denoting whether to re-standardize the
@@ -1567,13 +1571,23 @@ arma::mat proj3sp(arma::vec start_vec, List core_list, arma::uvec mat_order,
 //' @param tweights An optional numeric vector denoting the probabilistic
 //' weightings of annual matrices. Defaults to equal weighting among occasions.
 //' 
-//' @return A list with two elements:
+//' @return A list of class \code{lefkoProj}, which always includes the first
+//' three elements of the following, and also includes the remaiing elements
+//' below when a \code{lefkoMat} object is used as input:
 //' \item{projection}{A list of matrices showing the total number of individuals
 //' per stage per occasion, or showing the former with the projected stage 
 //' distribution and reproductive value per stage per occasion followed by
-//' the total population size per occasion (all row-bound in order).}
+//' the total population size per occasion (all row-bound in order). Each matrix
+//' corresponds to a different patch or population. If more than 1 replicate is
+//' projected, then the results from these replicates will be stacked within the
+//' same data frame.}
 //' \item{labels}{A data frame showing the order of populations and patches in
 //' item \code{projection}.}
+//' \item{control}{A short vector indicating the number of replicates and the
+//' number of occasions projected per replicate.}
+//' \item{ahstages}{The original stageframe used in the study.}
+//' \item{hstages}{A data frame showing the order of historical stage pairs.}
+//' \item{agestages}{A data frame showing the order of age-stage pairs.}
 //' 
 //' @section Notes:
 //' Projections are run both at the patch level and at the population level.
@@ -1583,6 +1597,14 @@ arma::mat proj3sp(arma::vec start_vec, List core_list, arma::uvec mat_order,
 //' Weightings given in \code{tweights} do not need to sum to 1. Final
 //' weightings used will be based on the proportion per element of the sum of
 //' elements in the user-supplied vector.
+//' 
+//' The resulting data frames in element \code{projection} are separated by
+//' pop-patch according to the order provided in element \code{labels}, but the
+//' matrices for each element of \code{projection} have the result of each
+//' replicate stacked in order on top of one another without any break or
+//' indication. Results for each replicate must be separated using the
+//' information provided in elements \code{control} and the 3 stage
+//' descriptor elements.
 //'
 //' @examples
 //' # Lathyrus example
@@ -1627,7 +1649,7 @@ arma::mat proj3sp(arma::vec start_vec, List core_list, arma::uvec mat_order,
 //'   repmatrix = lathrepm, supplement = lathsupp3, yearcol = "year2",
 //'   indivcol = "individ")
 //' 
-//' lathproj <- projection3(ehrlen3, stochastic = TRUE)
+//' lathproj <- projection3(ehrlen3, nreps = 5, stochastic = TRUE)
 //' 
 //' # Cypripedium example
 //' rm(list = ls(all=TRUE))
@@ -1681,13 +1703,13 @@ arma::mat proj3sp(arma::vec start_vec, List core_list, arma::uvec mat_order,
 //'   supplement = cypsupp3r, yearcol = "year2", 
 //'   patchcol = "patchid", indivcol = "individ")
 //' 
-//' cypstoch <- projection3(cypmatrix3r, stochastic = TRUE)
+//' cypstoch <- projection3(cypmatrix3r, nreps = 5, stochastic = TRUE)
 //' 
 //' @export projection3
 // [[Rcpp::export]]
-Rcpp::List projection3(List mpm, int times = 10000, bool stochastic = false,
-  bool standardize = false, bool growthonly = true, bool integeronly = false,
-  Nullable<NumericVector> start_vec = R_NilValue,
+Rcpp::List projection3(List mpm, int nreps = 1, int times = 10000,
+  bool stochastic = false, bool standardize = false, bool growthonly = true,
+  bool integeronly = false, Nullable<NumericVector> start_vec = R_NilValue,
   Nullable<NumericVector> tweights = R_NilValue) {
   
   Rcpp::List projection_list;
@@ -1697,6 +1719,9 @@ Rcpp::List projection3(List mpm, int times = 10000, bool stochastic = false,
   
   if (theclairvoyant < 1) {
     throw Rcpp::exception("Option times must equal a positive integer.", false);
+  }
+  if (nreps < 1) {
+    throw Rcpp::exception("Option nreps must be a positive integer.", false);
   }
   
   arma::uvec theprophecy(theclairvoyant);
@@ -1723,7 +1748,7 @@ Rcpp::List projection3(List mpm, int times = 10000, bool stochastic = false,
     }
     
     if (labels.length() < 3) {
-      throw Rcpp::exception("Function 'slambda3' requires annual matrices. This lefkoMat object appears to be a set of mean matrices, and lacks annual matrices.", false);
+      throw Rcpp::exception("Function 'projection3' requires annual matrices. This lefkoMat object appears to be a set of mean matrices, and lacks annual matrices.", false);
     }
     
     StringVector poporder = labels["pop"];
@@ -1832,18 +1857,28 @@ Rcpp::List projection3(List mpm, int times = 10000, bool stochastic = false,
       arma::uvec thenumbersofthebeast = find(ppcindex == allppcs(i));
       int chosen_yl = thenumbersofthebeast.n_elem;
       
-      if (stochastic) {
-        theprophecy = Rcpp::RcppArmadillo::sample(thenumbersofthebeast, theclairvoyant, true, twinput);
-      } else {
-        theprophecy.set_size(theclairvoyant);
-        theprophecy.zeros();
+      // This loop takes care of multiple replicates, creating the final data frame
+      // of results for each pop-patch
+      for (int rep = 0; rep < nreps; rep++) {
+        if (stochastic) {
+          theprophecy = Rcpp::RcppArmadillo::sample(thenumbersofthebeast, theclairvoyant, true, twinput);
+        } else {
+          theprophecy.set_size(theclairvoyant);
+          theprophecy.zeros();
+          
+          for (int j = 0; j < theclairvoyant; j++) {
+            theprophecy(j) = thenumbersofthebeast(j % chosen_yl);
+          }
+        }
         
-        for (int j = 0; j < theclairvoyant; j++) {
-          theprophecy(j) = thenumbersofthebeast(j % chosen_yl);
+        if (rep == 0) {
+          projection = proj3(startvec, amats, theprophecy, standardize, growthonly, integeronly);
+        } else {
+          arma::mat nextproj = proj3(startvec, amats, theprophecy, standardize, growthonly, integeronly);
+          projection = arma::join_cols(projection, nextproj);
         }
       }
       
-      arma::mat projection = proj3(startvec, amats, theprophecy, standardize, growthonly, integeronly);
       if (i == 0) {
         projection_list = List::create(_["0"] = projection);
       } else {
@@ -1915,25 +1950,42 @@ Rcpp::List projection3(List mpm, int times = 10000, bool stochastic = false,
         int numyearsused = meanmatyearlist.length();
         arma::uvec choicevec = linspace<arma::uvec>(0, (numyearsused - 1), numyearsused);
         int chosen_yl = choicevec.n_elem;
-        
-        if (stochastic) {
-          theprophecy = Rcpp::RcppArmadillo::sample(choicevec, theclairvoyant, true, twinput);
-        } else {
-          theprophecy.zeros();
+      
+        // This loop takes care of multiple replicates, creating the final data frame
+        // of results for the pop mean(s)
+        for (int rep = 0; rep < nreps; rep++) {
+          if (stochastic) {
+            theprophecy = Rcpp::RcppArmadillo::sample(choicevec, theclairvoyant, true, twinput);
+          } else {
+            theprophecy.zeros();
+            
+            for (int j = 0; j < theclairvoyant; j++) {
+              theprophecy(j) = choicevec(j % chosen_yl);
+            }
+          }
           
-          for (int j = 0; j < theclairvoyant; j++) {
-            theprophecy(j) = choicevec(j % chosen_yl);
+          if (rep == 0) {
+            projection = proj3(startvec, meanmatyearlist, theprophecy, standardize, growthonly, integeronly);
+          } else {
+            arma::mat nextproj = proj3(startvec, meanmatyearlist, theprophecy, standardize, growthonly, integeronly);
+            projection = arma::join_cols(projection, nextproj);
           }
         }
         
-        arma::mat projection = proj3(startvec, meanmatyearlist, theprophecy, standardize, growthonly, integeronly);
         projection_list.push_back(projection);
       }
     }
     DataFrame newlabels = DataFrame::create(_["pop"] = mmpops,
       _["patch"] = mmpatches);
     
-    return List::create(_["projection"] = projection_list, _["labels"] = newlabels);
+    Rcpp::IntegerVector control = {nreps, times};
+    
+    Rcpp::List output = List::create(_["projection"] = projection_list, _["labels"] = newlabels,
+      _["ahstages"] = stageframe, _["hstages"] = hstages, _["agestages"] = agestages,
+      _["control"] = control);
+    output.attr("class") = "lefkoProj";
+    
+    return output;
     
   } else {
     
@@ -1998,23 +2050,38 @@ Rcpp::List projection3(List mpm, int times = 10000, bool stochastic = false,
     
     arma::uvec thenumbersofthebeast = uniqueyears;
     
-    if (stochastic) {
-      theprophecy = Rcpp::RcppArmadillo::sample(thenumbersofthebeast, theclairvoyant, true, twinput);
-    } else {
-      theprophecy.zeros();
-      
-      for (int i = 0; i < theclairvoyant; i++) {
-        theprophecy(i) = thenumbersofthebeast(i % yl);
+    // This loop takes care of multiple replicates, creating the final data frame
+    // of results
+    for (int rep = 0; rep < nreps; rep++) {
+      if (stochastic) {
+        theprophecy = Rcpp::RcppArmadillo::sample(thenumbersofthebeast, theclairvoyant, true, twinput);
+      } else {
+        theprophecy.zeros();
+        
+        for (int i = 0; i < theclairvoyant; i++) {
+          theprophecy(i) = thenumbersofthebeast(i % yl);
+        }
+      }
+      if (rep == 0) {
+        projection = proj3(startvec, amats, theprophecy, standardize, growthonly, integeronly);
+      } else {
+        arma::mat nextproj = proj3(startvec, amats, theprophecy, standardize, growthonly, integeronly);
+        projection = arma::join_cols(projection, nextproj);
       }
     }
     
-    projection = proj3(startvec, amats, theprophecy, standardize, growthonly, integeronly);
     projection_list = List::create(_["0"] = projection);
-
+    
     DataFrame newlabels = DataFrame::create(_["pop"] = 1,
       _["patch"] = 1);
     
-    return List::create(_["projection"] = projection_list, _["labels"] = newlabels);
+    Rcpp::IntegerVector control = {nreps, times};
+    
+    Rcpp::List output = List::create(_["projection"] = projection_list, _["labels"] = newlabels,
+      _["control"] = control);
+    output.attr("class") = "lefkoProj";
+    
+    return output;
   }
 }
 

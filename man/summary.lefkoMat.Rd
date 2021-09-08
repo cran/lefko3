@@ -25,7 +25,8 @@ survival-transition matrices.
 \description{
 A function to simplify the viewing of basic information describing the
 matrices produced through functions \code{\link{flefko3}()},
-\code{\link{flefko2}()}, \code{\link{rlefko3}()}, and \code{\link{rlefko2}()}.
+\code{\link{flefko2}()}, \code{\link{rlefko3}()}, \code{\link{rlefko2}()},
+and \code{\link{aflefko2}()}.
 }
 \examples{
 data(cypdata)

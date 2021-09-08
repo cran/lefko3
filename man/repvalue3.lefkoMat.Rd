@@ -38,33 +38,40 @@ equal weighting.}
 }
 \value{
 This function returns the asymptotic reproductive value vectors if
-deterministic analysis chosen, and long-run mean reproductive value vectors
-if stochastic analysis was chosen.
+deterministic analysis is chosen, and long-run mean reproductive value
+vectors if stochastic analysis is chosen.
 
 The output depends on whether the \code{lefkoMat} object used as input is
 ahistorical or historical, and whether the analysis is deterministic or
-stochastic. If ahistorical, then a single data frame is output, which
-includes the number of the matrix within the \code{$A} element of the input
-\code{lefkoMat} object, followed by the stage id (numeric and assigned
-through \code{\link{sf_create}()}), the stage name, and the estimated
-reproductive value (\code{rep_value}). Reproductive values are scaled by the
-first non-zero value.
+stochastic. If deterministic and ahistorical, then a single data frame is
+output, which includes the number of the matrix within the \code{A} element
+of the input \code{lefkoMat} object, followed by the stage id (numeric and
+assigned through \code{\link{sf_create}()}), the stage name, and the
+estimated proportion of the reproductive value vector (\code{rep_value}). If
+stochastic and ahistorical, then a single data frame is output starting with
+the number of the population-patch (\code{matrix_set}), a string
+concatenating the names of the population and the patch (\code{poppatch}),
+the assigned stage id number (\code{stage_id}), and the stage name
+(\code{stage}), and the long-run mean reproductive value vector
+(\code{rep_value}).
 
 If a historical matrix is used as input, then two data frames are output
-into a list object. The \code{$hist} element contains a data frame in which 
-the stable stage distribution is given in terms of across-year stage pairs.
-The structure includes the matrix number, the numeric stage designations for
-stages in occasions \emph{t} and \emph{t}-1, respectively, followed by the
-respective stage names, and ending with the estimated reproductive value for
-that stage within its matrix (\code{rep_value}). The \code{$ahist} element is
-a data frame showing the reproductive values of the basic stages in the
-associated stageframe. The reproductive values in this second data frame are
-estimated via the approach developed in Ehrlen (2000), in which each
-ahistorical stage's reproductive value is the average of the RVs summed by
-stage at occasion \emph{t} weighted by the proportion of that stage pair
-within the historical stable stage distribution associated with the matrix.
-Both historical and ahistorical reproductive values are scaled to the first
-non-zero reproductive value in each case.
+into a list object. The \code{hist} element describes the historical
+stage-pair reproductive values, while the \code{ahist} element describes the
+stage reproductive values. If deterministic, then \code{hist} contains a data
+frame including the matrix number (\code{matrix}), the numeric stage
+designations for stages in occasions \emph{t} and \emph{t}-1,
+(\code{stage_id_2} and \code{stage_id_1}, respectively), followed by the
+respective stage names (\code{stage_2} and \code{stage_1}), and ending with
+the estimated reproductive values (\code{rep_value}). The associated
+\code{ahist} element is as before. If stochastic, then the \code{hist}
+element contains a single data frame with the number of the population-patch
+(\code{matrix_set}), a string concatenating the names of the population and
+the patch (\code{poppatch}), the assigned stage id numbers in times \emph{t}
+and \emph{t}-1 (\code{stage_id_2} and \code{stage_id_2}, respectively), and
+the associated stage names (\code{stage_2} and \code{stage_1}, respectively),
+and the long-run mean reproductive values (\code{rep_value}). The associated
+\code{ahist} element is as before in the ahistorical, stochastic case.
 
 In addition to the data frames noted above, stochastic analysis will result
 in the additional output of a list of matrices containing the actual
@@ -75,8 +82,8 @@ order of population-patch combinations in the \code{lefkoMat} input.
 \code{repvalue3.lefkoMat()} returns the reproductive values for stages in a
 set of population projection matrices provided as a \code{lefkoMat} object.
 This function can handle large and sparse matrices, and so can be used with
-large historical matrices, IPMs, age x stage matrices, as well as smaller
-ahistorical matrices.
+large historical matrices, IPMs, age x stage matrices, as well as ahistorical
+matrices.
 }
 \section{Notes}{
 

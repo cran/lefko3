@@ -1903,7 +1903,7 @@ overwrite <- function(stage3, stage2, stage1 = NA, eststage3 = NA,
   return(shrubbery)
 }
 
-#' Create an Data Frame of Supplemental Data for MPM Development
+#' Create a Data Frame of Supplemental Data for MPM Development
 #' 
 #' \code{supplemental()} provides all necessary supplemental data for matrix
 #' estimation, particularly bringing together data on proxy rates, data to 
@@ -2204,7 +2204,7 @@ supplemental <- function(stage3, stage2, stage1 = NA, eststage3 = NA,
   return(output)
 }
 
-#' Test for overdispersion and zero inflation in size and fecundity
+#' Test Overdispersion and Zero Inflation in Size and Fecundity Distributions
 #' 
 #' Function \code{sf_distrib} takes a historically formatted vertical data as
 #' input and tests whether size and fecundity data are dispersed according to a

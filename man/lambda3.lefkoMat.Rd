@@ -18,15 +18,15 @@
 \value{
 This function returns the dominant eigenvalue of each \code{$A}
 matrix in \code{mats}. The output includes a data frame showing the
-population, patch, and lambda estimate for each \code{$A} matrix. Row names
-correspond to the order of the matrix within the \code{$A} element of
+population, patch, and lambda estimate for each \code{A} matrix. Row names
+correspond to the order of the matrix within the \code{A} element of
 \code{mats}.
 }
 \description{
 \code{lambda3.lefkoMat()} returns the dominant eigenvalues of all projection
 matrices supplied within \code{lefkoMat} objects. This function can handle
 large and sparse matrices, and so can be used with large historical matrices,
-IPMs, age x stage matrices, as well as smaller ahistorical matrices.
+IPMs, age x stage matrices, as well as ahistorical matrices.
 }
 \section{Notes}{
 

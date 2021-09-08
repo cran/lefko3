@@ -11,7 +11,7 @@ vignette: >
 
 
 
-  <p style="text-indent: 20px">This document was built in Markdown in R 4.1.1 and compiled on 17 August 2021. It covers package `lefko3` version 3.7.0. Please note that this vignette was written with space considerations in mind. To reduce output size, we have prevented some statements from running if they produce long stretches of output. Examples include most `summary()` calls. In these cases, we include hashtagged versions of these calls, and our text assumes that the user runs these statements without hashtags. We have also written this vignette using the default Ehrlén format as the output format for all historical MPMs. All examples work with deVries format as well.</p>
+  <p style="text-indent: 20px">This document was built in Markdown in R 4.1.1 and compiled on 06 September 2021. It covers package `lefko3` version 3.8.0. Please note that this vignette was written with space considerations in mind. To reduce output size, we have prevented some statements from running if they produce long stretches of output. Examples include most `summary()` calls. In these cases, we include hashtagged versions of these calls, and our text assumes that the user runs these statements without hashtags. We have also written this vignette using the default Ehrlén format as the output format for all historical MPMs. All examples work with deVries format as well.</p>
 
 ## CASE STUDIES OF AMERICAN *Cypripedium candidum* POPULATION
 
@@ -27,7 +27,8 @@ vignette: >
   
   <p style="text-indent: 20px">Population matrix projection modeling requires an appropriate life history model showing how all stages and transitions are related. The figure below shows a very general life history model detailing these relationships in *Cypripedium candidum*. The first stage of life is a dormant seed stage, although an individual may germinate in the year following seed production. The first germinated stage is a protocorm, which is an underground, mycoheterotrophic stage unique to the families Orchidaceae and Pyrolaceae. There are three years of protocorm stages, followed by a seedling stage, and finally a set of stages that comprise the size-classified adult portion of life. The figure shows 49 such stages, each for a different number of stems (including 0 for vegetative dormancy) and one of two reproductive statuses. These stages may be reorganized for different circumstances (more on this later).</p>
   
-<img src = "lifhist1.png" width = "700"></img>
+<img src = "lifhist1.png" width = "700"></img>  
+
 **Figure 5.1.** Life history model of *Cypripedium candidum*. Survival transitions are indicated with solid arrows, while fecundity transitions are indicated with dashed arrows.
 
   <p style="text-indent: 20px">We can see a variety of transitions within this figure. The juvenile stages have fairly simple transitions. New recruits may enter the population directly from germination of a seed produced the previous year, in which case they start in the protocorm 1 stage, or they may begin as dormant seed. Dormant seed may remain dormant, die, or germinate into the protocorm 1 stage. Protocorms exist for up to 3 years, yielding the protocorm 1, 2, and 3 stages, without any possibility of staying within each of these stages for more than a single year. Protocorm 3 leads to a seedling stage, in which the plant may persist for many years before becoming mature. Here, maturity does not really refer to reproduction *per se*, but rather to a morphology indistinguishable from a reproductive plant except for the lack of a flower. The first mature stage is usually either vegetative dormancy (dorm), during which time the plant does not sprout, or a small, non-flowering adult (1V). Once in this portion of the life history, the plant may transition among 49 mature stages, including vegetative dormancy, 1-24 shoots without flowers, or 1-24 shoots with at least one flower (theoretically, individual plants may be bigger than 24 sprouts, but we have never observed a plant bigger than this in the population).</p>
@@ -552,7 +553,7 @@ summary(tmeans3r)
 #> Max.    1.000
 #> NULL
 ```
-
+  
   <p style="text-indent: 20px">It might help to do a more holistic comparison of the ahistorical vs. historical MPMs. Let's create matrix plots of the ahistorical and historical means. For this purpose, we will use the `image3()` function. Let's first view the ahistorical matrix image.</p>
 
 ```r
@@ -622,9 +623,9 @@ legend("bottomright", c("ahistorical", "historical"), lty = c(1, 2), col = c("bl
 ```
 
 ![Figure 5.6. Ahistorical vs. historical annual population growth rate](Ch5.24-1.png)
-
+  
   <p style="text-indent: 20px">We find that annual $\lambda$ estimates differ only slightly between ahistorical and historical analyses.</p>
-
+  
   <p style="text-indent: 20px">Now let's take a look at the stable stage distributions. We will look at deterministic and stochastic versions of the ahistorical and historical MPMs.</p>
 
 ```r
@@ -645,9 +646,9 @@ legend("topright", c("det ahist", "det hist", "sto ahist", "sto hist"),
 ```
 
 ![Figure 5.7. Ahistorical vs. historically-corrected stable and long-run mean stage distribution](Ch5.25-1.png)
-
+  
   <p style="text-indent: 20px">Overall, these are very similar patterns. Whether ahistorical or historical, deterministic or stochastic, our analyses suggest that small non-reproductive adults take up the greatest share of the stable stage structure, with dormant seed and 1st-year protocorms coming next, and then reproductive adults. The main differences appear to be a decreased presence of protocorms and increased presence of flowering adults in historical analysis. Stochastic analyses also reduce the importance of most stages with high proportions, while increasing the importance of rarer stages.</p>
-
+  
   <p style="text-indent: 20px">Next let's look at the reproductive values associated with both ahistorical and historical approaches. We will standardize against the maximum value in each case to make these comparable.</p>
 
 ```r
@@ -861,7 +862,7 @@ legend("topright", c("det ahist", "det hist", "sto ahist", "sto hist"),
 ![Figure 5.11. Elasticity of lambda to historical transitions](Ch5.32-1.png)
   <p style="text-indent: 20px">We can see that growth from occasion *t*-1 to *t* followed by shrinkage to occasion *t*+1 is associated with the greatest summed elasticities, while the inverse, shrinkage from occasion *t*-1 to *t* followed by growth to occasion *t*+1 is the next most important. Transitions associated with fecundity are associated with the lowest summed elasticities.</p>
   
-  <p style="text-indent: 20px">Package `lefko3` also includes functions to conduct deterministic and stochastic life table response experiments. Users wishing to conduct these analyses should see our new vignette on this topic.</p>
+  <p style="text-indent: 20px">Package `lefko3` also includes functions to conduct deterministic and stochastic life table response experiments, and a general projection function that can be used for analyses such as quasi-extinction analysis. Users wishing to conduct these analyses should see our other vignettes, including the long-format vignettes on <a href = "http://www.sheffersonlab.com/projects">the projects page</a> of the Shefferson lab website.
   
   <p style="text-indent: 20px">Further analytical tools are being planned for `lefko3`, but packages that handle projection matrices can typically handle the individual matrices produced and saved in `lefkoMat` objects in this package. Differences, obscure results, and errors sometimes arise when packages are not made to handle large and/or sparse matrices - historical matrices are both, and so care must be taken with their analysis.</p>
 

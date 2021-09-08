@@ -2,7 +2,7 @@
 % Please edit documentation in R/datamanag.R
 \name{historicalize3}
 \alias{historicalize3}
-\title{Create Historical Vertical Data Frame From Ahistorical Vertical Data Frame}
+\title{Create Historical Vertical Data Frame from Ahistorical Vertical Data Frame}
 \usage{
 historicalize3(
   data,
@@ -65,8 +65,8 @@ historicalize3(
 identity of the population for each individual.}
 
 \item{patchidcol}{A variable name or column number corresponding to the
-identity of the patch for each individual, if patches have been designated
-within populations.}
+identity of the patch or subpopulation for each individual, if patches have
+been designated within populations.}
 
 \item{individcol}{A variable name or column number corresponding to the
 unique identity of each individual.}
@@ -77,10 +77,10 @@ unique identity of each individual.}
 \item{year3col}{A variable name or column number corresponding to occasion
 \emph{t}+1 (year or time).}
 
-\item{xcol}{A variable name or column number corresponding to the x
+\item{xcol}{A variable name or column number corresponding to the X
 coordinate of each individual in Cartesian space.}
 
-\item{ycol}{A variable name or column number corresponding to the y
+\item{ycol}{A variable name or column number corresponding to the Y
 coordinate of each individual in Cartesian space.}
 
 \item{sizea2col}{A variable name or column number corresponding to the
@@ -240,8 +240,8 @@ should be included in analysis. Defaults to 0, but may take any value
 including NA.}
 
 \item{spacing}{The spacing at which density should be estimated, if density
-estimation is desired and x and y coordinates are supplied. Given in the same
-units as those used in the x and y coordinates given in \code{xcol} and
+estimation is desired and X and Y coordinates are supplied. Given in the same
+units as those used in the X and Y coordinates given in \code{xcol} and
 \code{ycol}. Defaults to NA.}
 
 \item{NAas0}{If TRUE, then all NA entries for size and fecundity variables
@@ -333,7 +333,7 @@ ahistorically formatted data frame. This data frame is in standard
 }
 \section{Notes}{
 
-In some datasets on species with unobserveable stages, observation status
+In some datasets on species with unobservable stages, observation status
 (\code{obsstatus}) might not be inferred properly if a single size variable
 is used that does not yield sizes greater than 0 in all cases in which
 individuals were observed. Such situations may arise, for example, in plants
@@ -344,6 +344,11 @@ observation status will be interpreted in relation to all 3 size variables.
 Further analysis can then utilize only a single size variable, of the user's
 choosing. Similar issues can arise in reproductive status (\code{repstatus}).
 
+Juvenile designation should only be used when juveniles fall outside of the
+size classification scheme used in determining stages. If juveniles are to be
+size classified along the size spectrum that adults also fall on, then
+it is best to treat juveniles as mature but not reproductive.
+
 Warnings that some individuals occur in state combinations that do not match
 any stages in the stageframe used to assign stages are common when first
 working with a dataset. Typically, these situations can be identified as
@@ -352,8 +357,9 @@ working with a dataset. Typically, these situations can be identified as
 arise with no concurrent \code{NoMatch} entries, which indicates that the
 input dataset contained conflicting state data at once suggesting that the
 individual is in some stage but is also dead. The latter is removed if the
-conflict occurs in occasion \emph{t} or occasion \emph{t}-1, as only living
-entries are allowed in these times.
+conflict occurs in occasion \emph{t} or \emph{t}-1, as only living entries
+are allowed in time \emph{t} and time \emph{t}-1 may involve living entries
+as well as unliving entries immediately prior to birth.
 
 Care should be taken to avoid variables with negative values indicating size,
 fecundity, or reproductive or observation status. Negative values can be
@@ -361,6 +367,14 @@ interpreted in different ways, typically reflecting estimation through other
 algorithms rather than actual measured data. Variables holding negative
 values can conflict with data management algorithms in ways that are
 difficult to predict.
+
+Unusual errors (e.g. \code{"Error in pjf..."}) may occur in cases where the
+variables are improperly passed, or where seemingly numeric variables include
+text and so get automatically converted to string variables.
+
+Density estimation is performed as a count of individuals alive and within
+the radius specified in \code{spacing} of the respective individual at some
+point in time.
 }
 
 \examples{

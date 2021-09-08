@@ -1,6 +1,39 @@
 LEFKO3 NEWS
 -----------
 
+CHANGES IN VERSION 3.8.0 (2021-09-08)
+-------------------------------------
+  NEW FEATURES
+    1. Function projection3() now includes the ability to produce replicate
+       simulations.
+    2. Function summary.lefkoProj() created to summarize the results of
+       population projection using function projection3().
+    3. Functions verticalize3() and historicalize3() now handle true radial
+       density estimation, if X and Y coordinates and a valid spacing threshold
+       are supplied.
+    4. Functions add_lM() and delete_lM() added to add and delete matrices from
+       lefkoMat objects.
+    5. Function subset_lM() added to create new lefkoMat objects as subsets of
+       other lefkoMat objects.
+    
+  USER-VISIBLE CHANGES
+    1. Sensitivity and elasticity descriptions corrected in vignettes.
+    2. Increased consistency in terminology used in output for stablestage3()
+       and repvalue3().
+    3. Function create_lM() now handles age-by-stage matrices.
+    
+  BUG FIXES
+    1. Fixed issue that could lead rlefko2() and rlefko3() to stop processing
+       matrices if specific years or patches are called.
+    2. Fixed issue affecting stochastic reproductive value estimation in
+       historical lefkoMat objects.
+    3. Fixed issue affecting some deterministic reproductive value estimates,
+       particularly in large historical MPMs, where a base reference value for
+       standardization cannot be determined.
+    4. Fixed issue preventing proper handling of historical matrix inputs in
+       create_lM().
+
+
 CHANGES IN VERSION 3.7.0 (2021-08-18)
 -------------------------------------
   NEW FEATURES

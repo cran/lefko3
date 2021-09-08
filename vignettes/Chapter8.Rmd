@@ -11,7 +11,7 @@ vignette: >
 
 
 
-  <p style="text-indent: 20px">This document was built in Markdown in R 4.1.1 and compiled on 17 August 2021. It covers package `lefko3` version 3.7.0. Please note that this vignette was written with space considerations in mind. To reduce output size, we have prevented some statements from running if they produce long stretches of output. Examples include most `summary()` calls. In these cases, we include hashtagged versions of these calls, and our text assumes that the user runs these statements without hashtags.</p>
+  <p style="text-indent: 20px">This document was built in Markdown in R 4.1.1 and compiled on 06 September 2021. It covers package `lefko3` version 3.8.0. Please note that this vignette was written with space considerations in mind. To reduce output size, we have prevented some statements from running if they produce long stretches of output. Examples include most `summary()` calls. In these cases, we include hashtagged versions of these calls, and our text assumes that the user runs these statements without hashtags.</p>
 
 ## CASE STUDIES OF SWEDISH *Lathyrus vernus* POPULATION
 
@@ -42,9 +42,10 @@ data(lathyrus)
 
 #### Step 1. Life history model development
 
-  <p style="text-indent: 20px">To begin, we will create a **stageframe** for this dataset. A stageframe is a data frame that describes all stages in the life history of the organism, in a way usable by the functions in this package and using stage names and classifications that completely match those used in the dataset. It links the dataset and our analyses to our life history model. In this case, the life history model is a life cycle graph (Figure 8.1). This model is based on the life history model provided in Ehrlén [-@ehrlen_dynamics_2000], but we utilize a different size classification based on the log leaf volume to make the size distribution more closely match a symmetric and somewhat normal distribution.</p>
+  <p style="text-indent: 20px">To begin, we will create a **stageframe** for this dataset. A stageframe is a data frame that describes all stages in the life history of the organism, in a way usable by the functions in this package and using stage names and classifications that completely match those used in the dataset. It links the dataset and our analyses to our life history model. In this case, the life history model is a life cycle graph (Fig. 8.1). This model is based on the life history model provided in Ehrlén [-@ehrlen_dynamics_2000], but we utilize a different size classification based on the log leaf volume to make the size distribution more closely match a symmetric and somewhat normal distribution.</p>
   
-<img src = "lathfun3.png" width = "700"></img>
+<img src = "lathfun3.png" width = "700"></img>  
+
 **Figure 8.1.** Life history model of *Lathyrus vernus* using the log leaf volume as the size classification metric.
   
   <p style="text-indent: 20px">Our stageframe needs to include complete descriptions of all stages that occur in the dataset, with each stage defined uniquely, and also needs to describe for each stage portrayed in our life history model. Since this object can be used for automated classification of individuals, all sizes, reproductive states, and other characteristics defining each stage in the dataset need to be accounted for explicitly. This can be difficult if a few data points exist outside the range of sizes specified in the stageframe, because such situations generally lead to errors down the line. So, great care must be taken to include all size values and values of other descriptor variables occurring within the dataset. The final description of each stage occurring in the dataset must not completely overlap with any other stage also found in the dataset, although partial overlap is allowed and expected.</p>
@@ -367,20 +368,20 @@ summary(lathmat2agep)
 #> Juvenile reproduction probability not estimated.
 #> 
 #> Survival probability sum check (each matrix represented by column in order):
-#>          [,1]  [,2]  [,3]  [,4]  [,5]  [,6]  [,7]  [,8]  [,9] [,10] [,11] [,12] [,13] [,14] [,15] [,16] [,17]
-#> Min.    0.000 0.000 0.000 0.000 0.000 0.000 0.000 0.000 0.000 0.000 0.000 0.000 0.000 0.000 0.000 0.000 0.000
-#> 1st Qu. 0.000 0.000 0.000 0.000 0.000 0.000 0.000 0.000 0.000 0.000 0.000 0.000 0.000 0.000 0.000 0.000 0.000
-#> Median  0.966 0.957 0.924 0.959 0.948 0.906 0.960 0.956 0.918 0.958 0.935 0.887 0.961 0.939 0.894 0.963 0.950
-#> Mean    0.607 0.606 0.594 0.603 0.602 0.586 0.604 0.604 0.591 0.605 0.599 0.581 0.606 0.600 0.583 0.605 0.603
-#> 3rd Qu. 0.987 0.985 0.973 0.984 0.982 0.966 0.986 0.984 0.970 0.983 0.980 0.964 0.984 0.981 0.966 0.985 0.983
-#> Max.    0.997 0.996 0.992 0.997 0.994 0.990 0.997 0.995 0.991 0.996 0.994 0.988 0.996 0.994 0.989 0.997 0.995
-#>         [,18]
-#> Min.    0.000
-#> 1st Qu. 0.000
-#> Median  0.910
-#> Mean    0.588
-#> 3rd Qu. 0.968
-#> Max.    0.990
+#>          [,1]  [,2]  [,3]  [,4]  [,5]  [,6]  [,7]  [,8]  [,9] [,10] [,11] [,12] [,13] [,14] [,15] [,16]
+#> Min.    0.000 0.000 0.000 0.000 0.000 0.000 0.000 0.000 0.000 0.000 0.000 0.000 0.000 0.000 0.000 0.000
+#> 1st Qu. 0.000 0.000 0.000 0.000 0.000 0.000 0.000 0.000 0.000 0.000 0.000 0.000 0.000 0.000 0.000 0.000
+#> Median  0.966 0.957 0.924 0.959 0.948 0.906 0.960 0.956 0.918 0.958 0.935 0.887 0.961 0.939 0.894 0.963
+#> Mean    0.607 0.606 0.594 0.603 0.602 0.586 0.604 0.604 0.591 0.605 0.599 0.581 0.606 0.600 0.583 0.605
+#> 3rd Qu. 0.987 0.985 0.973 0.984 0.982 0.966 0.986 0.984 0.970 0.983 0.980 0.964 0.984 0.981 0.966 0.985
+#> Max.    0.997 0.996 0.992 0.997 0.994 0.990 0.997 0.995 0.991 0.996 0.994 0.988 0.996 0.994 0.989 0.997
+#>         [,17] [,18]
+#> Min.    0.000 0.000
+#> 1st Qu. 0.000 0.000
+#> Median  0.950 0.910
+#> Mean    0.603 0.588
+#> 3rd Qu. 0.983 0.968
+#> Max.    0.995 0.990
 #> NULL
 ```
 

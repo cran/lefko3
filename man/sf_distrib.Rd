@@ -2,7 +2,7 @@
 % Please edit documentation in R/popchar.R
 \name{sf_distrib}
 \alias{sf_distrib}
-\title{Test for overdispersion and zero inflation in size and fecundity}
+\title{Test Overdispersion and Zero Inflation in Size and Fecundity Distributions}
 \usage{
 sf_distrib(
   data,

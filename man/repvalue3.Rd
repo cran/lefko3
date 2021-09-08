@@ -21,8 +21,8 @@ reproductive values of stages in a population projection matrix or a set of
 matrices. The specifics of estimation vary with the class of input object.
 This function is made to handle very large and sparse matrices supplied as
 \code{lefkoMat} objects or as individual matrices, and can be used with large
-historical matrices, IPMs, age x stage matrices, as well as smaller
-ahistorical matrices.
+historical matrices, IPMs, age x stage matrices, as well as ahistorical
+matrices.
 }
 \examples{
 # Lathyrus deterministic example

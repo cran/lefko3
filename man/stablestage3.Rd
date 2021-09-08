@@ -21,8 +21,8 @@ See related functions for details.
 distribution for a population projection matrix or set of matrices. This
 function is made to handle very large and sparse matrices supplied as 
 \code{lefkoMat} objects or as individual matrices, and can be used with large
-historical matrices, IPMs, age x stage matrices, as well as smaller
-ahistorical matrices.
+historical matrices, IPMs, age x stage matrices, as well as ahistorical
+matrices.
 }
 \examples{
 # Lathyrus deterministic example

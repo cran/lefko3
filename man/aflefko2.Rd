@@ -304,7 +304,7 @@ survival transitions, input those given and proxy transitions through the
 \code{overwrite} option.
 
 The reproduction matrix (field \code{repmatrix}) may only be supplied as
-ahistorical. If provided as historical, then \code{flefko2()} will fail and
+ahistorical. If provided as historical, then \code{aflefko2()} will fail and
 produce an error.
 
 Users may at times wish to estimate MPMs using a dataset incorporating
@@ -322,6 +322,11 @@ characterizing a different vital rate. The product of each row yields an
 element in the associated \code{$U} matrix. The number and order of elements
 in each column of this matrix matches the associated matrix in column vector
 format. Use of this option is generally for the purposes of debugging code.
+
+Users may produce age-based (Leslie) MPMs using this function. In that case,
+stages must be defined as occurring serially within single ages in the
+\code{stageframe}, with the possible exception of the final stage (which
+sometimes involves a perpetual stasis transition)..
 }
 
 \examples{

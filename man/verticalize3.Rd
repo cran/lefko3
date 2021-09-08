@@ -2,7 +2,7 @@
 % Please edit documentation in R/datamanag.R
 \name{verticalize3}
 \alias{verticalize3}
-\title{Create Historical Vertical Data Frame From Horizontal Data Frame}
+\title{Create Historical Vertical Data Frame from Horizontal Data Frame}
 \usage{
 verticalize3(
   data,
@@ -59,8 +59,8 @@ valid integer is required as input.}
 identity of the population for each individual.}
 
 \item{patchidcol}{A variable name or column number corresponding to the 
-identity of the patch for each individual, if patches have been designated 
-within populations.}
+identity of the patch or subpopulation for each individual, if patches have
+been designated within populations.}
 
 \item{individcol}{A variable name or column number corresponding to the 
 identity of each individual.}
@@ -72,17 +72,17 @@ pattern is not used, and all variable names are properly noted as character
 vectors in the other input variables, then this may be set to NA. Defaults to
 NA.}
 
-\item{xcol}{A variable name(s) or column number(s) corresponding to the x 
-coordinate of each individual, or each individual-occasion combination, in
-Cartesian space. Can refer to the only instance, the first instance, or all
-instances of x variables. In the last case, the values should be entered as
-a vector.}
+\item{xcol}{A variable name(s) or column number(s) corresponding to the X 
+coordinate of each individual, or each individual-occasion combination of the
+X coordinate, in Cartesian space. Can refer to the only instance, the first
+instance, or all instances of X variables. In the last case, the values
+should be entered as a vector.}
 
-\item{ycol}{A variable name(s) or column number(s) corresponding to the y
-coordinate of each individual, or each individual-occasion combination, in
-Cartesian space. Can refer to the only instance, the first instance, or all
-instances of y variables. In the last case, the values should be entered as
-a vector.}
+\item{ycol}{A variable name(s) or column number(s) corresponding to the Y
+coordinate of each individual, or each individual-occasion combination of the
+Y coordinate, in Cartesian space. Can refer to the only instance, the first
+instance, or all instances of Y variables. In the last case, the values
+should be entered as a vector.}
 
 \item{juvcol}{A variable name(s) or column number(s) that marks individuals
 in immature stages within the dataset. The \code{verticalize3()} function 
@@ -218,13 +218,13 @@ TRUE.}
 be censored using the variable defined in \code{censorcol}. Defaults to 
 FALSE.}
 
-\item{coordsRepeat}{A logical value indicating whether x and y coordinates
-correspond to a single x and a single y column. If TRUE, then each
-observation occasion has its own x and y variables. Defaults to FALSE.}
+\item{coordsRepeat}{A logical value indicating whether X and Y coordinates
+correspond to single X and Y columns. If TRUE, then each observation occasion
+has its own X and Y variables. Defaults to FALSE.}
 
 \item{spacing}{The spacing at which density should be estimated, if density
-estimation is desired and x and y coordinates are supplied. Given in the same
-units as those used in the x and y coordinates given in \code{xcol} and 
+estimation is desired and X and Y coordinates are supplied. Given in the same
+units as those used in the X and Y coordinates given in \code{xcol} and 
 \code{ycol}. Defaults to NA.}
 
 \item{NAas0}{If TRUE, then all NA entries for size and fecundity variables 
@@ -306,8 +306,8 @@ in occasions \emph{t}-1, \emph{t}, and \emph{t}+1, respectively.}
 \emph{t}-1, \emph{t}, and \emph{t}+1, respectively.}
 \item{alive1,alive2,alive3}{Binomial state as alive in occasions \emph{t}-1,
  \emph{t}, and \emph{t}+1, respectively.}
-\item{density}{Density of individuals per unit designated in \code{spacing}.
-Only given if spacing is not NA.}
+\item{density}{Radial density of individuals per unit designated in
+\code{spacing}. Only given if \code{spacing} is not NA.}
 }
 \description{
 \code{verticalize3()} returns a vertically formatted demographic data frame 
@@ -327,6 +327,11 @@ observation status will be interpreted in relation to all 3 size variables.
 Further analysis can then utilize only a single size variable, of the user's
 choosing. Similar issues can arise in reproductive status (\code{repstatus}).
 
+Juvenile designation should only be used when juveniles fall outside of the
+size classification scheme used in determining stages. If juveniles are to be
+size classified along the size spectrum that adults also fall on, then
+it is best to treat juveniles as mature but not reproductive.
+
 Warnings that some individuals occur in state combinations that do not match
 any stages in the stageframe used to assign stages are common when first
 working with a dataset. Typically, these situations can be identified as
@@ -336,7 +341,8 @@ arise with no concurrent \code{NoMatch} entries, which indicates that the
 input dataset contained conflicting state data at once suggesting that the
 individual is in some stage but is also dead. The latter is removed if the
 conflict occurs in occasion \emph{t} or \emph{t}-1, as only living entries
-are allowed in these times.
+are allowed in time \emph{t} and time \emph{t}-1 may involve living entries
+as well as unliving entries immediately prior to birth.
 
 Care should be taken to avoid variables with negative values indicating size,
 fecundity, or reproductive or observation status. Negative values can be
@@ -344,6 +350,14 @@ interpreted in different ways, typically reflecting estimation through other
 algorithms rather than actual measured data. Variables holding negative
 values can conflict with data management algorithms in ways that are
 difficult to predict.
+
+Unusual errors (e.g. \code{"Error in pfj..."}) may occur in cases where the
+variables are improperly passed, where seemingly numeric variables include
+text, or where the \code{blocksize} is improperly set.
+
+Density estimation is performed as a count of individuals alive and within
+the radius specified in \code{spacing} of the respective individual at some
+point in time.
 }
 
 \examples{

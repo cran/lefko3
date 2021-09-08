@@ -43,25 +43,34 @@ matrices in a \code{lefkoMat} object.
 
 The output depends on whether the \code{lefkoMat} object used as input is
 ahistorical or historical, and whether the analysis is deterministic or
-stochastic. If ahistorical, then a single data frame is output, which
-includes the number of the matrix within the \code{$A} element of the input
-\code{lefkoMat} object, followed by the stage id (numeric and assigned
-through \code{\link{sf_create}()}), the stage name, and the estimated
-proportion of the stable stage distribution (\code{ss_prop}).
+stochastic. If deterministic and ahistorical, then a single data frame is
+output, which includes the number of the matrix within the \code{A} element
+of the input \code{lefkoMat} object, followed by the stage id (numeric and
+assigned through \code{\link{sf_create}()}), the stage name, and the
+estimated proportion of the stable stage distribution (\code{ss_prop}). If
+stochastic and ahistorical, then a single data frame is output starting with
+the number of the population-patch (\code{matrix_set}), a string
+concatenating the names of the population and the patch (\code{poppatch}),
+the assigned stage id number (\code{stage_id}), and the stage name
+(\code{stage}), and the long-run average stage distribution (\code{ss_prop}).
 
 If a historical matrix is used as input, then two data frames are output
-into a list object. The \code{$hist} element contains a data frame in which 
-the stable stage distribution is given in terms of across-year stage pairs.
-The structure includes the matrix number, the numeric stage designations for
-stages in occasions \emph{t} and \emph{t}-1, respectively, followed by the
-respective stage names, and ending with the estimated proportion of the
-stable stage distribution for that stage within its matrix (\code{ss_prop}).
-The \code{$ahist} element contains the stable stage distribution in stages
-as given in the original stageframe. It includes a data frame with the matrix 
-of origin, the numeric stage designation, stage name, and the stable stage
-distribution estimated as the sum of distribution elements from \code{$hist}
-corresponding to the equivalent stage in occasion \emph{t}, irrespective of
-stage in occasion \emph{t}-1.
+into a list object. The \code{hist} element describes the historical
+stage-pair distribution, while the \code{ahist} element describes the stage
+distribution. If deterministic, then \code{hist} contains a data frame
+including the matrix number (\code{matrix}), the numeric stage designations for
+stages in occasions \emph{t} and \emph{t}-1, (\code{stage_id_2} and
+\code{stage_id_1}, respectively), followed by the respective stage names (
+\code{stage_2} and \code{stage_1}), and ending with the estimated stable
+stage-pair distribution. The associated \code{ahist} element is as before. If
+stochastic, then the \code{hist} element contains a single data frame with
+the number of the population-patch (\code{matrix_set}), a string
+concatenating the names of the population and the patch (\code{poppatch}),
+the assigned stage id numbers in times \emph{t} and \emph{t}-1 (
+\code{stage_id_2} and \code{stage_id_2}, respectively), and the associated
+stage names (\code{stage_2} and \code{stage_1}, respectively), and the
+long-run average stage distribution (\code{ss_prop}). The associated
+\code{ahist} element is as before in the ahistorical, stochastic case.
 
 In addition to the data frames noted above, stochastic analysis will result
 in the additional output of a list of matrices containing the actual
@@ -70,11 +79,11 @@ population-patch combinations in the \code{lefkoMat} input.
 }
 \description{
 \code{stablestage3.lefkoMat()} returns the deterministic stable stage
-distributions of all \code{$A} matrices in an object of class
-\code{lefkoMat}, as well as the long-run projected mean stage distribution in
-stochastic analysis. This function can handle large and sparse matrices, and
-so can be used with large historical matrices, IPMs, age x stage matrices, as
-well as smaller ahistorical matrices.
+distributions of all \code{A} matrices in an object of class \code{lefkoMat},
+as well as the long-run projected mean stage distribution in stochastic
+analysis. This function can handle large and sparse matrices, and so can be
+used with large historical matrices, IPMs, age x stage matrices, as well as
+ahistorical matrices.
 }
 \section{Notes}{
 

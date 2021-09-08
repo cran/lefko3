@@ -2,7 +2,7 @@
 % Please edit documentation in R/popchar.R
 \name{supplemental}
 \alias{supplemental}
-\title{Create an Data Frame of Supplemental Data for MPM Development}
+\title{Create a Data Frame of Supplemental Data for MPM Development}
 \usage{
 supplemental(
   stage3,

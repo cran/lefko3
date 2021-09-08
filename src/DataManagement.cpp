@@ -3801,3 +3801,91 @@ Rcpp::List theoldpizzle(DataFrame StageFrame, DataFrame OverWrite,
   return Rcpp::List::create(Named("a") = df0, Named("b") = df1, Named("c") = df2);
 }
 
+//' Estimate Radial Density in Cartesian Space
+//' 
+//' \code{density3()} estimates radial density on the basis of Cartesian
+//' coordinates and spacing information supplied as input. It is used internally
+//' by \code{\link{historicalize3}()} and \code{\link{verticalize3}()}.
+//' 
+//' @param data Demographic dataset in historical vertical format.
+//' @param xcol Number of column in \code{data} corresponding to x position.
+//' @param ycol Number of column in \code{data} corresponding to y position.
+//' @param yearcol Number of column in \code{data} corresponding to occasion
+//' \emph{t}.
+//' @param spacing Resolution of density estimation, as a scalar numeric.
+//' 
+//' @return This function returns a vector counting the number of individuals
+//' within the specified distance of each individual in the historically
+//' formatted vertical dataset.
+//' 
+//' @section Notes:
+//' The process used to estimate density is one in which the distances between
+//' all pairs of individuals are calculated via the Pythagorean theorem, and
+//' then individual density equals the number of these individuals with
+//' distances within the number input as \code{spacing}, respectively for each
+//' individual.
+//' 
+//' This function assumes that all individuals are alive in time \emph{t}, and
+//' so data should be filtered appropriately beforehand. Any rows with NA in X
+//' or Y will not be counted, and density is estimated specific to time \emph{t}.
+//' 
+//' @keywords internal
+//' @noRd
+// [[Rcpp::export]]
+arma::vec density3(Rcpp::DataFrame data, int xcol, int ycol, int yearcol,
+  double spacing) {
+  
+  int data_size = data.length();
+  int data_n = data.nrows();
+  
+  if (xcol < 0 || ycol < 0 || xcol > data_size || ycol > data_size) {
+    throw Rcpp::exception("Input column numbers for X and/or Y are outside the range of the dataset", 
+      false);
+  }
+  
+  int xcol_true = xcol - 1;
+  int ycol_true = ycol - 1;
+  
+  NumericVector Xdata = data[xcol_true];
+  NumericVector Ydata = data[ycol_true];
+  NumericVector yeardata = data[(yearcol - 1)];
+  
+  double ref_x {0};
+  double ref_y {0};
+  double est_a {0};
+  double est_b {0};
+  double est_c {0};
+  int counted_n {0};
+  
+  arma::vec density(data_n);
+  density.zeros();
+  
+  for (int i = 0; i < data_n; i++) {
+    ref_x = Xdata(i);
+    ref_y = Ydata(i);
+    
+    if (!NumericVector::is_na(Xdata(i)) && !NumericVector::is_na(Ydata(i))) {
+      for (int j = 0; j < data_n; j++) {
+        if (!NumericVector::is_na(Xdata(j)) && !NumericVector::is_na(Ydata(j)) && 
+            yeardata(i) == yeardata(j)) {
+          
+          est_a = Xdata(j) - ref_x;
+          est_b = Ydata(j) - ref_y;
+          
+          est_c = (est_a * est_a) + (est_b * est_b);
+          est_c = sqrt(est_c);
+          
+          if (est_c < spacing) counted_n++;
+        }
+      }
+    } else {
+      counted_n = 1;
+    }
+    
+    density(i) = counted_n - 1;
+    counted_n = 0;
+  }
+  
+  return density;
+}
+
