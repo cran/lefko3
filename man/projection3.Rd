@@ -12,8 +12,11 @@ projection3(
   standardize = FALSE,
   growthonly = TRUE,
   integeronly = FALSE,
+  substoch = 0L,
   start_vec = NULL,
-  tweights = NULL
+  start_frame = NULL,
+  tweights = NULL,
+  density = NULL
 )
 }
 \arguments{
@@ -40,24 +43,47 @@ population size at each occasion. Defaults to TRUE.}
 individuals projected in each stage at each occasion to the nearest
 integer. Defaults to FALSE.}
 
+\item{substoch}{An integer value indicating whether to force survival-
+transition matrices to be substochastic in density dependent simulations.
+Defaults to \code{0}, which does not force substochasticity. Alternatively,
+\code{1} forces all survival-transition elements to range from 0.0 to 1.0,
+and \code{2} forces all column rows to total no more than 1.0.}
+
 \item{start_vec}{An optional numeric vector denoting the starting stage
 distribution for the projection. Defaults to a single individual of each
 stage.}
 
+\item{start_frame}{An optional data frame characterizing stages, age-stages,
+or stage-pairs that should be set to non-zero values in the starting vector,
+and what those values should be. Can only be used with \code{lefkoMat}
+objects.}
+
 \item{tweights}{An optional numeric vector denoting the probabilistic
 weightings of annual matrices. Defaults to equal weighting among occasions.}
+
+\item{density}{An optional data frame describing the matrix elements that
+will be subject to density dependence, and the exact kind of density
+dependence that they will be subject to. The data frame used should be an
+object of class \code{lefkoDens}, which is the output from function
+\code{\link{density_input}()}.}
 }
 \value{
 A list of class \code{lefkoProj}, which always includes the first
-three elements of the following, and also includes the remaiing elements
+three elements of the following, and also includes the remaining elements
 below when a \code{lefkoMat} object is used as input:
-\item{projection}{A list of matrices showing the total number of individuals
-per stage per occasion, or showing the former with the projected stage 
-distribution and reproductive value per stage per occasion followed by
-the total population size per occasion (all row-bound in order). Each matrix
-corresponds to a different patch or population. If more than 1 replicate is
-projected, then the results from these replicates will be stacked within the
-same data frame.}
+\item{projection}{A list of lists of matrices showing the total number of
+individuals per stage per occasion. The first list corresponds to each
+pop-patch followed by each population. The inner list corresponds to
+replicates within each pop-patch or population.}
+\item{stage_dist}{A list of lists of the actual stage distribution in each
+occasion in each replicate in each pop-patch or population. The list order
+is the same as in \code{projection}.}
+\item{rep_value}{A list of lists of the actual reproductive value in each
+occasion in each replicate in each pop-patch or population. The list order
+is the same as in \code{projection}.}
+\item{pop_size}{A list of data frames showing the total population size in
+each occasion per replicate (row within data frame) per pop-patch or
+population (list element).}
 \item{labels}{A data frame showing the order of populations and patches in
 item \code{projection}.}
 \item{control}{A short vector indicating the number of replicates and the
@@ -68,12 +94,12 @@ number of occasions projected per replicate.}
 }
 \description{
 Function \code{projection3()} runs projection simulations. It projects the
-population forward in time by a user-defined number of occasions, and can
-perform these projections as replicates. Projections may be deterministic or
-stochastic. If deterministic, then projections will be cyclical if matrices
-exist covering multiple occasions for each population or patch. If
+population an patches forward in time by a user-defined number of occasions.
+Projections may be deterministic or stochastic, and may be density
+dependent either way. If deterministic, then projections will be cyclical if
+matrices exist covering multiple occasions for each population or patch. If
 stochastic, then annual matrices will be shuffled within patches and
-populations. There is no limit to the number of replicates.
+populations. Replicates may also be requested.
 }
 \section{Notes}{
 
@@ -85,6 +111,22 @@ Weightings given in \code{tweights} do not need to sum to 1. Final
 weightings used will be based on the proportion per element of the sum of
 elements in the user-supplied vector.
 
+Starting vectors can be input in one of two ways: 1) as \code{start_vec}
+input, which is a vector of numbers of the numbers of individuals in each
+stage, stage pair, or age-stage, with the length of the vector necessarily
+as long as there are rows in the matrices of the MPM; or 2) as
+\code{start_frame} input, which is a data frame showing only those stages,
+stage pairs, or age-stages that should begin with more than 0 individuals,
+and the numbers of individuals that those stages should start with (this
+object is created using the \code{\link{start_input}()} function). If both
+are provided, then \code{start_frame} takes precedence and \code{start_vec}
+is ignored. If neither is provided, then \code{projection3()} automatically
+assumes that each stage, stage pair, or age-stage begins with a single
+individual. Importantly, if a \code{lefkoMat} object is not used, and a list
+of matrices is provided instead, then \code{start_frame} cannot be utilized
+and a full \code{start_vec} must be provided to conduct a simulation with
+starting numbers of individuals other than 1 per stage.
+
 The resulting data frames in element \code{projection} are separated by
 pop-patch according to the order provided in element \code{labels}, but the
 matrices for each element of \code{projection} have the result of each
@@ -92,6 +134,19 @@ replicate stacked in order on top of one another without any break or
 indication. Results for each replicate must be separated using the
 information provided in elements \code{control} and the 3 stage
 descriptor elements.
+
+Density dependent projections are automatically set up if object
+\code{density} is input. If this object is not included, then density
+independent projections will be set up. Note that currently, density
+dependent projections can only be performed with \code{lefkoMat} objects.
+
+The stage distributions and reproductive values produced are not the
+asymptotic values as would be given by the standardized right and left
+eigenvectors associated with the dominant eigenvalue of a matrix, but are
+vectors describing these values at the specific points in time projected.
+See equations 14.86 and 14.88 and section 14.4 on Sensitivity and Elasticity
+Analysis under Environmental Stochasticity in Caswell (2001, Matrix
+Population Models, Sinauer Associates) for more details.
 }
 
 \examples{
@@ -120,10 +175,6 @@ lathvert <- verticalize3(lathyrus, noyears = 4, firstyear = 1988,
   nonobsacol = "Dormant1988", stageassign = lathframe, stagesize = "sizea",
   censorcol = "Missing1988", censorkeep = NA, censor = TRUE)
 
-lathrepm <- matrix(0, 7, 7)
-lathrepm[1, 6] <- 0.345
-lathrepm[2, 6] <- 0.054
-
 lathsupp3 <- supplemental(stage3 = c("Sd", "Sd", "Sdl", "Sdl", "Sd", "Sdl"), 
   stage2 = c("Sd", "Sd", "Sd", "Sd", "rep", "rep"),
   stage1 = c("Sd", "rep", "Sd", "rep", "all", "all"), 
@@ -134,8 +185,7 @@ lathsupp3 <- supplemental(stage3 = c("Sd", "Sd", "Sdl", "Sdl", "Sd", "Sdl"),
 
 ehrlen3 <- rlefko3(data = lathvert, stageframe = lathframe,
   year = c(1989, 1990), stages = c("stage3", "stage2", "stage1"),
-  repmatrix = lathrepm, supplement = lathsupp3, yearcol = "year2",
-  indivcol = "individ")
+  supplement = lathsupp3, yearcol = "year2", indivcol = "individ")
 
 lathproj <- projection3(ehrlen3, nreps = 5, stochastic = TRUE)
 
@@ -193,4 +243,9 @@ cypmatrix3r <- rlefko3(data = cypraw_v1, stageframe = cypframe_raw,
 
 cypstoch <- projection3(cypmatrix3r, nreps = 5, stochastic = TRUE)
 
+}
+\seealso{
+\code{\link{start_input}()}
+
+\code{\link{density_input}()}
 }

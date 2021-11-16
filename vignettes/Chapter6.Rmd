@@ -11,7 +11,7 @@ vignette: >
 
 
 
-  <p style="text-indent: 20px">This document was built in Markdown in R 4.1.1 and compiled on 06 September 2021. It covers package `lefko3` version 3.8.0. Please note that this vignette was written with space considerations in mind. To reduce output size, we have prevented some statements from running if they produce long stretches of output. Examples include most `summary()` calls. In these cases, we include hashtagged versions of these calls, and our text assumes that the user runs these statements without hashtags. We have also written this vignette using the default Ehrlén format as the output format for all historical MPMs. All examples work with deVries format as well.</p>
+  <p style="text-indent: 20px">This document was built in Markdown in R 4.1.2 and compiled on 13 November 2021. It covers package `lefko3` version 4.0.0. Please note that this vignette was written with space considerations in mind. To reduce output size, we have prevented some statements from running if they produce long stretches of output. Examples include most `summary()` calls. In these cases, we include hashtagged versions of these calls, and our text assumes that the user runs these statements without hashtags. We have also written this vignette using the default Ehrlén format as the output format for all historical MPMs. All examples work with deVries format as well.</p>
 
 ## CASE STUDIES OF SWEDISH *Lathyrus vernus* POPULATION
 
@@ -43,7 +43,7 @@ data(lathyrus)
 
 #### Step 1. Life history model development
 
-  <p style="text-indent: 20px">To begin, we need to create a **stageframe** for this dataset. A stageframe is a data frame that describes all stages in the life history of the organism, in a way usable by the functions in this package and using stage names and classifications that completely match those used in the dataset. It needs to include complete descriptions of all stages that occur in the dataset, with each stage defined uniquely. Since this object can be used for automated classification of individuals, all sizes, reproductive states, and other characteristics defining each stage in the dataset need to be accounted for explicitly. This can be difficult if a few data points exist outside the range of sizes specified in the stageframe, so great care must be taken to include all size values and values of other descriptor variables occurring within the dataset. The final description of each stage occurring in the dataset must not completely overlap with any other stage also found in the dataset, although partial overlap is allowed and expected. We will base our stageframe on the life history model provided in Ehrlén [-@ehrlen_dynamics_2000], but use a different size classification based on leaf volume to allow IPM construction and make all mature stages other than vegetative dormancy reproductive, as shown in Figure 6.1 below.</p>
+  <p style="text-indent: 20px">To begin, we need to create a **stageframe** for this dataset. A stageframe is a data frame that describes all stages in the life history of the organism, in a way usable by the functions in this package and using stage names and classifications that completely match those used in the dataset. It needs to include complete descriptions of all stages that occur in the dataset, with each stage defined uniquely. Since this object can be used for automated classification of individuals, all sizes, reproductive states, and other characteristics defining each stage in the dataset need to be accounted for explicitly. This can be difficult if a few data points exist outside the range of sizes specified in the stageframe, so great care must be taken to include all size values and values of other descriptor variables occurring within the dataset. The final description of each stage occurring in the dataset must not completely overlap with any other stage also found in the dataset, although partial overlap is allowed and expected. We will base our stageframe on the life history model provided in @ehrlen_dynamics_2000, but use a different size classification based on leaf volume to allow IPM construction and make all mature stages other than vegetative dormancy reproductive, as shown in Figure 6.1 below.</p>
   
 <img src = "lathipm.png" width = "700"></img>  
 
@@ -91,17 +91,17 @@ lathvertipm <- verticalize3(lathyrus, noyears = 4, firstyear = 1988,
 
 ```r
 writeLines(paste0("Total length of variable corresponding to fecundity in occasion t+1: ", length(lathvertipm$feca3)))
-#> Total length of variable corresponding to fecundity in occasion t+1: 2527
+#> Total length of variable corresponding to fecundity in occasion t+1: 2552
 writeLines(paste0("Total non-integer entries in fecundity in occasion t+1: ", length(which(lathvertipm$feca3 != round(lathvertipm$feca3)))))
 #> Total non-integer entries in fecundity in occasion t+1: 0
 writeLines(paste0("\nTotal length of variable corresponding to fecundity in occasion t: ", length(lathvertipm$feca2)))
 #> 
-#> Total length of variable corresponding to fecundity in occasion t: 2527
+#> Total length of variable corresponding to fecundity in occasion t: 2552
 writeLines(paste0("Total non-integer entries in fecundity in occasion t: ", length(which(lathvertipm$feca2 != round(lathvertipm$feca2)))))
 #> Total non-integer entries in fecundity in occasion t: 6
 writeLines(paste0("\nTotal length of variable corresponding to fecundity in occasion t-1: ", length(lathvertipm$feca1)))
 #> 
-#> Total length of variable corresponding to fecundity in occasion t-1: 2527
+#> Total length of variable corresponding to fecundity in occasion t-1: 2552
 writeLines(paste0("Total non-integer entries in fecundity in occasion t-1: ", length(which(lathvertipm$feca1 != round(lathvertipm$feca1)))))
 #> Total non-integer entries in fecundity in occasion t-1: 6
 ```
@@ -114,7 +114,7 @@ lathvertipm$feca2 <- round(lathvertipm$feca2)
 lathvertipm$feca1 <- round(lathvertipm$feca1)
 ```
 
-  <p style="text-indent: 20px">Although we wish to treat fecundity as a count, it is still not clear what underlying distribution we should use. This package currently allows 7 choices: Gaussian, Poisson, negative binomial, zero-inflated Poisson, zero-inflated negative binomial, zero-truncated Poisson, and zero-truncated negative binomial. To assess which to use, we should first assess whether the mean and variance of the count are equal using a dispersion test. The Poisson distribution assumes that the mean and variance are equal, and so we can test this assumption using a chi-squared test. If it is not significantly different, then we may use some variant of the Poisson distribution. If the data are significantly over- or under-dispersed, then we should use the negative binomial distribution. If fecundity of 0 is possible in reproductive stages, as in cases where reproductive status is defined by flowering rather than by offspring production, then we should also test whether the number of zeroes is significantly greater than expected under these distributions, and use a zero-inflated distribution if so (if fecundity does not equal 0 in any reproductive individuals at all, then we should use a zero-truncated distribution).</p>
+  <p style="text-indent: 20px">Although we wish to treat fecundity as a count, it is still not clear what underlying distribution we should use. This package currently allows 8 choices: Gaussian, Gamma, Poisson, negative binomial, zero-inflated Poisson, zero-inflated negative binomial, zero-truncated Poisson, and zero-truncated negative binomial. To assess which to use, we should first assess whether the mean and variance of the count are equal using a dispersion test. The Poisson distribution assumes that the mean and variance are equal, and so we can test this assumption using a chi-squared test. If it is not significantly different, then we may use some variant of the Poisson distribution. If the data are significantly over- or under-dispersed, then we should use the negative binomial distribution. If fecundity of 0 is possible in reproductive stages, as in cases where reproductive status is defined by flowering rather than by offspring production, then we should also test whether the number of zeroes is significantly greater than expected under these distributions, and use a zero-inflated distribution if so (if fecundity does not equal 0 in any reproductive individuals at all, then we should use a zero-truncated distribution).</p>
   
   <p style="text-indent: 20px">Let's start off by looking at a plot of the distribution of fecundity.</p>
 
@@ -125,25 +125,50 @@ hist(subset(lathvertipm, repstatus2 == 1)$feca2, main = "Fecundity",
 
 ![Figure 6.2. Histogram of fecundity in occasion t](Ch6.5-1.png)
 
-  <p style="text-indent: 20px">We see that the distribution seems to conform to a classic count variable with a very low mean value. The first bar suggests that there may be too many zeroes to use a standard Poisson or negative binomial distribution. But to make that decision, let's formally test the two assumptions of $mean = variance$ and no excess 0s. Both tests use chi-squared distribution-based approaches, with the zero-inflation test based on van der Broek [-@van_den_broek_score_1995]. The following line will assess all of this in fecundity, but can also assess size if necessary (we will treat size as conforming to a Gaussian distribution, so will not test these assumptions with it).</p>
+  <p style="text-indent: 20px">We see that the distribution seems to conform to a classic count variable with a very low mean value. The first bar suggests that there may be too many zeroes to use a standard Poisson or negative binomial distribution. But to make that decision, let's formally test the two assumptions of $mean = variance$ and no excess 0s. Both tests use chi-squared distribution-based approaches, with the zero-inflation test based on @van_den_broek_score_1995. The following line will assess all of this in fecundity, but can also assess size if necessary (we will treat size as conforming to a Gaussian distribution, so will not test these assumptions with it).</p>
 
 ```r
-sf_distrib(lathvertipm, size2 = "sizea2", fec = "feca2", repst = "repstatus2")
+sf_distrib(lathvertipm, sizea = c("sizea3", "sizea2"), fec = c("feca3", "feca2"),
+  repst = c("repstatus3", "repstatus2"), obs3 = "obsstatus3")
+#> Mean sizea is 466.9
 #> 
-#> Mean fecundity is 4.791
-#> The variance in fecundity is 70.14
-#> The probability of this dispersion level by chance assuming the true mean fecundity = variance in fecundity, and an alternative hypothesis of overdispersion, is 0
+#> The variance in sizea is 481700
+#> 
+#> The probability of this dispersion level by chance assuming that
+#> the true mean sizea = variance in sizea,
+#> and an alternative hypothesis of overdispersion, is 0
+#> 
+#> Primary size is significantly overdispersed.
+#> 
+#> Mean lambda in sizea is 1.69e-203
+#> The actual number of 0s in sizea is 0
+#> The expected number of 0s in sizea under the null hypothesis is 3.564e-200
+#> The probability of this deviation in 0s from expectation by chance is 1
+#> 
+#> Primary size is not significantly zero-inflated.
+#> Primary size does not appear to include 0s, suggesting
+#>             that a zero-truncated distribution may be warranted.
+#> 
+#> 
+#> 
+#> 
+#> 
+#> Mean fec is 4.825
+#> 
+#> The variance in fec is 72.74
+#> 
+#> The probability of this dispersion level by chance assuming that
+#> the true mean fec = variance in fec,
+#> and an alternative hypothesis of overdispersion, is 0
 #> 
 #> Fecundity is significantly overdispersed.
 #> 
-#> 
-#> Mean lambda is 0.008302
-#> The actual number of 0s in fecundity is 334
-#> The expected number of 0s in fecundity under the null hypothesis is 4.973
-#> The probability of this deviation in 0s is 0
+#> Mean lambda in fec is 0.008029
+#> The actual number of 0s in fec is 302
+#> The expected number of 0s in fec under the null hypothesis is 4.352
+#> The probability of this deviation in 0s from expectation by chance is 0
 #> 
 #> Fecundity is significantly zero-inflated.
-#> NULL
 ```
 
   <p style="text-indent: 20px">Such significant results for both tests show us that we really need to use a zero-inflated negative binomial distribution here.</p>
@@ -237,11 +262,9 @@ lathmodels3ipm <- modelsearch(lathvertipm, historical = TRUE, approach = "mixed"
   fecdist = "negbin", fec.zero = TRUE, indiv = "individ", year = "year2", 
   year.as.random = TRUE, juvsize = TRUE, show.model.tables = TRUE, quiet = TRUE)
 #> Warning: Some predictor variables are on very different scales: consider rescaling
-#> Warning in checkConv(attr(opt, "derivs"), opt$par, ctrl = control$checkConv, : Model failed to converge with
-#> max|grad| = 0.0158034 (tol = 0.002, component 1)
-#> Warning in checkConv(attr(opt, "derivs"), opt$par, ctrl = control$checkConv, : Model is nearly unidentifiable: very large eigenvalue
-#>  - Rescale variables?;Model is nearly unidentifiable: large eigenvalue ratio
-#>  - Rescale variables?
+
+#> Warning: Some predictor variables are on very different scales: consider rescaling
+#> boundary (singular) fit: see ?isSingular
 #> Warning: Some predictor variables are on very different scales: consider rescaling
 #> boundary (singular) fit: see ?isSingular
 #> Warning: Some predictor variables are on very different scales: consider rescaling
@@ -270,7 +293,6 @@ lathmodels2ipm <- modelsearch(lathvertipm, historical = FALSE,
 #summary(lathmodels2ipm)
 ```
 
-
 #### Step 4. IPM estimation
 
   <p style="text-indent: 20px">We will now create the historical suite of matrices covering the years of study. These matrices will be extremely large - large enough that some computers might have difficulty with them. If you encounter an error message telling you that you have run out of memory, then please try this on a more powerful computer :) .</p>
@@ -283,31 +305,31 @@ summary(lathmat3ipm)
 #> 
 #> This historical lefkoMat object contains 3 matrices.
 #> 
-#> Each matrix is a square matrix with 10609 rows and columns, and a total of 112550881 elements.
-#> A total of 3122136 survival transitions were estimated, with 1040712 per matrix.
+#> Each matrix is square with 10609 rows and columns, and a total of 112550881 elements.
+#> A total of 3122142 survival transitions were estimated, with 1040714 per matrix.
 #> A total of 60600 fecundity transitions were estimated, with 20200 per matrix.
+#> This lefkoMat object covers 1 populations, 1 patches, and 4 time steps.
 #> 
 #> Vital rate modeling quality control:
 #> 
-#> Survival estimated with 257 individuals and 2246 individual transitions.
-#> Observation estimated with 254 individuals and 2121 individual transitions.
+#> Survival estimated with 257 individuals and 2267 individual transitions.
+#> Observation estimated with 254 individuals and 2122 individual transitions.
 #> Size estimated with 254 individuals and 1916 individual transitions.
 #> Reproduction probability not estimated.
-#> Fecundity estimated with 257 individuals and 2246 individual transitions.
-#> Juvenile survival estimated with 187 individuals and 281 individual transitions.
-#> Juvenile observation estimated with 154 individuals and 210 individual transitions.
-#> Juvenile size estimated with 144 individuals and 193 individual transitions.
-#> Juvenile reproduction probability not estimated.
+#> Fecundity not estimated.
+#> Juvenile survival not estimated.
+#> Juvenile observation estimated with 257 individuals and 2267 individual transitions.
+#> Juvenile size estimated with 187 individuals and 285 individual transitions.
+#> Juvenile reproduction estimated with 154 individuals and 210 individual transitions.
 #> 
 #> Survival probability sum check (each matrix represented by column in order):
 #>          [,1]  [,2]  [,3]
 #> Min.    0.000 0.000 0.000
-#> 1st Qu. 0.996 0.983 0.988
-#> Median  1.000 0.999 1.000
-#> Mean    0.969 0.952 0.960
-#> 3rd Qu. 1.000 1.000 1.000
+#> 1st Qu. 0.987 0.987 0.987
+#> Median  0.996 0.996 0.996
+#> Mean    0.952 0.952 0.952
+#> 3rd Qu. 0.999 0.999 0.999
 #> Max.    1.000 1.000 1.000
-#> NULL
 ```
   
   <p style="text-indent: 20px">These are giant matrices. With 10,609 rows and columns, there are a total of 112,550,881 elements per matrix. But they are also amazingly sparse - with 1,060,912 elements estimated, only 0.9% of elements per matrix are non-zero. The survival probability sums all look good, so we appear to have no problems with overly large given and proxy survival transitions provided through our supplemental tables. Let's now build the ahistorical IPMs.</p>
@@ -320,35 +342,35 @@ summary(lathmat2ipm)
 #> 
 #> This ahistorical lefkoMat object contains 3 matrices.
 #> 
-#> Each matrix is a square matrix with 103 rows and columns, and a total of 10609 elements.
-#> A total of 30621 survival transitions were estimated, with 10207 per matrix.
+#> Each matrix is square with 103 rows and columns, and a total of 10609 elements.
+#> A total of 30609 survival transitions were estimated, with 10203 per matrix.
 #> A total of 600 fecundity transitions were estimated, with 200 per matrix.
+#> This lefkoMat object covers 1 populations, 1 patches, and 4 time steps.
 #> 
 #> Vital rate modeling quality control:
 #> 
-#> Survival estimated with 257 individuals and 2246 individual transitions.
-#> Observation estimated with 254 individuals and 2121 individual transitions.
+#> Survival estimated with 257 individuals and 2267 individual transitions.
+#> Observation estimated with 254 individuals and 2122 individual transitions.
 #> Size estimated with 254 individuals and 1916 individual transitions.
 #> Reproduction probability not estimated.
-#> Fecundity estimated with 257 individuals and 2246 individual transitions.
-#> Juvenile survival estimated with 187 individuals and 281 individual transitions.
-#> Juvenile observation estimated with 154 individuals and 210 individual transitions.
-#> Juvenile size estimated with 144 individuals and 193 individual transitions.
-#> Juvenile reproduction probability not estimated.
+#> Fecundity not estimated.
+#> Juvenile survival not estimated.
+#> Juvenile observation estimated with 257 individuals and 2267 individual transitions.
+#> Juvenile size estimated with 187 individuals and 285 individual transitions.
+#> Juvenile reproduction estimated with 154 individuals and 210 individual transitions.
 #> 
 #> Survival probability sum check (each matrix represented by column in order):
-#>             [,1]     [,2]     [,3]
-#> Min.    4.87e-05 1.35e-05 0.000059
-#> 1st Qu. 9.84e-01 9.61e-01 0.985057
-#> Median  9.99e-01 9.99e-01 0.998781
-#> Mean    9.54e-01 9.24e-01 0.956967
-#> 3rd Qu. 1.00e+00 1.00e+00 0.999866
-#> Max.    1.00e+00 1.00e+00 0.999985
-#> NULL
+#>          [,1]  [,2]  [,3]
+#> Min.    0.000 0.000 0.000
+#> 1st Qu. 0.975 0.975 0.975
+#> Median  0.998 0.998 0.998
+#> Mean    0.945 0.945 0.945
+#> 3rd Qu. 1.000 1.000 1.000
+#> Max.    1.000 1.000 1.000
 ```
   
-  <p style="text-indent: 20px">The ahistorical IPMs are certainly smaller than the historical IPMs, but are nonetheless quiet large. Although huge, these matrices are not sparse - 10,407 elements out of 10,609 per matrix are estimated (98.1%). Fortunately, we can assume that neither IPM is overparameterized, since ultimately the elements in an IPM and any other function-based matrix reflect the statistical power of the underlying vital rate models. In `lefko3`, the vital rate models used are the best-fit models from exhaustive model selection, and so are already the most parsimonious from within the suite of tested models.</p>
-
+  <p style="text-indent: 20px">The ahistorical IPMs are certainly smaller than the historical IPMs, but are nonetheless quiet large. Although huge, these matrices are not sparse - 10,403 elements out of 10,609 per matrix are estimated (98.1%).</p>
+  
   <p style="text-indent: 20px">Let's do a further comparison - let's view a matrix plot of each kind of MPM, ahistorical and then historical. First, the ahistorical plot.</p>
 
 ```r
@@ -357,10 +379,6 @@ image3(lathmat2ipm, used = 1)
 
 ![Figure 6.3. Image of ahistorical projection matrix](Ch6.12-1.png)
 
-```
-#> NULL
-```
-
   <p style="text-indent: 20px">Now the historical plot.</p>
 
 ```r
@@ -368,10 +386,6 @@ image3(lathmat3ipm, used = 1)
 ```
 
 ![Figure 6.4. Image of historical projection matrix](Ch6.13-1.png)
-
-```
-#> NULL
-```
 
   <p style="text-indent: 20px">The plots above show that the ahistorical matrix is large but dense, mostly full of non-zero entries (the colored elements correspond to non-zero elements). In contrast, the historical matrix is huge and sparse, mostly full of zeroes with a general pattern to the distribution of non-zero elements.</p>
   
@@ -385,16 +399,16 @@ writeLines("\nAhistorical matrix stage survival distribution: ")
 #> 
 #> Ahistorical matrix stage survival distribution:
 summary(colSums(lath2ipmmean$U[[1]]))
-#>      Min.   1st Qu.    Median      Mean   3rd Qu.      Max. 
-#> 0.0000404 0.9765161 0.9987748 0.9451579 0.9998662 0.9999849
+#>    Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+#>  0.0000  0.9751  0.9977  0.9447  0.9997  1.0000
 writeLines("\nHistorical matrix stage-pair survival distribution: ")
 #> 
 #> Historical matrix stage-pair survival distribution:
 summary(colSums(lath3ipmmean$U[[1]]))
 #>    Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
-#>  0.0000  0.9887  0.9994  0.9604  1.0000  1.0000
+#>  0.0000  0.9867  0.9965  0.9523  0.9986  1.0000
 ```
-
+  
   <p style="text-indent: 20px">All looks fine! Let's also take a look at a portion of one of the conditional historical matrices, particularly the matrix conditional on vegetative dormancy in occasion *t*-1. This matrix can be compared to the ahistorical mean to assess the impacts of history on the matrix elements themselves. Please remember to remove the hashtag.</p>
 
 ```r
@@ -425,20 +439,20 @@ legend("bottomleft", c("ahistorical", "historical"), lty = c(1, 2),
 
 ```r
 lambda3(lath2ipmmean)
-#>   pop patch   lambda
-#> 1   1     1 0.815444
+#>   pop patch    lambda
+#> 1   1     1 0.8112761
 lambda3(lath3ipmmean)
 #>   pop patch    lambda
-#> 1   1     1 0.8719855
+#> 1   1     1 0.8762491
 
 set.seed(42)
 slambda3(lathmat2ipm)
-#>   pop patch          a        var        sd          se
-#> 1   1     1 -0.2112375 0.01050791 0.1025081 0.001025081
+#>   pop patch          a          var          sd          se
+#> 1   1     1 -0.2091469 1.536413e-25 3.91971e-13 3.91971e-15
 set.seed(42)
 slambda3(lathmat3ipm, times = 1000)
-#>   pop patch          a         var         sd          se
-#> 1   1     1 -0.1439611 0.007964166 0.08924217 0.002822085
+#>   pop patch          a          var           sd           se
+#> 1   1     1 -0.1321049 6.886133e-22 2.624144e-11 8.298273e-13
 ```
   
   <p style="text-indent: 20px">The historical growth rate is larger than the ahistorical in both deterministic and stochastic analyses, although all four numbers suggest a declining population. Now let's compare the stable stage distribution from both the ahistorical and historical mean MPMs.</p>
@@ -521,7 +535,7 @@ writeLines("\nThe highest historically-corrected deterministic sensitivity is as
 #> 
 #> The highest historically-corrected deterministic sensitivity is associated with element:
 which(lath3ipmsens$ah_sensmats[[1]] == max(lath3ipmsens$ah_sensmats[[1]][which(lath2ipmmean$A[[1]] > 0)]))
-#> [1] 283
+#> [1] 280
 writeLines("\nThe highest ahistorical stochastic sensitivity is associated with element: ")
 #> 
 #> The highest ahistorical stochastic sensitivity is associated with element:
@@ -531,20 +545,20 @@ writeLines("\nThe highest historically-corrected stochastic sensitivity is assoc
 #> 
 #> The highest historically-corrected stochastic sensitivity is associated with element:
 which(lath3ipmsens_s$ah_sensmats[[1]] == max(lath3ipmsens_s$ah_sensmats[[1]][which(lath2ipmmean$A[[1]] > 0)]))
-#> [1] 309
+#> [1] 304
 writeLines("\nThe highest historical deterministic sensitivity is associated with element: ")
 #> 
 #> The highest historical deterministic sensitivity is associated with element:
 which(lath3ipmsens$h_sensmats[[1]] == max(lath3ipmsens$h_sensmats[[1]][which(lath3ipmmean$A[[1]] > 0)]))
-#> [1] 2206981
+#> [1] 2206978
 writeLines("\nThe highest historical stochastic sensitivity is associated with element: ")
 #> 
 #> The highest historical stochastic sensitivity is associated with element:
 which(lath3ipmsens_s$h_sensmats[[1]] == max(lath3ipmsens_s$h_sensmats[[1]][which(lath3ipmmean$A[[1]] > 0)]))
-#> [1] 2206981
+#> [1] 2206978
 ```
   
-  <p style="text-indent: 20px">Our sensitivity analyses generally suggest that population growth rate is most sensitive to element 309, which is the third column (309 / 103 = 3) and the 103rd row and so is associated with the transition from vegetative dormancy to the largest adult stage. However, deterministic analysis of the hMPM differs, suggesting that population growth rate is most elastic to element 283, which is in the third column and 77th row. This transition is from vegetative dormancy to a medium-to-large size adult. Historical deterministic and stochastic sensitivity analyses both suggest that population growth rate is most sensitive to changes in element 2,206,981, which is in the 209th column (2,206,981 / 10,609 = 208.0291) and the 309th row. That element corresponds to the transition from vegetative dormancy in occasions *t*-1 and *t* to the largest adult in occasion *t*+1. So, sensitivity analysis strongly suggests that vegetative dormancy has strong impacts on population growth rate.</p>
+  <p style="text-indent: 20px">Our sensitivity analyses generally suggest that population growth rate is most sensitive to element 309, which is the third column (309 / 103 = 3) and the 103rd row and so is associated with the transition from vegetative dormancy to the largest adult stage. However, deterministic analysis of the hMPM differs, suggesting that population growth rate is most elastic to element 280, which is in the third column and 74th row. This transition is from vegetative dormancy to a medium-to-large size adult. Historical deterministic and stochastic sensitivity analyses both suggest that population growth rate is most sensitive to changes in element 2,206,978, which is in the 209th column (2,206,981 / 10,609 = 208.0288) and the 306th row. That element corresponds to the transition from vegetative dormancy in occasions *t*-1 and *t* to a very larg adult in occasion *t*+1. So, sensitivity analysis strongly suggests that vegetative dormancy has strong impacts on population growth rate.</p>
   
   <p style="text-indent: 20px">We will now move on to elasticity analysis. We will reduce the number of occasion steps simulated in the stochastic historical analysis to reduce the amount of computer processing time (this might take several hours even with the number of steps reduced). We will also remove the sensitivity analyses from memory.</p>
 
@@ -642,7 +656,6 @@ legend("topright", c("det ahist", "det hist", "sto ahist", "sto hist"),
   <p style="text-indent: 20px">Package `lefko3` also includes functions to conduct deterministic and stochastic life table response experiments, and a general projection function that can be used for analyses such as quasi-extinction analysis. Users wishing to conduct these analyses should see our other vignettes, including the long-format vignettes on <a href = "http://www.sheffersonlab.com/projects">the projects page</a> of the Shefferson lab website.
   
   <p style="text-indent: 20px">Further analytical tools are being planned for `lefko3`, but packages that handle projection matrices can typically handle the individual matrices produced and saved in `lefkoMat` objects in this package. Differences, obscure results, and errors sometimes arise when packages are not made to handle large and/or sparse matrices - historical matrices are both, and so care must be taken with their analysis.</p>
-
 
 ## Acknowledgements
 

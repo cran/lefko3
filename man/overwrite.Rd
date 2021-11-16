@@ -18,15 +18,15 @@ overwrite(
 }
 \arguments{
 \item{stage3}{The name of the stage in occasion \emph{t}+1 in the transition
-to be replaced.}
+to be replaced. Abbreviations for groups of stages are also allowed
+(see Notes).}
 
 \item{stage2}{The name of the stage in occasion \emph{t} in the transition to
-be replaced.}
+be replaced. Abbreviations for groups of stages are also allowed (see Notes).}
 
 \item{stage1}{The name of the stage in occasion \emph{t}-1 in the transition
-to be replaced. Only needed if a historical matrix is to be produced. Use
-\code{rep} if all reproductive stages are to be used, and leave empty or use
-\code{all} if all stages in stageframe are to be used.}
+to be replaced. Only needed if a historical matrix is to be produced.
+Abbreviations for groups of stages are also allowed (see Notes).}
 
 \item{eststage3}{The name of the stage to replace \code{stage3}. Only needed
 if a transition will be replaced by another estimated transition.}
@@ -85,6 +85,17 @@ transitions within an ahistorical or historical projection matrix to
 overwrite with either given rates and probabilities, or other estimated
 transitions.
 }
+\section{Notes}{
+
+Entries in \code{stage3}, \code{stage2}, and \code{stage1} can include
+abbreviations for groups of stages. Use \code{rep} if all reproductive stages
+are to be used, \code{nrep} if all mature but non-reproductive stages are to
+be used, \code{mat} if all mature stages are to be used, \code{immat} if all
+immature stages are to be used, \code{prop} if all propagule stages are to be
+used, \code{npr} if all non-propagule stages are to be used, and leave empty
+or use \code{all} if all stages in stageframe are to be used.
+}
+
 \examples{
 cypover2r <- overwrite(stage3 = c("SD", "P1", "P2", "P3", "SL", "D", 
     "XSm", "Sm"),

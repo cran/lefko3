@@ -8,55 +8,69 @@ aflefko2(
   year = "all",
   patch = "all",
   stageframe,
-  supplement = NA,
-  repmatrix = NA,
-  overwrite = NA,
+  supplement = NULL,
+  repmatrix = NULL,
+  overwrite = NULL,
   data = NA,
   modelsuite = NA,
   surv_model = NA,
   obs_model = NA,
   size_model = NA,
+  sizeb_model = NA,
+  sizec_model = NA,
   repst_model = NA,
   fec_model = NA,
   jsurv_model = NA,
   jobs_model = NA,
   jsize_model = NA,
+  jsizeb_model = NA,
+  jsizec_model = NA,
   jrepst_model = NA,
   paramnames = NA,
-  inda = 0,
-  indb = 0,
-  indc = 0,
+  inda = NULL,
+  indb = NULL,
+  indc = NULL,
   surv_dev = 0,
   obs_dev = 0,
   size_dev = 0,
+  sizeb_dev = 0,
+  sizec_dev = 0,
   repst_dev = 0,
   fec_dev = 0,
   jsurv_dev = 0,
   jobs_dev = 0,
   jsize_dev = 0,
+  jsizeb_dev = 0,
+  jsizec_dev = 0,
   jrepst_dev = 0,
+  density = NA,
   repmod = 1,
-  yearcol = "year2",
-  patchcol = "patchid",
+  yearcol = NA,
+  patchcol = NA,
   year.as.random = FALSE,
   patch.as.random = FALSE,
+  random.inda = FALSE,
+  random.indb = FALSE,
+  random.indc = FALSE,
   final_age = 10,
   continue = TRUE,
   randomseed = NA,
   negfec = FALSE,
   reduce = FALSE,
-  err_check = FALSE
+  err_check = FALSE,
+  exp_tol = 700,
+  theta_tol = 1e+08
 )
 }
 \arguments{
 \item{year}{A variable corresponding to observation occasion, or a set
 of such values, given in values associated with the year term used in linear 
-model development. Can also equal \code{all}, in which case matrices will
-be estimated for all years. Defaults to \code{all}.}
+model development. Defaults to \code{"all"}, in which case matrices will be
+estimated for all occasions.}
 
 \item{patch}{A variable designating which patches or subpopulations will have
-matrices estimated. Should be set to specific patch names, or to \code{all}
-if matrices should be estimated for all patches. Defaults to \code{all}.}
+matrices estimated. Defaults to \code{"all"}, but can also be set to specific
+patch names.}
 
 \item{stageframe}{A stageframe object that includes information on the size,
 observation status, propagule status, immaturity status, and maturity status
@@ -67,39 +81,40 @@ continuous.}
 provides supplemental data that should be incorporated into the MPM. Three
 kinds of data may be integrated this way: transitions to be estimated via the
 use of proxy transitions, transition overwrites from the literature or
-supplemental studies, and transition multipliers for fecundity. This data
-frame should be produced using the \code{\link{supplemental}()} function. Can
-be used in place of or in addition to an overwrite table (see 
+supplemental studies, and transition multipliers for survival and fecundity.
+This data frame should be produced using the \code{\link{supplemental}()}
+function. Can be used in place of or in addition to an overwrite table (see 
 \code{overwrite} below) and a reproduction matrix (see \code{repmatrix}
 below).}
 
-\item{repmatrix}{A reproduction matrix, which is an optional matrix composed
-mostly of 0s, with non-zero values for each potentially new individual (row)
-born to each reproductive stage (column). Entries act as multipliers on
-fecundity, with 1 equaling full fecundity. Fecundity multipliers provided
-this way supplement rather than replace those provided in \code{supplement}.
-If left blank, then \code{aflefko2()} will assume that all stages marked as
-reproductive produce offspring at 1x that of fecundity estimated in provided
-linear models, and that fecundity will be into the first stage noted as
-propagule or immature. To prevent this behavior, input just \code{0}, which
+\item{repmatrix}{An optional reproduction matrix. This matrix is composed
+mostly of 0s, with non-zero entries acting as element identifiers and
+multipliers for fecundity (with 1 equaling full fecundity). If left blank,
+and no \code{supplement} is provided, then \code{aflefko2()} will assume that
+all stages marked as reproductive produce offspring at 1x that of estimated
+fecundity, and that offspring production will yield the first stage noted as
+propagule or immature.  To prevent this behavior, input just \code{0}, which
 will result in fecundity being estimated only for transitions noted in
-\code{supplement} above. Must be the dimensions of an ahistorical matrix.}
+\code{supplement} above. Must be the dimensions of an ahistorical stage-based
+matrix.}
 
 \item{overwrite}{An optional data frame developed with the
 \code{\link{overwrite}()} function describing transitions to be overwritten
 either with given values or with other estimated transitions. Note that this
 function supplements overwrite data provided in \code{supplement}.}
 
-\item{data}{The original historical demographic data frame used to estimate
+\item{data}{The historical vertical demographic data frame used to estimate
 vital rates (class \code{hfvdata}). The original data frame is required in
-order to initialize years and patches properly.}
+order to initialize occasions and patches properly.}
 
 \item{modelsuite}{An optional \code{lefkoMod} object holding the vital rate
 models. If given, then \code{surv_model}, \code{obs_model}, 
-\code{size_model}, \code{repst_model}, \code{fec_model}, \code{jsurv_model},
-\code{jobs_model}, \code{jsize_model}, \code{jrepst_model}, 
-\code{paramnames}, \code{yearcol}, and \code{patchcol} are not required. No
-models should include size or reproductive status in occasion \emph{t}-1.}
+\code{size_model}, \code{sizeb_model}, \code{sizec_model},
+\code{repst_model}, \code{fec_model}, \code{jsurv_model}, \code{jobs_model},
+\code{jsize_model}, \code{jsizeb_model}, \code{jsizec_model},
+\code{jrepst_model}, \code{paramnames}, \code{yearcol}, and \code{patchcol}
+are not required. No models should include size or reproductive status in
+occasion \emph{t}-1.}
 
 \item{surv_model}{A linear model predicting survival probability. This can be
 a model of class \code{glm} or \code{glmer}, and requires a predicted
@@ -115,12 +130,26 @@ will overwrite any observation probability model given in \code{modelsuite}.
 This model must have been developed in a modeling exercise testing only the
 impacts of occasion \emph{t}.}
 
-\item{size_model}{A linear model predicting size. This can be a model of
-class \code{glm} or \code{glmer}, both of which require a predicted poisson
-variable under a log link, or a model of class \code{lm} or \code{lmer}, in
-which a Gaussian response is assumed. If given, then will overwrite any size
-model given in \code{modelsuite}. This model must have been developed in a
-modeling exercise testing only the impacts of occasion \emph{t}.}
+\item{size_model}{A linear model predicting primary size. This can be a model
+of class \code{glm}, \code{glmer}, \code{glmmTMB}, \code{zeroinfl},
+\code{vglm}, \code{lm}, or \code{lmer}. If given, then will overwrite any
+primary size model given in \code{modelsuite}. This model must have been
+developed in a modeling exercise testing only the impacts of occasion
+\emph{t}.}
+
+\item{sizeb_model}{A linear model predicting secondary size. This can be a
+modelvof class \code{glm}, \code{glmer}, \code{glmmTMB}, \code{zeroinfl},
+\code{vglm}, \code{lm}, or \code{lmer}. If given, then will overwrite any
+secondary size model given in \code{modelsuite}. This model must have been
+developed in a modeling exercise testing only the impacts of occasion
+\emph{t}.}
+
+\item{sizec_model}{A linear model predicting tertiary size. This can be a
+modelvof class \code{glm}, \code{glmer}, \code{glmmTMB}, \code{zeroinfl},
+\code{vglm}, \code{lm}, or \code{lmer}. If given, then will overwrite any
+tertiary size model given in \code{modelsuite}. This model must have been
+developed in a modeling exercise testing only the impacts of occasion
+\emph{t}.}
 
 \item{repst_model}{A linear model predicting reproduction probability. This
 can be a model of class \code{glm} or \code{glmer}, and requires a predicted
@@ -130,10 +159,11 @@ have been developed in a modeling exercise testing only the impacts of
 occasion \emph{t}.}
 
 \item{fec_model}{A linear model predicting fecundity. This can be a model of
-class \code{glm} or \code{glmer}, and requires a predicted poisson variable
-under a log link. If given, then will overwrite any fecundity model given in
-\code{modelsuite}. This model must have been developed in a modeling exercise
-testing only the impacts of occasion \emph{t}.}
+class \code{glm}, \code{glmer}, \code{glmmTMB}, \code{zeroinfl},
+\code{vglm}, \code{lm}, or \code{lmer}. If given, then will overwrite any 
+fecundity model given in \code{modelsuite}. This model must have been
+developed in a modeling exercise testing only the impacts of occasion
+\emph{t}.}
 
 \item{jsurv_model}{A linear model predicting juvenile survival probability.
 This can be a model of class \code{glm} or \code{glmer}, and requires a
@@ -149,13 +179,26 @@ will overwrite any juvenile observation probability model given in
 \code{modelsuite}. This model must have been developed in a modeling exercise
 testing only the impacts of occasion \emph{t}.}
 
-\item{jsize_model}{A linear model predicting juvenile size. This can be a
-model of class \code{glm} or \code{glmer}, both of which require a predicted
-poisson variable under a log link, or a model of class \code{lm} or
-\code{lmer}, in which a Gaussian response is assumed. If given, then will
-overwrite any juvenile size model given in \code{modelsuite}. This model must
-have been developed in a modeling exercise testing only the impacts of
-occasion \emph{t}.}
+\item{jsize_model}{A linear model predicting juvenile primary size. This
+can be a model of class \code{glm}, \code{glmer}, \code{glmmTMB},
+\code{zeroinfl}, \code{vglm}, \code{lm}, or \code{lmer}. If given, then will
+overwrite any juvenile primary size model given in \code{modelsuite}. This
+model must have been developed in a modeling exercise testing only the
+impacts of occasion \emph{t}.}
+
+\item{jsizeb_model}{A linear model predicting juvenile secondary size. This
+can be a model of class \code{glm}, \code{glmer}, \code{glmmTMB},
+\code{zeroinfl}, \code{vglm}, \code{lm}, or \code{lmer}. If given, then will
+overwrite any juvenile secondary size model given in \code{modelsuite}. This
+model must have been developed in a modeling exercise testing only the
+impacts of occasion \emph{t}.}
+
+\item{jsizec_model}{A linear model predicting juvenile tertiary size. This
+can be a model of class \code{glm}, \code{glmer}, \code{glmmTMB},
+\code{zeroinfl}, \code{vglm}, \code{lm}, or \code{lmer}. If given, then will
+overwrite any juvenile tertiary size model given in \code{modelsuite}. This
+model must have been developed in a modeling exercise testing only the
+impacts of occasion \emph{t}.}
 
 \item{jrepst_model}{A linear model predicting reproduction probability of a 
 mature individual that was immature in the previous year. This can be a model
@@ -165,16 +208,28 @@ probability model given in \code{modelsuite}. This model must have been
 developed in a modeling exercise testing only the impacts of occasion
 \emph{t}.}
 
-\item{paramnames}{A dataframe with two columns, the first showing the general
-model terms that will be used in matrix creation, and the second showing the
-equivalent terms used in modeling. Only required if \code{modelsuite} is not 
-supplied.}
+\item{paramnames}{A dataframe with three columns, the first describing all
+terms used in linear modeling, the second (must be called \code{mainparams}),
+showing the general model terms that will be used in matrix creation (users
+should use \code{\link{modelsearch}()} at least once to see the proper
+names to be used in this column), and the third showing the equivalent terms
+used in modeling (must be named \code{modelparams}). Only required if
+\code{modelsuite} is not supplied.}
 
-\item{inda}{A numeric value to use for individual covariate a. Defaults to 0.}
+\item{inda}{Can be a single value to use for individual covariate \code{a}
+in all matrices, a pair of values to use for times \emph{t} and \emph{t}-1 in
+historical matrices, or a vector of such values corresponding to each
+occasion in option \code{year}. Defaults to \code{NULL}.}
 
-\item{indb}{A numeric value to use for individual covariate b. Defaults to 0.}
+\item{indb}{Can be a single value to use for individual covariate \code{b}
+in all matrices, a pair of values to use for times \emph{t} and \emph{t}-1 in
+historical matrices, or a vector of such values corresponding to each
+occasion in option \code{year}. Defaults to \code{NULL}.}
 
-\item{indc}{A numeric value to use for individual covariate c. Defaults to 0.}
+\item{indc}{Can be a single value to use for individual covariate \code{c}
+in all matrices, a pair of values to use for times \emph{t} and \emph{t}-1 in
+historical matrices, or a vector of such values corresponding to each
+occasion in option \code{year}. Defaults to \code{NULL}.}
 
 \item{surv_dev}{A numeric value to be added to the y-intercept in the linear
 model for survival probability.}
@@ -183,7 +238,13 @@ model for survival probability.}
 model for observation probability.}
 
 \item{size_dev}{A numeric value to be added to the y-intercept in the linear
-model for size.}
+model for primary size.}
+
+\item{sizeb_dev}{A numeric value to be added to the y-intercept in the linear
+model for secondary size.}
+
+\item{sizec_dev}{A numeric value to be added to the y-intercept in the linear
+model for tertiary size.}
 
 \item{repst_dev}{A numeric value to be added to the y-intercept in the linear
 model for probability of reproduction.}
@@ -198,12 +259,22 @@ model for juvenile survival probability.}
 model for juvenile observation probability.}
 
 \item{jsize_dev}{A numeric value to be added to the y-intercept in the linear
-model for juvenile size.}
+model for juvenile primary size.}
+
+\item{jsizeb_dev}{A numeric value to be added to the y-intercept in the
+linear model for juvenile secondary size.}
+
+\item{jsizec_dev}{A numeric value to be added to the y-intercept in the
+linear model for juvenile tertiary size.}
 
 \item{jrepst_dev}{A numeric value to be added to the y-intercept in the
 linear model for juvenile reproduction probability.}
 
-\item{repmod}{A scalar multiplier of fecundity. Defaults to 1.}
+\item{density}{A numeric value indicating density value to use to propagate
+matrices. Only needed if density is an explanatory term used in linear
+models. Defaults to \code{NA}.}
+
+\item{repmod}{A scalar multiplier of fecundity. Defaults to \code{1}.}
 
 \item{yearcol}{The variable name or column number corresponding to year in
 occasion \emph{t} in the dataset. Not needed if a \code{modelsuite} is
@@ -213,37 +284,59 @@ supplied.}
 the dataset. Not needed if a \code{modelsuite} is supplied.}
 
 \item{year.as.random}{A logical term indicating whether coefficients for
-missing patches within vital rate models should be estimated as random
-intercepts. Defaults to FALSE, in which case missing occasion coefficients
-are set to 0.}
+missing occasions within vital rate models should be estimated as random
+intercepts. Defaults to \code{FALSE}, in which case missing monitoring
+occasion coefficients are set to \code{0}.}
 
 \item{patch.as.random}{A logical term indicating whether coefficients for
 missing patches within vital rate models should be estimated as random
-intercepts. Defaults to FALSE, in which case missing patch coefficients are
-set to 0.}
+intercepts. Defaults to \code{FALSE}, in which case missing patch
+coefficients are set to \code{0}.}
+
+\item{random.inda}{A logical value denoting whether to treat individual
+covariate \code{a} as a random, categorical variable. Otherwise is treated as
+a fixed, numeric variable. Defaults to \code{FALSE}.}
+
+\item{random.indb}{A logical value denoting whether to treat individual
+covariate \code{b} as a random, categorical variable. Otherwise is treated as
+a fixed, numeric variable. Defaults to \code{FALSE}.}
+
+\item{random.indc}{A logical value denoting whether to treat individual
+covariate \code{c} as a random, categorical variable. Otherwise is treated as
+a fixed, numeric variable. Defaults to \code{FALSE}.}
 
 \item{final_age}{The final age to model in the matrix, where the first age
 will be age 0.}
 
 \item{continue}{A logical value designating whether to allow continued
-survival of individuals going past the final age, using the demographic
-characteristics of the final age.}
+survival of individuals past the final age noted in the stageframe, using the 
+demographic characteristics of the final age.}
 
 \item{randomseed}{A numeric value used as a seed to generate random estimates
 for missing occasion and patch coefficients, if either \code{year.as.random}
-or \code{patch.as.random} is set to TRUE. Defaults to
+or \code{patch.as.random} is set to \code{TRUE}. Defaults to
 \code{\link{set.seed}()} default.}
 
 \item{negfec}{A logical value denoting whether fecundity values estimated to
-be negative should be reset to 0. Defaults to FALSE.}
+be negative should be reset to \code{0}. Defaults to \code{FALSE}.}
 
 \item{reduce}{A logical value denoting whether to remove ahistorical stages
 associated solely with 0 transitions. These are only removed in cases where
-the associated row and column sums in ALL matrices estimated equal 0. 
-Defaults to FALSE.}
+the associated row and column sums in ALL matrices estimated equal 0.
+Defaults to \code{FALSE}.}
 
-\item{err_check}{A logical value indicating whether to add matrices of vital
-rate probabilities associated with each matrix. Defaults to FALSE.}
+\item{err_check}{A logical value indicating whether to append matrices of
+vital rate probabilities associated with each matrix to the \code{lefkoMat}
+object generated. These matrices are developed internally and can be used for
+error checking. Defaults to \code{FALSE}.}
+
+\item{exp_tol}{A numeric value used to indicate a maximum value to set
+exponents to in the core kernel to prevent numerical overflow. Defaults to
+\code{700}.}
+
+\item{theta_tol}{A numeric value used to indicate a maximum value to theta as
+used in the negative binomial probability density kernel. Defaults to
+\code{100000000}, but can be reset to other values during error checking.}
 }
 \value{
 If all inputs are properly formatted, then this function will return
@@ -252,11 +345,14 @@ projection model and all of its metadata. Its structure is a list with the
 following elements:
 
 \item{A}{A list of full projection matrices in order of sorted patches and
-years.}
-\item{U}{A list of survival transition matrices sorted as in \code{A}.}
-\item{F}{A list of fecundity matrices sorted as in \code{A}.}
+occasions. All matrices output in R's \code{matrix} class.}
+\item{U}{A list of survival transition matrices sorted as in \code{A}. All 
+matrices output in R's \code{matrix} class.}
+\item{F}{A list of fecundity matrices sorted as in \code{A}. All matrices 
+output in R's \code{matrix} class.}
 \item{hstages}{A data frame matrix showing the pairing of ahistorical stages
-used to create historical stage pairs. Set to NA for ahistorical matrices.}
+used to create historical stage pairs. Set to \code{NA} for ahistorical
+matrices.}
 \item{agestages}{A data frame showing the stage number and stage name
 corresponding to \code{ahstages}, as well as the associated age, of each
 actual row in each age-by-stage matrix.}
@@ -270,21 +366,23 @@ In \code{aflefko2()}, only one population may be analyzed at once, and so
 in \code{U} and \code{F} matrices, and the number of annual matrices.}
 \item{modelqc}{This is the \code{qc} portion of the modelsuite input.}
 \item{prob_out}{An optional element only added if \code{err_check = TRUE}.
-This is a list of vital rate probability matrices, with 4 columns in the
-order of survival, observation probability, reproduction probability, and
-size transition probability.}
+This is a list of vital rate probability matrices, with 6 columns in the
+order of survival, observation probability, reproduction probability, primary
+size transition probability, secondary size transition probability, and
+tertiary size transition probability.}
 }
 \description{
 Function \code{aflefko2()} returns ahistorical age x stage MPMs corresponding
-to the patches and years given, including the associated component transition
-and fecundity matrices, data frame detailing the characteristics of
-ahistorical stages and the exact age-stage combinations corresponding to rows
-and columns in estimated matrices, and a data frame characterizing the patch
-and year combinations corresponding to these matrices. Unlike
-\code{\link{rlefko2}()} and \code{\link{rlefko3}()}, this function does not
-currently distinguish populations.
+to the patches and occasion times given, including the associated component
+transition and fecundity matrices, data frames detailing the characteristics
+of ahistorical stages and the exact age-stage combinations corresponding to
+rows and columns in estimated matrices, and a data frame characterizing the
+patch and occasion time combinations corresponding to these matrices.
 }
 \section{Notes}{
+
+Unlike \code{\link{rlefko2}()} and \code{\link{rlefko3}()}, this function
+does not currently distinguish populations.
 
 This function will yield incorrect estimates if the models utilized
 incorporate state in occasion \emph{t}-1. Only use models developed testing
@@ -308,16 +406,20 @@ ahistorical. If provided as historical, then \code{aflefko2()} will fail and
 produce an error.
 
 Users may at times wish to estimate MPMs using a dataset incorporating
-multiple patches or subpopulations. Should the aim of analysis be a general
-MPM that does not distinguish these patches or subpopulations, the
-\code{patchcol} variable should be left to NA, which is the default.
+multiple patches or subpopulations, but without discriminating between those
+patches or subpopulations. Should the aim of analysis be a general MPM that
+does not distinguish these patches or subpopulations, the \code{patchcol}
+variable should be set to \code{NA}, which is the default.
 
 Input options including multiple variable names must be entered in the order
-of variables in occasion \emph{t}+1, \emph{t}, and \emph{t}-1. Rearranging
-the order WILL lead to erroneous calculations, and will probably also lead to
-fatal errors.
+of variables in occasion \emph{t}+1 and \emph{t}. Rearranging the order will
+lead to erroneous calculations, and may lead to fatal errors.
 
-Using the \code{err_check} option will produce a matrix of 4 columns, each
+Care should be taken to match the random status of year and patch to the
+states of those variables within the modelsuite. If they do not match, then
+they will be treated as zeroes in vital rate estimation.
+
+Using the \code{err_check} option will produce a matrix of 6 columns, each
 characterizing a different vital rate. The product of each row yields an
 element in the associated \code{$U} matrix. The number and order of elements
 in each column of this matrix matches the associated matrix in column vector

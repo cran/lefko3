@@ -12,7 +12,7 @@ supplemental(
   eststage2 = NA,
   eststage1 = NA,
   givenrate = NA,
-  multiplier = NA,
+  multiplier = 1,
   type = NA,
   type_t12 = NA,
   stageframe,
@@ -21,32 +21,35 @@ supplemental(
 }
 \arguments{
 \item{stage3}{The name of the stage in occasion \emph{t}+1 in the transition
-to be replaced. Abbreviations for groups of stages are also useable (see Notes).}
+to be replaced. Abbreviations for groups of stages are also usable (see
+Notes).}
 
 \item{stage2}{The name of the stage in occasion \emph{t} in the transition to
-be replaced. Abbreviations for groups of stages are also useable (see Notes).}
+be replaced. Abbreviations for groups of stages are also usable (see Notes).}
 
 \item{stage1}{The name of the stage in occasion \emph{t}-1 in the transition
 to be replaced. Only needed if a historical matrix is to be produced.
-Abbreviations for groups of stages are also useable (see Notes).}
+Abbreviations for groups of stages are also usable (see Notes).}
 
-\item{eststage3}{The name of the stage to replace \code{stage3}. Only needed
-if a transition will be replaced by another estimated transition.}
+\item{eststage3}{The name of the stage to replace \code{stage3} in a proxy
+transition. Only needed if a transition will be replaced by another estimated
+transition.}
 
-\item{eststage2}{The name of the stage to replace \code{stage2}. Only needed
-if a transition will be replaced by another estimated transition.}
+\item{eststage2}{The name of the stage to replace \code{stage2} in a proxy
+transition. Only needed if a transition will be replaced by another estimated
+transition.}
 
-\item{eststage1}{The name of the stage to replace \code{stage1}. Only needed
-if a transition will be replaced by another estimated transition, and the
-matrix to be estimated is historical. Stage \code{NotAlive} is also possible
-for raw hMPMs, as a means of handling the prior stage for individuals
-entering the population in occasion \emph{t}.}
+\item{eststage1}{The name of the stage to replace \code{stage1} in a proxy
+historical transition. Only needed if a transition will be replaced by
+another estimated transition, and the matrix to be estimated is historical.
+Stage \code{NotAlive} is also possible for raw hMPMs as a means of handling
+the prior stage for individuals entering the population in occasion \emph{t}.}
 
 \item{givenrate}{A fixed rate or probability to replace for the transition
 described by \code{stage3}, \code{stage2}, and \code{stage1}.}
 
-\item{multiplier}{A vector of numeric multipliers for fecundity, and NA
-entries for all other terms.}
+\item{multiplier}{A vector of numeric multipliers for fecundity or for proxy
+transitions. Defaults to \code{1}.}
 
 \item{type}{A vector denoting the kind of transition between occasions
 \emph{t} and \emph{t}+1 to be replaced. This should be entered as \code{1},
@@ -78,26 +81,32 @@ Variables in this object include the following:
 \item{stage2}{Stage at occasion \emph{t} in the transition to be replaced.}
 \item{stage1}{Stage at occasion \emph{t}-1 in the transition to be replaced.}
 \item{eststage3}{Stage at occasion \emph{t}+1 in the transition to replace
-the transition designated by \code{stage3}, \code{stage2}, and \code{stage1}.}
+the transition designated by \code{stage3}, \code{stage2}, and 
+\code{stage1}.}
 \item{eststage2}{Stage at occasion \emph{t} in the transition to replace the
 transition designated by \code{stage3}, \code{stage2}, and \code{stage1}.}
 \item{eststage1}{Stage at occasion \emph{t}-1 in the transition to replace
-the transition designated by \code{stage3}, \code{stage2}, and \code{stage1}.}
+the transition designated by \code{stage3}, \code{stage2}, and 
+\code{stage1}.}
 \item{givenrate}{A constant to be used as the value of the transition.}
+\item{multiplier}{A multiplier for proxy transitions or for fecundity.}
 \item{convtype}{Designates whether the transition from occasion \emph{t} to
 occasion \emph{t}+1 is a survival transition probability (1), a fecundity
 rate (2), or a fecundity multiplier (3).}
 \item{convtype_t12}{Designates whether the transition from occasion
-\emph{t}-1 tooccasion \emph{t} is a survival transition probability (1), a
+\emph{t}-1 to occasion \emph{t} is a survival transition probability (1), a
 fecundity rate (2).}
 }
 \description{
-\code{supplemental()} provides all necessary supplemental data for matrix
-estimation, particularly bringing together data on proxy rates, data to 
-overwrite existing rates, identified reproductive transitions complete, and
-fecundity multipliers.
+Function \code{supplemental()} provides all necessary supplemental data for
+matrix estimation, particularly bringing together data on proxy rates, data
+to overwrite existing rates, identified reproductive transitions complete,
+and fecundity multipliers.
 }
 \section{Notes}{
+
+Negative values are not allowed in \code{givenrate} and \code{multiplier}
+input.
 
 Fecundity multiplier data supplied via the \code{supplemental()} function
 acts in the same way as non-zero entries supplied via a reproductive matrix,
@@ -111,7 +120,9 @@ are to be used, \code{nrep} if all mature but non-reproductive stages are to
 be used, \code{mat} if all mature stages are to be used, \code{immat} if all
 immature stages are to be used, \code{prop} if all propagule stages are to be
 used, \code{npr} if all non-propagule stages are to be used, and leave empty
-or use \code{all} if all stages in stageframe are to be used.
+or use \code{all} if all stages in stageframe are to be used. Also use
+\code{groupX} to denote all stages in group X (e.g. \code{group1} will use
+all stages in the respective stageframe's group 1).
 }
 
 \examples{

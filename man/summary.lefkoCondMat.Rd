@@ -12,9 +12,9 @@
 \item{...}{Other parameters.}
 }
 \value{
-A summary of the object, showing the number of historical matrices,
-as well as the number of conditional matrices nested within each historical
-matrix.
+A text summary of the object shown on the console, showing the number
+of historical matrices, as well as the number of conditional matrices nested
+within each historical matrix.
 }
 \description{
 This function provides basic information summarizing the characteristics of

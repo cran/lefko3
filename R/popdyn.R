@@ -188,10 +188,10 @@ lmean <- function(mats, matsout = "all") {
   }
   
   if (!all(is.na(mats$hstages))) {
-    output <- turbogeodiesel(listofyears, mats$U, mats$F, mats$hstages, 
+    output <- .turbogeodiesel(listofyears, mats$U, mats$F, mats$hstages, 
       agestages, mats$ahstages, patchonly, poponly)
   } else {
-    output <- geodiesel(listofyears, mats$U, mats$F, agestages, mats$ahstages,
+    output <- .geodiesel(listofyears, mats$U, mats$F, agestages, mats$ahstages,
       patchonly, poponly)
     output$hstages <- NA
   }
@@ -451,10 +451,10 @@ lambda3.lefkoMat <- function(mats, sparse = "auto", ...) {
   }
   
   baldrick <- if (any(class(mats$A) == "matrix")) {
-    lambda3matrix(mats$A, sparsemethod)
+    .lambda3matrix(mats$A, sparsemethod)
 
   } else if (class(mats$A) == "list") {
-    unlist(lapply(mats$A, lambda3matrix, sparsemethod))
+    unlist(lapply(mats$A, .lambda3matrix, sparsemethod))
 
   } else {
     stop("Input not recognized.")
@@ -606,7 +606,7 @@ lambda3.matrix <- function(mats, sparse = "auto", ...)
     } else sparsemethod <- 0
   }
   
-  lambda <- lambda3matrix(mats, sparsemethod);
+  lambda <- .lambda3matrix(mats, sparsemethod);
 
   return(lambda)
 }
@@ -911,10 +911,10 @@ stablestage3.lefkoMat <- function(mats, stochastic = FALSE, times = 10000,
   
   if (!stochastic) {
     baldrick <- if (any(class(mats$A) == "matrix")) {
-      ss3matrix(mats$A, sparsemethod)
+      .ss3matrix(mats$A, sparsemethod)
       
     } else if (class(mats$A) == "list") {
-      unlist(lapply(mats$A, ss3matrix, sparsemethod))
+      unlist(lapply(mats$A, .ss3matrix, sparsemethod))
       
     } else {
       stop("Input not recognized.")
@@ -953,9 +953,9 @@ stablestage3.lefkoMat <- function(mats, stochastic = FALSE, times = 10000,
       }
       
       theprophecy <- sample(used_slots, times, replace = TRUE, prob = used_weights) - 1
-      starter <- ss3matrix(mats$A[[used_slots[1]]], sparsemethod)
+      starter <- .ss3matrix(mats$A[[used_slots[1]]], sparsemethod)
       
-      theseventhmatrix <- proj3(starter, mats$A, theprophecy, 1, 0, 0)
+      theseventhmatrix <- .proj3(starter, mats$A, theprophecy, 1, 0, 0)
       
       ssonly <- theseventhmatrix[((dim(mats$A[[1]])[1]) + 1):(2 *(dim(mats$A[[1]])[1])),]
       
@@ -1226,7 +1226,7 @@ stablestage3.matrix <- function(mats, sparse = "auto", ...)
     } else sparsemethod <- 0
   }
   
-  wcorr <- ss3matrix(mats, sparsemethod)
+  wcorr <- .ss3matrix(mats, sparsemethod)
   
   return(wcorr)
 }
@@ -1532,11 +1532,11 @@ repvalue3.lefkoMat <- function(mats, stochastic = FALSE, times = 10000,
   if (!stochastic) {
     baldrick <- if (any(class(mats$A) == "matrix")) {
       
-      almost_final <- rv3matrix(mats$A, sparsemethod)
+      almost_final <- .rv3matrix(mats$A, sparsemethod)
       
     } else if (class(mats$A) == "list") {
       final <- unlist(lapply(mats$A, function(X) {
-        almost_final <- rv3matrix(X, sparsemethod)
+        almost_final <- .rv3matrix(X, sparsemethod)
         return(almost_final/almost_final[which(almost_final == min(almost_final[which(almost_final > 0)])[1])])
       }))
     } else {
@@ -1577,9 +1577,9 @@ repvalue3.lefkoMat <- function(mats, stochastic = FALSE, times = 10000,
       }
       
       theprophecy <- sample(used_slots, times, replace = TRUE, prob = used_weights) - 1
-      starter <- ss3matrix(mats$A[[used_slots[1]]], sparsemethod)
+      starter <- .ss3matrix(mats$A[[used_slots[1]]], sparsemethod)
       
-      theseventhmatrix <- proj3(starter, mats$A, theprophecy, 1, 0, 0)
+      theseventhmatrix <- .proj3(starter, mats$A, theprophecy, 1, 0, 0)
       almostall <- theseventhmatrix[((dim(mats$A[[1]])[1]) + 1):(3 * (dim(mats$A[[1]])[1])),]
       
       return(almostall)
@@ -1929,7 +1929,7 @@ repvalue3.matrix <- function(mats, sparse = "auto", ...)
     } else sparsemethod <- 0
   }
   
-  v <- rv3matrix(mats, sparsemethod)
+  v <- .rv3matrix(mats, sparsemethod)
 
   return(v)
 }
@@ -2212,13 +2212,13 @@ sensitivity3.lefkoMat <- function(mats, stochastic = FALSE, steps = 10000,
     # Deterministic sensitivity analysis
     
     baldrick <- if (any(class(mats$A) == "matrix")) {
-      sens3matrix(mats$A, sparsemethod)
+      .sens3matrix(mats$A, sparsemethod)
       
     } else if (class(mats$A) == "list") {
       if (all(is.na(mats$hstages))) {
-        lapply(mats$A, sens3matrix, sparsemethod)
+        lapply(mats$A, .sens3matrix, sparsemethod)
       } else {
-        lapply(mats$A, sens3hlefko, mats$ahstages, mats$hstages)
+        lapply(mats$A, .sens3hlefko, mats$ahstages, mats$hstages)
       }
     } else {
       stop("Input not recognized.")
@@ -2246,10 +2246,10 @@ sensitivity3.lefkoMat <- function(mats, stochastic = FALSE, steps = 10000,
     # Stochastic sensitivity analysis
     
     if(!any(is.na(time_weights))) {
-      returned_cubes <- stoch_senselas(mats, times = steps, style = 1,
+      returned_cubes <- .stoch_senselas(mats, times = steps, style = 1,
         tweights = time_weights) 
     } else {
-      returned_cubes <- stoch_senselas(mats, times = steps, style = 1) 
+      returned_cubes <- .stoch_senselas(mats, times = steps, style = 1) 
     }
     
     main_cube <- returned_cubes[[1]]
@@ -2412,7 +2412,7 @@ sensitivity3.matrix <- function(mats, sparse = "auto", ...)
       sparsemethod <- 1
     } else sparsemethod <- 0
   }
-  wcorr <- sens3matrix(mats, sparsemethod)
+  wcorr <- .sens3matrix(mats, sparsemethod)
   
   return(wcorr)
 }
@@ -2584,7 +2584,7 @@ sensitivity3.list <- function(mats, stochastic = FALSE, steps = 10000,
   
   if (!stochastic) {
     # Deterministic sensitivity analysis
-    baldrick <- lapply(mats, sens3matrix, sparsemethod)
+    baldrick <- lapply(mats, .sens3matrix, sparsemethod)
     
     if (historical) {
       output <- list(h_sensmats = baldrick, ah_sensmats = NULL, h_stages = NULL,
@@ -2598,10 +2598,10 @@ sensitivity3.list <- function(mats, stochastic = FALSE, steps = 10000,
     # Stochastic sensitivity analysis
     
     if(!any(is.na(time_weights))) {
-      returned_cube <- stoch_senselas(mats, times = steps, style = 1,
+      returned_cube <- .stoch_senselas(mats, times = steps, style = 1,
         tweights = time_weights)[[1]]
     } else {
-      returned_cube <- stoch_senselas(mats, times = steps, style = 1)[[1]]
+      returned_cube <- .stoch_senselas(mats, times = steps, style = 1)[[1]]
     }
     
     returned_list <- lapply(as.list(c(1:dim(returned_cube)[3])), function(X) {
@@ -2906,13 +2906,13 @@ elasticity3.lefkoMat <- function(mats, stochastic = FALSE, steps = 10000,
     # Deterministic elasticity analysis
     
     baldrick <- if (any(class(mats$A) == "matrix")) {
-      elas3matrix(mats$A, sparsemethod)
+      .elas3matrix(mats$A, sparsemethod)
     } else if (class(mats$A) == "list") {
       
       if (all(is.na(mats$hstages))) {
-        lapply(mats$A, elas3matrix, sparsemethod)
+        lapply(mats$A, .elas3matrix, sparsemethod)
       } else {
-        lapply(mats$A, elas3hlefko, mats$ahstages, mats$hstages)
+        lapply(mats$A, .elas3hlefko, mats$ahstages, mats$hstages)
       }
     } else {
       stop("Input not recognized.")
@@ -2942,10 +2942,10 @@ elasticity3.lefkoMat <- function(mats, stochastic = FALSE, steps = 10000,
   } else {
     # Stochastic elasticity analysis
     if(!any(is.na(time_weights))) {
-      returned_cubes <- stoch_senselas(mats, times = steps, style = 2,
+      returned_cubes <- .stoch_senselas(mats, times = steps, style = 2,
         tweights = time_weights) 
     } else {
-      returned_cubes <- stoch_senselas(mats, times = steps, style = 2) 
+      returned_cubes <- .stoch_senselas(mats, times = steps, style = 2) 
     }
     
     main_cube <- returned_cubes[[1]]
@@ -3108,7 +3108,7 @@ elasticity3.matrix <- function(mats, sparse = "auto", ...)
       sparsemethod <- 1
     } else sparsemethod <- 0
   }
-  wcorr <- elas3matrix(mats, sparsemethod)
+  wcorr <- .elas3matrix(mats, sparsemethod)
   
   return(wcorr)
 }
@@ -3277,7 +3277,7 @@ elasticity3.list <- function(mats, stochastic = FALSE, steps = 10000,
     allnzs <- length(which(mats[[1]] > 0))
     nzprop <- allnzs / allelems
     
-    baldrick <- lapply(mats, elas3matrix, sparsemethod)
+    baldrick <- lapply(mats, .elas3matrix, sparsemethod)
     
     if (historical) {
       output <- list(h_elasmats = baldrick, ah_elasmats = NULL, h_stages = NULL,
@@ -3290,10 +3290,10 @@ elasticity3.list <- function(mats, stochastic = FALSE, steps = 10000,
     # Stochastic elasticity analysis
     
     if(!any(is.na(time_weights))) {
-      returned_cube <- stoch_senselas(mats, times = steps, style = 2,
+      returned_cube <- .stoch_senselas(mats, times = steps, style = 2,
         tweights = time_weights)[[1]]
     } else {
-      returned_cube <- stoch_senselas(mats, times = steps, style = 2)[[1]]
+      returned_cube <- .stoch_senselas(mats, times = steps, style = 2)[[1]]
     }
     
     returned_list <- lapply(as.list(c(1:dim(returned_cube)[3])), function(X) {
@@ -3661,10 +3661,10 @@ ltre3.lefkoMat <- function(mats, refmats = NA, ref = NA, stochastic = FALSE,
     # Deterministic LTRE analysis
     
     if (all(is.na(refmats))) {
-      baldrick <- ltre3matrix(mats$A, refnum = ref, mean = meanout,
+      baldrick <- .ltre3matrix(mats$A, refnum = ref, mean = meanout,
         sparse = sparsemethod)
     } else {
-      baldrick <- ltre3matrix(mats$A, refnum = ref, refmats_ = refmats,
+      baldrick <- .ltre3matrix(mats$A, refnum = ref, refmats_ = refmats,
         mean = meanout, sparse = sparsemethod)
     }
     
@@ -3715,20 +3715,20 @@ ltre3.lefkoMat <- function(mats, refmats = NA, ref = NA, stochastic = FALSE,
     
     if (all(is.na(refmats))) {
       if (all(is.na(time_weights))) {
-        baldrick <- sltre3matrix(mats$A, loy = listofyears, refnum = ref,
+        baldrick <- .sltre3matrix(mats$A, loy = listofyears, refnum = ref,
           steps = steps, burnin = burnin, sparse = sparsemethod)
       } else {
-        baldrick <- sltre3matrix(mats$A, loy = listofyears, refnum = ref,
+        baldrick <- .sltre3matrix(mats$A, loy = listofyears, refnum = ref,
           tweights_ = time_weights, steps = steps, burnin = burnin,
           sparse = sparsemethod)
       }
     } else {
       if (all(is.na(time_weights))) {
-        baldrick <- sltre3matrix(mats$A, loy = listofyears, refnum = ref,
+        baldrick <- .sltre3matrix(mats$A, loy = listofyears, refnum = ref,
           refmats_ = refmats, steps = steps, burnin = burnin,
           sparse = sparsemethod)
       } else {
-        baldrick <- sltre3matrix(mats$A, loy = listofyears, refnum = ref,
+        baldrick <- .sltre3matrix(mats$A, loy = listofyears, refnum = ref,
           refmats_ = refmats, tweights_ = time_weights, steps = steps,
           burnin = burnin, sparse = sparsemethod)
       }
@@ -3848,23 +3848,23 @@ summary.lefkoElas <- function(object, ...) {
               return(elasmats$ah_stages[which(elasmats$ah_stages$stage_id == elasmats$agestages$stage_id[X]),])
             })
           new_ahstages <- do.call("rbind.data.frame", new_ahstages_list)
-          indices <- bambi2(new_ahstages)
+          indices <- .bambi2(new_ahstages)
         } else {
-          indices <- bambi2(elasmats$ah_stages)
+          indices <- .bambi2(elasmats$ah_stages)
         }
       } else {
-        indices <- bambi2(elasmats$ah_stages)
+        indices <- .bambi2(elasmats$ah_stages)
       }
     } else {
-      indices <- bambi2(elasmats$ah_stages)
+      indices <- .bambi2(elasmats$ah_stages)
     }
     
   } else {
-    indices <- bambi3(elasmats$ah_stages, elasmats$h_stages)
+    indices <- .bambi3(elasmats$ah_stages, elasmats$h_stages)
   }
   
   for (i in c(1:used_iterations)) {
-    trialguy <- demolition3(used_emats[[i]], indices)
+    trialguy <- .demolition3(used_emats[[i]], indices)
     
     if (i == 1) {
       if (num_h_mats > 0) hist <- trialguy$hist[,c(1,2)]
@@ -4004,18 +4004,18 @@ summary.lefkoLTRE <- function(object, ...) {
               return(object$ahstages[which(object$ahstages$stage_id == object$agestages$stage_id[X]),])
             })
           new_ahstages <- do.call("rbind.data.frame", new_ahstages_list)
-          indices <- bambi2(new_ahstages)
+          indices <- .bambi2(new_ahstages)
         } else {
-          indices <- bambi2(object$ahstages)
+          indices <- .bambi2(object$ahstages)
         }
       } else {
-        indices <- bambi2(object$ahstages)
+        indices <- .bambi2(object$ahstages)
       }
     } else {
-      indices <- bambi2(object$ahstages)
+      indices <- .bambi2(object$ahstages)
     }
   } else {
-    indices <- bambi3(object$ahstages, object$hstages)
+    indices <- .bambi3(object$ahstages, object$hstages)
   }
   
   used_iterations <- if(ltretype == 1) {
@@ -4026,13 +4026,13 @@ summary.lefkoLTRE <- function(object, ...) {
   
   for (i in c(1:used_iterations)) {
     trialguy1 <- if (ltretype == 1) {
-      demolition3(object$ltre_det[[i]], indices)
+      .demolition3(object$ltre_det[[i]], indices)
     } else {
-      demolition3(object$ltre_mean[[i]], indices)
+      .demolition3(object$ltre_mean[[i]], indices)
     }
     
     if (ltretype == 2) {
-      trialguy2 <- demolition3(object$ltre_sd[[i]], indices)
+      trialguy2 <- .demolition3(object$ltre_sd[[i]], indices)
     }
     
     if (i == 1) {
@@ -4102,21 +4102,12 @@ summary.lefkoLTRE <- function(object, ...) {
 #' each projection, or decimals between 0 and 1, which would then be translated
 #' into the corresponding projection steps of the total. Defaults to
 #' \code{c(0, 0.25, 0.50, 0.75, 1.00)}.
-#' @param sums_out A logical value indicating whether to output population sums
-#' in matrix format, with columns corresponding to time and rows corresponding
-#' to replicate. Defaults to FALSE
 #' @param ... Other parameters.
 #' 
-#' @return If \code{sums_out = FALSE}, then there is no output beyond written
-#' statements describing the projection. If \code{sums_out = TRUE}, then the
-#' output is a list with two elements:
-#' \item{mat_sums}{}
-#' \item{milepost_sums}{}
-#' 
-#' @section Notes:
-#' If \code{sums_out = TRUE}, then the output from this function may be used to
-#' plot population size by replicate across time. This can enable analyses such
-#' as quasi-extinction analysis.
+#' @return Apart from a statement of the results, we have the following item in
+#' the output:
+#' \item{milepost_sums}{A data frame showing the number of replicates at each
+#' of the milepost times that is above the threshold population/patch size.}
 #' 
 #' @examples
 #' # Lathyrus example
@@ -4221,55 +4212,29 @@ summary.lefkoLTRE <- function(object, ...) {
 #' 
 #' @export
 summary.lefkoProj <- function(object, threshold = 1,
-  milepost = c(0, 0.25, 0.50, 0.75, 1.00), sums_out = FALSE, ...) {
+  milepost = c(0, 0.25, 0.50, 0.75, 1.00), ...) {
   
-  poppatches <- length(object$projection)
+  poppatches <- length(object$pop_size)
   
   nreps <- object$control[1]
   times <- object$control[2]
   
-  times_cor <- dim(object$projection[[1]])[2]
-  stages_uncor <- dim(object$projection[[1]])[1]
-  
-  stages_cor <- as.integer(stages_uncor / nreps);
-  
-  if (times_cor != (times + 1)) {
-    warning("The projection element does not appear to have the right number of projected occasions.", call. = FALSE)
-  }
   if (any(milepost < 0)) {
     stop("Option milepost may not take negative values.", call. = FALSE)
   }
-  if (any(milepost > times_cor)) {
-    stop("Option milepost may not take values higher than the number of actual projected occasions.", call. = FALSE)
+  if (any(milepost > times)) {
+    stop("Option milepost may not take values higher than the number of actual number of projected occasions.", call. = FALSE)
   }
   
-  if (all(milepost >=0) & all(milepost <= 1)) {
+  if (all(milepost >= 0) & all(milepost <= 1)) {
     milepost <- floor(milepost * times) + 1
   }
   
-  start_vec <- seq(from = 1, to = (((nreps-1) * stages_cor) + 1), by = stages_cor)
-  end_vec <- seq(from = stages_cor, to = (nreps * stages_cor), by = stages_cor)
-  guide_matrix <- cbind(start_vec, end_vec)
-  
-  mat_sums <- lapply(object$projection, function(X) {
-    t(apply(guide_matrix, 1, function(Y) {
-      output_mat <- colSums(X[c(Y[1]:Y[2]),])
-    }))
+  milepost_sums <- apply(as.matrix(c(1:poppatches)), 1, function (X) {
+    apply(as.matrix(object$pop_size[[X]][,milepost]), 2, function(Y) {
+      length(which(as.vector(Y) >= threshold))
+    })
   })
-  
-  milepost_sums <- if (nreps > 1) {
-    apply(as.matrix(c(1:poppatches)), 1, function (X) {
-      apply(as.matrix(mat_sums[[X]][,milepost]), 2, function(Y) {
-        length(which(as.vector(Y) >= threshold))
-      })
-    })
-  } else {
-    apply(as.matrix(c(1:poppatches)), 1, function (X) {
-      apply(as.matrix(mat_sums[[X]][,milepost]), 1, function(Y) {
-        length(which(as.vector(Y) >= threshold))
-      })
-    })
-  }
   
   if (is.element("matrix", class(milepost_sums))) {
     rownames(milepost_sums) <- milepost
@@ -4287,17 +4252,11 @@ summary.lefkoProj <- function(object, threshold = 1,
   writeLines(paste0("It includes ", times, " projected steps per replicate and ",
     nreps, " replicates."), con = stdout())
   writeLines(paste0("The number of replicates with population size above the threshold size of ", threshold,
-    " is as in the following matrix, with pop-patches given by column and milepost times given by row: \n"),
+    " is as in"),con = stdout())
+  writeLines(paste0("the following matrix, with pop-patches given by column and milepost times given by row: \n"),
     con = stdout())
-  print(milepost_sums, digits = 3)
+  #print(milepost_sums, digits = 3)
   
-  if (sums_out) {
-    output_list <- list(mat_sums, milepost_sums)
-    names(output_list) <- c("mat_sums", "milepost_sums")
-    
-    return (output_list)
-  } else {
-    return(NULL)
-  }
+  return (milepost_sums)
 }
 

@@ -17,8 +17,9 @@ A summary of the object, showing the best-fit models for all vital
 rates, with constants of 0 or 1 used for unestimated models. This is followed
 by a summary of the number of models tested per vital rate, and a table
 showing the names of the parameters used to model vital rates and represent
-tested factors. At the end is a section describing the number of individuals
-and individual transitions used to estimate each vital rate best-fit model.
+tested factors. At the end is a section describing the numbers of individuals
+and of individual transitions used to estimate each vital rate best-fit
+model, along with the accuracy of each binomial model.
 }
 \description{
 A function to summarize objects of class \code{lefkoMod}. This function shows

@@ -1,20 +1,19 @@
 #' Create Function-based Historical Matrix Projection Model
 #' 
 #' Function \code{flefko3()} returns function-based historical MPMs
-#' corresponding to the patches and years given, including the associated
-#' component transition and fecundity matrices, data frames detailing the
-#' characteristics of the ahistorical stages used and historical stage pairs
-#' created, and a data frame characterizing the patch and year combinations
-#' corresponding to these matrices. Unlike \code{\link{rlefko3}()}, this
-#' function currently does not distinguish populations within the same dataset.
+#' corresponding to the patches and occasion times given, including the
+#' associated component transition and fecundity matrices, data frames detailing
+#' the characteristics of the ahistorical stages used and historical stage pairs
+#' created, and a data frame characterizing the patch and occasion time
+#' combinations corresponding to these matrices.
 #'
 #' @param year A variable corresponding to the observation occasion, or a set
 #' of such values, given in values associated with the year term used in linear 
-#' model development. Can also equal \code{all}, in which case matrices will
-#' be estimated for all years. Defaults to \code{all}.
+#' model development. Defaults to \code{"all"}, in which case matrices will be
+#' estimated for all occasion times.
 #' @param patch A variable designating which patches or subpopulations will have
-#' matrices estimated. Should be set to specific patch names, or to \code{all}
-#' if matrices should be estimated for all patches. Defaults to \code{all}.
+#' matrices estimated. Defaults to \code{"all"}, but can also be set to specific
+#' patch names.
 #' @param stageframe A stageframe object that includes information on the size,
 #' observation status, propagule status, immaturity status, and maturity status
 #' of each ahistorical stage. Should also incorporate bin widths if size is
@@ -23,20 +22,18 @@
 #' provides supplemental data that should be incorporated into the MPM. Three
 #' kinds of data may be integrated this way: transitions to be estimated via the
 #' use of proxy transitions, transition overwrites from the literature or
-#' supplemental studies, and transition multipliers for fecundity. This data
-#' frame should be produced using the \code{\link{supplemental}()} function. Can
-#' be used in place of or in addition to an overwrite table (see 
+#' supplemental studies, and transition multipliers for survival and fecundity.
+#' This data frame should be produced using the \code{\link{supplemental}()}
+#' function. Can be used in place of or in addition to an overwrite table (see 
 #' \code{overwrite} below) and a reproduction matrix (see \code{repmatrix}
 #' below).
-#' @param repmatrix A reproduction matrix, which is an optional matrix composed
-#' mostly of 0s, with non-zero values for each potentially new individual (row)
-#' born to each reproductive stage (column). Entries act as multipliers on
-#' fecundity, with 1 equaling full fecundity. Fecundity multipliers provided
-#' this way supplement rather than replace those provided in \code{supplement}.
-#' If left blank, then \code{flefko3()} will assume that all stages marked as
-#' reproductive produce offspring at 1x that of fecundity estimated in provided
-#' linear models, and that fecundity will be into the first stage noted as
-#' propagule or immature. To prevent this behavior, input just \code{0}, which
+#' @param repmatrix An optional reproduction matrix. This matrix is composed
+#' mostly of 0s, with non-zero entries acting as element identifiers and
+#' multipliers for fecundity (with 1 equaling full fecundity). If left blank,
+#' and no \code{supplement} is provided, then \code{flefko3()} will assume that
+#' all stages marked as reproductive produce offspring at 1x that of estimated
+#' fecundity, and that offspring production will yield the first stage noted as
+#' propagule or immature.  To prevent this behavior, input just \code{0}, which
 #' will result in fecundity being estimated only for transitions noted in
 #' \code{supplement} above. May be the dimensions of either a historical or an
 #' ahistorical matrix. If the latter, then all stages will be used in occasion
@@ -46,15 +43,16 @@
 #' either with given values or with other estimated transitions. Note that this
 #' function supplements overwrite data provided in \code{supplement}.
 #' @param data The historical vertical demographic data frame used to estimate
-#' vital rates (class \code{hfvdata}), which is required to initialize years and
+#' vital rates (class \code{hfvdata}), which is required to initialize times and
 #' patches properly.
 #' @param modelsuite An optional \code{lefkoMod} object holding the vital rate
-#' models. If given, then \code{surv_model}, \code{obs_model},
-#' \code{size_model}, \code{repst_model}, \code{fec_model}, \code{jsurv_model},
-#' \code{jobs_model}, \code{jsize_model}, \code{jrepst_model},
-#' \code{paramnames}, \code{yearcol}, and \code{patchcol} are not required. One
-#' or more of these models should include size or reproductive status in occasion
-#' \emph{t}-1.
+#' models. If given, then \code{surv_model}, \code{obs_model}, 
+#' \code{size_model}, \code{sizeb_model}, \code{sizec_model},
+#' \code{repst_model}, \code{fec_model}, \code{jsurv_model}, \code{jobs_model},
+#' \code{jsize_model}, \code{jsizeb_model}, \code{jsizec_model},
+#' \code{jrepst_model}, \code{paramnames}, \code{yearcol}, and \code{patchcol}
+#' are not required. One or more of these  models should include size or
+#' reproductive status in occasion \emph{t}-1.
 #' @param surv_model A linear model predicting survival probability. This can 
 #' be a model of class \code{glm} or \code{glmer}, and requires a predicted
 #' binomial variable under a logit link. If given, then will overwrite any
@@ -67,12 +65,24 @@
 #' will overwrite any observation probability model given in \code{modelsuite}.
 #' This model must have been developed in a modeling exercise testing the
 #' impacts of occasions \emph{t} and \emph{t}-1.
-#' @param size_model A linear model predicting size. This can be a model of
-#' class \code{glm} or \code{glmer}, both of which require a predicted poisson
-#' variable under a log link, or a model of class \code{lm} or \code{lmer}, in
-#' which a Gaussian response is assumed. If given, then will overwrite any size
-#' model given in \code{modelsuite}.This model must have been developed in a
-#' modeling exercise testing the impacts of occasions \emph{t} and \emph{t}-1.
+#' @param size_model A linear model predicting primary size. This can be a model
+#' of class \code{glm}, \code{glmer}, \code{glmmTMB}, \code{zeroinfl},
+#' \code{vglm}, \code{lm}, or \code{lmer}. If given, then will overwrite any
+#' primary size model given in \code{modelsuite}. This model must have been
+#' developed in a modeling exercise testing the impacts of occasions \emph{t}
+#' and \emph{t}-1.
+#' @param sizeb_model A linear model predicting secondary size. This can be a
+#' modelvof class \code{glm}, \code{glmer}, \code{glmmTMB}, \code{zeroinfl},
+#' \code{vglm}, \code{lm}, or \code{lmer}. If given, then will overwrite any
+#' secondary size model given in \code{modelsuite}. This model must have been
+#' developed in a modeling exercise testing the impacts of occasions \emph{t}
+#' and \emph{t}-1.
+#' @param sizec_model A linear model predicting tertiary size. This can be a
+#' modelvof class \code{glm}, \code{glmer}, \code{glmmTMB}, \code{zeroinfl},
+#' \code{vglm}, \code{lm}, or \code{lmer}. If given, then will overwrite any
+#' tertiary size model given in \code{modelsuite}. This model must have been
+#' developed in a modeling exercise testing the impacts of occasions \emph{t}
+#' and \emph{t}-1.
 #' @param repst_model A linear model predicting reproduction probability. This 
 #' can be a model of class \code{glm} or \code{glmer}, and requires a predicted
 #' binomial variable under a logit link. If given, then will overwrite any
@@ -80,10 +90,11 @@
 #' have been developed in a modeling exercise testing the impacts of occasions
 #' \emph{t} and \emph{t}-1.
 #' @param fec_model A linear model predicting fecundity. This can be a model of
-#' class \code{glm} or \code{glmer}, and requires a predicted poisson variable
-#' under a log link. If given, then will overwrite any fecundity model given in 
-#' \code{modelsuite}. This model must have been developed in a modeling exercise 
-#' testing the impacts of occasions \emph{t} and \emph{t}-1.
+#' class \code{glm}, \code{glmer}, \code{glmmTMB}, \code{zeroinfl},
+#' \code{vglm}, \code{lm}, or \code{lmer}. If given, then will overwrite any 
+#' fecundity model given in \code{modelsuite}. This model must have been
+#' developed in a modeling exercise testing the impacts of occasions \emph{t}
+#' and \emph{t}-1.
 #' @param jsurv_model A linear model predicting juvenile survival probability.
 #' This can be a model of class \code{glm} or \code{glmer}, and requires a
 #' predicted binomial variable under a logit link. If given, then will overwrite
@@ -96,13 +107,24 @@
 #' will overwrite any juvenile observation probability model given in 
 #' \code{modelsuite}. This model must have been developed in a modeling exercise
 #' testing the impacts of occasions \emph{t} and \emph{t}-1.
-#' @param jsize_model A linear model predicting juvenile size. This can be a
-#' model of class \code{glm} or \code{glmer}, both of which require a predicted
-#' poisson variable under a log link, or a model of class \code{lm} or 
-#' \code{lmer}, in which a Gaussian response is assumed. If given, then will
-#' overwrite any juvenile size model given in \code{modelsuite}. This model must
-#' have been developed in a modeling exercise testing the impacts of occasions
-#' \emph{t} and \emph{t}-1.
+#' @param jsize_model A linear model predicting juvenile primary size. This
+#' can be a model of class \code{glm}, \code{glmer}, \code{glmmTMB},
+#' \code{zeroinfl}, \code{vglm}, \code{lm}, or \code{lmer}. If given, then will
+#' overwrite any juvenile primary size model given in \code{modelsuite}. This
+#' model must have been developed in a modeling exercise testing the impacts of 
+#' occasions \emph{t} and \emph{t}-1.
+#' @param jsizeb_model A linear model predicting juvenile secondary size. This
+#' can be a model of class \code{glm}, \code{glmer}, \code{glmmTMB},
+#' \code{zeroinfl}, \code{vglm}, \code{lm}, or \code{lmer}. If given, then will
+#' overwrite any juvenile secondary size model given in \code{modelsuite}. This
+#' model must have been developed in a modeling exercise testing the impacts of 
+#' occasions \emph{t} and \emph{t}-1.
+#' @param jsizec_model A linear model predicting juvenile tertiary size. This
+#' can be a model of class \code{glm}, \code{glmer}, \code{glmmTMB},
+#' \code{zeroinfl}, \code{vglm}, \code{lm}, or \code{lmer}. If given, then will
+#' overwrite any juvenile tertiary size model given in \code{modelsuite}. This
+#' model must have been developed in a modeling exercise testing the impacts of 
+#' occasions \emph{t} and \emph{t}-1.
 #' @param jrepst_model A linear model predicting reproduction probability of a 
 #' mature individual that was immature in the previous year. This can be a model
 #' of class \code{glm} or \code{glmer}, and requires a predicted binomial
@@ -110,19 +132,35 @@
 #' probability model given in \code{modelsuite}. This model must have been
 #' developed in a modeling exercise testing the impacts of occasions \emph{t}
 #' and \emph{t}-1.
-#' @param paramnames A dataframe with two columns, the first showing the general
-#' model terms that will be used in matrix creation, and the second showing the
-#' equivalent terms used in modeling. Only required if \code{modelsuite} is not 
-#' supplied.
-#' @param inda A numeric value to use for individual covariate a. Defaults to 0.
-#' @param indb A numeric value to use for individual covariate b. Defaults to 0.
-#' @param indc A numeric value to use for individual covariate c. Defaults to 0.
+#' @param paramnames A dataframe with three columns, the first describing all
+#' terms used in linear modeling, the second (must be called \code{mainparams}),
+#' showing the general model terms that will be used in matrix creation (users
+#' should use \code{\link{modelsearch}()} at least once to see the proper
+#' names to be used in this column), and the third showing the equivalent terms
+#' used in modeling (must be named \code{modelparams}). Only required if
+#' \code{modelsuite} is not supplied.
+#' @param inda Can be a single value to use for individual covariate \code{a}
+#' in all matrices, a pair of values to use for times \emph{t} and \emph{t}-1 in
+#' historical matrices, or a vector of such values corresponding to each
+#' occasion in option \code{year}. Defaults to \code{NULL}.
+#' @param indb Can be a single value to use for individual covariate \code{b}
+#' in all matrices, a pair of values to use for times \emph{t} and \emph{t}-1 in
+#' historical matrices, or a vector of such values corresponding to each
+#' occasion in option \code{year}. Defaults to \code{NULL}.
+#' @param indc Can be a single value to use for individual covariate \code{c}
+#' in all matrices, a pair of values to use for times \emph{t} and \emph{t}-1 in
+#' historical matrices, or a vector of such values corresponding to each
+#' occasion in option \code{year}. Defaults to \code{NULL}.
 #' @param surv_dev A numeric value to be added to the y-intercept in the linear
 #' model for survival probability.
 #' @param obs_dev A numeric value to be added to the y-intercept in the linear
 #' model for observation probability.
 #' @param size_dev A numeric value to be added to the y-intercept in the linear
-#' model for size.
+#' model for primary size.
+#' @param sizeb_dev A numeric value to be added to the y-intercept in the linear
+#' model for secondary size.
+#' @param sizec_dev A numeric value to be added to the y-intercept in the linear
+#' model for tertiary size.
 #' @param repst_dev A numeric value to be added to the y-intercept in the linear
 #' model for probability of reproduction.
 #' @param fec_dev A numeric value to be added to the y-intercept in the linear
@@ -132,29 +170,45 @@
 #' @param jobs_dev A numeric value to be added to the y-intercept in the linear
 #' model for juvenile observation probability.
 #' @param jsize_dev A numeric value to be added to the y-intercept in the linear
-#' model for juvenile size.
+#' model for juvenile primary size.
+#' @param jsizeb_dev A numeric value to be added to the y-intercept in the
+#' linear model for juvenile secondary size.
+#' @param jsizec_dev A numeric value to be added to the y-intercept in the
+#' linear model for juvenile tertiary size.
 #' @param jrepst_dev A numeric value to be added to the y-intercept in the
 #' linear model for juvenile reproduction probability.
-#' @param repmod A scalar multiplier of fecundity. Defaults to 1.
+#' @param density A numeric value indicating density value to use to propagate
+#' matrices. Only needed if density is an explanatory term used in linear
+#' models. Defaults to \code{NA}.
+#' @param repmod A scalar multiplier of fecundity. Defaults to \code{1}.
 #' @param yearcol The variable name or column number corresponding to year 
 #' in occasion \emph{t} in the dataset. Not needed if \code{modelsuite} is
 #' supplied.
 #' @param patchcol The variable name or column number corresponding to patch in 
 #' the dataset. Not needed if \code{modelsuite} is supplied.
 #' @param year.as.random A logical term indicating whether coefficients for
-#' missing patches within vital rate models should be estimated as random
-#' intercepts. Defaults to FALSE, in which case missing coefficients
-#' corresponding to observation occasions are set to 0.
+#' missing occasions within vital rate models should be estimated as random
+#' intercepts. Defaults to \code{FALSE}, in which case missing monitoring
+#' occasion coefficients are set to \code{0}.
 #' @param patch.as.random A logical term indicating whether coefficients for
 #' missing patches within vital rate models should be estimated as random
-#' intercepts. Defaults to FALSE, in which case missing patch coefficients 
-#' are set to 0.
+#' intercepts. Defaults to \code{FALSE}, in which case missing patch
+#' coefficients are set to \code{0}.
+#' @param random.inda A logical value denoting whether to treat individual
+#' covariate \code{a} as a random, categorical variable. Otherwise is treated as
+#' a fixed, numeric variable. Defaults to \code{FALSE}.
+#' @param random.indb A logical value denoting whether to treat individual
+#' covariate \code{b} as a random, categorical variable. Otherwise is treated as
+#' a fixed, numeric variable. Defaults to \code{FALSE}.
+#' @param random.indc A logical value denoting whether to treat individual
+#' covariate \code{c} as a random, categorical variable. Otherwise is treated as
+#' a fixed, numeric variable. Defaults to \code{FALSE}.
 #' @param randomseed A numeric value used as a seed to generate random estimates
 #' for missing occasion and patch coefficients, if either \code{year.as.random}
-#' or \code{patch.as.random} is set to TRUE. Defaults to 
+#' or \code{patch.as.random} is set to \code{TRUE}. Defaults to 
 #' \code{\link{set.seed}()} default.
 #' @param negfec A logical value denoting whether fecundity values estimated to
-#' be negative should be reset to 0. Defaults to FALSE.
+#' be negative should be reset to \code{0}. Defaults to \code{FALSE}.
 #' @param format A string indicating whether to estimate matrices in
 #' \code{ehrlen} format or \code{deVries} format. The latter adds one extra
 #' prior stage to account for the prior state of newborns. Defaults to
@@ -162,10 +216,17 @@
 #' @param reduce A logical value denoting whether to remove historical stages
 #' associated solely with 0 transitions. These are only removed in cases where
 #' the associated row and column sums in ALL matrices estimated equal 0. 
-#' Defaults to FALSE.
+#' Defaults to \code{FALSE}.
 #' @param err_check A logical value indicating whether to append matrices of
-#' vital rate probabilities associated with each matrix. These matrices are
-#' developed internally and can be used for erroc checking. Defaults to FALSE.
+#' vital rate probabilities associated with each matrix to the \code{lefkoMat}
+#' object generated. These matrices are developed internally and can be used for
+#' error checking. Defaults to \code{FALSE}.
+#' @param exp_tol A numeric value used to indicate a maximum value to set
+#' exponents to in the core kernel to prevent numerical overflow. Defaults to
+#' \code{700}.
+#' @param theta_tol A numeric value used to indicate a maximum value to theta as
+#' used in the negative binomial probability density kernel. Defaults to
+#' \code{100000000}, but can be reset to other values during error checking.
 #'
 #' @return If all inputs are properly formatted, then this function will return
 #' an object of class \code{lefkoMat}, which is a list that holds the matrix
@@ -173,41 +234,46 @@
 #' following elements:
 #' 
 #' \item{A}{A list of full projection matrices in order of sorted patches and
-#' years. All matrices output in the \code{matrix} class.}
+#' occasion times. All matrices output in R's \code{matrix} class.}
 #' \item{U}{A list of survival transition matrices sorted as in \code{A}. All 
-#' matrices output in the \code{matrix} class.}
+#' matrices output in R's \code{matrix} class.}
 #' \item{F}{A list of fecundity matrices sorted as in \code{A}. All matrices 
-#' output in the \code{matrix} class.}
+#' output in R's \code{matrix} class.}
 #' \item{hstages}{A data frame matrix showing the pairing of ahistorical stages
 #' used to create historical stage pairs.}
 #' \item{agestages}{A data frame showing age-stage pairs. In this function, it
-#' is set to NA. Only used in output to function \code{aflefko2}().}
+#' is set to \code{NA}. Only used in output to function \code{aflefko2}().}
 #' \item{ahstages}{A data frame detailing the characteristics of associated
 #' ahistorical stages, in the form of a modified stageframe that includes
 #' status as an entry stage through reproduction.}
-#' \item{labels}{A data frame showing the patch and year of each matrix in 
-#' order. In \code{flefko3()}, only one population may be analyzed at once, and
-#' so \code{pop = NA}.}
+#' \item{labels}{A data frame giving the population, patch, and year of each
+#' matrix in order. In \code{flefko3()}, only one population may be analyzed at
+#' once, and so \code{pop = NA}.}
 #' \item{matrixqc}{A short vector describing the number of non-zero elements in
 #' \code{U} and \code{F} matrices, and the number of annual matrices.}
 #' \item{modelqc}{This is the \code{qc} portion of the \code{modelsuite} input.}
 #' \item{prob_out}{An optional element only added if \code{err_check = TRUE}.
-#' This is a list of vital rate probability matrices, with 4 columns in the
-#' order of survival, observation probability, reproduction probability, and
-#' size transition probability.}
+#' This is a list of vital rate probability matrices, with 6 columns in the
+#' order of survival, observation probability, reproduction probability, primary
+#' size transition probability, secondary size transition probability, and
+#' tertiary size transition probability.}
 #'
 #' @section Notes:
+#' Unlike \code{\link{rlefko3}()}, this function currently does not distinguish
+#' populations within the same dataset.
+#' 
 #' The default behavior of this function is to estimate fecundity with regards
 #' to transitions specified via associated fecundity multipliers in either
 #' \code{supplement} or \code{repmatrix}. If both of these fields are left
 #' empty, then fecundity will be estimated at full for all transitions leading
 #' from reproductive stages to immature and propagule stages. However, if a
 #' \code{supplement} is provided and a \code{repmatrix} is not, or if
-#' \code{repmatrix} is set to 0, then only fecundity transitions noted in the
-#' supplement will be set to non-zero values. To use the default behavior of
-#' setting all reproductive stages to reproduce at full fecundity into immature
-#' and propagule stages but incorporate given or proxy survival transitions,
-#' input those given and proxy transitions through the \code{overwrite} option.
+#' \code{repmatrix} is set to \code{0}, then only fecundity transitions noted in
+#' the \code{supplement} will be set to non-zero values. To use the default
+#' behavior of setting all reproductive stages to reproduce at full fecundity
+#' into immature and propagule stages, but also incorporate given or proxy
+#' survival transitions, input those given and proxy transitions through the
+#' \code{overwrite} option.
 #' 
 #' The reproduction matrix (field \code{repmatrix}) may be supplied as either
 #' historical or ahistorical. If provided as ahistorical, then \code{flefko3()}
@@ -216,21 +282,26 @@
 #' multipliers noted.
 #' 
 #' Users may at times wish to estimate MPMs using a dataset incorporating
-#' multiple patches or subpopulations. Should the aim of analysis be a general
-#' MPM that does not distinguish these patches or subpopulations, the
-#' \code{patchcol} variable should be left to NA, which is the default.
-#' 
+#' multiple patches or subpopulations, but without discriminating between those
+#' patches or subpopulations. Should the aim of analysis be a general MPM that
+#' does not distinguish these patches or subpopulations, the \code{patchcol}
+#' variable should be set to \code{NA}, which is the default.
+#'
 #' Input options including multiple variable names must be entered in the order
 #' of variables in occasion \emph{t}+1, \emph{t}, and \emph{t}-1. Rearranging
-#' the order WILL lead to erroneous calculations, and will probably also lead to
-#' fatal errors.
+#' the order will lead to erroneous calculations, and will may lead to fatal
+#' errors.
 #' 
-#' Using the \code{err_check} option will produce a matrix of 4 columns, each
+#' Care should be taken to match the random status of year and patch to the
+#' states of those variables within the modelsuite. If they do not match, then
+#' they will be treated as zeroes in vital rate estimation.
+#' 
+#' Using the \code{err_check} option will produce a matrix of 6 columns, each
 #' characterizing a different vital rate. The product of each row yields an
 #' element in the associated \code{$U} matrix. The number and order of elements
 #' in each column of this matrix matches the associated matrix in column vector
 #' format. Use of this option is generally for the purposes of debugging code.
-#'
+#'`
 #' @examples
 #' \donttest{
 #' # Lathyrus example
@@ -287,33 +358,122 @@
 #' 
 #' lathmat3ln <- flefko3(year = "all", patch = "all", stageframe = lathframeln, 
 #'   modelsuite = lathmodelsln3, data = lathvertln, supplement = lathsupp3, 
-#'   patchcol = "patchid", yearcol = "year2", year.as.random = FALSE,
-#'   patch.as.random = FALSE, reduce = FALSE)
+#'   patchcol = "patchid", yearcol = "year2", year.as.random = TRUE,
+#'   patch.as.random = TRUE, reduce = FALSE)
 #' 
 #' summary(lathmat3ln)
+#' 
+#' #Cypripedium example using three size metrics for classification
+#' rm(list=ls(all=TRUE))
+#' 
+#' data(cypdata)
+#' sizevector.f <- c(0, 0, 0, 0, 0, 0, seq(1, 12, by = 1), seq(0, 9, by = 1),
+#'   seq(0, 8, by = 1), seq(0, 7, by = 1), seq(0, 6, by = 1), seq(0, 5, by = 1),
+#'   seq(0, 4, by = 1), seq(0, 3, by = 1), 0, 1, 2, 0, 1, 0, 
+#'   0, 0, 1, 0)
+#' sizebvector.f <- c(0, 0, 0, 0, 0, 0, rep(0, 12), rep(1, 10), rep(2, 9),
+#'   rep(3, 8), rep(4, 7), rep(5, 6), rep(6, 5), rep(7, 4), rep(8, 3), 9, 9, 10, 
+#'   0, 1, 1, 2)
+#' sizecvector.f <- c(0, 0, 0, 0, 0, 0, rep(0, 12), rep(0, 10), rep(0, 9),
+#'   rep(0, 8), rep(0, 7), rep(0, 6), rep(0, 5), rep(0, 4), 0, 0, 0, 0, 0, 0, 
+#'   1, 1, 1, 1)
+#' stagevector.f <- c("DS", "P1", "P2", "P3", "Sdl", "Dorm", "V1 I0 D0",
+#'   "V2 I0 D0", "V3 I0 D0", "V4 I0 D0", "V5 I0 D0", "V6 I0 D0", "V7 I0 D0",
+#'   "V8 I0 D0", "V9 I0 D0", "V10 I0 D0", "V11 I0 D0", "V12 I0 D0", "V0 I1 D0",
+#'   "V1 I1 D0", "V2 I1 D0", "V3 I1 D0", "V4 I1 D0", "V5 I1 D0", "V6 I1 D0",
+#'   "V7 I1 D0", "V8 I1 D0", "V9 I1 D0", "V0 I2 D0", "V1 I2 D0", "V2 I2 D0",
+#'   "V3 I2 D0", "V4 I2 D0", "V5 I2 D0", "V6 I2 D0", "V7 I2 D0", "V8 I2 D0",
+#'   "V0 I3 D0", "V1 I3 D0", "V2 I3 D0", "V3 I3 D0", "V4 I3 D0", "V5 I3 D0",
+#'   "V6 I3 D0", "V7 I3 D0", "V0 I4 D0", "V1 I4 D0", "V2 I4 D0", "V3 I4 D0",
+#'   "V4 I4 D0", "V5 I4 D0", "V6 I4 D0", "V0 I5 D0", "V1 I5 D0", "V2 I5 D0",
+#'   "V3 I5 D0", "V4 I5 D0", "V5 I5 D0", "V0 I6 D0", "V1 I6 D0", "V2 I6 D0",
+#'   "V3 I6 D0", "V4 I6 D0", "V0 I7 D0", "V1 I7 D0", "V2 I7 D0", "V3 I7 D0",
+#'   "V0 I8 D0", "V1 I8 D0", "V2 I8 D0", "V0 I9 D0", "V1 I9 D0", "V0 I10 D0",
+#'   "V0 I0 D1", "V0 I1 D1", "V1 I1 D1", "V0 I2 D1")
+#' repvector.f <- c(0, 0, 0, 0, 0, rep(0, 13), rep(1, 59))
+#' obsvector.f <- c(0, 0, 0, 0, 0, 0, rep(1, 71))
+#' matvector.f <- c(0, 0, 0, 0, 0, rep(1, 72))
+#' immvector.f <- c(0, 1, 1, 1, 1, rep(0, 72))
+#' propvector.f <- c(1, rep(0, 76))
+#' indataset.f <- c(0, 0, 0, 0, 0, rep(1, 72))
+#' binvec.f <- c(0, 0, 0, 0, 0, rep(0.5, 72))
+#' binbvec.f <- c(0, 0, 0, 0, 0, rep(0.5, 72))
+#' bincvec.f <- c(0, 0, 0, 0, 0, rep(0.5, 72))
+#' 
+#' vertframe.f <- sf_create(sizes = sizevector.f, sizesb = sizebvector.f,
+#'   sizesc = sizecvector.f, stagenames = stagevector.f, repstatus = repvector.f,
+#'   obsstatus = obsvector.f, propstatus = propvector.f, immstatus = immvector.f,
+#'   matstatus = matvector.f, indataset = indataset.f, binhalfwidth = binvec.f,
+#'   binhalfwidthb = binbvec.f, binhalfwidthc = bincvec.f)
+#' 
+#' vert.data.f <- verticalize3(cypdata, noyears = 6, firstyear = 2004,
+#'   individcol = "plantid", blocksize = 4, sizeacol = "Veg.04",
+#'   sizebcol = "Inf.04", sizeccol = "Inf2.04", repstracol = "Inf.04",
+#'   repstrbcol = "Inf2.04", fecacol = "Pod.04", censorcol = "censor",
+#'   censorkeep = 1, censorRepeat = FALSE, stageassign = vertframe.f,
+#'   stagesize = "sizeabc", NAas0 = TRUE, censor = FALSE)
+#' 
+#' vertmodels3f <- modelsearch(vert.data.f, historical = TRUE, suite = "main",
+#'   sizeb = c("sizeb3", "sizeb2", "sizeb1"), sizec = c("sizec3", "sizec2", "sizec1"),
+#'   approach = "glm", vitalrates = c("surv", "obs", "size", "repst", "fec"),
+#'   sizedist = "negbin", sizebdist = "poisson", sizecdist = "poisson",
+#'   fecdist = "poisson", patch.as.random = TRUE, year.as.random = TRUE)
+#' 
+#' vertsupp3f <- supplemental(stage3 = c("DS", "P1", "DS", "P1", "P2", "P2", "P3",
+#'     "Sdl", "Sdl", "Sdl", "Dorm", "V1 I0 D0", "V2 I0 D0", "V3 I0 D0", "Dorm",
+#'     "V1 I0 D0", "V2 I0 D0", "V3 I0 D0", "DS", "P1"),
+#'   stage2 = c("DS", "DS", "DS", "DS", "P1", "P1", "P2", "P3", "Sdl", "Sdl", "Sdl",
+#'     "Sdl", "Sdl", "Sdl", "Sdl", "Sdl", "Sdl", "Sdl", "rep", "rep"),
+#'   stage1 = c("DS", "DS", "rep", "rep", "DS", "rep", "P1", "P2", "P3", "Sdl",
+#'     "Sdl", "Sdl", "Sdl", "Sdl", "P3", "P3", "P3", "P3", "mat", "mat"),
+#'   eststage3 = c(NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, "Dorm", "V1 I0 D0",
+#'     "V2 I0 D0", "V3 I0 D0", "Dorm", "V1 I0 D0", "V2 I0 D0", "V3 I0 D0", NA, NA), 
+#'   eststage2 = c(NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, "V1 I0 D0", "V1 I0 D0",
+#'     "V1 I0 D0", "V1 I0 D0", "V1 I0 D0", "V1 I0 D0", "V1 I0 D0", "V1 I0 D0", NA, NA),
+#'   eststage1 = c(NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, "V1 I0 D0", "V1 I0 D0",
+#'     "V1 I0 D0", "V1 I0 D0", "V1 I0 D0", "V1 I0 D0", "V1 I0 D0", "V1 I0 D0", NA, NA),
+#'   givenrate = c(0.10, 0.20, 0.10, 0.20, 0.20, 0.20, 0.20, 0.25, 0.40, 0.40, NA,
+#'     NA, NA, NA, NA, NA, NA, NA, NA, NA),
+#'   multiplier = c(NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA,
+#'     NA, NA, 0.5 * 5000, 0.5 * 5000),
+#'   type =c(1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 3, 3),
+#'   stageframe = vertframe.f, historical = TRUE)
+#' 
+#' vert.mats.f3 <- flefko3(stageframe = vertframe.f, supplement = vertsupp3f, 
+#'   data = vert.data.f, modelsuite = vertmodels3f)
+#' summary(vert.mats.f3)
 #' }
 #' 
 #' @export
-flefko3 <- function(year = "all", patch = "all", stageframe, supplement = NA,
-  repmatrix = NA, overwrite = NA, data = NA, modelsuite = NA, surv_model = NA,
-  obs_model = NA, size_model = NA, repst_model = NA, fec_model = NA,
-  jsurv_model = NA, jobs_model = NA, jsize_model = NA, jrepst_model = NA,
-  paramnames = NA, inda = 0, indb = 0, indc = 0, surv_dev = 0, obs_dev = 0,
-  size_dev = 0, repst_dev = 0, fec_dev = 0, jsurv_dev = 0, jobs_dev = 0,
-  jsize_dev = 0, jrepst_dev = 0, repmod = 1, yearcol = NA, patchcol = NA, 
-  year.as.random = FALSE, patch.as.random = FALSE, randomseed = NA,
-  negfec = FALSE, format = "ehrlen", reduce = FALSE, err_check = FALSE) {
+flefko3 <- function(year = "all", patch = "all", stageframe, supplement = NULL,
+  repmatrix = NULL, overwrite = NULL, data = NA, modelsuite = NA,
+  surv_model = NA, obs_model = NA, size_model = NA, sizeb_model = NA,
+  sizec_model = NA, repst_model = NA, fec_model = NA, jsurv_model = NA,
+  jobs_model = NA, jsize_model = NA, jsizeb_model = NA, jsizec_model = NA,
+  jrepst_model = NA, paramnames = NA, inda = NULL, indb = NULL, indc = NULL,
+  surv_dev = 0, obs_dev = 0, size_dev = 0, sizeb_dev = 0, sizec_dev = 0,
+  repst_dev = 0, fec_dev = 0, jsurv_dev = 0, jobs_dev = 0, jsize_dev = 0,
+  jsizeb_dev = 0, jsizec_dev = 0, jrepst_dev = 0, density = NA, repmod = 1,
+  yearcol = NA, patchcol = NA, year.as.random = FALSE, patch.as.random = FALSE,
+  random.inda = FALSE, random.indb = FALSE, random.indc = FALSE, 
+  randomseed = NA, negfec = FALSE, format = "ehrlen", reduce = FALSE,
+  err_check = FALSE, exp_tol = 700, theta_tol = 100000000) {
+  
+  paramnames <- indanames <- indbnames <- indcnames <- NULL
   
   if (tolower(format) == "ehrlen") {
     format_int <- 1
   } else if (tolower(format) == "devries") {
     format_int <- 2
   } else {
-    stop("The format parameter must be set to either 'ehrlen' or 'deVries'.", call. = FALSE)
+    stop("The format parameter must be set to either 'ehrlen' or 'deVries'.",
+      call. = FALSE)
   }
   
   if (all(is.na(modelsuite)) & all(is.na(paramnames))) {
-    warning("Function may not work properly without a dataframe of model parameters or equivalents supplied either through the modelsuite option or through the paramnames input parameter.")
+    warning("Function may not work properly without a dataframe of model 
+      parameters or equivalents supplied either through the modelsuite option or 
+      through the paramnames input parameter.", call. = FALSE)
   } else if (!all(is.na(modelsuite))) {
     paramnames <- modelsuite$paramnames
     yearcol <- paramnames$modelparams[which(paramnames$mainparams == "year2")]
@@ -321,10 +481,26 @@ flefko3 <- function(year = "all", patch = "all", stageframe, supplement = NA,
   }
   
   if (all(is.na(data))) {
-    stop("Need original vertical dataset to set proper limits on year and patch.", call. = FALSE)
+    stop("Need original vertical dataset to set proper limits on year and patch.", 
+      call. = FALSE)
   }
   if (!any(class(data) == "data.frame")) {
-    stop("Need original vertical dataset used in modeling to proceed.", call. = FALSE)
+    stop("Need original vertical dataset used in modeling to proceed.",
+      call. = FALSE)
+  }
+  if (!any(class(data) == "hfvdata")) {
+    warning("Dataset used as input is not of class hfvdata. Will assume that the
+      dataset has been formatted equivalently.", call. = FALSE)
+  }
+  
+  stageframe_vars <- c("stage", "size", "size_b", "size_c", "min_age", "max_age",
+    "repstatus", "obsstatus", "propstatus", "immstatus", "matstatus", "indataset",
+    "binhalfwidth_raw", "sizebin_min", "sizebin_max", "sizebin_center",
+    "sizebin_width", "binhalfwidthb_raw", "sizebinb_min", "sizebinb_max",
+    "sizebinb_center", "sizebinb_width", "binhalfwidthc_raw", "sizebinc_min",
+    "sizebinc_max", "sizebinc_center", "sizebinc_width", "group", "comments")
+  if (any(!is.element(names(stageframe), stageframe_vars))) {
+    stop("Please use properly formatted stageframe as input.", call. = FALSE)
   }
   
   if (is.character(yearcol)) {
@@ -345,11 +521,15 @@ flefko3 <- function(year = "all", patch = "all", stageframe, supplement = NA,
   }
   
   if (length(year) == 0 | all(is.na(year) == TRUE) | any(is.na(year))) {
-    stop("This function cannot proceed without a specific occasion, or a suite of occasions, designated via the year option. NA entries are not allowed.", call. = FALSE)
+    stop("This function cannot proceed without a specific occasion, or a suite of
+      occasions, designated via the year option. NA entries are not allowed.",
+      call. = FALSE)
   }
   
   if (all(is.na(patch)) & !is.na(patchcol)) {
-    warning("Matrix creation may not proceed properly without input in the patch option when using a modelsuite in which patch is designated.", call. = FALSE)
+    warning("Matrix creation may not proceed properly without input in the patch
+      option when using a modelsuite in which patch is designated.",
+      call. = FALSE)
   }
   
   if (is.character(patchcol) & patchcol != "none") {
@@ -369,90 +549,306 @@ flefko3 <- function(year = "all", patch = "all", stageframe, supplement = NA,
     }
   }
   
-  if (!is.numeric(inda) | !is.numeric(indb) | !is.numeric(indc)) {
-    stop("Individual covariate values must be numeric.", call. = FALSE)
+  if (!is.null(inda)) {
+    if (!is.numeric(inda) & !random.inda) {
+      stop("Individual covariate vector a must be numeric if not set to random.",
+        call. = FALSE)
+    }
+    
+    if (!is.element(length(random.inda), c(1, 2, length(year)))) {
+      stop("Individual covariate vector a must be empty, or include 1, 2, or as
+        many elements as occasions to be modeled.", call. = FALSE)
+    }
+    
+    if (random.inda) {
+      indacol <- paramnames$modelparams[which(paramnames$mainparams == "indcova2")]
+      if (indacol == "none") {
+        stop("Individual covariate a not recognized in the modelsuite", call. = FALSE)
+      }
+      
+      indacol <- which(names(data) == indacol)
+      
+      if (length(indacol) > 0) {
+        indanames <- sort(unique(data[, indacol]))
+      } else {
+        stop("Individual covariate a not recognized in the modelsuite", call. = FALSE)
+      }
+      
+      if (any(!is.element(inda, indanames))) {
+        stop("Entered value for individual covariate a does not exist in the data.",
+          call. = FALSE)
+      }
+      
+      if (length(inda) == 1) {
+        r1.inda <- rep(as.character(inda), length(year))
+        r2.inda <- rep(as.character(inda), length(year))
+      } else if (length(inda) == 2 & length(year) != 2) {
+        r1.inda <- rep(as.character(inda[1]), length(year))
+        r2.inda <- rep(as.character(inda[2]), length(year))
+      } else if (length(inda) == length(year)) {
+        r2.inda <- as.character(inda)
+        r1.inda <- c("none", r2.inda[1:(length(inda) - 1)])
+      }
+      
+      f1.inda <- rep(0, length(year))
+      f2.inda <- rep(0, length(year))
+      
+    } else {
+      indanames <- c(0)
+      
+      if (length(inda) == 1) {
+        f1.inda <- rep(inda, length(year))
+        f2.inda <- rep(inda, length(year))
+      } else if (length(inda) == 2 & length(year) != 2) {
+        f1.inda <- rep(inda[1], length(year))
+        f2.inda <- rep(inda[2], length(year))
+      } else if (length(inda) == length(year)) {
+        f2.inda <- inda
+        f1.inda <- c(0, f2.inda[1:(length(inda) - 1)])
+      }
+      r2.inda <- rep("none", length(year))
+      r1.inda <- rep("none", length(year))
+    }
+  } else {
+    indanames <- c(0)
+    
+    f1.inda <- rep(0, length(year))
+    f2.inda <- rep(0, length(year))
+    r2.inda <- rep("none", length(year))
+    r1.inda <- rep("none", length(year))
+  }
+  
+  if (!is.null(indb)) {
+    if (!is.numeric(indb) & !random.indb) {
+      stop("Individual covariate vector b must be numeric if not set to random.",
+        call. = FALSE)
+    }
+    
+    if (!is.element(length(random.indb), c(1, 2, length(year)))) {
+      stop("Individual covariate vector b must be empty, or include 1, 2, or as
+        many elements as occasions to be modeled.", call. = FALSE)
+    }
+    
+    if (random.indb) {
+      indbcol <- paramnames$modelparams[which(paramnames$mainparams == "indcovb2")]
+      if (indbcol == "none") {
+        stop("Individual covariate b not recognized in the modelsuite", call. = FALSE)
+      }
+      
+      indbcol <- which(names(data) == indbcol)
+      
+      if (length(indbcol) > 0) {
+        indbnames <- sort(unique(data[, indbcol]))
+      } else {
+        stop("Individual covariate b not recognized in the modelsuite", call. = FALSE)
+      }
+      
+      if (any(!is.element(indb, indbnames))) {
+        stop("Entered value for individual covariate b does not exist in the data.",
+          call. = FALSE)
+      }
+      
+      if (length(indb) == 1) {
+        r1.indb <- rep(as.character(indb), length(year))
+        r2.indb <- rep(as.character(indb), length(year))
+      } else if (length(indb) == 2 & length(year) != 2) {
+        r1.indb <- rep(as.character(indb[1]), length(year))
+        r2.indb <- rep(as.character(indb[2]), length(year))
+      } else if (length(indb) == length(year)) {
+        r2.indb <- as.character(indb)
+        r1.indb <- c("none", r2.indb[1:(length(indb) - 1)])
+      }
+      
+      f1.indb <- rep(0, length(year))
+      f2.indb <- rep(0, length(year))
+      
+    } else {
+      indbnames <- c(0)
+      
+      if (length(indb) == 1) {
+        f1.indb <- rep(indb, length(year))
+        f2.indb <- rep(indb, length(year))
+      } else if (length(indb) == 2 & length(year) != 2) {
+        f1.indb <- rep(indb[1], length(year))
+        f2.indb <- rep(indb[2], length(year))
+      } else if (length(indb) == length(year)) {
+        f2.indb <- indb
+        f1.indb <- c(0, f2.indb[1:(length(indb) - 1)])
+      }
+      r2.indb <- rep("none", length(year))
+      r1.indb <- rep("none", length(year))
+    }
+  } else {
+    indbnames <- c(0)
+    
+    f1.indb <- rep(0, length(year))
+    f2.indb <- rep(0, length(year))
+    r2.indb <- rep("none", length(year))
+    r1.indb <- rep("none", length(year))
+  }
+  
+  if (!is.null(indc)) {
+    if (!is.numeric(indc) & !random.indc) {
+      stop("Individual covariate vector c must be numeric if not set to random.",
+        call. = FALSE)
+    }
+    
+    if (!is.element(length(random.indc), c(1, 2, length(year)))) {
+      stop("Individual covariate vector c must be empty, or include 1, 2, or as
+        many elements as occasions to be modeled.", call. = FALSE)
+    }
+    
+    if (random.indc) {
+      indccol <- paramnames$modelparams[which(paramnames$mainparams == "indcovc2")]
+      if (indccol == "none") {
+        stop("Individual covariate c not recognized in the modelsuite", call. = FALSE)
+      }
+      
+      indccol <- which(names(data) == indccol)
+      
+      if (length(indccol) > 0) {
+        indcnames <- sort(unique(data[, indccol]))
+      } else {
+        stop("Individual covariate c not recognized in the modelsuite", call. = FALSE)
+      }
+      
+      if (any(!is.element(indc, indcnames))) {
+        stop("Entered value for individual covariate c does not exist in the data.",
+          call. = FALSE)
+      }
+      
+      if (length(indc) == 1) {
+        r1.indc <- rep(as.character(indc), length(year))
+        r2.indc <- rep(as.character(indc), length(year))
+      } else if (length(indc) == 2 & length(year) != 2) {
+        r1.indc <- rep(as.character(indc[1]), length(year))
+        r2.indc <- rep(as.character(indc[2]), length(year))
+      } else if (length(indc) == length(year)) {
+        r2.indc <- as.character(indc)
+        r1.indc <- c("none", r2.indc[1:(length(indc) - 1)])
+      }
+      
+      f1.indc <- rep(0, length(year))
+      f2.indc <- rep(0, length(year))
+      
+    } else {
+      indcnames <- c(0)
+      
+      if (length(indc) == 1) {
+        f1.indc <- rep(indc, length(year))
+        f2.indc <- rep(indc, length(year))
+      } else if (length(indc) == 2 & length(year) != 2) {
+        f1.indc <- rep(indc[1], length(year))
+        f2.indc <- rep(indc[2], length(year))
+      } else if (length(indc) == length(year)) {
+        f2.indc <- indc
+        f1.indc <- c(0, f2.indc[1:(length(indc) - 1)])
+      }
+      r2.indc <- rep("none", length(year))
+      r1.indc <- rep("none", length(year))
+    }
+  } else {
+    indcnames <- c(0)
+    
+    f1.indc <- rep(0, length(year))
+    f2.indc <- rep(0, length(year))
+    r2.indc <- rep("none", length(year))
+    r1.indc <- rep("none", length(year))
+  }
+  
+  maingroups <- sort(unique(stageframe$group))
+  
+  if (!all(is.na(density))) {
+    if (!all(is.numeric(density))) {
+      stop("Density value must be numeric.", call. = FALSE)
+    }
+    
+    if (any(is.na(density))) {
+      density[which(is.na(density))] <- 0
+    }
+  } else {
+    density <- 0
   }
   
   if (all(is.na(repmatrix)) & all(is.na(supplement))) {
-    warning("Neither supplemental data nor a reproduction matrix have been supplied. All fecundity transitions will be inferred from the stageframe.", call. = FALSE)
+    warning("Neither supplemental data nor a reproduction matrix have been supplied.
+      All fecundity transitions will be inferred from the stageframe.",
+      call. = FALSE)
   } else if (all(is.na(repmatrix)) & any(class(supplement) == "lefkoSD")) {
     checkconv <- supplement$convtype
     
     if (!is.element(3, checkconv)) {
-      warning("Supplemental data does not include fecundity information, and a reproduction matrix has not been supplied. All fecundity transitions will be inferred from the stageframe.", call. = FALSE)
+      warning("Supplemental data does not include fecundity information, and a reproduction
+        matrix has not been supplied. All fecundity transitions will be inferred from the
+        stageframe.", call. = FALSE)
     }
   }
   
   stagenum_init <- dim(stageframe)[1]
-  if (!all(is.na(repmatrix))) {
+  if (!all(is.null(repmatrix))) {
     if (any(class(repmatrix) == "matrix")) {
       if (dim(repmatrix)[1] != stagenum_init & dim(repmatrix)[1] != stagenum_init^2) {
-        stop("The repmatrix provided must be a square matrix with dimensions equal to the number of stages in the stageframe, or the square thereof.", call. = FALSE)
+        stop("The repmatrix provided must be a square matrix with dimensions
+          equal to the number of stages in the stageframe, or the square thereof.",
+          call. = FALSE)
       }
       
       if (dim(repmatrix)[2] != stagenum_init & dim(repmatrix)[2] != stagenum_init^2) {
-        stop("The repmatrix provided must be a square matrix with dimensions equal to the number of stages in the stageframe, or the square thereof.", call. = FALSE)
+        stop("The repmatrix provided must be a square matrix with dimensions
+          equal to the number of stages in the stageframe, or the square thereof.",
+          call. = FALSE)
       }
     }
   }
   
-  if (any(!suppressWarnings(!is.na(as.numeric(as.character(stageframe$bin_size_ctr)))))) {
-    stop("Function flefko3() requires size to be numeric rather than categorical.", call. = FALSE)
+  if (any(!suppressWarnings(!is.na(as.numeric(as.character(stageframe$sizebin_center)))))) {
+    stop("Function flefko3() requires size to be numeric rather than categorical.",
+      call. = FALSE)
   }
   
-  melchett <- .sf_reassess(stageframe, supplement, repmatrix, overwrite, agemat = FALSE, format = format_int)
-  stageframe <- melchett[[1]]
-  repmatrix <- melchett[[2]]
+  melchett <- .sf_reassess(stageframe, supplement, overwrite, repmatrix,
+    agemat = FALSE, historical = TRUE, format = format_int)
+  stageframe <- melchett$stageframe
+  repmatrix <- melchett$repmatrix
+  ovtable <- melchett$ovtable
   
-  stageframe$stage_id <- as.numeric(stageframe$stage_id)
-  stageframe$original_size <- as.numeric(stageframe$original_size)
-  stageframe$bin_size_min <- as.numeric(stageframe$bin_size_min)
-  stageframe$bin_size_ctr <- as.numeric(stageframe$bin_size_ctr)
-  stageframe$bin_size_max <- as.numeric(stageframe$bin_size_max)
-  stageframe$bin_size_width <- as.numeric(stageframe$bin_size_width)
-  stageframe$bin_raw_halfwidth <- as.numeric(stageframe$bin_raw_halfwidth)
-  stageframe$repstatus <- as.numeric(stageframe$repstatus)
-  stageframe$obsstatus <- as.numeric(stageframe$obsstatus)
-  stageframe$propstatus <- as.numeric(stageframe$propstatus)
-  stageframe$immstatus <- as.numeric(stageframe$immstatus)
-  stageframe$matstatus <- as.numeric(stageframe$matstatus)
-  stageframe$entrystage <- as.numeric(stageframe$entrystage)
-  stageframe$indataset <- as.numeric(stageframe$indataset)
-  stageframe$alive <- as.numeric(stageframe$alive)
-  
-  stageframe$stageno <- c(1:dim(stageframe)[1])
-  rownames(stageframe) <- stageframe$stageno
-  stageframe$fullstage <- apply(as.matrix(c(1:dim(stageframe)[1])), 1, function(X) {
-    paste(stageframe$bin_size_ctr[X], stageframe$repstatus[X])
-  })
-  
-  instages <- length(stageframe$stage_id)
-  
-  ovtable <- .overwrite_reassess(stageframe, supplement, overwrite, historical = TRUE)
-  
-  flubbleindices <- which(tolower(ovtable$eststage1) == "notalive")
-  if (length(flubbleindices) > 0) {ovtable <- ovtable[-flubbleindices,]}
+  if (!all(is.na(overwrite)) | !all(is.na(supplement))) {
+    
+    if(any(duplicated(ovtable[,1:3]))) {
+      stop("Multiple entries with different values for the same stage transition
+        are not allowed in the supplemental or overwrite table. If modifying a
+        historical table to perform an ahistorical analysis, then this may be
+        due to different given rates of substitutions caused by dropping stage
+        at occasion t-1. Please eliminate duplicate transitions.",
+        call. = FALSE)
+    }
+  }
   
   # Next the data frame carrying all raw values and element indices for matrix element estimation
-  allstages.list <- theoldpizzle(stageframe, ovtable, repmatrix, finalage = 0,
+  allstages <- .theoldpizzle(stageframe, ovtable, repmatrix, finalage = 0,
     format = format_int, style = 0, cont = 0)
-  allstages <- do.call("cbind.data.frame", c(allstages.list, stringsAsFactors = FALSE))
   
-  maxsize <- max(c(allstages$a.size3, allstages$a.size2n, allstages$a.size2o, allstages$a.size1), na.rm = TRUE)
+  maxsize <- max(c(allstages$size3, allstages$size2n, allstages$size2o), na.rm = TRUE)
+  maxsizeb <- max(c(allstages$sizeb3, allstages$sizeb2n, allstages$sizeb2o), na.rm = TRUE)
+  maxsizec <- max(c(allstages$sizec3, allstages$sizec2n, allstages$sizec2o), na.rm = TRUE)
   
-  allstages <- allstages[(which(allstages$c.index321 != -1)),]
+  allstages <- allstages[(which(allstages$index321 != -1)),]
   
   # Now we work up the models
   if (class(modelsuite) == "lefkoMod") {
     if(is.na(surv_model)) {surv_model <- modelsuite$survival_model}
     if(is.na(obs_model)) {obs_model <- modelsuite$observation_model}
     if(is.na(size_model)) {size_model <- modelsuite$size_model}
+    if(is.na(sizeb_model)) {sizeb_model <- modelsuite$sizeb_model}
+    if(is.na(sizec_model)) {sizec_model <- modelsuite$sizec_model}
     if(is.na(repst_model)) {repst_model <- modelsuite$repstatus_model}
     if(is.na(fec_model)) {fec_model <- modelsuite$fecundity_model}
     
     if(is.na(jsurv_model)) {jsurv_model <- modelsuite$juv_survival_model}
     if(is.na(jobs_model)) {jobs_model <- modelsuite$juv_observation_model}
     if(is.na(jsize_model)) {jsize_model <- modelsuite$juv_size_model}
+    if(is.na(jsizeb_model)) {jsizeb_model <- modelsuite$juv_sizeb_model}
+    if(is.na(jsizec_model)) {jsizec_model <- modelsuite$juv_sizec_model}
     if(is.na(jrepst_model)) {jrepst_model <- modelsuite$juv_reproduction_model}
   }
   
@@ -462,14 +858,21 @@ flefko3 <- function(year = "all", patch = "all", stageframe, supplement = NA,
     set.seed(randomseed)
   }
   
-  surv_proxy <- .modelextract(surv_model, paramnames, mainyears, mainpatches, year.as.random, patch.as.random)
-  obs_proxy <- .modelextract(obs_model, paramnames, mainyears, mainpatches, year.as.random, patch.as.random)
+  surv_proxy <- .modelextract(surv_model, paramnames, mainyears, mainpatches, 
+    maingroups, indanames, indbnames, indcnames, year.as.random,
+    patch.as.random, random.inda, random.indb, random.indc, err_check = FALSE)
+  
+  obs_proxy <- .modelextract(obs_model, paramnames, mainyears, mainpatches,
+    maingroups, indanames, indbnames, indcnames, year.as.random,
+    patch.as.random, random.inda, random.indb, random.indc, err_check = FALSE)
   
   sigma <- 0
   rvarssummed <- 0
   sizedist <- 1
   
-  size_proxy <- .modelextract(size_model, paramnames, mainyears, mainpatches, year.as.random, patch.as.random)
+  size_proxy <- .modelextract(size_model, paramnames, mainyears, mainpatches,
+    maingroups, indanames, indbnames, indcnames, year.as.random,
+    patch.as.random, random.inda, random.indb, random.indc, err_check = FALSE)
   
   if (size_proxy$family == "poisson") {
     sizedist <- 0
@@ -481,28 +884,95 @@ flefko3 <- function(year = "all", patch = "all", stageframe, supplement = NA,
   } else if (size_proxy$family == "gaussian") {
     sizedist <- 2
     sigma <- size_proxy$sigma
+  } else if (size_proxy$family == "gamma") {
+    sizedist <- 3
+    
   } else {
     sizedist <- 1
   }
   
-  repst_proxy <- .modelextract(repst_model, paramnames, mainyears, mainpatches, year.as.random, patch.as.random)
-  fec_proxy <- .modelextract(fec_model, paramnames, mainyears, mainpatches, year.as.random, patch.as.random)
+  sigmab <- 0
+  rvarssummedb <- 0
+  sizebdist <- 1
+  
+  sizeb_proxy <- .modelextract(sizeb_model, paramnames, mainyears, mainpatches,
+    maingroups, indanames, indbnames, indcnames, year.as.random,
+    patch.as.random, random.inda, random.indb, random.indc, err_check = FALSE)
+  
+  if (sizeb_proxy$family == "poisson") {
+    sizebdist <- 0
+    if (!all(is.na(sizeb_proxy$variances))) {
+      rvarssummedb <- sum(sizeb_proxy$variances[,"vcov"])
+    } else {
+      rvarssummedb <- 0
+    }
+  } else if (sizeb_proxy$family == "gaussian") {
+    sizebdist <- 2
+    sigmab <- sizeb_proxy$sigma
+  } else if (sizeb_proxy$family == "gamma") {
+    sizebdist <- 3
+    
+  } else {
+    sizebdist <- 1
+  }
+  
+  sigmac <- 0
+  rvarssummedc <- 0
+  sizecdist <- 1
+  
+  sizec_proxy <- .modelextract(sizec_model, paramnames, mainyears, mainpatches,
+    maingroups, indanames, indbnames, indcnames, year.as.random,
+    patch.as.random, random.inda, random.indb, random.indc, err_check = FALSE)
+  
+  if (sizec_proxy$family == "poisson") {
+    sizecdist <- 0
+    if (!all(is.na(sizec_proxy$variances))) {
+      rvarssummedc <- sum(sizec_proxy$variances[,"vcov"])
+    } else {
+      rvarssummedc <- 0
+    }
+  } else if (sizec_proxy$family == "gaussian") {
+    sizecdist <- 2
+    sigmac <- sizec_proxy$sigma
+  } else if (sizec_proxy$family == "gamma") {
+    sizecdist <- 3
+    
+  } else {
+    sizecdist <- 1
+  }
+  
+  repst_proxy <- .modelextract(repst_model, paramnames, mainyears, mainpatches,
+    maingroups, indanames, indbnames, indcnames, year.as.random,
+    patch.as.random, random.inda, random.indb, random.indc, err_check = FALSE)
+  
+  fec_proxy <- .modelextract(fec_model, paramnames, mainyears, mainpatches,
+    maingroups, indanames, indbnames, indcnames, year.as.random,
+    patch.as.random, random.inda, random.indb, random.indc, err_check = FALSE)
   
   if (fec_proxy$family == "poisson") {
     fecdist <- 0
   } else if (fec_proxy$family == "gaussian") {
     fecdist <- 2
+  } else if (fec_proxy$family == "gamma") {
+    fecdist <- 3
   } else {
     fecdist <- 1
   }
   
-  jsurv_proxy <- .modelextract(jsurv_model, paramnames, mainyears, mainpatches, year.as.random, patch.as.random)
-  jobs_proxy <- .modelextract(jobs_model, paramnames, mainyears, mainpatches, year.as.random, patch.as.random)
+  jsurv_proxy <- .modelextract(jsurv_model, paramnames, mainyears, mainpatches,
+    maingroups, indanames, indbnames, indcnames, year.as.random,
+    patch.as.random, random.inda, random.indb, random.indc, err_check = FALSE)
+  
+  jobs_proxy <- .modelextract(jobs_model, paramnames, mainyears, mainpatches,
+    maingroups, indanames, indbnames, indcnames, year.as.random,
+    patch.as.random, random.inda, random.indb, random.indc, err_check = FALSE)
   
   jsigma <- 0
   jrvarssummed <- 0
   
-  jsize_proxy <- .modelextract(jsize_model, paramnames, mainyears, mainpatches, year.as.random, patch.as.random)
+  jsize_proxy <- .modelextract(jsize_model, paramnames, mainyears, mainpatches,
+    maingroups, indanames, indbnames, indcnames, year.as.random,
+    patch.as.random, random.inda, random.indb, random.indc, err_check = FALSE)
   
   if (jsize_proxy$family == "poisson") {
     if (!all(is.na(jsize_proxy$variances))) {
@@ -514,7 +984,43 @@ flefko3 <- function(year = "all", patch = "all", stageframe, supplement = NA,
     jsigma <- jsize_proxy$sigma
   }
   
-  jrepst_proxy <- .modelextract(jrepst_model, paramnames, mainyears, mainpatches, year.as.random, patch.as.random)
+  jsigmab <- 0
+  jrvarssummedb <- 0
+  
+  jsizeb_proxy <- .modelextract(jsizeb_model, paramnames, mainyears, mainpatches,
+    maingroups, indanames, indbnames, indcnames, year.as.random,
+    patch.as.random, random.inda, random.indb, random.indc, err_check = FALSE)
+  
+  if (jsizeb_proxy$family == "poisson") {
+    if (!all(is.na(jsizeb_proxy$variances))) {
+      jrvarssummedb <- sum(jsize_proxy$variances[,"vcov"])
+    } else {
+      jrvarssummedb <- 0
+    }
+  } else if (jsizeb_proxy$family == "gaussian") {
+    jsigmab <- jsizeb_proxy$sigma
+  }
+  
+  jsigmac <- 0
+  jrvarssummedc <- 0
+  
+  jsizec_proxy <- .modelextract(jsizec_model, paramnames, mainyears, mainpatches,
+    maingroups, indanames, indbnames, indcnames, year.as.random,
+    patch.as.random, random.inda, random.indb, random.indc, err_check = FALSE)
+  
+  if (jsizec_proxy$family == "poisson") {
+    if (!all(is.na(jsizec_proxy$variances))) {
+      jrvarssummedc <- sum(jsizec_proxy$variances[,"vcov"])
+    } else {
+      jrvarssummedc <- 0
+    }
+  } else if (jsizec_proxy$family == "gaussian") {
+    jsigmac <- jsizec_proxy$sigma
+  }
+  
+  jrepst_proxy <- .modelextract(jrepst_model, paramnames, mainyears, mainpatches,
+    maingroups, indanames, indbnames, indcnames, year.as.random,
+    patch.as.random, random.inda, random.indb, random.indc, err_check = FALSE)
   
   # This creates a list of pop, patch, and year in order of matrix
   if (!all(is.na(patch))) {
@@ -543,12 +1049,17 @@ flefko3 <- function(year = "all", patch = "all", stageframe, supplement = NA,
   yearlist <- split(listofyears, seq(nrow(listofyears)))
   
   # The next call runs the core matrix estimator function and creates all matrices
-  madsexmadrigal <- lapply(yearlist, jerzeibalowski, allstages, stageframe, format_int,
-    surv_proxy, obs_proxy, size_proxy, repst_proxy, fec_proxy, jsurv_proxy,
-    jobs_proxy, jsize_proxy, jrepst_proxy, inda, indb, indc, surv_dev, obs_dev,
-    size_dev, repst_dev, fec_dev, jsurv_dev, jobs_dev, jsize_dev, jrepst_dev,
-    repmod, rvarssummed, sigma, jrvarssummed, jsigma, maxsize, 0, sizedist,
-    fecdist, negfec)
+  madsexmadrigal <- lapply(yearlist, .jerzeibalowski, allstages, stageframe, 
+    format_int, surv_proxy, obs_proxy, size_proxy, sizeb_proxy, sizec_proxy, 
+    repst_proxy, fec_proxy, jsurv_proxy, jobs_proxy, jsize_proxy, jsizeb_proxy, 
+    jsizec_proxy, jrepst_proxy, f2.inda, f1.inda, f2.indb, f1.indb, f2.indc,
+    f1.indc, r2.inda, r1.inda, r2.indb, r1.indb, r2.indc, r1.indc, c(surv_dev, 
+      obs_dev, size_dev, sizeb_dev, sizec_dev, repst_dev, fec_dev, jsurv_dev, 
+      jobs_dev, jsize_dev, jsizeb_dev, jsizec_dev, jrepst_dev), density, repmod,
+    c(rvarssummed, sigma, rvarssummedb, sigmab, rvarssummedc, sigmac,
+      jrvarssummed, jsigma, jrvarssummedb, jsigmab, jrvarssummedc, jsigmac),
+    maxsize, maxsizeb, maxsizec, 0, sizedist, sizebdist, sizecdist, fecdist,
+    negfec, exp_tol, theta_tol)
   
   a_list <- lapply(madsexmadrigal, function(X) {X$A})
   u_list <- lapply(madsexmadrigal, function(X) {X$U})
@@ -649,20 +1160,18 @@ flefko3 <- function(year = "all", patch = "all", stageframe, supplement = NA,
 #' Create Function-based Ahistorical Matrix Projection Model
 #'
 #' Function \code{flefko2()} returns ahistorical MPMs corresponding to the
-#' patches and years given, including the associated component transition and
-#' fecundity matrices, a data frame detailing the characteristics of the
-#' ahistorical stages used, and a data frame characterizing the patch and year
-#' combinations corresponding to these matrices. Unlike \code{\link{rlefko2}()}
-#' and \code{\link{rlefko3}()}, this function does not currently distinguish
-#' populations.
+#' patches and occasion times given, including the associated component
+#' transition and fecundity matrices, a data frame detailing the characteristics
+#' of the ahistorical stages used, and a data frame characterizing the patch and
+#' occasion time combinations corresponding to these matrices.
 #'
 #' @param year A variable corresponding to observation occasion, or a set of
 #' such values, given in values associated with the year term used in linear
-#' model development. Can also equal \code{all}, in which case matrices will be
-#' estimated for all years. Defaults to \code{all}.
+#' model development. Defaults to \code{"all"}, in which case matrices will be
+#' estimated for all occasion times.
 #' @param patch A variable designating which patches or subpopulations will have
-#' matrices estimated. Should be set to specific patch names, or to \code{all}
-#' if matrices should be estimated for all patches. Defaults to \code{all}.
+#' matrices estimated. Defaults to \code{"all"}, but can also be set to specific
+#' patch names.
 #' @param stageframe A stageframe object that includes information on the size,
 #' observation status, propagule status, immaturity status, and maturity status
 #' of each ahistorical stage. Should also incorporate bin widths if size is
@@ -671,35 +1180,35 @@ flefko3 <- function(year = "all", patch = "all", stageframe, supplement = NA,
 #' provides supplemental data that should be incorporated into the MPM. Three
 #' kinds of data may be integrated this way: transitions to be estimated via the
 #' use of proxy transitions, transition overwrites from the literature or
-#' supplemental studies, and transition multipliers for fecundity. This data
-#' frame should be produced using the \code{\link{supplemental}()} function. Can
-#' be used in place of or in addition to an overwrite table (see 
+#' supplemental studies, and transition multipliers for survival and fecundity.
+#' This data frame should be produced using the \code{\link{supplemental}()}
+#' function. Can be used in place of or in addition to an overwrite table (see 
 #' \code{overwrite} below) and a reproduction matrix (see \code{repmatrix}
 #' below).
-#' @param repmatrix A reproduction matrix, which is an optional matrix composed
-#' mostly of 0s, with non-zero values for each potentially new individual (row)
-#' born to each reproductive stage (column). Entries act as multipliers on
-#' fecundity, with 1 equaling full fecundity. Fecundity multipliers provided
-#' this way supplement rather than replace those provided in \code{supplement}.
-#' If left blank, then \code{flefko2()} will assume that all stages marked as
-#' reproductive produce offspring at 1x that of fecundity estimated in provided
-#' linear models, and that fecundity will be into the first stage noted as
-#' propagule or immature. To prevent this behavior, input just \code{0}, which
+#' @param repmatrix An optional reproduction matrix. This matrix is composed
+#' mostly of 0s, with non-zero entries acting as element identifiers and
+#' multipliers for fecundity (with 1 equaling full fecundity). If left blank,
+#' and no \code{supplement} is provided, then \code{flefko2()} will assume that
+#' all stages marked as reproductive produce offspring at 1x that of estimated
+#' fecundity, and that offspring production will yield the first stage noted as
+#' propagule or immature.  To prevent this behavior, input just \code{0}, which
 #' will result in fecundity being estimated only for transitions noted in
 #' \code{supplement} above. Must be the dimensions of an ahistorical matrix.
 #' @param overwrite An optional data frame developed with the
 #' \code{\link{overwrite}()} function describing transitions to be overwritten
 #' either with given values or with other estimated transitions. Note that this
 #' function supplements overwrite data provided in \code{supplement}.
-#' @param data The original historical demographic data frame used to estimate
+#' @param data The historical vertical demographic data frame used to estimate
 #' vital rates (class \code{hfvdata}). The original data frame is required in
-#' order to initialize years and patches properly.
+#' order to initialize times and patches properly.
 #' @param modelsuite An optional \code{lefkoMod} object holding the vital rate
 #' models. If given, then \code{surv_model}, \code{obs_model}, 
-#' \code{size_model}, \code{repst_model}, \code{fec_model}, \code{jsurv_model},
-#' \code{jobs_model}, \code{jsize_model}, \code{jrepst_model}, 
-#' \code{paramnames}, \code{yearcol}, and \code{patchcol} are not required. No
-#' models should include size or reproductive status in occasion \emph{t}-1.
+#' \code{size_model}, \code{sizeb_model}, \code{sizec_model},
+#' \code{repst_model}, \code{fec_model}, \code{jsurv_model}, \code{jobs_model},
+#' \code{jsize_model}, \code{jsizeb_model}, \code{jsizec_model},
+#' \code{jrepst_model}, \code{paramnames}, \code{yearcol}, and \code{patchcol}
+#' are not required. No models should include size or reproductive status in
+#' occasion \emph{t}-1.
 #' @param surv_model A linear model predicting survival probability. This can
 #' be a model of class \code{glm} or \code{glmer}, and requires a predicted
 #' binomial variable under a logit link. If given, then will overwrite any
@@ -712,12 +1221,24 @@ flefko3 <- function(year = "all", patch = "all", stageframe, supplement = NA,
 #' will overwrite any observation probability model given in \code{modelsuite}.
 #' This model must have been developed in a modeling exercise testing only the
 #' impacts of occasion \emph{t}.
-#' @param size_model A linear model predicting size. This can be a model of
-#' class \code{glm} or \code{glmer}, both of which require a predicted poisson
-#' variable under a log link, or a model of class \code{lm} or \code{lmer}, in
-#' which a Gaussian response is assumed. If given, then will overwrite any size
-#' model given in \code{modelsuite}. This model must have been developed in a
-#' modeling exercise testing only the impacts of occasion \emph{t}.
+#' @param size_model A linear model predicting primary size. This can be a model
+#' of class \code{glm}, \code{glmer}, \code{glmmTMB}, \code{zeroinfl},
+#' \code{vglm}, \code{lm}, or \code{lmer}. If given, then will overwrite any
+#' primary size model given in \code{modelsuite}. This model must have been
+#' developed in a modeling exercise testing only the impacts of occasion
+#' \emph{t}.
+#' @param sizeb_model A linear model predicting secondary size. This can be a
+#' modelvof class \code{glm}, \code{glmer}, \code{glmmTMB}, \code{zeroinfl},
+#' \code{vglm}, \code{lm}, or \code{lmer}. If given, then will overwrite any
+#' secondary size model given in \code{modelsuite}. This model must have been
+#' developed in a modeling exercise testing only the impacts of occasion
+#' \emph{t}.
+#' @param sizec_model A linear model predicting tertiary size. This can be a
+#' modelvof class \code{glm}, \code{glmer}, \code{glmmTMB}, \code{zeroinfl},
+#' \code{vglm}, \code{lm}, or \code{lmer}. If given, then will overwrite any
+#' tertiary size model given in \code{modelsuite}. This model must have been
+#' developed in a modeling exercise testing only the impacts of occasion
+#' \emph{t}.
 #' @param repst_model A linear model predicting reproduction probability. This
 #' can be a model of class \code{glm} or \code{glmer}, and requires a predicted
 #' binomial variable under a logit link. If given, then will overwrite any
@@ -725,10 +1246,11 @@ flefko3 <- function(year = "all", patch = "all", stageframe, supplement = NA,
 #' have been developed in a modeling exercise testing only the impacts of
 #' occasion \emph{t}.
 #' @param fec_model A linear model predicting fecundity. This can be a model of
-#' class \code{glm} or \code{glmer}, and requires a predicted poisson variable
-#' under a log link. If given, then will overwrite any fecundity model given in
-#' \code{modelsuite}. This model must have been developed in a modeling exercise
-#' testing only the impacts of occasion \emph{t}.
+#' class \code{glm}, \code{glmer}, \code{glmmTMB}, \code{zeroinfl},
+#' \code{vglm}, \code{lm}, or \code{lmer}. If given, then will overwrite any 
+#' fecundity model given in \code{modelsuite}. This model must have been
+#' developed in a modeling exercise testing only the impacts of occasion
+#' \emph{t}.
 #' @param jsurv_model A linear model predicting juvenile survival probability.
 #' This can be a model of class \code{glm} or \code{glmer}, and requires a
 #' predicted binomial variable under a logit link. If given, then will overwrite
@@ -741,13 +1263,24 @@ flefko3 <- function(year = "all", patch = "all", stageframe, supplement = NA,
 #' will overwrite any juvenile observation probability model given in 
 #' \code{modelsuite}. This model must have been developed in a modeling exercise
 #' testing only the impacts of occasion \emph{t}.
-#' @param jsize_model A linear model predicting juvenile size. This can be a
-#' model of class \code{glm} or \code{glmer}, both of which require a predicted
-#' poisson variable under a log link, or a model of class \code{lm} or 
-#' \code{lmer}, in which a Gaussian response is assumed. If given, then will
-#' overwrite any juvenile size model given in \code{modelsuite}. This model must
-#' have been developed in a modeling exercise testing only the impacts of
-#' occasion \emph{t}.
+#' @param jsize_model A linear model predicting juvenile primary size. This
+#' can be a model of class \code{glm}, \code{glmer}, \code{glmmTMB},
+#' \code{zeroinfl}, \code{vglm}, \code{lm}, or \code{lmer}. If given, then will
+#' overwrite any juvenile primary size model given in \code{modelsuite}. This
+#' model must have been developed in a modeling exercise testing only the
+#' impacts of occasion \emph{t}.
+#' @param jsizeb_model A linear model predicting juvenile secondary size. This
+#' can be a model of class \code{glm}, \code{glmer}, \code{glmmTMB},
+#' \code{zeroinfl}, \code{vglm}, \code{lm}, or \code{lmer}. If given, then will
+#' overwrite any juvenile secondary size model given in \code{modelsuite}. This
+#' model must have been developed in a modeling exercise testing only the
+#' impacts of occasion \emph{t}.
+#' @param jsizec_model A linear model predicting juvenile tertiary size. This
+#' can be a model of class \code{glm}, \code{glmer}, \code{glmmTMB},
+#' \code{zeroinfl}, \code{vglm}, \code{lm}, or \code{lmer}. If given, then will
+#' overwrite any juvenile tertiary size model given in \code{modelsuite}. This
+#' model must have been developed in a modeling exercise testing only the
+#' impacts of occasion \emph{t}.
 #' @param jrepst_model A linear model predicting reproduction probability of a 
 #' mature individual that was immature in the previous year. This can be a model 
 #' of class \code{glm} or \code{glmer}, and requires a predicted binomial
@@ -755,19 +1288,35 @@ flefko3 <- function(year = "all", patch = "all", stageframe, supplement = NA,
 #' probability model given in \code{modelsuite}. This model must have been
 #' developed in a modeling exercise testing only the impacts of occasion
 #' \emph{t}.
-#' @param paramnames A dataframe with two columns, the first showing the general
-#' model terms that will be used in matrix creation, and the second showing the
-#' equivalent terms used in modeling. Only required if \code{modelsuite} is not 
-#' supplied.
-#' @param inda A numeric value to use for individual covariate a. Defaults to 0.
-#' @param indb A numeric value to use for individual covariate b. Defaults to 0.
-#' @param indc A numeric value to use for individual covariate c. Defaults to 0.
+#' @param paramnames A dataframe with three columns, the first describing all
+#' terms used in linear modeling, the second (must be called \code{mainparams}),
+#' showing the general model terms that will be used in matrix creation (users
+#' should use \code{\link{modelsearch}()} at least once to see the proper
+#' names to be used in this column), and the third showing the equivalent terms
+#' used in modeling (must be named \code{modelparams}). Only required if
+#' \code{modelsuite} is not supplied.
+#' @param inda Can be a single value to use for individual covariate \code{a}
+#' in all matrices, a pair of values to use for times \emph{t} and \emph{t}-1 in
+#' historical matrices, or a vector of such values corresponding to each
+#' occasion in option \code{year}. Defaults to \code{NULL}.
+#' @param indb Can be a single value to use for individual covariate \code{b}
+#' in all matrices, a pair of values to use for times \emph{t} and \emph{t}-1 in
+#' historical matrices, or a vector of such values corresponding to each
+#' occasion in option \code{year}. Defaults to \code{NULL}.
+#' @param indc Can be a single value to use for individual covariate \code{c}
+#' in all matrices, a pair of values to use for times \emph{t} and \emph{t}-1 in
+#' historical matrices, or a vector of such values corresponding to each
+#' occasion in option \code{year}. Defaults to \code{NULL}.
 #' @param surv_dev A numeric value to be added to the y-intercept in the linear
 #' model for survival probability.
 #' @param obs_dev A numeric value to be added to the y-intercept in the linear
 #' model for observation probability.
 #' @param size_dev A numeric value to be added to the y-intercept in the linear
-#' model for size.
+#' model for primary size.
+#' @param sizeb_dev A numeric value to be added to the y-intercept in the linear
+#' model for secondary size.
+#' @param sizec_dev A numeric value to be added to the y-intercept in the linear
+#' model for tertiary size.
 #' @param repst_dev A numeric value to be added to the y-intercept in the linear
 #' model for probability of reproduction.
 #' @param fec_dev A numeric value to be added to the y-intercept in the linear
@@ -777,35 +1326,59 @@ flefko3 <- function(year = "all", patch = "all", stageframe, supplement = NA,
 #' @param jobs_dev A numeric value to be added to the y-intercept in the linear
 #' model for juvenile observation probability.
 #' @param jsize_dev A numeric value to be added to the y-intercept in the linear
-#' model for juvenile size.
+#' model for juvenile primary size.
+#' @param jsizeb_dev A numeric value to be added to the y-intercept in the
+#' linear model for juvenile secondary size.
+#' @param jsizec_dev A numeric value to be added to the y-intercept in the
+#' linear model for juvenile tertiary size.
 #' @param jrepst_dev A numeric value to be added to the y-intercept in the
 #' linear model for juvenile reproduction probability.
-#' @param repmod A scalar multiplier of fecundity. Defaults to 1.
+#' @param density A numeric value indicating density value to use to propagate
+#' matrices. Only needed if density is an explanatory term used in linear
+#' models. Defaults to \code{NA}.
+#' @param repmod A scalar multiplier of fecundity. Defaults to \code{1}.
 #' @param yearcol The variable name or column number corresponding to year in
 #' occasion \emph{t} in the dataset. Not needed if a \code{modelsuite} is
 #' supplied.
 #' @param patchcol The variable name or column number corresponding to patch in
 #' the dataset. Not needed if a \code{modelsuite} is supplied.
 #' @param year.as.random A logical term indicating whether coefficients for
-#' missing patches within vital rate models should be estimated as random
-#' intercepts. Defaults to FALSE, in which case missing monitoring occasion
-#' coefficients are set to 0.
+#' missing occasions within vital rate models should be estimated as random
+#' intercepts. Defaults to \code{FALSE}, in which case missing monitoring
+#' occasion coefficients are set to \code{0}.
 #' @param patch.as.random A logical term indicating whether coefficients for
 #' missing patches within vital rate models should be estimated as random
-#' intercepts. Defaults to FALSE, in which case missing patch coefficients are
-#' set to 0.
+#' intercepts. Defaults to \code{FALSE}, in which case missing patch
+#' coefficients are set to \code{0}.
+#' @param random.inda A logical value denoting whether to treat individual
+#' covariate \code{a} as a random, categorical variable. Otherwise is treated as
+#' a fixed, numeric variable. Defaults to \code{FALSE}.
+#' @param random.indb A logical value denoting whether to treat individual
+#' covariate \code{b} as a random, categorical variable. Otherwise is treated as
+#' a fixed, numeric variable. Defaults to \code{FALSE}.
+#' @param random.indc A logical value denoting whether to treat individual
+#' covariate \code{c} as a random, categorical variable. Otherwise is treated as
+#' a fixed, numeric variable. Defaults to \code{FALSE}.
 #' @param randomseed A numeric value used as a seed to generate random estimates
 #' for missing occasion and patch coefficients, if either \code{year.as.random}
-#' or \code{patch.as.random} is set to TRUE. Defaults to
+#' or \code{patch.as.random} is set to \code{TRUE}. Defaults to
 #' \code{\link{set.seed}()} default.
 #' @param negfec A logical value denoting whether fecundity values estimated to
-#' be negative should be reset to 0. Defaults to FALSE.
+#' be negative should be reset to \code{0}. Defaults to \code{FALSE}.
 #' @param reduce A logical value denoting whether to remove ahistorical stages
 #' associated solely with 0 transitions. These are only removed in cases where
 #' the associated row and column sums in ALL matrices estimated equal 0.
-#' Defaults to FALSE.
-#' @param err_check A logical value indicating whether to add matrices of vital
-#' rate probabilities associated with each matrix. Defaults to FALSE.
+#' Defaults to \code{FALSE}.
+#' @param err_check A logical value indicating whether to append matrices of
+#' vital rate probabilities associated with each matrix to the \code{lefkoMat}
+#' object generated. These matrices are developed internally and can be used for
+#' error checking. Defaults to \code{FALSE}.
+#' @param exp_tol A numeric value used to indicate a maximum value to set
+#' exponents to in the core kernel to prevent numerical overflow. Defaults to
+#' \code{700}.
+#' @param theta_tol A numeric value used to indicate a maximum value to theta as
+#' used in the negative binomial probability density kernel. Defaults to
+#' \code{100000000}, but can be reset to other values during error checking.
 #'
 #' @return If all inputs are properly formatted, then this function will return
 #' an object of class \code{lefkoMat}, which is a list that holds the matrix
@@ -813,30 +1386,35 @@ flefko3 <- function(year = "all", patch = "all", stageframe, supplement = NA,
 #' following elements:
 #'
 #' \item{A}{A list of full projection matrices in order of sorted patches and
-#' years. All matrices output in the \code{matrix} class.}
+#' occasion times. All matrices output in R's \code{matrix} class.}
 #' \item{U}{A list of survival transition matrices sorted as in \code{A}. All 
-#' matrices output in the \code{matrix} class.}
+#' matrices output in R's \code{matrix} class.}
 #' \item{F}{A list of fecundity matrices sorted as in \code{A}. All matrices 
-#' output in the \code{matrix} class.}
+#' output in R's \code{matrix} class.}
 #' \item{hstages}{A data frame matrix showing the pairing of ahistorical stages
-#' used to create historical stage pairs. Set to NA for ahistorical matrices.}
+#' used to create historical stage pairs. Set to \code{NA} for ahistorical
+#' matrices.}
 #' \item{agestages}{A data frame showing age-stage pairs. In this function, it
-#' is set to NA. Only used in output to function \code{aflefko2}().}
+#' is set to \code{NA}. Only used in output to function \code{aflefko2}().}
 #' \item{ahstages}{A data frame detailing the characteristics of associated
 #' ahistorical stages, in the form of a modified stageframe that includes
 #' status as an entry stage through reproduction.}
-#' \item{labels}{A data frame giving the patch and year of each matrix in order.
-#' In \code{flefko2()}, only one population may be analyzed at once, and so 
-#' \code{pop = NA}}
+#' \item{labels}{A data frame giving the population, patch, and year of each
+#' matrix in order. In \code{flefko2()}, only one population may be analyzed at
+#' once, and so \code{pop = NA}.}
 #' \item{matrixqc}{A short vector describing the number of non-zero elements in
-#' \code{U} and \code{F} matrices, and the number of annual matrices.}
+#' \code{U} and \code{F} matrices, and the number of matrices.}
 #' \item{modelqc}{This is the \code{qc} portion of the modelsuite input.}
 #' \item{prob_out}{An optional element only added if \code{err_check = TRUE}.
-#' This is a list of vital rate probability matrices, with 4 columns in the
-#' order of survival, observation probability, reproduction probability, and
-#' size transition probability.}
+#' This is a list of vital rate probability matrices, with 6 columns in the
+#' order of survival, observation probability, reproduction probability, primary
+#' size transition probability, secondary size transition probability, and
+#' tertiary size transition probability.}
 #' 
 #' @section Notes:
+#' Unlike \code{\link{rlefko2}()} and \code{\link{rlefko3}()}, this function
+#' does not currently distinguish populations.
+#' 
 #' This function will yield incorrect estimates if the models utilized
 #' incorporate state in occasion \emph{t}-1. Only use models developed testing
 #' for ahistorical effects.
@@ -847,10 +1425,10 @@ flefko3 <- function(year = "all", patch = "all", stageframe, supplement = NA,
 #' empty, then fecundity will be estimated at full for all transitions leading
 #' from reproductive stages to immature and propagule stages. However, if a
 #' \code{supplement} is provided and a \code{repmatrix} is not, or if
-#' \code{repmatrix} is set to 0, then only fecundity transitions noted in the
-#' supplement will be set to non-zero values. To use the default behavior of
-#' setting all reproductive stages to reproduce at full fecundity into immature
-#' and propagule stages but also incorporate given or proxy
+#' \code{repmatrix} is set to \code{0}, then only fecundity transitions noted in
+#' the \code{supplement} will be set to non-zero values. To use the default
+#' behavior of setting all reproductive stages to reproduce at full fecundity
+#' into immature and propagule stages, but also incorporate given or proxy
 #' survival transitions, input those given and proxy transitions through the
 #' \code{overwrite} option.
 #' 
@@ -858,16 +1436,21 @@ flefko3 <- function(year = "all", patch = "all", stageframe, supplement = NA,
 #' ahistorical. If provided as historical, then \code{flefko2()} will fail and
 #' produce an error.
 #' 
-#' Users may at occasions wish to estimate MPMs using a dataset incorporating
-#' multiple patches or subpopulations. Should the aim of analysis be a general
-#' MPM that does not distinguish these patches or subpopulations, the
-#' \code{patchcol} variable should be left to NA, which is the default.
+#' Users may at times wish to estimate MPMs using a dataset incorporating
+#' multiple patches or subpopulations, but without discriminating between those
+#' patches or subpopulations. Should the aim of analysis be a general MPM that
+#' does not distinguish these patches or subpopulations, the \code{patchcol}
+#' variable should be set to \code{NA}, which is the default.
 #'
 #' Input options including multiple variable names must be entered in the order
-#' of variables in occasion \emph{t}+1 and \emph{t}. Rearranging the order WILL
-#' lead to erroneous calculations, and will probably also lead to fatal errors.
+#' of variables in occasion \emph{t}+1 and \emph{t}. Rearranging the order will
+#' lead to erroneous calculations, and may lead to fatal errors.
 #'
-#' Using the \code{err_check} option will produce a matrix of 4 columns, each
+#' Care should be taken to match the random status of year and patch to the
+#' states of those variables within the modelsuite. If they do not match, then
+#' they will be treated as zeroes in vital rate estimation.
+#' 
+#' Using the \code{err_check} option will produce a matrix of 6 columns, each
 #' characterizing a different vital rate. The product of each row yields an
 #' element in the associated \code{$U} matrix. The number and order of elements
 #' in each column of this matrix matches the associated matrix in column vector
@@ -931,21 +1514,102 @@ flefko3 <- function(year = "all", patch = "all", stageframe, supplement = NA,
 #'   patch.as.random = FALSE, reduce = FALSE)
 #' 
 #' summary(lathmat2ln)
+#' 
+#' #Cypripedium example using three size metrics for classification
+#' rm(list=ls(all=TRUE))
+#' 
+#' data(cypdata)
+#' sizevector.f <- c(0, 0, 0, 0, 0, 0, seq(1, 12, by = 1), seq(0, 9, by = 1),
+#'   seq(0, 8, by = 1), seq(0, 7, by = 1), seq(0, 6, by = 1), seq(0, 5, by = 1),
+#'   seq(0, 4, by = 1), seq(0, 3, by = 1), 0, 1, 2, 0, 1, 0, 
+#'   0, 0, 1, 0)
+#' sizebvector.f <- c(0, 0, 0, 0, 0, 0, rep(0, 12), rep(1, 10), rep(2, 9),
+#'   rep(3, 8), rep(4, 7), rep(5, 6), rep(6, 5), rep(7, 4), rep(8, 3), 9, 9, 10, 
+#'   0, 1, 1, 2)
+#' sizecvector.f <- c(0, 0, 0, 0, 0, 0, rep(0, 12), rep(0, 10), rep(0, 9),
+#'   rep(0, 8), rep(0, 7), rep(0, 6), rep(0, 5), rep(0, 4), 0, 0, 0, 0, 0, 0, 
+#'   1, 1, 1, 1)
+#' stagevector.f <- c("DS", "P1", "P2", "P3", "Sdl", "Dorm", "V1 I0 D0",
+#'   "V2 I0 D0", "V3 I0 D0", "V4 I0 D0", "V5 I0 D0", "V6 I0 D0", "V7 I0 D0",
+#'   "V8 I0 D0", "V9 I0 D0", "V10 I0 D0", "V11 I0 D0", "V12 I0 D0", "V0 I1 D0",
+#'   "V1 I1 D0", "V2 I1 D0", "V3 I1 D0", "V4 I1 D0", "V5 I1 D0", "V6 I1 D0",
+#'   "V7 I1 D0", "V8 I1 D0", "V9 I1 D0", "V0 I2 D0", "V1 I2 D0", "V2 I2 D0",
+#'   "V3 I2 D0", "V4 I2 D0", "V5 I2 D0", "V6 I2 D0", "V7 I2 D0", "V8 I2 D0",
+#'   "V0 I3 D0", "V1 I3 D0", "V2 I3 D0", "V3 I3 D0", "V4 I3 D0", "V5 I3 D0",
+#'   "V6 I3 D0", "V7 I3 D0", "V0 I4 D0", "V1 I4 D0", "V2 I4 D0", "V3 I4 D0",
+#'   "V4 I4 D0", "V5 I4 D0", "V6 I4 D0", "V0 I5 D0", "V1 I5 D0", "V2 I5 D0",
+#'   "V3 I5 D0", "V4 I5 D0", "V5 I5 D0", "V0 I6 D0", "V1 I6 D0", "V2 I6 D0",
+#'   "V3 I6 D0", "V4 I6 D0", "V0 I7 D0", "V1 I7 D0", "V2 I7 D0", "V3 I7 D0",
+#'   "V0 I8 D0", "V1 I8 D0", "V2 I8 D0", "V0 I9 D0", "V1 I9 D0", "V0 I10 D0",
+#'   "V0 I0 D1", "V0 I1 D1", "V1 I1 D1", "V0 I2 D1")
+#' repvector.f <- c(0, 0, 0, 0, 0, rep(0, 13), rep(1, 59))
+#' obsvector.f <- c(0, 0, 0, 0, 0, 0, rep(1, 71))
+#' matvector.f <- c(0, 0, 0, 0, 0, rep(1, 72))
+#' immvector.f <- c(0, 1, 1, 1, 1, rep(0, 72))
+#' propvector.f <- c(1, rep(0, 76))
+#' indataset.f <- c(0, 0, 0, 0, 0, rep(1, 72))
+#' binvec.f <- c(0, 0, 0, 0, 0, rep(0.5, 72))
+#' binbvec.f <- c(0, 0, 0, 0, 0, rep(0.5, 72))
+#' bincvec.f <- c(0, 0, 0, 0, 0, rep(0.5, 72))
+#' 
+#' vertframe.f <- sf_create(sizes = sizevector.f, sizesb = sizebvector.f,
+#'   sizesc = sizecvector.f, stagenames = stagevector.f, repstatus = repvector.f,
+#'   obsstatus = obsvector.f, propstatus = propvector.f, immstatus = immvector.f,
+#'   matstatus = matvector.f, indataset = indataset.f, binhalfwidth = binvec.f,
+#'   binhalfwidthb = binbvec.f, binhalfwidthc = bincvec.f)
+#' 
+#' vert.data.f <- verticalize3(cypdata, noyears = 6, firstyear = 2004,
+#'   individcol = "plantid", blocksize = 4, sizeacol = "Veg.04",
+#'   sizebcol = "Inf.04", sizeccol = "Inf2.04", repstracol = "Inf.04",
+#'   repstrbcol = "Inf2.04", fecacol = "Pod.04", censorcol = "censor",
+#'   censorkeep = 1, censorRepeat = FALSE, stageassign = vertframe.f,
+#'   stagesize = "sizeabc", NAas0 = TRUE, censor = FALSE)
+#' 
+#' vertmodels2f <- modelsearch(vert.data.f, historical = FALSE, suite = "main", 
+#'   sizeb = c("sizeb3", "sizeb2", "sizeb1"), sizec = c("sizec3", "sizec2", "sizec1"),
+#'   approach = "glm", vitalrates = c("surv", "obs", "size", "repst", "fec"),
+#'   sizedist = "negbin", sizebdist = "poisson", sizecdist = "poisson",
+#'   fecdist = "poisson", patch.as.random = TRUE, year.as.random = TRUE)
+#' 
+#' vertsupp2f <- supplemental(stage3 = c("DS", "P1", "P2", "P3", "Sdl", "Sdl",
+#'     "Dorm", "V1 I0 D0", "V2 I0 D0", "V3 I0 D0", "DS", "P1"),
+#'   stage2 = c("DS", "DS", "P1", "P2", "P3", "Sdl", "Sdl", "Sdl", "Sdl", "Sdl",
+#'     "rep", "rep"), 
+#'   eststage3 = c(NA, NA, NA, NA, NA, NA, "Dorm", "V1 I0 D0", "V2 I0 D0",
+#'     "V3 I0 D0", NA, NA), 
+#'   eststage2 = c(NA, NA, NA, NA, NA, NA, "V1 I0 D0", "V1 I0 D0", "V1 I0 D0",
+#'     "V1 I0 D0", NA, NA), 
+#'   givenrate = c(0.10, 0.20, 0.20, 0.20, 0.25, 0.40, NA, NA, NA, NA, NA, NA),
+#'   multiplier = c(NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, 0.5 * 5000, 0.5 * 5000),
+#'   type =c(1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 3, 3), stageframe = vertframe.f,
+#'   historical = FALSE)
+#' 
+#' vert.mats.f2 <- flefko2(stageframe = vertframe.f, supplement = vertsupp2f, 
+#'   data = vert.data.f, modelsuite = vertmodels2f)
+#' summary(vert.mats.f2)
 #' }
 #' 
 #' @export
-flefko2 <- function(year = "all", patch = "all", stageframe, supplement = NA,
-  repmatrix = NA, overwrite = NA, data = NA, modelsuite = NA, surv_model = NA,
-  obs_model = NA, size_model = NA, repst_model = NA, fec_model = NA,
-  jsurv_model = NA, jobs_model = NA, jsize_model = NA, jrepst_model = NA,
-  paramnames = NA, inda = 0, indb = 0, indc = 0, surv_dev = 0, obs_dev = 0,
-  size_dev = 0, repst_dev = 0, fec_dev = 0, jsurv_dev = 0, jobs_dev = 0,
-  jsize_dev = 0, jrepst_dev = 0, repmod = 1, yearcol = NA, patchcol = NA,
-  year.as.random = FALSE, patch.as.random = FALSE, randomseed = NA,
-  negfec = FALSE, reduce = FALSE, err_check = FALSE) {
+flefko2 <- function(year = "all", patch = "all", stageframe, supplement = NULL,
+  repmatrix = NULL, overwrite = NULL, data = NA, modelsuite = NA,
+  surv_model = NA, obs_model = NA, size_model = NA, sizeb_model = NA,
+  sizec_model = NA, repst_model = NA, fec_model = NA, jsurv_model = NA,
+  jobs_model = NA, jsize_model = NA, jsizeb_model = NA, jsizec_model = NA,
+  jrepst_model = NA, paramnames = NA, inda = NULL, indb = NULL, indc = NULL,
+  surv_dev = 0, obs_dev = 0, size_dev = 0, sizeb_dev = 0, sizec_dev = 0,
+  repst_dev = 0, fec_dev = 0, jsurv_dev = 0, jobs_dev = 0, jsize_dev = 0,
+  jsizeb_dev = 0, jsizec_dev = 0, jrepst_dev = 0, density = NA, repmod = 1,
+  yearcol = NA, patchcol = NA, year.as.random = FALSE, patch.as.random = FALSE,
+  random.inda = FALSE, random.indb = FALSE, random.indc = FALSE,
+  randomseed = NA, negfec = FALSE, reduce = FALSE, err_check = FALSE,
+  exp_tol = 700, theta_tol = 100000000) {
+  
+  paramnames <- indanames <- indbnames <- indcnames <- NULL
   
   if (all(is.na(modelsuite)) & all(is.na(paramnames))) {
-    warning("Function may not work properly without a dataframe of model parameters or equivalents supplied either through the modelsuite option or through the paramnames input parameter.")
+    warning("Function may not work properly without a dataframe of model 
+      parameters or equivalents supplied either through the modelsuite option or 
+      through the paramnames input parameter.", call. = FALSE)
   } else if (!all(is.na(modelsuite))) {
     paramnames <- modelsuite$paramnames
     yearcol <- paramnames$modelparams[which(paramnames$mainparams == "year2")]
@@ -953,10 +1617,26 @@ flefko2 <- function(year = "all", patch = "all", stageframe, supplement = NA,
   }
   
   if (all(is.na(data))) {
-    stop("Need original vertical dataset to set proper limits on year and patch.", call. = FALSE)
+    stop("Need original vertical dataset to set proper limits on year and patch.",
+      call. = FALSE)
   }
   if (!any(class(data) == "data.frame")) {
-    stop("Need original vertical dataset used in modeling to proceed.", call. = FALSE)
+    stop("Need original vertical dataset used in modeling to proceed.",
+      call. = FALSE)
+  }
+  if (!any(class(data) == "hfvdata")) {
+    warning("Dataset used as input is not of class hfvdata. Will assume that the
+      dataset has been formatted equivalently.", call. = FALSE)
+  }
+  
+  stageframe_vars <- c("stage", "size", "size_b", "size_c", "min_age", "max_age",
+    "repstatus", "obsstatus", "propstatus", "immstatus", "matstatus", "indataset",
+    "binhalfwidth_raw", "sizebin_min", "sizebin_max", "sizebin_center",
+    "sizebin_width", "binhalfwidthb_raw", "sizebinb_min", "sizebinb_max",
+    "sizebinb_center", "sizebinb_width", "binhalfwidthc_raw", "sizebinc_min",
+    "sizebinc_max", "sizebinc_center", "sizebinc_width", "group", "comments")
+  if (any(!is.element(names(stageframe), stageframe_vars))) {
+    stop("Please use properly formatted stageframe as input.", call. = FALSE)
   }
   
   if (is.character(yearcol)) {
@@ -977,11 +1657,15 @@ flefko2 <- function(year = "all", patch = "all", stageframe, supplement = NA,
   }
   
   if (length(year) == 0 | all(is.na(year) == TRUE) | any(is.na(year))) {
-    stop("This function cannot proceed without a specific occasion, or a suite of occasions, designated via the year option. NA entries are not allowed.", call. = FALSE)
+    stop("This function cannot proceed without a specific occasion, or a suite of
+      occasions, designated via the year option. NA entries are not allowed.",
+      call. = FALSE)
   }
   
   if (all(is.na(patch)) & !is.na(patchcol)) {
-    warning("Matrix creation may not proceed properly without input in the patch option when using a modelsuite in which patch is designated.", call. = FALSE)
+    warning("Matrix creation may not proceed properly without input in the patch
+      option when using a modelsuite in which patch is designated.",
+      call. = FALSE)
   }
   
   if (is.character(patchcol) & patchcol != "none") {
@@ -1001,84 +1685,299 @@ flefko2 <- function(year = "all", patch = "all", stageframe, supplement = NA,
     }
   }
   
-  if (!is.numeric(inda) | !is.numeric(indb) | !is.numeric(indc)) {
-    stop("Individual covariate values must be numeric.", call. = FALSE)
+  if (!is.null(inda)) {
+    if (!is.numeric(inda) & !random.inda) {
+      stop("Individual covariate vector a must be numeric if not set to random.",
+        call. = FALSE)
+    }
+    
+    if (!is.element(length(random.inda), c(1, 2, length(year)))) {
+      stop("Individual covariate vector a must be empty, or include 1, 2, or as
+        many elements as occasions to be modeled.", call. = FALSE)
+    }
+    
+    if (random.inda) {
+      indacol <- paramnames$modelparams[which(paramnames$mainparams == "indcova2")]
+      if (indacol == "none") {
+        stop("Individual covariate a not recognized in the modelsuite", call. = FALSE)
+      }
+      
+      indacol <- which(names(data) == indacol)
+      
+      if (length(indacol) > 0) {
+        indanames <- sort(unique(data[, indacol]))
+      } else {
+        stop("Individual covariate a not recognized in the modelsuite", call. = FALSE)
+      }
+      
+      if (any(!is.element(inda, indanames))) {
+        stop("Entered value for individual covariate a does not exist in the data.",
+          call. = FALSE)
+      }
+      
+      if (length(inda) == 1) {
+        r1.inda <- rep(as.character(inda), length(year))
+        r2.inda <- rep(as.character(inda), length(year))
+      } else if (length(inda) == 2 & length(year) != 2) {
+        r1.inda <- rep(as.character(inda[1]), length(year))
+        r2.inda <- rep(as.character(inda[2]), length(year))
+      } else if (length(inda) == length(year)) {
+        r2.inda <- as.character(inda)
+        r1.inda <- c("none", r2.inda[1:(length(inda) - 1)])
+      }
+      
+      f1.inda <- rep(0, length(year))
+      f2.inda <- rep(0, length(year))
+      
+    } else {
+      indanames <- c(0)
+      
+      if (length(inda) == 1) {
+        f1.inda <- rep(inda, length(year))
+        f2.inda <- rep(inda, length(year))
+      } else if (length(inda) == 2 & length(year) != 2) {
+        f1.inda <- rep(inda[1], length(year))
+        f2.inda <- rep(inda[2], length(year))
+      } else if (length(inda) == length(year)) {
+        f2.inda <- inda
+        f1.inda <- c(0, f2.inda[1:(length(inda) - 1)])
+      }
+      r2.inda <- rep("none", length(year))
+      r1.inda <- rep("none", length(year))
+    }
+  } else {
+    indanames <- c(0)
+    
+    f1.inda <- rep(0, length(year))
+    f2.inda <- rep(0, length(year))
+    r2.inda <- rep("none", length(year))
+    r1.inda <- rep("none", length(year))
+  }
+  
+  if (!is.null(indb)) {
+    if (!is.numeric(indb) & !random.indb) {
+      stop("Individual covariate vector b must be numeric if not set to random.",
+        call. = FALSE)
+    }
+    
+    if (!is.element(length(random.indb), c(1, 2, length(year)))) {
+      stop("Individual covariate vector b must be empty, or include 1, 2, or as
+        many elements as occasions to be modeled.", call. = FALSE)
+    }
+    
+    if (random.indb) {
+      indbcol <- paramnames$modelparams[which(paramnames$mainparams == "indcovb2")]
+      if (indbcol == "none") {
+        stop("Individual covariate b not recognized in the modelsuite", call. = FALSE)
+      }
+      
+      indbcol <- which(names(data) == indbcol)
+      
+      if (length(indbcol) > 0) {
+        indbnames <- sort(unique(data[, indbcol]))
+      } else {
+        stop("Individual covariate b not recognized in the modelsuite", call. = FALSE)
+      }
+      
+      if (any(!is.element(indb, indbnames))) {
+        stop("Entered value for individual covariate b does not exist in the data.",
+          call. = FALSE)
+      }
+      
+      if (length(indb) == 1) {
+        r1.indb <- rep(as.character(indb), length(year))
+        r2.indb <- rep(as.character(indb), length(year))
+      } else if (length(indb) == 2 & length(year) != 2) {
+        r1.indb <- rep(as.character(indb[1]), length(year))
+        r2.indb <- rep(as.character(indb[2]), length(year))
+      } else if (length(indb) == length(year)) {
+        r2.indb <- as.character(indb)
+        r1.indb <- c("none", r2.indb[1:(length(indb) - 1)])
+      }
+      
+      f1.indb <- rep(0, length(year))
+      f2.indb <- rep(0, length(year))
+      
+    } else {
+      indbnames <- c(0)
+      
+      if (length(indb) == 1) {
+        f1.indb <- rep(indb, length(year))
+        f2.indb <- rep(indb, length(year))
+      } else if (length(indb) == 2 & length(year) != 2) {
+        f1.indb <- rep(indb[1], length(year))
+        f2.indb <- rep(indb[2], length(year))
+      } else if (length(indb) == length(year)) {
+        f2.indb <- indb
+        f1.indb <- c(0, f2.indb[1:(length(indb) - 1)])
+      }
+      r2.indb <- rep("none", length(year))
+      r1.indb <- rep("none", length(year))
+    }
+  } else {
+    indbnames <- c(0)
+    
+    f1.indb <- rep(0, length(year))
+    f2.indb <- rep(0, length(year))
+    r2.indb <- rep("none", length(year))
+    r1.indb <- rep("none", length(year))
+  }
+  
+  if (!is.null(indc)) {
+    if (!is.numeric(indc) & !random.indc) {
+      stop("Individual covariate vector c must be numeric if not set to random.",
+        call. = FALSE)
+    }
+    
+    if (!is.element(length(random.indc), c(1, 2, length(year)))) {
+      stop("Individual covariate vector c must be empty, or include 1, 2, or as
+        many elements as occasions to be modeled.", call. = FALSE)
+    }
+    
+    if (random.indc) {
+      indccol <- paramnames$modelparams[which(paramnames$mainparams == "indcovc2")]
+      if (indccol == "none") {
+        stop("Individual covariate c not recognized in the modelsuite", call. = FALSE)
+      }
+      
+      indccol <- which(names(data) == indccol)
+      
+      if (length(indccol) > 0) {
+        indcnames <- sort(unique(data[, indccol]))
+      } else {
+        stop("Individual covariate c not recognized in the modelsuite", call. = FALSE)
+      }
+      
+      if (any(!is.element(indc, indcnames))) {
+        stop("Entered value for individual covariate c does not exist in the data.",
+          call. = FALSE)
+      }
+      
+      if (length(indc) == 1) {
+        r1.indc <- rep(as.character(indc), length(year))
+        r2.indc <- rep(as.character(indc), length(year))
+      } else if (length(indc) == 2 & length(year) != 2) {
+        r1.indc <- rep(as.character(indc[1]), length(year))
+        r2.indc <- rep(as.character(indc[2]), length(year))
+      } else if (length(indc) == length(year)) {
+        r2.indc <- as.character(indc)
+        r1.indc <- c("none", r2.indc[1:(length(indc) - 1)])
+      }
+      
+      f1.indc <- rep(0, length(year))
+      f2.indc <- rep(0, length(year))
+      
+    } else {
+      indcnames <- c(0)
+      
+      if (length(indc) == 1) {
+        f1.indc <- rep(indc, length(year))
+        f2.indc <- rep(indc, length(year))
+      } else if (length(indc) == 2 & length(year) != 2) {
+        f1.indc <- rep(indc[1], length(year))
+        f2.indc <- rep(indc[2], length(year))
+      } else if (length(indc) == length(year)) {
+        f2.indc <- indc
+        f1.indc <- c(0, f2.indc[1:(length(indc) - 1)])
+      }
+      r2.indc <- rep("none", length(year))
+      r1.indc <- rep("none", length(year))
+    }
+  } else {
+    indcnames <- c(0)
+    
+    f1.indc <- rep(0, length(year))
+    f2.indc <- rep(0, length(year))
+    r2.indc <- rep("none", length(year))
+    r1.indc <- rep("none", length(year))
+  }
+  
+  maingroups <- sort(unique(stageframe$group))
+  
+  if (!all(is.na(density))) {
+    if (!all(is.numeric(density))) {
+      stop("Density value must be numeric.", call. = FALSE)
+    }
+    
+    if (any(is.na(density))) {
+      density[which(is.na(density))] <- 0
+    }
+  } else {
+    density <- 0
   }
   
   if (all(is.na(repmatrix)) & all(is.na(supplement))) {
-    warning("Neither supplemental data nor a reproduction matrix have been supplied. All fecundity transitions will be inferred from the stageframe.", call. = FALSE)
+    warning("Neither supplemental data nor a reproduction matrix have been supplied.
+      All fecundity transitions will be inferred from the stageframe.",
+      call. = FALSE)
   } else if (all(is.na(repmatrix)) & any(class(supplement) == "lefkoSD")) {
     checkconv <- supplement$convtype
     
     if (!is.element(3, checkconv)) {
-      warning("Supplemental data does not include fecundity information, and a reproduction matrix has not been supplied. All fecundity transitions will be inferred from the stageframe.", call. = FALSE)
+      warning("Supplemental data does not include fecundity information, and a reproduction
+        matrix has not been supplied. All fecundity transitions will be inferred from the
+        stageframe.", call. = FALSE)
     }
   }
   
   stagenum_init <- dim(stageframe)[1]
-  if (!all(is.na(repmatrix))) {
+  if (!all(is.null(repmatrix))) {
     if (any(class(repmatrix) == "matrix")) {
       if (dim(repmatrix)[1] != stagenum_init | dim(repmatrix)[2] != stagenum_init) {
-        stop("The repmatrix provided must be a square matrix with dimensions equal to the number of stages in the stageframe.", call. = FALSE)
+        stop("The repmatrix provided must be a square matrix with dimensions
+          equal to the number of stages in the stageframe.", call. = FALSE)
       }
     }
   }
   
   if (any(!suppressWarnings(!is.na(as.numeric(as.character(stageframe$size)))))) {
-    stop("Function flefko2() requires size to be numeric rather than categorical.", call. = FALSE)
+    stop("Function flefko2() requires size to be numeric rather than categorical.",
+      call. = FALSE)
   }
   
-  melchett <- .sf_reassess(stageframe, supplement, repmatrix, overwrite,
-    agemat = FALSE, format = 1)
-  stageframe <- melchett[[1]]
-  repmatrix <- melchett[[2]]
+  melchett <- .sf_reassess(stageframe, supplement, overwrite, repmatrix,
+    agemat = FALSE, historical = FALSE, format = 1)
+  stageframe <- melchett$stageframe
+  repmatrix <- melchett$repmatrix
+  ovtable <- melchett$ovtable
   
-  stageframe$stage_id <- as.numeric(stageframe$stage_id)
-  stageframe$original_size <- as.numeric(stageframe$original_size)
-  stageframe$bin_size_min <- as.numeric(stageframe$bin_size_min)
-  stageframe$bin_size_ctr <- as.numeric(stageframe$bin_size_ctr)
-  stageframe$bin_size_max <- as.numeric(stageframe$bin_size_max)
-  stageframe$bin_size_width <- as.numeric(stageframe$bin_size_width)
-  stageframe$bin_raw_halfwidth <- as.numeric(stageframe$bin_raw_halfwidth)
-  stageframe$repstatus <- as.numeric(stageframe$repstatus)
-  stageframe$obsstatus <- as.numeric(stageframe$obsstatus)
-  stageframe$propstatus <- as.numeric(stageframe$propstatus)
-  stageframe$immstatus <- as.numeric(stageframe$immstatus)
-  stageframe$matstatus <- as.numeric(stageframe$matstatus)
-  stageframe$entrystage <- as.numeric(stageframe$entrystage)
-  stageframe$indataset <- as.numeric(stageframe$indataset)
-  stageframe$alive <- as.numeric(stageframe$alive)
-  
-  stageframe$stageno <- c(1:dim(stageframe)[1])
-  rownames(stageframe) <- stageframe$stageno
-  stageframe$fullstage <- apply(as.matrix(c(1:dim(stageframe)[1])), 1, function(X) {
-    paste(stageframe$bin_size_ctr[X], stageframe$repstatus[X])
-  })
-  
-  instages <- length(stageframe$stage_id)
-  
-  ovtable <- .overwrite_reassess(stageframe, supplement, overwrite, historical = FALSE)
+  if (!all(is.na(overwrite)) | !all(is.na(supplement))) {
+    
+    if(any(duplicated(ovtable[,1:3]))) {
+      stop("Multiple entries with different values for the same stage transition
+        are not allowed in the supplemental or overwrite table. If modifying a
+        historical table to perform an ahistorical analysis, then this may be
+        due to different given rates of substitutions caused by dropping stage
+        at occasion t-1. Please eliminate duplicate transitions.",
+        call. = FALSE)
+    }
+  }
   
   # Next the data frame for the C++-based matrix populator functions
-  allstages.list <- theoldpizzle(stageframe, ovtable, repmatrix, finalage = 0,
+  allstages <- .theoldpizzle(stageframe, ovtable, repmatrix, finalage = 0,
     format = 1, style = 1, cont = 0)
-  allstages <- do.call("cbind.data.frame", c(allstages.list, stringsAsFactors = FALSE))
   
-  maxsize <- max(c(allstages$a.size3, allstages$a.size2n, allstages$a.size2o), na.rm = TRUE)
+  maxsize <- max(c(allstages$size3, allstages$size2n, allstages$size2o), na.rm = TRUE)
+  maxsizeb <- max(c(allstages$sizeb3, allstages$sizeb2n, allstages$sizeb2o), na.rm = TRUE)
+  maxsizec <- max(c(allstages$sizec3, allstages$sizec2n, allstages$sizec2o), na.rm = TRUE)
   
-  allstages <- allstages[(which(allstages$c.index321 != -1)),]
+  allstages <- allstages[(which(allstages$index321 != -1)),]
   
   # Now we will work up the vital rate models
   if (class(modelsuite) == "lefkoMod") {
     if(is.na(surv_model)) {surv_model <- modelsuite$survival_model}
     if(is.na(obs_model)) {obs_model <- modelsuite$observation_model}
     if(is.na(size_model)) {size_model <- modelsuite$size_model}
+    if(is.na(sizeb_model)) {sizeb_model <- modelsuite$sizeb_model}
+    if(is.na(sizec_model)) {sizec_model <- modelsuite$sizec_model}
     if(is.na(repst_model)) {repst_model <- modelsuite$repstatus_model}
     if(is.na(fec_model)) {fec_model <- modelsuite$fecundity_model}
     
     if(is.na(jsurv_model)) {jsurv_model <- modelsuite$juv_survival_model}
     if(is.na(jobs_model)) {jobs_model <- modelsuite$juv_observation_model}
     if(is.na(jsize_model)) {jsize_model <- modelsuite$juv_size_model}
+    if(is.na(jsizeb_model)) {jsizeb_model <- modelsuite$juv_sizeb_model}
+    if(is.na(jsizec_model)) {jsizec_model <- modelsuite$juv_sizec_model}
     if(is.na(jrepst_model)) {jrepst_model <- modelsuite$juv_reproduction_model}
   }
   
@@ -1088,14 +1987,22 @@ flefko2 <- function(year = "all", patch = "all", stageframe, supplement = NA,
     set.seed(randomseed)
   }
   
-  surv_proxy <- .modelextract(surv_model, paramnames, mainyears, mainpatches, year.as.random, patch.as.random)
-  obs_proxy <- .modelextract(obs_model, paramnames, mainyears, mainpatches, year.as.random, patch.as.random)
+  surv_proxy <- .modelextract(surv_model, paramnames, mainyears, mainpatches, 
+    maingroups, indanames, indbnames, indcnames, year.as.random,
+    patch.as.random, random.inda, random.indb, random.indc, err_check = FALSE)
+  
+  
+  obs_proxy <- .modelextract(obs_model, paramnames, mainyears, mainpatches,
+    maingroups, indanames, indbnames, indcnames, year.as.random,
+    patch.as.random, random.inda, random.indb, random.indc, err_check = FALSE)
   
   sigma <- 0
   rvarssummed <- 0
   sizedist <- 1
   
-  size_proxy <- .modelextract(size_model, paramnames, mainyears, mainpatches, year.as.random, patch.as.random)
+  size_proxy <- .modelextract(size_model, paramnames, mainyears, mainpatches,
+    maingroups, indanames, indbnames, indcnames, year.as.random,
+    patch.as.random, random.inda, random.indb, random.indc, err_check = FALSE)
   
   if (size_proxy$family == "poisson") {
     sizedist <- 0
@@ -1107,28 +2014,95 @@ flefko2 <- function(year = "all", patch = "all", stageframe, supplement = NA,
   } else if (size_proxy$family == "gaussian") {
     sizedist <- 2
     sigma <- size_proxy$sigma
+  } else if (size_proxy$family == "gamma") {
+    sizedist <- 3
+    
   } else {
     sizedist <- 1
   }
   
-  repst_proxy <- .modelextract(repst_model, paramnames, mainyears, mainpatches, year.as.random, patch.as.random)
-  fec_proxy <- .modelextract(fec_model, paramnames, mainyears, mainpatches, year.as.random, patch.as.random)
+  sigmab <- 0
+  rvarssummedb <- 0
+  sizebdist <- 1
+  
+  sizeb_proxy <- .modelextract(sizeb_model, paramnames, mainyears, mainpatches,
+    maingroups, indanames, indbnames, indcnames, year.as.random,
+    patch.as.random, random.inda, random.indb, random.indc, err_check = FALSE)
+  
+  if (sizeb_proxy$family == "poisson") {
+    sizebdist <- 0
+    if (!all(is.na(sizeb_proxy$variances))) {
+      rvarssummedb <- sum(sizeb_proxy$variances[,"vcov"])
+    } else {
+      rvarssummedb <- 0
+    }
+  } else if (sizeb_proxy$family == "gaussian") {
+    sizebdist <- 2
+    sigmab <- sizeb_proxy$sigma
+  } else if (sizeb_proxy$family == "gamma") {
+    sizebdist <- 3
+    
+  } else {
+    sizebdist <- 1
+  }
+  
+  sigmac <- 0
+  rvarssummedc <- 0
+  sizecdist <- 1
+  
+  sizec_proxy <- .modelextract(sizec_model, paramnames, mainyears, mainpatches,
+    maingroups, indanames, indbnames, indcnames, year.as.random,
+    patch.as.random, random.inda, random.indb, random.indc, err_check = FALSE)
+  
+  if (sizec_proxy$family == "poisson") {
+    sizecdist <- 0
+    if (!all(is.na(sizec_proxy$variances))) {
+      rvarssummedc <- sum(sizec_proxy$variances[,"vcov"])
+    } else {
+      rvarssummedc <- 0
+    }
+  } else if (sizec_proxy$family == "gaussian") {
+    sizecdist <- 2
+    sigmac <- sizec_proxy$sigma
+  } else if (sizec_proxy$family == "gamma") {
+    sizecdist <- 3
+    
+  } else {
+    sizecdist <- 1
+  }
+  
+  repst_proxy <- .modelextract(repst_model, paramnames, mainyears, mainpatches,
+    maingroups, indanames, indbnames, indcnames, year.as.random,
+    patch.as.random, random.inda, random.indb, random.indc, err_check = FALSE)
+  
+  fec_proxy <- .modelextract(fec_model, paramnames, mainyears, mainpatches,
+    maingroups, indanames, indbnames, indcnames, year.as.random,
+    patch.as.random, random.inda, random.indb, random.indc, err_check = FALSE)
   
   if (fec_proxy$family == "poisson") {
     fecdist <- 0
   } else if (fec_proxy$family == "gaussian") {
     fecdist <- 2
+  } else if (fec_proxy$family == "gamma") {
+    fecdist <- 3
   } else {
     fecdist <- 1
   }
   
-  jsurv_proxy <- .modelextract(jsurv_model, paramnames, mainyears, mainpatches, year.as.random, patch.as.random)
-  jobs_proxy <- .modelextract(jobs_model, paramnames, mainyears, mainpatches, year.as.random, patch.as.random)
+  jsurv_proxy <- .modelextract(jsurv_model, paramnames, mainyears, mainpatches,
+    maingroups, indanames, indbnames, indcnames, year.as.random,
+    patch.as.random, random.inda, random.indb, random.indc, err_check = FALSE)
+  
+  jobs_proxy <- .modelextract(jobs_model, paramnames, mainyears, mainpatches,
+    maingroups, indanames, indbnames, indcnames, year.as.random,
+    patch.as.random, random.inda, random.indb, random.indc, err_check = FALSE)
   
   jsigma <- 0
   jrvarssummed <- 0
   
-  jsize_proxy <- .modelextract(jsize_model, paramnames, mainyears, mainpatches, year.as.random, patch.as.random)
+  jsize_proxy <- .modelextract(jsize_model, paramnames, mainyears, mainpatches,
+    maingroups, indanames, indbnames, indcnames, year.as.random,
+    patch.as.random, random.inda, random.indb, random.indc, err_check = FALSE)
   
   if (jsize_proxy$family == "poisson") {
     if (!all(is.na(jsize_proxy$variances))) {
@@ -1140,7 +2114,43 @@ flefko2 <- function(year = "all", patch = "all", stageframe, supplement = NA,
     jsigma <- jsize_proxy$sigma
   }
   
-  jrepst_proxy <- .modelextract(jrepst_model, paramnames, mainyears, mainpatches, year.as.random, patch.as.random)
+  jsigmab <- 0
+  jrvarssummedb <- 0
+  
+  jsizeb_proxy <- .modelextract(jsizeb_model, paramnames, mainyears, mainpatches,
+    maingroups, indanames, indbnames, indcnames, year.as.random,
+    patch.as.random, random.inda, random.indb, random.indc, err_check = FALSE)
+  
+  if (jsizeb_proxy$family == "poisson") {
+    if (!all(is.na(jsizeb_proxy$variances))) {
+      jrvarssummedb <- sum(jsize_proxy$variances[,"vcov"])
+    } else {
+      jrvarssummedb <- 0
+    }
+  } else if (jsizeb_proxy$family == "gaussian") {
+    jsigmab <- jsizeb_proxy$sigma
+  }
+  
+  jsigmac <- 0
+  jrvarssummedc <- 0
+  
+  jsizec_proxy <- .modelextract(jsizec_model, paramnames, mainyears, mainpatches,
+    maingroups, indanames, indbnames, indcnames, year.as.random,
+    patch.as.random, random.inda, random.indb, random.indc, err_check = FALSE)
+  
+  if (jsizec_proxy$family == "poisson") {
+    if (!all(is.na(jsizec_proxy$variances))) {
+      jrvarssummedc <- sum(jsizec_proxy$variances[,"vcov"])
+    } else {
+      jrvarssummedc <- 0
+    }
+  } else if (jsizec_proxy$family == "gaussian") {
+    jsigmac <- jsizec_proxy$sigma
+  }
+  
+  jrepst_proxy <- .modelextract(jrepst_model, paramnames, mainyears, mainpatches,
+    maingroups, indanames, indbnames, indcnames, year.as.random,
+    patch.as.random, random.inda, random.indb, random.indc, err_check = FALSE)
   
   # Next we create a list of pops, patches, and years in order of matrix
   if (!all(is.na(patch))) {
@@ -1168,12 +2178,17 @@ flefko2 <- function(year = "all", patch = "all", stageframe, supplement = NA,
   yearlist <- split(listofyears, seq(nrow(listofyears)))
   
   # The next line calls the core matrix estimator function
-  madsexmadrigal <- lapply(yearlist, jerzeibalowski, allstages, stageframe, 3,
-    surv_proxy, obs_proxy, size_proxy, repst_proxy, fec_proxy, jsurv_proxy,
-    jobs_proxy, jsize_proxy, jrepst_proxy, inda, indb, indc, surv_dev, obs_dev,
-    size_dev, repst_dev, fec_dev, jsurv_dev, jobs_dev, jsize_dev, jrepst_dev,
-    repmod, rvarssummed, sigma, jrvarssummed, jsigma, maxsize, 0, sizedist,
-    fecdist, negfec)
+  madsexmadrigal <- lapply(yearlist, .jerzeibalowski, allstages, stageframe, 3,
+    surv_proxy, obs_proxy, size_proxy, sizeb_proxy, sizec_proxy, repst_proxy,
+    fec_proxy, jsurv_proxy, jobs_proxy, jsize_proxy, jsizeb_proxy, jsizec_proxy,
+    jrepst_proxy, f2.inda, f1.inda, f2.indb, f1.indb, f2.indc, f1.indc, r2.inda,
+    r1.inda, r2.indb, r1.indb, r2.indc, r1.indc, c(surv_dev, obs_dev, size_dev,
+      sizeb_dev, sizec_dev, repst_dev, fec_dev, jsurv_dev, jobs_dev, jsize_dev,
+      jsizeb_dev, jsizec_dev, jrepst_dev), density, repmod, c(rvarssummed,
+      sigma, rvarssummedb, sigmab, rvarssummedc, sigmac, jrvarssummed, jsigma,
+      jrvarssummedb, jsigmab, jrvarssummedc, jsigmac), maxsize, maxsizeb,
+    maxsizec, 0, sizedist, sizebdist, sizecdist, fecdist, negfec, exp_tol,
+    theta_tol)
   
   a_list <- lapply(madsexmadrigal, function(X) {X$A})
   u_list <- lapply(madsexmadrigal, function(X) {X$U})
@@ -1221,8 +2236,10 @@ flefko2 <- function(year = "all", patch = "all", stageframe, supplement = NA,
 #' Reduce Matrix Dimensions By Eliminating Empty Stages
 #' 
 #' \code{.reducer2()} identifies empty stages in a set of ahistorical matrices
-#' and removes themfrom all matrices. It is used within \code{\link{flefko2}()}
-#' and \code{\link{rlefko2}()}.
+#' and removes them from all matrices. It also removes the associated rows in
+#' the associated \code{ahstages} or \code{agestages} object. It is used within
+#' \code{\link{flefko2}()}, \code{\link{aflefko2}()}, and
+#' \code{\link{rlefko2}()}.
 #' 
 #' @param A List of population projection matrices, from a \code{lefkoMat}
 #' object.
@@ -1232,7 +2249,8 @@ flefko2 <- function(year = "all", patch = "all", stageframe, supplement = NA,
 #' stages used to create matrices.
 #' 
 #' @return Returns a list of reduced \code{A}, \code{U}, and \code{F} matrices,
-#' plus the reduced \code{ahstages} object.
+#' plus the reduced \code{ahstages} object. Note that this can also work on
+#' \code{agestages}, if passed instead of \code{ahstages}.
 #' 
 #' @keywords internal
 #' @noRd
@@ -1265,10 +2283,11 @@ flefko2 <- function(year = "all", patch = "all", stageframe, supplement = NA,
 
 #' Create Raw Historical Matrix Projection Model
 #' 
-#' \code{rlefko3()} returns raw historical MPMs, including the associated
-#' component transition and fecundity matrices, data frames describing the
-#' ahistorical stages used and the historical paired stages, and a data frame
-#' describing the population, patch, and year associated with each matrix.
+#' Function \code{rlefko3()} returns raw historical MPMs, including the
+#' associated component transition and fecundity matrices, data frames
+#' describing the ahistorical stages used and the historical paired stages, and
+#' a data frame describing the population, patch, and occasion time associated
+#' with each matrix.
 #' 
 #' @param data A vertical demographic data frame, with variables corresponding
 #' to the naming conventions in \code{\link{verticalize3}()}.
@@ -1277,18 +2296,18 @@ flefko2 <- function(year = "all", patch = "all", stageframe, supplement = NA,
 #' of each ahistorical stage. Should also incorporate bin widths if size is
 #' continuous.
 #' @param year A variable corresponding to observation occasion, or a set of
-#' such values, given in values associated with the year term used in linear
-#' model development. Can also equal \code{all}, in which case matrices will be
-#' estimated for all years. Defaults to \code{all}.
+#' such values, given in values associated with the \code{year} term used in
+#' vital rate model development. Can also equal \code{all}, in which case
+#' matrices will be estimated for all occasions. Defaults to \code{all}.
 #' @param pop A variable designating which populations will have matrices
 #' estimated. Should be set to specific population names, or to \code{all} if
 #' all populations should have matrices estimated.
 #' @param patch A variable designating which patches or subpopulations will have
 #' matrices estimated. Should be set to specific patch names, or to \code{all}
 #' if matrices should be estimated for all patches. Defaults to \code{all}.
-#' @param censor If TRUE, then data will be removed according to the variable
-#' set in \code{censorcol}, such that only data with censor values equal to 1
-#' will remain. Defaults to FALSE.
+#' @param censor If \code{TRUE}, then data will be removed according to the
+#' variable set in \code{censorcol}, such that only data with censor values
+#' equal to 1 will remain. Defaults to \code{FALSE}.
 #' @param stages An optional vector denoting the names of the variables within
 #' the main vertical dataset coding for the stages of each individual in
 #' occasions \emph{t}+1, \emph{t}, and \emph{t}-1. The names of stages in these
@@ -1297,14 +2316,21 @@ flefko2 <- function(year = "all", patch = "all", stageframe, supplement = NA,
 #' of \code{alive}, \code{size}, \code{repst}, and \code{matst} to
 #' characteristics noted in the associated \code{stageframe}.
 #' @param alive A vector of names of binomial variables corresponding to status
-#' as alive (1) or dead (0) in occasions \emph{t}+1, \emph{t}, and \emph{t}-1,
-#' respectively.
-#' @param size A vector of names of variables coding size in occasions
-#' \emph{t}+1, \emph{t}, and \emph{t}-1, respectively. Defaults to 
+#' as alive (\code{1}) or dead (\code{0}) in occasions \emph{t}+1, \emph{t}, and
+#' \emph{t}-1, respectively.
+#' @param size A vector of names of variables coding the primary size variable
+#' in occasions \emph{t}+1, \emph{t}, and \emph{t}-1, respectively. Defaults to 
 #' \code{c("sizea3", "sizea2", "sizea1")}.
+#' @param sizeb A vector of names of variables coding the secondary size
+#' variable in occasions \emph{t}+1, \emph{t}, and \emph{t}-1, respectively.
+#' Defaults to \code{c(NA, NA, NA)}.
+#' @param sizec A vector of names of variables coding the tertiary size
+#' variable in occasions \emph{t}+1, \emph{t}, and \emph{t}-1, respectively.
+#' Defaults to \code{c(NA, NA, NA)}.
 #' @param repst A vector of names of variables coding reproductive status in
 #' occasions \emph{t}+1, \emph{t}, and \emph{t}-1, respectively. Defaults to 
-#' \code{c("repstatus3", "repstatus2", "repstatus1")}.
+#' \code{c("repstatus3", "repstatus2", "repstatus1")}. Must be supplied if
+#' \code{stages} is not provided.
 #' @param matst A vector of names of variables coding maturity status in
 #' occasions \emph{t}+1, \emph{t}, and \emph{t}-1, respectively. Defaults to
 #' \code{c("matstatus3", "matstatus2", "matstatus1")}. Must be supplied if
@@ -1317,18 +2343,16 @@ flefko2 <- function(year = "all", patch = "all", stageframe, supplement = NA,
 #' kinds of data may be integrated this way: transitions to be estimated via the
 #' use of proxy transitions, transition overwrites from the literature or
 #' supplemental studies, and transition multipliers for fecundity. This data
-#' frame should be produced using the \code{\link{supplemental}()} function. Can
-#' be used in place of or in addition to an overwrite table (see 
+#' frame should be produced using the \code{\link{supplemental}()} function.
+#' Should be used in place of or in addition to an overwrite table (see 
 #' \code{overwrite} below) and a reproduction matrix (see \code{repmatrix}
 #' below).
-#' @param repmatrix A reproduction matrix, which is an optional matrix composed
-#' mostly of 0s, with non-zero values for each potentially new individual (row)
-#' born to each reproductive stage (column). Entries act as multipliers on
-#' fecundity, with 1 equaling full fecundity. Fecundity multipliers provided
-#' this way supplement rather than replace those provided in \code{supplement}.
-#' If left blank, then \code{rlefko3()} will assume that all stages marked as
-#' reproductive produce offspring at 1x that of fecundity estimated in provided
-#' linear models, and that fecundity will be into the first stage noted as
+#' @param repmatrix An optional reproduction matrix. This matrix is composed
+#' mostly of 0s, with non-zero entries acting as element identifiers and
+#' multipliers for fecundity (with 1 equaling full fecundity). If left blank,
+#' and no \code{supplement} is provided, then \code{rlefko3()} will assume that
+#' all stages marked as reproductive produce offspring at 1x that of estimated
+#' fecundity, and that offspring production will yield the first stage noted as
 #' propagule or immature. To prevent this behavior, input just \code{0}, which
 #' will result in fecundity being estimated only for transitions noted in
 #' \code{supplement} above. May be the dimensions of either a historical or an
@@ -1349,17 +2373,18 @@ flefko2 <- function(year = "all", patch = "all", stageframe, supplement = NA,
 #' @param censorcol The variable name or column number denoting the censor
 #' status. Only needed if \code{censor = TRUE}.
 #' @param censorkeep The value of the censor variable denoting data elements to
-#' keep. Defaults to 0.
+#' keep. Defaults to \code{0}.
 #' @param format A string indicating whether to estimate matrices in
-#' \code{ehrlen} format or \code{deVries} format. The latter adds one extra
+#' \code{ehrlen} format or \code{deVries} format. The latter adds one unborn
 #' prior stage to account for the prior state of newborns. Defaults to
 #' \code{ehrlen} format.
 #' @param reduce A logical value denoting whether to remove historical stages
-#' associated exclusively with zero transitions. These are removed only if all
-#' row and column sums in ALL matrices estimated equal 0. Defaults to FALSE.
+#' associated exclusively with zero transitions. These are removed only if the
+#' respective row and column sums in ALL matrices estimated equal 0. Defaults to
+#' \code{FALSE}.
 #' @param err_check A logical value indicating whether to append extra
 #' information used in matrix calculation within the output list. Used for
-#' development debugging purposes.
+#' development debugging purposes. Defaults to \code{FALSE}.
 #'
 #' @return If all inputs are properly formatted, then this function will return
 #' an object of class \code{lefkoMat}, which is a list that holds the matrix
@@ -1367,7 +2392,7 @@ flefko2 <- function(year = "all", patch = "all", stageframe, supplement = NA,
 #' following elements:
 #'
 #' \item{A}{A list of full projection matrices in order of sorted populations,
-#' patches, and years. All matrices output in the \code{matrix} class.}
+#' patches, and occasions. All matrices output in the \code{matrix} class.}
 #' \item{U}{A list of survival transition matrices sorted as in \code{A}. All 
 #' matrices output in the \code{matrix} class.}
 #' \item{F}{A list of fecundity matrices sorted as in \code{A}. All matrices 
@@ -1408,13 +2433,19 @@ flefko2 <- function(year = "all", patch = "all", stageframe, supplement = NA,
 #' Users may at times wish to estimate MPMs using a dataset incorporating
 #' multiple patches or subpopulations. Should the aim of analysis be a general
 #' MPM that does not distinguish these patches or subpopulations, the
-#' \code{patchcol} variable should be left to NA, which is the default.
+#' \code{patchcol} variable should be left to \code{NA}, which is the default.
+#' Otherwise the variable identifying patch needs to be named.
 #'
 #' Input options including multiple variable names must be entered in the order
 #' of variables in occasion \emph{t}+1, \emph{t}, and \emph{t}-1. Rearranging
-#' the order WILL lead to erroneous calculations, and will probably also lead to
+#' the order WILL lead to erroneous calculations, and may lead to
 #' fatal errors.
 #'
+#' Although this function is capable of assigning stages given an input
+#' stageframe, it lacks the power of \code{\link{verticalize3}()} and
+#' \code{\link{historicalize3}()} in this regard. Users are strongly
+#' encouraged to use the latter two functions for stage assignment.
+#' 
 #' @examples
 #' # Lathyrus example
 #' data(lathyrus)
@@ -1515,22 +2546,26 @@ flefko2 <- function(year = "all", patch = "all", stageframe, supplement = NA,
 #' @export
 rlefko3 <- function(data, stageframe, year = "all", pop = NA, patch = NA,
   censor = FALSE, stages = NA, alive = c("alive3", "alive2", "alive1"),
-  size = c("sizea3", "sizea2", "sizea1"), 
-  repst = c("repstatus3", "repstatus2", "repstatus1"),
+  size = c("sizea3", "sizea2", "sizea1"), sizeb = c(NA, NA, NA),
+  sizec = c(NA, NA, NA), repst = c("repstatus3", "repstatus2", "repstatus1"),
   matst = c("matstatus3", "matstatus2", "matstatus1"),
-  fec = c("feca3", "feca2", "feca1"), supplement = NA, repmatrix = NA,
-  overwrite = NA, yearcol = NA, popcol = NA, patchcol = NA, indivcol = NA,
+  fec = c("feca3", "feca2", "feca1"), supplement = NULL, repmatrix = NULL,
+  overwrite = NULL, yearcol = NA, popcol = NA, patchcol = NA, indivcol = NA,
   censorcol = NA, censorkeep = 0, format = "ehrlen", reduce = FALSE,
   err_check = FALSE) {
   
-  tocensor <- indataset <- alive2 <- popused <- patchused <- yearused <- NULL
+  instageframe <- tocensor <- indataset <- alive2 <- popused <- patchused <- yearused <- NULL
+  
+  sizeb_used <- 0
+  sizec_used <- 0
   
   if (tolower(format) == "ehrlen") {
     format_int <- 1
   } else if (tolower(format) == "devries") {
     format_int <- 2
   } else {
-    stop("The format parameter must be set to either 'ehrlen' or 'deVries'.", call. = FALSE)
+    stop("The format parameter must be set to either 'ehrlen' or 'deVries'.",
+      call. = FALSE)
   }
   
   if (all(is.na(data))) {
@@ -1538,41 +2573,67 @@ rlefko3 <- function(data, stageframe, year = "all", pop = NA, patch = NA,
   }
   
   if (!any(class(data) == "data.frame")) {
-    stop("Need original vertical dataset to proceed. This dataset must be in historical vertical format.", call. = FALSE)
+    stop("Need original vertical dataset to proceed. This dataset must be in
+      historical vertical format.", call. = FALSE)
   }
   
   if (!any(class(data) == "hfvdata")) {
-    warning("Dataset used as input is not of class hfvdata. Will assume that the dataset has been formatted equivalently.", call. = FALSE)
+    warning("Dataset used as input is not of class hfvdata. Will assume that the
+      dataset has been formatted equivalently.", call. = FALSE)
+  }
+  
+  stageframe_vars <- c("stage", "size", "size_b", "size_c", "min_age", "max_age",
+    "repstatus", "obsstatus", "propstatus", "immstatus", "matstatus", "indataset",
+    "binhalfwidth_raw", "sizebin_min", "sizebin_max", "sizebin_center",
+    "sizebin_width", "binhalfwidthb_raw", "sizebinb_min", "sizebinb_max",
+    "sizebinb_center", "sizebinb_width", "binhalfwidthc_raw", "sizebinc_min",
+    "sizebinc_max", "sizebinc_center", "sizebinc_width", "group", "comments")
+  if (any(!is.element(names(stageframe), stageframe_vars))) {
+    stop("Please use properly formatted stageframe as input.", call. = FALSE)
   }
   
   if (all(is.na(stages))) {
     if ((length(alive) != 3)) {
-      stop("This function requires stage information for each of occasions t+1, t, and t-1. In the absence of stage columns in the dataset, it requires the input of data for living/dead status, size, reproductive status, and maturity status, for each of occasions t+1, t, and t-1.", call. = FALSE)
+      stop("This function requires stage information for each of occasions t+1,
+        t, and t-1. In the absence of stage columns in the dataset, it requires
+        the input of data for living/dead status, size, reproductive status, and
+        maturity status, for each of occasions t+1, t, and t-1.", call. = FALSE)
     }
     if ((length(size) != 3)) {
-      stop("This function requires stage information for each of occasions t+1, t, and t-1. In the absence of stage columns in the dataset, it requires the input of data for living/dead status, size, reproductive status, and maturity status, for each of occasions t+1, t, and t-1.", call. = FALSE)
+      stop("This function requires stage information for each of occasions t+1,
+        t, and t-1. In the absence of stage columns in the dataset, it requires
+        the input of data for living/dead status, size, reproductive status, and
+        maturity status, for each of occasions t+1, t, and t-1.", call. = FALSE)
     }
     if (!all(is.na(repst))) {
       if ((length(repst) != 3)) {
-        stop("This function requires stage information for each of occasions t+1, t, and t-1. In the absence of stage columns in the dataset, it requires the input of data for living/dead status, size, reproductive status, and maturity status, for each of occasions t+1, t, and t-1.", call. = FALSE)
+        stop("This function requires stage information for each of occasions t+1,
+          t, and t-1. In the absence of stage columns in the dataset, it requires
+          the input of data for living/dead status, size, reproductive status, and
+          maturity status, for each of occasions t+1, t, and t-1.", call. = FALSE)
       }
     }   
     if (!all(is.na(matst))) {
       if ((length(matst) != 3)) {
-        stop("This function requires stage information for each of occasions t+1, t, and t-1. In the absence of stage columns in the dataset, it requires the input of data for living/dead status, size, reproductive status, and maturity status, for each of occasions t+1, t, and t-1.", call. = FALSE)
+        stop("This function requires stage information for each of occasions t+1,
+          t, and t-1. In the absence of stage columns in the dataset, it requires
+          the input of data for living/dead status, size, reproductive status, and
+          maturity status, for each of occasions t+1, t, and t-1.", call. = FALSE)
       }
     }   
   } else if (length(stages) != 3) {
-    stop("This function requires stage information for each of occasions t+1, t, and t-1.", call. = FALSE)
+    stop("This function requires stage information for each of occasions t+1, t,
+      and t-1.", call. = FALSE)
   }
   
   if ((length(fec) != 3)) {
-    stop("This function requires three variables for fecundity, for each of occasions t+1, t, and t-1.", call. = FALSE)
+    stop("This function requires three variables for fecundity, for each of
+      occasions t+1, t, and t-1.", call. = FALSE)
   }
   
   if (is.character(yearcol)) {
     choicevar <- which(names(data) == yearcol);
-    mainyears <- sort(unique(data[,choicevar]))[-1] #Here we remove the 1st year because it has no occasion t-1 in the dataset
+    mainyears <- sort(unique(data[,choicevar]))[-1] # Occasion 1 is unusable, so removed
   } else if (is.numeric(yearcol)) {
     mainyears <- sort(unique(data[, yearcol]))[-1]
   } else {
@@ -1588,11 +2649,14 @@ rlefko3 <- function(data, stageframe, year = "all", pop = NA, patch = NA,
   }
   
   if (length(year) == 0 | all(is.na(year) == TRUE) | any(is.na(year))) {
-    stop("This function cannot proceed without being given a specific year, or a suite of years. NA entries are not allowed.", call. = FALSE)
+    stop("This function cannot proceed without being given a specific year, or a
+      suite of years. NA entries are not allowed.", call. = FALSE)
   }
   
   if (!all(is.element(year, mainyears))) {
-    stop("Dataset does not contain one or more of the requested years. Note that matrices cannot be made for the first year in a historical dataset.", call. = FALSE)
+    stop("Dataset does not contain one or more of the requested years. Note that
+      matrices cannot be made for the first year in a historical dataset.",
+      call. = FALSE)
   }
 
   if (censor == TRUE) {
@@ -1602,7 +2666,8 @@ rlefko3 <- function(data, stageframe, year = "all", pop = NA, patch = NA,
     
     if (all(is.character(censorcol))) {
       if (!all(is.element(censorcol, names(data)))) {
-        stop("Censor variable names input for censorcol do not match any variable names in the dataset.", call. = FALSE)
+        stop("Censor variable names input for censorcol do not match any
+          variable names in the dataset.", call. = FALSE)
       }
     }
     
@@ -1620,7 +2685,10 @@ rlefko3 <- function(data, stageframe, year = "all", pop = NA, patch = NA,
   }
   
   if (!all(is.na(pop)) & !all(is.na(patch))) {
-    if (is.na(popcol) | is.na(patchcol)) {stop("Need population and patch designation variables to proceed.", call. = FALSE)}
+    if (is.na(popcol) | is.na(patchcol)) {
+      stop("Need population and patch designation variables to proceed.", 
+        call. = FALSE)
+    }
     
     if (is.element("all", tolower(pop))) {
       if (is.character(popcol)) {popcol <- which(names(data) == popcol)}
@@ -1653,7 +2721,13 @@ rlefko3 <- function(data, stageframe, year = "all", pop = NA, patch = NA,
       return(output)
     })
   } else if (all(is.na(pop)) & !all(is.na(patch))) {
-    if (is.na(patchcol)) {stop("Need patch designation variable to proceed.", call. = FALSE)}
+    if (!is.na(popcol)) {
+      popcol <- NA
+    }
+    
+    if (is.na(patchcol)) {
+      stop("Need patch designation variable to proceed.", call. = FALSE)
+    }
     
     if (is.element("all", tolower(patch))) {
       if (is.character(patchcol)) {patchcol <- which(names(data) == patchcol)}
@@ -1675,7 +2749,13 @@ rlefko3 <- function(data, stageframe, year = "all", pop = NA, patch = NA,
       listofyears <- listofyears[[1]]
     }
   } else if (!all(is.na(pop)) & all(is.na(patch))) {
-    if (is.na(popcol)) {stop("Need population designation variable to proceed.", call. = FALSE)}
+    if (is.na(popcol)) {
+      stop("Need population designation variable to proceed.", call. = FALSE)
+    }
+    
+    if (!is.na(patchcol)) {
+      patchcol <- NA
+    }
     
     if (is.element("all", tolower(pop))) {
       if (is.character(popcol)) {popcol <- which(names(data) == popcol)}
@@ -1697,60 +2777,114 @@ rlefko3 <- function(data, stageframe, year = "all", pop = NA, patch = NA,
       listofyears <- listofyears[[1]]
     }
   } else if (all(is.na(pop)) & all(is.na(patch))) {
+    if (!is.na(popcol)) {
+      popcol <- NA
+    }
+    if (!is.na(patchcol)) {
+      patchcol <- NA
+    }
+    
     listofyears <- cbind.data.frame("1", "1", year, stringsAsFactors = FALSE)
     names(listofyears) <- c("pop", "patch", "year2")
   }
   
+  identifiedyearrows <- which(is.element(listofyears$year2, year))
+  if (length(identifiedyearrows) == 0) {
+    stop("Cannot recognize input year(s)", call. = FALSE)
+  } else {
+    listofyears <- listofyears[identifiedyearrows,]
+  }
   yearlist <- split(listofyears, seq(nrow(listofyears)))
   
   stagenum_init <- dim(stageframe)[1]
-  if (!all(is.na(repmatrix))) {
+  if (!all(is.null(repmatrix))) {
     if (any(class(repmatrix) == "matrix")) {
       if (dim(repmatrix)[1] != stagenum_init & dim(repmatrix)[1] != stagenum_init^2) {
-        stop("The repmatrix provided must be a square matrix with dimensions equal to the number of stages in the stageframe, or the square thereof.", call. = FALSE)
+        stop("The repmatrix must be a square matrix with dimensions equal to the
+          number of stages in the stageframe, or the square thereof.",
+          call. = FALSE)
       }
       
       if (dim(repmatrix)[2] != stagenum_init & dim(repmatrix)[2] != stagenum_init^2) {
-        stop("The repmatrix provided must be a square matrix with dimensions equal to the number of stages in the stageframe, or the square thereof.", call. = FALSE)
+        stop("The repmatrix must be a square matrix with dimensions equal to the
+          number of stages in the stageframe, or the square thereof.",
+          call. = FALSE)
       }
     }
   }
   
-  melchett <- .sf_reassess(stageframe, supplement, repmatrix, overwrite, 
-    agemat = FALSE, format = format_int)
-  stageframe <- melchett[[1]]
-  repmatrix <- melchett[[2]]
+  melchett <- .sf_reassess(stageframe, supplement, overwrite, repmatrix,
+    agemat = FALSE, historical = TRUE, format = format_int)
+  stageframe <- melchett$stageframe
+  repmatrix <- melchett$repmatrix
+  ovtable <- melchett$ovtable
   
-  stageframe$stage_id <- as.numeric(stageframe$stage_id)
-  stageframe$original_size <- as.numeric(stageframe$original_size)
-  stageframe$bin_size_min <- as.numeric(stageframe$bin_size_min)
-  stageframe$bin_size_ctr <- as.numeric(stageframe$bin_size_ctr)
-  stageframe$bin_size_max <- as.numeric(stageframe$bin_size_max)
-  stageframe$bin_size_width <- as.numeric(stageframe$bin_size_width)
-  stageframe$bin_raw_halfwidth <- as.numeric(stageframe$bin_raw_halfwidth)
-  stageframe$repstatus <- as.numeric(stageframe$repstatus)
-  stageframe$obsstatus <- as.numeric(stageframe$obsstatus)
-  stageframe$propstatus <- as.numeric(stageframe$propstatus)
-  stageframe$immstatus <- as.numeric(stageframe$immstatus)
-  stageframe$matstatus <- as.numeric(stageframe$matstatus)
-  stageframe$entrystage <- as.numeric(stageframe$entrystage)
-  stageframe$indataset <- as.numeric(stageframe$indataset)
-  stageframe$alive <- as.numeric(stageframe$alive)
-  
-  stageframe$stageno <- c(1:dim(stageframe)[1])
-  rownames(stageframe) <- stageframe$stageno
+  if (!all(is.na(overwrite)) | !all(is.na(supplement))) {
+    
+    if(any(duplicated(ovtable[,1:3]))) {
+      stop("Multiple entries with different values for the same stage transition
+        are not allowed in the supplemental or overwrite table. If performing
+        a historical analysis, then please remember that all stages must be
+        clearly defined in all three times, including time t-1. Please eliminate
+        duplicate transitions.", call. = FALSE)
+    }
+  }
   
   data$alive1 <- data[,which(names(data) == alive[3])]
   data$alive2 <- data[,which(names(data) == alive[2])]
   data$alive3 <- data[,which(names(data) == alive[1])]
   
   if (all(is.na(stages))) {
-    if (length(size) > 1) {
-      data$usedsize1 <- data[,which(names(data) == size[3])]
-      data$usedsize2 <- data[,which(names(data) == size[2])]
-      data$usedsize3 <- data[,which(names(data) == size[1])]
+    if (length(size) > 2) {
+      size1met <- which(names(data) == size[3])
+      size2met <- which(names(data) == size[2])
+      size3met <- which(names(data) == size[1])
+      
+      if (length(size1met) == 1 & length(size2met) == 1 & length(size3met) == 1) {
+        data$usedsize1 <- data[,size1met]
+        data$usedsize2 <- data[,size2met]
+        data$usedsize3 <- data[,size3met]
+      } else {
+        stop("Entered size variable names do not strictly correspond to single
+          variables in the dataset.", call. = FALSE)
+      }
+      
+      if (!all(is.na(sizeb)) & length(sizeb) > 2) {
+        size1met <- which(names(data) == sizeb[3])
+        size2met <- which(names(data) == sizeb[2])
+        size3met <- which(names(data) == sizeb[1])
+        
+        if (length(size1met) == 1 & length(size2met) == 1 & length(size3met) == 1) {
+          sizeb_used <- 1
+          data$usedsize1b <- data[,size1met]
+          data$usedsize2b <- data[,size2met]
+          data$usedsize3b <- data[,size3met]
+        } else {
+          stop("Entered sizeb variable names do not strictly correspond to single
+          variables in the dataset, or fewer than 3 variable names have been
+          entered.", call. = FALSE)
+        }
+      }
+      
+      if (!all(is.na(sizec)) & length(sizec) > 2) {
+        size1met <- which(names(data) == sizec[3])
+        size2met <- which(names(data) == sizec[2])
+        size3met <- which(names(data) == sizec[1])
+        
+        if (length(size1met) == 1 & length(size2met) == 1 & length(size3met) == 1) {
+          sizec_used <- 1
+          data$usedsize1c <- data[,size1met]
+          data$usedsize2c <- data[,size2met]
+          data$usedsize3c <- data[,size3met]
+        } else {
+          stop("Entered sizec variable names do not strictly correspond to single
+          variables in the dataset, or fewer than 3 variable names have been
+          entered.", call. = FALSE)
+        }
+      }
     } else {
-      warning("Without stage columns, lefko3 MPM estimation functions generally require size variables. Failure to include size variables may lead to odd results.", call. = FALSE)
+      warning("Without stage columns, rlefko3() requires size variables as input.
+        Failure to include size variables may lead to odd results.", call. = FALSE)
     }
     if (length(repst) > 1) {
       data$usedrepst1 <- data[,which(names(data) == repst[3])]
@@ -1769,17 +2903,36 @@ rlefko3 <- function(data, stageframe, year = "all", pop = NA, patch = NA,
       }
       mainstages <- intersect(which(stageframe$bin_size_min < data$usedsize1[X]), 
         which(stageframe$bin_size_max >= data$usedsize1[X]))
+      if (sizeb_used == 1) {
+        if (is.na(data$usedsize1b[X])) {
+          data$usedsize1b[X] <- 0
+        }
+        mainstages <- intersect(which(instageframe$sizebinb_min < data$usedsize1b[X]), mainstages)
+        mainstages <- intersect(which(instageframe$sizebinb_max >= data$usedsize1b[X]), mainstages)
+      }
+      if (sizec_used == 1) {
+        if (is.na(data$usedsize1c[X])) {
+          data$usedsize1c[X] <- 0
+        }
+        mainstages <- intersect(which(instageframe$sizebinc_min < data$usedsize1c[X]), mainstages)
+        mainstages <- intersect(which(instageframe$sizebinc_max >= data$usedsize1c[X]), mainstages)
+      }
+      
       jmstages <- which(stageframe$immstatus == (1 - data$usedmatstatus1[X]))
       obsstages <- which(stageframe$obsstatus == data$obsstatus1[X])
       repstages <- which(stageframe$repstatus == data$repstatus1[X])
       alivestage1 <- which(stageframe$alive == data$alive1[X])
       
-      choicestage <- intersect(intersect(intersect(mainstages, jmstages), intersect(obsstages, repstages)), alivestage1)
-      
-      if (length(choicestage) == 0) choicestage <- which(stageframe$stage_id == max(stageframe$stage_id))
+      choicestage <- intersect(intersect(intersect(mainstages, jmstages),
+          intersect(obsstages, repstages)), alivestage1)
       
       if (length(choicestage) == 0) {
-        stop("Stage characteristics mismatch dataset. Consider using the stages option, particularly if the vertical file was created with NRasRep = TRUE in verticalize3() or historicalize3().", call. = FALSE)
+        choicestage <- which(stageframe$stage_id == max(stageframe$stage_id))
+        if (data$alive1[X] != 0) {
+          stop("Stage characteristics mismatch dataset. Consider using the stages
+            option, particularly if the vertical file was created with NRasRep = TRUE
+            in verticalize3() or historicalize3().", call. = FALSE)
+        }
       }
       
       return(as.character(stageframe$stage[choicestage]))
@@ -1791,14 +2944,34 @@ rlefko3 <- function(data, stageframe, year = "all", pop = NA, patch = NA,
       }
       mainstages <- intersect(which(stageframe$bin_size_min < data$usedsize2[X]), 
         which(stageframe$bin_size_max >= data$usedsize2[X]))
+      if (sizeb_used == 1) {
+        if (is.na(data$usedsize2b[X])) {
+          data$usedsize2b[X] <- 0
+        }
+        mainstages <- intersect(which(instageframe$sizebinb_min < data$usedsize2b[X]), mainstages)
+        mainstages <- intersect(which(instageframe$sizebinb_max >= data$usedsize2b[X]), mainstages)
+      }
+      if (sizec_used == 1) {
+        if (is.na(data$usedsize2c[X])) {
+          data$usedsize2c[X] <- 0
+        }
+        mainstages <- intersect(which(instageframe$sizebinc_min < data$usedsize2c[X]), mainstages)
+        mainstages <- intersect(which(instageframe$sizebinc_max >= data$usedsize2c[X]), mainstages)
+      }
       jmstages <- which(stageframe$immstatus == (1 - data$usedmatstatus2[X]))
       obsstages <- which(stageframe$obsstatus == data$obsstatus2[X])
       repstages <- which(stageframe$repstatus == data$repstatus2[X])
       
-      choicestage <- intersect(intersect(mainstages, jmstages), intersect(obsstages, repstages))
+      choicestage <- intersect(intersect(mainstages, jmstages),
+          intersect(obsstages, repstages))
       
       if (length(choicestage) == 0) {
-        stop("Stage characteristics mismatch dataset. Consider using the stages option, particularly if the vertical file was created with NRasRep = TRUE in verticalize3() or historicalize3().", call. = FALSE)
+        choicestage <- which(stageframe$stage_id == max(stageframe$stage_id))
+        if (data$alive2[X] != 0) {
+          stop("Stage characteristics mismatch dataset. Consider using the stages
+            option, particularly if the vertical file was created with NRasRep = TRUE
+            in verticalize3() or historicalize3().", call. = FALSE)
+        }
       }
       
       return(as.character(stageframe$stage[choicestage]))
@@ -1810,20 +2983,40 @@ rlefko3 <- function(data, stageframe, year = "all", pop = NA, patch = NA,
       }
       mainstages <- intersect(which(stageframe$bin_size_min < data$usedsize3[X]), 
         which(stageframe$bin_size_max >= data$usedsize3[X]))
+      if (sizeb_used == 1) {
+        if (is.na(data$usedsize3b[X])) {
+          data$usedsize3b[X] <- 0
+        }
+        mainstages <- intersect(which(instageframe$sizebinb_min < data$usedsize3b[X]), mainstages)
+        mainstages <- intersect(which(instageframe$sizebinb_max >= data$usedsize3b[X]), mainstages)
+      }
+      if (sizec_used == 1) {
+        if (is.na(data$usedsize3c[X])) {
+          data$usedsize3c[X] <- 0
+        }
+        mainstages <- intersect(which(instageframe$sizebinc_min < data$usedsize3c[X]), mainstages)
+        mainstages <- intersect(which(instageframe$sizebinc_max >= data$usedsize3c[X]), mainstages)
+      }
       jmstages <- which(stageframe$immstatus == (1 - data$usedmatstatus3[X]))
       obsstages <- which(stageframe$obsstatus == data$obsstatus3[X])
       repstages <- which(stageframe$repstatus == data$repstatus3[X])
       alivestage3 <- which(stageframe$alive == data$alive3[X])
       
-      choicestage <- intersect(intersect(intersect(mainstages, jmstages), intersect(obsstages, repstages)), alivestage3)
+      choicestage <- intersect(intersect(intersect(mainstages, jmstages),
+        intersect(obsstages, repstages)), alivestage3)
       
-      if (length(choicestage) == 0) choicestage <- which(stageframe$stage_id == max(stageframe$stage_id))
+      if (length(choicestage) == 0) {
+        choicestage <- which(instageframe$stage_id == max(instageframe$stage_id))
+        if (data$alive3[X] != 0) {
+          stop("Stage characteristics mismatch dataset. Consider using the stages
+            option, particularly if the vertical file was created with NRasRep = TRUE
+            in verticalize3() or historicalize3().", call. = FALSE)
+        }
+      }
       
       return(as.character(stageframe$stage[choicestage]))
     })
-    
-  } else if (length(stages) > 1) {
-    
+  } else if (length(stages) > 2) {
     if (is.numeric(stages[2])) {
       data$usedstage1 <- data[, stages[3]]
       data$usedstage2 <- data[, stages[2]]
@@ -1858,11 +3051,12 @@ rlefko3 <- function(data, stageframe, year = "all", pop = NA, patch = NA,
     stages.used <- sort(unique(c(data$usedstage2, data$usedstage3)))
     
     if (length(setdiff(stages.used, stageframe$stage)) > 0 & !is.element("NotAlive", stages.used)) {
-      stop("Some stages in dataset do not match those detailed in the input stageframe.", call. = FALSE)
+      stop("Some stages in dataset do not match those detailed in the input stageframe.",
+        call. = FALSE)
     }
   }
   
-  if (length(fec) > 1) {
+  if (length(fec) > 2) {
     data$usedfec1 <- data[,which(names(data) == fec[3])]
     data$usedfec2 <- data[,which(names(data) == fec[2])]
     data$usedfec3 <- data[,which(names(data) == fec[1])]
@@ -1871,16 +3065,17 @@ rlefko3 <- function(data, stageframe, year = "all", pop = NA, patch = NA,
     data$usedfec2[which(is.na(data$usedfec2))] <- 0
     data$usedfec3[which(is.na(data$usedfec3))] <- 0
   } else {
-    warning("Lefko3 MPM estimation functions generally require fecundity variables. Failure to include fecundity variables leads to matrices composed only of survival transitions.", call. = FALSE)
+    warning("Function rlefko3() requires 3 fecundity variables, for times t+1, t,
+      and t-1. Failure to include fecundity variables leads to matrices composed
+      only of survival transitions.", call. = FALSE)
   } 
   
-  ovtable <- .overwrite_reassess(stageframe, supplement, overwrite, historical = TRUE)
-  
-  #Here we search for NotAlive entries and then alter the dataset accordingly
-  #Then we remove the NotAlive entries from the supplement table
+  # Here we search for NotAlive entries in the dataset, and then alter the dataset
+  # based on eststage entries in the ovtable. Finally, we remove the NotAlive
+  # entries from the ovtable table
   flubbleindices <- which(tolower(ovtable$eststage1) == "notalive")
-  flubble <- ovtable[flubbleindices,]
   if (length(flubbleindices) > 0) {
+    flubble <- ovtable[flubbleindices,]
     for (i in c(1:dim(flubble)[1])) {
       datamatch_t1 <- which(tolower(data$stage1) == "notalive")
       datamatch_t2 <- which(data$usedstage2 == flubble$eststage2[i])
@@ -1899,10 +3094,10 @@ rlefko3 <- function(data, stageframe, year = "all", pop = NA, patch = NA,
   
   # This section creates stageexpansion9, which is a data frame that holds values for stage transitions from paired stages
   # in occasions t and t-1 to paired stages in occasions t and t+1
-  majortrial <- theoldpizzle(stageframe, ovtable, repmatrix, finalage = 0,
+  stageexpansion9 <- .theoldpizzle(stageframe, ovtable, repmatrix, finalage = 0,
     format = format_int, style = 0, cont = 0)
-  stageexpansion9 <- do.call("cbind.data.frame", c(majortrial, stringsAsFactors = FALSE))
   
+  #Here we reformat the repmatrix if deVries format is chosen
   harpoon <- if (format_int == 2) {
     prior_reps <- colSums(repmatrix)
     prior_reps[which(prior_reps > 0)] <- 1
@@ -1913,38 +3108,38 @@ rlefko3 <- function(data, stageframe, year = "all", pop = NA, patch = NA,
   }
   
   # Stageexpansion3 is a dataframe created to hold values for paired stages in occasions t and t-1 only
-  stageexpansion3 <- cbind.data.frame(expand.grid(size3 = stageframe$bin_size_ctr, 
-    size2n = stageframe$bin_size_ctr), expand.grid(rep3 = stageframe$repstatus, 
+  stageexpansion3 <- cbind.data.frame(expand.grid(size3 = stageframe$sizebin_center, 
+    size2n = stageframe$sizebin_center), expand.grid(sizeb3 = stageframe$sizebinb_center, 
+    sizeb2n = stageframe$sizebinb_center), expand.grid(sizec3 = stageframe$sizebinc_center, 
+    sizec2n = stageframe$sizebinc_center), expand.grid(rep3 = stageframe$repstatus, 
     rep2n = stageframe$repstatus), expand.grid(indata3 = stageframe$indataset, 
-    indata2n = stageframe$indataset), expand.grid(stage3 = stageframe$stageno,
-    stage2n = stageframe$stageno), fec32n = c(harpoon))
+    indata2n = stageframe$indataset), expand.grid(stage3 = stageframe$stage_id,
+    stage2n = stageframe$stage_id), fec32n = c(harpoon))
   
   stageexpansion3$indata32n <- stageexpansion3$indata3 * stageexpansion3$indata2n
   
   instages <- length(stageframe$stage_id) #Total number of stages, including the dead stage
-  
   stageexpansion3$index21 <- apply(as.matrix(c(1:dim(stageexpansion3)[1])), 1, function(X) {
     ((stageexpansion3$stage3[X] - 1) + ((stageexpansion3$stage2n[X] - 1) * instages))
   })
-  
   stageexpansion3$stcod3 <- apply(as.matrix(c(1:dim(stageexpansion3)[1])), 1, function(X) {
-    stageframe$stage[which(stageframe$stageno == stageexpansion3$stage3[X])]
+    stageframe$stage[which(stageframe$stage_id == stageexpansion3$stage3[X])]
   })
   stageexpansion3$stcod2 <- apply(as.matrix(c(1:dim(stageexpansion3)[1])), 1, function(X) {
-    stageframe$stage[which(stageframe$stageno == stageexpansion3$stage2n[X])]
+    stageframe$stage[which(stageframe$stage_id == stageexpansion3$stage2n[X])]
   })
   
   # Now we will add a number of indices to the dataset
   data <- subset(data, alive2 == 1)
   
   data$index1 <- apply(as.matrix(data$usedstage1), 1, function(X) {
-    stageframe$stageno[which(stageframe$stage == X)]
+    stageframe$stage_id[which(stageframe$stage == X)]
   })
   data$index2 <- apply(as.matrix(data$usedstage2), 1, function(X) {
-    stageframe$stageno[which(stageframe$stage == X)]
+    stageframe$stage_id[which(stageframe$stage == X)]
   })
   data$index3 <- apply(as.matrix(data$usedstage3), 1, function(X) {
-    stageframe$stageno[which(stageframe$stage == X)]
+    stageframe$stage_id[which(stageframe$stage == X)]
   })
   
   data$index321 <- apply(as.matrix(c(1:length(data$usedstage1))), 1, function(X) {
@@ -1964,22 +3159,28 @@ rlefko3 <- function(data, stageframe, year = "all", pop = NA, patch = NA,
   data$usedfec2[which(is.na(data$usedfec2))] <- 0
   
   if(is.element(0, unique(data$index1))) {
-    warning("Data (stage at occasion t-1) contains some stages not identified in stageframe. Note that all stage characteristics must match, including reproductive status.", call. = FALSE)
+    warning("Data (stage at occasion t-1) contains stages not identified in stageframe.
+      All stage characteristics must match, including reproductive status.",
+      call. = FALSE)
   }
   if(is.element(0, unique(data$index2))) {
-    warning("Data (stage at occasion t) contains some stages not identified in stageframe. Note that all stage characteristics must match, including reproductive status.", call. = FALSE)
+    warning("Data (stage at occasion t) contains stages not identified in stageframe.
+      All stage characteristics must match, including reproductive status.",
+      call. = FALSE)
   }
   if(is.element(0, unique(data$index3))) {
-    warning("Data (stage at occasion t+1) contains some stages not identified in stageframe. Note that all stage characteristics must match, including reproductive status.", call. = FALSE)
+    warning("Data (stage at occasion t+1) contains stages not identified in stageframe.
+      All stage characteristics must match, including reproductive status.",
+      call. = FALSE)
   }
   
   madsexmadrigal <- lapply(yearlist, function(X) {
     passed_data <- data
-    if (!is.na(X$pop[1]) & !is.na(pop)) {
+    if (!is.na(X$pop[1]) & !is.na(popcol)) {
       passed_data$popused <- passed_data[,popcol];
       passed_data <- subset(passed_data, popused == X$pop[1]);
     }
-    if (!is.na(X$patch[1]) & !is.na(patch)) {
+    if (!is.na(X$patch[1]) & !is.na(patchcol)) {
       passed_data$patchused <- passed_data[,patchcol];
       passed_data <- subset(passed_data, patchused == X$patch[1]);
     }
@@ -1989,7 +3190,7 @@ rlefko3 <- function(data, stageframe, year = "all", pop = NA, patch = NA,
     }
     if (err_check) { err_push <- 1} else {err_push <- 0}
     
-    specialpatrolgroup(sge9l = stageexpansion9, sge3 = stageexpansion3,
+    .specialpatrolgroup(sge9l = stageexpansion9, sge3 = stageexpansion3,
       MainData = passed_data, StageFrame = stageframe, format = format_int, 
         err_switch = err_push)
   })
@@ -2055,10 +3256,10 @@ rlefko3 <- function(data, stageframe, year = "all", pop = NA, patch = NA,
 
 #' Create Raw Ahistorical Matrix Projection Model
 #'
-#' \code{rlefko2()} returns raw ahistorical MPMs, including the associated
-#' component transition and fecundity matrices, a data frame describing the
-#' ahistorical stages used, and a data frame describing the population, patch,
-#' and year associated with each matrix.
+#' Function \code{rlefko2()} returns raw ahistorical MPMs, including the
+#' associated component transition and fecundity matrices, a data frame
+#' describing the ahistorical stages used, and a data frame describing the
+#' population, patch, and occasion time associated with each matrix.
 #' 
 #' @param data A vertical demographic data frame, with variables corresponding 
 #' to the naming conventions in \code{\link{verticalize3}()}.
@@ -2067,9 +3268,9 @@ rlefko3 <- function(data, stageframe, year = "all", pop = NA, patch = NA,
 #' of each ahistorical stage. Should also incorporate bin widths if size is
 #' continuous.
 #' @param year A variable corresponding to observation occasion, or a set
-#' of such values, given in values associated with the year term used in linear 
-#' model development. Can also equal \code{all}, in which case matrices will
-#' be estimated for all years. Defaults to \code{all}.
+#' of such values, given in values associated with the \code{year} term used in
+#' vital rate model development. Can also equal \code{all}, in which case
+#' matrices will be estimated for all occasion times. Defaults to \code{all}.
 #' @param pop A variable designating which populations will have matrices
 #' estimated. Should be set to specific population names, or to \code{all} if
 #' all populations should have matrices estimated.
@@ -2087,14 +3288,21 @@ rlefko3 <- function(data, stageframe, year = "all", pop = NA, patch = NA,
 #' of \code{alive}, \code{size}, \code{repst}, and \code{matst} to
 #' characteristics noted in the associated \code{stageframe}.
 #' @param alive A vector of names of binomial variables corresponding to status
-#' as alive (1) or dead (0) in occasions \emph{t}+1, \emph{t}, and \emph{t}-1,
+#' as alive (\code{1}) or dead (\code{0}) in occasions \emph{t}+1 ans \emph{t},
 #' respectively.
-#' @param size A vector of names of variables coding size in occasions
-#' \emph{t}+1 and \emph{t}, respectively. Defaults to
+#' @param size A vector of names of variables coding the primary size variable
+#' in occasions \emph{t}+1 and \emph{t}, respectively. Defaults to
 #' \code{c("sizea3", "sizea2")}.
+#' @param sizeb A vector of names of variables coding the secondary size
+#' variable in occasions \emph{t}+1 and \emph{t}, respectively. Defaults to
+#' \code{c(NA, NA)}.
+#' @param sizec A vector of names of variables coding the tertiary size
+#' variable in occasions \emph{t}+1 and \emph{t}, respectively. Defaults to
+#' \code{c(NA, NA)}.
 #' @param repst A vector of names of variables coding reproductive status in
 #' occasions \emph{t}+1 and \emph{t}, respectively. Defaults to 
-#' \code{c("repstatus3", "repstatus2")}.
+#' \code{c("repstatus3", "repstatus2")}. Must be supplied if \code{stages} is
+#' not provided.
 #' @param matst A vector of names of variables coding maturity status in
 #' occasions \emph{t}+1 and \emph{t}, respectively. Defaults to
 #' \code{c("matstatus3", "matstatus2")}. Must be supplied if \code{stages} is
@@ -2106,18 +3314,16 @@ rlefko3 <- function(data, stageframe, year = "all", pop = NA, patch = NA,
 #' kinds of data may be integrated this way: transitions to be estimated via the
 #' use of proxy transitions, transition overwrites from the literature or
 #' supplemental studies, and transition multipliers for fecundity. This data
-#' frame should be produced using the \code{\link{supplemental}()} function. Can
-#' be used in place of or in addition to an overwrite table (see 
+#' frame should be produced using the \code{\link{supplemental}()} function.
+#' Should be used in place of or in addition to an overwrite table (see 
 #' \code{overwrite} below) and a reproduction matrix (see \code{repmatrix}
 #' below).
-#' @param repmatrix A reproduction matrix, which is an optional matrix composed
-#' mostly of 0s, with non-zero values for each potentially new individual (row)
-#' born to each reproductive stage (column). Entries act as multipliers on
-#' fecundity, with 1 equaling full fecundity. Fecundity multipliers provided
-#' this way supplement rather than replace those provided in \code{supplement}.
-#' If left blank, then \code{rlefko2()} will assume that all stages marked as
-#' reproductive produce offspring at 1x that of fecundity estimated in provided
-#' linear models, and that fecundity will be into the first stage noted as
+#' @param repmatrix An optional reproduction matrix. This matrix is composed
+#' mostly of 0s, with non-zero entries acting as element identifiers and
+#' multipliers for fecundity (with 1 equaling full fecundity). If left blank,
+#' and no \code{supplement} is provided, then \code{rlefko2()} will assume that
+#' all stages marked as reproductive produce offspring at 1x that of estimated
+#' fecundity, and that offspring production will yield the first stage noted as
 #' propagule or immature. To prevent this behavior, input just \code{0}, which
 #' will result in fecundity being estimated only for transitions noted in
 #' \code{supplement} above. Must be the dimensions of an ahistorical matrix.
@@ -2136,10 +3342,11 @@ rlefko3 <- function(data, stageframe, year = "all", pop = NA, patch = NA,
 #' @param censorcol The variable name or column number denoting the censor
 #' status. Only needed if \code{censor = TRUE}.
 #' @param censorkeep The value of the censor variable denoting data elements to
-#' keep. Defaults to 0.
+#' keep. Defaults to \code{0}.
 #' @param reduce A logical value denoting whether to remove historical stages
-#' associated with only zero transitions. These are removed only if all row and
-#' column sums in ALL matrices estimated equal 0. Defaults to FALSE.
+#' associated with only zero transitions. These are removed only if the
+#' respective row and column sums in ALL matrices estimated equal 0. Defaults to
+#' \code{FALSE}.
 #' 
 #' @return If all inputs are properly formatted, then this function will return
 #' an object of class \code{lefkoMat}, which is a list that holds the matrix
@@ -2147,7 +3354,7 @@ rlefko3 <- function(data, stageframe, year = "all", pop = NA, patch = NA,
 #' following elements:
 #' 
 #' \item{A}{A list of full projection matrices in order of sorted populations,
-#' patches, and years. All matrices output in the \code{matrix} class.}
+#' patches, and occasions. All matrices output in the \code{matrix} class.}
 #' \item{U}{A list of survival transition matrices sorted as in \code{A}. All 
 #' matrices output in the \code{matrix} class.}
 #' \item{F}{A list of fecundity matrices sorted as in \code{A}. All matrices 
@@ -2176,9 +3383,9 @@ rlefko3 <- function(data, stageframe, year = "all", pop = NA, patch = NA,
 #' \code{repmatrix} is set to 0, then only fecundity transitions noted in the
 #' supplement will be set to non-zero values. To use the default behavior of
 #' setting all reproductive stages to reproduce at full fecundity into immature
-#' and propagule stages but also incorporate given or proxy
-#' survival transitions, input those given and proxy transitions through the
-#' \code{overwrite} option.
+#' and propagule stages but also incorporate given or proxy survival
+#' transitions, input those given and proxy transitions through the
+#' \code{overwrite} options.
 #' 
 #' The reproduction matrix (field \code{repmatrix}) may only be supplied as
 #' ahistorical. If provided as historical, then \code{rlefko2()} will fail and
@@ -2187,12 +3394,18 @@ rlefko3 <- function(data, stageframe, year = "all", pop = NA, patch = NA,
 #' Users may at times wish to estimate MPMs using a dataset incorporating
 #' multiple patches or subpopulations. Should the aim of analysis be a general
 #' MPM that does not distinguish these patches or subpopulations, the
-#' \code{patchcol} variable should be left to NA, which is the default.
+#' \code{patchcol} variable should be left to \code{NA}, which is the default.
+#' Otherwise the variable identifying patch needs to be named.
 #'
 #' Input options including multiple variable names must be entered in the order
 #' of variables in occasion \emph{t}+1 and \emph{t}. Rearranging the order WILL
-#' lead to erroneous calculations, and will probably also lead to fatal errors.
-#'
+#' lead to erroneous calculations, and may lead to fatal errors.
+#' 
+#' Although this function is capable of assigning stages given an input
+#' stageframe, it lacks the power of \code{\link{verticalize3}()} and
+#' \code{\link{historicalize3}()} in this regard. Users are strongly
+#' encouraged to use the latter two functions for stage assignment.
+#' 
 #' @examples
 #' # Lathyrus example
 #' data(lathyrus)
@@ -2280,46 +3493,76 @@ rlefko3 <- function(data, stageframe, year = "all", pop = NA, patch = NA,
 #' @export
 rlefko2 <- function(data, stageframe, year = "all", pop = NA, patch = NA,
   censor = FALSE, stages = NA, alive = c("alive3", "alive2"),
-  size = c("sizea3", "sizea2"), repst = c("repstatus3", "repstatus2"),
+  size = c("sizea3", "sizea2"), sizeb = c(NA, NA), sizec = c(NA, NA),
+  repst = c("repstatus3", "repstatus2"),
   matst = c("matstatus3", "matstatus2"), fec = c("feca3", "feca2"),
-  supplement = NA, repmatrix = NA, overwrite = NA, yearcol = NA, popcol = NA,
-  patchcol = NA, indivcol = NA, censorcol = NA, censorkeep = 0, reduce = FALSE) {
+  supplement = NULL, repmatrix = NULL, overwrite = NULL, yearcol = NA,
+  popcol = NA, patchcol = NA, indivcol = NA, censorcol = NA, censorkeep = 0,
+  reduce = FALSE) {
   
   tocensor <- indataset <- alive2 <- popused <- patchused <- yearused <- NULL
+  
+  sizeb_used <- 0
+  sizec_used <- 0
   
   if (all(is.na(data))) {
     stop("Need original vertical dataset to proceed.", call. = FALSE)
   }
   
   if (!any(class(data) == "data.frame")) {
-    stop("Need original vertical dataset to proceed. This dataset must be in historical vertical format.", call. = FALSE)
+    stop("Need original vertical dataset to proceed. This dataset must be in
+      historical vertical format.", call. = FALSE)
   }
   
   if (!any(class(data) == "hfvdata")) {
-    warning("Dataset used as input is not of class hfvdata. Will assume that the dataset has been formatted equivalently.", call. = FALSE)
+    warning("Dataset used as input is not of class hfvdata. Will assume that the
+      dataset has been formatted equivalently.", call. = FALSE)
+  }
+  
+  stageframe_vars <- c("stage", "size", "size_b", "size_c", "min_age", "max_age",
+    "repstatus", "obsstatus", "propstatus", "immstatus", "matstatus", "indataset",
+    "binhalfwidth_raw", "sizebin_min", "sizebin_max", "sizebin_center",
+    "sizebin_width", "binhalfwidthb_raw", "sizebinb_min", "sizebinb_max",
+    "sizebinb_center", "sizebinb_width", "binhalfwidthc_raw", "sizebinc_min",
+    "sizebinc_max", "sizebinc_center", "sizebinc_width", "group", "comments")
+  if (any(!is.element(names(stageframe), stageframe_vars))) {
+    stop("Please use properly formatted stageframe as input.", call. = FALSE)
   }
   
   if (all(is.na(stages))) {
     if (!(length(alive) > 1)) {
-      stop("This function requires stage information for each of occasions t+1 and t. In the absence of stage columns in the dataset, it requires two variables for living/dead status, size, reproductive status, and maturity status, for each of occasions t+1 and t.", call. = FALSE)
+      stop("This function requires stage information for each of occasions t+1
+        and t. In the absence of stage columns in the dataset, it requires two
+        variables for living/dead status, size, reproductive status, and
+        maturity status, for each of occasions t+1 and t.", call. = FALSE)
     }
     if (!(length(size) > 1)) {
-      stop("This function requires stage information for each of occasions t+1 and t. In the absence of stage columns in the dataset, it requires two variables for living/dead status, size, reproductive status, and maturity status, for each of occasions t+1 and t.", call. = FALSE)
+      stop("This function requires stage information for each of occasions t+1
+        and t. In the absence of stage columns in the dataset, it requires two
+        variables for living/dead status, size, reproductive status, and
+        maturity status, for each of occasions t+1 and t.", call. = FALSE)
     }
     if (!all(is.na(repst))) {
       if (!(length(repst) > 1)) {
-        stop("This function requires stage information for each of occasions t+1 and t. In the absence of stage columns in the dataset, it requires two variables for living/dead status, size, reproductive status, and maturity status, for each of occasions t+1 and t.", call. = FALSE)
+        stop("This function requires stage information for each of occasions t+1
+          and t. In the absence of stage columns in the dataset, it requires two
+          variables for living/dead status, size, reproductive status, and
+          maturity status, for each of occasions t+1 and t.", call. = FALSE)
       }
     }   
     if (!all(is.na(matst))) {
       if (!(length(matst) > 1)) {
-        stop("This function requires stage information for each of occasions t+1 and t. In the absence of stage columns in the dataset, it requires two variables for living/dead status, size, reproductive status, and maturity status, for each of occasions t+1 and t.", call. = FALSE)
+        stop("This function requires stage information for each of occasions t+1
+          and t. In the absence of stage columns in the dataset, it requires two
+          variables for living/dead status, size, reproductive status, and
+          maturity status, for each of occasions t+1 and t.", call. = FALSE)
       }
     }   
   }
   
   if (!(length(fec) > 1)) {
-    stop("This function requires two variables for fecundity, for each of occasions t+1 and t.", call. = FALSE)
+    stop("This function requires two variables for fecundity, for each of
+      occasions t+1 and t.", call. = FALSE)
   }
   
   if (is.character(yearcol)) {
@@ -2340,21 +3583,26 @@ rlefko2 <- function(data, stageframe, year = "all", pop = NA, patch = NA,
   }
   
   if (length(year) == 0 | all(is.na(year) == TRUE) | any(is.na(year))) {
-    stop("This function cannot proceed without being given a specific year, or a suite of years. NA entries are not allowed.", call. = FALSE)
+    stop("This function cannot proceed without being given a specific year, or a
+      suite of years. NA entries are not allowed.", call. = FALSE)
   }
   
   if (!all(is.element(year, mainyears))) {
-    stop("Dataset does not contain one or more of the requested years. Note that matrices cannot be made for the first year in a historical dataset.", call. = FALSE)
+    stop("Dataset does not contain one or more of the requested years. Note that
+      matrices cannot be made for the first year in a historical dataset.",
+      call. = FALSE)
   }
   
   if (censor == TRUE) {
     if(all(is.na(censorcol)) == TRUE) {
-      stop("Cannot censor the data without a proper censor variable.", call. = FALSE)
+      stop("Cannot censor the data without a proper censor variable.",
+        call. = FALSE)
     }
     
     if (all(is.character(censorcol))) {
       if (!all(is.element(censorcol, names(data)))) {
-        stop("Censor variable names input for censorcol do not match any variable names in the dataset.", call. = FALSE)
+        stop("Censor variable names input for censorcol do not match any
+          variable names in the dataset.", call. = FALSE)
       }
     }
     
@@ -2373,7 +3621,8 @@ rlefko2 <- function(data, stageframe, year = "all", pop = NA, patch = NA,
   
   if (!all(is.na(pop)) & !all(is.na(patch))) {
     if (is.na(popcol) | is.na(patchcol)) {
-      stop("Need population and patch designation variables to proceed.", call. = FALSE)
+      stop("Need population and patch designation variables to proceed.",
+        call. = FALSE)
     }
     
     if (is.element("all", tolower(pop))) {
@@ -2387,7 +3636,8 @@ rlefko2 <- function(data, stageframe, year = "all", pop = NA, patch = NA,
       
       listofpatches <- apply(as.matrix(pops), 1, function(X) {
         patchfolly <- subset(data, popcol == X);
-        output <- cbind.data.frame(X, unique(patchfolly[,yearcol]), stringsAsFactors = FALSE);
+        output <- cbind.data.frame(X, unique(patchfolly[,yearcol]), 
+          stringsAsFactors = FALSE);
         names(output) <- c("pop", "patch");
         return(output);
       })
@@ -2406,6 +3656,10 @@ rlefko2 <- function(data, stageframe, year = "all", pop = NA, patch = NA,
       return(output)
     })
   } else if (all(is.na(pop)) & !all(is.na(patch))) {
+    if (!is.na(popcol)) {
+      popcol <- NA
+    }
+    
     if (is.na(patchcol)) {
       stop("Need patch designation variable to proceed.", call. = FALSE)
     }
@@ -2418,7 +3672,8 @@ rlefko2 <- function(data, stageframe, year = "all", pop = NA, patch = NA,
     
     listofyears <- apply(as.matrix(patches), 1, function(X) {
       checkyrdata <- subset(data, patchcol = X);
-      output <- cbind.data.frame("1", X, unique(checkyrdata[,yearcol]), stringsAsFactors = FALSE);
+      output <- cbind.data.frame("1", X, unique(checkyrdata[,yearcol]),
+        stringsAsFactors = FALSE);
       names(output) <- c("pop", "patch", "year2");
       return(output)
     })
@@ -2433,6 +3688,10 @@ rlefko2 <- function(data, stageframe, year = "all", pop = NA, patch = NA,
       stop("Need population designation variable to proceed.", call. = FALSE)
     }
     
+    if (!is.na(patchcol)) {
+      patchcol <- NA
+    }
+    
     if (is.element("all", tolower(pop))) {
       if (is.character(popcol)) {popcol <- which(names(data) == popcol)}
       
@@ -2441,7 +3700,8 @@ rlefko2 <- function(data, stageframe, year = "all", pop = NA, patch = NA,
     
     listofyears <- apply(as.matrix(pops), 1, function(X) {
       checkyrdata <- subset(data, popcol = X);
-      output <- cbind.data.frame(X, "1", unique(checkyrdata[,yearcol]), stringsAsFactors = FALSE);
+      output <- cbind.data.frame(X, "1", unique(checkyrdata[,yearcol]),
+        stringsAsFactors = FALSE);
       names(output) <- c("pop", "patch", "year2");
       return(output)
     })
@@ -2452,48 +3712,57 @@ rlefko2 <- function(data, stageframe, year = "all", pop = NA, patch = NA,
       listofyears <- listofyears[[1]]
     }
   } else if (all(is.na(pop)) & all(is.na(patch))) {
+    if (!is.na(popcol)) {
+      popcol <- NA
+    }
+    if (!is.na(patchcol)) {
+      patchcol <- NA
+    }
+    
     listofyears <- cbind.data.frame("1", "1", year, stringsAsFactors = FALSE)
     names(listofyears) <- c("pop", "patch", "year2")
   }
   
+  identifiedyearrows <- which(is.element(listofyears$year2, year))
+  if (length(identifiedyearrows) == 0) {
+    stop("Cannot recognize input year(s)", call. = FALSE)
+  } else {
+    listofyears <- listofyears[identifiedyearrows,]
+  }
   yearlist <- split(listofyears, seq(nrow(listofyears)))
   
   stagenum_init <- dim(stageframe)[1]
-  if (!all(is.na(repmatrix))) {
+  if (!all(is.null(repmatrix))) {
     if (any(class(repmatrix) == "matrix")) {
       if (dim(repmatrix)[1] != stagenum_init) {
-        stop("The repmatrix provided must be a square matrix with dimensions equal to the number of stages in the stageframe.", call. = FALSE)
+        stop("The repmatrix must be a square matrix with dimensions equal to the
+          number of stages in the stageframe.", call. = FALSE)
       }
       
       if (dim(repmatrix)[2] != stagenum_init) {
-        stop("The repmatrix provided must be a square matrix with dimensions equal to the number of stages in the stageframe, or the square thereof.", call. = FALSE)
+        stop("The repmatrix must be a square matrix with dimensions equal to the
+          number of stages in the stageframe.", call. = FALSE)
       }
     }
   }
   
-  melchett <- .sf_reassess(stageframe, supplement, repmatrix, overwrite,
-    agemat = FALSE, format = 1)
-  stageframe <- melchett[[1]]
-  repmatrix <- melchett[[2]]
+  melchett <- .sf_reassess(stageframe, supplement, overwrite, repmatrix,
+    agemat = FALSE, historical = FALSE, format = 1)
+  stageframe <- melchett$stageframe
+  repmatrix <- melchett$repmatrix
+  ovtable <- melchett$ovtable
   
-  stageframe$stage_id <- as.numeric(stageframe$stage_id)
-  stageframe$original_size <- as.numeric(stageframe$original_size)
-  stageframe$bin_size_min <- as.numeric(stageframe$bin_size_min)
-  stageframe$bin_size_ctr <- as.numeric(stageframe$bin_size_ctr)
-  stageframe$bin_size_max <- as.numeric(stageframe$bin_size_max)
-  stageframe$bin_size_width <- as.numeric(stageframe$bin_size_width)
-  stageframe$bin_raw_halfwidth <- as.numeric(stageframe$bin_raw_halfwidth)
-  stageframe$repstatus <- as.numeric(stageframe$repstatus)
-  stageframe$obsstatus <- as.numeric(stageframe$obsstatus)
-  stageframe$propstatus <- as.numeric(stageframe$propstatus)
-  stageframe$immstatus <- as.numeric(stageframe$immstatus)
-  stageframe$matstatus <- as.numeric(stageframe$matstatus)
-  stageframe$entrystage <- as.numeric(stageframe$entrystage)
-  stageframe$indataset <- as.numeric(stageframe$indataset)
-  stageframe$alive <- as.numeric(stageframe$alive)
-  
-  stageframe$stageno <- c(1:dim(stageframe)[1])
-  rownames(stageframe) <- stageframe$stageno
+  if (!all(is.na(overwrite)) | !all(is.na(supplement))) {
+    
+    if(any(duplicated(ovtable[,1:3]))) {
+      stop("Multiple entries with different values for the same stage transition
+        are not allowed in the supplemental or overwrite table. If modifying a
+        historical table to perform an ahistorical analysis, then this may be
+        due to different given rates of substitutions caused by dropping stage
+        at occasion t-1. Please eliminate duplicate transitions.",
+        call. = FALSE)
+    }
+  }
   
   data$alive2 <- data[,which(names(data) == alive[2])]
   data$alive3 <- data[,which(names(data) == alive[1])]
@@ -2503,10 +3772,49 @@ rlefko2 <- function(data, stageframe, year = "all", pop = NA, patch = NA,
   
   if (all(is.na(stages))) {
     if (length(size) > 1) {
-      data$usedsize2 <- data[,which(names(data) == size[2])]
-      data$usedsize3 <- data[,which(names(data) == size[1])]
+      size2met <- which(names(data) == size[2])
+      size3met <- which(names(data) == size[1])
+      
+      if (length(size2met) == 1 & length(size3met) == 1) {
+        data$usedsize2 <- data[,size2met]
+        data$usedsize3 <- data[,size3met]
+      } else {
+        stop("Entered size variable names do not strictly correspond to single
+          variables in the dataset.", call. = FALSE)
+      }
+      
+      if (!all(is.na(sizeb)) & length(sizeb) > 1) {
+        size2met <- which(names(data) == sizeb[2])
+        size3met <- which(names(data) == sizeb[1])
+        
+        if (length(size2met) == 1 & length(size3met) == 1) {
+          sizeb_used <- 1
+          data$usedsize2b <- data[,size2met]
+          data$usedsize3b <- data[,size3met]
+        } else {
+          stop("Entered sizeb variable names do not strictly correspond to single
+          variables in the dataset, or fewer than 2 variable names have been
+          entered.", call. = FALSE)
+        }
+      }
+      
+      if (!all(is.na(sizec)) & length(sizec) > 1) {
+        size2met <- which(names(data) == sizec[2])
+        size3met <- which(names(data) == sizec[1])
+        
+        if (length(size2met) == 1 & length(size3met) == 1) {
+          sizec_used <- 1
+          data$usedsize2c <- data[,size2met]
+          data$usedsize3c <- data[,size3met]
+        } else {
+          stop("Entered sizec variable names do not strictly correspond to single
+          variables in the dataset, or fewer than 2 variable names have been
+          entered.", call. = FALSE)
+        }
+      }
     } else {
-      warning("Without stage columns, lefko3 MPM estimation functions generally require size variables. Failure to include size variables may lead to odd results.", call. = FALSE)
+      warning("Without stage columns, rlefko3() requires size variables as input.
+        Failure to include size variables may lead to odd results.", call. = FALSE)
     }
     if (length(repst) > 1) {
       data$usedrepst2 <- data[,which(names(data) == repst[2])]
@@ -2521,16 +3829,36 @@ rlefko2 <- function(data, stageframe, year = "all", pop = NA, patch = NA,
       if (is.na(data$usedsize2[X])) {
         data$usedsize2[X] <- 0
       }
-      mainstages <- intersect(which(instageframe$bin_size_min < data$usedsize2[X]), 
-                              which(instageframe$bin_size_max >= data$usedsize2[X]))
+      mainstages <- intersect(which(instageframe$sizebin_min < data$usedsize2[X]), 
+        which(instageframe$sizebin_max >= data$usedsize2[X]))
+      if (sizeb_used == 1) {
+        if (is.na(data$usedsize2b[X])) {
+          data$usedsize2b[X] <- 0
+        }
+        mainstages <- intersect(which(instageframe$sizebinb_min < data$usedsize2b[X]), mainstages)
+        mainstages <- intersect(which(instageframe$sizebinb_max >= data$usedsize2b[X]), mainstages)
+      }
+      if (sizec_used == 1) {
+        if (is.na(data$usedsize2c[X])) {
+          data$usedsize2c[X] <- 0
+        }
+        mainstages <- intersect(which(instageframe$sizebinc_min < data$usedsize2c[X]), mainstages)
+        mainstages <- intersect(which(instageframe$sizebinc_max >= data$usedsize2c[X]), mainstages)
+      }
       jmstages <- which(instageframe$immstatus == (1 - data$usedmatstatus2[X]))
       obsstages <- which(instageframe$obsstatus == data$obsstatus2[X])
       repstages <- which(instageframe$repstatus == data$repstatus2[X])
-      
-      choicestage <- intersect(intersect(mainstages, jmstages), intersect(obsstages, repstages))
+        
+      choicestage <- intersect(intersect(mainstages, jmstages),
+        intersect(obsstages, repstages))
       
       if (length(choicestage) == 0) {
-        stop("Stage characteristics mismatch dataset. Consider using the stages option, particularly if the vertical file was created with NRasRep = TRUE in verticalize3() or historicalize3().", call. = FALSE)
+        choicestage <- which(stageframe$stage_id == max(stageframe$stage_id))
+        if (data$alive2[X] != 0) {
+          stop("Stage characteristics mismatch dataset. Consider using the stages
+            option, particularly if the vertical file was created with NRasRep = TRUE
+            in verticalize3() or historicalize3().", call. = FALSE)
+        }
       }
       
       return(as.character(instageframe$stage[choicestage]))
@@ -2540,24 +3868,41 @@ rlefko2 <- function(data, stageframe, year = "all", pop = NA, patch = NA,
       if (is.na(data$usedsize3[X])) {
         data$usedsize3[X] <- 0
       }
-      mainstages <- intersect(which(instageframe$bin_size_min < data$usedsize3[X]), 
-        which(instageframe$bin_size_max >= data$usedsize3[X]))
+      mainstages <- intersect(which(instageframe$sizebin_min < data$usedsize3[X]), 
+        which(instageframe$sizebin_max >= data$usedsize3[X]))
+      if (sizeb_used == 1) {
+        if (is.na(data$usedsize3b[X])) {
+          data$usedsize3b[X] <- 0
+        }
+        mainstages <- intersect(which(instageframe$sizebinb_min < data$usedsize3b[X]), mainstages)
+        mainstages <- intersect(which(instageframe$sizebinb_max >= data$usedsize3b[X]), mainstages)
+      }
+      if (sizec_used == 1) {
+        if (is.na(data$usedsize3c[X])) {
+          data$usedsize3c[X] <- 0
+        }
+        mainstages <- intersect(which(instageframe$sizebinc_min < data$usedsize3c[X]), mainstages)
+        mainstages <- intersect(which(instageframe$sizebinc_max >= data$usedsize3c[X]), mainstages)
+      }
       jmstages <- which(instageframe$immstatus == (1 - data$usedmatstatus3[X]))
       obsstages <- which(instageframe$obsstatus == data$obsstatus3[X])
       repstages <- which(instageframe$repstatus == data$repstatus3[X])
       alivestage3 <- which(instageframe$alive == data$alive3[X])
       
-      choicestage <- intersect(intersect(intersect(mainstages, jmstages), intersect(obsstages, repstages)), alivestage3)
+      choicestage <- intersect(intersect(intersect(mainstages, jmstages),
+        intersect(obsstages, repstages)), alivestage3)
       
       if (length(choicestage) == 0) {
-        stop("Stage characteristics mismatch dataset. Consider using the stages option, particularly if the vertical file was created with NRasRep = TRUE in verticalize3() or historicalize3().", call. = FALSE)
+        choicestage <- which(instageframe$stage_id == max(instageframe$stage_id))
+        if (data$alive3[X] != 0) {
+          stop("Stage characteristics mismatch dataset. Consider using the stages
+            option, particularly if the vertical file was created with NRasRep = TRUE
+            in verticalize3() or historicalize3().", call. = FALSE)
+        }
       }
-      
-      if (length(choicestage) == 0) choicestage <- which(instageframe$stage_id == max(instageframe$stage_id))
       
       return(as.character(instageframe$stage[choicestage]))
     })
-    
   } else if (length(stages) > 1) {
     if (is.numeric(stages[2])) {
       data$usedstage2 <- data[, stages[2]]
@@ -2583,7 +3928,8 @@ rlefko2 <- function(data, stageframe, year = "all", pop = NA, patch = NA,
     stages.used <- sort(unique(c(data$usedstage2, data$usedstage3)))
     
     if (length(setdiff(stages.used, stageframe$stage)) > 0) {
-      stop("Some stages in dataset do not match those detailed in the input stageframe.", call. = FALSE)
+      stop("Some stages in dataset do not match those detailed in the input stageframe.",
+        call. = FALSE)
     }
   }
   
@@ -2594,31 +3940,31 @@ rlefko2 <- function(data, stageframe, year = "all", pop = NA, patch = NA,
     data$usedfec2[which(is.na(data$usedfec2))] <- 0
     data$usedfec3[which(is.na(data$usedfec3))] <- 0
   } else {
-    warning("Lefko3 MPM estimation functions generally require fecundity variables. Failure to include fecundity variables leads to matrices composed only of survival transitions.", call. = FALSE)
+    warning("Function rlefko2() requires 2 fecundity variables, for times t+1 and t. 
+      Failure to include fecundity variables leads to matrices composed only of 
+      survival transitions.", call. = FALSE)
   } 
   
-  ovtable <- .overwrite_reassess(stageframe, supplement, overwrite, historical = FALSE)
-  
   # This section creates stageexpansion3, a data frame with stage transition values from occasion t to t+1
-  majortrial <- theoldpizzle(stageframe, ovtable, repmatrix, finalage = 0, 
+  stageexpansion3 <- .theoldpizzle(stageframe, ovtable, repmatrix, finalage = 0, 
     format = 1, style = 1, cont = 0)
-  stageexpansion3 <- do.call("cbind.data.frame", c(majortrial, stringsAsFactors = FALSE))
   
   # Stageexpansion2 is a dataframe created to hold values for stages in occasion t only
-  stageexpansion2 <- cbind.data.frame(stage2 = as.numeric(stageframe$stageno),
-    size2 = as.numeric(stageframe$bin_size_ctr), rep2 = as.numeric(stageframe$repstatus),
-    indata2 = as.numeric(stageframe$indataset), index2 = (as.numeric(stageframe$stageno) - 1),
+  stageexpansion2 <- cbind.data.frame(stage2 = as.numeric(stageframe$stage_id),
+    size2 = as.numeric(stageframe$sizebin_center), sizeb2 = as.numeric(stageframe$sizebinb_center),
+    sizec2 = as.numeric(stageframe$sizebinc_center), rep2 = as.numeric(stageframe$repstatus),
+    indata2 = as.numeric(stageframe$indataset), index2 = (as.numeric(stageframe$stage_id) - 1),
     fec3 = c(rowSums(repmatrix), 0))
   stageexpansion2$fec3[which(stageexpansion2$fec3 > 0)] <- 1
   
   data <- subset(data, alive2 == 1)
   
   data$index2 <- apply(as.matrix(data$usedstage2), 1, function(X) {
-    instageframe$stageno[which(instageframe$stage == X)] - 1
+    instageframe$stage_id[which(instageframe$stage == X)] - 1
   })
   data$index2[which(is.na(data$index2))] <- 0
   data$index3 <- apply(as.matrix(data$usedstage3), 1, function(X) {
-    instageframe$stageno[which(instageframe$stage == X)] - 1
+    instageframe$stage_id[which(instageframe$stage == X)] - 1
   })
   data$index3[which(is.na(data$index3))] <- 0
   data$index32 <- apply(as.matrix(c(1:length(data$usedstage2))), 1, function(X) {
@@ -2626,20 +3972,24 @@ rlefko2 <- function(data, stageframe, year = "all", pop = NA, patch = NA,
   })
   
   if(is.element(0, unique(data$index2))) {
-    warning("Data (stage at occasion t) contains some stages not identified in stageframe. Note that all stage characteristics must match, including reproductive status.", call. = FALSE)
+    warning("Data (stage at occasion t) contains stages not identified in stageframe.
+      All stage characteristics must match, including reproductive status.", 
+      call. = FALSE)
   }
   if(is.element(0, unique(data$index3))) {
-    warning("Data (stage at occasion t+1) contains some stages not identified in stageframe. Note that all stage characteristics must match, including reproductive status.", call. = FALSE)
+    warning("Data (stage at occasion t+1) contains stages not identified in stageframe.
+      All stage characteristics must match, including reproductive status.",
+      call. = FALSE)
   }
   
   # This section runs the core matrix estimator
   madsexmadrigal <- lapply(yearlist, function(X) {
     passed_data <- data
-    if (!is.na(X$pop[1]) & !is.na(pop)) {
+    if (!is.na(X$pop[1]) & !is.na(popcol)) {
       passed_data$popused <- passed_data[,popcol];
       passed_data <- subset(passed_data, popused == X$pop[1]);
     }
-    if (!is.na(X$patch[1]) & !is.na(patch)) {
+    if (!is.na(X$patch[1]) & !is.na(patchcol)) {
       passed_data$patchused <- passed_data[,patchcol];
       passed_data <- subset(passed_data, patchused == X$patch[1]);
     }
@@ -2647,7 +3997,7 @@ rlefko2 <- function(data, stageframe, year = "all", pop = NA, patch = NA,
       passed_data$yearused <- passed_data[,yearcol];
       passed_data <- subset(passed_data, yearused == X$year2[1]);
     }
-    normalpatrolgroup(sge3 = stageexpansion3, sge2 = stageexpansion2, 
+    .normalpatrolgroup(sge3 = stageexpansion3, sge2 = stageexpansion2, 
       MainData = passed_data, StageFrame = stageframe)
   })
   
@@ -2694,21 +4044,19 @@ rlefko2 <- function(data, stageframe, year = "all", pop = NA, patch = NA,
 #' Create Function-based Ahistorical Age x Stage Matrix Projection Model
 #'
 #' Function \code{aflefko2()} returns ahistorical age x stage MPMs corresponding
-#' to the patches and years given, including the associated component transition
-#' and fecundity matrices, data frame detailing the characteristics of
-#' ahistorical stages and the exact age-stage combinations corresponding to rows
-#' and columns in estimated matrices, and a data frame characterizing the patch
-#' and year combinations corresponding to these matrices. Unlike
-#' \code{\link{rlefko2}()} and \code{\link{rlefko3}()}, this function does not
-#' currently distinguish populations.
+#' to the patches and occasion times given, including the associated component
+#' transition and fecundity matrices, data frames detailing the characteristics
+#' of ahistorical stages and the exact age-stage combinations corresponding to
+#' rows and columns in estimated matrices, and a data frame characterizing the
+#' patch and occasion time combinations corresponding to these matrices.
 #'
 #' @param year A variable corresponding to observation occasion, or a set
 #' of such values, given in values associated with the year term used in linear 
-#' model development. Can also equal \code{all}, in which case matrices will
-#' be estimated for all years. Defaults to \code{all}.
+#' model development. Defaults to \code{"all"}, in which case matrices will be
+#' estimated for all occasions.
 #' @param patch A variable designating which patches or subpopulations will have
-#' matrices estimated. Should be set to specific patch names, or to \code{all}
-#' if matrices should be estimated for all patches. Defaults to \code{all}.
+#' matrices estimated. Defaults to \code{"all"}, but can also be set to specific
+#' patch names.
 #' @param stageframe A stageframe object that includes information on the size,
 #' observation status, propagule status, immaturity status, and maturity status
 #' of each ahistorical stage. Should also incorporate bin widths if size is
@@ -2717,35 +4065,36 @@ rlefko2 <- function(data, stageframe, year = "all", pop = NA, patch = NA,
 #' provides supplemental data that should be incorporated into the MPM. Three
 #' kinds of data may be integrated this way: transitions to be estimated via the
 #' use of proxy transitions, transition overwrites from the literature or
-#' supplemental studies, and transition multipliers for fecundity. This data
-#' frame should be produced using the \code{\link{supplemental}()} function. Can
-#' be used in place of or in addition to an overwrite table (see 
+#' supplemental studies, and transition multipliers for survival and fecundity.
+#' This data frame should be produced using the \code{\link{supplemental}()}
+#' function. Can be used in place of or in addition to an overwrite table (see 
 #' \code{overwrite} below) and a reproduction matrix (see \code{repmatrix}
 #' below).
-#' @param repmatrix A reproduction matrix, which is an optional matrix composed
-#' mostly of 0s, with non-zero values for each potentially new individual (row)
-#' born to each reproductive stage (column). Entries act as multipliers on
-#' fecundity, with 1 equaling full fecundity. Fecundity multipliers provided
-#' this way supplement rather than replace those provided in \code{supplement}.
-#' If left blank, then \code{aflefko2()} will assume that all stages marked as
-#' reproductive produce offspring at 1x that of fecundity estimated in provided
-#' linear models, and that fecundity will be into the first stage noted as
-#' propagule or immature. To prevent this behavior, input just \code{0}, which
+#' @param repmatrix An optional reproduction matrix. This matrix is composed
+#' mostly of 0s, with non-zero entries acting as element identifiers and
+#' multipliers for fecundity (with 1 equaling full fecundity). If left blank,
+#' and no \code{supplement} is provided, then \code{aflefko2()} will assume that
+#' all stages marked as reproductive produce offspring at 1x that of estimated
+#' fecundity, and that offspring production will yield the first stage noted as
+#' propagule or immature.  To prevent this behavior, input just \code{0}, which
 #' will result in fecundity being estimated only for transitions noted in
-#' \code{supplement} above. Must be the dimensions of an ahistorical matrix.
+#' \code{supplement} above. Must be the dimensions of an ahistorical stage-based
+#' matrix.
 #' @param overwrite An optional data frame developed with the
 #' \code{\link{overwrite}()} function describing transitions to be overwritten
 #' either with given values or with other estimated transitions. Note that this
 #' function supplements overwrite data provided in \code{supplement}.
-#' @param data The original historical demographic data frame used to estimate
+#' @param data The historical vertical demographic data frame used to estimate
 #' vital rates (class \code{hfvdata}). The original data frame is required in
-#' order to initialize years and patches properly.
+#' order to initialize occasions and patches properly.
 #' @param modelsuite An optional \code{lefkoMod} object holding the vital rate
 #' models. If given, then \code{surv_model}, \code{obs_model}, 
-#' \code{size_model}, \code{repst_model}, \code{fec_model}, \code{jsurv_model},
-#' \code{jobs_model}, \code{jsize_model}, \code{jrepst_model}, 
-#' \code{paramnames}, \code{yearcol}, and \code{patchcol} are not required. No
-#' models should include size or reproductive status in occasion \emph{t}-1.
+#' \code{size_model}, \code{sizeb_model}, \code{sizec_model},
+#' \code{repst_model}, \code{fec_model}, \code{jsurv_model}, \code{jobs_model},
+#' \code{jsize_model}, \code{jsizeb_model}, \code{jsizec_model},
+#' \code{jrepst_model}, \code{paramnames}, \code{yearcol}, and \code{patchcol}
+#' are not required. No models should include size or reproductive status in
+#' occasion \emph{t}-1.
 #' @param surv_model A linear model predicting survival probability. This can be
 #' a model of class \code{glm} or \code{glmer}, and requires a predicted
 #' binomial variable under a logit link. If given, then will overwrite any
@@ -2758,12 +4107,24 @@ rlefko2 <- function(data, stageframe, year = "all", pop = NA, patch = NA,
 #' will overwrite any observation probability model given in \code{modelsuite}.
 #' This model must have been developed in a modeling exercise testing only the
 #' impacts of occasion \emph{t}.
-#' @param size_model A linear model predicting size. This can be a model of
-#' class \code{glm} or \code{glmer}, both of which require a predicted poisson
-#' variable under a log link, or a model of class \code{lm} or \code{lmer}, in
-#' which a Gaussian response is assumed. If given, then will overwrite any size
-#' model given in \code{modelsuite}. This model must have been developed in a
-#' modeling exercise testing only the impacts of occasion \emph{t}.
+#' @param size_model A linear model predicting primary size. This can be a model
+#' of class \code{glm}, \code{glmer}, \code{glmmTMB}, \code{zeroinfl},
+#' \code{vglm}, \code{lm}, or \code{lmer}. If given, then will overwrite any
+#' primary size model given in \code{modelsuite}. This model must have been
+#' developed in a modeling exercise testing only the impacts of occasion
+#' \emph{t}.
+#' @param sizeb_model A linear model predicting secondary size. This can be a
+#' modelvof class \code{glm}, \code{glmer}, \code{glmmTMB}, \code{zeroinfl},
+#' \code{vglm}, \code{lm}, or \code{lmer}. If given, then will overwrite any
+#' secondary size model given in \code{modelsuite}. This model must have been
+#' developed in a modeling exercise testing only the impacts of occasion
+#' \emph{t}.
+#' @param sizec_model A linear model predicting tertiary size. This can be a
+#' modelvof class \code{glm}, \code{glmer}, \code{glmmTMB}, \code{zeroinfl},
+#' \code{vglm}, \code{lm}, or \code{lmer}. If given, then will overwrite any
+#' tertiary size model given in \code{modelsuite}. This model must have been
+#' developed in a modeling exercise testing only the impacts of occasion
+#' \emph{t}.
 #' @param repst_model A linear model predicting reproduction probability. This
 #' can be a model of class \code{glm} or \code{glmer}, and requires a predicted
 #' binomial variable under a logit link. If given, then will overwrite any
@@ -2771,10 +4132,11 @@ rlefko2 <- function(data, stageframe, year = "all", pop = NA, patch = NA,
 #' have been developed in a modeling exercise testing only the impacts of
 #' occasion \emph{t}.
 #' @param fec_model A linear model predicting fecundity. This can be a model of
-#' class \code{glm} or \code{glmer}, and requires a predicted poisson variable
-#' under a log link. If given, then will overwrite any fecundity model given in
-#' \code{modelsuite}. This model must have been developed in a modeling exercise
-#' testing only the impacts of occasion \emph{t}.
+#' class \code{glm}, \code{glmer}, \code{glmmTMB}, \code{zeroinfl},
+#' \code{vglm}, \code{lm}, or \code{lmer}. If given, then will overwrite any 
+#' fecundity model given in \code{modelsuite}. This model must have been
+#' developed in a modeling exercise testing only the impacts of occasion
+#' \emph{t}.
 #' @param jsurv_model A linear model predicting juvenile survival probability.
 #' This can be a model of class \code{glm} or \code{glmer}, and requires a
 #' predicted binomial variable under a logit link. If given, then will overwrite
@@ -2787,13 +4149,24 @@ rlefko2 <- function(data, stageframe, year = "all", pop = NA, patch = NA,
 #' will overwrite any juvenile observation probability model given in
 #' \code{modelsuite}. This model must have been developed in a modeling exercise
 #' testing only the impacts of occasion \emph{t}.
-#' @param jsize_model A linear model predicting juvenile size. This can be a
-#' model of class \code{glm} or \code{glmer}, both of which require a predicted
-#' poisson variable under a log link, or a model of class \code{lm} or
-#' \code{lmer}, in which a Gaussian response is assumed. If given, then will
-#' overwrite any juvenile size model given in \code{modelsuite}. This model must
-#' have been developed in a modeling exercise testing only the impacts of
-#' occasion \emph{t}.
+#' @param jsize_model A linear model predicting juvenile primary size. This
+#' can be a model of class \code{glm}, \code{glmer}, \code{glmmTMB},
+#' \code{zeroinfl}, \code{vglm}, \code{lm}, or \code{lmer}. If given, then will
+#' overwrite any juvenile primary size model given in \code{modelsuite}. This
+#' model must have been developed in a modeling exercise testing only the
+#' impacts of occasion \emph{t}.
+#' @param jsizeb_model A linear model predicting juvenile secondary size. This
+#' can be a model of class \code{glm}, \code{glmer}, \code{glmmTMB},
+#' \code{zeroinfl}, \code{vglm}, \code{lm}, or \code{lmer}. If given, then will
+#' overwrite any juvenile secondary size model given in \code{modelsuite}. This
+#' model must have been developed in a modeling exercise testing only the
+#' impacts of occasion \emph{t}.
+#' @param jsizec_model A linear model predicting juvenile tertiary size. This
+#' can be a model of class \code{glm}, \code{glmer}, \code{glmmTMB},
+#' \code{zeroinfl}, \code{vglm}, \code{lm}, or \code{lmer}. If given, then will
+#' overwrite any juvenile tertiary size model given in \code{modelsuite}. This
+#' model must have been developed in a modeling exercise testing only the
+#' impacts of occasion \emph{t}.
 #' @param jrepst_model A linear model predicting reproduction probability of a 
 #' mature individual that was immature in the previous year. This can be a model
 #' of class \code{glm} or \code{glmer}, and requires a predicted binomial
@@ -2801,19 +4174,35 @@ rlefko2 <- function(data, stageframe, year = "all", pop = NA, patch = NA,
 #' probability model given in \code{modelsuite}. This model must have been
 #' developed in a modeling exercise testing only the impacts of occasion
 #' \emph{t}.
-#' @param paramnames A dataframe with two columns, the first showing the general
-#' model terms that will be used in matrix creation, and the second showing the
-#' equivalent terms used in modeling. Only required if \code{modelsuite} is not 
-#' supplied.
-#' @param inda A numeric value to use for individual covariate a. Defaults to 0.
-#' @param indb A numeric value to use for individual covariate b. Defaults to 0.
-#' @param indc A numeric value to use for individual covariate c. Defaults to 0.
+#' @param paramnames A dataframe with three columns, the first describing all
+#' terms used in linear modeling, the second (must be called \code{mainparams}),
+#' showing the general model terms that will be used in matrix creation (users
+#' should use \code{\link{modelsearch}()} at least once to see the proper
+#' names to be used in this column), and the third showing the equivalent terms
+#' used in modeling (must be named \code{modelparams}). Only required if
+#' \code{modelsuite} is not supplied.
+#' @param inda Can be a single value to use for individual covariate \code{a}
+#' in all matrices, a pair of values to use for times \emph{t} and \emph{t}-1 in
+#' historical matrices, or a vector of such values corresponding to each
+#' occasion in option \code{year}. Defaults to \code{NULL}.
+#' @param indb Can be a single value to use for individual covariate \code{b}
+#' in all matrices, a pair of values to use for times \emph{t} and \emph{t}-1 in
+#' historical matrices, or a vector of such values corresponding to each
+#' occasion in option \code{year}. Defaults to \code{NULL}.
+#' @param indc Can be a single value to use for individual covariate \code{c}
+#' in all matrices, a pair of values to use for times \emph{t} and \emph{t}-1 in
+#' historical matrices, or a vector of such values corresponding to each
+#' occasion in option \code{year}. Defaults to \code{NULL}.
 #' @param surv_dev A numeric value to be added to the y-intercept in the linear
 #' model for survival probability.
 #' @param obs_dev A numeric value to be added to the y-intercept in the linear
 #' model for observation probability.
 #' @param size_dev A numeric value to be added to the y-intercept in the linear
-#' model for size.
+#' model for primary size.
+#' @param sizeb_dev A numeric value to be added to the y-intercept in the linear
+#' model for secondary size.
+#' @param sizec_dev A numeric value to be added to the y-intercept in the linear
+#' model for tertiary size.
 #' @param repst_dev A numeric value to be added to the y-intercept in the linear
 #' model for probability of reproduction.
 #' @param fec_dev A numeric value to be added to the y-intercept in the linear
@@ -2823,40 +4212,64 @@ rlefko2 <- function(data, stageframe, year = "all", pop = NA, patch = NA,
 #' @param jobs_dev A numeric value to be added to the y-intercept in the linear
 #' model for juvenile observation probability.
 #' @param jsize_dev A numeric value to be added to the y-intercept in the linear
-#' model for juvenile size.
+#' model for juvenile primary size.
+#' @param jsizeb_dev A numeric value to be added to the y-intercept in the
+#' linear model for juvenile secondary size.
+#' @param jsizec_dev A numeric value to be added to the y-intercept in the
+#' linear model for juvenile tertiary size.
 #' @param jrepst_dev A numeric value to be added to the y-intercept in the
 #' linear model for juvenile reproduction probability.
-#' @param repmod A scalar multiplier of fecundity. Defaults to 1.
+#' @param density A numeric value indicating density value to use to propagate
+#' matrices. Only needed if density is an explanatory term used in linear
+#' models. Defaults to \code{NA}.
+#' @param repmod A scalar multiplier of fecundity. Defaults to \code{1}.
 #' @param yearcol The variable name or column number corresponding to year in
 #' occasion \emph{t} in the dataset. Not needed if a \code{modelsuite} is
 #' supplied.
 #' @param patchcol The variable name or column number corresponding to patch in 
 #' the dataset. Not needed if a \code{modelsuite} is supplied.
 #' @param year.as.random A logical term indicating whether coefficients for
-#' missing patches within vital rate models should be estimated as random
-#' intercepts. Defaults to FALSE, in which case missing occasion coefficients
-#' are set to 0.
+#' missing occasions within vital rate models should be estimated as random
+#' intercepts. Defaults to \code{FALSE}, in which case missing monitoring
+#' occasion coefficients are set to \code{0}.
 #' @param patch.as.random A logical term indicating whether coefficients for
 #' missing patches within vital rate models should be estimated as random
-#' intercepts. Defaults to FALSE, in which case missing patch coefficients are
-#' set to 0.
+#' intercepts. Defaults to \code{FALSE}, in which case missing patch
+#' coefficients are set to \code{0}.
+#' @param random.inda A logical value denoting whether to treat individual
+#' covariate \code{a} as a random, categorical variable. Otherwise is treated as
+#' a fixed, numeric variable. Defaults to \code{FALSE}.
+#' @param random.indb A logical value denoting whether to treat individual
+#' covariate \code{b} as a random, categorical variable. Otherwise is treated as
+#' a fixed, numeric variable. Defaults to \code{FALSE}.
+#' @param random.indc A logical value denoting whether to treat individual
+#' covariate \code{c} as a random, categorical variable. Otherwise is treated as
+#' a fixed, numeric variable. Defaults to \code{FALSE}.
 #' @param final_age The final age to model in the matrix, where the first age
 #' will be age 0.
 #' @param continue A logical value designating whether to allow continued
-#' survival of individuals going past the final age, using the demographic
-#' characteristics of the final age.
+#' survival of individuals past the final age noted in the stageframe, using the 
+#' demographic characteristics of the final age.
 #' @param randomseed A numeric value used as a seed to generate random estimates
 #' for missing occasion and patch coefficients, if either \code{year.as.random}
-#' or \code{patch.as.random} is set to TRUE. Defaults to
+#' or \code{patch.as.random} is set to \code{TRUE}. Defaults to
 #' \code{\link{set.seed}()} default.
 #' @param negfec A logical value denoting whether fecundity values estimated to
-#' be negative should be reset to 0. Defaults to FALSE.
+#' be negative should be reset to \code{0}. Defaults to \code{FALSE}.
 #' @param reduce A logical value denoting whether to remove ahistorical stages
 #' associated solely with 0 transitions. These are only removed in cases where
-#' the associated row and column sums in ALL matrices estimated equal 0. 
-#' Defaults to FALSE.
-#' @param err_check A logical value indicating whether to add matrices of vital
-#' rate probabilities associated with each matrix. Defaults to FALSE.
+#' the associated row and column sums in ALL matrices estimated equal 0.
+#' Defaults to \code{FALSE}.
+#' @param err_check A logical value indicating whether to append matrices of
+#' vital rate probabilities associated with each matrix to the \code{lefkoMat}
+#' object generated. These matrices are developed internally and can be used for
+#' error checking. Defaults to \code{FALSE}.
+#' @param exp_tol A numeric value used to indicate a maximum value to set
+#' exponents to in the core kernel to prevent numerical overflow. Defaults to
+#' \code{700}.
+#' @param theta_tol A numeric value used to indicate a maximum value to theta as
+#' used in the negative binomial probability density kernel. Defaults to
+#' \code{100000000}, but can be reset to other values during error checking.
 #'
 #' @return If all inputs are properly formatted, then this function will return
 #' an object of class \code{lefkoMat}, which is a list that holds the matrix
@@ -2864,11 +4277,14 @@ rlefko2 <- function(data, stageframe, year = "all", pop = NA, patch = NA,
 #' following elements:
 #'
 #' \item{A}{A list of full projection matrices in order of sorted patches and
-#' years.}
-#' \item{U}{A list of survival transition matrices sorted as in \code{A}.}
-#' \item{F}{A list of fecundity matrices sorted as in \code{A}.}
+#' occasions. All matrices output in R's \code{matrix} class.}
+#' \item{U}{A list of survival transition matrices sorted as in \code{A}. All 
+#' matrices output in R's \code{matrix} class.}
+#' \item{F}{A list of fecundity matrices sorted as in \code{A}. All matrices 
+#' output in R's \code{matrix} class.}
 #' \item{hstages}{A data frame matrix showing the pairing of ahistorical stages
-#' used to create historical stage pairs. Set to NA for ahistorical matrices.}
+#' used to create historical stage pairs. Set to \code{NA} for ahistorical
+#' matrices.}
 #' \item{agestages}{A data frame showing the stage number and stage name
 #' corresponding to \code{ahstages}, as well as the associated age, of each
 #' actual row in each age-by-stage matrix.}
@@ -2882,11 +4298,15 @@ rlefko2 <- function(data, stageframe, year = "all", pop = NA, patch = NA,
 #' in \code{U} and \code{F} matrices, and the number of annual matrices.}
 #' \item{modelqc}{This is the \code{qc} portion of the modelsuite input.}
 #' \item{prob_out}{An optional element only added if \code{err_check = TRUE}.
-#' This is a list of vital rate probability matrices, with 4 columns in the
-#' order of survival, observation probability, reproduction probability, and
-#' size transition probability.}
+#' This is a list of vital rate probability matrices, with 6 columns in the
+#' order of survival, observation probability, reproduction probability, primary
+#' size transition probability, secondary size transition probability, and
+#' tertiary size transition probability.}
 #' 
 #' @section Notes:
+#' Unlike \code{\link{rlefko2}()} and \code{\link{rlefko3}()}, this function
+#' does not currently distinguish populations.
+#' 
 #' This function will yield incorrect estimates if the models utilized
 #' incorporate state in occasion \emph{t}-1. Only use models developed testing
 #' for ahistorical effects.
@@ -2909,16 +4329,20 @@ rlefko2 <- function(data, stageframe, year = "all", pop = NA, patch = NA,
 #' produce an error.
 #' 
 #' Users may at times wish to estimate MPMs using a dataset incorporating
-#' multiple patches or subpopulations. Should the aim of analysis be a general
-#' MPM that does not distinguish these patches or subpopulations, the
-#' \code{patchcol} variable should be left to NA, which is the default.
+#' multiple patches or subpopulations, but without discriminating between those
+#' patches or subpopulations. Should the aim of analysis be a general MPM that
+#' does not distinguish these patches or subpopulations, the \code{patchcol}
+#' variable should be set to \code{NA}, which is the default.
 #'
 #' Input options including multiple variable names must be entered in the order
-#' of variables in occasion \emph{t}+1, \emph{t}, and \emph{t}-1. Rearranging
-#' the order WILL lead to erroneous calculations, and will probably also lead to
-#' fatal errors.
+#' of variables in occasion \emph{t}+1 and \emph{t}. Rearranging the order will
+#' lead to erroneous calculations, and may lead to fatal errors.
 #'
-#' Using the \code{err_check} option will produce a matrix of 4 columns, each
+#' Care should be taken to match the random status of year and patch to the
+#' states of those variables within the modelsuite. If they do not match, then
+#' they will be treated as zeroes in vital rate estimation.
+#' 
+#' Using the \code{err_check} option will produce a matrix of 6 columns, each
 #' characterizing a different vital rate. The product of each row yields an
 #' element in the associated \code{$U} matrix. The number and order of elements
 #' in each column of this matrix matches the associated matrix in column vector
@@ -2993,19 +4417,26 @@ rlefko2 <- function(data, stageframe, year = "all", pop = NA, patch = NA,
 #' 
 #' }
 #' @export
-aflefko2 <- function(year = "all", patch = "all", stageframe, supplement = NA,
-  repmatrix = NA, overwrite = NA, data = NA, modelsuite = NA, surv_model = NA,
-  obs_model = NA, size_model = NA, repst_model = NA, fec_model = NA,
-  jsurv_model = NA, jobs_model = NA, jsize_model = NA, jrepst_model = NA,
-  paramnames = NA, inda = 0, indb = 0, indc = 0, surv_dev = 0, obs_dev = 0,
-  size_dev = 0, repst_dev = 0, fec_dev = 0, jsurv_dev = 0, jobs_dev = 0,
-  jsize_dev = 0, jrepst_dev = 0, repmod = 1, yearcol = "year2",
-  patchcol = "patchid", year.as.random = FALSE, patch.as.random = FALSE,
-  final_age = 10, continue = TRUE, randomseed = NA, negfec = FALSE,
-  reduce = FALSE, err_check = FALSE) {
+aflefko2 <- function(year = "all", patch = "all", stageframe, supplement = NULL,
+  repmatrix = NULL, overwrite = NULL, data = NA, modelsuite = NA,
+  surv_model = NA, obs_model = NA, size_model = NA, sizeb_model = NA,
+  sizec_model = NA, repst_model = NA, fec_model = NA, jsurv_model = NA,
+  jobs_model = NA, jsize_model = NA, jsizeb_model = NA, jsizec_model = NA,
+  jrepst_model = NA, paramnames = NA, inda = NULL, indb = NULL, indc = NULL,
+  surv_dev = 0, obs_dev = 0, size_dev = 0, sizeb_dev = 0, sizec_dev = 0,
+  repst_dev = 0, fec_dev = 0, jsurv_dev = 0, jobs_dev = 0, jsize_dev = 0,
+  jsizeb_dev = 0, jsizec_dev = 0, jrepst_dev = 0, density = NA, repmod = 1,
+  yearcol = NA, patchcol = NA, year.as.random = FALSE, patch.as.random = FALSE,
+  random.inda = FALSE, random.indb = FALSE, random.indc = FALSE, final_age = 10,
+  continue = TRUE, randomseed = NA, negfec = FALSE, reduce = FALSE,
+  err_check = FALSE, exp_tol = 700, theta_tol = 100000000) {
+  
+  paramnames <- indanames <- indbnames <- indcnames <- NULL
   
   if (all(is.na(modelsuite)) & all(is.na(paramnames))) {
-    warnings("Function may not work properly without a dataframe of model parameters or equivalents supplied either through modelsuite or through the paramnames input parameter.")
+    warning("Function may not work properly without a dataframe of model 
+      parameters or equivalents supplied either through the modelsuite option or 
+      through the paramnames input parameter.", call. = FALSE)
   } else if (!all(is.na(modelsuite))) {
     paramnames <- modelsuite$paramnames
     yearcol <- paramnames$modelparams[which(paramnames$mainparams == "year2")]
@@ -3013,10 +4444,26 @@ aflefko2 <- function(year = "all", patch = "all", stageframe, supplement = NA,
   }
   
   if (all(is.na(data))) {
-    stop("Need original vertical dataset to set proper limits on year and patch.", call. = FALSE)
+    stop("Need original vertical dataset to set proper limits on year and patch.", 
+      call. = FALSE)
   }
   if (!any(class(data) == "data.frame")) {
-    stop("Need original vertical dataset used in modeling to proceed.", call. = FALSE)
+    stop("Need original vertical dataset used in modeling to proceed.",
+      call. = FALSE)
+  }
+  if (!any(class(data) == "hfvdata")) {
+    warning("Dataset used as input is not of class hfvdata. Will assume that the
+      dataset has been formatted equivalently.", call. = FALSE)
+  }
+  
+  stageframe_vars <- c("stage", "size", "size_b", "size_c", "min_age", "max_age",
+    "repstatus", "obsstatus", "propstatus", "immstatus", "matstatus", "indataset",
+    "binhalfwidth_raw", "sizebin_min", "sizebin_max", "sizebin_center",
+    "sizebin_width", "binhalfwidthb_raw", "sizebinb_min", "sizebinb_max",
+    "sizebinb_center", "sizebinb_width", "binhalfwidthc_raw", "sizebinc_min",
+    "sizebinc_max", "sizebinc_center", "sizebinc_width", "group", "comments")
+  if (any(!is.element(names(stageframe), stageframe_vars))) {
+    stop("Please use properly formatted stageframe as input.", call. = FALSE)
   }
   
   if (is.character(yearcol)) {
@@ -3037,14 +4484,18 @@ aflefko2 <- function(year = "all", patch = "all", stageframe, supplement = NA,
   }
   
   if (length(year) == 0 | all(is.na(year) == TRUE) | any(is.na(year))) {
-    stop("This function cannot proceed without being given a specific year, or a suite of years. NA entries are not allowed.", call. = FALSE)
+    stop("This function cannot proceed without a specific occasion, or a suite of
+      occasions, designated via the year option. NA entries are not allowed.",
+      call. = FALSE)
   }
   
   if (all(is.na(patch)) & !is.na(patchcol)) {
-    warning("Matrix creation may not proceed properly without input in the patch option when using a modelsuite in which patch is designated.", call. = FALSE)
+    warning("Matrix creation may not proceed properly without input in the patch
+      option when using a modelsuite in which patch is designated.",
+      call. = FALSE)
   }
   
-  if (is.character(patchcol)) {
+  if (is.character(patchcol) & patchcol != "none") {
     choicevar <- which(names(data) == patchcol);
     mainpatches <- sort(unique(as.character(data[,choicevar])))
   } else if (is.numeric(patchcol)) {
@@ -3061,17 +4512,238 @@ aflefko2 <- function(year = "all", patch = "all", stageframe, supplement = NA,
     }
   }
   
-  if (!is.numeric(inda) | !is.numeric(indb) | !is.numeric(indc)) {
-    stop("Individual covariate values must be numeric.", call. = FALSE)
+  if (!is.null(inda)) {
+    if (!is.numeric(inda) & !random.inda) {
+      stop("Individual covariate vector a must be numeric if not set to random.",
+        call. = FALSE)
+    }
+    
+    if (!is.element(length(random.inda), c(1, 2, length(year)))) {
+      stop("Individual covariate vector a must be empty, or include 1, 2, or as
+        many elements as occasions to be modeled.", call. = FALSE)
+    }
+    
+    if (random.inda) {
+      indacol <- paramnames$modelparams[which(paramnames$mainparams == "indcova2")]
+      if (indacol == "none") {
+        stop("Individual covariate a not recognized in the modelsuite", call. = FALSE)
+      }
+      
+      indacol <- which(names(data) == indacol)
+      
+      if (length(indacol) > 0) {
+        indanames <- sort(unique(data[, indacol]))
+      } else {
+        stop("Individual covariate a not recognized in the modelsuite", call. = FALSE)
+      }
+      
+      if (any(!is.element(inda, indanames))) {
+        stop("Entered value for individual covariate a does not exist in the data.",
+          call. = FALSE)
+      }
+      
+      if (length(inda) == 1) {
+        r1.inda <- rep(as.character(inda), length(year))
+        r2.inda <- rep(as.character(inda), length(year))
+      } else if (length(inda) == 2 & length(year) != 2) {
+        r1.inda <- rep(as.character(inda[1]), length(year))
+        r2.inda <- rep(as.character(inda[2]), length(year))
+      } else if (length(inda) == length(year)) {
+        r2.inda <- as.character(inda)
+        r1.inda <- c("none", r2.inda[1:(length(inda) - 1)])
+      }
+      
+      f1.inda <- rep(0, length(year))
+      f2.inda <- rep(0, length(year))
+      
+    } else {
+      indanames <- c(0)
+      
+      if (length(inda) == 1) {
+        f1.inda <- rep(inda, length(year))
+        f2.inda <- rep(inda, length(year))
+      } else if (length(inda) == 2 & length(year) != 2) {
+        f1.inda <- rep(inda[1], length(year))
+        f2.inda <- rep(inda[2], length(year))
+      } else if (length(inda) == length(year)) {
+        f2.inda <- inda
+        f1.inda <- c(0, f2.inda[1:(length(inda) - 1)])
+      }
+      r2.inda <- rep("none", length(year))
+      r1.inda <- rep("none", length(year))
+    }
+  } else {
+    indanames <- c(0)
+    
+    f1.inda <- rep(0, length(year))
+    f2.inda <- rep(0, length(year))
+    r2.inda <- rep("none", length(year))
+    r1.inda <- rep("none", length(year))
+  }
+  
+  if (!is.null(indb)) {
+    if (!is.numeric(indb) & !random.indb) {
+      stop("Individual covariate vector b must be numeric if not set to random.",
+        call. = FALSE)
+    }
+    
+    if (!is.element(length(random.indb), c(1, 2, length(year)))) {
+      stop("Individual covariate vector b must be empty, or include 1, 2, or as
+        many elements as occasions to be modeled.", call. = FALSE)
+    }
+    
+    if (random.indb) {
+      indbcol <- paramnames$modelparams[which(paramnames$mainparams == "indcovb2")]
+      if (indbcol == "none") {
+        stop("Individual covariate b not recognized in the modelsuite", call. = FALSE)
+      }
+      
+      indbcol <- which(names(data) == indbcol)
+      
+      if (length(indbcol) > 0) {
+        indbnames <- sort(unique(data[, indbcol]))
+      } else {
+        stop("Individual covariate b not recognized in the modelsuite", call. = FALSE)
+      }
+      
+      if (any(!is.element(indb, indbnames))) {
+        stop("Entered value for individual covariate b does not exist in the data.",
+          call. = FALSE)
+      }
+      
+      if (length(indb) == 1) {
+        r1.indb <- rep(as.character(indb), length(year))
+        r2.indb <- rep(as.character(indb), length(year))
+      } else if (length(indb) == 2 & length(year) != 2) {
+        r1.indb <- rep(as.character(indb[1]), length(year))
+        r2.indb <- rep(as.character(indb[2]), length(year))
+      } else if (length(indb) == length(year)) {
+        r2.indb <- as.character(indb)
+        r1.indb <- c("none", r2.indb[1:(length(indb) - 1)])
+      }
+      
+      f1.indb <- rep(0, length(year))
+      f2.indb <- rep(0, length(year))
+      
+    } else {
+      indbnames <- c(0)
+      
+      if (length(indb) == 1) {
+        f1.indb <- rep(indb, length(year))
+        f2.indb <- rep(indb, length(year))
+      } else if (length(indb) == 2 & length(year) != 2) {
+        f1.indb <- rep(indb[1], length(year))
+        f2.indb <- rep(indb[2], length(year))
+      } else if (length(indb) == length(year)) {
+        f2.indb <- indb
+        f1.indb <- c(0, f2.indb[1:(length(indb) - 1)])
+      }
+      r2.indb <- rep("none", length(year))
+      r1.indb <- rep("none", length(year))
+    }
+  } else {
+    indbnames <- c(0)
+    
+    f1.indb <- rep(0, length(year))
+    f2.indb <- rep(0, length(year))
+    r2.indb <- rep("none", length(year))
+    r1.indb <- rep("none", length(year))
+  }
+  
+  if (!is.null(indc)) {
+    if (!is.numeric(indc) & !random.indc) {
+      stop("Individual covariate vector c must be numeric if not set to random.",
+        call. = FALSE)
+    }
+    
+    if (!is.element(length(random.indc), c(1, 2, length(year)))) {
+      stop("Individual covariate vector c must be empty, or include 1, 2, or as
+        many elements as occasions to be modeled.", call. = FALSE)
+    }
+    
+    if (random.indc) {
+      indccol <- paramnames$modelparams[which(paramnames$mainparams == "indcovc2")]
+      if (indccol == "none") {
+        stop("Individual covariate c not recognized in the modelsuite", call. = FALSE)
+      }
+      
+      indccol <- which(names(data) == indccol)
+      
+      if (length(indccol) > 0) {
+        indcnames <- sort(unique(data[, indccol]))
+      } else {
+        stop("Individual covariate c not recognized in the modelsuite", call. = FALSE)
+      }
+      
+      if (any(!is.element(indc, indcnames))) {
+        stop("Entered value for individual covariate c does not exist in the data.",
+          call. = FALSE)
+      }
+      
+      if (length(indc) == 1) {
+        r1.indc <- rep(as.character(indc), length(year))
+        r2.indc <- rep(as.character(indc), length(year))
+      } else if (length(indc) == 2 & length(year) != 2) {
+        r1.indc <- rep(as.character(indc[1]), length(year))
+        r2.indc <- rep(as.character(indc[2]), length(year))
+      } else if (length(indc) == length(year)) {
+        r2.indc <- as.character(indc)
+        r1.indc <- c("none", r2.indc[1:(length(indc) - 1)])
+      }
+      
+      f1.indc <- rep(0, length(year))
+      f2.indc <- rep(0, length(year))
+      
+    } else {
+      indcnames <- c(0)
+      
+      if (length(indc) == 1) {
+        f1.indc <- rep(indc, length(year))
+        f2.indc <- rep(indc, length(year))
+      } else if (length(indc) == 2 & length(year) != 2) {
+        f1.indc <- rep(indc[1], length(year))
+        f2.indc <- rep(indc[2], length(year))
+      } else if (length(indc) == length(year)) {
+        f2.indc <- indc
+        f1.indc <- c(0, f2.indc[1:(length(indc) - 1)])
+      }
+      r2.indc <- rep("none", length(year))
+      r1.indc <- rep("none", length(year))
+    }
+  } else {
+    indcnames <- c(0)
+    
+    f1.indc <- rep(0, length(year))
+    f2.indc <- rep(0, length(year))
+    r2.indc <- rep("none", length(year))
+    r1.indc <- rep("none", length(year))
+  }
+  
+  maingroups <- sort(unique(stageframe$group))
+  
+  if (!all(is.na(density))) {
+    if (!all(is.numeric(density))) {
+      stop("Density value must be numeric.", call. = FALSE)
+    }
+    
+    if (any(is.na(density))) {
+      density[which(is.na(density))] <- 0
+    }
+  } else {
+    density <- 0
   }
   
   if (all(is.na(repmatrix)) & all(is.na(supplement))) {
-    warning("Neither supplemental data nor a reproduction matrix have been supplied. All fecundity transitions will be inferred from the stageframe.", call. = FALSE)
+    warning("Neither supplemental data nor a reproduction matrix have been supplied. 
+      All fecundity transitions will be inferred from the stageframe.",
+      call. = FALSE)
   } else if (all(is.na(repmatrix)) & any(class(supplement) == "lefkoSD")) {
     checkconv <- supplement$convtype
     
     if (!is.element(3, checkconv)) {
-      warning("Supplemental data does not include fecundity information, and a reproduction matrix has not been supplied. All fecundity transitions will be inferred from the stageframe.", call. = FALSE)
+      warning("Supplemental data does not include fecundity information, and a reproduction
+        matrix has not been supplied. All fecundity transitions will be inferred from the
+        stageframe.", call. = FALSE)
     }
   }
   
@@ -3079,74 +4751,59 @@ aflefko2 <- function(year = "all", patch = "all", stageframe, supplement = NA,
   if (!all(is.na(repmatrix))) {
     if (any(class(repmatrix) == "matrix")) {
       if (dim(repmatrix)[1] != stagenum_init | dim(repmatrix)[2] != stagenum_init) {
-        stop("The repmatrix provided must be a square matrix with dimensions equal to the number of stages in the stageframe.", call. = FALSE)
+        stop("The repmatrix provided must be a square matrix with dimensions
+          equal to the number of stages in the stageframe.", call. = FALSE)
       }
     }
   }
   
-  if (any(!suppressWarnings(!is.na(as.numeric(as.character(stageframe$size)))))) {
-    stop("Function aflefko2() requires size to be numeric rather than categorical.", call. = FALSE)
+  if (any(!suppressWarnings(!is.na(as.numeric(as.character(stageframe$bin_size_ctr)))))) {
+    stop("Function aflefko2() requires size to be numeric rather than categorical.", 
+      call. = FALSE)
   }
   
-  melchett <- .sf_reassess(stageframe, supplement, repmatrix, overwrite,
-    agemat = TRUE, format = 1)
-  stageframe <- melchett[[1]]
-  repmatrix <- melchett[[2]]
+  melchett <- .sf_reassess(stageframe, supplement, overwrite, repmatrix,
+    agemat = TRUE, historical = FALSE, format = 1)
+  stageframe <- melchett$stageframe
+  repmatrix <- melchett$repmatrix
+  ovtable <- melchett$ovtable
   
-  stageframe$stage_id <- as.numeric(stageframe$stage_id)
-  stageframe$original_size <- as.numeric(stageframe$original_size)
-  stageframe$bin_size_min <- as.numeric(stageframe$bin_size_min)
-  stageframe$bin_size_ctr <- as.numeric(stageframe$bin_size_ctr)
-  stageframe$bin_size_max <- as.numeric(stageframe$bin_size_max)
-  stageframe$bin_size_width <- as.numeric(stageframe$bin_size_width)
-  stageframe$bin_raw_halfwidth <- as.numeric(stageframe$bin_raw_halfwidth)
-  stageframe$repstatus <- as.numeric(stageframe$repstatus)
-  stageframe$obsstatus <- as.numeric(stageframe$obsstatus)
-  stageframe$propstatus <- as.numeric(stageframe$propstatus)
-  stageframe$immstatus <- as.numeric(stageframe$immstatus)
-  stageframe$matstatus <- as.numeric(stageframe$matstatus)
-  stageframe$entrystage <- as.numeric(stageframe$entrystage)
-  stageframe$indataset <- as.numeric(stageframe$indataset)
-  stageframe$alive <- as.numeric(stageframe$alive)
-  stageframe$min_age <- as.numeric(stageframe$min_age)
-  stageframe$max_age <- as.numeric(stageframe$max_age)
-  
-  stageframe$stageno <- c(1:dim(stageframe)[1])
-  rownames(stageframe) <- stageframe$stageno
-  stageframe$fullstage <- apply(as.matrix(c(1:dim(stageframe)[1])), 1, function(X) {
-    paste(stageframe$bin_size_ctr[X], stageframe$repstatus[X])
-  })
-  
-  instages <- length(stageframe$stage_id)
-  
-  stageframe$min_age[which(is.na(stageframe$min_age))] <- 0
-  
-  if (final_age < max(stageframe$max_age, na.rm = TRUE)) {
-    warning("Value of final_age will be adjusted to equal the maximum max_age value in the stageframe supplied.", call. = FALSE)
-    final_age <- max(stageframe$max_age, na.rm = TRUE)
+  if (!all(is.na(overwrite)) | !all(is.na(supplement))) {
+    
+    if(any(duplicated(ovtable[,1:3]))) {
+      stop("Multiple entries with different values for the same stage transition
+        are not allowed in the supplemental or overwrite table. If modifying a
+        historical table to perform an ahistorical analysis, then this may be
+        due to different given rates of substitutions caused by dropping stage
+        at occasion t-1. Please eliminate duplicate transitions.",
+        call. = FALSE)
+    }
   }
-  
-  ovtable <- .overwrite_reassess(stageframe, supplement, overwrite, historical = FALSE)
   
   # Next the data frame for the C++-based matrix populator functions
-  allstages.list <- theoldpizzle(stageframe, ovtable, repmatrix, finalage = final_age, 
+  allstages <- .theoldpizzle(stageframe, ovtable, repmatrix, finalage = final_age, 
     format = 1, style = 2, cont = continue)
-  allstages <- do.call("cbind.data.frame", c(allstages.list, stringsAsFactors = FALSE))
   
-  maxsize <- max(c(allstages$a.size3, allstages$a.size2n), na.rm = TRUE)
+  maxsize <- max(c(allstages$size3, allstages$size2n, allstages$size2o), na.rm = TRUE)
+  maxsizeb <- max(c(allstages$sizeb3, allstages$sizeb2n, allstages$sizeb2o), na.rm = TRUE)
+  maxsizec <- max(c(allstages$sizec3, allstages$sizec2n, allstages$sizec2o), na.rm = TRUE)
   
-  allstages <- allstages[(which(allstages$c.aliveandequal != -1)),]
+  allstages <- allstages[(which(allstages$aliveandequal != -1)),]
   
   if (class(modelsuite) == "lefkoMod") {
     if(is.na(surv_model)) {surv_model <- modelsuite$survival_model}
     if(is.na(obs_model)) {obs_model <- modelsuite$observation_model}
     if(is.na(size_model)) {size_model <- modelsuite$size_model}
+    if(is.na(sizeb_model)) {sizeb_model <- modelsuite$sizeb_model}
+    if(is.na(sizec_model)) {sizec_model <- modelsuite$sizec_model}
     if(is.na(repst_model)) {repst_model <- modelsuite$repstatus_model}
     if(is.na(fec_model)) {fec_model <- modelsuite$fecundity_model}
     
     if(is.na(jsurv_model)) {jsurv_model <- modelsuite$juv_survival_model}
     if(is.na(jobs_model)) {jobs_model <- modelsuite$juv_observation_model}
     if(is.na(jsize_model)) {jsize_model <- modelsuite$juv_size_model}
+    if(is.na(jsizeb_model)) {jsizeb_model <- modelsuite$juv_sizeb_model}
+    if(is.na(jsizec_model)) {jsizec_model <- modelsuite$juv_sizec_model}
     if(is.na(jrepst_model)) {jrepst_model <- modelsuite$juv_reproduction_model}
   }
   
@@ -3156,14 +4813,22 @@ aflefko2 <- function(year = "all", patch = "all", stageframe, supplement = NA,
     set.seed(randomseed)
   }
   
-  surv_proxy <- .modelextract(surv_model, paramnames, mainyears, mainpatches, year.as.random, patch.as.random)
-  obs_proxy <- .modelextract(obs_model, paramnames, mainyears, mainpatches, year.as.random, patch.as.random)
+  surv_proxy <- .modelextract(surv_model, paramnames, mainyears, mainpatches, 
+    maingroups, indanames, indbnames, indcnames, year.as.random,
+    patch.as.random, random.inda, random.indb, random.indc, err_check = FALSE)
+  
+  
+  obs_proxy <- .modelextract(obs_model, paramnames, mainyears, mainpatches,
+    maingroups, indanames, indbnames, indcnames, year.as.random,
+    patch.as.random, random.inda, random.indb, random.indc, err_check = FALSE)
   
   sigma <- 0
   rvarssummed <- 0
   sizedist <- 1
   
-  size_proxy <- .modelextract(size_model, paramnames, mainyears, mainpatches, year.as.random, patch.as.random)
+  size_proxy <- .modelextract(size_model, paramnames, mainyears, mainpatches,
+    maingroups, indanames, indbnames, indcnames, year.as.random,
+    patch.as.random, random.inda, random.indb, random.indc, err_check = FALSE)
   
   if (size_proxy$family == "poisson") {
     sizedist <- 0
@@ -3175,28 +4840,95 @@ aflefko2 <- function(year = "all", patch = "all", stageframe, supplement = NA,
   } else if (size_proxy$family == "gaussian") {
     sizedist <- 2
     sigma <- size_proxy$sigma
+  } else if (size_proxy$family == "gamma") {
+    sizedist <- 3
+    
   } else {
     sizedist <- 1
   }
   
-  repst_proxy <- .modelextract(repst_model, paramnames, mainyears, mainpatches, year.as.random, patch.as.random)
-  fec_proxy <- .modelextract(fec_model, paramnames, mainyears, mainpatches, year.as.random, patch.as.random)
+  sigmab <- 0
+  rvarssummedb <- 0
+  sizebdist <- 1
+  
+  sizeb_proxy <- .modelextract(sizeb_model, paramnames, mainyears, mainpatches,
+    maingroups, indanames, indbnames, indcnames, year.as.random,
+    patch.as.random, random.inda, random.indb, random.indc, err_check = FALSE)
+  
+  if (sizeb_proxy$family == "poisson") {
+    sizebdist <- 0
+    if (!all(is.na(sizeb_proxy$variances))) {
+      rvarssummedb <- sum(sizeb_proxy$variances[,"vcov"])
+    } else {
+      rvarssummedb <- 0
+    }
+  } else if (sizeb_proxy$family == "gaussian") {
+    sizebdist <- 2
+    sigmab <- sizeb_proxy$sigma
+  } else if (sizeb_proxy$family == "gamma") {
+    sizebdist <- 3
+    
+  } else {
+    sizebdist <- 1
+  }
+  
+  sigmac <- 0
+  rvarssummedc <- 0
+  sizecdist <- 1
+  
+  sizec_proxy <- .modelextract(sizec_model, paramnames, mainyears, mainpatches,
+    maingroups, indanames, indbnames, indcnames, year.as.random,
+    patch.as.random, random.inda, random.indb, random.indc, err_check = FALSE)
+  
+  if (sizec_proxy$family == "poisson") {
+    sizecdist <- 0
+    if (!all(is.na(sizec_proxy$variances))) {
+      rvarssummedc <- sum(sizec_proxy$variances[,"vcov"])
+    } else {
+      rvarssummedc <- 0
+    }
+  } else if (sizec_proxy$family == "gaussian") {
+    sizecdist <- 2
+    sigmac <- sizec_proxy$sigma
+  } else if (sizec_proxy$family == "gamma") {
+    sizecdist <- 3
+    
+  } else {
+    sizecdist <- 1
+  }
+  
+  repst_proxy <- .modelextract(repst_model, paramnames, mainyears, mainpatches,
+    maingroups, indanames, indbnames, indcnames, year.as.random,
+    patch.as.random, random.inda, random.indb, random.indc, err_check = FALSE)
+  
+  fec_proxy <- .modelextract(fec_model, paramnames, mainyears, mainpatches,
+    maingroups, indanames, indbnames, indcnames, year.as.random,
+    patch.as.random, random.inda, random.indb, random.indc, err_check = FALSE)
   
   if (fec_proxy$family == "poisson") {
     fecdist <- 0
   } else if (fec_proxy$family == "gaussian") {
     fecdist <- 2
+  } else if (fec_proxy$family == "gamma") {
+    fecdist <- 3
   } else {
     fecdist <- 1
   }
   
-  jsurv_proxy <- .modelextract(jsurv_model, paramnames, mainyears, mainpatches, year.as.random, patch.as.random)
-  jobs_proxy <- .modelextract(jobs_model, paramnames, mainyears, mainpatches, year.as.random, patch.as.random)
+  jsurv_proxy <- .modelextract(jsurv_model, paramnames, mainyears, mainpatches,
+    maingroups, indanames, indbnames, indcnames, year.as.random,
+    patch.as.random, random.inda, random.indb, random.indc, err_check = FALSE)
+  
+  jobs_proxy <- .modelextract(jobs_model, paramnames, mainyears, mainpatches,
+    maingroups, indanames, indbnames, indcnames, year.as.random,
+    patch.as.random, random.inda, random.indb, random.indc, err_check = FALSE)
   
   jsigma <- 0
   jrvarssummed <- 0
   
-  jsize_proxy <- .modelextract(jsize_model, paramnames, mainyears, mainpatches, year.as.random, patch.as.random)
+  jsize_proxy <- .modelextract(jsize_model, paramnames, mainyears, mainpatches,
+    maingroups, indanames, indbnames, indcnames, year.as.random,
+    patch.as.random, random.inda, random.indb, random.indc, err_check = FALSE)
   
   if (jsize_proxy$family == "poisson") {
     if (!all(is.na(jsize_proxy$variances))) {
@@ -3208,7 +4940,43 @@ aflefko2 <- function(year = "all", patch = "all", stageframe, supplement = NA,
     jsigma <- jsize_proxy$sigma
   }
   
-  jrepst_proxy <- .modelextract(jrepst_model, paramnames, mainyears, mainpatches, year.as.random, patch.as.random)
+  jsigmab <- 0
+  jrvarssummedb <- 0
+  
+  jsizeb_proxy <- .modelextract(jsizeb_model, paramnames, mainyears, mainpatches,
+    maingroups, indanames, indbnames, indcnames, year.as.random,
+    patch.as.random, random.inda, random.indb, random.indc, err_check = FALSE)
+  
+  if (jsizeb_proxy$family == "poisson") {
+    if (!all(is.na(jsizeb_proxy$variances))) {
+      jrvarssummedb <- sum(jsize_proxy$variances[,"vcov"])
+    } else {
+      jrvarssummedb <- 0
+    }
+  } else if (jsizeb_proxy$family == "gaussian") {
+    jsigmab <- jsizeb_proxy$sigma
+  }
+  
+  jsigmac <- 0
+  jrvarssummedc <- 0
+  
+  jsizec_proxy <- .modelextract(jsizec_model, paramnames, mainyears, mainpatches,
+    maingroups, indanames, indbnames, indcnames, year.as.random,
+    patch.as.random, random.inda, random.indb, random.indc, err_check = FALSE)
+  
+  if (jsizec_proxy$family == "poisson") {
+    if (!all(is.na(jsizec_proxy$variances))) {
+      jrvarssummedc <- sum(jsizec_proxy$variances[,"vcov"])
+    } else {
+      jrvarssummedc <- 0
+    }
+  } else if (jsizec_proxy$family == "gaussian") {
+    jsigmac <- jsizec_proxy$sigma
+  }
+  
+  jrepst_proxy <- .modelextract(jrepst_model, paramnames, mainyears, mainpatches,
+    maingroups, indanames, indbnames, indcnames, year.as.random,
+    patch.as.random, random.inda, random.indb, random.indc, err_check = FALSE)
   
   # This creates a list of pop, patch, and year in order of matrix
   if (!all(is.na(patch))) {
@@ -3235,12 +5003,17 @@ aflefko2 <- function(year = "all", patch = "all", stageframe, supplement = NA,
   
   yearlist <- split(listofyears, seq(nrow(listofyears)))
   
-  madsexmadrigal <- lapply(yearlist, jerzeibalowski, allstages, stageframe, 4,
-    surv_proxy, obs_proxy, size_proxy, repst_proxy, fec_proxy, jsurv_proxy,
-    jobs_proxy, jsize_proxy, jrepst_proxy, inda, indb, indc, surv_dev, obs_dev,
-    size_dev, repst_dev, fec_dev, jsurv_dev, jobs_dev, jsize_dev, jrepst_dev,
-    repmod, rvarssummed, sigma, jrvarssummed, jsigma, maxsize, final_age,
-    sizedist, fecdist, negfec)
+  madsexmadrigal <- lapply(yearlist, .jerzeibalowski, allstages, stageframe, 4,
+    surv_proxy, obs_proxy, size_proxy, sizeb_proxy, sizec_proxy, repst_proxy,
+    fec_proxy, jsurv_proxy, jobs_proxy, jsize_proxy, jsizeb_proxy, jsizec_proxy,
+    jrepst_proxy, f2.inda, f1.inda, f2.indb, f1.indb, f2.indc, f1.indc, r2.inda,
+    r1.inda, r2.indb, r1.indb, r2.indc, r1.indc, c(surv_dev, obs_dev, size_dev,
+      sizeb_dev, sizec_dev, repst_dev, fec_dev, jsurv_dev, jobs_dev, jsize_dev,
+      jsizeb_dev, jsizec_dev, jrepst_dev), density, repmod, c(rvarssummed,
+      sigma, rvarssummedb, sigmab, rvarssummedc, sigmac, jrvarssummed, jsigma,
+      jrvarssummedb, jsigmab, jrvarssummedc, jsigmac), maxsize, maxsizeb,
+    maxsizec, final_age, sizedist, sizebdist, sizecdist, fecdist, negfec,
+    exp_tol, theta_tol)
   
   a_list <- lapply(madsexmadrigal, function(X) {X$A})
   u_list <- lapply(madsexmadrigal, function(X) {X$U})
@@ -3267,17 +5040,12 @@ aflefko2 <- function(year = "all", patch = "all", stageframe, supplement = NA,
   if (is.element("qc", names(modelsuite))) {qcoutput2 <- modelsuite$qc}
   
   if (reduce == TRUE) {
-    drops <- .reducer2(a_list, u_list, f_list, ahstages)
-    
-    mismatched_stages <- which(!is.element(agestages$stage_id, ahstages$stage_id))
-    if (length(mismatched_stages > 0)) {
-      agestages <- agestages[-mismatched_stages,]
-    }
+    drops <- .reducer2(a_list, u_list, f_list, agestages)
     
     a_list <- drops$A
     u_list <- drops$U
     f_list <- drops$F
-    ahstages <- drops$ahstages
+    agestages <- drops$ahstages
   }
   
   if (!err_check) {
@@ -3370,6 +5138,10 @@ summary.lefkoMat <- function(object, colsums = TRUE, ...) {
   mqcb <- matrices$matrixqc[2]
   mqcc <- matrices$matrixqc[3]
   
+  totalpops <- length(unique(matrices$labels$pop))
+  totalpatches <- length(unique(matrices$labels$patch))
+  totalyears <- length(unique(matrices$labels$year2))
+  
   if (!all(is.na(matrices$hstages))) {
     histmark <- "historical"
   } else {
@@ -3383,7 +5155,7 @@ summary.lefkoMat <- function(object, colsums = TRUE, ...) {
     writeLines(paste0("\nThis ", histmark, " lefkoMat object contains ", mqcc,
         " matrices."))
   }
-  writeLines(paste0("\nEach matrix is a square matrix with ", matdim,
+  writeLines(paste0("\nEach matrix is square with ", matdim,
     " rows and columns, and a total of ", matdim*matdim, " elements."))
   
   mqac <- mqca / mqcc
@@ -3401,6 +5173,9 @@ summary.lefkoMat <- function(object, colsums = TRUE, ...) {
     writeLines(paste0("A total of ", mqca, " transitions were estimated, with ", 
         mqac, " per matrix. Positions of survival vs fecundity transitions are not known."))
   }
+  
+  writeLines(paste0("This lefkoMat object covers ", totalpops, " populations, ",
+      totalpatches, " patches, and ", (totalyears + 1), " time steps."))
   
   if (is.element("dataqc", names(matrices))) {
     dqca <- matrices$dataqc[1]
@@ -3503,7 +5278,5 @@ summary.lefkoMat <- function(object, colsums = TRUE, ...) {
   if (min(dethonthetoilet) < 0) {
     warning("Some matrices include stages with survival probability less than 0.0.", call. = FALSE)
   }
-  
-  return()
 }
 

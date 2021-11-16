@@ -6,24 +6,34 @@
 \usage{
 sf_distrib(
   data,
-  size3 = NA,
-  size2 = NA,
+  sizea = NA,
+  sizeb = NA,
+  sizec = NA,
   obs3 = NA,
   fec = NA,
   repst = NA,
-  zisize = TRUE,
-  zifec = TRUE
+  zisizea = TRUE,
+  zisizeb = TRUE,
+  zisizec = TRUE,
+  zifec = TRUE,
+  fectime = 2
 )
 }
 \arguments{
 \item{data}{A historical vertical data file, which is a data frame of class
 \code{hfvdata}.}
 
-\item{size3}{The name or column number of the variable corresponding to size
-in occasion *t+1*.}
+\item{sizea}{A vector holding the name or column number of the variables
+corresponding to primary size in occasions *t*+1 and *t*. Input only if
+\code{sizea} is to be tested.}
 
-\item{size2}{The name or column number of the variable corresponding to size
-in occasion *t*. This term is required for both size and fecundity tests.}
+\item{sizeb}{A vector holding the name or column number of the variables
+corresponding to secondary size in occasions *t*+1 and *t*. Input only if
+\code{sizeb} is to be tested.}
+
+\item{sizec}{A vector holding the name or column number of the variables
+corresponding to tertiary size in occasions *t*+1 and *t*. Input only if
+\code{sizec} is to be tested.}
 
 \item{obs3}{The name or column number of the variable corresponding to
 observation status in occasion *t+1*. This should be used if observation
@@ -31,17 +41,27 @@ status will be used as a vital rate to absorb states of size = 0.}
 
 \item{fec}{The name or column number of the variable corresponding to
 fecundity. The name of the variable should correspond to the proper occasion,
-either occasion *t* or occasion *t*-1.}
+either occasion *t* or occasion *t*-1. Input only if \code{fec} is to be
+tested.}
 
 \item{repst}{The name or column number of the variable corresponding to
-reproductive status in occasion *t*. Required if fecundity distribution will
-be tested.}
+reproductive status in occasion *t*. If not provided, then fecundity will be
+tested without subsetting to only reproductive individuals.}
 
-\item{zisize}{A logical value indicating whether to conduct a test of zero
-inflation in size. Defaults to TRUE.}
+\item{zisizea}{A logical value indicating whether to conduct a test of zero
+inflation in primary size. Defaults to \code{TRUE}.}
+
+\item{zisizeb}{A logical value indicating whether to conduct a test of zero
+inflation in secondary size. Defaults to \code{TRUE}.}
+
+\item{zisizec}{A logical value indicating whether to conduct a test of zero
+inflation in tertiary size. Defaults to \code{TRUE}.}
 
 \item{zifec}{A logical value indicating whether to conduct a test of zero
 inflation in fecundity. Defaults to TRUE.}
+
+\item{fectime}{An integer indicating whether to treat fecundity as occurring
+in time *t* (\code{2}) or time *t*+1 (\code{3}). Defaults to \code{2}.}
 }
 \value{
 Produces text describing the degree and significance of difference
@@ -110,8 +130,8 @@ lathvertln$feca3 <- round(lathvertln$feca3)
 # Zero-inflation will not be assessed in this example, since 0 values in
 # fecundity have been excluded in the life history model.
 
-sf_distrib(lathvertln, size2 = "sizea2", fec = "feca2",
-  repst = "repstatus2", zifec = FALSE)
+sf_distrib(lathvertln, sizea = c("sizea3", "sizea2"), fec = c("feca3", "feca2"),
+  repst = c("repstatus3", "repstatus2"), zifec = FALSE)
 
 # Cypripedium example
 rm(list=ls(all=TRUE))
@@ -141,7 +161,8 @@ cypraw_v1 <- verticalize3(data = cypdata, noyears = 6, firstyear = 2004,
   stageassign = cypframe_raw, stagesize = "sizeadded", NAas0 = TRUE,
   NRasRep = TRUE)
 
-sf_distrib(cypraw_v1, size2 = "size2added", fec = "feca2",
-  repst = "repstatus2", zisize = FALSE)
+sf_distrib(cypraw_v1, sizea = c("size3added", "size2added"),
+  fec = c("feca3", "feca2"), repst = c("repstatus3", "repstatus2"),
+  zisizea = TRUE)
 
 }

@@ -1,6 +1,81 @@
 LEFKO3 NEWS
 -----------
 
+CHANGES IN VERSION 4.0.1 (2021-11-15)
+-------------------------------------
+  BUG FIXES
+    1. Function aflefko2() now properly removes agestages rows when 
+       reduce = TRUE.
+    2. Problems with mathjaxr integration fixed.
+
+
+CHANGES IN VERSION 4.0.0 (2021-11-14)
+-------------------------------------
+  NEW FEATURES
+    1. Function projection3() can now run density dependent projections using
+       the Ricker, Beverton-Holt, Usher, and logistic functions.
+    2. Functions start_input() and density_input() have been created to describe
+       starting vectors and density dependence in the simplest format possible.
+    3. Function modelsearch() now also calculates the accuracy of binomial
+       models and adds the output to the QC section of the output. Function
+       summary.lefkoMod() reports this output.
+    4. Function sf_create() now handles dual- and triple-size classification
+    5. Functions sf_create() and supplemental() now handle the designation of
+       core stage groups.
+    6. Functions verticalize3() and historicalize3() now handle dual- and
+       triple-size metric classification.
+    7. Function modelsearch() can now test the impacts of three different size
+       variables, and can also develop vital rate models for up to three
+       separate response size variables.
+    8. Function modelsearch() can now test the impacts of spatial density and
+       stage group.
+    9. Function modelsearch() now allows individual covariates to be
+       incorporated as random categorical variables, as well as fixed
+       continuous quantitative variables.
+    10. Function modelsearch() now also allows the Gamma distribution for size
+        and fecundity.
+    11. Function flefko2() now handles up to three size metrics, stage groups,
+        random categorical variables, and density.
+    12. Function sf_distrib() now handles up to three size metrics, and also
+        handles fecundity estimation in both times t and t+1.
+    13. Function projection3() now allows two forms of enforced
+        substochasticity. The first keeps all survival-transition probabilities
+        within bounds, while the second keeps all stage survival probabilities
+        within bounds.
+    
+  USER-VISIBLE CHANGES
+    1. Function projection3() now creates easier-to-understand output structures
+       clearly dividing numbers of individuals from stage distributions from
+       reproductive values and population sizes.
+    2. Function supplemental() now takes proxy multipliers, and gives errors for
+       negative given rates and multipliers.
+    3. Corrected some figure dimensions in vignettes.
+    4. Corrected help text for some functions.
+    5. Functions sf_distrib(), summary.lefkoMat(), summary.lefkoCondMat(),
+       summary.lefkoMod(), and image3() no longer return a NULL to the console.
+    6. The default for option censorRepeat in function verticalize3() has been
+       changed to FALSE, in order to prevent overzealous censoring by default.
+    7. Text output from summary functions and sf_distrib() has been altered to
+       fit within standard output consoles, including typical page widths.
+    8. Added sparse matrix override to slambda3() in case of errors incurred in
+       eigen analysis.
+    
+  BUG FIXES
+    1. Corrected bug causing code "npr" to yield propagule stages in time t+1
+       in supplement and overwrite tables.
+    2. Fixed issue preventing estimation of size transition into observable
+       classes with size 0 under the Poisson distribution in flefko3() and
+       flefko2().
+    3. Corrected porous stage assignment handling in historicalize3().
+    4. Eliminated incorrect projection set assignment when running multiple
+       patches or populations through function projection3().
+    5. Eliminated bug giving warnings when running rlefko2() and rlefko3() with
+       specific choices of patches or populations given as input options.
+    6. Fixed issue causing rlefko2() and rlefko3() to estimate only some
+       transition-survival probabilities and fecundities when patchcol or popcol
+       is given without any respective specific patch or pop options given.
+
+
 CHANGES IN VERSION 3.8.0 (2021-09-08)
 -------------------------------------
   NEW FEATURES
@@ -342,7 +417,7 @@ CHANGES IN VERSION 3.0.0 (2020-10-22)
     3. Eliminated faulty parameterization of matrix geometric mean in lmean()
        function.
 
-  \subsection{BUG FIXES}{
+  BUG FIXES
     1. Corrected core kernel underlying lmean(), and redeveloped in C++ to yield
        faster results.
     2. Corrected parameterization of negative binomial distribution.
@@ -391,3 +466,73 @@ CHANGES IN VERSION 2.2.2 (2020-07-28)
     1. Fixed calculation of observed lifespan in functions verticalize3() 
        and historicalize3().
 
+
+CHANGES IN VERSION 2.2.1 (2020-07-18)
+-------------------------------------
+  USER-VISIBLE CHANGES
+    1. Removed some vignettes to reduce size.
+    2. Added greater detail to Metadata in DESCRIPTION file
+
+  BUG FIXES
+    1. Added on.exit() to modelsearch() to keep user options through that
+       routine. 
+    2. Fixed bugs in repvalue3.lefkoMat() and repvalue3.matrix().
+
+
+CHANGES IN VERSION 2.2.0 (2020-07-08)
+-------------------------------------
+  USER-VISIBLE CHANGES
+    1. All internal function documentation now complete.
+    2. Reduced vignette sizes.
+
+  BUG FIXES
+    1. Fixed bugs in summary.lefkoMod().
+
+
+CHANGES IN VERSION 2.1.0 (2020-07-06)
+-------------------------------------
+  NEW FEATURES
+    1. Advanced routines developed for deterministic analysis functions,
+       including repvalue3() and stablestage3().
+
+  USER-VISIBLE CHANGES
+    1. Cleaned up all help pages.
+
+  BUG FIXES
+    1. Scattered bugs eliminated.
+
+
+CHANGES IN VERSION 2.0.0 (2020-06-27)
+-------------------------------------
+  NEW FEATURES
+    1. Stageframe objects now have their own class, and stageframes now handle
+       log-size based bin widths.
+    2. Sf_create() also now stops if vector lengths are not equal, and can
+       create stageframes for IPMs.
+    3. Mean matrix function lmean() created.
+    4. Added size in time t to juvenile models.
+    5. Fecundity models can now use fecundity in t+1 as a response.
+    6. Integrated estimation function into verticalize3() and historicalize3().
+
+  USER-VISIBLE CHANGES
+    1. All matrix creation functions have been fully rewritten for speed
+       (eliminated extraneous find() calls and long loops).
+    2. Vignettes split up across chapter files.
+
+  BUG FIXES
+    1. Eliminated problems with class interpretation in modelsearch().
+
+
+CHANGES IN VERSION 1.0.0 (2020-03-24)
+-------------------------------------
+  NEW FEATURES
+    1. Lathyrus dataset added.
+    2. Examples added to all core functions.
+
+  USER-VISIBLE CHANGES
+    1. All matrix estimation functions have been rewritten to include core C++
+       functions, for speed up and memory efficiency.
+    2. Added patch functionality to modelsearch(), flefko3(), and flefko2().
+
+  BUG FIXES
+    1. Bugs corrected in probability and rate estimation functions.

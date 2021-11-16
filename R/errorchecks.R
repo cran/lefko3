@@ -6,9 +6,9 @@
 #' @param object An object of class \code{lefkoCondMat}.
 #' @param ... Other parameters.
 #' 
-#' @return A summary of the object, showing the number of historical matrices,
-#' as well as the number of conditional matrices nested within each historical
-#' matrix.
+#' @return A text summary of the object shown on the console, showing the number
+#' of historical matrices, as well as the number of conditional matrices nested
+#' within each historical matrix.
 #' 
 #' @examples
 #' # Lathyrus example
@@ -120,7 +120,8 @@ summary.lefkoCondMat <- function(object, ...) {
   prevstages <- length(condmatrices)
   matdim <- dim(firstcondmat)
   
-  writeLines(paste0("\nThis lefkoCondMat object contains ", prevstages, " conditional matrices per historical matrix, covering ", numhistmats, " historical matrices."))
+  writeLines(paste0("\nThis lefkoCondMat object contains ", prevstages, " conditional matrices per historical matrix,"))
+  writeLines(paste0("It covers ", numhistmats, " main historical matrices."))
   writeLines(paste0("Each conditional matrix is a square matrix with ", matdim[1], " rows and columns, and a total of ", matdim[1]*matdim[1], " elements."))
   writeLines(paste0("\nThe order of conditional matrices corresponding to stage in occasion t-1 is:\n", paste(object$ahstages$stage, collapse = " ")))
   writeLines("\nThe order of historical matrices is: \n")
@@ -128,8 +129,6 @@ summary.lefkoCondMat <- function(object, ...) {
   
   writeLines("\nThe order of conditional matrices matches the stage column in object $ahstages.")
   writeLines("The order of historical matrices follows that shown in object $labels.")
-  
-  return()
 }
 
 #' Create Matrix Image
@@ -386,8 +385,6 @@ image3.lefkoMat <- function(mats, used = "all", type = "A", ...) {
   
   lapply(chosen_list, function(X) {SparseM::image(SparseM::as.matrix.csr(X),
     col =c("white", "red"))})
-  
-  return()
 }
 
 #' Create a Matrix Image for a Single Matrix
@@ -495,8 +492,6 @@ image3.lefkoMat <- function(mats, used = "all", type = "A", ...) {
 image3.matrix <- function(mats, ...) {
   
   SparseM::image(SparseM::as.matrix.csr(mats), col =c("white", "red"))
-  
-  return()
 }
 
 #' Create Matrix Images for Matrices in a List
@@ -627,8 +622,6 @@ image3.list <- function(mats, used = "all", ...) {
     }
     SparseM::image(SparseM::as.matrix.csr(X), col =c("white", "red"))}
   )
-  
-  return()
 }
 
 #' Create Matrix Image(s) for lefkoSens Object
@@ -791,8 +784,6 @@ image3.lefkoSens <- function(mats, used = "all", type = "a", ...) {
   
   lapply(chosen_list, function(X) {SparseM::image(SparseM::as.matrix.csr(X),
     col =c("white", "red"))})
-  
-  return()
 }
 
 #' Create Matrix Image(s) for lefkoElas Object
@@ -956,8 +947,4 @@ image3.lefkoElas <- function(mats, used = "all", type = "a", ...) {
   
   lapply(chosen_list, function(X) {SparseM::image(SparseM::as.matrix.csr(X),
     col =c("white", "red"))})
-  
-  return()
 }
-
-

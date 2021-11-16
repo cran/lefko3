@@ -14,12 +14,14 @@ rlefko3(
   stages = NA,
   alive = c("alive3", "alive2", "alive1"),
   size = c("sizea3", "sizea2", "sizea1"),
+  sizeb = c(NA, NA, NA),
+  sizec = c(NA, NA, NA),
   repst = c("repstatus3", "repstatus2", "repstatus1"),
   matst = c("matstatus3", "matstatus2", "matstatus1"),
   fec = c("feca3", "feca2", "feca1"),
-  supplement = NA,
-  repmatrix = NA,
-  overwrite = NA,
+  supplement = NULL,
+  repmatrix = NULL,
+  overwrite = NULL,
   yearcol = NA,
   popcol = NA,
   patchcol = NA,
@@ -41,9 +43,9 @@ of each ahistorical stage. Should also incorporate bin widths if size is
 continuous.}
 
 \item{year}{A variable corresponding to observation occasion, or a set of
-such values, given in values associated with the year term used in linear
-model development. Can also equal \code{all}, in which case matrices will be
-estimated for all years. Defaults to \code{all}.}
+such values, given in values associated with the \code{year} term used in
+vital rate model development. Can also equal \code{all}, in which case
+matrices will be estimated for all occasions. Defaults to \code{all}.}
 
 \item{pop}{A variable designating which populations will have matrices
 estimated. Should be set to specific population names, or to \code{all} if
@@ -53,9 +55,9 @@ all populations should have matrices estimated.}
 matrices estimated. Should be set to specific patch names, or to \code{all}
 if matrices should be estimated for all patches. Defaults to \code{all}.}
 
-\item{censor}{If TRUE, then data will be removed according to the variable
-set in \code{censorcol}, such that only data with censor values equal to 1
-will remain. Defaults to FALSE.}
+\item{censor}{If \code{TRUE}, then data will be removed according to the
+variable set in \code{censorcol}, such that only data with censor values
+equal to 1 will remain. Defaults to \code{FALSE}.}
 
 \item{stages}{An optional vector denoting the names of the variables within
 the main vertical dataset coding for the stages of each individual in
@@ -66,16 +68,25 @@ of \code{alive}, \code{size}, \code{repst}, and \code{matst} to
 characteristics noted in the associated \code{stageframe}.}
 
 \item{alive}{A vector of names of binomial variables corresponding to status
-as alive (1) or dead (0) in occasions \emph{t}+1, \emph{t}, and \emph{t}-1,
-respectively.}
+as alive (\code{1}) or dead (\code{0}) in occasions \emph{t}+1, \emph{t}, and
+\emph{t}-1, respectively.}
 
-\item{size}{A vector of names of variables coding size in occasions
-\emph{t}+1, \emph{t}, and \emph{t}-1, respectively. Defaults to 
+\item{size}{A vector of names of variables coding the primary size variable
+in occasions \emph{t}+1, \emph{t}, and \emph{t}-1, respectively. Defaults to 
 \code{c("sizea3", "sizea2", "sizea1")}.}
+
+\item{sizeb}{A vector of names of variables coding the secondary size
+variable in occasions \emph{t}+1, \emph{t}, and \emph{t}-1, respectively.
+Defaults to \code{c(NA, NA, NA)}.}
+
+\item{sizec}{A vector of names of variables coding the tertiary size
+variable in occasions \emph{t}+1, \emph{t}, and \emph{t}-1, respectively.
+Defaults to \code{c(NA, NA, NA)}.}
 
 \item{repst}{A vector of names of variables coding reproductive status in
 occasions \emph{t}+1, \emph{t}, and \emph{t}-1, respectively. Defaults to 
-\code{c("repstatus3", "repstatus2", "repstatus1")}.}
+\code{c("repstatus3", "repstatus2", "repstatus1")}. Must be supplied if
+\code{stages} is not provided.}
 
 \item{matst}{A vector of names of variables coding maturity status in
 occasions \emph{t}+1, \emph{t}, and \emph{t}-1, respectively. Defaults to
@@ -91,19 +102,17 @@ provides supplemental data that should be incorporated into the MPM. Three
 kinds of data may be integrated this way: transitions to be estimated via the
 use of proxy transitions, transition overwrites from the literature or
 supplemental studies, and transition multipliers for fecundity. This data
-frame should be produced using the \code{\link{supplemental}()} function. Can
-be used in place of or in addition to an overwrite table (see 
+frame should be produced using the \code{\link{supplemental}()} function.
+Should be used in place of or in addition to an overwrite table (see 
 \code{overwrite} below) and a reproduction matrix (see \code{repmatrix}
 below).}
 
-\item{repmatrix}{A reproduction matrix, which is an optional matrix composed
-mostly of 0s, with non-zero values for each potentially new individual (row)
-born to each reproductive stage (column). Entries act as multipliers on
-fecundity, with 1 equaling full fecundity. Fecundity multipliers provided
-this way supplement rather than replace those provided in \code{supplement}.
-If left blank, then \code{rlefko3()} will assume that all stages marked as
-reproductive produce offspring at 1x that of fecundity estimated in provided
-linear models, and that fecundity will be into the first stage noted as
+\item{repmatrix}{An optional reproduction matrix. This matrix is composed
+mostly of 0s, with non-zero entries acting as element identifiers and
+multipliers for fecundity (with 1 equaling full fecundity). If left blank,
+and no \code{supplement} is provided, then \code{rlefko3()} will assume that
+all stages marked as reproductive produce offspring at 1x that of estimated
+fecundity, and that offspring production will yield the first stage noted as
 propagule or immature. To prevent this behavior, input just \code{0}, which
 will result in fecundity being estimated only for transitions noted in
 \code{supplement} above. May be the dimensions of either a historical or an
@@ -131,20 +140,21 @@ identity.}
 status. Only needed if \code{censor = TRUE}.}
 
 \item{censorkeep}{The value of the censor variable denoting data elements to
-keep. Defaults to 0.}
+keep. Defaults to \code{0}.}
 
 \item{format}{A string indicating whether to estimate matrices in
-\code{ehrlen} format or \code{deVries} format. The latter adds one extra
+\code{ehrlen} format or \code{deVries} format. The latter adds one unborn
 prior stage to account for the prior state of newborns. Defaults to
 \code{ehrlen} format.}
 
 \item{reduce}{A logical value denoting whether to remove historical stages
-associated exclusively with zero transitions. These are removed only if all
-row and column sums in ALL matrices estimated equal 0. Defaults to FALSE.}
+associated exclusively with zero transitions. These are removed only if the
+respective row and column sums in ALL matrices estimated equal 0. Defaults to
+\code{FALSE}.}
 
 \item{err_check}{A logical value indicating whether to append extra
 information used in matrix calculation within the output list. Used for
-development debugging purposes.}
+development debugging purposes. Defaults to \code{FALSE}.}
 }
 \value{
 If all inputs are properly formatted, then this function will return
@@ -153,7 +163,7 @@ projection model and all of its metadata. Its structure is a list with the
 following elements:
 
 \item{A}{A list of full projection matrices in order of sorted populations,
-patches, and years. All matrices output in the \code{matrix} class.}
+patches, and occasions. All matrices output in the \code{matrix} class.}
 \item{U}{A list of survival transition matrices sorted as in \code{A}. All 
 matrices output in the \code{matrix} class.}
 \item{F}{A list of fecundity matrices sorted as in \code{A}. All matrices 
@@ -173,10 +183,11 @@ matrix in order.}
 vertical dataset used as input.}
 }
 \description{
-\code{rlefko3()} returns raw historical MPMs, including the associated
-component transition and fecundity matrices, data frames describing the
-ahistorical stages used and the historical paired stages, and a data frame
-describing the population, patch, and year associated with each matrix.
+Function \code{rlefko3()} returns raw historical MPMs, including the
+associated component transition and fecundity matrices, data frames
+describing the ahistorical stages used and the historical paired stages, and
+a data frame describing the population, patch, and occasion time associated
+with each matrix.
 }
 \section{Notes}{
 
@@ -201,12 +212,18 @@ multipliers noted.
 Users may at times wish to estimate MPMs using a dataset incorporating
 multiple patches or subpopulations. Should the aim of analysis be a general
 MPM that does not distinguish these patches or subpopulations, the
-\code{patchcol} variable should be left to NA, which is the default.
+\code{patchcol} variable should be left to \code{NA}, which is the default.
+Otherwise the variable identifying patch needs to be named.
 
 Input options including multiple variable names must be entered in the order
 of variables in occasion \emph{t}+1, \emph{t}, and \emph{t}-1. Rearranging
-the order WILL lead to erroneous calculations, and will probably also lead to
+the order WILL lead to erroneous calculations, and may lead to
 fatal errors.
+
+Although this function is capable of assigning stages given an input
+stageframe, it lacks the power of \code{\link{verticalize3}()} and
+\code{\link{historicalize3}()} in this regard. Users are strongly
+encouraged to use the latter two functions for stage assignment.
 }
 
 \examples{

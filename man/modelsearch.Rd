@@ -6,6 +6,7 @@
 \usage{
 modelsearch(
   data,
+  stageframe = NULL,
   historical = TRUE,
   approach = "mixed",
   suite = "size",
@@ -14,16 +15,25 @@ modelsearch(
   surv = c("alive3", "alive2", "alive1"),
   obs = c("obsstatus3", "obsstatus2", "obsstatus1"),
   size = c("sizea3", "sizea2", "sizea1"),
+  sizeb = c(NA, NA, NA),
+  sizec = c(NA, NA, NA),
   repst = c("repstatus3", "repstatus2", "repstatus1"),
   fec = c("feca3", "feca2", "feca1"),
   stage = c("stage3", "stage2", "stage1"),
   indiv = "individ",
   patch = NA,
   year = "year2",
+  density = NA,
   sizedist = "gaussian",
+  sizebdist = NA,
+  sizecdist = NA,
   fecdist = "gaussian",
   size.zero = FALSE,
+  sizeb.zero = FALSE,
+  sizec.zero = FALSE,
   size.trunc = FALSE,
+  sizeb.trunc = FALSE,
+  sizec.trunc = FALSE,
   fec.zero = FALSE,
   fec.trunc = FALSE,
   patch.as.random = TRUE,
@@ -31,13 +41,21 @@ modelsearch(
   juvestimate = NA,
   juvsize = FALSE,
   jsize.zero = FALSE,
+  jsizeb.zero = FALSE,
+  jsizec.zero = FALSE,
   jsize.trunc = FALSE,
+  jsizeb.trunc = FALSE,
+  jsizec.trunc = FALSE,
   fectime = 2,
   censor = NA,
   age = NA,
   indcova = NA,
   indcovb = NA,
   indcovc = NA,
+  random.indcova = FALSE,
+  random.indcovb = FALSE,
+  random.indcovc = FALSE,
+  test.group = FALSE,
   show.model.tables = TRUE,
   global.only = FALSE,
   quiet = FALSE
@@ -50,26 +68,30 @@ to the output format provided by functions \code{\link{verticalize3}()} or
 \code{\link{historicalize3}()}, as long as all needed variables are properly
 designated.}
 
+\item{stageframe}{The stageframe characterizing the life history model used.
+Optional unless \code{test.group = TRUE}, in which case it is required.
+Defaults to \code{NULL}.}
+
 \item{historical}{A logical variable denoting whether to assess the effects
-of state in occasion \emph{t}-1 in addition to state in occasion \emph{t}.
-Defaults to TRUE.}
+of state in occasion \emph{t}-1, in addition to state in occasion \emph{t}.
+Defaults to \code{TRUE}.}
 
 \item{approach}{The statistical approach to be taken for model building. The 
-default is \code{mixed}, which uses the mixed model approach utilized in 
-packages \code{lme4} and \code{glmmTMB}. Other options include \code{glm},
-which uses \code{lm}, \code{glm}, \code{glm.nb}, and related functions in
-packages \code{MASS}, \code{stats}, and \code{pscl}.}
+default is \code{"mixed"}, which uses the mixed model approach utilized in 
+packages \code{lme4} and \code{glmmTMB}. Other options include \code{"glm"},
+which uses generalized linear modeling assuming that all factors are fixed.}
 
-\item{suite}{This describes the global model for each vital rate estimation
+\item{suite}{This describes the global model for each vital rate estimation,
 and has the following possible values: \code{full}, includes main effects and
 all two-way interactions of size and reproductive status; \code{main},
 includes main effects only of size and reproductive status; \code{size},
 includes only size (also interactions between size in historical model);
 \code{rep}, includes only reproductive status (also interactions between
-status in historical model); \code{cons}, all vital rates estimated only as
-y-intercepts. If \code{approach = "glm"} and \code{year.as.random = FALSE},
-then year is also included as a fixed effect, and, in the case of
-\code{full}, included in two-way interactions. Defaults to \code{size}.}
+status in historical model); and \code{cons}, all vital rates estimated only
+as y-intercepts. If \code{approach = "glm"} and
+\code{year.as.random = FALSE}, then year is also included as a fixed effect,
+and, in the case of \code{full}, included in two-way interactions. Defaults
+to \code{size}.}
 
 \item{bestfit}{A variable indicating the model selection criterion for the
 choice of best-fit model. The default is \code{AICc&k}, which chooses the 
@@ -92,9 +114,19 @@ Defaults to \code{c("alive3", "alive2", "alive1")}.}
 status in occasions \emph{t}+1, \emph{t}, and \emph{t}-1, respectively.
 Defaults to \code{c("obsstatus3", "obsstatus2", "obsstatus1")}.}
 
-\item{size}{A vector indicating the variable names coding for size in
-occasions \emph{t}+1, \emph{t}, and \emph{t}-1, respectively. Defaults to
-\code{c("sizea3", "sizea2", "sizea1")}.}
+\item{size}{A vector indicating the variable names coding for the primary
+size variable on occasions \emph{t}+1, \emph{t}, and \emph{t}-1,
+respectively. Defaults to \code{c("sizea3", "sizea2", "sizea1")}.}
+
+\item{sizeb}{A vector indicating the variable names coding for the secondary
+size variable on occasions \emph{t}+1, \emph{t}, and \emph{t}-1,
+respectively. Defaults to \code{c(NA, NA, NA)}, in which case \code{sizeb} is
+not used.}
+
+\item{sizec}{A vector indicating the variable names coding for the tertiary
+size variable on occasions \emph{t}+1, \emph{t}, and \emph{t}-1,
+respectively. Defaults to \code{c(NA, NA, NA)}, in which case \code{sizec} is
+not used.}
 
 \item{repst}{A vector indicating the variable names coding for reproductive
 status in occasions \emph{t}+1, \emph{t}, and \emph{t}-1, respectively.
@@ -104,74 +136,131 @@ Defaults to \code{c("repstatus3", "repstatus2", "repstatus1")}.}
 occasions \emph{t}+1, \emph{t}, and \emph{t}-1, respectively. Defaults to
 \code{c("feca3", "feca2", "feca1")}.}
 
-\item{stage}{A vector indicating the variables coding for stage in occasions
-\emph{t}+1, \emph{t}, and \emph{t}-1. Defaults to \code{c("stage3", "stage2",
-"stage1")}.}
+\item{stage}{A vector indicating the variable names coding for stage in
+occasions \emph{t}+1, \emph{t}, and \emph{t}-1. Defaults to
+\code{c("stage3", "stage2", "stage1")}.}
 
-\item{indiv}{A variable indicating the variable name coding individual
-identity. Defaults to \code{individ}.}
+\item{indiv}{A text value indicating the variable name coding individual
+identity. Defaults to \code{"individ"}.}
 
-\item{patch}{A variable indicating the variable name coding for patch, where
-patches are defined as permanent subgroups within the study population.
-Defaults to NA.}
+\item{patch}{A text value indicating the variable name coding for patch,
+where patches are defined as permanent subgroups within the study population.
+Defaults to \code{NA}.}
 
-\item{year}{A variable indicating the variable coding for observation
+\item{year}{A text value indicating the variable coding for observation
 occasion \emph{t}. Defaults to \code{year2}.}
 
-\item{sizedist}{The probability distribution used to model size. Options
-include \code{gaussian} for the Normal distribution (default), \code{poisson}
-for the Poisson distribution, and \code{negbin} for the negative binomial
-distribution (quadratic parameterization).}
+\item{density}{A text value indicating the name of the variable coding for
+spatial density, should the user wish to test spatial density as a fixed
+factor affecting vital rates. Defaults to \code{NA}.}
+
+\item{sizedist}{The probability distribution used to model primary size.
+Options include \code{"gaussian"} for the Normal distribution (default),
+\code{"poisson"} for the Poisson distribution, \code{"negbin"} for the
+negative binomial distribution (quadratic parameterization), and 
+\code{"gamma"} for the Gamma distribution.}
+
+\item{sizebdist}{The probability distribution used to model secondary size.
+Options include \code{"gaussian"} for the Normal distribution,
+\code{"poisson"} for the Poisson distribution, \code{"negbin"} for the
+negative binomial distribution (quadratic parameterization), and
+\code{"gamma"} for the Gamma distribution. Defaults to \code{NA}.}
+
+\item{sizecdist}{The probability distribution used to model tertiary size.
+Options include \code{"gaussian"} for the Normal distribution,
+\code{"poisson"} for the Poisson distribution, \code{"negbin"} for the
+negative binomial distribution (quadratic parameterization), and
+\code{"gamma"} for the Gamma distribution. Defaults to \code{NA}.}
 
 \item{fecdist}{The probability distribution used to model fecundity. Options
-include \code{gaussian} for the Normal distribution (default), \code{poisson}
-for the Poisson distribution, and \code{negbin} for the negative binomial
-distribution (quadratic parameterization).}
+include \code{"gaussian"} for the Normal distribution (default),
+\code{"poisson"} for the Poisson distribution, \code{"negbin"} for the
+negative binomial distribution (quadratic parameterization), and
+\code{"gamma"} for the Gamma distribution.}
 
-\item{size.zero}{A logical variable indicating whether size distribution 
-should be zero-inflated. Only applies to Poisson and negative binomial 
-distributions. Defaults to FALSE.}
+\item{size.zero}{A logical variable indicating whether the primary size
+distribution should be zero-inflated. Only applies to Poisson and negative
+binomial distributions. Defaults to \code{FALSE}.}
 
-\item{size.trunc}{A logical variable indicating whether size distribution is
-zero-truncated. Defaults to FALSE. Cannot be TRUE if \code{size.zero = TRUE}.}
+\item{sizeb.zero}{A logical variable indicating whether the secondary size
+distribution should be zero-inflated. Only applies to Poisson and negative
+binomial distributions. Defaults to \code{FALSE}.}
 
-\item{fec.zero}{A logical variable indicating whether fecundity distribution 
-should be zero-inflated. Only applies to Poisson and negative binomial 
-distributions. Defaults to FALSE.}
+\item{sizec.zero}{A logical variable indicating whether the tertiary size
+distribution should be zero-inflated. Only applies to Poisson and negative
+binomial distributions. Defaults to \code{FALSE}.}
 
-\item{fec.trunc}{A logical variable indicating whether fecundity distribution
-is zero-truncated. Defaults to FALSE. Cannot be TRUE if
-\code{fec.zero = TRUE}.}
+\item{size.trunc}{A logical variable indicating whether the primary size
+distribution should be zero-truncated. Only applies to Poisson and negative
+binomial distributions. Defaults to \code{FALSE}. Cannot be \code{TRUE} if
+\code{size.zero = TRUE}.}
 
-\item{patch.as.random}{If set to TRUE and \code{approach = "lme4"}, then
-\code{patch} is included as a random factor. If set to FALSE and
+\item{sizeb.trunc}{A logical variable indicating whether the secondary size
+distribution should be zero-truncated. Only applies to Poisson and negative
+binomial distributions. Defaults to \code{FALSE}. Cannot be \code{TRUE} if
+\code{sizeb.zero = TRUE}.}
+
+\item{sizec.trunc}{A logical variable indicating whether the tertiary size
+distribution should be zero-truncated. Only applies to Poisson and negative
+binomial distributions. Defaults to \code{FALSE}. Cannot be \code{TRUE} if
+\code{sizec.zero = TRUE}.}
+
+\item{fec.zero}{A logical variable indicating whether the fecundity
+distribution should be zero-inflated. Only applies to Poisson and negative
+binomial distributions. Defaults to \code{FALSE}.}
+
+\item{fec.trunc}{A logical variable indicating whether the fecundity
+distribution should be zero-truncated. Only applies to the Poisson and
+negative binomial distributions. Defaults to \code{FALSE}. Cannot be
+\code{TRUE} if \code{fec.zero = TRUE}.}
+
+\item{patch.as.random}{If set to \code{TRUE} and \code{approach = "mixed"},
+then \code{patch} is included as a random factor. If set to \code{FALSE} and
 \code{approach = "glm"}, then \code{patch} is included as a fixed factor. All
 other combinations of logical value and \code{approach} lead to \code{patch}
-not being included in modeling. Defaults to TRUE.}
+not being included in modeling. Defaults to \code{TRUE}.}
 
-\item{year.as.random}{If set to TRUE and \code{approach = "lme4"}, then
-\code{year} is included as a random factor. If set to FALSE, then \code{year}
-is included as a fixed factor. All other combinations of logical value and
-\code{approach} lead to \code{year} not being included in modeling. Defaults
-to TRUE.}
+\item{year.as.random}{If set to \code{TRUE} and \code{approach = "mixed"},
+then \code{year} is included as a random factor. If set to \code{FALSE}, then
+\code{year} is included as a fixed factor. All other combinations of logical
+value and \code{approach} lead to \code{year} not being included in modeling.
+Defaults to \code{TRUE}.}
 
 \item{juvestimate}{An optional variable denoting the stage name of the
-juvenile stage in the vertical dataset. If not NA, and \code{stage} is also
-given (see below), then vital rates listed in \code{vitalrates} other than
-\code{fec} will also be estimated from the juvenile stage to all adult
-stages. Defaults to NA, in which case juvenile vital rates are not estimated.}
+juvenile stage in the vertical dataset. If not \code{NA}, and \code{stage} is
+also given (see below), then vital rates listed in \code{vitalrates} other
+than \code{fec} will also be estimated from the juvenile stage to all adult
+stages. Defaults to \code{NA}, in which case juvenile vital rates are not
+estimated.}
 
 \item{juvsize}{A logical variable denoting whether size should be used as a
 term in models involving transition from the juvenile stage. Defaults to
-FALSE, and is only used if \code{juvestimate} does not equal NA.}
+\code{FALSE}, and is only used if \code{juvestimate} does not equal
+\code{NA}.}
 
-\item{jsize.zero}{A logical variable indicating whether size distribution 
-of juveniles should be zero-inflated. Only applies to Poisson and negative
-binomial distributions. Defaults to FALSE.}
+\item{jsize.zero}{A logical variable indicating whether the primary size
+distribution of juveniles should be zero-inflated. Only applies to Poisson
+and negative binomial distributions. Defaults to \code{FALSE}.}
 
-\item{jsize.trunc}{A logical variable indicating whether size distribution in
-juveniles is zero-truncated. Defaults to FALSE. Cannot be TRUE if
-\code{jsize.zero = TRUE}.}
+\item{jsizeb.zero}{A logical variable indicating whether the secondary size
+distribution of juveniles should be zero-inflated. Only applies to Poisson
+and negative binomial distributions. Defaults to \code{FALSE}.}
+
+\item{jsizec.zero}{A logical variable indicating whether the tertiary size
+distribution of juveniles should be zero-inflated. Only applies to Poisson
+and negative binomial distributions. Defaults to \code{FALSE}.}
+
+\item{jsize.trunc}{A logical variable indicating whether the primary size
+distribution in juveniles should be zero-truncated. Defaults to \code{FALSE}.
+Cannot be \code{TRUE} if \code{jsize.zero = TRUE}.}
+
+\item{jsizeb.trunc}{A logical variable indicating whether the secondary size
+distribution in juveniles should be zero-truncated. Defaults to \code{FALSE}.
+Cannot be \code{TRUE} if \code{jsizeb.zero = TRUE}.}
+
+\item{jsizec.trunc}{A logical variable indicating whether the tertiary size
+distribution in juveniles should be zero-truncated. Defaults to \code{FALSE}.
+Cannot be \code{TRUE} if \code{jsizec.zero = TRUE}.}
 
 \item{fectime}{A variable indicating which year of fecundity to use as the
 response term in fecundity models. Options include \code{2}, which refers to
@@ -180,93 +269,137 @@ Defaults to \code{2}.}
 
 \item{censor}{A vector denoting the names of censoring variables in the
 dataset, in order from occasion \emph{t}+1, followed by occasion \emph{t},
-and lastly followed by occasion \emph{t}-1. Defaults to NA.}
+and lastly followed by occasion \emph{t}-1. Defaults to \code{NA}.}
 
 \item{age}{Designates the name of the variable corresponding to age in the
-vertical dataset. Defaults to NA, in which case age is not included in linear
-models. Should only be used if building age x stage matrices.}
+vertical dataset. Defaults to \code{NA}, in which case age is not included in
+linear models. Should only be used if building Leslie or age x stage
+matrices.}
 
 \item{indcova}{Vector designating the names in occasions \emph{t}+1,
-\emph{t}, and \emph{t}-1 of an individual covariate. Defaults to NA.}
+\emph{t}, and \emph{t}-1 of an individual covariate. Defaults to \code{NA}.}
 
 \item{indcovb}{Vector designating the names in occasions \emph{t}+1,
-\emph{t}, and \emph{t}-1 of an individual covariate. Defaults to NA.}
+\emph{t}, and \emph{t}-1 of a second individual covariate. Defaults to
+\code{NA}.}
 
 \item{indcovc}{Vector designating the names in occasions \emph{t}+1,
-\emph{t}, and \emph{t}-1 of an individual covariate. Defaults to NA.}
+\emph{t}, and \emph{t}-1 of a third individual covariate. Defaults to
+\code{NA}.}
+
+\item{random.indcova}{A logical value indicating whether \code{indcova}
+should be treated as a random categorical factor, rather than as a fixed
+factor. Defaults to \code{FALSE}.}
+
+\item{random.indcovb}{A logical value indicating whether \code{indcovb}
+should be treated as a random categorical factor, rather than as a fixed
+factor. Defaults to \code{FALSE}.}
+
+\item{random.indcovc}{A logical value indicating whether \code{indcovc}
+should be treated as a random categorical factor, rather than as a fixed
+factor. Defaults to \code{FALSE}.}
+
+\item{test.group}{A logical value indicating whether to include the
+\code{group} variable from the input \code{stageframe} as a fixed categorical
+variable in linear models. Defaults to \code{FALSE}.}
 
 \item{show.model.tables}{If set to TRUE, then includes full modeling tables
-in the output. Defaults to TRUE.}
+in the output. Defaults to \code{TRUE}.}
 
 \item{global.only}{If set to TRUE, then only global models will be built and
-evaluated. Defaults to FALSE.}
+evaluated. Defaults to \code{FALSE}.}
 
 \item{quiet}{If set to TRUE, then model building and selection will proceed
-without warnings and diagnostic messages being issued. Note that this will
-not affect warnings and messages generated as models themselves are tested.
-Defaults to FALSE.}
+with most warnings and diagnostic messages silenced. Defaults to
+\code{FALSE}.}
 }
 \value{
 This function yields an object of class \code{lefkoMod}, which is a
-list in which the first 9 elements are the best-fit models for survival,
-observation status, size, reproductive status, fecundity, juvenile survival,
-juvenile observation, juvenile size, and juvenile transition to reproduction, 
-respectively, followed by 9 elements corresponding to the model tables for
-each of these vital rates, in order, followed by a single character element
-denoting the criterion used for model selection, and ending on a quality
-control vector:
+list in which the first 13 elements are the best-fit models for survival,
+observation status, primary size, secondary size, tertiary size,
+reproductive status, fecundity, juvenile survival, juvenile observation,
+juvenile primary size, juvenile secondary size, juvenile tertiary size, and
+juvenile transition to reproduction, respectively, followed by 13 elements
+corresponding to the model tables for each of these vital rates, in order,
+followed by a data frame showing the order and names of variables used in
+modeling, followed by a single character element denoting the criterion used
+for model selection, and ending on a data frame with quality control data:
 
 \item{survival_model}{Best-fit model of the binomial probability of survival
-from occasion \emph{t} to occasion \emph{t}+1. Defaults to 1.}
+from occasion \emph{t} to occasion \emph{t}+1. Defaults to \code{1}.}
 \item{observation_model}{Best-fit model of the binomial probability of 
 observation in occasion \emph{t}+1 given survival to that occasion. Defaults
-to 1.}
-\item{size_model}{Best-fit model of size in occasion \emph{t}+1 given
-survival to and observation in that occasion. Defaults to 1.}
+to \code{1}.}
+\item{size_model}{Best-fit model of the primary size metric on occasion
+\emph{t}+1 given survival to and observation in that occasion. Defaults to
+\code{1}.}
+\item{sizeb_model}{Best-fit model of the secondary size metric on occasion
+\emph{t}+1 given survival to and observation in that occasion. Defaults to
+\code{1}.}
+\item{sizec_model}{Best-fit model of the tertiary size metric on occasion
+\emph{t}+1 given survival to and observation in that occasion. Defaults to
+\code{1}.}
 \item{repstatus_model}{Best-fit model of the binomial probability of
 reproduction in occasion \emph{t}+1, given survival to and observation in
-that occasion. Defaults to 1.}
+that occasion. Defaults to \code{1}.}
 \item{fecundity_model}{Best-fit model of fecundity in occasion \emph{t}+1
 given survival to, and observation and reproduction in that occasion.
-Defaults to 1.}
+Defaults to \code{1}.}
 \item{juv_survival_model}{Best-fit model of the binomial probability of
 survival from occasion \emph{t} to occasion \emph{t}+1 of an immature
-individual. Defaults to 1.}
+individual. Defaults to \code{1}.}
 \item{juv_observation_model}{Best-fit model of the binomial probability of 
 observation in occasion \emph{t}+1 given survival to that occasion of an
-immature individual. Defaults to 1.}
-\item{juv_size_model}{Best-fit model of size in occasion \emph{t}+1 given
-survival to and observation in that occasion of an immature individual.
-Defaults to 1.}
+immature individual. Defaults to \code{1}.}
+\item{juv_size_model}{Best-fit model of the primary size metric on occasion
+\emph{t}+1 given survival to and observation in that occasion of an immature
+individual. Defaults to \code{1}.}
+\item{juv_sizeb_model}{Best-fit model of the secondary size metric on
+occasion \emph{t}+1 given survival to and observation in that occasion of an
+immature individual. Defaults to \code{1}.}
+\item{juv_sizec_model}{Best-fit model of the tertiary size metric on occasion
+\emph{t}+1 given survival to and observation in that occasion of an immature
+individual. Defaults to \code{1}.}
 \item{juv_reproduction_model}{Best-fit model of the binomial probability of
 reproduction in occasion \emph{t}+1, given survival to and observation in
 that occasion of an individual that was immature in occasion \emph{t}. This
 model is technically not a model of reproduction probability for individuals
 that are immature, rather reproduction probability here is given for
 individuals that are mature in occasion \emph{t}+1 but immature in occasion
-\emph{t}. Defaults to 1.}
+\emph{t}. Defaults to \code{1}.}
 \item{survival_table}{Full dredge model table of survival probability.}
 \item{observation_table}{Full dredge model table of observation probability.}
-\item{size_table}{Full dredge model table of size.}
+\item{size_table}{Full dredge model table of the primary size variable.}
+\item{sizeb_table}{Full dredge model table of the secondary size variable.}
+\item{sizec_table}{Full dredge model table of the tertiary size variable.}
 \item{repstatus_table}{Full dredge model table of reproduction probability.}
 \item{fecundity_table}{Full dredge model table of fecundity.}
 \item{juv_survival_table}{Full dredge model table of immature survival 
 probability.}
 \item{juv_observation_table}{Full dredge model table of immature observation
 probability.}
-\item{juv_size_table}{Full dredge model table of immature size.}
+\item{juv_size_table}{Full dredge model table of primary size in immature
+individuals.}
+\item{juv_sizeb_table}{Full dredge model table of secondary size in immature
+individuals.}
+\item{juv_sizec_table}{Full dredge model table of tertiary size in immature
+individuals.}
 \item{juv_reproduction_table}{Full dredge model table of immature
 reproduction probability.}
 \item{criterion}{Character variable denoting the criterion used to determine
 the best-fit model.}
-\item{qc}{Data frame with three variables: 1) Name of vital rate, 2) number
-of individuals used to model that vital rate, and 3) number of individual
-transitions used to model that vital rate.}
+\item{qc}{Data frame with four variables: 1) Name of vital rate, 2) number
+of individuals used to model that vital rate, 3) number of individual
+transitions used to model that vital rate, and 4) accuracy of model expressed
+as percent of predicted responses equal to actual responses (only in binomial
+models).}
 }
 \description{
-Function \code{modelsearch()} returns both a best-fit model for each vital
-rate, and a model table showing all models tested. The final output can be
-used as input in other functions within this package.
+Function \code{modelsearch()} runs exhaustive model building and selection
+for each vital rate needed to estimate a function-based MPM or IPM. It
+returns best-fit models for each vital rate, model table showing all models
+tested, and model quality control data. The final output can be used as input
+in other functions within this package.
 }
 \section{Notes}{
 
@@ -274,32 +407,34 @@ The mechanics governing model building are fairly robust to errors and
 exceptions. The function attempts to build global models, and simplifies
 models automatically should model building fail. Model building proceeds
 through the functions \code{\link[stats]{lm}()} (GLM with Gaussian response),
-\code{\link[stats]{glm}()} (GLM with Poisson or binomial response),
+\code{\link[stats]{glm}()} (GLM with Poisson, Gamma, or binomial response),
 \code{\link[MASS]{glm.nb}()} (GLM with negative binomial response),
-\code{\link[pscl]{zeroinfl}()} (zero-inflated Poisson or negative binomial
-response), \code{\link[lme4]{lmer}()} (mixed model with Gaussian response),
-\code{\link[lme4]{glmer}()} (mixed model with binomial or Poisson response),
-and \code{\link[glmmTMB]{glmmTMB}()} (mixed model with negative binomial,
-or zero-truncated or zero-inflated Poisson or negative binomial response).
-See documentation related to these functions for further information. Any
-response term that is invariable in the dataset will lead to a best-fit model
-for that response represented by a single constant value.
+\code{\link[pscl]{zeroinfl}()} (GLM with zero-inflated Poisson or negative
+binomial response), \code{\link[VGAM]{vglm}()} (GLM with zero-truncated
+Poisson or negative binomial response), \code{\link[lme4]{lmer}()} (mixed
+model with Gaussian response), \code{\link[lme4]{glmer}()} (mixed model with
+binomial, Poisson, or Gamma response), and \code{\link[glmmTMB]{glmmTMB}()}
+(mixed model with negative binomial, or zero-truncated or zero-inflated
+Poisson or negative binomial response). See documentation related to these
+functions for further information. Any response term that is invariable in
+the dataset will lead to a best-fit model for that response represented by a
+single constant value.
 
 Exhaustive model building and selection proceeds via the
 \code{\link[MuMIn]{dredge}()} function in package \code{MuMIn}. This function
 is verbose, so that any errors and warnings developed during model building,
 model analysis, and model selection can be found and dealt with.
 Interpretations of errors during global model analysis may be found in
-documentation in for the functions and packages mentioned. Package
-\code{MuMIn} is used for model dredging (see \link[MuMIn]{dredge}()), and
-errors and warnings during dredging can be interpreted using the
-documentation for that package. Errors occurring during dredging lead to the
-adoption of the global model as the best-fit, and the user should view all
-logged errors and warnings to determine the best way to proceed. The 
-\code{quiet = TRUE} option can be used to silence dredge warnings, but users
-should note that automated model selection can be viewed as a black box, and
-so care should be taken to ensure that the models run make biological sense,
-and that model quality is prioritized.
+documentation for the functions and packages mentioned. Package \code{MuMIn}
+is used for model dredging (see \link[MuMIn]{dredge}()), and errors and
+warnings during dredging can be interpreted using the documentation for that
+package. Errors occurring during dredging lead to the adoption of the global
+model as the best-fit, and the user should view all logged errors and
+warnings to determine the best way to proceed. The \code{quiet = TRUE} option
+can be used to silence dredge warnings, but users should note that automated
+model selection can be viewed as a black box, and so care should be taken to
+ensure that the models run make biological sense, and that model quality is
+prioritized.
 
 Exhaustive model selection through dredging works best with larger datasets
 and fewer tested parameters. Setting \code{suite = "full"} may initiate a
@@ -307,10 +442,7 @@ dredge that takes a dramatically long time, particularly if the model is
 historical, individual covariates are used, or a zero-inflated distribution
 is assumed. In such cases, the number of models built and tested will run at
 least in the millions. Small datasets will also increase the error associated
-with these tests, leading to adoption of simpler models overall. We do not
-yet offer a parallelization option for function \code{modelsearch()}, but
-plan to offer one in the future to speed this process up for particularly
-large global models.
+with these tests, leading to adoption of simpler models overall.
 
 Care must be taken to build models that test the impacts of state in occasion
 \emph{t}-1 for historical models, and that do not test these impacts for
@@ -337,6 +469,10 @@ this distribution, please check the matrix column sums to make sure that they
 do not predict survival greater than 1.0. If they do, then please use either
 the negative binomial distribution or the zero-truncated Poisson
 distribution.
+
+If density dependence is explored through function \code{modelsearch()},
+then the interpretation of density is not the full population size but rather
+the spatial density term included in the dataset.
 }
 
 \examples{
@@ -376,7 +512,7 @@ lathvertln$feca1 <- round(lathvertln$feca1)
 lathvertln$feca3 <- round(lathvertln$feca3)
 
 lathmodelsln3 <- modelsearch(lathvertln, historical = TRUE, 
-  approach = "glm", suite = "main", 
+  approach = "mixed", suite = "main", 
   vitalrates = c("surv", "obs", "size", "repst", "fec"), juvestimate = "Sdl",
   bestfit = "AICc&k", sizedist = "gaussian", fecdist = "poisson", 
   indiv = "individ", patch = "patchid", year = "year2",year.as.random = TRUE,
@@ -396,8 +532,8 @@ lathsupp3 <- supplemental(stage3 = c("Sd", "Sd", "Sdl", "Sdl", "mat", "Sd", "Sdl
 
 lathmat3ln <- flefko3(year = "all", patch = "all", stageframe = lathframeln, 
   modelsuite = lathmodelsln3, data = lathvertln, supplement = lathsupp3, 
-  patchcol = "patchid", yearcol = "year2", year.as.random = FALSE,
-  patch.as.random = FALSE, reduce = FALSE)
+  patchcol = "patchid", yearcol = "year2", year.as.random = TRUE,
+  patch.as.random = TRUE, reduce = FALSE)
 
 summary(lathmat3ln)
 }

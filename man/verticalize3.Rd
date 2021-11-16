@@ -36,7 +36,7 @@ verticalize3(
   stageassign = NA,
   stagesize = NA,
   censorkeep = 0,
-  censorRepeat = TRUE,
+  censorRepeat = FALSE,
   censor = FALSE,
   coordsRepeat = FALSE,
   spacing = NA,
@@ -50,10 +50,11 @@ verticalize3(
 \item{data}{The horizontal data file. A valid data frame is required as
 input.}
 
-\item{noyears}{The number of years or observation periods in the dataset. A
+\item{noyears}{The number of years or observation occasions in the dataset. A
 valid integer is required as input.}
 
-\item{firstyear}{The first year or occasion of observation. Defaults to 1.}
+\item{firstyear}{The first year or occasion of observation. Defaults to
+\code{1}.}
 
 \item{popidcol}{A variable name or column number corresponding to the 
 identity of the population for each individual.}
@@ -69,54 +70,60 @@ identity of each individual.}
 the input dataset designated in \code{data}, if a set pattern of variables is
 used for each observation occasion in the data frame used as input. If such a
 pattern is not used, and all variable names are properly noted as character
-vectors in the other input variables, then this may be set to NA. Defaults to
-NA.}
+vectors in the other input variables, then this may be set to \code{NA}.
+Defaults to \code{NA}.}
 
 \item{xcol}{A variable name(s) or column number(s) corresponding to the X 
-coordinate of each individual, or each individual-occasion combination of the
-X coordinate, in Cartesian space. Can refer to the only instance, the first
-instance, or all instances of X variables. In the last case, the values
-should be entered as a vector.}
+coordinate of each individual, or of each individual at each occasion, in
+Cartesian space. Can refer to the only instance, the first instance, or all
+instances of X variables. In the last case, the values should be entered as a
+vector.}
 
 \item{ycol}{A variable name(s) or column number(s) corresponding to the Y
-coordinate of each individual, or each individual-occasion combination of the
-Y coordinate, in Cartesian space. Can refer to the only instance, the first
-instance, or all instances of Y variables. In the last case, the values
-should be entered as a vector.}
+coordinate of each individual, or of each individual at each occasion, in
+Cartesian space. Can refer to the only instance, the first instance, or all
+instances of Y variables. In the last case, the values should be entered as a
+vector.}
 
 \item{juvcol}{A variable name(s) or column number(s) that marks individuals
-in immature stages within the dataset. The \code{verticalize3()} function 
-assumes that immature individuals are identified in this variable marked with
-a number equal to or greater than 1, and that mature individuals are marked
-as 0 or NA. Can refer to the first instance, or all instances of these
+in immature stages within the dataset. This function assumes that immature
+individuals are identified in this variable marked with a number equal to or
+greater than \code{1}, and that mature individuals are marked as \code{0} or
+\code{NA}. Can refer to the first instance, or all instances of these
 variables. In the latter case, the values should be entered as a vector.}
 
 \item{sizeacol}{A variable name(s) or column number(s) corresponding to the
 size entry associated with the first year or observation occasion in the
 dataset. Can refer to the first instance, or all instances of these
-variables. In the latter case, the values should be entered as a vector.}
+variables. In the latter case, the values should be entered as a vector.
+This variable should refer to the first size variable in the stageframe,
+unless \code{stagesize = "sizeadded"}.}
 
 \item{sizebcol}{A second variable name(s) or column number(s) corresponding
-tp the size entry associated with the first year or observation occasion in
+to the size entry associated with the first year or observation occasion in
 the dataset. Can refer to the first instance, or all instances of these
-variables. In the latter case, the values should be entered as a vector.}
+variables. In the latter case, the values should be entered as a vector.
+This variable should refer to the second size variable in the stageframe,
+unless \code{stagesize = "sizeadded"}.}
 
 \item{sizeccol}{A third variable name(s) or column number(s) corresponding to
 the size entry associated with the first year or observation occasion in the
 dataset. Can refer to the first instance, or all instances of these variables.
-In the latter case, the values should be entered as a vector.}
+In the latter case, the values should be entered as a vector. This variable
+should refer to the third size variable in the stageframe, unless
+\code{stagesize = "sizeadded"}.}
 
 \item{repstracol}{A variable name(s) or column number(s) corresponding to the
 production of reproductive structures, such as flowers, associated with the 
 first year or observation period in the input dataset. This can be binomial 
-or count data, and is used to in analysis of the probability of reproduction.
-Can refer to the first instance, or all instances of these variables. In the
+or count data, and is used to analyze the probability of reproduction. Can
+refer to the first instance, or all instances of these variables. In the
 latter case, the values should be entered as a vector.}
 
 \item{repstrbcol}{A second variable name(s) or column number(s) corresponding
 to the production of reproductive structures, such as flowers, associated
 with the first year or observation period in the input dataset. This can be 
-binomial or count data, and is used to in analysis of the probability of
+binomial or count data, and is used to analyze the probability of
 reproduction. Can refer to the first instance, or all instances of these
 variables. In the latter case, the values should be entered as a vector.}
 
@@ -149,52 +156,52 @@ last case, the values should be entered as a vector.}
 
 \item{aliveacol}{Variable name(s) or column number(s) providing information
 on whether an individual is alive at a given occasion. If used, living status
-must be designated as binomial (living = 1, dead = 0). Can refer to the first
-instance of a living status variable in the dataset, or equal a full vector
-of all living status variables in temporal order.}
+must be designated as binomial (living = \code{1}, dead = \code{0}). Can
+refer to the first instance of a living status variable in the dataset, or
+a full vector of all living status variables in temporal order.}
 
 \item{deadacol}{Variable name(s) or column number(s) providing information on
 whether an individual is alive at a given occasion. If used, dead status must
-be designated as binomial (dead = 1, living = 0).  Can refer to the first
-instance of a dead status variable in the dataset, or equal a full vector
+be designated as binomial (dead = \code{1}, living = \code{0}).  Can refer to
+the first instance of a dead status variable in the dataset, or a full vector
 of all dead status variables in temporal order.}
 
 \item{obsacol}{A variable name(s) or column number(s) providing information
 on whether an individual is in an observable stage at a given occasion. If
-used, observation status must be designated as binomial (observed = 1, not 
-observed = 0). Can refer to the first instance of an observation status
-variable in the dataset, or equal a full vector of all observation status
+used, observation status must be designated as binomial (observed = \code{1}, 
+not observed = \code{0}). Can refer to the first instance of an observation
+status variable in the dataset, or a full vector of all observation status
 variables in temporal order.}
 
 \item{nonobsacol}{A variable name(s) or column number(s) providing
 information on whether an individual is in an unobservable stage at a given
 occasion. If used, observation status must be designated as binomial (not
-observed = 1, observed = 0). Can refer to the first instance of a
-non-observation status variable in the dataset, or equal a full vector of all
+observed = \code{1}, observed = \code{0}). Can refer to the first instance of
+a non-observation status variable in the dataset, or a full vector of all
 non-observation status variables in temporal order.}
 
 \item{censorcol}{A variable name(s) or column number(s) corresponding to the
 first entry of a censor variable, used to distinguish between entries to use
 and entries not to use, or to designate entries with special issues that
 require further attention. Can refer to the first instance of a censor status
-variable in the dataset, or equal a full vector of all censor status
-variables in temporal order. Can also refer to a single censor status
-variable used for the entire individual, if \code{singlecensor = TRUE}.}
+variable in the dataset, or a full vector of all censor status variables in
+temporal order. Can also refer to a single censor status variable used for
+the entire individual, if \code{singlecensor = TRUE}.}
 
 \item{repstrrel}{This is a scalar multiplier on variable \code{repstrbcol} to
 make it equivalent to \code{repstracol}. This can be useful if two 
 reproductive status variables have related but unequal units, for example if
 \code{repstracol} refers to one-flowered stems while \code{repstrbcol} refers
-to two-flowered stems. Defaults to 1.}
+to two-flowered stems. Defaults to \code{1}.}
 
 \item{fecrel}{This is a scalar multiplier on variable \code{fecbcol} to make
 it equivalent to \code{fecacol}. This can be useful if two fecundity 
-variables have related but unequal units. Defaults to 1.}
+variables have related but unequal units. Defaults to \code{1}.}
 
 \item{stagecol}{Optional variable name(s) or column number(s) corresponding
 to life history stage at a given occasion. Can refer to the first instance of
-a stage identity variable in the dataset, or equal a full vector of all
-stage identity variables in temporal order.}
+a stage identity variable in the dataset, or a full vector of all stage
+identity variables in temporal order.}
 
 \item{stageassign}{The stageframe object identifying the life history model
 being operationalized. Note that if \code{stagecol} is provided, then this
@@ -202,49 +209,57 @@ stageframe is not used for stage designation.}
 
 \item{stagesize}{A variable name or column number describing which size 
 variable to use in stage estimation. Defaults to NA, and can also take 
-\code{sizea}, \code{sizeb}, \code{sizec}, or \code{sizeadded}, depending on
-which size variable is chosen.}
+\code{sizea}, \code{sizeb}, \code{sizec}, \code{sizeab}, \code{sizebc},
+\code{sizeac}, \code{sizeabc}, or \code{sizeadded}, depending on
+which size variable within the input dataset is chosen. Note that the
+variable(s) chosen should be presented in the order of the primary,
+secondary, and tertiary variables in the stageframe input with
+\code{stageassign}. For example, choosing \code{sizeb} assumes that this size
+is the primary variable in the stageframe.}
 
 \item{censorkeep}{The value of the censor variable identifying data to be
-included in analysis. Defaults to 0, but may take any value including NA.
-Note that if NA is the value to keep, then this function will alter all NAs
-to 0 values, and all other values to 1, treating 0 as the value to keep.}
+included in analysis. Defaults to \code{0}, but may take any value including
+\code{NA}. Note that if \code{NA} is the value to keep, then this function
+will alter all \code{NA}s to \code{0} values, and all other values to
+\code{1}, treating \code{0} as the new value to keep.}
 
 \item{censorRepeat}{A logical value indicating whether the censor variable
 is a single column, or whether it repeats across occasion blocks. Defaults to
-TRUE.}
+\code{FALSE}.}
 
 \item{censor}{A logical variable determining whether the output data should 
 be censored using the variable defined in \code{censorcol}. Defaults to 
-FALSE.}
+\code{FALSE}.}
 
 \item{coordsRepeat}{A logical value indicating whether X and Y coordinates
-correspond to single X and Y columns. If TRUE, then each observation occasion
-has its own X and Y variables. Defaults to FALSE.}
+correspond to single X and Y columns. If \code{TRUE}, then each observation
+occasion has its own X and Y variables. Defaults to \code{FALSE}.}
 
 \item{spacing}{The spacing at which density should be estimated, if density
 estimation is desired and X and Y coordinates are supplied. Given in the same
 units as those used in the X and Y coordinates given in \code{xcol} and 
-\code{ycol}. Defaults to NA.}
+\code{ycol}. Defaults to \code{NA}.}
 
-\item{NAas0}{If TRUE, then all NA entries for size and fecundity variables 
-will be set to 0. This can help increase the sample size analyzed by 
-\code{\link{modelsearch}()}, but should only be used when it is clear that 
-this substitution is biologically realistic. Defaults to FALSE.}
+\item{NAas0}{If \code{TRUE}, then all \code{NA} entries for size and
+fecundity variables will be set to 0. This can help increase the sample size
+analyzed by \code{\link{modelsearch}()}, but should only be used when it is
+clear that this substitution is biologically realistic. Defaults to
+\code{FALSE}.}
 
-\item{NRasRep}{If TRUE, then will treat non-reproductive but mature 
+\item{NRasRep}{If \code{TRUE}, then will treat non-reproductive but mature 
 individuals as reproductive during stage assignment. This can be useful when
 a matrix is desired without separation of reproductive and non-reproductive
 but mature stages of the same size. Only used if \code{stageassign} is set
-to a stageframe. Defaults to FALSE.}
+to a stageframe. Defaults to \code{FALSE}.}
 
 \item{reduce}{A logical variable determining whether unused variables and 
 some invariant state variables should be removed from the output dataset.
-Defaults to TRUE.}
+Defaults to \code{TRUE}.}
 
 \item{a2check}{A logical variable indicating whether to retain all data with
-living status at occasion \emph{t} equal to 0. Defaults to FALSE, and should
-be kept on FALSE except to inspect potential errors in the dataset.}
+living status at occasion \emph{t} equal to 0. Defaults to \code{FALSE}, and
+should be kept \code{FALSE} except to inspect potential errors in the
+dataset.}
 }
 \value{
 If all inputs are properly formatted, then this function will output
@@ -310,9 +325,10 @@ in occasions \emph{t}-1, \emph{t}, and \emph{t}+1, respectively.}
 \code{spacing}. Only given if \code{spacing} is not NA.}
 }
 \description{
-\code{verticalize3()} returns a vertically formatted demographic data frame 
-organized to create historical projection matrices, given a horizontally
-formatted input data frame.
+Function \code{verticalize3()} returns a vertically formatted demographic
+data frame organized to create historical projection matrices, given a
+horizontally formatted input data frame. It also handles stage assignments
+if given an appropriate stageframe.
 }
 \section{Notes}{
 
@@ -351,7 +367,7 @@ algorithms rather than actual measured data. Variables holding negative
 values can conflict with data management algorithms in ways that are
 difficult to predict.
 
-Unusual errors (e.g. \code{"Error in pfj..."}) may occur in cases where the
+Unusual errors (e.g. \code{"Error in .pfj..."}) may occur in cases where the
 variables are improperly passed, where seemingly numeric variables include
 text, or where the \code{blocksize} is improperly set.
 
@@ -497,7 +513,7 @@ cypmatrix2r <- rlefko2(data = cypraw_v1, stageframe = cypframe_raw,
   year = "all", patch = "all", stages = c("stage3", "stage2", "stage1"),
   size = c("size3added", "size2added"), supplement = cypsupp2r,
   yearcol = "year2", patchcol = "patchid", indivcol = "individ")
-                       
+
 cyp2mean <- lmean(cypmatrix2r)
 cyp2mean
 
@@ -544,7 +560,7 @@ cypmatrix2r <- rlefko2(data = cypraw_v1, stageframe = cypframe_raw,
   year = "all", patch = "all", stages = c("stage3", "stage2", "stage1"),
   size = c("size3added", "size2added"), supplement = cypsupp2r,
   yearcol = "year2", patchcol = "patchid", indivcol = "individ")
-                       
+
 cyp2mean <- lmean(cypmatrix2r)
 cyp2mean
 

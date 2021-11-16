@@ -4,9 +4,9 @@
 using namespace Rcpp;
 using namespace arma;
 
-//' Main Formula Creation for \code{modelsearch()}
+//' Main Formula Creation for Function \code{modelsearch()}
 //'
-//' Function \code{stovokor()} creates formulae to be used as input in the
+//' Function \code{.stovokor()} creates formulae to be used as input in the
 //' global model calls used in function \code{\link{modelsearch}()}.
 //'
 //' @param surv A vector of strings indicating the names of the variables coding
@@ -14,7 +14,11 @@ using namespace arma;
 //' @param obs A vector of strings indicating the names of the variables coding
 //' observation status.
 //' @param size A vector of strings indicating the names of the variables coding
-//' size.
+//' primary size.
+//' @param sizeb A vector of strings indicating the names of the variables
+//' coding secondary size.
+//' @param sizec A vector of strings indicating the names of the variables
+//' coding tertiary size.
 //' @param repst A vector of strings indicating the names of the variables
 //' coding reproductive status.
 //' @param fec A vector of strings indicating the names of the variables coding
@@ -28,10 +32,6 @@ using namespace arma;
 //' \code{"size"}, \code{"rep"}, and \code{"const"}.
 //' @param approach A string indicating whether to use mixed model encoding 
 //' (\code{"mixed"}) or GLM encoding (\code{"glm"}).
-//' @param sizedist A string variable indicating the distribution to use to
-//' model size.
-//' @param fecdist A string variable indicating the distribution to use to
-//' model fecundity.
 //' @param nojuvs A logical value indicating that juvenile rates should be
 //' estimated (\code{FALSE}) or not (\code{TRUE}).
 //' @param age A string indicating the name of the variable coding age.
@@ -54,37 +54,56 @@ using namespace arma;
 //' variable within mixed models.
 //' @param yasrand A logical value indicating whether to treat year as a random
 //' variable within mixed models.
+//' @param iaasrand A logical value indicating whether to treat indcova as
+//' random.
+//' @param ibasrand A logical value indicating whether to treat indcovb as
+//' random.
+//' @param icasrand A logical value indicating whether to treat indcovc as
+//' random.
 //' @param fectime An integer indicating whether to use reproductive output in
 //' time \emph{t} (2) or time \emph{t}+1 (3) as the response for fecundity.
 //' @param juvsize A logical value indicating whether to include size terms in
 //' juvenile models.
-//' @param size0 A logical value indicating whether size distribution should
-//' be zero-inflated. Only applies to Poisson and negative binomial
-//' distributions.
-//' @param fec0 A logical value indicating whether size distribution should
-//' be zero-inflated. Only applies to Poisson and negative binomial
-//' distributions.
+//' @param sizebused A logical value denoting if secondary size variables are to
+//' be used.
+//' @param sizecused A logical value denoting if tertiary size variables are to
+//' be used.
+//' @param grouptest A logical value indicating whether to test for group
+//' effect.
+//' @param densitycol The name of the density variable, or \code{"none"}.
+//' @param densityused A logical value indicating whether the density variable
+//' is to be used.
+//' @param indcovaused Logical value indicating whether individual covariate a
+//' is used.
+//' @param indcovbused Logical value indicating whether individual covariate b
+//' is used.
+//' @param indcovcused Logical value indicating whether individual covariate c
+//' is used.
 //' 
 //' @return Vector of 9 strings, each a formula to be used as input in function.
 //' \code{modelsearch()}.
 //'
 //' @keywords internal
 //' @noRd
-// [[Rcpp::export]]
+// [[Rcpp::export(.stovokor)]]
 List stovokor(StringVector surv, StringVector obs, StringVector size,
-  StringVector repst, StringVector fec, StringVector vitalrates,
-  bool historical, String suite, String approach, String sizedist,
-  String fecdist, bool nojuvs, String age, StringVector indcova,
-  StringVector indcovb, StringVector indcovc, String indiv, String patch,
-  String year, bool pasrand, bool yasrand, int fectime, bool juvsize,
-  bool size0, bool fec0) {
+  StringVector sizeb, StringVector sizec, StringVector repst, StringVector fec,
+  StringVector vitalrates, bool historical, String suite, String approach,
+  bool nojuvs, String age, StringVector indcova, StringVector indcovb,
+  StringVector indcovc, String indiv, String patch, String year, bool pasrand,
+  bool yasrand, bool iaasrand, bool ibasrand, bool icasrand, int fectime,
+  bool juvsize, bool sizebused, bool sizecused, bool grouptest,
+  String densitycol, bool densityused, bool indcovaused, bool indcovbused,
+  bool indcovcused) {
   
-  if (nojuvs) juvsize = FALSE;
+  if (nojuvs) juvsize = false;
   
   int nvitalrates = vitalrates.length();
   bool survcheck = 0;
   bool obscheck = 0;
   bool sizecheck = 0;
+  bool sizebcheck = 0;
+  bool sizeccheck = 0;
   bool repstcheck = 0;
   bool feccheck = 0;
   
@@ -94,33 +113,56 @@ List stovokor(StringVector surv, StringVector obs, StringVector size,
   String fullsurvmodel;
   String fullobsmodel;
   String fullsizemodel;
+  String fullsizebmodel;
+  String fullsizecmodel;
   String fullrepstmodel;
   String fullfecmodel;
+  
   String juvsurvmodel;
   String juvobsmodel;
   String juvsizemodel;
+  String juvsizebmodel;
+  String juvsizecmodel;
   String juvrepstmodel;
-  String randomtackonp;
-  String randomtackony;
-  String randomtackoni;
-  String randomtackon;
-  String fixedtackonp;
-  String fixedtackony;
-  String fixedtackon;
+  
+  String randomtackonp = "";
+  String randomtackony = "";
+  String randomtackoni = "";
+  String randomtackonia = "";
+  String randomtackonib = "";
+  String randomtackonic = "";
+  String randomtackon = "";
+  
+  String fixedtackong = "";
+  String fixedtackonp = "";
+  String fixedtackony = "";
+  String fixedtackonia = "";
+  String fixedtackonib = "";
+  String fixedtackonic = "";
+  String fixedtackon = "";
+  
   String sizesuffix;
   String jsizesuffix;
   String fecsuffix;
+  
+  String fullmainmodel;
+  String juvmainmodel;
   
   int covcount {0};
   if (indcova(1) != "none") covcount += 1;
   if (indcovb(1) != "none") covcount += 1;
   if (indcovc(1) != "none") covcount += 1;
+  int modelcounter {0};
+  int juvmodelcounter {0};
+  int fixedcovcounter {0};
   
   // This section determines which vital rates need global model formulae
   for (int i = 0; i < nvitalrates; i++) {
     if (vitalrates(i) == "surv") survcheck = 1;
     if (vitalrates(i) == "obs") obscheck = 1;
     if (vitalrates(i) == "size") sizecheck = 1;
+    if (vitalrates(i) == "size" && sizebused) sizebcheck = 1;
+    if (vitalrates(i) == "size" && sizecused) sizeccheck = 1;
     if (vitalrates(i) == "repst") repstcheck = 1;
     if (vitalrates(i) == "fec") feccheck = 1;
   }
@@ -130,7 +172,7 @@ List stovokor(StringVector surv, StringVector obs, StringVector size,
     if (historical) {
       if (sizel != 3 && repstl != 3) {
         if (sizel == 2 && repstl == 2) {
-          historical = FALSE;
+          historical = false;
         } else if (repstl == 3) {
           suite = "rep";
         } else if (sizel == 3) {
@@ -152,7 +194,7 @@ List stovokor(StringVector surv, StringVector obs, StringVector size,
     if (historical) {
       if (repstl != 3) {
         if (repstl == 2) {
-          historical = FALSE;
+          historical = false;
         } else {
           suite = "const";
         }
@@ -168,7 +210,7 @@ List stovokor(StringVector surv, StringVector obs, StringVector size,
     if (historical) {
       if (sizel != 3) {
         if (sizel == 2) {
-          historical = FALSE;
+          historical = false;
         } else {
           suite = "const";
         }
@@ -183,15 +225,19 @@ List stovokor(StringVector surv, StringVector obs, StringVector size,
   }
   
   // Here we determine the nature of the potentially random variables
-  randomtackonp = "";
-  randomtackony = "";
-  randomtackoni = "";
-  fixedtackonp = "";
-  fixedtackony = "";
-  
   if (approach != "mixed") {
-    yasrand = FALSE;
-    pasrand = FALSE;
+    yasrand = false;
+    pasrand = false;
+  }
+  
+  if (grouptest) {
+    fixedcovcounter += 1;
+    fixedtackong += "as.factor(group2)";
+    
+    if (historical) {
+      fixedcovcounter += 1;
+      fixedtackong += "+ as.factor(group1)";
+    }
   }
   
   if (year!= "none") {
@@ -201,9 +247,15 @@ List stovokor(StringVector surv, StringVector obs, StringVector size,
       randomtackony += year;
       randomtackony += ")";
     } else {
-      fixedtackony += " + as.factor(";
+      if (fixedcovcounter > 0) {
+        fixedtackony += " + as.factor(";
+      } else {
+        fixedtackony += "as.factor(";
+      }
       fixedtackony += year;
       fixedtackony += ")";
+      
+      fixedcovcounter += 1;
     }
   }
   
@@ -214,9 +266,15 @@ List stovokor(StringVector surv, StringVector obs, StringVector size,
       randomtackonp += patch;
       randomtackonp += ")";
     } else {
-      fixedtackonp += " + as.factor(";
+      if (fixedcovcounter > 0) {
+        fixedtackonp += " + as.factor(";
+      } else {
+        fixedtackonp += "as.factor(";
+      }
       fixedtackonp += patch;
+      
       fixedtackonp += ")";
+      fixedcovcounter += 1;
     }
   }
   
@@ -226,354 +284,859 @@ List stovokor(StringVector surv, StringVector obs, StringVector size,
     randomtackoni += ")";
   }
   
-  randomtackon = randomtackony;
+  // Now we add the individual covariates to the tacked-on sections
+  if (indcova(1) != "none") {
+    if (!iaasrand) {
+      if (fixedcovcounter > 0) {
+        fixedtackonia += " + ";
+        fixedtackonia += indcova(1);
+      } else {
+        fixedtackonia += indcova(1);
+      }
+      fixedcovcounter += 1;
+      if (historical) {
+        fixedtackonia += " + ";
+        fixedtackonia += indcova(2);
+      }
+    } else {
+      randomtackonia += " + (1 | ";
+      randomtackonia += indcova(1);
+      randomtackonia += ")";
+      
+      if (historical) {
+        randomtackonia += " + (1 | ";
+        randomtackonia += indcova(2);
+        randomtackonia += ")";
+      }
+    }
+  }
+  if (indcovb(1) != "none") {
+    if (!ibasrand) {
+      if (fixedcovcounter > 0) {
+        fixedtackonib += " + ";
+        fixedtackonib += indcovb(1);
+      } else {
+        fixedtackonib += indcovb(1);
+      }
+      fixedcovcounter += 1;
+      if (historical) {
+        fixedtackonib += " + ";
+        fixedtackonib += indcovb(2);
+      }
+    } else {
+      randomtackonib += " + (1 | ";
+      randomtackonib += indcovb(1);
+      randomtackonib += ")";
+      
+      if (historical) {
+        randomtackonib += " + (1 | ";
+        randomtackonib += indcovb(2);
+        randomtackonib += ")";
+      }
+    }
+  }
+  if (indcovc(1) != "none") {
+    if (!icasrand) {
+      if (fixedcovcounter > 0) {
+        fixedtackonic += " + ";
+        fixedtackonic += indcovc(1);
+      } else {
+        fixedtackonic += indcovc(1);
+      }
+      fixedcovcounter += 1;
+      if (historical) {
+        fixedtackonic += " + ";
+        fixedtackonic += indcovc(2);
+      }
+    } else {
+      randomtackonic += " + (1 | ";
+      randomtackonic += indcovc(1);
+      randomtackonic += ")";
+      
+      if (historical) {
+        randomtackonic += " + (1 | ";
+        randomtackonic += indcovc(2);
+        randomtackonic += ")";
+      }
+    }
+  }
+  if (suite == "full" && !iaasrand && !ibasrand) {
+    if (indcova(1) != "none" && indcovb(1) != "none") {
+      fixedtackonib += " + ";
+      fixedtackonib += indcova(1);
+      fixedtackonib += ":";
+      fixedtackonib += indcovb(1);
+      
+      if (historical) {
+        fixedtackonib += " + ";
+        fixedtackonib += indcova(2);
+        fixedtackonib += ":";
+        fixedtackonib += indcovb(2);
+        
+        fixedtackonib += " + ";
+        fixedtackonib += indcova(1);
+        fixedtackonib += ":";
+        fixedtackonib += indcovb(2);
+        
+        fixedtackonib += " + ";
+        fixedtackonib += indcova(2);
+        fixedtackonib += ":";
+        fixedtackonib += indcovb(1);
+      }
+    }
+  }
+  if (suite == "full" && !iaasrand && !icasrand) {
+    if (indcova(1) != "none" && indcovc(1) != "none") {
+      fixedtackonic += " + ";
+      fixedtackonic += indcova(1);
+      fixedtackonic += ":";
+      fixedtackonic += indcovc(1);
+      
+      if (historical) {
+        fixedtackonic += " + ";
+        fixedtackonic += indcova(2);
+        fixedtackonic += ":";
+        fixedtackonic += indcovc(2);
+        
+        fixedtackonic += " + ";
+        fixedtackonic += indcova(1);
+        fixedtackonic += ":";
+        fixedtackonic += indcovc(2);
+        
+        fixedtackonic += " + ";
+        fixedtackonic += indcova(2);
+        fixedtackonic += ":";
+        fixedtackonic += indcovc(1);
+      }
+    }
+  }
+  if (suite == "full" && !ibasrand && !icasrand) {
+    if (indcovb(1) != "none" && indcovc(1) != "none") {
+      fixedtackonic += " + ";
+      fixedtackonic += indcovb(1);
+      fixedtackonic += ":";
+      fixedtackonic += indcovc(1);
+      
+      if (historical) {
+        fixedtackonic += " + ";
+        fixedtackonic += indcovb(2);
+        fixedtackonic += ":";
+        fixedtackonic += indcovc(2);
+        
+        fixedtackonic += " + ";
+        fixedtackonic += indcovb(1);
+        fixedtackonic += ":";
+        fixedtackonic += indcovc(2);
+        
+        fixedtackonic += " + ";
+        fixedtackonic += indcovb(2);
+        fixedtackonic += ":";
+        fixedtackonic += indcovc(1);
+      }
+    }
+  }
+  
+  randomtackon += randomtackonia;
+  randomtackon += randomtackonib;
+  randomtackon += randomtackonic;
+  randomtackon += randomtackony;
   randomtackon += randomtackonp;
   randomtackon += randomtackoni;
-  fixedtackon = fixedtackony;
+  
+  fixedtackon += fixedtackong;
+  fixedtackon += fixedtackonia;
+  fixedtackon += fixedtackonib;
+  fixedtackon += fixedtackonic;
+  fixedtackon += fixedtackony;
   fixedtackon += fixedtackonp;
   
-  // Now we will build the global models
-  if (survcheck) {
-    fullsurvmodel = surv(0);
-    fullsurvmodel += " ~ ";
+  // Main model patterns
+  // First the juvenile model pattern
+  if (!nojuvs) {
+    juvmainmodel = " ~ ";
     
-    if (!nojuvs) {
-      juvsurvmodel = surv(0);
-      juvsurvmodel += " ~ ";
-      
-      if (suite == "full" || suite == "main" || suite == "size") {
-        if (juvsize) {
-          juvsurvmodel += size(1);
-        } else juvsurvmodel += "1";
-      } else juvsurvmodel += "1";
-      
-      juvsurvmodel += fixedtackon;
-      juvsurvmodel += randomtackon;
+    if (suite == "full" || suite == "main" || suite == "size" || suite == "repst") {
+      if (juvsize && suite != "repst") {
+        juvmainmodel += size(1);
+        juvmodelcounter += 1;
+        
+        if (sizebused) {
+          if (juvmodelcounter > 0) juvmainmodel += " + ";
+          juvmainmodel += sizeb(1);
+          juvmodelcounter += 1;
+          
+          if (suite == "full") {
+            juvmainmodel += " + ";
+            juvmainmodel += size(1);
+            juvmainmodel += ":";
+            juvmainmodel += sizeb(1);
+          }
+        }
+        if (sizecused) {
+          if (juvmodelcounter > 0) juvmainmodel += " + ";
+          juvmainmodel += sizec(1);
+          juvmodelcounter += 1;
+          
+          if (suite == "full") {
+            juvmainmodel += " + ";
+            juvmainmodel += size(1);
+            juvmainmodel += ":";
+            juvmainmodel += sizec(1);
+            
+            if (sizebused) {
+              juvmainmodel += " + ";
+              juvmainmodel += sizeb(1);
+              juvmainmodel += ":";
+              juvmainmodel += sizec(1);
+            }
+          }
+        }
+        if (densityused) {
+          if (juvmodelcounter > 0) juvmainmodel += " + ";
+          juvmainmodel += densitycol;
+          juvmodelcounter += 1;
+          
+          if (suite == "full") {
+            juvmainmodel += " + ";
+            juvmainmodel += size(1);
+            juvmainmodel += ":";
+            juvmainmodel += densitycol;
+            
+            if (sizebused) {
+              juvmainmodel += " + ";
+              juvmainmodel += sizeb(1);
+              juvmainmodel += ":";
+              juvmainmodel += densitycol;
+            }
+            if (sizecused) {
+              juvmainmodel += " + ";
+              juvmainmodel += sizec(1);
+              juvmainmodel += ":";
+              juvmainmodel += densitycol;
+            }
+          }
+        }
+        
+      } else if (densityused) {
+        if (juvmodelcounter > 0) juvmainmodel += " + ";
+        juvmainmodel += densitycol;
+        juvmodelcounter += 1;
+      } else if (fixedcovcounter == 0) {
+        juvmainmodel += "1";
+      }
+    } else  if (fixedcovcounter == 0) {
+      juvmainmodel += "1";
     }
     
-    if (age != "none") {
-      fullsurvmodel += age;
-    }
-    if (indcova(1) != "none") {
-      if (age != "none") fullsurvmodel += " + ";
-      fullsurvmodel += indcova(1);
+    juvmainmodel += fixedtackon;
+    juvmainmodel += randomtackon;
+  }
+    
+  // Now the adult model pattern
+  fullmainmodel = " ~ ";
+  
+  if (age != "none") {
+    fullmainmodel += age;
+    modelcounter += 1;
+  }
+  
+  if (densityused) {
+    if (modelcounter > 0) fullmainmodel += " + ";
+    fullmainmodel += densitycol;
+    modelcounter += 1;
+  }
+  
+  if (suite == "full" || suite == "main" || suite == "size" || suite == "repst") {
+    if (suite != "repst") {
+      if (modelcounter > 0) fullmainmodel += " + ";
+      fullmainmodel += size(1);
+      modelcounter += 1;
+      
+      if (suite == "full" && densityused) {
+        fullmainmodel += " + ";
+        fullmainmodel += size(1);
+        fullmainmodel += ":";
+        fullmainmodel += densitycol;
+      }
       
       if (historical) {
-        fullsurvmodel += " + ";
-        fullsurvmodel += indcova(2);
+        fullmainmodel += " + ";
+        fullmainmodel += size(2);
+        
+        if (suite != "main") {
+          fullmainmodel += " + ";
+          fullmainmodel += size(1);
+          fullmainmodel += ":";
+          fullmainmodel += size(2);
+        }
+        
+        if (suite == "full" && densityused) {
+          fullmainmodel += " + ";
+          fullmainmodel += size(2);
+          fullmainmodel += ":";
+          fullmainmodel += densitycol;
+        }
+      }
+      
+      if (sizebused) {
+        if (modelcounter > 0) fullmainmodel += " + ";
+        fullmainmodel += sizeb(1);
+        modelcounter += 1;
+        
+        if (suite == "full" && densityused) {
+          fullmainmodel += " + ";
+          fullmainmodel += sizeb(1);
+          fullmainmodel += ":";
+          fullmainmodel += densitycol;
+        }
+        
+        if (historical) {
+          fullmainmodel += " + ";
+          fullmainmodel += sizeb(2);
+        
+          if (suite != "main") {
+            fullmainmodel += " + ";
+            fullmainmodel += sizeb(1);
+            fullmainmodel += ":";
+            fullmainmodel += sizeb(2);
+            
+            fullmainmodel += " + ";
+            fullmainmodel += size(1);
+            fullmainmodel += ":";
+            fullmainmodel += sizeb(2);
+            
+            fullmainmodel += " + ";
+            fullmainmodel += sizeb(1);
+            fullmainmodel += ":";
+            fullmainmodel += size(2);
+          }
+          
+          if (suite == "full" && densityused) {
+            fullmainmodel += " + ";
+            fullmainmodel += sizeb(2);
+            fullmainmodel += ":";
+            fullmainmodel += densitycol;
+          }
+        }
+      }
+      if (sizecused) {
+        if (modelcounter > 0) fullmainmodel += " + ";
+        fullmainmodel += sizec(1);
+        modelcounter += 1;
+        
+        if (suite == "full" && densityused) {
+          fullmainmodel += " + ";
+          fullmainmodel += sizec(1);
+          fullmainmodel += ":";
+          fullmainmodel += densitycol;
+        }
+        
+        if (historical) {
+          fullmainmodel += " + ";
+          fullmainmodel += sizec(2);
+        
+          if (suite != "main") {
+            fullmainmodel += " + ";
+            fullmainmodel += sizec(1);
+            fullmainmodel += ":";
+            fullmainmodel += sizec(2);
+            
+            fullmainmodel += " + ";
+            fullmainmodel += size(1);
+            fullmainmodel += ":";
+            fullmainmodel += sizec(2);
+            
+            fullmainmodel += " + ";
+            fullmainmodel += sizec(1);
+            fullmainmodel += ":";
+            fullmainmodel += size(2);
+            
+            if (sizebused) {
+              fullmainmodel += " + ";
+              fullmainmodel += sizeb(1);
+              fullmainmodel += ":";
+              fullmainmodel += sizec(2);
+              
+              fullmainmodel += " + ";
+              fullmainmodel += sizec(1);
+              fullmainmodel += ":";
+              fullmainmodel += sizeb(2);
+            }
+          }
+          
+          if (suite == "full" && densityused) {
+            fullmainmodel += " + ";
+            fullmainmodel += sizec(2);
+            fullmainmodel += ":";
+            fullmainmodel += densitycol;
+          }
+        }
       }
     }
-    if (indcovb(1) != "none") {
-      if (age != "none" || indcova(1) != "none") fullsurvmodel += " + ";
-      fullsurvmodel += indcovb(1);
+    
+    if (suite != "size") {
+      if (modelcounter > 0) fullmainmodel += " + ";
+      fullmainmodel += repst(1);
+      modelcounter += 1;
       
-      if (historical) {
-        fullsurvmodel += " + ";
-        fullsurvmodel += indcovb(2);
+      if (suite == "full" && densityused) {
+        fullmainmodel += " + ";
+        fullmainmodel += repst(1);
+        fullmainmodel += ":";
+        fullmainmodel += densitycol;
       }
-    }
-    if (indcovc(1) != "none") {
-      if (age != "none" || covcount > 1) fullsurvmodel += " + ";
-      fullsurvmodel += indcovc(1);
       
       if (historical) {
-        fullsurvmodel += " + ";
-        fullsurvmodel += indcovc(2);
+        fullmainmodel += " + ";
+        fullmainmodel += repst(2);
+        
+        if (suite == "repst" || suite == "full") {
+          fullmainmodel += " + ";
+          fullmainmodel += repst(1);
+          fullmainmodel += ":";
+          fullmainmodel += repst(2);
+        }
+        
+        if (suite == "full" && densityused) {
+          fullmainmodel += " + ";
+          fullmainmodel += repst(2);
+          fullmainmodel += ":";
+          fullmainmodel += densitycol;
+        }
       }
     }
     
     if (suite == "full") {
-      if (age != "none" || covcount > 0) fullsurvmodel += " + ";
-      fullsurvmodel += size(1);
-      fullsurvmodel += " + ";
-      fullsurvmodel += repst(1);
+      fullmainmodel += " + ";
+      fullmainmodel += size(1);
+      fullmainmodel += ":";
+      fullmainmodel += repst(1);
       
-      if (historical) {
-        fullsurvmodel += " + ";
-        fullsurvmodel += size(2);
-        fullsurvmodel += " + ";
-        fullsurvmodel += repst(2);
+      if (sizebused) {
+        fullmainmodel += " + ";
+        fullmainmodel += sizeb(1);
+        fullmainmodel += ":";
+        fullmainmodel += repst(1);
       }
       
-      fullsurvmodel += " + ";
-      fullsurvmodel += size(1);
-      fullsurvmodel += ":";
-      fullsurvmodel += repst(1);
+      if (sizecused) {
+        fullmainmodel += " + ";
+        fullmainmodel += sizec(1);
+        fullmainmodel += ":";
+        fullmainmodel += repst(1);
+      }
       
       if (historical) {
-        fullsurvmodel += " + ";
-        fullsurvmodel += size(1);
-        fullsurvmodel += ":";
-        fullsurvmodel += size(2);
+        fullmainmodel += " + ";
+        fullmainmodel += repst(2);
+        fullmainmodel += ":";
+        fullmainmodel += size(2);
         
-        fullsurvmodel += " + ";
-        fullsurvmodel += repst(1);
-        fullsurvmodel += ":";
-        fullsurvmodel += repst(2);
+        fullmainmodel += " + ";
+        fullmainmodel += size(1);
+        fullmainmodel += ":";
+        fullmainmodel += size(2);
         
-        fullsurvmodel += " + ";
-        fullsurvmodel += size(1);
-        fullsurvmodel += ":";
-        fullsurvmodel += repst(2);
+        fullmainmodel += " + ";
+        fullmainmodel += repst(1);
+        fullmainmodel += ":";
+        fullmainmodel += repst(2);
         
-        fullsurvmodel += " + ";
-        fullsurvmodel += repst(1);
-        fullsurvmodel += ":";
-        fullsurvmodel += size(2);
+        fullmainmodel += " + ";
+        fullmainmodel += size(1);
+        fullmainmodel += ":";
+        fullmainmodel += repst(2);
+        
+        fullmainmodel += " + ";
+        fullmainmodel += repst(1);
+        fullmainmodel += ":";
+        fullmainmodel += size(2);
+        
+        if (sizebused) {
+          fullmainmodel += " + ";
+          fullmainmodel += sizeb(2);
+          fullmainmodel += ":";
+          fullmainmodel += repst(2);
+          
+          fullmainmodel += " + ";
+          fullmainmodel += sizeb(1);
+          fullmainmodel += ":";
+          fullmainmodel += repst(2);
+          
+          fullmainmodel += " + ";
+          fullmainmodel += repst(1);
+          fullmainmodel += ":";
+          fullmainmodel += sizeb(2);
+        }
+        
+        if (sizecused) {
+          fullmainmodel += " + ";
+          fullmainmodel += sizec(2);
+          fullmainmodel += ":";
+          fullmainmodel += repst(2);
+          
+          fullmainmodel += " + ";
+          fullmainmodel += sizec(1);
+          fullmainmodel += ":";
+          fullmainmodel += repst(2);
+          
+          fullmainmodel += " + ";
+          fullmainmodel += repst(1);
+          fullmainmodel += ":";
+          fullmainmodel += sizec(2);
+        }
       }
       
       if (age != "none") {
-        fullsurvmodel += " + ";
-        fullsurvmodel += age;
-        fullsurvmodel += ":";
-        fullsurvmodel += size(1);
+        fullmainmodel += " + ";
+        fullmainmodel += age;
+        fullmainmodel += ":";
+        fullmainmodel += size(1);
         
-        fullsurvmodel += " + ";
-        fullsurvmodel += age;
-        fullsurvmodel += ":";
-        fullsurvmodel += repst(1);
+        if (sizebused) {
+          fullmainmodel += " + ";
+          fullmainmodel += age;
+          fullmainmodel += ":";
+          fullmainmodel += sizeb(1);
+        }
+        if (sizecused) {
+          fullmainmodel += " + ";
+          fullmainmodel += age;
+          fullmainmodel += ":";
+          fullmainmodel += sizec(1);
+        }
+        
+        fullmainmodel += " + ";
+        fullmainmodel += age;
+        fullmainmodel += ":";
+        fullmainmodel += repst(1);
+        
+        if (densityused) {
+          fullmainmodel += " + ";
+          fullmainmodel += age;
+          fullmainmodel += ":";
+          fullmainmodel += densitycol;
+        }
         
         if (historical) {
-          fullsurvmodel += " + ";
-          fullsurvmodel += age;
-          fullsurvmodel += ":";
-          fullsurvmodel += size(2);
+          fullmainmodel += " + ";
+          fullmainmodel += age;
+          fullmainmodel += ":";
+          fullmainmodel += size(2);
           
-          fullsurvmodel += " + ";
-          fullsurvmodel += age;
-          fullsurvmodel += ":";
-          fullsurvmodel += repst(2);
+          if (sizebused) {
+            fullmainmodel += " + ";
+            fullmainmodel += age;
+            fullmainmodel += ":";
+            fullmainmodel += sizeb(2);
+          }
+          if (sizecused) {
+            fullmainmodel += " + ";
+            fullmainmodel += age;
+            fullmainmodel += ":";
+            fullmainmodel += sizec(2);
+          }
+          
+          fullmainmodel += " + ";
+          fullmainmodel += age;
+          fullmainmodel += ":";
+          fullmainmodel += repst(2);
         }
       }
       
-      if (indcova(1) != "none") {
-        fullsurvmodel += " + ";
-        fullsurvmodel += indcova(1);
-        fullsurvmodel += ":";
-        fullsurvmodel += size(1);
+      if (indcova(1) != "none" && !iaasrand) {
+        fullmainmodel += " + ";
+        fullmainmodel += indcova(1);
+        fullmainmodel += ":";
+        fullmainmodel += size(1);
         
-        fullsurvmodel += " + ";
-        fullsurvmodel += indcova(1);
-        fullsurvmodel += ":";
-        fullsurvmodel += repst(1);
+        if (sizebused) {
+          fullmainmodel += " + ";
+          fullmainmodel += indcova(1);
+          fullmainmodel += ":";
+          fullmainmodel += sizeb(1);
+        }
+        if (sizecused) {
+          fullmainmodel += " + ";
+          fullmainmodel += indcova(1);
+          fullmainmodel += ":";
+          fullmainmodel += sizec(1);
+        }
+        
+        fullmainmodel += " + ";
+        fullmainmodel += indcova(1);
+        fullmainmodel += ":";
+        fullmainmodel += repst(1);
+        
+        if (densityused) {
+          fullmainmodel += " + ";
+          fullmainmodel += indcova(1);
+          fullmainmodel += ":";
+          fullmainmodel += densitycol;
+        }
         
         if (historical && indcova(2) != "none") {
-          fullsurvmodel += " + ";
-          fullsurvmodel += indcova(2);
-          fullsurvmodel += ":";
-          fullsurvmodel += size(2);
+          fullmainmodel += " + ";
+          fullmainmodel += indcova(2);
+          fullmainmodel += ":";
+          fullmainmodel += size(2);
           
-          fullsurvmodel += " + ";
-          fullsurvmodel += indcova(2);
-          fullsurvmodel += ":";
-          fullsurvmodel += repst(2);
+          if (sizebused) {
+            fullmainmodel += " + ";
+            fullmainmodel += indcova(2);
+            fullmainmodel += ":";
+            fullmainmodel += sizeb(2);
+            
+            fullmainmodel += " + ";
+            fullmainmodel += indcova(1);
+            fullmainmodel += ":";
+            fullmainmodel += sizeb(2);
+            
+            fullmainmodel += " + ";
+            fullmainmodel += indcova(2);
+            fullmainmodel += ":";
+            fullmainmodel += sizeb(1);
+          }
+          if (sizecused) {
+            fullmainmodel += " + ";
+            fullmainmodel += indcova(2);
+            fullmainmodel += ":";
+            fullmainmodel += sizec(2);
+            
+            fullmainmodel += " + ";
+            fullmainmodel += indcova(1);
+            fullmainmodel += ":";
+            fullmainmodel += sizec(2);
+            
+            fullmainmodel += " + ";
+            fullmainmodel += indcova(2);
+            fullmainmodel += ":";
+            fullmainmodel += sizec(1);
+          }
+        
+          fullmainmodel += " + ";
+          fullmainmodel += indcova(2);
+          fullmainmodel += ":";
+          fullmainmodel += repst(2);
+          
+          if (densityused) {
+            fullmainmodel += " + ";
+            fullmainmodel += indcova(2);
+            fullmainmodel += ":";
+            fullmainmodel += densitycol;
+          }
         }
       }
-      if (indcovb(1) != "none") {
-        fullsurvmodel += " + ";
-        fullsurvmodel += indcovb(1);
-        fullsurvmodel += ":";
-        fullsurvmodel += size(1);
+      if (indcovb(1) != "none" && !ibasrand) {
+        fullmainmodel += " + ";
+        fullmainmodel += indcovb(1);
+        fullmainmodel += ":";
+        fullmainmodel += size(1);
         
-        fullsurvmodel += " + ";
-        fullsurvmodel += indcovb(1);
-        fullsurvmodel += ":";
-        fullsurvmodel += repst(1);
+        if (sizebused) {
+          fullmainmodel += " + ";
+          fullmainmodel += indcovb(1);
+          fullmainmodel += ":";
+          fullmainmodel += sizeb(1);
+        }
+        if (sizecused) {
+          fullmainmodel += " + ";
+          fullmainmodel += indcovb(1);
+          fullmainmodel += ":";
+          fullmainmodel += sizec(1);
+        }
+        
+        fullmainmodel += " + ";
+        fullmainmodel += indcovb(1);
+        fullmainmodel += ":";
+        fullmainmodel += repst(1);
+        
+        if (densityused) {
+          fullmainmodel += " + ";
+          fullmainmodel += indcovb(1);
+          fullmainmodel += ":";
+          fullmainmodel += densitycol;
+        }
         
         if (historical && indcovb(2) != "none") {
-          fullsurvmodel += " + ";
-          fullsurvmodel += indcovb(2);
-          fullsurvmodel += ":";
-          fullsurvmodel += size(2);
+          fullmainmodel += " + ";
+          fullmainmodel += indcovb(2);
+          fullmainmodel += ":";
+          fullmainmodel += size(2);
           
-          fullsurvmodel += " + ";
-          fullsurvmodel += indcovb(2);
-          fullsurvmodel += ":";
-          fullsurvmodel += repst(2);
-        }
+          if (sizebused) {
+            fullmainmodel += " + ";
+            fullmainmodel += indcovb(2);
+            fullmainmodel += ":";
+            fullmainmodel += sizeb(2);
+            
+            fullmainmodel += " + ";
+            fullmainmodel += indcovb(1);
+            fullmainmodel += ":";
+            fullmainmodel += sizeb(2);
+            
+            fullmainmodel += " + ";
+            fullmainmodel += indcovb(2);
+            fullmainmodel += ":";
+            fullmainmodel += sizeb(1);
+          }
+          if (sizecused) {
+            fullmainmodel += " + ";
+            fullmainmodel += indcovb(2);
+            fullmainmodel += ":";
+            fullmainmodel += sizec(2);
+            
+            fullmainmodel += " + ";
+            fullmainmodel += indcovb(1);
+            fullmainmodel += ":";
+            fullmainmodel += sizec(2);
+            
+            fullmainmodel += " + ";
+            fullmainmodel += indcovb(2);
+            fullmainmodel += ":";
+            fullmainmodel += sizec(1);
+          }
         
-        if (indcova(1) != "none") {
-          fullsurvmodel += " + ";
-          fullsurvmodel += indcova(1);
-          fullsurvmodel += ":";
-          fullsurvmodel += indcovb(1);
+          fullmainmodel += " + ";
+          fullmainmodel += indcovb(2);
+          fullmainmodel += ":";
+          fullmainmodel += repst(2);
           
-          if (historical) {
-            if (indcova(2) != "none" && indcovb(2) != "none") {
-              fullsurvmodel += " + ";
-              fullsurvmodel += indcova(2);
-              fullsurvmodel += ":";
-              fullsurvmodel += indcovb(2);
-              
-              fullsurvmodel += " + ";
-              fullsurvmodel += indcova(1);
-              fullsurvmodel += ":";
-              fullsurvmodel += indcovb(2);
-              
-              fullsurvmodel += " + ";
-              fullsurvmodel += indcova(2);
-              fullsurvmodel += ":";
-              fullsurvmodel += indcovb(1);
-            } else if (indcova(2) != "none") {
-              fullsurvmodel += " + ";
-              fullsurvmodel += indcova(2);
-              fullsurvmodel += ":";
-              fullsurvmodel += indcovb(1);
-            } else if (indcovb(2) != "none") {
-              fullsurvmodel += " + ";
-              fullsurvmodel += indcova(1);
-              fullsurvmodel += ":";
-              fullsurvmodel += indcovb(2);
-            }
-          } 
+          if (densityused) {
+            fullmainmodel += " + ";
+            fullmainmodel += indcovb(2);
+            fullmainmodel += ":";
+            fullmainmodel += densitycol;
+          }
         }
       }
       
-      if (indcovc(1) != "none") {
-        fullsurvmodel += " + ";
-        fullsurvmodel += indcovc(1);
-        fullsurvmodel += ":";
-        fullsurvmodel += size(1);
+      if (indcovc(1) != "none" && !icasrand) {
+        fullmainmodel += " + ";
+        fullmainmodel += indcovc(1);
+        fullmainmodel += ":";
+        fullmainmodel += size(1);
         
-        fullsurvmodel += " + ";
-        fullsurvmodel += indcovc(1);
-        fullsurvmodel += ":";
-        fullsurvmodel += repst(1);
+        if (sizebused) {
+          fullmainmodel += " + ";
+          fullmainmodel += indcovc(1);
+          fullmainmodel += ":";
+          fullmainmodel += sizeb(1);
+        }
+        if (sizecused) {
+          fullmainmodel += " + ";
+          fullmainmodel += indcovc(1);
+          fullmainmodel += ":";
+          fullmainmodel += sizec(1);
+        }
+        
+        fullmainmodel += " + ";
+        fullmainmodel += indcovc(1);
+        fullmainmodel += ":";
+        fullmainmodel += repst(1);
+        
+        if (densityused) {
+          fullmainmodel += " + ";
+          fullmainmodel += indcovc(1);
+          fullmainmodel += ":";
+          fullmainmodel += densitycol;
+        }
         
         if (historical && indcovc(2) != "none") {
-          fullsurvmodel += " + ";
-          fullsurvmodel += indcovc(2);
-          fullsurvmodel += ":";
-          fullsurvmodel += size(2);
+          fullmainmodel += " + ";
+          fullmainmodel += indcovc(2);
+          fullmainmodel += ":";
+          fullmainmodel += size(2);
           
-          fullsurvmodel += " + ";
-          fullsurvmodel += indcovc(2);
-          fullsurvmodel += ":";
-          fullsurvmodel += repst(2);
-        }
+          if (sizebused) {
+            fullmainmodel += " + ";
+            fullmainmodel += indcovc(2);
+            fullmainmodel += ":";
+            fullmainmodel += sizeb(2);
+            
+            fullmainmodel += " + ";
+            fullmainmodel += indcovc(1);
+            fullmainmodel += ":";
+            fullmainmodel += sizeb(2);
+            
+            fullmainmodel += " + ";
+            fullmainmodel += indcovc(2);
+            fullmainmodel += ":";
+            fullmainmodel += sizeb(1);
+          }
+          if (sizecused) {
+            fullmainmodel += " + ";
+            fullmainmodel += indcovc(2);
+            fullmainmodel += ":";
+            fullmainmodel += sizec(2);
+            
+            fullmainmodel += " + ";
+            fullmainmodel += indcovc(1);
+            fullmainmodel += ":";
+            fullmainmodel += sizec(2);
+            
+            fullmainmodel += " + ";
+            fullmainmodel += indcovc(2);
+            fullmainmodel += ":";
+            fullmainmodel += sizec(1);
+          }
         
-        if (indcova(1) != "none") {
-          fullsurvmodel += " + ";
-          fullsurvmodel += indcova(1);
-          fullsurvmodel += ":";
-          fullsurvmodel += indcovc(1);
+          fullmainmodel += " + ";
+          fullmainmodel += indcovc(2);
+          fullmainmodel += ":";
+          fullmainmodel += repst(2);
           
-          if (historical) {
-            if (indcova(2) != "none" && indcovc(2) != "none") {
-              fullsurvmodel += " + ";
-              fullsurvmodel += indcova(2);
-              fullsurvmodel += ":";
-              fullsurvmodel += indcovc(2);
-              
-              fullsurvmodel += " + ";
-              fullsurvmodel += indcova(1);
-              fullsurvmodel += ":";
-              fullsurvmodel += indcovc(2);
-              
-              fullsurvmodel += " + ";
-              fullsurvmodel += indcova(2);
-              fullsurvmodel += ":";
-              fullsurvmodel += indcovc(1);
-            } else if (indcova(2) != "none") {
-              fullsurvmodel += " + ";
-              fullsurvmodel += indcova(2);
-              fullsurvmodel += ":";
-              fullsurvmodel += indcovc(1);
-            } else if (indcovc(2) != "none") {
-              fullsurvmodel += " + ";
-              fullsurvmodel += indcova(1);
-              fullsurvmodel += ":";
-              fullsurvmodel += indcovc(2);
-            }
-          } 
-        }
-        if (indcovb(1) != "none") {
-          fullsurvmodel += " + ";
-          fullsurvmodel += indcovb(1);
-          fullsurvmodel += ":";
-          fullsurvmodel += indcovc(1);
-          
-          if (historical) {
-            if (indcovb(2) != "none" && indcovc(2) != "none") {
-              fullsurvmodel += " + ";
-              fullsurvmodel += indcovb(2);
-              fullsurvmodel += ":";
-              fullsurvmodel += indcovc(2);
-              
-              fullsurvmodel += " + ";
-              fullsurvmodel += indcovb(1);
-              fullsurvmodel += ":";
-              fullsurvmodel += indcovc(2);
-              
-              fullsurvmodel += " + ";
-              fullsurvmodel += indcovb(2);
-              fullsurvmodel += ":";
-              fullsurvmodel += indcovc(1);
-            } else if (indcovb(2) != "none") {
-              fullsurvmodel += " + ";
-              fullsurvmodel += indcovb(2);
-              fullsurvmodel += ":";
-              fullsurvmodel += indcovc(1);
-            } else if (indcovc(2) != "none") {
-              fullsurvmodel += " + ";
-              fullsurvmodel += indcovb(1);
-              fullsurvmodel += ":";
-              fullsurvmodel += indcovc(2);
-            }
-          } 
+          if (densityused) {
+            fullmainmodel += " + ";
+            fullmainmodel += indcovc(2);
+            fullmainmodel += ":";
+            fullmainmodel += densitycol;
+          }
         }
       }
-    } else if (suite == "main") {
-      if (age != "none" || covcount > 0) fullsurvmodel += " + ";
-      fullsurvmodel += size(1);
-      
-      if (historical && sizecheck) {
-        fullsurvmodel += " + ";
-        fullsurvmodel += size(2);
-      }
-      
-      fullsurvmodel += " + ";
-      fullsurvmodel += repst(1);
-      
-      if (historical && repstcheck) {
-        fullsurvmodel += " + ";
-        fullsurvmodel += repst(2);
-      }
-      
-    } else if (suite == "size") {
-      if (age != "none" || covcount > 0) fullsurvmodel += " + ";
-      fullsurvmodel += size(1);
-      
-      if (historical && sizecheck) {
-        fullsurvmodel += " + ";
-        fullsurvmodel += size(2);
-        
-        fullsurvmodel += " + ";
-        fullsurvmodel += size(1);
-        fullsurvmodel += ":";
-        fullsurvmodel += size(2);
-      }
-      
-    } else if (suite == "rep") {
-      if (age != "none" || covcount > 0) fullsurvmodel += " + ";
-      fullsurvmodel += repst(1);
-      
-      if (historical && repstcheck) {
-        fullsurvmodel += " + ";
-        fullsurvmodel += repst(2);
-        
-        fullsurvmodel += " + ";
-        fullsurvmodel += repst(1);
-        fullsurvmodel += ":";
-        fullsurvmodel += repst(2);
-      }
-      
-    } else {
-      if (age == "none" && covcount == 0) fullsurvmodel += "1";
     }
     
-    fullsurvmodel += fixedtackon;
-    fullsurvmodel += randomtackon;
+    if (modelcounter > 0 && fixedcovcounter > 0) fullmainmodel += " + ";
+    
+    fullmainmodel += fixedtackon;
+    fullmainmodel += randomtackon;
+  } else if (suite == "rep") {
+    if (age != "none" || covcount > 0) fullmainmodel += " + ";
+    fullmainmodel += repst(1);
+    
+    if (historical && repstcheck) {
+      fullmainmodel += " + ";
+      fullmainmodel += repst(2);
+      
+      fullmainmodel += " + ";
+      fullmainmodel += repst(1);
+      fullmainmodel += ":";
+      fullmainmodel += repst(2);
+    }
+    
+    fullmainmodel += fixedtackon;
+    fullmainmodel += randomtackon;
+  } else if (suite == "cons") {
+    if (fixedcovcounter == 0 && modelcounter == 0) fullmainmodel += "1";
+    
+    fullmainmodel += fixedtackon;
+    if (fixedcovcounter > 0) fullmainmodel += " + ";
+    fullmainmodel += randomtackon;
+  } else {
+    fullmainmodel = "none";
+  }
+  
+  // Now we will build the global models
+  if (survcheck) {
+    fullsurvmodel = surv(0);
+    fullsurvmodel += fullmainmodel;
+    
+    if (!nojuvs) {
+      juvsurvmodel = surv(0);
+      juvsurvmodel += juvmainmodel;
+    } else {
+    juvsurvmodel = "none";
+    }
     
   } else {
     fullsurvmodel = "none";
@@ -581,1327 +1144,65 @@ List stovokor(StringVector surv, StringVector obs, StringVector size,
   
   if (obscheck) {
     fullobsmodel = obs(0);
-    fullobsmodel += " ~ ";
+    fullobsmodel += fullmainmodel;
     
     if (!nojuvs) {
       juvobsmodel = obs(0);
-      juvobsmodel += " ~ ";
-      
-      if (suite == "full" || suite == "main" || suite == "size") {
-        if (juvsize) {
-          juvobsmodel += size(1);
-        } else juvobsmodel += "1";
-      } else juvobsmodel += "1";
-      
-      juvobsmodel += fixedtackon;
-      juvobsmodel += randomtackon;
-    }
-    
-    if (age != "none") {
-      fullobsmodel += age;
-    }
-    if (indcova(1) != "none") {
-      if (age != "none") fullobsmodel += " + ";
-      fullobsmodel += indcova(1);
-      
-      if (historical) {
-        fullobsmodel += " + ";
-        fullobsmodel += indcova(2);
-      }
-    }
-    if (indcovb(1) != "none") {
-      if (age != "none" || indcova(1) != "none") fullobsmodel += " + ";
-      fullobsmodel += indcovb(1);
-      
-      if (historical) {
-        fullobsmodel += " + ";
-        fullobsmodel += indcovb(2);
-      }
-    }
-    if (indcovc(1) != "none") {
-      if (age != "none" || covcount > 1) fullobsmodel += " + ";
-      fullobsmodel += indcovc(1);
-      
-      if (historical) {
-        fullobsmodel += " + ";
-        fullobsmodel += indcovc(2);
-      }
-    }
-    
-    if (suite == "full") {
-      if (age != "none" || covcount > 0) fullobsmodel += " + ";
-      fullobsmodel += size(1);
-      fullobsmodel += " + ";
-      fullobsmodel += repst(1);
-      
-      if (historical) {
-        fullobsmodel += " + ";
-        fullobsmodel += size(2);
-        fullobsmodel += " + ";
-        fullobsmodel += repst(2);
-      }
-      
-      fullobsmodel += " + ";
-      fullobsmodel += size(1);
-      fullobsmodel += ":";
-      fullobsmodel += repst(1);
-      
-      if (historical) {
-        fullobsmodel += " + ";
-        fullobsmodel += size(1);
-        fullobsmodel += ":";
-        fullobsmodel += size(2);
-        
-        fullobsmodel += " + ";
-        fullobsmodel += repst(1);
-        fullobsmodel += ":";
-        fullobsmodel += repst(2);
-        
-        fullobsmodel += " + ";
-        fullobsmodel += size(1);
-        fullobsmodel += ":";
-        fullobsmodel += repst(2);
-        
-        fullobsmodel += " + ";
-        fullobsmodel += repst(1);
-        fullobsmodel += ":";
-        fullobsmodel += size(2);
-      }
-      
-      if (age != "none") {
-        fullobsmodel += " + ";
-        fullobsmodel += age;
-        fullobsmodel += ":";
-        fullobsmodel += size(1);
-        
-        fullobsmodel += " + ";
-        fullobsmodel += age;
-        fullobsmodel += ":";
-        fullobsmodel += repst(1);
-        
-        if (historical) {
-          fullobsmodel += " + ";
-          fullobsmodel += age;
-          fullobsmodel += ":";
-          fullobsmodel += size(2);
-          
-          fullobsmodel += " + ";
-          fullobsmodel += age;
-          fullobsmodel += ":";
-          fullobsmodel += repst(2);
-        }
-      }
-      
-      if (indcova(1) != "none") {
-        fullobsmodel += " + ";
-        fullobsmodel += indcova(1);
-        fullobsmodel += ":";
-        fullobsmodel += size(1);
-        
-        fullobsmodel += " + ";
-        fullobsmodel += indcova(1);
-        fullobsmodel += ":";
-        fullobsmodel += repst(1);
-        
-        if (historical && indcova(2) != "none") {
-          fullobsmodel += " + ";
-          fullobsmodel += indcova(2);
-          fullobsmodel += ":";
-          fullobsmodel += size(2);
-          
-          fullobsmodel += " + ";
-          fullobsmodel += indcova(2);
-          fullobsmodel += ":";
-          fullobsmodel += repst(2);
-        }
-      }
-      if (indcovb(1) != "none") {
-        fullobsmodel += " + ";
-        fullobsmodel += indcovb(1);
-        fullobsmodel += ":";
-        fullobsmodel += size(1);
-        
-        fullobsmodel += " + ";
-        fullobsmodel += indcovb(1);
-        fullobsmodel += ":";
-        fullobsmodel += repst(1);
-        
-        if (historical && indcovb(2) != "none") {
-          fullobsmodel += " + ";
-          fullobsmodel += indcovb(2);
-          fullobsmodel += ":";
-          fullobsmodel += size(2);
-          
-          fullobsmodel += " + ";
-          fullobsmodel += indcovb(2);
-          fullobsmodel += ":";
-          fullobsmodel += repst(2);
-        }
-        
-        if (indcova(1) != "none") {
-          fullobsmodel += " + ";
-          fullobsmodel += indcova(1);
-          fullobsmodel += ":";
-          fullobsmodel += indcovb(1);
-          
-          if (historical) {
-            if (indcova(2) != "none" && indcovb(2) != "none") {
-              fullobsmodel += " + ";
-              fullobsmodel += indcova(2);
-              fullobsmodel += ":";
-              fullobsmodel += indcovb(2);
-              
-              fullobsmodel += " + ";
-              fullobsmodel += indcova(1);
-              fullobsmodel += ":";
-              fullobsmodel += indcovb(2);
-              
-              fullobsmodel += " + ";
-              fullobsmodel += indcova(2);
-              fullobsmodel += ":";
-              fullobsmodel += indcovb(1);
-            } else if (indcova(2) != "none") {
-              fullobsmodel += " + ";
-              fullobsmodel += indcova(2);
-              fullobsmodel += ":";
-              fullobsmodel += indcovb(1);
-            } else if (indcovb(2) != "none") {
-              fullobsmodel += " + ";
-              fullobsmodel += indcova(1);
-              fullobsmodel += ":";
-              fullobsmodel += indcovb(2);
-            }
-          } 
-        }
-      }
-      
-      if (indcovc(1) != "none") {
-        fullobsmodel += " + ";
-        fullobsmodel += indcovc(1);
-        fullobsmodel += ":";
-        fullobsmodel += size(1);
-        
-        fullobsmodel += " + ";
-        fullobsmodel += indcovc(1);
-        fullobsmodel += ":";
-        fullobsmodel += repst(1);
-        
-        if (historical && indcovc(2) != "none") {
-          fullobsmodel += " + ";
-          fullobsmodel += indcovc(2);
-          fullobsmodel += ":";
-          fullobsmodel += size(2);
-          
-          fullobsmodel += " + ";
-          fullobsmodel += indcovc(2);
-          fullobsmodel += ":";
-          fullobsmodel += repst(2);
-        }
-        if (indcova(1) != "none") {
-          fullobsmodel += " + ";
-          fullobsmodel += indcova(1);
-          fullobsmodel += ":";
-          fullobsmodel += indcovc(1);
-          
-          if (historical) {
-            if (indcova(2) != "none" && indcovc(2) != "none") {
-              fullobsmodel += " + ";
-              fullobsmodel += indcova(2);
-              fullobsmodel += ":";
-              fullobsmodel += indcovc(2);
-              
-              fullobsmodel += " + ";
-              fullobsmodel += indcova(1);
-              fullobsmodel += ":";
-              fullobsmodel += indcovc(2);
-              
-              fullobsmodel += " + ";
-              fullobsmodel += indcova(2);
-              fullobsmodel += ":";
-              fullobsmodel += indcovc(1);
-            } else if (indcova(2) != "none") {
-              fullobsmodel += " + ";
-              fullobsmodel += indcova(2);
-              fullobsmodel += ":";
-              fullobsmodel += indcovc(1);
-            } else if (indcovc(2) != "none") {
-              fullobsmodel += " + ";
-              fullobsmodel += indcova(1);
-              fullobsmodel += ":";
-              fullobsmodel += indcovc(2);
-            }
-          } 
-        }
-        if (indcovb(1) != "none") {
-          fullobsmodel += " + ";
-          fullobsmodel += indcovb(1);
-          fullobsmodel += ":";
-          fullobsmodel += indcovc(1);
-          
-          if (historical) {
-            if (indcovb(2) != "none" && indcovc(2) != "none") {
-              fullobsmodel += " + ";
-              fullobsmodel += indcovb(2);
-              fullobsmodel += ":";
-              fullobsmodel += indcovc(2);
-              
-              fullobsmodel += " + ";
-              fullobsmodel += indcovb(1);
-              fullobsmodel += ":";
-              fullobsmodel += indcovc(2);
-              
-              fullobsmodel += " + ";
-              fullobsmodel += indcovb(2);
-              fullobsmodel += ":";
-              fullobsmodel += indcovc(1);
-            } else if (indcovb(2) != "none") {
-              fullobsmodel += " + ";
-              fullobsmodel += indcovb(2);
-              fullobsmodel += ":";
-              fullobsmodel += indcovc(1);
-            } else if (indcovc(2) != "none") {
-              fullobsmodel += " + ";
-              fullobsmodel += indcovb(1);
-              fullobsmodel += ":";
-              fullobsmodel += indcovc(2);
-            }
-          } 
-        }
-      }
-    } else if (suite == "main") {
-      if (age != "none" || covcount > 0) fullobsmodel += " + ";
-      fullobsmodel += size(1);
-      
-      if (historical && sizecheck) {
-        fullobsmodel += " + ";
-        fullobsmodel += size(2);
-      }
-      
-      fullobsmodel += " + ";
-      fullobsmodel += repst(1);
-      
-      if (historical && repstcheck) {
-        fullobsmodel += " + ";
-        fullobsmodel += repst(2);
-      }
-      
-    } else if (suite == "size") {
-      if (age != "none" || covcount > 0) fullobsmodel += " + ";
-      fullobsmodel += size(1);
-      
-      if (historical && sizecheck) {
-        fullobsmodel += " + ";
-        fullobsmodel += size(2);
-        
-        fullobsmodel += " + ";
-        fullobsmodel += size(1);
-        fullobsmodel += ":";
-        fullobsmodel += size(2);
-      }
-      
-    } else if (suite == "rep") {
-      if (age != "none" || covcount > 0) fullobsmodel += " + ";
-      fullobsmodel += repst(1);
-      
-      if (historical && repstcheck) {
-        fullobsmodel += " + ";
-        fullobsmodel += repst(2);
-        
-        fullobsmodel += " + ";
-        fullobsmodel += repst(1);
-        fullobsmodel += ":";
-        fullobsmodel += repst(2);
-      }
-      
+      juvobsmodel += juvmainmodel;
     } else {
-      if (age == "none" && covcount == 0) fullobsmodel += "1";
+      juvobsmodel = "none";
     }
-    
-    fullobsmodel += fixedtackon;
-    fullobsmodel += randomtackon;
-    
   } else {
     fullobsmodel = "none";
   }
   
   if (sizecheck) {
     fullsizemodel = size(0);
-    fullsizemodel += " ~ ";
-    sizesuffix = "";
+    fullsizemodel += fullmainmodel;
     
     if (!nojuvs) {
       juvsizemodel = size(0);
-      juvsizemodel += " ~ ";
-      
-      if (suite == "full" || suite == "main" || suite == "size") {
-        
-        if (juvsize) {
-          juvsizemodel += size(1);
-          jsizesuffix = size(1);
-        } else {
-          juvsizemodel += "1";
-        }
-        
-      } else if (approach == "mixed") {
-        juvsizemodel += "1"; // This should be altered, since it will probably result in 1 for glm with year or other factor
-      }
-      
-      juvsizemodel += fixedtackon;
-      juvsizemodel += randomtackon;
-      jsizesuffix += fixedtackon;
-      
-      if (approach == "glm" && size0 && sizedist == "poisson") {
-        juvsizemodel += " | ";
-        juvsizemodel += jsizesuffix;
-      }
-    }
-    
-    if (age != "none") {
-      fullsizemodel += age;
-      sizesuffix += age;
-    }
-    if (indcova(1) != "none") {
-      if (age != "none") {
-        fullsizemodel += " + ";
-        sizesuffix += " + ";
-      }
-      fullsizemodel += indcova(1);
-      sizesuffix += indcova(1);
-      
-      if (historical) {
-        fullsizemodel += " + ";
-        fullsizemodel += indcova(2);
-        
-        sizesuffix += " + ";
-        sizesuffix += indcova(2);
-      }
-    }
-    if (indcovb(1) != "none") {
-      if (age != "none" || indcova(1) != "none") {
-        fullsizemodel += " + ";
-        sizesuffix += " + ";
-      }
-      fullsizemodel += indcovb(1);
-      sizesuffix += indcovb(1);
-      
-      if (historical) {
-        fullsizemodel += " + ";
-        fullsizemodel += indcovb(2);
-        
-        sizesuffix += " + ";
-        sizesuffix += indcovb(2);
-      }
-    }
-    if (indcovc(1) != "none") {
-      if (age != "none" || covcount > 1) {
-        fullsizemodel += " + ";
-        sizesuffix += " + ";
-      }
-      fullsizemodel += indcovc(1);
-      sizesuffix += indcovc(1);
-      
-      if (historical) {
-        fullsizemodel += " + ";
-        fullsizemodel += indcovc(2);
-        
-        sizesuffix += " + ";
-        sizesuffix += indcovc(2);
-      }
-    }
-    
-    if (suite == "full") {
-      if (age != "none" || covcount > 0) {
-        fullsizemodel += " + ";
-        sizesuffix += " + ";
-      }
-      fullsizemodel += size(1);
-      fullsizemodel += " + ";
-      fullsizemodel += repst(1);
-      
-      sizesuffix += size(1);
-      sizesuffix += " + ";
-      sizesuffix += repst(1);
-      
-      if (historical) {
-        fullsizemodel += " + ";
-        fullsizemodel += size(2);
-        fullsizemodel += " + ";
-        fullsizemodel += repst(2);
-        
-        sizesuffix += " + ";
-        sizesuffix += size(2);
-        sizesuffix += " + ";
-        sizesuffix += repst(2);
-      }
-      
-      fullsizemodel += " + ";
-      fullsizemodel += size(1);
-      fullsizemodel += ":";
-      fullsizemodel += repst(1);
-      
-      sizesuffix += " + ";
-      sizesuffix += size(1);
-      sizesuffix += ":";
-      sizesuffix += repst(1);
-      
-      if (historical) {
-        fullsizemodel += " + ";
-        fullsizemodel += size(1);
-        fullsizemodel += ":";
-        fullsizemodel += size(2);
-        
-        fullsizemodel += " + ";
-        fullsizemodel += repst(1);
-        fullsizemodel += ":";
-        fullsizemodel += repst(2);
-        
-        fullsizemodel += " + ";
-        fullsizemodel += size(1);
-        fullsizemodel += ":";
-        fullsizemodel += repst(2);
-        
-        fullsizemodel += " + ";
-        fullsizemodel += repst(1);
-        fullsizemodel += ":";
-        fullsizemodel += size(2);
-        
-        sizesuffix += " + ";
-        sizesuffix += size(1);
-        sizesuffix += ":";
-        sizesuffix += size(2);
-        
-        sizesuffix += " + ";
-        sizesuffix += repst(1);
-        sizesuffix += ":";
-        sizesuffix += repst(2);
-        
-        sizesuffix += " + ";
-        sizesuffix += size(1);
-        sizesuffix += ":";
-        sizesuffix += repst(2);
-        
-        sizesuffix += " + ";
-        sizesuffix += repst(1);
-        sizesuffix += ":";
-        sizesuffix += size(2);
-      }
-      
-      if (age != "none") {
-        fullsizemodel += " + ";
-        fullsizemodel += age;
-        fullsizemodel += ":";
-        fullsizemodel += size(1);
-        
-        fullsizemodel += " + ";
-        fullsizemodel += age;
-        fullsizemodel += ":";
-        fullsizemodel += repst(1);
-        
-        sizesuffix += " + ";
-        sizesuffix += age;
-        sizesuffix += ":";
-        sizesuffix += size(1);
-        
-        sizesuffix += " + ";
-        sizesuffix += age;
-        sizesuffix += ":";
-        sizesuffix += repst(1);
-        
-        if (historical) {
-          fullsizemodel += " + ";
-          fullsizemodel += age;
-          fullsizemodel += ":";
-          fullsizemodel += size(2);
-          
-          fullsizemodel += " + ";
-          fullsizemodel += age;
-          fullsizemodel += ":";
-          fullsizemodel += repst(2);
-          
-          sizesuffix += " + ";
-          sizesuffix += age;
-          sizesuffix += ":";
-          sizesuffix += size(2);
-          
-          sizesuffix += " + ";
-          sizesuffix += age;
-          sizesuffix += ":";
-          sizesuffix += repst(2);
-        }
-      }
-      
-      if (indcova(1) != "none") {
-        fullsizemodel += " + ";
-        fullsizemodel += indcova(1);
-        fullsizemodel += ":";
-        fullsizemodel += size(1);
-        
-        fullsizemodel += " + ";
-        fullsizemodel += indcova(1);
-        fullsizemodel += ":";
-        fullsizemodel += repst(1);
-        
-        sizesuffix += " + ";
-        sizesuffix += indcova(1);
-        sizesuffix += ":";
-        sizesuffix += size(1);
-        
-        sizesuffix += " + ";
-        sizesuffix += indcova(1);
-        sizesuffix += ":";
-        sizesuffix += repst(1);
-        
-        if (historical && indcova(2) != "none") {
-          fullsizemodel += " + ";
-          fullsizemodel += indcova(2);
-          fullsizemodel += ":";
-          fullsizemodel += size(2);
-          
-          fullsizemodel += " + ";
-          fullsizemodel += indcova(2);
-          fullsizemodel += ":";
-          fullsizemodel += repst(2);
-          
-          sizesuffix += " + ";
-          sizesuffix += indcova(2);
-          sizesuffix += ":";
-          sizesuffix += size(2);
-          
-          sizesuffix += " + ";
-          sizesuffix += indcova(2);
-          sizesuffix += ":";
-          sizesuffix += repst(2);
-        }
-      }
-      if (indcovb(1) != "none") {
-        fullsizemodel += " + ";
-        fullsizemodel += indcovb(1);
-        fullsizemodel += ":";
-        fullsizemodel += size(1);
-        
-        fullsizemodel += " + ";
-        fullsizemodel += indcovb(1);
-        fullsizemodel += ":";
-        fullsizemodel += repst(1);
-        
-        sizesuffix += " + ";
-        sizesuffix += indcovb(1);
-        sizesuffix += ":";
-        sizesuffix += size(1);
-        
-        sizesuffix += " + ";
-        sizesuffix += indcovb(1);
-        sizesuffix += ":";
-        sizesuffix += repst(1);
-        
-        if (historical && indcovb(2) != "none") {
-          fullsizemodel += " + ";
-          fullsizemodel += indcovb(2);
-          fullsizemodel += ":";
-          fullsizemodel += size(2);
-          
-          fullsizemodel += " + ";
-          fullsizemodel += indcovb(2);
-          fullsizemodel += ":";
-          fullsizemodel += repst(2);
-          
-          sizesuffix += " + ";
-          sizesuffix += indcovb(2);
-          sizesuffix += ":";
-          sizesuffix += size(2);
-          
-          sizesuffix += " + ";
-          sizesuffix += indcovb(2);
-          sizesuffix += ":";
-          sizesuffix += repst(2);
-        }
-        
-        if (indcova(1) != "none") {
-          fullsizemodel += " + ";
-          fullsizemodel += indcova(1);
-          fullsizemodel += ":";
-          fullsizemodel += indcovb(1);
-          
-          sizesuffix += " + ";
-          sizesuffix += indcova(1);
-          sizesuffix += ":";
-          sizesuffix += indcovb(1);
-          
-          if (historical) {
-            if (indcova(2) != "none" && indcovb(2) != "none") {
-              fullsizemodel += " + ";
-              fullsizemodel += indcova(2);
-              fullsizemodel += ":";
-              fullsizemodel += indcovb(2);
-              
-              fullsizemodel += " + ";
-              fullsizemodel += indcova(1);
-              fullsizemodel += ":";
-              fullsizemodel += indcovb(2);
-              
-              fullsizemodel += " + ";
-              fullsizemodel += indcova(2);
-              fullsizemodel += ":";
-              fullsizemodel += indcovb(1);
-              
-              sizesuffix += " + ";
-              sizesuffix += indcova(2);
-              sizesuffix += ":";
-              sizesuffix += indcovb(2);
-              
-              sizesuffix += " + ";
-              sizesuffix += indcova(1);
-              sizesuffix += ":";
-              sizesuffix += indcovb(2);
-              
-              sizesuffix += " + ";
-              sizesuffix += indcova(2);
-              sizesuffix += ":";
-              sizesuffix += indcovb(1);
-            } else if (indcova(2) != "none") {
-              fullsizemodel += " + ";
-              fullsizemodel += indcova(2);
-              fullsizemodel += ":";
-              fullsizemodel += indcovb(1);
-              
-              sizesuffix += " + ";
-              sizesuffix += indcova(2);
-              sizesuffix += ":";
-              sizesuffix += indcovb(1);
-            } else if (indcovb(2) != "none") {
-              fullsizemodel += " + ";
-              fullsizemodel += indcova(1);
-              fullsizemodel += ":";
-              fullsizemodel += indcovb(2);
-              
-              sizesuffix += " + ";
-              sizesuffix += indcova(1);
-              sizesuffix += ":";
-              sizesuffix += indcovb(2);
-            }
-          } 
-        }
-      }
-      
-      if (indcovc(1) != "none") {
-        fullsizemodel += " + ";
-        fullsizemodel += indcovc(1);
-        fullsizemodel += ":";
-        fullsizemodel += size(1);
-        
-        fullsizemodel += " + ";
-        fullsizemodel += indcovc(1);
-        fullsizemodel += ":";
-        fullsizemodel += repst(1);
-        
-        sizesuffix += " + ";
-        sizesuffix += indcovc(1);
-        sizesuffix += ":";
-        sizesuffix += size(1);
-        
-        sizesuffix += " + ";
-        sizesuffix += indcovc(1);
-        sizesuffix += ":";
-        sizesuffix += repst(1);
-        
-        if (historical && indcovc(2) != "none") {
-          fullsizemodel += " + ";
-          fullsizemodel += indcovc(2);
-          fullsizemodel += ":";
-          fullsizemodel += size(2);
-          
-          fullsizemodel += " + ";
-          fullsizemodel += indcovc(2);
-          fullsizemodel += ":";
-          fullsizemodel += repst(2);
-          
-          sizesuffix += " + ";
-          sizesuffix += indcovc(2);
-          sizesuffix += ":";
-          sizesuffix += size(2);
-          
-          sizesuffix += " + ";
-          sizesuffix += indcovc(2);
-          sizesuffix += ":";
-          sizesuffix += repst(2);
-        }
-        if (indcova(1) != "none") {
-          fullsizemodel += " + ";
-          fullsizemodel += indcova(1);
-          fullsizemodel += ":";
-          fullsizemodel += indcovc(1);
-          
-          sizesuffix += " + ";
-          sizesuffix += indcova(1);
-          sizesuffix += ":";
-          sizesuffix += indcovc(1);
-          
-          if (historical) {
-            if (indcova(2) != "none" && indcovc(2) != "none") {
-              fullsizemodel += " + ";
-              fullsizemodel += indcova(2);
-              fullsizemodel += ":";
-              fullsizemodel += indcovc(2);
-              
-              fullsizemodel += " + ";
-              fullsizemodel += indcova(1);
-              fullsizemodel += ":";
-              fullsizemodel += indcovc(2);
-              
-              fullsizemodel += " + ";
-              fullsizemodel += indcova(2);
-              fullsizemodel += ":";
-              fullsizemodel += indcovc(1);
-              
-              sizesuffix += " + ";
-              sizesuffix += indcova(2);
-              sizesuffix += ":";
-              sizesuffix += indcovc(2);
-              
-              sizesuffix += " + ";
-              sizesuffix += indcova(1);
-              sizesuffix += ":";
-              sizesuffix += indcovc(2);
-              
-              sizesuffix += " + ";
-              sizesuffix += indcova(2);
-              sizesuffix += ":";
-              sizesuffix += indcovc(1);
-            } else if (indcova(2) != "none") {
-              fullsizemodel += " + ";
-              fullsizemodel += indcova(2);
-              fullsizemodel += ":";
-              fullsizemodel += indcovc(1);
-              
-              sizesuffix += " + ";
-              sizesuffix += indcova(2);
-              sizesuffix += ":";
-              sizesuffix += indcovc(1);
-            } else if (indcovc(2) != "none") {
-              fullsizemodel += " + ";
-              fullsizemodel += indcova(1);
-              fullsizemodel += ":";
-              fullsizemodel += indcovc(2);
-              
-              sizesuffix += " + ";
-              sizesuffix += indcova(1);
-              sizesuffix += ":";
-              sizesuffix += indcovc(2);
-            }
-          } 
-        }
-        if (indcovb(1) != "none") {
-          fullsizemodel += " + ";
-          fullsizemodel += indcovb(1);
-          fullsizemodel += ":";
-          fullsizemodel += indcovc(1);
-          
-          sizesuffix += " + ";
-          sizesuffix += indcovb(1);
-          sizesuffix += ":";
-          sizesuffix += indcovc(1);
-          
-          if (historical) {
-            if (indcovb(2) != "none" && indcovc(2) != "none") {
-              fullsizemodel += " + ";
-              fullsizemodel += indcovb(2);
-              fullsizemodel += ":";
-              fullsizemodel += indcovc(2);
-              
-              fullsizemodel += " + ";
-              fullsizemodel += indcovb(1);
-              fullsizemodel += ":";
-              fullsizemodel += indcovc(2);
-              
-              fullsizemodel += " + ";
-              fullsizemodel += indcovb(2);
-              fullsizemodel += ":";
-              fullsizemodel += indcovc(1);
-              
-              sizesuffix += " + ";
-              sizesuffix += indcovb(2);
-              sizesuffix += ":";
-              sizesuffix += indcovc(2);
-              
-              sizesuffix += " + ";
-              sizesuffix += indcovb(1);
-              sizesuffix += ":";
-              sizesuffix += indcovc(2);
-              
-              sizesuffix += " + ";
-              sizesuffix += indcovb(2);
-              sizesuffix += ":";
-              sizesuffix += indcovc(1);
-            } else if (indcovb(2) != "none") {
-              fullsizemodel += " + ";
-              fullsizemodel += indcovb(2);
-              fullsizemodel += ":";
-              fullsizemodel += indcovc(1);
-              
-              sizesuffix += " + ";
-              sizesuffix += indcovb(2);
-              sizesuffix += ":";
-              sizesuffix += indcovc(1);
-            } else if (indcovc(2) != "none") {
-              fullsizemodel += " + ";
-              fullsizemodel += indcovb(1);
-              fullsizemodel += ":";
-              fullsizemodel += indcovc(2);
-              
-              sizesuffix += " + ";
-              sizesuffix += indcovb(1);
-              sizesuffix += ":";
-              sizesuffix += indcovc(2);
-            }
-          } 
-        }
-      }
-    } else if (suite == "main") {
-      if (age != "none" || covcount > 0) {
-        fullsizemodel += " + ";
-        sizesuffix += " + ";
-      }
-      
-      fullsizemodel += size(1);
-      sizesuffix += size(1);
-      
-      if (historical && sizecheck) {
-        fullsizemodel += " + ";
-        fullsizemodel += size(2);
-        
-        sizesuffix += " + ";
-        sizesuffix += size(2);
-      }
-      
-      fullsizemodel += " + ";
-      fullsizemodel += repst(1);
-      
-      sizesuffix += " + ";
-      sizesuffix += repst(1);
-      
-      if (historical && repstcheck) {
-        fullsizemodel += " + ";
-        fullsizemodel += repst(2);
-        
-        sizesuffix += " + ";
-        sizesuffix += repst(2);
-      }
-      
-    } else if (suite == "size") {
-      if (age != "none" || covcount > 0) {
-        fullsizemodel += " + ";
-        sizesuffix += " + ";
-      }
-      
-      fullsizemodel += size(1);
-      sizesuffix += size(1);
-      
-      if (historical && sizecheck) {
-        fullsizemodel += " + ";
-        fullsizemodel += size(2);
-        
-        sizesuffix += " + ";
-        sizesuffix += size(2);
-        
-        fullsizemodel += " + ";
-        fullsizemodel += size(1);
-        fullsizemodel += ":";
-        fullsizemodel += size(2);
-        
-        sizesuffix += " + ";
-        sizesuffix += size(1);
-        sizesuffix += ":";
-        sizesuffix += size(2);
-      }
-      
-    } else if (suite == "rep") {
-      if (age != "none" || covcount > 0) {
-        fullsizemodel += " + ";
-        sizesuffix += " + ";
-      }
-      
-      fullsizemodel += repst(1);
-      sizesuffix += repst(1);
-      
-      if (historical && repstcheck) {
-        fullsizemodel += " + ";
-        fullsizemodel += repst(2);
-        
-        sizesuffix += " + ";
-        sizesuffix += repst(2);
-        
-        fullsizemodel += " + ";
-        fullsizemodel += repst(1);
-        fullsizemodel += ":";
-        fullsizemodel += repst(2);
-        
-        sizesuffix += " + ";
-        sizesuffix += repst(1);
-        sizesuffix += ":";
-        sizesuffix += repst(2);
-      }
-      
+      juvsizemodel += juvmainmodel;
     } else {
-      if (age == "none" && covcount == 1) fullsizemodel += "1";
+      juvsizemodel = "none";
     }
     
-    fullsizemodel += fixedtackon;
-    sizesuffix += fixedtackon;
-    fullsizemodel += randomtackon;
-    
-    if (size0 && suite != "const" && approach == "glm") {
-      if (sizedist == "poisson") {
-        fullsizemodel += " | ";
-        fullsizemodel += sizesuffix;
+    if (sizebused) {
+      fullsizebmodel = sizeb(0);
+      fullsizebmodel += fullmainmodel;
+      
+      if (!nojuvs) {
+        juvsizebmodel = sizeb(0);
+        juvsizebmodel += juvmainmodel;
+      } else {
+        juvsizebmodel = "none";
       }
     }
-    
+    if (sizecused) {
+      fullsizecmodel = sizec(0);
+      fullsizecmodel += fullmainmodel;
+      
+      if (!nojuvs) {
+        juvsizecmodel = sizec(0);
+        juvsizecmodel += juvmainmodel;
+      } else {
+        juvsizecmodel = "none";
+      }
+    }
   } else {
-    fullsizemodel = "none";
+    fullsizecmodel = "none";
   }
   
   if (repstcheck) {
     fullrepstmodel = repst(0);
-    fullrepstmodel += " ~ ";
+    fullrepstmodel += fullmainmodel;
     
     if (!nojuvs) {
       juvrepstmodel = repst(0);
-      juvrepstmodel += " ~ ";
-      
-      if (suite == "full" || suite == "main" || suite == "size") {
-        if (juvsize) {
-          juvrepstmodel += size(1);
-        } else juvrepstmodel += "1";
-      } else juvrepstmodel += "1";
-      
-      juvrepstmodel += fixedtackon;
-      juvrepstmodel += randomtackon;
-    }
-    
-    if (age != "none") {
-      fullrepstmodel += age;
-    }
-    if (indcova(1) != "none") {
-      if (age != "none") fullrepstmodel += " + ";
-      fullrepstmodel += indcova(1);
-      
-      if (historical) {
-        fullrepstmodel += " + ";
-        fullrepstmodel += indcova(2);
-      }
-    }
-    if (indcovb(1) != "none") {
-      if (age != "none" || indcova(1) != "none") fullrepstmodel += " + ";
-      fullrepstmodel += indcovb(1);
-      
-      if (historical) {
-        fullrepstmodel += " + ";
-        fullrepstmodel += indcovb(2);
-      }
-    }
-    if (indcovc(1) != "none") {
-      if (age != "none" || covcount > 1) fullrepstmodel += " + ";
-      fullrepstmodel += indcovc(1);
-      
-      if (historical) {
-        fullrepstmodel += " + ";
-        fullrepstmodel += indcovc(2);
-      }
-    }
-    
-    if (suite == "full") {
-      if (age != "none" || covcount > 0) fullrepstmodel += " + ";
-      fullrepstmodel += size(1);
-      fullrepstmodel += " + ";
-      fullrepstmodel += repst(1);
-      
-      if (historical) {
-        fullrepstmodel += " + ";
-        fullrepstmodel += size(2);
-        fullrepstmodel += " + ";
-        fullrepstmodel += repst(2);
-      }
-      
-      fullrepstmodel += " + ";
-      fullrepstmodel += size(1);
-      fullrepstmodel += ":";
-      fullrepstmodel += repst(1);
-      
-      if (historical) {
-        fullrepstmodel += " + ";
-        fullrepstmodel += size(1);
-        fullrepstmodel += ":";
-        fullrepstmodel += size(2);
-        
-        fullrepstmodel += " + ";
-        fullrepstmodel += repst(1);
-        fullrepstmodel += ":";
-        fullrepstmodel += repst(2);
-        
-        fullrepstmodel += " + ";
-        fullrepstmodel += size(1);
-        fullrepstmodel += ":";
-        fullrepstmodel += repst(2);
-        
-        fullrepstmodel += " + ";
-        fullrepstmodel += repst(1);
-        fullrepstmodel += ":";
-        fullrepstmodel += size(2);
-      }
-      
-      if (age != "none") {
-        fullrepstmodel += " + ";
-        fullrepstmodel += age;
-        fullrepstmodel += ":";
-        fullrepstmodel += size(1);
-        
-        fullrepstmodel += " + ";
-        fullrepstmodel += age;
-        fullrepstmodel += ":";
-        fullrepstmodel += repst(1);
-        
-        if (historical) {
-          fullrepstmodel += " + ";
-          fullrepstmodel += age;
-          fullrepstmodel += ":";
-          fullrepstmodel += size(2);
-          
-          fullrepstmodel += " + ";
-          fullrepstmodel += age;
-          fullrepstmodel += ":";
-          fullrepstmodel += repst(2);
-        }
-      }
-      
-      if (indcova(1) != "none") {
-        fullrepstmodel += " + ";
-        fullrepstmodel += indcova(1);
-        fullrepstmodel += ":";
-        fullrepstmodel += size(1);
-        
-        fullrepstmodel += " + ";
-        fullrepstmodel += indcova(1);
-        fullrepstmodel += ":";
-        fullrepstmodel += repst(1);
-        
-        if (historical && indcova(2) != "none") {
-          fullrepstmodel += " + ";
-          fullrepstmodel += indcova(2);
-          fullrepstmodel += ":";
-          fullrepstmodel += size(2);
-          
-          fullrepstmodel += " + ";
-          fullrepstmodel += indcova(2);
-          fullrepstmodel += ":";
-          fullrepstmodel += repst(2);
-        }
-      }
-      if (indcovb(1) != "none") {
-        fullrepstmodel += " + ";
-        fullrepstmodel += indcovb(1);
-        fullrepstmodel += ":";
-        fullrepstmodel += size(1);
-        
-        fullrepstmodel += " + ";
-        fullrepstmodel += indcovb(1);
-        fullrepstmodel += ":";
-        fullrepstmodel += repst(1);
-        
-        if (historical && indcovb(2) != "none") {
-          fullrepstmodel += " + ";
-          fullrepstmodel += indcovb(2);
-          fullrepstmodel += ":";
-          fullrepstmodel += size(2);
-          
-          fullrepstmodel += " + ";
-          fullrepstmodel += indcovb(2);
-          fullrepstmodel += ":";
-          fullrepstmodel += repst(2);
-        }
-        
-        if (indcova(1) != "none") {
-          fullrepstmodel += " + ";
-          fullrepstmodel += indcova(1);
-          fullrepstmodel += ":";
-          fullrepstmodel += indcovb(1);
-          
-          if (historical) {
-            if (indcova(2) != "none" && indcovb(2) != "none") {
-              fullrepstmodel += " + ";
-              fullrepstmodel += indcova(2);
-              fullrepstmodel += ":";
-              fullrepstmodel += indcovb(2);
-              
-              fullrepstmodel += " + ";
-              fullrepstmodel += indcova(1);
-              fullrepstmodel += ":";
-              fullrepstmodel += indcovb(2);
-              
-              fullrepstmodel += " + ";
-              fullrepstmodel += indcova(2);
-              fullrepstmodel += ":";
-              fullrepstmodel += indcovb(1);
-            } else if (indcova(2) != "none") {
-              fullrepstmodel += " + ";
-              fullrepstmodel += indcova(2);
-              fullrepstmodel += ":";
-              fullrepstmodel += indcovb(1);
-            } else if (indcovb(2) != "none") {
-              fullrepstmodel += " + ";
-              fullrepstmodel += indcova(1);
-              fullrepstmodel += ":";
-              fullrepstmodel += indcovb(2);
-            }
-          } 
-        }
-      }
-      
-      if (indcovc(1) != "none") {
-        fullrepstmodel += " + ";
-        fullrepstmodel += indcovc(1);
-        fullrepstmodel += ":";
-        fullrepstmodel += size(1);
-        
-        fullrepstmodel += " + ";
-        fullrepstmodel += indcovc(1);
-        fullrepstmodel += ":";
-        fullrepstmodel += repst(1);
-        
-        if (historical && indcovc(2) != "none") {
-          fullrepstmodel += " + ";
-          fullrepstmodel += indcovc(2);
-          fullrepstmodel += ":";
-          fullrepstmodel += size(2);
-          
-          fullrepstmodel += " + ";
-          fullrepstmodel += indcovc(2);
-          fullrepstmodel += ":";
-          fullrepstmodel += repst(2);
-        }
-        if (indcova(1) != "none") {
-          fullrepstmodel += " + ";
-          fullrepstmodel += indcova(1);
-          fullrepstmodel += ":";
-          fullrepstmodel += indcovc(1);
-          
-          if (historical) {
-            if (indcova(2) != "none" && indcovc(2) != "none") {
-              fullrepstmodel += " + ";
-              fullrepstmodel += indcova(2);
-              fullrepstmodel += ":";
-              fullrepstmodel += indcovc(2);
-              
-              fullrepstmodel += " + ";
-              fullrepstmodel += indcova(1);
-              fullrepstmodel += ":";
-              fullrepstmodel += indcovc(2);
-              
-              fullrepstmodel += " + ";
-              fullrepstmodel += indcova(2);
-              fullrepstmodel += ":";
-              fullrepstmodel += indcovc(1);
-            } else if (indcova(2) != "none") {
-              fullrepstmodel += " + ";
-              fullrepstmodel += indcova(2);
-              fullrepstmodel += ":";
-              fullrepstmodel += indcovc(1);
-            } else if (indcovc(2) != "none") {
-              fullrepstmodel += " + ";
-              fullrepstmodel += indcova(1);
-              fullrepstmodel += ":";
-              fullrepstmodel += indcovc(2);
-            }
-          } 
-        }
-        if (indcovb(1) != "none") {
-          fullrepstmodel += " + ";
-          fullrepstmodel += indcovb(1);
-          fullrepstmodel += ":";
-          fullrepstmodel += indcovc(1);
-          
-          if (historical) {
-            if (indcovb(2) != "none" && indcovc(2) != "none") {
-              fullrepstmodel += " + ";
-              fullrepstmodel += indcovb(2);
-              fullrepstmodel += ":";
-              fullrepstmodel += indcovc(2);
-              
-              fullrepstmodel += " + ";
-              fullrepstmodel += indcovb(1);
-              fullrepstmodel += ":";
-              fullrepstmodel += indcovc(2);
-              
-              fullrepstmodel += " + ";
-              fullrepstmodel += indcovb(2);
-              fullrepstmodel += ":";
-              fullrepstmodel += indcovc(1);
-            } else if (indcovb(2) != "none") {
-              fullrepstmodel += " + ";
-              fullrepstmodel += indcovb(2);
-              fullrepstmodel += ":";
-              fullrepstmodel += indcovc(1);
-            } else if (indcovc(2) != "none") {
-              fullrepstmodel += " + ";
-              fullrepstmodel += indcovb(1);
-              fullrepstmodel += ":";
-              fullrepstmodel += indcovc(2);
-            }
-          } 
-        }
-        
-      }
-    } else if (suite == "main") {
-      if (age != "none" || covcount > 0) fullrepstmodel += " + ";
-      fullrepstmodel += size(1);
-      
-      if (historical && sizecheck) {
-        fullrepstmodel += " + ";
-        fullrepstmodel += size(2);
-      }
-      
-      fullrepstmodel += " + ";
-      fullrepstmodel += repst(1);
-      
-      if (historical && repstcheck) {
-        fullrepstmodel += " + ";
-        fullrepstmodel += repst(2);
-      }
-      
-    } else if (suite == "size") {
-      if (age != "none" || covcount > 0) fullrepstmodel += " + ";
-      fullrepstmodel += size(1);
-      
-      if (historical && sizecheck) {
-        fullrepstmodel += " + ";
-        fullrepstmodel += size(2);
-        
-        fullrepstmodel += " + ";
-        fullrepstmodel += size(1);
-        fullrepstmodel += ":";
-        fullrepstmodel += size(2);
-      }
-      
-    } else if (suite == "rep") {
-      if (age != "none" || covcount > 0) fullrepstmodel += " + ";
-      fullrepstmodel += repst(1);
-      
-      if (historical && repstcheck) {
-        fullrepstmodel += " + ";
-        fullrepstmodel += repst(2);
-        
-        fullrepstmodel += " + ";
-        fullrepstmodel += repst(1);
-        fullrepstmodel += ":";
-        fullrepstmodel += repst(2);
-      }
-      
+      juvrepstmodel += juvmainmodel;
     } else {
-      if (age == "none" && covcount == 0) fullrepstmodel += "1";
+      juvrepstmodel = "none";
     }
-    
-    fullrepstmodel += fixedtackon;
-    fullrepstmodel += randomtackon;
-    
   } else {
     fullrepstmodel = "none";
   }
@@ -1912,689 +1213,74 @@ List stovokor(StringVector surv, StringVector obs, StringVector size,
     } else {
       fullfecmodel = fec(1);
     }
-    fullfecmodel += " ~ ";
-    fecsuffix = "";
-    
-    if (age != "none") {
-      fullfecmodel += age;
-      fecsuffix += age;
-    }
-    if (indcova(1) != "none") {
-      if (age != "none") {
-        
-        fullfecmodel += " + ";
-        fecsuffix += " + ";
-      }
-      fullfecmodel += indcova(1);
-      fecsuffix += indcova(1);
-      
-      if (historical) {
-        fullfecmodel += " + ";
-        fullfecmodel += indcova(2);
-        
-        fecsuffix += " + ";
-        fecsuffix += indcova(2);
-      }
-    }
-    if (indcovb(1) != "none") {
-      if (age != "none" || indcova(1) != "none") {
-        
-        fullfecmodel += " + ";
-        fecsuffix += " + ";
-      }
-      fullfecmodel += indcovb(1);
-      fecsuffix += indcovb(1);
-      
-      if (historical) {
-        fullfecmodel += " + ";
-        fullfecmodel += indcovb(2);
-        
-        fecsuffix += " + ";
-        fecsuffix += indcovb(2);
-      }
-    }
-    if (indcovc(1) != "none") {
-      if (age != "none" || covcount > 1) {
-        
-        fullfecmodel += " + ";
-        fecsuffix += " + ";
-      }
-      fullfecmodel += indcovc(1);
-      fecsuffix += indcovc(1);
-      
-      if (historical) {
-        fullfecmodel += " + ";
-        fullfecmodel += indcovc(2);
-        
-        fecsuffix += " + ";
-        fecsuffix += indcovc(2);
-      }
-    }
-    
-    if (suite == "full") {
-      if (age != "none" || covcount > 0) {
-        
-        fullfecmodel += " + ";
-        fecsuffix += " + ";
-      }
-      
-      fullfecmodel += size(1);
-      fecsuffix += size(1);
-      
-      if (fectime == 3) {
-        fullfecmodel += " + ";
-        fullfecmodel += repst(1);
-        
-        fecsuffix += " + ";
-        fecsuffix += repst(1);
-      }
-      
-      if (historical) {
-        fullfecmodel += " + ";
-        fullfecmodel += size(2);
-        fullfecmodel += " + ";
-        fullfecmodel += repst(2);
-        
-        fecsuffix += " + ";
-        fecsuffix += size(2);
-        fecsuffix += " + ";
-        fecsuffix += repst(2);
-      }
-      
-      if (fectime == 3) {
-        fullfecmodel += " + ";
-        fullfecmodel += size(1);
-        fullfecmodel += ":";
-        fullfecmodel += repst(1);
-        
-        fecsuffix += " + ";
-        fecsuffix += size(1);
-        fecsuffix += ":";
-        fecsuffix += repst(1);
-      }
-      
-      if (historical) {
-        fullfecmodel += " + ";
-        fullfecmodel += size(1);
-        fullfecmodel += ":";
-        fullfecmodel += size(2);
-        
-        fecsuffix += " + ";
-        fecsuffix += size(1);
-        fecsuffix += ":";
-        fecsuffix += size(2);
-        
-        if (fectime == 3) {
-          fullfecmodel += " + ";
-          fullfecmodel += repst(1);
-          fullfecmodel += ":";
-          fullfecmodel += repst(2);
-          
-          fecsuffix += " + ";
-          fecsuffix += repst(1);
-          fecsuffix += ":";
-          fecsuffix += repst(2);
-        }
-        
-        fullfecmodel += " + ";
-        fullfecmodel += size(1);
-        fullfecmodel += ":";
-        fullfecmodel += repst(2);
-        
-        fecsuffix += " + ";
-        fecsuffix += size(1);
-        fecsuffix += ":";
-        fecsuffix += repst(2);
-        
-        if (fectime == 3) {
-          fullfecmodel += " + ";
-          fullfecmodel += size(2);
-          fullfecmodel += ":";
-          fullfecmodel += repst(1);
-          
-          fecsuffix += " + ";
-          fecsuffix += size(2);
-          fecsuffix += ":";
-          fecsuffix += repst(1);
-        }
-      }
-      
-      if (age != "none") {
-        fullfecmodel += " + ";
-        fullfecmodel += age;
-        fullfecmodel += ":";
-        fullfecmodel += size(1);
-        
-        fecsuffix += " + ";
-        fecsuffix += age;
-        fecsuffix += ":";
-        fecsuffix += size(1);
-        
-        if (fectime == 3) {
-          fullfecmodel += " + ";
-          fullfecmodel += age;
-          fullfecmodel += ":";
-          fullfecmodel += repst(1);
-          
-          fecsuffix += " + ";
-          fecsuffix += age;
-          fecsuffix += ":";
-          fecsuffix += repst(1);
-        }
-        
-        if (historical) {
-          fullfecmodel += " + ";
-          fullfecmodel += age;
-          fullfecmodel += ":";
-          fullfecmodel += size(2);
-          
-          fullfecmodel += " + ";
-          fullfecmodel += age;
-          fullfecmodel += ":";
-          fullfecmodel += repst(2);
-          
-          fecsuffix += " + ";
-          fecsuffix += age;
-          fecsuffix += ":";
-          fecsuffix += size(2);
-          
-          fecsuffix += " + ";
-          fecsuffix += age;
-          fecsuffix += ":";
-          fecsuffix += repst(2);
-        }
-      }
-      
-      if (indcova(1) != "none") {
-        fullfecmodel += " + ";
-        fullfecmodel += indcova(1);
-        fullfecmodel += ":";
-        fullfecmodel += size(1);
-        
-        fecsuffix += " + ";
-        fecsuffix += indcova(1);
-        fecsuffix += ":";
-        fecsuffix += size(1);
-        
-        if (fectime == 3) {
-          fullfecmodel += " + ";
-          fullfecmodel += indcova(1);
-          fullfecmodel += ":";
-          fullfecmodel += repst(1);
-          
-          fecsuffix += " + ";
-          fecsuffix += indcova(1);
-          fecsuffix += ":";
-          fecsuffix += repst(1);
-        }
-        
-        if (historical && indcova(2) != "none") {
-          fullfecmodel += " + ";
-          fullfecmodel += indcova(2);
-          fullfecmodel += ":";
-          fullfecmodel += size(2);
-          
-          fullfecmodel += " + ";
-          fullfecmodel += indcova(2);
-          fullfecmodel += ":";
-          fullfecmodel += repst(2);
-          
-          fecsuffix += " + ";
-          fecsuffix += indcova(2);
-          fecsuffix += ":";
-          fecsuffix += size(2);
-          
-          fecsuffix += " + ";
-          fecsuffix += indcova(2);
-          fecsuffix += ":";
-          fecsuffix += repst(2);
-        }
-      }
-      
-      if (indcovb(1) != "none") {
-        fullfecmodel += " + ";
-        fullfecmodel += indcovb(1);
-        fullfecmodel += ":";
-        fullfecmodel += size(1);
-        
-        fecsuffix += " + ";
-        fecsuffix += indcovb(1);
-        fecsuffix += ":";
-        fecsuffix += size(1);
-        
-        if (fectime == 3) {
-          fullfecmodel += " + ";
-          fullfecmodel += indcovb(1);
-          fullfecmodel += ":";
-          fullfecmodel += repst(1);
-          
-          fecsuffix += " + ";
-          fecsuffix += indcovb(1);
-          fecsuffix += ":";
-          fecsuffix += repst(1);
-        }
-        
-        if (historical && indcovb(2) != "none") {
-          fullfecmodel += " + ";
-          fullfecmodel += indcovb(2);
-          fullfecmodel += ":";
-          fullfecmodel += size(2);
-          
-          fullfecmodel += " + ";
-          fullfecmodel += indcovb(2);
-          fullfecmodel += ":";
-          fullfecmodel += repst(2);
-          
-          fecsuffix += " + ";
-          fecsuffix += indcovb(2);
-          fecsuffix += ":";
-          fecsuffix += size(2);
-          
-          fecsuffix += " + ";
-          fecsuffix += indcovb(2);
-          fecsuffix += ":";
-          fecsuffix += repst(2);
-        }
-        if (indcova(1) != "none") {
-          fullfecmodel += " + ";
-          fullfecmodel += indcova(1);
-          fullfecmodel += ":";
-          fullfecmodel += indcovb(1);
-          
-          fecsuffix += " + ";
-          fecsuffix += indcova(1);
-          fecsuffix += ":";
-          fecsuffix += indcovb(1);
-          
-          if (historical) {
-            if (indcova(2) != "none" && indcovb(2) != "none") {
-              fullfecmodel += " + ";
-              fullfecmodel += indcova(2);
-              fullfecmodel += ":";
-              fullfecmodel += indcovb(2);
-              
-              fullfecmodel += " + ";
-              fullfecmodel += indcova(1);
-              fullfecmodel += ":";
-              fullfecmodel += indcovb(2);
-              
-              fullfecmodel += " + ";
-              fullfecmodel += indcova(2);
-              fullfecmodel += ":";
-              fullfecmodel += indcovb(1);
-              
-              fecsuffix += " + ";
-              fecsuffix += indcova(2);
-              fecsuffix += ":";
-              fecsuffix += indcovb(2);
-              
-              fecsuffix += " + ";
-              fecsuffix += indcova(1);
-              fecsuffix += ":";
-              fecsuffix += indcovb(2);
-              
-              fecsuffix += " + ";
-              fecsuffix += indcova(2);
-              fecsuffix += ":";
-              fecsuffix += indcovb(1);
-            } else if (indcova(2) != "none") {
-              fullfecmodel += " + ";
-              fullfecmodel += indcova(2);
-              fullfecmodel += ":";
-              fullfecmodel += indcovb(1);
-              
-              fecsuffix += " + ";
-              fecsuffix += indcova(2);
-              fecsuffix += ":";
-              fecsuffix += indcovb(1);
-            } else if (indcovb(2) != "none") {
-              fullfecmodel += " + ";
-              fullfecmodel += indcova(1);
-              fullfecmodel += ":";
-              fullfecmodel += indcovb(2);
-              
-              fecsuffix += " + ";
-              fecsuffix += indcova(1);
-              fecsuffix += ":";
-              fecsuffix += indcovb(2);
-            }
-          } 
-        }
-      }
-      
-      if (indcovc(1) != "none") {
-        fullfecmodel += " + ";
-        fullfecmodel += indcovc(1);
-        fullfecmodel += ":";
-        fullfecmodel += size(1);
-        
-        fecsuffix += " + ";
-        fecsuffix += indcovc(1);
-        fecsuffix += ":";
-        fecsuffix += size(1);
-        
-        if (fectime == 3) {
-          fullfecmodel += " + ";
-          fullfecmodel += indcovc(1);
-          fullfecmodel += ":";
-          fullfecmodel += repst(1);
-          
-          fecsuffix += " + ";
-          fecsuffix += indcovc(1);
-          fecsuffix += ":";
-          fecsuffix += repst(1);
-        }
-        
-        if (historical && indcovc(2) != "none") {
-          fullfecmodel += " + ";
-          fullfecmodel += indcovc(2);
-          fullfecmodel += ":";
-          fullfecmodel += size(2);
-          
-          fullfecmodel += " + ";
-          fullfecmodel += indcovc(2);
-          fullfecmodel += ":";
-          fullfecmodel += repst(2);
-          
-          fecsuffix += " + ";
-          fecsuffix += indcovc(2);
-          fecsuffix += ":";
-          fecsuffix += size(2);
-          
-          fecsuffix += " + ";
-          fecsuffix += indcovc(2);
-          fecsuffix += ":";
-          fecsuffix += repst(2);
-        }
-        if (indcova(1) != "none") {
-          fullfecmodel += " + ";
-          fullfecmodel += indcova(1);
-          fullfecmodel += ":";
-          fullfecmodel += indcovc(1);
-          
-          fecsuffix += " + ";
-          fecsuffix += indcova(1);
-          fecsuffix += ":";
-          fecsuffix += indcovc(1);
-          
-          if (historical) {
-            if (indcova(2) != "none" && indcovc(2) != "none") {
-              fullfecmodel += " + ";
-              fullfecmodel += indcova(2);
-              fullfecmodel += ":";
-              fullfecmodel += indcovc(2);
-              
-              fullfecmodel += " + ";
-              fullfecmodel += indcova(1);
-              fullfecmodel += ":";
-              fullfecmodel += indcovc(2);
-              
-              fullfecmodel += " + ";
-              fullfecmodel += indcova(2);
-              fullfecmodel += ":";
-              fullfecmodel += indcovc(1);
-              
-              fecsuffix += " + ";
-              fecsuffix += indcova(2);
-              fecsuffix += ":";
-              fecsuffix += indcovc(2);
-              
-              fecsuffix += " + ";
-              fecsuffix += indcova(1);
-              fecsuffix += ":";
-              fecsuffix += indcovc(2);
-              
-              fecsuffix += " + ";
-              fecsuffix += indcova(2);
-              fecsuffix += ":";
-              fecsuffix += indcovc(1);
-            } else if (indcova(2) != "none") {
-              fullfecmodel += " + ";
-              fullfecmodel += indcova(2);
-              fullfecmodel += ":";
-              fullfecmodel += indcovc(1);
-              
-              fecsuffix += " + ";
-              fecsuffix += indcova(2);
-              fecsuffix += ":";
-              fecsuffix += indcovc(1);
-            } else if (indcovc(2) != "none") {
-              fullfecmodel += " + ";
-              fullfecmodel += indcova(1);
-              fullfecmodel += ":";
-              fullfecmodel += indcovc(2);
-              
-              fecsuffix += " + ";
-              fecsuffix += indcova(1);
-              fecsuffix += ":";
-              fecsuffix += indcovc(2);
-            }
-          } 
-        }
-        if (indcovb(1) != "none") {
-          fullfecmodel += " + ";
-          fullfecmodel += indcovb(1);
-          fullfecmodel += ":";
-          fullfecmodel += indcovc(1);
-          
-          fecsuffix += " + ";
-          fecsuffix += indcovb(1);
-          fecsuffix += ":";
-          fecsuffix += indcovc(1);
-          if (historical) {
-            if (indcovb(2) != "none" && indcovc(2) != "none") {
-              fullfecmodel += " + ";
-              fullfecmodel += indcovb(2);
-              fullfecmodel += ":";
-              fullfecmodel += indcovc(2);
-              
-              fullfecmodel += " + ";
-              fullfecmodel += indcovb(1);
-              fullfecmodel += ":";
-              fullfecmodel += indcovc(2);
-              
-              fullfecmodel += " + ";
-              fullfecmodel += indcovb(2);
-              fullfecmodel += ":";
-              fullfecmodel += indcovc(1);
-              
-              fecsuffix += " + ";
-              fecsuffix += indcovb(2);
-              fecsuffix += ":";
-              fecsuffix += indcovc(2);
-              
-              fecsuffix += " + ";
-              fecsuffix += indcovb(1);
-              fecsuffix += ":";
-              fecsuffix += indcovc(2);
-              
-              fecsuffix += " + ";
-              fecsuffix += indcovb(2);
-              fecsuffix += ":";
-              fecsuffix += indcovc(1);
-            } else if (indcovb(2) != "none") {
-              fullfecmodel += " + ";
-              fullfecmodel += indcovb(2);
-              fullfecmodel += ":";
-              fullfecmodel += indcovc(1);
-              
-              fecsuffix += " + ";
-              fecsuffix += indcovb(2);
-              fecsuffix += ":";
-              fecsuffix += indcovc(1);
-            } else if (indcovc(2) != "none") {
-              fullfecmodel += " + ";
-              fullfecmodel += indcovb(1);
-              fullfecmodel += ":";
-              fullfecmodel += indcovc(2);
-              
-              fecsuffix += " + ";
-              fecsuffix += indcovb(1);
-              fecsuffix += ":";
-              fecsuffix += indcovc(2);
-            }
-          } 
-        }
-        
-      }
-    } else if (suite == "main") {
-      
-      if (age != "none" || covcount > 0) {
-        fullfecmodel += " + ";
-        fecsuffix += " + ";
-      }
-      
-      fullfecmodel += size(1);
-      fecsuffix += size(1);
-      
-      if (historical && sizecheck) {
-        
-        fullfecmodel += " + ";
-        fullfecmodel += size(2);
-        
-        fecsuffix += " + ";
-        fecsuffix += size(2);
-      }
-      
-      if (fectime == 3) {
-        fullfecmodel += " + ";
-        fullfecmodel += repst(1);
-        
-        fecsuffix += " + ";
-        fecsuffix += repst(1);
-      }
-      
-      if (historical && repstcheck) {
-        fullfecmodel += " + ";
-        fullfecmodel += repst(2);
-        
-        fecsuffix += " + ";
-        fecsuffix += repst(2);
-      }
-      
-    } else if (suite == "size") {
-      
-      if (age != "none" || covcount > 0) {
-        fullfecmodel += " + ";
-        fecsuffix += " + ";
-      }
-      
-      fullfecmodel += size(1);
-      fecsuffix += size(1);
-      
-      if (historical && sizecheck) {
-        fullfecmodel += " + ";
-        fullfecmodel += size(2);
-        
-        fullfecmodel += " + ";
-        fullfecmodel += size(1);
-        fullfecmodel += ":";
-        fullfecmodel += size(2);
-        
-        fecsuffix += " + ";
-        fecsuffix += size(2);
-        
-        fecsuffix += " + ";
-        fecsuffix += size(1);
-        fecsuffix += ":";
-        fecsuffix += size(2);
-      }
-      
-    } else if (suite == "rep") {
-      
-      if (age != "none" || covcount > 0) {
-        fullfecmodel += " + ";
-        fecsuffix += " + ";
-      }
-      
-      if (fectime == 3) {
-        fullfecmodel += repst(1);
-        fecsuffix += repst(1);
-      } else if (!historical) {
-        fullfecmodel += "1";
-      }
-      
-      if (historical && repstcheck) {
-        fullfecmodel += " + ";
-        fullfecmodel += repst(2);
-        
-        fullfecmodel += " + ";
-        fullfecmodel += repst(1);
-        fullfecmodel += ":";
-        fullfecmodel += repst(2);
-        
-        fecsuffix += " + ";
-        fecsuffix += repst(2);
-        
-        fecsuffix += " + ";
-        fecsuffix += repst(1);
-        fecsuffix += ":";
-        fecsuffix += repst(2);
-      }
-      
-    } else {
-      if (age == "none" && covcount == 0) fullfecmodel += "1";
-    }
-    
-    fullfecmodel += fixedtackon;
-    fecsuffix += fixedtackon;
-    fullfecmodel += randomtackon;
-    
-    if (fec0 && suite != "const" && approach == "glm") {
-      if (fecdist == "poisson") {
-        fullfecmodel += " | ";
-        fullfecmodel += fecsuffix;
-      }
-    }
-    
+    fullfecmodel += fullmainmodel;
   } else {
     fullfecmodel = "none";
   }
   
   StringVector fullnames {"time t", "individual", "patch", "alive in time t+1",
-    "observed in time t+1", "size in time t+1",
-    "reproductive status in time t+1", "fecundity in time t+1",
-    "fecundity in time t", "size in time t", "size in time t-1", 
-    "reproductive status in time t", "reprodutive status in time t-1",
-    "age in time t", "individual covariate a in time t",
-    "individual covariate a in time t-1", "individual covariate b in time t",
-    "individual covariate b in time t-1", "individual covariate c in time t",
-    "individual covariate c in time t-1",};
+    "observed in time t+1", "sizea in time t+1", "sizeb in time t+1",
+    "sizec in time t+1", "reproductive status in time t+1",
+    "fecundity in time t+1", "fecundity in time t", "sizea in time t",
+    "sizea in time t-1", "sizeb in time t", "sizeb in time t-1", "sizec in time t", 
+    "sizec in time t-1", "reproductive status in time t",
+    "reprodutive status in time t-1", "age in time t", "density in time t",
+    "individual covariate a in time t", "individual covariate a in time t-1",
+    "individual covariate b in time t", "individual covariate b in time t-1",
+    "individual covariate c in time t", "individual covariate c in time t-1",
+    "stage group in time t", "stage group in time t-1"};
   StringVector mainparams {"year2", "individ", "patch", "surv3", "obs3",
-    "size3", "repst3", "fec3", "fec2", "size2", "size1", "repst2", "repst1",
-    "age", "indcova2", "indcova1", "indcovb2", "indcovb1", "indcovc2",
-    "indcovc1"};
+    "size3", "sizeb3", "sizec3", "repst3", "fec3", "fec2", "size2", "size1",
+    "sizeb2", "sizeb1", "sizec2", "sizec1", "repst2", "repst1", "age",
+    "density", "indcova2", "indcova1", "indcovb2", "indcovb1", "indcovc2",
+    "indcovc1", "group2", "group1"};
   
-  StringVector modelparams (20);
+  StringVector modelparams (29);
   modelparams(0) = year;
   modelparams(1) = indiv;
   modelparams(2) = patch;
   modelparams(3) = surv(0);
   modelparams(4) = obs(0);
   modelparams(5) = size(0);
-  modelparams(6) = repst(0);
-  modelparams(7) = fec(0);
-  modelparams(8) = fec(1);
-  modelparams(9) = size(1);
-  if (historical) {modelparams(10) = size(2);} else {modelparams(10) = "none";}
-  modelparams(11) = repst(1);
-  if (historical) {modelparams(12) = repst(2);} else {modelparams(12) = "none";}
-  modelparams(13) = age;
-  modelparams(14) = indcova(1);
-  if (historical) {modelparams(15) = indcova(2);} else {modelparams(15) = "none";}
-  modelparams(16) = indcovb(1);
-  if (historical) {modelparams(17) = indcovb(2);} else {modelparams(17) = "none";}
-  modelparams(18) = indcovc(1);
-  if (historical) {modelparams(19) = indcovc(2);} else {modelparams(19) = "none";}
+  if (sizebused) {modelparams(6) = sizeb(0);} else {modelparams(6) = "none";}
+  if (sizecused) {modelparams(7) = sizec(0);} else {modelparams(7) = "none";}
+  modelparams(8) = repst(0);
+  if (fectime == 3) {modelparams(9) = fec(0);} else {modelparams(9) = "none";}
+  if (fectime == 2) {modelparams(10) = fec(1);} else {modelparams(10) = "none";}
+  modelparams(11) = size(1);
+  if (historical) {modelparams(12) = size(2);} else {modelparams(12) = "none";}
+  if (sizebused) {modelparams(13) = sizeb(1);} else {modelparams(13) = "none";}
+  if (sizebused && historical) {modelparams(14) = sizeb(2);} else {modelparams(14) = "none";}
+  if (sizecused) {modelparams(15) = sizec(1);} else {modelparams(15) = "none";}
+  if (sizecused && historical) {modelparams(16) = sizec(2);} else {modelparams(16) = "none";}
+  modelparams(17) = repst(1);
+  if (historical) {modelparams(18) = repst(2);} else {modelparams(18) = "none";}
+  modelparams(19) = age;
+  if (densityused) {modelparams(20) = densitycol;} else {modelparams(20) = "none";}
+  if (indcovaused) {modelparams(21) = indcova(1);} else {modelparams(21) = "none";}
+  if (indcovaused && historical) {modelparams(22) = indcova(2);} else {modelparams(22) = "none";}
+  if (indcovbused) {modelparams(23) = indcovb(1);} else {modelparams(23) = "none";}
+  if (indcovbused && historical) {modelparams(24) = indcovb(2);} else {modelparams(24) = "none";}
+  if (indcovcused) {modelparams(25) = indcovc(1);} else {modelparams(25) = "none";}
+  if (indcovcused && historical) {modelparams(26) = indcovc(2);} else {modelparams(26) = "none";}
+  if (grouptest) {
+    modelparams(27) = "group2";
+    if (historical) {modelparams(28) = "group1";} else {modelparams(28) = "group1";}
+  } else {
+    modelparams(27) = "none";
+    modelparams(28) = "none";
+  }
   
   Rcpp::DataFrame paramnames = DataFrame::create(Named("parameter_names") = fullnames,
     _["mainparams"] = mainparams, _["modelparams"] = modelparams);
   
   Rcpp::List output = List::create(Named("full.surv.model") = fullsurvmodel,
     _["full.obs.model"] = fullobsmodel, _["full.size.model"] = fullsizemodel,
+    _["full.sizeb.model"] = fullsizebmodel, _["full.sizec.model"] = fullsizecmodel,
     _["full.repst.model"] = fullrepstmodel, _["full.fec.model"] = fullfecmodel,
     _["juv.surv.model"] = juvsurvmodel, _["juv.obs.model"] = juvobsmodel,
-    _["juv.size.model"] = juvsizemodel, _["juv.repst.model"] = juvrepstmodel,
+    _["juv.size.model"] = juvsizemodel, _["juv.sizeb.model"] = juvsizebmodel,
+    _["juv.sizec.model"] = juvsizecmodel, _["juv.repst.model"] = juvrepstmodel,
     _["paramnames"] = paramnames);
   
   if (fullsurvmodel == "none") {
@@ -2602,19 +1288,45 @@ List stovokor(StringVector surv, StringVector obs, StringVector size,
     
     if (!nojuvs) {output["juv.surv.model"] = 1;}
   }
-  if (nojuvs) {output["juv.surv.model"] = 0;}
+  if (nojuvs) {
+    output["juv.surv.model"] = 0;
+  }
   
   if (fullobsmodel == "none") {
     output["full.obs.model"] = 1;
-    if (!nojuvs) {output["juv.obs.model"] = 1;}
+    
+    if (!nojuvs) {
+      output["juv.obs.model"] = 1;
+    }
   }
   if (nojuvs) {output["juv.obs.model"] = 0;}
   
   if (fullsizemodel == "none") {
-    if (!nojuvs) {output["juv.size.model"] = 1;}
     output["full.size.model"] = 1;
+    
+    if (!nojuvs) {
+      output["juv.size.model"] = 1;
+    }
   }
   if (nojuvs) {output["juv.size.model"] = 0;}
+  
+  if (fullsizebmodel == "none") {
+    output["full.sizeb.model"] = 1;
+    
+    if (!nojuvs) {
+      output["juv.sizeb.model"] = 1;
+    }
+  }
+  if (nojuvs) {output["juv.sizeb.model"] = 0;}
+  
+  if (fullsizecmodel == "none") {
+    output["full.sizec.model"] = 1;
+    
+    if (!nojuvs) {
+      output["juv.sizec.model"] = 1;
+    }
+  }
+  if (nojuvs) {output["juv.sizec.model"] = 0;}
   
   if (fullrepstmodel == "none") {
     output["full.repst.model"] = 1;
@@ -2626,3 +1338,4 @@ List stovokor(StringVector surv, StringVector obs, StringVector size,
   
   return output;
 }
+

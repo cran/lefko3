@@ -4,13 +4,17 @@
 \alias{slambda3}
 \title{Estimate Stochastic Population Growth Rate}
 \usage{
-slambda3(mpm, times = 10000L, tweights = NULL)
+slambda3(mpm, times = 10000L, dense_only = FALSE, tweights = NULL)
 }
 \arguments{
 \item{mpm}{A matrix projection model of class \code{lefkoMat}, or a list of
 full matrix projection matrices.}
 
 \item{times}{Number of occasions to iterate. Defaults to 10,000.}
+
+\item{dense_only}{A logical value indicating whether to force matrices to be
+run in dense format. Defaults to \code{FALSE}, and should only be used if
+errors occur when running under default conditions.}
 
 \item{tweights}{Numeric vector denoting the probabilistic weightings of
 annual matrices. Defaults to equal weighting among occasions.}
@@ -72,18 +76,17 @@ lathvert <- verticalize3(lathyrus, noyears = 4, firstyear = 1988,
   nonobsacol = "Dormant1988", stageassign = lathframe, stagesize = "sizea",
   censorcol = "Missing1988", censorkeep = NA, censor = TRUE)
 
-lathrepm <- matrix(0, 7, 7)
-lathrepm[1, 6] <- 0.345
-lathrepm[2, 6] <- 0.054
-
-lathover3 <- overwrite(stage3 = c("Sd", "Sd", "Sdl"),
-  stage2 = c("Sd", "Sd", "Sd"), stage1 = c("Sd", "rep", "rep"),
-  givenrate = c(0.345, 0.345, 0.054))
+lathsupp3 <- supplemental(stage3 = c("Sd", "Sd", "Sdl", "Sdl", "Sd", "Sdl"), 
+  stage2 = c("Sd", "Sd", "Sd", "Sd", "rep", "rep"),
+  stage1 = c("Sd", "rep", "Sd", "rep", "all", "all"), 
+  givenrate = c(0.345, 0.345, 0.054, 0.054, NA, NA),
+  multiplier = c(NA, NA, NA, NA, 0.345, 0.054),
+  type = c(1, 1, 1, 1, 3, 3), type_t12 = c(1, 2, 1, 2, 1, 1),
+  stageframe = lathframe, historical = TRUE)
 
 ehrlen3 <- rlefko3(data = lathvert, stageframe = lathframe,
   year = c(1989, 1990), stages = c("stage3", "stage2", "stage1"),
-  repmatrix = lathrepm, overwrite = lathover3, yearcol = "year2",
-  indivcol = "individ")
+  supplement = lathsupp3, yearcol = "year2", indivcol = "individ")
 
 slambda3(ehrlen3)
 
@@ -138,7 +141,7 @@ cypmatrix3r <- rlefko3(data = cypraw_v1, stageframe = cypframe_raw,
   supplement = cypsupp3r, yearcol = "year2", 
   patchcol = "patchid", indivcol = "individ")
 
-cypstoch <- slambda3(cypmatrix3r)
+cypstoch <- slambda3(cypmatrix3r, dense_only = TRUE)
 cypstoch
 
 }

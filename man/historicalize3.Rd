@@ -141,62 +141,62 @@ individual covariate to be used in analysis, in occasion \emph{t}.}
 \item{indcova3col}{A variable name or column number corresponding to an
 individual covariate to be used in analysis, in occasion \emph{t}+1.}
 
-\item{indcovb2col}{A second variable name or column number corresponding to
-an individual covariate to be used in analysis, in occasion \emph{t}.}
-
-\item{indcovb3col}{A second variable name or column number corresponding to
-an individual covariate to be used in analysis, in occasion \emph{t}+1.}
-
-\item{indcovc2col}{A third variable name or column number corresponding to an
+\item{indcovb2col}{A variable name or column number corresponding to a second
 individual covariate to be used in analysis, in occasion \emph{t}.}
 
-\item{indcovc3col}{A third variable name or column number corresponding to an
+\item{indcovb3col}{A variable name or column number corresponding to a second
+individual covariate to be used in analysis, in occasion \emph{t}+1.}
+
+\item{indcovc2col}{A variable name or column number corresponding to a third
+individual covariate to be used in analysis, in occasion \emph{t}.}
+
+\item{indcovc3col}{A variable name or column number corresponding to a third
 individual covariate to be used in analysis, in occasion \emph{t}+1.}
 
 \item{alive2col}{A variable name or column number that provides information
 on whether an individual is alive in occasion \emph{t}. If used, living
-status must be designated as binomial (living = 1, dead = 0).}
+status must be designated as binomial (living = \code{1}, dead = \code{0}).}
 
 \item{alive3col}{A variable name or column number that provides information
 on whether an individual is alive in occasion \emph{t}+1. If used, living
-status must be designated as binomial (living = 1, dead = 0).}
+status must be designated as binomial (living = \code{1}, dead = \code{0}).}
 
 \item{dead2col}{A variable name or column number that provides information on
 whether an individual is dead in occasion \emph{t}. If used, dead status
-must be designated as binomial (dead = 1, living = 0).}
+must be designated as binomial (living = \code{0}, dead = \code{1}).}
 
 \item{dead3col}{A variable name or column number that provides information on
 whether an individual is dead in occasion \emph{t}+1. If used, dead status
-must be designated as binomial (dead = 1, living = 0).}
+must be designated as binomial (living = \code{0}, dead = \code{1}).}
 
 \item{obs2col}{A variable name or column number providing information on
 whether an individual is in an observable stage in occasion \emph{t}. If
-used, observation status must be designated as binomial (observed = 1, not 
-observed = 0).}
+used, observation status must be designated as binomial (observed = \code{1},
+not observed = \code{0}).}
 
 \item{obs3col}{A variable name or column number providing information on
 whether an individual is in an observable stage in occasion \emph{t}+1. If
-used, observation status must be designated as binomial (observed = 1, not 
-observed = 0).}
+used, observation status must be designated as binomial (observed = \code{1},
+not observed = \code{0}).}
 
 \item{nonobs2col}{A variable name or column number providing information on
 whether an individual is in an unobservable stage in occasion \emph{t}. If
-used, observation status must be designated as binomial (not observed = 1,
-observed = 0).}
+used, observation status must be designated as binomial (observed = \code{0},
+not observed = \code{1}).}
 
 \item{nonobs3col}{A variable name or column number providing information on
 whether an individual is in an unobservable stage in occasion \emph{t}+1. If
-used, observation status must be designated as binomial (not observed = 1,
-observed = 0).}
+used, observation status must be designated as binomial (observed = \code{0},
+not observed = \code{1}).}
 
-\item{repstrrel}{This is a scalar multiplier to make the variable represented
+\item{repstrrel}{This is a scalar multiplier making the variable represented
 by \code{repstrb2col} equivalent to the variable represented by 
 \code{repstra2col}. This can be useful if two reproductive status variables
 have related but unequal units, for example if \code{repstrb2col} refers to
 one-flowered stems while \code{repstra2col} refers to two-flowered stems.}
 
-\item{fecrel}{This is a scalar multiplier that makes the variable represented
-by \code{fecb2col} equivalent to the variable represented by \code{feca2col}.
+\item{fecrel}{This is a scalar multiplier making the variable represented by
+\code{fecb2col} equivalent to the variable represented by \code{feca2col}.
 This can be useful if two fecundity variables have related but unequal units.}
 
 \item{stage2col}{Optional variable name or column number corresponding to
@@ -206,29 +206,34 @@ life history stage in occasion \emph{t}.}
 life history stage in occasion \emph{t}+1.}
 
 \item{juv2col}{A variable name or column number that marks individuals in
-immature stages in occasion \emph{t}. The \code{historicalize3()} function
+immature stages in occasion \emph{t}. Function \code{historicalize3()}
 assumes that immature individuals are identified in this variable marked with
-a number equal to or greater than 1, and that mature individuals are marked
-as 0 or NA.}
+a number equal to or greater than \code{1}, and that mature individuals are
+marked as \code{0} or \code{NA}.}
 
 \item{juv3col}{A variable name or column number that marks individuals in
-immature stages in occasion \emph{t}+1. The \code{historicalize3()} function
+immature stages in occasion \emph{t}+1. Function \code{historicalize3()}
 assumes that immature individuals are identified in this variable marked with
-a number equal to or greater than 1, and that mature individuals are marked
-as 0 or NA.}
+a number equal to or greater than \code{1}, and that mature individuals are
+marked as \code{0} or \code{NA}.}
 
 \item{stageassign}{The stageframe object identifying the life history model
 being operationalized. Note that if \code{stage2col} is provided, then this
 stageframe is not utilized in stage designation.}
 
-\item{stagesize}{A variable name or column number describing which size
-variable to use in stage estimation. Defaults to NA, and can also take
-\code{sizea}, \code{sizeb}, \code{sizec}, or \code{sizeadded}, depending on
-which size variable is chosen.}
+\item{stagesize}{A variable name or column number describing which size 
+variable to use in stage estimation. Defaults to \code{NA}, and can also take 
+\code{sizea}, \code{sizeb}, \code{sizec}, \code{sizeab}, \code{sizebc},
+\code{sizeac}, \code{sizeabc}, or \code{sizeadded}, depending on
+which size variable within the input dataset is chosen. Note that the
+variable(s) chosen should be presented in the order of the primary,
+secondary, and tertiary variables in the stageframe input with
+\code{stageassign}. For example, choosing \code{sizeb} assumes that this size
+variable in the dataset is the primary variable in the stageframe.}
 
 \item{censor}{A logical variable determining whether the output data should
 be censored using the variable defined in \code{censorcol}. Defaults to 
-FALSE.}
+\code{FALSE}.}
 
 \item{censorcol}{A variable name or column number corresponding to a censor
 variable within the dataset, used to distinguish between entries to use and
@@ -236,28 +241,30 @@ those to discard from analysis, or to designate entries with special issues
 that require further attention.}
 
 \item{censorkeep}{The value of the censoring variable identifying data that
-should be included in analysis. Defaults to 0, but may take any value
-including NA.}
+should be included in analysis. Defaults to \code{0}, but may take any value
+including \code{NA}.}
 
 \item{spacing}{The spacing at which density should be estimated, if density
 estimation is desired and X and Y coordinates are supplied. Given in the same
 units as those used in the X and Y coordinates given in \code{xcol} and
-\code{ycol}. Defaults to NA.}
+\code{ycol}. Defaults to \code{NA}.}
 
-\item{NAas0}{If TRUE, then all NA entries for size and fecundity variables
-will be set to 0. This can help increase the sample size analyzed by 
-\code{\link{modelsearch}()}, but should only be used when it is clear that
-this substitution is biologically realistic. Defaults to FALSE.}
+\item{NAas0}{If TRUE, then all \code{NA} entries for size and fecundity
+variables will be set to \code{0}. This can help increase the sample size
+analyzed by  \code{\link{modelsearch}()}, but should only be used when it is
+clear that this substitution is biologically realistic. Defaults to
+\code{FALSE}.}
 
-\item{NRasRep}{If set to TRUE, then this function will treat non-reproductive
-but mature individuals as reproductive during stage zssignment. This can be 
-useful when a matrix is desired without separation of reproductive and
-non-reproductive but mature stages of the same size. Only used if 
-\code{stageassign} is set to a stageframe. Defaults to FALSE.}
+\item{NRasRep}{If set to \code{TRUE}, then this function will treat
+non-reproductive but mature individuals as reproductive during stage
+assignment. This can be useful when a matrix is desired without separation of
+reproductive and non-reproductive but mature stages of the same size. Only
+used if \code{stageassign} is set to a valid stageframe. Defaults to
+\code{FALSE}.}
 
 \item{reduce}{A logical variable determining whether unused variables and
 some invariant state variables should be removed from the output dataset.
-Defaults to TRUE.}
+Defaults to \code{TRUE}.}
 }
 \value{
 If all inputs are properly formatted, then this function will output
@@ -265,10 +272,11 @@ a historical vertical data frame (class \code{hfvdata}), meaning that the
 output data frame will have three consecutive years of size and reproductive
 data per individual per row. This data frame is in standard format for all
 functions used in \code{lefko3}, and so can be used without further 
-modification. Note that determination of state in occasions *t*-1 and *t*+1
-gives preference to condition in occasion *t* within the input dataset.
-Conflicts in condition in input datasets that have both occasions *t* and
-*t*+1 listed per row are resolved by using condition in occasion *t*.
+modification. Note that determination of state in occasions \emph{t}-1 and
+\emph{t}+1 gives preference to condition in occasion \emph{t} within the
+input dataset. Conflicts in condition in input datasets that have both
+occasions \emph{t} and \emph{t}+1 listed per row are resolved by using
+condition in occasion \emph{t}.
 
 Variables in this data frame include the following:
 \item{rowid}{Unique identifier for the row of the data frame.}
@@ -289,8 +297,8 @@ corresponds to age = 0.}
 \emph{t}, and \emph{t}+1, respectively.}
 \item{sizeb1,sizeb2,sizeb3}{Secondary size measurement in occasions
 \emph{t}-1, \emph{t}, and \emph{t}+1, respectively.}
-\item{sizec1,sizec2,sizec3}{Tertiary measurement in occasions \emph{t}-1,
-\emph{t}, and \emph{t}+1, respectively.}
+\item{sizec1,sizec2,sizec3}{Tertiary size measurement in occasions
+\emph{t}-1, \emph{t}, and \emph{t}+1, respectively.}
 \item{size1added,size2added,size3added}{Sum of primary, secondary, and
 tertiary size measurements in occasions \emph{t}-1, \emph{t}, and \emph{t}+1,
 respectively.}
@@ -307,33 +315,47 @@ respectively.}
 \emph{t}-1, \emph{t}, and \emph{t}+1, respectively.}
 \item{fec1added,fec2added,fec3added}{Sum of primary and secondary fecundity
 in occasions \emph{t}-1, \emph{t}, and \emph{t}+1, respectively.}
-\item{censor1,censor2,censor3}{Censor state values in occasions \emph{t}-1,
+\item{censor1,censor2,censor3}{Censor status values in occasions \emph{t}-1,
 \emph{t}, and \emph{t}+1, respectively.}
 \item{juvgiven1,juvgiven2,juvgiven3}{Binomial variable indicating whether
 individual is juvenile in occasions \emph{t}-1, \emph{t}, and \emph{t}+1.
 Only given if \code{juvcol} is provided.}
-\item{obsstatus1,obsstatus2,obsstatus3}{Binomial observation state in
+\item{obsstatus1,obsstatus2,obsstatus3}{Binomial observation status in
 occasions \emph{t}-1, \emph{t}, and \emph{t}+1, respectively.}
-\item{repstatus1,repstatus2,repstatus3}{Binomial reproductive state in
+\item{repstatus1,repstatus2,repstatus3}{Binomial reproductive status in
 occasions \emph{t}-1, \emph{t}, and \emph{t}+1, respectively.}
-\item{fecstatus1,fecstatus2,fecstatus3}{Binomial offspring production state
+\item{fecstatus1,fecstatus2,fecstatus3}{Binomial offspring production status
 in occasions \emph{t}-1, \emph{t}, and \emph{t}+1, respectively.}
-\item{matstatus1,matstatus2,matstatus3}{Binomial maturity state in occasions
+\item{matstatus1,matstatus2,matstatus3}{Binomial maturity status in occasions
 \emph{t}-1, \emph{t}, and \emph{t}+1, respectively.}
-\item{alive1,alive2,alive3}{Binomial state as alive in occasions \emph{t}-1,
+\item{alive1,alive2,alive3}{Binomial status as alive in occasions \emph{t}-1,
  \emph{t}, and \emph{t}+1, respectively.}
 \item{density}{Density of individuals per unit designated in \code{spacing}.
-Only given if spacing is not NA.}
+Only given if spacing is not \code{NA}.}
 }
 \description{
-\code{historicalize3()} returns a vertically formatted demographic data frame
-organized to create historical projection matrices, given a vertically but
-ahistorically formatted data frame. This data frame is in standard 
-\code{lefko3} format and can be used in all functions in the package.
+Function \code{historicalize3()} returns a vertically formatted demographic
+data frame organized to create historical projection matrices, given a
+vertically but ahistorically formatted data frame. This data frame is in
+standard \code{hfvdata} format and can be used in all functions in the
+package.
 }
 \section{Notes}{
 
-In some datasets on species with unobservable stages, observation status
+Warnings that some individuals occur in state combinations that do not match
+any stages in the stageframe used to assign stages, and that some individuals
+match characteristics of several stages in the stageframe, are common when
+first working with a dataset. Typically, these situations can be identified as
+\code{NoMatch} entries in \code{stage3}, although such entries may crop up in
+\code{stage1} and \code{stage2}, as well. In some cases, these warnings will
+arise with no concurrent \code{NoMatch} entries. These are important warnings
+and suggest that there is likely a problem with the stageframe. The most
+common such problems are: 1) stages have significant overlap in
+characteristics, with the most common being overlapping size bins caused by
+erroneous definitions of size bin halfwidths; and 2) some individuals exist
+in states not defined within the stageframe.
+
+In some datasets with unobservable stages, observation status
 (\code{obsstatus}) might not be inferred properly if a single size variable
 is used that does not yield sizes greater than 0 in all cases in which
 individuals were observed. Such situations may arise, for example, in plants
@@ -341,25 +363,17 @@ when leaf number is the dominant size variable used, but individuals
 occasionally occur with inflorescences but no leaves. In this instances,
 it helps to mark related variables as \code{sizeb} and \code{sizec}, because
 observation status will be interpreted in relation to all 3 size variables.
-Further analysis can then utilize only a single size variable, of the user's
-choosing. Similar issues can arise in reproductive status (\code{repstatus}).
+Alternatively, observation status may be input via \code{obs2col} and
+\code{obs3col} to force computation with given values (although this requires
+all instances of observation and non-observation to be known and coded ahead
+of time). Further analysis can then utilize only a single size variable, of
+the user's choosing. Similar issues can arise in reproductive status
+(\code{repstatus}).
 
 Juvenile designation should only be used when juveniles fall outside of the
 size classification scheme used in determining stages. If juveniles are to be
 size classified along the size spectrum that adults also fall on, then
 it is best to treat juveniles as mature but not reproductive.
-
-Warnings that some individuals occur in state combinations that do not match
-any stages in the stageframe used to assign stages are common when first
-working with a dataset. Typically, these situations can be identified as
-\code{NoMatch} entries in \code{stage3}, although such entries may crop up in
-\code{stage1} and \code{stage2}, as well. In rare cases, these warnings will
-arise with no concurrent \code{NoMatch} entries, which indicates that the
-input dataset contained conflicting state data at once suggesting that the
-individual is in some stage but is also dead. The latter is removed if the
-conflict occurs in occasion \emph{t} or \emph{t}-1, as only living entries
-are allowed in time \emph{t} and time \emph{t}-1 may involve living entries
-as well as unliving entries immediately prior to birth.
 
 Care should be taken to avoid variables with negative values indicating size,
 fecundity, or reproductive or observation status. Negative values can be

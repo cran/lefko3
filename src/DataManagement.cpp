@@ -6,7 +6,7 @@ using namespace arma;
 
 //' Re-index Projection Matrix On Basis of Overwrite Table
 //' 
-//' This function takes matrix indices provided by functions
+//' Function \code{.ovreplace()} takes matrix indices provided by functions
 //' \code{\link{rlefko3}()}, \code{\link{rlefko2}()}, \code{\link{flefko3}()},
 //' \code{\link{flefko2}()}, and \code{\link{aflefko2}()} and updates them with
 //' information provided in the overwrite table used as input in that function.
@@ -22,20 +22,26 @@ using namespace arma;
 //' @param gvnrate Vector of replacement transition values.
 //' @param multipl Vector of fecundity multipliers.
 //' 
-//' @return Vector of updated matrix indices and, where appropriate, replacement
-//' matrix element values.
+//' @return A matrix. Column 1 is the given rate for a survival transitions,
+//' Column 2 is the proxy transition to be used to estimate that transition.
+//' Column 3 is the given rate for a fecundity transitions. Column 4 is the
+//' proxy transition to be used to estimate that transition. Column 5 is a
+//' vector of fecundity multipliers, in cases where no given rate or proxy is to
+//' be used but fecundity is to be multiplied by some value. Column 6 is a
+//' vector of survival transition multipliers. Column 7 is a vector of fecundity
+//' transition multipliers.
 //' 
 //' @keywords internal
 //' @noRd
-// [[Rcpp::export]]
+// [[Rcpp::export(.ovreplace)]]
 arma::mat ovreplace(arma::vec allst321, arma::vec idx321old,
   arma::vec idx321new, arma::vec convtype, arma::vec eststag3, 
   arma::vec gvnrate, arma::vec multipl) {
   
   int n = idx321new.n_elem;
   
-  arma::mat replacements(allst321.n_elem, 5);
-  replacements.fill(-1);
+  arma::mat replacements(allst321.n_elem, 7);
+  replacements.fill(-1.0);
   
   for (int i = 0; i < n; i++) {
     arma::uvec correctplace = find(allst321 == idx321old[i]);
@@ -54,7 +60,11 @@ arma::mat ovreplace(arma::vec allst321, arma::vec idx321old,
       }
       
       if (convtype[i] == 3) {
-        if (multipl[i] > 0) {replacements(correctplace[j], 4) = multipl[i];}
+        replacements(correctplace[j], 4) = multipl[i];
+      } else if (convtype[i] == 1) {
+        replacements(correctplace[j], 5) = multipl[i];
+      } else if (convtype[i] == 2) {
+        replacements(correctplace[j], 6) = multipl[i];
       }
     }
   }
@@ -64,7 +74,7 @@ arma::mat ovreplace(arma::vec allst321, arma::vec idx321old,
 
 //' Create Vertical Structure for Horizontal Data Frame Input
 //' 
-//' Function \code{pfj()} powers the R function \code{\link{verticalize3}()},
+//' Function \code{.pfj()} powers the R function \code{\link{verticalize3}()},
 //' creating the vertical structure and rearranging the data in that shape.
 //' 
 //' @param data The horizontal data file.
@@ -135,8 +145,8 @@ arma::mat ovreplace(arma::vec allst321, arma::vec idx321old,
 //' if and only if they are reproductive. Otherwise, all individuals with size 0
 //' are treated as not observed.
 //' @param stassign A logical value indicating whether to assign stages.
-//' @param stszcol Column number describing which size variable to use in stage 
-//' estimation.
+//' @param stszcol Integer describing which size variable or combination of size
+//' variables to use in stage estimation.
 //' @param censorkeep The value of the censoring variable identifying data
 //' that should be included in analysis. Defaults to 0, but may take any numeric
 //' value including NA.
@@ -153,7 +163,7 @@ arma::mat ovreplace(arma::vec allst321, arma::vec idx321old,
 //' 
 //' @keywords internal
 //' @noRd
-// [[Rcpp::export]]
+// [[Rcpp::export(.pfj)]]
 Rcpp::List pfj(DataFrame data, DataFrame stageframe, int noyears, int firstyear,
   int popidcol, int patchidcol, int individcol, int blocksize, arma::ivec xcol,
   arma::ivec ycol, arma::ivec juvcol, arma::ivec sizeacol, arma::ivec sizebcol,
@@ -164,6 +174,8 @@ Rcpp::List pfj(DataFrame data, DataFrame stageframe, int noyears, int firstyear,
   arma::ivec censorcol, arma::ivec stagecol, double repstrrel, double fecrel,
   bool NAas0, bool NRasRep, bool RepasObs, bool stassign, int stszcol,
   double censorkeep, bool censbool, bool censrepeat, bool coordsrepeat) {
+  
+  Rcpp::List output_longlist(81);
   
   // Here we standardize variable vector lengths  
   if (xcol.n_elem == 1) {
@@ -434,20 +446,30 @@ Rcpp::List pfj(DataFrame data, DataFrame stageframe, int noyears, int firstyear,
   
   int noindivs = data.nrows();
   
-  double livcheck1 {0};
-  double livcheck2 {0};
-  double livcheck3 {0};
+  double livcheck1 {0.0};
+  double livcheck2 {0.0};
+  double livcheck3 {0.0};
   
-  double nonobssub1 {0};
-  double nonobssub2 {0};
-  double nonobssub3 {0};
+  double nonobssub1 {0.0};
+  double nonobssub2 {0.0};
+  double nonobssub3 {0.0};
   
-  double stagesize1 {0};
-  double stagesize2 {0};
-  double stagesize3 {0};
+  double stagesize1 {0.0};
+  double stagesize2 {0.0};
+  double stagesize3 {0.0};
+  double stagesize1b {0.0};
+  double stagesize2b {0.0};
+  double stagesize3b {0.0};
+  double stagesize1c {0.0};
+  double stagesize2c {0.0};
+  double stagesize3c {0.0};
   
-  arma::uvec stagemini;
-  arma::uvec stagemaxi;
+  arma::uvec stagemini1;
+  arma::uvec stagemaxi1;
+  arma::uvec stagemini2;
+  arma::uvec stagemaxi2;
+  arma::uvec stagemini3;
+  arma::uvec stagemaxi3;
   arma::uvec stageobs;
   arma::uvec stagerep;
   arma::uvec stagemat;
@@ -464,12 +486,20 @@ Rcpp::List pfj(DataFrame data, DataFrame stageframe, int noyears, int firstyear,
   arma::vec indataset = stageframe["indataset"];
   arma::vec sfszmin = stageframe["sizebin_min"];
   arma::vec sfszmax = stageframe["sizebin_max"];
+  arma::vec sfszminb = stageframe["sizebinb_min"];
+  arma::vec sfszmaxb = stageframe["sizebinb_max"];
+  arma::vec sfszminc = stageframe["sizebinc_min"];
+  arma::vec sfszmaxc = stageframe["sizebinc_max"];
   
   arma::vec repstatarma = repstat;
   arma::vec obsstatarma = obsstat;
   arma::vec matstatarma = matstat;
   arma::vec sfszminarma = sfszmin;
   arma::vec sfszmaxarma = sfszmax;
+  arma::vec sfszminarmab = sfszminb;
+  arma::vec sfszmaxarmab = sfszmaxb;
+  arma::vec sfszminarmac = sfszminc;
+  arma::vec sfszmaxarmac = sfszmaxc;
   int stagenum = sfszmaxarma.n_elem;
   
   arma::uvec instages = find(indataset == 1);
@@ -482,7 +512,11 @@ Rcpp::List pfj(DataFrame data, DataFrame stageframe, int noyears, int firstyear,
   arma::vec inrepstatarma (instagenum);
   arma::vec inobsstatarma (instagenum);
   arma::vec inmatstatarma (instagenum);
-  
+  arma::vec insfszminarmab (instagenum);
+  arma::vec insfszmaxarmab (instagenum);
+  arma::vec insfszminarmac (instagenum);
+  arma::vec insfszmaxarmac (instagenum);
+
   int inplace {0};
   for (int i = 0; i < stagenum; i++) {
     stageid(i) = i+1;
@@ -491,6 +525,10 @@ Rcpp::List pfj(DataFrame data, DataFrame stageframe, int noyears, int firstyear,
       instageid(inplace) = i + 1;
       insfszminarma(inplace) = sfszminarma(i);
       insfszmaxarma(inplace) = sfszmaxarma(i);
+      insfszminarmab(inplace) = sfszminarmab(i);
+      insfszmaxarmab(inplace) = sfszmaxarmab(i);
+      insfszminarmac(inplace) = sfszminarmac(i);
+      insfszmaxarmac(inplace) = sfszmaxarmac(i);
       inrepstatarma(inplace) = repstatarma(i);
       inobsstatarma(inplace) = obsstatarma(i);
       inmatstatarma(inplace) = matstatarma(i);
@@ -563,16 +601,16 @@ Rcpp::List pfj(DataFrame data, DataFrame stageframe, int noyears, int firstyear,
   Rcpp::NumericVector juvgiven1x (noindivs);
   Rcpp::NumericVector juvgiven2x (noindivs);
   Rcpp::NumericVector juvgiven3x (noindivs);
-  nonobsgiven1x.fill(-1);
-  nonobsgiven2x.fill(-1);
-  nonobsgiven3x.fill(-1);
+  nonobsgiven1x.fill(-1.0);
+  nonobsgiven2x.fill(-1.0);
+  nonobsgiven3x.fill(-1.0);
   
   Rcpp::NumericVector zerovec (noindivs);
   Rcpp::NumericVector onevec (noindivs);
   Rcpp::NumericVector negonevec (noindivs);
-  zerovec.fill(0);
-  onevec.fill(1);
-  negonevec.fill(-1);
+  zerovec.fill(0.0);
+  onevec.fill(1.0);
+  negonevec.fill(-1.0);
   
   int ndflength = noindivs * (noyears - 1);
   
@@ -702,8 +740,8 @@ Rcpp::List pfj(DataFrame data, DataFrame stageframe, int noyears, int firstyear,
   Rcpp::NumericVector lastseen (ndflength);
   Rcpp::NumericVector obsage (ndflength);
   Rcpp::NumericVector obslifespan (ndflength);
-  firstseenx.fill(0);
-  lastseenx.fill(0);
+  firstseenx.fill(0.0);
+  lastseenx.fill(0.0);
   
   Rcpp::NumericVector temp1 (noindivs);
   Rcpp::NumericVector temp2 (noindivs);
@@ -712,15 +750,15 @@ Rcpp::List pfj(DataFrame data, DataFrame stageframe, int noyears, int firstyear,
   Rcpp::NumericVector temp5 (noindivs);
   
   for (int i = 0; i < noindivs; i++) {
-    firstseenx[i] = 0;
-    lastseenx[i] = 0;
+    firstseenx[i] = 0.0;
+    lastseenx[i] = 0.0;
     
     for (int k = 0; k < noyears; k++) {
       temp1 = data[sizeacol(k)];
-      if (sizebcol(k) != -1 ) {temp2 = data[sizebcol(k)];} else {temp2 = zerovec;}
-      if (sizeccol(k) != -1 ) {temp3 = data[sizeccol(k)];} else {temp3 = zerovec;}
-      if (repstracol(k) != -1 ) {temp4 = data[repstracol(k)];} else {temp4 = zerovec;}
-      if (repstrbcol(k) != -1 ) {temp5 = data[repstrbcol(k)];} else {temp5 = zerovec;}
+      if (sizebcol(k) != -1 ) {temp2 = data[sizebcol(k)];} else {temp2 = clone(zerovec);}
+      if (sizeccol(k) != -1 ) {temp3 = data[sizeccol(k)];} else {temp3 = clone(zerovec);}
+      if (repstracol(k) != -1 ) {temp4 = data[repstracol(k)];} else {temp4 = clone(zerovec);}
+      if (repstrbcol(k) != -1 ) {temp5 = data[repstrbcol(k)];} else {temp5 = clone(zerovec);}
       
       if (NumericVector::is_na(temp1[i])) {temp1[i] = 0;}
       if (NumericVector::is_na(temp2[i])) {temp2[i] = 0;}
@@ -729,31 +767,31 @@ Rcpp::List pfj(DataFrame data, DataFrame stageframe, int noyears, int firstyear,
       if (NumericVector::is_na(temp5[i])) {temp5[i] = 0;}
       
       if (temp1[i] > 0 && firstseenx[i] == 0) {
-        firstseenx[i] = firstyear + k;
+        firstseenx[i] = firstyear + static_cast<double>(k);
       } else if (temp2[i] > 0 && firstseenx[i] == 0) {
-        firstseenx[i] = firstyear + k;
+        firstseenx[i] = firstyear + static_cast<double>(k);
       } else if (temp3[i] > 0 && firstseenx[i] == 0) {
-        firstseenx[i] = firstyear + k;
+        firstseenx[i] = firstyear + static_cast<double>(k);
       } else if (temp4[i] > 0 && firstseenx[i] == 0) {
-        firstseenx[i] = firstyear + k;
+        firstseenx[i] = firstyear + static_cast<double>(k);
       } else if (temp5[i] > 0 && firstseenx[i] == 0) {
-        firstseenx[i] = firstyear + k;
+        firstseenx[i] = firstyear + static_cast<double>(k);
       }
       
       if (temp1[i] > 0 && firstseenx[i] != 0) {
-        lastseenx[i] = firstyear + k;
+        lastseenx[i] = firstyear + static_cast<double>(k);
       } else if (temp2[i] > 0 && firstseenx[i] != 0) {
-        lastseenx[i] = firstyear + k;
+        lastseenx[i] = firstyear + static_cast<double>(k);
       } else if (temp3[i] > 0 && firstseenx[i] != 0) {
-        lastseenx[i] = firstyear + k;
+        lastseenx[i] = firstyear + static_cast<double>(k);
       } else if (temp4[i] > 0 && firstseenx[i] != 0) {
-        lastseenx[i] = firstyear + k;
+        lastseenx[i] = firstyear + static_cast<double>(k);
       } else if (temp5[i] > 0 && firstseenx[i] != 0) {
-        lastseenx[i] = firstyear + k;
+        lastseenx[i] = firstyear + static_cast<double>(k);
       }
     }
   }
-
+  
   // Set up main loop
   for (int j = 0; j < (noyears - 1); j++) {
     if (popidcol > -1) popidx = data[popidcol];
@@ -762,7 +800,7 @@ Rcpp::List pfj(DataFrame data, DataFrame stageframe, int noyears, int firstyear,
     
     if (j == 0) { // This is implemented in the first year
       
-      sizea1x = zerovec;
+      sizea1x = clone(zerovec);
       sizea2x = data[sizeacol(0)];
       sizea3x = data[sizeacol(1)];
       
@@ -773,67 +811,67 @@ Rcpp::List pfj(DataFrame data, DataFrame stageframe, int noyears, int firstyear,
       }
       
       if (xcol(0) > -1) {
-        xpos1x = zerovec;
+        xpos1x = clone(zerovec);
         xpos2x = data[xcol(0)];
         xpos3x = data[xcol(1)];
       }
       
       if (ycol(0) > -1) {
-        ypos1x = zerovec;
+        ypos1x = clone(zerovec);
         ypos2x = data[ycol(0)];
         ypos3x = data[ycol(1)];
       }
       
       if (repstracol(0) > -1) {
-        repstra1x = zerovec;
+        repstra1x = clone(zerovec);
         repstra2x = data[repstracol(0)];
         repstra3x = data[repstracol(1)];
       }
       
       if (fecacol(0) > -1) {
-        feca1x = zerovec;
+        feca1x = clone(zerovec);
         feca2x = data[fecacol(0)];
         feca3x = data[fecacol(1)];
       }
       
       if (sizebcol(0) > -1) {
-        sizeb1x = zerovec;
+        sizeb1x = clone(zerovec);
         sizeb2x = data[sizebcol(0)];
         sizeb3x = data[sizebcol(1)];
       }
       
       if (repstrbcol(0) > -1) {
-        repstrb1x = zerovec;
+        repstrb1x = clone(zerovec);
         repstrb2x = data[repstrbcol(0)];
         repstrb3x = data[repstrbcol(1)];
       }
       
       if (fecbcol(0) > -1) {
-        fecb1x = zerovec;
+        fecb1x = clone(zerovec);
         fecb2x = data[fecbcol(0)];
         fecb3x = data[fecbcol(1)];
       }
       
       if (sizeccol(0) > -1) {
-        sizec1x = zerovec;
+        sizec1x = clone(zerovec);
         sizec2x = data[sizeccol(0)];
         sizec3x = data[sizeccol(1)];
       }
       
       if (indcovacol(0) > -1) {
-        indcova1x = zerovec;
+        indcova1x = clone(zerovec);
         indcova2x = data[indcovacol(0)];
         indcova3x = data[indcovacol(1)];
       }
       
       if (indcovbcol(0) > -1) {
-        indcovb1x = zerovec;
+        indcovb1x = clone(zerovec);
         indcovb2x = data[indcovbcol(0)];
         indcovb3x = data[indcovbcol(1)];
       }
       
       if (indcovccol(0) > -1) {
-        indcovc1x = zerovec;
+        indcovc1x = clone(zerovec);
         indcovc2x = data[indcovccol(0)];
         indcovc3x = data[indcovccol(1)];
       }
@@ -844,9 +882,9 @@ Rcpp::List pfj(DataFrame data, DataFrame stageframe, int noyears, int firstyear,
         if (censrepeat) {
         
           if (censorkeep == 0) {
-            censor1x = onevec;
+            censor1x = clone(onevec);
           } else {
-            censor1x = zerovec;
+            censor1x = clone(zerovec);
           }
           
           censor2x = data[censorcol(0)];
@@ -855,9 +893,9 @@ Rcpp::List pfj(DataFrame data, DataFrame stageframe, int noyears, int firstyear,
         } else {
         
           if (censorkeep == 0) {
-            censor1x = onevec;
+            censor1x = clone(onevec);
           } else {
-            censor1x = zerovec;
+            censor1x = clone(zerovec);
           }
           
           censor2x = data[censorcol(0)];
@@ -865,21 +903,20 @@ Rcpp::List pfj(DataFrame data, DataFrame stageframe, int noyears, int firstyear,
         }
       }
       
-      
       if (aliveacol(0) > -1) {
-        alivegiven1x = zerovec;
+        alivegiven1x = clone(zerovec);
         alivegiven2x = data[aliveacol(0)];
         alivegiven3x = data[aliveacol(1)];
       }
       
       if (deadacol(0) > -1) {
-        deadgiven1x = zerovec;
+        deadgiven1x = clone(zerovec);
         deadgiven2x = data[deadacol(0)];
         deadgiven3x = data[deadacol(1)];
       }
       
       if (obsacol(0) > -1) {
-        obsgiven1x = zerovec;
+        obsgiven1x = clone(zerovec);
         obsgiven2x = data[obsacol(0)];
         obsgiven3x = data[obsacol(1)];
       }
@@ -891,7 +928,7 @@ Rcpp::List pfj(DataFrame data, DataFrame stageframe, int noyears, int firstyear,
       }
       
       if (juvcol(0) > -1) {
-        juvgiven1x = zerovec;
+        juvgiven1x = clone(zerovec);
         juvgiven2x = data[juvcol(0)];
         juvgiven3x = data[juvcol(1)];
       }
@@ -1019,19 +1056,19 @@ Rcpp::List pfj(DataFrame data, DataFrame stageframe, int noyears, int firstyear,
     }
     
     for (int i = 0; i < noindivs; i++) {
-      livcheck1 = 0;
-      livcheck2 = 0;
-      livcheck3 = 0;
+      livcheck1 = 0.0;
+      livcheck2 = 0.0;
+      livcheck3 = 0.0;
       
-      nonobssub1 = -1;
-      nonobssub2 = -1;
-      nonobssub3 = -1;
+      nonobssub1 = -1.0;
+      nonobssub2 = -1.0;
+      nonobssub3 = -1.0;
       
-      rowid[(i + (j * noindivs))] = i + 1;
+      rowid[(i + (j * noindivs))] = static_cast<double>(i) + 1.0;
       popid[(i + (j * noindivs))] = popidx[i];
       patchid[(i + (j * noindivs))] = patchidx[i];
       individ[(i + (j * noindivs))] = individx[i];
-      year2[(i + (j * noindivs))] = firstyear + j;
+      year2[(i + (j * noindivs))] = static_cast<double>(firstyear) + static_cast<double>(j);
       xpos1[(i + (j * noindivs))] = xpos1x[i];
       ypos1[(i + (j * noindivs))] = ypos1x[i];
       xpos2[(i + (j * noindivs))] = xpos2x[i];
@@ -1099,37 +1136,35 @@ Rcpp::List pfj(DataFrame data, DataFrame stageframe, int noyears, int firstyear,
         stage2[(i + (j * noindivs))] = stage2x[i];
         stage3[(i + (j * noindivs))] = stage3x[i];
         
-        stage1num[(i + (j * noindivs))] = 0;
-        stage2num[(i + (j * noindivs))] = 0;
-        stage3num[(i + (j * noindivs))] = 0;
+        stage1num[(i + (j * noindivs))] = 0.0;
+        stage2num[(i + (j * noindivs))] = 0.0;
+        stage3num[(i + (j * noindivs))] = 0.0;
       }
-      
       
       if (censbool) { // Here we develop the censoring variable
         
         if (NumericVector::is_na(censor1x[i])) {
-          censor1[(i + (j * noindivs))] = 0;
+          censor1[(i + (j * noindivs))] = 0.0;
         } else if (j != 0) {
-          censor1[(i + (j * noindivs))] = 1;
+          censor1[(i + (j * noindivs))] = 1.0;
         }
         
         if (NumericVector::is_na(censor2x[i])) {
-          censor2[(i + (j * noindivs))] = 0;
+          censor2[(i + (j * noindivs))] = 0.0;
         } else {
-          censor2[(i + (j * noindivs))] = 1;
+          censor2[(i + (j * noindivs))] = 1.0;
         }
         
         if (NumericVector::is_na(censor3x[i])) {
-          censor3[(i + (j * noindivs))] = 0;
+          censor3[(i + (j * noindivs))] = 0.0;
         } else {
-          censor3[(i + (j * noindivs))] = 1;
+          censor3[(i + (j * noindivs))] = 1.0;
         }
       } else {
         censor1[(i + (j * noindivs))] = censor1x[i];
         censor2[(i + (j * noindivs))] = censor2x[i];
         censor3[(i + (j * noindivs))] = censor3x[i];
       }
-      
       
       alivegiven1[(i + (j * noindivs))] = alivegiven1x[i];
       alivegiven2[(i + (j * noindivs))] = alivegiven2x[i];
@@ -1147,152 +1182,167 @@ Rcpp::List pfj(DataFrame data, DataFrame stageframe, int noyears, int firstyear,
       juvgiven2[(i + (j * noindivs))] = juvgiven2x[i];
       juvgiven3[(i + (j * noindivs))] = juvgiven3x[i];
       
-      if (NumericVector::is_na(sizea10[(i + (j * noindivs))])) sizea10[(i + (j * noindivs))] = 0;
-      if (NumericVector::is_na(sizea20[(i + (j * noindivs))])) sizea20[(i + (j * noindivs))] = 0;
-      if (NumericVector::is_na(sizea30[(i + (j * noindivs))])) sizea30[(i + (j * noindivs))] = 0;
-      if (NumericVector::is_na(sizeb10[(i + (j * noindivs))])) sizeb10[(i + (j * noindivs))] = 0;
-      if (NumericVector::is_na(sizeb20[(i + (j * noindivs))])) sizeb20[(i + (j * noindivs))] = 0;
-      if (NumericVector::is_na(sizeb30[(i + (j * noindivs))])) sizeb30[(i + (j * noindivs))] = 0;
-      if (NumericVector::is_na(sizec10[(i + (j * noindivs))])) sizec10[(i + (j * noindivs))] = 0;
-      if (NumericVector::is_na(sizec20[(i + (j * noindivs))])) sizec20[(i + (j * noindivs))] = 0;
-      if (NumericVector::is_na(sizec30[(i + (j * noindivs))])) sizec30[(i + (j * noindivs))] = 0;
+      if (NumericVector::is_na(sizea10[(i + (j * noindivs))])) sizea10[(i + (j * noindivs))] = 0.0;
+      if (NumericVector::is_na(sizea20[(i + (j * noindivs))])) sizea20[(i + (j * noindivs))] = 0.0;
+      if (NumericVector::is_na(sizea30[(i + (j * noindivs))])) sizea30[(i + (j * noindivs))] = 0.0;
+      if (NumericVector::is_na(sizeb10[(i + (j * noindivs))])) sizeb10[(i + (j * noindivs))] = 0.0;
+      if (NumericVector::is_na(sizeb20[(i + (j * noindivs))])) sizeb20[(i + (j * noindivs))] = 0.0;
+      if (NumericVector::is_na(sizeb30[(i + (j * noindivs))])) sizeb30[(i + (j * noindivs))] = 0.0;
+      if (NumericVector::is_na(sizec10[(i + (j * noindivs))])) sizec10[(i + (j * noindivs))] = 0.0;
+      if (NumericVector::is_na(sizec20[(i + (j * noindivs))])) sizec20[(i + (j * noindivs))] = 0.0;
+      if (NumericVector::is_na(sizec30[(i + (j * noindivs))])) sizec30[(i + (j * noindivs))] = 0.0;
       
-      if (NumericVector::is_na(repstra10[(i + (j * noindivs))])) repstra10[(i + (j * noindivs))] = 0;
-      if (NumericVector::is_na(repstra20[(i + (j * noindivs))])) repstra20[(i + (j * noindivs))] = 0;
-      if (NumericVector::is_na(repstra30[(i + (j * noindivs))])) repstra30[(i + (j * noindivs))] = 0;
-      if (NumericVector::is_na(repstrb10[(i + (j * noindivs))])) repstrb10[(i + (j * noindivs))] = 0;
-      if (NumericVector::is_na(repstrb20[(i + (j * noindivs))])) repstrb20[(i + (j * noindivs))] = 0;
-      if (NumericVector::is_na(repstrb30[(i + (j * noindivs))])) repstrb30[(i + (j * noindivs))] = 0;
+      if (NumericVector::is_na(repstra10[(i + (j * noindivs))])) repstra10[(i + (j * noindivs))] = 0.0;
+      if (NumericVector::is_na(repstra20[(i + (j * noindivs))])) repstra20[(i + (j * noindivs))] = 0.0;
+      if (NumericVector::is_na(repstra30[(i + (j * noindivs))])) repstra30[(i + (j * noindivs))] = 0.0;
+      if (NumericVector::is_na(repstrb10[(i + (j * noindivs))])) repstrb10[(i + (j * noindivs))] = 0.0;
+      if (NumericVector::is_na(repstrb20[(i + (j * noindivs))])) repstrb20[(i + (j * noindivs))] = 0.0;
+      if (NumericVector::is_na(repstrb30[(i + (j * noindivs))])) repstrb30[(i + (j * noindivs))] = 0.0;
       
-      if (NumericVector::is_na(feca10[(i + (j * noindivs))])) feca10[(i + (j * noindivs))] = 0;
-      if (NumericVector::is_na(feca20[(i + (j * noindivs))])) feca20[(i + (j * noindivs))] = 0;
-      if (NumericVector::is_na(feca30[(i + (j * noindivs))])) feca30[(i + (j * noindivs))] = 0;
-      if (NumericVector::is_na(fecb10[(i + (j * noindivs))])) fecb10[(i + (j * noindivs))] = 0;
-      if (NumericVector::is_na(fecb20[(i + (j * noindivs))])) fecb20[(i + (j * noindivs))] = 0;
-      if (NumericVector::is_na(fecb30[(i + (j * noindivs))])) fecb30[(i + (j * noindivs))] = 0;
+      if (NumericVector::is_na(feca10[(i + (j * noindivs))])) feca10[(i + (j * noindivs))] = 0.0;
+      if (NumericVector::is_na(feca20[(i + (j * noindivs))])) feca20[(i + (j * noindivs))] = 0.0;
+      if (NumericVector::is_na(feca30[(i + (j * noindivs))])) feca30[(i + (j * noindivs))] = 0.0;
+      if (NumericVector::is_na(fecb10[(i + (j * noindivs))])) fecb10[(i + (j * noindivs))] = 0.0;
+      if (NumericVector::is_na(fecb20[(i + (j * noindivs))])) fecb20[(i + (j * noindivs))] = 0.0;
+      if (NumericVector::is_na(fecb30[(i + (j * noindivs))])) fecb30[(i + (j * noindivs))] = 0.0;
       
-      if (NumericVector::is_na(indcova1[(i + (j * noindivs))])) indcova1[(i + (j * noindivs))] = 0;
-      if (NumericVector::is_na(indcova2[(i + (j * noindivs))])) indcova2[(i + (j * noindivs))] = 0;
-      if (NumericVector::is_na(indcova3[(i + (j * noindivs))])) indcova3[(i + (j * noindivs))] = 0;
-      if (NumericVector::is_na(indcovb1[(i + (j * noindivs))])) indcovb1[(i + (j * noindivs))] = 0;
-      if (NumericVector::is_na(indcovb2[(i + (j * noindivs))])) indcovb2[(i + (j * noindivs))] = 0;
-      if (NumericVector::is_na(indcovb3[(i + (j * noindivs))])) indcovb3[(i + (j * noindivs))] = 0;
-      if (NumericVector::is_na(indcovc1[(i + (j * noindivs))])) indcovc1[(i + (j * noindivs))] = 0;
-      if (NumericVector::is_na(indcovc2[(i + (j * noindivs))])) indcovc2[(i + (j * noindivs))] = 0;
-      if (NumericVector::is_na(indcovc3[(i + (j * noindivs))])) indcovc3[(i + (j * noindivs))] = 0;
+      if (NumericVector::is_na(indcova1[(i + (j * noindivs))])) indcova1[(i + (j * noindivs))] = 0.0;
+      if (NumericVector::is_na(indcova2[(i + (j * noindivs))])) indcova2[(i + (j * noindivs))] = 0.0;
+      if (NumericVector::is_na(indcova3[(i + (j * noindivs))])) indcova3[(i + (j * noindivs))] = 0.0;
+      if (NumericVector::is_na(indcovb1[(i + (j * noindivs))])) indcovb1[(i + (j * noindivs))] = 0.0;
+      if (NumericVector::is_na(indcovb2[(i + (j * noindivs))])) indcovb2[(i + (j * noindivs))] = 0.0;
+      if (NumericVector::is_na(indcovb3[(i + (j * noindivs))])) indcovb3[(i + (j * noindivs))] = 0.0;
+      if (NumericVector::is_na(indcovc1[(i + (j * noindivs))])) indcovc1[(i + (j * noindivs))] = 0.0;
+      if (NumericVector::is_na(indcovc2[(i + (j * noindivs))])) indcovc2[(i + (j * noindivs))] = 0.0;
+      if (NumericVector::is_na(indcovc3[(i + (j * noindivs))])) indcovc3[(i + (j * noindivs))] = 0.0;
       
       if (NumericVector::is_na(juvgiven1[(i + (j * noindivs))])) {
-        juvgiven1[(i + (j * noindivs))] = 0;
-      } else if (juvgiven1[(i + (j * noindivs))] != 0) {
-        juvgiven1[(i + (j * noindivs))] = 1;
+        juvgiven1[(i + (j * noindivs))] = 0.0;
+      } else if (juvgiven1[(i + (j * noindivs))] != 0.0) {
+        juvgiven1[(i + (j * noindivs))] = 1.0;
       }
       
       if (NumericVector::is_na(juvgiven2[(i + (j * noindivs))])) {
-        juvgiven2[(i + (j * noindivs))] = 0;
-      } else if (juvgiven2[(i + (j * noindivs))] != 0) {
-        juvgiven2[(i + (j * noindivs))] = 1;
+        juvgiven2[(i + (j * noindivs))] = 0.0;
+      } else if (juvgiven2[(i + (j * noindivs))] != 0.0) {
+        juvgiven2[(i + (j * noindivs))] = 1.0;
       }
       
       if (NumericVector::is_na(juvgiven3[(i + (j * noindivs))])) {
-        juvgiven3[(i + (j * noindivs))] = 0;
-      } else if (juvgiven3[(i + (j * noindivs))] != 0) {
-        juvgiven3[(i + (j * noindivs))] = 1;
+        juvgiven3[(i + (j * noindivs))] = 0.0;
+      } else if (juvgiven3[(i + (j * noindivs))] != 0.0) {
+        juvgiven3[(i + (j * noindivs))] = 1.0;
       }
       
-      matstat1[(i + (j * noindivs))] = 1 - juvgiven1[(i + (j * noindivs))];
-      matstat2[(i + (j * noindivs))] = 1 - juvgiven2[(i + (j * noindivs))];
-      matstat3[(i + (j * noindivs))] = 1 - juvgiven3[(i + (j * noindivs))];
+      matstat1[(i + (j * noindivs))] = 1.0 - juvgiven1[(i + (j * noindivs))];
+      matstat2[(i + (j * noindivs))] = 1.0 - juvgiven2[(i + (j * noindivs))];
+      matstat3[(i + (j * noindivs))] = 1.0 - juvgiven3[(i + (j * noindivs))];
       
-      addedsize1[(i + (j * noindivs))] = sizea10[(i + (j * noindivs))] + sizeb10[(i + (j * noindivs))] + sizec10[(i + (j * noindivs))];
-      addedsize2[(i + (j * noindivs))] = sizea20[(i + (j * noindivs))] + sizeb20[(i + (j * noindivs))] + sizec20[(i + (j * noindivs))];
-      addedsize3[(i + (j * noindivs))] = sizea30[(i + (j * noindivs))] + sizeb30[(i + (j * noindivs))] + sizec30[(i + (j * noindivs))];
+      addedsize1[(i + (j * noindivs))] = sizea10[(i + (j * noindivs))] + 
+        sizeb10[(i + (j * noindivs))] + sizec10[(i + (j * noindivs))];
+      addedsize2[(i + (j * noindivs))] = sizea20[(i + (j * noindivs))] + 
+        sizeb20[(i + (j * noindivs))] + sizec20[(i + (j * noindivs))];
+      addedsize3[(i + (j * noindivs))] = sizea30[(i + (j * noindivs))] + 
+        sizeb30[(i + (j * noindivs))] + sizec30[(i + (j * noindivs))];
       
-      addedrepstr1[(i + (j * noindivs))] = repstra10[(i + (j * noindivs))] + (repstrb10[(i + (j * noindivs))] * repstrrel);
-      addedrepstr2[(i + (j * noindivs))] = repstra20[(i + (j * noindivs))] + (repstrb20[(i + (j * noindivs))] * repstrrel);
-      addedrepstr3[(i + (j * noindivs))] = repstra30[(i + (j * noindivs))] + (repstrb30[(i + (j * noindivs))] * repstrrel);
+      addedrepstr1[(i + (j * noindivs))] = repstra10[(i + (j * noindivs))] + 
+        (repstrb10[(i + (j * noindivs))] * repstrrel);
+      addedrepstr2[(i + (j * noindivs))] = repstra20[(i + (j * noindivs))] + 
+        (repstrb20[(i + (j * noindivs))] * repstrrel);
+      addedrepstr3[(i + (j * noindivs))] = repstra30[(i + (j * noindivs))] + 
+        (repstrb30[(i + (j * noindivs))] * repstrrel);
       
-      addedfec1[(i + (j * noindivs))] = feca10[(i + (j * noindivs))] + (fecb10[(i + (j * noindivs))] * fecrel);
-      addedfec2[(i + (j * noindivs))] = feca20[(i + (j * noindivs))] + (fecb20[(i + (j * noindivs))] * fecrel);
-      addedfec3[(i + (j * noindivs))] = feca30[(i + (j * noindivs))] + (fecb30[(i + (j * noindivs))] * fecrel);
+      addedfec1[(i + (j * noindivs))] = feca10[(i + (j * noindivs))] + 
+        (fecb10[(i + (j * noindivs))] * fecrel);
+      addedfec2[(i + (j * noindivs))] = feca20[(i + (j * noindivs))] + 
+        (fecb20[(i + (j * noindivs))] * fecrel);
+      addedfec3[(i + (j * noindivs))] = feca30[(i + (j * noindivs))] + 
+        (fecb30[(i + (j * noindivs))] * fecrel);
       
       if (NumericVector::is_na(nonobsgiven1[(i + (j * noindivs))])) {
-        nonobssub1 = -1;
+        nonobssub1 = -1.0;
       } else if (nonobsgiven1[(i + (j * noindivs))] >= 0) {
-        nonobsgiven1[(i + (j * noindivs))] = 1;
-        nonobssub1 = 1;
+        nonobsgiven1[(i + (j * noindivs))] = 1.0;
+        nonobssub1 = 1.0;
       }
       
       if (NumericVector::is_na(nonobsgiven2[(i + (j * noindivs))])) {
-        nonobssub2 = -1;
+        nonobssub2 = -1.0;
       } else if (nonobsgiven2[(i + (j * noindivs))] >= 0) {
-        nonobsgiven2[(i + (j * noindivs))] = 1;
-        nonobssub2 = 1;
+        nonobsgiven2[(i + (j * noindivs))] = 1.0;
+        nonobssub2 = 1.0;
       }
       
       if (NumericVector::is_na(nonobsgiven3[(i + (j * noindivs))])) {
-        nonobssub3 = -1;
+        nonobssub3 = -1.0;
       } else if (nonobsgiven3[(i + (j * noindivs))] >= 0) {
-        nonobsgiven3[(i + (j * noindivs))] = 1;
-        nonobssub3 = 1;
+        nonobsgiven3[(i + (j * noindivs))] = 1.0;
+        nonobssub3 = 1.0;
       }
       
       // Observation status
-      if (addedsize1[(i + (j * noindivs))] > 0 || obsgiven1[(i + (j * noindivs))] > 0 || nonobssub1 == 0) {
-        spryn1[(i + (j * noindivs))] = 1;
+      if (addedsize1[(i + (j * noindivs))] > 0 || obsgiven1[(i + (j * noindivs))] > 0 || nonobssub1 == 0.0) {
+        spryn1[(i + (j * noindivs))] = 1.0;
       }
-      if (addedsize2[(i + (j * noindivs))] > 0 || obsgiven2[(i + (j * noindivs))] > 0 || nonobssub2 == 0) {
-        spryn2[(i + (j * noindivs))] = 1;
+      if (addedsize2[(i + (j * noindivs))] > 0 || obsgiven2[(i + (j * noindivs))] > 0 || nonobssub2 == 0.0) {
+        spryn2[(i + (j * noindivs))] = 1.0;
       } 
-      if (addedsize3[(i + (j * noindivs))] > 0 || obsgiven3[(i + (j * noindivs))] > 0 || nonobssub3 == 0) {
-        spryn3[(i + (j * noindivs))] = 1;
+      if (addedsize3[(i + (j * noindivs))] > 0 || obsgiven3[(i + (j * noindivs))] > 0 || nonobssub3 == 0.0) {
+        spryn3[(i + (j * noindivs))] = 1.0;
       }
       
       // Here is thre correction is size 0 individuals that reproduce are actually observed
-      if (RepasObs == 1 && addedsize1[(i + (j * noindivs))] == 0 && addedrepstr1[(i + (j * noindivs))] != 0) {
-        spryn1[(i + (j * noindivs))] = 1;
+      if (RepasObs == 1 && addedsize1[(i + (j * noindivs))] == 0 && addedrepstr1[(i + (j * noindivs))] != 0.0) {
+        spryn1[(i + (j * noindivs))] = 1.0;
       }
-      if (RepasObs == 1 && addedsize2[(i + (j * noindivs))] == 0 && addedrepstr2[(i + (j * noindivs))] != 0) {
-        spryn2[(i + (j * noindivs))] = 1;
+      if (RepasObs == 1 && addedsize2[(i + (j * noindivs))] == 0 && addedrepstr2[(i + (j * noindivs))] != 0.0) {
+        spryn2[(i + (j * noindivs))] = 1.0;
       }
-      if (RepasObs == 1 && addedsize3[(i + (j * noindivs))] == 0 && addedrepstr3[(i + (j * noindivs))] != 0) {
-        spryn3[(i + (j * noindivs))] = 1;
+      if (RepasObs == 1 && addedsize3[(i + (j * noindivs))] == 0 && addedrepstr3[(i + (j * noindivs))] != 0.0) {
+        spryn3[(i + (j * noindivs))] = 1.0;
       }
       
-      if (addedrepstr1[(i + (j * noindivs))] > 0) repyn1[(i + (j * noindivs))] = 1;
-      if (addedrepstr2[(i + (j * noindivs))] > 0) repyn2[(i + (j * noindivs))] = 1;
-      if (addedrepstr3[(i + (j * noindivs))] > 0) repyn3[(i + (j * noindivs))] = 1;
+      if (addedrepstr1[(i + (j * noindivs))] > 0) repyn1[(i + (j * noindivs))] = 1.0;
+      if (addedrepstr2[(i + (j * noindivs))] > 0) repyn2[(i + (j * noindivs))] = 1.0;
+      if (addedrepstr3[(i + (j * noindivs))] > 0) repyn3[(i + (j * noindivs))] = 1.0;
       
-      if (addedfec1[(i + (j * noindivs))] > 0) fecyn1[(i + (j * noindivs))] = 1;
-      if (addedfec2[(i + (j * noindivs))] > 0) fecyn2[(i + (j * noindivs))] = 1;
-      if (addedfec3[(i + (j * noindivs))] > 0) fecyn3[(i + (j * noindivs))] = 1;
+      if (addedfec1[(i + (j * noindivs))] > 0) fecyn1[(i + (j * noindivs))] = 1.0;
+      if (addedfec2[(i + (j * noindivs))] > 0) fecyn2[(i + (j * noindivs))] = 1.0;
+      if (addedfec3[(i + (j * noindivs))] > 0) fecyn3[(i + (j * noindivs))] = 1.0;
       
       if (nonobssub1 >= 0) {
-        livcheck1 = addedsize1[(i + (j * noindivs))] + addedrepstr1[(i + (j * noindivs))] + spryn1[(i + (j * noindivs))] + nonobssub1;
+        livcheck1 = addedsize1[(i + (j * noindivs))] + addedrepstr1[(i + (j * noindivs))] + 
+            spryn1[(i + (j * noindivs))] + nonobssub1;
       } else {
-        livcheck1 = addedsize1[(i + (j * noindivs))] + addedrepstr1[(i + (j * noindivs))] + spryn1[(i + (j * noindivs))];
+        livcheck1 = addedsize1[(i + (j * noindivs))] + addedrepstr1[(i + (j * noindivs))] + 
+            spryn1[(i + (j * noindivs))];
       }
       if (nonobssub2 >= 0) {
-        livcheck2 = addedsize2[(i + (j * noindivs))] + addedrepstr2[(i + (j * noindivs))] + spryn2[(i + (j * noindivs))] + nonobssub2;
+        livcheck2 = addedsize2[(i + (j * noindivs))] + addedrepstr2[(i + (j * noindivs))] + 
+            spryn2[(i + (j * noindivs))] + nonobssub2;
       } else {
-        livcheck2 = addedsize2[(i + (j * noindivs))] + addedrepstr2[(i + (j * noindivs))] + spryn2[(i + (j * noindivs))];
+        livcheck2 = addedsize2[(i + (j * noindivs))] + addedrepstr2[(i + (j * noindivs))] + 
+            spryn2[(i + (j * noindivs))];
       }
       if (nonobssub3 >= 0) {
-        livcheck3 = addedsize3[(i + (j * noindivs))] + addedrepstr3[(i + (j * noindivs))] + spryn3[(i + (j * noindivs))] + nonobssub3;
+        livcheck3 = addedsize3[(i + (j * noindivs))] + addedrepstr3[(i + (j * noindivs))] + 
+            spryn3[(i + (j * noindivs))] + nonobssub3;
       } else {
-        livcheck3 = addedsize3[(i + (j * noindivs))] + addedrepstr3[(i + (j * noindivs))] + spryn3[(i + (j * noindivs))];
+        livcheck3 = addedsize3[(i + (j * noindivs))] + addedrepstr3[(i + (j * noindivs))] + 
+            spryn3[(i + (j * noindivs))];
       }
       
-      if (livcheck1 > 0) alive1[(i + (j * noindivs))] = 1;
-      if (livcheck2 > 0) alive2[(i + (j * noindivs))] = 1;
-      if (livcheck3 > 0) alive3[(i + (j * noindivs))] = 1;
+      if (livcheck1 > 0) alive1[(i + (j * noindivs))] = 1.0;
+      if (livcheck2 > 0) alive2[(i + (j * noindivs))] = 1.0;
+      if (livcheck3 > 0) alive3[(i + (j * noindivs))] = 1.0;
       
-      if (alivegiven1[(i + (j * noindivs))] > 0) alive1[(i + (j * noindivs))] = 1;
-      if (alivegiven2[(i + (j * noindivs))] > 0) alive2[(i + (j * noindivs))] = 1;
-      if (alivegiven3[(i + (j * noindivs))] > 0) alive3[(i + (j * noindivs))] = 1;
+      if (alivegiven1[(i + (j * noindivs))] > 0) alive1[(i + (j * noindivs))] = 1.0;
+      if (alivegiven2[(i + (j * noindivs))] > 0) alive2[(i + (j * noindivs))] = 1.0;
+      if (alivegiven3[(i + (j * noindivs))] > 0) alive3[(i + (j * noindivs))] = 1.0;
       
-      if (deadgiven1[(i + (j * noindivs))] > 0) alive1[(i + (j * noindivs))] = 0;
-      if (deadgiven2[(i + (j * noindivs))] > 0) alive2[(i + (j * noindivs))] = 0;
-      if (deadgiven3[(i + (j * noindivs))] > 0) alive3[(i + (j * noindivs))] = 0;
+      if (deadgiven1[(i + (j * noindivs))] > 0) alive1[(i + (j * noindivs))] = 0.0;
+      if (deadgiven2[(i + (j * noindivs))] > 0) alive2[(i + (j * noindivs))] = 0.0;
+      if (deadgiven3[(i + (j * noindivs))] > 0) alive3[(i + (j * noindivs))] = 0.0;
       
       // Corrections to living status, lifespan, and age based on later sightings
       if (firstseenx[i] <= (j + firstyear) && lastseenx[i] >= (j + firstyear)) { // This loop needs to be altered to check all years for lastseen adjustments, once firstseen is determined
@@ -1304,47 +1354,196 @@ Rcpp::List pfj(DataFrame data, DataFrame stageframe, int noyears, int firstyear,
         
         alive2[(i + (j * noindivs))] = 1;
         
-        if (lastseenx[i] >= (j + firstyear + 1)) {alive3[(i + (j * noindivs))] = 1;}
-        if (firstseenx[i] <= (j + firstyear - 1)) {alive1[(i + (j * noindivs))] = 1;}
+        if (lastseenx[i] >= (j + firstyear + 1)) {alive3[(i + (j * noindivs))] = 1.0;}
+        if (firstseenx[i] <= (j + firstyear - 1)) {alive1[(i + (j * noindivs))] = 1.0;}
       }
       
       // Here we take care of stage assignments
       if (stassign && stagecol(0) == -1) {
         
-        if (stszcol == 4) {
+        if (stszcol == 8) {
+          
+          stagesize1 = sizea10[(i + (j * noindivs))];
+          stagesize2 = sizea20[(i + (j * noindivs))];
+          stagesize3 = sizea30[(i + (j * noindivs))];
+          stagesize1b = sizeb10[(i + (j * noindivs))];
+          stagesize2b = sizeb20[(i + (j * noindivs))];
+          stagesize3b = sizeb30[(i + (j * noindivs))];
+          stagesize1c = sizec10[(i + (j * noindivs))];
+          stagesize2c = sizec20[(i + (j * noindivs))];
+          stagesize3c = sizec30[(i + (j * noindivs))];
+          
+          arma::uvec stagemini1a = find(insfszminarma < stagesize1);
+          arma::uvec stagemaxi1a = find(insfszmaxarma >= stagesize1);
+          arma::uvec stagemini1b = find(insfszminarmab < stagesize1b);
+          arma::uvec stagemaxi1b = find(insfszmaxarmab >= stagesize1b);
+          arma::uvec stagemini1c = find(insfszminarmac < stagesize1c);
+          arma::uvec stagemaxi1c = find(insfszmaxarmac >= stagesize1c);
+          arma::uvec stagemini2a = find(insfszminarma < stagesize2);
+          arma::uvec stagemaxi2a = find(insfszmaxarma >= stagesize2);
+          arma::uvec stagemini2b = find(insfszminarmab < stagesize2b);
+          arma::uvec stagemaxi2b = find(insfszmaxarmab >= stagesize2b);
+          arma::uvec stagemini2c = find(insfszminarmac < stagesize2c);
+          arma::uvec stagemaxi2c = find(insfszmaxarmac >= stagesize2c);
+          arma::uvec stagemini3a = find(insfszminarma < stagesize3);
+          arma::uvec stagemaxi3a = find(insfszmaxarma >= stagesize3);
+          arma::uvec stagemini3b = find(insfszminarmab < stagesize3b);
+          arma::uvec stagemaxi3b = find(insfszmaxarmab >= stagesize3b);
+          arma::uvec stagemini3c = find(insfszminarmac < stagesize3c);
+          arma::uvec stagemaxi3c = find(insfszmaxarmac >= stagesize3c);
+          
+          arma::uvec stagemini1d = intersect(stagemini1a, stagemini1b);
+          stagemini1 = intersect(stagemini1c, stagemini1d);
+          arma::uvec stagemaxi1d = intersect(stagemaxi1a, stagemaxi1b);
+          stagemaxi1 = intersect(stagemaxi1c, stagemaxi1d);
+          arma::uvec stagemini2d = intersect(stagemini2a, stagemini2b);
+          stagemini2 = intersect(stagemini2c, stagemini2d);
+          arma::uvec stagemaxi2d = intersect(stagemaxi2a, stagemaxi2b);
+          stagemaxi2 = intersect(stagemaxi2c, stagemaxi2d);
+          arma::uvec stagemini3d = intersect(stagemini3a, stagemini3b);
+          stagemini3 = intersect(stagemini3c, stagemini3d);
+          arma::uvec stagemaxi3d = intersect(stagemaxi3a, stagemaxi3b);
+          stagemaxi3 = intersect(stagemaxi3c, stagemaxi3d);
+        } else if (stszcol == 7) {
+          
+          stagesize1 = sizeb10[(i + (j * noindivs))];
+          stagesize2 = sizeb20[(i + (j * noindivs))];
+          stagesize3 = sizeb30[(i + (j * noindivs))];
+          stagesize1b = sizec10[(i + (j * noindivs))];
+          stagesize2b = sizec20[(i + (j * noindivs))];
+          stagesize3b = sizec30[(i + (j * noindivs))];
+          
+          arma::uvec stagemini1a = find(insfszminarma < stagesize1);
+          arma::uvec stagemaxi1a = find(insfszmaxarma >= stagesize1);
+          arma::uvec stagemini1b = find(insfszminarmab < stagesize1b);
+          arma::uvec stagemaxi1b = find(insfszmaxarmab >= stagesize1b);
+          arma::uvec stagemini2a = find(insfszminarma < stagesize2);
+          arma::uvec stagemaxi2a = find(insfszmaxarma >= stagesize2);
+          arma::uvec stagemini2b = find(insfszminarmab < stagesize2b);
+          arma::uvec stagemaxi2b = find(insfszmaxarmab >= stagesize2b);
+          arma::uvec stagemini3a = find(insfszminarma < stagesize3);
+          arma::uvec stagemaxi3a = find(insfszmaxarma >= stagesize3);
+          arma::uvec stagemini3b = find(insfszminarmab < stagesize3b);
+          arma::uvec stagemaxi3b = find(insfszmaxarmab >= stagesize3b);
+          
+          stagemini1 = intersect(stagemini1a, stagemini1b);
+          stagemaxi1 = intersect(stagemaxi1a, stagemaxi1b);
+          stagemini2 = intersect(stagemini2a, stagemini2b);
+          stagemaxi2 = intersect(stagemaxi2a, stagemaxi2b);
+          stagemini3 = intersect(stagemini3a, stagemini3b);
+          stagemaxi3 = intersect(stagemaxi3a, stagemaxi3b);
+        } else if (stszcol == 6) {
+          
+          stagesize1 = sizea10[(i + (j * noindivs))];
+          stagesize2 = sizea20[(i + (j * noindivs))];
+          stagesize3 = sizea30[(i + (j * noindivs))];
+          stagesize1b = sizec10[(i + (j * noindivs))];
+          stagesize2b = sizec20[(i + (j * noindivs))];
+          stagesize3b = sizec30[(i + (j * noindivs))];
+          
+          arma::uvec stagemini1a = find(insfszminarma < stagesize1);
+          arma::uvec stagemaxi1a = find(insfszmaxarma >= stagesize1);
+          arma::uvec stagemini1b = find(insfszminarmab < stagesize1b);
+          arma::uvec stagemaxi1b = find(insfszmaxarmab >= stagesize1b);
+          arma::uvec stagemini2a = find(insfszminarma < stagesize2);
+          arma::uvec stagemaxi2a = find(insfszmaxarma >= stagesize2);
+          arma::uvec stagemini2b = find(insfszminarmab < stagesize2b);
+          arma::uvec stagemaxi2b = find(insfszmaxarmab >= stagesize2b);
+          arma::uvec stagemini3a = find(insfszminarma < stagesize3);
+          arma::uvec stagemaxi3a = find(insfszmaxarma >= stagesize3);
+          arma::uvec stagemini3b = find(insfszminarmab < stagesize3b);
+          arma::uvec stagemaxi3b = find(insfszmaxarmab >= stagesize3b);
+          
+          stagemini1 = intersect(stagemini1a, stagemini1b);
+          stagemaxi1 = intersect(stagemaxi1a, stagemaxi1b);
+          stagemini2 = intersect(stagemini2a, stagemini2b);
+          stagemaxi2 = intersect(stagemaxi2a, stagemaxi2b);
+          stagemini3 = intersect(stagemini3a, stagemini3b);
+          stagemaxi3 = intersect(stagemaxi3a, stagemaxi3b);
+        } else if (stszcol == 5) {
+          
+          stagesize1 = sizea10[(i + (j * noindivs))];
+          stagesize2 = sizea20[(i + (j * noindivs))];
+          stagesize3 = sizea30[(i + (j * noindivs))];
+          stagesize1b = sizeb10[(i + (j * noindivs))];
+          stagesize2b = sizeb20[(i + (j * noindivs))];
+          stagesize3b = sizeb30[(i + (j * noindivs))];
+          
+          arma::uvec stagemini1a = find(insfszminarma < stagesize1);
+          arma::uvec stagemaxi1a = find(insfszmaxarma >= stagesize1);
+          arma::uvec stagemini1b = find(insfszminarmab < stagesize1b);
+          arma::uvec stagemaxi1b = find(insfszmaxarmab >= stagesize1b);
+          arma::uvec stagemini2a = find(insfszminarma < stagesize2);
+          arma::uvec stagemaxi2a = find(insfszmaxarma >= stagesize2);
+          arma::uvec stagemini2b = find(insfszminarmab < stagesize2b);
+          arma::uvec stagemaxi2b = find(insfszmaxarmab >= stagesize2b);
+          arma::uvec stagemini3a = find(insfszminarma < stagesize3);
+          arma::uvec stagemaxi3a = find(insfszmaxarma >= stagesize3);
+          arma::uvec stagemini3b = find(insfszminarmab < stagesize3b);
+          arma::uvec stagemaxi3b = find(insfszmaxarmab >= stagesize3b);
+          
+          stagemini1 = intersect(stagemini1a, stagemini1b);
+          stagemaxi1 = intersect(stagemaxi1a, stagemaxi1b);
+          stagemini2 = intersect(stagemini2a, stagemini2b);
+          stagemaxi2 = intersect(stagemaxi2a, stagemaxi2b);
+          stagemini3 = intersect(stagemini3a, stagemini3b);
+          stagemaxi3 = intersect(stagemaxi3a, stagemaxi3b);
+        } else if (stszcol == 4) {
           
           stagesize1 = addedsize1[(i + (j * noindivs))];
           stagesize2 = addedsize2[(i + (j * noindivs))];
           stagesize3 = addedsize3[(i + (j * noindivs))];
           
+          stagemini1 = find(insfszminarma < stagesize1);
+          stagemaxi1 = find(insfszmaxarma >= stagesize1);
+          stagemini2 = find(insfszminarma < stagesize2);
+          stagemaxi2 = find(insfszmaxarma >= stagesize2);
+          stagemini3 = find(insfszminarma < stagesize3);
+          stagemaxi3 = find(insfszmaxarma >= stagesize3);
         } else if (stszcol == 3) {
           
           stagesize1 = sizec10[(i + (j * noindivs))];
           stagesize2 = sizec20[(i + (j * noindivs))];
           stagesize3 = sizec30[(i + (j * noindivs))];
           
+          stagemini1 = find(insfszminarma < stagesize1);
+          stagemaxi1 = find(insfszmaxarma >= stagesize1);
+          stagemini2 = find(insfszminarma < stagesize2);
+          stagemaxi2 = find(insfszmaxarma >= stagesize2);
+          stagemini3 = find(insfszminarma < stagesize3);
+          stagemaxi3 = find(insfszmaxarma >= stagesize3);
         } else if (stszcol == 2) {
           
           stagesize1 = sizeb10[(i + (j * noindivs))];
           stagesize2 = sizeb20[(i + (j * noindivs))];
           stagesize3 = sizeb30[(i + (j * noindivs))];
           
+          stagemini1 = find(insfszminarma < stagesize1);
+          stagemaxi1 = find(insfszmaxarma >= stagesize1);
+          stagemini2 = find(insfszminarma < stagesize2);
+          stagemaxi2 = find(insfszmaxarma >= stagesize2);
+          stagemini3 = find(insfszminarma < stagesize3);
+          stagemaxi3 = find(insfszmaxarma >= stagesize3);
         } else {
           
           stagesize1 = sizea10[(i + (j * noindivs))];
           stagesize2 = sizea20[(i + (j * noindivs))];
           stagesize3 = sizea30[(i + (j * noindivs))];
           
+          stagemini1 = find(insfszminarma < stagesize1);
+          stagemaxi1 = find(insfszmaxarma >= stagesize1);
+          stagemini2 = find(insfszminarma < stagesize2);
+          stagemaxi2 = find(insfszmaxarma >= stagesize2);
+          stagemini3 = find(insfszminarma < stagesize3);
+          stagemaxi3 = find(insfszmaxarma >= stagesize3);
         }
         
         // Stage 2
-        stagemini = find(insfszminarma < stagesize2);
-        stagemaxi = find(insfszmaxarma >= stagesize2);
         stagerep = find(inrepstatarma == repyn2[(i + (j * noindivs))]);
         stagemat = find(inmatstatarma == matstat2[(i + (j * noindivs))]);
         stageobs = find(inobsstatarma == spryn2[(i + (j * noindivs))]);
         
-        cs1 = intersect(stagemini, stagemaxi);
+        cs1 = intersect(stagemini2, stagemaxi2);
         cs2 = intersect(stageobs, stagemat);
         
         if (NRasRep) {
@@ -1356,7 +1555,7 @@ Rcpp::List pfj(DataFrame data, DataFrame stageframe, int noyears, int firstyear,
         
         if (cs4.n_elem > 0 && alive2[(i + (j * noindivs))] == 1) {
           choicestage = instageid(cs4[0]) - 1;
-          stage2num[(i + (j * noindivs))] = choicestage + 1;
+          stage2num[(i + (j * noindivs))] = static_cast<double>(choicestage) + 1.0;
           
           stage2[(i + (j * noindivs))] = sfname[choicestage];
         } else {
@@ -1364,13 +1563,11 @@ Rcpp::List pfj(DataFrame data, DataFrame stageframe, int noyears, int firstyear,
         }
         
         // Stage 1
-        stagemini = find(insfszminarma < stagesize1);
-        stagemaxi = find(insfszmaxarma >= stagesize1);
         stagerep = find(inrepstatarma == repyn1[(i + (j * noindivs))]);
         stagemat = find(inmatstatarma == matstat1[(i + (j * noindivs))]);
         stageobs = find(inobsstatarma == spryn1[(i + (j * noindivs))]);
         
-        cs1 = intersect(stagemini, stagemaxi);
+        cs1 = intersect(stagemini1, stagemaxi1);
         cs2 = intersect(stageobs, stagemat);
         
         if (NRasRep) {
@@ -1382,22 +1579,20 @@ Rcpp::List pfj(DataFrame data, DataFrame stageframe, int noyears, int firstyear,
         
         if (cs4.n_elem > 0 && alive1[(i + (j * noindivs))] == 1) {
           choicestage = instageid(cs4[0]) - 1;
-          stage1num[(i + (j * noindivs))] = choicestage + 1;
+          stage1num[(i + (j * noindivs))] = static_cast<double>(choicestage) + 1.0;
           
           stage1[(i + (j * noindivs))] = sfname[choicestage];
         } else {
           stage1[(i + (j * noindivs))] = "NotAlive";
-          matstat1[(i + (j * noindivs))] = 0;
+          matstat1[(i + (j * noindivs))] = 0.0;
         }
         
         // Stage 3
-        stagemini = find(insfszminarma < stagesize3);
-        stagemaxi = find(insfszmaxarma >= stagesize3);
         stagerep = find(inrepstatarma == repyn3[(i + (j * noindivs))]);
         stagemat = find(inmatstatarma == matstat3[(i + (j * noindivs))]);
         stageobs = find(inobsstatarma == spryn3[(i + (j * noindivs))]);
         
-        cs1 = intersect(stagemini, stagemaxi);
+        cs1 = intersect(stagemini3, stagemaxi3);
         cs2 = intersect(stageobs, stagemat);
         
         if (NRasRep) {
@@ -1411,7 +1606,7 @@ Rcpp::List pfj(DataFrame data, DataFrame stageframe, int noyears, int firstyear,
         if (cs4.n_elem == 1 && alive3[(i + (j * noindivs))] == 1) {
           
           choicestage = instageid(cs4[0]) - 1;
-          stage3num[(i + (j * noindivs))] = choicestage + 1;
+          stage3num[(i + (j * noindivs))] = static_cast<double>(choicestage) + 1.0;
           
           stage3[(i + (j * noindivs))] = sfname[choicestage];
           
@@ -1468,64 +1663,122 @@ Rcpp::List pfj(DataFrame data, DataFrame stageframe, int noyears, int firstyear,
     fecb3 = fecb30;
   }
   
-  Rcpp::DataFrame df0 = DataFrame::create(Named("rowid") = rowid,
-    _["popid"] = popid, _["patchid"] = patchid, _["individ"] = individ,
-    _["year2"] = year2, _["firstseen"] = firstseen, _["lastseen"] = lastseen,
-    _["obsage"] = obsage, _["obslifespan"] = obslifespan);
+  output_longlist(0) = rowid;
+  output_longlist(1) = popid;
+  output_longlist(2) = patchid;
+  output_longlist(3) = individ;
+  output_longlist(4) = year2;
+  output_longlist(5) = firstseen;
+  output_longlist(6) = lastseen;
+  output_longlist(7) = obsage;
+  output_longlist(8) = obslifespan;
   
-  Rcpp::DataFrame df1 = DataFrame::create(Named("xpos1") = xpos1,
-    _["ypos1"] = ypos1, _["sizea1"] = sizea1, _["sizeb1"] = sizeb1,
-    _["sizec1"] = sizec1, _["sizeadded1"] = addedsize1,
-    _["repstra1"] = repstra1, _["repstrb1"] = repstrb1,
-    _["repstradded1"] = addedrepstr1, _["feca1"] = feca1, _["fecb1"] = fecb1,
-    _["fecadded1"] = addedfec1, _["indcova1"] = indcova1,
-    _["indcovb1"] = indcovb1, _["indcovc1"] = indcovc1, _["censor1"] = censor1,
-    _["juvgiven1"] = juvgiven1);
+  output_longlist(9) = xpos1;
+  output_longlist(10) = ypos1;
+  output_longlist(11) = sizea1;
+  output_longlist(12) = sizeb1;
+  output_longlist(13) = sizec1;
+  output_longlist(14) = addedsize1;
+  output_longlist(15) = repstra1;
+  output_longlist(16) = repstrb1;
+  output_longlist(17) = addedrepstr1;
+  output_longlist(18) = feca1;
+  output_longlist(19) = fecb1;
+  output_longlist(20) = addedfec1;
+  output_longlist(21) = indcova1;
+  output_longlist(22) = indcovb1;
+  output_longlist(23) = indcovc1;
+  output_longlist(24) = censor1;
+  output_longlist(25) = juvgiven1;
   
-  Rcpp::DataFrame df1a = DataFrame::create(Named("obsstatus1") = spryn1,
-    _["repstatus1"] = repyn1, _["fecstatus1"] = fecyn1,
-    _["matstatus1"] = matstat1, _["alive1"] = alive1, _["stage1"] = stage1,
-    _["stage1index"] = stage1num);
+  output_longlist(26) = spryn1;
+  output_longlist(27) = repyn1;
+  output_longlist(28) = fecyn1;
+  output_longlist(29) = matstat1;
+  output_longlist(30) = alive1;
+  output_longlist(31) = stage1;
+  output_longlist(32) = stage1num;
   
-  Rcpp::DataFrame df2 = DataFrame::create(Named("xpos2") = xpos2,
-    _["ypos2"] = ypos2,  _["sizea2"] = sizea2, _["sizeb2"] = sizeb2,
-    _["sizec2"] = sizec2, _["sizeadded2"] = addedsize2,
-    _["repstra2"] = repstra2, _["repstrb2"] = repstrb2,
-    _["repstradded2"] = addedrepstr2, _["feca2"] = feca2, _["fecb2"] = fecb2,
-    _["fecadded2"] = addedfec2, _["indcova2"] = indcova2,
-    _["indcovb2"] = indcovb2, _["indcovc2"] = indcovc2, _["censor2"] = censor2,
-    _["juvgiven2"] = juvgiven2);
+  output_longlist(33) = xpos2;
+  output_longlist(34) = ypos2;
+  output_longlist(35) = sizea2;
+  output_longlist(36) = sizeb2;
+  output_longlist(37) = sizec2;
+  output_longlist(38) = addedsize2;
+  output_longlist(39) = repstra2;
+  output_longlist(40) = repstrb2;
+  output_longlist(41) = addedrepstr2;
+  output_longlist(42) = feca2;
+  output_longlist(43) = fecb2;
+  output_longlist(44) = addedfec2;
+  output_longlist(45) = indcova2;
+  output_longlist(46) = indcovb2;
+  output_longlist(47) = indcovc2;
+  output_longlist(48) = censor2;
+  output_longlist(49) = juvgiven2;
   
-  Rcpp::DataFrame df2a = DataFrame::create(Named("obsstatus2") = spryn2,
-    _["repstatus2"] = repyn2, _["fecstatus2"] = fecyn2,
-    _["matstatus2"] = matstat2, _["alive2"] = alive2, _["stage2"] = stage2,
-    _["stage2index"] = stage2num);
+  output_longlist(50) = spryn2;
+  output_longlist(51) = repyn2;
+  output_longlist(52) = fecyn2;
+  output_longlist(53) = matstat2;
+  output_longlist(54) = alive2;
+  output_longlist(55) = stage2;
+  output_longlist(56) = stage2num;
+
+  output_longlist(57) = xpos3;
+  output_longlist(58) = ypos3;
+  output_longlist(59) = sizea3;
+  output_longlist(60) = sizeb3;
+  output_longlist(61) = sizec3;
+  output_longlist(62) = addedsize3;
+  output_longlist(63) = repstra3;
+  output_longlist(64) = repstrb3;
+  output_longlist(65) = addedrepstr3;
+  output_longlist(66) = feca3;
+  output_longlist(67) = fecb3;
+  output_longlist(68) = addedfec3;
+  output_longlist(69) = indcova3;
+  output_longlist(70) = indcovb3;
+  output_longlist(71) = indcovc3;
+  output_longlist(72) = censor3;
+  output_longlist(73) = juvgiven3;
   
-  Rcpp::DataFrame df3 = DataFrame::create(Named("xpos3") = xpos3,
-    _["ypos3"] = ypos3, _["sizea3"] = sizea3, _["sizeb3"] = sizeb3,
-    _["sizec3"] = sizec3, _["sizeadded3"] = addedsize3,
-    _["repstra3"] = repstra3, _["repstrb3"] = repstrb3,
-    _["repstradded3"] = addedrepstr3, _["feca3"] = feca3, _["fecb3"] = fecb3,
-    _["fecadded3"] = addedfec3, _["indcova3"] = indcova3,
-    _["indcovb3"] = indcovb3, _["indcovc3"] = indcovc3, _["censor3"] = censor3,
-    _["juvgiven3"] = juvgiven3);
+  output_longlist(74) = spryn3;
+  output_longlist(75) = repyn3;
+  output_longlist(76) = fecyn3;
+  output_longlist(77) = matstat3;
+  output_longlist(78) = alive3;
+  output_longlist(79) = stage3;
+  output_longlist(80) = stage3num;
   
-  Rcpp::DataFrame df3a = DataFrame::create(Named("obsstatus3") = spryn3,
-    _["repstatus3"] = repyn3, _["fecstatus3"] = fecyn3,
-    _["matstatus3"] = matstat3, _["alive3"] = alive3, _["stage3"] = stage3,
-    _["stage3index"] = stage3num);
+  Rcpp::CharacterVector varnames {"rowid", "popid", "patchid", "individ",
+    "year2", "firstseen", "lastseen", "obsage", "obslifespan","xpos1", "ypos1",
+    "sizea1", "sizeb1", "sizec1", "size1added", "repstra1", "repstrb1",
+    "repstr1added", "feca1", "fecb1", "fec1added", "indcova1", "indcovb1",
+    "indcovc1", "censor1", "juvgiven1", "obsstatus1", "repstatus1",
+    "fecstatus1", "matstatus1", "alive1", "stage1", "stage1index",
+    "xpos2", "ypos2", "sizea2", "sizeb2", "sizec2", "size2added", "repstra2",
+    "repstrb2", "repstr2added", "feca2", "fecb2", "fec2added", "indcova2",
+    "indcovb2", "indcovc2", "censor2", "juvgiven2", "obsstatus2", "repstatus2",
+    "fecstatus2", "matstatus2", "alive2", "stage2", "stage2index",
+    "xpos3", "ypos3", "sizea3", "sizeb3", "sizec3", "size3added", "repstra3",
+    "repstrb3", "repstr3added", "feca3", "fecb3", "fec3added", "indcova3",
+    "indcovb3", "indcovc3", "censor3", "juvgiven3", "obsstatus3", "repstatus3",
+    "fecstatus3", "matstatus3", "alive3", "stage3", "stage3index"};
   
+  output_longlist.attr("names") = varnames;
+  output_longlist.attr("row.names") = Rcpp::IntegerVector::create(NA_INTEGER, alive3.length());
+  StringVector needed_classes {"data.frame", "hfvdata"};
+  output_longlist.attr("class") = needed_classes; // data.frame
   
-  return Rcpp::List::create(Named("a") = df0, Named("b") = df1,
-    Named("c") = df1a, Named("d") = df2, Named("e") = df2a, Named("f") = df3,
-    Named("g") = df3a);
+  return output_longlist;
 }
 
 //' Create Historical Vertical Structure for Ahistorical Vertical Data Frame
 //' 
-//' Function \code{jpf()} powers the R function \code{\link{historicalize3}()},
-//' creating the historical, vertical structure and rearranging the data in that
-//' shape.
+//' Function \code{.jpf()} is the core kernel for function
+//' \code{\link{historicalize3}()}, creating the historical, vertical structure
+//' and rearranging the data in that shape.
 //'
 //' @param data The horizontal data file.
 //' @param stageframe The stageframe object identifying the life history model
@@ -1536,8 +1789,8 @@ Rcpp::List pfj(DataFrame data, DataFrame stageframe, int noyears, int firstyear,
 //' for each individual.
 //' @param individcol Column number corresponding to the identity of each 
 //' individual.
-//' @param year2col Column number of year or time step in time \emph{t}.
-//' @param year3col Column number of year or time step in time \emph{t}+1.
+//' @param year2col Column number of year or occasion in time \emph{t}.
+//' @param year3col Column number of year or occasion in time \emph{t}+1.
 //' @param xcol Column number corresponding to the x coordinate of each
 //' individual in Cartesian space.
 //' @param ycol Column number corresponding to the y coordinate of each
@@ -1559,14 +1812,16 @@ Rcpp::List pfj(DataFrame data, DataFrame stageframe, int noyears, int firstyear,
 //' @param sizec3col Column number corresponding to the tertiary size variable
 //' in time \emph{t}+1.
 //' @param repstra2col Column number corresponding to the main variable coding
-//' the production of reproductive structures, such as flowers, in time \emph{t}.
+//' for the production of reproductive structures, such as flowers, in time
+//' \emph{t}.
 //' @param repstra3col Column number corresponding to the main variable coding
-//' the production of reproductive structures, such as flowers, in time
+//' for the production of reproductive structures, such as flowers, in time
 //' \emph{t}+1.
 //' @param repstrb2col Column number corresponding to a second variable coding
-//' the production of reproductive structures, such as flowers, in time \emph{t}.
+//' for the production of reproductive structures, such as flowers, in time
+//' \emph{t}.
 //' @param repstrb3col Column number corresponding to a second variable coding
-//' the production of reproductive structures, such as flowers, in time
+//' for the production of reproductive structures, such as flowers, in time
 //' \emph{t}+1.
 //' @param feca2col Column number corresponding to the main variable coding for
 //' fecundity in time \emph{t}.
@@ -1576,18 +1831,18 @@ Rcpp::List pfj(DataFrame data, DataFrame stageframe, int noyears, int firstyear,
 //' fecundity in time \emph{t}.
 //' @param fecb3col Column number corresponding to a second variable coding for
 //' fecundity in time \emph{t}+1.
-//' @param indcova2col Column number corresponding to an individual covariate
-//' in time \emph{t}.
-//' @param indcova3col Column number corresponding to an individual covariate
-//' in time \emph{t}+1.
-//' @param indcovb2col Column number corresponding to an individual covariate
-//' in time \emph{t}.
-//' @param indcovb3col Column number corresponding to an individual covariate
-//' in time \emph{t}+1.
-//' @param indcovc2col Column number corresponding to an individual covariate
-//' in time \emph{t}.
-//' @param indcovc3col Column number corresponding to an individual covariate
-//' in time \emph{t}+1.
+//' @param indcova2col Column number corresponding to an individual covariate in
+//' time \emph{t}.
+//' @param indcova3col Column number corresponding to an individual covariate in
+//' time \emph{t}+1.
+//' @param indcovb2col Column number corresponding to an individual covariate in
+//' time \emph{t}.
+//' @param indcovb3col Column number corresponding to an individual covariate in
+//' time \emph{t}+1.
+//' @param indcovc2col Column number corresponding to an individual covariate in
+//' time \emph{t}.
+//' @param indcovc3col Column number corresponding to an individual covariate in
+//' time \emph{t}+1.
 //' @param alive2col Column number detailing whether an individual is alive in 
 //' time \emph{t}.
 //' @param alive3col Column number detailing whether an individual is alive in 
@@ -1599,14 +1854,14 @@ Rcpp::List pfj(DataFrame data, DataFrame stageframe, int noyears, int firstyear,
 //' @param obs2col Column number detailing whether an individual is in an
 //' observable stage in time \emph{t}.
 //' @param obs3col Column number detailing whether an individual is in an
-//' unobservable stage in time \emph{t}.
+//' observable stage in time \emph{t}+1.
 //' @param nonobs2col Column number detailing whether an individual is in an
 //' unobservable stage in time \emph{t}.
 //' @param nonobs3col Column number detailing whether an individual is in an
 //' unobservable stage in time \emph{t}+1.
-//' @param repstrrel This is a scalar modifier for that makes the variable in
+//' @param repstrrel This is a scalar multiplier for that makes the variable in
 //' \code{repstrb2col} equivalent to \code{repstra2col}.
-//' @param fecrel This is a scalar modifier for that makes the variable in
+//' @param fecrel This is a scalar multiplier for that makes the variable in
 //' \code{fecb2col} equivalent to \code{feca2col}.
 //' @param stage2col Column number corresponding to life history stage in time
 //' \emph{t}.
@@ -1614,25 +1869,25 @@ Rcpp::List pfj(DataFrame data, DataFrame stageframe, int noyears, int firstyear,
 //' \emph{t}+1.
 //' @param censorcol Column number corresponding to a censor variable within the
 //' dataset.
-//' @param NAas0 If TRUE, then all NA entries for size and fecundity variables
-//' will be set to 0.
-//' @param NRasRep If TRUE, then will treat non-reproductive but mature
-//' individuals as reproductive during stage assignment.
+//' @param NAas0 If \code{TRUE}, then all \code{NA} entries for size and
+//' fecundity variables will be set to 0.
+//' @param NRasRep If \code{TRUE}, then non-reproductive but mature individuals
+//' will be treated as reproductive during stage assignment.
 //' @param stassign A logical value indicating whether to assign stages.
-//' @param stszcol Column number describing which size variable to use in stage 
-//' estimation.
+//' @param stszcol Integer describing which size variable to use in stage 
+//' estimation. Numbers 1 through 8 are possible.
 //' @param censorkeep Numeric value of censor variable, denoting elements to
-//' keep. If NA is to be used, then set this variable to 0 and set
+//' keep. If \code{NA} is to be used, then set this variable to \code{0} and set
 //' \code{censbool = TRUE}.
-//' @param censbool A logical variable determining whether NA denotes the value
-//' of the censoring variable identifying data to keep.
+//' @param censbool A logical variable determining whether \code{NA} denotes the
+//' value of the censoring variable identifying data to keep.
 //' 
-//' @return The output is currently a 7 element list, where each element is a
-//' data frame with the same number of rows.
+//' @return The output is currently a list coerced into the data frame class,
+//' and is read as a data frame by R. It is secondarily in class \code{hfvdata}.
 //' 
 //' @keywords internal
 //' @noRd
-// [[Rcpp::export]]
+// [[Rcpp::export(.jpf)]]
 Rcpp::List jpf(DataFrame data, DataFrame stageframe, int popidcol,
   int patchidcol, int individcol, int year2col, int year3col, int xcol,
   int ycol, int juv2col, int juv3col, int sizea2col, int sizea3col,
@@ -1644,6 +1899,8 @@ Rcpp::List jpf(DataFrame data, DataFrame stageframe, int popidcol,
   int nonobs2col, int nonobs3col, double repstrrel, double fecrel,
   int stage2col, int stage3col, int censorcol, bool NAas0, bool NRasRep,
   bool stassign, int stszcol, double censorkeep, bool censbool) {
+  
+  Rcpp::List output_longlist(81);
   
   int norows = data.nrows(); // The number of data points in the demographic dataset
   
@@ -1681,8 +1938,8 @@ Rcpp::List jpf(DataFrame data, DataFrame stageframe, int popidcol,
   int ndfindex {0};
   int prevyrindex {0};
   int nextyrindex {0};
-  double livcheck2 {0};
-  double livcheck3 {0};
+  double livcheck2 {0.0};
+  double livcheck3 {0.0};
   
   Rcpp::StringVector sfname = stageframe["stage"]; // This section reads in the stageframe
   Rcpp::NumericVector repstat = stageframe["repstatus"];
@@ -1691,12 +1948,20 @@ Rcpp::List jpf(DataFrame data, DataFrame stageframe, int popidcol,
   arma::vec indataset = stageframe["indataset"];
   arma::vec sfszmin = stageframe["sizebin_min"];
   arma::vec sfszmax = stageframe["sizebin_max"];
+  arma::vec sfszminb = stageframe["sizebinb_min"];
+  arma::vec sfszmaxb = stageframe["sizebinb_max"];
+  arma::vec sfszminc = stageframe["sizebinc_min"];
+  arma::vec sfszmaxc = stageframe["sizebinc_max"];
   
   arma::vec repstatarma = repstat;
   arma::vec obsstatarma = obsstat;
   arma::vec matstatarma = matstat;
   arma::vec sfszminarma = sfszmin;
   arma::vec sfszmaxarma = sfszmax;
+  arma::vec sfszminarmab = sfszminb;
+  arma::vec sfszmaxarmab = sfszmaxb;
+  arma::vec sfszminarmac = sfszminc;
+  arma::vec sfszmaxarmac = sfszmaxc;
   int stagenum = sfszmaxarma.n_elem; // This is the total number of life history stages in the stageframe
   
   arma::uvec instages = find(indataset == 1); 
@@ -1709,8 +1974,12 @@ Rcpp::List jpf(DataFrame data, DataFrame stageframe, int popidcol,
   arma::vec inrepstatarma(instagenum);
   arma::vec inobsstatarma(instagenum);
   arma::vec inmatstatarma(instagenum);
+  arma::vec insfszminarmab (instagenum);
+  arma::vec insfszmaxarmab (instagenum);
+  arma::vec insfszminarmac (instagenum);
+  arma::vec insfszmaxarmac (instagenum);
   
-  int inplace {0}; // This section creates vectors describing only life history stages that actually occur in the dataset
+  int inplace {0}; // This section creates vectors describing only life history stages in the dataset
   for (int i = 0; i < stagenum; i++) {
     stageid(i) = i+1;
     
@@ -1718,6 +1987,10 @@ Rcpp::List jpf(DataFrame data, DataFrame stageframe, int popidcol,
       instageid(inplace) = i + 1;
       insfszminarma(inplace) = sfszminarma(i);
       insfszmaxarma(inplace) = sfszmaxarma(i);
+      insfszminarmab(inplace) = sfszminarmab(i);
+      insfszmaxarmab(inplace) = sfszmaxarmab(i);
+      insfszminarmac(inplace) = sfszminarmac(i);
+      insfszmaxarmac(inplace) = sfszmaxarmac(i);
       inrepstatarma(inplace) = repstatarma(i);
       inobsstatarma(inplace) = obsstatarma(i);
       inmatstatarma(inplace) = matstatarma(i);
@@ -1798,45 +2071,45 @@ Rcpp::List jpf(DataFrame data, DataFrame stageframe, int popidcol,
   Rcpp::StringVector stage3x (norows);
   
   // Assign values from the dataset
-  if (popidcol != -1) {popidx = data[popidcol];} else {popidx = zerovec;}
-  if (patchidcol != -1) {patchidx = data[patchidcol];} else {patchidx = zerovec;}
-  if (censorcol != -1) {censor2x = data[censorcol];} else {censor2x = zerovec;}
+  if (popidcol != -1) {popidx = data[popidcol];} else {popidx = clone(zerovec);}
+  if (patchidcol != -1) {patchidx = data[patchidcol];} else {patchidx = clone(zerovec);}
+  if (censorcol != -1) {censor2x = data[censorcol];} else {censor2x = clone(zerovec);}
   
   sizea2x = data[sizea2col];
-  if (sizeb2col != -1) {sizeb2x = data[sizeb2col];} else {sizeb2x = zerovec;}
-  if (sizec2col != -1) {sizec2x = data[sizec2col];} else {sizec2x = zerovec;}
-  if (repstra2col != -1) {repstra2x = data[repstra2col];} else {repstra2x = zerovec;}
-  if (repstrb2col != -1) {repstrb2x = data[repstrb2col];} else {repstrb2x = zerovec;}
-  if (feca2col != -1) {feca2x = data[feca2col];} else {feca2x = zerovec;}
-  if (fecb2col != -1) {fecb2x = data[fecb2col];} else {fecb2x = zerovec;}
+  if (sizeb2col != -1) {sizeb2x = data[sizeb2col];} else {sizeb2x = clone(zerovec);}
+  if (sizec2col != -1) {sizec2x = data[sizec2col];} else {sizec2x = clone(zerovec);}
+  if (repstra2col != -1) {repstra2x = data[repstra2col];} else {repstra2x = clone(zerovec);}
+  if (repstrb2col != -1) {repstrb2x = data[repstrb2col];} else {repstrb2x = clone(zerovec);}
+  if (feca2col != -1) {feca2x = data[feca2col];} else {feca2x = clone(zerovec);}
+  if (fecb2col != -1) {fecb2x = data[fecb2col];} else {fecb2x = clone(zerovec);}
   
-  if (indcova2col != -1) {indcova2x = data[indcova2col];} else {indcova2x = zerovec;}
-  if (indcova3col != -1) {indcova3x = data[indcova3col];} else {indcova3x = zerovec;}
-  if (indcovb2col != -1) {indcovb2x = data[indcovb2col];} else {indcovb2x = zerovec;}
-  if (indcovb3col != -1) {indcovb3x = data[indcovb3col];} else {indcovb3x = zerovec;}
-  if (indcovc2col != -1) {indcovc2x = data[indcovc2col];} else {indcovc2x = zerovec;}
-  if (indcovc3col != -1) {indcovc3x = data[indcovc3col];} else {indcovc3x = zerovec;}
+  if (indcova2col != -1) {indcova2x = data[indcova2col];} else {indcova2x = clone(zerovec);}
+  if (indcova3col != -1) {indcova3x = data[indcova3col];} else {indcova3x = clone(zerovec);}
+  if (indcovb2col != -1) {indcovb2x = data[indcovb2col];} else {indcovb2x = clone(zerovec);}
+  if (indcovb3col != -1) {indcovb3x = data[indcovb3col];} else {indcovb3x = clone(zerovec);}
+  if (indcovc2col != -1) {indcovc2x = data[indcovc2col];} else {indcovc2x = clone(zerovec);}
+  if (indcovc3col != -1) {indcovc3x = data[indcovc3col];} else {indcovc3x = clone(zerovec);}
   
-  if (juv2col != -1) {juvgiven2x = data[juv2col];} else {juvgiven2x = zerovec;}
-  if (obs2col != -1) {obsgiven2x = data[obs2col];} else {obsgiven2x.fill(-1);} //Set to -1 to make nonobs vs dead designation easier
-  if (nonobs2col != -1) {nonobsgiven2x = data[nonobs2col];} else {nonobsgiven2x.fill(-1);}
-  if (alive2col != -1) {alivegiven2x = data[alive2col];} else {alivegiven2x.fill(-1);}
-  if (dead2col != -1) {deadgiven2x = data[dead2col];} else {deadgiven2x.fill(-1);}
-  if (xcol != -1) {xpos2x = data[xcol];} else {xpos2x.fill(-1);}
-  if (ycol != -1) {ypos2x = data[ycol];} else {ypos2x.fill(-1);}
+  if (juv2col != -1) {juvgiven2x = data[juv2col];} else {juvgiven2x = clone(zerovec);}
+  if (obs2col != -1) {obsgiven2x = data[obs2col];} else {obsgiven2x.fill(-1.0);} // Set to -1 to make nonobs vs dead designation easier
+  if (nonobs2col != -1) {nonobsgiven2x = data[nonobs2col];} else {nonobsgiven2x.fill(-1.0);}
+  if (alive2col != -1) {alivegiven2x = data[alive2col];} else {alivegiven2x.fill(-1.0);}
+  if (dead2col != -1) {deadgiven2x = data[dead2col];} else {deadgiven2x.fill(-1.0);}
+  if (xcol != -1) {xpos2x = data[xcol];} else {xpos2x.fill(-1.0);}
+  if (ycol != -1) {ypos2x = data[ycol];} else {ypos2x.fill(-1.0);}
   
-  if (sizea3col != -1) {sizea3x = data[sizea3col];} else {sizea3x = zerovec;}
-  if (sizeb3col != -1) {sizeb3x = data[sizeb3col];} else {sizeb3x = zerovec;}
-  if (sizec3col != -1) {sizec3x = data[sizec3col];} else {sizec3x = zerovec;}
-  if (repstra3col != -1) {repstra3x = data[repstra3col];} else {repstra3x = zerovec;}
-  if (repstrb3col != -1) {repstrb3x = data[repstrb3col];} else {repstrb3x = zerovec;}
-  if (feca3col != -1) {feca3x = data[feca3col];} else {feca3x = zerovec;}
-  if (fecb3col != -1) {fecb3x = data[fecb3col];} else {fecb3x = zerovec;}
-  if (juv3col != -1) {juvgiven3x = data[juv3col];} else {juvgiven3x = zerovec;}
-  if (obs3col != -1) {obsgiven3x = data[obs3col];} else {obsgiven3x.fill(-1);} //Set to -1 to make nonobs vs dead designation easier
-  if (nonobs3col != -1) {nonobsgiven3x = data[nonobs3col];} else {nonobsgiven3x.fill(-1);}
-  if (alive3col != -1) {alivegiven3x = data[alive3col];} else {alivegiven3x.fill(-1);}
-  if (dead3col != -1) {deadgiven3x = data[dead3col];} else {deadgiven3x.fill(-1);}
+  if (sizea3col != -1) {sizea3x = data[sizea3col];} else {sizea3x = clone(zerovec);}
+  if (sizeb3col != -1) {sizeb3x = data[sizeb3col];} else {sizeb3x = clone(zerovec);}
+  if (sizec3col != -1) {sizec3x = data[sizec3col];} else {sizec3x = clone(zerovec);}
+  if (repstra3col != -1) {repstra3x = data[repstra3col];} else {repstra3x = clone(zerovec);}
+  if (repstrb3col != -1) {repstrb3x = data[repstrb3col];} else {repstrb3x = clone(zerovec);}
+  if (feca3col != -1) {feca3x = data[feca3col];} else {feca3x = clone(zerovec);}
+  if (fecb3col != -1) {fecb3x = data[fecb3col];} else {fecb3x = clone(zerovec);}
+  if (juv3col != -1) {juvgiven3x = data[juv3col];} else {juvgiven3x = clone(zerovec);}
+  if (obs3col != -1) {obsgiven3x = data[obs3col];} else {obsgiven3x.fill(-1.0);} // Set to -1 to make nonobs vs dead designation easier
+  if (nonobs3col != -1) {nonobsgiven3x = data[nonobs3col];} else {nonobsgiven3x.fill(-1.0);}
+  if (alive3col != -1) {alivegiven3x = data[alive3col];} else {alivegiven3x.fill(-1.0);}
+  if (dead3col != -1) {deadgiven3x = data[dead3col];} else {deadgiven3x.fill(-1.0);}
   
   if (stage2col != -1) {stage2x = data[stage2col];}
   if (stage3col != -1) {stage3x = data[stage3col];}
@@ -1859,7 +2132,7 @@ Rcpp::List jpf(DataFrame data, DataFrame stageframe, int popidcol,
   Rcpp::NumericVector fecb2 (ndflength);
   Rcpp::NumericVector fecadded2 (ndflength);
   
-  arma::ivec year2 (ndflength);   // valgrind mentioned this line, which used to be an Rcpp::IntegerVector
+  arma::ivec year2 (ndflength);
   year2.zeros();
   
   Rcpp::NumericVector indcova2 (ndflength);
@@ -1872,27 +2145,27 @@ Rcpp::List jpf(DataFrame data, DataFrame stageframe, int popidcol,
   Rcpp::NumericVector juvgiven2 (ndflength);
   Rcpp::IntegerVector matstat2 (ndflength);
   
-  censor2.fill(crazycensor); //This variable used to be filled with 0
+  censor2.fill(crazycensor);
   
-  xpos2.fill(0);
-  ypos2.fill(0);
-  sizea2.fill(0);
-  sizeb2.fill(0);
-  sizec2.fill(0);
-  sizeadded2.fill(0);
-  repstra2.fill(0);
-  repstrb2.fill(0);
-  repstradded2.fill(0);
-  feca2.fill(0);
-  fecb2.fill(0);
-  fecadded2.fill(0);
-  indcova2.fill(0);
-  indcovb2.fill(0);
-  indcovc2.fill(0);
+  xpos2.fill(0.0);
+  ypos2.fill(0.0);
+  sizea2.fill(0.0);
+  sizeb2.fill(0.0);
+  sizec2.fill(0.0);
+  sizeadded2.fill(0.0);
+  repstra2.fill(0.0);
+  repstrb2.fill(0.0);
+  repstradded2.fill(0.0);
+  feca2.fill(0.0);
+  fecb2.fill(0.0);
+  fecadded2.fill(0.0);
+  indcova2.fill(0.0);
+  indcovb2.fill(0.0);
+  indcovc2.fill(0.0);
   repstatus2.fill(0);
   fecstatus2.fill(0);
   obsstatus2.fill(0);
-  juvgiven2.fill(0);
+  juvgiven2.fill(0.0);
   matstat2.fill(0);
   
   Rcpp::NumericVector censor3 (ndflength);
@@ -1919,27 +2192,27 @@ Rcpp::List jpf(DataFrame data, DataFrame stageframe, int popidcol,
   Rcpp::NumericVector juvgiven3 (ndflength);
   Rcpp::IntegerVector matstat3 (ndflength);
   
-  censor3.fill(crazycensor); // This used to be filled with 0
+  censor3.fill(crazycensor);
   
-  xpos3.fill(0);
-  ypos3.fill(0);
-  sizea3.fill(0);
-  sizeb3.fill(0);
-  sizec3.fill(0);
-  sizeadded3.fill(0);
-  repstra3.fill(0);
-  repstrb3.fill(0);
-  repstradded3.fill(0);
-  feca3.fill(0);
-  fecb3.fill(0);
-  fecadded3.fill(0);
-  indcova3.fill(0);
-  indcovb3.fill(0);
-  indcovc3.fill(0);
+  xpos3.fill(0.0);
+  ypos3.fill(0.0);
+  sizea3.fill(0.0);
+  sizeb3.fill(0.0);
+  sizec3.fill(0.0);
+  sizeadded3.fill(0.0);
+  repstra3.fill(0.0);
+  repstrb3.fill(0.0);
+  repstradded3.fill(0.0);
+  feca3.fill(0.0);
+  fecb3.fill(0.0);
+  fecadded3.fill(0.0);
+  indcova3.fill(0.0);
+  indcovb3.fill(0.0);
+  indcovc3.fill(0.0);
   repstatus3.fill(0);
   fecstatus3.fill(0);
   obsstatus3.fill(0);
-  juvgiven3.fill(0);
+  juvgiven3.fill(0.0);
   matstat3.fill(0);
   
   Rcpp::NumericVector censor1 (ndflength);
@@ -1966,34 +2239,35 @@ Rcpp::List jpf(DataFrame data, DataFrame stageframe, int popidcol,
   Rcpp::NumericVector juvgiven1 (ndflength);
   Rcpp::IntegerVector matstat1 (ndflength);
   
-  censor1.fill(crazycensor); // This used to be filled with 0
+  censor1.fill(crazycensor);
   
-  xpos1.fill(0);
-  ypos1.fill(0);
-  sizea1.fill(0);
-  sizeb1.fill(0);
-  sizec1.fill(0);
-  sizeadded1.fill(0);
-  repstra1.fill(0);
-  repstrb1.fill(0);
-  repstradded1.fill(0);
-  feca1.fill(0);
-  fecb1.fill(0);
-  fecadded1.fill(0);
-  indcova1.fill(0);
-  indcovb1.fill(0);
-  indcovc1.fill(0);
+  xpos1.fill(0.0);
+  ypos1.fill(0.0);
+  sizea1.fill(0.0);
+  sizeb1.fill(0.0);
+  sizec1.fill(0.0);
+  sizeadded1.fill(0.0);
+  repstra1.fill(0.0);
+  repstrb1.fill(0.0);
+  repstradded1.fill(0.0);
+  feca1.fill(0.0);
+  fecb1.fill(0.0);
+  fecadded1.fill(0.0);
+  indcova1.fill(0.0);
+  indcovb1.fill(0.0);
+  indcovc1.fill(0.0);
   repstatus1.fill(0);
   fecstatus1.fill(0);
   obsstatus1.fill(0);
-  juvgiven1.fill(0);
+  juvgiven1.fill(0.0);
   matstat1.fill(0);
   
-  // This section introduces variables used to check whether the censor variable has been checked and set at each step
-  arma::uvec indivnum (ndflength);          // New Line
-  arma::uvec censor2check (ndflength);      // New line
-  indivnum.zeros();                         // New line
-  censor2check.zeros();                     // New line
+  // This section introduces variables used to check whether the censor variable
+  // has been checked and set at each step
+  arma::uvec indivnum (ndflength);
+  arma::uvec censor2check (ndflength);
+  indivnum.zeros();
+  censor2check.zeros();
   
   // Here we introduce some derived variables that require extra looping or other control parameters
   arma::ivec firstseen (ndflength);
@@ -2005,9 +2279,9 @@ Rcpp::List jpf(DataFrame data, DataFrame stageframe, int popidcol,
   Rcpp::NumericVector alive3 (ndflength);
   firstseen.fill(-1);
   lastseen.fill(-1);
-  alive1.fill(0);
-  alive2.fill(0);
-  alive3.fill(0);
+  alive1.fill(0.0);
+  alive2.fill(0.0);
+  alive3.fill(0.0);
   
   Rcpp::StringVector stage1 (ndflength);
   Rcpp::StringVector stage2 (ndflength);
@@ -2015,16 +2289,26 @@ Rcpp::List jpf(DataFrame data, DataFrame stageframe, int popidcol,
   Rcpp::NumericVector stage1num (ndflength);
   Rcpp::NumericVector stage2num (ndflength);
   Rcpp::NumericVector stage3num (ndflength);
-  stage1num.fill(0);
-  stage2num.fill(0);
-  stage3num.fill(0);
+  stage1num.fill(0.0);
+  stage2num.fill(0.0);
+  stage3num.fill(0.0);
   
-  double stagesize1 {0};
-  double stagesize2 {0};
-  double stagesize3 {0};
+  double stagesize1 {0.0};
+  double stagesize2 {0.0};
+  double stagesize3 {0.0};
+  double stagesize1b {0.0};
+  double stagesize2b {0.0};
+  double stagesize3b {0.0};
+  double stagesize1c {0.0};
+  double stagesize2c {0.0};
+  double stagesize3c {0.0};
   
-  arma::uvec stagemini;
-  arma::uvec stagemaxi;
+  arma::uvec stagemini1;
+  arma::uvec stagemaxi1;
+  arma::uvec stagemini2;
+  arma::uvec stagemaxi2;
+  arma::uvec stagemini3;
+  arma::uvec stagemaxi3;
   arma::uvec stageobs;
   arma::uvec stagerep;
   arma::uvec stagemat;
@@ -2040,66 +2324,68 @@ Rcpp::List jpf(DataFrame data, DataFrame stageframe, int popidcol,
       if (year2x[i] == yearall2x[j]) currentyear = j;
     }
     
+    // This establishes a place marker variable corresponding to the current individual
     currentindiv = -1;
-    for (int k = 0; k < noindivs; k++) { // This establishes a place marker variable corresponding to the current individual
+    for (int k = 0; k < noindivs; k++) {
       if (individx[i] == allindivs[k]) {
         currentindiv = k;
         indivnum[i] = k;
       }
     }
     
-    ndfindex = (noyears * currentindiv) + currentyear; // This establishes the row in the new dataset being created
+    // This establishes the row in the new dataset being created
+    ndfindex = (noyears * currentindiv) + currentyear;
     
     if (NumericVector::is_na(sizea2x[i])) {
-      sizea20x[i] = 0;
-      if (NAas0) {sizea2x[i] = 0;}
+      sizea20x[i] = 0.0;
+      if (NAas0) {sizea2x[i] = 0.0;}
     } else {sizea20x[i] = sizea2x[i];}
     if (NumericVector::is_na(sizeb2x[i])) {
-      sizeb20x[i] = 0;
-      if (NAas0) {sizeb2x[i] = 0;}
+      sizeb20x[i] = 0.0;
+      if (NAas0) {sizeb2x[i] = 0.0;}
     } else {sizeb20x[i] = sizeb2x[i];}
     if (NumericVector::is_na(sizec2x[i])) {
-      sizec20x[i] = 0;
-      if (NAas0) {sizec2x[i] = 0;}
+      sizec20x[i] = 0.0;
+      if (NAas0) {sizec2x[i] = 0.0;}
     } else {sizec20x[i] = sizec2x[i];}
     if (NumericVector::is_na(repstra2x[i])) {
-      repstra20x[i] = 0;
-      if (NAas0) {repstra2x[i] = 0;}
+      repstra20x[i] = 0.0;
+      if (NAas0) {repstra2x[i] = 0.0;}
     } else {repstra20x[i] = repstra2x[i];}
     if (NumericVector::is_na(repstrb2x[i])) {
-      repstrb20x[i] = 0;
-      if (NAas0) {repstrb2x[i] = 0;}
+      repstrb20x[i] = 0.0;
+      if (NAas0) {repstrb2x[i] = 0.0;}
     } else {repstrb20x[i] = repstrb2x[i];}
     if (NumericVector::is_na(feca2x[i])) {
-      feca20x[i] = 0;
-      if (NAas0) {feca2x[i] = 0;}
+      feca20x[i] = 0.0;
+      if (NAas0) {feca2x[i] = 0.0;}
     } else {feca20x[i] = feca2x[i];}
     if (NumericVector::is_na(fecb2x[i])) {
-      fecb20x[i] = 0;
-      if (NAas0) {fecb2x[i] = 0;}
+      fecb20x[i] = 0.0;
+      if (NAas0) {fecb2x[i] = 0.0;}
     } else {fecb20x[i] = fecb2x[i];}
     
     if (NumericVector::is_na(juvgiven2x[i])) {
-      juvgiven20x[i] = 0;
+      juvgiven20x[i] = 0.0;
     } else if (juvgiven2x[i] != 0) {
-      juvgiven20x[i] = 1;
-    } else {juvgiven20x[i] = 0;}
+      juvgiven20x[i] = 1.0;
+    } else {juvgiven20x[i] = 0.0;}
     
     // Here we develop the censoring variable
     if (censbool && censorcol != -1) { // This provides a replacement in cases where NA designates data to keep
       if (NumericVector::is_na(censor2x[i])) {
-        censor2[ndfindex] = 0;
+        censor2[ndfindex] = 0.0;
         censor2check[ndfindex] = 1;
       } else {
-        censor2[ndfindex] = 1;
+        censor2[ndfindex] = 1.0;
         censor2check[ndfindex] = 1;
       }
     } else if (censorcol != -1) {
       if (censorkeep == 0 && NumericVector::is_na(censor2x[i])) {
-        censor2[ndfindex] = 1;
+        censor2[ndfindex] = 1.0;
         censor2check[ndfindex] = 1;
       } else if (censorkeep == 1 && NumericVector::is_na(censor2x[i])) {
-        censor2[ndfindex] = 0;
+        censor2[ndfindex] = 0.0;
         censor2check[ndfindex] = 1;
       } else {
         censor2[ndfindex] = censor2x[i];
@@ -2107,7 +2393,7 @@ Rcpp::List jpf(DataFrame data, DataFrame stageframe, int popidcol,
       }
     }
     
-    rowid[ndfindex] = i;
+    rowid[ndfindex] = static_cast<double>(i);
     popid[ndfindex] = popidx[i];
     patchid[ndfindex] = patchidx[i];
     individ[ndfindex] = allindivs[currentindiv];
@@ -2149,18 +2435,18 @@ Rcpp::List jpf(DataFrame data, DataFrame stageframe, int popidcol,
     juvgiven2[ndfindex] = juvgiven20x[i];
     matstat2[ndfindex] = 1 - juvgiven2[ndfindex];
     
-    if (alivegiven2x[i] > 0) {alive2[ndfindex] = 1;} else if (alivegiven2x[i] == 0) {alive2[ndfindex] = 0;}
-    if (deadgiven2x[i] > 0) {alive2[ndfindex] = 0;} else if (deadgiven2x[i] == 0) {alive2[ndfindex] = 1;}
+    if (alivegiven2x[i] > 0) {alive2[ndfindex] = 1.0;} else if (alivegiven2x[i] == 0) {alive2[ndfindex] = 0.0;}
+    if (deadgiven2x[i] > 0) {alive2[ndfindex] = 0.0;} else if (deadgiven2x[i] == 0) {alive2[ndfindex] = 1.0;}
     
     livcheck2 = sizeadded2[ndfindex] + repstradded2[ndfindex] + obsstatus2[ndfindex];
     
     if (livcheck2 > 0 && firstseenx[currentindiv] == -1) {
       firstseenx[currentindiv] = currentyear + firstyear;
       lastseenx[currentindiv] = currentyear + firstyear;
-      alive2[ndfindex] = 1;
+      alive2[ndfindex] = 1.0;
     } else if (livcheck2 > 0) {
       lastseenx[currentindiv] = currentyear + firstyear;
-      alive2[ndfindex] = 1;
+      alive2[ndfindex] = 1.0;
     }
     
     if (alive2[ndfindex] == 1 && matstat2[ndfindex] == 1) {
@@ -2172,48 +2458,49 @@ Rcpp::List jpf(DataFrame data, DataFrame stageframe, int popidcol,
     } else if (stassign) {stage2[ndfindex] = "NotAlive";}
     
     
-    // Now we work on time t+1 for the last possible time t (which is technically the second to last time), in cases where t+1 columns are provided
+    // Now we work on time t+1 for the last possible time t (which is technically the
+    // second to last time), in cases where t+1 columns are provided
     if (currentyear == (noyears - 1)) {
       if (censbool && censorcol != -1) { // Here we develop the censoring variable for the last time
         if (NumericVector::is_na(censor2x[i])) {
-          censor3[ndfindex] = 0;
+          censor3[ndfindex] = 0.0;
         } else {
-          censor3[ndfindex] = 1;
+          censor3[ndfindex] = 1.0;
         }
       } else if (censorcol != -1) {     // New section through 1908
         if (censorkeep == 0 && NumericVector::is_na(censor2x[i])) {
-          censor3[ndfindex] = 1;
+          censor3[ndfindex] = 1.0;
         } else if (censorkeep == 1 && NumericVector::is_na(censor2x[i])) {
-          censor3[ndfindex] = 0;
+          censor3[ndfindex] = 0.0;
         } else {
           censor3[ndfindex] = censor2x[i];
         }
       }
       
       if (NumericVector::is_na(juvgiven3x[i])) {
-        juvgiven30x[i] = 0;
+        juvgiven30x[i] = 0.0;
       } else if (juvgiven3x[i] != 0) {
-        juvgiven30x[i] = 1;
-      } else {juvgiven30x[i] = 0;}
+        juvgiven30x[i] = 1.0;
+      } else {juvgiven30x[i] = 0.0;}
       
       if (sizea3col != -1) {
         if (NumericVector::is_na(sizea3x[i])) {
-          sizea30x[i] = 0;
-          if (NAas0) {sizea3x[i] = 0;}
+          sizea30x[i] = 0.0;
+          if (NAas0) {sizea3x[i] = 0.0;}
         } else {sizea30x[i] = sizea3x[i];}
         sizea3[ndfindex] = sizea3x[i];
       }
       if (sizeb3col != -1) {
         if (NumericVector::is_na(sizeb3x[i])) {
-          sizeb30x[i] = 0;
-          if (NAas0) {sizeb3x[i] = 0;}
+          sizeb30x[i] = 0.0;
+          if (NAas0) {sizeb3x[i] = 0.0;}
         } else {sizeb30x[i] = sizeb3x[i];}
         sizeb3[ndfindex] = sizeb3x[i];
       }
       if (sizec3col != -1) {
         if (NumericVector::is_na(sizec3x[i])) {
-          sizec30x[i] = 0;
-          if (NAas0) {sizec3x[i] = 0;}
+          sizec30x[i] = 0.0;
+          if (NAas0) {sizec3x[i] = 0.0;}
         } else {sizec30x[i] = sizec3x[i];}
         sizec3[ndfindex] = sizec3x[i];
       }
@@ -2221,15 +2508,15 @@ Rcpp::List jpf(DataFrame data, DataFrame stageframe, int popidcol,
       
       if (repstra3col != -1) {
         if (NumericVector::is_na(repstra3x[i])) {
-          repstra30x[i] = 0;
-          if (NAas0) {repstra3x[i] = 0;}
+          repstra30x[i] = 0.0;
+          if (NAas0) {repstra3x[i] = 0.0;}
         } else {repstra30x[i] = repstra3x[i];}
         repstra3[ndfindex] = repstra3x[i];
       }
       if (repstrb3col != -1) {
         if (NumericVector::is_na(repstrb3x[i])) {
-          repstrb30x[i] = 0;
-          if (NAas0) {repstrb3x[i] = 0;}
+          repstrb30x[i] = 0.0;
+          if (NAas0) {repstrb3x[i] = 0.0;}
         } else {repstrb30x[i] = repstrb3x[i];}
         repstrb3[ndfindex] = repstrb3x[i];
       }
@@ -2237,15 +2524,15 @@ Rcpp::List jpf(DataFrame data, DataFrame stageframe, int popidcol,
       
       if (feca3col != -1) {
         if (NumericVector::is_na(feca3x[i])) {
-          feca30x[i] = 0;
-          if (NAas0) {feca3x[i] = 0;}
+          feca30x[i] = 0.0;
+          if (NAas0) {feca3x[i] = 0.0;}
         } else {feca30x[i] = feca3x[i];}
         feca3[ndfindex] = feca3x[i];
       }
       if (fecb3col != -1) {
         if (NumericVector::is_na(fecb3x[i])) {
-          fecb30x[i] = 0;
-          if (NAas0) {feca3x[i] = 0;}
+          fecb30x[i] = 0.0;
+          if (NAas0) {feca3x[i] = 0.0;}
         } else {fecb30x[i] = fecb3x[i];}
         fecb3[ndfindex] = fecb3x[i];
       }
@@ -2281,8 +2568,16 @@ Rcpp::List jpf(DataFrame data, DataFrame stageframe, int popidcol,
       juvgiven3[ndfindex] = juvgiven30x[i];
       matstat3[ndfindex] = 1 - juvgiven3[ndfindex];
       
-      if (alivegiven3x[i] > 0) {alive3[ndfindex] = 1;} else if (alivegiven3x[i] == 0) {alive3[ndfindex] = 0;}
-      if (deadgiven3x[i] > 0) {alive3[ndfindex] = 0;} else if (deadgiven3x[i] == 0) {alive3[ndfindex] = 1;}
+      if (alivegiven3x[i] > 0) {
+        alive3[ndfindex] = 1.0;
+      } else if (alivegiven3x[i] == 0) {
+        alive3[ndfindex] = 0.0;
+      }
+      if (deadgiven3x[i] > 0) {
+        alive3[ndfindex] = 0.0;
+      } else if (deadgiven3x[i] == 0) {
+        alive3[ndfindex] = 1.0;
+      }
       
       livcheck3 = sizeadded3[ndfindex] + repstradded3[ndfindex] + obsstatus3[ndfindex];
       
@@ -2290,11 +2585,15 @@ Rcpp::List jpf(DataFrame data, DataFrame stageframe, int popidcol,
         firstseenx[currentindiv] = currentyear + firstyear + 1;
         lastseenx[currentindiv] = currentyear + firstyear + 1;
         alive3[ndfindex] = 1;
-        if (juv3col == -1 && repstradded2[ndfindex] > 0) {matstat3[ndfindex] = 1;}
+        if (juv3col == -1 && repstradded2[ndfindex] > 0) {
+          matstat3[ndfindex] = 1;
+        }
       } else if (livcheck3 > 0) {
         lastseenx[currentindiv] = currentyear + firstyear + 1;
         alive3[ndfindex] = 1;
-        if (juv3col == -1 && repstradded2[ndfindex] > 0) {matstat3[ndfindex] = 1;}
+        if (juv3col == -1 && repstradded2[ndfindex] > 0) {
+          matstat3[ndfindex] = 1;
+        }
       }
       
       if (stage3col != -1 && alive3[ndfindex] == 1) {
@@ -2324,7 +2623,7 @@ Rcpp::List jpf(DataFrame data, DataFrame stageframe, int popidcol,
         }
       }
     }
-    // valgrind mentioned this line
+    
     // Now the normal calculations
     currentindiv = -1;
     for (int k = 0; k < noindivs; k++) {
@@ -2341,15 +2640,15 @@ Rcpp::List jpf(DataFrame data, DataFrame stageframe, int popidcol,
       }
       
       if (year2[i] >= firstseen[i] && year2[i] <= lastseen[i] && alive2[i] == 0) {
-        alive2[i] = 1;
+        alive2[i] = 1.0;
       } else if (alive2[i] == 0) {
-        alive2[i] = 0;
+        alive2[i] = 0.0;
       }
       
       if ((year2[i] + 1) >= firstseen[i] && (year2[i] + 1) <= lastseen[i] && alive3[i] == 0) {
-        alive3[i] = 1;
+        alive3[i] = 1.0;
       } else if (alive3[i] == 0) {
-        alive3[i] = 0;
+        alive3[i] = 0.0;
       }
       
       currentyear = year2[i] - firstyear;
@@ -2416,7 +2715,9 @@ Rcpp::List jpf(DataFrame data, DataFrame stageframe, int popidcol,
           if (obsstatus3[i] == 0) {
             stage3[i] = "NotObserved";
           } else {stage3[i] = stage2[nextyrindex];}
-        } else if (stage2col != -1 && alive3[i] == 0 && stassign) {stage3[i] = "NotAlive";}
+        } else if (stage2col != -1 && alive3[i] == 0 && stassign) {
+          stage3[i] = "NotAlive";
+        }
       }
       
       if (currentyear > 0  && year2[i] < (firstyear + noyears)) {
@@ -2424,7 +2725,7 @@ Rcpp::List jpf(DataFrame data, DataFrame stageframe, int popidcol,
         
         alive1[i] = alive2[prevyrindex];
         
-        if (censor2(i) == censorkeep && alive1(i) == 1) {  // New section through 2153
+        if (censor2(i) == censorkeep && alive1(i) == 1) {
           if (censbool) {
             censor1(i) = 0;
           } else {
@@ -2468,46 +2769,200 @@ Rcpp::List jpf(DataFrame data, DataFrame stageframe, int popidcol,
         if (stage2col != -1 && alive1[i] == 1 && stassign) {
           if (obsstatus1[i] == 0) {
             stage1[i] = "NotObserved";
-          } else {stage1[i] = stage2[prevyrindex];}
-        } else if (stage2col != -1 && alive1[i] == 0 && stassign) {stage1[i] = "NotAlive";}
+          } else {
+            stage1[i] = stage2[prevyrindex];
+          }
+        } else if (stage2col != -1 && alive1[i] == 0 && stassign) {
+          stage1[i] = "NotAlive";
+        }
       }
       
       // Stage assignments
       if (stassign && stage2col == -1) {
         
-        if (stszcol == 4) {
+        if (stszcol == 8) {
+          
+          stagesize1 = sizea1[i];
+          stagesize2 = sizea2[i];
+          stagesize3 = sizea3[i];
+          stagesize1b = sizeb1[i];
+          stagesize2b = sizeb2[i];
+          stagesize3b = sizeb3[i];
+          stagesize1c = sizec1[i];
+          stagesize2c = sizec2[i];
+          stagesize3c = sizec3[i];
+          
+          arma::uvec stagemini1a = find(insfszminarma < stagesize1);
+          arma::uvec stagemaxi1a = find(insfszmaxarma >= stagesize1);
+          arma::uvec stagemini1b = find(insfszminarmab < stagesize1b);
+          arma::uvec stagemaxi1b = find(insfszmaxarmab >= stagesize1b);
+          arma::uvec stagemini1c = find(insfszminarmac < stagesize1c);
+          arma::uvec stagemaxi1c = find(insfszmaxarmac >= stagesize1c);
+          arma::uvec stagemini2a = find(insfszminarma < stagesize2);
+          arma::uvec stagemaxi2a = find(insfszmaxarma >= stagesize2);
+          arma::uvec stagemini2b = find(insfszminarmab < stagesize2b);
+          arma::uvec stagemaxi2b = find(insfszmaxarmab >= stagesize2b);
+          arma::uvec stagemini2c = find(insfszminarmac < stagesize2c);
+          arma::uvec stagemaxi2c = find(insfszmaxarmac >= stagesize2c);
+          arma::uvec stagemini3a = find(insfszminarma < stagesize3);
+          arma::uvec stagemaxi3a = find(insfszmaxarma >= stagesize3);
+          arma::uvec stagemini3b = find(insfszminarmab < stagesize3b);
+          arma::uvec stagemaxi3b = find(insfszmaxarmab >= stagesize3b);
+          arma::uvec stagemini3c = find(insfszminarmac < stagesize3c);
+          arma::uvec stagemaxi3c = find(insfszmaxarmac >= stagesize3c);
+          
+          arma::uvec stagemini1d = intersect(stagemini1a, stagemini1b);
+          stagemini1 = intersect(stagemini1c, stagemini1d);
+          arma::uvec stagemaxi1d = intersect(stagemaxi1a, stagemaxi1b);
+          stagemaxi1 = intersect(stagemaxi1c, stagemaxi1d);
+          arma::uvec stagemini2d = intersect(stagemini2a, stagemini2b);
+          stagemini2 = intersect(stagemini2c, stagemini2d);
+          arma::uvec stagemaxi2d = intersect(stagemaxi2a, stagemaxi2b);
+          stagemaxi2 = intersect(stagemaxi2c, stagemaxi2d);
+          arma::uvec stagemini3d = intersect(stagemini3a, stagemini3b);
+          stagemini3 = intersect(stagemini3c, stagemini3d);
+          arma::uvec stagemaxi3d = intersect(stagemaxi3a, stagemaxi3b);
+          stagemaxi3 = intersect(stagemaxi3c, stagemaxi3d);
+        } else if (stszcol == 7) {
+          
+          stagesize1 = sizeb1[i];
+          stagesize2 = sizeb2[i];
+          stagesize3 = sizeb3[i];
+          stagesize1b = sizec1[i];
+          stagesize2b = sizec2[i];
+          stagesize3b = sizec3[i];
+          
+          arma::uvec stagemini1a = find(insfszminarma < stagesize1);
+          arma::uvec stagemaxi1a = find(insfszmaxarma >= stagesize1);
+          arma::uvec stagemini1b = find(insfszminarmab < stagesize1b);
+          arma::uvec stagemaxi1b = find(insfszmaxarmab >= stagesize1b);
+          arma::uvec stagemini2a = find(insfszminarma < stagesize2);
+          arma::uvec stagemaxi2a = find(insfszmaxarma >= stagesize2);
+          arma::uvec stagemini2b = find(insfszminarmab < stagesize2b);
+          arma::uvec stagemaxi2b = find(insfszmaxarmab >= stagesize2b);
+          arma::uvec stagemini3a = find(insfszminarma < stagesize3);
+          arma::uvec stagemaxi3a = find(insfszmaxarma >= stagesize3);
+          arma::uvec stagemini3b = find(insfszminarmab < stagesize3b);
+          arma::uvec stagemaxi3b = find(insfszmaxarmab >= stagesize3b);
+          
+          stagemini1 = intersect(stagemini1a, stagemini1b);
+          stagemaxi1 = intersect(stagemaxi1a, stagemaxi1b);
+          stagemini2 = intersect(stagemini2a, stagemini2b);
+          stagemaxi2 = intersect(stagemaxi2a, stagemaxi2b);
+          stagemini3 = intersect(stagemini3a, stagemini3b);
+          stagemaxi3 = intersect(stagemaxi3a, stagemaxi3b);
+        } else if (stszcol == 6) {
+          
+          stagesize1 = sizea1[i];
+          stagesize2 = sizea2[i];
+          stagesize3 = sizea3[i];
+          stagesize1b = sizec1[i];
+          stagesize2b = sizec2[i];
+          stagesize3b = sizec3[i];
+          
+          arma::uvec stagemini1a = find(insfszminarma < stagesize1);
+          arma::uvec stagemaxi1a = find(insfszmaxarma >= stagesize1);
+          arma::uvec stagemini1b = find(insfszminarmab < stagesize1b);
+          arma::uvec stagemaxi1b = find(insfszmaxarmab >= stagesize1b);
+          arma::uvec stagemini2a = find(insfszminarma < stagesize2);
+          arma::uvec stagemaxi2a = find(insfszmaxarma >= stagesize2);
+          arma::uvec stagemini2b = find(insfszminarmab < stagesize2b);
+          arma::uvec stagemaxi2b = find(insfszmaxarmab >= stagesize2b);
+          arma::uvec stagemini3a = find(insfszminarma < stagesize3);
+          arma::uvec stagemaxi3a = find(insfszmaxarma >= stagesize3);
+          arma::uvec stagemini3b = find(insfszminarmab < stagesize3b);
+          arma::uvec stagemaxi3b = find(insfszmaxarmab >= stagesize3b);
+          
+          stagemini1 = intersect(stagemini1a, stagemini1b);
+          stagemaxi1 = intersect(stagemaxi1a, stagemaxi1b);
+          stagemini2 = intersect(stagemini2a, stagemini2b);
+          stagemaxi2 = intersect(stagemaxi2a, stagemaxi2b);
+          stagemini3 = intersect(stagemini3a, stagemini3b);
+          stagemaxi3 = intersect(stagemaxi3a, stagemaxi3b);
+        } else if (stszcol == 5) {
+          
+          stagesize1 = sizea1[i];
+          stagesize2 = sizea2[i];
+          stagesize3 = sizea3[i];
+          stagesize1b = sizeb1[i];
+          stagesize2b = sizeb2[i];
+          stagesize3b = sizeb3[i];
+          
+          arma::uvec stagemini1a = find(insfszminarma < stagesize1);
+          arma::uvec stagemaxi1a = find(insfszmaxarma >= stagesize1);
+          arma::uvec stagemini1b = find(insfszminarmab < stagesize1b);
+          arma::uvec stagemaxi1b = find(insfszmaxarmab >= stagesize1b);
+          arma::uvec stagemini2a = find(insfszminarma < stagesize2);
+          arma::uvec stagemaxi2a = find(insfszmaxarma >= stagesize2);
+          arma::uvec stagemini2b = find(insfszminarmab < stagesize2b);
+          arma::uvec stagemaxi2b = find(insfszmaxarmab >= stagesize2b);
+          arma::uvec stagemini3a = find(insfszminarma < stagesize3);
+          arma::uvec stagemaxi3a = find(insfszmaxarma >= stagesize3);
+          arma::uvec stagemini3b = find(insfszminarmab < stagesize3b);
+          arma::uvec stagemaxi3b = find(insfszmaxarmab >= stagesize3b);
+          
+          stagemini1 = intersect(stagemini1a, stagemini1b);
+          stagemaxi1 = intersect(stagemaxi1a, stagemaxi1b);
+          stagemini2 = intersect(stagemini2a, stagemini2b);
+          stagemaxi2 = intersect(stagemaxi2a, stagemaxi2b);
+          stagemini3 = intersect(stagemini3a, stagemini3b);
+          stagemaxi3 = intersect(stagemaxi3a, stagemaxi3b);
+        } else if (stszcol == 4) {
           
           stagesize1 = sizeadded1[i];
           stagesize2 = sizeadded2[i];
           stagesize3 = sizeadded3[i];
           
+          stagemini1 = find(insfszminarma < stagesize1);
+          stagemaxi1 = find(insfszmaxarma >= stagesize1);
+          stagemini2 = find(insfszminarma < stagesize2);
+          stagemaxi2 = find(insfszmaxarma >= stagesize2);
+          stagemini3 = find(insfszminarma < stagesize3);
+          stagemaxi3 = find(insfszmaxarma >= stagesize3);
         } else if (stszcol == 3) {
           
           stagesize1 = sizec1[i];
           stagesize2 = sizec2[i];
           stagesize3 = sizec3[i];
           
+          stagemini1 = find(insfszminarma < stagesize1);
+          stagemaxi1 = find(insfszmaxarma >= stagesize1);
+          stagemini2 = find(insfszminarma < stagesize2);
+          stagemaxi2 = find(insfszmaxarma >= stagesize2);
+          stagemini3 = find(insfszminarma < stagesize3);
+          stagemaxi3 = find(insfszmaxarma >= stagesize3);
         } else if (stszcol == 2) {
           
           stagesize1 = sizeb1[i];
           stagesize2 = sizeb2[i];
           stagesize3 = sizeb3[i];
           
+          stagemini1 = find(insfszminarma < stagesize1);
+          stagemaxi1 = find(insfszmaxarma >= stagesize1);
+          stagemini2 = find(insfszminarma < stagesize2);
+          stagemaxi2 = find(insfszmaxarma >= stagesize2);
+          stagemini3 = find(insfszminarma < stagesize3);
+          stagemaxi3 = find(insfszmaxarma >= stagesize3);
         } else {
           
           stagesize1 = sizea1[i];
           stagesize2 = sizea2[i];
           stagesize3 = sizea3[i];
+          
+          stagemini1 = find(insfszminarma < stagesize1);
+          stagemaxi1 = find(insfszmaxarma >= stagesize1);
+          stagemini2 = find(insfszminarma < stagesize2);
+          stagemaxi2 = find(insfszmaxarma >= stagesize2);
+          stagemini3 = find(insfszminarma < stagesize3);
+          stagemaxi3 = find(insfszmaxarma >= stagesize3);
         }
         
         // Stage 2
-        stagemini = find(insfszminarma < stagesize2);
-        stagemaxi = find(insfszmaxarma >= stagesize2);
         stagerep = find(inrepstatarma == repstatus2[i]);
         stagemat = find(inmatstatarma == matstat2[i]);
         stageobs = find(inobsstatarma == obsstatus2[i]);
         
-        cs1 = intersect(stagemini, stagemaxi);
+        cs1 = intersect(stagemini2, stagemaxi2);
         cs2 = intersect(stageobs, stagemat);
         
         if (NRasRep) {
@@ -2517,23 +2972,32 @@ Rcpp::List jpf(DataFrame data, DataFrame stageframe, int popidcol,
           cs4 = intersect(cs1, cs3);
         }
         
-        if (cs4.n_elem > 0 && alive2[i] == 1) {
+        if (cs4.n_elem == 1 && alive2[i] == 1) {
           choicestage = instageid(cs4[0]) - 1;
           stage2num[i] = choicestage + 1;
           
           stage2[i] = sfname[choicestage];
-        } else {
+        } else if (cs4.n_elem == 0 && alive2[i] == 1) {
+          stage2[i] = "NoMatch";
+          
+          Rf_warningcall(R_NilValue,
+            "Some stages occurring in the dataset do not match any characteristics in the input stageframe.");
+        } else if (alive2[i] != 1)  {
           stage2[i] = "NotAlive";
+        } else if (cs4.n_elem > 1) {
+          Rf_warningcall(R_NilValue,
+            "Some stages in the input stageframe appear to have the same description. Please make sure that all stages included in the stageframe are defined with unique sets of characteristics.");
+          
+        } else {
+          throw Rcpp::exception("Stage assignment error.", false);
         }
         
         // Stage 1
-        stagemini = find(insfszminarma < stagesize1);
-        stagemaxi = find(insfszmaxarma >= stagesize1);
         stagerep = find(inrepstatarma == repstatus1[i]);
         stagemat = find(inmatstatarma == matstat1[i]);
         stageobs = find(inobsstatarma == obsstatus1[i]);
         
-        cs1 = intersect(stagemini, stagemaxi);
+        cs1 = intersect(stagemini1, stagemaxi1);
         cs2 = intersect(stageobs, stagemat);
         
         if (NRasRep) {
@@ -2543,24 +3007,33 @@ Rcpp::List jpf(DataFrame data, DataFrame stageframe, int popidcol,
           cs4 = intersect(cs1, cs3);
         }
         
-        if (cs4.n_elem > 0 && alive1[i] == 1) {
+        if (cs4.n_elem == 1 && alive1[i] == 1) {
           choicestage = instageid(cs4[0]) - 1;
           stage1num[i] = choicestage + 1;
           
           stage1[i] = sfname[choicestage];
-        } else {
+        } else if (cs4.n_elem == 0 && alive1[i] == 1) {
+          stage1[i] = "NoMatch";
+          
+          Rf_warningcall(R_NilValue,
+            "Some stages occurring in the dataset do not match any characteristics in the input stageframe.");
+        } else if (alive1[i] != 1) {
           stage1[i] = "NotAlive";
           matstat1[i] = 0;
+        } else if (cs4.n_elem > 1) {
+          Rf_warningcall(R_NilValue,
+            "Some stages in the input stageframe appear to have the same description. Please make sure that all stages included in the stageframe are defined with unique sets of characteristics.");
+          
+        } else {
+          throw Rcpp::exception("Stage assignment error.", false);
         }
         
         // Stage 3
-        stagemini = find(insfszminarma < stagesize3);
-        stagemaxi = find(insfszmaxarma >= stagesize3);
         stagerep = find(inrepstatarma == repstatus3[i]);
         stagemat = find(inmatstatarma == matstat3[i]);
         stageobs = find(inobsstatarma == obsstatus3[i]);
         
-        cs1 = intersect(stagemini, stagemaxi);
+        cs1 = intersect(stagemini3, stagemaxi3);
         cs2 = intersect(stageobs, stagemat);
         
         if (NRasRep) {
@@ -2572,30 +3045,23 @@ Rcpp::List jpf(DataFrame data, DataFrame stageframe, int popidcol,
         
         // Here we create exceptions based on stage assignment problems in time t+1
         if (cs4.n_elem == 1 && alive3[i] == 1) {
-          
           choicestage = instageid(cs4[0]) - 1;
           stage3num[i] = choicestage + 1;
           
           stage3[i] = sfname[choicestage];
-          
         } else if (alive3[i] != 1) {
-          
           stage3[i] = "NotAlive";
-          
         } else if (cs4.n_elem == 0) {
-          
           stage3[i] = "NoMatch";
           
-          Rf_warningcall(R_NilValue, "Some stages occurring in the dataset do not match any characteristics in the input stageframe.");
-          
+          Rf_warningcall(R_NilValue,
+            "Some stages occurring in the dataset do not match any characteristics in the input stageframe.");
         } else if (cs4.n_elem > 1) {
-          
-          Rf_warningcall(R_NilValue, "Some stages in the input stageframe appear to have the same description. Please make sure that all stages included in the stageframe are defined with unique sets of characteristics.");
+          Rf_warningcall(R_NilValue,
+            "Some stages in the input stageframe appear to have the same description. Please make sure that all stages included in the stageframe are defined with unique sets of characteristics.");
           
         } else {
-          
           throw Rcpp::exception("Stage assignment error.", false);
-          
         }
       } // stassign if statement
     } // currentindiv if statement
@@ -2616,7 +3082,7 @@ Rcpp::List jpf(DataFrame data, DataFrame stageframe, int popidcol,
       if (newcount > 0) {
         for (int j = 0; j < newcount; j++) {
           if (censbool) {
-            censor2(indivzeros(j)) = 0;
+            censor2(indivzeros(j)) = 0.0;
           } else {
             censor2(indivzeros(j)) = censorkeep;
           }
@@ -2634,7 +3100,7 @@ Rcpp::List jpf(DataFrame data, DataFrame stageframe, int popidcol,
             
             if (nextvec.n_elem > 0) {
               if (censbool) {
-                censor1(nextvec(0)) = 0;
+                censor1(nextvec(0)) = 0.0;
               } else {
                 censor1(nextvec(0)) = censorkeep;
               }
@@ -2642,9 +3108,9 @@ Rcpp::List jpf(DataFrame data, DataFrame stageframe, int popidcol,
             
             if (priorvec.n_elem > 0) {
               if (censbool) {
-                censor3(priorvec(0)) = 0;
+                censor3(priorvec(0)) = 0.0;
               } else {
-                censor3(priorvec(0)) = censorkeep;  // valgrind mentioned this line
+                censor3(priorvec(0)) = censorkeep;
               }
             } // priorvec if statement
           } // currenttracking if statement
@@ -2653,64 +3119,124 @@ Rcpp::List jpf(DataFrame data, DataFrame stageframe, int popidcol,
     } // noindivs for loop
   } // end censor correction section
   
-  Rcpp::DataFrame df0 = DataFrame::create(Named("rowid") = rowid,
-    _["popid"] = popid, _["patchid"] = patchid, _["individ"] = individ,
-    _["year2"] = year2, _["firstseen"] = firstseen, _["lastseen"] = lastseen,
-    _["obsage"] = obsage, _["obslifespan"] = obslifespan);
+  // Output list creation
+  output_longlist(0) = rowid;
+  output_longlist(1) = popid;
+  output_longlist(2) = patchid;
+  output_longlist(3) = individ;
+  output_longlist(4) = year2;
+  output_longlist(5) = firstseen;
+  output_longlist(6) = lastseen;
+  output_longlist(7) = obsage;
+  output_longlist(8) = obslifespan;
   
-  Rcpp::DataFrame df1 = DataFrame::create(Named("xpos1") = xpos1,
-    _["ypos1"] = ypos1, _["sizea1"] = sizea1, _["sizeb1"] = sizeb1,
-    _["sizec1"] = sizec1, _["sizeadded1"] = sizeadded1,
-    _["repstra1"] = repstra1, _["repstrb1"] = repstrb1,
-    _["repstradded1"] = repstradded1, _["feca1"] = feca1, _["fecb1"] = fecb1,
-    _["fecaadded1"] = fecadded1, _["indcova1"] = indcova1,
-    _["indcovb1"] = indcovb1, _["indcovc1"] = indcovc1, _["censor1"] = censor1,
-    _["juvgiven1"] = juvgiven1);
+  output_longlist(9) = xpos1;
+  output_longlist(10) = ypos1;
+  output_longlist(11) = sizea1;
+  output_longlist(12) = sizeb1;
+  output_longlist(13) = sizec1;
+  output_longlist(14) = sizeadded1;
+  output_longlist(15) = repstra1;
+  output_longlist(16) = repstrb1;
+  output_longlist(17) = repstradded1;
+  output_longlist(18) = feca1;
+  output_longlist(19) = fecb1;
+  output_longlist(20) = fecadded1;
+  output_longlist(21) = indcova1;
+  output_longlist(22) = indcovb1;
+  output_longlist(23) = indcovc1;
+  output_longlist(24) = censor1;
+  output_longlist(25) = juvgiven1;
   
-  Rcpp::DataFrame df1a = DataFrame::create(Named("obsstatus1") = obsstatus1,
-    _["repstatus1"] = repstatus1, _["fecstatus1"] = fecstatus1,
-    _["matstatus1"] = matstat1, _["alive1"] = alive1, _["stage1"] = stage1,
-    _["stage1index"] = stage1num);
+  output_longlist(26) = obsstatus1;
+  output_longlist(27) = repstatus1;
+  output_longlist(28) = fecstatus1;
+  output_longlist(29) = matstat1;
+  output_longlist(30) = alive1;
+  output_longlist(31) = stage1;
+  output_longlist(32) = stage1num;
   
-  Rcpp::DataFrame df2 = DataFrame::create(Named("xpos2") = xpos2,
-    _["ypos2"] = ypos2, _["sizea2"] = sizea2, _["sizeb2"] = sizeb2,
-    _["sizec2"] = sizec2, _["sizeadded2"] = sizeadded2,
-    _["repstra2"] = repstra2, _["repstrb2"] = repstrb2,
-    _["repstradded2"] = repstradded2, _["feca2"] = feca2, _["fecb2"] = fecb2,
-    _["fecaadded2"] = fecadded2, _["indcova2"] = indcova2,
-    _["indcovb2"] = indcovb2, _["indcovc2"] = indcovc2, _["censor2"] = censor2,
-    _["juvgiven2"] = juvgiven2);
+  output_longlist(33) = xpos2;
+  output_longlist(34) = ypos2;
+  output_longlist(35) = sizea2;
+  output_longlist(36) = sizeb2;
+  output_longlist(37) = sizec2;
+  output_longlist(38) = sizeadded2;
+  output_longlist(39) = repstra2;
+  output_longlist(40) = repstrb2;
+  output_longlist(41) = repstradded2;
+  output_longlist(42) = feca2;
+  output_longlist(43) = fecb2;
+  output_longlist(44) = fecadded2;
+  output_longlist(45) = indcova2;
+  output_longlist(46) = indcovb2;
+  output_longlist(47) = indcovc2;
+  output_longlist(48) = censor2;
+  output_longlist(49) = juvgiven2;
   
-  Rcpp::DataFrame df2a = DataFrame::create(Named("obsstatus2") = obsstatus2,
-    _["repstatus2"] = repstatus2, _["fecstatus2"] = fecstatus2,
-    _["matstatus2"] = matstat2, _["alive2"] = alive2, _["stage2"] = stage2,
-    _["stage2index"] = stage2num);
+  output_longlist(50) = obsstatus2;
+  output_longlist(51) = repstatus2;
+  output_longlist(52) = fecstatus2;
+  output_longlist(53) = matstat2;
+  output_longlist(54) = alive2;
+  output_longlist(55) = stage2;
+  output_longlist(56) = stage2num;
+
+  output_longlist(57) = xpos3;
+  output_longlist(58) = ypos3;
+  output_longlist(59) = sizea3;
+  output_longlist(60) = sizeb3;
+  output_longlist(61) = sizec3;
+  output_longlist(62) = sizeadded3;
+  output_longlist(63) = repstra3;
+  output_longlist(64) = repstrb3;
+  output_longlist(65) = repstradded3;
+  output_longlist(66) = feca3;
+  output_longlist(67) = fecb3;
+  output_longlist(68) = fecadded3;
+  output_longlist(69) = indcova3;
+  output_longlist(70) = indcovb3;
+  output_longlist(71) = indcovc3;
+  output_longlist(72) = censor3;
+  output_longlist(73) = juvgiven3;
   
-  Rcpp::DataFrame df3 = DataFrame::create(Named("xpos3") = xpos3,
-    _["ypos3"] = ypos3, _["sizea3"] = sizea3, _["sizeb3"] = sizeb3,
-    _["sizec3"] = sizec3, _["sizeadded3"] = sizeadded3,
-    _["repstra3"] = repstra3, _["repstrb3"] = repstrb3,
-    _["repstradded3"] = repstradded3, _["feca3"] = feca3, _["fecb3"] = fecb3,
-    _["fecaadded3"] = fecadded3, _["indcova3"] = indcova3,
-    _["indcovb3"] = indcovb3, _["indcovc3"] = indcovc3, _["censor3"] = censor3,
-    _["juvgiven3"] = juvgiven3);
+  output_longlist(74) = obsstatus3;
+  output_longlist(75) = repstatus3;
+  output_longlist(76) = fecstatus3;
+  output_longlist(77) = matstat3;
+  output_longlist(78) = alive3;
+  output_longlist(79) = stage3;
+  output_longlist(80) = stage3num;
   
-  Rcpp::DataFrame df3a = DataFrame::create(Named("obsstatus3") = obsstatus3,
-    _["repstatus3"] = repstatus3, _["fecstatus3"] = fecstatus3,
-    _["matstatus3"] = matstat3, _["alive3"] = alive3, _["stage3"] = stage3,
-    _["stage3index"] = stage3num);
+  Rcpp::CharacterVector varnames {"rowid", "popid", "patchid", "individ",
+    "year2", "firstseen", "lastseen", "obsage", "obslifespan","xpos1", "ypos1",
+    "sizea1", "sizeb1", "sizec1", "size1added", "repstra1", "repstrb1",
+    "repstr1added", "feca1", "fecb1", "fec1added", "indcova1", "indcovb1",
+    "indcovc1", "censor1", "juvgiven1", "obsstatus1", "repstatus1",
+    "fecstatus1", "matstatus1", "alive1", "stage1", "stage1index",
+    "xpos2", "ypos2", "sizea2", "sizeb2", "sizec2", "size2added", "repstra2",
+    "repstrb2", "repstr2added", "feca2", "fecb2", "fec2added", "indcova2",
+    "indcovb2", "indcovc2", "censor2", "juvgiven2", "obsstatus2", "repstatus2",
+    "fecstatus2", "matstatus2", "alive2", "stage2", "stage2index",
+    "xpos3", "ypos3", "sizea3", "sizeb3", "sizec3", "size3added", "repstra3",
+    "repstrb3", "repstr3added", "feca3", "fecb3", "fec3added", "indcova3",
+    "indcovb3", "indcovc3", "censor3", "juvgiven3", "obsstatus3", "repstatus3",
+    "fecstatus3", "matstatus3", "alive3", "stage3", "stage3index"};
   
-  return Rcpp::List::create(Named("a") = df0, Named("b") = df1,
-    Named("c") = df1a, Named("d") = df2, Named("e") = df2a, Named("f") = df3,
-    Named("g") = df3a);
+  output_longlist.attr("names") = varnames;
+  output_longlist.attr("row.names") = Rcpp::IntegerVector::create(NA_INTEGER, alive3.length());
+  StringVector needed_classes {"data.frame", "hfvdata"};
+  output_longlist.attr("class") = needed_classes; // data.frame
+  
+  return output_longlist;
 }
 
 //' Create Element Index for Matrix Estimation
 //' 
-//' Function \code{theoldpizzle()} create a data frame object spread across
-//' three 20-element long list objects that is used by \code{jerzeibalowski()}
-//' to estimate function-derived matrices, and also provides the element map for
-//' raw matrices.
+//' Function \code{.theoldpizzle()} creates a data frame object used by 
+//' functions \code{\link{.specialpatrolgroup}()},
+//' \code{\link{.normalpatrolgroup}()}, and \code{.jerzeibalowski()} to estimate
+//' raw and function-derived matrices.
 //'
 //' @param StageFrame The stageframe object identifying the life history model
 //' being operationalized.
@@ -2725,14 +3251,12 @@ Rcpp::List jpf(DataFrame data, DataFrame stageframe, int popidcol,
 //' and 2 is age-by-stage.
 //' @param cont Denotes whether age-by-stage matrix continues past the final age.
 //' 
-//' @return The output is currently a three element list, where each element is
-//' a data frame with the same number of rows. These are combined into one data
-//' frame by \code{\link{flefko3}()}, \code{\link{flefko2}()}, and
-//' \code{\link{aflefko2}()}.
+//' @return The output is a large data frame describing every element to be
+//' estimated in matrices.
 //' 
 //' @keywords internal
 //' @noRd
-// [[Rcpp::export]]
+// [[Rcpp::export(.theoldpizzle)]]
 Rcpp::List theoldpizzle(DataFrame StageFrame, DataFrame OverWrite,
   arma::mat repmatrix, int finalage, int format, int style, int cont) {
   
@@ -2761,30 +3285,37 @@ Rcpp::List theoldpizzle(DataFrame StageFrame, DataFrame OverWrite,
   arma::vec ovnewgivenrate(ovrows * totalages);
   arma::vec ovnewmultiplier(ovrows * totalages);
   arma::vec ovconvtypeage(ovrows * totalages);
-  ovindex3.fill(-1);
-  ovindex2.fill(-1);
-  ovindex1.fill(-1);
-  ovnew3.fill(-1);
-  ovnew2.fill(-1);
-  ovnew1.fill(-1);
-  ovindexold321.fill(-1);
-  ovindexnew321.fill(-1);
-  ovnewgivenrate.fill(-1);
+  ovindex3.fill(-1.0);
+  ovindex2.fill(-1.0);
+  ovindex1.fill(-1.0);
+  ovnew3.fill(-1.0);
+  ovnew2.fill(-1.0);
+  ovnew1.fill(-1.0);
+  ovindexold321.fill(-1.0);
+  ovindexnew321.fill(-1.0);
+  ovnewgivenrate.fill(-1.0);
   ovnewmultiplier.zeros();
-  ovconvtypeage.fill(-1);
+  ovconvtypeage.fill(-1.0);
   
   arma::vec newstageid = StageFrame["stage_id"];
   StringVector origstageid = StageFrame["stage"];
-  arma::vec binsizectr = StageFrame["bin_size_ctr"];
+  arma::vec binsizectr = StageFrame["sizebin_center"];
   arma::vec repstatus = StageFrame["repstatus"];
   arma::vec obsstatus = StageFrame["obsstatus"];
   arma::vec immstatus = StageFrame["immstatus"];
   arma::vec matstatus = StageFrame["matstatus"];
   arma::vec indata = StageFrame["indataset"];
-  arma::vec binsizewidth = StageFrame["bin_size_width"];
+  arma::vec binsizewidth = StageFrame["sizebin_width"];
   arma::vec alive = StageFrame["alive"];
   arma::vec minage = StageFrame["min_age"];
   arma::vec maxage = StageFrame["max_age"];
+  arma::vec group = StageFrame["group"];
+  
+  arma::vec binsizebctr = StageFrame["sizebinb_center"];
+  arma::vec binsizecctr = StageFrame["sizebinc_center"];
+  arma::vec binsizebwidth = StageFrame["sizebinb_width"];
+  arma::vec binsizecwidth = StageFrame["sizebinc_width"];
+  
   
   // This section determines the length of the matrix map data frame
   int nostages = newstageid.n_elem;
@@ -2827,112 +3358,93 @@ Rcpp::List theoldpizzle(DataFrame StageFrame, DataFrame OverWrite,
   
   // Here we set up the vectors that will be put together into the matrix map
   // data frame
-  arma::vec stage3(totallength);
-  arma::vec stage2n(totallength);
-  arma::vec stage2o(totallength);
-  arma::vec stage1(totallength);
-  stage3.zeros();
-  stage2n.zeros();
-  stage2o.zeros();
-  stage1.zeros();
+  arma::vec stage3(totallength, fill::zeros);
+  arma::vec stage2n(totallength, fill::zeros);
+  arma::vec stage2o(totallength, fill::zeros);
+  arma::vec stage1(totallength, fill::zeros);
   
-  arma::vec size3(totallength);
-  arma::vec size2n(totallength);
-  arma::vec size2o(totallength);
-  arma::vec size1(totallength);
-  size3.zeros();
-  size2n.zeros();
-  size2o.zeros();
-  size1.zeros();
+  arma::vec size3(totallength, fill::zeros);
+  arma::vec size2n(totallength, fill::zeros);
+  arma::vec size2o(totallength, fill::zeros);
+  arma::vec size1(totallength, fill::zeros);
   
-  arma::vec obs3(totallength);
-  arma::vec obs2n(totallength);
-  arma::vec obs2o(totallength);
-  arma::vec obs1(totallength);
-  obs3.zeros();
-  obs2n.zeros();
-  obs2o.zeros();
-  obs1.zeros();
+  arma::vec sizeb3(totallength, fill::zeros);
+  arma::vec sizeb2n(totallength, fill::zeros);
+  arma::vec sizeb2o(totallength, fill::zeros);
+  arma::vec sizeb1(totallength, fill::zeros);
   
-  arma::vec rep3(totallength);
-  arma::vec rep2n(totallength);
-  arma::vec rep2o(totallength);
-  arma::vec rep1(totallength);
-  rep3.zeros();
-  rep2n.zeros();
-  rep2o.zeros();
-  rep1.zeros();
+  arma::vec sizec3(totallength, fill::zeros);
+  arma::vec sizec2n(totallength, fill::zeros);
+  arma::vec sizec2o(totallength, fill::zeros);
+  arma::vec sizec1(totallength, fill::zeros);
   
-  arma::vec mat3(totallength);
-  arma::vec mat2n(totallength);
-  arma::vec mat2o(totallength);
-  arma::vec mat1(totallength);
-  mat3.zeros();
-  mat2n.zeros();
-  mat2o.zeros();
-  mat1.zeros();
+  arma::vec obs3(totallength, fill::zeros);
+  arma::vec obs2n(totallength, fill::zeros);
+  arma::vec obs2o(totallength, fill::zeros);
+  arma::vec obs1(totallength, fill::zeros);
   
-  arma::vec imm3(totallength);
-  arma::vec imm2n(totallength);
-  arma::vec imm2o(totallength);
-  arma::vec imm1(totallength);
-  imm3.zeros();
-  imm2n.zeros();
-  imm2o.zeros();
-  imm1.zeros();
+  arma::vec rep3(totallength, fill::zeros);
+  arma::vec rep2n(totallength, fill::zeros);
+  arma::vec rep2o(totallength, fill::zeros);
+  arma::vec rep1(totallength, fill::zeros);
   
-  arma::vec repentry3(totallength);
-  arma::vec binwidth(totallength);
-  repentry3.zeros();
-  binwidth.zeros();
+  arma::vec mat3(totallength, fill::zeros);
+  arma::vec mat2n(totallength, fill::zeros);
+  arma::vec mat2o(totallength, fill::zeros);
+  arma::vec mat1(totallength, fill::zeros);
   
-  arma::vec indata3(totallength);
-  arma::vec indata2n(totallength);
-  arma::vec indata2o(totallength);
-  arma::vec indata1(totallength);
-  indata3.zeros();
-  indata2n.zeros();
-  indata2o.zeros();
-  indata1.zeros();
+  arma::vec imm3(totallength, fill::zeros);
+  arma::vec imm2n(totallength, fill::zeros);
+  arma::vec imm2o(totallength, fill::zeros);
+  arma::vec imm1(totallength, fill::zeros);
   
-  arma::vec minage3(totallength);
-  arma::vec minage2(totallength);
-  arma::vec maxage3(totallength);
-  arma::vec maxage2(totallength);
-  minage3.zeros();
-  minage2.zeros();
-  maxage3.zeros();
-  maxage2.zeros();
+  arma::vec repentry3(totallength, fill::zeros);
+  arma::vec binwidth(totallength, fill::zeros);
+  arma::vec binbwidth(totallength, fill::zeros);
+  arma::vec bincwidth(totallength, fill::zeros);
   
-  arma::vec actualage(totallength);
+  arma::vec indata3(totallength, fill::zeros);
+  arma::vec indata2n(totallength, fill::zeros);
+  arma::vec indata2o(totallength, fill::zeros);
+  arma::vec indata1(totallength, fill::zeros);
+  
+  arma::vec minage3(totallength, fill::zeros);
+  arma::vec minage2(totallength, fill::zeros);
+  arma::vec maxage3(totallength, fill::zeros);
+  arma::vec maxage2(totallength, fill::zeros);
+  
+  arma::vec grp3(totallength, fill::zeros);
+  arma::vec grp2n(totallength, fill::zeros);
+  arma::vec grp2o(totallength, fill::zeros);
+  arma::vec grp1(totallength, fill::zeros);
+  
+  arma::vec actualage(totallength, fill::zeros);
   arma::vec index321(totallength);
   arma::vec index21(totallength);
-  arma::vec indatalong(totallength);
+  arma::vec indatalong(totallength, fill::zeros);
   arma::vec aliveequal(totallength);
-  arma::vec included(totallength);
-  actualage.zeros();
+  arma::vec included(totallength, fill::zeros);
   index321.fill(-1);
   index21.fill(-1);
-  indatalong.zeros();
   aliveequal.fill(-1);
-  included.zeros();
   
   arma::mat asadditions(totallength, 5);
+  asadditions.zeros();
+  
   arma::vec ovgivent(totallength);
   arma::vec ovestt(totallength);
   arma::vec ovgivenf(totallength);
   arma::vec ovestf(totallength);
-  arma::vec ovrepentry(totallength);
-  asadditions.zeros();
+  arma::vec ovrepentry(totallength, fill::zeros);
+  arma::vec ovsurvmult(totallength, fill::ones);
+  arma::vec ovfecmult(totallength, fill::ones);
   ovgivent.fill(-1);
   ovestt.fill(-1);
   ovgivenf.fill(-1);
   ovestf.fill(-1);
-  ovrepentry.zeros();
   
   int repm_elem {-1};
   double deadandnasty {0};
-  // long long int lifeindex {0};
   long long int currentindex {0};
 
   // This step changes the stage names to stage numbers per the input stageframe for styles 0 and 1
@@ -3007,9 +3519,10 @@ Rcpp::List theoldpizzle(DataFrame StageFrame, DataFrame OverWrite,
         if (!NumericVector::is_na(ovgivenrate(i))) {
           ovnewgivenrate(i) = ovgivenrate(i);
         }
-        if (!NumericVector::is_na(ovmultiplier(i))) {
-          ovnewmultiplier(i) = ovmultiplier(i);
+        if (NumericVector::is_na(ovmultiplier(i))) {
+          ovmultiplier(i) = 1;
         }
+        ovnewmultiplier(i) = ovmultiplier(i);
         
         if (ovconvtype(i) == 3) {
           for (int j = 0; j < nostages; j++) {
@@ -3033,22 +3546,47 @@ Rcpp::List theoldpizzle(DataFrame StageFrame, DataFrame OverWrite,
                 stage2n(currentindex) = newstageid(time2n);
                 stage2o(currentindex) = newstageid(time2o);
                 stage1(currentindex) = newstageid(time1);
+                
                 size3(currentindex) = binsizectr(time3);
                 size2n(currentindex) = binsizectr(time2n);
                 size2o(currentindex) = binsizectr(time2o);
                 size1(currentindex) = binsizectr(time1);
+                
+                sizeb3(currentindex) = binsizebctr(time3);
+                sizeb2n(currentindex) = binsizebctr(time2n);
+                sizeb2o(currentindex) = binsizebctr(time2o);
+                sizeb1(currentindex) = binsizebctr(time1);
+                
+                if (NumericVector::is_na(sizeb3(currentindex))) sizeb3(currentindex) = 0;
+                if (NumericVector::is_na(sizeb2n(currentindex))) sizeb2n(currentindex) = 0;
+                if (NumericVector::is_na(sizeb2o(currentindex))) sizeb2o(currentindex) = 0;
+                if (NumericVector::is_na(sizeb1(currentindex))) sizeb1(currentindex) = 0;
+                
+                sizec3(currentindex) = binsizecctr(time3);
+                sizec2n(currentindex) = binsizecctr(time2n);
+                sizec2o(currentindex) = binsizecctr(time2o);
+                sizec1(currentindex) = binsizecctr(time1);
+                
+                if (NumericVector::is_na(sizec3(currentindex))) sizec3(currentindex) = 0;
+                if (NumericVector::is_na(sizec2n(currentindex))) sizec2n(currentindex) = 0;
+                if (NumericVector::is_na(sizec2o(currentindex))) sizec2o(currentindex) = 0;
+                if (NumericVector::is_na(sizec1(currentindex))) sizec1(currentindex) = 0;
+                
                 obs3(currentindex) = obsstatus(time3);
                 obs2n(currentindex) = obsstatus(time2n);
                 obs2o(currentindex) = obsstatus(time2o);
                 obs1(currentindex) = obsstatus(time1);
+                
                 rep3(currentindex) = repstatus(time3);
                 rep2n(currentindex) = repstatus(time2n);
                 rep2o(currentindex) = repstatus(time2o);
                 rep1(currentindex) = repstatus(time1);
+                
                 mat3(currentindex) = matstatus(time3);
                 mat2n(currentindex) = matstatus(time2n);
                 mat2o(currentindex) = matstatus(time2o);
                 mat1(currentindex) = matstatus(time1);
+                
                 imm3(currentindex) = immstatus(time3);
                 imm2n(currentindex) = immstatus(time2n);
                 imm2o(currentindex) = immstatus(time2o);
@@ -3076,12 +3614,24 @@ Rcpp::List theoldpizzle(DataFrame StageFrame, DataFrame OverWrite,
                 indata2n(currentindex) = indata(time2n);
                 indata2o(currentindex) = indata(time2o);
                 indata1(currentindex) = indata(time1);
+                
                 binwidth(currentindex) = binsizewidth(time3);
+                binbwidth(currentindex) = binsizebwidth(time3);
+                bincwidth(currentindex) = binsizecwidth(time3);
+                
+                if (NumericVector::is_na(binbwidth(currentindex))) binbwidth(currentindex) = 0;
+                if (NumericVector::is_na(bincwidth(currentindex))) bincwidth(currentindex) = 0;
+                
                 minage3(currentindex) = minage(time3);
                 minage2(currentindex) = minage(time2o);
                 maxage3(currentindex) = maxage(time3);
                 maxage2(currentindex) = maxage(time2o);
                 actualage(currentindex) = 0;
+                
+                grp3(currentindex) = group(time3);
+                grp2n(currentindex) = group(time2n);
+                grp2o(currentindex) = group(time2o);
+                grp1(currentindex) = group(time1);
                 
                 if (stage3(currentindex) == nostages || stage2n(currentindex) == nostages) {
                   deadandnasty = 1;
@@ -3096,7 +3646,8 @@ Rcpp::List theoldpizzle(DataFrame StageFrame, DataFrame OverWrite,
                   aliveequal(currentindex) = (stage3(currentindex) - 1) + 
                     ((stage2n(currentindex) - 1) * nostages_nodead_nounborn) + 
                     ((stage2o(currentindex) - 1) * nostages_nodead * nostages_nodead_nounborn) + 
-                    ((stage1(currentindex) - 1) * nostages_nodead_nounborn * nostages_nodead * nostages_nodead_nounborn);
+                    ((stage1(currentindex) - 1) * nostages_nodead_nounborn * 
+                      nostages_nodead * nostages_nodead_nounborn);
                   
                   // The next two index variables are used by ovreplace
                   index321(currentindex) = (stage3(currentindex) - 1) + 
@@ -3120,7 +3671,8 @@ Rcpp::List theoldpizzle(DataFrame StageFrame, DataFrame OverWrite,
     } // time1 loop 
     
     if (ovrows > 1 || ovconvtype(0) != -1) {
-      asadditions = ovreplace(index321, ovindexold321, ovindexnew321, ovconvtype, ovnew3, ovnewgivenrate, ovnewmultiplier);
+      asadditions = ovreplace(index321, ovindexold321, ovindexnew321, ovconvtype, 
+        ovnew3, ovnewgivenrate, ovnewmultiplier);
       
       ovgivent = asadditions.col(0);
       ovestt = asadditions.col(1);
@@ -3128,6 +3680,8 @@ Rcpp::List theoldpizzle(DataFrame StageFrame, DataFrame OverWrite,
       ovestf = asadditions.col(3);
       
       ovrepentry = asadditions.col(4);
+      ovsurvmult = asadditions.col(5);
+      ovfecmult = asadditions.col(6);
       
       arma::uvec workedupindex = find(ovrepentry > 0);
       int changedreps = workedupindex.n_elem;
@@ -3146,11 +3700,13 @@ Rcpp::List theoldpizzle(DataFrame StageFrame, DataFrame OverWrite,
         // Here are the new versions
         ovindexold321(i) = (ovindex3(i) - 1) + ((ovindex2(i) - 1) * nostages_nodead_nounborn) + 
           ((ovindex2(i) - 1) * nostages_nodead_nounborn * nostages_nodead_nounborn) + 
-          ((ovindex1(i) - 1) * nostages_nodead_nounborn * nostages_nodead_nounborn * nostages_nodead_nounborn);
+          ((ovindex1(i) - 1) * nostages_nodead_nounborn * nostages_nodead_nounborn * 
+            nostages_nodead_nounborn);
           
         ovindexnew321(i) = (ovnew3(i) - 1) + ((ovnew2(i) - 1) * nostages_nodead) + 
           ((ovnew2(i) - 1) * nostages_nodead_nounborn * nostages_nodead_nounborn) + 
-          ((ovnew1(i) - 1) * nostages_nodead_nounborn * nostages_nodead_nounborn * nostages_nodead_nounborn);
+          ((ovnew1(i) - 1) * nostages_nodead_nounborn * nostages_nodead_nounborn * 
+            nostages_nodead_nounborn);
         
         if (ovindexold321(i) < 0) ovindexold321(i) = -1;
         if (ovindexnew321(i) < 0) ovindexnew321(i) = -1;
@@ -3158,9 +3714,10 @@ Rcpp::List theoldpizzle(DataFrame StageFrame, DataFrame OverWrite,
         if (!NumericVector::is_na(ovgivenrate(i))) {
           ovnewgivenrate(i) = ovgivenrate(i);
         }
-        if (!NumericVector::is_na(ovmultiplier(i))) {
-          ovnewmultiplier(i) = ovmultiplier(i);
+        if (NumericVector::is_na(ovmultiplier(i))) {
+          ovmultiplier(i) = 1;
         }
+        ovnewmultiplier(i) = ovmultiplier(i);
       } // i for loop
     } // ovrows if statement
     
@@ -3174,22 +3731,47 @@ Rcpp::List theoldpizzle(DataFrame StageFrame, DataFrame OverWrite,
           stage2n(currentindex) = newstageid(time2o);
           stage2o(currentindex) = newstageid(time2o);
           stage1(currentindex) = newstageid(time1);
+          
           size3(currentindex) = binsizectr(time3);
           size2n(currentindex) = binsizectr(time2o);
           size2o(currentindex) = binsizectr(time2o);
           size1(currentindex) = binsizectr(time1);
+          
+          sizeb3(currentindex) = binsizebctr(time3);
+          sizeb2n(currentindex) = binsizebctr(time2o);
+          sizeb2o(currentindex) = binsizebctr(time2o);
+          sizeb1(currentindex) = binsizebctr(time1);
+          
+          if (NumericVector::is_na(sizeb3(currentindex))) sizeb3(currentindex) = 0;
+          if (NumericVector::is_na(sizeb2n(currentindex))) sizeb2n(currentindex) = 0;
+          if (NumericVector::is_na(sizeb2o(currentindex))) sizeb2o(currentindex) = 0;
+          if (NumericVector::is_na(sizeb1(currentindex))) sizeb1(currentindex) = 0;
+                
+          sizec3(currentindex) = binsizecctr(time3);
+          sizec2n(currentindex) = binsizecctr(time2o);
+          sizec2o(currentindex) = binsizecctr(time2o);
+          sizec1(currentindex) = binsizecctr(time1);
+          
+          if (NumericVector::is_na(sizec3(currentindex))) sizec3(currentindex) = 0;
+          if (NumericVector::is_na(sizec2n(currentindex))) sizec2n(currentindex) = 0;
+          if (NumericVector::is_na(sizec2o(currentindex))) sizec2o(currentindex) = 0;
+          if (NumericVector::is_na(sizec1(currentindex))) sizec1(currentindex) = 0;
+          
           obs3(currentindex) = obsstatus(time3);
           obs2n(currentindex) = obsstatus(time2o);
           obs2o(currentindex) = obsstatus(time2o);
           obs1(currentindex) = obsstatus(time1);
+          
           rep3(currentindex) = repstatus(time3);
           rep2n(currentindex) = repstatus(time2o);
           rep2o(currentindex) = repstatus(time2o);
           rep1(currentindex) = repstatus(time1);
+          
           mat3(currentindex) = matstatus(time3);
           mat2n(currentindex) = matstatus(time2o);
           mat2o(currentindex) = matstatus(time2o);
           mat1(currentindex) = matstatus(time1);
+          
           imm3(currentindex) = immstatus(time3);
           imm2n(currentindex) = immstatus(time2o);
           imm2o(currentindex) = immstatus(time2o);
@@ -3202,7 +3784,8 @@ Rcpp::List theoldpizzle(DataFrame StageFrame, DataFrame OverWrite,
             } else if (repmattype == 2) {
               repm_elem = time3 + (time2o * nostages_nodead_nounborn) + 
                 (time2o * nostages_nodead_nounborn * nostages_nodead_nounborn) +
-                (time1 * nostages_nodead_nounborn * nostages_nodead_nounborn * nostages_nodead_nounborn);
+                (time1 * nostages_nodead_nounborn * nostages_nodead_nounborn * 
+                  nostages_nodead_nounborn);
             } else {
               repm_elem = -1;
             }
@@ -3220,7 +3803,8 @@ Rcpp::List theoldpizzle(DataFrame StageFrame, DataFrame OverWrite,
             } else if (repmattype == 2) {  // Historical repmatrix
               repentry3(currentindex) = repmatrix((time3 + (nostages_nodead_nounborn * time2o)) + 
                 ((nostages_nodead_nounborn * nostages_nodead_nounborn * time2o)) +
-                (nostages_nodead_nounborn * nostages_nodead_nounborn * nostages_nodead_nounborn * time1));
+                (nostages_nodead_nounborn * nostages_nodead_nounborn * 
+                  nostages_nodead_nounborn * time1));
             }
           } else {
             repentry3(currentindex) = 0;
@@ -3230,12 +3814,24 @@ Rcpp::List theoldpizzle(DataFrame StageFrame, DataFrame OverWrite,
           indata2n(currentindex) = indata(time2o);
           indata2o(currentindex) = indata(time2o);
           indata1(currentindex) = indata(time1);
+          
           binwidth(currentindex) = binsizewidth(time3);
+          binbwidth(currentindex) = binsizebwidth(time3);
+          bincwidth(currentindex) = binsizecwidth(time3);
+          
+          if (NumericVector::is_na(binbwidth(currentindex))) binbwidth(currentindex) = 0;
+          if (NumericVector::is_na(bincwidth(currentindex))) bincwidth(currentindex) = 0;
+          
           minage3(currentindex) = minage(time3);
           minage2(currentindex) = minage(time2o);
           maxage3(currentindex) = maxage(time3);
           maxage2(currentindex) = maxage(time2o);
           actualage(currentindex) = 0;
+          
+          grp3(currentindex) = group(time3);
+          grp2n(currentindex) = group(time2o);
+          grp2o(currentindex) = group(time2o);
+          grp1(currentindex) = group(time1);
           
           if (stage3(currentindex) == nostages || stage2n(currentindex) == nostages) {
             deadandnasty = 1;
@@ -3246,8 +3842,8 @@ Rcpp::List theoldpizzle(DataFrame StageFrame, DataFrame OverWrite,
           }
           
           if (deadandnasty == 0) {
-            aliveequal(currentindex) = (stage3(currentindex) - 1) + ((stage2n(currentindex) - 1) * (nostages - 1)) + 
-              ((stage2o(currentindex) - 1) * (nostages - 1) * (nostages - 1)) + 
+            aliveequal(currentindex) = (stage3(currentindex) - 1) + ((stage2n(currentindex) - 1) * 
+                (nostages - 1)) + ((stage2o(currentindex) - 1) * (nostages - 1) * (nostages - 1)) + 
               ((stage1(currentindex) - 1) * (nostages - 1) * (nostages - 1) * (nostages - 1));
             
             index321(currentindex) = (stage3(currentindex) - 1) + 
@@ -3267,12 +3863,15 @@ Rcpp::List theoldpizzle(DataFrame StageFrame, DataFrame OverWrite,
     } // time1 loop 
     
     if (ovrows > 1 || ovconvtype(0) != -1) {
-      asadditions = ovreplace(index321, ovindexold321, ovindexnew321, ovconvtype, ovnew3, ovnewgivenrate, ovnewmultiplier);
+      asadditions = ovreplace(index321, ovindexold321, ovindexnew321, ovconvtype, 
+        ovnew3, ovnewgivenrate, ovnewmultiplier);
       
       ovgivent = asadditions.col(0);
       ovestt = asadditions.col(1);
       ovgivenf = asadditions.col(2);
       ovestf = asadditions.col(3);
+      ovsurvmult = asadditions.col(5);
+      ovfecmult = asadditions.col(6);
       
       ovrepentry = asadditions.col(4);
       
@@ -3299,9 +3898,10 @@ Rcpp::List theoldpizzle(DataFrame StageFrame, DataFrame OverWrite,
         if (!NumericVector::is_na(ovgivenrate(i))) {
           ovnewgivenrate(i) = ovgivenrate(i);
         }
-        if (!NumericVector::is_na(ovmultiplier(i))) {
-          ovnewmultiplier(i) = ovmultiplier(i);
+        if (NumericVector::is_na(ovmultiplier(i))) {
+          ovmultiplier(i) = 1;
         }
+        ovnewmultiplier(i) = ovmultiplier(i);
       } // i for loop
     } // ovrows if statement
     
@@ -3312,26 +3912,49 @@ Rcpp::List theoldpizzle(DataFrame StageFrame, DataFrame OverWrite,
         stage2n(currentindex) = newstageid(time2n);
         stage2o(currentindex) = newstageid(time2n);
         stage1(currentindex) = 0;
+        
         size3(currentindex) = binsizectr(time3);
         size2n(currentindex) = binsizectr(time2n);
         size2o(currentindex) = binsizectr(time2n);
         size1(currentindex) = 0;
+        
+        sizeb3(currentindex) = binsizebctr(time3);
+        sizeb2n(currentindex) = binsizebctr(time2n);
+        sizeb2o(currentindex) = binsizebctr(time2n);
+        sizeb1(currentindex) = 0;
+        
+        if (NumericVector::is_na(sizeb3(currentindex))) sizeb3(currentindex) = 0;
+        if (NumericVector::is_na(sizeb2n(currentindex))) sizeb2n(currentindex) = 0;
+        if (NumericVector::is_na(sizeb2o(currentindex))) sizeb2o(currentindex) = 0;
+        
+        sizec3(currentindex) = binsizecctr(time3);
+        sizec2n(currentindex) = binsizecctr(time2n);
+        sizec2o(currentindex) = binsizecctr(time2n);
+        sizec1(currentindex) = 0;
+        
+        if (NumericVector::is_na(sizec3(currentindex))) sizec3(currentindex) = 0;
+        if (NumericVector::is_na(sizec2n(currentindex))) sizec2n(currentindex) = 0;
+        if (NumericVector::is_na(sizec2o(currentindex))) sizec2o(currentindex) = 0;
+        
         obs3(currentindex) = obsstatus(time3);
         obs2n(currentindex) = obsstatus(time2n);
         obs2o(currentindex) = obsstatus(time2n);
         obs1(currentindex) = 0;
+        
         rep3(currentindex) = repstatus(time3);
         rep2n(currentindex) = repstatus(time2n);
         rep2o(currentindex) = repstatus(time2n);
         rep1(currentindex) = 0;
+        
         mat3(currentindex) = matstatus(time3);
         mat2n(currentindex) = matstatus(time2n);
         mat2o(currentindex) = matstatus(time2n);
-        mat1(currentindex) = matstatus(time2n);
+        mat1(currentindex) = 0;
+        
         imm3(currentindex) = immstatus(time3);
         imm2n(currentindex) = immstatus(time2n);
         imm2o(currentindex) = immstatus(time2n);
-        imm1(currentindex) = immstatus(time2n);
+        imm1(currentindex) = 0;
         
         if (time3 < nostages_nodead) {
           repentry3(currentindex) = repmatrix((time3 + (nostages_nodead * time2n)));
@@ -3343,12 +3966,24 @@ Rcpp::List theoldpizzle(DataFrame StageFrame, DataFrame OverWrite,
         indata2n(currentindex) = indata(time2n);
         indata2o(currentindex) = indata(time2n);
         indata1(currentindex) = 1;
+        
         binwidth(currentindex) = binsizewidth(time3);
+        binbwidth(currentindex) = binsizebwidth(time3);
+        bincwidth(currentindex) = binsizecwidth(time3);
+        
+        if (NumericVector::is_na(binbwidth(currentindex))) binbwidth(currentindex) = 0;
+        if (NumericVector::is_na(bincwidth(currentindex))) bincwidth(currentindex) = 0;
+        
         minage3(currentindex) = minage(time3);
         minage2(currentindex) = minage(time2n);
         maxage3(currentindex) = maxage(time3);
         maxage2(currentindex) = maxage(time2n);
         actualage(currentindex) = 0;
+        
+        grp3(currentindex) = group(time3);
+        grp2n(currentindex) = group(time2n);
+        grp2o(currentindex) = group(time2n);
+        grp1(currentindex) = 0;
         
         if (stage3(currentindex) == nostages || stage2n(currentindex) == nostages) {
           deadandnasty = 1;
@@ -3357,9 +3992,11 @@ Rcpp::List theoldpizzle(DataFrame StageFrame, DataFrame OverWrite,
         }
         
         if (deadandnasty == 0) {
-          aliveequal(currentindex) = (stage3(currentindex) - 1) + ((stage2n(currentindex) - 1) * nostages_nodead);
+          aliveequal(currentindex) = (stage3(currentindex) - 1) + 
+            ((stage2n(currentindex) - 1) * nostages_nodead);
 
-          index321(currentindex) = (stage3(currentindex) - 1) + ((stage2n(currentindex) - 1) * nostages);
+          index321(currentindex) = (stage3(currentindex) - 1) + 
+            ((stage2n(currentindex) - 1) * nostages);
           index21(currentindex) = (stage2n(currentindex) - 1);
         }
         
@@ -3372,12 +4009,15 @@ Rcpp::List theoldpizzle(DataFrame StageFrame, DataFrame OverWrite,
     } // time2n loop
     
     if (ovrows > 1 || ovconvtype(0) != -1) {
-      asadditions = ovreplace(index321, ovindexold321, ovindexnew321, ovconvtype, ovnew3, ovnewgivenrate, ovnewmultiplier);
+      asadditions = ovreplace(index321, ovindexold321, ovindexnew321, ovconvtype,
+        ovnew3, ovnewgivenrate, ovnewmultiplier);
       
       ovgivent = asadditions.col(0);
       ovestt = asadditions.col(1);
       ovgivenf = asadditions.col(2);
       ovestf = asadditions.col(3);
+      ovsurvmult = asadditions.col(5);
+      ovfecmult = asadditions.col(6);
       
       ovrepentry = asadditions.col(4);
       
@@ -3432,21 +4072,24 @@ Rcpp::List theoldpizzle(DataFrame StageFrame, DataFrame OverWrite,
               }
               
               if (ovindex3(i + (ovrows * age2)) != -1 && ovindex2(i + (ovrows * age2)) != -1) {
-                ovindexold321(i + (ovrows * age2)) = ovindex3(i + (ovrows * age2)) + (age3 * nostages) + 
-                  (ovindex2(i + (ovrows * age2)) * nostages * totalages) + (age2 * nostages * nostages * totalages);
+                ovindexold321(i + (ovrows * age2)) = ovindex3(i + (ovrows * age2)) +
+                  (age3 * nostages) + (ovindex2(i + (ovrows * age2)) * nostages * totalages) + 
+                  (age2 * nostages * nostages * totalages);
               }
               
               if (ovnew3(i + (ovrows * age2)) != -1 && ovnew2(i + (ovrows * age2)) != -1) {
-                ovindexnew321(i + (ovrows * age2)) = ovnew3(i + (ovrows * age2)) + (age3 * nostages) + 
-                  (ovnew2(i + (ovrows * age2)) * nostages * totalages) + (age2 * nostages * nostages * totalages);
+                ovindexnew321(i + (ovrows * age2)) = ovnew3(i + (ovrows * age2)) +
+                  (age3 * nostages) + (ovnew2(i + (ovrows * age2)) * nostages * totalages) +
+                  (age2 * nostages * nostages * totalages);
               }
               
               if (!NumericVector::is_na(ovgivenrate(i))) {
                 ovnewgivenrate(i + (ovrows * age2)) = ovgivenrate(i);
               }
-              if (!NumericVector::is_na(ovmultiplier(i))) {
-                ovnewmultiplier(i + (ovrows * age2)) = ovmultiplier(i);
+              if (NumericVector::is_na(ovmultiplier(i))) {
+                ovmultiplier(i) = 1;
               }
+              ovnewmultiplier(i + (ovrows * age2)) = ovmultiplier(i);
             } else {
               if (ovconvtype(i) == 1) {
                 age3 = age2;
@@ -3471,20 +4114,23 @@ Rcpp::List theoldpizzle(DataFrame StageFrame, DataFrame OverWrite,
               }
               
               if (ovindex3(i + (ovrows * age2)) != -1 && ovindex2(i + (ovrows * age2)) != -1) {
-                ovindexold321(i + (ovrows * age2)) = ovindex3(i + (ovrows * age2)) + (age3 * nostages) + 
-                  (ovindex2(i + (ovrows * age2)) * nostages * totalages) + (age2 * nostages * nostages * totalages);
+                ovindexold321(i + (ovrows * age2)) = ovindex3(i + (ovrows * age2)) +
+                  (age3 * nostages) + (ovindex2(i + (ovrows * age2)) * nostages * totalages) +
+                  (age2 * nostages * nostages * totalages);
               }
               
               if (ovnew3(i + (ovrows * age2)) != -1 && ovnew2(i + (ovrows * age2)) != -1) {
-                ovindexnew321(i + (ovrows * age2)) = ovnew3(i + (ovrows * age2)) + (age3 * nostages) + 
-                  (ovnew2(i + (ovrows * age2)) * nostages * totalages) + (age2 * nostages * nostages * totalages);
+                ovindexnew321(i + (ovrows * age2)) = ovnew3(i + (ovrows * age2)) +
+                  (age3 * nostages) + (ovnew2(i + (ovrows * age2)) * nostages * totalages) +
+                  (age2 * nostages * nostages * totalages);
               }
               if (!NumericVector::is_na(ovgivenrate(i))) {
                 ovnewgivenrate(i + (ovrows * age2)) = ovgivenrate(i);
               }
-              if (!NumericVector::is_na(ovmultiplier(i))) {
-                ovnewmultiplier(i + (ovrows * age2)) = ovmultiplier(i);
+              if (NumericVector::is_na(ovmultiplier(i))) {
+                ovmultiplier(i) = 1;
               }
+              ovnewmultiplier(i + (ovrows * age2)) = ovmultiplier(i);
             }
           } // j for loop
           
@@ -3509,22 +4155,45 @@ Rcpp::List theoldpizzle(DataFrame StageFrame, DataFrame OverWrite,
             stage2n(currentindex) = newstageid(time2n);
             stage2o(currentindex) = newstageid(time2n);
             stage1(currentindex) = 0;
+            
             size3(currentindex) = binsizectr(time3);
             size2n(currentindex) = binsizectr(time2n);
             size2o(currentindex) = binsizectr(time2n);
             size1(currentindex) = 0;
+            
+            sizeb3(currentindex) = binsizebctr(time3);
+            sizeb2n(currentindex) = binsizebctr(time2n);
+            sizeb2o(currentindex) = binsizebctr(time2n);
+            sizeb1(currentindex) = 0;
+            
+            if (NumericVector::is_na(sizeb3(currentindex))) sizeb3(currentindex) = 0;
+            if (NumericVector::is_na(sizeb2n(currentindex))) sizeb2n(currentindex) = 0;
+            if (NumericVector::is_na(sizeb2o(currentindex))) sizeb2o(currentindex) = 0;
+            
+            sizec3(currentindex) = binsizecctr(time3);
+            sizec2n(currentindex) = binsizecctr(time2n);
+            sizec2o(currentindex) = binsizecctr(time2n);
+            sizec1(currentindex) = 0;
+            
+            if (NumericVector::is_na(sizec3(currentindex))) sizec3(currentindex) = 0;
+            if (NumericVector::is_na(sizec2n(currentindex))) sizec2n(currentindex) = 0;
+            if (NumericVector::is_na(sizec2o(currentindex))) sizec2o(currentindex) = 0;
+            
             obs3(currentindex) = obsstatus(time3);
             obs2n(currentindex) = obsstatus(time2n);
             obs2o(currentindex) = obsstatus(time2n);
             obs1(currentindex) = 0;
+            
             rep3(currentindex) = repstatus(time3);
             rep2n(currentindex) = repstatus(time2n);
             rep2o(currentindex) = repstatus(time2n);
             rep1(currentindex) = 0;
+            
             mat3(currentindex) = matstatus(time3);
             mat2n(currentindex) = matstatus(time2n);
             mat2o(currentindex) = matstatus(time2n);
             mat1(currentindex) = 0;
+            
             imm3(currentindex) = immstatus(time3);
             imm2n(currentindex) = immstatus(time2n);
             imm2o(currentindex) = immstatus(time2n);
@@ -3536,12 +4205,24 @@ Rcpp::List theoldpizzle(DataFrame StageFrame, DataFrame OverWrite,
             indata2n(currentindex) = indata(time2n);
             indata2o(currentindex) = indata(time2n);
             indata1(currentindex) = 0;
+            
             binwidth(currentindex) = binsizewidth(time3);
+            binbwidth(currentindex) = binsizebwidth(time3);
+            bincwidth(currentindex) = binsizecwidth(time3);
+            
+            if (NumericVector::is_na(binbwidth(currentindex))) binbwidth(currentindex) = 0;
+            if (NumericVector::is_na(bincwidth(currentindex))) bincwidth(currentindex) = 0;
+            
             minage3(currentindex) = minage(time3);
             minage2(currentindex) = minage(time2n);
             maxage3(currentindex) = maxage(time3);
             maxage2(currentindex) = maxage(time2n);
             actualage(currentindex) = age2;
+            
+            grp3(currentindex) = group(time3);
+            grp2n(currentindex) = group(time2n);
+            grp2o(currentindex) = group(time2n);
+            grp1(currentindex) = 0;
             
             // The next indexer includes the following order: (1st # of age blocks) + (1st # of stage cols) +
             // (1st # of age rows) + stage in time 3
@@ -3571,22 +4252,45 @@ Rcpp::List theoldpizzle(DataFrame StageFrame, DataFrame OverWrite,
                 stage2n(currentindex) = newstageid(time2n);
                 stage2o(currentindex) = newstageid(time2n);
                 stage1(currentindex) = 0;
+                
                 size3(currentindex) = binsizectr(time3);
                 size2n(currentindex) = binsizectr(time2n);
                 size2o(currentindex) = binsizectr(time2n);
                 size1(currentindex) = 0;
+                
+                sizeb3(currentindex) = binsizebctr(time3);
+                sizeb2n(currentindex) = binsizebctr(time2n);
+                sizeb2o(currentindex) = binsizebctr(time2n);
+                sizeb1(currentindex) = 0;
+                
+                if (NumericVector::is_na(sizeb3(currentindex))) sizeb3(currentindex) = 0;
+                if (NumericVector::is_na(sizeb2n(currentindex))) sizeb2n(currentindex) = 0;
+                if (NumericVector::is_na(sizeb2o(currentindex))) sizeb2o(currentindex) = 0;
+                
+                sizec3(currentindex) = binsizecctr(time3);
+                sizec2n(currentindex) = binsizecctr(time2n);
+                sizec2o(currentindex) = binsizecctr(time2n);
+                sizec1(currentindex) = 0;
+                
+                if (NumericVector::is_na(sizec3(currentindex))) sizec3(currentindex) = 0;
+                if (NumericVector::is_na(sizec2n(currentindex))) sizec2n(currentindex) = 0;
+                if (NumericVector::is_na(sizec2o(currentindex))) sizec2o(currentindex) = 0;
+                
                 obs3(currentindex) = obsstatus(time3);
                 obs2n(currentindex) = obsstatus(time2n);
                 obs2o(currentindex) = obsstatus(time2n);
                 obs1(currentindex) = 0;
+                
                 rep3(currentindex) = repstatus(time3);
                 rep2n(currentindex) = repstatus(time2n);
                 rep2o(currentindex) = repstatus(time2n);
                 rep1(currentindex) = 0;
+                
                 mat3(currentindex) = matstatus(time3);
                 mat2n(currentindex) = matstatus(time2n);
                 mat2o(currentindex) = matstatus(time2n);
                 mat1(currentindex) = 0;
+                
                 imm3(currentindex) = immstatus(time3);
                 imm2n(currentindex) = immstatus(time2n);
                 imm2o(currentindex) = immstatus(time2n);
@@ -3600,19 +4304,32 @@ Rcpp::List theoldpizzle(DataFrame StageFrame, DataFrame OverWrite,
                 indata2n(currentindex) = indata(time2n);
                 indata2o(currentindex) = indata(time2n);
                 indata1(currentindex) = 0;
+                
                 binwidth(currentindex) = binsizewidth(time3);
+                binbwidth(currentindex) = binsizebwidth(time3);
+                bincwidth(currentindex) = binsizecwidth(time3);
+                
+                if (NumericVector::is_na(binbwidth(currentindex))) binbwidth(currentindex) = 0;
+                if (NumericVector::is_na(bincwidth(currentindex))) bincwidth(currentindex) = 0;
+                
                 minage3(currentindex) = minage(time3);
                 minage2(currentindex) = minage(time2n);
                 maxage3(currentindex) = maxage(time3);
                 maxage2(currentindex) = maxage(time2n);
                 actualage(currentindex) = age2;
                 
-                // The next indexer includes the following order: (1st # of age blocks) + (1st # of stage cols) +
-                // (1st # of age rows) + stage in time 3
+                grp3(currentindex) = group(time3);
+                grp2n(currentindex) = group(time2n);
+                grp2o(currentindex) = group(time2n);
+                grp1(currentindex) = 0;
+                
+                // The next indexer includes the following order: (1st # of age blocks) + 
+                // (1st # of stage cols) + (1st # of age rows) + stage in time 3
                 index321(currentindex) = currentindex;
                 indatalong(currentindex) = 1;
                 
-                // This section identifies elements with non-zero entries by their element number in the final matrix
+                // This section identifies elements with non-zero entries by their
+                // element number in the final matrix
                 if (alive(time2n) == 1 && alive(time3) == 1) {
                   if (age2 >= minage2(currentindex) && age2 <= maxage2(currentindex)) { 
                     
@@ -3638,22 +4355,45 @@ Rcpp::List theoldpizzle(DataFrame StageFrame, DataFrame OverWrite,
             stage2n(currentindex) = newstageid(time2n);
             stage2o(currentindex) = newstageid(time2n);
             stage1(currentindex) = 0;
+            
             size3(currentindex) = binsizectr(time3);
             size2n(currentindex) = binsizectr(time2n);
             size2o(currentindex) = binsizectr(time2n);
             size1(currentindex) = 0;
+            
+            sizeb3(currentindex) = binsizebctr(time3);
+            sizeb2n(currentindex) = binsizebctr(time2n);
+            sizeb2o(currentindex) = binsizebctr(time2n);
+            sizeb1(currentindex) = 0;
+            
+            if (NumericVector::is_na(sizeb3(currentindex))) sizeb3(currentindex) = 0;
+            if (NumericVector::is_na(sizeb2n(currentindex))) sizeb2n(currentindex) = 0;
+            if (NumericVector::is_na(sizeb2o(currentindex))) sizeb2o(currentindex) = 0;
+            
+            sizec3(currentindex) = binsizecctr(time3);
+            sizec2n(currentindex) = binsizecctr(time2n);
+            sizec2o(currentindex) = binsizecctr(time2n);
+            sizec1(currentindex) = 0;
+            
+            if (NumericVector::is_na(sizec3(currentindex))) sizec3(currentindex) = 0;
+            if (NumericVector::is_na(sizec2n(currentindex))) sizec2n(currentindex) = 0;
+            if (NumericVector::is_na(sizec2o(currentindex))) sizec2o(currentindex) = 0;
+                
             obs3(currentindex) = obsstatus(time3);
             obs2n(currentindex) = obsstatus(time2n);
             obs2o(currentindex) = obsstatus(time2n);
             obs1(currentindex) = 0;
+            
             rep3(currentindex) = repstatus(time3);
             rep2n(currentindex) = repstatus(time2n);
             rep2o(currentindex) = repstatus(time2n);
             rep1(currentindex) = 0;
+            
             mat3(currentindex) = matstatus(time3);
             mat2n(currentindex) = matstatus(time2n);
             mat2o(currentindex) = matstatus(time2n);
             mat1(currentindex) = 0;
+            
             imm3(currentindex) = immstatus(time3);
             imm2n(currentindex) = immstatus(time2n);
             imm2o(currentindex) = immstatus(time2n);
@@ -3665,15 +4405,27 @@ Rcpp::List theoldpizzle(DataFrame StageFrame, DataFrame OverWrite,
             indata2n(currentindex) = indata(time2n);
             indata2o(currentindex) = indata(time2n);
             indata1(currentindex) = 0;
+            
             binwidth(currentindex) = binsizewidth(time3);
+            binbwidth(currentindex) = binsizebwidth(time3);
+            bincwidth(currentindex) = binsizecwidth(time3);
+            
+            if (NumericVector::is_na(binbwidth(currentindex))) binbwidth(currentindex) = 0;
+            if (NumericVector::is_na(bincwidth(currentindex))) bincwidth(currentindex) = 0;
+                
             minage3(currentindex) = minage(time3);
             minage2(currentindex) = minage(time2n);
             maxage3(currentindex) = maxage(time3);
             maxage2(currentindex) = maxage(time2n);
             actualage(currentindex) = age2;
             
-            // The next indexer includes the following order: (1st # of age blocks) + (1st # of stage cols) +
-            // (1st # of age rows) + stage in time 3
+            grp3(currentindex) = group(time3);
+            grp2n(currentindex) = group(time2n);
+            grp2o(currentindex) = group(time2n);
+            grp1(currentindex) = 0;
+            
+            // The next indexer includes the following order: (1st # of age blocks) + 
+            // (1st # of stage cols) + (1st # of age rows) + stage in time 3
             index321(currentindex) = currentindex;
             indatalong(currentindex) = 1;
             
@@ -3700,22 +4452,45 @@ Rcpp::List theoldpizzle(DataFrame StageFrame, DataFrame OverWrite,
                 stage2n(currentindex) = newstageid(time2n);
                 stage2o(currentindex) = newstageid(time2n);
                 stage1(currentindex) = 0;
+                
                 size3(currentindex) = binsizectr(time3);
                 size2n(currentindex) = binsizectr(time2n);
                 size2o(currentindex) = binsizectr(time2n);
                 size1(currentindex) = 0;
+                
+                sizeb3(currentindex) = binsizebctr(time3);
+                sizeb2n(currentindex) = binsizebctr(time2n);
+                sizeb2o(currentindex) = binsizebctr(time2n);
+                sizeb1(currentindex) = 0;
+                
+                if (NumericVector::is_na(sizeb3(currentindex))) sizeb3(currentindex) = 0;
+                if (NumericVector::is_na(sizeb2n(currentindex))) sizeb2n(currentindex) = 0;
+                if (NumericVector::is_na(sizeb2o(currentindex))) sizeb2o(currentindex) = 0;
+                
+                sizec3(currentindex) = binsizecctr(time3);
+                sizec2n(currentindex) = binsizecctr(time2n);
+                sizec2o(currentindex) = binsizecctr(time2n);
+                sizec1(currentindex) = 0;
+                
+                if (NumericVector::is_na(sizec3(currentindex))) sizec3(currentindex) = 0;
+                if (NumericVector::is_na(sizec2n(currentindex))) sizec2n(currentindex) = 0;
+                if (NumericVector::is_na(sizec2o(currentindex))) sizec2o(currentindex) = 0;
+                
                 obs3(currentindex) = obsstatus(time3);
                 obs2n(currentindex) = obsstatus(time2n);
                 obs2o(currentindex) = obsstatus(time2n);
                 obs1(currentindex) = 0;
+                
                 rep3(currentindex) = repstatus(time3);
                 rep2n(currentindex) = repstatus(time2n);
                 rep2o(currentindex) = repstatus(time2n);
                 rep1(currentindex) = 0;
+                
                 mat3(currentindex) = matstatus(time3);
                 mat2n(currentindex) = matstatus(time2n);
                 mat2o(currentindex) = matstatus(time2n);
                 mat1(currentindex) = 0;
+                
                 imm3(currentindex) = immstatus(time3);
                 imm2n(currentindex) = immstatus(time2n);
                 imm2o(currentindex) = immstatus(time2n);
@@ -3729,12 +4504,23 @@ Rcpp::List theoldpizzle(DataFrame StageFrame, DataFrame OverWrite,
                 indata2n(currentindex) = indata(time2n);
                 indata2o(currentindex) = indata(time2n);
                 indata1(currentindex) = 0;
+                
                 binwidth(currentindex) = binsizewidth(time3);
+                binbwidth(currentindex) = binsizebwidth(time3);
+                bincwidth(currentindex) = binsizecwidth(time3);
+                
+                if (NumericVector::is_na(binbwidth(currentindex))) binbwidth(currentindex) = 0;
+                if (NumericVector::is_na(bincwidth(currentindex))) bincwidth(currentindex) = 0;
+                
                 minage3(currentindex) = minage(time3);
                 minage2(currentindex) = minage(time2n);
                 maxage3(currentindex) = maxage(time3);
                 maxage2(currentindex) = maxage(time2n);
                 actualage(currentindex) = age2;
+                grp3(currentindex) = group(time3);
+                grp2n(currentindex) = group(time2n);
+                grp2o(currentindex) = group(time2n);
+                grp1(currentindex) = 0;
                 
                 // The next indexer includes the following order: (1st # of age blocks) + (1st # of stage cols) +
                 // (1st # of age rows) + stage in time 3
@@ -3765,6 +4551,8 @@ Rcpp::List theoldpizzle(DataFrame StageFrame, DataFrame OverWrite,
       ovestt = asadditions.col(1);
       ovgivenf = asadditions.col(2);
       ovestf = asadditions.col(3);
+      ovsurvmult = asadditions.col(5);
+      ovfecmult = asadditions.col(6);
       
       ovrepentry = asadditions.col(4);
       
@@ -3779,33 +4567,99 @@ Rcpp::List theoldpizzle(DataFrame StageFrame, DataFrame OverWrite,
     } // ovreplace if statement
   } // Age by stage loop (style == 2)
   
-  DataFrame df0 = DataFrame::create(Named("stage3") = stage3,
-    _["stage2n"] = stage2n, _["stage2o"] = stage2o, _["stage1"] = stage1,
-    _["size3"] = size3, _["size2n"] = size2n, _["size2o"] = size2o,
-    _["size1"] = size1, _["obs3"] = obs3, _["obs2n"] = obs2n,
-    _["obs2o"] = obs2o, _["obs1"] = obs1, _["rep3"] = rep3, _["rep2n"] = rep2n,
-    _["rep2o"] = rep2o, _["rep1"] = rep1, _["mat3"] = mat3, _["mat2n"] = mat2n, 
-    _["mat2o"] = mat2o, _["mat1"] = mat1);
+  Rcpp::List output_longlist(59);
   
-  DataFrame df1 = DataFrame::create(Named("imm3") = imm3, _["imm2n"] = imm2n,
-    _["imm2o"] = imm2o, _["imm1"] = imm1, _["repentry3"] = repentry3,
-    _["indata3"] = indata3, _["indata2n"] = indata2n, _["indata2o"] = indata2o,
-    _["indata1"] = indata1, _["binwidth"] = binwidth, _["minage3"] = minage3,
-    _["minage2"] = minage2, _["maxage3"] = maxage3, _["maxage2"] = maxage2,
-    _["actualage"] = actualage, _["indata"] = indatalong, _["ovgiven_t"] = ovgivent,
-    _["ovest_t"] = ovestt, _["ovgiven_f"] = ovgivenf, _["ovest_f"] = ovestf);
+  output_longlist(0) = Rcpp::NumericVector(stage3.begin(), stage3.end());
+  output_longlist(1) = Rcpp::NumericVector(stage2n.begin(), stage2n.end());
+  output_longlist(2) = Rcpp::NumericVector(stage2o.begin(), stage2o.end());
+  output_longlist(3) = Rcpp::NumericVector(stage1.begin(), stage1.end());
+  output_longlist(4) = Rcpp::NumericVector(size3.begin(), size3.end());
+  output_longlist(5) = Rcpp::NumericVector(size2n.begin(), size2n.end());
+  output_longlist(6) = Rcpp::NumericVector(size2o.begin(), size2o.end());
+  output_longlist(7) = Rcpp::NumericVector(size1.begin(), size1.end());
+  output_longlist(8) = Rcpp::NumericVector(sizeb3.begin(), sizeb3.end());
+  output_longlist(9) = Rcpp::NumericVector(sizeb2n.begin(), sizeb2n.end());
   
-  DataFrame df2 = DataFrame::create(Named("aliveandequal") = aliveequal, 
-    _["index321"] = index321, _["index21"] = index21);
+  output_longlist(10) = Rcpp::NumericVector(sizeb2o.begin(), sizeb2o.end());
+  output_longlist(11) = Rcpp::NumericVector(sizeb1.begin(), sizeb1.end());
+  output_longlist(12) = Rcpp::NumericVector(sizec3.begin(), sizec3.end());
+  output_longlist(13) = Rcpp::NumericVector(sizec2n.begin(), sizec2n.end());
+  output_longlist(14) = Rcpp::NumericVector(sizec2o.begin(), sizec2o.end());
+  output_longlist(15) = Rcpp::NumericVector(sizec1.begin(), sizec1.end());
+  output_longlist(16) = Rcpp::NumericVector(obs3.begin(), obs3.end());
+  output_longlist(17) = Rcpp::NumericVector(obs2n.begin(), obs2n.end());
+  output_longlist(18) = Rcpp::NumericVector(obs2o.begin(), obs2o.end());
+  output_longlist(19) = Rcpp::NumericVector(obs1.begin(), obs1.end());
   
-  return Rcpp::List::create(Named("a") = df0, Named("b") = df1, Named("c") = df2);
+  output_longlist(20) = Rcpp::NumericVector(rep3.begin(), rep3.end());
+  output_longlist(21) = Rcpp::NumericVector(rep2n.begin(), rep2n.end());
+  output_longlist(22) = Rcpp::NumericVector(rep2o.begin(), rep2o.end());
+  output_longlist(23) = Rcpp::NumericVector(rep1.begin(), rep1.end());
+  output_longlist(24) = Rcpp::NumericVector(mat3.begin(), mat3.end());
+  output_longlist(25) = Rcpp::NumericVector(mat2n.begin(), mat2n.end());
+  output_longlist(26) = Rcpp::NumericVector(mat2o.begin(), mat2o.end());
+  output_longlist(27) = Rcpp::NumericVector(mat1.begin(), mat1.end());
+  output_longlist(28) = Rcpp::NumericVector(imm3.begin(), imm3.end());
+  output_longlist(29) = Rcpp::NumericVector(imm2n.begin(), imm2n.end());
+  
+  output_longlist(30) = Rcpp::NumericVector(imm2o.begin(), imm2o.end());
+  output_longlist(31) = Rcpp::NumericVector(imm1.begin(), imm1.end());
+  output_longlist(32) = Rcpp::NumericVector(repentry3.begin(), repentry3.end());
+  output_longlist(33) = Rcpp::NumericVector(indata3.begin(), indata3.end());
+  output_longlist(34) = Rcpp::NumericVector(indata2n.begin(), indata2n.end());
+  output_longlist(35) = Rcpp::NumericVector(indata2o.begin(), indata2o.end());
+  output_longlist(36) = Rcpp::NumericVector(indata1.begin(), indata1.end());
+  output_longlist(37) = Rcpp::NumericVector(binwidth.begin(), binwidth.end());
+  output_longlist(38) = Rcpp::NumericVector(binbwidth.begin(), binbwidth.end());
+  output_longlist(39) = Rcpp::NumericVector(bincwidth.begin(), bincwidth.end());
+  
+  output_longlist(40) = Rcpp::NumericVector(minage3.begin(), minage3.end());
+  output_longlist(41) = Rcpp::NumericVector(minage2.begin(), minage2.end());
+  output_longlist(42) = Rcpp::NumericVector(maxage3.begin(), maxage3.end());
+  output_longlist(43) = Rcpp::NumericVector(maxage2.begin(), maxage2.end());
+  output_longlist(44) = Rcpp::NumericVector(actualage.begin(), actualage.end());
+  
+  output_longlist(45) = Rcpp::NumericVector(grp3.begin(), grp3.end());
+  output_longlist(46) = Rcpp::NumericVector(grp2n.begin(), grp2n.end());
+  output_longlist(47) = Rcpp::NumericVector(grp2o.begin(), grp2o.end());
+  output_longlist(48) = Rcpp::NumericVector(grp1.begin(), grp1.end());
+  
+  output_longlist(49) = Rcpp::NumericVector(indatalong.begin(), indatalong.end());
+  output_longlist(50) = Rcpp::NumericVector(ovgivent.begin(), ovgivent.end());
+  output_longlist(51) = Rcpp::NumericVector(ovestt.begin(), ovestt.end());
+  output_longlist(52) = Rcpp::NumericVector(ovgivenf.begin(), ovgivenf.end());
+  output_longlist(53) = Rcpp::NumericVector(ovestf.begin(), ovestf.end());
+  output_longlist(54) = Rcpp::NumericVector(ovsurvmult.begin(), ovsurvmult.end());
+  output_longlist(55) = Rcpp::NumericVector(ovfecmult.begin(), ovfecmult.end());
+  
+  output_longlist(56) = Rcpp::NumericVector(aliveequal.begin(), aliveequal.end());
+  output_longlist(57) = Rcpp::NumericVector(index321.begin(), index321.end());
+  output_longlist(58) = Rcpp::NumericVector(index21.begin(), index21.end());
+  
+  int stage3_length = stage3.n_elem;
+  
+  CharacterVector namevec = {"stage3", "stage2n", "stage2o", "stage1", "size3",
+    "size2n", "size2o", "size1", "sizeb3", "sizeb2n", "sizeb2o", "sizeb1", 
+    "sizec3", "sizec2n", "sizec2o", "sizec1", "obs3", "obs2n", "obs2o", "obs1",
+    "rep3", "rep2n", "rep2o", "rep1", "mat3", "mat2n", "mat2o", "mat1", "imm3",
+    "imm2n", "imm2o", "imm1", "repentry3", "indata3", "indata2n", "indata2o",
+    "indata1", "binwidth", "binbwidth", "bincwidth", "minage3", "minage2",
+    "maxage3", "maxage2", "actualage", "group3", "group2n", "group2o", "group1",
+    "indata", "ovgiven_t", "ovest_t", "ovgiven_f", "ovest_f", "ovsurvmult",
+    "ovfecmult", "aliveandequal", "index321", "index21"};
+  output_longlist.attr("names") = namevec;
+  output_longlist.attr("row.names") = Rcpp::IntegerVector::create(NA_INTEGER, stage3_length);
+  output_longlist.attr("class") = "data.frame";
+  
+  return output_longlist;
 }
 
 //' Estimate Radial Density in Cartesian Space
 //' 
-//' \code{density3()} estimates radial density on the basis of Cartesian
-//' coordinates and spacing information supplied as input. It is used internally
-//' by \code{\link{historicalize3}()} and \code{\link{verticalize3}()}.
+//' Function \code{.density3()} estimates radial density on the basis of
+//' Cartesian coordinates and spacing information supplied as input. It is used
+//' internally by \code{\link{historicalize3}()} and
+//' \code{\link{verticalize3}()}.
 //' 
 //' @param data Demographic dataset in historical vertical format.
 //' @param xcol Number of column in \code{data} corresponding to x position.
@@ -3831,8 +4685,8 @@ Rcpp::List theoldpizzle(DataFrame StageFrame, DataFrame OverWrite,
 //' 
 //' @keywords internal
 //' @noRd
-// [[Rcpp::export]]
-arma::vec density3(Rcpp::DataFrame data, int xcol, int ycol, int yearcol,
+// [[Rcpp::export(.density3)]]
+Rcpp::NumericVector density3(Rcpp::DataFrame data, int xcol, int ycol, int yearcol,
   double spacing) {
   
   int data_size = data.length();
@@ -3850,11 +4704,11 @@ arma::vec density3(Rcpp::DataFrame data, int xcol, int ycol, int yearcol,
   NumericVector Ydata = data[ycol_true];
   NumericVector yeardata = data[(yearcol - 1)];
   
-  double ref_x {0};
-  double ref_y {0};
-  double est_a {0};
-  double est_b {0};
-  double est_c {0};
+  double ref_x {0.0};
+  double ref_y {0.0};
+  double est_a {0.0};
+  double est_b {0.0};
+  double est_c {0.0};
   int counted_n {0};
   
   arma::vec density(data_n);
@@ -3886,6 +4740,6 @@ arma::vec density3(Rcpp::DataFrame data, int xcol, int ycol, int yearcol,
     counted_n = 0;
   }
   
-  return density;
+  return Rcpp::NumericVector(density.begin(), density.end());
 }
 

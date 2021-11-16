@@ -4,13 +4,7 @@
 \alias{summary.lefkoProj}
 \title{Summarize lefkoProj Objects}
 \usage{
-\method{summary}{lefkoProj}(
-  object,
-  threshold = 1,
-  milepost = c(0, 0.25, 0.5, 0.75, 1),
-  sums_out = FALSE,
-  ...
-)
+\method{summary}{lefkoProj}(object, threshold = 1, milepost = c(0, 0.25, 0.5, 0.75, 1), ...)
 }
 \arguments{
 \item{object}{A \code{lefkoProj} object.}
@@ -25,31 +19,19 @@ each projection, or decimals between 0 and 1, which would then be translated
 into the corresponding projection steps of the total. Defaults to
 \code{c(0, 0.25, 0.50, 0.75, 1.00)}.}
 
-\item{sums_out}{A logical value indicating whether to output population sums
-in matrix format, with columns corresponding to time and rows corresponding
-to replicate. Defaults to FALSE}
-
 \item{...}{Other parameters.}
 }
 \value{
-If \code{sums_out = FALSE}, then there is no output beyond written
-statements describing the projection. If \code{sums_out = TRUE}, then the
-output is a list with two elements:
-\item{mat_sums}{}
-\item{milepost_sums}{}
+Apart from a statement of the results, we have the following item in
+the output:
+\item{milepost_sums}{A data frame showing the number of replicates at each
+of the milepost times that is above the threshold population/patch size.}
 }
 \description{
 Function \code{summary.lefkoProj()} summarizes \code{lefkoProj} objects.
 Particularly, it breaks down the data frames provided in the 
 \code{projection} element in ways meaningful for those running simulations.
 }
-\section{Notes}{
-
-If \code{sums_out = TRUE}, then the output from this function may be used to
-plot population size by replicate across time. This can enable analyses such
-as quasi-extinction analysis.
-}
-
 \examples{
 # Lathyrus example
 data(lathyrus)

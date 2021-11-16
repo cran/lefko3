@@ -18,7 +18,7 @@ using namespace arma;
 //' 
 //' @keywords internal
 //' @noRd
-// [[Rcpp::export]]
+// [[Rcpp::export(.flagrantcrap)]]
 arma::vec flagrantcrap(arma::mat Xmat, arma::uvec allindices) {
   
   arma::vec newcol = Xmat.elem(allindices);
@@ -37,7 +37,7 @@ arma::vec flagrantcrap(arma::mat Xmat, arma::uvec allindices) {
 //' 
 //' @keywords internal
 //' @noRd
-// [[Rcpp::export]]
+// [[Rcpp::export(.moreflagrantcrap)]]
 arma::vec moreflagrantcrap(arma::mat Xmat) {
   
   arma::vec newcol = arma::vectorise(Xmat);
@@ -60,7 +60,7 @@ arma::vec moreflagrantcrap(arma::mat Xmat) {
 //' 
 //' @keywords internal
 //' @noRd
-// [[Rcpp::export]]
+// [[Rcpp::export(.spmat_log)]]
 arma::sp_mat spmat_log(arma::sp_mat coremat)
 {
   arma::sp_mat::const_iterator start = coremat.begin();
@@ -69,29 +69,27 @@ arma::sp_mat spmat_log(arma::sp_mat coremat)
   
   int n = std::distance(start, end);
   
-  if (n <= 0) {
-    Rcpp::stop("No values found!", false);
+  if (n > 0) {
+    arma::umat locs(2, n);
+    arma::uvec temp(2);
+    arma::vec vals(n);
+    arma::vec logvals(n);
+    locs.zeros();
+    temp.zeros();
+    vals.zeros();
+    logvals.zeros();
+    
+    for(int i = 0; i < n; ++i) {
+      temp(0) = it.row();
+      temp(1) = it.col();
+      locs.col(i) = temp;
+      vals(i) = coremat(temp(0), temp(1));
+      logvals(i) = log(vals(i));
+      ++it; // increment
+    }
+    
+    coremat = arma::sp_mat(locs, logvals, coremat.n_rows, coremat.n_cols);
   }
-  
-  arma::umat locs(2, n);
-  arma::uvec temp(2);
-  arma::vec vals(n);
-  arma::vec logvals(n);
-  locs.zeros();
-  temp.zeros();
-  vals.zeros();
-  logvals.zeros();
-  
-  for(int i = 0; i < n; ++i) {
-    temp(0) = it.row();
-    temp(1) = it.col();
-    locs.col(i) = temp;
-    vals(i) = coremat(temp(0), temp(1));
-    logvals(i) = log(vals(i));
-    ++it; // increment
-  }
-  
-  coremat = arma::sp_mat(locs, logvals, coremat.n_rows, coremat.n_cols);
   
   return coremat;
 }
@@ -118,7 +116,7 @@ arma::sp_mat spmat_log(arma::sp_mat coremat)
 //' 
 //' @keywords internal
 //' @noRd
-// [[Rcpp::export]]
+// [[Rcpp::export(.turbogeodiesel)]]
 List turbogeodiesel(DataFrame loy, List Umats, List Fmats, DataFrame hstages, 
   DataFrame agestages, DataFrame stages, bool patchmats, bool popmats) {
   
@@ -414,7 +412,7 @@ List turbogeodiesel(DataFrame loy, List Umats, List Fmats, DataFrame hstages,
 //' 
 //' @keywords internal
 //' @noRd
-// [[Rcpp::export]]
+// [[Rcpp::export(.geodiesel)]]
 List geodiesel(DataFrame loy, List Umats, List Fmats, DataFrame agestages,
   DataFrame stages, bool patchmats, bool popmats) {
   
@@ -657,7 +655,7 @@ List geodiesel(DataFrame loy, List Umats, List Fmats, DataFrame agestages,
 //' 
 //' @keywords internal
 //' @noRd
-// [[Rcpp::export]]
+// [[Rcpp::export(.decomp3)]]
 List decomp3(arma::mat Amat) {
   
   arma::cx_vec Aeigval;
@@ -686,7 +684,7 @@ List decomp3(arma::mat Amat) {
 //' 
 //' @keywords internal
 //' @noRd
-// [[Rcpp::export]]
+// [[Rcpp::export(.decomp3sp)]]
 List decomp3sp(arma::mat Amat) {
   
   arma::sp_mat spAmat(Amat);
@@ -697,7 +695,7 @@ List decomp3sp(arma::mat Amat) {
   arma::cx_mat Aeigvecl;
   arma::cx_mat Aeigvecr;
   
-  eigs_gen(Aeigval, Aeigvecr, spAmat, 1);
+  eigs_gen(Aeigval, Aeigvecr, spAmat, 1); // Identified as problem with valgrind
   
   eigs_gen(Aeigvall, Aeigvecl, t_spAmat, 1);
   
@@ -726,7 +724,7 @@ List decomp3sp(arma::mat Amat) {
 //' 
 //' @keywords internal
 //' @noRd
-// [[Rcpp::export]]
+// [[Rcpp::export(.decomp3sp_inp)]]
 List decomp3sp_inp(arma::sp_mat spAmat) {
   
   arma::sp_mat t_spAmat = spAmat.t();
@@ -762,7 +760,7 @@ List decomp3sp_inp(arma::sp_mat spAmat) {
 //' 
 //' @keywords internal
 //' @noRd
-// [[Rcpp::export]]
+// [[Rcpp::export(.lambda3matrix)]]
 double lambda3matrix(arma::mat Amat, bool sparse) {
   
   double lambda {0};
@@ -801,7 +799,7 @@ double lambda3matrix(arma::mat Amat, bool sparse) {
 //' 
 //' @keywords internal
 //' @noRd
-// [[Rcpp::export]]
+// [[Rcpp::export(.ss3matrix)]]
 arma::vec ss3matrix(arma::mat Amat, bool sparse) {
   List eigenstuff;
   
@@ -846,7 +844,7 @@ arma::vec ss3matrix(arma::mat Amat, bool sparse) {
 //' 
 //' @keywords internal
 //' @noRd
-// [[Rcpp::export]]
+// [[Rcpp::export(.rv3matrix)]]
 arma::vec rv3matrix(arma::mat Amat, bool sparse) {
   List eigenstuff;
   
@@ -887,7 +885,7 @@ arma::vec rv3matrix(arma::mat Amat, bool sparse) {
 //' 
 //' @keywords internal
 //' @noRd
-// [[Rcpp::export]]
+// [[Rcpp::export(.sens3matrix)]]
 arma::mat sens3matrix(arma::mat Amat, bool sparse) {
   List eigenstuff;
   
@@ -956,7 +954,7 @@ arma::mat sens3matrix(arma::mat Amat, bool sparse) {
 //' 
 //' @keywords internal
 //' @noRd
-// [[Rcpp::export]]
+// [[Rcpp::export(.sens3sp_matrix)]]
 arma::sp_mat sens3sp_matrix(arma::sp_mat Aspmat, arma::sp_mat refmat) {
   
   List eigenstuff = decomp3sp_inp(Aspmat);
@@ -1024,7 +1022,7 @@ arma::sp_mat sens3sp_matrix(arma::sp_mat Aspmat, arma::sp_mat refmat) {
 //' 
 //' @keywords internal
 //' @noRd
-// [[Rcpp::export]]
+// [[Rcpp::export(.sens3hlefko)]]
 List sens3hlefko(arma::mat Amat, DataFrame ahstages, DataFrame hstages) {
   
   arma::uvec stage_id = ahstages["stage_id"];
@@ -1132,7 +1130,7 @@ List sens3hlefko(arma::mat Amat, DataFrame ahstages, DataFrame hstages) {
 //' 
 //' @keywords internal
 //' @noRd
-// [[Rcpp::export]]
+// [[Rcpp::export(.elas3matrix)]]
 arma::mat elas3matrix(arma::mat Amat, bool sparse) {
   List eigenstuff;
   
@@ -1203,7 +1201,7 @@ arma::mat elas3matrix(arma::mat Amat, bool sparse) {
 //' 
 //' @keywords internal
 //' @noRd
-// [[Rcpp::export]]
+// [[Rcpp::export(.elas3hlefko)]]
 List elas3hlefko(arma::mat Amat, DataFrame ahstages, DataFrame hstages) {
   
   arma::uvec stage_id = ahstages["stage_id"];
@@ -1284,17 +1282,18 @@ List elas3hlefko(arma::mat Amat, DataFrame ahstages, DataFrame hstages) {
 //' numbers of individuals to the nearest integer.
 //' 
 //' @return A matrix in which, if \code{growthonly = TRUE}, each row is the
-//' population vector at each projected occasion, and if \code{growthonly = FALSE},
-//' the top half of the matrix is the w projection (stage distribution) and the
-//' bottom half is the v projection (reproductive values) for use in estimation
-//' of stochastic sensitivities and elasticities (in addition, a further row is
-//' appended to the bottom, corresponding to the R vector, which is the
-//' sum of the unstandardized w vector resulting from each occasion's
-//' projection).
+//' population vector at each projected occasion, and if \code{growthonly =
+//' FALSE}, the top third of the matrix is the actual number of individuals in
+//' each stage across time, the second third is the w projection (stage
+//' distribution), and the bottom third is the v projection (reproductive
+//' values) for use in estimation of stochastic sensitivities and elasticities
+//' (in addition, a further row is appended to the bottom, corresponding to the
+//' \emph{R} vector, which is the sum of the unstandardized \emph{w} vector
+//' resulting from each occasion's projection).
 //' 
 //' @keywords internal
 //' @noRd
-// [[Rcpp::export]]
+// [[Rcpp::export(.proj3)]]
 arma::mat proj3(arma::vec start_vec, List core_list, arma::uvec mat_order,
   bool standardize, bool growthonly, bool integeronly) {
   
@@ -1335,6 +1334,7 @@ arma::mat proj3(arma::vec start_vec, List core_list, arma::uvec mat_order,
   if (!growthonly) {
     wpopproj.col(0) = start_vec / sum(start_vec);
     vpopproj.col(theclairvoyant) = start_vec / sum(start_vec);
+    Rvecmat(0) = sum(start_vec);
   }
   
   if (sparse_switch == 0) {
@@ -1349,14 +1349,14 @@ arma::mat proj3(arma::vec start_vec, List core_list, arma::uvec mat_order,
       }
       popproj.col(i+1) = theseventhson;
       
-      if (!growthonly) Rvecmat(i+1) = sum(theseventhson);
+      Rvecmat(i+1) = sum(theseventhson);
       
       if (standardize) {
         theseventhson = theseventhson / sum(theseventhson);
       }
       
       if (!growthonly) {
-        wpopproj.col(i+1) = theseventhson;
+        wpopproj.col(i+1) = theseventhson / Rvecmat(i+1);
         
         thesecondprophecy = as<arma::mat>(core_list[(mat_order(theclairvoyant - (i+1)))]);
         theseventhgrandson = theseventhgrandson * thesecondprophecy;
@@ -1397,14 +1397,14 @@ arma::mat proj3(arma::vec start_vec, List core_list, arma::uvec mat_order,
       }
       popproj.col(i+1) = arma::vec(arma::mat(sparse_seventhson));
       
-      if (!growthonly) Rvecmat(i+1) = sum(popproj.col(i+1));
+      Rvecmat(i+1) = sum(popproj.col(i+1));
       
       if (standardize) {
         sparse_seventhson = sparse_seventhson / sum(popproj.col(i+1));
       }
       
       if (!growthonly) {
-        wpopproj.col(i+1) = arma::vec(arma::mat(sparse_seventhson));
+        wpopproj.col(i+1) = arma::vec(arma::mat(sparse_seventhson)) / Rvecmat(i+1);
         
         sparse_secondprophecy = as<arma::sp_mat>(sparse_list[(mat_order(theclairvoyant - (i+1)))]);
         theseventhgrandson = theseventhgrandson * sparse_secondprophecy;
@@ -1451,17 +1451,18 @@ arma::mat proj3(arma::vec start_vec, List core_list, arma::uvec mat_order,
 //' numbers of individuals to the nearest integer.
 //' 
 //' @return A matrix in which, if \code{growthonly = TRUE}, each row is the
-//' population vector at each projected occasion, and if \code{growthonly = FALSE},
-//' the top half of the matrix is the w projection (stage distribution) and the
-//' bottom half is the v projection (reproductive values) for use in estimation
-//' of stochastic sensitivities and elasticities (in addition, a further row is
-//' appended to the bottom, corresponding to the R vector, which is the
-//' sum of the unstandardized w vector resulting from each occasion's
-//' projection).
+//' population vector at each projected occasion, and if \code{growthonly =
+//' FALSE}, the top third of the matrix is the actual number of individuals in
+//' each stage across time, the second third is the w projection (stage
+//' distribution), and the bottom third is the v projection (reproductive
+//' values) for use in estimation of stochastic sensitivities and elasticities
+//' (in addition, a further row is appended to the bottom, corresponding to the
+//' \emph{R} vector, which is the sum of the unstandardized \emph{w} vector
+//' resulting from each occasion's projection).
 //' 
 //' @keywords internal
 //' @noRd
-// [[Rcpp::export]]
+// [[Rcpp::export(.proj3sp)]]
 arma::mat proj3sp(arma::vec start_vec, List core_list, arma::uvec mat_order,
   bool standardize, bool growthonly, bool integeronly) {
   
@@ -1493,6 +1494,7 @@ arma::mat proj3sp(arma::vec start_vec, List core_list, arma::uvec mat_order,
   if (!growthonly) {
     wpopproj.col(0) = start_vec / sum(start_vec);
     vpopproj.col(theclairvoyant) = start_vec / sum(start_vec);
+    Rvecmat(0) = sum(start_vec);
   }
   
   // Sparse matrix projection
@@ -1508,20 +1510,20 @@ arma::mat proj3sp(arma::vec start_vec, List core_list, arma::uvec mat_order,
     }
     popproj.col(i+1) = arma::vec(arma::mat(sparse_seventhson));
     
-    if (!growthonly) Rvecmat(i+1) = sum(popproj.col(i+1));
+    Rvecmat(i+1) = sum(popproj.col(i+1));
     
     if (standardize) {
       sparse_seventhson = sparse_seventhson / sum(popproj.col(i+1));
     }
     
     if (!growthonly) {
-      wpopproj.col(i+1) = arma::vec(arma::mat(sparse_seventhson));
+      wpopproj.col(i+1) = arma::vec(arma::mat(sparse_seventhson)) / Rvecmat(i+1);
       
       sparse_secondprophecy = as<arma::sp_mat>(core_list[(mat_order(theclairvoyant - (i+1)))]);
       theseventhgrandson = theseventhgrandson * sparse_secondprophecy;
       
       double seventhgrandsum = sum(theseventhgrandson);
-      arma::vec  midwife = theseventhgrandson.as_col() / seventhgrandsum;
+      arma::vec midwife = theseventhgrandson.as_col() / seventhgrandsum;
       
       theseventhgrandson = theseventhgrandson / seventhgrandsum;
       
@@ -1539,15 +1541,393 @@ arma::mat proj3sp(arma::vec start_vec, List core_list, arma::uvec mat_order,
   }
 }
 
+//' Core Time-based Density-Dependent Population Matrix Projection Function
+//' 
+//' Function \code{proj3dens()} runs density-dependent matrix projections.
+//' 
+//' @param start_vec The starting population vector for the projection.
+//' @param core_list A list of full projection matrices, corresponding to the 
+//' \code{A} list within a \code{lefkoMat} object.
+//' @param mat_order A vector giving the order of matrices to use at each occasion.
+//' @param growthonly A logical value stating whether to output only a matrix
+//' showing the change in population size from one year to the next for use in
+//' stochastic population growth rate estimation (TRUE), or a larger matrix also
+//' containing the w and v projections for stochastic perturbation analysis,
+//' stage distribution estimation, and reproductive value estimation.
+//' @param integeronly A logical value indicating whether to round all projected
+//' numbers of individuals to the nearest integer.
+//' @param substoch An integer value indicating whether to force survival-
+//' transition matrices to be substochastic in density dependent simulations.
+//' Defaults to \code{0}, which does not force substochasticity. Alternatively,
+//' \code{1} forces all survival-transition elements to range from 0.0 to 1.0,
+//' and \code{2} forces all column rows to total no more than 1.0.
+//' @param dens_input The original \code{lefkoDens} data frame supplied through
+//' the \code{\link{density_input}()} function.
+//' @param dens_index A list giving the indices of elements in object
+//' \code{dens_input}.
+//' 
+//' @return A matrix in which, if \code{growthonly = TRUE}, each row is the
+//' population vector at each projected occasion, and if \code{growthonly =
+//' FALSE}, the top third of the matrix is the actual number of individuals in
+//' each stage across time, the second third is the w projection (stage
+//' distribution), and the bottom third is the v projection (reproductive
+//' values) for use in estimation of stochastic sensitivities and elasticities
+//' (in addition, a further row is appended to the bottom, corresponding to the
+//' \emph{R} vector, which is the sum of the unstandardized \emph{w} vector
+//' resulting from each occasion's projection).
+//' 
+//' @section Notes:
+//' There is no option to standardize population vectors here, because density
+//' dependence requires the full population size to be tracked.
+//' 
+//' @keywords internal
+//' @noRd
+// [[Rcpp::export(.proj3dens)]]
+arma::mat proj3dens(arma::vec start_vec, List core_list, arma::uvec mat_order,
+  bool growthonly, bool integeronly, int substoch, Rcpp::DataFrame dens_input,
+  Rcpp::List dens_index) {
+  
+  int sparse_switch {0};
+  int time_delay {1};
+  double pop_size {0};
+  
+  int nostages = start_vec.n_elem;
+  int theclairvoyant = mat_order.n_elem;
+  arma::vec theseventhson;
+  arma::rowvec theseventhgrandson;
+  arma::mat theprophecy;
+  arma::mat thesecondprophecy;
+  
+  // Density dependence arguments
+  arma::uvec dyn_index321 = dens_index["index321"];
+  arma::uvec dyn_index_col = dens_index[1];
+  arma::uvec dyn_style = dens_input["style"];
+  arma::vec dyn_alpha = dens_input["alpha"];
+  arma::vec dyn_beta = dens_input["beta"];
+  arma::uvec dyn_delay = dens_input["time_delay"];
+  arma::uvec dyn_type = dens_input["type"];
+  int n_dyn_elems = dyn_index321.n_elem;
+  
+  // Matrices and vectors for projection results
+  arma::mat popproj(nostages, (theclairvoyant + 1)); // This is the population vector
+  arma::mat wpopproj(nostages, (theclairvoyant + 1)); // This is the population w vector
+  arma::mat vpopproj(nostages, (theclairvoyant + 1)); // This is the population v vector
+  arma::mat Rvecmat(1, (theclairvoyant+1));
+  popproj.zeros();
+  wpopproj.zeros();
+  vpopproj.zeros();
+  Rvecmat.zeros();
+  
+  theseventhson = start_vec;
+  theseventhgrandson = start_vec.as_row();
+  
+  arma::mat finaloutput;
+  
+  // Here we will check if the matrix is large and sparse
+  int test_elems = as<arma::mat>(core_list(0)).n_elem;
+  arma::uvec nonzero_elems = find(as<arma::mat>(core_list(0)));
+  int all_nonzeros = nonzero_elems.n_elem;
+  double sparse_check = static_cast<double>(all_nonzeros) / static_cast<double>(test_elems);
+  if (sparse_check <= 0.5) {
+    sparse_switch = 1;
+  } else sparse_switch = 0;
+  
+  // Now the projection
+  popproj.col(0) = start_vec;
+  if (!growthonly) {
+    wpopproj.col(0) = start_vec / sum(start_vec);
+    vpopproj.col(theclairvoyant) = start_vec / sum(start_vec);
+    Rvecmat(0) = sum(start_vec);
+  }
+  
+  double changing_element {0.0};
+  double changing_colsum {0.0};
+  
+  if (sparse_switch == 0) {
+    // Dense matrix projection
+    
+    for (int i = 0; i < theclairvoyant; i++) {
+      theprophecy = as<arma::mat>(core_list[(mat_order(i))]);
+      
+      // Now we modify the matrix with density dependence
+      for (int j = 0; j < n_dyn_elems; j++) {
+        time_delay = dyn_delay(j);
+        if (time_delay > 0) time_delay = time_delay - 1;
+        
+        if (i >= time_delay) {
+          pop_size = sum(popproj.col(i - time_delay));
+          
+          if (dyn_style(j) == 1) { // Ricker
+            changing_element = theprophecy(dyn_index321(j)) * 
+              dyn_alpha(j) * exp((-1*dyn_beta(j)) * pop_size); // Fi*ALPHA*exp(-BETA*n)
+            
+            if (substoch == 0 || dyn_type(j) == 2) {
+              theprophecy(dyn_index321(j)) = changing_element;
+            } else if (substoch == 1 && dyn_type(j) == 1) {
+              if (changing_element > 1.0) {
+                changing_element = 1.0;
+              } else if (changing_element < 0.0) {
+                changing_element = 0.0;
+              }
+              theprophecy(dyn_index321(j)) = changing_element;
+            } else if (substoch == 2 && dyn_type(j) == 1) {
+              changing_colsum = sum(theprophecy.col(dyn_index_col(j))) - theprophecy(dyn_index321(j));
+              
+              if (changing_element > (1.0 - changing_colsum)) {
+                changing_element = (1.0 - changing_colsum);
+              }
+              theprophecy(dyn_index321(j)) = changing_element;
+            }
+          } else if (dyn_style(j) == 2) { // Beverton-Holt
+            changing_element = theprophecy(dyn_index321(j)) * 
+              dyn_alpha(j) / (1 + dyn_beta(j) * pop_size); // Fi*ALPHA/(1+BETA*n)
+            
+            if (substoch == 0 || dyn_type(j) == 2) {
+              theprophecy(dyn_index321(j)) = changing_element;
+            } else if (substoch == 1 && dyn_type(j) == 1) {
+              if (changing_element > 1.0) {
+                changing_element = 1.0;
+              } else if (changing_element < 0.0) {
+                changing_element = 0.0;
+              }
+              theprophecy(dyn_index321(j)) = changing_element;
+            } else if (substoch == 2 && dyn_type(j) == 1) {
+              changing_colsum = sum(theprophecy.col(dyn_index_col(j))) - theprophecy(dyn_index321(j));
+              
+              if (changing_element > (1.0 - changing_colsum)) {
+                changing_element = (1.0 - changing_colsum);
+              }
+              theprophecy(dyn_index321(j)) = changing_element;
+            }
+          } else if (dyn_style(j) == 3) { // Usher function
+            changing_element = theprophecy(dyn_index321(j)) * 
+              (1 / (1 + exp(dyn_alpha(j) * pop_size + dyn_beta(j)))); // Fi*(1 / (1 + exp(alpha*N+b)))
+            
+            if (substoch == 0 || dyn_type(j) == 2) {
+              theprophecy(dyn_index321(j)) = changing_element;
+            } else if (substoch == 1 && dyn_type(j) == 1) {
+              if (changing_element > 1.0) {
+                changing_element = 1.0;
+              } else if (changing_element < 0.0) {
+                changing_element = 0.0;
+              }
+              theprophecy(dyn_index321(j)) = changing_element;
+            } else if (substoch == 2 && dyn_type(j) == 1) {
+              changing_colsum = sum(theprophecy.col(dyn_index_col(j))) - theprophecy(dyn_index321(j));
+              
+              if (changing_element > (1.0 - changing_colsum)) {
+                changing_element = (1.0 - changing_colsum);
+              }
+              theprophecy(dyn_index321(j)) = changing_element;
+            }
+          } else if (dyn_style(j) == 4) { // Logistic function
+            changing_element = theprophecy(dyn_index321(j)) * 
+              (1 - pop_size / dyn_alpha(j)); // Fi*(1 - ALPHA/n)
+            
+            if (substoch == 0 || dyn_type(j) == 2) {
+              theprophecy(dyn_index321(j)) = changing_element;
+            } else if (substoch == 1 && dyn_type(j) == 1) {
+              if (changing_element > 1.0) {
+                changing_element = 1.0;
+              } else if (changing_element < 0.0) {
+                changing_element = 0.0;
+              }
+              theprophecy(dyn_index321(j)) = changing_element;
+            } else if (substoch == 2 && dyn_type(j) == 1) {
+              changing_colsum = sum(theprophecy.col(dyn_index_col(j))) - theprophecy(dyn_index321(j));
+              
+              if (changing_element > (1.0 - changing_colsum)) {
+                changing_element = (1.0 - changing_colsum);
+              }
+              theprophecy(dyn_index321(j)) = changing_element;
+            }
+          }
+        }
+      }
+      
+      theseventhson = theprophecy * theseventhson; // thechosenone
+      if (integeronly) {
+        theseventhson = floor(theseventhson);
+      }
+      popproj.col(i+1) = theseventhson;
+      
+      Rvecmat(i+1) = sum(theseventhson);
+      
+      if (!growthonly) {
+        wpopproj.col(i+1) = theseventhson / Rvecmat(i+1);
+        
+        thesecondprophecy = as<arma::mat>(core_list[(mat_order(theclairvoyant - (i+1)))]);
+        theseventhgrandson = theseventhgrandson * thesecondprophecy;
+        
+        double seventhgrandsum = sum(theseventhgrandson);
+        arma::vec midwife = theseventhgrandson.as_col() / seventhgrandsum;
+        
+        theseventhgrandson = theseventhgrandson / seventhgrandsum;
+        
+        vpopproj.col(theclairvoyant - (i+1)) = midwife;
+      }
+    }
+  } else {
+    // Sparse matrix projection
+    
+    arma::sp_mat sparse_seventhson = arma::sp_mat(theseventhson);
+    
+    int matlist_length = core_list.size();
+    arma::mat first_mat = core_list(0);
+    arma::sp_mat new_sparse = arma::sp_mat(first_mat);
+    Rcpp::List sparse_list = List::create(_["1"] = new_sparse);
+    if(matlist_length > 1) {
+      for (int i = 1; i < matlist_length; i++) {
+        first_mat = as<arma::mat>(core_list(i));
+        new_sparse = arma::sp_mat(first_mat);
+        sparse_list.push_back(new_sparse);
+      }
+    }
+    arma::sp_mat sparse_prophecy;
+    arma::sp_mat sparse_secondprophecy;
+    
+    for (int i = 0; i < theclairvoyant; i++) {
+      sparse_prophecy = as<arma::sp_mat>(sparse_list[(mat_order(i))]);
+      
+      // Now we modify the matrix with density dependence
+      for (int j = 0; j < n_dyn_elems; j++) {
+        time_delay = dyn_delay(j);
+        if (time_delay > 0) time_delay = time_delay - 1;
+        
+        if (i >= time_delay) {
+          pop_size = sum(popproj.col(i - time_delay));
+          
+          if (dyn_style(j) == 1) { // Ricker
+            changing_element = sparse_prophecy(dyn_index321(j)) * 
+              dyn_alpha(j) * exp((-1*dyn_beta(j)) * pop_size); // Fi*ALPHA*exp(-BETA*n)
+            
+            if (substoch == 0 || dyn_type(j) == 2) {
+              sparse_prophecy(dyn_index321(j)) = changing_element;
+            } else if (substoch == 1 && dyn_type(j) == 1) {
+              if (changing_element > 1.0) {
+                changing_element = 1.0;
+              } else if (changing_element < 0.0) {
+                changing_element = 0.0;
+              }
+              sparse_prophecy(dyn_index321(j)) = changing_element;
+            } else if (substoch == 2 && dyn_type(j) == 1) {
+              changing_colsum = sum(sparse_prophecy.col(dyn_index_col(j))) - sparse_prophecy(dyn_index321(j));
+              
+              if (changing_element > (1.0 - changing_colsum)) {
+                changing_element = (1.0 - changing_colsum);
+              }
+              sparse_prophecy(dyn_index321(j)) = changing_element;
+            }
+          } else if (dyn_style(j) == 2) { // Beverton-Holt
+            changing_element = sparse_prophecy(dyn_index321(j)) * 
+              dyn_alpha(j) / (1 + dyn_beta(j) * pop_size); // Fi*ALPHA/(1+BETA*n)
+            
+            if (substoch == 0 || dyn_type(j) == 2) {
+              sparse_prophecy(dyn_index321(j)) = changing_element;
+            } else if (substoch == 1 && dyn_type(j) == 1) {
+              if (changing_element > 1.0) {
+                changing_element = 1.0;
+              } else if (changing_element < 0.0) {
+                changing_element = 0.0;
+              }
+              sparse_prophecy(dyn_index321(j)) = changing_element;
+            } else if (substoch == 2 && dyn_type(j) == 1) {
+              changing_colsum = sum(sparse_prophecy.col(dyn_index_col(j))) - sparse_prophecy(dyn_index321(j));
+              
+              if (changing_element > (1.0 - changing_colsum)) {
+                changing_element = (1.0 - changing_colsum);
+              }
+              sparse_prophecy(dyn_index321(j)) = changing_element;
+            }
+          } else if (dyn_style(j) == 3) { // Usher function
+            changing_element = sparse_prophecy(dyn_index321(j)) * 
+              (1 / (1 + exp(dyn_alpha(j) * pop_size + dyn_beta(j)))); // Fi*(1 / (1 + exp(alpha*N+b)))
+            
+            if (substoch == 0 || dyn_type(j) == 2) {
+              sparse_prophecy(dyn_index321(j)) = changing_element;
+            } else if (substoch == 1 && dyn_type(j) == 1) {
+              if (changing_element > 1.0) {
+                changing_element = 1.0;
+              } else if (changing_element < 0.0) {
+                changing_element = 0.0;
+              }
+              sparse_prophecy(dyn_index321(j)) = changing_element;
+            } else if (substoch == 2 && dyn_type(j) == 1) {
+              changing_colsum = sum(sparse_prophecy.col(dyn_index_col(j))) - sparse_prophecy(dyn_index321(j));
+              
+              if (changing_element > (1.0 - changing_colsum)) {
+                changing_element = (1.0 - changing_colsum);
+              }
+              sparse_prophecy(dyn_index321(j)) = changing_element;
+            }
+          } else if (dyn_style(j) == 4) { // Logistic function
+            changing_element = sparse_prophecy(dyn_index321(j)) * 
+              (1 - pop_size / dyn_alpha(j)); // Fi*(1 - ALPHA/n)
+            
+            if (substoch == 0 || dyn_type(j) == 2) {
+              sparse_prophecy(dyn_index321(j)) = changing_element;
+            } else if (substoch == 1 && dyn_type(j) == 1) {
+              if (changing_element > 1.0) {
+                changing_element = 1.0;
+              } else if (changing_element < 0.0) {
+                changing_element = 0.0;
+              }
+              sparse_prophecy(dyn_index321(j)) = changing_element;
+            } else if (substoch == 2 && dyn_type(j) == 1) {
+              changing_colsum = sum(sparse_prophecy.col(dyn_index_col(j))) - sparse_prophecy(dyn_index321(j));
+              
+              if (changing_element > (1.0 - changing_colsum)) {
+                changing_element = (1.0 - changing_colsum);
+              }
+              sparse_prophecy(dyn_index321(j)) = changing_element;
+            }
+          }
+        }
+      }
+      
+      sparse_seventhson = sparse_prophecy * sparse_seventhson;
+      if (integeronly) {
+        sparse_seventhson = floor(sparse_seventhson);
+      }
+      popproj.col(i+1) = arma::vec(arma::mat(sparse_seventhson));
+      
+      Rvecmat(i+1) = sum(popproj.col(i+1));
+      
+      if (!growthonly) {
+        wpopproj.col(i+1) = arma::vec(arma::mat(sparse_seventhson)) / Rvecmat(i+1);
+        
+        sparse_secondprophecy = as<arma::sp_mat>(sparse_list[(mat_order(theclairvoyant - (i+1)))]);
+        theseventhgrandson = theseventhgrandson * sparse_secondprophecy;
+        
+        double seventhgrandsum = sum(theseventhgrandson);
+        arma::vec midwife = theseventhgrandson.as_col() / seventhgrandsum;
+        
+        theseventhgrandson = theseventhgrandson / seventhgrandsum;
+        
+        vpopproj.col(theclairvoyant - (i+1)) = midwife;
+      }
+    }
+  }
+  
+  if (growthonly) {
+    return popproj;
+  } else {
+    arma::mat revised_vproj = join_cols(vpopproj, Rvecmat);
+    arma::mat expanded_proj = join_cols(wpopproj, revised_vproj);
+    
+    return join_cols(popproj, expanded_proj);
+  }
+}
+
 //' Conduct Population Projection Simulations
 //' 
 //' Function \code{projection3()} runs projection simulations. It projects the
-//' population forward in time by a user-defined number of occasions, and can
-//' perform these projections as replicates. Projections may be deterministic or
-//' stochastic. If deterministic, then projections will be cyclical if matrices
-//' exist covering multiple occasions for each population or patch. If
+//' population an patches forward in time by a user-defined number of occasions.
+//' Projections may be deterministic or stochastic, and may be density
+//' dependent either way. If deterministic, then projections will be cyclical if
+//' matrices exist covering multiple occasions for each population or patch. If
 //' stochastic, then annual matrices will be shuffled within patches and
-//' populations. There is no limit to the number of replicates.
+//' populations. Replicates may also be requested.
 //' 
 //' @param mpm A matrix projection model of class \code{lefkoMat}, or a list of
 //' full matrix projection matrices.
@@ -1565,22 +1945,42 @@ arma::mat proj3sp(arma::vec start_vec, List core_list, arma::uvec mat_order,
 //' @param integeronly A logical value indicating whether to round the number of
 //' individuals projected in each stage at each occasion to the nearest
 //' integer. Defaults to FALSE.
+//' @param substoch An integer value indicating whether to force survival-
+//' transition matrices to be substochastic in density dependent simulations.
+//' Defaults to \code{0}, which does not force substochasticity. Alternatively,
+//' \code{1} forces all survival-transition elements to range from 0.0 to 1.0,
+//' and \code{2} forces all column rows to total no more than 1.0.
 //' @param start_vec An optional numeric vector denoting the starting stage
 //' distribution for the projection. Defaults to a single individual of each
 //' stage.
+//' @param start_frame An optional data frame characterizing stages, age-stages,
+//' or stage-pairs that should be set to non-zero values in the starting vector,
+//' and what those values should be. Can only be used with \code{lefkoMat}
+//' objects.
 //' @param tweights An optional numeric vector denoting the probabilistic
 //' weightings of annual matrices. Defaults to equal weighting among occasions.
+//' @param density An optional data frame describing the matrix elements that
+//' will be subject to density dependence, and the exact kind of density
+//' dependence that they will be subject to. The data frame used should be an
+//' object of class \code{lefkoDens}, which is the output from function
+//' \code{\link{density_input}()}.
 //' 
 //' @return A list of class \code{lefkoProj}, which always includes the first
-//' three elements of the following, and also includes the remaiing elements
+//' three elements of the following, and also includes the remaining elements
 //' below when a \code{lefkoMat} object is used as input:
-//' \item{projection}{A list of matrices showing the total number of individuals
-//' per stage per occasion, or showing the former with the projected stage 
-//' distribution and reproductive value per stage per occasion followed by
-//' the total population size per occasion (all row-bound in order). Each matrix
-//' corresponds to a different patch or population. If more than 1 replicate is
-//' projected, then the results from these replicates will be stacked within the
-//' same data frame.}
+//' \item{projection}{A list of lists of matrices showing the total number of
+//' individuals per stage per occasion. The first list corresponds to each
+//' pop-patch followed by each population. The inner list corresponds to
+//' replicates within each pop-patch or population.}
+//' \item{stage_dist}{A list of lists of the actual stage distribution in each
+//' occasion in each replicate in each pop-patch or population. The list order
+//' is the same as in \code{projection}.}
+//' \item{rep_value}{A list of lists of the actual reproductive value in each
+//' occasion in each replicate in each pop-patch or population. The list order
+//' is the same as in \code{projection}.}
+//' \item{pop_size}{A list of data frames showing the total population size in
+//' each occasion per replicate (row within data frame) per pop-patch or
+//' population (list element).}
 //' \item{labels}{A data frame showing the order of populations and patches in
 //' item \code{projection}.}
 //' \item{control}{A short vector indicating the number of replicates and the
@@ -1598,6 +1998,22 @@ arma::mat proj3sp(arma::vec start_vec, List core_list, arma::uvec mat_order,
 //' weightings used will be based on the proportion per element of the sum of
 //' elements in the user-supplied vector.
 //' 
+//' Starting vectors can be input in one of two ways: 1) as \code{start_vec}
+//' input, which is a vector of numbers of the numbers of individuals in each
+//' stage, stage pair, or age-stage, with the length of the vector necessarily
+//' as long as there are rows in the matrices of the MPM; or 2) as
+//' \code{start_frame} input, which is a data frame showing only those stages,
+//' stage pairs, or age-stages that should begin with more than 0 individuals,
+//' and the numbers of individuals that those stages should start with (this
+//' object is created using the \code{\link{start_input}()} function). If both
+//' are provided, then \code{start_frame} takes precedence and \code{start_vec}
+//' is ignored. If neither is provided, then \code{projection3()} automatically
+//' assumes that each stage, stage pair, or age-stage begins with a single
+//' individual. Importantly, if a \code{lefkoMat} object is not used, and a list
+//' of matrices is provided instead, then \code{start_frame} cannot be utilized
+//' and a full \code{start_vec} must be provided to conduct a simulation with
+//' starting numbers of individuals other than 1 per stage.
+//' 
 //' The resulting data frames in element \code{projection} are separated by
 //' pop-patch according to the order provided in element \code{labels}, but the
 //' matrices for each element of \code{projection} have the result of each
@@ -1605,7 +2021,23 @@ arma::mat proj3sp(arma::vec start_vec, List core_list, arma::uvec mat_order,
 //' indication. Results for each replicate must be separated using the
 //' information provided in elements \code{control} and the 3 stage
 //' descriptor elements.
-//'
+//' 
+//' Density dependent projections are automatically set up if object
+//' \code{density} is input. If this object is not included, then density
+//' independent projections will be set up. Note that currently, density
+//' dependent projections can only be performed with \code{lefkoMat} objects.
+//' 
+//' The stage distributions and reproductive values produced are not the
+//' asymptotic values as would be given by the standardized right and left
+//' eigenvectors associated with the dominant eigenvalue of a matrix, but are
+//' vectors describing these values at the specific points in time projected.
+//' See equations 14.86 and 14.88 and section 14.4 on Sensitivity and Elasticity
+//' Analysis under Environmental Stochasticity in Caswell (2001, Matrix
+//' Population Models, Sinauer Associates) for more details.
+//' 
+//' @seealso \code{\link{start_input}()}
+//' @seealso \code{\link{density_input}()}
+//' 
 //' @examples
 //' # Lathyrus example
 //' data(lathyrus)
@@ -1632,10 +2064,6 @@ arma::mat proj3sp(arma::vec start_vec, List core_list, arma::uvec mat_order,
 //'   nonobsacol = "Dormant1988", stageassign = lathframe, stagesize = "sizea",
 //'   censorcol = "Missing1988", censorkeep = NA, censor = TRUE)
 //' 
-//' lathrepm <- matrix(0, 7, 7)
-//' lathrepm[1, 6] <- 0.345
-//' lathrepm[2, 6] <- 0.054
-//' 
 //' lathsupp3 <- supplemental(stage3 = c("Sd", "Sd", "Sdl", "Sdl", "Sd", "Sdl"), 
 //'   stage2 = c("Sd", "Sd", "Sd", "Sd", "rep", "rep"),
 //'   stage1 = c("Sd", "rep", "Sd", "rep", "all", "all"), 
@@ -1646,8 +2074,7 @@ arma::mat proj3sp(arma::vec start_vec, List core_list, arma::uvec mat_order,
 //' 
 //' ehrlen3 <- rlefko3(data = lathvert, stageframe = lathframe,
 //'   year = c(1989, 1990), stages = c("stage3", "stage2", "stage1"),
-//'   repmatrix = lathrepm, supplement = lathsupp3, yearcol = "year2",
-//'   indivcol = "individ")
+//'   supplement = lathsupp3, yearcol = "year2", indivcol = "individ")
 //' 
 //' lathproj <- projection3(ehrlen3, nreps = 5, stochastic = TRUE)
 //' 
@@ -1709,19 +2136,32 @@ arma::mat proj3sp(arma::vec start_vec, List core_list, arma::uvec mat_order,
 // [[Rcpp::export]]
 Rcpp::List projection3(List mpm, int nreps = 1, int times = 10000,
   bool stochastic = false, bool standardize = false, bool growthonly = true,
-  bool integeronly = false, Nullable<NumericVector> start_vec = R_NilValue,
-  Nullable<NumericVector> tweights = R_NilValue) {
+  bool integeronly = false, int substoch = 0,
+  Nullable<NumericVector> start_vec = R_NilValue,
+  Nullable<DataFrame> start_frame = R_NilValue,
+  Nullable<NumericVector> tweights = R_NilValue,
+  Nullable<DataFrame> density = R_NilValue) {
   
-  Rcpp::List projection_list;
+  Rcpp::List dens_index;
+  Rcpp::DataFrame start_thru;
+  Rcpp::DataFrame dens_input;
   
   int theclairvoyant {0};
   theclairvoyant = times;
+  
+  int dens_switch {0};
+  int used_matsize {0};
+  int total_projrows {0};
   
   if (theclairvoyant < 1) {
     throw Rcpp::exception("Option times must equal a positive integer.", false);
   }
   if (nreps < 1) {
     throw Rcpp::exception("Option nreps must be a positive integer.", false);
+  }
+  
+  if (substoch != 0 && substoch != 1 && substoch != 2) {
+    throw Rcpp::exception("Option substoch must be set to 0, 1, or 2.", false);
   }
   
   arma::uvec theprophecy(theclairvoyant);
@@ -1739,12 +2179,153 @@ Rcpp::List projection3(List mpm, int nreps = 1, int times = 10000,
     DataFrame labels = as<DataFrame>(mpm["labels"]);
     DataFrame agestages = as<DataFrame>(mpm["agestages"]);
     
-    bool historical;
+    bool historical = false;
+    bool agebystage = false;
     
     if (hstages.length() > 1) {
       historical = true;
-    } else {
-      historical = false;
+    }
+    if (agestages.length() > 1) {
+      agebystage = true;
+    }
+    
+    if (density.isNotNull()) { 
+      Rcpp::DataFrame dens_thru(density);
+      dens_input = dens_thru;
+      dens_switch = 1;
+      
+      Rcpp::StringVector di_stage3 = dens_input["stage3"];
+      Rcpp::StringVector di_stage2 = dens_input["stage2"];
+      Rcpp::StringVector di_stage1 = dens_input["stage1"];
+      int di_size = di_stage3.length();
+      
+      if (historical) {
+        StringVector stage3 = hstages["stage_2"];
+        StringVector stage2r = hstages["stage_1"];
+        StringVector stage2c = hstages["stage_2"];
+        StringVector stage1 = hstages["stage_1"];
+        int hst_size = stage3.length();
+        
+        arma::uvec hst_3(hst_size);
+        arma::uvec hst_2r(hst_size);
+        arma::uvec hst_2c(hst_size);
+        arma::uvec hst_1(hst_size);
+        hst_3.zeros();
+        hst_2r.zeros();
+        hst_2c.zeros();
+        hst_1.zeros();
+        
+        arma::uvec di_stage32_id(di_size);
+        arma::uvec di_stage21_id(di_size);
+        arma::uvec di_index(di_size);
+        di_stage32_id.zeros();
+        di_stage21_id.zeros();
+        di_index.zeros();
+        
+        for (int i = 0; i < di_size; i++) { // This loop runs through each density_input line
+          for (int j = 0; j < hst_size; j++) {
+            if (di_stage3(i) == stage3(j)) {
+              hst_3(j) = 1;
+            } else {
+              hst_3(j) = 0;
+            }
+          }
+          
+          for (int j = 0; j < hst_size; j++) {
+            if (di_stage2(i) == stage2r(j)) {
+              hst_2r(j) = 1;
+            } else {
+              hst_2r(j) = 0;
+            }
+          }
+          
+          for (int j = 0; j < hst_size; j++) {
+            if (di_stage2(i) == stage2c(j)) {
+              hst_2c(j) = 1;
+            } else {
+              hst_2c(j) = 0;
+            }
+          }
+          
+          for (int j = 0; j < hst_size; j++) {
+            if (di_stage1(i) == stage1(j)) {
+              hst_1(j) = 1;
+            } else {
+              hst_1(j) = 0;
+            }
+          }
+          
+          arma::uvec find_hst3 = find(hst_3);
+          arma::uvec find_hst2r = find(hst_2r);
+          arma::uvec find_hst2c = find(hst_2c);
+          arma::uvec find_hst1 = find(hst_1);
+          
+          arma::uvec pop_32 = intersect(find_hst3, find_hst2r);
+          arma::uvec pop_21 = intersect(find_hst2c, find_hst1);
+          
+          di_stage32_id(i) = pop_32(0);
+          di_stage21_id(i) = pop_21(0);
+          di_index(i) = pop_32(0) + (pop_21(0) * hst_size);
+          
+          // Eventually we need to zero the indexers out again
+          hst_3.zeros();
+          hst_2r.zeros();
+          hst_2c.zeros();
+          hst_1.zeros();
+        }
+        
+        dens_index = Rcpp::List::create(_["index32"] = di_stage32_id,
+          _["index21"] = di_stage21_id, _["index321"] = di_index);
+      } else {
+        StringVector stage3 = stageframe["stage"];
+        StringVector stage2 = stageframe["stage"];
+        int ahst_size = stage3.length();
+        
+        arma::uvec ahst_3(ahst_size);
+        arma::uvec ahst_2(ahst_size);
+        ahst_3.zeros();
+        ahst_2.zeros();
+
+        arma::uvec di_stage32_id(di_size);
+        arma::uvec di_stage21_id(di_size);
+        arma::uvec di_index(di_size);
+        di_stage32_id.zeros();
+        di_stage21_id.zeros();
+        di_index.zeros();
+        
+        for (int i = 0; i < di_size; i++) { // This loop runs through each density_input line
+          for (int j = 0; j < ahst_size; j++) {
+            if (di_stage3(i) == stage3(j)) {
+              ahst_3(j) = 1;
+            } else {
+              ahst_3(j) = 0;
+            }
+          }
+          
+          for (int j = 0; j < ahst_size; j++) {
+            if (di_stage2(i) == stage2(j)) {
+              ahst_2(j) = 1;
+            } else {
+              ahst_2(j) = 0;
+            }
+          }
+          
+          arma::uvec find_ahst3 = find(ahst_3);
+          arma::uvec find_ahst2 = find(ahst_2);
+          
+          di_stage32_id(i) = find_ahst3(0);
+          di_stage21_id(i) = find_ahst2(0);
+
+          di_index(i) = find_ahst3(0) + (find_ahst2(0) * ahst_size);
+          
+          // Eventually we need to zero the indexers out again
+          ahst_3.zeros();
+          ahst_2.zeros();
+        }
+        
+        dens_index = Rcpp::List::create(_["index3"] = di_stage32_id,
+          _["index2"] = di_stage21_id, _["index321"] = di_index);
+      }
     }
     
     if (labels.length() < 3) {
@@ -1834,16 +2415,41 @@ Rcpp::List projection3(List mpm, int nreps = 1, int times = 10000,
     int meanmatrows = thechosenone.n_rows;
     arma::vec startvec;
     int trials = meanamats.length();
+    used_matsize = meanmatrows;
     
     arma::uvec ppcindex = as<arma::uvec>(poppatchc);
     arma::uvec allppcs = as<arma::uvec>(sort_unique(poppatchc));
     int allppcsnem = allppcs.n_elem;
+    List plist_hold(allppcsnem);
+    int pop_est {1};
+    if (allppcsnem > 1) {
+      pop_est = trials - allppcsnem;    
+    }
+    List projection_list(trials);
     
-    if (start_vec.isNotNull()) {
+    if(start_frame.isNotNull()) {
+      Rcpp::DataFrame start_thru(start_frame);
+      
+      startvec.set_size(meanmatrows);
+      startvec.zeros();
+      
+      arma::uvec start_elems = start_thru["row_num"];
+      start_elems = start_elems - 1;
+      arma::vec start_values = start_thru["value"];
+      
+      if (start_elems.max() > (meanmatrows - 1)) {
+        throw Rcpp::exception("Start vector input frame includes element indices too high for this MPM", false);
+      }
+      
+      for (int i = 0; i < start_elems.n_elem; i++) {
+        startvec(start_elems(i)) = start_values(i);
+      }
+    } else if (start_vec.isNotNull()) {
       if (as<NumericVector>(start_vec).length() != meanmatrows) {
         throw Rcpp::exception("Start vector must be the same length as the number of rows in each matrix.", false);
       }
       startvec = as<arma::vec>(start_vec);
+      
     } else {
       startvec.set_size(meanmatrows);
       startvec.ones();
@@ -1871,22 +2477,30 @@ Rcpp::List projection3(List mpm, int nreps = 1, int times = 10000,
           }
         }
         
-        if (rep == 0) {
-          projection = proj3(startvec, amats, theprophecy, standardize, growthonly, integeronly);
+        if (dens_switch) {
+          if (rep == 0) {
+            projection = proj3dens(startvec, amats, theprophecy, growthonly,
+              integeronly, substoch, dens_input, dens_index);
+          } else {
+            arma::mat nextproj = proj3dens(startvec, amats, theprophecy,
+              growthonly, integeronly, substoch, dens_input, dens_index);
+            projection = arma::join_cols(projection, nextproj);
+          }
         } else {
-          arma::mat nextproj = proj3(startvec, amats, theprophecy, standardize, growthonly, integeronly);
-          projection = arma::join_cols(projection, nextproj);
+          if (rep == 0) {
+            projection = proj3(startvec, amats, theprophecy, standardize, growthonly,
+              integeronly);
+          } else {
+            arma::mat nextproj = proj3(startvec, amats, theprophecy, standardize,
+              growthonly, integeronly);
+            projection = arma::join_cols(projection, nextproj);
+          }
         }
       }
       
-      if (i == 0) {
-        projection_list = List::create(_["0"] = projection);
-      } else {
-        projection_list.push_back(projection);
-      }
+      projection_list(i) = projection;
     }
     
-    int pop_est {1};
     StringVector allpops = unique(poporder);
     arma::uvec popmatch(loysize);
     arma::uvec yearmatch(loysize);
@@ -1964,37 +2578,134 @@ Rcpp::List projection3(List mpm, int nreps = 1, int times = 10000,
             }
           }
           
-          if (rep == 0) {
-            projection = proj3(startvec, meanmatyearlist, theprophecy, standardize, growthonly, integeronly);
+          if (dens_switch) {
+            if (rep == 0) {
+              projection = proj3dens(startvec, meanmatyearlist, theprophecy,
+                growthonly, integeronly, substoch, dens_input, dens_index);
+            } else {
+              arma::mat nextproj = proj3dens(startvec, meanmatyearlist, theprophecy,
+                growthonly, integeronly, substoch, dens_input, dens_index);
+              projection = arma::join_cols(projection, nextproj);
+            }
           } else {
-            arma::mat nextproj = proj3(startvec, meanmatyearlist, theprophecy, standardize, growthonly, integeronly);
-            projection = arma::join_cols(projection, nextproj);
+            if (rep == 0) {
+              projection = proj3(startvec, meanmatyearlist, theprophecy,
+                standardize, growthonly, integeronly);
+            } else {
+              arma::mat nextproj = proj3(startvec, meanmatyearlist, theprophecy,
+                standardize, growthonly, integeronly);
+              projection = arma::join_cols(projection, nextproj);
+            }
           }
         }
-        
-        projection_list.push_back(projection);
+        projection_list(allppcsnem + i) = projection;
       }
     }
+    
+    // The final output will have a projection list with # elements = nreps, nested
+    // within a list with # elements = # pop-patches
+    List projection_set(nreps);
+    List ss_set(nreps);
+    List rv_set(nreps);
+    arma::mat total_sizes_set(nreps, (times+1), fill::zeros);
+    
+    int length_ppy = projection_list.length();
+    
+    List final_projection(length_ppy);
+    List final_ss(length_ppy);
+    List final_rv(length_ppy);
+    List final_ns(length_ppy);
+    
+    List output(9);
+    
+    if (!growthonly) {
+      
+      arma::mat list_proj(total_projrows, (times+1), fill::zeros);
+      arma::mat extracted_proj(used_matsize, used_matsize, fill::zeros);
+      
+      int diversion = used_matsize * 3 + 1;
+      
+      for (int j = 0; j < length_ppy; j++) {
+        list_proj = as<arma::mat>(projection_list[j]);
+        
+        for (int i = 0; i < nreps; i++) {
+          extracted_proj = list_proj.rows((diversion * i), (diversion * i + used_matsize - 1));
+          projection_set(i) = extracted_proj;
+          
+          extracted_proj = list_proj.rows((diversion * i + used_matsize), (diversion * i + (2 * used_matsize) - 1));
+          ss_set(i) = extracted_proj;
+          
+          extracted_proj = list_proj.rows((diversion * i + (2 * used_matsize)), (diversion * i + (3 * used_matsize) - 1));
+          rv_set(i) = extracted_proj;
+          
+          total_sizes_set.row(i) = list_proj.row(diversion * (i+1) - 1);
+        }
+        final_projection(j) = clone(projection_set);
+        final_ss(j) = clone(ss_set);
+        final_rv(j) = clone(rv_set);
+        final_ns(j) = total_sizes_set;
+      }
+      
+    } else {
+      
+      arma::mat list_proj(total_projrows, (times+1), fill::zeros);
+      arma::mat extracted_proj(used_matsize, used_matsize, fill::zeros);
+      
+      int diversion = used_matsize;
+      
+      for (int j = 0; j < length_ppy; j++) {
+        list_proj = as<arma::mat>(projection_list[j]);
+        
+        for (int i = 0; i < nreps; i++) {
+          extracted_proj = list_proj.rows((diversion * i), (diversion * i + used_matsize - 1));
+          projection_set(i) = extracted_proj;
+          
+          total_sizes_set.row(i) = sum(extracted_proj, 0);
+        }
+        
+        final_projection(j) = clone(projection_set);
+        final_ss(j) = NULL;
+        final_rv(j) = NULL;
+        final_ns(j) = total_sizes_set;
+      }
+      
+    }
+    
     DataFrame newlabels = DataFrame::create(_["pop"] = mmpops,
       _["patch"] = mmpatches);
-    
     Rcpp::IntegerVector control = {nreps, times};
     
-    Rcpp::List output = List::create(_["projection"] = projection_list, _["labels"] = newlabels,
-      _["ahstages"] = stageframe, _["hstages"] = hstages, _["agestages"] = agestages,
-      _["control"] = control);
+    output(0) = final_projection;
+    output(1) = final_ss;
+    output(2) = final_rv;
+    output(3) = final_ns;
+    output(4) = newlabels;
+    output(5) = stageframe;
+    output(6) = hstages;
+    output(7) = agestages;
+    output(8) = control;
+    
+    CharacterVector namevec = {"projection", "stage_dist", "rep_value", "pop_size",
+      "labels", "ahstages", "hstages", "agestages", "control"};
+    output.attr("names") = namevec;
+    
+    if (dens_switch) {
+      output.push_back(dens_index);
+    }
     output.attr("class") = "lefkoProj";
     
     return output;
     
   } else {
     
+    List projection_list (1);
     List amats = mpm;
     
     int yl = amats.length();
     arma::mat firstmat = as<arma::mat>(amats[0]);
     int matrows = firstmat.n_rows;
     int matcols = firstmat.n_cols;
+    used_matsize = matrows;
     
     bool historical;
     
@@ -2070,7 +2781,7 @@ Rcpp::List projection3(List mpm, int nreps = 1, int times = 10000,
       }
     }
     
-    projection_list = List::create(_["0"] = projection);
+    projection_list(0) = projection;
     
     DataFrame newlabels = DataFrame::create(_["pop"] = 1,
       _["patch"] = 1);
@@ -2098,6 +2809,9 @@ Rcpp::List projection3(List mpm, int nreps = 1, int times = 10000,
 //' @param mpm A matrix projection model of class \code{lefkoMat}, or a list of
 //' full matrix projection matrices.
 //' @param times Number of occasions to iterate. Defaults to 10,000.
+//' @param dense_only A logical value indicating whether to force matrices to be
+//' run in dense format. Defaults to \code{FALSE}, and should only be used if
+//' errors occur when running under default conditions.
 //' @param tweights Numeric vector denoting the probabilistic weightings of
 //' annual matrices. Defaults to equal weighting among occasions.
 //' 
@@ -2146,18 +2860,17 @@ Rcpp::List projection3(List mpm, int nreps = 1, int times = 10000,
 //'   nonobsacol = "Dormant1988", stageassign = lathframe, stagesize = "sizea",
 //'   censorcol = "Missing1988", censorkeep = NA, censor = TRUE)
 //' 
-//' lathrepm <- matrix(0, 7, 7)
-//' lathrepm[1, 6] <- 0.345
-//' lathrepm[2, 6] <- 0.054
-//' 
-//' lathover3 <- overwrite(stage3 = c("Sd", "Sd", "Sdl"),
-//'   stage2 = c("Sd", "Sd", "Sd"), stage1 = c("Sd", "rep", "rep"),
-//'   givenrate = c(0.345, 0.345, 0.054))
+//' lathsupp3 <- supplemental(stage3 = c("Sd", "Sd", "Sdl", "Sdl", "Sd", "Sdl"), 
+//'   stage2 = c("Sd", "Sd", "Sd", "Sd", "rep", "rep"),
+//'   stage1 = c("Sd", "rep", "Sd", "rep", "all", "all"), 
+//'   givenrate = c(0.345, 0.345, 0.054, 0.054, NA, NA),
+//'   multiplier = c(NA, NA, NA, NA, 0.345, 0.054),
+//'   type = c(1, 1, 1, 1, 3, 3), type_t12 = c(1, 2, 1, 2, 1, 1),
+//'   stageframe = lathframe, historical = TRUE)
 //' 
 //' ehrlen3 <- rlefko3(data = lathvert, stageframe = lathframe,
 //'   year = c(1989, 1990), stages = c("stage3", "stage2", "stage1"),
-//'   repmatrix = lathrepm, overwrite = lathover3, yearcol = "year2",
-//'   indivcol = "individ")
+//'   supplement = lathsupp3, yearcol = "year2", indivcol = "individ")
 //' 
 //' slambda3(ehrlen3)
 //' 
@@ -2212,12 +2925,12 @@ Rcpp::List projection3(List mpm, int nreps = 1, int times = 10000,
 //'   supplement = cypsupp3r, yearcol = "year2", 
 //'   patchcol = "patchid", indivcol = "individ")
 //' 
-//' cypstoch <- slambda3(cypmatrix3r)
+//' cypstoch <- slambda3(cypmatrix3r, dense_only = TRUE)
 //' cypstoch
 //' 
 //' @export slambda3
 // [[Rcpp::export]]
-DataFrame slambda3(List mpm, int times = 10000, 
+DataFrame slambda3(List mpm, int times = 10000, bool dense_only = false,
   Nullable<NumericVector> tweights = R_NilValue) {
   
   int theclairvoyant {0};
@@ -2254,7 +2967,9 @@ DataFrame slambda3(List mpm, int times = 10000,
     if (sparse_check <= 0.5) {
       sparse_switch = 1;
     } else sparse_switch = 0;
-  
+    
+    if (dense_only) sparse_switch = 0;
+    
     if (labels.length() < 3) {
       throw Rcpp::exception("Function 'slambda3' requires annual matrices. This lefkoMat object appears to be a set of mean matrices, and lacks annual matrices.", false);
     }
@@ -2472,7 +3187,9 @@ DataFrame slambda3(List mpm, int times = 10000,
     if (sparse_check <= 0.5) {
       sparse_switch = 1;
     } else sparse_switch = 0;
-  
+    
+    if (dense_only) sparse_switch = 0;
+    
     int yl = amats.length();
     arma::mat firstmat = as<arma::mat>(amats[0]);
     int matrows = firstmat.n_rows;
@@ -2594,7 +3311,7 @@ DataFrame slambda3(List mpm, int times = 10000,
 //'
 //' @keywords internal
 //' @noRd
-// [[Rcpp::export]]
+// [[Rcpp::export(.stoch_senselas)]]
 Rcpp::List stoch_senselas(List mpm, int times = 10000, int style = 1,
   Nullable<NumericVector> tweights = R_NilValue) {
   
@@ -3144,7 +3861,7 @@ Rcpp::List stoch_senselas(List mpm, int times = 10000, int style = 1,
 //' 
 //' @keywords internal
 //' @noRd
-// [[Rcpp::export]]
+// [[Rcpp::export(.bambi3)]]
 DataFrame bambi3(DataFrame stages, DataFrame hstages) {
   
   StringVector stagenames = stages["stage"];
@@ -3378,7 +4095,7 @@ DataFrame bambi3(DataFrame stages, DataFrame hstages) {
 //' 
 //' @keywords internal
 //' @noRd
-// [[Rcpp::export]]
+// [[Rcpp::export(.bambi2)]]
 DataFrame bambi2(DataFrame stages) {
   
   StringVector stagenames = stages["stage"];
@@ -3502,7 +4219,7 @@ DataFrame bambi2(DataFrame stages) {
 //' 
 //' @keywords internal
 //' @noRd
-// [[Rcpp::export]]
+// [[Rcpp::export(.demolition3)]]
 List demolition3(arma::mat e_amat, DataFrame bambesque,
   Nullable<Rcpp::NumericVector> amat_ = R_NilValue,
   Nullable<Rcpp::NumericVector> fmat_ = R_NilValue) {
@@ -4368,7 +5085,7 @@ List demolition3(arma::mat e_amat, DataFrame bambesque,
 //' 
 //' @keywords internal
 //' @noRd
-// [[Rcpp::export]]
+// [[Rcpp::export(.ltre3matrix)]]
 arma::cube ltre3matrix(List Amats, Rcpp::IntegerVector refnum,
   Nullable<Rcpp::List> refmats_ = R_NilValue, bool mean = true,
   bool sparse = false) {
@@ -4502,7 +5219,7 @@ arma::cube ltre3matrix(List Amats, Rcpp::IntegerVector refnum,
 //' 
 //' @keywords internal
 //' @noRd
-// [[Rcpp::export]]
+// [[Rcpp::export(.sltre3matrix)]]
 Rcpp::List sltre3matrix(List Amats, DataFrame loy, Rcpp::IntegerVector refnum,
   Nullable<Rcpp::List> refmats_ = R_NilValue,
   Nullable<arma::vec> tweights_ = R_NilValue, int steps = 10000,
@@ -4806,14 +5523,6 @@ Rcpp::List sltre3matrix(List Amats, DataFrame loy, Rcpp::IntegerVector refnum,
       // In Davison's original code, all elements equal to 0 in the reference
       // matrices must also be 0s in the difference matrices
       
-      /*if (i == 0) {
-        diff_meanmat = List::create(diffmean1);
-        diff_sdmat = List::create(diffsd1);
-      } else {
-        diff_meanmat.push_back(diffmean1);
-        diff_sdmat.push_back(diffsd1);
-      }*/
-      
       // Now the contributions
       diffmean1 = diffmean1 % as<arma::mat>(elas_mean(0));
       diffsd1 = diffsd1 % as<arma::mat>(elas_sd(0));
@@ -4836,7 +5545,7 @@ Rcpp::List sltre3matrix(List Amats, DataFrame loy, Rcpp::IntegerVector refnum,
     mat_sd.zeros();
     ref_matmean.zeros();
     ref_matsd.zeros();
-    
+  
     // First the pop/patch means and sds
     for (int i = 0; i < numpoppatches; i++) {
       arma::uvec poppatch_chosen = find(poppatchc == uniquepoppatches(i));
@@ -5062,14 +5771,6 @@ Rcpp::List sltre3matrix(List Amats, DataFrame loy, Rcpp::IntegerVector refnum,
       
       diffmean1 = as<arma::sp_mat>(poppatch_meanmat(i)) - ref_matmean;
       diffsd1 = as<arma::sp_mat>(poppatch_sdmat(i)) - ref_matsd;
-      
-      /*if (i == 0) {
-        diff_meanmat = List::create(diffmean1);
-        diff_sdmat = List::create(diffsd1);
-      } else {
-        diff_meanmat.push_back(diffmean1);
-        diff_sdmat.push_back(diffsd1);
-      }*/
       
       // Now the contributions
       diffmean1 = diffmean1 % as<arma::sp_mat>(elas_mean(0));
