@@ -42,8 +42,10 @@ verticalize3(
   spacing = NA,
   NAas0 = FALSE,
   NRasRep = FALSE,
+  NOasObs = FALSE,
   reduce = TRUE,
-  a2check = FALSE
+  a2check = FALSE,
+  quiet = FALSE
 )
 }
 \arguments{
@@ -248,9 +250,15 @@ clear that this substitution is biologically realistic. Defaults to
 
 \item{NRasRep}{If \code{TRUE}, then will treat non-reproductive but mature 
 individuals as reproductive during stage assignment. This can be useful when
-a matrix is desired without separation of reproductive and non-reproductive
-but mature stages of the same size. Only used if \code{stageassign} is set
-to a stageframe. Defaults to \code{FALSE}.}
+a MPM is desired without separation of reproductive and non-reproductive but
+mature stages of the same size. Only used if \code{stageassign} is set to a
+stageframe. Defaults to \code{FALSE}.}
+
+\item{NOasObs}{If \code{TRUE}, then will treat individuals that are
+interpreted as not observed in the dataset as though they were observed
+during stage assignment. This can be useful when a MPM is desired without
+separation of observable and unobservable stages. Only used if
+\code{stageassign} is set to a stageframe. Defaults to \code{FALSE}.}
 
 \item{reduce}{A logical variable determining whether unused variables and 
 some invariant state variables should be removed from the output dataset.
@@ -260,6 +268,9 @@ Defaults to \code{TRUE}.}
 living status at occasion \emph{t} equal to 0. Defaults to \code{FALSE}, and
 should be kept \code{FALSE} except to inspect potential errors in the
 dataset.}
+
+\item{quiet}{A logical variable indicating whether to silence warnings.
+Defaults to \code{FALSE}.}
 }
 \value{
 If all inputs are properly formatted, then this function will output

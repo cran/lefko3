@@ -459,7 +459,7 @@ flefko3 <- function(year = "all", patch = "all", stageframe, supplement = NULL,
   randomseed = NA, negfec = FALSE, format = "ehrlen", reduce = FALSE,
   err_check = FALSE, exp_tol = 700, theta_tol = 100000000) {
   
-  paramnames <- indanames <- indbnames <- indcnames <- NULL
+  indanames <- indbnames <- indcnames <- NULL
   
   if (tolower(format) == "ehrlen") {
     format_int <- 1
@@ -1604,7 +1604,7 @@ flefko2 <- function(year = "all", patch = "all", stageframe, supplement = NULL,
   randomseed = NA, negfec = FALSE, reduce = FALSE, err_check = FALSE,
   exp_tol = 700, theta_tol = 100000000) {
   
-  paramnames <- indanames <- indbnames <- indcnames <- NULL
+  indanames <- indbnames <- indcnames <- NULL
   
   if (all(is.na(modelsuite)) & all(is.na(paramnames))) {
     warning("Function may not work properly without a dataframe of model 
@@ -4431,7 +4431,7 @@ aflefko2 <- function(year = "all", patch = "all", stageframe, supplement = NULL,
   continue = TRUE, randomseed = NA, negfec = FALSE, reduce = FALSE,
   err_check = FALSE, exp_tol = 700, theta_tol = 100000000) {
   
-  paramnames <- indanames <- indbnames <- indcnames <- NULL
+  indanames <- indbnames <- indcnames <- NULL
   
   if (all(is.na(modelsuite)) & all(is.na(paramnames))) {
     warning("Function may not work properly without a dataframe of model 
@@ -5175,7 +5175,7 @@ summary.lefkoMat <- function(object, colsums = TRUE, ...) {
   }
   
   writeLines(paste0("This lefkoMat object covers ", totalpops, " populations, ",
-      totalpatches, " patches, and ", (totalyears + 1), " time steps."))
+      totalpatches, " patches, and ", totalyears, " time steps."))
   
   if (is.element("dataqc", names(matrices))) {
     dqca <- matrices$dataqc[1]
@@ -5185,80 +5185,82 @@ summary.lefkoMat <- function(object, colsums = TRUE, ...) {
   }
   
   if (is.element("modelqc", names(matrices))) {
-    moqc12 <- matrices$modelqc[1,2]
-    moqc22 <- matrices$modelqc[2,2]
-    moqc32 <- matrices$modelqc[3,2]
-    moqc42 <- matrices$modelqc[4,2]
-    moqc52 <- matrices$modelqc[5,2]
-    moqc62 <- matrices$modelqc[6,2]
-    moqc72 <- matrices$modelqc[7,2]
-    moqc82 <- matrices$modelqc[8,2]
-    moqc92 <- matrices$modelqc[9,2]
-    
-    moqc13 <- matrices$modelqc[1,3]
-    moqc23 <- matrices$modelqc[2,3]
-    moqc33 <- matrices$modelqc[3,3]
-    moqc43 <- matrices$modelqc[4,3]
-    moqc53 <- matrices$modelqc[5,3]
-    moqc63 <- matrices$modelqc[6,3]
-    moqc73 <- matrices$modelqc[7,3]
-    moqc83 <- matrices$modelqc[8,3]
-    moqc93 <- matrices$modelqc[9,3]
-    
-    writeLines("\nVital rate modeling quality control:\n")
-
-    if (moqc12 > 0) {
-      writeLines(paste0("Survival estimated with ", moqc12, " individuals and ", moqc13, " individual transitions."))
-    } else {
-      writeLines("Survival not estimated.")
-    }
-    
-    if (moqc22 > 0) {
-      writeLines(paste0("Observation estimated with ", moqc22, " individuals and ", moqc23, " individual transitions."))
-    } else {
-      writeLines("Observation probability not estimated.")
-    }
-    
-    if (moqc32 > 0) {
-      writeLines(paste0("Size estimated with ", moqc32, " individuals and ", moqc33, " individual transitions."))
-    } else {
-      writeLines("Size transition not estimated.")
-    }
-    
-    if (moqc42 > 0) {
-      writeLines(paste0("Reproductive status estimated with ", moqc42, " individuals and ", moqc43, " individual transitions."))
-    } else {
-      writeLines("Reproduction probability not estimated.")
-    }
-    
-    if (moqc52 > 0) {
-      writeLines(paste0("Fecundity estimated with ", moqc52, " individuals and ", moqc53, " individual transitions."))
-    } else {
-      writeLines("Fecundity not estimated.")
-    }
-    
-    if (moqc62 > 0) {
-      writeLines(paste0("Juvenile survival estimated with ", moqc62, " individuals and ", moqc63, " individual transitions."))
-    } else {
-      writeLines("Juvenile survival not estimated.")
-    }
-    
-    if (moqc72 > 0) {
-      writeLines(paste0("Juvenile observation estimated with ", moqc72, " individuals and ", moqc73, " individual transitions."))
-    } else {
-      writeLines("Juvenile observation probability not estimated.")
-    }
-    
-    if (moqc82 > 0) {
-      writeLines(paste0("Juvenile size estimated with ", moqc82, " individuals and ", moqc83, " individual transitions."))
-    } else {
-      writeLines("Juvenile size transition not estimated.")
-    }
-    
-    if (moqc92 > 0) {
-      writeLines(paste0("Juvenile reproduction estimated with ", moqc92, " individuals and ", moqc93, " individual transitions."))
-    } else {
-      writeLines("Juvenile reproduction probability not estimated.")
+    if (class(matrices$modelqc) == "data.frame") {
+      moqc12 <- matrices$modelqc[1,2]
+      moqc22 <- matrices$modelqc[2,2]
+      moqc32 <- matrices$modelqc[3,2]
+      moqc42 <- matrices$modelqc[4,2]
+      moqc52 <- matrices$modelqc[5,2]
+      moqc62 <- matrices$modelqc[6,2]
+      moqc72 <- matrices$modelqc[7,2]
+      moqc82 <- matrices$modelqc[8,2]
+      moqc92 <- matrices$modelqc[9,2]
+      
+      moqc13 <- matrices$modelqc[1,3]
+      moqc23 <- matrices$modelqc[2,3]
+      moqc33 <- matrices$modelqc[3,3]
+      moqc43 <- matrices$modelqc[4,3]
+      moqc53 <- matrices$modelqc[5,3]
+      moqc63 <- matrices$modelqc[6,3]
+      moqc73 <- matrices$modelqc[7,3]
+      moqc83 <- matrices$modelqc[8,3]
+      moqc93 <- matrices$modelqc[9,3]
+      
+      writeLines("\nVital rate modeling quality control:\n")
+      
+      if (moqc12 > 0) {
+        writeLines(paste0("Survival estimated with ", moqc12, " individuals and ", moqc13, " individual transitions."))
+      } else {
+        writeLines("Survival not estimated.")
+      }
+      
+      if (moqc22 > 0) {
+        writeLines(paste0("Observation estimated with ", moqc22, " individuals and ", moqc23, " individual transitions."))
+      } else {
+        writeLines("Observation probability not estimated.")
+      }
+      
+      if (moqc32 > 0) {
+        writeLines(paste0("Size estimated with ", moqc32, " individuals and ", moqc33, " individual transitions."))
+      } else {
+        writeLines("Size transition not estimated.")
+      }
+      
+      if (moqc42 > 0) {
+        writeLines(paste0("Reproductive status estimated with ", moqc42, " individuals and ", moqc43, " individual transitions."))
+      } else {
+        writeLines("Reproduction probability not estimated.")
+      }
+      
+      if (moqc52 > 0) {
+        writeLines(paste0("Fecundity estimated with ", moqc52, " individuals and ", moqc53, " individual transitions."))
+      } else {
+        writeLines("Fecundity not estimated.")
+      }
+      
+      if (moqc62 > 0) {
+        writeLines(paste0("Juvenile survival estimated with ", moqc62, " individuals and ", moqc63, " individual transitions."))
+      } else {
+        writeLines("Juvenile survival not estimated.")
+      }
+      
+      if (moqc72 > 0) {
+        writeLines(paste0("Juvenile observation estimated with ", moqc72, " individuals and ", moqc73, " individual transitions."))
+      } else {
+        writeLines("Juvenile observation probability not estimated.")
+      }
+      
+      if (moqc82 > 0) {
+        writeLines(paste0("Juvenile size estimated with ", moqc82, " individuals and ", moqc83, " individual transitions."))
+      } else {
+        writeLines("Juvenile size transition not estimated.")
+      }
+      
+      if (moqc92 > 0) {
+        writeLines(paste0("Juvenile reproduction estimated with ", moqc92, " individuals and ", moqc93, " individual transitions."))
+      } else {
+        writeLines("Juvenile reproduction probability not estimated.")
+      }
     }
   }
   

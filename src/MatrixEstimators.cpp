@@ -1708,12 +1708,6 @@ List jerzeibalowski(DataFrame ppy, DataFrame AllStages, DataFrame stageframe,
             }
           }
           
-          
-          
-          
-          
-          
-          
           double mainsum = rimeotam(survcoefs, fl1(i), fl2n(i), sz1(i), sz2o(i),
             szb1(i), szb2o(i), szc1(i), szc2o(i), actualage2(i), inda1, inda2,
             indb1, indb2, indc1, indc2, dens, false);
@@ -1778,9 +1772,9 @@ List jerzeibalowski(DataFrame ppy, DataFrame AllStages, DataFrame stageframe,
             }
           }
           double chosen_randcovc1 {0.0};
+          if (chosen_r1indc != "none") {
             int delectable_sum = rand_index(0, 1) + rand_index(1, 1) + rand_index(2, 1) +
               rand_index(3, 1) + rand_index(4, 1);
-          if (chosen_r1indc != "none") {
             for (int indcount = 0; indcount < rand_index(5, 1); indcount++) {
               if (chosen_r1indc == obsind_rownames(indcount + delectable_sum)) {
                 chosen_randcovc1 = obsind(indcount + delectable_sum);
@@ -1799,7 +1793,6 @@ List jerzeibalowski(DataFrame ppy, DataFrame AllStages, DataFrame stageframe,
             
           if (preout(1) > exp_tol) preout(1) = exp_tol; // This catches numbers too high to be dealt with properly
           out(i, 1) = exp(preout(1)) / (1.0 + exp(preout(1)));
-          
         } else {
           out(i, 1) = obscoefs(0);
         }
@@ -1926,7 +1919,7 @@ List jerzeibalowski(DataFrame ppy, DataFrame AllStages, DataFrame stageframe,
                 double mainsum = rimeotam(sizecoefs, fl1(i), fl2n(i), sz1(i), sz2o(i),
                   szb1(i), szb2o(i), szc1(i), szc2o(i), actualage2(i), inda1, inda2,
                   indb1, indb2, indc1, indc2, dens, true);
-          
+                
                 lambda_preexp = (mainsum + chosen_randcova2zi + chosen_randcova1zi +
                   chosen_randcovb2zi + chosen_randcovb1zi + chosen_randcovc2zi +
                   chosen_randcovc1zi + sizegroups2zi(grp2o(i)) + sizegroups1zi(grp1(i)) + 
@@ -1946,7 +1939,7 @@ List jerzeibalowski(DataFrame ppy, DataFrame AllStages, DataFrame stageframe,
                 double mainsum = rimeotam(sizecoefs, fl1(i), fl2n(i), sz1(i), sz2o(i),
                   szb1(i), szb2o(i), szc1(i), szc2o(i), actualage2(i), inda1, inda2,
                   indb1, indb2, indc1, indc2, dens, false);
-          
+                
                 lambda_preexp = (mainsum + chosen_randcova2 + chosen_randcova1 +
                   chosen_randcovb2 + chosen_randcovb1 + chosen_randcovc2 +
                   chosen_randcovc1 + sizegroups2(grp2o(i)) + sizegroups1(grp1(i)) + 
@@ -1963,7 +1956,6 @@ List jerzeibalowski(DataFrame ppy, DataFrame AllStages, DataFrame stageframe,
                   out(i, 3) = ((pow(lambda, sz3(i)) * exp(-1.0 * lambda)) / sizefac);
                 }
               }
-              
             } else if (sizedist == 1) {
               // Negative binomial size distribution
               
@@ -2025,7 +2017,6 @@ List jerzeibalowski(DataFrame ppy, DataFrame AllStages, DataFrame stageframe,
                   out(i, 3) = exp(raw_prob);
                 }
               }
-              
             } else if (sizedist == 2) {
               // Gaussian size distribution
               
@@ -2180,7 +2171,7 @@ List jerzeibalowski(DataFrame ppy, DataFrame AllStages, DataFrame stageframe,
                 }
               }
             }
-
+            
             if (sizebdist == 0) {
               // Poisson size_b distribution
               
@@ -2661,7 +2652,6 @@ List jerzeibalowski(DataFrame ppy, DataFrame AllStages, DataFrame stageframe,
             if (fl3(i) == 0) {
               out(i, 2) = 1.0 - out(i, 2);
             }
-            
           } else {
             if (fl3(i) == 0) {
               out(i, 2) = 1.0 - repstcoefs(0);
@@ -2671,7 +2661,6 @@ List jerzeibalowski(DataFrame ppy, DataFrame AllStages, DataFrame stageframe,
               out(i, 2) = 0.0;
             }
           }
-          
         } else {
           out(i, 1) = 1.0 - out(i, 1);
           out(i, 2) = 1.0;
@@ -2681,8 +2670,6 @@ List jerzeibalowski(DataFrame ppy, DataFrame AllStages, DataFrame stageframe,
         }
         
         survtransmat(k) = out(i, 0) * out(i, 1) * out(i, 2) * out(i, 3) * out(i, 4) * out(i, 5);
-        
-        
       } else if (immat2n(i) == 1 && immat1(i) == 1 && jsurvl > 0) {
         // Juvenile to adult transitions
         
@@ -3692,7 +3679,6 @@ List jerzeibalowski(DataFrame ppy, DataFrame AllStages, DataFrame stageframe,
             if (fl3(i) == 0) {
               out(i, 2) = 1.0 - out(i, 2);
             }
-            
           } else {
             if (fl3(i) == 0) {
               out(i, 2) = 1.0 - jrepstcoefs(0);
@@ -3702,7 +3688,6 @@ List jerzeibalowski(DataFrame ppy, DataFrame AllStages, DataFrame stageframe,
               out(i, 2) = 0.0;
             }
           }
-          
         } else {
           out(i, 1) = 1.0 - out(i, 1);
           out(i, 2) = 1.0;
@@ -3712,7 +3697,6 @@ List jerzeibalowski(DataFrame ppy, DataFrame AllStages, DataFrame stageframe,
         }
         
         survtransmat(k) = out(i, 0) * out(i, 1) * out(i, 2) * out(i, 3) * out(i, 4) * out(i, 5);
-        
       }
     } else if (ovgivent(i) != -1) {
       // All other transitions
@@ -3957,7 +3941,6 @@ List jerzeibalowski(DataFrame ppy, DataFrame AllStages, DataFrame stageframe,
             fectransmat(k) = feccoefs(0);
           }
         }
-
       } else if (ovgivenf(i) != -1 ) {
         fectransmat(k) = ovgivenf(i);
       }
@@ -3966,18 +3949,22 @@ List jerzeibalowski(DataFrame ppy, DataFrame AllStages, DataFrame stageframe,
     }
   }
   
+  double ov_mult {0};
   if (replacementst > 0) {
     for (int i = 0; i < replacementst; i++) {
       
       repindex = replacetvec(i); // AllStages index
       properindex = aliveandequal(repindex);
-      arma::uvec rightindex = find(index321 == ovestt(repindex));
-      proxyindex = aliveandequal(rightindex(0));
+      arma::uvec rightindex = find(index321 == ovestt(repindex)); // Should this be repindex+1?
       
-      double ov_mult = ovsurvmult(i);
-      if (ov_mult < 0.0) ov_mult = 1.0;
-      
-      survtransmat(properindex) = survtransmat(proxyindex) * ov_mult;
+      if (rightindex.n_elem > 0) {
+        proxyindex = aliveandequal(rightindex(0));
+        
+        ov_mult = ovsurvmult(i);
+        if (ov_mult < 0.0) ov_mult = 1.0;
+        
+        survtransmat(properindex) = survtransmat(proxyindex) * ov_mult;
+      }
     }
   }
   
@@ -3987,12 +3974,15 @@ List jerzeibalowski(DataFrame ppy, DataFrame AllStages, DataFrame stageframe,
       repindex = replacefvec(i); // AllStages index
       properindex = aliveandequal(repindex);
       arma::uvec rightindex = find(index321 == ovestf(repindex));
-      proxyindex = aliveandequal(rightindex(0));
       
-      double ov_mult = ovfecmult(i);
-      if (ov_mult < 0.0) ov_mult = 1.0;
-      
-      fectransmat(properindex) = fectransmat(proxyindex) * ov_mult;
+      if (rightindex.n_elem > 0) {
+        proxyindex = aliveandequal(rightindex(0));
+        
+        ov_mult = ovfecmult(i);
+        if (ov_mult < 0.0) ov_mult = 1.0;
+        
+        fectransmat(properindex) = fectransmat(proxyindex) * ov_mult;
+      }
     }
   }
   
@@ -4000,5 +3990,79 @@ List jerzeibalowski(DataFrame ppy, DataFrame AllStages, DataFrame stageframe,
   
   return List::create(Named("A") = amatrix, _["U"] = survtransmat,
     _["F"] = fectransmat, _["out"] = out);
+}
+
+//' Create Historically Structured Version of ahMPM
+//' 
+//' Function \code{thefifthhousemate()} takes an ahistorical MPM as input, and
+//' uses the \code{allstages} index to create a historically structured version
+//' of it.
+//' 
+//' @param mpm The original ahMPM, supplied as a \code{lefkoMat} object.
+//' @param allstages The index dataframe developed by
+//' \code{\link{.simplepizzle}()}.
+//' @param stageframe The ahistorical stageframe supplied by
+//' \code{\link{.simplepizzle}()}.
+//' @param format Integer indicating whether historical matrices should be in
+//' (1) Ehrlen or (2) deVries format.
+//' 
+//' @return This will return a list of lists. The first list is composed of all
+//' new \code{A} matrices. The second list is composed of all new \code{U}
+//' matrices. The third list is composed of all new \code{F} matrices.
+//' 
+//' @keywords internal
+//' @noRd
+// [[Rcpp::export(.thefifthhousemate)]]
+Rcpp::List thefifthhousemate (List mpm, DataFrame allstages,
+  DataFrame stageframe, int format) {
+  Rcpp::List old_Umats = mpm["U"];
+  Rcpp::List old_Fmats = mpm["F"];
+  
+  Rcpp::IntegerVector stageid = stageframe["stage_id"];
+  int nostages = stageid.length();
+  int nocols = nostages * nostages;
+  
+  if (format == 2) nocols = (nostages -1) * nostages;
+  
+  Rcpp::IntegerVector old_index = allstages["index21"];
+  Rcpp::IntegerVector new_index = allstages["index321"];
+  
+  int num_mats = old_Umats.length();
+  int index_elems = new_index.length();
+  
+  Rcpp::List new_Umats(num_mats);
+  Rcpp::List new_Fmats(num_mats);
+  Rcpp::List new_Amats(num_mats);
+  
+  arma::mat new_U(nocols, nocols, fill::zeros);
+  arma::mat new_F(nocols, nocols, fill::zeros);
+  arma::mat new_A(nocols, nocols, fill::zeros);
+  arma::mat old_U(nostages, nostages, fill::zeros);
+  arma::mat old_F(nostages, nostages, fill::zeros);
+  
+  for (int i = 0; i < num_mats; i++) {
+    new_U.zeros();
+    new_F.zeros();
+    new_A.zeros();
+    old_U.zeros();
+    old_F.zeros();
+    
+    old_U = as<arma::mat>(old_Umats(i));
+    old_F = as<arma::mat>(old_Fmats(i));
+    
+    for (int j = 0; j < index_elems; j++) {
+      new_U(new_index(j)) = old_U(old_index(j));
+      new_F(new_index(j)) = old_F(old_index(j));
+    }
+    
+    new_A = new_U + new_F;
+    new_Umats(i) = new_U;
+    new_Fmats(i) = new_F;
+    new_Amats(i) = new_A;
+  }
+  
+  Rcpp::List output = List::create(Named("A") = new_Amats, _["U"] = new_Umats,
+    _["F"] = new_Fmats);
+  return output;
 }
 

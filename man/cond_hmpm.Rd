@@ -10,16 +10,16 @@ cond_hmpm(hmpm, matchoice = NULL, err_check = NULL)
 \item{hmpm}{A historical matrix projection model of class \code{lefkoMat}.}
 
 \item{matchoice}{A character denoting whether to use A, U, or F matrices.
-Defaults to A matrices.}
+Defaults to \code{A} matrices.}
 
 \item{err_check}{A logical value denoting whether to include a data frame
 of element equivalence from the conditional matrices to the original
-matrices. Used only for debugging purposes. Defaults to FALSE.}
+matrices. Used only for debugging purposes. Defaults to \code{FALSE}.}
 }
 \value{
 A \code{lefkoCondMat} object, with the following elements:
 
-\item{Acond}{A multi-level list holding the conditional A matrices derived
+\item{Mcond}{A multi-level list holding the conditional A matrices derived
 from the input \code{lefkoMat} object. The top level of the list corresponds
 to each historical matrix in turn, and the lower level corresponds to each
 stage in time \emph{t}-1, with individual conditional matrices named for the

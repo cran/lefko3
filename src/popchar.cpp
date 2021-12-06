@@ -2921,6 +2921,27 @@ Rcpp::List sf_reassess(DataFrame stageframe, Nullable<DataFrame> supplement,
     int overall_counter {0};
     int group_check {0};
     
+    int group_baseline3 {0};
+    int group_baseline2 {0};
+    int group_baseline1 {0};
+    int group_baselinee3 {0};
+    int group_baselinee2 {0};
+    int group_baselinee1 {0};
+    
+    int group_ratchet3 {0};
+    int group_ratchet2 {0};
+    int group_ratchet1 {0};
+    int group_ratchete3 {0};
+    int group_ratchete2 {0};
+    int group_ratchete1 {0};
+    
+    int prevl3 {0};
+    int prevl2 {0};
+    int prevl1 {0};
+    int prevle3 {0};
+    int prevle2 {0};
+    int prevle1 {0};
+    
     for (int i = 0; i < supp_rows; i++) {
       overall_counter = 0;
       for (int j = 0; j < s1_planned(i); j++) {
@@ -2943,10 +2964,24 @@ Rcpp::List sf_reassess(DataFrame stageframe, Nullable<DataFrame> supplement,
             } else {
               for (int m = 0; m < no_groups; m++) {
                 if (stage3_supp(i) == group_text(m)) {
+                  if (l == 0) group_ratchet3 = 0;
+                  if (l != prevl3 && l != 0) group_ratchet3 += 1;
+                  
                   group_check = 1;
                   arma::uvec current_group = find(newgroupvec == m);
+                  int current_group_length = current_group.n_elem;
+                  if (group_ratchet3 > (current_group_length - 1)) {
+                    group_ratchet3 = 0;
+                  }
                   
-                  stage3_newsupp(basepoints(i) + overall_counter) = newstagevec(current_group(m));
+                  if (group_ratchet3 == 0) {
+                    group_baseline3 = l;
+                  }
+                  
+                  stage3_newsupp(basepoints(i) + overall_counter) = 
+                    newstagevec(current_group(l - group_baseline3));
+                  
+                  prevl3 = l;
                 }
               }
               
@@ -2978,10 +3013,24 @@ Rcpp::List sf_reassess(DataFrame stageframe, Nullable<DataFrame> supplement,
             } else {
               for (int m = 0; m < no_groups; m++) {
                 if (eststage3_supp(i) == group_text(m)) {
-                group_check = 1;
-                arma::uvec current_group = find(newgroupvec == m);
-                
-                eststage3_newsupp(basepoints(i) + overall_counter) = newstagevec(current_group(m));
+                  if (l == 0) group_ratchete3 = 0;
+                  if (l != prevle3 && l != 0) group_ratchete3 += 1;
+                  
+                  group_check = 1;
+                  arma::uvec current_group = find(newgroupvec == m);
+                  int current_group_length = current_group.n_elem;
+                  if (group_ratchete3 > (current_group_length - 1)) {
+                    group_ratchete3 = 0;
+                  }
+                  
+                  if (group_ratchete3 == 0) {
+                    group_baselinee3 = l;
+                  }
+                  
+                  eststage3_newsupp(basepoints(i) + overall_counter) = 
+                    newstagevec(current_group(l - group_baselinee3));
+                  
+                  prevle3 = l;
                 }
               }
               
@@ -3009,10 +3058,24 @@ Rcpp::List sf_reassess(DataFrame stageframe, Nullable<DataFrame> supplement,
             } else {
               for (int m = 0; m < no_groups; m++) {
                 if (stage2_supp(i) == group_text(m)) {
+                  if (k == 0) group_ratchet2 = 0;
+                  if (k != prevl2 && k != 0) group_ratchet2 += 1;
+                  
                   group_check = 1;
                   arma::uvec current_group = find(newgroupvec == m);
+                  int current_group_length = current_group.n_elem;
+                  if (group_ratchet2 > (current_group_length - 1)) {
+                    group_ratchet2 = 0;
+                  }
                   
-                  stage2_newsupp(basepoints(i) + overall_counter) = newstagevec(current_group(m));
+                  if (group_ratchet2 == 0) {
+                    group_baseline2 = k;
+                  }
+                  
+                  stage2_newsupp(basepoints(i) + overall_counter) =
+                    newstagevec(current_group(k - group_baseline2));
+                  
+                  prevl2 = k;
                 }
               }
               
@@ -3040,10 +3103,24 @@ Rcpp::List sf_reassess(DataFrame stageframe, Nullable<DataFrame> supplement,
             } else {
               for (int m = 0; m < no_groups; m++) {
                 if (eststage2_supp(i) == group_text(m)) {
-                group_check = 1;
-                arma::uvec current_group = find(newgroupvec == m);
-                
-                eststage2_newsupp(basepoints(i) + overall_counter) = newstagevec(current_group(m));
+                  if (k == 0) group_ratchete2 = 0;
+                  if (k != prevle2 && k != 0) group_ratchete2 += 1;
+                  
+                  group_check = 1;
+                  arma::uvec current_group = find(newgroupvec == m);
+                  int current_group_length = current_group.n_elem;
+                  if (group_ratchete2 > (current_group_length - 1)) {
+                    group_ratchete2 = 0;
+                  }
+                  
+                  if (group_ratchete2 == 0) {
+                    group_baselinee2 = k;
+                  }
+                  
+                  eststage2_newsupp(basepoints(i) + overall_counter) =
+                    newstagevec(current_group(k - group_baselinee2));
+                  
+                  prevle2 = k;
                 }
               }
               
@@ -3071,10 +3148,24 @@ Rcpp::List sf_reassess(DataFrame stageframe, Nullable<DataFrame> supplement,
             } else {
               for (int m = 0; m < no_groups; m++) {
                 if (stage1_supp(i) == group_text(m)) {
+                  if (j == 0) group_ratchet1 = 0;
+                  if (j != prevl1 && j != 0) group_ratchet1 += 1;
+                  
                   group_check = 1;
                   arma::uvec current_group = find(newgroupvec == m);
+                  int current_group_length = current_group.n_elem;
+                  if (group_ratchet1 > (current_group_length - 1)) {
+                    group_ratchet1 = 0;
+                  }
                   
-                  stage1_newsupp(basepoints(i) + overall_counter) = newstagevec(current_group(m));
+                  if (group_ratchet1 == 0) {
+                    group_baseline1 = j;
+                  }
+                  
+                  stage1_newsupp(basepoints(i) + overall_counter) =
+                    newstagevec(current_group(j - group_baseline1));
+                  
+                  prevl1 = j;
                 }
               }
               
@@ -3102,10 +3193,24 @@ Rcpp::List sf_reassess(DataFrame stageframe, Nullable<DataFrame> supplement,
             } else {
               for (int m = 0; m < no_groups; m++) {
                 if (eststage1_supp(i) == group_text(m)) {
-                group_check = 1;
-                arma::uvec current_group = find(newgroupvec == m);
-                
-                eststage1_newsupp(basepoints(i) + overall_counter) = newstagevec(current_group(m));
+                  if (j == 0) group_ratchete1 = 0;
+                  if (j != prevle1 && j != 0) group_ratchete1 += 1;
+                  
+                  group_check = 1;
+                  arma::uvec current_group = find(newgroupvec == m);
+                  int current_group_length = current_group.n_elem;
+                  if (group_ratchete1 > (current_group_length - 1)) {
+                    group_ratchete1 = 0;
+                  }
+                  
+                  if (group_ratchete1 == 0) {
+                    group_baselinee1 = j;
+                  }
+                  
+                  eststage1_newsupp(basepoints(i) + overall_counter) =
+                    newstagevec(current_group(j - group_baselinee1));
+                  
+                  prevle1 = j;
                 }
               }
               

@@ -55,7 +55,9 @@ historicalize3(
   spacing = NA,
   NAas0 = FALSE,
   NRasRep = FALSE,
-  reduce = TRUE
+  NOasObs = FALSE,
+  reduce = TRUE,
+  quiet = FALSE
 )
 }
 \arguments{
@@ -262,9 +264,18 @@ reproductive and non-reproductive but mature stages of the same size. Only
 used if \code{stageassign} is set to a valid stageframe. Defaults to
 \code{FALSE}.}
 
+\item{NOasObs}{If \code{TRUE}, then will treat individuals that are
+interpreted as not observed in the dataset as though they were observed
+during stage assignment. This can be useful when a MPM is desired without
+separation of observable and unobservable stages. Only used if
+\code{stageassign} is set to a stageframe. Defaults to \code{FALSE}.}
+
 \item{reduce}{A logical variable determining whether unused variables and
 some invariant state variables should be removed from the output dataset.
 Defaults to \code{TRUE}.}
+
+\item{quiet}{A logical variable indicating whether to silence warnings.
+Defaults to \code{FALSE}.}
 }
 \value{
 If all inputs are properly formatted, then this function will output

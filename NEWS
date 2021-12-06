@@ -1,6 +1,49 @@
 LEFKO3 NEWS
 -----------
 
+CHANGES IN VERSION 4.1.0 (2021-12-06)
+-------------------------------------
+  NEW FEATURES
+    1. Included option to ignore observation status during stage assignment in
+       verticalize3() and historicalize3().
+    2. Included option to quiet all warnings in verticalize3() and
+       historicalize3().
+    3. New options to prevent display of overdispersion and zero-inflation tests
+       in sf_distrib().
+    4. Added hist_null() function to create historically-structured MPM to serve
+       as a null model MPM assuming no individual history.
+    5. Created function diff_lM() that creates lefkoDiff objects, which are
+       MPM style objects that are actually matrix differences between
+       two lefkoMat objects with equivalent dimensions.
+    6. Added cond_diff() function to create conditional difference matrices
+       from supplied lefkoDiff objects.
+    7. Created actualstage3() function to calculate actual stage frequencies and
+       proportions from input hfv dataset.
+    8. Created create_pm() function to create a skeleton paramnames object for
+       users building vital rate models manually.
+
+  USER-VISIBLE CHANGES
+    1. Introduced an integer check in function sf_distrib() that stops tests on
+       non-integer variables.
+    2. All vignettes have been updated to the latest functions and results.
+
+  BUG FIXES
+    1. Fixed incorrect time step calculation in summary.lefkoMat().
+    2. Fixed incorrect P values for zero-inflation when fewer than expected 0s
+       found in sf_distrib().
+    3. Fixed fatal issue affecting certain kinds of proxy transitions in
+       function-based matrix estimation.
+    4. Fixed incorrect stage distribution calculation in stochastic
+       stablestage3() and projection3().
+    5. Fixed fatal error in summary.lefkoProj() that occurred when summarizing
+       projections with single replicates.
+    6. Fixed fatal errors in flefko2(), flefko3(), aflefko2(), and
+       summary.lefkoMat() relating to the use of user-defined vital rate
+       functions.
+    7. Corrected incorrect assignment of stages in flefko3(), flefko2(), and
+       aflefko2() based on use of groups in supplement tables.
+
+
 CHANGES IN VERSION 4.0.1 (2021-11-15)
 -------------------------------------
   BUG FIXES
@@ -536,3 +579,243 @@ CHANGES IN VERSION 1.0.0 (2020-03-24)
 
   BUG FIXES
     1. Bugs corrected in probability and rate estimation functions.
+
+
+CHANGES IN VERSION 0.13.1 (2020-02-16)
+-------------------------------------
+  USER-VISIBLE CHANGES
+    1. Reorganized flefko2() around Rcpp functions.
+
+  BUG FIXES
+    1. Cleaned up bugs discovered in rlefko3().
+
+
+CHANGES IN VERSION 0.13.0 (2020-02-14)
+-------------------------------------
+  USER-VISIBLE CHANGES
+    1. Re-developed core functions of rlefko3() with Rcpp and RcppArmadillo.
+       Functions now run lightning quick.
+
+
+CHANGES IN VERSION 0.12.1 (2020-02-11)
+-------------------------------------
+  USER-VISIBLE CHANGES
+    1. Re-developed rlefko3() function per new approach to rlefko2().
+
+
+CHANGES IN VERSION 0.12.0 (2020-02-05)
+-------------------------------------
+  NEW FEATURES
+    1. Developed rlefko2() function.
+
+  USER-VISIBLE CHANGES
+    1. Developed rlefko2() function.
+    2. Redesigned all matrix functions to handle different populations and
+       patches.
+    3. Made core matrix creators invisible.
+    4. Increased standardization of inputs.
+    5. Eliminated class lefkoMatMulti.
+
+
+CHANGES IN VERSION 0.11.0 (2020-01-31)
+-------------------------------------
+  NEW FEATURES
+    1. Created the hfvdata class for standardized, vertical demographic data
+       frames.
+    2. Added quality control sections to lefkoMod and lefkoMatMulti objects,
+       including functions that create these objects.
+    3. Created new summary.lefkoMatMulti function.
+
+
+CHANGES IN VERSION 0.10.2 (2020-01-29)
+-------------------------------------
+  NEW FEATURES
+    1. Added negative binomial functionality to vital rate estimators.
+
+  USER-VISIBLE CHANGES
+    1. Massive changes and improvements to tutorials.
+
+
+CHANGES IN VERSION 0.10.1 (2020-01-22)
+-------------------------------------
+  NEW FEATURES
+    1. Added negative binomial functionality to modelsearch().
+    2. Added a summary function for class lefkoMod.
+
+
+CHANGES IN VERSION 0.10.0 (2020-01-19)
+-------------------------------------
+  NEW FEATURES
+    1. Added Cypripedium candidum vignette.
+    2. Data mgmt functions can now prune unused variables from output.
+
+  USER-VISIBLE CHANGES
+    1. Replaced all flw and frt entries with repst and fec.
+
+
+CHANGES IN VERSION 0.9.0 (2020-01-15)
+-------------------------------------
+  NEW FEATURES
+    1. Added cypdata.
+
+  USER-VISIBLE CHANGES
+    1. Formatted code and help files.
+
+
+CHANGES IN VERSION 0.8.3 (2020-01-11)
+-------------------------------------
+  USER-VISIBLE CHANGES
+    1. Eliminated year effect warnings by option.
+
+
+CHANGES IN VERSION 0.8.2 (2020-01-10)
+-------------------------------------
+  NEW FEATURES
+    1. Added the lefkoMatMulti class.
+    2. Gave matrix creation functions the ability to create output with lists of
+       A, T, and F matrices for all years requested.
+
+
+CHANGES IN VERSION 0.8.1 (2020-01-10)
+-------------------------------------
+  NEW FEATURES
+    1. Added greater flexibility to modelsearch() function to allow it to
+       estimate binomial models under constant response.
+
+  USER-VISIBLE CHANGES
+    1. Synchronized data management function to modelsearch() function.
+
+
+CHANGES IN VERSION 0.8.0 (2020-01-01)
+-------------------------------------
+  NEW FEATURES
+    1. Added modelsearch function to handle model building and selection workflow.
+
+
+CHANGES IN VERSION 0.7.0 (2019-11-22)
+-------------------------------------
+  NEW FEATURES
+    1. All workhorse functions are now generally debugged C++ functions.
+
+  BUG FIXES
+    1. Fixed overwriting and estimating portions of matrix creation functions.
+
+
+CHANGES IN VERSION 0.6.1 (2019-11-22)
+-------------------------------------
+  BUG FIXES
+    1. Fixed overwriting portion of matrix design, so that given transitions are
+       properly added to historical matrices.
+
+
+CHANGES IN VERSION 0.6.0 (2019-11-20)
+-------------------------------------
+  NEW FEATURES
+    1. Fully rebuilt flefko3 and flefko2 so that fecundity is now estimated
+       using binaries written in C++.
+
+  USER-VISIBLE CHANGES
+    1. Matrix design is reworked to make everything faster.
+
+
+CHANGES IN VERSION 0.5.1 (2019-11-19)
+-------------------------------------
+  NEW FEATURES
+    1. Rebuilt flefko2 to use C++ precompiled probability density functions.
+
+
+CHANGES IN VERSION 0.5.0 (2019-11-18)
+-------------------------------------
+  NEW FEATURES
+    1. Rewrote workhorse portions of survival transition estimators as
+       precompiled binaries in C++.
+    2. Rewrote historical matrix function (flefko3()) to handle reworked pxy
+       functions.
+
+  BUG FIXES
+    1. Corrected issues in help files.
+
+
+CHANGES IN VERSION 0.4.4 (2019-11-11)
+-------------------------------------
+  NEW FEATURES
+    1. Added a patch term to ahv2hv() function.
+
+  USER-VISIBLE CHANGES
+    1. Changed plantid variable to individ.
+
+
+CHANGES IN VERSION 0.4.3 (2019-11-08)
+-------------------------------------
+  NEW FEATURES
+    1. Added density3() function.
+
+  USER-VISIBLE CHANGES
+    1. Sped up verticalize3() and ahv2hv() functions.
+
+  BUG FIXES
+    1. Corrected links throughout.
+
+
+CHANGES IN VERSION 0.4.2 (2019-11-07)
+-------------------------------------
+  NEW FEATURES
+    1. Added ability to handle character column names to verticalize_h().
+
+
+CHANGES IN VERSION 0.4.1 (2019-11-06)
+-------------------------------------
+  BUG FIXES
+    1. Corrected issues in verticalize_h function.
+
+
+CHANGES IN VERSION 0.4.0 (2019-11-03)
+-------------------------------------
+  NEW FEATURES
+    1. Added RSpectra-based population matrix projection analysis functions.
+
+  USER-VISIBLE CHANGES
+    1. Added GPL license.
+
+
+CHANGES IN VERSION 0.3.1 (2019-11-02)
+-------------------------------------
+  BUG FIXES
+    1. Corrected bug leading to infinite mu values in probbin for some models.
+    2. Corrected the method of using proxy transitions from certain juvenile
+       stages to mature stages in all lefko functions.
+
+
+CHANGES IN VERSION 0.3.0 (2019-11-01)
+-------------------------------------
+  USER-VISIBLE CHANGES
+    1. Increased ability to choose which unobserved stages lead to which
+      vobserved stages.
+    2. Standardized terms in more functions for cross-compatibility and easier
+       workflow.
+
+
+CHANGES IN VERSION 0.2.1 (2019-10-29)
+-------------------------------------
+  NEW FEATURES
+    1. Added Gaussian probability calculation.
+    2. Developed sf_create function.
+    3. First version of rlefko3() created.
+
+
+CHANGES IN VERSION 0.1.1 (2019-10-26)
+-------------------------------------
+  NEW FEATURES
+    1. Matrix creation functions now discriminate size and fecundity on the
+       basis of probability distribution.
+
+  USER-VISIBLE CHANGES
+    1. Adds numeric class recognition.
+    2. Documentation improvements.
+
+
+CHANGES IN VERSION 0.1.0 (2019-10-25)
+-------------------------------------
+  NEW FEATURES
+    1. First development version. Main 2d and 3d matrix functions created.
+

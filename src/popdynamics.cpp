@@ -1356,7 +1356,7 @@ arma::mat proj3(arma::vec start_vec, List core_list, arma::uvec mat_order,
       }
       
       if (!growthonly) {
-        wpopproj.col(i+1) = theseventhson / Rvecmat(i+1);
+        wpopproj.col(i+1) = popproj.col(i+1) / Rvecmat(i+1); // popproj.col(i+1) was originally theseventhson
         
         thesecondprophecy = as<arma::mat>(core_list[(mat_order(theclairvoyant - (i+1)))]);
         theseventhgrandson = theseventhgrandson * thesecondprophecy;
@@ -1404,7 +1404,7 @@ arma::mat proj3(arma::vec start_vec, List core_list, arma::uvec mat_order,
       }
       
       if (!growthonly) {
-        wpopproj.col(i+1) = arma::vec(arma::mat(sparse_seventhson)) / Rvecmat(i+1);
+        wpopproj.col(i+1) = popproj.col(i+1) / Rvecmat(i+1);// popproj.col(i+1) was originally arma::vec(arma::mat(sparse_seventhson))
         
         sparse_secondprophecy = as<arma::sp_mat>(sparse_list[(mat_order(theclairvoyant - (i+1)))]);
         theseventhgrandson = theseventhgrandson * sparse_secondprophecy;
@@ -1517,7 +1517,7 @@ arma::mat proj3sp(arma::vec start_vec, List core_list, arma::uvec mat_order,
     }
     
     if (!growthonly) {
-      wpopproj.col(i+1) = arma::vec(arma::mat(sparse_seventhson)) / Rvecmat(i+1);
+      wpopproj.col(i+1) = popproj.col(i+1) / Rvecmat(i+1); // popproj.col(i+1) was originally arma::vec(arma::mat(sparse_seventhson))
       
       sparse_secondprophecy = as<arma::sp_mat>(core_list[(mat_order(theclairvoyant - (i+1)))]);
       theseventhgrandson = theseventhgrandson * sparse_secondprophecy;
@@ -1754,7 +1754,7 @@ arma::mat proj3dens(arma::vec start_vec, List core_list, arma::uvec mat_order,
       Rvecmat(i+1) = sum(theseventhson);
       
       if (!growthonly) {
-        wpopproj.col(i+1) = theseventhson / Rvecmat(i+1);
+        wpopproj.col(i+1) = popproj.col(i+1) / Rvecmat(i+1); // popproj.col(i+1) was originally theseventhson
         
         thesecondprophecy = as<arma::mat>(core_list[(mat_order(theclairvoyant - (i+1)))]);
         theseventhgrandson = theseventhgrandson * thesecondprophecy;
@@ -1894,7 +1894,7 @@ arma::mat proj3dens(arma::vec start_vec, List core_list, arma::uvec mat_order,
       Rvecmat(i+1) = sum(popproj.col(i+1));
       
       if (!growthonly) {
-        wpopproj.col(i+1) = arma::vec(arma::mat(sparse_seventhson)) / Rvecmat(i+1);
+        wpopproj.col(i+1) = popproj.col(i+1) / Rvecmat(i+1); // popproj.col(i+1) was originally arma::vec(arma::mat(sparse_seventhson))
         
         sparse_secondprophecy = as<arma::sp_mat>(sparse_list[(mat_order(theclairvoyant - (i+1)))]);
         theseventhgrandson = theseventhgrandson * sparse_secondprophecy;
@@ -2800,11 +2800,8 @@ Rcpp::List projection3(List mpm, int nreps = 1, int times = 10000,
 //' 
 //' Function \code{slambda3()} estimates the stochastic population growth rate,
 //' \eqn{a}, defined as the long-term arithmetic mean of the log population 
-//' growth rate estimated per simulated occasion (as given in equation 2 in
-//' Tuljapurkar, Horvitz, and Pascarella 2003). This term is estimated via
-//' projection of randomly sampled matrices, similarly to the procedure outlined
-//' in Box 7.4 of Morris and Doak (2002). Can handle both lefkoMat objects and
-//' lists of full A matrices. 
+//' growth rate estimated per simulated occasion. This function can handle both
+//' lefkoMat objects and lists of full A matrices as input. 
 //' 
 //' @param mpm A matrix projection model of class \code{lefkoMat}, or a list of
 //' full matrix projection matrices.
@@ -2826,6 +2823,11 @@ Rcpp::List projection3(List mpm, int nreps = 1, int times = 10000,
 //' \item{se}{The standard error of a.}
 //'
 //' @section Notes:
+//' The log stochastic population growth rate, \eqn{a}, is as given in equation
+//' 2 of Tuljapurkar, Horvitz, and Pascarella 2003. This term is estimated via
+//' projection of randomly sampled matrices, similarly to the procedure outlined
+//' in Box 7.4 of Morris and Doak (2002).
+//'  
 //' Stochastic growth rate is estimated both at the patch level and at the
 //' population level. Population level estimates will be noted at the end of the
 //' data frame with 0 entries for patch designation.

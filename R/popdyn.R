@@ -4228,13 +4228,25 @@ summary.lefkoProj <- function(object, threshold = 1,
   
   if (all(milepost >= 0) & all(milepost <= 1)) {
     milepost <- floor(milepost * times) + 1
+  } else if (any(milepost == 0)) {
+    milepost <- milepost + 1
   }
   
-  milepost_sums <- apply(as.matrix(c(1:poppatches)), 1, function (X) {
-    apply(as.matrix(object$pop_size[[X]][,milepost]), 2, function(Y) {
-      length(which(as.vector(Y) >= threshold))
+  if (nreps > 1) {
+    milepost_sums <- apply(as.matrix(c(1:poppatches)), 1, function (X) {
+      phew <- apply(as.matrix(object$pop_size[[X]][,milepost]), 2, function(Y) {
+        return(length(which(as.vector(Y) >= threshold)))
+      })
+      return(phew)
     })
-  })
+  } else {
+     milepost_sums <- apply(as.matrix(c(1:poppatches)), 1, function (X) {
+      phew <- apply(as.matrix(object$pop_size[[X]][,milepost]), 1, function(Y) {
+        return(length(which(as.vector(Y) >= threshold)))
+      })
+      return(phew)
+    })
+  }
   
   if (is.element("matrix", class(milepost_sums))) {
     rownames(milepost_sums) <- milepost
@@ -4244,7 +4256,7 @@ summary.lefkoProj <- function(object, threshold = 1,
     })
     colnames(milepost_sums) <- col_labels
   } else {
-    names(milepost_sums) <- milepost
+    rownames(milepost_sums) <- milepost
   }
   
   writeLines(paste0("\nThe input lefkoProj object covers ", poppatches,
@@ -4252,10 +4264,9 @@ summary.lefkoProj <- function(object, threshold = 1,
   writeLines(paste0("It includes ", times, " projected steps per replicate and ",
     nreps, " replicates."), con = stdout())
   writeLines(paste0("The number of replicates with population size above the threshold size of ", threshold,
-    " is as in"),con = stdout())
+    " is as in"), con = stdout())
   writeLines(paste0("the following matrix, with pop-patches given by column and milepost times given by row: \n"),
     con = stdout())
-  #print(milepost_sums, digits = 3)
   
   return (milepost_sums)
 }

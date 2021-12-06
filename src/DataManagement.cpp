@@ -144,6 +144,8 @@ arma::mat ovreplace(arma::vec allst321, arma::vec idx321old,
 //' @param RepasObs If TRUE, then will treat individuals with size 0 as observed
 //' if and only if they are reproductive. Otherwise, all individuals with size 0
 //' are treated as not observed.
+//' @param NOasObs If TRUE, then will treat unobserved individuals as observed
+//' during stage assignment.
 //' @param stassign A logical value indicating whether to assign stages.
 //' @param stszcol Integer describing which size variable or combination of size
 //' variables to use in stage estimation.
@@ -157,6 +159,7 @@ arma::mat ovreplace(arma::vec allst321, arma::vec idx321old,
 //' single static column, or whether censor variables repeat across blocks.
 //' @param coordsrepeat A logical value indicating whether coordinate variables
 //' are single static columns, or whether they repeat across blocks.
+//' @param quiet A logical value indicating whether to silense warnings.
 //' 
 //' @return The output is currently a 7 element list, where each element is a
 //' data frame with the same number of rows.
@@ -172,8 +175,9 @@ Rcpp::List pfj(DataFrame data, DataFrame stageframe, int noyears, int firstyear,
   arma::ivec indcovbcol, arma::ivec indcovccol, arma::ivec aliveacol,
   arma::ivec deadacol, arma::ivec obsacol, arma::ivec nonobsacol,
   arma::ivec censorcol, arma::ivec stagecol, double repstrrel, double fecrel,
-  bool NAas0, bool NRasRep, bool RepasObs, bool stassign, int stszcol,
-  double censorkeep, bool censbool, bool censrepeat, bool coordsrepeat) {
+  bool NAas0, bool NRasRep, bool RepasObs, bool NOasObs, bool stassign,
+  int stszcol, double censorkeep, bool censbool, bool censrepeat,
+  bool coordsrepeat, bool quiet) {
   
   Rcpp::List output_longlist(81);
   
@@ -1544,11 +1548,16 @@ Rcpp::List pfj(DataFrame data, DataFrame stageframe, int noyears, int firstyear,
         stageobs = find(inobsstatarma == spryn2[(i + (j * noindivs))]);
         
         cs1 = intersect(stagemini2, stagemaxi2);
-        cs2 = intersect(stageobs, stagemat);
         
-        if (NRasRep) {
+        if (NRasRep && NOasObs) {
+          cs4 = cs1;
+        } else if (NOasObs) {
+          cs4 = intersect(stagerep, cs1);
+        } else if (NRasRep) {
+          cs2 = intersect(stageobs, stagemat);
           cs4 = intersect(cs1, cs2);
         } else {
+          cs2 = intersect(stageobs, stagemat);
           cs3 = intersect(stagerep, cs2);
           cs4 = intersect(cs1, cs3);
         }
@@ -1568,11 +1577,16 @@ Rcpp::List pfj(DataFrame data, DataFrame stageframe, int noyears, int firstyear,
         stageobs = find(inobsstatarma == spryn1[(i + (j * noindivs))]);
         
         cs1 = intersect(stagemini1, stagemaxi1);
-        cs2 = intersect(stageobs, stagemat);
         
-        if (NRasRep) {
+        if (NRasRep && NOasObs) {
+          cs4 = cs1;
+        } else if (NOasObs) {
+          cs4 = intersect(stagerep, cs1);
+        } else if (NRasRep) {
+          cs2 = intersect(stageobs, stagemat);
           cs4 = intersect(cs1, cs2);
         } else {
+          cs2 = intersect(stageobs, stagemat);
           cs3 = intersect(stagerep, cs2);
           cs4 = intersect(cs1, cs3);
         }
@@ -1593,11 +1607,16 @@ Rcpp::List pfj(DataFrame data, DataFrame stageframe, int noyears, int firstyear,
         stageobs = find(inobsstatarma == spryn3[(i + (j * noindivs))]);
         
         cs1 = intersect(stagemini3, stagemaxi3);
-        cs2 = intersect(stageobs, stagemat);
         
-        if (NRasRep) {
+        if (NRasRep && NOasObs) {
+          cs4 = cs1;
+        } else if (NOasObs) {
+          cs4 = intersect(stagerep, cs1);
+        } else if (NRasRep) {
+          cs2 = intersect(stageobs, stagemat);
           cs4 = intersect(cs1, cs2);
         } else {
+          cs2 = intersect(stageobs, stagemat);
           cs3 = intersect(stagerep, cs2);
           cs4 = intersect(cs1, cs3);
         }
@@ -1618,11 +1637,11 @@ Rcpp::List pfj(DataFrame data, DataFrame stageframe, int noyears, int firstyear,
           
           stage3[(i + (j * noindivs))] = "NoMatch";
           
-          Rf_warningcall(R_NilValue, "Some stages occurring in the dataset do not match any characteristics in the input stageframe.");
+          if (!quiet) Rf_warningcall(R_NilValue, "Some stages occurring in the dataset do not match any characteristics in the input stageframe.");
           
         } else if (cs4.n_elem > 1) {
           
-          Rf_warningcall(R_NilValue, "Some stages in the input stageframe appear to have the same description. Please make sure that all stages included in the stageframe are defined with unique sets of characteristics.");
+          if (!quiet) Rf_warningcall(R_NilValue, "Some stages in the input stageframe appear to have the same description. Please make sure that all stages included in the stageframe are defined with unique sets of characteristics.");
           
         } else {
           
@@ -1873,6 +1892,8 @@ Rcpp::List pfj(DataFrame data, DataFrame stageframe, int noyears, int firstyear,
 //' fecundity variables will be set to 0.
 //' @param NRasRep If \code{TRUE}, then non-reproductive but mature individuals
 //' will be treated as reproductive during stage assignment.
+//' @param NOasObs If TRUE, then will treat unobserved individuals as observed
+//' during stage assignment.
 //' @param stassign A logical value indicating whether to assign stages.
 //' @param stszcol Integer describing which size variable to use in stage 
 //' estimation. Numbers 1 through 8 are possible.
@@ -1881,6 +1902,7 @@ Rcpp::List pfj(DataFrame data, DataFrame stageframe, int noyears, int firstyear,
 //' \code{censbool = TRUE}.
 //' @param censbool A logical variable determining whether \code{NA} denotes the
 //' value of the censoring variable identifying data to keep.
+//' @param quiet A logical value indicating whether to silense warnings.
 //' 
 //' @return The output is currently a list coerced into the data frame class,
 //' and is read as a data frame by R. It is secondarily in class \code{hfvdata}.
@@ -1898,7 +1920,8 @@ Rcpp::List jpf(DataFrame data, DataFrame stageframe, int popidcol,
   int alive3col, int dead2col, int dead3col, int obs2col, int obs3col,
   int nonobs2col, int nonobs3col, double repstrrel, double fecrel,
   int stage2col, int stage3col, int censorcol, bool NAas0, bool NRasRep,
-  bool stassign, int stszcol, double censorkeep, bool censbool) {
+  bool NOasObs, bool stassign, int stszcol, double censorkeep, bool censbool,
+  bool quiet) {
   
   Rcpp::List output_longlist(81);
   
@@ -2963,11 +2986,16 @@ Rcpp::List jpf(DataFrame data, DataFrame stageframe, int popidcol,
         stageobs = find(inobsstatarma == obsstatus2[i]);
         
         cs1 = intersect(stagemini2, stagemaxi2);
-        cs2 = intersect(stageobs, stagemat);
         
-        if (NRasRep) {
+        if (NRasRep && NOasObs) {
+          cs4 = cs1;
+        } else if (NOasObs) {
+          cs4 = intersect(stagerep, cs1);
+        } else if (NRasRep) {
+          cs2 = intersect(stageobs, stagemat);
           cs4 = intersect(cs1, cs2);
         } else {
+          cs2 = intersect(stageobs, stagemat);
           cs3 = intersect(stagerep, cs2);
           cs4 = intersect(cs1, cs3);
         }
@@ -2980,12 +3008,12 @@ Rcpp::List jpf(DataFrame data, DataFrame stageframe, int popidcol,
         } else if (cs4.n_elem == 0 && alive2[i] == 1) {
           stage2[i] = "NoMatch";
           
-          Rf_warningcall(R_NilValue,
+          if (!quiet) Rf_warningcall(R_NilValue,
             "Some stages occurring in the dataset do not match any characteristics in the input stageframe.");
         } else if (alive2[i] != 1)  {
           stage2[i] = "NotAlive";
         } else if (cs4.n_elem > 1) {
-          Rf_warningcall(R_NilValue,
+          if (!quiet) Rf_warningcall(R_NilValue,
             "Some stages in the input stageframe appear to have the same description. Please make sure that all stages included in the stageframe are defined with unique sets of characteristics.");
           
         } else {
@@ -2998,11 +3026,16 @@ Rcpp::List jpf(DataFrame data, DataFrame stageframe, int popidcol,
         stageobs = find(inobsstatarma == obsstatus1[i]);
         
         cs1 = intersect(stagemini1, stagemaxi1);
-        cs2 = intersect(stageobs, stagemat);
         
-        if (NRasRep) {
+        if (NRasRep && NOasObs) {
+          cs4 = cs1;
+        } else if (NOasObs) {
+          cs4 = intersect(stagerep, cs1);
+        } else if (NRasRep) {
+          cs2 = intersect(stageobs, stagemat);
           cs4 = intersect(cs1, cs2);
         } else {
+          cs2 = intersect(stageobs, stagemat);
           cs3 = intersect(stagerep, cs2);
           cs4 = intersect(cs1, cs3);
         }
@@ -3015,13 +3048,13 @@ Rcpp::List jpf(DataFrame data, DataFrame stageframe, int popidcol,
         } else if (cs4.n_elem == 0 && alive1[i] == 1) {
           stage1[i] = "NoMatch";
           
-          Rf_warningcall(R_NilValue,
+          if (!quiet) Rf_warningcall(R_NilValue,
             "Some stages occurring in the dataset do not match any characteristics in the input stageframe.");
         } else if (alive1[i] != 1) {
           stage1[i] = "NotAlive";
           matstat1[i] = 0;
         } else if (cs4.n_elem > 1) {
-          Rf_warningcall(R_NilValue,
+          if (!quiet) Rf_warningcall(R_NilValue,
             "Some stages in the input stageframe appear to have the same description. Please make sure that all stages included in the stageframe are defined with unique sets of characteristics.");
           
         } else {
@@ -3034,11 +3067,16 @@ Rcpp::List jpf(DataFrame data, DataFrame stageframe, int popidcol,
         stageobs = find(inobsstatarma == obsstatus3[i]);
         
         cs1 = intersect(stagemini3, stagemaxi3);
-        cs2 = intersect(stageobs, stagemat);
         
-        if (NRasRep) {
+        if (NRasRep && NOasObs) {
+          cs4 = cs1;
+        } else if (NOasObs) {
+          cs4 = intersect(stagerep, cs1);
+        } else if (NRasRep) {
+          cs2 = intersect(stageobs, stagemat);
           cs4 = intersect(cs1, cs2);
         } else {
+          cs2 = intersect(stageobs, stagemat);
           cs3 = intersect(stagerep, cs2);
           cs4 = intersect(cs1, cs3);
         }
@@ -3054,10 +3092,10 @@ Rcpp::List jpf(DataFrame data, DataFrame stageframe, int popidcol,
         } else if (cs4.n_elem == 0) {
           stage3[i] = "NoMatch";
           
-          Rf_warningcall(R_NilValue,
+          if (!quiet) Rf_warningcall(R_NilValue,
             "Some stages occurring in the dataset do not match any characteristics in the input stageframe.");
         } else if (cs4.n_elem > 1) {
-          Rf_warningcall(R_NilValue,
+          if (!quiet) Rf_warningcall(R_NilValue,
             "Some stages in the input stageframe appear to have the same description. Please make sure that all stages included in the stageframe are defined with unique sets of characteristics.");
           
         } else {
@@ -4741,5 +4779,668 @@ Rcpp::NumericVector density3(Rcpp::DataFrame data, int xcol, int ycol, int yearc
   }
   
   return Rcpp::NumericVector(density.begin(), density.end());
+}
+
+//' Create Element Index for Matrix Estimation
+//' 
+//' Function \code{.simplepizzle()} creates a data frame object used by function
+//' \code{\link{.hist_null}()} to provide an index for estimation of null
+//' historical matrices from ahistorical MPM inputs.
+//' 
+//' @param StageFrame The stageframe object identifying the life history model
+//' being operationalized.
+//' @param format Integer indicating whether historical matrices should be in
+//' (1) Ehrlen or (2) deVries format.
+//' 
+//' @return The output is composed of three elements:
+//' \item{ahstages}{A new stageframe, which only differs from the input
+//' stageframe in deVries format.}
+//' \item{hstages}{A new historical stage-pair index for the new historical
+//' matrices.}
+//' \item{allstages}{A large data frame describing every element to be estimated
+//' in the new historical matrices}.
+//' 
+//' @keywords internal
+//' @noRd
+// [[Rcpp::export(.simplepizzle)]]
+Rcpp::List simplepizzle(DataFrame StageFrame, int format) {
+  
+  arma::vec newstageid = StageFrame["stage_id"];
+  StringVector origstageid = StageFrame["stage"];
+  arma::vec binsizectr = StageFrame["sizebin_center"];
+  arma::vec repstatus = StageFrame["repstatus"];
+  arma::vec obsstatus = StageFrame["obsstatus"];
+  arma::vec immstatus = StageFrame["immstatus"];
+  arma::vec matstatus = StageFrame["matstatus"];
+  arma::vec indata = StageFrame["indataset"];
+  arma::vec binsizewidth = StageFrame["sizebin_width"];
+  arma::vec minage = StageFrame["min_age"];
+  arma::vec maxage = StageFrame["max_age"];
+  arma::vec group = StageFrame["group"];
+  
+  arma::vec binsizebctr = StageFrame["sizebinb_center"];
+  arma::vec binsizecctr = StageFrame["sizebinc_center"];
+  arma::vec binsizebwidth = StageFrame["sizebinb_width"];
+  arma::vec binsizecwidth = StageFrame["sizebinc_width"];
+  
+  // This section determines the length of the matrix map data frame
+  int nostages = newstageid.n_elem;
+  int nostages_nounborn = nostages;
+  int prior_stage = -1;
+  int totallength {0};
+  
+  if (format == 2) {
+    arma::vec oldorigsize = StageFrame["original_size"];
+    arma::vec oldorigbsize = StageFrame["size_b"];
+    arma::vec oldorigcsize = StageFrame["size_c"];
+    arma::vec oldpropstatus = StageFrame["propstatus"];
+    arma::vec oldbinhalfwidthraw = StageFrame["binhalfwidth_raw"];
+    arma::vec oldsizebinmin = StageFrame["sizebin_min"];
+    arma::vec oldsizebinmax = StageFrame["sizebin_max"];
+    arma::vec oldbinhalfwidthbraw = StageFrame["binhalfwidthb_raw"];
+    arma::vec oldsizebinbmin = StageFrame["sizebinb_min"];
+    arma::vec oldsizebinbmax = StageFrame["sizebinb_max"];
+    arma::vec oldbinhalfwidthcraw = StageFrame["binhalfwidthc_raw"];
+    arma::vec oldsizebincmin = StageFrame["sizebinc_min"];
+    arma::vec oldsizebincmax = StageFrame["sizebinc_max"];
+    Rcpp::StringVector oldcomments = StageFrame["comments"];
+    arma::vec oldentrystage = StageFrame["entrystage"];
+    
+    nostages = nostages + 1;
+    nostages_nounborn = nostages - 1;
+    prior_stage = nostages_nounborn;
+    totallength = (2 * nostages_nounborn * nostages_nounborn *
+      nostages);
+    
+    Rcpp::IntegerVector newstageidvec(nostages);
+    Rcpp::StringVector newstagevec(nostages);
+    Rcpp::NumericVector neworigsizevec(nostages);
+    Rcpp::NumericVector neworigsizebvec(nostages);
+    Rcpp::NumericVector neworigsizecvec(nostages);
+    Rcpp::IntegerVector newminagevec(nostages);
+    Rcpp::IntegerVector newmaxagevec(nostages);
+    Rcpp::IntegerVector newrepstatusvec(nostages);
+    Rcpp::IntegerVector newobsstatusvec(nostages);
+    Rcpp::IntegerVector newpropstatusvec(nostages);
+    Rcpp::IntegerVector newimmstatusvec(nostages);
+    Rcpp::IntegerVector newmatstatusvec(nostages);
+    Rcpp::IntegerVector newindatasetvec(nostages);
+    Rcpp::NumericVector newbinhalfwidthrawvec(nostages);
+    Rcpp::NumericVector newsizebinminvec(nostages);
+    Rcpp::NumericVector newsizebinmaxvec(nostages);
+    Rcpp::NumericVector newsizebincentervec(nostages);
+    Rcpp::NumericVector newsizebinwidthvec(nostages);
+    
+    Rcpp::NumericVector newbinhalfwidthbrawvec(nostages);
+    Rcpp::NumericVector newsizebinbminvec(nostages);
+    Rcpp::NumericVector newsizebinbmaxvec(nostages);
+    Rcpp::NumericVector newsizebinbcentervec(nostages);
+    Rcpp::NumericVector newsizebinbwidthvec(nostages);
+    
+    Rcpp::NumericVector newbinhalfwidthcrawvec(nostages);
+    Rcpp::NumericVector newsizebincminvec(nostages);
+    Rcpp::NumericVector newsizebincmaxvec(nostages);
+    Rcpp::NumericVector newsizebinccentervec(nostages);
+    Rcpp::NumericVector newsizebincwidthvec(nostages);
+    
+    Rcpp::IntegerVector newgroupvec(nostages);
+    Rcpp::StringVector newcomments(nostages);
+    Rcpp::IntegerVector newentrystage(nostages);
+    
+    for (int i = 0; i < nostages_nounborn; i++) {
+      newstageidvec(i) = newstageid(i);
+      newstagevec(i) = origstageid(i);
+      neworigsizevec(i) = oldorigsize(i);
+      neworigsizebvec(i) = oldorigbsize(i);
+      neworigsizecvec(i) = oldorigcsize(i);
+      newminagevec(i) = minage(i);
+      newmaxagevec(i) = maxage(i);
+      newrepstatusvec(i) = repstatus(i);
+      newobsstatusvec(i) = obsstatus(i);
+      newpropstatusvec(i) = oldpropstatus(i);
+      newimmstatusvec(i) = immstatus(i);
+      newmatstatusvec(i) = matstatus(i);
+      newindatasetvec(i) = indata(i);
+      
+      newbinhalfwidthrawvec(i) = oldbinhalfwidthraw(i);
+      newsizebinminvec(i) = oldsizebinmin(i);
+      newsizebinmaxvec(i) = oldsizebinmax(i);
+      newsizebincentervec(i) = binsizectr(i);
+      newsizebinwidthvec(i) = binsizewidth(i);
+      
+      newbinhalfwidthbrawvec(i) = oldbinhalfwidthbraw(i);
+      newsizebinbminvec(i) = oldsizebinbmin(i);
+      newsizebinbmaxvec(i) = oldsizebinbmax(i);
+      newsizebinbcentervec(i) = binsizebctr(i);
+      newsizebinbwidthvec(i) = binsizebwidth(i);
+      
+      newbinhalfwidthcrawvec(i) = oldbinhalfwidthcraw(i);
+      newsizebincminvec(i) = oldsizebincmin(i);
+      newsizebincmaxvec(i) = oldsizebincmax(i);
+      newsizebinccentervec(i) = binsizecctr(i);
+      newsizebincwidthvec(i) = binsizecwidth(i);
+      
+      newgroupvec(i) = group(i);
+      newcomments(i) = oldcomments(i);
+      newentrystage(i) = oldentrystage(i);
+    }
+    
+    newstageidvec(nostages_nounborn) = newstageid(nostages_nounborn - 1) + 1;
+    newstagevec(nostages_nounborn) = "AlmostBorn";
+    neworigsizevec(nostages_nounborn) = 0.0;
+    neworigsizebvec(nostages_nounborn) = 0.0;
+    neworigsizecvec(nostages_nounborn) = 0.0;
+    newminagevec(nostages_nounborn) = NA_INTEGER;
+    newmaxagevec(nostages_nounborn) = NA_INTEGER;
+    newrepstatusvec(nostages_nounborn) = 0;
+    newobsstatusvec(nostages_nounborn) = 1;
+    newpropstatusvec(nostages_nounborn) = 0;
+    newimmstatusvec(nostages_nounborn) = 1;
+    newmatstatusvec(nostages_nounborn) = 0;
+    newindatasetvec(nostages_nounborn) = 1;
+    
+    newbinhalfwidthrawvec(nostages_nounborn) = 0;
+    newsizebinminvec(nostages_nounborn) = 0;
+    newsizebinmaxvec(nostages_nounborn) = 0;
+    newsizebincentervec(nostages_nounborn) = 0;
+    newsizebinwidthvec(nostages_nounborn) = 0;
+    
+    newbinhalfwidthbrawvec(nostages_nounborn) = 0;
+    newsizebinbminvec(nostages_nounborn) = 0;
+    newsizebinbmaxvec(nostages_nounborn) = 0;
+    newsizebinbcentervec(nostages_nounborn) = 0;
+    newsizebinbwidthvec(nostages_nounborn) = 0;
+    
+    newbinhalfwidthcrawvec(nostages_nounborn) = 0;
+    newsizebincminvec(nostages_nounborn) = 0;
+    newsizebincmaxvec(nostages_nounborn) = 0;
+    newsizebinccentervec(nostages_nounborn) = 0;
+    newsizebincwidthvec(nostages_nounborn) = 0;
+    
+    newgroupvec(nostages_nounborn) = 0;
+    newcomments(nostages_nounborn) = "Almost Born";
+    newentrystage(nostages_nounborn) = 0;
+    
+    Rcpp::List new_stageframe(31);
+    
+    new_stageframe(0) = newstageidvec;
+    new_stageframe(1) = newstagevec;
+    new_stageframe(2) = neworigsizevec;
+    new_stageframe(3) = neworigsizebvec;
+    new_stageframe(4) = neworigsizecvec;
+    new_stageframe(5) = newminagevec;
+    new_stageframe(6) = newmaxagevec;
+    new_stageframe(7) = newrepstatusvec;
+    new_stageframe(8) = newobsstatusvec;
+    new_stageframe(9) = newpropstatusvec;
+    new_stageframe(10) = newimmstatusvec;
+    new_stageframe(11) = newmatstatusvec;
+    new_stageframe(12) = newindatasetvec;
+    
+    new_stageframe(13) = newbinhalfwidthrawvec;
+    new_stageframe(14) = newsizebinminvec;
+    new_stageframe(15) = newsizebinmaxvec;
+    new_stageframe(16) = newsizebincentervec;
+    new_stageframe(17) = newsizebinwidthvec;
+    
+    new_stageframe(18) = newbinhalfwidthbrawvec;
+    new_stageframe(19) = newsizebinbminvec;
+    new_stageframe(20) = newsizebinbmaxvec;
+    new_stageframe(21) = newsizebinbcentervec;
+    new_stageframe(22) = newsizebinbwidthvec;
+    
+    new_stageframe(23) = newbinhalfwidthcrawvec;
+    new_stageframe(24) = newsizebincminvec;
+    new_stageframe(25) = newsizebincmaxvec;
+    new_stageframe(26) = newsizebinccentervec;
+    new_stageframe(27) = newsizebincwidthvec;
+    
+    new_stageframe(28) = newgroupvec;
+    new_stageframe(29) = newcomments;
+    new_stageframe(30) = newentrystage;
+    
+    CharacterVector sfnamevec = {"stage_id", "stage", "original_size", "size_b",
+      "size_c", "min_age", "max_age", "repstatus", "obsstatus", "propstatus",
+      "immstatus", "matstatus", "indataset", "binhalfwidth_raw", "sizebin_min",
+      "sizebin_max", "sizebin_center", "sizebin_width", "binhalfwidthb_raw",
+      "sizebinb_min", "sizebinb_max", "sizebinb_center", "sizebinb_width",
+      "binhalfwidthc_raw", "sizebinc_min", "sizebinc_max", "sizebinc_center",
+      "sizebinc_width", "group", "comments", "entrystage"};
+    
+    new_stageframe.attr("names") = sfnamevec;
+    new_stageframe.attr("row.names") = Rcpp::IntegerVector::create(NA_INTEGER, newstageidvec.length());
+    new_stageframe.attr("class") = "data.frame";
+    
+    StageFrame = new_stageframe;
+    
+    newstageid = as<arma::vec>(new_stageframe["stage_id"]);
+    origstageid = new_stageframe["stage"];
+    binsizectr = as<arma::vec>(new_stageframe["sizebin_center"]);
+    repstatus = as<arma::vec>(new_stageframe["repstatus"]);
+    obsstatus = as<arma::vec>(new_stageframe["obsstatus"]);
+    immstatus = as<arma::vec>(new_stageframe["immstatus"]);
+    matstatus = as<arma::vec>(new_stageframe["matstatus"]);
+    indata = as<arma::vec>(new_stageframe["indataset"]);
+    binsizewidth = as<arma::vec>(new_stageframe["sizebin_width"]);
+    minage = as<arma::vec>(new_stageframe["min_age"]);
+    maxage = as<arma::vec>(new_stageframe["max_age"]);
+    group = as<arma::vec>(new_stageframe["group"]);
+    
+    binsizebctr = as<arma::vec>(new_stageframe["sizebinb_center"]);
+    binsizecctr = as<arma::vec>(new_stageframe["sizebinc_center"]);
+    binsizebwidth = as<arma::vec>(new_stageframe["sizebinb_width"]);
+    binsizecwidth = as<arma::vec>(new_stageframe["sizebinc_width"]);
+    
+  } else {
+    totallength = (nostages * nostages * nostages);
+  }
+  
+  // New let's create the new hstages
+  Rcpp::List hstages(4);
+  
+  int hstages_length = nostages * nostages_nounborn;
+  
+  Rcpp::IntegerVector stid2(hstages_length);
+  Rcpp::IntegerVector stid1(hstages_length);
+  Rcpp::StringVector st2(hstages_length);
+  Rcpp::StringVector st1(hstages_length);
+  
+  for (int j = 0; j < nostages; j++) {
+    for (int i = 0; i < nostages_nounborn; i++) {
+      stid2((j * (nostages_nounborn)) + i) = i + 1;
+      stid1((j * (nostages_nounborn)) + i) = j + 1;
+      st2((j * (nostages_nounborn)) + i) = origstageid(i);
+      st1((j * (nostages_nounborn)) + i) = origstageid(j);
+    }
+  }
+  
+  hstages(0) = stid2;
+  hstages(1) = stid1;
+  hstages(2) = st2;
+  hstages(3) = st1;
+  
+  CharacterVector hsnamevec = {"stage_id_2", "stage_id_1", "stage_2", "stage_1"};
+  
+  hstages.attr("names") = hsnamevec;
+  hstages.attr("row.names") = Rcpp::IntegerVector::create(NA_INTEGER, stid2.length());
+  hstages.attr("class") = "data.frame";
+  
+  // Here we set up the vectors that will be put together into the matrix map
+  // data frame
+  arma::vec stage3(totallength, fill::zeros);
+  arma::vec stage2n(totallength, fill::zeros);
+  arma::vec stage2o(totallength, fill::zeros);
+  arma::vec stage1(totallength, fill::zeros);
+  
+  arma::vec size3(totallength, fill::zeros);
+  arma::vec size2n(totallength, fill::zeros);
+  arma::vec size2o(totallength, fill::zeros);
+  arma::vec size1(totallength, fill::zeros);
+  
+  arma::vec sizeb3(totallength, fill::zeros);
+  arma::vec sizeb2n(totallength, fill::zeros);
+  arma::vec sizeb2o(totallength, fill::zeros);
+  arma::vec sizeb1(totallength, fill::zeros);
+  
+  arma::vec sizec3(totallength, fill::zeros);
+  arma::vec sizec2n(totallength, fill::zeros);
+  arma::vec sizec2o(totallength, fill::zeros);
+  arma::vec sizec1(totallength, fill::zeros);
+  
+  arma::vec obs3(totallength, fill::zeros);
+  arma::vec obs2n(totallength, fill::zeros);
+  arma::vec obs2o(totallength, fill::zeros);
+  arma::vec obs1(totallength, fill::zeros);
+  
+  arma::vec rep3(totallength, fill::zeros);
+  arma::vec rep2n(totallength, fill::zeros);
+  arma::vec rep2o(totallength, fill::zeros);
+  arma::vec rep1(totallength, fill::zeros);
+  
+  arma::vec mat3(totallength, fill::zeros);
+  arma::vec mat2n(totallength, fill::zeros);
+  arma::vec mat2o(totallength, fill::zeros);
+  arma::vec mat1(totallength, fill::zeros);
+  
+  arma::vec imm3(totallength, fill::zeros);
+  arma::vec imm2n(totallength, fill::zeros);
+  arma::vec imm2o(totallength, fill::zeros);
+  arma::vec imm1(totallength, fill::zeros);
+  
+  arma::vec repentry3(totallength, fill::zeros);
+  arma::vec binwidth(totallength, fill::zeros);
+  arma::vec binbwidth(totallength, fill::zeros);
+  arma::vec bincwidth(totallength, fill::zeros);
+  
+  arma::vec indata3(totallength, fill::zeros);
+  arma::vec indata2n(totallength, fill::zeros);
+  arma::vec indata2o(totallength, fill::zeros);
+  arma::vec indata1(totallength, fill::zeros);
+  
+  arma::vec minage3(totallength, fill::zeros);
+  arma::vec minage2(totallength, fill::zeros);
+  arma::vec maxage3(totallength, fill::zeros);
+  arma::vec maxage2(totallength, fill::zeros);
+  
+  arma::vec grp3(totallength, fill::zeros);
+  arma::vec grp2n(totallength, fill::zeros);
+  arma::vec grp2o(totallength, fill::zeros);
+  arma::vec grp1(totallength, fill::zeros);
+  
+  arma::vec actualage(totallength, fill::zeros);
+  arma::vec index321(totallength);
+  arma::vec index21(totallength);
+  arma::vec indatalong(totallength, fill::zeros);
+  arma::vec aliveequal(totallength);
+  arma::vec included(totallength, fill::zeros);
+  index321.fill(-1);
+  index21.fill(-1);
+  aliveequal.fill(-1);
+  
+  long long int currentindex {0};
+  
+  // Now we cover the main data frame creation loops
+  // When style = 0, this will create AllStages for the historical case
+  if (format == 2) {
+    for (int time1 = 0; time1 < nostages; time1++) {
+      for (int time2o = 0; time2o < nostages_nounborn; time2o++) {
+        for (int time2n = 0; time2n < nostages; time2n++) {
+          for (int time3 = 0; time3 < nostages; time3++) {
+            
+            if (time3 != prior_stage) {
+              if (time2n == time2o || time2n == prior_stage){
+                
+                included(currentindex) = 1;
+                
+                stage3(currentindex) = newstageid(time3);
+                stage2n(currentindex) = newstageid(time2n);
+                stage2o(currentindex) = newstageid(time2o);
+                stage1(currentindex) = newstageid(time1);
+                
+                size3(currentindex) = binsizectr(time3);
+                size2n(currentindex) = binsizectr(time2n);
+                size2o(currentindex) = binsizectr(time2o);
+                size1(currentindex) = binsizectr(time1);
+                
+                sizeb3(currentindex) = binsizebctr(time3);
+                sizeb2n(currentindex) = binsizebctr(time2n);
+                sizeb2o(currentindex) = binsizebctr(time2o);
+                sizeb1(currentindex) = binsizebctr(time1);
+                
+                if (NumericVector::is_na(sizeb3(currentindex))) sizeb3(currentindex) = 0;
+                if (NumericVector::is_na(sizeb2n(currentindex))) sizeb2n(currentindex) = 0;
+                if (NumericVector::is_na(sizeb2o(currentindex))) sizeb2o(currentindex) = 0;
+                if (NumericVector::is_na(sizeb1(currentindex))) sizeb1(currentindex) = 0;
+                
+                sizec3(currentindex) = binsizecctr(time3);
+                sizec2n(currentindex) = binsizecctr(time2n);
+                sizec2o(currentindex) = binsizecctr(time2o);
+                sizec1(currentindex) = binsizecctr(time1);
+                
+                if (NumericVector::is_na(sizec3(currentindex))) sizec3(currentindex) = 0;
+                if (NumericVector::is_na(sizec2n(currentindex))) sizec2n(currentindex) = 0;
+                if (NumericVector::is_na(sizec2o(currentindex))) sizec2o(currentindex) = 0;
+                if (NumericVector::is_na(sizec1(currentindex))) sizec1(currentindex) = 0;
+                
+                obs3(currentindex) = obsstatus(time3);
+                obs2n(currentindex) = obsstatus(time2n);
+                obs2o(currentindex) = obsstatus(time2o);
+                obs1(currentindex) = obsstatus(time1);
+                
+                rep3(currentindex) = repstatus(time3);
+                rep2n(currentindex) = repstatus(time2n);
+                rep2o(currentindex) = repstatus(time2o);
+                rep1(currentindex) = repstatus(time1);
+                
+                mat3(currentindex) = matstatus(time3);
+                mat2n(currentindex) = matstatus(time2n);
+                mat2o(currentindex) = matstatus(time2o);
+                mat1(currentindex) = matstatus(time1);
+                
+                imm3(currentindex) = immstatus(time3);
+                imm2n(currentindex) = immstatus(time2n);
+                imm2o(currentindex) = immstatus(time2o);
+                imm1(currentindex) = immstatus(time1);
+                
+                repentry3(currentindex) = 0;
+                
+                indata3(currentindex) = indata(time3);
+                indata2n(currentindex) = indata(time2n);
+                indata2o(currentindex) = indata(time2o);
+                indata1(currentindex) = indata(time1);
+                
+                binwidth(currentindex) = binsizewidth(time3);
+                binbwidth(currentindex) = binsizebwidth(time3);
+                bincwidth(currentindex) = binsizecwidth(time3);
+                
+                if (NumericVector::is_na(binbwidth(currentindex))) binbwidth(currentindex) = 0;
+                if (NumericVector::is_na(bincwidth(currentindex))) bincwidth(currentindex) = 0;
+                
+                minage3(currentindex) = minage(time3);
+                minage2(currentindex) = minage(time2o);
+                maxage3(currentindex) = maxage(time3);
+                maxage2(currentindex) = maxage(time2o);
+                actualage(currentindex) = 0;
+                
+                grp3(currentindex) = group(time3);
+                grp2n(currentindex) = group(time2n);
+                grp2o(currentindex) = group(time2o);
+                grp1(currentindex) = group(time1);
+                
+                aliveequal(currentindex) = (stage3(currentindex) - 1) + 
+                  ((stage2n(currentindex) - 1) * nostages_nounborn) + 
+                  ((stage2o(currentindex) - 1) * nostages * nostages_nounborn) + 
+                  ((stage1(currentindex) - 1) * nostages_nounborn * nostages *
+                    nostages_nounborn);
+                
+                // The next two index variables are used by ovreplace
+                index321(currentindex) = (stage3(currentindex) - 1) + 
+                  ((stage2n(currentindex) - 1) * nostages_nounborn) + 
+                  ((stage2o(currentindex) - 1) * nostages * nostages_nounborn) + 
+                  ((stage1(currentindex) - 1) * nostages_nounborn * nostages *
+                    nostages_nounborn);
+                  
+                index21(currentindex) = (stage3(currentindex) - 1) + 
+                  ((stage2o(currentindex) - 1) * nostages_nounborn); // Used to be 2o and 1
+                
+                indatalong(currentindex) = indata3(currentindex) * indata2n(currentindex) * 
+                  indata2o(currentindex) * indata1(currentindex);
+                
+                currentindex += 1;
+              } // if (time2n == tim2o || time2n == prior_stage) statement
+            } // if (time3n != dead_stage) statement
+          } // time3 loop
+        } // time2n loop
+      } // time2o loop
+    } // time1 loop 
+    
+  } else if (format == 1) { // Historical MPM in Ehrlen format
+    for (int time1 = 0; time1 < nostages; time1++) {
+      for (int time2o = 0; time2o < nostages; time2o++) {
+        for (int time3 = 0; time3 < nostages; time3++) {
+          
+          included(currentindex) = 1;
+          
+          stage3(currentindex) = newstageid(time3);
+          stage2n(currentindex) = newstageid(time2o);
+          stage2o(currentindex) = newstageid(time2o);
+          stage1(currentindex) = newstageid(time1);
+          
+          size3(currentindex) = binsizectr(time3);
+          size2n(currentindex) = binsizectr(time2o);
+          size2o(currentindex) = binsizectr(time2o);
+          size1(currentindex) = binsizectr(time1);
+          
+          sizeb3(currentindex) = binsizebctr(time3);
+          sizeb2n(currentindex) = binsizebctr(time2o);
+          sizeb2o(currentindex) = binsizebctr(time2o);
+          sizeb1(currentindex) = binsizebctr(time1);
+          
+          if (NumericVector::is_na(sizeb3(currentindex))) sizeb3(currentindex) = 0;
+          if (NumericVector::is_na(sizeb2n(currentindex))) sizeb2n(currentindex) = 0;
+          if (NumericVector::is_na(sizeb2o(currentindex))) sizeb2o(currentindex) = 0;
+          if (NumericVector::is_na(sizeb1(currentindex))) sizeb1(currentindex) = 0;
+                
+          sizec3(currentindex) = binsizecctr(time3);
+          sizec2n(currentindex) = binsizecctr(time2o);
+          sizec2o(currentindex) = binsizecctr(time2o);
+          sizec1(currentindex) = binsizecctr(time1);
+          
+          if (NumericVector::is_na(sizec3(currentindex))) sizec3(currentindex) = 0;
+          if (NumericVector::is_na(sizec2n(currentindex))) sizec2n(currentindex) = 0;
+          if (NumericVector::is_na(sizec2o(currentindex))) sizec2o(currentindex) = 0;
+          if (NumericVector::is_na(sizec1(currentindex))) sizec1(currentindex) = 0;
+          
+          obs3(currentindex) = obsstatus(time3);
+          obs2n(currentindex) = obsstatus(time2o);
+          obs2o(currentindex) = obsstatus(time2o);
+          obs1(currentindex) = obsstatus(time1);
+          
+          rep3(currentindex) = repstatus(time3);
+          rep2n(currentindex) = repstatus(time2o);
+          rep2o(currentindex) = repstatus(time2o);
+          rep1(currentindex) = repstatus(time1);
+          
+          mat3(currentindex) = matstatus(time3);
+          mat2n(currentindex) = matstatus(time2o);
+          mat2o(currentindex) = matstatus(time2o);
+          mat1(currentindex) = matstatus(time1);
+          
+          imm3(currentindex) = immstatus(time3);
+          imm2n(currentindex) = immstatus(time2o);
+          imm2o(currentindex) = immstatus(time2o);
+          imm1(currentindex) = immstatus(time1);
+          
+          repentry3(currentindex) = 0;
+          
+          indata3(currentindex) = indata(time3);
+          indata2n(currentindex) = indata(time2o);
+          indata2o(currentindex) = indata(time2o);
+          indata1(currentindex) = indata(time1);
+          
+          binwidth(currentindex) = binsizewidth(time3);
+          binbwidth(currentindex) = binsizebwidth(time3);
+          bincwidth(currentindex) = binsizecwidth(time3);
+          
+          if (NumericVector::is_na(binbwidth(currentindex))) binbwidth(currentindex) = 0;
+          if (NumericVector::is_na(bincwidth(currentindex))) bincwidth(currentindex) = 0;
+          
+          minage3(currentindex) = minage(time3);
+          minage2(currentindex) = minage(time2o);
+          maxage3(currentindex) = maxage(time3);
+          maxage2(currentindex) = maxage(time2o);
+          actualage(currentindex) = 0;
+          
+          grp3(currentindex) = group(time3);
+          grp2n(currentindex) = group(time2o);
+          grp2o(currentindex) = group(time2o);
+          grp1(currentindex) = group(time1);
+          
+          aliveequal(currentindex) = (stage3(currentindex) - 1) + ((stage2n(currentindex) - 1) * 
+              (nostages - 1)) + ((stage2o(currentindex) - 1) * (nostages - 1) * (nostages - 1)) + 
+            ((stage1(currentindex) - 1) * (nostages - 1) * (nostages - 1) * (nostages - 1));
+            
+          index321(currentindex) = (stage3(currentindex) - 1) + 
+            ((stage2n(currentindex) - 1) * nostages) + 
+            ((stage2n(currentindex) - 1) * nostages * nostages) + 
+            ((stage1(currentindex) - 1) * nostages * nostages * nostages);
+          index21(currentindex) = (stage3(currentindex) - 1) + ((stage2n(currentindex) - 1) * nostages);
+          
+          indatalong(currentindex) = indata3(currentindex) * indata2n(currentindex) * 
+            indata2o(currentindex) * indata1(currentindex);
+          
+          currentindex += 1;
+        } // time3 loop
+      } // time2o loop
+    } // time1 loop 
+  }
+  
+  int stage3_length = stage3.n_elem;
+  
+  Rcpp::List output_longlist(59);
+  
+  output_longlist(0) = Rcpp::NumericVector(stage3.begin(), stage3.end());
+  output_longlist(1) = Rcpp::NumericVector(stage2n.begin(), stage2n.end());
+  output_longlist(2) = Rcpp::NumericVector(stage2o.begin(), stage2o.end());
+  output_longlist(3) = Rcpp::NumericVector(stage1.begin(), stage1.end());
+  output_longlist(4) = Rcpp::NumericVector(size3.begin(), size3.end());
+  output_longlist(5) = Rcpp::NumericVector(size2n.begin(), size2n.end());
+  output_longlist(6) = Rcpp::NumericVector(size2o.begin(), size2o.end());
+  output_longlist(7) = Rcpp::NumericVector(size1.begin(), size1.end());
+  output_longlist(8) = Rcpp::NumericVector(sizeb3.begin(), sizeb3.end());
+  output_longlist(9) = Rcpp::NumericVector(sizeb2n.begin(), sizeb2n.end());
+  
+  output_longlist(10) = Rcpp::NumericVector(sizeb2o.begin(), sizeb2o.end());
+  output_longlist(11) = Rcpp::NumericVector(sizeb1.begin(), sizeb1.end());
+  output_longlist(12) = Rcpp::NumericVector(sizec3.begin(), sizec3.end());
+  output_longlist(13) = Rcpp::NumericVector(sizec2n.begin(), sizec2n.end());
+  output_longlist(14) = Rcpp::NumericVector(sizec2o.begin(), sizec2o.end());
+  output_longlist(15) = Rcpp::NumericVector(sizec1.begin(), sizec1.end());
+  output_longlist(16) = Rcpp::NumericVector(obs3.begin(), obs3.end());
+  output_longlist(17) = Rcpp::NumericVector(obs2n.begin(), obs2n.end());
+  output_longlist(18) = Rcpp::NumericVector(obs2o.begin(), obs2o.end());
+  output_longlist(19) = Rcpp::NumericVector(obs1.begin(), obs1.end());
+  
+  output_longlist(20) = Rcpp::NumericVector(rep3.begin(), rep3.end());
+  output_longlist(21) = Rcpp::NumericVector(rep2n.begin(), rep2n.end());
+  output_longlist(22) = Rcpp::NumericVector(rep2o.begin(), rep2o.end());
+  output_longlist(23) = Rcpp::NumericVector(rep1.begin(), rep1.end());
+  output_longlist(24) = Rcpp::NumericVector(mat3.begin(), mat3.end());
+  output_longlist(25) = Rcpp::NumericVector(mat2n.begin(), mat2n.end());
+  output_longlist(26) = Rcpp::NumericVector(mat2o.begin(), mat2o.end());
+  output_longlist(27) = Rcpp::NumericVector(mat1.begin(), mat1.end());
+  output_longlist(28) = Rcpp::NumericVector(imm3.begin(), imm3.end());
+  output_longlist(29) = Rcpp::NumericVector(imm2n.begin(), imm2n.end());
+  
+  output_longlist(30) = Rcpp::NumericVector(imm2o.begin(), imm2o.end());
+  output_longlist(31) = Rcpp::NumericVector(imm1.begin(), imm1.end());
+  output_longlist(32) = Rcpp::NumericVector(repentry3.begin(), repentry3.end());
+  output_longlist(33) = Rcpp::NumericVector(indata3.begin(), indata3.end());
+  output_longlist(34) = Rcpp::NumericVector(indata2n.begin(), indata2n.end());
+  output_longlist(35) = Rcpp::NumericVector(indata2o.begin(), indata2o.end());
+  output_longlist(36) = Rcpp::NumericVector(indata1.begin(), indata1.end());
+  output_longlist(37) = Rcpp::NumericVector(binwidth.begin(), binwidth.end());
+  output_longlist(38) = Rcpp::NumericVector(binbwidth.begin(), binbwidth.end());
+  output_longlist(39) = Rcpp::NumericVector(bincwidth.begin(), bincwidth.end());
+  
+  output_longlist(40) = Rcpp::NumericVector(minage3.begin(), minage3.end());
+  output_longlist(41) = Rcpp::NumericVector(minage2.begin(), minage2.end());
+  output_longlist(42) = Rcpp::NumericVector(maxage3.begin(), maxage3.end());
+  output_longlist(43) = Rcpp::NumericVector(maxage2.begin(), maxage2.end());
+  output_longlist(44) = Rcpp::NumericVector(actualage.begin(), actualage.end());
+  
+  output_longlist(45) = Rcpp::NumericVector(grp3.begin(), grp3.end());
+  output_longlist(46) = Rcpp::NumericVector(grp2n.begin(), grp2n.end());
+  output_longlist(47) = Rcpp::NumericVector(grp2o.begin(), grp2o.end());
+  output_longlist(48) = Rcpp::NumericVector(grp1.begin(), grp1.end());
+  
+  output_longlist(49) = Rcpp::NumericVector(indatalong.begin(), indatalong.end());
+  output_longlist(50) = Rcpp::NumericVector(stage3_length, -1.0);
+  output_longlist(51) = Rcpp::NumericVector(stage3_length, -1.0);
+  output_longlist(52) = Rcpp::NumericVector(stage3_length, -1.0);
+  output_longlist(53) = Rcpp::NumericVector(stage3_length, -1.0);
+  output_longlist(54) = Rcpp::NumericVector(stage3_length, 1.0);
+  output_longlist(55) = Rcpp::NumericVector(stage3_length, 1.0);
+  
+  output_longlist(56) = Rcpp::NumericVector(aliveequal.begin(), aliveequal.end());
+  output_longlist(57) = Rcpp::NumericVector(index321.begin(), index321.end());
+  output_longlist(58) = Rcpp::NumericVector(index21.begin(), index21.end());
+  
+  CharacterVector namevec = {"stage3", "stage2n", "stage2o", "stage1", "size3",
+    "size2n", "size2o", "size1", "sizeb3", "sizeb2n", "sizeb2o", "sizeb1", 
+    "sizec3", "sizec2n", "sizec2o", "sizec1", "obs3", "obs2n", "obs2o", "obs1",
+    "rep3", "rep2n", "rep2o", "rep1", "mat3", "mat2n", "mat2o", "mat1", "imm3",
+    "imm2n", "imm2o", "imm1", "repentry3", "indata3", "indata2n", "indata2o",
+    "indata1", "binwidth", "binbwidth", "bincwidth", "minage3", "minage2",
+    "maxage3", "maxage2", "actualage", "group3", "group2n", "group2o", "group1",
+    "indata", "ovgiven_t", "ovest_t", "ovgiven_f", "ovest_f", "ovsurvmult",
+    "ovfecmult", "aliveandequal", "index321", "index21"};
+  output_longlist.attr("names") = namevec;
+  output_longlist.attr("row.names") = Rcpp::IntegerVector::create(NA_INTEGER, stage3_length);
+  output_longlist.attr("class") = "data.frame";
+  
+  Rcpp::List output = Rcpp::List::create(Named("ahstages") = StageFrame,
+    _["hstages"] = hstages, _["allstages"] = output_longlist);
+  return output;
 }
 

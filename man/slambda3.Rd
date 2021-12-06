@@ -33,14 +33,16 @@ mean of the log population growth rate across simulated occasions.}
 \description{
 Function \code{slambda3()} estimates the stochastic population growth rate,
 \eqn{a}, defined as the long-term arithmetic mean of the log population 
-growth rate estimated per simulated occasion (as given in equation 2 in
-Tuljapurkar, Horvitz, and Pascarella 2003). This term is estimated via
-projection of randomly sampled matrices, similarly to the procedure outlined
-in Box 7.4 of Morris and Doak (2002). Can handle both lefkoMat objects and
-lists of full A matrices.
+growth rate estimated per simulated occasion. This function can handle both
+lefkoMat objects and lists of full A matrices as input.
 }
 \section{Notes}{
 
+The log stochastic population growth rate, \eqn{a}, is as given in equation
+2 of Tuljapurkar, Horvitz, and Pascarella 2003. This term is estimated via
+projection of randomly sampled matrices, similarly to the procedure outlined
+in Box 7.4 of Morris and Doak (2002).
+ 
 Stochastic growth rate is estimated both at the patch level and at the
 population level. Population level estimates will be noted at the end of the
 data frame with 0 entries for patch designation.

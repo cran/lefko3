@@ -16,7 +16,9 @@ sf_distrib(
   zisizeb = TRUE,
   zisizec = TRUE,
   zifec = TRUE,
-  fectime = 2
+  fectime = 2,
+  show.size = TRUE,
+  show.fec = TRUE
 )
 }
 \arguments{
@@ -39,14 +41,14 @@ corresponding to tertiary size in occasions *t*+1 and *t*. Input only if
 observation status in occasion *t+1*. This should be used if observation
 status will be used as a vital rate to absorb states of size = 0.}
 
-\item{fec}{The name or column number of the variable corresponding to
-fecundity. The name of the variable should correspond to the proper occasion,
-either occasion *t* or occasion *t*-1. Input only if \code{fec} is to be
-tested.}
+\item{fec}{A vector holding the names or column numbers of the variables
+corresponding to in occasions *t*+1 and *t*. Input only if \code{fec} is to
+be tested.}
 
-\item{repst}{The name or column number of the variable corresponding to
-reproductive status in occasion *t*. If not provided, then fecundity will be
-tested without subsetting to only reproductive individuals.}
+\item{repst}{A vector holding the names or column numbers of the variables
+corresponding to reproductive status in occasions *t*+1 and *t*. If not
+provided, then fecundity will be tested without subsetting to only
+reproductive individuals.}
 
 \item{zisizea}{A logical value indicating whether to conduct a test of zero
 inflation in primary size. Defaults to \code{TRUE}.}
@@ -62,6 +64,12 @@ inflation in fecundity. Defaults to TRUE.}
 
 \item{fectime}{An integer indicating whether to treat fecundity as occurring
 in time *t* (\code{2}) or time *t*+1 (\code{3}). Defaults to \code{2}.}
+
+\item{show.size}{A logical value indicating whether to show the output for
+tests of size. Defaults to \code{TRUE}.}
+
+\item{show.fec}{A logical value indicating whether to show the output for
+tests of fecundity. Defaults to \code{TRUE}.}
 }
 \value{
 Produces text describing the degree and significance of difference

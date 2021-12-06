@@ -20,7 +20,7 @@ using namespace arma;
 //' 
 //' @keywords internal
 //' @noRd
-// [[Rcpp::export]]
+// [[Rcpp::export(.hoffmannofstuttgart)]]
 List hoffmannofstuttgart(arma::mat mainmat, DataFrame indices, int ahstages,
   StringVector stagenames) {
   arma::uvec stage1 = indices["stage1"];
@@ -69,14 +69,14 @@ List hoffmannofstuttgart(arma::mat mainmat, DataFrame indices, int ahstages,
 //' 
 //' @param hmpm A historical matrix projection model of class \code{lefkoMat}.
 //' @param matchoice A character denoting whether to use A, U, or F matrices.
-//' Defaults to A matrices.
+//' Defaults to \code{A} matrices.
 //' @param err_check A logical value denoting whether to include a data frame
 //' of element equivalence from the conditional matrices to the original
-//' matrices. Used only for debugging purposes. Defaults to FALSE.
+//' matrices. Used only for debugging purposes. Defaults to \code{FALSE}.
 //' 
 //' @return A \code{lefkoCondMat} object, with the following elements:
 //' 
-//' \item{Acond}{A multi-level list holding the conditional A matrices derived
+//' \item{Mcond}{A multi-level list holding the conditional A matrices derived
 //' from the input \code{lefkoMat} object. The top level of the list corresponds
 //' to each historical matrix in turn, and the lower level corresponds to each
 //' stage in time \emph{t}-1, with individual conditional matrices named for the
@@ -317,7 +317,7 @@ Rcpp::List cond_hmpm(List hmpm, Nullable<CharacterVector> matchoice = R_NilValue
   }
   allout.names() = matnames;
   
-  List panama = List::create(Named("Acond") = allout, _["hstages"] = hstages,
+  List panama = List::create(Named("Mcond") = allout, _["hstages"] = hstages,
     _["ahstages"] = stageframe, _["labels"] = labels);
   
   if (err_c) {
@@ -328,3 +328,336 @@ Rcpp::List cond_hmpm(List hmpm, Nullable<CharacterVector> matchoice = R_NilValue
   
   return panama;
 }
+
+//' Extract Conditional Ahistorical Difference Matrices
+//' 
+//' Function \code{cond_diff()} takes a set of historical difference matrices
+//' resulting from function \code{\link{diff_lM}()} and decomposes them into 
+//' ahistorical difference matrices conditional upon stage in time \emph{t}-1.
+//' 
+//' @param lDiff An object of class \code{lefkoDiff}.
+//' @param ref Choice of mpm to use as reference. Defaults to \code{1}, which
+//' means that the \code{ahstages}, \code{hstages}, and \code{labels} elements
+//' for mpm1 will be used for all calculations. Only \code{1} amd \code{2} are
+//' possible inputs.
+//' @param matchoice A character denoting whether to use A, U, or F matrices.
+//' Defaults to \code{A} matrices.
+//' @param err_check A logical value denoting whether to include a data frame
+//' of element equivalence from the conditional matrices to the original
+//' matrices. Used only for debugging purposes. Defaults to \code{FALSE}.
+//' 
+//' @return A \code{lefkoCondDiff} object, with the following elements:
+//' 
+//' \item{Mcond}{A multi-level list holding the conditional matrices derived
+//' from the input \code{lefkoDiff} object. The top level of the list
+//' corresponds to each historical difference matrix in turn, and the lower
+//' level corresponds to each stage in time \emph{t}-1, with individual
+//' conditional matrices named for the latter.}
+//' \item{hstages}{A data frame matrix showing the pairing of ahistorical stages
+//' used to create historical stage pairs.}
+//' \item{ahstages}{A data frame detailing the characteristics of associated
+//' ahistorical stages.}
+//' \item{labels}{A data frame showing the patch and year of each input full A 
+//' matrix in order.}
+//' 
+//' @examples
+//' sizevector <- c(0, 0, 0, 0, 0, 0, 1, 3, 6, 11, 19.5)
+//' stagevector <- c("SD", "P1", "P2", "P3", "SL", "D", "XSm", "Sm", "Md", "Lg",
+//'   "XLg")
+//' repvector <- c(0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1)
+//' obsvector <- c(0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1)
+//' matvector <- c(0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1)
+//' immvector <- c(0, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0)
+//' propvector <- c(1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)
+//' indataset <- c(0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1)
+//' binvec <- c(0, 0, 0, 0, 0, 0.5, 0.5, 1.5, 1.5, 3.5, 5)
+//' comments <- c("Dormant seed", "1st yr protocorm", "2nd yr protocorm",
+//'   "3rd yr protocorm", "Seedling", "Dormant adult",
+//'   "Extra small adult (1 shoot)", "Small adult (2-4 shoots)",
+//'   "Medium adult (5-7 shoots)", "Large adult (8-14 shoots)",
+//'   "Extra large adult (>14 shoots)")
+//' cypframe_raw <- sf_create(sizes = sizevector, stagenames = stagevector, 
+//'   repstatus = repvector, obsstatus = obsvector, matstatus = matvector,
+//'   propstatus = propvector, immstatus = immvector, indataset = indataset, 
+//'   binhalfwidth = binvec, comments = comments)
+//' 
+//' cypraw_v1 <- verticalize3(data = cypdata, noyears = 6, firstyear = 2004, 
+//'   patchidcol = "patch", individcol = "plantid", blocksize = 4,
+//'   sizeacol = "Inf2.04", sizebcol = "Inf.04", sizeccol = "Veg.04",
+//'   repstracol = "Inf.04", repstrbcol = "Inf2.04", fecacol = "Pod.04",
+//'   stageassign = cypframe_raw, stagesize = "sizeadded", NAas0 = TRUE,
+//'   NRasRep = TRUE)
+//' 
+//' seeds_per_pod <- 5000
+//' 
+//' cypsupp2_raw <- supplemental(stage3 = c("SD", "P1", "P2", "P3", "SL", "SL", "D", 
+//'     "XSm", "SD", "P1"),
+//'   stage2 = c("SD", "SD", "P1", "P2", "P3", "SL", "SL", "SL", "rep", "rep"),
+//'   eststage3 = c(NA, NA, NA, NA, NA, NA, "D", "XSm", NA, NA),
+//'   eststage2 = c(NA, NA, NA, NA, NA, NA, "XSm", "XSm", NA, NA),
+//'   givenrate = c(0.03, 0.15, 0.1, 0.1, 0.1, 0.05, NA, NA, NA, NA),
+//'   multiplier = c(NA, NA, NA, NA, NA, NA, NA, NA, (0.5 * seeds_per_pod),
+//'     (0.5 * seeds_per_pod)),
+//'   type =c(1, 1, 1, 1, 1, 1, 1, 1, 3, 3),
+//'   stageframe = cypframe_raw, historical = FALSE)
+//' cypsupp3_raw <- supplemental(stage3 = c("SD", "SD", "P1", "P1", "P2", "P3",
+//'     "SL", "SL", "SL", "D", "D", "SD", "P1"),
+//'   stage2 = c("SD", "SD", "SD", "SD", "P1", "P2", "P3", "SL", "SL", "SL", "SL",
+//'     "rep", "rep"),
+//'   stage1 = c("SD", "rep", "SD", "rep", "SD", "P1", "P2", "P3", "SL", "P3",
+//'     "SL", "mat", "mat"),
+//'   eststage3 = c(NA, NA, NA, NA, NA, NA, NA, NA, NA, "XSm", "D", NA, NA),
+//'   eststage2 = c(NA, NA, NA, NA, NA, NA, NA, NA, NA, "XSm", "XSm", NA, NA),
+//'   eststage1 = c(NA, NA, NA, NA, NA, NA, NA, NA, NA, "XSm", "XSm", NA, NA),
+//'   givenrate = c(0.01, 0.05, 0.10, 0.20, 0.1, 0.1, 0.05, 0.05, 0.05, NA, NA,
+//'     NA, NA),
+//'   multiplier = c(NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA,
+//'     (0.5 * seeds_per_pod), (0.5 * seeds_per_pod)),
+//'   type = c(1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 3, 3),
+//'   type_t12 = c(1, 2, 1, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1),
+//'   stageframe = cypframe_raw, historical = TRUE)
+//' 
+//' cypmatrix2rp <- rlefko2(data = cypraw_v1, stageframe = cypframe_raw,
+//'   year = "all", patch = "all", stages = c("stage3", "stage2"),
+//'   size = c("size3added", "size2added"), supplement = cypsupp2_raw, 
+//'   yearcol = "year2", patchcol = "patchid", indivcol = "individ")
+//' 
+//' cypmatrix2r <- rlefko2(data = cypraw_v1, stageframe = cypframe_raw,
+//'   year = "all", stages = c("stage3", "stage2"),
+//'   size = c("size3added", "size2added"), supplement = cypsupp2_raw, 
+//'   yearcol = "year2", patchcol = "patchid", indivcol = "individ")
+//' 
+//' cypmatrix3rp <- rlefko3(data = cypraw_v1, stageframe = cypframe_raw,
+//'   year = "all", patch = "all", stages = c("stage3", "stage2", "stage1"), 
+//'   size = c("size3added", "size2added", "size1added"), supplement = cypsupp3_raw, 
+//'   yearcol = "year2", patchcol = "patchid", indivcol = "individ")
+//' 
+//' cypmatrix3r <- rlefko3(data = cypraw_v1, stageframe = cypframe_raw,
+//'   year = "all", stages = c("stage3", "stage2", "stage1"), 
+//'   size = c("size3added", "size2added", "size1added"), supplement = cypsupp3_raw, 
+//'   yearcol = "year2", patchcol = "patchid", indivcol = "individ")
+//' 
+//' cypmatrix2r_3 <- hist_null(cypmatrix2r)
+//' cypmatrix2r_3 <- delete_lM(cypmatrix2r_3, year = 2004)
+//' diff_r <- diff_lM(cypmatrix3r, cypmatrix2r_3)
+//' 
+//' cypmatrix2rp_3 <- hist_null(cypmatrix2rp)
+//' cypmatrix2rp_3 <- delete_lM(cypmatrix2rp_3, year = 2004)
+//' diff_rp <- diff_lM(cypmatrix3rp, cypmatrix2rp_3)
+//' 
+//' condr1 <- cond_diff(diff_r, ref = 1)
+//' condr2 <- cond_diff(diff_r, ref = 2)
+//' 
+//' condrp1 <- cond_diff(diff_rp, matchoice = "U", ref = 1)
+//' condrp2 <- cond_diff(diff_rp, matchoice = "F", ref = 2)
+//' 
+//' @export cond_diff
+// [[Rcpp::export]]
+Rcpp::List cond_diff(List lDiff, int ref = 1,
+  Nullable<CharacterVector> matchoice = R_NilValue,
+  Nullable<LogicalVector> err_check = R_NilValue) {
+  
+  CharacterVector usedmats("a");
+  int iusedmats {1};
+  LogicalVector err_v = {false};
+  bool err_c = false;
+  
+  if (ref != 1 && ref != 2) {
+    throw Rcpp::exception("Option ref must equal 1 or 2.");
+  }
+  
+  if (matchoice.isNotNull()) {
+    usedmats = matchoice;
+    
+    if (usedmats(0) == "A" || usedmats(0) == "a") {
+      iusedmats = 1;
+    } else if (usedmats(0) == "U" || usedmats(0) == "u") {
+      iusedmats = 2;
+    } else if (usedmats(0) == "F" || usedmats(0) == "f") {
+      iusedmats = 3;
+    } else {
+      Rcpp::Rcout << "Choice of matrix not recognized. Using A matrices.";
+      iusedmats = 1;
+    }
+  }
+  
+  if (err_check.isNotNull()) {
+    err_v = err_check;
+    if (err_v(0)) {
+      err_c = true;
+    }
+  }
+  
+  List amats = lDiff["A"];
+  List umats = lDiff["U"];
+  List fmats = lDiff["F"];
+  List hstages1 = lDiff["hstages1"];
+  List hstages2 = lDiff["hstages2"];
+  List stageframe1 = lDiff["ahstages1"];
+  List stageframe2 = lDiff["ahstages2"];
+  List labels1 = lDiff["labels1"];
+  List labels2 = lDiff["labels2"];
+  int numofmats = amats.length();
+  
+  arma::uvec hstage1 = hstages1["stage_id_1"];
+  arma::uvec hstage2 = hstages1["stage_id_2"];
+  arma::uvec ahstages = stageframe1["stage_id"];
+  StringVector stagenames = stageframe1["stage"];
+  
+  List hstages = hstages1;
+  List stageframe = stageframe1;
+  List labels = labels1;
+  
+  if (ref == 2) {
+    hstage1 = as<arma::uvec>(hstages2["stage_id_1"]);
+    hstage2 = as<arma::uvec>(hstages2["stage_id_2"]);
+    ahstages = as<arma::uvec>(stageframe2["stage_id"]);
+    stagenames = stageframe2["stage"];
+    
+    hstages = hstages2;
+    stageframe = stageframe2;
+    labels = labels2;
+  }
+  
+  StringVector matnames(numofmats);
+  
+  for (int i = 0; i < numofmats; i++) {
+    matnames(i) = i + 1;
+  }
+  
+  int ahmpm_rows = ahstages.n_elem;
+  int hmpm_rows = hstage1.n_elem;
+  int hmpm_elems = 2 * ahmpm_rows * ahmpm_rows * ahmpm_rows;
+  
+  int format_int {0};
+  if (stagenames(ahmpm_rows - 1) == "AlmostBorn") format_int = 1;
+  
+  arma::uvec stage1(hmpm_elems);
+  arma::uvec stage2(hmpm_elems);
+  arma::uvec stage3(hmpm_elems);
+  arma::ivec main_index(hmpm_elems);
+  arma::ivec new_index(hmpm_elems);
+  stage1.zeros();
+  stage2.zeros();
+  stage3.zeros();
+  main_index.fill(-1);
+  new_index.fill(-1);
+  
+  int stage1_proxy {0};
+  int stage2o_proxy {0};
+  int stage2n_proxy {0};
+  int stage3_proxy {0};
+  
+  int counter = 0;
+  
+  // This next section creates an index of matrix elements in the original matrices
+  // and the new conditional matrices. It must be run on the hstages inputs in
+  // order to handle reduced matrices properly.
+  if (format_int == 0) {
+    // This portion handles Ehrlen-format hMPMs
+    for (int prior = 0; prior < hmpm_rows; prior++) {
+      for (int post = 0; post < hmpm_rows; post++) {
+        stage1_proxy = hstage1[prior];
+        stage2o_proxy = hstage2[prior];
+        stage2n_proxy = hstage1[post];
+        stage3_proxy = hstage2[post];
+        
+        if (stage2o_proxy == stage2n_proxy) {
+          stage1[counter] = stage1_proxy;
+          stage2[counter] = stage2n_proxy;
+          stage3[counter] = stage3_proxy;
+              
+          main_index[counter] = post + (prior * hmpm_rows);
+          new_index[counter] = (stage3[counter] - 1) + ((stage2[counter] - 1) * ahmpm_rows);
+          
+          counter++;
+        }
+      }
+    }
+  } else {
+    // This section deals with deVries-format hMPMs
+    for (int prior = 0; prior < hmpm_rows; prior++) {
+      for (int post = 0; post < hmpm_rows; post++) {
+        stage1_proxy = hstage1[prior];
+        stage2o_proxy = hstage2[prior];
+        stage2n_proxy = hstage1[post];
+        stage3_proxy = hstage2[post];
+        
+        if (stage2o_proxy == stage2n_proxy) {
+          stage1[counter] = stage1_proxy;
+          stage2[counter] = stage2o_proxy;
+          stage3[counter] = stage3_proxy;
+              
+          main_index[counter] = post + (prior * hmpm_rows);
+          new_index[counter] = (stage3[counter] - 1) + ((stage2[counter] - 1) * ahmpm_rows);
+          
+          counter++;
+        } else if (stage2n_proxy == ahmpm_rows && stage1_proxy < ahmpm_rows) {
+          stage1[counter] = stage1_proxy;
+          stage2[counter] = stage2o_proxy;
+          stage3[counter] = stage3_proxy;
+              
+          main_index[counter] = post + (prior * hmpm_rows);
+          new_index[counter] = (stage3[counter] - 1) + ((stage2[counter] - 1) * ahmpm_rows);
+              
+          counter++;
+        }
+      }
+    }
+  }
+  
+  arma::uvec elements_to_use = find(stage1 > 0);
+  stage1 = stage1.elem(elements_to_use);
+  stage2 = stage2.elem(elements_to_use);
+  stage3 = stage3.elem(elements_to_use);
+  main_index = main_index.elem(elements_to_use);
+  new_index = new_index.elem(elements_to_use);
+  
+  DataFrame loveontherocks = DataFrame::create(Named("stage1") = stage1,
+    _["stage2"] = stage2, _["stage3"] = stage3, _["main_index"] = main_index,
+    _["new_index"] = new_index);
+  
+  // This next line creates the conditional matrices in list form
+  List mats1 = hoffmannofstuttgart(amats(0), loveontherocks, ahmpm_rows, stagenames);
+  
+  if (iusedmats == 3) {
+    mats1 = hoffmannofstuttgart(fmats(0), loveontherocks, ahmpm_rows, stagenames);
+  } else if (iusedmats == 2) {
+    mats1 = hoffmannofstuttgart(umats(0), loveontherocks, ahmpm_rows, stagenames);
+  } 
+  
+  List allout = List::create(Named("1") = mats1);
+  
+  if (iusedmats == 3) {
+    for (int i = 1; i < numofmats; i++) {
+      mats1 = hoffmannofstuttgart(fmats(i), loveontherocks, ahmpm_rows, stagenames);
+      
+      allout.push_back(mats1);
+    }
+  } else if (iusedmats == 2) {
+    for (int i = 1; i < numofmats; i++) {
+      mats1 = hoffmannofstuttgart(umats(i), loveontherocks, ahmpm_rows, stagenames);
+      
+      allout.push_back(mats1);
+    }
+  } else {
+    for (int i = 1; i < numofmats; i++) {
+      mats1 = hoffmannofstuttgart(amats(i), loveontherocks, ahmpm_rows, stagenames);
+      
+      allout.push_back(mats1);
+    }
+  }
+  allout.names() = matnames;
+  
+  List panama = List::create(Named("Mcond") = allout, _["hstages"] = hstages,
+    _["ahstages"] = stageframe, _["labels"] = labels);
+  
+  if (err_c) {
+    Rcpp::List morestuff = List::create(_["err_check"] = loveontherocks);
+    panama.push_back(morestuff);
+  }
+  panama.attr("class") = "lefkoCondDiffMat";
+  
+  return panama;
+}
+

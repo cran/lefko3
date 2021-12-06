@@ -106,6 +106,8 @@
 #' @param RepasObs If TRUE, then will treat individuals with size 0 as observed
 #' if and only if they are reproductive. Otherwise, all individuals with size 0
 #' are treated as not observed.
+#' @param NOasObs If TRUE, then will treat unobserved individuals as observed
+#' during stage assignment.
 #' @param stassign A logical value indicating whether to assign stages.
 #' @param stszcol Integer describing which size variable or combination of size
 #' variables to use in stage estimation.
@@ -119,14 +121,15 @@
 #' single static column, or whether censor variables repeat across blocks.
 #' @param coordsrepeat A logical value indicating whether coordinate variables
 #' are single static columns, or whether they repeat across blocks.
+#' @param quiet A logical value indicating whether to silense warnings.
 #' 
 #' @return The output is currently a 7 element list, where each element is a
 #' data frame with the same number of rows.
 #' 
 #' @keywords internal
 #' @noRd
-.pfj <- function(data, stageframe, noyears, firstyear, popidcol, patchidcol, individcol, blocksize, xcol, ycol, juvcol, sizeacol, sizebcol, sizeccol, repstracol, repstrbcol, fecacol, fecbcol, indcovacol, indcovbcol, indcovccol, aliveacol, deadacol, obsacol, nonobsacol, censorcol, stagecol, repstrrel, fecrel, NAas0, NRasRep, RepasObs, stassign, stszcol, censorkeep, censbool, censrepeat, coordsrepeat) {
-    .Call('_lefko3_pfj', PACKAGE = 'lefko3', data, stageframe, noyears, firstyear, popidcol, patchidcol, individcol, blocksize, xcol, ycol, juvcol, sizeacol, sizebcol, sizeccol, repstracol, repstrbcol, fecacol, fecbcol, indcovacol, indcovbcol, indcovccol, aliveacol, deadacol, obsacol, nonobsacol, censorcol, stagecol, repstrrel, fecrel, NAas0, NRasRep, RepasObs, stassign, stszcol, censorkeep, censbool, censrepeat, coordsrepeat)
+.pfj <- function(data, stageframe, noyears, firstyear, popidcol, patchidcol, individcol, blocksize, xcol, ycol, juvcol, sizeacol, sizebcol, sizeccol, repstracol, repstrbcol, fecacol, fecbcol, indcovacol, indcovbcol, indcovccol, aliveacol, deadacol, obsacol, nonobsacol, censorcol, stagecol, repstrrel, fecrel, NAas0, NRasRep, RepasObs, NOasObs, stassign, stszcol, censorkeep, censbool, censrepeat, coordsrepeat, quiet) {
+    .Call('_lefko3_pfj', PACKAGE = 'lefko3', data, stageframe, noyears, firstyear, popidcol, patchidcol, individcol, blocksize, xcol, ycol, juvcol, sizeacol, sizebcol, sizeccol, repstracol, repstrbcol, fecacol, fecbcol, indcovacol, indcovbcol, indcovccol, aliveacol, deadacol, obsacol, nonobsacol, censorcol, stagecol, repstrrel, fecrel, NAas0, NRasRep, RepasObs, NOasObs, stassign, stszcol, censorkeep, censbool, censrepeat, coordsrepeat, quiet)
 }
 
 #' Create Historical Vertical Structure for Ahistorical Vertical Data Frame
@@ -228,6 +231,8 @@
 #' fecundity variables will be set to 0.
 #' @param NRasRep If \code{TRUE}, then non-reproductive but mature individuals
 #' will be treated as reproductive during stage assignment.
+#' @param NOasObs If TRUE, then will treat unobserved individuals as observed
+#' during stage assignment.
 #' @param stassign A logical value indicating whether to assign stages.
 #' @param stszcol Integer describing which size variable to use in stage 
 #' estimation. Numbers 1 through 8 are possible.
@@ -236,14 +241,15 @@
 #' \code{censbool = TRUE}.
 #' @param censbool A logical variable determining whether \code{NA} denotes the
 #' value of the censoring variable identifying data to keep.
+#' @param quiet A logical value indicating whether to silense warnings.
 #' 
 #' @return The output is currently a list coerced into the data frame class,
 #' and is read as a data frame by R. It is secondarily in class \code{hfvdata}.
 #' 
 #' @keywords internal
 #' @noRd
-.jpf <- function(data, stageframe, popidcol, patchidcol, individcol, year2col, year3col, xcol, ycol, juv2col, juv3col, sizea2col, sizea3col, sizeb2col, sizeb3col, sizec2col, sizec3col, repstra2col, repstra3col, repstrb2col, repstrb3col, feca2col, feca3col, fecb2col, fecb3col, indcova2col, indcova3col, indcovb2col, indcovb3col, indcovc2col, indcovc3col, alive2col, alive3col, dead2col, dead3col, obs2col, obs3col, nonobs2col, nonobs3col, repstrrel, fecrel, stage2col, stage3col, censorcol, NAas0, NRasRep, stassign, stszcol, censorkeep, censbool) {
-    .Call('_lefko3_jpf', PACKAGE = 'lefko3', data, stageframe, popidcol, patchidcol, individcol, year2col, year3col, xcol, ycol, juv2col, juv3col, sizea2col, sizea3col, sizeb2col, sizeb3col, sizec2col, sizec3col, repstra2col, repstra3col, repstrb2col, repstrb3col, feca2col, feca3col, fecb2col, fecb3col, indcova2col, indcova3col, indcovb2col, indcovb3col, indcovc2col, indcovc3col, alive2col, alive3col, dead2col, dead3col, obs2col, obs3col, nonobs2col, nonobs3col, repstrrel, fecrel, stage2col, stage3col, censorcol, NAas0, NRasRep, stassign, stszcol, censorkeep, censbool)
+.jpf <- function(data, stageframe, popidcol, patchidcol, individcol, year2col, year3col, xcol, ycol, juv2col, juv3col, sizea2col, sizea3col, sizeb2col, sizeb3col, sizec2col, sizec3col, repstra2col, repstra3col, repstrb2col, repstrb3col, feca2col, feca3col, fecb2col, fecb3col, indcova2col, indcova3col, indcovb2col, indcovb3col, indcovc2col, indcovc3col, alive2col, alive3col, dead2col, dead3col, obs2col, obs3col, nonobs2col, nonobs3col, repstrrel, fecrel, stage2col, stage3col, censorcol, NAas0, NRasRep, NOasObs, stassign, stszcol, censorkeep, censbool, quiet) {
+    .Call('_lefko3_jpf', PACKAGE = 'lefko3', data, stageframe, popidcol, patchidcol, individcol, year2col, year3col, xcol, ycol, juv2col, juv3col, sizea2col, sizea3col, sizeb2col, sizeb3col, sizec2col, sizec3col, repstra2col, repstra3col, repstrb2col, repstrb3col, feca2col, feca3col, fecb2col, fecb3col, indcova2col, indcova3col, indcovb2col, indcovb3col, indcovc2col, indcovc3col, alive2col, alive3col, dead2col, dead3col, obs2col, obs3col, nonobs2col, nonobs3col, repstrrel, fecrel, stage2col, stage3col, censorcol, NAas0, NRasRep, NOasObs, stassign, stszcol, censorkeep, censbool, quiet)
 }
 
 #' Create Element Index for Matrix Estimation
@@ -310,6 +316,31 @@
     .Call('_lefko3_density3', PACKAGE = 'lefko3', data, xcol, ycol, yearcol, spacing)
 }
 
+#' Create Element Index for Matrix Estimation
+#' 
+#' Function \code{.simplepizzle()} creates a data frame object used by function
+#' \code{\link{.hist_null}()} to provide an index for estimation of null
+#' historical matrices from ahistorical MPM inputs.
+#' 
+#' @param StageFrame The stageframe object identifying the life history model
+#' being operationalized.
+#' @param format Integer indicating whether historical matrices should be in
+#' (1) Ehrlen or (2) deVries format.
+#' 
+#' @return The output is composed of three elements:
+#' \item{ahstages}{A new stageframe, which only differs from the input
+#' stageframe in deVries format.}
+#' \item{hstages}{A new historical stage-pair index for the new historical
+#' matrices.}
+#' \item{allstages}{A large data frame describing every element to be estimated
+#' in the new historical matrices}.
+#' 
+#' @keywords internal
+#' @noRd
+.simplepizzle <- function(StageFrame, format) {
+    .Call('_lefko3_simplepizzle', PACKAGE = 'lefko3', StageFrame, format)
+}
+
 #' Core Engine for cond_hmpm()
 #' 
 #' Creates a list of conditional ahistorical matrices in the style noted in
@@ -326,7 +357,7 @@
 #' 
 #' @keywords internal
 #' @noRd
-hoffmannofstuttgart <- function(mainmat, indices, ahstages, stagenames) {
+.hoffmannofstuttgart <- function(mainmat, indices, ahstages, stagenames) {
     .Call('_lefko3_hoffmannofstuttgart', PACKAGE = 'lefko3', mainmat, indices, ahstages, stagenames)
 }
 
@@ -339,14 +370,14 @@ hoffmannofstuttgart <- function(mainmat, indices, ahstages, stagenames) {
 #' 
 #' @param hmpm A historical matrix projection model of class \code{lefkoMat}.
 #' @param matchoice A character denoting whether to use A, U, or F matrices.
-#' Defaults to A matrices.
+#' Defaults to \code{A} matrices.
 #' @param err_check A logical value denoting whether to include a data frame
 #' of element equivalence from the conditional matrices to the original
-#' matrices. Used only for debugging purposes. Defaults to FALSE.
+#' matrices. Used only for debugging purposes. Defaults to \code{FALSE}.
 #' 
 #' @return A \code{lefkoCondMat} object, with the following elements:
 #' 
-#' \item{Acond}{A multi-level list holding the conditional A matrices derived
+#' \item{Mcond}{A multi-level list holding the conditional A matrices derived
 #' from the input \code{lefkoMat} object. The top level of the list corresponds
 #' to each historical matrix in turn, and the lower level corresponds to each
 #' stage in time \emph{t}-1, with individual conditional matrices named for the
@@ -416,6 +447,133 @@ hoffmannofstuttgart <- function(mainmat, indices, ahstages, stagenames) {
 #' @export cond_hmpm
 cond_hmpm <- function(hmpm, matchoice = NULL, err_check = NULL) {
     .Call('_lefko3_cond_hmpm', PACKAGE = 'lefko3', hmpm, matchoice, err_check)
+}
+
+#' Extract Conditional Ahistorical Difference Matrices
+#' 
+#' Function \code{cond_diff()} takes a set of historical difference matrices
+#' resulting from function \code{\link{diff_lM}()} and decomposes them into 
+#' ahistorical difference matrices conditional upon stage in time \emph{t}-1.
+#' 
+#' @param lDiff An object of class \code{lefkoDiff}.
+#' @param ref Choice of mpm to use as reference. Defaults to \code{1}, which
+#' means that the \code{ahstages}, \code{hstages}, and \code{labels} elements
+#' for mpm1 will be used for all calculations. Only \code{1} amd \code{2} are
+#' possible inputs.
+#' @param matchoice A character denoting whether to use A, U, or F matrices.
+#' Defaults to \code{A} matrices.
+#' @param err_check A logical value denoting whether to include a data frame
+#' of element equivalence from the conditional matrices to the original
+#' matrices. Used only for debugging purposes. Defaults to \code{FALSE}.
+#' 
+#' @return A \code{lefkoCondDiff} object, with the following elements:
+#' 
+#' \item{Mcond}{A multi-level list holding the conditional matrices derived
+#' from the input \code{lefkoDiff} object. The top level of the list
+#' corresponds to each historical difference matrix in turn, and the lower
+#' level corresponds to each stage in time \emph{t}-1, with individual
+#' conditional matrices named for the latter.}
+#' \item{hstages}{A data frame matrix showing the pairing of ahistorical stages
+#' used to create historical stage pairs.}
+#' \item{ahstages}{A data frame detailing the characteristics of associated
+#' ahistorical stages.}
+#' \item{labels}{A data frame showing the patch and year of each input full A 
+#' matrix in order.}
+#' 
+#' @examples
+#' sizevector <- c(0, 0, 0, 0, 0, 0, 1, 3, 6, 11, 19.5)
+#' stagevector <- c("SD", "P1", "P2", "P3", "SL", "D", "XSm", "Sm", "Md", "Lg",
+#'   "XLg")
+#' repvector <- c(0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1)
+#' obsvector <- c(0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1)
+#' matvector <- c(0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1)
+#' immvector <- c(0, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0)
+#' propvector <- c(1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)
+#' indataset <- c(0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1)
+#' binvec <- c(0, 0, 0, 0, 0, 0.5, 0.5, 1.5, 1.5, 3.5, 5)
+#' comments <- c("Dormant seed", "1st yr protocorm", "2nd yr protocorm",
+#'   "3rd yr protocorm", "Seedling", "Dormant adult",
+#'   "Extra small adult (1 shoot)", "Small adult (2-4 shoots)",
+#'   "Medium adult (5-7 shoots)", "Large adult (8-14 shoots)",
+#'   "Extra large adult (>14 shoots)")
+#' cypframe_raw <- sf_create(sizes = sizevector, stagenames = stagevector, 
+#'   repstatus = repvector, obsstatus = obsvector, matstatus = matvector,
+#'   propstatus = propvector, immstatus = immvector, indataset = indataset, 
+#'   binhalfwidth = binvec, comments = comments)
+#' 
+#' cypraw_v1 <- verticalize3(data = cypdata, noyears = 6, firstyear = 2004, 
+#'   patchidcol = "patch", individcol = "plantid", blocksize = 4,
+#'   sizeacol = "Inf2.04", sizebcol = "Inf.04", sizeccol = "Veg.04",
+#'   repstracol = "Inf.04", repstrbcol = "Inf2.04", fecacol = "Pod.04",
+#'   stageassign = cypframe_raw, stagesize = "sizeadded", NAas0 = TRUE,
+#'   NRasRep = TRUE)
+#' 
+#' seeds_per_pod <- 5000
+#' 
+#' cypsupp2_raw <- supplemental(stage3 = c("SD", "P1", "P2", "P3", "SL", "SL", "D", 
+#'     "XSm", "SD", "P1"),
+#'   stage2 = c("SD", "SD", "P1", "P2", "P3", "SL", "SL", "SL", "rep", "rep"),
+#'   eststage3 = c(NA, NA, NA, NA, NA, NA, "D", "XSm", NA, NA),
+#'   eststage2 = c(NA, NA, NA, NA, NA, NA, "XSm", "XSm", NA, NA),
+#'   givenrate = c(0.03, 0.15, 0.1, 0.1, 0.1, 0.05, NA, NA, NA, NA),
+#'   multiplier = c(NA, NA, NA, NA, NA, NA, NA, NA, (0.5 * seeds_per_pod),
+#'     (0.5 * seeds_per_pod)),
+#'   type =c(1, 1, 1, 1, 1, 1, 1, 1, 3, 3),
+#'   stageframe = cypframe_raw, historical = FALSE)
+#' cypsupp3_raw <- supplemental(stage3 = c("SD", "SD", "P1", "P1", "P2", "P3",
+#'     "SL", "SL", "SL", "D", "D", "SD", "P1"),
+#'   stage2 = c("SD", "SD", "SD", "SD", "P1", "P2", "P3", "SL", "SL", "SL", "SL",
+#'     "rep", "rep"),
+#'   stage1 = c("SD", "rep", "SD", "rep", "SD", "P1", "P2", "P3", "SL", "P3",
+#'     "SL", "mat", "mat"),
+#'   eststage3 = c(NA, NA, NA, NA, NA, NA, NA, NA, NA, "XSm", "D", NA, NA),
+#'   eststage2 = c(NA, NA, NA, NA, NA, NA, NA, NA, NA, "XSm", "XSm", NA, NA),
+#'   eststage1 = c(NA, NA, NA, NA, NA, NA, NA, NA, NA, "XSm", "XSm", NA, NA),
+#'   givenrate = c(0.01, 0.05, 0.10, 0.20, 0.1, 0.1, 0.05, 0.05, 0.05, NA, NA,
+#'     NA, NA),
+#'   multiplier = c(NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA,
+#'     (0.5 * seeds_per_pod), (0.5 * seeds_per_pod)),
+#'   type = c(1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 3, 3),
+#'   type_t12 = c(1, 2, 1, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1),
+#'   stageframe = cypframe_raw, historical = TRUE)
+#' 
+#' cypmatrix2rp <- rlefko2(data = cypraw_v1, stageframe = cypframe_raw,
+#'   year = "all", patch = "all", stages = c("stage3", "stage2"),
+#'   size = c("size3added", "size2added"), supplement = cypsupp2_raw, 
+#'   yearcol = "year2", patchcol = "patchid", indivcol = "individ")
+#' 
+#' cypmatrix2r <- rlefko2(data = cypraw_v1, stageframe = cypframe_raw,
+#'   year = "all", stages = c("stage3", "stage2"),
+#'   size = c("size3added", "size2added"), supplement = cypsupp2_raw, 
+#'   yearcol = "year2", patchcol = "patchid", indivcol = "individ")
+#' 
+#' cypmatrix3rp <- rlefko3(data = cypraw_v1, stageframe = cypframe_raw,
+#'   year = "all", patch = "all", stages = c("stage3", "stage2", "stage1"), 
+#'   size = c("size3added", "size2added", "size1added"), supplement = cypsupp3_raw, 
+#'   yearcol = "year2", patchcol = "patchid", indivcol = "individ")
+#' 
+#' cypmatrix3r <- rlefko3(data = cypraw_v1, stageframe = cypframe_raw,
+#'   year = "all", stages = c("stage3", "stage2", "stage1"), 
+#'   size = c("size3added", "size2added", "size1added"), supplement = cypsupp3_raw, 
+#'   yearcol = "year2", patchcol = "patchid", indivcol = "individ")
+#' 
+#' cypmatrix2r_3 <- hist_null(cypmatrix2r)
+#' cypmatrix2r_3 <- delete_lM(cypmatrix2r_3, year = 2004)
+#' diff_r <- diff_lM(cypmatrix3r, cypmatrix2r_3)
+#' 
+#' cypmatrix2rp_3 <- hist_null(cypmatrix2rp)
+#' cypmatrix2rp_3 <- delete_lM(cypmatrix2rp_3, year = 2004)
+#' diff_rp <- diff_lM(cypmatrix3rp, cypmatrix2rp_3)
+#' 
+#' condr1 <- cond_diff(diff_r, ref = 1)
+#' condr2 <- cond_diff(diff_r, ref = 2)
+#' 
+#' condrp1 <- cond_diff(diff_rp, matchoice = "U", ref = 1)
+#' condrp2 <- cond_diff(diff_rp, matchoice = "F", ref = 2)
+#' 
+#' @export cond_diff
+cond_diff <- function(lDiff, ref = 1L, matchoice = NULL, err_check = NULL) {
+    .Call('_lefko3_cond_diff', PACKAGE = 'lefko3', lDiff, ref, matchoice, err_check)
 }
 
 #' Estimate All Elements of Raw Historical Matrix
@@ -753,6 +911,30 @@ cond_hmpm <- function(hmpm, matchoice = NULL, err_check = NULL) {
 #' @noRd
 .jerzeibalowski <- function(ppy, AllStages, stageframe, matrixformat, survproxy, obsproxy, sizeproxy, sizebproxy, sizecproxy, repstproxy, fecproxy, jsurvproxy, jobsproxy, jsizeproxy, jsizebproxy, jsizecproxy, jrepstproxy, f2_inda, f1_inda, f2_indb, f1_indb, f2_indc, f1_indc, r2_inda, r1_inda, r2_indb, r1_indb, r2_indc, r1_indc, dev_terms, dens, fecmod, svsigmas, maxsize, maxsizeb, maxsizec, finalage, sizedist, sizebdist, sizecdist, fecdist, negfec, exp_tol = 700.0, theta_tol = 100000000.0) {
     .Call('_lefko3_jerzeibalowski', PACKAGE = 'lefko3', ppy, AllStages, stageframe, matrixformat, survproxy, obsproxy, sizeproxy, sizebproxy, sizecproxy, repstproxy, fecproxy, jsurvproxy, jobsproxy, jsizeproxy, jsizebproxy, jsizecproxy, jrepstproxy, f2_inda, f1_inda, f2_indb, f1_indb, f2_indc, f1_indc, r2_inda, r1_inda, r2_indb, r1_indb, r2_indc, r1_indc, dev_terms, dens, fecmod, svsigmas, maxsize, maxsizeb, maxsizec, finalage, sizedist, sizebdist, sizecdist, fecdist, negfec, exp_tol, theta_tol)
+}
+
+#' Create Historically Structured Version of ahMPM
+#' 
+#' Function \code{thefifthhousemate()} takes an ahistorical MPM as input, and
+#' uses the \code{allstages} index to create a historically structured version
+#' of it.
+#' 
+#' @param mpm The original ahMPM, supplied as a \code{lefkoMat} object.
+#' @param allstages The index dataframe developed by
+#' \code{\link{.simplepizzle}()}.
+#' @param stageframe The ahistorical stageframe supplied by
+#' \code{\link{.simplepizzle}()}.
+#' @param format Integer indicating whether historical matrices should be in
+#' (1) Ehrlen or (2) deVries format.
+#' 
+#' @return This will return a list of lists. The first list is composed of all
+#' new \code{A} matrices. The second list is composed of all new \code{U}
+#' matrices. The third list is composed of all new \code{F} matrices.
+#' 
+#' @keywords internal
+#' @noRd
+.thefifthhousemate <- function(mpm, allstages, stageframe, format) {
+    .Call('_lefko3_thefifthhousemate', PACKAGE = 'lefko3', mpm, allstages, stageframe, format)
 }
 
 #' Main Formula Creation for Function \code{modelsearch()}
@@ -1874,11 +2056,8 @@ projection3 <- function(mpm, nreps = 1L, times = 10000L, stochastic = FALSE, sta
 #' 
 #' Function \code{slambda3()} estimates the stochastic population growth rate,
 #' \eqn{a}, defined as the long-term arithmetic mean of the log population 
-#' growth rate estimated per simulated occasion (as given in equation 2 in
-#' Tuljapurkar, Horvitz, and Pascarella 2003). This term is estimated via
-#' projection of randomly sampled matrices, similarly to the procedure outlined
-#' in Box 7.4 of Morris and Doak (2002). Can handle both lefkoMat objects and
-#' lists of full A matrices. 
+#' growth rate estimated per simulated occasion. This function can handle both
+#' lefkoMat objects and lists of full A matrices as input. 
 #' 
 #' @param mpm A matrix projection model of class \code{lefkoMat}, or a list of
 #' full matrix projection matrices.
@@ -1900,6 +2079,11 @@ projection3 <- function(mpm, nreps = 1L, times = 10000L, stochastic = FALSE, sta
 #' \item{se}{The standard error of a.}
 #'
 #' @section Notes:
+#' The log stochastic population growth rate, \eqn{a}, is as given in equation
+#' 2 of Tuljapurkar, Horvitz, and Pascarella 2003. This term is estimated via
+#' projection of randomly sampled matrices, similarly to the procedure outlined
+#' in Box 7.4 of Morris and Doak (2002).
+#'  
 #' Stochastic growth rate is estimated both at the patch level and at the
 #' population level. Population level estimates will be noted at the end of the
 #' data frame with 0 entries for patch designation.
