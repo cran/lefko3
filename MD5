@@ -1,6 +1,6 @@
-30e16dacb205e290c5db5b9bd9cabb28 *DESCRIPTION
+e3c950c8fc436c573a3a438aae1dd8db *DESCRIPTION
 eb6e318492e34e4fdf33bcec21079c2c *NAMESPACE
-d69c0345026842ca4d4465867567f212 *NEWS
+ca570a59c01c16e82776baea8d37674f *NEWS
 3c18529cfc3077cac4ac6b16073478eb *R/RcppExports.R
 cc1319c76e224e3b381f37f9b5b2c91e *R/data.R
 105c1a8b0c8b84229ea2865f210681b0 *R/datamanag.R
@@ -90,7 +90,7 @@ d1efd6a0e0e2294632307aa883ebc233 *man/summary.lefkoMod.Rd
 15d23e6410f4ede51c1794721fb7ada9 *man/summary.lefkoProj.Rd
 1cdee31fd69900ec7f7989aa77aaa005 *man/supplemental.Rd
 809b1876dbc7d92e2eb0eb208d80167f *man/verticalize3.Rd
-1f0eca7bcf16e0f1e3493e0ef5ced09a *src/DataManagement.cpp
+7274f3881f2db16f87fb6b9e1d316d5e *src/DataManagement.cpp
 5733f97ebe862601913b8177f3adcfa1 *src/ErrorChecks.cpp
 61059660eb073d93e00e8ee054237071 *src/Makevars
 61059660eb073d93e00e8ee054237071 *src/Makevars.win

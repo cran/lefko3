@@ -1,6 +1,12 @@
 LEFKO3 NEWS
 -----------
 
+CHANGES IN VERSION 4.1.1 (2021-12-07)
+-------------------------------------
+  BUG FIXES
+    1. Fixed C++ runtime error in function hist_null().
+
+
 CHANGES IN VERSION 4.1.0 (2021-12-06)
 -------------------------------------
   NEW FEATURES

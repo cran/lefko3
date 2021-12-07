@@ -4852,40 +4852,40 @@ Rcpp::List simplepizzle(DataFrame StageFrame, int format) {
     totallength = (2 * nostages_nounborn * nostages_nounborn *
       nostages);
     
-    Rcpp::IntegerVector newstageidvec(nostages);
+    arma::vec newstageidvec(nostages);
     Rcpp::StringVector newstagevec(nostages);
-    Rcpp::NumericVector neworigsizevec(nostages);
-    Rcpp::NumericVector neworigsizebvec(nostages);
-    Rcpp::NumericVector neworigsizecvec(nostages);
-    Rcpp::IntegerVector newminagevec(nostages);
-    Rcpp::IntegerVector newmaxagevec(nostages);
-    Rcpp::IntegerVector newrepstatusvec(nostages);
-    Rcpp::IntegerVector newobsstatusvec(nostages);
-    Rcpp::IntegerVector newpropstatusvec(nostages);
-    Rcpp::IntegerVector newimmstatusvec(nostages);
-    Rcpp::IntegerVector newmatstatusvec(nostages);
-    Rcpp::IntegerVector newindatasetvec(nostages);
-    Rcpp::NumericVector newbinhalfwidthrawvec(nostages);
-    Rcpp::NumericVector newsizebinminvec(nostages);
-    Rcpp::NumericVector newsizebinmaxvec(nostages);
-    Rcpp::NumericVector newsizebincentervec(nostages);
-    Rcpp::NumericVector newsizebinwidthvec(nostages);
+    arma::vec neworigsizevec(nostages);
+    arma::vec neworigsizebvec(nostages);
+    arma::vec neworigsizecvec(nostages);
+    arma::vec newminagevec(nostages);
+    arma::vec newmaxagevec(nostages);
+    arma::vec newrepstatusvec(nostages);
+    arma::vec newobsstatusvec(nostages);
+    arma::vec newpropstatusvec(nostages);
+    arma::vec newimmstatusvec(nostages);
+    arma::vec newmatstatusvec(nostages);
+    arma::vec newindatasetvec(nostages);
+    arma::vec newbinhalfwidthrawvec(nostages);
+    arma::vec newsizebinminvec(nostages);
+    arma::vec newsizebinmaxvec(nostages);
+    arma::vec newsizebincentervec(nostages);
+    arma::vec newsizebinwidthvec(nostages);
     
-    Rcpp::NumericVector newbinhalfwidthbrawvec(nostages);
-    Rcpp::NumericVector newsizebinbminvec(nostages);
-    Rcpp::NumericVector newsizebinbmaxvec(nostages);
-    Rcpp::NumericVector newsizebinbcentervec(nostages);
-    Rcpp::NumericVector newsizebinbwidthvec(nostages);
+    arma::vec newbinhalfwidthbrawvec(nostages);
+    arma::vec newsizebinbminvec(nostages);
+    arma::vec newsizebinbmaxvec(nostages);
+    arma::vec newsizebinbcentervec(nostages);
+    arma::vec newsizebinbwidthvec(nostages);
     
-    Rcpp::NumericVector newbinhalfwidthcrawvec(nostages);
-    Rcpp::NumericVector newsizebincminvec(nostages);
-    Rcpp::NumericVector newsizebincmaxvec(nostages);
-    Rcpp::NumericVector newsizebinccentervec(nostages);
-    Rcpp::NumericVector newsizebincwidthvec(nostages);
+    arma::vec newbinhalfwidthcrawvec(nostages);
+    arma::vec newsizebincminvec(nostages);
+    arma::vec newsizebincmaxvec(nostages);
+    arma::vec newsizebinccentervec(nostages);
+    arma::vec newsizebincwidthvec(nostages);
     
-    Rcpp::IntegerVector newgroupvec(nostages);
+    arma::vec newgroupvec(nostages);
     Rcpp::StringVector newcomments(nostages);
-    Rcpp::IntegerVector newentrystage(nostages);
+    arma::vec newentrystage(nostages);
     
     for (int i = 0; i < nostages_nounborn; i++) {
       newstageidvec(i) = newstageid(i);
@@ -4925,41 +4925,41 @@ Rcpp::List simplepizzle(DataFrame StageFrame, int format) {
       newentrystage(i) = oldentrystage(i);
     }
     
-    newstageidvec(nostages_nounborn) = newstageid(nostages_nounborn - 1) + 1;
+    newstageidvec(nostages_nounborn) = newstageid(nostages_nounborn - 1.0) + 1.0;
     newstagevec(nostages_nounborn) = "AlmostBorn";
     neworigsizevec(nostages_nounborn) = 0.0;
     neworigsizebvec(nostages_nounborn) = 0.0;
     neworigsizecvec(nostages_nounborn) = 0.0;
-    newminagevec(nostages_nounborn) = NA_INTEGER;
-    newmaxagevec(nostages_nounborn) = NA_INTEGER;
-    newrepstatusvec(nostages_nounborn) = 0;
-    newobsstatusvec(nostages_nounborn) = 1;
-    newpropstatusvec(nostages_nounborn) = 0;
-    newimmstatusvec(nostages_nounborn) = 1;
-    newmatstatusvec(nostages_nounborn) = 0;
-    newindatasetvec(nostages_nounborn) = 1;
+    newminagevec(nostages_nounborn) = NA_REAL;
+    newmaxagevec(nostages_nounborn) = NA_REAL;
+    newrepstatusvec(nostages_nounborn) = 0.0;
+    newobsstatusvec(nostages_nounborn) = 1.0;
+    newpropstatusvec(nostages_nounborn) = 0.0;
+    newimmstatusvec(nostages_nounborn) = 1.0;
+    newmatstatusvec(nostages_nounborn) = 0.0;
+    newindatasetvec(nostages_nounborn) = 1.0;
     
-    newbinhalfwidthrawvec(nostages_nounborn) = 0;
-    newsizebinminvec(nostages_nounborn) = 0;
-    newsizebinmaxvec(nostages_nounborn) = 0;
-    newsizebincentervec(nostages_nounborn) = 0;
-    newsizebinwidthvec(nostages_nounborn) = 0;
+    newbinhalfwidthrawvec(nostages_nounborn) = 0.0;
+    newsizebinminvec(nostages_nounborn) = 0.0;
+    newsizebinmaxvec(nostages_nounborn) = 0.0;
+    newsizebincentervec(nostages_nounborn) = 0.0;
+    newsizebinwidthvec(nostages_nounborn) = 0.0;
     
-    newbinhalfwidthbrawvec(nostages_nounborn) = 0;
-    newsizebinbminvec(nostages_nounborn) = 0;
-    newsizebinbmaxvec(nostages_nounborn) = 0;
-    newsizebinbcentervec(nostages_nounborn) = 0;
-    newsizebinbwidthvec(nostages_nounborn) = 0;
+    newbinhalfwidthbrawvec(nostages_nounborn) = 0.0;
+    newsizebinbminvec(nostages_nounborn) = 0.0;
+    newsizebinbmaxvec(nostages_nounborn) = 0.0;
+    newsizebinbcentervec(nostages_nounborn) = 0.0;
+    newsizebinbwidthvec(nostages_nounborn) = 0.0;
     
-    newbinhalfwidthcrawvec(nostages_nounborn) = 0;
-    newsizebincminvec(nostages_nounborn) = 0;
-    newsizebincmaxvec(nostages_nounborn) = 0;
-    newsizebinccentervec(nostages_nounborn) = 0;
-    newsizebincwidthvec(nostages_nounborn) = 0;
+    newbinhalfwidthcrawvec(nostages_nounborn) = 0.0;
+    newsizebincminvec(nostages_nounborn) = 0.0;
+    newsizebincmaxvec(nostages_nounborn) = 0.0;
+    newsizebinccentervec(nostages_nounborn) = 0.0;
+    newsizebincwidthvec(nostages_nounborn) = 0.0;
     
-    newgroupvec(nostages_nounborn) = 0;
+    newgroupvec(nostages_nounborn) = 0.0;
     newcomments(nostages_nounborn) = "Almost Born";
-    newentrystage(nostages_nounborn) = 0;
+    newentrystage(nostages_nounborn) = 0.0;
     
     Rcpp::List new_stageframe(31);
     
@@ -5008,7 +5008,7 @@ Rcpp::List simplepizzle(DataFrame StageFrame, int format) {
       "sizebinc_width", "group", "comments", "entrystage"};
     
     new_stageframe.attr("names") = sfnamevec;
-    new_stageframe.attr("row.names") = Rcpp::IntegerVector::create(NA_INTEGER, newstageidvec.length());
+    new_stageframe.attr("row.names") = Rcpp::IntegerVector::create(NA_INTEGER, newstageidvec.n_elem);
     new_stageframe.attr("class") = "data.frame";
     
     StageFrame = new_stageframe;
