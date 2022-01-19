@@ -20,6 +20,7 @@ modelsearch(
   repst = c("repstatus3", "repstatus2", "repstatus1"),
   fec = c("feca3", "feca2", "feca1"),
   stage = c("stage3", "stage2", "stage1"),
+  matstat = c("matstatus3", "matstatus2", "matstatus1"),
   indiv = "individ",
   patch = NA,
   year = "year2",
@@ -58,6 +59,7 @@ modelsearch(
   test.group = FALSE,
   show.model.tables = TRUE,
   global.only = FALSE,
+  accuracy = TRUE,
   quiet = FALSE
 )
 }
@@ -139,6 +141,10 @@ occasions \emph{t}+1, \emph{t}, and \emph{t}-1, respectively. Defaults to
 \item{stage}{A vector indicating the variable names coding for stage in
 occasions \emph{t}+1, \emph{t}, and \emph{t}-1. Defaults to
 \code{c("stage3", "stage2", "stage1")}.}
+
+\item{matstat}{A vector indicating the variable names coding for maturity
+status in occasions \emph{t}+1, \emph{t}, and \emph{t}-1. Defaults to
+\code{c("matstatus3", "matstatus2", "matstatus1")}.}
 
 \item{indiv}{A text value indicating the variable name coding individual
 identity. Defaults to \code{"individ"}.}
@@ -271,10 +277,10 @@ Defaults to \code{2}.}
 dataset, in order from occasion \emph{t}+1, followed by occasion \emph{t},
 and lastly followed by occasion \emph{t}-1. Defaults to \code{NA}.}
 
-\item{age}{Designates the name of the variable corresponding to age in the
-vertical dataset. Defaults to \code{NA}, in which case age is not included in
-linear models. Should only be used if building Leslie or age x stage
-matrices.}
+\item{age}{Designates the name of the variable corresponding to age in time
+\emph{t} in the vertical dataset. Defaults to \code{NA}, in which case age
+is not included in linear models. Should only be used if building Leslie or
+age x stage matrices.}
 
 \item{indcova}{Vector designating the names in occasions \emph{t}+1,
 \emph{t}, and \emph{t}-1 of an individual covariate. Defaults to \code{NA}.}
@@ -309,21 +315,26 @@ in the output. Defaults to \code{TRUE}.}
 \item{global.only}{If set to TRUE, then only global models will be built and
 evaluated. Defaults to \code{FALSE}.}
 
+\item{accuracy}{A logical value indicating whether to test accuracy of
+models. See \code{Notes} section for details on hoew accuracy is assessed.
+Defaults to \code{TRUE}.}
+
 \item{quiet}{If set to TRUE, then model building and selection will proceed
 with most warnings and diagnostic messages silenced. Defaults to
 \code{FALSE}.}
 }
 \value{
 This function yields an object of class \code{lefkoMod}, which is a
-list in which the first 13 elements are the best-fit models for survival,
+list in which the first 14 elements are the best-fit models for survival,
 observation status, primary size, secondary size, tertiary size,
 reproductive status, fecundity, juvenile survival, juvenile observation,
-juvenile primary size, juvenile secondary size, juvenile tertiary size, and
-juvenile transition to reproduction, respectively, followed by 13 elements
-corresponding to the model tables for each of these vital rates, in order,
-followed by a data frame showing the order and names of variables used in
-modeling, followed by a single character element denoting the criterion used
-for model selection, and ending on a data frame with quality control data:
+juvenile primary size, juvenile secondary size, juvenile tertiary size,
+juvenile transition to reproduction, and juvenile transition to maturity,
+respectively. This is followed by 14 elements corresponding to the model
+tables for each of these vital rates, in order, followed by a data frame
+showing the order and names of variables used in modeling, followed by a
+single character element denoting the criterion used for model selection, and
+ending on a data frame with quality control data:
 
 \item{survival_model}{Best-fit model of the binomial probability of survival
 from occasion \emph{t} to occasion \emph{t}+1. Defaults to \code{1}.}
@@ -367,6 +378,9 @@ model is technically not a model of reproduction probability for individuals
 that are immature, rather reproduction probability here is given for
 individuals that are mature in occasion \emph{t}+1 but immature in occasion
 \emph{t}. Defaults to \code{1}.}
+\item{juv_maturity_model}{Best-fit model of the binomial probability of
+becoming mature in occasion \emph{t}+1, given survival to that occasion of an
+individual that was immature in occasion \emph{t}. Defaults to \code{1}.}
 \item{survival_table}{Full dredge model table of survival probability.}
 \item{observation_table}{Full dredge model table of observation probability.}
 \item{size_table}{Full dredge model table of the primary size variable.}
@@ -386,13 +400,15 @@ individuals.}
 individuals.}
 \item{juv_reproduction_table}{Full dredge model table of immature
 reproduction probability.}
+\item{juv_maturity_table}{Full dredge model table of the probability of
+an immature individual transitioning to maturity.}
 \item{criterion}{Character variable denoting the criterion used to determine
 the best-fit model.}
-\item{qc}{Data frame with four variables: 1) Name of vital rate, 2) number
+\item{qc}{Data frame with five variables: 1) Name of vital rate, 2) number
 of individuals used to model that vital rate, 3) number of individual
-transitions used to model that vital rate, and 4) accuracy of model expressed
-as percent of predicted responses equal to actual responses (only in binomial
-models).}
+transitions used to model that vital rate, 4) parameter distribution used to
+model the vital rats, and 5) accuracy of model, given as detailed in Notes
+section.}
 }
 \description{
 Function \code{modelsearch()} runs exhaustive model building and selection
@@ -420,6 +436,15 @@ functions for further information. Any response term that is invariable in
 the dataset will lead to a best-fit model for that response represented by a
 single constant value.
 
+When \code{modelsearch()} is called, it first builds global models for all
+vital rates and runs them. If a global model fails, then the function
+proceeds by dropping any two-way interactions and trying again. If this
+fails, then function will continue to drop key terms (typically random terms
+or individual covariates) until something rune. The last attempt if running a
+mixed set of models is to try a glm version of the original failed model, and
+use that as a global model if it runs properly. Finally, if all attempts
+fail, then the function returns a \code{1}.
+
 Exhaustive model building and selection proceeds via the
 \code{\link[MuMIn]{dredge}()} function in package \code{MuMIn}. This function
 is verbose, so that any errors and warnings developed during model building,
@@ -443,6 +468,16 @@ historical, individual covariates are used, or a zero-inflated distribution
 is assumed. In such cases, the number of models built and tested will run at
 least in the millions. Small datasets will also increase the error associated
 with these tests, leading to adoption of simpler models overall.
+
+Accuracy of vital rate models is calculated differently depending on vital
+rate and assumed distribution. For all vital rates assuming a binomial
+distribution, including survival, observation status, reproductive status,
+and juvenile version of these, accuracy is calculated as the percent of
+predicted responses equal to actual responses. In all other models, accuracy
+is actually the conditional R-wquared using package \code{MuMIn}'s
+\code{\link[MuMIn]{r.squaredGLMM}()} function, estimated via the delta
+method. When this method fails, \code{modelsearch()} calculates McFadden's
+pseudo R-squared. If this fails, then \code{NA} is returned.
 
 Care must be taken to build models that test the impacts of state in occasion
 \emph{t}-1 for historical models, and that do not test these impacts for

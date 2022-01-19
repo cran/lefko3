@@ -10,9 +10,9 @@ using namespace arma;
 //' deVries and Caswell (2018).
 //'
 //' @param mainmat Historical matrix.
-//' @param indices Data frame including the stages at times t-1, t, and t+1, as
-//' well as indices corresponding to elements in the main historical matrix and
-//' the conditional matrices to be produced.
+//' @param indices Data frame including the stages at times \emph{t}-1,
+//' \emph{t}, and \emph{t}+1, asvwell as indices corresponding to elements in
+//' the main historical matrix andvthe conditional matrices to be produced.
 //' @param ahstages The number of stages in the stageframe.
 //' @param stageframe The original stageframe for the input matrices.
 //'

@@ -6,7 +6,7 @@
 \title{Demographic Dataset of \emph{Cypripedium candidum} Population, in Vertical
 Format}
 \format{
-A data frame with 77 individuals, 331 rows, and 12 variables. Each
+A data frame with 77 individuals, 322 rows, and 14 variables. Each
 row corresponds to a specific two-year transition for a specific individual.
 Variable codes are similar to those for \code{cypdata}, but use \code{.2} to
 identify occasion \emph{t} and \code{.3} to identify occasion \emph{t}+1.
@@ -15,6 +15,8 @@ identify occasion \emph{t} and \code{.3} to identify occasion \emph{t}+1.
   \item{plantid}{A numeric variable giving a unique number to each 
   individual.}
   \item{patch}{A variable refering to patch within the population.}
+  \item{X}{An X coordinate for the plant within the population.}
+  \item{Y}{A Y coordinate for the plant within the population.}
   \item{censor}{A variable coding for whether the data point is valid. An
   entry of 1 means that it is so.}
   \item{year2}{Year in occasion \emph{t}.}

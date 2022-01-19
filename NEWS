@@ -1,6 +1,97 @@
 LEFKO3 NEWS
 -----------
 
+CHANGES IN VERSION 4.2.0 (2022-01-XX)
+-------------------------------------
+  NEW FEATURES
+    1. Functions rleslie() and fleslie() created to estimate raw and 
+       function-based Leslie MPMs, respectively.
+    2. Added a beta term setting K as hard maximum in the logistic function
+       using functions density_input() and projection3().
+    3. Accuracy check added to size and fecundity models in modelsearch().
+    4. Function modelsearch() new runs exhaustive model selection under the
+       `suite = "cons"` setting if age, density, or any individual covariate is
+       added to the analysis.
+    5. Function modelsearch() now performs accuracy checks by default, and
+       allows an opt-out.
+    6. Function actualstage3() now removes stages if wished, including stage
+       NotAlive be default.
+    7. New plot.lefkoProj() function added.
+    8. All function-based matrix estimators now incorporate a default method
+       for continuous distributions using cumulative density functions to
+       estimate size transition probabilities. The midpoint rule is now only an
+       option (and not advised).
+    9. New standalone density dependence functions ricker3(), beverton3(),
+       usher3(), and logistic3() added.
+    10. Substochasticity options for projection3() now include the option to
+        force fecundity to stay non-negative.
+    11. Function projection3() now issues warnings if density dependence yields
+        matrix impossible matrix values.
+    12. Function modelsearch() now also estimates maturity status probability in
+        juveniles.
+    13. Functions supplemental(), density_input(), and start_input() now also
+        include automated handling of keywords "obs" and "nobs", which specify
+        the use of all observable or unobservable stages, respectively.
+
+  USER-VISIBLE CHANGES
+    1. Functions rlefko2() and rlefko3() now provide warnings if individual
+       identity variable name or column number is not provided.
+    2. Function summary.lefkoMat() now provides appropriate descriptions of
+       data quality control sections with missing values.
+    3. Added spatial coordinates to cypdata and cypvert.
+    4. Function modelsearch() is now more flexible with input errors in some
+       key settings.
+    5. Ended dependence on package stringr.
+    6. Expanded data frame output with actualstage3() to give individual stage
+       designations in times t and t-1.
+    7. Function summary.lefkoMat() now yields warnings if any fecundity matrix
+       contains a negative value, and if any matrix contains an NA value.
+    8. Added equations in key help files.
+    9. Corrections and updates to all vignettes.
+    10. Function modelsearch() now tries several more parameterizations if the
+        global model fails.
+    11. Function lmean() now also incorporates modelqc and dataqc elements for
+        quality control purposes.
+    12. Function aflefko2() now treats missing minimum ages as zeroes, allowing
+        estimation even when age info is missing from stageframes.
+
+  BUG FIXES
+    1. Matrix quality control summaries corrected when functions add_lM(),
+       delete_lM(), and subset_lM() are used.
+    2. Corrected errors in documentation regatding censoring variables used in
+       rlefko3() and rlefko2().
+    3. Corrected issue yielding fatal error in historicalize3() when spatial
+       coordinates are set and reduce = TRUE.
+    4. Corrected improper matrix formatting in some integer variables used in
+       historicalize3().
+    5. Fixed bug ignoring coordsRepeat setting in verticalize3().
+    6. Fixed bug causing inconsistent coordinate assignment under unobserved
+       stages in historicalize3().
+    7. Corrected bug capable of causing the logistic function to yield negative
+       matrix elements.
+    8. Fixed improper handling of numeric entries for year and patch options in
+       function modelsearch().
+    9. Corrected issue in flefko3(), flefko2(), and aflefko2() affecting the
+       incorporation of zero-inflated Poisson and negative binomial models.
+    10. Fixed fecundity estimation issue arising in some circumstances with
+        deVries-formatted historical models.
+    11. Fixed bug leading size of 0 to be treated as zero-inflated in Poisson
+        and negative binomial models.
+    12. Added tolerance limit to binomial probability estimation in all
+        function-based matrix estimators, to prevent some conditions yielding
+        NA probabilities.
+    13. Eliminated bug causing rare error in formulae creation in modelsearch().
+    14. Eliminated bug causing unrealistic pseudo-R^2 in rare runs of
+        modelsearch().
+    15. Eliminated fatal error in modelsearch() occurring under rare instances
+        when all attempts to build a working global model fail.
+    16. Fixed bug incorrectly importing non-standard variable names into
+        modelsearch().
+    17. Fixed error causing density dependent projections under large,
+        historical MPMs in projection3() to issue substochasticity warnings
+        continuously regardless of actual substochasticity violation.
+
+
 CHANGES IN VERSION 4.1.1 (2021-12-07)
 -------------------------------------
   BUG FIXES

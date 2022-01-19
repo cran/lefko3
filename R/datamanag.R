@@ -1,5 +1,5 @@
 #' Create Historical Vertical Data Frame from Horizontal Data Frame
-#'
+#' 
 #' Function \code{verticalize3()} returns a vertically formatted demographic
 #' data frame organized to create historical projection matrices, given a
 #' horizontally formatted input data frame. It also handles stage assignments
@@ -1144,7 +1144,7 @@ verticalize3 <- function(data, noyears, firstyear = 1, popidcol = 0,
 #' vertically but ahistorically formatted data frame. This data frame is in
 #' standard \code{hfvdata} format and can be used in all functions in the
 #' package.
-#'
+#' 
 #' @param data The horizontal data file.
 #' @param popidcol A variable name or column number corresponding to the
 #' identity of the population for each individual.
@@ -1308,7 +1308,7 @@ verticalize3 <- function(data, noyears, firstyear = 1, popidcol = 0,
 #' Defaults to \code{TRUE}.
 #' @param quiet A logical variable indicating whether to silence warnings.
 #' Defaults to \code{FALSE}.
-#'
+#' 
 #' @return If all inputs are properly formatted, then this function will output
 #' a historical vertical data frame (class \code{hfvdata}), meaning that the
 #' output data frame will have three consecutive years of size and reproductive
@@ -2048,33 +2048,33 @@ historicalize3 <- function(data, popidcol = 0, patchidcol = 0, individcol,
   if (reduce) {
     if (all(is.na(popdata$xpos1)) | length(unique(popdata$xpos1)) == 1) {
       popdata <- popdata[,-c(which(names(popdata) == "xpos1"))]
-    } else if (all.equal(sort(unique(popdata$xpos1)), c(-1,0))) {
+    } else if (isTRUE(all.equal(sort(unique(popdata$xpos1)), c(-1,0)))) {
       popdata <- popdata[,-c(which(names(popdata) == "xpos1"))]
     }
     if (all(is.na(popdata$ypos1)) | length(unique(popdata$ypos1)) == 1) {
       popdata <- popdata[,-c(which(names(popdata) == "ypos1"))]
-    } else if (all.equal(sort(unique(popdata$ypos1)), c(-1,0))) {
+    } else if (isTRUE(all.equal(sort(unique(popdata$ypos1)), c(-1,0)))) {
       popdata <- popdata[,-c(which(names(popdata) == "ypos1"))]
     }
     
     if (all(is.na(popdata$xpos2)) | length(unique(popdata$xpos2)) == 1) {
       popdata <- popdata[,-c(which(names(popdata) == "xpos2"))]
-    } else if (all.equal(sort(unique(popdata$xpos2)), c(-1,0))) {
+    } else if (isTRUE(all.equal(sort(unique(popdata$xpos2)), c(-1,0)))) {
       popdata <- popdata[,-c(which(names(popdata) == "xpos2"))]
     }
     if (all(is.na(popdata$ypos2)) | length(unique(popdata$ypos2)) == 1) {
       popdata <- popdata[,-c(which(names(popdata) == "ypos2"))]
-    } else if (all.equal(sort(unique(popdata$ypos2)), c(-1,0))) {
+    } else if (isTRUE(all.equal(sort(unique(popdata$ypos2)), c(-1,0)))) {
       popdata <- popdata[,-c(which(names(popdata) == "ypos2"))]
     }
     if (all(is.na(popdata$xpos3)) | length(unique(popdata$xpos3)) == 1) {
       popdata <- popdata[,-c(which(names(popdata) == "xpos3"))]
-    } else if (all.equal(sort(unique(popdata$xpos3)), c(-1,0))) {
+    } else if (isTRUE(all.equal(sort(unique(popdata$xpos3)), c(-1,0)))) {
       popdata <- popdata[,-c(which(names(popdata) == "xpos3"))]
     }
     if (all(is.na(popdata$ypos3)) | length(unique(popdata$ypos3)) == 1) {
       popdata <- popdata[,-c(which(names(popdata) == "ypos3"))]
-    } else if (all.equal(sort(unique(popdata$ypos3)), c(-1,0))) {
+    } else if (isTRUE(all.equal(sort(unique(popdata$ypos3)), c(-1,0)))) {
       popdata <- popdata[,-c(which(names(popdata) == "ypos3"))]
     }
     
@@ -2829,8 +2829,8 @@ create_lM <- function(mats, stageframe, hstages = NA, agestages = NA,
 #' @param patch The patch designation for each matrix. If object \code{lM}
 #' includes only a single patch, then defaults to that designation. Otherwise
 #' requires a designation as input.
-#' @param year The designation for occasion at time *t* corresponding to each
-#' matrix. Cannot be left empty.
+#' @param year The designation for occasion at time \emph{t} corresponding to
+#' each matrix. Cannot be left empty.
 #' 
 #' @return A \code{lefkoMat} object incorporating the new matrices within the
 #' object input in \code{lM}. 
@@ -3287,6 +3287,15 @@ add_lM <- function(lM, Amats = NA, Umats = NA, Fmats = NA, UFdecomp = FALSE,
   lM$U <- append(lM$U, Umats)
   lM$F <- append(lM$F, Fmats)
   
+  surv_additions <- sum(unlist(lapply(Umats, function(X) {
+    length(which(X > 0))
+  })))
+  fec_additions <- sum(unlist(lapply(Fmats, function(X) {
+    length(which(X > 0))
+  })))
+  
+  lM$matrixqc[1] <- lM$matrixqc[1] + surv_additions
+  lM$matrixqc[2] <- lM$matrixqc[2] + fec_additions
   lM$matrixqc[3] <- lM$matrixqc[3] + list_lengthA
   
   newlabels <- cbind.data.frame(pop = pop, patch = patch, year2 = year)
@@ -3306,8 +3315,8 @@ add_lM <- function(lM, Amats = NA, Umats = NA, Fmats = NA, UFdecomp = FALSE,
 #' \code{mat_num} is not given.
 #' @param patch The patch designation for matrices to remove. Only used if
 #' \code{mat_num} is not given.
-#' @param year The time *t* designation for matrices to remove. Only used if
-#' \code{mat_num} is not given.
+#' @param year The time \emph{t} designation for matrices to remove. Only used
+#' if \code{mat_num} is not given.
 #' 
 #' @return A \code{lefkoMat} object in which the matrices specified in \code{lM}
 #' have been removed. 
@@ -3566,6 +3575,15 @@ delete_lM <- function(lM, mat_num = NA, pop = NA, patch = NA, year = NA) {
   lM$U <- lM$U[-mat_num]
   lM$F <- lM$F[-mat_num]
   
+  surv_portions <- sum(unlist(lapply(lM$U, function(X) {
+    length(which(X > 0))
+  })))
+  fec_portions <- sum(unlist(lapply(lM$F, function(X) {
+    length(which(X > 0))
+  })))
+  
+  lM$matrixqc[1] <- surv_portions
+  lM$matrixqc[2] <- fec_portions
   lM$matrixqc[3] <- lM$matrixqc[3] - length(mat_num)
   
   lM$labels <- lM$labels[-mat_num,]
@@ -3586,8 +3604,8 @@ delete_lM <- function(lM, mat_num = NA, pop = NA, patch = NA, year = NA) {
 #' \code{mat_num} is not given.
 #' @param patch The patch designation for matrices to select. Only used if
 #' \code{mat_num} is not given.
-#' @param year The time *t* designation for matrices to select. Only used if
-#' \code{mat_num} is not given.
+#' @param year The time \emph{t} designation for matrices to select. Only used
+#' if \code{mat_num} is not given.
 #' 
 #' @return A \code{lefkoMat} object composed of the matrices specified in the
 #' options. 
@@ -3847,6 +3865,15 @@ subset_lM <- function(lM, mat_num = NA, pop = NA, patch = NA, year = NA) {
   lM$U <- lM$U[mat_num]
   lM$F <- lM$F[mat_num]
   
+  surv_portions <- sum(unlist(lapply(lM$U, function(X) {
+    length(which(X > 0))
+  })))
+  fec_portions <- sum(unlist(lapply(lM$F, function(X) {
+    length(which(X > 0))
+  })))
+  
+  lM$matrixqc[1] <- surv_portions
+  lM$matrixqc[2] <- fec_portions
   lM$matrixqc[3] <- length(mat_num)
     
   lM$labels <- lM$labels[mat_num,]

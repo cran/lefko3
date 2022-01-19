@@ -45,8 +45,8 @@ Otherwise requires a designation as input.}
 includes only a single patch, then defaults to that designation. Otherwise
 requires a designation as input.}
 
-\item{year}{The designation for occasion at time *t* corresponding to each
-matrix. Cannot be left empty.}
+\item{year}{The designation for occasion at time \emph{t} corresponding to
+each matrix. Cannot be left empty.}
 }
 \value{
 A \code{lefkoMat} object incorporating the new matrices within the

@@ -2,14 +2,15 @@
 % Please edit documentation in R/popchar.R
 \name{actualstage3}
 \alias{actualstage3}
-\title{Calculate Actual Stage or Stage-Pair Distributions}
+\title{Calculate Actual Stage, Age-Stage, or Stage-Pair Distributions}
 \usage{
 actualstage3(
   data,
   historical = FALSE,
   year2 = "year2",
   indices = c("stage3index", "stage2index", "stage1index"),
-  stagecol = c("stage3", "stage2", "stage1")
+  stagecol = c("stage3", "stage2", "stage1"),
+  remove.stage = "NotAlive"
 )
 }
 \arguments{
@@ -29,13 +30,18 @@ Defaults to \code{c("stage3index", "stage2index", "stage1index")}.}
 \item{stagecol}{A vector of three strings, indicating the stage name columns
 for times \emph{t}+1, \emph{t}, and \emph{t}-1, respectively, in \code{data}.
 Defaults to \code{stagecol = c("stage3", "stage2", "stage1")}.}
+
+\item{remove.stage}{A string vector indicating the names of stages to remove
+from consideration. Defaults to \code{"NotAlive"}.}
 }
 \value{
-A data frame with five variables:
+A data frame with the following variables:
 \item{rowid}{A string identifier term, equal to the monitoring occasion in
 time \emph{t} and the stage index.}
 \item{stageindex}{The stageframe index of the stage.}
 \item{stage}{The name of each stage, or \code{NA}.}
+\item{stage2}{The name of the stage in time \emph{t}.}
+\item{stage1}{The name of the stage in time \emph{t}-1, or \code{NA}.}
 \item{year2}{Monitoring occasion in time \emph{t}.}
 \item{frequency}{The number of individuals in the respective stage and time.}
 \item{actual_prop}{The proportion of individuals alive in time \emph{t} in

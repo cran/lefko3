@@ -347,9 +347,9 @@
 #' deVries and Caswell (2018).
 #'
 #' @param mainmat Historical matrix.
-#' @param indices Data frame including the stages at times t-1, t, and t+1, as
-#' well as indices corresponding to elements in the main historical matrix and
-#' the conditional matrices to be produced.
+#' @param indices Data frame including the stages at times \emph{t}-1,
+#' \emph{t}, and \emph{t}+1, asvwell as indices corresponding to elements in
+#' the main historical matrix andvthe conditional matrices to be produced.
 #' @param ahstages The number of stages in the stageframe.
 #' @param stageframe The original stageframe for the input matrices.
 #'
@@ -576,6 +576,250 @@ cond_diff <- function(lDiff, ref = 1L, matchoice = NULL, err_check = NULL) {
     .Call('_lefko3_cond_diff', PACKAGE = 'lefko3', lDiff, ref, matchoice, err_check)
 }
 
+#' Two-parameter Ricker function
+#' 
+#' Function \code{ricker3()} creates a vector of values produced by the two-
+#' parameter Ricker function as applied with a user-specified time lag. The
+#' two-parameter Ricker function is given as 
+#' \eqn{\phi_{t+1} = \phi_t \alpha e^{-\beta n_t}}. Here, if no
+#' \code{separate_N} vector is provided, then \eqn{n_t = \phi_t}.
+#' 
+#' @param start_value A positive number to start the return vector in time 0.
+#' @param alpha The alpha parameter in the two-parameter Ricker function. Must
+#' be non-negative.
+#' @param beta The beta parameter in the two-parameter Ricker function.
+#' @param time_steps The number of time steps to run the projection. Must be a
+#' positive integer.
+#' @param time_lag A positive integer denoting the number of time steps back
+#' for the value of phi in the two-parameter Ricker function.
+#' @param pre0_subs A logical value indicating whether to use a number other
+#' than that given in \code{start_value} for values of phi lagged from times
+#' prior to time 0.
+#' @param pre0_value A positive number to use for phi lagged from times prior
+#' to time 0. Only used if \code{pre0_subs = TRUE}.
+#' @param substoch An integer value indicating the kind of substochasticity to
+#' use. Values include: \code{0}, no substochasticity enforced (the default);
+#' \code{1}, all numbers must be non-negative; and \code{2}, all numbers should
+#' be forced to the interval [0, 1].
+#' @param separate_N An optional numeric vector with values of N in each time,
+#' if phi is to be treated as different from N in the two-parameter model.
+#' 
+#' @return A numeric vector of values showing values projected under the two-
+#' parameter Ricker function.
+#' 
+#' @examples
+#' trial_run1 <- ricker3(1, alpha = 0.5, beta = -0.009)
+#' plot(trial_run1)
+#' 
+#' trial_run2 <- ricker3(1, alpha = 0.5, beta = 0.009)
+#' plot(trial_run2)
+#' 
+#' trial_run3 <- ricker3(1, alpha = 1, beta = -0.009)
+#' plot(trial_run3)
+#' 
+#' trial_run4 <- ricker3(1, alpha = 1, beta = 0.009)
+#' plot(trial_run4)
+#' 
+#' trial_run5 <- ricker3(1, alpha = 5, beta = -0.009)
+#' plot(trial_run5)
+#' 
+#' trial_run6 <- ricker3(1, alpha = 5, beta = 0.009)
+#' plot(trial_run6)
+#' 
+#' used_Ns <- c(10, 15, 12, 14, 14, 150, 15, 1, 5, 7, 9, 14, 13, 16, 17, 19,
+#'   25, 26)
+#' trial_run7 <- ricker3(1, alpha = 1, beta = -0.009, separate_N = used_Ns)
+#' plot(trial_run7)
+#' 
+#' @export ricker3
+ricker3 <- function(start_value, alpha, beta, time_steps = 100L, time_lag = 1L, pre0_subs = FALSE, pre0_value = 0.0, substoch = 0L, separate_N = NULL) {
+    .Call('_lefko3_ricker3', PACKAGE = 'lefko3', start_value, alpha, beta, time_steps, time_lag, pre0_subs, pre0_value, substoch, separate_N)
+}
+
+#' Two-parameter Beverton-Holt function
+#' 
+#' Function \code{beverton3()} creates a vector of values produced by the two-
+#' parameter Beverton-Holt function as applied with a user-specified time lag.
+#' The two-parameter Beverton-Holt function is given as 
+#' \eqn{\phi_{t+1} = \phi_t \alpha / (1 + \beta n_t)}. Here, if no
+#' \code{separate_N} vector is provided, then \eqn{n_t = \phi_t}.
+#' 
+#' @param start_value A positive number to start the return vector in time 0.
+#' @param alpha The alpha parameter in the two-parameter Beverton-Holt
+#' function. Must be non-negative.
+#' @param beta The beta parameter in the two-parameter Beverton-Holt function.
+#' Must be non-negative.
+#' @param time_steps The number of time steps to run the projection. Must be a
+#' positive integer.
+#' @param time_lag A positive integer denoting the number of time steps back
+#' for the value of phi in the two-parameter Beverton-Holt function.
+#' @param pre0_subs A logical value indicating whether to use a number other
+#' than that given in \code{start_value} for values of phi lagged from times
+#' prior to time 0.
+#' @param pre0_value A positive number to use for phi lagged from times prior
+#' to time 0. Only used if \code{pre0_subs = TRUE}.
+#' @param substoch An integer value indicating the kind of substochasticity to
+#' use. Values include: \code{0}, no substochasticity enforced (the default);
+#' \code{1}, all numbers must be non-negative; and \code{2}, all numbers should
+#' be forced to the interval [0, 1].
+#' @param separate_N An optional numeric vector with values of N in each time,
+#' if phi is to be treated as different from N in the two-parameter model.
+#' 
+#' @return A numeric vector of values showing values projected under the two-
+#' parameter Beverton-Holt function.
+#' 
+#' @examples
+#' trial_run1 <- beverton3(1, alpha = 0.5, beta = 0.009)
+#' plot(trial_run1)
+#' 
+#' trial_run2 <- beverton3(1, alpha = 0.5, beta = 0.9)
+#' plot(trial_run2)
+#' 
+#' trial_run3 <- beverton3(1, alpha = 1, beta = 0.009)
+#' plot(trial_run3)
+#' 
+#' trial_run4 <- beverton3(1, alpha = 1, beta = 0.9)
+#' plot(trial_run4)
+#' 
+#' trial_run5 <- beverton3(1, alpha = 5, beta = 0.009)
+#' plot(trial_run5)
+#' 
+#' trial_run6 <- beverton3(1, alpha = 5, beta = 0.9)
+#' plot(trial_run6)
+#' 
+#' used_Ns <- c(10, 15, 12, 14, 14, 150, 15, 1, 5, 7, 9, 14, 13, 16, 17, 19,
+#'   25, 26)
+#' trial_run7 <- beverton3(1, alpha = 1, beta = 0.009, separate_N = used_Ns)
+#' plot(trial_run7)
+#' 
+#' @export beverton3
+beverton3 <- function(start_value, alpha, beta, time_steps = 100L, time_lag = 1L, pre0_subs = FALSE, pre0_value = 0.0, substoch = 0L, separate_N = NULL) {
+    .Call('_lefko3_beverton3', PACKAGE = 'lefko3', start_value, alpha, beta, time_steps, time_lag, pre0_subs, pre0_value, substoch, separate_N)
+}
+
+#' Two-parameter Usher function
+#' 
+#' Function \code{usher3()} creates a vector of values produced by the two-
+#' parameter Usher function as applied with a user-specified time lag.
+#' The Usher function is given as 
+#' \eqn{\phi_{t+1} = \phi_t / (1 + e^{\alpha n_t + \beta})}. Here,
+#' if no \code{separate_N} vector is provided, then \eqn{n_t = \phi_t}.
+#' 
+#' @param start_value A positive number to start the return vector in time 0.
+#' @param alpha The alpha parameter in the two-parameter Usher
+#' function.
+#' @param beta The beta parameter in the two-parameter Usher function.
+#' @param time_steps The number of time steps to run the projection. Must be a
+#' positive integer.
+#' @param time_lag A positive integer denoting the number of time steps back
+#' for the value of phi in the two-parameter Usher function.
+#' @param pre0_subs A logical value indicating whether to use a number other
+#' than that given in \code{start_value} for values of phi lagged from times
+#' prior to time 0.
+#' @param pre0_value A positive number to use for phi lagged from times prior
+#' to time 0. Only used if \code{pre0_subs = TRUE}.
+#' @param substoch An integer value indicating the kind of substochasticity to
+#' use. Values include: \code{0}, no substochasticity enforced (the default);
+#' \code{1}, all numbers must be non-negative; and \code{2}, all numbers should
+#' be forced to the interval [0, 1].
+#' @param separate_N An optional numeric vector with values of N in each time,
+#' if phi is to be treated as different from N in the two-parameter model.
+#' 
+#' @return A numeric vector of values showing values projected under the two-
+#' parameter Usher function.
+#' 
+#' @examples
+#' trial_run1 <- usher3(1, alpha = -0.5, beta = 0.005)
+#' plot(trial_run1)
+#' 
+#' trial_run2 <- usher3(1, alpha = 0.5, beta = 0.005)
+#' plot(trial_run2)
+#' 
+#' trial_run3 <- usher3(1, alpha = -5, beta = 0.005)
+#' plot(trial_run3)
+#' 
+#' trial_run4 <- usher3(1, alpha = 5, beta = 0.005)
+#' plot(trial_run4)
+#' 
+#' trial_run5 <- usher3(1, alpha = -25, beta = 0.005)
+#' plot(trial_run5)
+#' 
+#' trial_run6 <- usher3(1, alpha = 25, beta = 0.005)
+#' plot(trial_run6)
+#' 
+#' used_Ns <- c(10, 15, 12, 14, 14, 150, 15, 1, 5, 7, 9, 14, 13, 16, 17, 19,
+#'   25, 26)
+#' trial_run7 <- usher3(1, alpha = -0.5, beta = 0.005, separate_N = used_Ns)
+#' plot(trial_run7)
+#' 
+#' @export usher3
+usher3 <- function(start_value, alpha, beta, time_steps = 100L, time_lag = 1L, pre0_subs = FALSE, pre0_value = 0.0, substoch = 0L, separate_N = NULL) {
+    .Call('_lefko3_usher3', PACKAGE = 'lefko3', start_value, alpha, beta, time_steps, time_lag, pre0_subs, pre0_value, substoch, separate_N)
+}
+
+#' Two-parameter logistic function
+#' 
+#' Function \code{logistic3()} creates a vector of values produced by the
+#' logistic function as applied with a user-specified time lag. The logistic
+#' function is given as 
+#' \eqn{\phi_{t+1} = \phi_t \lambda (1 - n_t / K)}. Here,
+#' if no \code{separate_N} vector is provided, then \eqn{n_t = \phi_t}. If
+#' \eqn{\lambda} is not provided, then it defaults to \code{1.0}.
+#' 
+#' @param start_value A positive number to start the return vector in time 0.
+#' @param alpha The carrying capacity K.
+#' @param beta If set to some positive number, then this number is the maximum
+#' value of phi to enforce. Otherwise, equals \code{0} and enforces no limit.
+#' @param lambda The value of the discrete population growth rate to use.
+#' Equal to the natural logarithm of the instantaneous growth rate, r.
+#' @param time_steps The number of time steps to run the projection. Must be a
+#' positive integer.
+#' @param time_lag A positive integer denoting the number of time steps back
+#' for the value of phi in the logistic function.
+#' @param pre0_subs A logical value indicating whether to use a number other
+#' than that given in \code{start_value} for values of phi lagged from times
+#' prior to time 0.
+#' @param pre0_value A positive number to use for phi lagged from times prior
+#' to time 0. Only used if \code{pre0_subs = TRUE}.
+#' @param substoch An integer value indicating the kind of substochasticity to
+#' use. Values include: \code{0}, no substochasticity enforced (the default);
+#' \code{1}, all numbers must be non-negative; and \code{2}, all numbers should
+#' be forced to the interval [0, 1].
+#' @param separate_N An optional numeric vector with values of N in each time,
+#' if phi is to be treated as different from N in the logistic model.
+#' 
+#' @return A numeric vector of values showing values projected under the-
+#' logistic function.
+#' 
+#' @examples
+#' trial_run1 <- logistic3(1, alpha = 5)
+#' plot(trial_run1)
+#' 
+#' trial_run2 <- logistic3(1, alpha = 5, beta = 5)
+#' plot(trial_run2)
+#' 
+#' trial_run3 <- logistic3(1, alpha = 100)
+#' plot(trial_run3)
+#' 
+#' trial_run4 <- logistic3(1, alpha = 100, beta = 50)
+#' plot(trial_run4)
+#' 
+#' trial_run5 <- logistic3(1, alpha = 500)
+#' plot(trial_run5)
+#' 
+#' trial_run6 <- logistic3(1, alpha = 500, beta = 501)
+#' plot(trial_run6)
+#' 
+#' used_Ns <- c(10, 15, 12, 14, 14, 150, 15, 1, 5, 7, 9, 14, 13, 16, 17, 19,
+#'   25, 26)
+#' trial_run7 <- logistic3(1, alpha = 500, beta = 501, separate_N = used_Ns)
+#' plot(trial_run7)
+#' 
+#' @export logistic3
+logistic3 <- function(start_value, alpha, beta = 0.0, lambda = 1.0, time_steps = 100L, time_lag = 1L, pre0_subs = FALSE, pre0_value = 0.0, substoch = 0L, separate_N = NULL) {
+    .Call('_lefko3_logistic3', PACKAGE = 'lefko3', start_value, alpha, beta, lambda, time_steps, time_lag, pre0_subs, pre0_value, substoch, separate_N)
+}
+
 #' Estimate All Elements of Raw Historical Matrix
 #' 
 #' Function \code{.specialpatrolgroup()} swiftly calculates matrix transitions
@@ -630,11 +874,34 @@ cond_diff <- function(lDiff, ref = 1L, matchoice = NULL, err_check = NULL) {
     .Call('_lefko3_normalpatrolgroup', PACKAGE = 'lefko3', sge3, sge2, MainData, StageFrame)
 }
 
+#' Estimate All Elements of Raw Ahistorical Population Projection Matrix
+#' 
+#' Function \code{.minorpatrolgroup()} swiftly calculates matrix transitions
+#' in raw Leslie MPMs, and is used internally in \code{\link{rleslie}()}.
+#' 
+#' @param MainData The demographic dataset modified internally to have needed
+#' variables for living status, reproduction status, and fecundity.
+#' @param StageFrame The full stageframe for the analysis.
+#' @param fectime An integer coding to estimate fecundity using time \emph{t}
+#' (\code{2}) or time \emph{t}+1 \code{(3)}.
+#' @param cont Should a self-loop transition be estimated for the final age.
+#' @param lastage An integer coding for the last age to use in matrix
+#' construction.
+#' 
+#' @return List of three matrices, including the survival-transition (U)
+#' matrix, the fecundity matrix (F), and the sum (A) matrix, with A first.
+#' 
+#' @keywords internal
+#' @noRd
+.minorpatrolgroup <- function(MainData, StageFrame, fectime, cont, fec_mod) {
+    .Call('_lefko3_minorpatrolgroup', PACKAGE = 'lefko3', MainData, StageFrame, fectime, cont, fec_mod)
+}
+
 #' Creates Matrices of Year and Patch Terms in Models
 #' 
 #' Function \code{.revelations()} creates a matrix holding either the year or
 #' patch coefficients from all vital rate models. This reduces memory load in
-#' function \code{\link{.jerzeibalowski}()}, which may be important in some
+#' functions \code{\link{.jerzeibalowski}()}, which may be important in some
 #' systems or compilers.
 #' 
 #' @param survproxy The proxy vital rate model covering survival from the main
@@ -661,41 +928,44 @@ cond_diff <- function(lDiff, ref = 1L, matchoice = NULL, err_check = NULL) {
 #' size from the main matrix estimator function.
 #' @param jsizecproxy The proxy vital rate model covering juvenile tertiary
 #' size from the main matrix estimator function.
-#' @param repstproxy The proxy vital rate model covering juvenile reproductive
+#' @param jrepstproxy The proxy vital rate model covering juvenile reproductive
 #' status from the main matrix estimator function.
+#' @param jmatstproxy The proxy vital rate model covering juvenile probability
+#' of becoming mature from the main matrix estimator function.
 #' @param mat_switch An integer coding for year (\code{1}) or patch (\code{2}).
 #' 
-#' @return A matrix with 13 columns corresponding to the number of vital rates
+#' @return A matrix with 14 columns corresponding to the number of vital rates
 #' and number of columns equal to the number of year or patches.
 #' 
 #' @keywords internal
 #' @noRd
-.revelations <- function(survproxy, obsproxy, sizeproxy, sizebproxy, sizecproxy, repstproxy, fecproxy, jsurvproxy, jobsproxy, jsizeproxy, jsizebproxy, jsizecproxy, jrepstproxy, mat_switch) {
-    .Call('_lefko3_revelations', PACKAGE = 'lefko3', survproxy, obsproxy, sizeproxy, sizebproxy, sizecproxy, repstproxy, fecproxy, jsurvproxy, jobsproxy, jsizeproxy, jsizebproxy, jsizecproxy, jrepstproxy, mat_switch)
+.revelations <- function(survproxy, obsproxy, sizeproxy, sizebproxy, sizecproxy, repstproxy, fecproxy, jsurvproxy, jobsproxy, jsizeproxy, jsizebproxy, jsizecproxy, jrepstproxy, jmatstproxy, mat_switch) {
+    .Call('_lefko3_revelations', PACKAGE = 'lefko3', survproxy, obsproxy, sizeproxy, sizebproxy, sizecproxy, repstproxy, fecproxy, jsurvproxy, jobsproxy, jsizeproxy, jsizebproxy, jsizecproxy, jrepstproxy, jmatstproxy, mat_switch)
 }
 
 #' Creates a Summation of Most Terms Needed in Vital Rate Calculation
 #' 
-#' Function \code{.rimeotam()} provides the majority of the work in creating the
-#' linear model sum to be used in vital rate estimation in the MPM. Works
-#' specifically with function \code{\link{jerzeibalowski}()}.
+#' Function \code{.rimeotam()} provides the majority of the work in creating
+#' the linear model sum to be used in vital rate estimation in the MPM. Works
+#' specifically with functions \code{\link{.jerzeibalowski}()} and
+#' \code{\link{.motherbalowski}()}.
 #' 
 #' @param maincoefs The coefficients portion of the vital rate model proxy.
-#' @param fl1_i Reproductive status in time *t*-1.
-#' @param fl2n_i Reproductive status in time *t*.
-#' @param sz1_i Primary size in time *t*-1.
-#' @param sz2o_i Primary size in time *t*.
-#' @param szb1_i Secondary size in time *t*-1.
-#' @param szb2o_i Secondary size in time *t*.
-#' @param szc1_i Tertiary size in time *t*-1.
-#' @param szc2o_i Tertiary size in time *t*.
-#' @param aage2_i Used age in time *t*.
-#' @param inda_1 Value of numeric individual covariate a in time *t*-1.
-#' @param inda_2 Value of numeric individual covariate a in time *t*.
-#' @param indb_1 Value of numeric individual covariate b in time *t*-1.
-#' @param indb_2 Value of numeric individual covariate b in time *t*.
-#' @param indc_1 Value of numeric individual covariate c in time *t*-1.
-#' @param indc_2 Value of numeric individual covariate c in time *t*.
+#' @param fl1_i Reproductive status in time \emph{t}*-1.
+#' @param fl2n_i Reproductive status in time \emph{t}.
+#' @param sz1_i Primary size in time \emph{t}-1.
+#' @param sz2o_i Primary size in time \emph{t}.
+#' @param szb1_i Secondary size in time \emph{t}-1.
+#' @param szb2o_i Secondary size in time \emph{t}.
+#' @param szc1_i Tertiary size in time \emph{t}-1.
+#' @param szc2o_i Tertiary size in time \emph{t}.
+#' @param aage2_i Used age in time \emph{t}.
+#' @param inda_1 Value of numeric individual covariate a in time \emph{t}-1.
+#' @param inda_2 Value of numeric individual covariate a in time \emph{t}.
+#' @param indb_1 Value of numeric individual covariate b in time \emph{t}-1.
+#' @param indb_2 Value of numeric individual covariate b in time \emph{t}.
+#' @param indc_1 Value of numeric individual covariate c in time \emph{t}-1.
+#' @param indc_2 Value of numeric individual covariate c in time \emph{t}.
 #' @param used_dens Density value used.
 #' @param zi A logical value indicating whether model coefficients refer to the
 #' zero inflation portion of a model.
@@ -712,7 +982,7 @@ cond_diff <- function(lDiff, ref = 1L, matchoice = NULL, err_check = NULL) {
 #' Counts Numbers of Elements in Each Random Individual Covariate Portion of
 #' Model
 #' 
-#' Function \code{.foi_counter} counts the number of elements in each random
+#' Function \code{.foi_counter()} counts the number of elements in each random
 #' individual covariate and returns that as a vector.
 #' 
 #' @param modelproxy A list holding the contents of a model processed with
@@ -731,7 +1001,7 @@ cond_diff <- function(lDiff, ref = 1L, matchoice = NULL, err_check = NULL) {
 
 #' Create Vector of Random Individual Covariate Terms
 #' 
-#' Function \code{.flightoficarus()} creates vectorss of random covariate
+#' Function \code{.flightoficarus()} creates vectors of random covariate
 #' terms.
 #' 
 #' @param modelproxy A model proxy list extracted with function
@@ -808,8 +1078,8 @@ cond_diff <- function(lDiff, ref = 1L, matchoice = NULL, err_check = NULL) {
 
 #' Create Index of Element Numbers for Random Individual Covariate Terms
 #' 
-#' Function \code{.foi_index} creates a matrix indexing the end points of each
-#' random individual covariate in the utilized vectors.
+#' Function \code{.foi_index()} creates a matrix indexing the end points of
+#' each random individual covariate in the utilized vectors.
 #' 
 #' @param surv_proxy Adult survival model proxy.
 #' @param obs_proxy Adult observation status model proxy.
@@ -824,16 +1094,106 @@ cond_diff <- function(lDiff, ref = 1L, matchoice = NULL, err_check = NULL) {
 #' @param jsizeb_proxy Juvenile secondary size model proxy.
 #' @param jsizec_proxy Juvenile tertiary size model proxy.
 #' @param jrepst_proxy Juvenile reproductive status model proxy.
+#' @param jmatst_proxy Juvenile maturity status model proxy.
 #' 
-#' @return An integer matrix with 6 rows and 20 columns. The columns
-#' contain the number of elements in each random individual covariate term,
-#' with the row order being: 1) cov a t2, 2) cov a t1, 3) cov b t2,
-#' 4) cov b t1, 5) cov c t2, cov c t1.
+#' @return An integer matrix with 6 rows and 20 columns. The columns contain
+#' the number of elements in each random individual covariate term, with the
+#' row order being: 1) cov a t2, 2) cov a t1, 3) cov b t2, 4) cov b t1,
+#' 5) cov c t2, and 6) cov c t1.
 #' 
 #' @keywords internal
 #' @noRd
-.foi_index <- function(surv_proxy, obs_proxy, size_proxy, sizeb_proxy, sizec_proxy, repst_proxy, fec_proxy, jsurv_proxy, jobs_proxy, jsize_proxy, jsizeb_proxy, jsizec_proxy, jrepst_proxy) {
-    .Call('_lefko3_foi_index', PACKAGE = 'lefko3', surv_proxy, obs_proxy, size_proxy, sizeb_proxy, sizec_proxy, repst_proxy, fec_proxy, jsurv_proxy, jobs_proxy, jsize_proxy, jsizeb_proxy, jsizec_proxy, jrepst_proxy)
+.foi_index <- function(surv_proxy, obs_proxy, size_proxy, sizeb_proxy, sizec_proxy, repst_proxy, fec_proxy, jsurv_proxy, jobs_proxy, jsize_proxy, jsizeb_proxy, jsizec_proxy, jrepst_proxy, jmatst_proxy) {
+    .Call('_lefko3_foi_index', PACKAGE = 'lefko3', surv_proxy, obs_proxy, size_proxy, sizeb_proxy, sizec_proxy, repst_proxy, fec_proxy, jsurv_proxy, jobs_proxy, jsize_proxy, jsizeb_proxy, jsizec_proxy, jrepst_proxy, jmatst_proxy)
+}
+
+#' Estimate Value for Vital Rate Based on Inputs
+#' 
+#' Function \code{.preouterator()} calculates the value of the vital rate
+#' called for by the function.
+#' 
+#' @param modelproxy A model_proxy object derived from function
+#' \code{\link(.modelextract)()}.
+#' @param maincoefs The coefficients portion of the vital rate model proxy.
+#' @param randindex An integer matrix indexing all random covariates for all
+#' vital rates.
+#' @param dev_terms A numeric vector containing the deviations to the linear
+#' models input by the user. The order is: survival, observation status, size,
+#' size_b, size_c, reproductive status, fecundity, juvenile survival, juvenile
+#' observation status, juvenile size, juvenile size_b, juvenile size_c,
+#' and juvenile reproductive status.
+#' @param svsigmas A vector of sigma and summedvar terms from vital rate
+#' models, in the order of: summedvars, sigma, summedvarsb, sigmab,
+#' summedvarsc, sigmac, jsummedvars, jsigma, jsummedvarsb, jsigmab,
+#' jsummedvarsc, and jsigmac. Summedvar terms are summed variance-covariance
+#' terms in Poisson and negative binomial size distributions, and sigma terms
+#' are standard deviations in the Gaussian size distribution.
+#' @param vitalyear A matrix with year coefficients for all vital rates.
+#' @param vitalpatch A matrix with patch coefficients for all vital rates.
+#' @param chosen_r2inda A string identifying random covariate a in time t.
+#' @param chosen_r1inda A string identifying random covariate a in time t-1.
+#' @param chosen_r2indb A string identifying random covariate b in time t.
+#' @param chosen_r1indb A string identifying random covariate b in time t-1.
+#' @param chosen_r2indc A string identifying random covariate c in time t.
+#' @param chosen_r1indc A string identifying random covariate c in time t-1.
+#' @param status_terms A NumericVector containing, in order: fl1_i, fl2n_i,
+#' sz1_i, sz2o_i, szb1_i, szb2o_i, szc1_i, szc2o_i, aage2_i, inda_1, inda_2,
+#' indb_1, indb_2, indc_1, indc_2, used_dens, sz3_i, szb3_i, szc3_i,
+#' binwidth3_i, binbwidth3_i, and bincwidth3_i.
+#' @param modelgroups2 A vector of group slope coefficients for time t.
+#' @param modelgroups1 A vector of group slope coefficients for time t-1.
+#' @param modelgroups2zi A vector of zero-inflation model group slope
+#' coefficients for time t.
+#' @param modelgroups1zi A vector of zero-inflation model group slope
+#' coefficients for time t-1.
+#' @param modelyearzi A vector of zero-inflation model time slope coefficients.
+#' @param modelpatchzi A vector of zero-inflation model patch slope coefficients.
+#' @param modelind A vector of individual covariate slope coefficients.
+#' @param modelind_rownames A string vector with the names of the individual
+#' covariate coefficients.
+#' @param modelindzi A vector of individual covariate slope coefficients.
+#' @param modelind_rownames_zi A string vector with the names of the individual
+#' covariate coefficients.
+#' @param zi A logical value indicating whether model coefficients refer to the
+#' zero inflation portion of a model.
+#' @param grp2o_i Stage group number in time t.
+#' @param grp1_i Stage group number in time t-1.
+#' @param patchnumber An integer index for pop-patch.
+#' @param yearnumber An integer index for monitoring occasion in time t.
+#' @param vitaldist A parameter specifying the distribution of the vital rate.
+#' Current options are: Poisson (0), negative binomial (1), Gaussian (2),
+#' Gamma (3), and binomial (4).
+#' @param vitalrate An integer specifying the vital rate. 1 = surv, 2 = obs,
+#' 3 = size, 4 = sizeb, 5 = sizec, 6 = repst, 7 = fec, 8 = jsurv, 9 = jobs,
+#' 10 = jsize, 11 = jsizeb, 12 = jsizec, 13 = jrepst, 14 = jmatst.
+#' @param exp_tol A numeric value indicating the maximum limit for the
+#' \code{exp()} function to be used in vital rate calculations. Defaults to
+#' \code{700.0}.
+#' @param theta_tol A numeric value indicating a maximum value for theta in
+#' negative binomial probability density estimation. Defaults to
+#' \code{100000000.0}.
+#' @param ipm_cdf A logical value indicating whether to use the cumulative
+#' density function to estimate size transitions in continuous distributions
+#' (\code{true}), or the midpoint method (\code{false}).
+#' @param matrixformat An integer representing the style of matrix to develop.
+#' Options include Ehrlen-format hMPM (1), deVries-format hMPM (2), ahMPM (3),
+#' and age-by-stage MPM (4).
+#' @param fecmod A scalar multiplier for fecundity.
+#' @param repentry_i Rep entry value for time t+1.
+#' @param negfec A logical value denoting whether to change negative estimated
+#' fecundity to 0.
+#' @param stage2n_i Numeric index of stage in time t.
+#' @param nostages The total number of stages in the stageframe.
+#' @param modeltrunc An integer coding for zero-truncation status.
+#' @param modelsigma A double numeric holding the standard deviation of the
+#' parameter distribution.
+#' 
+#' @return A class double numeric value for the vital rate being estimated.
+#' 
+#' @keywords internal
+#' @noRd
+.preouterator <- function(modelproxy, maincoefs, randindex, dev_terms, svsigmas, vitalyear, vitalpatch, chosen_r2inda, chosen_r1inda, chosen_r2indb, chosen_r1indb, chosen_r2indc, chosen_r1indc, status_terms, modelgroups2, modelgroups1, modelgroups2zi, modelgroups1zi, modelyearzi, modelpatchzi, modelind, modelind_rownames, modelindzi, modelind_rownames_zi, zi, grp2o_i, grp1_i, patchnumber, yearnumber, vitaldist, vitalrate, exp_tol, theta_tol, ipm_cdf, matrixformat, fecmod, repentry_i, negfec, stage2n_i, nostages, modeltrunc, modelsigma) {
+    .Call('_lefko3_preouterator', PACKAGE = 'lefko3', modelproxy, maincoefs, randindex, dev_terms, svsigmas, vitalyear, vitalpatch, chosen_r2inda, chosen_r1inda, chosen_r2indb, chosen_r1indb, chosen_r2indc, chosen_r1indc, status_terms, modelgroups2, modelgroups1, modelgroups2zi, modelgroups1zi, modelyearzi, modelpatchzi, modelind, modelind_rownames, modelindzi, modelind_rownames_zi, zi, grp2o_i, grp1_i, patchnumber, yearnumber, vitaldist, vitalrate, exp_tol, theta_tol, ipm_cdf, matrixformat, fecmod, repentry_i, negfec, stage2n_i, nostages, modeltrunc, modelsigma)
 }
 
 #' Estimate All Elements of Function-based Population Projection Matrix
@@ -865,20 +1225,49 @@ cond_diff <- function(lDiff, ref = 1L, matchoice = NULL, err_check = NULL) {
 #' @param jsizeproxy List of coefficients estimated in model of juvenile size.
 #' @param jrepstproxy List of coefficients estimated in model of juvenile
 #' reproductive status.
-#' @param inda A numeric vector of length equal to the number of years, holding
-#' values equal to the mean value of individual covariate \code{a} at each time
-#' to be used in analysis.
-#' @param indb A numeric vector of length equal to the number of years, holding
-#' values equal to the mean value of individual covariate \code{b} at each time
-#' to be used in analysis.
-#' @param indc A numeric vector of length equal to the number of years, holding
-#' values equal to the mean value of individual covariate \code{c} at each time
-#' to be used in analysis.
+#' @param jmatstproxy List of coefficients estimated in model of juvenile
+#' maturity probability.
+#' @param f2_inda A numeric vector of length equal to the number of years,
+#' holding values equal to the mean value of individual covariate \code{a} at
+#' each time \emph{t} to be used in analysis.
+#' @param f1_inda A numeric vector of length equal to the number of years,
+#' holding values equal to the mean value of individual covariate \code{a} at
+#' each time \emph{t}-1 to be used in analysis.
+#' @param f2_indb A numeric vector of length equal to the number of years,
+#' holding values equal to the mean value of individual covariate \code{b} at
+#' each time \emph{t} to be used in analysis.
+#' @param f1_indb A numeric vector of length equal to the number of years,
+#' holding values equal to the mean value of individual covariate \code{b} at
+#' each time \emph{t}-1 to be used in analysis.
+#' @param f2_indc A numeric vector of length equal to the number of years,
+#' holding values equal to the mean value of individual covariate \code{c} at
+#' each time \emph{t} to be used in analysis.
+#' @param f1_indc A numeric vector of length equal to the number of years,
+#' holding values equal to the mean value of individual covariate \code{c} at
+#' each time \emph{t}-1 to be used in analysis.
+#' @param r2_inda A numeric vector of length equal to the number of years,
+#' holding values equal to the mean value of individual random covariate
+#' \code{a} at each time \emph{t} to be used in analysis.
+#' @param r1_inda A numeric vector of length equal to the number of years,
+#' holding values equal to the mean value of individual random covariate
+#' \code{a} at each time \emph{t}-1 to be used in analysis.
+#' @param r2_indb A numeric vector of length equal to the number of years,
+#' holding values equal to the mean value of individual random covariate
+#' \code{b} at each time \emph{t} to be used in analysis.
+#' @param r1_indb A numeric vector of length equal to the number of years,
+#' holding values equal to the mean value of individual random covariate
+#' \code{b} at each time \emph{t}-1 to be used in analysis.
+#' @param r2_indc A numeric vector of length equal to the number of years,
+#' holding values equal to the mean value of individual random covariate
+#' \code{c} at each time \emph{t} to be used in analysis.
+#' @param r1_indc A numeric vector of length equal to the number of years,
+#' holding values equal to the mean value of individual random covariate
+#' \code{c} at each time \emph{t}-1 to be used in analysis.
 #' @param dev_terms A numeric vector containing the deviations to the linear
 #' models input by the user. The order is: survival, observation status, size,
 #' size_b, size_c, reproductive status, fecundity, juvenile survival, juvenile
 #' observation status, juvenile size, juvenile size_b, juvenile size_c,
-#' and juvenile reproductive status.
+#' juvenile reproductive status, and juvenile maturity status.
 #' @param dens A numeric value equal to the density to be used in calculations.
 #' @param fecmod A scalar multiplier for fecundity.
 #' @param svsigmas A vector of sigma and summedvar terms from vital rate
@@ -887,35 +1276,60 @@ cond_diff <- function(lDiff, ref = 1L, matchoice = NULL, err_check = NULL) {
 #' jsummedvarsc, and jsigmac. Summedvar terms are summed variance-covariance
 #' terms in Poisson and negative binomial size distributions, and sigma terms
 #' are standard deviations in the Gaussian size distribution.
-#' @param maxsize The maximum size to be used in element estimation.
+#' @param maxsize The maximum primary size to be used in element estimation.
+#' @param maxsizeb The maximum secondary size to be used in element estimation.
+#' @param maxsizec The maximum tertiary size to be used in element estimation.
 #' @param finalage The final age to be included in age-by-stage MPM estimation.
-#' @param sizedist Designates whether size is Gaussian (2), Poisson (0), or
-#' negative binomial (1) distributed.
-#' @param fecdist Designates whether fecundity is Gaussian (2), Poisson (0), or
-#' negative binomial (1) distributed.
-#' @param negfec Logical value denoting whether to change negative estimated
+#' @param sizedist Designates whether primary size is Gamma (3), Gaussian (2),
+#' Poisson (0), or negative binomial (1) distributed.
+#' @param sizebdist Designates whether secondary size is Gamma (3),
+#' Gaussian (2), Poisson (0), or negative binomial (1) distributed.
+#' @param sizecdist Designates whether tertiary size is Gamma (3),
+#' Gaussian (2), Poisson (0), or negative binomial (1) distributed.
+#' @param fecdist Designates whether fecundity is Gamma (3), Gaussian (2),
+#' Poisson (0), or negative binomial (1) distributed.
+#' @param negfec A logical value denoting whether to change negative estimated
 #' fecundity to 0.
-#' @param exp_tol A numeric value indicating the maximum limit for the exp()
-#' function to be used in vital rate calculations. Defaults to \code{700.0}.
+#' @param exp_tol A numeric value indicating the maximum limit for the
+#' \code{exp()} function to be used in vital rate calculations. Defaults to
+#' \code{700.0}.
 #' @param theta_tol A numeric value indicating a maximum value for theta in
-#' negative binomial probability density estimation.
-#' Defaults to \code{100000000}.
+#' negative binomial probability density estimation. Defaults to
+#' \code{100000000.0}.
+#' @param ipm_method A string indicating which method should be used to
+#' estimate size transitions in cases with continuous distributions. Options
+#' include \code{"midpoint"}, which uses the midpoint method, and \code{"cdf"},
+#' which uses the cumulative density function.
 #' 
-#' @return A list of 3 matrices, including the main MPM (A), the survival-
-#' transition matrix (U), and a fecundity matrix (F). With tweaking, can also
-#' produce a 4 column matrix showing survival probability, observation
-#' probability, reproduction probability, and size transition probability, for
-#' each element of the final MPM.
+#' @return A list with 4 elements. The first 3 elements are matrices, including
+#' the main MPM (A), the survival-transition matrix (U), and a fecundity matrix
+#' (F). The last element is a 6 column matrix showing survival probability,
+#' observation probability, reproduction probability, sizea transition
+#' probability, sizeb transition probability, and sizec transition probability
+#' for each element of the final MPM.
+#' 
+#' @section Notes:
+#' 
+#' The DataFrame AllStages introduces variables used in size and fecundity
+#' calculations. This DataFrame is broken up into long vectors composed of
+#' input sizes and related variables for these calculations. The "model" Lists
+#' bring in the vital rate models, and include random coefficients where
+#' needed. We also have a number of extra variables, that include such info as
+#' whether to use the Poisson, negative binomial, Gamma, or Gaussian
+#' distributions for size and fecundity calculations. If \code{sizedist},
+#' \code{sizebdist}, \code{sizecdist}, or \code{fecdist} equals 0, 1, 2, or 3,
+#' then the Poisson, negative binomial, Gaussian, or Gamma is used,
+#' respectively.
 #' 
 #' @keywords internal
 #' @noRd
-.jerzeibalowski <- function(ppy, AllStages, stageframe, matrixformat, survproxy, obsproxy, sizeproxy, sizebproxy, sizecproxy, repstproxy, fecproxy, jsurvproxy, jobsproxy, jsizeproxy, jsizebproxy, jsizecproxy, jrepstproxy, f2_inda, f1_inda, f2_indb, f1_indb, f2_indc, f1_indc, r2_inda, r1_inda, r2_indb, r1_indb, r2_indc, r1_indc, dev_terms, dens, fecmod, svsigmas, maxsize, maxsizeb, maxsizec, finalage, sizedist, sizebdist, sizecdist, fecdist, negfec, exp_tol = 700.0, theta_tol = 100000000.0) {
-    .Call('_lefko3_jerzeibalowski', PACKAGE = 'lefko3', ppy, AllStages, stageframe, matrixformat, survproxy, obsproxy, sizeproxy, sizebproxy, sizecproxy, repstproxy, fecproxy, jsurvproxy, jobsproxy, jsizeproxy, jsizebproxy, jsizecproxy, jrepstproxy, f2_inda, f1_inda, f2_indb, f1_indb, f2_indc, f1_indc, r2_inda, r1_inda, r2_indb, r1_indb, r2_indc, r1_indc, dev_terms, dens, fecmod, svsigmas, maxsize, maxsizeb, maxsizec, finalage, sizedist, sizebdist, sizecdist, fecdist, negfec, exp_tol, theta_tol)
+.jerzeibalowski <- function(ppy, AllStages, stageframe, matrixformat, survproxy, obsproxy, sizeproxy, sizebproxy, sizecproxy, repstproxy, fecproxy, jsurvproxy, jobsproxy, jsizeproxy, jsizebproxy, jsizecproxy, jrepstproxy, jmatstproxy, f2_inda, f1_inda, f2_indb, f1_indb, f2_indc, f1_indc, r2_inda, r1_inda, r2_indb, r1_indb, r2_indc, r1_indc, dev_terms, dens, fecmod, svsigmas, maxsize, maxsizeb, maxsizec, finalage, sizedist, sizebdist, sizecdist, fecdist, negfec, exp_tol = 700.0, theta_tol = 100000000.0, ipm_method = "cdf") {
+    .Call('_lefko3_jerzeibalowski', PACKAGE = 'lefko3', ppy, AllStages, stageframe, matrixformat, survproxy, obsproxy, sizeproxy, sizebproxy, sizecproxy, repstproxy, fecproxy, jsurvproxy, jobsproxy, jsizeproxy, jsizebproxy, jsizecproxy, jrepstproxy, jmatstproxy, f2_inda, f1_inda, f2_indb, f1_indb, f2_indc, f1_indc, r2_inda, r1_inda, r2_indb, r1_indb, r2_indc, r1_indc, dev_terms, dens, fecmod, svsigmas, maxsize, maxsizeb, maxsizec, finalage, sizedist, sizebdist, sizecdist, fecdist, negfec, exp_tol, theta_tol, ipm_method)
 }
 
 #' Create Historically Structured Version of ahMPM
 #' 
-#' Function \code{thefifthhousemate()} takes an ahistorical MPM as input, and
+#' Function \code{.thefifthhousemate()} takes an ahistorical MPM as input, and
 #' uses the \code{allstages} index to create a historically structured version
 #' of it.
 #' 
@@ -937,6 +1351,121 @@ cond_diff <- function(lDiff, ref = 1L, matchoice = NULL, err_check = NULL) {
     .Call('_lefko3_thefifthhousemate', PACKAGE = 'lefko3', mpm, allstages, stageframe, format)
 }
 
+#' Creates Matrices of Year and Patch Terms in Leslie Models
+#' 
+#' Function \code{.revelations_leslie()} creates a matrix holding either the
+#' year or patch coefficients from Leslie vital rate models. This reduces
+#' memory load in function \code{\link{.motherbalowski}()}.
+#' 
+#' @param survproxy The proxy vital rate model covering survival from the main
+#' matrix estimator function.
+#' @param fecproxy The proxy vital rate model covering fecundity from the main
+#' matrix estimator function.
+#' 
+#' @return A matrix with 2 columns corresponding to the number of vital rates
+#' and number of columns equal to the number of year or patches.
+#' 
+#' @keywords internal
+#' @noRd
+.revelations_leslie <- function(survproxy, fecproxy, mat_switch) {
+    .Call('_lefko3_revelations_leslie', PACKAGE = 'lefko3', survproxy, fecproxy, mat_switch)
+}
+
+#' Create Index of Element Numbers for Random Individual Covariate Terms in
+#' Leslie Models
+#' 
+#' Function \code{.foi_index_leslie()} creates a matrix indexing the end points
+#' of each random individual covariate in the utilized vectors. Used in
+#' function \code{\link{.motherbalowski}()}.
+#' 
+#' @param surv_proxy Adult survival model proxy.
+#' @param fec_proxy Adult fecundity model proxy.
+#' 
+#' @return An integer matrix with 6 rows and 3 columns. The columns contain the
+#' number of elements in each random individual covariate term, with the row
+#' order being: 1) cov a t2, 2) cov a t1, 3) cov b t2, 4) cov b t1,
+#' 5) cov c t2, and 6) cov c t1.
+#' 
+#' @keywords internal
+#' @noRd
+.foi_index_leslie <- function(surv_proxy, fec_proxy) {
+    .Call('_lefko3_foi_index_leslie', PACKAGE = 'lefko3', surv_proxy, fec_proxy)
+}
+
+#' Estimate All Elements of Function-based Population Projection Matrix
+#' 
+#' Function \code{.motherbalowski()} swiftly calculates matrix elements in
+#' function-based Leslie population projection matrices. Used in
+#' \code{\link{fleslie}()}.
+#' 
+#' @param ppy A data frame with one row, showing the population, patch, and
+#' year.
+#' @param ageframe The modified stageframe used in matrix calculations.
+#' @param survproxy List of coefficients estimated in model of survival.
+#' @param fecproxy List of coefficients estimated in model of fecundity.
+#' @param f2_inda A numeric vector of length equal to the number of years,
+#' holding values equal to the mean value of individual covariate \code{a} at
+#' each time \emph{t} to be used in analysis.
+#' @param f1_inda A numeric vector of length equal to the number of years,
+#' holding values equal to the mean value of individual covariate \code{a} at
+#' each time \emph{t}-1 to be used in analysis.
+#' @param f2_indb A numeric vector of length equal to the number of years,
+#' holding values equal to the mean value of individual covariate \code{b} at
+#' each time \emph{t} to be used in analysis.
+#' @param f1_indb A numeric vector of length equal to the number of years,
+#' holding values equal to the mean value of individual covariate \code{b} at
+#' each time \emph{t}-1 to be used in analysis.
+#' @param f2_indc A numeric vector of length equal to the number of years,
+#' holding values equal to the mean value of individual covariate \code{c} at
+#' each time \emph{t} to be used in analysis.
+#' @param f1_indc A numeric vector of length equal to the number of years,
+#' holding values equal to the mean value of individual covariate \code{c} at
+#' each time \emph{t}-1 to be used in analysis.
+#' @param r2_inda A numeric vector of length equal to the number of years,
+#' holding values equal to the mean value of individual random covariate
+#' \code{a} at each time \emph{t} to be used in analysis.
+#' @param r1_inda A numeric vector of length equal to the number of years,
+#' holding values equal to the mean value of individual random covariate
+#' \code{a} at each time \emph{t}-1 to be used in analysis.
+#' @param r2_indb A numeric vector of length equal to the number of years,
+#' holding values equal to the mean value of individual random covariate
+#' \code{b} at each time \emph{t} to be used in analysis.
+#' @param r1_indb A numeric vector of length equal to the number of years,
+#' holding values equal to the mean value of individual random covariate
+#' \code{b} at each time \emph{t}-1 to be used in analysis.
+#' @param r2_indc A numeric vector of length equal to the number of years,
+#' holding values equal to the mean value of individual random covariate
+#' \code{c} at each time \emph{t} to be used in analysis.
+#' @param r1_indc A numeric vector of length equal to the number of years,
+#' holding values equal to the mean value of individual random covariate
+#' \code{c} at each time \emph{t}-1 to be used in analysis.
+#' @param surv_dev A numeric value indicating the deviation to the linear
+#' model of survival input by the user.
+#' @param fec_dev A numeric value indicating the deviation to the linear
+#' model of fecundity input by the user.
+#' @param dens A numeric value equal to the density to be used in calculations.
+#' @param fecmod A scalar multiplier for fecundity.
+#' @param finalage The final age to be included in Leslie MPM estimation.
+#' @param fecdist Designates whether fecundity is Gamma (3), Gaussian (2),
+#' Poisson (0), or negative binomial (1) distributed.
+#' @param negfec A logical value denoting whether to change negative estimated
+#' fecundity to 0.
+#' @param exp_tol A numeric value indicating the maximum limit for the
+#' \code{exp()} function to be used in vital rate calculations. Defaults to
+#' \code{700.0}.
+#' @param theta_tol A numeric value indicating a maximum value for theta in
+#' negative binomial probability density estimation. Defaults to
+#' \code{100000000.0}.
+#' 
+#' @return A list of 3 matrices, including the main MPM (A), the survival-
+#' transition matrix (U), and a fecundity matrix (F).
+#' 
+#' @keywords internal
+#' @noRd
+.motherbalowski <- function(ppy, ageframe, survproxy, fecproxy, f2_inda, f1_inda, f2_indb, f1_indb, f2_indc, f1_indc, r2_inda, r1_inda, r2_indb, r1_indb, r2_indc, r1_indc, surv_dev, fec_dev, dens, fecmod, finalage, fecdist, negfec, exp_tol = 700.0, theta_tol = 100000000.0) {
+    .Call('_lefko3_motherbalowski', PACKAGE = 'lefko3', ppy, ageframe, survproxy, fecproxy, f2_inda, f1_inda, f2_indb, f1_indb, f2_indc, f1_indc, r2_inda, r1_inda, r2_indb, r1_indb, r2_indc, r1_indc, surv_dev, fec_dev, dens, fecmod, finalage, fecdist, negfec, exp_tol, theta_tol)
+}
+
 #' Main Formula Creation for Function \code{modelsearch()}
 #'
 #' Function \code{.stovokor()} creates formulae to be used as input in the
@@ -956,6 +1485,8 @@ cond_diff <- function(lDiff, ref = 1L, matchoice = NULL, err_check = NULL) {
 #' coding reproductive status.
 #' @param fec A vector of strings indicating the names of the variables coding
 #' fecundity.
+#' @param matstat A vector of strings indicating the names of the variables
+#' coding for maturity status.
 #' @param vitalrates A vector of strings indicating which vital rates will be
 #' estimated.
 #' @param historical A logical value indicating whether to create global models
@@ -1018,8 +1549,8 @@ cond_diff <- function(lDiff, ref = 1L, matchoice = NULL, err_check = NULL) {
 #'
 #' @keywords internal
 #' @noRd
-.stovokor <- function(surv, obs, size, sizeb, sizec, repst, fec, vitalrates, historical, suite, approach, nojuvs, age, indcova, indcovb, indcovc, indiv, patch, year, pasrand, yasrand, iaasrand, ibasrand, icasrand, fectime, juvsize, sizebused, sizecused, grouptest, densitycol, densityused, indcovaused, indcovbused, indcovcused) {
-    .Call('_lefko3_stovokor', PACKAGE = 'lefko3', surv, obs, size, sizeb, sizec, repst, fec, vitalrates, historical, suite, approach, nojuvs, age, indcova, indcovb, indcovc, indiv, patch, year, pasrand, yasrand, iaasrand, ibasrand, icasrand, fectime, juvsize, sizebused, sizecused, grouptest, densitycol, densityused, indcovaused, indcovbused, indcovcused)
+.stovokor <- function(surv, obs, size, sizeb, sizec, repst, fec, matstat, vitalrates, historical, suite, approach, nojuvs, age, indcova, indcovb, indcovc, indiv, patch, year, pasrand, yasrand, iaasrand, ibasrand, icasrand, fectime, juvsize, sizebused, sizecused, grouptest, densitycol, densityused, indcovaused, indcovbused, indcovcused) {
+    .Call('_lefko3_stovokor', PACKAGE = 'lefko3', surv, obs, size, sizeb, sizec, repst, fec, matstat, vitalrates, historical, suite, approach, nojuvs, age, indcova, indcovb, indcovc, indiv, patch, year, pasrand, yasrand, iaasrand, ibasrand, icasrand, fectime, juvsize, sizebused, sizecused, grouptest, densitycol, densityused, indcovaused, indcovbused, indcovcused)
 }
 
 #' Append NumericVector to the End of Another NumericVector
@@ -1378,6 +1909,82 @@ sf_create <- function(sizes, stagenames = NULL, sizesb = NULL, sizesc = NULL, re
 #' @noRd
 .sf_reassess <- function(stageframe, supplement, overwrite, repmatrix, agemat = FALSE, historical = FALSE, format = 1L) {
     .Call('_lefko3_sf_reassess', PACKAGE = 'lefko3', stageframe, supplement, overwrite, repmatrix, agemat, historical, format)
+}
+
+#' Create Stageframe for Population Matrix Projection Analysis
+#' 
+#' Function \code{.sf_leslie()} returns a data frame describing each age in a
+#' Leslie MPM in terms of ahistorical stage information. This function is
+#' internal to \code{\link{rleslie}()} and \code{\link{fleslie}()}.
+#' 
+#' @param min_age The first age to include in the matrix.
+#' @param max_age The maximum age to include in the matrix.
+#' @param min_fecage The first age in which reproduction is possible.
+#' @param max_fecage The final age in which reproduction is possible.
+#' @param cont A logical value indicating whether survival continues past the
+#' last described age.
+#' 
+#' @return A data frame of class \code{stageframe}, which includes information
+#' on the stage name, size, reproductive status, observation status, propagule 
+#' status, immaturity status, maturity status, presence within the core dataset, 
+#' stage group classification, raw bin half-width, and the minimum, 
+#' center, and maximum of each size bin, as well as its width. If minimum and
+#' maximum ages were specified, then these are also included. Also includes an 
+#' empty string variable that can be used to describe stages meaningfully.
+#' 
+#' Variables in this data frame include the following:
+#' \item{stage}{The unique names of the stages to be analyzed.}
+#' \item{size}{The typical or representative size at which each stage occurs.}
+#' \item{size_b}{Size at which each stage occurs in terms of a second size
+#' variable, if one exists.}
+#' \item{size_c}{Size at which each stage occurs in terms of a third size
+#' variable, if one exists.}
+#' \item{min_age}{The minimum age at which the stage may occur.}
+#' \item{max_age}{The maximum age at which the stage may occur.}
+#' \item{repstatus}{A binomial variable showing whether each stage is
+#' reproductive.}
+#' \item{obsstatus}{A binomial variable showing whether each stage is
+#' observable.}
+#' \item{propstatus}{A binomial variable showing whether each stage is a
+#' propagule.}
+#' \item{immstatus}{A binomial variable showing whether each stage can occur as
+#' immature.}
+#' \item{matstatus}{A binomial variable showing whether each stage occurs in
+#' maturity.}
+#' \item{indataset}{A binomial variable describing whether each stage occurs in
+#' the input dataset.}
+#' \item{binhalfwidth_raw}{The half-width of the size bin, as input.}
+#' \item{sizebin_min}{The minimum size at which the stage may occur.}
+#' \item{sizebin_max}{The maximum size at which the stage may occur.}
+#' \item{sizebin_center}{The midpoint of the size bin at which the stage may
+#' occur.}
+#' \item{sizebin_width}{The width of the size bin corresponding to the stage.}
+#' \item{binhalfwidthb_raw}{The half-width of the size bin of a second size
+#' variable, as input.}
+#' \item{sizebinb_min}{The minimum size at which the stage may occur.}
+#' \item{sizebinb_max}{The maximum size at which the stage may occur.}
+#' \item{sizebinb_center}{The midpoint of the size bin at which the stage may
+#' occur, in terms of a second size variable.}
+#' \item{sizebinb_width}{The width of the size bin corresponding to the stage,
+#' in terms of a second size variable.}
+#' \item{binhalfwidthc_raw}{The half-width of the size bin of a third size
+#' variable, as input.}
+#' \item{sizebinc_min}{The minimum size at which the stage may occur, in terms
+#' of a third size variable.}
+#' \item{sizebinc_max}{The maximum size at which the stage may occur, in terms
+#' of a third size variable.}
+#' \item{sizebinc_center}{The midpoint of the size bin at which the stage may
+#' occur, in terms of a third size variable.}
+#' \item{sizebinc_width}{The width of the size bin corresponding to the stage,
+#' in terms of a third size variable.}
+#' \item{group}{An integer denoting the size classification group that the
+#' stage falls within.}
+#' \item{comments}{A text field for stage descriptions.}
+#' 
+#' @keywords internal
+#' @noRd
+.sf_leslie <- function(min_age, max_age, min_fecage, max_fecage, cont) {
+    .Call('_lefko3_sf_leslie', PACKAGE = 'lefko3', min_age, max_age, min_fecage, max_fecage, cont)
 }
 
 #' Vectorize Matrix for Historical Mean Matrix Estimation
@@ -1807,12 +2414,15 @@ sf_create <- function(sizes, stagenames = NULL, sizesb = NULL, sizesc = NULL, re
 #' @param substoch An integer value indicating whether to force survival-
 #' transition matrices to be substochastic in density dependent simulations.
 #' Defaults to \code{0}, which does not force substochasticity. Alternatively,
-#' \code{1} forces all survival-transition elements to range from 0.0 to 1.0,
-#' and \code{2} forces all column rows to total no more than 1.0.
+#' \code{1} forces all survival-transition elements to range from 0.0 to 1.0
+#' and fecundity to be non-negative, and \code{2} forces all column rows to
+#' total no more than 1.0.
 #' @param dens_input The original \code{lefkoDens} data frame supplied through
 #' the \code{\link{density_input}()} function.
 #' @param dens_index A list giving the indices of elements in object
 #' \code{dens_input}.
+#' @param allow_warnings A logical value indicating whether the function should
+#' send warnings if estimated values fall outside of the realm of possibility.
 #' 
 #' @return A matrix in which, if \code{growthonly = TRUE}, each row is the
 #' population vector at each projected occasion, and if \code{growthonly =
@@ -1830,8 +2440,8 @@ sf_create <- function(sizes, stagenames = NULL, sizesb = NULL, sizesc = NULL, re
 #' 
 #' @keywords internal
 #' @noRd
-.proj3dens <- function(start_vec, core_list, mat_order, growthonly, integeronly, substoch, dens_input, dens_index) {
-    .Call('_lefko3_proj3dens', PACKAGE = 'lefko3', start_vec, core_list, mat_order, growthonly, integeronly, substoch, dens_input, dens_index)
+.proj3dens <- function(start_vec, core_list, mat_order, growthonly, integeronly, substoch, dens_input, dens_index, allow_warnings = FALSE) {
+    .Call('_lefko3_proj3dens', PACKAGE = 'lefko3', start_vec, core_list, mat_order, growthonly, integeronly, substoch, dens_input, dens_index, allow_warnings)
 }
 
 #' Conduct Population Projection Simulations
@@ -1864,7 +2474,14 @@ sf_create <- function(sizes, stagenames = NULL, sizesb = NULL, sizesc = NULL, re
 #' transition matrices to be substochastic in density dependent simulations.
 #' Defaults to \code{0}, which does not force substochasticity. Alternatively,
 #' \code{1} forces all survival-transition elements to range from 0.0 to 1.0,
-#' and \code{2} forces all column rows to total no more than 1.0.
+#' and forces fecundity to be non-negative; and \code{2} forces all column rows
+#' in the survival-transition matrices to total no more than 1.0, in addition
+#' to the actions outlined for option \code{1}.
+#' @param sub_warnings A logical value indicating whether to warn the user if
+#' density dependence yields matrix values outside of the realm of possibility.
+#' Generally, this means that survival-transition elements altered to values
+#' outside of the interval [0, 1], and negative fecundity values, will both
+#' yield warnings. Defaults to \code{TRUE}.
 #' @param start_vec An optional numeric vector denoting the starting stage
 #' distribution for the projection. Defaults to a single individual of each
 #' stage.
@@ -1898,11 +2515,13 @@ sf_create <- function(sizes, stagenames = NULL, sizesb = NULL, sizesc = NULL, re
 #' population (list element).}
 #' \item{labels}{A data frame showing the order of populations and patches in
 #' item \code{projection}.}
-#' \item{control}{A short vector indicating the number of replicates and the
-#' number of occasions projected per replicate.}
 #' \item{ahstages}{The original stageframe used in the study.}
 #' \item{hstages}{A data frame showing the order of historical stage pairs.}
 #' \item{agestages}{A data frame showing the order of age-stage pairs.}
+#' \item{control}{A short vector indicating the number of replicates and the
+#' number of occasions projected per replicate.}
+#' \item{density}{The data frame input under the density option. Only provided
+#' if input by the user.}
 #' 
 #' @section Notes:
 #' Projections are run both at the patch level and at the population level.
@@ -2048,8 +2667,8 @@ sf_create <- function(sizes, stagenames = NULL, sizesb = NULL, sizesc = NULL, re
 #' cypstoch <- projection3(cypmatrix3r, nreps = 5, stochastic = TRUE)
 #' 
 #' @export projection3
-projection3 <- function(mpm, nreps = 1L, times = 10000L, stochastic = FALSE, standardize = FALSE, growthonly = TRUE, integeronly = FALSE, substoch = 0L, start_vec = NULL, start_frame = NULL, tweights = NULL, density = NULL) {
-    .Call('_lefko3_projection3', PACKAGE = 'lefko3', mpm, nreps, times, stochastic, standardize, growthonly, integeronly, substoch, start_vec, start_frame, tweights, density)
+projection3 <- function(mpm, nreps = 1L, times = 10000L, stochastic = FALSE, standardize = FALSE, growthonly = TRUE, integeronly = FALSE, substoch = 0L, sub_warnings = TRUE, start_vec = NULL, start_frame = NULL, tweights = NULL, density = NULL) {
+    .Call('_lefko3_projection3', PACKAGE = 'lefko3', mpm, nreps, times, stochastic, standardize, growthonly, integeronly, substoch, sub_warnings, start_vec, start_frame, tweights, density)
 }
 
 #' Estimate Stochastic Population Growth Rate

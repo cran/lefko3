@@ -20,14 +20,29 @@ A summary of the object, showing the number of each type of matrix,
 the number of annual matrices, the number of estimated (non-zero) elements
 across all matrices and per matrix, the number of unique transitions in the
 dataset, the number of individuals, and summaries of the column sums of the
-survival-transition matrices.
+survival-transition matrices. This function will also yield warnings if any
+survival-transition matrices include elements outside of the interval [0,1],
+if any fecundity matrices contain negative elements, and if any matrices
+include NA values.
 }
 \description{
 A function to simplify the viewing of basic information describing the
 matrices produced through functions \code{\link{flefko3}()},
 \code{\link{flefko2}()}, \code{\link{rlefko3}()}, \code{\link{rlefko2}()},
-and \code{\link{aflefko2}()}.
+\code{\link{aflefko2}()}, \code{\link{rleslie}()}, and
+\code{\link{fleslie}()}.
 }
+\section{Notes}{
+
+Under the Gaussian and gamma size distributions, the number of estimated
+parameters may differ between the two \code{ipm_method} settings. Because
+the midpoint method has a tendency to incorporate upward bias in the
+estimation of size transition probabilities, it is more likely to yield non-
+zero values when the true probability is extremely close to 0. This will
+result in the \code{summary.lefkoMat} function yielding higher numbers of
+estimated parameters than the \code{ipm_method = "CDF"} yields in some cases.
+}
+
 \examples{
 data(cypdata)
 

@@ -19,7 +19,7 @@ each projection, or decimals between 0 and 1, which would then be translated
 into the corresponding projection steps of the total. Defaults to
 \code{c(0, 0.25, 0.50, 0.75, 1.00)}.}
 
-\item{...}{Other parameters.}
+\item{...}{Other parameters currently not utilized.}
 }
 \value{
 Apart from a statement of the results, we have the following item in

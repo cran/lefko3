@@ -9,7 +9,7 @@
 \arguments{
 \item{object}{A \code{lefkoLTRE} object.}
 
-\item{...}{Other parameters.}
+\item{...}{Other parameters currently not utilized.}
 }
 \value{
 A list composed of 2 (if deterministic) or 4 (if stochastic) data

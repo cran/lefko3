@@ -119,10 +119,11 @@ abbreviations for groups of stages. Use \code{rep} if all reproductive stages
 are to be used, \code{nrep} if all mature but non-reproductive stages are to
 be used, \code{mat} if all mature stages are to be used, \code{immat} if all
 immature stages are to be used, \code{prop} if all propagule stages are to be
-used, \code{npr} if all non-propagule stages are to be used, and leave empty
-or use \code{all} if all stages in stageframe are to be used. Also use
-\code{groupX} to denote all stages in group X (e.g. \code{group1} will use
-all stages in the respective stageframe's group 1).
+used, \code{npr} if all non-propagule stages are to be used, \code{obs} if
+all observable stages are to be used, \code{nobs} if all unobservable stages
+are to be used, and leave empty or use \code{all} if all stages in stageframe
+are to be used. Also use \code{groupX} to denote all stages in group X (e.g.
+\code{group1} will use all stages in the respective stageframe's group 1).
 }
 
 \examples{

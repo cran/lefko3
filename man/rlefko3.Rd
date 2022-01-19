@@ -44,20 +44,20 @@ continuous.}
 
 \item{year}{A variable corresponding to observation occasion, or a set of
 such values, given in values associated with the \code{year} term used in
-vital rate model development. Can also equal \code{all}, in which case
-matrices will be estimated for all occasions. Defaults to \code{all}.}
+vital rate model development. Can also equal \code{"all"}, in which case
+matrices will be estimated for all occasions. Defaults to \code{"all"}.}
 
 \item{pop}{A variable designating which populations will have matrices
-estimated. Should be set to specific population names, or to \code{all} if
+estimated. Should be set to specific population names, or to \code{"all"} if
 all populations should have matrices estimated.}
 
 \item{patch}{A variable designating which patches or subpopulations will have
-matrices estimated. Should be set to specific patch names, or to \code{all}
-if matrices should be estimated for all patches. Defaults to \code{all}.}
+matrices estimated. Should be set to specific patch names, or to \code{"all"}
+if matrices should be estimated for all patches. Defaults to \code{"all"}.}
 
 \item{censor}{If \code{TRUE}, then data will be removed according to the
 variable set in \code{censorcol}, such that only data with censor values
-equal to 1 will remain. Defaults to \code{FALSE}.}
+equal to \code{censorkeep} will remain. Defaults to \code{FALSE}.}
 
 \item{stages}{An optional vector denoting the names of the variables within
 the main vertical dataset coding for the stages of each individual in
@@ -323,4 +323,17 @@ cypmatrix3r <- rlefko3(data = cypraw_v1, stageframe = cypframe_raw,
 
 summary(cypmatrix3r)
 
+}
+\seealso{
+\code{\link{flefko3}()}
+
+\code{\link{flefko2}()}
+
+\code{\link{aflefko2}()}
+
+\code{\link{fleslie}()}
+
+\code{\link{rlefko2}()}
+
+\code{\link{rleslie}()}
 }

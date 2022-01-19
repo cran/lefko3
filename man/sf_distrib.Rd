@@ -26,28 +26,28 @@ sf_distrib(
 \code{hfvdata}.}
 
 \item{sizea}{A vector holding the name or column number of the variables
-corresponding to primary size in occasions *t*+1 and *t*. Input only if
-\code{sizea} is to be tested.}
+corresponding to primary size in occasions \emph{t}+1 and \emph{t}. Input 
+only if \code{sizea} is to be tested.}
 
 \item{sizeb}{A vector holding the name or column number of the variables
-corresponding to secondary size in occasions *t*+1 and *t*. Input only if
-\code{sizeb} is to be tested.}
+corresponding to secondary size in occasions \emph{t}+1 and \emph{t}. Input 
+only if \code{sizeb} is to be tested.}
 
 \item{sizec}{A vector holding the name or column number of the variables
-corresponding to tertiary size in occasions *t*+1 and *t*. Input only if
-\code{sizec} is to be tested.}
+corresponding to tertiary size in occasions \emph{t}+1 and \emph{t}. Input 
+only if \code{sizec} is to be tested.}
 
 \item{obs3}{The name or column number of the variable corresponding to
-observation status in occasion *t+1*. This should be used if observation
+observation status in occasion \emph{t}+1. This should be used if observation
 status will be used as a vital rate to absorb states of size = 0.}
 
 \item{fec}{A vector holding the names or column numbers of the variables
-corresponding to in occasions *t*+1 and *t*. Input only if \code{fec} is to
-be tested.}
+corresponding to in occasions \emph{t}+1 and \emph{t}. Input only if 
+\code{fec} is to be tested.}
 
 \item{repst}{A vector holding the names or column numbers of the variables
-corresponding to reproductive status in occasions *t*+1 and *t*. If not
-provided, then fecundity will be tested without subsetting to only
+corresponding to reproductive status in occasions \emph{t}+1 and \emph{t}.
+If not provided, then fecundity will be tested without subsetting to only
 reproductive individuals.}
 
 \item{zisizea}{A logical value indicating whether to conduct a test of zero
@@ -63,7 +63,8 @@ inflation in tertiary size. Defaults to \code{TRUE}.}
 inflation in fecundity. Defaults to TRUE.}
 
 \item{fectime}{An integer indicating whether to treat fecundity as occurring
-in time *t* (\code{2}) or time *t*+1 (\code{3}). Defaults to \code{2}.}
+in time \emph{t} (\code{2}) or time \emph{t}+1 (\code{3}). Defaults to
+\code{2}.}
 
 \item{show.size}{A logical value indicating whether to show the output for
 tests of size. Defaults to \code{TRUE}.}
@@ -93,7 +94,8 @@ appropriate than a simple analysis of size and fecundity variables in
 
 The specific test used for overdispersion is a chi-squared test of the
 dispersion parameter estimated using a generalized linear model predicting
-the response given size in occasion *t*, under a quasi-Poisson distribution.
+the response given size in occasion \emph{t}, under a quasi-Poisson
+distribution.
 
 The specific test used for zero-inflation is the chi-squared test presented
 in van der Broek (1995).

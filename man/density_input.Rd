@@ -50,9 +50,9 @@ assumed to be subject to this style of density dependence. Defaults to
 \code{ricker}.}
 
 \item{time_delay}{A vector indicating the number of occasions back on which
-density dependence operates. Defaults to 1, and may not equal any number less
-than 1. If a single number is input, then all noted transitions are assumed
-to be subject to this time delay.}
+density dependence operates. Defaults to \code{1}, and may not equal any
+number less than 1. If a single number is input, then all noted transitions
+are assumed to be subject to this time delay.}
 
 \item{alpha}{A vector indicating the numeric values to use as the
 alpha term in the two parameter Ricker, Beverton-Holt, or Usher function, or
@@ -62,9 +62,10 @@ provided, then all noted transitions are assumed to be subject to this value
 of alpha.}
 
 \item{beta}{A vector indicating the numeric values to use as the beta term in
-the two parameter Ricker, Beverton-Holt, or Usher function. Not used in the
-logistic equation. If a single number is provided, then all noted transitions
-are assumed to be subject to this value of beta.}
+the two parameter Ricker, Beverton-Holt, or Usher function. Used to indicate
+whether to use \emph{K} as a hard limit in the logistic equation (see section
+\code{Notes} below). If a single number is provided, then all noted
+transitions are assumed to be subject to this value of \code{beta}.}
 
 \item{type}{A vector denoting the kind of transition between occasions
 \emph{t} and \emph{t}+1 to be replaced. This should be entered as \code{1},
@@ -119,7 +120,7 @@ one time-step delay (see Notes).
 The parameters \code{alpha} and \code{beta} are applied according to the
 two-parameter Ricker function, the two-parameter Beverton-Holt function, the
 two-parameter Usher function, or the one-parameter logistic function.
-Although the default is that a 1 time step delay is assumed), greater time
+Although the default is that a 1 time step delay is assumed, greater time
 delays can be set through the \code{time_delay} option.
 
 Entries in \code{stage3}, \code{stage2}, and \code{stage1} can include
@@ -127,11 +128,21 @@ abbreviations for groups of stages. Use \code{rep} if all reproductive stages
 are to be used, \code{nrep} if all mature but non-reproductive stages are to
 be used, \code{mat} if all mature stages are to be used, \code{immat} if all
 immature stages are to be used, \code{prop} if all propagule stages are to be
-used, \code{npr} if all non-propagule stages are to be used, and leave empty
-or use \code{all} if all stages in stageframe are to be used.
+used, \code{npr} if all non-propagule stages are to be used, \code{obs} if
+all observable stages are to be used, \code{nobs} if all unobservable stages
+are to be used, and leave empty or use \code{all} if all stages in stageframe
+are to be used.
+
+When using the logistic function, it is possible that the time delay used in
+density dependent simulations will cause matrix elements to become negative.
+To prevent this behavior, set the associated \code{beta} term to \code{1.0}.
+Doing so will set \code{K} as the hard limit in the logistic equation,
+essentially setting a minimum limit at \code{0} for all matrix elements
+modified.
 }
 
 \examples{
+\donttest{
 # Lathyrus example
 data(lathyrus)
 
@@ -177,6 +188,10 @@ ehrlen3mean <- lmean(ehrlen3)
 e3d <- density_input(ehrlen3mean, stage3 = c("Sd", "Sdl"),
   stage2 = c("rep", "rep"), stage1 = c("all", "all"), style = 1,
   time_delay = 1, alpha = 1, beta = 0, type = c(2, 2), type_t12 = c(1, 1))
+
+lathproj <- projection3(ehrlen3, nreps = 5, stochastic = TRUE, substoch = 2,
+  density = e3d)
+}
 
 }
 \seealso{

@@ -185,7 +185,7 @@ Rcpp::List pfj(DataFrame data, DataFrame stageframe, int noyears, int firstyear,
   if (xcol.n_elem == 1) {
     xcol.resize(noyears);
     
-    if (blocksize == 0) {
+    if (!coordsrepeat || blocksize == 0) {
       for (int i = 1; i < noyears; i++) {
         xcol(i) = xcol(0);
       }
@@ -199,7 +199,7 @@ Rcpp::List pfj(DataFrame data, DataFrame stageframe, int noyears, int firstyear,
   if (ycol.n_elem == 1) {
     ycol.resize(noyears);
     
-    if (blocksize == 0) {
+    if (!coordsrepeat || blocksize == 0) {
       for (int i = 1; i < noyears; i++) {
         ycol(i) = ycol(0);
       }
@@ -1925,9 +1925,9 @@ Rcpp::List jpf(DataFrame data, DataFrame stageframe, int popidcol,
   
   Rcpp::List output_longlist(81);
   
-  int norows = data.nrows(); // The number of data points in the demographic dataset
+  int norows = data.nrows();
   
-  Rcpp::NumericVector ckcheck (1); // This section through 1378 is new
+  Rcpp::NumericVector ckcheck (1);
   ckcheck(0) = censorkeep;
   double crazycensor;
   Rcpp::NumericVector censfillvec (norows);
@@ -1935,7 +1935,7 @@ Rcpp::List jpf(DataFrame data, DataFrame stageframe, int popidcol,
     crazycensor = 0;
   } else{
     crazycensor = censorkeep;
-  }                               // End new section
+  }
   
   Rcpp::NumericVector zerovec (norows);
   Rcpp::NumericVector negonevec (norows);
@@ -1945,7 +1945,7 @@ Rcpp::List jpf(DataFrame data, DataFrame stageframe, int popidcol,
   Rcpp::StringVector individx(norows);
   individx = data[individcol];
   Rcpp::StringVector allindivs = unique(individx);
-  int noindivs = allindivs.size(); // This is the total number of individuals in the dataset
+  int noindivs = allindivs.size(); // Total number of individuals in dataset
   
   Rcpp::IntegerVector year2x(norows);
   Rcpp::IntegerVector year3x(norows);
@@ -1953,9 +1953,9 @@ Rcpp::List jpf(DataFrame data, DataFrame stageframe, int popidcol,
   if (year3col != -1) {year3x = data[year3col];} else {year3x = zerovec;}
   Rcpp::IntegerVector yearall2x = sort_unique(year2x);
   int firstyear = min(yearall2x);
-  int noyears = yearall2x.size(); // This is the total number of observation periods
+  int noyears = yearall2x.size(); // Total number of observation periods
   
-  int ndflength = noyears * noindivs; // This is the initial length of the final vertical dataset with all year x indiv combos
+  int ndflength = noyears * noindivs; // Initial length of final hfv dataset
   int currentyear {0};
   int currentindiv {-1};
   int ndfindex {0};
@@ -1964,7 +1964,7 @@ Rcpp::List jpf(DataFrame data, DataFrame stageframe, int popidcol,
   double livcheck2 {0.0};
   double livcheck3 {0.0};
   
-  Rcpp::StringVector sfname = stageframe["stage"]; // This section reads in the stageframe
+  Rcpp::StringVector sfname = stageframe["stage"];
   Rcpp::NumericVector repstat = stageframe["repstatus"];
   Rcpp::NumericVector obsstat = stageframe["obsstatus"];
   Rcpp::NumericVector matstat = stageframe["matstatus"];
@@ -1985,10 +1985,10 @@ Rcpp::List jpf(DataFrame data, DataFrame stageframe, int popidcol,
   arma::vec sfszmaxarmab = sfszmaxb;
   arma::vec sfszminarmac = sfszminc;
   arma::vec sfszmaxarmac = sfszmaxc;
-  int stagenum = sfszmaxarma.n_elem; // This is the total number of life history stages in the stageframe
+  int stagenum = sfszmaxarma.n_elem; // Total number of life stages in stageframe
   
   arma::uvec instages = find(indataset == 1); 
-  int instagenum = instages.n_elem; // This is the total number of life history stages in the demographic dataset
+  int instagenum = instages.n_elem; // Total number of stages in dataset
   
   arma::uvec stageid(stagenum);
   arma::uvec instageid(instagenum);
@@ -2002,7 +2002,8 @@ Rcpp::List jpf(DataFrame data, DataFrame stageframe, int popidcol,
   arma::vec insfszminarmac (instagenum);
   arma::vec insfszmaxarmac (instagenum);
   
-  int inplace {0}; // This section creates vectors describing only life history stages in the dataset
+  // This section creates vectors describing only life history stages in the dataset
+  int inplace {0};
   for (int i = 0; i < stagenum; i++) {
     stageid(i) = i+1;
     
@@ -2114,7 +2115,7 @@ Rcpp::List jpf(DataFrame data, DataFrame stageframe, int popidcol,
   if (indcovc3col != -1) {indcovc3x = data[indcovc3col];} else {indcovc3x = clone(zerovec);}
   
   if (juv2col != -1) {juvgiven2x = data[juv2col];} else {juvgiven2x = clone(zerovec);}
-  if (obs2col != -1) {obsgiven2x = data[obs2col];} else {obsgiven2x.fill(-1.0);} // Set to -1 to make nonobs vs dead designation easier
+  if (obs2col != -1) {obsgiven2x = data[obs2col];} else {obsgiven2x.fill(-1.0);}
   if (nonobs2col != -1) {nonobsgiven2x = data[nonobs2col];} else {nonobsgiven2x.fill(-1.0);}
   if (alive2col != -1) {alivegiven2x = data[alive2col];} else {alivegiven2x.fill(-1.0);}
   if (dead2col != -1) {deadgiven2x = data[dead2col];} else {deadgiven2x.fill(-1.0);}
@@ -2129,7 +2130,7 @@ Rcpp::List jpf(DataFrame data, DataFrame stageframe, int popidcol,
   if (feca3col != -1) {feca3x = data[feca3col];} else {feca3x = clone(zerovec);}
   if (fecb3col != -1) {fecb3x = data[fecb3col];} else {fecb3x = clone(zerovec);}
   if (juv3col != -1) {juvgiven3x = data[juv3col];} else {juvgiven3x = clone(zerovec);}
-  if (obs3col != -1) {obsgiven3x = data[obs3col];} else {obsgiven3x.fill(-1.0);} // Set to -1 to make nonobs vs dead designation easier
+  if (obs3col != -1) {obsgiven3x = data[obs3col];} else {obsgiven3x.fill(-1.0);}
   if (nonobs3col != -1) {nonobsgiven3x = data[nonobs3col];} else {nonobsgiven3x.fill(-1.0);}
   if (alive3col != -1) {alivegiven3x = data[alive3col];} else {alivegiven3x.fill(-1.0);}
   if (dead3col != -1) {deadgiven3x = data[dead3col];} else {deadgiven3x.fill(-1.0);}
@@ -2292,7 +2293,8 @@ Rcpp::List jpf(DataFrame data, DataFrame stageframe, int popidcol,
   indivnum.zeros();
   censor2check.zeros();
   
-  // Here we introduce some derived variables that require extra looping or other control parameters
+  // Here we introduce some derived variables that require extra looping or
+  // other control parameters
   arma::ivec firstseen (ndflength);
   arma::ivec lastseen (ndflength);
   arma::ivec obsage (ndflength);
@@ -2341,9 +2343,11 @@ Rcpp::List jpf(DataFrame data, DataFrame stageframe, int popidcol,
   arma::uvec cs4;
   int choicestage {0};
   
-  // Main loop, which creates the main new dataset rows. Establishes state in time t for all cases in which an individual is observed
-  for (int i = 0; i < norows; i++) { // Variable i corresponds to row in the old dataset
-    for (int j = 0; j < noyears; j++) { // This establishes a place marker for vectors corresponding to the current year
+  // Main loop, which creates the main new dataset rows. Establishes state in
+  // time t for all cases in which an individual is observed
+  for (int i = 0; i < norows; i++) { // i corresponds to row in the old dataset
+    for (int j = 0; j < noyears; j++) {
+      // This establishes a place marker for vectors corresponding to the current year
       if (year2x[i] == yearall2x[j]) currentyear = j;
     }
     
@@ -2395,7 +2399,8 @@ Rcpp::List jpf(DataFrame data, DataFrame stageframe, int popidcol,
     } else {juvgiven20x[i] = 0.0;}
     
     // Here we develop the censoring variable
-    if (censbool && censorcol != -1) { // This provides a replacement in cases where NA designates data to keep
+    if (censbool && censorcol != -1) {
+      // This section provides replacements in cases where NA designates data to keep
       if (NumericVector::is_na(censor2x[i])) {
         censor2[ndfindex] = 0.0;
         censor2check[ndfindex] = 1;
@@ -2440,7 +2445,9 @@ Rcpp::List jpf(DataFrame data, DataFrame stageframe, int popidcol,
     indcovb2[ndfindex] = indcovb2x[i];
     indcovc2[ndfindex] = indcovc2x[i];
     
-    if (repstradded2[ndfindex] > 0) {repstatus2[ndfindex] = 1;} else {repstatus2[ndfindex] = 0;}
+    if (repstradded2[ndfindex] > 0) {
+      repstatus2[ndfindex] = 1;} else {repstatus2[ndfindex] = 0;
+    }
     if (NumericVector::is_na(obsgiven2x[i])) {
       obsstatus2[ndfindex] = 0;
     } else if (obsgiven2x[i] > 0) {
@@ -2458,8 +2465,17 @@ Rcpp::List jpf(DataFrame data, DataFrame stageframe, int popidcol,
     juvgiven2[ndfindex] = juvgiven20x[i];
     matstat2[ndfindex] = 1 - juvgiven2[ndfindex];
     
-    if (alivegiven2x[i] > 0) {alive2[ndfindex] = 1.0;} else if (alivegiven2x[i] == 0) {alive2[ndfindex] = 0.0;}
-    if (deadgiven2x[i] > 0) {alive2[ndfindex] = 0.0;} else if (deadgiven2x[i] == 0) {alive2[ndfindex] = 1.0;}
+    if (alivegiven2x[i] > 0) {
+      alive2[ndfindex] = 1.0;
+    } else if (alivegiven2x[i] == 0) {
+      alive2[ndfindex] = 0.0;
+    }
+    
+    if (deadgiven2x[i] > 0) {
+      alive2[ndfindex] = 0.0;
+    } else if (deadgiven2x[i] == 0) {
+      alive2[ndfindex] = 1.0;
+    }
     
     livcheck2 = sizeadded2[ndfindex] + repstradded2[ndfindex] + obsstatus2[ndfindex];
     
@@ -2481,8 +2497,8 @@ Rcpp::List jpf(DataFrame data, DataFrame stageframe, int popidcol,
     } else if (stassign) {stage2[ndfindex] = "NotAlive";}
     
     
-    // Now we work on time t+1 for the last possible time t (which is technically the
-    // second to last time), in cases where t+1 columns are provided
+    // Now we work on time t+1 for the last possible time t (which is technically
+    // the second to last time), in cases where t+1 columns are provided
     if (currentyear == (noyears - 1)) {
       if (censbool && censorcol != -1) { // Here we develop the censoring variable for the last time
         if (NumericVector::is_na(censor2x[i])) {
@@ -2626,16 +2642,20 @@ Rcpp::List jpf(DataFrame data, DataFrame stageframe, int popidcol,
   } // End of i loop
   
   
-  // Now a loop that establishes most states in time t+1 and t-1, and stages in all times
-  for (int i = 0; i < ndflength; i++) { // Here variable i refers to rows in the final dataset
+  // Now a loop that establishes most states in time t+1 and t-1,
+  // and stages in all times
+  for (int i = 0; i < ndflength; i++) { // i refers to rows in the final dataset
     
-    // This short section deals with correcting info for individuals that are unobserved for long periods
+    // This short section deals with correcting info for individuals that are
+    // unobserved for long periods
     if (i > 0 && rowid[i] == 0) {
       if (year2[i-1] < lastseen[i-1] && (year2[i-1] + 1) < (firstyear + noyears)) {
         individ[i] = individ[i-1];
         popid[i] = popid[i-1];
         patchid[i] = patchid[i-1];
         year2[i] = year2[i-1] + 1;
+        xpos2[i] = xpos2[i-1]; // This is new
+        ypos2[i] = ypos2[i-1]; // This is new
         
         if (matstat2[i-1] == 1) {
           matstat2[i] = 1;
@@ -2693,7 +2713,7 @@ Rcpp::List jpf(DataFrame data, DataFrame stageframe, int popidcol,
       if (currentyear < (noyears - 1)) { 
         nextyrindex = (noyears * currentindiv) + (currentyear + 1);
         
-        if (censor2[i] == censorkeep && alive2[i] == 1) {      // New section through 2095
+        if (censor2[i] == censorkeep && alive2[i] == 1) {
           censor3[i] = censorkeep;
         } else {
           censor3[i] = censor2[nextyrindex];
@@ -2759,7 +2779,7 @@ Rcpp::List jpf(DataFrame data, DataFrame stageframe, int popidcol,
         }
         
         xpos1[i] = xpos2[prevyrindex];
-        ypos1[i] = ypos3[prevyrindex];
+        ypos1[i] = ypos2[prevyrindex];
         
         sizea1[i] = sizea2[prevyrindex];
         sizeb1[i] = sizeb2[prevyrindex];
@@ -2798,6 +2818,20 @@ Rcpp::List jpf(DataFrame data, DataFrame stageframe, int popidcol,
         } else if (stage2col != -1 && alive1[i] == 0 && stassign) {
           stage1[i] = "NotAlive";
         }
+      }
+      
+      // Coordinaete corrections
+      if (xpos1[i] != xpos2[i] && xpos1[i] == 0.0) {
+        xpos1[i] = xpos2[i];
+      }
+      if (xpos3[i] != xpos2[i] && xpos3[i] == 0.0) {
+        xpos3[i] = xpos2[i];
+      }
+      if (ypos1[i] != ypos2[i] && ypos1[i] == 0.0) {
+        ypos1[i] = ypos2[i];
+      }
+      if (ypos3[i] != ypos2[i] && ypos3[i] == 0.0) {
+        ypos3[i] = ypos2[i];
       }
       
       // Stage assignments
@@ -3162,11 +3196,11 @@ Rcpp::List jpf(DataFrame data, DataFrame stageframe, int popidcol,
   output_longlist(1) = popid;
   output_longlist(2) = patchid;
   output_longlist(3) = individ;
-  output_longlist(4) = year2;
-  output_longlist(5) = firstseen;
-  output_longlist(6) = lastseen;
-  output_longlist(7) = obsage;
-  output_longlist(8) = obslifespan;
+  output_longlist(4) = Rcpp::IntegerVector(year2.begin(), year2.end());
+  output_longlist(5) = Rcpp::IntegerVector(firstseen.begin(), firstseen.end());
+  output_longlist(6) = Rcpp::IntegerVector(lastseen.begin(), lastseen.end());
+  output_longlist(7) = Rcpp::IntegerVector(obsage.begin(), obsage.end());
+  output_longlist(8) = Rcpp::IntegerVector(obslifespan.begin(), obslifespan.end());
   
   output_longlist(9) = xpos1;
   output_longlist(10) = ypos1;

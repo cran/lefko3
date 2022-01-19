@@ -10,7 +10,7 @@
 \item{object}{An R object of class \code{lefkoMod} resulting from
 \code{\link{modelsearch}()}.}
 
-\item{...}{Other parameters.}
+\item{...}{Other parameters currently not utilized.}
 }
 \value{
 A summary of the object, showing the best-fit models for all vital

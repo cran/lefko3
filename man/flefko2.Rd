@@ -26,6 +26,7 @@ flefko2(
   jsizeb_model = NA,
   jsizec_model = NA,
   jrepst_model = NA,
+  jmatst_model = NA,
   paramnames = NA,
   inda = NULL,
   indb = NULL,
@@ -43,6 +44,7 @@ flefko2(
   jsizeb_dev = 0,
   jsizec_dev = 0,
   jrepst_dev = 0,
+  jmatst_dev = 0,
   density = NA,
   repmod = 1,
   yearcol = NA,
@@ -54,6 +56,7 @@ flefko2(
   random.indc = FALSE,
   randomseed = NA,
   negfec = FALSE,
+  ipm_method = "CDF",
   reduce = FALSE,
   err_check = FALSE,
   exp_tol = 700,
@@ -109,9 +112,9 @@ models. If given, then \code{surv_model}, \code{obs_model},
 \code{size_model}, \code{sizeb_model}, \code{sizec_model},
 \code{repst_model}, \code{fec_model}, \code{jsurv_model}, \code{jobs_model},
 \code{jsize_model}, \code{jsizeb_model}, \code{jsizec_model},
-\code{jrepst_model}, \code{paramnames}, \code{yearcol}, and \code{patchcol}
-are not required. No models should include size or reproductive status in
-occasion \emph{t}-1.}
+\code{jrepst_model}, \code{jmatst_model}, \code{paramnames}, \code{yearcol},
+and \code{patchcol} are not required. No models should include size or
+reproductive status in occasion \emph{t}-1.}
 
 \item{surv_model}{A linear model predicting survival probability. This can
 be a model of class \code{glm} or \code{glmer}, and requires a predicted
@@ -198,12 +201,19 @@ model must have been developed in a modeling exercise testing only the
 impacts of occasion \emph{t}.}
 
 \item{jrepst_model}{A linear model predicting reproduction probability of a 
-mature individual that was immature in the previous year. This can be a model 
+mature individual that was immature in time \emph{t}. This can be a model
 of class \code{glm} or \code{glmer}, and requires a predicted binomial
 variable under a logit link. If given, then will overwrite any reproduction
 probability model given in \code{modelsuite}. This model must have been
 developed in a modeling exercise testing only the impacts of occasion
 \emph{t}.}
+
+\item{jmatst_model}{A linear model predicting maturity probability of an 
+individual that was immature in time \emph{t}. This can be a model of class
+\code{glm} or \code{glmer}, and requires a predicted binomial variable under
+a logit link. If given, then will overwrite any maturity probability model
+given in \code{modelsuite}. This model must have been developed in a modeling
+exercise testing only the impacts of occasion \emph{t}.}
 
 \item{paramnames}{A dataframe with three columns, the first describing all
 terms used in linear modeling, the second (must be called \code{mainparams}),
@@ -267,6 +277,9 @@ linear model for juvenile tertiary size.}
 \item{jrepst_dev}{A numeric value to be added to the y-intercept in the
 linear model for juvenile reproduction probability.}
 
+\item{jmatst_dev}{A numeric value to be added to the y-intercept in the
+linear model for juvenile maturity probability.}
+
 \item{density}{A numeric value indicating density value to use to propagate
 matrices. Only needed if density is an explanatory term used in linear
 models. Defaults to \code{NA}.}
@@ -309,6 +322,11 @@ or \code{patch.as.random} is set to \code{TRUE}. Defaults to
 
 \item{negfec}{A logical value denoting whether fecundity values estimated to
 be negative should be reset to \code{0}. Defaults to \code{FALSE}.}
+
+\item{ipm_method}{A string indicating what method to use to estimate size
+transition probabilities if size is treated as continuous. Options include
+\code{"midpoint"}, which utilizes the midpoint method, and \code{"CDF"},
+which uses the cumulative distribution function. Defaults to \code{"CDF"}.}
 
 \item{reduce}{A logical value denoting whether to remove ahistorical stages
 associated solely with 0 transitions. These are only removed in cases where
@@ -369,8 +387,9 @@ occasion time combinations corresponding to these matrices.
 }
 \section{Notes}{
 
-Unlike \code{\link{rlefko2}()} and \code{\link{rlefko3}()}, this function
-does not currently distinguish populations.
+Unlike \code{\link{rlefko2}()}, \code{\link{rlefko3}()}, and
+\code{\link{rleslie}()}, this function does not currently distinguish
+populations.
 
 This function will yield incorrect estimates if the models utilized
 incorporate state in occasion \emph{t}-1. Only use models developed testing
@@ -406,6 +425,32 @@ lead to erroneous calculations, and may lead to fatal errors.
 Care should be taken to match the random status of year and patch to the
 states of those variables within the modelsuite. If they do not match, then
 they will be treated as zeroes in vital rate estimation.
+
+The \code{ipm_method} function gives the option of using two different means
+of estimating the probability of size transition. The midpoint method
+(\code{"midpoint"}) refers to the method in which the probability is
+estimated by first estimating the probability associated with transition from
+the exact size at the midpoint of the size class using the corresponding
+probability density function, and then multiplying that value by the bin
+width of the size class. Doak et al. 2021 (Ecological Monographs) noted that
+this method can produce biased results, with total size transitions
+associated with a specific size not totaling to 1.0 and even specific size
+transition probabilities capable of being estimated at values greater than
+1.0. The alternative and default method, \code{"CDF"}, uses the corresponding
+cumulative density function to estimate the probability of size transition as
+the cumulative probability of size transition at the greater limit of the
+size class minus the cumulative probability of size transition at the lower
+limit of the size class. The latter method avoids this bias. Note, however,
+that both methods are exact and unbiased for negative binomial and Poisson
+distributions.
+
+Under the Gaussian and gamma size distributions, the number of estimated
+parameters may differ between the two \code{ipm_method} settings. Because
+the midpoint method has a tendency to incorporate upward bias in the
+estimation of size transition probabilities, it is more likely to yield non-
+zero values when the true probability is extremely close to 0. This will
+result in the \code{summary.lefkoMat} function yielding higher numbers of
+estimated parameters than the \code{ipm_method = "CDF"} yields in some cases.
 
 Using the \code{err_check} option will produce a matrix of 6 columns, each
 characterizing a different vital rate. The product of each row yields an
@@ -547,4 +592,17 @@ vert.mats.f2 <- flefko2(stageframe = vertframe.f, supplement = vertsupp2f,
 summary(vert.mats.f2)
 }
 
+}
+\seealso{
+\code{\link{flefko3}()}
+
+\code{\link{aflefko2}()}
+
+\code{\link{fleslie}()}
+
+\code{\link{rlefko3}()}
+
+\code{\link{rlefko2}()}
+
+\code{\link{rleslie}()}
 }

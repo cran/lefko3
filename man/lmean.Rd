@@ -35,6 +35,12 @@ the original \code{labels} set, then these will be re-labeled as \code{A},
 \code{1}, or \code{1}, respectively.}
 \item{matrixqc}{A short vector describing the number of non-zero elements in
 \code{U} and \code{F} mean matrices, and the number of annual matrices.}
+\item{modelqc}{This is the \code{qc} portion of the \code{modelsuite} input.
+Only output from \code{lefkoMat} objects resulting from function-based
+estimation.}
+\item{dataqc}{A vector showing the numbers of individuals and rows in the
+vertical dataset used as input. Only output from \code{lefkoMat} objects
+resulting from raw matrix estimation.}
 }
 \description{
 \code{lmean()} estimates mean projection matrices as element-wise arithmetic

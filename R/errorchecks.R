@@ -120,10 +120,13 @@ summary.lefkoCondMat <- function(object, ...) {
   prevstages <- length(condmatrices)
   matdim <- dim(firstcondmat)
   
-  writeLines(paste0("\nThis lefkoCondMat object contains ", prevstages, " conditional matrices per historical matrix,"))
+  writeLines(paste0("\nThis lefkoCondMat object contains ", prevstages,
+      " conditional matrices per historical matrix,"))
   writeLines(paste0("It covers ", numhistmats, " main historical matrices."))
-  writeLines(paste0("Each conditional matrix is a square matrix with ", matdim[1], " rows and columns, and a total of ", matdim[1]*matdim[1], " elements."))
-  writeLines(paste0("\nThe order of conditional matrices corresponding to stage in occasion t-1 is:\n", paste(object$ahstages$stage, collapse = " ")))
+  writeLines(paste0("Each conditional matrix is a square matrix with ", matdim[1],
+      " rows and columns, and a total of ", matdim[1]*matdim[1], " elements."))
+  writeLines(paste0("\nThe order of conditional matrices corresponding to stage in occasion t-1 is:\n",
+      paste(object$ahstages$stage, collapse = " ")))
   writeLines("\nThe order of historical matrices is: \n")
   print.data.frame(object$labels)
   

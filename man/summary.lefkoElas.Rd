@@ -9,7 +9,7 @@
 \arguments{
 \item{object}{A \code{lefkoElas} object.}
 
-\item{...}{Other parameters.}
+\item{...}{Other parameters currently not utilized.}
 }
 \value{
 A list composed of 2 data frames. The first, \code{hist}, is a data

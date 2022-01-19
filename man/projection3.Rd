@@ -13,6 +13,7 @@ projection3(
   growthonly = TRUE,
   integeronly = FALSE,
   substoch = 0L,
+  sub_warnings = TRUE,
   start_vec = NULL,
   start_frame = NULL,
   tweights = NULL,
@@ -47,7 +48,15 @@ integer. Defaults to FALSE.}
 transition matrices to be substochastic in density dependent simulations.
 Defaults to \code{0}, which does not force substochasticity. Alternatively,
 \code{1} forces all survival-transition elements to range from 0.0 to 1.0,
-and \code{2} forces all column rows to total no more than 1.0.}
+and forces fecundity to be non-negative; and \code{2} forces all column rows
+in the survival-transition matrices to total no more than 1.0, in addition
+to the actions outlined for option \code{1}.}
+
+\item{sub_warnings}{A logical value indicating whether to warn the user if
+density dependence yields matrix values outside of the realm of possibility.
+Generally, this means that survival-transition elements altered to values
+outside of the interval [0, 1], and negative fecundity values, will both
+yield warnings. Defaults to \code{TRUE}.}
 
 \item{start_vec}{An optional numeric vector denoting the starting stage
 distribution for the projection. Defaults to a single individual of each
@@ -86,11 +95,13 @@ each occasion per replicate (row within data frame) per pop-patch or
 population (list element).}
 \item{labels}{A data frame showing the order of populations and patches in
 item \code{projection}.}
-\item{control}{A short vector indicating the number of replicates and the
-number of occasions projected per replicate.}
 \item{ahstages}{The original stageframe used in the study.}
 \item{hstages}{A data frame showing the order of historical stage pairs.}
 \item{agestages}{A data frame showing the order of age-stage pairs.}
+\item{control}{A short vector indicating the number of replicates and the
+number of occasions projected per replicate.}
+\item{density}{The data frame input under the density option. Only provided
+if input by the user.}
 }
 \description{
 Function \code{projection3()} runs projection simulations. It projects the

@@ -13,17 +13,18 @@ parameter within the MPM generating functions, and the third is to be
 edited with the names of the variables as they appear in the models.
 }
 \description{
-Creates a simple skeleton paramnames object that can be entered as input in
-functions \code{\link{flefko2}()}, \code{\link{flefko3}()}, and
+Creates a simple skeleton \code{paramnames} object that can be entered as
+input in functions \code{\link{flefko2}()}, \code{\link{flefko3}()}, and
 \code{\link{aflefko2}()}.
 }
 \section{Notes}{
 
 The third column in the resulting object should be edited with the names only
-of those variables actually used in vital rate modeling. This `paramnames`
-object should apply to all models used in a single MPM building exercise. So,
-for example, if the models used include random terms, then they should all
-have the same random terms. Fixed terms can vary, however.
+of those variables actually used in vital rate modeling. This
+\code{paramnames} object should apply to all models used in a single MPM
+building exercise. So, for example, if the models used include random terms,
+then they should all have the same random terms. Fixed terms can vary,
+however.
 }
 
 \examples{

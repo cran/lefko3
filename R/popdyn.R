@@ -29,6 +29,12 @@
 #' \code{1}, or \code{1}, respectively.}
 #' \item{matrixqc}{A short vector describing the number of non-zero elements in
 #' \code{U} and \code{F} mean matrices, and the number of annual matrices.}
+#' \item{modelqc}{This is the \code{qc} portion of the \code{modelsuite} input.
+#' Only output from \code{lefkoMat} objects resulting from function-based
+#' estimation.}
+#' \item{dataqc}{A vector showing the numbers of individuals and rows in the
+#' vertical dataset used as input. Only output from \code{lefkoMat} objects
+#' resulting from raw matrix estimation.}
 #' 
 #' @examples
 #' # Lathyrus example
@@ -194,6 +200,13 @@ lmean <- function(mats, matsout = "all") {
     output <- .geodiesel(listofyears, mats$U, mats$F, agestages, mats$ahstages,
       patchonly, poponly)
     output$hstages <- NA
+  }
+  
+  if (is.element("dataqc", names(mats))) {
+    output$dataqc <- mats$dataqc
+  }
+  if (is.element("modelqc", names(mats))) {
+    output$dataqc <- mats$modelqc
   }
   
   class(output) <- "lefkoMat"
@@ -3762,7 +3775,7 @@ ltre3.lefkoMat <- function(mats, refmats = NA, ref = NA, stochastic = FALSE,
 #' and, if applicable, historical transition.
 #'
 #' @param object A \code{lefkoElas} object.
-#' @param ... Other parameters.
+#' @param ... Other parameters currently not utilized.
 #' 
 #' @return A list composed of 2 data frames. The first, \code{hist}, is a data
 #' frame showing the summed elasticities for all 16 kinds of historical
@@ -3896,7 +3909,7 @@ summary.lefkoElas <- function(object, ...) {
 #' and, if applicable, historical transition.
 #'
 #' @param object A \code{lefkoLTRE} object.
-#' @param ... Other parameters.
+#' @param ... Other parameters currently not utilized.
 #' 
 #' @return A list composed of 2 (if deterministic) or 4 (if stochastic) data
 #' frames. If deterministic, then \code{hist_det} is a data
@@ -4102,7 +4115,7 @@ summary.lefkoLTRE <- function(object, ...) {
 #' each projection, or decimals between 0 and 1, which would then be translated
 #' into the corresponding projection steps of the total. Defaults to
 #' \code{c(0, 0.25, 0.50, 0.75, 1.00)}.
-#' @param ... Other parameters.
+#' @param ... Other parameters currently not utilized.
 #' 
 #' @return Apart from a statement of the results, we have the following item in
 #' the output:
@@ -4269,5 +4282,230 @@ summary.lefkoProj <- function(object, threshold = 1,
     con = stdout())
   
   return (milepost_sums)
+}
+
+#' Plot Projection Simulations
+#' 
+#' Function \code{plot.lefkoProj()} produces plots of \code{lefkoProj} objects.
+#' Acts as a convenient wrapper for the \code{plot.default()} function.
+#' 
+#' @param x A \code{lefkoProj} object.
+#' @param variable The focus variable of the plot to produce. Defaults to
+#' \code{"popsize"}, which produces line plots of the \code{popsize} element in
+#' object \code{x}.
+#' @param style A string denoting ther kind of plot to produce. Currently
+#' limited to \code{"timeseries"}, which shows \code{variable} against time on
+#' the x axis. Other choices include \code{"statespace"}, which plots
+#' \code{variable} at one time on the x axis against the same variable in the
+#' next time on the y axis.
+#' @param repl The replicate to plot. Defaults to \code{"all"}, in which case
+#' all replicates are plotted.
+#' @param patch The patch to plot, as labeled in the \code{labels} element in
+#' object \code{x}. Defaults to \code{"pop"}, in which case only the final
+#' population-level projection is plotted. Can also be set to \code{"all"}, in
+#' which case projections for all patches and population in the \code{labels}
+#' element are plotted.
+#' @param auto_ylim A logical value indicating whether the maximum of the y axis
+#' should be determined automatically. Defaults to \code{TRUE}, but reverts to
+#' \code{FALSE} if any setting for \code{ylim} is given.
+#' @param auto_col A logical value indicating whether to shift the color of
+#' lines associated with each patch automatically. Defaults to \code{TRUE}, but
+#' reverts to \code{FALSE} if any setting for \code{col} is given.
+#' @param auto_lty A logical value indicating whether to shift the line type
+#' associated with each replicate automatically. Defaults to \code{TRUE}, but
+#' reverts to \code{FALSE} if any setting for \code{lty} is given.
+#' @param ... Other parameters used by functions \code{plot.default()} and
+#' \code{lines()}.
+#' 
+#' @return A plot of the results of a \code{link{projection3}()} run.
+#' 
+#' @section Notes:
+#' Output plots are currently limited to time series and state space plots of
+#' population size.
+#' 
+#' @examples
+#' # Lathyrus example
+#' data(lathyrus)
+#' 
+#' sizevector <- c(0, 100, 13, 127, 3730, 3800, 0)
+#' stagevector <- c("Sd", "Sdl", "VSm", "Sm", "VLa", "Flo", "Dorm")
+#' repvector <- c(0, 0, 0, 0, 0, 1, 0)
+#' obsvector <- c(0, 1, 1, 1, 1, 1, 0)
+#' matvector <- c(0, 0, 1, 1, 1, 1, 1)
+#' immvector <- c(1, 1, 0, 0, 0, 0, 0)
+#' propvector <- c(1, 0, 0, 0, 0, 0, 0)
+#' indataset <- c(0, 1, 1, 1, 1, 1, 1)
+#' binvec <- c(0, 100, 11, 103, 3500, 3800, 0.5)
+#' 
+#' lathframe <- sf_create(sizes = sizevector, stagenames = stagevector,
+#'   repstatus = repvector, obsstatus = obsvector, matstatus = matvector,
+#'   immstatus = immvector, indataset = indataset, binhalfwidth = binvec,
+#'   propstatus = propvector)
+#' 
+#' lathvert <- verticalize3(lathyrus, noyears = 4, firstyear = 1988,
+#'   patchidcol = "SUBPLOT", individcol = "GENET", blocksize = 9,
+#'   juvcol = "Seedling1988", sizeacol = "Volume88", repstracol = "FCODE88",
+#'   fecacol = "Intactseed88", deadacol = "Dead1988",
+#'   nonobsacol = "Dormant1988", stageassign = lathframe, stagesize = "sizea",
+#'   censorcol = "Missing1988", censorkeep = NA, censor = TRUE)
+#' 
+#' lathrepm <- matrix(0, 7, 7)
+#' lathrepm[1, 6] <- 0.345
+#' lathrepm[2, 6] <- 0.054
+#' 
+#' lathsupp3 <- supplemental(stage3 = c("Sd", "Sd", "Sdl", "Sdl", "Sd", "Sdl"), 
+#'   stage2 = c("Sd", "Sd", "Sd", "Sd", "rep", "rep"),
+#'   stage1 = c("Sd", "rep", "Sd", "rep", "all", "all"), 
+#'   givenrate = c(0.345, 0.345, 0.054, 0.054, NA, NA),
+#'   multiplier = c(NA, NA, NA, NA, 0.345, 0.054),
+#'   type = c(1, 1, 1, 1, 3, 3), type_t12 = c(1, 2, 1, 2, 1, 1),
+#'   stageframe = lathframe, historical = TRUE)
+#' 
+#' ehrlen3 <- rlefko3(data = lathvert, stageframe = lathframe,
+#'   year = c(1989, 1990), stages = c("stage3", "stage2", "stage1"),
+#'   repmatrix = lathrepm, supplement = lathsupp3, yearcol = "year2",
+#'   indivcol = "individ")
+#' 
+#' lathproj <- projection3(ehrlen3, nreps = 5, stochastic = TRUE)
+#' plot(lathproj)
+#' 
+#' @export
+plot.lefkoProj <- function(x, variable = "popsize", style = "time",
+  repl = "all", patch = "pop", auto_ylim = TRUE, auto_col = TRUE,
+  auto_lty = TRUE, ...) {
+  
+  further_args <- list(...)
+  
+  if (length(further_args) == 0) further_args <- list()
+  
+  if (!is.element("type", names(further_args))) {
+    further_args$type <- "l"
+  }
+  if (!is.element("ylab", names(further_args))) {
+    further_args$ylab <- "Population size"
+  }
+  if (!is.element("xlab", names(further_args))) {
+    further_args$xlab <- "Time"
+  }
+  if (is.element("col", names(further_args))) {
+    auto_col <- FALSE
+  }
+  if (is.element("lty", names(further_args))) {
+    auto_lty <- FALSE
+  }
+  if (is.element("ylim", names(further_args))) {
+    auto_ylim <- FALSE
+  }
+  basal_args <- further_args
+  
+  actual_patches <- c(1:length(x$labels$patch))
+  actual_replicates <- c(1:x$control[1])
+  
+  if (length(grep("pop", variable)) > 0 | length(grep("size", variable)) > 0) {
+    variable <- "popsize"
+  }
+  
+  if (length(grep("stat", style)) > 0) {
+    style <- "statespace"
+  } else if (length(grep("tim", style)) > 0) {
+    style <- "timeseries"
+  }
+  
+  if (all(is.na(patch))) {
+    patch <- actual_patches
+  } else if (is.character(patch)) {
+    if (any(grep("al", patch))) {
+      patch <- actual_patches
+    } else if (length(patch) == 1) {
+      if (grep("po", patch)) {
+        if (length(actual_patches) == 1) {
+          patch <- actual_patches
+        } else {
+          patch <- which(x$labels$patch == 0)
+        }
+      }
+    } else {
+      patch <- as.numeric(patch)
+      
+      if (any(is.na(patch))) {
+        stop("Setting patch not understood. Please do not combine text with numbers.",
+          call. = FALSE)
+      }
+      if (!all(is.element(patch, actual_patches))) {
+        stop("Setting patch not understood. Please check the labels element of
+          your input lefkoProj object.", call. = FALSE)
+      }
+    }
+  } else if (is.numeric(patch)) {
+    if (any(!is.element(patch, actual_patches))) {
+      stop("Setting patch not understood. Please check the labels element of
+          your input lefkoProj object.", call. = FALSE)
+    }
+  }
+  
+  if (is.character(repl)) {
+    if (any(grep("al", repl))) {
+      repl <- actual_replicates
+    } else {
+      stop("Setting repl not understood.", call. = FALSE)
+    }
+  } else {
+    if (any(!is.element(repl, actual_replicates))) {
+      stop("Setting repl not understood.", call. = FALSE)
+    }
+  }
+  
+  if (variable != "popsize") {
+    stop("Function plot.lefkoProj() does not current handle plots of elements
+      other than `popsize`.", call. = FALSE)
+  }
+  
+  used_col <- 1
+  
+  for (i in patch) {
+    used_lty <- 1
+    
+    if (auto_ylim) {
+      further_args$ylim <- c(0, max(x$pop_size[[i]], na.rm = TRUE))
+    }
+    if (auto_col) {
+      further_args$col <- used_col
+      basal_args$col <- used_col
+    }
+    if (auto_lty) {
+      further_args$lty <- used_lty
+      basal_args$lty <- used_lty
+    }
+      
+    if (style == "timeseries") {
+      c_xy <- xy.coords(x = c(1:length(x$pop_size[[i]][1,])), y = x$pop_size[[i]][1,])
+      further_args$x <- c_xy
+      
+    } else if (style == "statespace") {
+      c_xy <- xy.coords(x = x$pop_size[[i]][1,1:(dim(x$pop_size[[i]])[2] - 1)],
+        y = x$pop_size[[i]][1,2:dim(x$pop_size[[i]])[2]])
+      further_args$x <- c_xy
+    }
+    
+    do.call("plot.default", further_args)
+    
+    if (length(repl) > 1) {
+      for (j in c(2:x$control[1])) {
+        if (style == "timeseries") {
+          basal_args$x <- c(1:length(x$pop_size[[i]][1,]))
+          basal_args$y <- x$pop_size[[i]][1,]
+          
+        } else if (style == "statespace") {
+          basal_args$y <- x$pop_size[[i]][j,2:dim(x$pop_size[[i]])[2]]
+          basal_args$x <- x$pop_size[[i]][j,1:(dim(x$pop_size[[i]])[2] - 1)]
+        
+        }
+        do.call("lines", basal_args)
+      }
+      used_lty <- used_lty + 1;
+    }
+    used_col <- used_col + 1;
+    if (used_col > length(palette())) used_col <- 1;
+  }
 }
 

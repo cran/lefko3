@@ -6,7 +6,7 @@
 \title{Demographic Dataset of \emph{Cypripedium candidum} Population, in Horizontal
 Format}
 \format{
-A data frame with 77 individuals and 27 variables. Each row 
+A data frame with 77 individuals and 29 variables. Each row 
 corresponds to an unique individual, and each variable from \code{size.04} 
 on refers to the state of the individual in a particular year.
 
@@ -14,6 +14,8 @@ on refers to the state of the individual in a particular year.
   \item{plantid}{A numeric variable giving a unique number to each 
   individual.}
   \item{patch}{A variable refering to patch within the population.}
+  \item{X}{An X coordinate for the plant within the population.}
+  \item{Y}{A Y coordinate for the plant within the population.}
   \item{censor}{A variable coding for whether the data point is valid. An
   entry of 1 means that it is so.}
   \item{Inf2.04}{Number of double inflorescences in 2004.}

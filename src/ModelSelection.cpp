@@ -23,6 +23,8 @@ using namespace arma;
 //' coding reproductive status.
 //' @param fec A vector of strings indicating the names of the variables coding
 //' fecundity.
+//' @param matstat A vector of strings indicating the names of the variables
+//' coding for maturity status.
 //' @param vitalrates A vector of strings indicating which vital rates will be
 //' estimated.
 //' @param historical A logical value indicating whether to create global models
@@ -88,13 +90,13 @@ using namespace arma;
 // [[Rcpp::export(.stovokor)]]
 List stovokor(StringVector surv, StringVector obs, StringVector size,
   StringVector sizeb, StringVector sizec, StringVector repst, StringVector fec,
-  StringVector vitalrates, bool historical, String suite, String approach,
-  bool nojuvs, String age, StringVector indcova, StringVector indcovb,
-  StringVector indcovc, String indiv, String patch, String year, bool pasrand,
-  bool yasrand, bool iaasrand, bool ibasrand, bool icasrand, int fectime,
-  bool juvsize, bool sizebused, bool sizecused, bool grouptest,
-  String densitycol, bool densityused, bool indcovaused, bool indcovbused,
-  bool indcovcused) {
+  StringVector matstat, StringVector vitalrates, bool historical, String suite,
+  String approach, bool nojuvs, String age, StringVector indcova,
+  StringVector indcovb, StringVector indcovc, String indiv, String patch,
+  String year, bool pasrand, bool yasrand, bool iaasrand, bool ibasrand,
+  bool icasrand, int fectime, bool juvsize, bool sizebused, bool sizecused,
+  bool grouptest, String densitycol, bool densityused, bool indcovaused,
+  bool indcovbused, bool indcovcused) {
   
   if (nojuvs) juvsize = false;
   
@@ -110,20 +112,21 @@ List stovokor(StringVector surv, StringVector obs, StringVector size,
   int sizel = size.length();
   int repstl = repst.length();
   
-  String fullsurvmodel;
-  String fullobsmodel;
-  String fullsizemodel;
-  String fullsizebmodel;
-  String fullsizecmodel;
-  String fullrepstmodel;
-  String fullfecmodel;
+  String fullsurvmodel = "none";
+  String fullobsmodel = "none";
+  String fullsizemodel = "none";
+  String fullsizebmodel = "none";
+  String fullsizecmodel = "none";
+  String fullrepstmodel = "none";
+  String fullfecmodel = "none";
   
-  String juvsurvmodel;
-  String juvobsmodel;
-  String juvsizemodel;
-  String juvsizebmodel;
-  String juvsizecmodel;
-  String juvrepstmodel;
+  String juvsurvmodel = "none";
+  String juvobsmodel = "none";
+  String juvsizemodel = "none";
+  String juvsizebmodel = "none";
+  String juvsizecmodel = "none";
+  String juvrepstmodel = "none";
+  String juvmatstmodel = "none";
   
   String randomtackonp = "";
   String randomtackony = "";
@@ -152,9 +155,25 @@ List stovokor(StringVector surv, StringVector obs, StringVector size,
   if (indcova(1) != "none") covcount += 1;
   if (indcovb(1) != "none") covcount += 1;
   if (indcovc(1) != "none") covcount += 1;
+  
   int modelcounter {0};
   int juvmodelcounter {0};
   int fixedcovcounter {0};
+  int randomcovcounter {0};
+  
+  int indcova_ran_counter {0};
+  int indcovb_ran_counter {0};
+  int indcovc_ran_counter {0};
+  int year_ran_counter {0};
+  int patch_ran_counter {0};
+  int indiv_ran_counter {0};
+  
+  int indcova_fix_counter {0};
+  int indcovb_fix_counter {0};
+  int indcovc_fix_counter {0};
+  int year_fix_counter {0};
+  int patch_fix_counter {0};
+  int group_fix_counter {0};
   
   // This section determines which vital rates need global model formulae
   for (int i = 0; i < nvitalrates; i++) {
@@ -238,93 +257,93 @@ List stovokor(StringVector surv, StringVector obs, StringVector size,
       fixedcovcounter += 1;
       fixedtackong += "+ as.factor(group1)";
     }
+    group_fix_counter += 1;
   }
   
   if (year!= "none") {
     if (yasrand) {
-      randomtackony += " + ";
       randomtackony += "(1 | ";
       randomtackony += year;
       randomtackony += ")";
+      
+      year_ran_counter += 1;
+      randomcovcounter += 1;
     } else {
-      if (fixedcovcounter > 0) {
-        fixedtackony += " + as.factor(";
-      } else {
-        fixedtackony += "as.factor(";
-      }
+      fixedtackony += "as.factor(";
       fixedtackony += year;
       fixedtackony += ")";
       
+      year_fix_counter += 1;
       fixedcovcounter += 1;
     }
   }
   
   if (patch!= "none") {
     if (pasrand) {
-      randomtackonp += " + ";
       randomtackonp += "(1 | ";
       randomtackonp += patch;
       randomtackonp += ")";
-    } else {
-      if (fixedcovcounter > 0) {
-        fixedtackonp += " + as.factor(";
-      } else {
-        fixedtackonp += "as.factor(";
-      }
-      fixedtackonp += patch;
       
+      patch_ran_counter += 1;
+      randomcovcounter += 1;
+    } else {
+      fixedtackonp += "as.factor(";
+      fixedtackonp += patch;
       fixedtackonp += ")";
+      
+      patch_fix_counter += 1;
       fixedcovcounter += 1;
     }
   }
   
   if (indiv != "none" && approach == "mixed") {
-    randomtackoni += " + (1 | ";
+    randomtackoni += "(1 | ";
     randomtackoni += indiv;
     randomtackoni += ")";
+    
+    indiv_ran_counter += 1;
+    randomcovcounter += 1;
   }
   
   // Now we add the individual covariates to the tacked-on sections
   if (indcova(1) != "none") {
     if (!iaasrand) {
-      if (fixedcovcounter > 0) {
-        fixedtackonia += " + ";
-        fixedtackonia += indcova(1);
-      } else {
-        fixedtackonia += indcova(1);
-      }
-      fixedcovcounter += 1;
+      fixedtackonia += indcova(1);
       if (historical) {
         fixedtackonia += " + ";
         fixedtackonia += indcova(2);
       }
+      
+      indcova_fix_counter += 1;
+      fixedcovcounter += 1;
     } else {
-      randomtackonia += " + (1 | ";
+      randomtackonia += "(1 | ";
       randomtackonia += indcova(1);
       randomtackonia += ")";
       
       if (historical) {
         randomtackonia += " + (1 | ";
         randomtackonia += indcova(2);
-        randomtackonia += ")";
+        randomtackonia += ") + ";
       }
+      
+      indcova_ran_counter += 1;
+      randomcovcounter += 1;
     }
   }
   if (indcovb(1) != "none") {
     if (!ibasrand) {
-      if (fixedcovcounter > 0) {
-        fixedtackonib += " + ";
-        fixedtackonib += indcovb(1);
-      } else {
-        fixedtackonib += indcovb(1);
-      }
-      fixedcovcounter += 1;
+      fixedtackonib += indcovb(1);
+      
       if (historical) {
         fixedtackonib += " + ";
         fixedtackonib += indcovb(2);
       }
+      
+      indcovb_fix_counter += 1;
+      fixedcovcounter += 1;
     } else {
-      randomtackonib += " + (1 | ";
+      randomtackonib += "(1 | ";
       randomtackonib += indcovb(1);
       randomtackonib += ")";
       
@@ -333,23 +352,23 @@ List stovokor(StringVector surv, StringVector obs, StringVector size,
         randomtackonib += indcovb(2);
         randomtackonib += ")";
       }
+      
+      indcovb_ran_counter += 1;
+      randomcovcounter += 1;
     }
   }
   if (indcovc(1) != "none") {
     if (!icasrand) {
-      if (fixedcovcounter > 0) {
-        fixedtackonic += " + ";
-        fixedtackonic += indcovc(1);
-      } else {
-        fixedtackonic += indcovc(1);
-      }
-      fixedcovcounter += 1;
+      fixedtackonic += indcovc(1);
       if (historical) {
         fixedtackonic += " + ";
         fixedtackonic += indcovc(2);
       }
+      
+      indcovc_fix_counter += 1;
+      fixedcovcounter += 1;
     } else {
-      randomtackonic += " + (1 | ";
+      randomtackonic += "(1 | ";
       randomtackonic += indcovc(1);
       randomtackonic += ")";
       
@@ -358,6 +377,9 @@ List stovokor(StringVector surv, StringVector obs, StringVector size,
         randomtackonic += indcovc(2);
         randomtackonic += ")";
       }
+      
+      indcovc_ran_counter += 1;
+      randomcovcounter += 1;
     }
   }
   if (suite == "full" && !iaasrand && !ibasrand) {
@@ -436,29 +458,65 @@ List stovokor(StringVector surv, StringVector obs, StringVector size,
     }
   }
   
-  randomtackon += randomtackonia;
-  randomtackon += randomtackonib;
-  randomtackon += randomtackonic;
-  randomtackon += randomtackony;
-  randomtackon += randomtackonp;
-  randomtackon += randomtackoni;
+  if (indcova_ran_counter > 0) {
+    randomtackon += " + ";
+    randomtackon += randomtackonia;
+  }
+  if (indcovb_ran_counter > 0) {
+    randomtackon += " + ";
+    randomtackon += randomtackonib;
+  }
+  if (indcovc_ran_counter > 0) {
+    randomtackon += " + ";
+    randomtackon += randomtackonic;
+  }
+  if (year_ran_counter > 0) {
+    randomtackon += " + ";
+    randomtackon += randomtackony;
+  }
+  if (patch_ran_counter > 0) {
+    randomtackon += " + ";
+    randomtackon += randomtackonp;
+  }
+  if (indiv_ran_counter > 0) {
+    randomtackon += " + ";
+    randomtackon += randomtackoni;
+  }
   
-  fixedtackon += fixedtackong;
-  fixedtackon += fixedtackonia;
-  fixedtackon += fixedtackonib;
-  fixedtackon += fixedtackonic;
-  fixedtackon += fixedtackony;
-  fixedtackon += fixedtackonp;
+  if (group_fix_counter > 0) {
+    fixedtackon += " + ";
+    fixedtackon += fixedtackong;
+  }
+  if (indcova_fix_counter > 0) {
+    fixedtackon += " + ";
+    fixedtackon += fixedtackonia;
+  }
+  if (indcovb_fix_counter > 0) {
+    fixedtackon += " + ";
+    fixedtackon += fixedtackonib;
+  }
+  if (indcovc_fix_counter > 0) {
+    fixedtackon += " + ";
+    fixedtackon += fixedtackonic;
+  }
+  if (year_fix_counter > 0) {
+    fixedtackon += " + ";
+    fixedtackon += fixedtackony;
+  }
+  if (patch_fix_counter > 0) {
+    fixedtackon += " + ";
+    fixedtackon += fixedtackonp;
+  }
   
   // Main model patterns
   // First the juvenile model pattern
   if (!nojuvs) {
     juvmainmodel = " ~ ";
     
-    if (suite == "full" || suite == "main" || suite == "size" || suite == "repst") {
+    if (suite != "const") {
       if (juvsize && suite != "repst") {
         juvmainmodel += size(1);
-        juvmodelcounter += 1;
+        juvmodelcounter = 1;
         
         if (sizebused) {
           if (juvmodelcounter > 0) juvmainmodel += " + ";
@@ -516,7 +574,6 @@ List stovokor(StringVector surv, StringVector obs, StringVector size,
             }
           }
         }
-        
       } else if (densityused) {
         if (juvmodelcounter > 0) juvmainmodel += " + ";
         juvmainmodel += densitycol;
@@ -528,8 +585,8 @@ List stovokor(StringVector surv, StringVector obs, StringVector size,
       juvmainmodel += "1";
     }
     
-    juvmainmodel += fixedtackon;
-    juvmainmodel += randomtackon;
+    if (fixedcovcounter > 0) juvmainmodel += fixedtackon;
+    if (randomcovcounter > 0) juvmainmodel += randomtackon;
   }
     
   // Now the adult model pattern
@@ -537,7 +594,7 @@ List stovokor(StringVector surv, StringVector obs, StringVector size,
   
   if (age != "none") {
     fullmainmodel += age;
-    modelcounter += 1;
+    modelcounter = 1;
   }
   
   if (densityused) {
@@ -1096,10 +1153,10 @@ List stovokor(StringVector surv, StringVector obs, StringVector size,
       }
     }
     
-    if (modelcounter > 0 && fixedcovcounter > 0) fullmainmodel += " + ";
+    //if (modelcounter > 0 && fixedcovcounter > 0) fullmainmodel += " + ";
     
-    fullmainmodel += fixedtackon;
-    fullmainmodel += randomtackon;
+    if (fixedcovcounter > 0) fullmainmodel += fixedtackon;
+    if (randomcovcounter > 0) fullmainmodel += randomtackon;
   } else if (suite == "rep") {
     if (age != "none" || covcount > 0) fullmainmodel += " + ";
     fullmainmodel += repst(1);
@@ -1114,14 +1171,16 @@ List stovokor(StringVector surv, StringVector obs, StringVector size,
       fullmainmodel += repst(2);
     }
     
-    fullmainmodel += fixedtackon;
-    fullmainmodel += randomtackon;
+    if (fixedcovcounter > 0) fullmainmodel += fixedtackon;
+    if (randomcovcounter > 0) fullmainmodel += randomtackon;
   } else if (suite == "cons") {
     if (fixedcovcounter == 0 && modelcounter == 0) fullmainmodel += "1";
     
-    fullmainmodel += fixedtackon;
-    if (fixedcovcounter > 0) fullmainmodel += " + ";
-    fullmainmodel += randomtackon;
+    //if (modelcounter > 0) fullmainmodel += " + "; // This added
+    if (fixedcovcounter > 0) fullmainmodel += fixedtackon;
+    
+    if (randomcovcounter > 0) fullmainmodel += randomtackon;
+    
   } else {
     fullmainmodel = "none";
   }
@@ -1134,8 +1193,12 @@ List stovokor(StringVector surv, StringVector obs, StringVector size,
     if (!nojuvs) {
       juvsurvmodel = surv(0);
       juvsurvmodel += juvmainmodel;
+      
+      juvmatstmodel = matstat(0);
+      juvmatstmodel += juvmainmodel;
     } else {
     juvsurvmodel = "none";
+    juvmatstmodel = "none";
     }
     
   } else {
@@ -1224,18 +1287,19 @@ List stovokor(StringVector surv, StringVector obs, StringVector size,
     "fecundity in time t+1", "fecundity in time t", "sizea in time t",
     "sizea in time t-1", "sizeb in time t", "sizeb in time t-1", "sizec in time t", 
     "sizec in time t-1", "reproductive status in time t",
-    "reprodutive status in time t-1", "age in time t", "density in time t",
+    "reproductive status in time t-1", "maturity status in time t+1",
+    "maturity status in time t", "age in time t", "density in time t",
     "individual covariate a in time t", "individual covariate a in time t-1",
     "individual covariate b in time t", "individual covariate b in time t-1",
     "individual covariate c in time t", "individual covariate c in time t-1",
     "stage group in time t", "stage group in time t-1"};
   StringVector mainparams {"year2", "individ", "patch", "surv3", "obs3",
     "size3", "sizeb3", "sizec3", "repst3", "fec3", "fec2", "size2", "size1",
-    "sizeb2", "sizeb1", "sizec2", "sizec1", "repst2", "repst1", "age",
-    "density", "indcova2", "indcova1", "indcovb2", "indcovb1", "indcovc2",
-    "indcovc1", "group2", "group1"};
+    "sizeb2", "sizeb1", "sizec2", "sizec1", "repst2", "repst1", "matst3",
+    "matst2", "age", "density", "indcova2", "indcova1", "indcovb2", "indcovb1",
+    "indcovc2", "indcovc1", "group2", "group1"};
   
-  StringVector modelparams (29);
+  StringVector modelparams (31);
   modelparams(0) = year;
   modelparams(1) = indiv;
   modelparams(2) = patch;
@@ -1255,20 +1319,22 @@ List stovokor(StringVector surv, StringVector obs, StringVector size,
   if (sizecused && historical) {modelparams(16) = sizec(2);} else {modelparams(16) = "none";}
   modelparams(17) = repst(1);
   if (historical) {modelparams(18) = repst(2);} else {modelparams(18) = "none";}
-  modelparams(19) = age;
-  if (densityused) {modelparams(20) = densitycol;} else {modelparams(20) = "none";}
-  if (indcovaused) {modelparams(21) = indcova(1);} else {modelparams(21) = "none";}
-  if (indcovaused && historical) {modelparams(22) = indcova(2);} else {modelparams(22) = "none";}
-  if (indcovbused) {modelparams(23) = indcovb(1);} else {modelparams(23) = "none";}
-  if (indcovbused && historical) {modelparams(24) = indcovb(2);} else {modelparams(24) = "none";}
-  if (indcovcused) {modelparams(25) = indcovc(1);} else {modelparams(25) = "none";}
-  if (indcovcused && historical) {modelparams(26) = indcovc(2);} else {modelparams(26) = "none";}
+  modelparams(19) = matstat(0);
+  modelparams(20) = matstat(1);
+  modelparams(21) = age;
+  if (densityused) {modelparams(22) = densitycol;} else {modelparams(22) = "none";}
+  if (indcovaused) {modelparams(23) = indcova(1);} else {modelparams(23) = "none";}
+  if (indcovaused && historical) {modelparams(24) = indcova(2);} else {modelparams(24) = "none";}
+  if (indcovbused) {modelparams(25) = indcovb(1);} else {modelparams(25) = "none";}
+  if (indcovbused && historical) {modelparams(26) = indcovb(2);} else {modelparams(26) = "none";}
+  if (indcovcused) {modelparams(27) = indcovc(1);} else {modelparams(27) = "none";}
+  if (indcovcused && historical) {modelparams(28) = indcovc(2);} else {modelparams(28) = "none";}
   if (grouptest) {
-    modelparams(27) = "group2";
-    if (historical) {modelparams(28) = "group1";} else {modelparams(28) = "group1";}
+    modelparams(29) = "group2";
+    if (historical) {modelparams(30) = "group1";} else {modelparams(30) = "group1";}
   } else {
-    modelparams(27) = "none";
-    modelparams(28) = "none";
+    modelparams(29) = "none";
+    modelparams(30) = "none";
   }
   
   Rcpp::DataFrame paramnames = DataFrame::create(Named("parameter_names") = fullnames,
@@ -1281,12 +1347,15 @@ List stovokor(StringVector surv, StringVector obs, StringVector size,
     _["juv.surv.model"] = juvsurvmodel, _["juv.obs.model"] = juvobsmodel,
     _["juv.size.model"] = juvsizemodel, _["juv.sizeb.model"] = juvsizebmodel,
     _["juv.sizec.model"] = juvsizecmodel, _["juv.repst.model"] = juvrepstmodel,
-    _["paramnames"] = paramnames);
+    _["juv.matst.model"] = juvmatstmodel, _["paramnames"] = paramnames);
   
   if (fullsurvmodel == "none") {
     output["full.surv.model"] = 1;
     
-    if (!nojuvs) {output["juv.surv.model"] = 1;}
+    if (!nojuvs) {
+      output["juv.surv.model"] = 1;
+      output["juv.matst.model"] = 1;
+    }
   }
   if (nojuvs) {
     output["juv.surv.model"] = 0;

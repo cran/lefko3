@@ -18,8 +18,8 @@ within the \code{labels} element of \code{lM}, or a vector of such integers.}
 \item{patch}{The patch designation for matrices to remove. Only used if
 \code{mat_num} is not given.}
 
-\item{year}{The time *t* designation for matrices to remove. Only used if
-\code{mat_num} is not given.}
+\item{year}{The time \emph{t} designation for matrices to remove. Only used
+if \code{mat_num} is not given.}
 }
 \value{
 A \code{lefkoMat} object in which the matrices specified in \code{lM}

@@ -10,7 +10,7 @@
 #' 
 #' @usage data(cypdata)
 #' 
-#' @format A data frame with 77 individuals and 27 variables. Each row 
+#' @format A data frame with 77 individuals and 29 variables. Each row 
 #' corresponds to an unique individual, and each variable from \code{size.04} 
 #' on refers to the state of the individual in a particular year.
 #' 
@@ -18,6 +18,8 @@
 #'   \item{plantid}{A numeric variable giving a unique number to each 
 #'   individual.}
 #'   \item{patch}{A variable refering to patch within the population.}
+#'   \item{X}{An X coordinate for the plant within the population.}
+#'   \item{Y}{A Y coordinate for the plant within the population.}
 #'   \item{censor}{A variable coding for whether the data point is valid. An
 #'   entry of 1 means that it is so.}
 #'   \item{Inf2.04}{Number of double inflorescences in 2004.}
@@ -162,7 +164,7 @@
 #' 
 #' @usage data(cypvert)
 #' 
-#' @format A data frame with 77 individuals, 331 rows, and 12 variables. Each
+#' @format A data frame with 77 individuals, 322 rows, and 14 variables. Each
 #' row corresponds to a specific two-year transition for a specific individual.
 #' Variable codes are similar to those for \code{cypdata}, but use \code{.2} to
 #' identify occasion \emph{t} and \code{.3} to identify occasion \emph{t}+1.
@@ -171,6 +173,8 @@
 #'   \item{plantid}{A numeric variable giving a unique number to each 
 #'   individual.}
 #'   \item{patch}{A variable refering to patch within the population.}
+#'   \item{X}{An X coordinate for the plant within the population.}
+#'   \item{Y}{A Y coordinate for the plant within the population.}
 #'   \item{censor}{A variable coding for whether the data point is valid. An
 #'   entry of 1 means that it is so.}
 #'   \item{year2}{Year in occasion \emph{t}.}
