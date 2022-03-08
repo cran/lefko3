@@ -56,6 +56,8 @@ historicalize3(
   NAas0 = FALSE,
   NRasRep = FALSE,
   NOasObs = FALSE,
+  prebreeding = TRUE,
+  age_offset = 0,
   reduce = TRUE,
   quiet = FALSE
 )
@@ -269,6 +271,13 @@ interpreted as not observed in the dataset as though they were observed
 during stage assignment. This can be useful when a MPM is desired without
 separation of observable and unobservable stages. Only used if
 \code{stageassign} is set to a stageframe. Defaults to \code{FALSE}.}
+
+\item{prebreeding}{A logical term indicating whether the life history model
+is pre-breeding. If so, then \code{1} is added to all ages. Defaults to
+\code{TRUE}.}
+
+\item{age_offset}{A number to add automatically to all values of age at time
+\emph{t}. Defaults to \code{0}.}
 
 \item{reduce}{A logical variable determining whether unused variables and
 some invariant state variables should be removed from the output dataset.

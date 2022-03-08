@@ -178,6 +178,11 @@
 #' during stage assignment. This can be useful when a MPM is desired without
 #' separation of observable and unobservable stages. Only used if
 #' \code{stageassign} is set to a stageframe. Defaults to \code{FALSE}.
+#' @param prebreeding A logical term indicating whether the life history model
+#' is pre-breeding. If so, then \code{1} is added to all ages. Defaults to
+#' \code{TRUE}.
+#' @param age_offset A number to add automatically to all values of age at time
+#' \emph{t}. Defaults to \code{0}.
 #' @param reduce A logical variable determining whether unused variables and 
 #' some invariant state variables should be removed from the output dataset.
 #' Defaults to \code{TRUE}.
@@ -389,8 +394,6 @@
 #' ehrlen3mean$A[[1]]
 #' 
 #' # Cypripedium example using blocksize
-#' rm(list=ls(all=TRUE))
-#' 
 #' data(cypdata)
 #' 
 #' sizevector <- c(0, 0, 0, 0, 0, 0, 1, 2.5, 4.5, 8, 17.5)
@@ -491,7 +494,8 @@ verticalize3 <- function(data, noyears, firstyear = 1, popidcol = 0,
   repstrrel = 1, fecrel = 1, stagecol = 0, stageassign = NA, stagesize = NA,
   censorkeep = 0, censorRepeat = FALSE, censor = FALSE,
   coordsRepeat = FALSE, spacing = NA, NAas0 = FALSE, NRasRep = FALSE,
-  NOasObs = FALSE, reduce = TRUE, a2check = FALSE, quiet = FALSE) {
+  NOasObs = FALSE, prebreeding = TRUE, age_offset = 0, reduce = TRUE,
+  a2check = FALSE, quiet = FALSE) {
   
   stassign <- rowid <- alive2 <- indataset <- censor1 <- censor2 <- NULL
   censor3 <- censbool <- NULL
@@ -513,9 +517,11 @@ verticalize3 <- function(data, noyears, firstyear = 1, popidcol = 0,
   }
   
   if (!all(is.logical(c(censorRepeat, censor, coordsRepeat, NAas0, NRasRep, 
-      NOasObs, reduce, a2check, quiet)))) {
+      NOasObs, reduce, a2check, quiet, prebreeding)))) {
     stop("Some logical variables have been set to non-logical values.", call. = FALSE)
   }
+  
+  if (prebreeding) age_offset <- age_offset + 1
   
   if (is.character(popidcol)) {
     if (is.element(popidcol, names(data))) {
@@ -746,7 +752,7 @@ verticalize3 <- function(data, noyears, firstyear = 1, popidcol = 0,
   
   stagesize <- tolower(stagesize)
   if(!all(is.na(stageassign))) {
-    if(!is.element("stageframe", class(stageassign))) {
+    if(!is(stageassign, "stageframe")) {
       stop("The stageassign option can only take NA or a stageframe object as input.",
         call. = FALSE)
     }
@@ -1134,6 +1140,8 @@ verticalize3 <- function(data, noyears, firstyear = 1, popidcol = 0,
     }
   }
   
+  popdatareal$obsage <- popdatareal$obsage + age_offset
+  
   return(popdatareal)
 }
 
@@ -1303,6 +1311,11 @@ verticalize3 <- function(data, noyears, firstyear = 1, popidcol = 0,
 #' during stage assignment. This can be useful when a MPM is desired without
 #' separation of observable and unobservable stages. Only used if
 #' \code{stageassign} is set to a stageframe. Defaults to \code{FALSE}.
+#' @param prebreeding A logical term indicating whether the life history model
+#' is pre-breeding. If so, then \code{1} is added to all ages. Defaults to
+#' \code{TRUE}.
+#' @param age_offset A number to add automatically to all values of age at time
+#' \emph{t}. Defaults to \code{0}.
 #' @param reduce A logical variable determining whether unused variables and
 #' some invariant state variables should be removed from the output dataset.
 #' Defaults to \code{TRUE}.
@@ -1486,14 +1499,17 @@ historicalize3 <- function(data, popidcol = 0, patchidcol = 0, individcol,
   nonobs2col = 0, nonobs3col = 0, repstrrel = 1, fecrel = 1, stage2col = 0,
   stage3col = 0, juv2col = 0, juv3col = 0, stageassign = NA, stagesize = NA,
   censor = FALSE, censorcol = 0, censorkeep = 0, spacing = NA, NAas0 = FALSE,
-  NRasRep = FALSE, NOasObs = FALSE, reduce = TRUE, quiet = FALSE) {
+  NRasRep = FALSE, NOasObs = FALSE, prebreeding = TRUE, age_offset = 0,
+  reduce = TRUE, quiet = FALSE) {
   
   alive2 <- indataset <- censor1 <- censor2 <- censor3 <- censbool <- NULL
   
-  if (!all(is.logical(c(NAas0, NRasRep, NOasObs, reduce, quiet)))) {
+  if (!all(is.logical(c(NAas0, NRasRep, NOasObs, reduce, quiet, prebreeding)))) {
     stop("Some logical variables have been assigned non-logical values.",
       call. = FALSE)
   }
+  
+  if (prebreeding) age_offset <- age_offset + 1
   
   if (is.na(individcol)) {
     stop("Individual ID variable is required.", call. = FALSE)
@@ -2265,6 +2281,8 @@ historicalize3 <- function(data, popidcol = 0, patchidcol = 0, individcol,
     }
   }
   
+  popdata$obsage <- popdata$obsage + age_offset
+  
   return(popdata)
 }
 
@@ -2598,15 +2616,15 @@ create_lM <- function(mats, stageframe, hstages = NA, agestages = NA,
   
   F_indices <- NULL
   
-  if (class(mats) != "list") {
+  if (!is.list(mats)) {
     stop("Object mats must be an object of class list.", call. = FALSE)
   }
-  if (!is.element("matrix", class(mats[[1]]))) {
+  if (!is.matrix(mats[[1]])) {
     stop("Object mats must be a list composed of objects of class matrix.", call. = FALSE)
   }
   mat_length <- length(mats)
   
-  if (!is.element("stageframe", class(stageframe))) {
+  if (!is(stageframe, "stageframe")) {
     warning("Object stageframe is not of class stageframe.", call. = FALSE)
   }
   if(all(is.na(agestages)) & agebystage) {
@@ -2648,6 +2666,13 @@ create_lM <- function(mats, stageframe, hstages = NA, agestages = NA,
         call. = FALSE)
     }
   }
+  
+  new_frame <- .sf_reassess(stageframe, supplement = NULL, overwrite = NULL,
+    repmatrix = NULL, agemat = agebystage, historical = historical, format = 1)
+  stageframe <- new_frame$stageframe
+  stageframe <- stageframe[-(dim(stageframe)[1]),]
+  # Entry stage issue
+  
   true_poporder <- poporder
   true_patchorder <- patchorder
   true_yearorder <- yearorder
@@ -2696,6 +2721,13 @@ create_lM <- function(mats, stageframe, hstages = NA, agestages = NA,
       stop("Unable to interpret entry stage designations.", call. = FALSE)
     }
   }
+  
+  if (entrystage > length(stageframe$entrystage)) {
+    stop("Chosen entry stage does not exist.", call. = FALSE)
+  }
+  new_entries <- rep(0, length(stageframe$entrystage))
+  new_entries[entrystage] <- 1
+  stageframe$entrystage <- new_entries
   
   matrixqc <- c(NA, NA, mat_length)
   
@@ -3068,7 +3100,7 @@ add_lM <- function(lM, Amats = NA, Umats = NA, Fmats = NA, UFdecomp = FALSE,
   
   F_indices <- numstages <- NULL
   
-  if (class(lM) != "lefkoMat") {
+  if (!is(lM, "lefkoMat")) {
     stop("This function requires a lefkoMat object as input.", call. = FALSE)
   }
   
@@ -3104,7 +3136,7 @@ add_lM <- function(lM, Amats = NA, Umats = NA, Fmats = NA, UFdecomp = FALSE,
   }
   
   if (!all(is.na(Amats))) {
-    if (class(Amats) == "matrix") {
+    if (is.matrix(Amats)) {
       Amats <- list(Amats)
     }
     
@@ -3199,7 +3231,7 @@ add_lM <- function(lM, Amats = NA, Umats = NA, Fmats = NA, UFdecomp = FALSE,
   }
   
   if (!all(is.na(Umats))) {
-    if (class(Umats) == "matrix") {
+    if (is.matrix(Umats)) {
       Umats <- list(Umats)
     }
     
@@ -3208,7 +3240,7 @@ add_lM <- function(lM, Amats = NA, Umats = NA, Fmats = NA, UFdecomp = FALSE,
     }
   }
   if (!all(is.na(Fmats))) {
-    if (class(Fmats) == "matrix") {
+    if (is.matrix(Fmats)) {
       Fmats <- list(Fmats)
     }
     
@@ -3515,7 +3547,7 @@ add_lM <- function(lM, Amats = NA, Umats = NA, Fmats = NA, UFdecomp = FALSE,
 #' @export
 delete_lM <- function(lM, mat_num = NA, pop = NA, patch = NA, year = NA) {
   
-  if (class(lM) != "lefkoMat") {
+  if (!is(lM, "lefkoMat")) {
     stop("This function requires a lefkoMat object as input.", call. = FALSE)
   }
   if (all(is.na(mat_num)) & all(is.na(pop)) & all(is.na(patch)) & all(is.na(year))) {
@@ -3805,7 +3837,7 @@ delete_lM <- function(lM, mat_num = NA, pop = NA, patch = NA, year = NA) {
 #' @export
 subset_lM <- function(lM, mat_num = NA, pop = NA, patch = NA, year = NA) {
   
-  if (class(lM) != "lefkoMat") {
+  if (!is(lM, "lefkoMat")) {
     stop("This function requires a lefkoMat object as input.", call. = FALSE)
   }
   if (all(is.na(mat_num)) & all(is.na(pop)) & all(is.na(patch)) & all(is.na(year))) {
@@ -3892,12 +3924,16 @@ subset_lM <- function(lM, mat_num = NA, pop = NA, patch = NA, year = NA) {
 #' @param mpm An ahistorical MPM of class \code{lefkoMat}.
 #' @param format An integer stipulating whether historical matrices should be
 #' produced in Ehrlen format (\code{1}) or deVries format (\code{2}).
+#' @param err_check A logical value indicating whether to output the main index
+#' used to sort elements in the matrices.
 #' 
 #' @return An object of class \code{lefkoMat}, with the same list structure as
 #' the input object, but with \code{A}, \code{U}, and \code{F} elements replaced
 #' with lists of historically-structured matrices, and with element
 #' \code{hstages} changed from \code{NA} to an index of stage pairs
-#' corresponding to the rows and columns of the new matrices.
+#' corresponding to the rows and columns of the new matrices. If
+#' \code{err_check = TRUE}, then a data frame showing the values used to
+#' determine element index values is also exported.
 #' 
 #' @examples
 #' sizevector <- c(1, 1, 2, 3)
@@ -3940,8 +3976,8 @@ subset_lM <- function(lM, mat_num = NA, pop = NA, patch = NA, year = NA) {
 #' nullmodel2 <- hist_null(anth_lefkoMat, 2) # deVries format
 #' 
 #' @export
-hist_null <- function(mpm, format = 1) {
-  if (!is.element("lefkoMat", class(mpm))) {
+hist_null <- function(mpm, format = 1, err_check = FALSE) {
+  if (!is(mpm, "lefkoMat")) {
     stop("Function hist_null requires an object of class lefkoMat as input.",
       call. = FALSE)
   }
@@ -3957,24 +3993,44 @@ hist_null <- function(mpm, format = 1) {
   redone_mpms <- .thefifthhousemate(mpm, allstages$allstages, allstages$ahstages, format)
   
   if (is.element("dataqc", names(mpm)) & is.element("matrixqc", names(mpm))) {
+    totalutransitions <- sum(unlist(lapply(redone_mpms$U, function(X) {length(which(X != 0))})))
+    totalftransitions <- sum(unlist(lapply(redone_mpms$F, function(X) {length(which(X != 0))})))
+    totalmatrices <- length(redone_mpms$U)
+    
+    qcoutput1 <- c(totalutransitions, totalftransitions, totalmatrices)
+    
     new_mpm <- list(A = redone_mpms$A, U = redone_mpms$U, F = redone_mpms$F,
       agestages = mpm$agestages, hstages = allstages$hstages,
       ahstages = allstages$ahstages, labels = mpm$labels,
-      matrixqc = mpm$matrixqc, dataqc = mpm$dataqc)
+      matrixqc = qcoutput1, dataqc = mpm$dataqc)
   } else if (is.element("matrixqc", names(mpm)) & is.element("modelqc", names(mpm))) {
+    totalutransitions <- sum(unlist(lapply(redone_mpms$U, function(X) {length(which(X != 0))})))
+    totalftransitions <- sum(unlist(lapply(redone_mpms$F, function(X) {length(which(X != 0))})))
+    totalmatrices <- length(redone_mpms$U)
+    
+    qcoutput1 <- c(totalutransitions, totalftransitions, totalmatrices)
+    
     new_mpm <- list(A = redone_mpms$A, U = redone_mpms$U, F = redone_mpms$F,
       agestages = mpm$agestages, hstages = allstages$hstages,
       ahstages = allstages$ahstages, labels = mpm$labels,
-      matrixqc = mpm$matrixqc, modelqc = mpm$modelqc)
+      matrixqc = qcoutput1, modelqc = mpm$modelqc)
   } else if (is.element("matrixqc", names(mpm))) {
+    totalutransitions <- sum(unlist(lapply(redone_mpms$U, function(X) {length(which(X != 0))})))
+    totalftransitions <- sum(unlist(lapply(redone_mpms$F, function(X) {length(which(X != 0))})))
+    totalmatrices <- length(redone_mpms$U)
+    
+    qcoutput1 <- c(totalutransitions, totalftransitions, totalmatrices)
+    
     new_mpm <- list(A = redone_mpms$A, U = redone_mpms$U, F = redone_mpms$F,
       agestages = mpm$agestages, hstages = allstages$hstages,
-      ahstages = allstages$ahstages, labels = mpm$labels, matrixqc = mpm$matrixqc)
+      ahstages = allstages$ahstages, labels = mpm$labels, matrixqc = qcoutput1)
   } else {
     new_mpm <- list(A = redone_mpms$A, U = redone_mpms$U, F = redone_mpms$F,
       agestages = mpm$agestages, hstages = allstages$hstages,
       ahstages = allstages$ahstages, labels = mpm$labels)
   }
+  
+  if (err_check) new_mpm <- append(new_mpm, allstages)
   
   class(new_mpm) <- "lefkoMat"
   

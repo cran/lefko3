@@ -376,7 +376,7 @@ legend("bottomleft", c("deterministic", "stochastic mean", "stochastic SD"),
   
   <p style="text-indent: 20px">LTREs and sLTREs are powerful tools, and more complex versions of both analyses exist. Please consult @caswell_matrix_2001 and @davison_contributions_2013 for more information.</p>
   
-  <p style="text-indent: 20px">Package `lefko3` also includes functions complex analyses, including a general projection function that can be used for analyses such as quasi-extinction analysis as well as for density dependent analysis. Users wishing to conduct these analyses should see our free e-manual called ***lefko3: a gentle introduction*** and other vignettes, including long-format and video vignettes, on <a href = "http://www.sheffersonlab.com/projects">the projects page</a> of the Shefferson lab website.
+  <p style="text-indent: 20px">Package `lefko3` also includes functions to conduct complex analyses, including two general projection functions that can be used for analyses such as quasi-extinction analysis as well as for density dependent analysis. Users wishing to conduct these analyses should see our free e-manual called ***lefko3: a gentle introduction*** and other vignettes, including long-format and video vignettes, on <a href = "http://www.sheffersonlab.com/projects">the projects page</a> of the Shefferson lab website.
 
 ## Literature cited
 

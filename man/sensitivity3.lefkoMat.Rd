@@ -22,7 +22,7 @@ deterministic (FALSE) or stochastic (TRUE) sensitivity analysis. Defaults to
 FALSE.}
 
 \item{steps}{The number of occasions to project forward in stochastic
-simulation. Defaults to 10,000.}
+simulation. Defaults to \code{10000}.}
 
 \item{time_weights}{Numeric vector denoting the probabilistic weightings of
 annual matrices. Defaults to equal weighting among occasions.}
@@ -39,16 +39,17 @@ A, U, and F matrices in the output \code{lefkoSens} object.}
 \value{
 This function returns an object of class \code{lefkoSens}, which is a
 list of 8 elements. The first, \code{h_sensmats}, is a list of historical
-sensitivity matrices (NULL if an ahMPM is used as input). The second,
+sensitivity matrices (\code{NULL} if an ahMPM is used as input). The second,
 \code{ah_elasmats}, is a list of either ahistorical sensitivity matrices if
 an ahMPM is used as input, or, if an hMPM is used as input, then the result
 is a list of ahistorical matrices based on the equivalent historical
 dependencies assumed in the input historical matrices. The third element,
-\code{h_stages}, is a data frame showing historical stage pairs (NULL if
-ahMPM used as input). The fourth element, \code{agestages}, show the order of
-age-stage combinations, if age-by-stage MPMs have been supplied. The fifth
-element, \code{ah_stages}, is a data frame showing the order of ahistorical
-stages. The last 3 elements are the A, U, and F portions of the input.
+\code{h_stages}, is a data frame showing historical stage pairs (\code{NULL}
+if an ahMPM used as input). The fourth element, \code{agestages}, show the
+order of age-stage combinations, if age-by-stage MPMs have been supplied. The
+fifth element, \code{ah_stages}, is a data frame showing the order of
+ahistorical stages. The last 3 elements are the A, U, and F portions of the
+input.
 }
 \description{
 \code{sensitivity3.lefkoMat()} returns the sensitivities of population growth

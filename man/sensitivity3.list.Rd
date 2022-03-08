@@ -29,7 +29,7 @@ simulation. Defaults to 10,000.}
 annual matrices. Defaults to equal weighting among occasions.}
 
 \item{historical}{A logical value indicating whether matrices are historical.
-Defaults to FALSE.}
+Defaults to \code{FALSE}.}
 
 \item{sparse}{A text string indicating whether to use sparse matrix encoding
 (\code{"yes"}) or dense matrix encoding (\code{"no"}). Defaults to
@@ -44,13 +44,13 @@ Defaults to FALSE.}
 \value{
 This function returns an object of class \code{lefkoSens}, which is a
 list of 8 elements. The first, \code{h_sensmats}, is a list of historical
-sensitivity matrices (NULL if an ahMPM is used as input). The second,
+sensitivity matrices (\code{NULL} if an ahMPM is used as input). The second,
 \code{ah_elasmats}, is a list of ahistorical sensitivity matrices if an ahMPM
-is used as input (NULL if an hMPM is used as input). The third element,
-\code{h_stages}, the fourth element, \code{agestages}, and the fifth element,
-\code{ah_stages}, are NULL. The last 3 elements include the original A
-matrices supplied (as the \code{A} element), followed by NULLs for the U and
-F elements.
+is used as input (\code{NULL} if an hMPM is used as input). The third
+element, \code{h_stages}, the fourth element, \code{agestages}, and the fifth
+element, \code{ah_stages}, are \code{NULL}. The last 3 elements include the
+original A matrices supplied (as the \code{A} element), followed by
+\code{NULL}s for the U and F elements.
 }
 \description{
 \code{sensitivity3.list()} returns the sensitivities of population growth
@@ -69,8 +69,8 @@ to the log of the stochastic \eqn{\lambda}.
 
 Currently, this function does not estimate equivalent ahistorical stochastic
 sensitivities for input historical matrices, due to the lack of guidance
-input on the order of stages (such guidance is provided within
-\code{lefkoMat} objects).
+input on the order of stages (guidance is provided within \code{lefkoMat}
+objects).
 }
 
 \examples{

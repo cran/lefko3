@@ -34,13 +34,13 @@ rlefko3(
 )
 }
 \arguments{
-\item{data}{A vertical demographic data frame, with variables corresponding
-to the naming conventions in \code{\link{verticalize3}()}.}
+\item{data}{A vertical demographic data frame, with variables corresponding 
+to the naming conventions in \code{\link{verticalize3}()} and
+\code{\link{historicalize3}()}.}
 
 \item{stageframe}{A stageframe object that includes information on the size,
-observation status, propagule status, immaturity status, and maturity status
-of each ahistorical stage. Should also incorporate bin widths if size is
-continuous.}
+observation status, propagule status, reproduction status, immaturity status,
+and maturity status of each ahistorical stage.}
 
 \item{year}{A variable corresponding to observation occasion, or a set of
 such values, given in values associated with the \code{year} term used in
@@ -53,7 +53,8 @@ all populations should have matrices estimated.}
 
 \item{patch}{A variable designating which patches or subpopulations will have
 matrices estimated. Should be set to specific patch names, or to \code{"all"}
-if matrices should be estimated for all patches. Defaults to \code{"all"}.}
+if matrices should be estimated for all patches. Defaults to \code{NA}, in
+which case patch designations are ignored..}
 
 \item{censor}{If \code{TRUE}, then data will be removed according to the
 variable set in \code{censorcol}, such that only data with censor values
@@ -270,7 +271,6 @@ ehrlen3 <- rlefko3(data = lathvert, stageframe = lathframe, year = "all",
 summary(ehrlen3)
 
 # Cypripedium example
-rm(list=ls(all=TRUE))
 data(cypdata)
 
 sizevector <- c(0, 0, 0, 0, 0, 0, 1, 2.5, 4.5, 8, 17.5)
@@ -330,6 +330,8 @@ summary(cypmatrix3r)
 \code{\link{flefko2}()}
 
 \code{\link{aflefko2}()}
+
+\code{\link{arlefko2}()}
 
 \code{\link{fleslie}()}
 

@@ -1,7 +1,60 @@
 LEFKO3 NEWS
 -----------
 
-CHANGES IN VERSION 4.2.0 (2022-01-XX)
+CHANGES IN VERSION 5.0.1 (2022-03-08)
+-------------------------------------
+  USER-VISIBLE CHANGES
+    1. Updated help files for projection functions.
+
+  BUG FIXES
+    1. Updated primitive class checks in some functions.
+
+
+CHANGES IN VERSION 5.0.0 (2022-03-01)
+-------------------------------------
+  NEW FEATURES
+    1. New function arlefko2() created to handle raw age-by-stage MPM
+       estimation.
+    2. Function aflefko2() now fixes the starting age by whether the life
+       history model is pre-breeding or post-breeding.
+    3. Functions verticalize3() and historicalize3() now handle age offsets and
+       automatically offset age by 1 if set to prebreeding = TRUE.
+    4. Further output has been added when err_check = TRUE is set in all
+       function-based matrix estimators.
+    5. New function f_projection3() runs MPM and IPM projections in which
+       matrices are developed from vital rate models at each step.
+
+  USER-VISIBLE CHANGES
+    1. Default final_age in function aflefko2() is now the final age at time t
+       in the original dataset.
+    2. All function-based matrix estimators have been sped up.
+    3. Population dynamics functions have been sped up.
+    4. All population dynamics functions involving actual projection can now be
+       cancelled during runs.
+    5. Function create_lM() now produces a properly edited stageframe usable
+       with all other functions taking lefkoMat objects as input.
+
+  BUG FIXES
+    1. Function plot.lefkoProj() now uses the correct default axis labels when
+       conducting a state-space plot.
+    2. Function hist_null() now correctly estimates the numbers of survival and
+       fecundity elements.
+    3. Eliminated bug in functions flefko3(), flefko2(), and aflefko2()
+       preventing incorporation of random year effects into matrix estimation.
+    4. Eliminated bug causing inflation of lambda under some instances of the
+       Poisson distribution in function-based matrix estimation.
+    5. Fixed erroneous mixing of QC information in lmean() output.
+    6. Fixed issue preventing multiple replicates from being displayed in
+       plot.lefkoProj under the timeseries option.
+    7. Fixed issue causing certain impossible transitions linked to the
+       prior stage to be estimated as non-zero in deVries-format function-based
+       hMPMs.
+    8. Fixed incorrect formatting of deVries hMPMs resulting from function
+       hist_null().
+    9. Function create_pm() updated to handle maturity status models.
+
+
+CHANGES IN VERSION 4.2.0 (2022-01-17)
 -------------------------------------
   NEW FEATURES
     1. Functions rleslie() and fleslie() created to estimate raw and 

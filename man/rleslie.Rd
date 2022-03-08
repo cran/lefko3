@@ -26,7 +26,8 @@ rleslie(
   censorcol = NA,
   censorkeep = 0,
   fectime = 2,
-  fecmod = 1
+  fecmod = 1,
+  prebreeding = TRUE
 )
 }
 \arguments{
@@ -34,7 +35,8 @@ rleslie(
 to the naming conventions in \code{\link{verticalize3}()}.}
 
 \item{start_age}{The age from which to start the matrix. Defaults to
-\code{NA}, in which case the earliest age in the dataset is used.}
+\code{NA}, age \code{1} is used if \code{prebreeding = TRUE}, and age
+\code{0} is used if \code{prebreeding = FALSE}.}
 
 \item{last_age}{The final age to use in the matrix. Defaults to \code{NA}, in
 which case the highest age in the dataset is used.}
@@ -45,7 +47,7 @@ demographic characteristics of the final age. Defaults to \code{TRUE}.}
 
 \item{fecage_min}{The minimum age at which reproduction is possible. Defaults
 to \code{NA}, which is interpreted to mean that fecundity should be assessed
-starting in the first described age.}
+starting in the minimum age observed in the dataset.}
 
 \item{fecage_max}{The maximum age at which reproduction is possible. Defaults
 to \code{NA}, which is interpreted to mean that fecundity should be assessed
@@ -105,6 +107,9 @@ the variable given for \code{fec} in time \emph{t} (\code{2}) or time
 \emph{t}+1 (\code{3}).}
 
 \item{fecmod}{A scalar multiplier for fecundity. Defaults to \code{1.0}.}
+
+\item{prebreeding}{A logical value indicating whether the life history model
+is a pre-breeding model. Defaults to \code{TRUE}.}
 }
 \value{
 If all inputs are properly formatted, then this function will return
@@ -167,7 +172,7 @@ cypraw_v1 <- verticalize3(data = cypdata, noyears = 6, firstyear = 2004,
 
 cyp_rl <- rleslie(data = cypraw_v1, start_age = 0, last_age = 4, continue = TRUE,
   fecage_min = 3, fecage_max = 4, year = "all", pop = NA, patch = "all",
-  yearcol = "year2", popcol = NA, patchcol = "patchid")
+  yearcol = "year2", popcol = NA, patchcol = "patchid", indivcol = "individ")
 cyp_rl
 
 }
@@ -177,6 +182,8 @@ cyp_rl
 \code{\link{flefko2}()}
 
 \code{\link{aflefko2}()}
+
+\code{\link{arlefko2}()}
 
 \code{\link{fleslie}()}
 

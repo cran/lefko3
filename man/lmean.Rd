@@ -132,7 +132,7 @@ cypmatrix2r <- rlefko2(data = cypraw_v1, stageframe = cypframe_raw,
   year = "all", patch = "all", stages = c("stage3", "stage2", "stage1"),
   size = c("size3added", "size2added"), supplement = cypsupp2r,
   yearcol = "year2", patchcol = "patchid", indivcol = "individ")
-                       
+
 cyp2mean <- lmean(cypmatrix2r)
 cyp2mean
 

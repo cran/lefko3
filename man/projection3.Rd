@@ -8,6 +8,7 @@ projection3(
   mpm,
   nreps = 1L,
   times = 10000L,
+  historical = FALSE,
   stochastic = FALSE,
   standardize = FALSE,
   growthonly = TRUE,
@@ -29,20 +30,25 @@ full matrix projection matrices.}
 \item{times}{Number of occasions to iterate per replicate. Defaults to
 10,000.}
 
+\item{historical}{An optional logical value only used if object \code{mpm}
+is a list of matrices, rather than a \code{lefkoMat} object. Defaults to
+\code{FALSE} for the former case, and overridden by information supplied in
+the \code{lefkoMat} object for the latter case.}
+
 \item{stochastic}{A logical value denoting whether to conduct a stochastic
 projection or a deterministic / cyclical projection.}
 
 \item{standardize}{A logical value denoting whether to re-standardize the
-population size to 1.0 at each occasion. Defaults to FALSE.}
+population size to 1.0 at each occasion. Defaults to \code{FALSE}.}
 
 \item{growthonly}{A logical value indicating whether to produce only the
 projected population size at each occasion, or a vector showing the stage
 distribution followed by the reproductive value vector followed by the full
-population size at each occasion. Defaults to TRUE.}
+population size at each occasion. Defaults to \code{TRUE}.}
 
 \item{integeronly}{A logical value indicating whether to round the number of
 individuals projected in each stage at each occasion to the nearest
-integer. Defaults to FALSE.}
+integer. Defaults to \code{FALSE}.}
 
 \item{substoch}{An integer value indicating whether to force survival-
 transition matrices to be substochastic in density dependent simulations.
@@ -105,12 +111,14 @@ if input by the user.}
 }
 \description{
 Function \code{projection3()} runs projection simulations. It projects the
-population an patches forward in time by a user-defined number of occasions.
-Projections may be deterministic or stochastic, and may be density
-dependent either way. If deterministic, then projections will be cyclical if
-matrices exist covering multiple occasions for each population or patch. If
-stochastic, then annual matrices will be shuffled within patches and
-populations. Replicates may also be requested.
+population and patches forward in time by a user-defined number of
+occasions. A given set of matrices is utilized and not recreated, although
+elements may be altered if density dependence is set. Projections may be
+deterministic or stochastic, and may be density dependent in either case. If
+deterministic, then projections will be cyclical if matrices exist covering
+multiple occasions for each population or patch. If stochastic, then annual
+matrices will be shuffled within patches and populations. Also produces
+replicates if set.
 }
 \section{Notes}{
 
@@ -158,6 +166,11 @@ vectors describing these values at the specific points in time projected.
 See equations 14.86 and 14.88 and section 14.4 on Sensitivity and Elasticity
 Analysis under Environmental Stochasticity in Caswell (2001, Matrix
 Population Models, Sinauer Associates) for more details.
+
+Consistently positive population growth can quickly lead to population size
+numbers larger than can be handled computationally. In that circumstance, a
+continuously rising population size will suddenly become \code{NaN} for the
+remainder of the projection.
 }
 
 \examples{
@@ -201,7 +214,6 @@ ehrlen3 <- rlefko3(data = lathvert, stageframe = lathframe,
 lathproj <- projection3(ehrlen3, nreps = 5, stochastic = TRUE)
 
 # Cypripedium example
-rm(list = ls(all=TRUE))
 data(cypdata)
  
 sizevector <- c(0, 0, 0, 0, 0, 0, 1, 2.5, 4.5, 8, 17.5)
@@ -259,4 +271,6 @@ cypstoch <- projection3(cypmatrix3r, nreps = 5, stochastic = TRUE)
 \code{\link{start_input}()}
 
 \code{\link{density_input}()}
+
+\code{\link{f_projection3}()}
 }

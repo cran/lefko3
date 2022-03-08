@@ -4,13 +4,24 @@
 \alias{slambda3}
 \title{Estimate Stochastic Population Growth Rate}
 \usage{
-slambda3(mpm, times = 10000L, dense_only = FALSE, tweights = NULL)
+slambda3(
+  mpm,
+  times = 10000L,
+  historical = FALSE,
+  dense_only = FALSE,
+  tweights = NULL
+)
 }
 \arguments{
 \item{mpm}{A matrix projection model of class \code{lefkoMat}, or a list of
 full matrix projection matrices.}
 
-\item{times}{Number of occasions to iterate. Defaults to 10,000.}
+\item{times}{Number of occasions to iterate. Defaults to \code{10000}.}
+
+\item{historical}{An optional logical value only used if object \code{mpm}
+is a list of matrices, rather than a \code{lefkoMat} object. Defaults to
+\code{FALSE} for the former case, and overridden by information supplied in
+the \code{lefkoMat} object for the latter case.}
 
 \item{dense_only}{A logical value indicating whether to force matrices to be
 run in dense format. Defaults to \code{FALSE}, and should only be used if

@@ -44,6 +44,7 @@
 #' @importFrom grDevices palette xy.coords
 #' @importFrom lme4 fixef glmer lmer ranef VarCorr
 #' @importFrom MASS glm.nb
+#' @importFrom methods is
 #' @importFrom MuMIn dredge r.squaredGLMM
 #' @importFrom pscl zeroinfl
 #' @importFrom Rcpp evalCpp

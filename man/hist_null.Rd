@@ -4,20 +4,25 @@
 \alias{hist_null}
 \title{Create Historical MPMs Assuming No Influence of Individual History}
 \usage{
-hist_null(mpm, format = 1)
+hist_null(mpm, format = 1, err_check = FALSE)
 }
 \arguments{
 \item{mpm}{An ahistorical MPM of class \code{lefkoMat}.}
 
 \item{format}{An integer stipulating whether historical matrices should be
 produced in Ehrlen format (\code{1}) or deVries format (\code{2}).}
+
+\item{err_check}{A logical value indicating whether to output the main index
+used to sort elements in the matrices.}
 }
 \value{
 An object of class \code{lefkoMat}, with the same list structure as
 the input object, but with \code{A}, \code{U}, and \code{F} elements replaced
 with lists of historically-structured matrices, and with element
 \code{hstages} changed from \code{NA} to an index of stage pairs
-corresponding to the rows and columns of the new matrices.
+corresponding to the rows and columns of the new matrices. If
+\code{err_check = TRUE}, then a data frame showing the values used to
+determine element index values is also exported.
 }
 \description{
 Function \code{hist_null()} uses ahistorical MPMs to create the equivalent

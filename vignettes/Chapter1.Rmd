@@ -721,6 +721,8 @@ In the above equation, $E_{ji}^{\mu}$ and $E_{ji}^{\sigma}$ are the stochastic e
   
 #### Further analyses   
   
+  <p style="text-indent: 20px">Package `lefko3` includes two general projection functions, `projection3()` and `f_projection3()`. The former projects matrices that have already been created, while the latter creates new function-based MPMs (including IPMs) at each time step. These functions both include the capability to conduct replicate simulations, as well as density dependence. Unlike other packages and methods, these functions are engineered for speed, and also include the capability to enforce substochasticity. Please see our book, **lefko3: a gentle introduction**, for more details (on the <a href = "http://www.sheffersonlab.com/projects.html">Projects page</a> of www.sheffersonlab.com).</p>
+  
   <p style="text-indent: 20px">Users can take the MPMs produced by MPM creation functions in package `lefko3` and plug them into MPM or matrix analysis functions in other packages. Matrices produced by `lefko3` are stored within `lefkoMat` objects, and users wishing to work with analysis functions in other packages need only extract the matrices from them. This allows the use of all functions that work with matrices, including functions in base R such as `eigen()`, as well as in packages such as `popbio` [@stubben_estimating_2007] and `popdemo` [@stott_popdemo_2012]. We encourage users to explore whether the packages and functions they wish to use can handle sparse matrices, as well as large matrices - some were not designed to and can fail or yield unpredictable behavior when applied particularly to historical matrices produced by `lefko3`.</p>
   
 ## Acknowledgements   

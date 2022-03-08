@@ -7,11 +7,12 @@
 fleslie(
   year = "all",
   patch = "all",
-  data = NA,
-  modelsuite = NA,
-  surv_model = NA,
-  fec_model = NA,
-  paramnames = NA,
+  prebreeding = TRUE,
+  data = NULL,
+  modelsuite = NULL,
+  surv_model = NULL,
+  fec_model = NULL,
+  paramnames = NULL,
   start_age = NA,
   last_age = NA,
   fecage_min = NA,
@@ -24,15 +25,9 @@ fleslie(
   fec_dev = 0,
   density = NA,
   repmod = 1,
-  yearcol = 0,
-  patchcol = NA,
-  agecol = "obsage",
-  year.as.random = FALSE,
-  patch.as.random = FALSE,
   random.inda = FALSE,
   random.indb = FALSE,
   random.indc = FALSE,
-  randomseed = NA,
   negfec = FALSE,
   exp_tol = 700,
   theta_tol = 1e+08
@@ -46,48 +41,52 @@ estimated for all occasions.}
 
 \item{patch}{A variable designating which patches or subpopulations will have
 matrices estimated. Defaults to \code{"all"}, but can also be set to specific
-patch names.}
+patch names or a vector thereof.}
+
+\item{prebreeding}{A logical value indicating whether the life history model
+is a pre-breeding model. Defaults to \code{TRUE}.}
 
 \item{data}{The historical vertical demographic data frame used to estimate
 vital rates (class \code{hfvdata}). The original data frame is required in
-order to initialize occasions and patches properly.}
+order to initialize occasions and patches properly, and to assess the range
+of ages observed in the population.}
 
 \item{modelsuite}{An optional \code{lefkoMod} object holding the vital rate
-models. If given, then \code{surv_model}, \code{fec_model},
-\code{paramnames}, \code{yearcol}, and \code{patchcol} are not required. No
-models should include size or reproductive status in occasion \emph{t}-1.}
+models. If given, then \code{surv_model}, \code{fec_model}, and 
+\code{paramnames} are not required. No models should include size or
+reproductive status in any occasion, nor should they include any variable for
+occasion \emph{t}-1.}
 
 \item{surv_model}{A linear model predicting survival probability. This can be
 a model of class \code{glm} or \code{glmer}, and requires a predicted
-binomial variable under a logit link. If given, then will overwrite any
-survival probability model given in \code{modelsuite}. This model must have
-been developed in a modeling exercise testing only the impacts of occasion
-\emph{t}.}
+binomial variable under a logit link. Ignored if \code{modelsuite} is
+provided. This model must have been developed in a modeling exercise testing
+only the impacts of occasion \emph{t}.}
 
 \item{fec_model}{A linear model predicting fecundity. This can be a model of
 class \code{glm}, \code{glmer}, \code{glmmTMB}, \code{zeroinfl},
-\code{vglm}, \code{lm}, or \code{lmer}. If given, then will overwrite any 
-fecundity model given in \code{modelsuite}. This model must have been
-developed in a modeling exercise testing only the impacts of occasion
-\emph{t}.}
+\code{vglm}, \code{lm}, or \code{lmer}. Ignored if \code{modelsuite} is
+provided. This model must have been developed in a modeling exercise testing
+only the impacts of occasion \emph{t}.}
 
-\item{paramnames}{A dataframe with three columns, the first describing all
-terms used in linear modeling, the second (must be called \code{mainparams}),
-showing the general model terms that will be used in matrix creation (users
-should use \code{\link{modelsearch}()} at least once to see the proper
-names to be used in this column), and the third showing the equivalent terms
-used in modeling (must be named \code{modelparams}). Only required if
-\code{modelsuite} is not supplied.}
+\item{paramnames}{A data frame with three columns, the first describing all
+terms used in linear modeling, the second (must be called \code{mainparams})
+giving the general model terms that will be used in matrix creation, and the
+third showing the equivalent terms used in modeling (must be named
+\code{modelparams}). Function \code{\link{create_pm}()} can be used to
+create a skeleton \code{paramnames} object, which can then be edited. Only
+required if \code{modelsuite} is not supplied.}
 
 \item{start_age}{The age from which to start the matrix. Defaults to
-\code{NA}, in which case the earliest age in the dataset is used.}
+\code{NA}, in which case age \code{1} is used if \code{prebreeding = TRUE},
+and age \code{0} is used if \code{prebreeding = FALSE}.}
 
 \item{last_age}{The final age to use in the matrix. Defaults to \code{NA}, in
 which case the highest age in the dataset is used.}
 
 \item{fecage_min}{The minimum age at which reproduction is possible. Defaults
 to \code{NA}, which is interpreted to mean that fecundity should be assessed
-starting in the first described age.}
+starting in the minimum age observed in the dataset.}
 
 \item{fecage_max}{The maximum age at which reproduction is possible. Defaults
 to \code{NA}, which is interpreted to mean that fecundity should be assessed
@@ -98,19 +97,16 @@ survival of individuals past the final age noted in the stageframe, using the
 demographic characteristics of the final age. Defaults to \code{TRUE}.}
 
 \item{inda}{Can be a single value to use for individual covariate \code{a}
-in all matrices, a pair of values to use for times \emph{t} and \emph{t}-1 in
-historical matrices, or a vector of such values corresponding to each
-occasion in option \code{year}. Defaults to \code{NULL}.}
+in all matrices, or a vector of such values corresponding to each occasion in
+the dataset. Defaults to \code{NULL}.}
 
 \item{indb}{Can be a single value to use for individual covariate \code{b}
-in all matrices, a pair of values to use for times \emph{t} and \emph{t}-1 in
-historical matrices, or a vector of such values corresponding to each
-occasion in option \code{year}. Defaults to \code{NULL}.}
+in all matrices, or a vector of such values corresponding to each occasion in
+the dataset. Defaults to \code{NULL}.}
 
 \item{indc}{Can be a single value to use for individual covariate \code{c}
-in all matrices, a pair of values to use for times \emph{t} and \emph{t}-1 in
-historical matrices, or a vector of such values corresponding to each
-occasion in option \code{year}. Defaults to \code{NULL}.}
+in all matrices, or a vector of such values corresponding to each occasion in
+the dataset. Defaults to \code{NULL}.}
 
 \item{surv_dev}{A numeric value to be added to the y-intercept in the linear
 model for survival probability.}
@@ -124,26 +120,6 @@ models. Defaults to \code{NA}.}
 
 \item{repmod}{A scalar multiplier of fecundity. Defaults to \code{1}.}
 
-\item{yearcol}{The variable name or column number corresponding to year in
-occasion \emph{t} in the dataset. Not needed if a \code{modelsuite} is
-supplied.}
-
-\item{patchcol}{The variable name or column number corresponding to patch in 
-the dataset. Not needed if a \code{modelsuite} is supplied.}
-
-\item{agecol}{The name or column number of the variable coding for age in
-\code{data}. Defaults to \code{"obsage"}.}
-
-\item{year.as.random}{A logical term indicating whether coefficients for
-missing occasions within vital rate models should be estimated as random
-intercepts. Defaults to \code{FALSE}, in which case missing monitoring
-occasion coefficients are set to \code{0}.}
-
-\item{patch.as.random}{A logical term indicating whether coefficients for
-missing patches within vital rate models should be estimated as random
-intercepts. Defaults to \code{FALSE}, in which case missing patch
-coefficients are set to \code{0}.}
-
 \item{random.inda}{A logical value denoting whether to treat individual
 covariate \code{a} as a random, categorical variable. Otherwise is treated as
 a fixed, numeric variable. Defaults to \code{FALSE}.}
@@ -155,11 +131,6 @@ a fixed, numeric variable. Defaults to \code{FALSE}.}
 \item{random.indc}{A logical value denoting whether to treat individual
 covariate \code{c} as a random, categorical variable. Otherwise is treated as
 a fixed, numeric variable. Defaults to \code{FALSE}.}
-
-\item{randomseed}{A numeric value used as a seed to generate random estimates
-for missing occasion and patch coefficients, if either \code{year.as.random}
-or \code{patch.as.random} is set to \code{TRUE}. Defaults to
-\code{\link{set.seed}()} default.}
 
 \item{negfec}{A logical value denoting whether fecundity values estimated to
 be negative should be reset to \code{0}. Defaults to \code{FALSE}.}
@@ -175,8 +146,8 @@ used in the negative binomial probability density kernel. Defaults to
 \value{
 If all inputs are properly formatted, then this function will return
 an object of class \code{lefkoMat}, which is a list that holds the matrix
-projection model and all of its metadata. Its structure is a list with the
-following elements:
+projection model and all of its metadata. Its structure has the following
+elements:
 
 \item{A}{A list of full projection matrices in order of sorted patches and
 occasions. All matrices output in R's \code{matrix} class.}
@@ -189,25 +160,24 @@ output in R's \code{matrix} class.}
 \item{ahstages}{A data frame detailing the characteristics of associated
 ages, in the form of a modified stageframe including reproduction status.}
 \item{labels}{A data frame giving the patch and year of each matrix in order.
-In \code{aflefko2()}, only one population may be analyzed at once, and so
-\code{pop = NA}}
+In \code{fleslie()}, only one population may be analyzed at once.}
 \item{matrixqc}{A short vector describing the number of non-zero elements
 in \code{U} and \code{F} matrices, and the number of annual matrices.}
 \item{modelqc}{This is the \code{qc} portion of the modelsuite input.}
 }
 \description{
 Function \code{fleslie()} returns age-based (Leslie) MPMs corresponding to
-the patches and occasion times given, including the associated component
+the patches and occasions given, including the associated component
 transition and fecundity matrices, data frames detailing the characteristics
 of the exact ages corresponding to rows and columns in estimated matrices,
-and a data frame characterizing the patch and occasion time combinations
+and a data frame characterizing the patch and occasion combinations
 corresponding to these matrices.
 }
 \section{Notes}{
 
-Unlike \code{\link{rlefko2}()}, \code{\link{rlefko3}()}, and
-\code{\link{rleslie}()}, this function does not currently distinguish
-populations.
+Unlike \code{\link{rlefko2}()}, \code{\link{rlefko3}()},
+\code{\link{arlefko2}()}, and \code{\link{rleslie}()}, this function does not
+currently distinguish populations.
 
 This function will yield incorrect estimates if the models utilized
 incorporate state in occasion \emph{t}-1, or any size or reproductive status
@@ -216,8 +186,8 @@ terms.
 Users may at times wish to estimate MPMs using a dataset incorporating
 multiple patches or subpopulations, but without discriminating between those
 patches or subpopulations. Should the aim of analysis be a general MPM that
-does not distinguish these patches or subpopulations, the \code{patchcol}
-variable should be set to \code{NA}, which is the default.
+does not distinguish these patches or subpopulations, the
+\code{modelsearch()} run should not include patch terms.
 
 Input options including multiple variable names must be entered in the order
 of variables in occasion \emph{t}+1 and \emph{t}. Rearranging the order will
@@ -247,11 +217,10 @@ lathvert_age <- subset(lathvert_base, firstseen > 1988)
 lathmodels2_age <- modelsearch(lathvert_age, historical = FALSE,
   approach = "mixed", suite = "cons", bestfit = "AICc&k", age = "obsage",
   vitalrates = c("surv", "fec"), fecdist = "poisson", indiv = "individ",
-  year = "year2", year.as.random = TRUE, show.model.tables = TRUE,
-  quiet = TRUE)
+  year = "year2", show.model.tables = TRUE, quiet = TRUE)
 
 lathmat2fleslie <- fleslie(year = "all", data = lathvert_age,
-  modelsuite = lathmodels2_age, yearcol = "year2", fecage_min = 1)
+  modelsuite = lathmodels2_age, fecage_min = 1)
 
 summary(lathmat2fleslie)
 }
@@ -262,6 +231,8 @@ summary(lathmat2fleslie)
 \code{\link{flefko2}()}
 
 \code{\link{aflefko2}()}
+
+\code{\link{arlefko2}()}
 
 \code{\link{rlefko3}()}
 
