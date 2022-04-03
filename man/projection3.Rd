@@ -15,6 +15,7 @@ projection3(
   integeronly = FALSE,
   substoch = 0L,
   sub_warnings = TRUE,
+  year = NULL,
   start_vec = NULL,
   start_frame = NULL,
   tweights = NULL,
@@ -63,6 +64,12 @@ density dependence yields matrix values outside of the realm of possibility.
 Generally, this means that survival-transition elements altered to values
 outside of the interval [0, 1], and negative fecundity values, will both
 yield warnings. Defaults to \code{TRUE}.}
+
+\item{year}{Either a single integer value corresponding to the year to
+project, or a vector of \code{times} elements with the year to use at each
+time step. If a vector shorter than \code{times} is supplied, then this
+vector will be cycled. If not provided, then all annual matrices will be
+cycled within patches or populations.}
 
 \item{start_vec}{An optional numeric vector denoting the starting stage
 distribution for the projection. Defaults to a single individual of each
@@ -171,6 +178,11 @@ Consistently positive population growth can quickly lead to population size
 numbers larger than can be handled computationally. In that circumstance, a
 continuously rising population size will suddenly become \code{NaN} for the
 remainder of the projection.
+
+Users wishing to run a projection of a single patch in a \code{lefkoMat}
+object with multiple patches should subset the MPM first to contain only
+the patch needed. This can be accomplished with the
+\code{\link{subset_lM}()} function.
 }
 
 \examples{
@@ -240,22 +252,23 @@ cypraw_v1 <- verticalize3(data = cypdata, noyears = 6, firstyear = 2004,
   NRasRep = TRUE)
 
 cypsupp3r <- supplemental(stage3 = c("SD", "SD", "P1", "P1", "P2", "P3", "SL",
-    "D", "XSm", "Sm", "D", "XSm", "Sm", "SD", "P1"),
+    "D", "XSm", "Sm", "D", "XSm", "Sm", "mat", "mat", "mat", "SD", "P1"),
   stage2 = c("SD", "SD", "SD", "SD", "P1", "P2", "P3", "SL", "SL", "SL", "SL",
-    "SL", "SL", "rep", "rep"),
+    "SL", "SL", "D", "XSm", "Sm", "rep", "rep"),
   stage1 = c("SD", "rep", "SD", "rep", "SD", "P1", "P2", "P3", "P3", "P3",
-    "SL", "SL", "SL", "mat", "mat"),
+    "SL", "SL", "SL", "SL", "SL", "SL", "mat", "mat"),
   eststage3 = c(NA, NA, NA, NA, NA, NA, NA, "D", "XSm", "Sm", "D", "XSm", "Sm",
-    NA, NA),
+    "mat", "mat", "mat", NA, NA),
   eststage2 = c(NA, NA, NA, NA, NA, NA, NA, "XSm", "XSm", "XSm", "XSm", "XSm",
-    "XSm", NA, NA),
+    "XSm", "D", "XSm", "Sm", NA, NA),
   eststage1 = c(NA, NA, NA, NA, NA, NA, NA, "XSm", "XSm", "XSm", "XSm", "XSm",
-    "XSm", NA, NA),
+    "XSm", "XSm", "XSm", "XSm", NA, NA),
   givenrate = c(0.1, 0.1, 0.2, 0.2, 0.2, 0.2, 0.25, NA, NA, NA, NA, NA, NA,
-    NA, NA),
-  multiplier = c(NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, 0.5, 0.5),
-  type = c(1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 3, 3),
-  type_t12 = c(1, 2, 1, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1),
+    NA, NA, NA, NA, NA),
+  multiplier = c(NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA,
+    NA, 0.5, 0.5),
+  type = c(1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 3, 3),
+  type_t12 = c(1, 2, 1, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1),
   stageframe = cypframe_raw, historical = TRUE)
 
 cypmatrix3r <- rlefko3(data = cypraw_v1, stageframe = cypframe_raw, 

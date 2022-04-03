@@ -159,28 +159,30 @@ dim(vertdata2)
   3. reproductive multipliers to indicate which stages lead to the production of which stages, and at what level relative to estimated fecundity; and
   4. survival multipliers, in cases in which proxy survival transitions are used but must be set at elevated or reduced levels relative to the original transition.
   
-  <p style="text-indent: 20px">We will create two supplement tables, the first covering the historical analysis, and the second covering the ahistorical analysis. Each row refers to a specific transition, and in the historical case, there are codes for 19 given transitions (12 for the ahistorical case). The first nine of the historical transitions are set to specific probabilities, and the next eight are transitions that will be set to other, estimated transitions acting as proxies (these are the non-NA transitions in `eststage` set below). The final two terms are fecundity multipliers. Based on the literature, the proxies for entry into the adult classes are transitions from dormancy, as below. Where necessary, we also use `rep` and `mat` as shorthand to code for all reproductive stages and all mature stages, respectively.</p>
+  <p style="text-indent: 20px">We will create two supplement tables, the first covering the historical analysis, and the second covering the ahistorical analysis. Each row refers to a specific transition, and in the historical case, there are codes for 23 given transitions (12 for the ahistorical case). The first nine of the historical transitions are set to specific probabilities (six for the ahistorical), and the next 12 are transitions that will be set to other, estimated transitions acting as proxies (four for the ahistorical; these are the non-NA transitions in `eststage` set below). The final two terms are fecundity multipliers. Based on the literature, the proxies for entry into the adult classes are transitions from dormancy, as below. Where necessary, we also use `rep` and `mat` as shorthand to code for all reproductive stages and all mature stages, respectively.</p>
 ```{r Ch5.8}
 cypsupp3 <- supplemental(stage3 = c("SD", "SD", "P1", "P1", "P2", "P3", "SL",
-    "SL", "SL", "D", "V1", "V2", "V3", "D", "V1", "V2", "V3", "SD", "P1"), 
+    "SL", "SL", "D", "V1", "V2", "V3", "D", "V1", "V2", "V3", "mat", "mat",
+    "mat", "mat", "SD", "P1"), 
   stage2 = c("SD", "SD", "SD", "SD", "P1", "P2", "P3", "SL", "SL", "SL", "SL", 
-    "SL", "SL", "SL", "SL", "SL", "SL", "rep", "rep"), 
+    "SL", "SL", "SL", "SL", "SL", "SL", "D", "V1", "V2", "V3", "rep", "rep"), 
   stage1 = c("SD", "rep", "SD", "rep", "SD", "P1", "P2", "P3", "SL", "P3", "P3",
-    "P3", "P3", "SL", "SL", "SL", "SL", "mat", "mat"), 
+    "P3", "P3", "SL", "SL", "SL", "SL", "SL", "SL", "SL", "SL", "mat", "mat"), 
   eststage3 = c(NA, NA, NA, NA, NA, NA, NA, NA, NA, "D", "V1", "V2", "V3", "D",
-    "V1", "V2", "V3", NA, NA), 
+    "V1", "V2", "V3", "mat", "mat", "mat", "mat", NA, NA), 
   eststage2 = c(NA, NA, NA, NA, NA, NA, NA, NA, NA, "D", "D", "D", "D", "D", 
-    "D", "D", "D", NA, NA), 
+    "D", "D", "D", "D", "V1", "V2", "V3", NA, NA), 
   eststage1 = c(NA, NA, NA, NA, NA, NA, NA, NA, NA, "D", "D", "D", "D", "D", 
-    "D", "D", "D", NA, NA), 
+    "D", "D", "D", "V1", "V1", "V1", "V1", NA, NA), 
   givenrate = c(0.08, 0.08, 0.1, 0.1, 0.1, 0.1, 0.125, 0.2, 0.2, NA, NA, NA, NA, 
-    NA, NA, NA, NA, NA, NA),
+    NA, NA, NA, NA, NA, NA, NA, NA, NA, NA),
   multiplier = c(NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA,
-    NA, 0.5, 0.5),
+    NA, 1, 1, 1, 1, 0.5, 0.5),
   type = c("S", "S", "S", "S", "S", "S", "S", "S", "S", "S", "S", "S", "S", "S",
-    "S", "S", "S", "R", "R"), 
+    "S", "S", "S", "S", "S", "S", "S", "R", "R"), 
   type_t12 = c("S", "F", "S", "F", "S", "S", "S", "S", "S", "S", "S", "S", "S",
-    "S", "S", "S", "S", "S", "S"), stageframe = cypframe)
+    "S", "S", "S", "S", "S", "S", "S", "S", "S", "S"), stageframe = cypframe)
+
 cypsupp2 <- supplemental(stage3 = c("SD", "P1", "P2", "P3", "SL", "SL", "D",
     "V1", "V2", "V3", "SD", "P1"), 
   stage2 = c("SD", "SD", "P1", "P2", "P3", "SL", "SL", "SL", "SL", "SL", "rep",
@@ -310,7 +312,7 @@ cypmatrix3 <- flefko3(stageframe = cypframe, supplement = cypsupp3,
 #summary(cypmatrix3)
 ```
   
-  <p style="text-indent: 20px">We see many more total elements per matrix (over 8.5 million, in comparison to 2,916 in the ahistorical case), and many more rows and columns (54 rows and columns in the ahistorical case, and 54^2^ = 2,916 rows and columns in the historical case). However, historical matrices are composed primarily of structural zeros. Thus, with only 117,712 + 2,352 = 120,064 elements estimated per matrix, only 1.4% of elements are non-zero (the equivalent percentage for the ahistorical case is 84.3%).</p>
+  <p style="text-indent: 20px">We see many more total elements per matrix (over 8.5 million, in contrast to 2,916 in the ahistorical case), and many more rows and columns (54 rows and columns in the ahistorical case, and 54^2^ = 2,916 rows and columns in the historical case). However, historical matrices are composed primarily of structural zeros. Thus, with only 117,908 + 2,352 = 120,260 elements estimated per matrix, only 1.4% of elements are non-zero (the equivalent percentage for the ahistorical case is 84.3%).</p>
   
   <p style="text-indent: 20px">Now let's estimate some element-wise mean matrices. Here, we will create the ahistorical and historical mean MPMs and look at their summaries.</p>
 ```{r Ch5.14}
@@ -337,6 +339,8 @@ image3(tmeans3r, used = 1)
 condm3r <- cond_hmpm(tmeans3r)
 #print(condm3r$Mcond[[1]]$D, digits = 3)
 ```
+\noindent
+This conditional matrix essentially takes the logically possible elements in which stage in time *t*-1 is `D` (vegetative dormancy), and creates a matrix with the dimensions and row and column order of an ahistorical matrix with them. Since vegetative dormancy is an adult stage, we do not see survival transitions from juvenile stages - only adult portions of the matrix are shown, including both survival and fecundity transitions.
   
 #### Step 5. MPM analysis 
   
@@ -407,9 +411,9 @@ legend("topleft", c("det ahist", "det hist", "sto ahist", "sto hist"),
   col = c("black", "orangered", "grey", "darkred"), pch = 15, bty = "n")
 ```
   
-  <p style="text-indent: 20px">We see some big differences here. Particularly, it appears that ahistorical analyses both suggest reproductive value to some of the juvenile stages, most notably seedlings and 3rd year protocorms. Historical analysis show virtually no reproductive value to those stages, in contrast. Interesting results in need of further study!</p>
+  <p style="text-indent: 20px">We see roughly equivalent patterns here. All analyses show the smallest reproductive value in the juvenile stages, while adults have the greatest value, particularly medium- and large-sized adults of both flowering and non-flowering kinds. Interesting results in need of further study!</p>
   
-  <p style="text-indent: 20px">Let's now do a sensitivity analysis, again using both deterministic and stochastic approaches. First we will look at the ahistorical MPM.</p>
+  <p style="text-indent: 20px">Let's now conduct a sensitivity analysis, again using both deterministic and stochastic approaches. First we will look at the ahistorical MPM.</p>
 ```{r Ch5.22}
 tm2sens <- sensitivity3(tmeans2r)
 set.seed(42)
@@ -459,7 +463,7 @@ writeLines(paste0("This value is associated with element: ",
     max(tm3sens_s$ah_sensmats[[1]][which(tmeans2r$A[[1]] > 0)]))))
 ```
   
-  <p style="text-indent: 20px">We see both deterministic and stochastic sensitivity analyses supporting the transition from 1-sprouted non-flowering adult in occasions *t*-1 and *t* to the largest flowering adult in occasion *t*+1 (we can see this by dividing 962,658 by the number of stage pairs, which is 2916 - rounding up the answer gives us the matrix column [331], and the remainder from this division problem gives us the row [378]; the row and column numbers can then be checked against the `hstages` portion of the historical `lefkoMat` object used as input). The highest historically-corrected deterministic sensitivity value is associated with the transition from 1-sprouted non-flowering adult to 20-sprouted flowering adults (element 374), while the historically-corrected stochastic sensitivity value is associated with the transitions from 1-sprouted non-flowering adult to the largest flowering adult stage (element 378). Thus, our results generally reinforce the results of the ahistorical case.</p>
+  <p style="text-indent: 20px">We see both deterministic and stochastic sensitivity analyses supporting the transition from 1-sprouted non-flowering adult in occasions *t*-1 and *t* to the largest flowering adult in occasion *t*+1 (we can see this by dividing 962,658 by the number of stage pairs, which is 2916 - rounding up the answer gives us the matrix column [331], and the remainder from this division problem gives us the row [378]; the row and column numbers can then be checked against the `hstages` portion of the historical `lefkoMat` object used as input). The highest historically-corrected deterministic and stochastic sensitivity value is associated with the transition from 1-sprouted non-flowering adult to the largest flowering adult stage (element 378). Thus, our results reinforce the results of the ahistorical case.</p>
   
   <p style="text-indent: 20px">Let's now assess the elasticity of $\lambda$ to matrix elements, comparing the ahistorical to the historically-corrected case in both deterministic and stochastic analyses.</p>
 ```{r Ch5.24}

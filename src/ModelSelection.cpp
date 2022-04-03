@@ -104,8 +104,6 @@ List stovokor(StringVector surv, StringVector obs, StringVector size,
   bool survcheck = 0;
   bool obscheck = 0;
   bool sizecheck = 0;
-  bool sizebcheck = 0;
-  bool sizeccheck = 0;
   bool repstcheck = 0;
   bool feccheck = 0;
   
@@ -180,8 +178,6 @@ List stovokor(StringVector surv, StringVector obs, StringVector size,
     if (vitalrates(i) == "surv") survcheck = 1;
     if (vitalrates(i) == "obs") obscheck = 1;
     if (vitalrates(i) == "size") sizecheck = 1;
-    if (vitalrates(i) == "size" && sizebused) sizebcheck = 1;
-    if (vitalrates(i) == "size" && sizecused) sizeccheck = 1;
     if (vitalrates(i) == "repst") repstcheck = 1;
     if (vitalrates(i) == "fec") feccheck = 1;
   }

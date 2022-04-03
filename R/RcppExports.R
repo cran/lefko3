@@ -3,7 +3,7 @@
 
 #' Create Vertical Structure for Horizontal Data Frame Input
 #' 
-#' Function \code{.pfj()} powers the R function \code{\link{verticalize3}()},
+#' Function \code{pfj()} powers the R function \code{\link{verticalize3}()},
 #' creating the vertical structure and rearranging the data in that shape.
 #' 
 #' @param data The horizontal data file.
@@ -101,7 +101,7 @@
 
 #' Create Historical Vertical Structure for Ahistorical Vertical Data Frame
 #' 
-#' Function \code{.jpf()} is the core kernel for function
+#' Function \code{jpf()} is the core kernel for function
 #' \code{\link{historicalize3}()}, creating the historical, vertical structure
 #' and rearranging the data in that shape.
 #'
@@ -353,24 +353,24 @@
 #'   stageassign = cypframe_raw, stagesize = "sizeadded", NAas0 = TRUE, 
 #'   NRasRep = TRUE)
 #' 
-#' cypsupp3r <- supplemental(stage3 = c("SD", "SD", "P1", "P1", "P2", "P3",
-#'     "SL", "SL", "SL", "D", "XSm", "Sm", "D", "XSm", "Sm", "SD", "P1"),
-#'   stage2 = c("SD", "SD", "SD", "SD", "P1", "P2", "P3", "SL", "SL", "SL",
-#'     "SL", "SL", "SL", "SL", "SL", "rep", "rep"),
-#'   stage1 = c("SD", "rep", "SD", "rep", "SD", "P1", "P2", "P3", "SL", "P3",
-#'     "P3", "P3", "SL", "SL", "SL", "all", "all"),
-#'   eststage3 = c(NA, NA, NA, NA, NA, NA, NA, NA, NA, "D", "XSm", "Sm", "D",
-#'     "XSm", "Sm", NA, NA),
-#'   eststage2 = c(NA, NA, NA, NA, NA, NA, NA, NA, NA, "XSm", "XSm", "XSm",
-#'     "XSm", "XSm", "XSm", NA, NA),
-#'   eststage1 = c(NA, NA, NA, NA, NA, NA, NA, NA, NA, "XSm", "XSm", "XSm",
-#'     "XSm", "XSm", "XSm", NA, NA),
-#'   givenrate = c(0.1, 0.1, 0.2, 0.2, 0.2, 0.2, 0.25, 0.4, 0.4, NA, NA, NA, NA,
-#'     NA, NA, NA, NA),
+#' cypsupp3r <- supplemental(stage3 = c("SD", "SD", "P1", "P1", "P2", "P3", "SL",
+#'     "D", "XSm", "Sm", "D", "XSm", "Sm", "mat", "mat", "mat", "SD", "P1"),
+#'   stage2 = c("SD", "SD", "SD", "SD", "P1", "P2", "P3", "SL", "SL", "SL", "SL",
+#'     "SL", "SL", "D", "XSm", "Sm", "rep", "rep"),
+#'   stage1 = c("SD", "rep", "SD", "rep", "SD", "P1", "P2", "P3", "P3", "P3",
+#'     "SL", "SL", "SL", "SL", "SL", "SL", "mat", "mat"),
+#'   eststage3 = c(NA, NA, NA, NA, NA, NA, NA, "D", "XSm", "Sm", "D", "XSm", "Sm",
+#'     "mat", "mat", "mat", NA, NA),
+#'   eststage2 = c(NA, NA, NA, NA, NA, NA, NA, "XSm", "XSm", "XSm", "XSm", "XSm",
+#'     "XSm", "D", "XSm", "Sm", NA, NA),
+#'   eststage1 = c(NA, NA, NA, NA, NA, NA, NA, "XSm", "XSm", "XSm", "XSm", "XSm",
+#'     "XSm", "XSm", "XSm", "XSm", NA, NA),
+#'   givenrate = c(0.1, 0.1, 0.2, 0.2, 0.2, 0.2, 0.25, NA, NA, NA, NA, NA, NA,
+#'     NA, NA, NA, NA, NA),
 #'   multiplier = c(NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA,
-#'     0.5, 0.5),
-#'   type = c(1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 3, 3),
-#'   type_t12 = c(1, 2, 1, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1),
+#'     NA, 0.5, 0.5),
+#'   type = c(1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 3, 3),
+#'   type_t12 = c(1, 2, 1, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1),
 #'   stageframe = cypframe_raw, historical = TRUE)
 #' 
 #' cypmatrix3r <- rlefko3(data = cypraw_v1, stageframe = cypframe_raw,
@@ -458,21 +458,24 @@ cond_hmpm <- function(hmpm, matchoice = NULL, err_check = NULL) {
 #'     (0.5 * seeds_per_pod)),
 #'   type =c(1, 1, 1, 1, 1, 1, 1, 1, 3, 3),
 #'   stageframe = cypframe_raw, historical = FALSE)
-#' cypsupp3_raw <- supplemental(stage3 = c("SD", "SD", "P1", "P1", "P2", "P3",
-#'     "SL", "SL", "SL", "D", "D", "SD", "P1"),
+#' cypsupp3_raw <- supplemental(stage3 = c("SD", "SD", "P1", "P1", "P2", "P3", "SL",
+#'     "D", "XSm", "Sm", "D", "XSm", "Sm", "mat", "mat", "mat", "SD", "P1"),
 #'   stage2 = c("SD", "SD", "SD", "SD", "P1", "P2", "P3", "SL", "SL", "SL", "SL",
-#'     "rep", "rep"),
-#'   stage1 = c("SD", "rep", "SD", "rep", "SD", "P1", "P2", "P3", "SL", "P3",
-#'     "SL", "mat", "mat"),
-#'   eststage3 = c(NA, NA, NA, NA, NA, NA, NA, NA, NA, "XSm", "D", NA, NA),
-#'   eststage2 = c(NA, NA, NA, NA, NA, NA, NA, NA, NA, "XSm", "XSm", NA, NA),
-#'   eststage1 = c(NA, NA, NA, NA, NA, NA, NA, NA, NA, "XSm", "XSm", NA, NA),
-#'   givenrate = c(0.01, 0.05, 0.10, 0.20, 0.1, 0.1, 0.05, 0.05, 0.05, NA, NA,
-#'     NA, NA),
-#'   multiplier = c(NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA,
-#'     (0.5 * seeds_per_pod), (0.5 * seeds_per_pod)),
-#'   type = c(1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 3, 3),
-#'   type_t12 = c(1, 2, 1, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1),
+#'     "SL", "SL", "D", "XSm", "Sm", "rep", "rep"),
+#'   stage1 = c("SD", "rep", "SD", "rep", "SD", "P1", "P2", "P3", "P3", "P3",
+#'     "SL", "SL", "SL", "SL", "SL", "SL", "mat", "mat"),
+#'   eststage3 = c(NA, NA, NA, NA, NA, NA, NA, "D", "XSm", "Sm", "D", "XSm", "Sm",
+#'     "mat", "mat", "mat", NA, NA),
+#'   eststage2 = c(NA, NA, NA, NA, NA, NA, NA, "XSm", "XSm", "XSm", "XSm", "XSm",
+#'     "XSm", "D", "XSm", "Sm", NA, NA),
+#'   eststage1 = c(NA, NA, NA, NA, NA, NA, NA, "XSm", "XSm", "XSm", "XSm", "XSm",
+#'     "XSm", "XSm", "XSm", "XSm", NA, NA),
+#'   givenrate = c(0.1, 0.1, 0.2, 0.2, 0.2, 0.2, 0.25, NA, NA, NA, NA, NA, NA,
+#'     NA, NA, NA, NA, NA),
+#'   multiplier = c(NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA,
+#'     NA, 0.5, 0.5),
+#'   type = c(1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 3, 3),
+#'   type_t12 = c(1, 2, 1, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1),
 #'   stageframe = cypframe_raw, historical = TRUE)
 #' 
 #' cypmatrix2rp <- rlefko2(data = cypraw_v1, stageframe = cypframe_raw,
@@ -904,7 +907,7 @@ NULL
 #' Compares Three Strings for Interaction Notation
 #' 
 #' This function compares checks to see if one string is composed of the other
-#' two string in R's interaction notation.
+#' two strings in R's interaction notation.
 #' 
 #' @name stringcompare_x
 #' 
@@ -2180,7 +2183,7 @@ sf_create <- function(sizes, stagenames = NULL, sizesb = NULL, sizesc = NULL, re
 
 #' Standardize Stageframe For MPM Analysis
 #' 
-#' Function \code{.sf_reassess()} takes a stageframe as input, and uses
+#' Function \code{sf_reassess()} takes a stageframe as input, and uses
 #' information supplied there and through the supplement, reproduction and
 #' overwrite tables to rearrange this into a format usable by the matrix
 #' creation functions, \code{\link{flefko3}()}, \code{\link{flefko2}()},
@@ -2212,7 +2215,7 @@ sf_create <- function(sizes, stagenames = NULL, sizesb = NULL, sizesc = NULL, re
 
 #' Create Stageframe for Population Matrix Projection Analysis
 #' 
-#' Function \code{.sf_leslie()} returns a data frame describing each age in a
+#' Function \code{sf_leslie()} returns a data frame describing each age in a
 #' Leslie MPM in terms of ahistorical stage information. This function is
 #' internal to \code{\link{rleslie}()} and \code{\link{fleslie}()}.
 #' 
@@ -2328,7 +2331,7 @@ sf_create <- function(sizes, stagenames = NULL, sizesb = NULL, sizesc = NULL, re
 
 #' Estimate All Elements of Raw Historical Matrix
 #' 
-#' Function \code{.specialpatrolgroup()} swiftly calculates matrix transitions
+#' Function \code{specialpatrolgroup()} swiftly calculates matrix transitions
 #' in raw historical matrices, and serves as the core workhorse function behind
 #' \code{\link{rlefko3}()}.
 #' 
@@ -2360,7 +2363,7 @@ sf_create <- function(sizes, stagenames = NULL, sizesb = NULL, sizesc = NULL, re
 
 #' Estimate All Elements of Raw Ahistorical Population Projection Matrix
 #' 
-#' Function \code{.normalpatrolgroup()} swiftly calculates matrix transitions
+#' Function \code{normalpatrolgroup()} swiftly calculates matrix transitions
 #' in raw ahistorical matrices, and serves as the core workhorse function
 #' behind \code{\link{rlefko2}()}.
 #' 
@@ -2386,7 +2389,7 @@ sf_create <- function(sizes, stagenames = NULL, sizesb = NULL, sizesc = NULL, re
 
 #' Estimate All Elements of Raw Ahistorical Population Projection Matrix
 #' 
-#' Function \code{.minorpatrolgroup()} swiftly calculates matrix transitions
+#' Function \code{minorpatrolgroup()} swiftly calculates matrix transitions
 #' in raw Leslie MPMs, and is used internally in \code{\link{rleslie}()}.
 #' 
 #' @name minorpatrolgroup
@@ -2893,9 +2896,9 @@ sf_create <- function(sizes, stagenames = NULL, sizesb = NULL, sizesc = NULL, re
 
 #' Key Function Passing Models and Other Parameters to Matrix Estimators
 #' 
-#' This function takes the various vital rate models and other parameters and
-#' coordinates them as input into the function-based matrix estimation
-#' functions.
+#' Function \code{raymccooney()} takes the various vital rate models and other
+#' parameters and coordinates them as input into the function-based matrix
+#' estimation functions.
 #' 
 #' @param listofyears A data frame where the rows designate the exact order of
 #' years and patches to produce matrices for.
@@ -3229,11 +3232,11 @@ sf_create <- function(sizes, stagenames = NULL, sizesb = NULL, sizesc = NULL, re
 #' @param year Either a single integer value corresponding to the year to
 #' project, or a vector of \code{times} elements with the year to use at each
 #' time step. Defaults to \code{NA}, in which the first year in the set of years
-#' in the dataset is projected. If a vector shorted than \code{times} is
+#' in the dataset is projected. If a vector shorter than \code{times} is
 #' supplied, then this vector will be cycled.
 #' @param patch A value of \code{NA}, a single string value corresponding to the
 #' patch to project, or a vector of \code{times} elements with the patch to use
-#' at each time step. If a vector shorted than \code{times} is supplied, then
+#' at each time step. If a vector shorter than \code{times} is supplied, then
 #' this vector will be cycled. Note that this function currently does not
 #' handle multiple projections for different patches in the same run.
 #' @param sp_density Either a single numeric value of spatial density to use in
@@ -3343,17 +3346,19 @@ sf_create <- function(sizes, stagenames = NULL, sizesb = NULL, sizesc = NULL, re
 #' below when a \code{lefkoMat} object is used as input:
 #' \item{projection}{A list of lists of matrices showing the total number of
 #' individuals per stage per occasion. The first list corresponds to each
-#' pop-patch followed by each population. The inner list corresponds to
+#' pop-patch followed by each population (this top-level list is a single
+#' element in \code{f_projection3()}). The inner list corresponds to
 #' replicates within each pop-patch or population.}
 #' \item{stage_dist}{A list of lists of the actual stage distribution in each
-#' occasion in each replicate in each pop-patch or population. The list order
-#' is the same as in \code{projection}.}
+#' occasion in each replicate in each pop-patch or population. The list
+#' structure is the same as in \code{\link{projection3}()}.}
 #' \item{rep_value}{A list of lists of the actual reproductive value in each
-#' occasion in each replicate in each pop-patch or population. The list order
-#' is the same as in \code{projection}.}
+#' occasion in each replicate in each pop-patch or population. The list
+#' structure is the same as in \code{\link{projection3}()}.}
 #' \item{pop_size}{A list of matrices showing the total population size in each
 #' occasion per replicate (row within data frame) per pop-patch or population
-#' (list element).}
+#' (list element). Only a single pop-patch or population is allowed in
+#' \code{f_projection3()}}
 #' \item{labels}{A data frame showing the order of populations and patches in
 #' item \code{projection}.}
 #' \item{ahstages}{The original stageframe used in the study.}
@@ -3971,6 +3976,11 @@ f_projection3 <- function(data, format, prebreeding = TRUE, start_age = NA_integ
 #' Generally, this means that survival-transition elements altered to values
 #' outside of the interval [0, 1], and negative fecundity values, will both
 #' yield warnings. Defaults to \code{TRUE}.
+#' @param year Either a single integer value corresponding to the year to
+#' project, or a vector of \code{times} elements with the year to use at each
+#' time step. If a vector shorter than \code{times} is supplied, then this
+#' vector will be cycled. If not provided, then all annual matrices will be
+#' cycled within patches or populations.
 #' @param start_vec An optional numeric vector denoting the starting stage
 #' distribution for the projection. Defaults to a single individual of each
 #' stage.
@@ -4063,6 +4073,11 @@ f_projection3 <- function(data, format, prebreeding = TRUE, start_age = NA_integ
 #' continuously rising population size will suddenly become \code{NaN} for the
 #' remainder of the projection.
 #' 
+#' Users wishing to run a projection of a single patch in a \code{lefkoMat}
+#' object with multiple patches should subset the MPM first to contain only
+#' the patch needed. This can be accomplished with the
+#' \code{\link{subset_lM}()} function.
+#' 
 #' @seealso \code{\link{start_input}()}
 #' @seealso \code{\link{density_input}()}
 #' @seealso \code{\link{f_projection3}()}
@@ -4134,22 +4149,23 @@ f_projection3 <- function(data, format, prebreeding = TRUE, start_age = NA_integ
 #'   NRasRep = TRUE)
 #' 
 #' cypsupp3r <- supplemental(stage3 = c("SD", "SD", "P1", "P1", "P2", "P3", "SL",
-#'     "D", "XSm", "Sm", "D", "XSm", "Sm", "SD", "P1"),
+#'     "D", "XSm", "Sm", "D", "XSm", "Sm", "mat", "mat", "mat", "SD", "P1"),
 #'   stage2 = c("SD", "SD", "SD", "SD", "P1", "P2", "P3", "SL", "SL", "SL", "SL",
-#'     "SL", "SL", "rep", "rep"),
+#'     "SL", "SL", "D", "XSm", "Sm", "rep", "rep"),
 #'   stage1 = c("SD", "rep", "SD", "rep", "SD", "P1", "P2", "P3", "P3", "P3",
-#'     "SL", "SL", "SL", "mat", "mat"),
+#'     "SL", "SL", "SL", "SL", "SL", "SL", "mat", "mat"),
 #'   eststage3 = c(NA, NA, NA, NA, NA, NA, NA, "D", "XSm", "Sm", "D", "XSm", "Sm",
-#'     NA, NA),
+#'     "mat", "mat", "mat", NA, NA),
 #'   eststage2 = c(NA, NA, NA, NA, NA, NA, NA, "XSm", "XSm", "XSm", "XSm", "XSm",
-#'     "XSm", NA, NA),
+#'     "XSm", "D", "XSm", "Sm", NA, NA),
 #'   eststage1 = c(NA, NA, NA, NA, NA, NA, NA, "XSm", "XSm", "XSm", "XSm", "XSm",
-#'     "XSm", NA, NA),
+#'     "XSm", "XSm", "XSm", "XSm", NA, NA),
 #'   givenrate = c(0.1, 0.1, 0.2, 0.2, 0.2, 0.2, 0.25, NA, NA, NA, NA, NA, NA,
-#'     NA, NA),
-#'   multiplier = c(NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, 0.5, 0.5),
-#'   type = c(1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 3, 3),
-#'   type_t12 = c(1, 2, 1, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1),
+#'     NA, NA, NA, NA, NA),
+#'   multiplier = c(NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA,
+#'     NA, 0.5, 0.5),
+#'   type = c(1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 3, 3),
+#'   type_t12 = c(1, 2, 1, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1),
 #'   stageframe = cypframe_raw, historical = TRUE)
 #' 
 #' cypmatrix3r <- rlefko3(data = cypraw_v1, stageframe = cypframe_raw, 
@@ -4161,8 +4177,8 @@ f_projection3 <- function(data, format, prebreeding = TRUE, start_age = NA_integ
 #' cypstoch <- projection3(cypmatrix3r, nreps = 5, stochastic = TRUE)
 #' 
 #' @export projection3
-projection3 <- function(mpm, nreps = 1L, times = 10000L, historical = FALSE, stochastic = FALSE, standardize = FALSE, growthonly = TRUE, integeronly = FALSE, substoch = 0L, sub_warnings = TRUE, start_vec = NULL, start_frame = NULL, tweights = NULL, density = NULL) {
-    .Call('_lefko3_projection3', PACKAGE = 'lefko3', mpm, nreps, times, historical, stochastic, standardize, growthonly, integeronly, substoch, sub_warnings, start_vec, start_frame, tweights, density)
+projection3 <- function(mpm, nreps = 1L, times = 10000L, historical = FALSE, stochastic = FALSE, standardize = FALSE, growthonly = TRUE, integeronly = FALSE, substoch = 0L, sub_warnings = TRUE, year = NULL, start_vec = NULL, start_frame = NULL, tweights = NULL, density = NULL) {
+    .Call('_lefko3_projection3', PACKAGE = 'lefko3', mpm, nreps, times, historical, stochastic, standardize, growthonly, integeronly, substoch, sub_warnings, year, start_vec, start_frame, tweights, density)
 }
 
 #' Estimate Stochastic Population Growth Rate
@@ -4278,22 +4294,23 @@ projection3 <- function(mpm, nreps = 1L, times = 10000L, historical = FALSE, sto
 #'   NRasRep = TRUE)
 #' 
 #' cypsupp3r <- supplemental(stage3 = c("SD", "SD", "P1", "P1", "P2", "P3", "SL",
-#'     "D", "XSm", "Sm", "D", "XSm", "Sm", "SD", "P1"),
+#'     "D", "XSm", "Sm", "D", "XSm", "Sm", "mat", "mat", "mat", "SD", "P1"),
 #'   stage2 = c("SD", "SD", "SD", "SD", "P1", "P2", "P3", "SL", "SL", "SL", "SL",
-#'     "SL", "SL", "rep", "rep"),
+#'     "SL", "SL", "D", "XSm", "Sm", "rep", "rep"),
 #'   stage1 = c("SD", "rep", "SD", "rep", "SD", "P1", "P2", "P3", "P3", "P3",
-#'     "SL", "SL", "SL", "mat", "mat"),
+#'     "SL", "SL", "SL", "SL", "SL", "SL", "mat", "mat"),
 #'   eststage3 = c(NA, NA, NA, NA, NA, NA, NA, "D", "XSm", "Sm", "D", "XSm", "Sm",
-#'     NA, NA),
+#'     "mat", "mat", "mat", NA, NA),
 #'   eststage2 = c(NA, NA, NA, NA, NA, NA, NA, "XSm", "XSm", "XSm", "XSm", "XSm",
-#'     "XSm", NA, NA),
+#'     "XSm", "D", "XSm", "Sm", NA, NA),
 #'   eststage1 = c(NA, NA, NA, NA, NA, NA, NA, "XSm", "XSm", "XSm", "XSm", "XSm",
-#'     "XSm", NA, NA),
+#'     "XSm", "XSm", "XSm", "XSm", NA, NA),
 #'   givenrate = c(0.1, 0.1, 0.2, 0.2, 0.2, 0.2, 0.25, NA, NA, NA, NA, NA, NA,
-#'     NA, NA),
-#'   multiplier = c(NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, 0.5, 0.5),
-#'   type = c(1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 3, 3),
-#'   type_t12 = c(1, 2, 1, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1),
+#'     NA, NA, NA, NA, NA),
+#'   multiplier = c(NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA,
+#'     NA, 0.5, 0.5),
+#'   type = c(1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 3, 3),
+#'   type_t12 = c(1, 2, 1, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1),
 #'   stageframe = cypframe_raw, historical = TRUE)
 #' 
 #' cypmatrix3r <- rlefko3(data = cypraw_v1, stageframe = cypframe_raw, 

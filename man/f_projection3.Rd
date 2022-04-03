@@ -213,12 +213,12 @@ required if \code{modelsuite} is not supplied.}
 \item{year}{Either a single integer value corresponding to the year to
 project, or a vector of \code{times} elements with the year to use at each
 time step. Defaults to \code{NA}, in which the first year in the set of years
-in the dataset is projected. If a vector shorted than \code{times} is
+in the dataset is projected. If a vector shorter than \code{times} is
 supplied, then this vector will be cycled.}
 
 \item{patch}{A value of \code{NA}, a single string value corresponding to the
 patch to project, or a vector of \code{times} elements with the patch to use
-at each time step. If a vector shorted than \code{times} is supplied, then
+at each time step. If a vector shorter than \code{times} is supplied, then
 this vector will be cycled. Note that this function currently does not
 handle multiple projections for different patches in the same run.}
 
@@ -350,17 +350,19 @@ three elements of the following, and also includes the remaining elements
 below when a \code{lefkoMat} object is used as input:
 \item{projection}{A list of lists of matrices showing the total number of
 individuals per stage per occasion. The first list corresponds to each
-pop-patch followed by each population. The inner list corresponds to
+pop-patch followed by each population (this top-level list is a single
+element in \code{f_projection3()}). The inner list corresponds to
 replicates within each pop-patch or population.}
 \item{stage_dist}{A list of lists of the actual stage distribution in each
-occasion in each replicate in each pop-patch or population. The list order
-is the same as in \code{projection}.}
+occasion in each replicate in each pop-patch or population. The list
+structure is the same as in \code{\link{projection3}()}.}
 \item{rep_value}{A list of lists of the actual reproductive value in each
-occasion in each replicate in each pop-patch or population. The list order
-is the same as in \code{projection}.}
+occasion in each replicate in each pop-patch or population. The list
+structure is the same as in \code{\link{projection3}()}.}
 \item{pop_size}{A list of matrices showing the total population size in each
 occasion per replicate (row within data frame) per pop-patch or population
-(list element).}
+(list element). Only a single pop-patch or population is allowed in
+\code{f_projection3()}}
 \item{labels}{A data frame showing the order of populations and patches in
 item \code{projection}.}
 \item{ahstages}{The original stageframe used in the study.}

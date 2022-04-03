@@ -4209,22 +4209,23 @@ summary.lefkoLTRE <- function(object, ...) {
 #'   NRasRep = TRUE)
 #' 
 #' cypsupp3r <- supplemental(stage3 = c("SD", "SD", "P1", "P1", "P2", "P3", "SL",
-#'     "D", "XSm", "Sm", "D", "XSm", "Sm", "SD", "P1"),
+#'     "D", "XSm", "Sm", "D", "XSm", "Sm", "mat", "mat", "mat", "SD", "P1"),
 #'   stage2 = c("SD", "SD", "SD", "SD", "P1", "P2", "P3", "SL", "SL", "SL", "SL",
-#'     "SL", "SL", "rep", "rep"),
+#'     "SL", "SL", "D", "XSm", "Sm", "rep", "rep"),
 #'   stage1 = c("SD", "rep", "SD", "rep", "SD", "P1", "P2", "P3", "P3", "P3",
-#'     "SL", "SL", "SL", "mat", "mat"),
+#'     "SL", "SL", "SL", "SL", "SL", "SL", "mat", "mat"),
 #'   eststage3 = c(NA, NA, NA, NA, NA, NA, NA, "D", "XSm", "Sm", "D", "XSm", "Sm",
-#'     NA, NA),
+#'     "mat", "mat", "mat", NA, NA),
 #'   eststage2 = c(NA, NA, NA, NA, NA, NA, NA, "XSm", "XSm", "XSm", "XSm", "XSm",
-#'     "XSm", NA, NA),
+#'     "XSm", "D", "XSm", "Sm", NA, NA),
 #'   eststage1 = c(NA, NA, NA, NA, NA, NA, NA, "XSm", "XSm", "XSm", "XSm", "XSm",
-#'     "XSm", NA, NA),
+#'     "XSm", "XSm", "XSm", "XSm", NA, NA),
 #'   givenrate = c(0.1, 0.1, 0.2, 0.2, 0.2, 0.2, 0.25, NA, NA, NA, NA, NA, NA,
-#'     NA, NA),
-#'   multiplier = c(NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, 0.5, 0.5),
-#'   type = c(1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 3, 3),
-#'   type_t12 = c(1, 2, 1, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1),
+#'     NA, NA, NA, NA, NA),
+#'   multiplier = c(NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA,
+#'     NA, 0.5, 0.5),
+#'   type = c(1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 3, 3),
+#'   type_t12 = c(1, 2, 1, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1),
 #'   stageframe = cypframe_raw, historical = TRUE)
 #' 
 #' cypmatrix3r <- rlefko3(data = cypraw_v1, stageframe = cypframe_raw, 
@@ -4327,10 +4328,13 @@ summary.lefkoProj <- function(object, threshold = 1,
 #' @param auto_lty A logical value indicating whether to shift the line type
 #' associated with each replicate automatically. Defaults to \code{TRUE}, but
 #' reverts to \code{FALSE} if any setting for \code{lty} is given.
+#' @param auto_title A logical value indicating whether to add a title to each
+#' plot. The plot is composed of the concatenated population and patch names.
+#' Defaults to \code{FALSE}.
 #' @param ... Other parameters used by functions \code{plot.default()} and
 #' \code{lines()}.
 #' 
-#' @return A plot of the results of a \code{link{projection3}()} run.
+#' @return A plot of the results of a \code{\link{projection3}()} run.
 #' 
 #' @section Notes:
 #' Output plots are currently limited to time series and state space plots of
@@ -4385,7 +4389,7 @@ summary.lefkoProj <- function(object, threshold = 1,
 #' @export
 plot.lefkoProj <- function(x, variable = "popsize", style = "time",
   repl = "all", patch = "pop", auto_ylim = TRUE, auto_col = TRUE,
-  auto_lty = TRUE, ...) {
+  auto_lty = TRUE, auto_title = FALSE, ...) {
   
   further_args <- list(...)
   
@@ -4402,6 +4406,9 @@ plot.lefkoProj <- function(x, variable = "popsize", style = "time",
   }
   if (is.element("ylim", names(further_args))) {
     auto_ylim <- FALSE
+  }
+  if (is.element("main", names(further_args))) {
+    auto_title <- FALSE
   }
   basal_args <- further_args
   
@@ -4484,6 +4491,11 @@ plot.lefkoProj <- function(x, variable = "popsize", style = "time",
   used_col <- 1
   
   for (i in patch) {
+    if (auto_title) {
+      used_string <- paste("pop", x$labels[i, 1], "patch", x$labels[i, 2])
+      further_args$main <- used_string
+    }
+    
     used_lty <- 1
     
     if (auto_ylim) {

@@ -543,6 +543,7 @@ n _{1,4C}
 \phi_{t+1} = \phi_t \times \alpha e^{-\beta n_t}
 \end{equation}
   
+\noindent
 where $\alpha$ and $\beta$ are the density dependence parameters, and $\beta$ in particular gives the strength of density dependence. This equation is among the most interesting in the density dependence literature, because it is capable of producing oscillations, even multi-period oscillations, and chaos.
   
   <p style="text-indent: 20px">The second density dependence function applied in `lefko3` is the Beverton-Holt equation, which is given as</p>
@@ -552,6 +553,7 @@ where $\alpha$ and $\beta$ are the density dependence parameters, and $\beta$ in
 \phi_{t+1} = \phi_t \times \frac{\alpha}{1 + \beta n_t}
 \end{equation}
   
+\noindent
 where $\alpha$ and $\beta$ are, once again, the density dependence parameters, and $\beta$ in particular gives the strength of density dependence. This function generally asymptotes at an equilibrium density, and so is not capable of producing the complex patterns that the Ricker model is capable of.
   
   <p style="text-indent: 20px">The third function implemented in `lefko3` is the Usher function, given as</p>
@@ -561,6 +563,7 @@ where $\alpha$ and $\beta$ are, once again, the density dependence parameters, a
 \phi_{t+1} = \phi_t \times \frac{1}{1 + e^{\alpha n_t + \beta}}
 \end{equation}
   
+\noindent
 where both $\alpha$ and $\beta$ give the strength of density dependence, though the former via an interaction with density and the latter via an addition to the exponential effect.
   
   <p style="text-indent: 20px">Finally, `lefko3` also implements a form of the logistic equation, given as</p>

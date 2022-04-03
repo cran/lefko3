@@ -6,7 +6,7 @@ using namespace arma;
 
 //' Create Vertical Structure for Horizontal Data Frame Input
 //' 
-//' Function \code{.pfj()} powers the R function \code{\link{verticalize3}()},
+//' Function \code{pfj()} powers the R function \code{\link{verticalize3}()},
 //' creating the vertical structure and rearranging the data in that shape.
 //' 
 //' @param data The horizontal data file.
@@ -730,6 +730,8 @@ Rcpp::List pfj(DataFrame data, DataFrame stageframe, int noyears, int firstyear,
   
   // Set up main loop
   for (int j = 0; j < (noyears - 1); j++) {
+    Rcpp::checkUserInterrupt();
+    
     if (popidcol > -1) popidx = data[popidcol];
     if (patchidcol > -1) patchidx = data[patchidcol];
     if (individcol > -1) individx = data[individcol];
@@ -1722,7 +1724,7 @@ Rcpp::List pfj(DataFrame data, DataFrame stageframe, int noyears, int firstyear,
 
 //' Create Historical Vertical Structure for Ahistorical Vertical Data Frame
 //' 
-//' Function \code{.jpf()} is the core kernel for function
+//' Function \code{jpf()} is the core kernel for function
 //' \code{\link{historicalize3}()}, creating the historical, vertical structure
 //' and rearranging the data in that shape.
 //'
@@ -1959,8 +1961,6 @@ Rcpp::List jpf(DataFrame data, DataFrame stageframe, int popidcol,
   Rcpp::StringVector patchidx;
   Rcpp::NumericVector xpos2x;
   Rcpp::NumericVector ypos2x;
-  //Rcpp::NumericVector xpos3x (norows);
-  //Rcpp::NumericVector ypos3x (norows);
   Rcpp::NumericVector sizea2x;
   Rcpp::NumericVector sizea3x;
   Rcpp::NumericVector repstra2x;
@@ -1984,7 +1984,6 @@ Rcpp::List jpf(DataFrame data, DataFrame stageframe, int popidcol,
   Rcpp::NumericVector indcovc3x;
   
   Rcpp::NumericVector censor2x;
-  //Rcpp::NumericVector censor3x (norows);
   Rcpp::NumericVector alivegiven2x;
   Rcpp::NumericVector alivegiven3x;
   Rcpp::NumericVector deadgiven2x;
@@ -2275,6 +2274,8 @@ Rcpp::List jpf(DataFrame data, DataFrame stageframe, int popidcol,
   // Main loop, which creates the main new dataset rows. Establishes state in
   // time t for all cases in which an individual is observed
   for (int i = 0; i < norows; i++) { // i corresponds to row in the old dataset
+    if (i % 5 == 0) Rcpp::checkUserInterrupt();
+    
     for (int j = 0; j < noyears; j++) {
       // This establishes a place marker for vectors corresponding to the current year
       if (year2x[i] == yearall2x[j]) currentyear = j;
@@ -2574,6 +2575,7 @@ Rcpp::List jpf(DataFrame data, DataFrame stageframe, int popidcol,
   // Now a loop that establishes most states in time t+1 and t-1,
   // and stages in all times
   for (int i = 0; i < ndflength; i++) { // i refers to rows in the final dataset
+    if (i % 5 == 0) Rcpp::checkUserInterrupt();
     
     // This short section deals with correcting info for individuals that are
     // unobserved for long periods
@@ -3364,7 +3366,6 @@ Rcpp::List simplepizzle(DataFrame StageFrame, int format) {
   // This section determines the length of the matrix map data frame
   int nostages = newstageid.n_elem;
   int nostages_nounborn = nostages;
-  int prior_stage = -1;
   int totallength {0};
   if (format == 2)  nostages = nostages + 1;
   
@@ -3388,7 +3389,6 @@ Rcpp::List simplepizzle(DataFrame StageFrame, int format) {
     arma::vec oldentrystage = as<arma::vec>(StageFrame["entrystage"]);
     
     nostages_nounborn = nostages - 1;
-    prior_stage = nostages_nounborn;
     totallength = (2 * nostages_nounborn * nostages_nounborn *
       nostages);
     
