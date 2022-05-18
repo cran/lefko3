@@ -5,6 +5,8 @@
 #' horizontally formatted input data frame. It also handles stage assignments
 #' if given an appropriate stageframe.
 #' 
+#' @name verticalize3
+#' 
 #' @param data The horizontal data file. A valid data frame is required as
 #' input.
 #' @param noyears The number of years or observation occasions in the dataset. A
@@ -256,7 +258,7 @@
 #' \code{spacing}. Only given if \code{spacing} is not NA.}
 #' 
 #' @section Notes:
-#' In some datasets on species with unobserveable stages, observation status
+#' In some datasets on species with unobservable stages, observation status
 #' (\code{obsstatus}) might not be inferred properly if a single size variable
 #' is used that does not yield sizes greater than 0 in all cases in which
 #' individuals were observed. Such situations may arise, for example, in plants
@@ -282,7 +284,7 @@
 #' individual is in some stage but is also dead. The latter is removed if the
 #' conflict occurs in occasion \emph{t} or \emph{t}-1, as only living entries
 #' are allowed in time \emph{t} and time \emph{t}-1 may involve living entries
-#' as well as unliving entries immediately prior to birth.
+#' as well as non-living entries immediately prior to birth.
 #' 
 #' Care should be taken to avoid variables with negative values indicating size,
 #' fecundity, or reproductive or observation status. Negative values can be
@@ -298,6 +300,12 @@
 #' Density estimation is performed as a count of individuals alive and within
 #' the radius specified in \code{spacing} of the respective individual at some
 #' point in time.
+#' 
+#' If a censor variable is included for each monitoring occasion, and the
+#' \code{blocksize} option is set, then the user must set
+#' \code{censorRepeat = TRUE} in order to censor the correct transitions.
+#' Failing this step will likely lead to the loss of a large portion of the data
+#' as all data for entire individuals will be excluded.
 #' 
 #' @examples
 #' # Lathyrus example using blocksize - when repeated patterns exist in variable
@@ -1142,6 +1150,12 @@ verticalize3 <- function(data, noyears, firstyear = 1, popidcol = 0,
   
   popdatareal$obsage <- popdatareal$obsage + age_offset
   
+  if (censor & !censorRepeat & blocksize > 0) {
+    message("hfv dataset has been censored using a non-repeating censor variable.
+      Please check the resulting dataset with the summary_hfv() function to make
+      sure that not too much has been removed from the original dataset.")
+  }
+  
   return(popdatareal)
 }
 
@@ -1152,6 +1166,8 @@ verticalize3 <- function(data, noyears, firstyear = 1, popidcol = 0,
 #' vertically but ahistorically formatted data frame. This data frame is in
 #' standard \code{hfvdata} format and can be used in all functions in the
 #' package.
+#' 
+#' @name historicalize3
 #' 
 #' @param data The horizontal data file.
 #' @param popidcol A variable name or column number corresponding to the

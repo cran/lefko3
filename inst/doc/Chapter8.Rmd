@@ -109,7 +109,7 @@ lathframeln <- sf_create(sizes = sizevector, stagenames = stagevector,
   
   <p style="text-indent: 20px">We also have two choices for use as our reproductive status and fecundity variables. The first choice, `FCODE88` indicates whether a plant flowered. The second choice, `Intactseed88`, indicates the number of seed produced. Flowering plants typically have different demographic characteristics than non-flowering plants, either reflecting reproductive costs, or, conversely, because flowering plants might have more resources and hence higher survival than non-flowering plants. We should separate transitions among these two groups. So, let's use `FCODE88` to indicate reproductive status, and `Intactseed88` to indicate fecundity.</p>
   
-  <p style="text-indent: 20px">Finally, note that in the input to the following function, we utilize a strictly repeating pattern of variable names arranged in the same order for each monitoring occasion. This arrangement allows us to enter only the first variable in each set, as long as `noyears` and `blocksize` are set properly and no gaps or shuffles appear in the dataset. The data management functions that we have created for `lefko3` do not require such repeating patterns, but they do make the required input in the function much shorter and more succinct.</p>
+  <p style="text-indent: 20px">Finally, note that in the input to the following function, we utilize a strictly repeating pattern of variable names arranged in the same order for each monitoring occasion. This arrangement allows us to enter only the first variable in each set, as long as `noyears` and `blocksize` are set properly and no gaps or shuffles appear in the dataset. The data management functions that we have created for `lefko3` do not require such repeating patterns, but they do make the required input in the function much shorter and more succinct. To see a detailed summary of the resulting hfv dataset, remove `full = FALSE` from the `summary_hfv()` call.</p>
 
 ```r
 lathvertln <- verticalize3(lathyrus, noyears = 4, firstyear = 1988,
@@ -119,7 +119,12 @@ lathvertln <- verticalize3(lathyrus, noyears = 4, firstyear = 1988,
   nonobsacol = "Dormant1988", stageassign = lathframeln,
   stagesize = "sizea", censorcol = "Missing1988", censorkeep = NA,
   NAas0 = TRUE, censor = TRUE)
-#summary(lathvertln)
+#> hfv dataset has been censored using a non-repeating censor variable.
+#>       Please check the resulting dataset with the summary_hfv() function to make
+#>       sure that not too much has been removed from the original dataset.
+summary_hfv(lathvertln, full = FALSE)
+#> 
+#> This hfv dataset contains 2552 rows, 42 variables, 1 population, 6 patches, 276 individuals, and 3 time steps.
 ```
   
   <p style="text-indent: 20px">Before we move on to the next key steps in analysis, let's take a closer look at fecundity. In this dataset, fecundity is mostly a count of intact seeds, and only differs in six cases where the seed output was estimated based on other models. To see this, try the following code.</p>
@@ -430,14 +435,14 @@ lathmat2msens_s <- sensitivity3(lathmat2age, stochastic = TRUE)
 
 writeLines(paste0("The highest deterministic sensitivity value: ",
   max(lathmat2msens$ah_sensmats[[1]][which(lathmat2mean$A[[1]] > 0)])))
-#> The highest deterministic sensitivity value: 0.121270537991596
+#> The highest deterministic sensitivity value: 0.14396564929191
 writeLines(paste0("This value is associated with element: ",
   which(lathmat2msens$ah_sensmats[[1]] == 
     max(lathmat2msens$ah_sensmats[[1]][which(lathmat2mean$A[[1]] > 0)]))))
-#> This value is associated with element: 3208
+#> This value is associated with element: 3838
 writeLines(paste0("The highest stochastic sensitivity value: ",
   max(lathmat2msens_s$ah_sensmats[[1]][which(lathmat2mean$A[[1]] > 0)])))
-#> The highest stochastic sensitivity value: 0.125742280796789
+#> The highest stochastic sensitivity value: 0.151083270853861
 writeLines(paste0("This value is associated with element: ",
   which(lathmat2msens_s$ah_sensmats[[1]] ==
     max(lathmat2msens_s$ah_sensmats[[1]][which(lathmat2mean$A[[1]] > 0)]))))
@@ -455,16 +460,16 @@ lathmat2melas_s <- elasticity3(lathmat2age, stochastic = TRUE)
 
 writeLines(paste0("The highest deterministic elasticity value: ",
   max(lathmat2melas$ah_elasmats[[1]][which(lathmat2mean$A[[1]] > 0)])))
-#> The highest deterministic elasticity value: 0.0275294186982584
+#> The highest deterministic elasticity value: 0.0332105403473359
 writeLines(paste0("The largest determnistic elasticity is associated with element: ",
   which(lathmat2melas$ah_elasmats[[1]] == max(lathmat2melas$ah_elasmats[[1]]))))
-#> The largest determnistic elasticity is associated with element: 2820
+#> The largest determnistic elasticity is associated with element: 3841
 writeLines(paste0("The highest stochastic elasticity value: ",
   max(lathmat2melas_s$ah_elasmats[[1]][which(lathmat2mean$A[[1]] > 0)])))
-#> The highest stochastic elasticity value: 0.0274915321942021
+#> The highest stochastic elasticity value: 0.033524701358656
 writeLines(paste0("The largest stochastic elasticity is associated with element: ",
   which(lathmat2melas_s$ah_elasmats[[1]] == max(lathmat2melas_s$ah_elasmats[[1]]))))
-#> The largest stochastic elasticity is associated with element: 2820
+#> The largest stochastic elasticity is associated with element: 3841
 ```
   
   <p style="text-indent: 20px">Both deterministic and stochastic analyses show that population growth rate is most elastic to element 2820, which is in column 45 and row 48. Checking our stageframe shows that this element is associated with transition from dormant adult age 3 or higher to non-flowering three-sprouted adult.</p>
@@ -537,63 +542,63 @@ lathmat2m_sltre <- ltre3(lathmat2agep, stochastic = TRUE, rseed = 42)
 ```r
 writeLines(paste0("Highest (i.e most positive) deterministic LTRE contribution: ",
   max(lathmat2m_ltre$ltre_det[[1]])))
-#> Highest (i.e most positive) deterministic LTRE contribution: 0.00181737035024266
+#> Highest (i.e most positive) deterministic LTRE contribution: 0.00184635504067327
 writeLines(paste0("Highest deterministic LTRE contribution is associated with element: ",
   which(lathmat2m_ltre$ltre_det[[1]] == max(lathmat2m_ltre$ltre_det[[1]]))))
 #> Highest deterministic LTRE contribution is associated with element: 3841
 writeLines(paste0("Lowest (i.e. most negative) deterministic LTRE contribution: ",
   min(lathmat2m_ltre$ltre_det[[1]])))
-#> Lowest (i.e. most negative) deterministic LTRE contribution: -0.00324398944756521
+#> Lowest (i.e. most negative) deterministic LTRE contribution: -0.00235987126640427
 writeLines(paste0("Lowest deterministic LTRE contribution is associated with element: ",
   which(lathmat2m_ltre$ltre_det[[1]] == min(lathmat2m_ltre$ltre_det[[1]]))))
 #> Lowest deterministic LTRE contribution is associated with element: 3825
 
 writeLines(paste0("Highest stochastic mean LTRE contribution: ",
   max(lathmat2m_sltre$ltre_mean[[1]])))
-#> Highest stochastic mean LTRE contribution: 0.00168036799561467
+#> Highest stochastic mean LTRE contribution: 0.00176132067911133
 writeLines(paste0("Highest stochastic mean LTRE contribution is associated with element: ",
   which(lathmat2m_sltre$ltre_mean[[1]] == max(lathmat2m_sltre$ltre_mean[[1]]))))
 #> Highest stochastic mean LTRE contribution is associated with element: 3841
 writeLines(paste0("Lowest stochastic mean LTRE contribution: ",
   min(lathmat2m_sltre$ltre_mean[[1]])))
-#> Lowest stochastic mean LTRE contribution: -0.00373375466694055
+#> Lowest stochastic mean LTRE contribution: -0.00267096555627256
 writeLines(paste0("Lowest stochastic mean LTRE contribution is associated with element: ",
   which(lathmat2m_sltre$ltre_mean[[1]] == min(lathmat2m_sltre$ltre_mean[[1]]))))
-#> Lowest stochastic mean LTRE contribution is associated with element: 3195
+#> Lowest stochastic mean LTRE contribution is associated with element: 3825
 
 writeLines(paste0("Highest stochastic SD LTRE contribution: ",
   max(lathmat2m_sltre$ltre_sd[[1]])))
-#> Highest stochastic SD LTRE contribution: 4.55638946540519e-05
+#> Highest stochastic SD LTRE contribution: 3.37901045579132e-05
 writeLines(paste0("Highest stochastic SD LTRE contribution is associated with element: ",
   which(lathmat2m_sltre$ltre_sd[[1]] == max(lathmat2m_sltre$ltre_sd[[1]]))))
 #> Highest stochastic SD LTRE contribution is associated with element: 3138
 writeLines(paste0("Lowest stochastic SD LTRE contribution: ",
   min(lathmat2m_sltre$ltre_sd[[1]])))
-#> Lowest stochastic SD LTRE contribution: -3.32295933559817e-05
+#> Lowest stochastic SD LTRE contribution: -2.95205258298888e-05
 writeLines(paste0("Lowest stochastic SD LTRE contribution is associated with element: ",
   which(lathmat2m_sltre$ltre_sd[[1]] == min(lathmat2m_sltre$ltre_sd[[1]]))))
-#> Lowest stochastic SD LTRE contribution is associated with element: 3843
+#> Lowest stochastic SD LTRE contribution is associated with element: 3841
 
 writeLines(paste0("Total positive deterministic LTRE contributions: ",
   sum(lathmat2m_ltre$ltre_det[[1]][which(lathmat2m_ltre$ltre_det[[1]] > 0)])))
-#> Total positive deterministic LTRE contributions: 0.0397322318589641
+#> Total positive deterministic LTRE contributions: 0.0341116763064364
 writeLines(paste0("Total negative deterministic LTRE contributions: ",
   sum(lathmat2m_ltre$ltre_det[[1]][which(lathmat2m_ltre$ltre_det[[1]] < 0)])))
-#> Total negative deterministic LTRE contributions: -0.0314597246919546
+#> Total negative deterministic LTRE contributions: -0.0255192566804928
 writeLines(paste0("\nTotal positive stochastic mean LTRE contributions: ",
   sum(lathmat2m_sltre$ltre_mean[[1]][which(lathmat2m_sltre$ltre_mean[[1]] > 0)])))
 #> 
-#> Total positive stochastic mean LTRE contributions: 0.0397749033517226
+#> Total positive stochastic mean LTRE contributions: 0.0342840015465079
 writeLines(paste0("Total negative stochastic mean LTRE contributions: ",
   sum(lathmat2m_sltre$ltre_mean[[1]][which(lathmat2m_sltre$ltre_mean[[1]] < 0)])))
-#> Total negative stochastic mean LTRE contributions: -0.0365662783651413
+#> Total negative stochastic mean LTRE contributions: -0.0290170479685542
 writeLines(paste0("\nTotal positive stochastic SD LTRE contributions: ",
   sum(lathmat2m_sltre$ltre_sd[[1]][which(lathmat2m_sltre$ltre_sd[[1]] > 0)])))
 #> 
-#> Total positive stochastic SD LTRE contributions: 0.00048187454044065
+#> Total positive stochastic SD LTRE contributions: 0.000288501420787641
 writeLines(paste0("Total negative stochastic SD LTRE contributions: ",
   sum(lathmat2m_sltre$ltre_sd[[1]][which(lathmat2m_sltre$ltre_sd[[1]] < 0)])))
-#> Total negative stochastic SD LTRE contributions: -0.00060173340431452
+#> Total negative stochastic SD LTRE contributions: -0.000580097782208445
 ```
   
   <p style="text-indent: 20px">All LTRE outputs show very small contributions from individual elements. However, element 3841 appears to be the most positive in both the deterministic and stochastic mean cases. This is the stasis transition for seven-sprouted flowering adults. Variability in elements appears to have much smaller impact on $log \lambda$ than shifts in the means do.</p>

@@ -302,7 +302,11 @@ linear or mixed linear models using a variety of response distributions.
 Matrix estimation functions produce all necessary matrices from a single
 dataset, including all times, patches, and populations in a single shot,
 and do so quickly through core binaries engineered for speed and
-accuracy.
+accuracy. Deterministic and stochastic analysis functions allow
+sensitivity analysis, elasticity analysis, LTRE analysis, etc.
+Projection functions allow density dependent and independent, as well as
+stochastic, cyclical, and replicated projections for even quite complex
+situations.
 </p>
 <p style="text-indent: 20px">
 This vignette was written as a basic introduction to the concepts and
@@ -338,8 +342,8 @@ population across all life history stages deemed relevant, across the
 most relevant time interval (typically one year, but sometimes
 different, and assumed to be consistent within each analysis). They
 require a complete model of the organism’s life history prior to
-construction, and this model must explicitly show all life stages and
-all life history transitions to be modeled. Each stage is mutually
+construction, and this model must explicitly describe all life stages
+and all life history transitions to be modeled. Each stage is mutually
 exclusive, meaning that an individual can only be in a single stage at a
 given time. Each stage is represented in the matrix by a single column
 and a single row. Each transition takes exactly one full time step,
@@ -369,7 +373,9 @@ different number of stems, leaves, and flowers in each growing season.
 In still other cases, stages may be defined via other characteristics.
 For example, the vegetative dormancy stage of some perennial herbs is
 defined by a lack of aboveground size, and so is characteristically not
-observable <span class="citation">(Shefferson et al. 2001)</span>.
+observable <span class="citation">(Shefferson et al. 2001)</span>. In
+still other cases, age may also fall into a stage’s definition, as may
+the maturity status, observability, etc.
 </p>
 <p style="text-indent: 20px">
 The timing of monitoring relative to the reproductive season impacts the
@@ -516,7 +522,7 @@ examples of studies breaking these assumptions and using a
 some degree of individual history into matrix estimation and analysis
 <span class="citation">(Ehrlén 2000; Shefferson, Warren II, and Pulliam
 2014; Shefferson, Mizuta, and Hutchings 2017; Shefferson et al. 2018;
-Vries and Caswell 2018)</span>.
+deVries and Caswell 2018)</span>.
 </p>
 <p style="text-indent: 20px">
 The <strong>historical MPM</strong> (hMPM) is an extension of the matrix
@@ -527,7 +533,7 @@ only on its stage in occasion <em>t</em> but also on its stage in
 occasion <em>t</em>-1. Population ecologists considering this problem
 analytically might be inclined to add an extra dimension to the matrix
 to deal with this, thus creating a 3d array or cube. However, this is
-mathematically intractable, with many analyses becoming impossible <span class="citation">(Vries and Caswell 2018)</span>. Instead, we utilize
+mathematically intractable, with many analyses becoming impossible <span class="citation">(deVries and Caswell 2018)</span>. Instead, we utilize
 the approach developed by <span class="citation">Ehrlén (2000)</span>,
 in which rows and columns represent life history stages paired in
 consecutive occasions. Thus, columns now represent the
@@ -535,7 +541,7 @@ consecutive occasions. Thus, columns now represent the
 <em>t</em>-1), and rows now represent the <strong>To</strong> pair of
 stages (stage in occasions <em>t</em> and <em>t</em>+1), as in Figure
 1.2. This model is equivalent to the second-order model proposed by
-<span class="citation">Vries and Caswell (2018)</span>, although the
+<span class="citation">deVries and Caswell (2018)</span>, although the
 latter incorporates more history into transitions involving individuals
 just born (we explain the difference further in this vignette).
 </p>
@@ -872,10 +878,10 @@ supposed to occur in order to check their values properly.
 <div id="different-parameterizations-of-the-historical-mpm" class="section level3">
 <h3>Different parameterizations of the historical MPM</h3>
 <p style="text-indent: 20px">
-<span class="citation">Vries and Caswell (2018)</span> detail different
-approaches to the development of hMPMs, differing in how state or stage
-in occasion <em>t</em>-1 is incorporated into the matrix. <strong>Full
-prior stage dependence models</strong> deal with history by
+<span class="citation">deVries and Caswell (2018)</span> detail
+different approaches to the development of hMPMs, differing in how state
+or stage in occasion <em>t</em>-1 is incorporated into the matrix.
+<strong>Full prior stage dependence models</strong> deal with history by
 incorporating prior condition as the exact stage of an organism in
 occasion <em>t</em>-1, yielding a matrix showing stage pairs in occasion
 <em>t</em>-1 and <em>t</em> along the columns of the matrix, and stage
@@ -889,14 +895,14 @@ measure of condition can be used, such as growth (i.e. the change in
 size between occasions <em>t</em>-1 and <em>t</em>).
 </p>
 <p style="text-indent: 20px">
-One key feature proposed by <span class="citation">Vries and Caswell
+One key feature proposed by <span class="citation">deVries and Caswell
 (2018)</span> is the addition of a new stage to account for the prior
 status of newborn individuals. This reflects a slightly different
 interpretation from <span class="citation">Ehrlén (2000)</span> of the
 historical transition. In <span class="citation">Ehrlén (2000)</span>,
 all matrix elements simply reflect the order of the events in a single
 transition, including both fecundity and survival-transition events.
-However, in <span class="citation">Vries and Caswell (2018)</span>,
+However, in <span class="citation">deVries and Caswell (2018)</span>,
 these matrix elements must also reflect the history of specific
 individuals. In the latter case, the fact that a newborn in occasion
 <em>t</em> did not exist in occasion <em>t</em>-1 leads to the creation
@@ -955,7 +961,7 @@ n _{1,BC} \\
 n _{1,CC}
 \end{array}\right]  
 \end{equation}\]</span></p>
-<p>This hMPM becomes as follows in <span class="citation">Vries and
+<p>This hMPM becomes as follows in <span class="citation">deVries and
 Caswell (2018)</span> format:</p>
 <p><span class="math display">\[\begin{equation}
 \tag{9}
@@ -1027,14 +1033,14 @@ matrices developed with <code>lefko3</code> can be seen as falling
 within the <strong>prior condition model</strong> approach where prior
 condition is determined in the same way as current stage. We also
 implement both the <span class="citation">Ehrlén (2000)</span> format
-and the <span class="citation">Vries and Caswell (2018)</span> format,
+and the <span class="citation">deVries and Caswell (2018)</span> format,
 and use the former as the default. We leave it to the user to decide
 which approach to use.
 </p>
 <p style="text-indent: 20px">
-<span class="citation">Vries and Caswell (2018)</span> also suggest that
-hMPMs can be organized differently to yield more intuitive models. In
-particular, matrices may be as organized as block matrices where the
+<span class="citation">deVries and Caswell (2018)</span> also suggest
+that hMPMs can be organized differently to yield more intuitive models.
+In particular, matrices may be as organized as block matrices where the
 component blocks are essentially matrices showing the transitions from
 all stages in occasion <em>t</em> to stages in occasion <em>t</em>+1
 conditioned on individuals having been in the same stage in occasion
@@ -1282,7 +1288,9 @@ datum and a radius are provided. Both functions are powered by binaries
 built in C++ using single control loops to propagate each data frame
 properly and efficiently, and so run very quickly (typically under 1s on
 a 2019 MacBook Pro). The case studies included in <code>lefko3</code>
-illustrate the usage of these functions on real data.
+illustrate the usage of these functions on real data. The function
+<code>summary_hfv()</code> can be used to provide quick details about
+the resulting standardized datasets.
 </p>
 </div>
 <div id="step-2b-provide-supplemental-information-for-matrix-estimation" class="section level3">
@@ -1665,12 +1673,14 @@ models developed using the functions and packages mentioned before.
 <div id="step-4-estimate-matrices" class="section level3">
 <h3>Step 4: Estimate matrices</h3>
 <p style="text-indent: 20px">
-MPM creation can be accomplished with seven different functions:
+MPM creation can be accomplished with eight different functions:
 </p>
 <ol style="list-style-type: decimal">
 <li><p><code>rlefko2()</code> - Creates raw ahistorical stage-classified
 MPMs given a dataset, a stageframe, and a supplement table.</p></li>
 <li><p><code>rlefko3()</code> - Creates raw historical stage-classified
+MPMs given a dataset, a stageframe, and a supplement table.</p></li>
+<li><p><code>arlefko2()</code> - Creates raw ahistorical age-by-stage
 MPMs given a dataset, a stageframe, and a supplement table.</p></li>
 <li><p><code>rleslie()</code> - Creates raw age-classified MPMs given a
 dataset, a stageframe, and a supplement table</p></li>
@@ -1680,7 +1690,7 @@ supplement table.</p></li>
 <li><p><code>flefko3()</code> - Creates function-based historical MPMs
 and IPMs given a dataset, a set of models, a stageframe, and a
 supplement table.</p></li>
-<li><p><code>aflefko3()</code> - Creates function-based ahistorical
+<li><p><code>aflefko2()</code> - Creates function-based ahistorical
 age-by-stage MPMs given a dataset, a set of models, a stageframe, and a
 supplement table.</p></li>
 <li><p><code>fleslie()</code> - Creates function-based age-classified
@@ -1822,17 +1832,39 @@ functions by vital rate <span class="citation">(e.g., Jensen
 </p>
 <p style="text-indent: 20px">
 To provide the greatest flexibility, <code>lefko3</code> currently
-implements density dependence using the <code>density_input()</code>
-function, which allows users to list all matrix elements that should be
-subject to density dependence, and to stipulate the characteristics of
-the density dependence. Shorthand abbreviations can be used, such as
+implements density dependence in three different ways. First, density
+dependence may be set on matrix elements themselves using the
+<code>density_input()</code> function in conjunction with the two
+projection functions, <code>projection3()</code> and
+<code>f_projection3()</code>. This function allows users to list all
+matrix elements that should be subject to density dependence with a time
+lag, and to stipulate the characteristics of the density dependence.
+Shorthand abbreviations can be used in function
+<code>density_input()</code> to describe where density, such as
 <code>all</code> for all stages, <code>rep</code> for reproductive
 stages, <code>nrep</code> for mature but non-reproductive stages, etc. A
 default time delay of 1 time step is applied, and this can be set to any
-positive integer. Currently, <code>lefko3</code> includes four density
-dependence functions that can be chosen, with projections capable of
-including multiple functions and time delays. The first is the Ricker
-function, which is given as
+positive integer.Most users will be interested in this form.
+</p>
+<p style="text-indent: 20px">
+The second form of density dependence is vital rate density dependence,
+assuming a time lag. This form modifies vital rates developed for
+function-based MPMs by density, and so is less general than the previous
+approach. This can be operationalized using the
+<code>density_vr()</code> function in conjunction with function
+<code>f_projection3()</code>.
+</p>
+<p style="text-indent: 20px">
+The third form is spatial density dependence in vital rate models. This
+form of density dependence models spatial density rather population
+size, and is incorporated into vital rate model development in
+function-based MPMs.
+</p>
+<p style="text-indent: 20px">
+Currently, <code>lefko3</code> includes four density dependence
+functions that can be chosen, with projections capable of including
+multiple functions and time delays. The first is the Ricker function,
+which is given as
 </p>
 <p><span class="math display">\[\begin{equation}
 \tag{12}
@@ -1880,17 +1912,18 @@ equation, given as
 needed.</p>
 <p style="text-indent: 20px">
 Package <code>lefko3</code> currently implements these analyses via the
-<code>projection3()</code> function. Settings for this function also
-allow the user to stipulate whether the projection should force matrices
-to remain substochastic. Two forms of substochasticity are allowed: 1) a
-simple form in which survival-transition probabilities can be prevented
-from moving outside of the interval [0, 1] and fecundity can be
-prevented from becoming negative, and 2) a more complicated form that
-keeps the column sums in survival-transitions matrices (equivalent to
-the survival probabilities of stages, stage-pairs, or age-stages) within
-the interval [0, 1] and prevents fecundity from becoming negative. We
-are currently developing functions to analyze density-dependent
-projection results, including sensitivity and elasticity analyses.
+<code>projection3()</code> and <code>f_projection3()</code> functions.
+Settings for this function also allow the user to stipulate whether the
+projection should force matrices to remain substochastic. Two forms of
+substochasticity are allowed: 1) a simple form in which
+survival-transition probabilities can be prevented from moving outside
+of the interval [0, 1] and fecundity can be prevented from becoming
+negative, and 2) a more complicated form that keeps the column sums in
+survival-transitions matrices (equivalent to the survival probabilities
+of stages, stage-pairs, or age-stages) within the interval [0, 1] and
+prevents fecundity from becoming negative. We are currently developing
+functions to analyze density-dependent projection results, including
+sensitivity and elasticity analyses.
 </p>
 </div>
 <div id="population-growth-rate" class="section level4">
@@ -2321,6 +2354,12 @@ Components of Stochastic Population Growth in
 <em><span>Cypripedium</span> Calceolus</em>.”</span> <em>The American
 Naturalist</em> 181 (3): 410–20. <a href="https://doi.org/10.1086/669155">https://doi.org/10.1086/669155</a>.
 </div>
+<div id="ref-de_vries_demography_2018" class="csl-entry">
+deVries, Charlotte, and Hal Caswell. 2018. <span>“Demography When
+History Matters: Construction and Analysis of Second-Order Matrix
+Population Models.”</span> <em>Theoretical Ecology</em> 11 (2): 129–40.
+<a href="https://doi.org/10.1007/s12080-017-0353-0">https://doi.org/10.1007/s12080-017-0353-0</a>.
+</div>
 <div id="ref-doak_critical_2021" class="csl-entry">
 Doak, Daniel F., Ellen Waddle, Ryan E. Langendorf, Allison M. Louthan,
 Nathalie Isabelle Chardon, Reilly R. Dibner, Douglas A. Keinath, et al.
@@ -2423,12 +2462,6 @@ Matrix Analysis.”</span> <em>Methods in Ecology and Evolution</em> 3
 Stubben, Chris J., and Brook G. Milligan. 2007. <span>“Estimating and
 Analyzing Demographic Models Using the <em>Popbio</em> Package in
 <em>r</em>.”</span> <em>Journal of Statistical Software</em> 22: 11. <a href="https://doi.org/10.18637/jss.v022.i11">https://doi.org/10.18637/jss.v022.i11</a>.
-</div>
-<div id="ref-de_vries_demography_2018" class="csl-entry">
-Vries, Charlotte de, and Hal Caswell. 2018. <span>“Demography When
-History Matters: Construction and Analysis of Second-Order Matrix
-Population Models.”</span> <em>Theoretical Ecology</em> 11 (2): 129–40.
-<a href="https://doi.org/10.1007/s12080-017-0353-0">https://doi.org/10.1007/s12080-017-0353-0</a>.
 </div>
 <div id="ref-wardle_graph_1998" class="csl-entry">
 Wardle, Glenda M. 1998. <span>“A Graph Theory Approach to Demographic

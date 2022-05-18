@@ -1,6 +1,54 @@
 LEFKO3 NEWS
 -----------
 
+CHANGES IN VERSION 5.2.0 (2022-05-18)
+-------------------------------------
+  NEW FEATURES
+    1. Function f_projection3() can now run density dependent projections in
+       which the vital rates used are modified by projected density.
+    2. Function density_vr() created to provide vital rate density dependence
+       information for function f_projection3().
+    3. Option added to functions projection3() and f_projection3() to suppress
+       warnings.
+    4. Function summary.lefkoProj() now has an option to interpret NaN values as
+       positive infinity, changing the count of replicates still alive in the
+       milepost section. This option, inf_alive, may also be set to FALSE to
+       count NaNs as evidence of extinction.
+    5. A new summary_hfv() function has been created to simplify quality
+       control checks on historical vertical format datasets.
+    6. Function verticalize3() now warns the user to check the resulting dataset
+       if the dataset is censored and the blocksize option is used without
+       the censorRepeat option being set to TRUE, as these cases may result in
+       excessive data pruning.
+    7. Function summary.lefkoProj() now calculates mean extinction time when
+       prompted.
+
+  USER-VISIBLE CHANGES
+    1. Function modelsearch() now allows an "age" setting for the suite option,
+       which yields the same results as "cons" but checks to make sure that an
+       age variable is properly added.
+    2. Function modelsearch() now allows a "leslie" setting for the vitalrates
+       option, which provides a shorthand for c("surv", "fec") as would be used
+       by fleslie().
+    3. The documentation for functions modelsearch() and fleslie() have been
+       updated to provide more information for handling Leslie MPMs.
+    4. Added series of new error messages if expected data frame size input in
+       verticalize3() is too large.
+    5. Vignettes have been updated with new functions.
+    6. Some error messages made more informative.
+
+  BUG FIXES
+    1. The stageframe developed with functions rleslie() and fleslie() has been
+       fixed to include stage_id, alive, and almost_born variables, allowing
+       Leslie-formatted lefkoMat objects to be passed to all lefko3 functions
+       analyzing them, including lmean().
+    2. Fixed bug yielding vector leaks from other variables when using the
+       blocksize feature in verticalize3().
+    3. Fixed incorrect fecundity summation in rlefko3(), resulting from
+       miscounting offspring from individuals dying the transition in which they
+       reproduced.
+
+
 CHANGES IN VERSION 5.1.0 (2022-04-01)
 -------------------------------------
   NEW FEATURES

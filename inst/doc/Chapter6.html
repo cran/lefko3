@@ -592,6 +592,9 @@ variable in each set, as long as <code>noyears</code> and
 in the dataset. The data management functions that we have created for
 <code>lefko3</code> do not require such repeating patterns, but they do
 make the required input in the function much shorter and more succinct.
+To see a more detailed summary of the standardized dataset, please
+remove <code>full = FALSE</code> from the <code>summary_hfv()</code>
+call.
 </p>
 <div class="sourceCode" id="cb3"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>lathvertipm <span class="ot">&lt;-</span> <span class="fu">verticalize3</span>(lathyrus, <span class="at">noyears =</span> <span class="dv">4</span>, <span class="at">firstyear =</span> <span class="dv">1988</span>, </span>
 <span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">individcol =</span> <span class="st">&quot;GENET&quot;</span>, <span class="at">blocksize =</span> <span class="dv">9</span>, <span class="at">juvcol =</span> <span class="st">&quot;Seedling1988&quot;</span>, </span>
@@ -599,7 +602,12 @@ make the required input in the function much shorter and more succinct.
 <span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">deadacol =</span> <span class="st">&quot;Dead1988&quot;</span>, <span class="at">nonobsacol =</span> <span class="st">&quot;Dormant1988&quot;</span>, <span class="at">stageassign =</span> lathframeipm,</span>
 <span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">stagesize =</span> <span class="st">&quot;sizea&quot;</span>, <span class="at">censorcol =</span> <span class="st">&quot;Missing1988&quot;</span>,<span class="at">censorkeep =</span> <span class="cn">NA</span>, <span class="at">censor =</span> <span class="cn">TRUE</span>,</span>
 <span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">NAas0 =</span> <span class="cn">TRUE</span>, <span class="at">NRasRep =</span> <span class="cn">TRUE</span>)</span>
-<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a><span class="co">#summary(lathvertipm)</span></span></code></pre></div>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; hfv dataset has been censored using a non-repeating censor variable.</span></span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;       Please check the resulting dataset with the summary_hfv() function to make</span></span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;       sure that not too much has been removed from the original dataset.</span></span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a><span class="fu">summary_hfv</span>(lathvertipm, <span class="at">full =</span> <span class="cn">FALSE</span>)</span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; This hfv dataset contains 2552 rows, 42 variables, 1 population, 1 patch, 276 individuals, and 3 time steps.</span></span></code></pre></div>
 <p style="text-indent: 20px">
 Before we move on to the next steps in analysis, let’s take a closer
 look at fecundity. In this dataset, fecundity is mostly a count of

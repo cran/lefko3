@@ -7,6 +7,8 @@
 #' created, and a data frame characterizing the patch and occasion combinations
 #' corresponding to these matrices.
 #' 
+#' @name flefko3
+#' 
 #' @param year A variable corresponding to the observation occasion, or a set
 #' of such values, given in values associated with the year term used in linear 
 #' model development. Defaults to \code{"all"}, in which case matrices will be
@@ -147,33 +149,33 @@
 #' historical matrices, or a vector of such values corresponding to each
 #' occasion in the dataset. Defaults to \code{NULL}.
 #' @param surv_dev A numeric value to be added to the y-intercept in the linear
-#' model for survival probability.
+#' model for survival probability. Defaults to \code{0}.
 #' @param obs_dev A numeric value to be added to the y-intercept in the linear
-#' model for observation probability.
+#' model for observation probability. Defaults to \code{0}.
 #' @param size_dev A numeric value to be added to the y-intercept in the linear
-#' model for primary size.
+#' model for primary size. Defaults to \code{0}.
 #' @param sizeb_dev A numeric value to be added to the y-intercept in the linear
-#' model for secondary size.
+#' model for secondary size. Defaults to \code{0}.
 #' @param sizec_dev A numeric value to be added to the y-intercept in the linear
-#' model for tertiary size.
+#' model for tertiary size. Defaults to \code{0}.
 #' @param repst_dev A numeric value to be added to the y-intercept in the linear
-#' model for probability of reproduction.
+#' model for probability of reproduction. Defaults to \code{0}.
 #' @param fec_dev A numeric value to be added to the y-intercept in the linear
-#' model for fecundity.
+#' model for fecundity. Defaults to \code{0}.
 #' @param jsurv_dev A numeric value to be added to the y-intercept in the linear
-#' model for juvenile survival probability.
+#' model for juvenile survival probability. Defaults to \code{0}.
 #' @param jobs_dev A numeric value to be added to the y-intercept in the linear
-#' model for juvenile observation probability.
+#' model for juvenile observation probability. Defaults to \code{0}.
 #' @param jsize_dev A numeric value to be added to the y-intercept in the linear
-#' model for juvenile primary size.
+#' model for juvenile primary size. Defaults to \code{0}.
 #' @param jsizeb_dev A numeric value to be added to the y-intercept in the
-#' linear model for juvenile secondary size.
+#' linear model for juvenile secondary size. Defaults to \code{0}.
 #' @param jsizec_dev A numeric value to be added to the y-intercept in the
-#' linear model for juvenile tertiary size.
+#' linear model for juvenile tertiary size. Defaults to \code{0}.
 #' @param jrepst_dev A numeric value to be added to the y-intercept in the
-#' linear model for juvenile reproduction probability.
+#' linear model for juvenile reproduction probability. Defaults to \code{0}.
 #' @param jmatst_dev A numeric value to be added to the y-intercept in the
-#' linear model for juvenile maturity probability.
+#' linear model for juvenile maturity probability. Defaults to \code{0}.
 #' @param density A numeric value indicating density value to use to propagate
 #' matrices. Only needed if density is an explanatory term used in one or more
 #' vital rate models. Defaults to \code{NA}.
@@ -1056,6 +1058,8 @@ flefko3 <- function(year = "all", patch = "all", stageframe, supplement = NULL,
 #' and removes them from all matrices. It is used within \code{\link{flefko3}()}
 #' and \code{\link{rlefko3}()}.
 #' 
+#' @name .reducer3
+#' 
 #' @param A List of population projection matrices, from a \code{lefkoMat}
 #' object.
 #' @param U List of surviva-transition matrices corresponding to \code{A}.
@@ -1102,7 +1106,9 @@ flefko3 <- function(year = "all", patch = "all", stageframe, supplement = NULL,
 #' and fecundity matrices, a data frame detailing the characteristics of the
 #' ahistorical stages used, and a data frame characterizing the patch and
 #' occasion combinations corresponding to these matrices.
-#'
+#' 
+#' @name flefko2
+#' 
 #' @param year A variable corresponding to the observation occasion, or a set
 #' of such values, given in values associated with the year term used in linear 
 #' model development. Defaults to \code{"all"}, in which case matrices will be
@@ -1241,33 +1247,33 @@ flefko3 <- function(year = "all", patch = "all", stageframe, supplement = NULL,
 #' historical matrices, or a vector of such values corresponding to each
 #' occasion in the dataset. Defaults to \code{NULL}.
 #' @param surv_dev A numeric value to be added to the y-intercept in the linear
-#' model for survival probability.
+#' model for survival probability. Defaults to \code{0}.
 #' @param obs_dev A numeric value to be added to the y-intercept in the linear
-#' model for observation probability.
+#' model for observation probability. Defaults to \code{0}.
 #' @param size_dev A numeric value to be added to the y-intercept in the linear
-#' model for primary size.
+#' model for primary size. Defaults to \code{0}.
 #' @param sizeb_dev A numeric value to be added to the y-intercept in the linear
-#' model for secondary size.
+#' model for secondary size. Defaults to \code{0}.
 #' @param sizec_dev A numeric value to be added to the y-intercept in the linear
-#' model for tertiary size.
+#' model for tertiary size. Defaults to \code{0}.
 #' @param repst_dev A numeric value to be added to the y-intercept in the linear
-#' model for probability of reproduction.
+#' model for probability of reproduction. Defaults to \code{0}.
 #' @param fec_dev A numeric value to be added to the y-intercept in the linear
-#' model for fecundity.
+#' model for fecundity. Defaults to \code{0}.
 #' @param jsurv_dev A numeric value to be added to the y-intercept in the linear
-#' model for juvenile survival probability.
+#' model for juvenile survival probability. Defaults to \code{0}.
 #' @param jobs_dev A numeric value to be added to the y-intercept in the linear
-#' model for juvenile observation probability.
+#' model for juvenile observation probability. Defaults to \code{0}.
 #' @param jsize_dev A numeric value to be added to the y-intercept in the linear
-#' model for juvenile primary size.
+#' model for juvenile primary size. Defaults to \code{0}.
 #' @param jsizeb_dev A numeric value to be added to the y-intercept in the
-#' linear model for juvenile secondary size.
+#' linear model for juvenile secondary size. Defaults to \code{0}.
 #' @param jsizec_dev A numeric value to be added to the y-intercept in the
-#' linear model for juvenile tertiary size.
+#' linear model for juvenile tertiary size. Defaults to \code{0}.
 #' @param jrepst_dev A numeric value to be added to the y-intercept in the
-#' linear model for juvenile reproduction probability.
+#' linear model for juvenile reproduction probability. Defaults to \code{0}.
 #' @param jmatst_dev A numeric value to be added to the y-intercept in the
-#' linear model for juvenile maturity probability.
+#' linear model for juvenile maturity probability. Defaults to \code{0}.
 #' @param density A numeric value indicating density value to use to propagate
 #' matrices. Only needed if density is an explanatory term used in one or more
 #' vital rate models. Defaults to \code{NA}.
@@ -2118,6 +2124,8 @@ flefko2 <- function(year = "all", patch = "all", stageframe, supplement = NULL,
 #' \code{\link{flefko2}()}, \code{\link{aflefko2}()}, and
 #' \code{\link{rlefko2}()}.
 #' 
+#' @name .reducer2
+#' 
 #' @param A List of population projection matrices, from a \code{lefkoMat}
 #' object.
 #' @param U List of surviva-transition matrices corresponding to \code{A}.
@@ -2166,7 +2174,9 @@ flefko2 <- function(year = "all", patch = "all", stageframe, supplement = NULL,
 #' of ahistorical stages and the exact age-stage combinations corresponding to
 #' rows and columns in estimated matrices, and a data frame characterizing the
 #' patch and occasion combinations corresponding to these matrices.
-#'
+#' 
+#' @name aflefko2
+#' 
 #' @param year A variable corresponding to the observation occasion, or a set
 #' of such values, given in values associated with the year term used in linear 
 #' model development. Defaults to \code{"all"}, in which case matrices will be
@@ -2305,33 +2315,33 @@ flefko2 <- function(year = "all", patch = "all", stageframe, supplement = NULL,
 #' historical matrices, or a vector of such values corresponding to each
 #' occasion in the dataset. Defaults to \code{NULL}.
 #' @param surv_dev A numeric value to be added to the y-intercept in the linear
-#' model for survival probability.
+#' model for survival probability. Defaults to \code{0}.
 #' @param obs_dev A numeric value to be added to the y-intercept in the linear
-#' model for observation probability.
+#' model for observation probability. Defaults to \code{0}.
 #' @param size_dev A numeric value to be added to the y-intercept in the linear
-#' model for primary size.
+#' model for primary size. Defaults to \code{0}.
 #' @param sizeb_dev A numeric value to be added to the y-intercept in the linear
-#' model for secondary size.
+#' model for secondary size. Defaults to \code{0}.
 #' @param sizec_dev A numeric value to be added to the y-intercept in the linear
-#' model for tertiary size.
+#' model for tertiary size. Defaults to \code{0}.
 #' @param repst_dev A numeric value to be added to the y-intercept in the linear
-#' model for probability of reproduction.
+#' model for probability of reproduction. Defaults to \code{0}.
 #' @param fec_dev A numeric value to be added to the y-intercept in the linear
-#' model for fecundity.
+#' model for fecundity. Defaults to \code{0}.
 #' @param jsurv_dev A numeric value to be added to the y-intercept in the linear
-#' model for juvenile survival probability.
+#' model for juvenile survival probability. Defaults to \code{0}.
 #' @param jobs_dev A numeric value to be added to the y-intercept in the linear
-#' model for juvenile observation probability.
+#' model for juvenile observation probability. Defaults to \code{0}.
 #' @param jsize_dev A numeric value to be added to the y-intercept in the linear
-#' model for juvenile primary size.
+#' model for juvenile primary size. Defaults to \code{0}.
 #' @param jsizeb_dev A numeric value to be added to the y-intercept in the
-#' linear model for juvenile secondary size.
+#' linear model for juvenile secondary size. Defaults to \code{0}.
 #' @param jsizec_dev A numeric value to be added to the y-intercept in the
-#' linear model for juvenile tertiary size.
+#' linear model for juvenile tertiary size. Defaults to \code{0}.
 #' @param jrepst_dev A numeric value to be added to the y-intercept in the
-#' linear model for juvenile reproduction probability.
+#' linear model for juvenile reproduction probability. Defaults to \code{0}.
 #' @param jmatst_dev A numeric value to be added to the y-intercept in the
-#' linear model for juvenile maturity probability.
+#' linear model for juvenile maturity probability. Defaults to \code{0}.
 #' @param density A numeric value indicating density value to use to propagate
 #' matrices. Only needed if density is an explanatory term used in one or more
 #' vital rate models. Defaults to \code{NA}.
@@ -2768,7 +2778,6 @@ aflefko2 <- function(year = "all", patch = "all", stageframe, supplement = NULL,
     warning(paste0("First age at time t cannot be less than 0."), call. = FALSE)
   }
   
-  
   if (length(year) == 0 | any(is.na(year))) {
     stop("This function cannot proceed without a specific occasion, or a suite of
       occasions, designated via the year option. NA entries are not allowed.",
@@ -3171,7 +3180,9 @@ aflefko2 <- function(year = "all", patch = "all", stageframe, supplement = NULL,
 #' of the exact ages corresponding to rows and columns in estimated matrices,
 #' and a data frame characterizing the patch and occasion combinations
 #' corresponding to these matrices.
-#'
+#' 
+#' @name fleslie
+#' 
 #' @param year A variable corresponding to observation occasion, or a set
 #' of such values, given in values associated with the year term used in linear 
 #' model development. Defaults to \code{"all"}, in which case matrices will be
@@ -3189,7 +3200,9 @@ aflefko2 <- function(year = "all", patch = "all", stageframe, supplement = NULL,
 #' models. If given, then \code{surv_model}, \code{fec_model}, and 
 #' \code{paramnames} are not required. No models should include size or
 #' reproductive status in any occasion, nor should they include any variable for
-#' occasion \emph{t}-1.
+#' occasion \emph{t}-1. Note that the modelsuite must have been created from a
+#' \code{modelsearch()} run in which \code{vitalrates = c("surv", "fec")} and
+#' the \code{suite} option was set to either \code{age} or \code{cons}.
 #' @param surv_model A linear model predicting survival probability. This can be
 #' a model of class \code{glm} or \code{glmer}, and requires a predicted
 #' binomial variable under a logit link. Ignored if \code{modelsuite} is
@@ -3231,9 +3244,9 @@ aflefko2 <- function(year = "all", patch = "all", stageframe, supplement = NULL,
 #' in all matrices, or a vector of such values corresponding to each occasion in
 #' the dataset. Defaults to \code{NULL}.
 #' @param surv_dev A numeric value to be added to the y-intercept in the linear
-#' model for survival probability.
+#' model for survival probability. Defaults to \code{0}.
 #' @param fec_dev A numeric value to be added to the y-intercept in the linear
-#' model for fecundity.
+#' model for fecundity. Defaults to \code{0}.
 #' @param density A numeric value indicating density value to use to propagate
 #' matrices. Only needed if density is an explanatory term used in linear
 #' models. Defaults to \code{NA}.
@@ -3819,6 +3832,8 @@ fleslie <- function(year = "all", patch = "all", prebreeding = TRUE, data = NULL
 #' describing the ahistorical stages used and the historical paired stages, and
 #' a data frame describing the population, patch, and occasion time associated
 #' with each matrix.
+#' 
+#' @name rlefko3
 #' 
 #' @param data  A vertical demographic data frame, with variables corresponding 
 #' to the naming conventions in \code{\link{verticalize3}()} and
@@ -4816,6 +4831,8 @@ rlefko3 <- function(data, stageframe, year = "all", pop = NA, patch = NA,
 #' describing the ahistorical stages used, and a data frame describing the
 #' population, patch, and occasion time associated with each matrix.
 #' 
+#' @name rlefko2
+#' 
 #' @param data  A vertical demographic data frame, with variables corresponding 
 #' to the naming conventions in \code{\link{verticalize3}()} and
 #' \code{\link{historicalize3}()}.
@@ -5628,7 +5645,9 @@ rlefko2 <- function(data, stageframe, year = "all", pop = NA, patch = NA,
 #' combinations corresponding to rows and columns in estimated matrices, and a
 #' data frame characterizing the patch and occasion time combinations
 #' corresponding to these matrices.
-#'
+#' 
+#' @name arlefko2
+#' 
 #' @param data  A vertical demographic data frame, with variables corresponding 
 #' to the naming conventions in \code{\link{verticalize3}()} and
 #' \code{\link{historicalize3}()}.
@@ -6499,6 +6518,8 @@ arlefko2 <- function(data, stageframe, year = "all", pop = NA, patch = NA,
 #' describing the ages used, and a data frame describing the population, patch,
 #' and occasion time associated with each matrix.
 #' 
+#' @name rleslie
+#' 
 #' @param data A vertical demographic data frame, with variables corresponding 
 #' to the naming conventions in \code{\link{verticalize3}()}.
 #' @param start_age The age from which to start the matrix. Defaults to
@@ -6966,6 +6987,8 @@ rleslie <- function(data, start_age = NA, last_age = NA, continue = TRUE,
 #' \code{\link{flefko2}()}, \code{\link{rlefko3}()}, \code{\link{rlefko2}()},
 #' \code{\link{aflefko2}()}, \code{\link{rleslie}()}, and
 #' \code{\link{fleslie}()}.
+#' 
+#' @name summary.lefkoMat
 #' 
 #' @param object An object of class \code{lefkoMat}.
 #' @param colsums A logical value indicating whether column sums should be shown

@@ -2,7 +2,7 @@
 % Please edit documentation in R/popchar.R
 \name{density_input}
 \alias{density_input}
-\title{Create a Data Frame of Elements Subject to Density Dependence}
+\title{Create a Data Frame of Density Dependence Relationships in Matrix Elements}
 \usage{
 density_input(
   mpm,
@@ -49,10 +49,10 @@ function. If only a single code is provided, then all noted transitions are
 assumed to be subject to this style of density dependence. Defaults to
 \code{ricker}.}
 
-\item{time_delay}{A vector indicating the number of occasions back on which
-density dependence operates. Defaults to \code{1}, and may not equal any
-number less than 1. If a single number is input, then all noted transitions
-are assumed to be subject to this time delay.}
+\item{time_delay}{An integer vector indicating the number of occasions back
+on which density dependence operates. Defaults to \code{1}, and may not equal
+any integer less than 1. If a single number is input, then all noted
+transitions are assumed to be subject to this time delay.}
 
 \item{alpha}{A vector indicating the numeric values to use as the
 alpha term in the two parameter Ricker, Beverton-Holt, or Usher function, or
@@ -110,12 +110,20 @@ occasion \emph{t} is a survival transition probability (1), a fecundity rate
 \description{
 Function \code{density_input()} provides all necessary data to incorporate
 density dependence into a \code{lefkoMat} object, a list of matrices, or a
-single matrix. Three forms of density dependence are allowed, including the
+single matrix. Four forms of density dependence are allowed, including the
 Ricker function, the Beverton-Holt function, the Usher function, and the
 logistic function. In each case, density must have an effect with at least a
-one time-step delay (see Notes).
+one time-step delay (see Notes). The resulting data frame provides a guide
+for other \code{lefko3} functions to modify matrix elements by density.
 }
 \section{Notes}{
+
+This function provides inputs when density dependence is operationalized
+directly on matrix elements. It can be used in both \code{projection3()} and
+\code{f_projection3()}. Users wishing to modify vital rate functions by
+density dependence functions for use in function-based projections with
+function \code{f_projection3()} should use function \code{density_vr()} to
+provide the correct inputs.
 
 The parameters \code{alpha} and \code{beta} are applied according to the
 two-parameter Ricker function, the two-parameter Beverton-Holt function, the

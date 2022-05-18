@@ -4,13 +4,25 @@
 \alias{summary.lefkoProj}
 \title{Summarize lefkoProj Objects}
 \usage{
-\method{summary}{lefkoProj}(object, threshold = 1, milepost = c(0, 0.25, 0.5, 0.75, 1), ...)
+\method{summary}{lefkoProj}(
+  object,
+  threshold = 1,
+  inf_alive = TRUE,
+  milepost = c(0, 0.25, 0.5, 0.75, 1),
+  ext_time = FALSE,
+  ...
+)
 }
 \arguments{
 \item{object}{A \code{lefkoProj} object.}
 
 \item{threshold}{A threshold population size to be searched for in
 projections. Defaults to 1.}
+
+\item{inf_alive}{A logical value indicating whether to treat infinitely
+large population size as indicating that the population is still extant.
+If \code{FALSE}, then the population is considered extinct. Defaults to
+\code{TRUE}.}
 
 \item{milepost}{A numeric vector indicating at which points in the projection
 to assess detailed results. Can be input as integer values, in which case
@@ -19,19 +31,39 @@ each projection, or decimals between 0 and 1, which would then be translated
 into the corresponding projection steps of the total. Defaults to
 \code{c(0, 0.25, 0.50, 0.75, 1.00)}.}
 
+\item{ext_time}{A logical value indicating whether to output extinction times
+per population-patch. Defaults to \code{FALSE}.}
+
 \item{...}{Other parameters currently not utilized.}
 }
 \value{
-Apart from a statement of the results, we have the following item in
-the output:
+Apart from a statement of the results, this function outputs a list
+with the following elements:
 \item{milepost_sums}{A data frame showing the number of replicates at each
 of the milepost times that is above the threshold population/patch size.}
+\item{extinction_times}{A dataframe showing the numbers of replicates going
+extinct (\code{ext_reps}) and mean extinction time (\code{ext_time}) per
+population-patch. If \code{ext_time = FALSE}, then only outputs \code{NA}.}
 }
 \description{
 Function \code{summary.lefkoProj()} summarizes \code{lefkoProj} objects.
 Particularly, it breaks down the data frames provided in the 
 \code{projection} element in ways meaningful for those running simulations.
 }
+\section{Notes}{
+
+The \code{inf_alive} option assesses whether replicates have reached a value
+of \code{NaN}. If \code{inf_alive = TRUE} and a value of \code{NaN} is found,
+then the replicate is considered extant if the preceding value is above the
+extinction threshold. If the setting is \code{inf_alive = FALSE}, then a
+value of \code{NaN} is considered evidence of extinction.
+
+Extinction time is calculated on the basis of whether the replicate ever
+falls below a single individual. A replicate with a positive population size
+below 0.0 that manages to rise above 1.0 individual is still considered to
+have gone extinct the first time it crossed below 1.0.
+}
+
 \examples{
 # Lathyrus example
 data(lathyrus)
@@ -79,7 +111,6 @@ lathproj <- projection3(ehrlen3, nreps = 5, stochastic = TRUE)
 summary(lathproj)
 
 # Cypripedium example
-rm(list = ls(all=TRUE))
 data(cypdata)
  
 sizevector <- c(0, 0, 0, 0, 0, 0, 1, 2.5, 4.5, 8, 17.5)
@@ -132,6 +163,6 @@ cypmatrix3r <- rlefko3(data = cypraw_v1, stageframe = cypframe_raw,
   patchcol = "patchid", indivcol = "individ")
 
 cypstoch <- projection3(cypmatrix3r, nreps = 5, stochastic = TRUE)
-summary(cypstoch)
+summary(cypstoch, ext_time = TRUE)
 
 }

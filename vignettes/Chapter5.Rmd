@@ -91,12 +91,14 @@ vertdata <- verticalize3(data = cypdata, noyears = 6, firstyear = 2004,
   sizeacol = "Inf2.04", sizebcol = "Inf.04", sizeccol = "Veg.04", 
   repstracol = "Inf.04", repstrbcol = "Inf2.04", fecacol = "Pod.04", 
   stageassign = cypframe, stagesize = "sizeadded", NAas0 = TRUE)
-#summary(vertdata)
+summary_hfv(vertdata, full = FALSE)
+#> 
+#> This hfv dataset contains 320 rows, 54 variables, 1 population, 3 patches, 74 individuals, and 5 time steps.
 ```
   
   <p style="text-indent: 20px">In the above code, we described the input dataset in a way that allows R to reorganize it appropriately. Note that in the input to the function, we utilized a repeating pattern of variable names arranged in the same order for each monitoring occasion. This arrangement allows us to enter only the first variable in each set, as long as `noyears` and `blocksize` are set properly and no gaps or shuffles appear among columns in the dataset. `lefko3`'s data management functions do not require such repeating patterns, but such patterns do make the required function input much more succinct. Without these patterns, column names should be input as vectors in the correct temporal order for each input option, and the `blocksize` option should be omitted.</p>
   
-  <p style="text-indent: 20px">The output dataset includes a number of summary variables, but the data is essentially broken down into groups of three consecutive monitoring occasions each (occasions *t*+1, *t*, and *t*-1, corresponding to `year3`, `year2`, and `year1` in the output, respectively), with individuals spread across multiple rows. The output dataset is further limited to those entries in which the individual is alive in occasion *t* (`year2`), meaning that all rows in which an individual is dead or not yet recruited in occasion *t* are dropped. We end up with 320 rows of data and 54 variables.</p>
+  <p style="text-indent: 20px">The output dataset includes a number of summary variables (to see the variables please remove `full = FALSE` from the `summary_hfv()` call), but the data is essentially broken down into groups of three consecutive monitoring occasions each (occasions *t*+1, *t*, and *t*-1, corresponding to `year3`, `year2`, and `year1` in the output, respectively), with individuals spread across multiple rows. The output dataset is further limited to those entries in which the individual is alive in occasion *t* (`year2`), meaning that all rows in which an individual is dead or not yet recruited in occasion *t* are dropped. We end up with 320 rows of data and 54 variables.</p>
   
   <p style="text-indent: 20px">This reorganized dataset includes a set of interesting terms that were automatically calculated: the `sizeadded` group of three variables. These are sums of the size variables for each occasion, such that `size1added` is calculated as `sizea1 + sizeb1 + sizec1`. This term may or may not make sense depending on the dataset. In this dataset, the full size of the individual in each occasion is this sum, because size is determined as the number of stems per plant, and the three original size columns give the numbers of three different kinds of stems: `Veg`, `Inf`, and `Inf2` are the numbers of non-reproductive stems, single-flowered inflorescences, and double-flowered inflorescences, respectively, per plant per occasion (an inflorescence is a single flowering stem, and no inflorescence has more than two flowers). Since size is given as the total number of stems in this example, we will use the `sizeadded` group of variables to code individual size.</p>
   
@@ -172,17 +174,12 @@ vertdata2 <- historicalize3(data = cypvert, patchidcol = "patch",
   feca2col = "Pod.2", feca3col = "Pod.3", repstrrel = 2, stageassign = cypframe,
   stagesize = "sizeadded", censorcol = "censor", censorkeep = 1, censor = FALSE,
   NAas0 = TRUE, reduce = TRUE)
-#summary(vertdata2)
+summary_hfv(vertdata2, full = FALSE)
+#> 
+#> This hfv dataset contains 320 rows, 54 variables, 1 population, 3 patches, 74 individuals, and 5 time steps.
 ```
   
-  <p style="text-indent: 20px">We can compare the dimensions of the new vertical datasets. The lengths of the datasets are the same in terms of rows and columns, and the variables and data are the same although the order of the columns and rows might not match (see the summaries for comparison).</p>
-
-```r
-dim(vertdata)
-#> [1] 320  54
-dim(vertdata2)
-#> [1] 320  54
-```
+  <p style="text-indent: 20px">If we compare the dimensions of the new vertical datasets, we find that the lengths of the datasets are the same in terms of rows and columns, and the variables and data are the same although the order of the columns and rows might not match (see the summaries for comparison).</p>
   
   <p style="text-indent: 20px">One important consideration is the use of censor variables. Censoring a demographic dataset refers to the elimination of suspect data points from analysis. This is typically accomplished by including a binary variable in the dataset denoting whether an individual datum is to be kept or excluded. The objects `vertdata` and `vertdata2` were both created without using censoring variables. However, because the datasets included censor variables (all data were set to be included, with no suspect data), we wished to incorporate those variables in the final datasets. Hence, although `censor = FALSE` in both the call to `verticalize3()` and the call to `historicalize3()`, we also noted `censorcol = "censor"` and `censorkeep = 1` in the call to `historicalize3()` (the latter option specifies the value of the censor variable coding for a "good" datum). Failing to add these options to the call to `historicalize3()` will produce approximately the same dataset, but with some zeroes entering variables `censor1`, `censor2`, and `censor3` in the historicalized dataset that do not exist in the first, verticalized dataset.</p>
   
@@ -377,7 +374,7 @@ tmeans3r <- lmean(cypmatrix3)
 image3(tmeans2r, used = 1)
 ```
 
-![Figure 5.3. Image of ahistorical element-wise matrix mean](Ch5.15-1.png)
+![Figure 5.3. Image of ahistorical element-wise matrix mean](Ch5.14-1.png)
 
 ```
 #> [[1]]
@@ -390,7 +387,7 @@ image3(tmeans2r, used = 1)
 image3(tmeans3r, used = 1)
 ```
 
-![Figure 5.4. Images of historical element-wise matrix mean](Ch5.16-1.png)
+![Figure 5.4. Images of historical element-wise matrix mean](Ch5.15-1.png)
 
 ```
 #> [[1]]
@@ -445,7 +442,7 @@ legend("bottomright", c("ahistorical", "historical"), lty = c(1, 2),
   col = c("black", "red"), lwd = 2, bty = "n")
 ```
 
-![Figure 5.5. Ahistorical vs. historical annual population growth rate](Ch5.19-1.png)
+![Figure 5.5. Ahistorical vs. historical annual population growth rate](Ch5.18-1.png)
   
   <p style="text-indent: 20px">We find that annual $\lambda$ estimates differ only slightly between ahistorical and historical analyses.</p>
   
@@ -468,7 +465,7 @@ legend("topright", c("det ahist", "det hist", "sto ahist", "sto hist"),
   col = c("black", "orangered", "grey", "darkred"), pch = 15, bty = "n")
 ```
 
-![Figure 5.6. Ahistorical vs. historically-corrected stable and long-run mean stage distribution](Ch5.20-1.png)
+![Figure 5.6. Ahistorical vs. historically-corrected stable and long-run mean stage distribution](Ch5.19-1.png)
   
   <p style="text-indent: 20px">Overall, these are very similar patterns. Whether ahistorical or historical, deterministic or stochastic, our analyses suggest that small non-reproductive adults take up the greatest share of the stable stage structure, with small reproductive adults coming next, and then dormant seed and 1st-year protocorms.</p>
   
@@ -493,7 +490,7 @@ legend("topleft", c("det ahist", "det hist", "sto ahist", "sto hist"),
   col = c("black", "orangered", "grey", "darkred"), pch = 15, bty = "n")
 ```
 
-![Figure 5.7. Ahistorical vs. historically-corrected deterministic and stochastic reproductive values](Ch5.21-1.png)
+![Figure 5.7. Ahistorical vs. historically-corrected deterministic and stochastic reproductive values](Ch5.20-1.png)
   
   <p style="text-indent: 20px">We see roughly equivalent patterns here. All analyses show the smallest reproductive value in the juvenile stages, while adults have the greatest value, particularly medium- and large-sized adults of both flowering and non-flowering kinds. Interesting results in need of further study!</p>
   
@@ -534,7 +531,7 @@ tm3sens_s <- sensitivity3(cypmatrix3, stochastic = TRUE)
 
 writeLines(paste0("The highest deterministic sensitivity value: ",
   max(tm3sens$h_sensmats[[1]][which(tmeans3r$A[[1]] > 0)])))
-#> The highest deterministic sensitivity value: 0.0507110864421899
+#> The highest deterministic sensitivity value: 0.0507110864421898
 writeLines(paste0("This value is associated with element: ",
   which(tm3sens$h_sensmats[[1]] == 
     max(tm3sens$h_sensmats[[1]][which(tmeans3r$A[[1]] > 0)]))))
@@ -613,7 +610,7 @@ legend("topright", c("det ahist", "det hist", "sto ahist", "sto hist"),
   col = c("black", "orangered", "grey", "darkred"), pch = 15, bty = "n")
 ```
 
-![Figure 5.8. Ahistorical vs. historically-corrected deterministic and stochastic elasticity to stage](Ch5.25-1.png)
+![Figure 5.8. Ahistorical vs. historically-corrected deterministic and stochastic elasticity to stage](Ch5.24-1.png)
   
   <p style="text-indent: 20px">Elasticity analyses in these plots look very similar. Population growth rates are most elastic in response to changes in stage 7, which is the one-sprouted non-flowering adult stage. Small adult stages have higher elasticity than larger adults and juveniles. Most of the differences between analyses here appear to lie in elasticity of small non-flowering vs. flowering adults in the ahistorical vs. historical comparison.</p>
   
@@ -636,7 +633,7 @@ legend("topright", c("det ahist", "det hist", "sto ahist", "sto hist"),
   col = c("black", "orangered", "grey", "darkred"), pch = 15, bty = "n")
 ```
 
-![Figure 5.9. Ahistorical vs. historically-corrected elasticity of lambda to transitions](Ch5.26-1.png)
+![Figure 5.9. Ahistorical vs. historically-corrected elasticity of lambda to transitions](Ch5.25-1.png)
   
   <p style="text-indent: 20px">Some users of `lefko3` may wish to use conduct custom projections, perhaps involving density dependence or projected individual covariate inputs. Beginning with version 5.0, `lefko3` includes function `f_projection3()`, which allows users to conduct projection simulations of function-based MPMs. This function takes the vital rate models that constitute the `lefkoMod` object input into matrix generating functions `flefko3()`, `flefko2()`, `aflefko2()`, and `afleslie()`, and builds matrices projecting the population forward according to whatever inputs the user has in mind. Function `f_projection3()` is different from function `projection3()` in that the latter requires a `lefkoMat` object as input, and uses the matrices in whatever projection the user has in mind. The former actually creates these matrices from scratch at each time step and so does not take matrices as inputs.</p>
   
@@ -680,24 +677,32 @@ summary(basetrial)
 #> It includes 100 projected steps per replicate and 10 replicates.
 #> The number of replicates with population size above the threshold size of 1 is as in
 #> the following matrix, with pop-patches given by column and milepost times given by row:
+#> $milepost_sums
 #>     1 1
 #> 1    10
 #> 26   10
 #> 51   10
 #> 76   10
 #> 101  10
+#> 
+#> $extinction_times
+#> [1] NA
 summary(alttrial)
 #> 
 #> The input lefkoProj object covers 1 population-patches.
 #> It includes 100 projected steps per replicate and 10 replicates.
 #> The number of replicates with population size above the threshold size of 1 is as in
 #> the following matrix, with pop-patches given by column and milepost times given by row:
+#> $milepost_sums
 #>     1 1
 #> 1    10
 #> 26   10
 #> 51   10
 #> 76   10
 #> 101  10
+#> 
+#> $extinction_times
+#> [1] NA
 ```
   
   <p style="text-indent: 20px">Let's compare these two projections with plots.</p>
@@ -708,7 +713,7 @@ plot(basetrial, ylim = c(0, 100))
 plot(alttrial, ylim = c(0, 100))
 ```
 
-![Figure 5.10. Projections of Cypripedium population against boosted fecundity](Ch5.29-1.png)
+![Figure 5.10. Projections of Cypripedium population against boosted fecundity](Ch5.28-1.png)
   
   <p style="text-indent: 20px">Each plot shows 10 lines, one for each replicate. Both projections show decline, but the population appears to reach a higher high size early on under the boosted fecundity scenario. So, while boosting fecundity does not prevent extinction, it does seem to boost the population and probably lowers the overall chances of extinction within a short time window.</p>
   

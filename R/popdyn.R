@@ -4122,18 +4122,39 @@ summary.lefkoLTRE <- function(object, ...) {
 #' @param object A \code{lefkoProj} object.
 #' @param threshold A threshold population size to be searched for in
 #' projections. Defaults to 1.
+#' @param inf_alive A logical value indicating whether to treat infinitely
+#' large population size as indicating that the population is still extant.
+#' If \code{FALSE}, then the population is considered extinct. Defaults to
+#' \code{TRUE}.
 #' @param milepost A numeric vector indicating at which points in the projection
 #' to assess detailed results. Can be input as integer values, in which case
 #' each number must be between 1 and the total number of occasions projected in
 #' each projection, or decimals between 0 and 1, which would then be translated
 #' into the corresponding projection steps of the total. Defaults to
 #' \code{c(0, 0.25, 0.50, 0.75, 1.00)}.
+#' @param ext_time A logical value indicating whether to output extinction times
+#' per population-patch. Defaults to \code{FALSE}.
 #' @param ... Other parameters currently not utilized.
 #' 
-#' @return Apart from a statement of the results, we have the following item in
-#' the output:
+#' @return Apart from a statement of the results, this function outputs a list
+#' with the following elements:
 #' \item{milepost_sums}{A data frame showing the number of replicates at each
 #' of the milepost times that is above the threshold population/patch size.}
+#' \item{extinction_times}{A dataframe showing the numbers of replicates going
+#' extinct (\code{ext_reps}) and mean extinction time (\code{ext_time}) per
+#' population-patch. If \code{ext_time = FALSE}, then only outputs \code{NA}.}
+#' 
+#' @section Notes:
+#' The \code{inf_alive} option assesses whether replicates have reached a value
+#' of \code{NaN}. If \code{inf_alive = TRUE} and a value of \code{NaN} is found,
+#' then the replicate is considered extant if the preceding value is above the
+#' extinction threshold. If the setting is \code{inf_alive = FALSE}, then a
+#' value of \code{NaN} is considered evidence of extinction.
+#' 
+#' Extinction time is calculated on the basis of whether the replicate ever
+#' falls below a single individual. A replicate with a positive population size
+#' below 0.0 that manages to rise above 1.0 individual is still considered to
+#' have gone extinct the first time it crossed below 1.0.
 #' 
 #' @examples
 #' # Lathyrus example
@@ -4182,7 +4203,6 @@ summary.lefkoLTRE <- function(object, ...) {
 #' summary(lathproj)
 #' 
 #' # Cypripedium example
-#' rm(list = ls(all=TRUE))
 #' data(cypdata)
 #'  
 #' sizevector <- c(0, 0, 0, 0, 0, 0, 1, 2.5, 4.5, 8, 17.5)
@@ -4235,11 +4255,11 @@ summary.lefkoLTRE <- function(object, ...) {
 #'   patchcol = "patchid", indivcol = "individ")
 #' 
 #' cypstoch <- projection3(cypmatrix3r, nreps = 5, stochastic = TRUE)
-#' summary(cypstoch)
+#' summary(cypstoch, ext_time = TRUE)
 #' 
 #' @export
-summary.lefkoProj <- function(object, threshold = 1,
-  milepost = c(0, 0.25, 0.50, 0.75, 1.00), ...) {
+summary.lefkoProj <- function(object, threshold = 1, inf_alive = TRUE,
+  milepost = c(0, 0.25, 0.50, 0.75, 1.00), ext_time = FALSE, ...) {
   
   poppatches <- length(object$pop_size)
   
@@ -4259,17 +4279,65 @@ summary.lefkoProj <- function(object, threshold = 1,
     milepost <- milepost + 1
   }
   
+  if (inf_alive | ext_time) {
+    for (i in c(1:poppatches)) {
+      for (j in c(1:nreps)) {
+        for (k in c(1:times)) {
+          if (is.nan(object$pop_size[[i]][j, k]) & k > 1) {
+            object$pop_size[[i]][j, k] <- object$pop_size[[i]][j, (k - 1)]
+          }
+        }
+      }
+    }
+  }
+  
+  if (ext_time) {
+    the_numbers <- apply(as.matrix(c(1:poppatches)), 1, function(X) {
+      freemasonry <- apply(as.matrix(c(1:nreps)), 1, function(Y) {
+        ext_points <- which(object$pop_size[[X]][Y,] < 1)
+        if (length(ext_points) > 0) return (min(ext_points)) else return (NA)
+      })
+      ext_varmints <- length(which(!is.na(freemasonry)))
+      if (ext_varmints > 0) {
+        ext_time <- mean(freemasonry, na.rm = TRUE)
+      } else {
+        ext_time <- NA
+      }
+      return (c(ext_varmints, ext_time))
+    })
+    
+    the_numbers <- t(the_numbers)
+    the_numbers <- as.data.frame(the_numbers)
+    colnames(the_numbers) <- c("ext_reps", "ext_time")
+    
+    if (dim(object$labels)[1] > 1) {
+      row_labels <- apply(object$labels, 1, function(X) {
+        paste(X[1], X[2])
+      })
+      rownames(the_numbers) <- row_labels
+    }
+  } else {
+    the_numbers <- NA
+  }
+  
   if (nreps > 1) {
+    
     milepost_sums <- apply(as.matrix(c(1:poppatches)), 1, function (X) {
+      
       phew <- apply(as.matrix(object$pop_size[[X]][,milepost]), 2, function(Y) {
-        return(length(which(as.vector(Y) >= threshold)))
+        above_vector <- which(as.vector(Y) >= threshold)
+        
+        return(length(above_vector))
       })
       return(phew)
     })
   } else {
-     milepost_sums <- apply(as.matrix(c(1:poppatches)), 1, function (X) {
+    milepost_sums <- apply(as.matrix(c(1:poppatches)), 1, function (X) {
+      
       phew <- apply(as.matrix(object$pop_size[[X]][,milepost]), 1, function(Y) {
-        return(length(which(as.vector(Y) >= threshold)))
+        above_vector <- which(as.vector(Y) >= threshold)
+        
+        return(length(above_vector))
       })
       return(phew)
     })
@@ -4295,7 +4363,9 @@ summary.lefkoProj <- function(object, threshold = 1,
   writeLines(paste0("the following matrix, with pop-patches given by column and milepost times given by row: \n"),
     con = stdout())
   
-  return (milepost_sums)
+  output <- list(milepost_sums = milepost_sums, extinction_times = the_numbers)
+  
+  return (output)
 }
 
 #' Plot Projection Simulations

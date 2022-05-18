@@ -70,7 +70,7 @@ lathframeipm <- sf_create(sizes = sizevector, stagenames = stagevector,
   
   <p style="text-indent: 20px">To work with this dataset, we first need to format the data into *vertical format*, in which each row corresponds to the state of a single individual in two (if ahistorical) or three (if historical) consecutive time intervals. Because this is an IPM, we will need to estimate linear models of vital rates. This will require us to avoid NAs in size and fecundity (fortunately, in this dataset, NA is equivalent to 0), so we will set `NAas0 = TRUE` to inform R to treat NAs as zeroes. We will also set `NRasRep = TRUE` because we will assume that all adult stages other than dormancy are reproductive, and there are mature individuals in the dataset that do not reproduce but need to be included in reproductive stages (setting this option to `TRUE` makes sure that the reproductive status of non-reproductive individuals in potentially reproductive stages is set to 1, although the actual fecundity is not altered). Finally, we will ignore patches marked in the dataset and estimate matrices only for the full population, in order to preserve statistical power for vital rate modeling in historical IPM analysis.</p>
   
-  <p style="text-indent: 20px">In the input to `verticalize3()` below, we utilize a repeating pattern of variable names arranged in the same order for each monitoring occasion. This arrangement allows us to enter only the first variable in each set, as long as `noyears` and `blocksize` are set properly and no gaps or shuffles appear in the dataset. The data management functions that we have created for `lefko3` do not require such repeating patterns, but they do make the required input in the function much shorter and more succinct.</p>
+  <p style="text-indent: 20px">In the input to `verticalize3()` below, we utilize a repeating pattern of variable names arranged in the same order for each monitoring occasion. This arrangement allows us to enter only the first variable in each set, as long as `noyears` and `blocksize` are set properly and no gaps or shuffles appear in the dataset. The data management functions that we have created for `lefko3` do not require such repeating patterns, but they do make the required input in the function much shorter and more succinct. To see a more detailed summary of the standardized dataset, please remove `full = FALSE` from the `summary_hfv()` call.</p>
 
 ```r
 lathvertipm <- verticalize3(lathyrus, noyears = 4, firstyear = 1988, 
@@ -79,7 +79,12 @@ lathvertipm <- verticalize3(lathyrus, noyears = 4, firstyear = 1988,
   deadacol = "Dead1988", nonobsacol = "Dormant1988", stageassign = lathframeipm,
   stagesize = "sizea", censorcol = "Missing1988",censorkeep = NA, censor = TRUE,
   NAas0 = TRUE, NRasRep = TRUE)
-#summary(lathvertipm)
+#> hfv dataset has been censored using a non-repeating censor variable.
+#>       Please check the resulting dataset with the summary_hfv() function to make
+#>       sure that not too much has been removed from the original dataset.
+summary_hfv(lathvertipm, full = FALSE)
+#> 
+#> This hfv dataset contains 2552 rows, 42 variables, 1 population, 1 patch, 276 individuals, and 3 time steps.
 ```
   
   <p style="text-indent: 20px">Before we move on to the next steps in analysis, let's take a closer look at fecundity. In this dataset, fecundity is mostly a count of intact seeds, and only differs in six cases where the seed output was estimated based on other models. To see this, try the following code.</p>

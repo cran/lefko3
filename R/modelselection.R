@@ -27,11 +27,11 @@
 #' includes main effects only of size and reproductive status; \code{size},
 #' includes only size (also interactions between size in historical model);
 #' \code{rep}, includes only reproductive status (also interactions between
-#' status in historical model); and \code{cons}, all vital rates estimated only
-#' as y-intercepts. If \code{approach = "glm"} and
-#' \code{year.as.random = FALSE}, then year is also included as a fixed effect,
-#' and, in the case of \code{full}, included in two-way interactions. Defaults
-#' to \code{size}.
+#' status in historical model); \code{age}, all vital rates estimated with age
+#' and y-intercepts only; \code{cons}, all vital rates estimated only as
+#' y-intercepts. If \code{approach = "glm"} and \code{year.as.random = FALSE},
+#' then year is also included as a fixed effect, and, in the case of
+#' \code{full}, included in two-way interactions. Defaults to \code{size}.
 #' @param bestfit A variable indicating the model selection criterion for the
 #' choice of best-fit model. The default is \code{AICc&k}, which chooses the 
 #' best-fit model as the model with the lowest AICc or, if not the same model,
@@ -42,7 +42,10 @@
 #' linear modeling, with the following options: \code{surv}, survival
 #' probability; \code{obs}, observation probability; \code{size}, overall size;
 #' \code{repst}, probability of reproducing; and \code{fec}, amount of
-#' reproduction (overall fecundity). Defaults to \code{c("surv", "size", "fec")}.
+#' reproduction (overall fecundity). May also be set to
+#' \code{vitalrates = "leslie"}, which is equivalent to setting
+#' \code{c("surv", "fec")} for a Leslie MPM. Defaults to
+#' \code{c("surv", "size", "fec")}.
 #' @param surv A vector indicating the variable names coding for status as alive
 #' or dead in occasions \emph{t}+1, \emph{t}, and \emph{t}-1, respectively.
 #' Defaults to \code{c("alive3", "alive2", "alive1")}.
@@ -297,6 +300,11 @@
 #' section.}
 #' 
 #' @section Notes:
+#' Setting \code{suite = "cons"} prevents the inclusion of size and reproductive
+#' status as fixed, independent factors in modeling. However, it does not
+#' prevent any other terms from being included. Density, age, individual
+#' covariates, individual identity, patch, and year may all be included.
+#' 
 #' The mechanics governing model building are fairly robust to errors and
 #' exceptions. The function attempts to build global models, and simplifies
 #' models automatically should model building fail. Model building proceeds
@@ -386,6 +394,12 @@
 #' If density dependence is explored through function \code{modelsearch()},
 #' then the interpretation of density is not the full population size but rather
 #' the spatial density term included in the dataset.
+#' 
+#' Users building vital rate models for Leslie matrices must set
+#' \code{vitalrates = c("surv", "fec")} or \code{vitalrates = "leslie"} rather
+#' than the default, because only survival and fecundity should be estimated in
+#' these cases. Also, the \code{suite} setting can be set to either \code{age}
+#' or \code{cons}, as the results will be exactly the same.
 #' 
 #' @examples
 #' \donttest{
@@ -583,6 +597,7 @@ modelsearch <- function(data, stageframe = NULL, historical = TRUE,
   }
   
   # Here we will use text matching to identify the linear modeling approach and distributions
+  vitalrates <- tolower(vitalrates)
   approach <- tolower(approach)
   suite <- tolower(suite)
   bestfit <- tolower(bestfit)
@@ -614,6 +629,11 @@ modelsearch <- function(data, stageframe = NULL, historical = TRUE,
   } else if(length(grep("rp", suite)) > 0) {
     suite <- "rep"
   } else if(length(grep("co", suite)) > 0) {
+    suite <- "cons"
+  } else if(length(grep("ag", suite)) > 0) {
+    if (is.na(age)) {
+      stop("Age variable required for age-based and age-by-stage MPMs.", call. = FALSE)
+    }
     suite <- "cons"
   }
   
@@ -687,6 +707,9 @@ modelsearch <- function(data, stageframe = NULL, historical = TRUE,
   }
   if (length(grep("fc", vitalrates)) > 0) {
     vitalrates[grep("fc", vitalrates)] <- "fec"
+  }
+  if (length(vitalrates) == 1 & length(grep("lesl", vitalrates)) > 0) {
+    vitalrates <- c("surv", "fec")
   }
   
   if (approach == "mixed" & !requireNamespace("lme4", quietly = TRUE)) {

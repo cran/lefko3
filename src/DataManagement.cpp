@@ -10,8 +10,8 @@ using namespace arma;
 //' creating the vertical structure and rearranging the data in that shape.
 //' 
 //' @param data The horizontal data file.
-//' @param stageframe The stageframe object identifying the life history model
-//' being operationalized. This should be the full stageframe.
+//' @param stageframe The stageframe object describing the life history model.
+//' This should be the full stageframe.
 //' @param noyears The number of years or observation periods in the dataset.
 //' @param firstyear The first year or time of observation.
 //' @param popidcol Column number corresponding to the identity of the
@@ -112,8 +112,10 @@ Rcpp::List pfj(DataFrame data, DataFrame stageframe, int noyears, int firstyear,
   bool coordsrepeat, bool quiet) {
   
   Rcpp::List output_longlist(81);
+  int noindivs = data.nrows();
+  int novars = data.length();
   
-  // Here we standardize variable vector lengths  
+  // Vector length checks and standardizing vectors of data frame columns
   if (xcol.n_elem == 1) {
     xcol.resize(noyears);
     
@@ -121,10 +123,15 @@ Rcpp::List pfj(DataFrame data, DataFrame stageframe, int noyears, int firstyear,
       for (int i = 1; i < noyears; i++) {
         xcol(i) = xcol(0);
       }
-    } else {
+    } else if (xcol(0) != -1) {
       for (int i = 1; i < noyears; i++) {
         xcol(i) = xcol(i-1) + blocksize;
+        if (xcol(i) >= novars) {
+          throw Rcpp::exception("Vector xcol is too small. Either noyears is too small or not enough data blocks have been input.");
+        }
       }
+    } else {
+      xcol.fill(-1);
     }
   }
   
@@ -135,10 +142,15 @@ Rcpp::List pfj(DataFrame data, DataFrame stageframe, int noyears, int firstyear,
       for (int i = 1; i < noyears; i++) {
         ycol(i) = ycol(0);
       }
-    } else {
+    } else if (ycol(0) != -1) {
       for (int i = 1; i < noyears; i++) {
         ycol(i) = ycol(i-1) + blocksize;
+        if (ycol(i) >= novars) {
+          throw Rcpp::exception("Vector ycol is too small. Either noyears is too small or not enough data blocks have been input.");
+        }
       }
+    } else {
+      ycol.fill(-1);
     }
   }
   
@@ -149,10 +161,15 @@ Rcpp::List pfj(DataFrame data, DataFrame stageframe, int noyears, int firstyear,
       for (int i = 1; i < noyears; i++) {
         juvcol(i) = juvcol(0);
       }
-    } else {
+    } else if (juvcol(0) != -1) {
       for (int i = 1; i < noyears; i++) {
         juvcol(i) = juvcol(i-1) + blocksize;
+        if (juvcol(i) >= novars) {
+          throw Rcpp::exception("Vector juvcol is too small. Either noyears is too small or not enough data blocks have been input.");
+        }
       }
+    } else {
+      juvcol.fill(-1);
     }
   }
   
@@ -163,10 +180,15 @@ Rcpp::List pfj(DataFrame data, DataFrame stageframe, int noyears, int firstyear,
       for (int i = 1; i < noyears; i++) {
         sizeacol(i) = sizeacol(0);
       }
-    } else {
+    } else if (sizeacol(0) != -1) {
       for (int i = 1; i < noyears; i++) {
         sizeacol(i) = sizeacol(i-1) + blocksize;
+        if (sizeacol(i) >= novars) {
+          throw Rcpp::exception("Vector sizeacol is too small. Either noyears is too small or not enough data blocks have been input.");
+        }
       }
+    } else {
+      sizeacol.fill(-1);
     }
   }
   
@@ -177,10 +199,15 @@ Rcpp::List pfj(DataFrame data, DataFrame stageframe, int noyears, int firstyear,
       for (int i = 1; i < noyears; i++) {
         sizebcol(i) = sizebcol(0);
       }
-    } else {
+    } else if (sizebcol(0) != -1) {
       for (int i = 1; i < noyears; i++) {
         sizebcol(i) = sizebcol(i-1) + blocksize;
+        if (sizebcol(i) >= novars) {
+          throw Rcpp::exception("Vector sizebcol is too small. Either noyears is too small or not enough data blocks have been input.");
+        }
       }
+    } else {
+      sizebcol.fill(-1);
     }
   }
   
@@ -191,10 +218,15 @@ Rcpp::List pfj(DataFrame data, DataFrame stageframe, int noyears, int firstyear,
       for (int i = 1; i < noyears; i++) {
         sizeccol(i) = sizeccol(0);
       }
-    } else {
+    } else if (sizeccol(0) != -1) {
       for (int i = 1; i < noyears; i++) {
         sizeccol(i) = sizeccol(i-1) + blocksize;
+        if (sizeccol(i) >= novars) {
+          throw Rcpp::exception("Vector sizeccol is too small. Either noyears is too small or not enough data blocks have been input.");
+        }
       }
+    } else {
+      sizeccol.fill(-1);
     }
   }
   
@@ -205,10 +237,15 @@ Rcpp::List pfj(DataFrame data, DataFrame stageframe, int noyears, int firstyear,
       for (int i = 1; i < noyears; i++) {
         repstracol(i) = repstracol(0);
       }
-    } else {
+    } else if (repstracol(0) != -1) {
       for (int i = 1; i < noyears; i++) {
         repstracol(i) = repstracol(i-1) + blocksize;
+        if (repstracol(i) >= novars) {
+          throw Rcpp::exception("Vector repstracol is too small. Either noyears is too small or not enough data blocks have been input.");
+        }
       }
+    } else {
+      repstracol.fill(-1);
     }
   }
   
@@ -219,10 +256,15 @@ Rcpp::List pfj(DataFrame data, DataFrame stageframe, int noyears, int firstyear,
       for (int i = 1; i < noyears; i++) {
         repstrbcol(i) = repstrbcol(0);
       }
-    } else {
+    } else if (repstrbcol(0) != -1) {
       for (int i = 1; i < noyears; i++) {
         repstrbcol(i) = repstrbcol(i-1) + blocksize;
+        if (repstrbcol(i) >= novars) {
+          throw Rcpp::exception("Vector repstrbcol is too small. Either noyears is too small or not enough data blocks have been input.");
+        }
       }
+    } else {
+      repstrbcol.fill(-1);
     }
   }
   
@@ -233,10 +275,15 @@ Rcpp::List pfj(DataFrame data, DataFrame stageframe, int noyears, int firstyear,
       for (int i = 1; i < noyears; i++) {
         fecacol(i) = fecacol(0);
       }
-    } else {
+    } else if (fecacol(0) != -1) {
       for (int i = 1; i < noyears; i++) {
         fecacol(i) = fecacol(i-1) + blocksize;
+        if (fecacol(i) >= novars) {
+          throw Rcpp::exception("Vector fecacol is too small. Either noyears is too small or not enough data blocks have been input.");
+        }
       }
+    } else {
+      fecacol.fill(-1);
     }
   }
   
@@ -247,10 +294,15 @@ Rcpp::List pfj(DataFrame data, DataFrame stageframe, int noyears, int firstyear,
       for (int i = 1; i < noyears; i++) {
         fecbcol(i) = fecbcol(0);
       }
-    } else {
+    } else if (fecbcol(0) != -1) {
       for (int i = 1; i < noyears; i++) {
         fecbcol(i) = fecbcol(i-1) + blocksize;
+        if (fecbcol(i) >= novars) {
+          throw Rcpp::exception("Vector fecbcol is too small. Either noyears is too small or not enough data blocks have been input.");
+        }
       }
+    } else {
+      fecbcol.fill(-1);
     }
   }
   
@@ -261,10 +313,15 @@ Rcpp::List pfj(DataFrame data, DataFrame stageframe, int noyears, int firstyear,
       for (int i = 1; i < noyears; i++) {
         indcovacol(i) = indcovacol(0);
       }
-    } else {
+    } else if (indcovacol(0) != -1) {
       for (int i = 1; i < noyears; i++) {
         indcovacol(i) = indcovacol(i-1) + blocksize;
+        if (indcovacol(i) >= novars) {
+          throw Rcpp::exception("Vector indcovacol is too small. Either noyears is too small or not enough data blocks have been input.");
+        }
       }
+    } else {
+      indcovacol.fill(-1);
     }
   }
   
@@ -275,10 +332,15 @@ Rcpp::List pfj(DataFrame data, DataFrame stageframe, int noyears, int firstyear,
       for (int i = 1; i < noyears; i++) {
         indcovbcol(i) = indcovbcol(0);
       }
-    } else {
+    } else if (indcovbcol(0) != -1) {
       for (int i = 1; i < noyears; i++) {
         indcovbcol(i) = indcovbcol(i-1) + blocksize;
+        if (indcovbcol(i) >= novars) {
+          throw Rcpp::exception("EVector indcovbcol is too small. ither noyears is too small or not enough data blocks have been input.");
+        }
       }
+    } else {
+      indcovbcol.fill(-1);
     }
   }
   
@@ -289,10 +351,15 @@ Rcpp::List pfj(DataFrame data, DataFrame stageframe, int noyears, int firstyear,
       for (int i = 1; i < noyears; i++) {
         indcovccol(i) = indcovccol(0);
       }
-    } else {
+    } else if (indcovccol(0) != -1) {
       for (int i = 1; i < noyears; i++) {
         indcovccol(i) = indcovccol(i-1) + blocksize;
+        if (indcovccol(i) >= novars) {
+          throw Rcpp::exception("Vector indcovccol is too small. Either noyears is too small or not enough data blocks have been input.");
+        }
       }
+    } else {
+      indcovccol.fill(-1);
     }
   }
   
@@ -303,10 +370,15 @@ Rcpp::List pfj(DataFrame data, DataFrame stageframe, int noyears, int firstyear,
       for (int i = 1; i < noyears; i++) {
         aliveacol(i) = aliveacol(0);
       }
-    } else {
+    } else if (aliveacol(0) != -1) {
       for (int i = 1; i < noyears; i++) {
         aliveacol(i) = aliveacol(i-1) + blocksize;
+        if (aliveacol(i) >= novars) {
+          throw Rcpp::exception("Vector aliveacol is too small. Either noyears is too small or not enough data blocks have been input.");
+        }
       }
+    } else {
+      aliveacol.fill(-1);
     }
   }
   
@@ -317,10 +389,15 @@ Rcpp::List pfj(DataFrame data, DataFrame stageframe, int noyears, int firstyear,
       for (int i = 1; i < noyears; i++) {
         deadacol(i) = deadacol(0);
       }
-    } else {
+    } else if (deadacol(0) != -1) {
       for (int i = 1; i < noyears; i++) {
         deadacol(i) = deadacol(i-1) + blocksize;
+        if (deadacol(i) >= novars) {
+          throw Rcpp::exception("Vector deadacol is too small. Either noyears is too small or not enough data blocks have been input.");
+        }
       }
+    } else {
+      deadacol.fill(-1);
     }
   }
   
@@ -331,10 +408,15 @@ Rcpp::List pfj(DataFrame data, DataFrame stageframe, int noyears, int firstyear,
       for (int i = 1; i < noyears; i++) {
         obsacol(i) = obsacol(0);
       }
-    } else {
+    } else if (obsacol(0) != -1) {
       for (int i = 1; i < noyears; i++) {
         obsacol(i) = obsacol(i-1) + blocksize;
+        if (obsacol(i) >= novars) {
+          throw Rcpp::exception("Vector obsacol is too small. Either noyears is too small or not enough data blocks have been input.");
+        }
       }
+    } else {
+      obsacol.fill(-1);
     }
   }
   
@@ -345,10 +427,15 @@ Rcpp::List pfj(DataFrame data, DataFrame stageframe, int noyears, int firstyear,
       for (int i = 1; i < noyears; i++) {
         nonobsacol(i) = nonobsacol(0);
       }
-    } else {
+    } else if (nonobsacol(0) != -1) {
       for (int i = 1; i < noyears; i++) {
         nonobsacol(i) = nonobsacol(i-1) + blocksize;
+        if (nonobsacol(i) >= novars) {
+          throw Rcpp::exception("Vector nonobsacol is too small. Either noyears is too small or not enough data blocks have been input.");
+        }
       }
+    } else {
+      nonobsacol.fill(-1);
     }
   }
   
@@ -359,10 +446,15 @@ Rcpp::List pfj(DataFrame data, DataFrame stageframe, int noyears, int firstyear,
       for (int i = 1; i < noyears; i++) {
         censorcol(i) = censorcol(0);
       }
-    } else if (blocksize > 0) {
+    } else if (blocksize > 0 && censorcol(0) != -1) {
       for (int i = 1; i < noyears; i++) {
         censorcol(i) = censorcol(i-1) + blocksize;
+        if (censorcol(i) >= novars) {
+          throw Rcpp::exception("Vector censorcol is too small. Either noyears is too small or not enough data blocks have been input.");
+        }
       }
+    } else {
+      censorcol.fill(-1);
     }
   }
   
@@ -373,15 +465,19 @@ Rcpp::List pfj(DataFrame data, DataFrame stageframe, int noyears, int firstyear,
       for (int i = 1; i < noyears; i++) {
         stagecol(i) = stagecol(0);
       }
-    } else {
+    } else if (stagecol(0) != -1) {
       for (int i = 1; i < noyears; i++) {
         stagecol(i) = stagecol(i-1) + blocksize;
+        if (stagecol(i) >= novars) {
+          throw Rcpp::exception("Vector stagecol is too small. Either noyears is too small or not enough data blocks have been input.");
+        }
       }
+    } else {
+      stagecol.fill(-1);
     }
   }
   
-  int noindivs = data.nrows();
-  
+  // Variable initialization for most vectors
   double livcheck1 {0.0};
   double livcheck2 {0.0};
   double livcheck3 {0.0};
@@ -541,12 +637,12 @@ Rcpp::List pfj(DataFrame data, DataFrame stageframe, int noyears, int firstyear,
   nonobsgiven2x.fill(-1.0);
   nonobsgiven3x.fill(-1.0);
   
-  Rcpp::NumericVector zerovec (noindivs);
-  Rcpp::NumericVector onevec (noindivs);
-  Rcpp::NumericVector negonevec (noindivs);
-  zerovec.fill(0.0);
-  onevec.fill(1.0);
-  negonevec.fill(-1.0);
+  Rcpp::NumericVector zerovec (noindivs, 0.0);
+  Rcpp::NumericVector onevec (noindivs, 1.0);
+  Rcpp::NumericVector negonevec (noindivs, -1.0);
+  // zerovec.fill(0.0);
+  // onevec.fill(1.0);
+  // negonevec.fill(-1.0);
   
   int ndflength = noindivs * (noyears - 1);
   
@@ -670,60 +766,70 @@ Rcpp::List pfj(DataFrame data, DataFrame stageframe, int noyears, int firstyear,
   Rcpp::NumericVector stage2num (ndflength);
   Rcpp::NumericVector stage3num (ndflength);
   
-  Rcpp::NumericVector firstseenx (noindivs);
-  Rcpp::NumericVector lastseenx (noindivs);
+  Rcpp::NumericVector firstseenx (noindivs, 0.0);
+  Rcpp::NumericVector lastseenx (noindivs, 0.0);
   Rcpp::NumericVector firstseen (ndflength);
   Rcpp::NumericVector lastseen (ndflength);
   Rcpp::NumericVector obsage (ndflength);
   Rcpp::NumericVector obslifespan (ndflength);
-  firstseenx.fill(0.0);
-  lastseenx.fill(0.0);
-  
-  Rcpp::NumericVector temp1 (noindivs);
-  Rcpp::NumericVector temp2 (noindivs);
-  Rcpp::NumericVector temp3 (noindivs);
-  Rcpp::NumericVector temp4 (noindivs);
-  Rcpp::NumericVector temp5 (noindivs);
+  // firstseenx.fill(0.0);
+  // lastseenx.fill(0.0);
   
   for (int i = 0; i < noindivs; i++) {
-    firstseenx[i] = 0.0;
-    lastseenx[i] = 0.0;
+    // firstseenx[i] = 0.0;
+    // lastseenx[i] = 0.0;
+    
+    Rcpp::NumericVector temp1 (noindivs, 0.0);
+    Rcpp::NumericVector temp2 (noindivs, 0.0);
+    Rcpp::NumericVector temp3 (noindivs, 0.0);
+    Rcpp::NumericVector temp4 (noindivs, 0.0);
+    Rcpp::NumericVector temp5 (noindivs, 0.0);
     
     for (int k = 0; k < noyears; k++) {
-      temp1 = data[sizeacol(k)];
-      if (sizebcol(k) != -1 ) {temp2 = data[sizebcol(k)];} else {temp2 = clone(zerovec);}
-      if (sizeccol(k) != -1 ) {temp3 = data[sizeccol(k)];} else {temp3 = clone(zerovec);}
-      if (repstracol(k) != -1 ) {temp4 = data[repstracol(k)];} else {temp4 = clone(zerovec);}
-      if (repstrbcol(k) != -1 ) {temp5 = data[repstrbcol(k)];} else {temp5 = clone(zerovec);}
+      if (sizeacol(k) != -1 ) {
+        temp1 = clone(as<NumericVector>(data[sizeacol(k)]));
+      } else {temp1 = clone(zerovec);}
+      if (sizebcol(k) != -1 ) {
+        temp2 = clone(as<NumericVector>(data[sizebcol(k)]));
+      } else {temp2 = clone(zerovec);}
+      if (sizeccol(k) != -1 ) {
+        temp3 = clone(as<NumericVector>(data[sizeccol(k)]));
+      } else {temp3 = clone(zerovec);}
+      if (repstracol(k) != -1 ) {
+        temp4 = clone(as<NumericVector>(data[repstracol(k)]));
+      } else {temp4 = clone(zerovec);}
+      if (repstrbcol(k) != -1 ) {
+        temp5 = clone(as<NumericVector>(data[repstrbcol(k)]));
+      } else {temp5 = clone(zerovec);}
       
-      if (NumericVector::is_na(temp1[i])) {temp1[i] = 0;}
-      if (NumericVector::is_na(temp2[i])) {temp2[i] = 0;}
-      if (NumericVector::is_na(temp3[i])) {temp3[i] = 0;}
-      if (NumericVector::is_na(temp4[i])) {temp4[i] = 0;}
-      if (NumericVector::is_na(temp5[i])) {temp5[i] = 0;}
+      if (NumericVector::is_na(temp1(i))) {temp1(i) = 0.0;}
+      if (NumericVector::is_na(temp2(i))) {temp2(i) = 0.0;}
+      if (NumericVector::is_na(temp3(i))) {temp3(i) = 0.0;}
+      if (NumericVector::is_na(temp4(i))) {temp4(i) = 0.0;}
+      if (NumericVector::is_na(temp5(i))) {temp5(i) = 0.0;}
       
-      if (temp1[i] > 0 && firstseenx[i] == 0) {
-        firstseenx[i] = firstyear + static_cast<double>(k);
-      } else if (temp2[i] > 0 && firstseenx[i] == 0) {
-        firstseenx[i] = firstyear + static_cast<double>(k);
-      } else if (temp3[i] > 0 && firstseenx[i] == 0) {
-        firstseenx[i] = firstyear + static_cast<double>(k);
-      } else if (temp4[i] > 0 && firstseenx[i] == 0) {
-        firstseenx[i] = firstyear + static_cast<double>(k);
-      } else if (temp5[i] > 0 && firstseenx[i] == 0) {
-        firstseenx[i] = firstyear + static_cast<double>(k);
+      if (temp1(i) > 0.0 && firstseenx(i) == 0.0) {
+        firstseenx(i) = firstyear + static_cast<double>(k);
+      } else if (temp2(i) > 0.0 && firstseenx(i) == 0.0) {
+        firstseenx(i) = firstyear + static_cast<double>(k);
+      } else if (temp3(i) > 0.0 && firstseenx(i) == 0.0) {
+        firstseenx(i) = firstyear + static_cast<double>(k);
+      } else if (temp4(i) > 0.0 && firstseenx(i) == 0.0) {
+        firstseenx(i) = firstyear + static_cast<double>(k);
+      } else if (temp5(i) > 0.0 && firstseenx(i) == 0.0) {
+        firstseenx(i) = firstyear + static_cast<double>(k);
       }
       
-      if (temp1[i] > 0 && firstseenx[i] != 0) {
-        lastseenx[i] = firstyear + static_cast<double>(k);
-      } else if (temp2[i] > 0 && firstseenx[i] != 0) {
-        lastseenx[i] = firstyear + static_cast<double>(k);
-      } else if (temp3[i] > 0 && firstseenx[i] != 0) {
-        lastseenx[i] = firstyear + static_cast<double>(k);
-      } else if (temp4[i] > 0 && firstseenx[i] != 0) {
-        lastseenx[i] = firstyear + static_cast<double>(k);
-      } else if (temp5[i] > 0 && firstseenx[i] != 0) {
-        lastseenx[i] = firstyear + static_cast<double>(k);
+      if (temp1(i) > 0 && firstseenx(i) != 0.0) {
+        lastseenx(i) = firstyear + static_cast<double>(k);
+      } else if (temp2(i) > 0 && firstseenx(i) != 0.0) {
+        lastseenx(i) = firstyear + static_cast<double>(k);
+      } else if (temp3(i) > 0 && firstseenx(i) != 0.0) {
+       lastseenx(i) = firstyear + static_cast<double>(k);
+      } else if (temp4(i) > 0 && firstseenx(i) != 0.0) {
+        lastseenx(i) = firstyear + static_cast<double>(k);
+      } else if (temp5(i) > 0 && firstseenx(i) != 0.0) {
+        lastseenx(i) = firstyear + static_cast<double>(k);
       }
     }
   }
@@ -732,9 +838,9 @@ Rcpp::List pfj(DataFrame data, DataFrame stageframe, int noyears, int firstyear,
   for (int j = 0; j < (noyears - 1); j++) {
     Rcpp::checkUserInterrupt();
     
-    if (popidcol > -1) popidx = data[popidcol];
-    if (patchidcol > -1) patchidx = data[patchidcol];
-    if (individcol > -1) individx = data[individcol];
+    if (popidcol > -1) popidx = as<StringVector>(data[popidcol]);
+    if (patchidcol > -1) patchidx = as<StringVector>(data[patchidcol]);
+    if (individcol > -1) individx = as<StringVector>(data[individcol]);
     
     if (j == 0) { // This is implemented in the first year
       
@@ -1074,7 +1180,7 @@ Rcpp::List pfj(DataFrame data, DataFrame stageframe, int noyears, int firstyear,
         stage2[(i + (j * noindivs))] = stage2x[i];
         stage3[(i + (j * noindivs))] = stage3x[i];
         
-        stage1num[(i + (j * noindivs))] = 0.0;
+        stage1num[(i + (j * noindivs))] = 0.0; // Should probably redo this to create stage indices...
         stage2num[(i + (j * noindivs))] = 0.0;
         stage3num[(i + (j * noindivs))] = 0.0;
       }
@@ -1229,14 +1335,17 @@ Rcpp::List pfj(DataFrame data, DataFrame stageframe, int noyears, int firstyear,
         spryn3[(i + (j * noindivs))] = 1.0;
       }
       
-      // Here is thre correction is size 0 individuals that reproduce are actually observed
-      if (RepasObs == 1 && addedsize1[(i + (j * noindivs))] == 0 && addedrepstr1[(i + (j * noindivs))] != 0.0) {
+      // Here is the correction if size 0 individuals that reproduce are actually observed
+      if (RepasObs == 1 && addedsize1[(i + (j * noindivs))] == 0 &&
+          addedrepstr1[(i + (j * noindivs))] != 0.0) {
         spryn1[(i + (j * noindivs))] = 1.0;
       }
-      if (RepasObs == 1 && addedsize2[(i + (j * noindivs))] == 0 && addedrepstr2[(i + (j * noindivs))] != 0.0) {
+      if (RepasObs == 1 && addedsize2[(i + (j * noindivs))] == 0 &&
+          addedrepstr2[(i + (j * noindivs))] != 0.0) {
         spryn2[(i + (j * noindivs))] = 1.0;
       }
-      if (RepasObs == 1 && addedsize3[(i + (j * noindivs))] == 0 && addedrepstr3[(i + (j * noindivs))] != 0.0) {
+      if (RepasObs == 1 && addedsize3[(i + (j * noindivs))] == 0 &&
+          addedrepstr3[(i + (j * noindivs))] != 0.0) {
         spryn3[(i + (j * noindivs))] = 1.0;
       }
       
@@ -1292,8 +1401,12 @@ Rcpp::List pfj(DataFrame data, DataFrame stageframe, int noyears, int firstyear,
         
         alive2[(i + (j * noindivs))] = 1;
         
-        if (lastseenx[i] >= (j + firstyear + 1)) {alive3[(i + (j * noindivs))] = 1.0;}
-        if (firstseenx[i] <= (j + firstyear - 1)) {alive1[(i + (j * noindivs))] = 1.0;}
+        if (lastseenx[i] >= (j + firstyear + 1)) {
+          alive3[(i + (j * noindivs))] = 1.0;
+        }
+        if (firstseenx[i] <= (j + firstyear - 1)) {
+          alive1[(i + (j * noindivs))] = 1.0;
+        }
       }
       
       // Here we take care of stage assignments
@@ -1561,7 +1674,6 @@ Rcpp::List pfj(DataFrame data, DataFrame stageframe, int noyears, int firstyear,
           stage3[(i + (j * noindivs))] = sfname[choicestage];
           
         } else if (alive3[(i + (j * noindivs))] != 1) {
-          
           stage3[(i + (j * noindivs))] = "NotAlive";
           
         } else if (cs4.n_elem == 0) {

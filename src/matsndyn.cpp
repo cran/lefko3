@@ -14,6 +14,8 @@ using namespace arma;
 //' 
 //' This function appends one NumericVector fully to another.
 //' 
+//' @name concat_dbl
+//' 
 //' @param A Any NumericVector.
 //' @param B Any other NumericVector.
 //' 
@@ -42,13 +44,13 @@ NumericVector concat_dbl(NumericVector x, NumericVector y) {
 //' Returns a new IntegerVector with elements of vector A followed by
 //' elements of vector B.
 //' 
+//' @name concat_int
 //' @param A Any IntegerVector.
 //' @param B Any other IntegerVector.
 //' 
 //' @return Returns a new IntegerVector with elements of vector A followed by
 //' elements of vector B.
 //' 
-//'
 //' @keywords internal
 //' @noRd
 // [[Rcpp::export(.concat_int)]]
@@ -71,13 +73,14 @@ IntegerVector concat_int(IntegerVector x, IntegerVector y) {
 //' Returns a new StringVector with elements of vector A followed by
 //' elements of vector B.
 //' 
+//' @name concat_str
+//' 
 //' @param A Any StringVector.
 //' @param B Any other StringVector.
 //' 
 //' @return Returns a new StringVector with elements of vector A followed by
 //' elements of vector B.
 //' 
-//'
 //' @keywords internal
 //' @noRd
 // [[Rcpp::export(.concat_str)]]
@@ -103,6 +106,8 @@ StringVector concat_str(StringVector x, StringVector y) {
 //' \code{\link{flefko2}()}, \code{\link{aflefko2}()}, \code{\link{rlefko3}()},
 //' and \code{\link{rlefko2}()}, in which it determines how each stage is
 //' treated during matrix estimation.
+//' 
+//' @name sf_create
 //' 
 //' @param sizes A numeric vector of the typical or representative size of each
 //' life history stage. If making function-based MPMs, then this should be a
@@ -2005,6 +2010,8 @@ Rcpp::List sf_create (NumericVector sizes, Nullable<StringVector> stagenames = R
 //' \code{\link{aflefko2}()}, \code{\link{rlefko3}()}, and
 //' \code{\link{rlefko2}()}.
 //' 
+//' @name sf_reassess
+//' 
 //' @param stageframe The original stageframe.
 //' @param supplement The original supplemental data input
 //' (class \code{lefkoSD}). Can also equal NA.
@@ -3312,6 +3319,8 @@ Rcpp::List sf_reassess(DataFrame stageframe, Nullable<DataFrame> supplement,
 //' Leslie MPM in terms of ahistorical stage information. This function is
 //' internal to \code{\link{rleslie}()} and \code{\link{fleslie}()}.
 //' 
+//' @name sf_leslie
+//' 
 //' @param min_age The first age to include in the matrix.
 //' @param max_age The maximum age to include in the matrix.
 //' @param min_fecage The first age in which reproduction is possible.
@@ -3328,53 +3337,62 @@ Rcpp::List sf_reassess(DataFrame stageframe, Nullable<DataFrame> supplement,
 //' empty string variable that can be used to describe stages meaningfully.
 //' 
 //' Variables in this data frame include the following:
-//' \item{stage}{The unique names of the stages to be analyzed.}
-//' \item{size}{The typical or representative size at which each stage occurs.}
+//' \item{stage_id}{An unique integer representing each age, in order.}
+//' \item{stage}{The unique names of the ages to be analyzed.}
+//' \item{size}{The typical or representative size at which each stage occurs.
+//' Since ages are not characterized by size, this is generally \code{NA}.}
 //' \item{size_b}{Size at which each stage occurs in terms of a second size
-//' variable, if one exists.}
+//' variable, if one exists. In Leslie MPMs, generally \code{NA}.}
 //' \item{size_c}{Size at which each stage occurs in terms of a third size
-//' variable, if one exists.}
-//' \item{min_age}{The minimum age at which the stage may occur.}
-//' \item{max_age}{The maximum age at which the stage may occur.}
-//' \item{repstatus}{A binomial variable showing whether each stage is
+//' variable, if one exists. In Leslie MPMs, generally \code{NA}.}
+//' \item{min_age}{The minimum age at which the stage may occur. In Leslie MPMs,
+//' defaults to the current age.}
+//' \item{max_age}{The maximum age at which the stage may occur. In Leslie MPMs,
+//' will generally equal the current age or \code{NA}, depending on whether
+//' individuals are allowed to remain at the maximum age.}
+//' \item{repstatus}{A binomial variable showing whether each age is
 //' reproductive.}
-//' \item{obsstatus}{A binomial variable showing whether each stage is
+//' \item{obsstatus}{A binomial variable showing whether each age is
 //' observable.}
-//' \item{propstatus}{A binomial variable showing whether each stage is a
+//' \item{propstatus}{A binomial variable showing whether each age is a
 //' propagule.}
-//' \item{immstatus}{A binomial variable showing whether each stage can occur as
+//' \item{immstatus}{A binomial variable showing whether each age can occur as
 //' immature.}
-//' \item{matstatus}{A binomial variable showing whether each stage occurs in
+//' \item{matstatus}{A binomial variable showing whether each age occurs in
 //' maturity.}
-//' \item{indataset}{A binomial variable describing whether each stage occurs in
+//' \item{indataset}{A binomial variable describing whether each age occurs in
 //' the input dataset.}
 //' \item{binhalfwidth_raw}{The half-width of the size bin, as input.}
-//' \item{sizebin_min}{The minimum size at which the stage may occur.}
-//' \item{sizebin_max}{The maximum size at which the stage may occur.}
-//' \item{sizebin_center}{The midpoint of the size bin at which the stage may
-//' occur.}
-//' \item{sizebin_width}{The width of the size bin corresponding to the stage.}
+//' \item{sizebin_min}{The minimum primary size at which the age may occur.}
+//' \item{sizebin_max}{The maximum primary size at which the age may occur.}
+//' \item{sizebin_center}{The midpoint of the primary size bin at which the age
+//' may occur.}
+//' \item{sizebin_width}{The width of the primary size bin corresponding to the
+//' age.}
 //' \item{binhalfwidthb_raw}{The half-width of the size bin of a second size
 //' variable, as input.}
-//' \item{sizebinb_min}{The minimum size at which the stage may occur.}
-//' \item{sizebinb_max}{The maximum size at which the stage may occur.}
-//' \item{sizebinb_center}{The midpoint of the size bin at which the stage may
-//' occur, in terms of a second size variable.}
-//' \item{sizebinb_width}{The width of the size bin corresponding to the stage,
-//' in terms of a second size variable.}
+//' \item{sizebinb_min}{The minimum secondary size at which the age may occur.}
+//' \item{sizebinb_max}{The maximum secondary size at which the age may occur.}
+//' \item{sizebinb_center}{The midpoint of the secondary size bin at which the
+//' age may occur.}
+//' \item{sizebinb_width}{The width of the secondary size bin corresponding to
+//' the age.}
 //' \item{binhalfwidthc_raw}{The half-width of the size bin of a third size
 //' variable, as input.}
-//' \item{sizebinc_min}{The minimum size at which the stage may occur, in terms
-//' of a third size variable.}
-//' \item{sizebinc_max}{The maximum size at which the stage may occur, in terms
-//' of a third size variable.}
-//' \item{sizebinc_center}{The midpoint of the size bin at which the stage may
-//' occur, in terms of a third size variable.}
-//' \item{sizebinc_width}{The width of the size bin corresponding to the stage,
-//' in terms of a third size variable.}
+//' \item{sizebinc_min}{The minimum tertiary size at which the age may occur.}
+//' \item{sizebinc_max}{The maximum tertiary size at which the age may occur.}
+//' \item{sizebinc_center}{The midpoint of the tertiary size bin at which the
+//' age may occur.}
+//' \item{sizebinc_width}{The width of the tertiary size bin corresponding to
+//' the age.}
 //' \item{group}{An integer denoting the size classification group that the
-//' stage falls within.}
+//' age falls within.}
 //' \item{comments}{A text field for stage descriptions.}
+//' \item{alive}{An integer vector denoting whether the age is alive. Defaults
+//' to \code{1} for all ages.}
+//' \item{almost_born}{An integer vector denoting whether the age corresponds to
+//' the prior stage of a newly produced individual in a historical model. In
+//' Leslie MPMs, defaults to \code{0}.}
 //' 
 //' @keywords internal
 //' @noRd
@@ -3388,16 +3406,18 @@ Rcpp::List sf_leslie (int min_age, int max_age, int min_fecage,int max_fecage,
     throw Rcpp::exception("There must be at least two ages to create a Leslie MPM.", false);
   }
   
-  Rcpp::List output_longlist(29);
-  Rcpp::CharacterVector varnames {"stage", "size", "size_b", "size_c", "min_age", "max_age",
-    "repstatus", "obsstatus", "propstatus", "immstatus", "matstatus", "indataset",
-    "binhalfwidth_raw", "sizebin_min", "sizebin_max", "sizebin_center", "sizebin_width",
-    "binhalfwidthb_raw", "sizebinb_min", "sizebinb_max", "sizebinb_center", "sizebinb_width",
-    "binhalfwidthc_raw", "sizebinc_min", "sizebinc_max", "sizebinc_center", "sizebinc_width",
-    "group", "comments"};
+  Rcpp::List output_longlist(32);
+  Rcpp::CharacterVector varnames {"stage_id", "stage", "size", "size_b",
+    "size_c", "min_age", "max_age", "repstatus", "obsstatus", "propstatus",
+    "immstatus", "matstatus", "indataset", "binhalfwidth_raw", "sizebin_min",
+    "sizebin_max", "sizebin_center", "sizebin_width", "binhalfwidthb_raw",
+    "sizebinb_min", "sizebinb_max", "sizebinb_center", "sizebinb_width",
+    "binhalfwidthc_raw", "sizebinc_min", "sizebinc_max", "sizebinc_center",
+    "sizebinc_width", "group", "comments", "alive", "almost_born"};
   
   int matsize = total_ages;
   
+  IntegerVector stage_id (matsize, 1);
   StringVector agenames_true (matsize, NA_STRING);
   NumericVector size_true (matsize, NA_REAL);
   NumericVector sizesb_true (matsize, NA_REAL);
@@ -3427,8 +3447,11 @@ Rcpp::List sf_leslie (int min_age, int max_age, int min_fecage,int max_fecage,
   NumericVector sizebinc_width (matsize, NA_REAL);
   IntegerVector group_true (matsize, 0);
   StringVector comments_true (matsize, "No description");
+  IntegerVector alive_true (matsize, 1);
+  IntegerVector almost_born (matsize, 0);
   
   for (int i = 0; i < total_ages; i++) {
+    stage_id = i + 1;
     Rcpp::String part1("Age");
     part1 += (static_cast<char>(i + min_age));
     agenames_true(i) = part1;
@@ -3447,46 +3470,49 @@ Rcpp::List sf_leslie (int min_age, int max_age, int min_fecage,int max_fecage,
     }
   }
   
-  output_longlist(0) = agenames_true;
-  output_longlist(1) = size_true;
-  output_longlist(2) = sizesb_true;
-  output_longlist(3) = sizesc_true;
+  output_longlist(0) = stage_id;
+  output_longlist(1) = agenames_true;
+  output_longlist(2) = size_true;
+  output_longlist(3) = sizesb_true;
+  output_longlist(4) = sizesc_true;
   
-  output_longlist(4) = minage_true;
-  output_longlist(5) = maxage_true;
-  output_longlist(6) = repstatus_true;
-  output_longlist(7) = obsstatus_true;
-  output_longlist(8) = propstatus_true;
-  output_longlist(9) = immstatus_true;
-  output_longlist(10) = matstatus_true;
+  output_longlist(5) = minage_true;
+  output_longlist(6) = maxage_true;
+  output_longlist(7) = repstatus_true;
+  output_longlist(8) = obsstatus_true;
+  output_longlist(9) = propstatus_true;
+  output_longlist(10) = immstatus_true;
+  output_longlist(11) = matstatus_true;
   
-  output_longlist(11) = indataset_true;
+  output_longlist(12) = indataset_true;
   
-  output_longlist(12) = binhalfwidth_true;
-  output_longlist(13) = sizebin_min;
-  output_longlist(14) = sizebin_max;
-  output_longlist(15) = sizebin_center;
-  output_longlist(16) = sizebin_width;
+  output_longlist(13) = binhalfwidth_true;
+  output_longlist(14) = sizebin_min;
+  output_longlist(15) = sizebin_max;
+  output_longlist(16) = sizebin_center;
+  output_longlist(17) = sizebin_width;
   
-  output_longlist(17) = binhalfwidthb_true;
-  output_longlist(18) = sizebinb_min;
-  output_longlist(19) = sizebinb_max;
-  output_longlist(20) = sizebinb_center;
-  output_longlist(21) = sizebinb_width;
+  output_longlist(18) = binhalfwidthb_true;
+  output_longlist(19) = sizebinb_min;
+  output_longlist(20) = sizebinb_max;
+  output_longlist(21) = sizebinb_center;
+  output_longlist(22) = sizebinb_width;
   
-  output_longlist(22) = binhalfwidthc_true;
-  output_longlist(23) = sizebinc_min;
-  output_longlist(24) = sizebinc_max;
-  output_longlist(25) = sizebinc_center;
-  output_longlist(26) = sizebinc_width;
+  output_longlist(23) = binhalfwidthc_true;
+  output_longlist(24) = sizebinc_min;
+  output_longlist(25) = sizebinc_max;
+  output_longlist(26) = sizebinc_center;
+  output_longlist(27) = sizebinc_width;
   
-  output_longlist(27) = group_true;
-  output_longlist(28) = comments_true;
+  output_longlist(28) = group_true;
+  output_longlist(29) = comments_true;
+  output_longlist(30) = alive_true;
+  output_longlist(31) = almost_born;
   
   output_longlist.attr("names") = varnames;
   output_longlist.attr("row.names") = Rcpp::IntegerVector::create(NA_INTEGER, matsize);
   StringVector needed_classes {"data.frame", "stageframe"};
-  output_longlist.attr("class") = needed_classes; // data.frame
+  output_longlist.attr("class") = needed_classes;
   
   return output_longlist;
 }
@@ -3958,19 +3984,18 @@ arma::mat ovreplace(arma::vec allst321, arma::vec idx321old,
 //'
 //' @param StageFrame The stageframe object identifying the life history model
 //' being operationalized.
-//' @param OverWrite The overwrite table used in analysis, as modified by 
-//' \code{.overwrite_reassess}. Must be processed via \code{.overwrite_reassess}
-//' rather than being a raw overwrite or supplement table.
+//' @param OverWrite The supplement or overwrite table used in analysis, as
+//' modified by \code{.sf_reassess()}.
 //' @param repmatrix The reproductive matrix used in analysis.
 //' @param firstage The first age to be used in the analysis. Should typically
 //' be \code{0} for pre-breeding and \code{1} for post-breeding life history
 //' models. If not building age-by-stage MPMs, then should be set to \code{0}.
 //' @param finalage The final age to be used in analysis. If not building
 //' age-by-stage MPMs, then should be set to \code{0}.
-//' @param format Indicates whether historical matrices should be in (1) Ehrlen
-//' or (2) deVries format.
-//' @param style The style of analysis, where 0 is historical, 1 is ahistorical,
-//' and 2 is age-by-stage.
+//' @param format Indicates whether historical matrices should be in (\code{1})
+//' Ehrlen or (\code{2}) deVries format.
+//' @param style The style of analysis, where \code{0} is historical, \code{1}
+//' is ahistorical, and \code{2} is age-by-stage.
 //' @param cont Denotes whether age-by-stage matrix continues past the final
 //' age.
 //' @param filter An integer denoting whether to filter the DataFrame to
@@ -4149,11 +4174,13 @@ Rcpp::List theoldpizzle(DataFrame StageFrame, DataFrame OverWrite,
   
   arma::vec actualage(totallength, fill::zeros);
   arma::vec index321(totallength);
+  arma::vec index321d (totallength); // Version that does not remove transitions ending in death
   arma::vec index21(totallength);
   arma::vec indatalong(totallength, fill::zeros);
   arma::vec aliveequal(totallength);
   arma::vec included(totallength, fill::zeros);
   index321.fill(-1.0);
+  index321d.fill(-1.0);
   index21.fill(-1.0);
   aliveequal.fill(-1.0);
   
@@ -4372,6 +4399,12 @@ Rcpp::List theoldpizzle(DataFrame StageFrame, DataFrame OverWrite,
                 } else {
                   deadandnasty = 0.0;
                 }
+                
+                // Required for proper fecundity estimation in rlefko3
+                index321d(currentindex) = (stage3(currentindex) - 1) + 
+                  ((stage2n(currentindex) - 1) * nostages) + 
+                  ((stage2o(currentindex) - 1) * nostages * nostages) + 
+                  ((stage1(currentindex) - 1) * nostages * nostages * nostages);
                 
                 if (deadandnasty == 0.0) {
                   // The next index variable gives the element in the final matrix
@@ -4595,6 +4628,13 @@ Rcpp::List theoldpizzle(DataFrame StageFrame, DataFrame OverWrite,
           } else {
             deadandnasty = 0.0;
           }
+          
+          // Required for proper fecundity estimation in rlefko3
+          index321d(currentindex) = (stage3(currentindex) - 1) + 
+            ((stage2n(currentindex) - 1) * nostages_nodead_nounborn) + 
+            ((stage2n(currentindex) - 1) * nostages_nodead_nounborn * nostages_nodead_nounborn) + 
+            ((stage1(currentindex) - 1) * nostages_nodead_nounborn * nostages_nodead_nounborn * 
+              nostages_nodead_nounborn);
           
           if (deadandnasty == 0.0) {
             aliveequal(currentindex) = (stage3(currentindex) - 1) + ((stage2n(currentindex) - 1) * 
@@ -5352,7 +5392,7 @@ Rcpp::List theoldpizzle(DataFrame StageFrame, DataFrame OverWrite,
   } // Age-by-stage loop (style = 2)
   
   // Now the final output formatting
-  Rcpp::List output_longlist(59);
+  Rcpp::List output_longlist(60);
   int stage3_length = 0;
   
   arma::uvec used_indices;
@@ -5439,6 +5479,7 @@ Rcpp::List theoldpizzle(DataFrame StageFrame, DataFrame OverWrite,
     
     NumericVector aliveequal_new(new_length);
     NumericVector index321_new(new_length);
+    NumericVector index321d_new(new_length);
     NumericVector index21_new(new_length);
     
     for (int i = 0; i < new_length; i++) {
@@ -5514,6 +5555,7 @@ Rcpp::List theoldpizzle(DataFrame StageFrame, DataFrame OverWrite,
       
       aliveequal_new(i) = aliveequal(used_indices(i));
       index321_new(i) = index321(used_indices(i));
+      index321d_new(i) = index321d(used_indices(i));
       index21_new(i) = index21(used_indices(i));
     }
     
@@ -5582,7 +5624,8 @@ Rcpp::List theoldpizzle(DataFrame StageFrame, DataFrame OverWrite,
     
     output_longlist(56) = aliveequal_new;
     output_longlist(57) = index321_new;
-    output_longlist(58) = index21_new;
+    output_longlist(58) = index321d_new;
+    output_longlist(59) = index21_new;
     
   } else {
     stage3_length = stage3.n_elem;
@@ -5652,7 +5695,8 @@ Rcpp::List theoldpizzle(DataFrame StageFrame, DataFrame OverWrite,
     
     output_longlist(56) = Rcpp::NumericVector(aliveequal.begin(), aliveequal.end());
     output_longlist(57) = Rcpp::NumericVector(index321.begin(), index321.end());
-    output_longlist(58) = Rcpp::NumericVector(index21.begin(), index21.end());
+    output_longlist(58) = Rcpp::NumericVector(index321d.begin(), index321d.end());
+    output_longlist(59) = Rcpp::NumericVector(index21.begin(), index21.end());
   }
   
   CharacterVector namevec = {"stage3", "stage2n", "stage2o", "stage1", "size3",
@@ -5663,7 +5707,7 @@ Rcpp::List theoldpizzle(DataFrame StageFrame, DataFrame OverWrite,
     "indata1", "binwidth", "binbwidth", "bincwidth", "minage3", "minage2",
     "maxage3", "maxage2", "actualage", "group3", "group2n", "group2o", "group1",
     "indata", "ovgiven_t", "ovest_t", "ovgiven_f", "ovest_f", "ovsurvmult",
-    "ovfecmult", "aliveandequal", "index321", "index21"};
+    "ovfecmult", "aliveandequal", "index321", "index321d", "index21"};
   output_longlist.attr("names") = namevec;
   output_longlist.attr("row.names") = Rcpp::IntegerVector::create(NA_INTEGER, stage3_length);
   output_longlist.attr("class") = "data.frame";
@@ -5689,13 +5733,14 @@ Rcpp::List theoldpizzle(DataFrame StageFrame, DataFrame OverWrite,
 //' @param StageFrame The full stageframe for the analysis.
 //' @param repmatrix The modified repmatrix used in the course of computation.
 //' This is used particularly when deVries-format hMPMs are desired.
-//' @param format Indicates whether to output Ehrlen-format hMPMs (1) or
-//' deVries-format hMPMs (2).
-//' @param err_switch If set to 1, then will also output probsrates and
+//' @param format Indicates whether to output Ehrlen-format hMPMs (\code{1}) or
+//' deVries-format hMPMs (\code{2}).
+//' @param err_switch If set to \code{1}, then will also output probsrates and
 //' stage2fec.
 //' 
-//' @return List of three matrices, including the survival-transition (U)
-//' matrix, the fecundity matrix (F), and the sum (A) matrix, with A first.
+//' @return List of three matrices, including the survival-transition (\code{U})
+//' matrix, the fecundity matrix (\code{F}), and the sum (\code{A}) matrix, with
+//' the \code{A} matrix first.
 //' 
 //' @keywords internal
 //' @noRd
@@ -5714,6 +5759,7 @@ List specialpatrolgroup(DataFrame sge9l, DataFrame sge3, DataFrame MainData,
   arma::vec sge9ovsurvmult = as<arma::vec>(sge9l["ovsurvmult"]);
   arma::vec sge9ovfecmult = as<arma::vec>(sge9l["ovfecmult"]);
   arma::vec sge9index321 = as<arma::vec>(sge9l["index321"]);
+  arma::vec sge9index321d = as<arma::vec>(sge9l["index321d"]);
   arma::vec sge9index21 = as<arma::vec>(sge9l["index21"]);
   arma::vec aliveandequal = as<arma::vec>(sge9l["aliveandequal"]);
   
@@ -5787,23 +5833,30 @@ List specialpatrolgroup(DataFrame sge9l, DataFrame sge3, DataFrame MainData,
   
   // This main loop counts individuals going through transitions and sums their
   // fecundities, and then adds that info to the 3-trans and 2-trans tables
-  for (int i = 0; i < n; i++) { 
-    arma::uvec choiceelement = find(sge9index321 == dataindex321(i)); // Added this now
+  for (int i = 0; i < n; i++) {
+    // Survival portion and main individual counter
+    arma::uvec choiceelement = find(sge9index321 == dataindex321(i));
     
-    stage2fec((dataindex21(i)), 0) = stage2fec((dataindex21(i)), 0) + 1; // Yields sum of indivs with particular transition
+    stage2fec((dataindex21(i)), 0) = stage2fec((dataindex21(i)), 0) + 1; // Indiv sum with particular transition
     
     if (choiceelement.n_elem > 0) {
-      probsrates0(choiceelement(0)) = probsrates0(choiceelement(0)) + 1; // Yields sum of indivs with particular transition
+      probsrates0(choiceelement(0)) = probsrates0(choiceelement(0)) + 1; // Indiv sum with particular transition
       
       if (dataalive3(i) > 0) {
         stage2fec((dataindex21(i)), 1) = stage2fec((dataindex21(i)), 1) + 1;
       }
       
+    }
+    
+    // Fecundity sums
+    arma::uvec choiceelement_f = find(sge9index321d == dataindex321(i));
+    if (choiceelement_f.n_elem > 0) {
       stage2fec((dataindex21(i)), 2) = stage2fec((dataindex21(i)), 2) + datausedfec2(i);
     }
     
     if (format == 2) {
       for (int j = 0; j < aes_count; j++) {
+        // Survival portion
         arma::uvec choiceelementp = find(sge9index321 == dataindex321_prior(i, j));
         
         stage2fecp((dataindex21(i)), 0) = stage2fecp((dataindex21(i)), 0) + 1;
@@ -5814,7 +5867,10 @@ List specialpatrolgroup(DataFrame sge9l, DataFrame sge3, DataFrame MainData,
           if (dataalive3(i) > 0) {
             stage2fecp((dataindex21(i)), 1) = stage2fecp((dataindex21(i)), 1) + 1;
           }
-          
+        }
+        
+        arma::uvec choiceelementp_f = find(sge9index321d == dataindex321_prior(i, j));
+        if (choiceelementp_f.n_elem > 0) {
           stage2fecp((dataindex21(i)), 2) = stage2fecp((dataindex21(i)), 2) + datausedfec2(i);
         }
       }
@@ -5966,8 +6022,9 @@ List specialpatrolgroup(DataFrame sge9l, DataFrame sge3, DataFrame MainData,
 //' \code{usedstage} columns.
 //' @param StageFrame The full stageframe for the analysis.
 //' 
-//' @return List of three matrices, including the survival-transition (U)
-//' matrix, the fecundity matrix (F), and the sum (A) matrix, with A first.
+//' @return List of three matrices, including the survival-transition (\code{U})
+//' matrix, the fecundity matrix (\code{F}), and the sum (\code{A}) matrix, with
+//' the \code{A} matrix first.
 //' 
 //' @keywords internal
 //' @noRd
@@ -6138,8 +6195,9 @@ List normalpatrolgroup(DataFrame sge3, DataFrame sge2, DataFrame MainData,
 //' @param lastage An integer coding for the last age to use in matrix
 //' construction.
 //' 
-//' @return List of three matrices, including the survival-transition (U)
-//' matrix, the fecundity matrix (F), and the sum (A) matrix, with A first.
+//' @return List of three matrices, including the survival-transition (\code{U})
+//' matrix, the fecundity matrix (\code{F}), and the sum (\code{A}) matrix, with
+//' the \code{A} matrix first.
 //' 
 //' @keywords internal
 //' @noRd
@@ -6235,8 +6293,9 @@ Rcpp::List minorpatrolgroup(DataFrame MainData, DataFrame StageFrame,
 //' @param cont A logical value indicating whether to lump survival past the
 //' last age into a final age transition set on the supermatrix diagonal.
 //' 
-//' @return List of three matrices, including the survival-transition (U)
-//' matrix, the fecundity matrix (F), and the sum (A) matrix, with A first.
+//' @return List of three matrices, including the survival-transition (\code{U})
+//' matrix, the fecundity matrix (\code{F}), and the sum (\code{A}) matrix, with
+//' the \code{A} matrix first.
 //' 
 //' @keywords internal
 //' @noRd
@@ -7679,7 +7738,20 @@ double preouterator(List modelproxy, NumericVector maincoefs, arma::imat randind
 //' size_b, size_c, reproductive status, fecundity, juvenile survival, juvenile
 //' observation status, juvenile size, juvenile size_b, juvenile size_c,
 //' juvenile reproductive status, and juvenile maturity status.
-//' @param dens A numeric value equal to the density to be used in calculations.
+//' @param dens_vr A logical value indicating whether any vital rates are
+//' density dependent.
+//' @param dvr_yn A logical vector indicating whether each vital rate is density
+//' dependent.
+//' @param dvr_style An integer vector indicating the style of density
+//' dependence for each vital rate.
+//' @param dvr_alpha A numeric vector indicating the value of alpha to use in
+//' density dependence for each vital rate.
+//' @param dvr_beta A numeric vector indicating the value of beta to use in
+//' density dependence for each vital rate.
+//' @param dens_n A numeric vector corresponding to the population size to use
+//' in vital rate density dependence calculations.
+//' @param dens A numeric value equal to the spatial density to be used in
+//' calculations.
 //' @param fecmod A scalar multiplier for fecundity.
 //' @param maxsize The maximum primary size to be used in element estimation.
 //' @param maxsizeb The maximum secondary size to be used in element estimation.
@@ -7747,6 +7819,8 @@ List jerzeibalowski(DataFrame AllStages, DataFrame stageframe, int matrixformat,
   NumericVector f2_indc, NumericVector f1_indc, StringVector r2_inda,
   StringVector r1_inda, StringVector r2_indb, StringVector r1_indb,
   StringVector r2_indc, StringVector r1_indc, NumericVector dev_terms,
+  bool dens_vr, LogicalVector dvr_yn, IntegerVector dvr_style,
+  NumericVector dvr_alpha, NumericVector dvr_beta, NumericVector dens_n,
   double dens, double fecmod, double maxsize, double maxsizeb, double maxsizec,
   unsigned int firstage, unsigned int finalage, bool negfec, int yearnumber,
   int patchnumber, double exp_tol = 700.0, double theta_tol = 100000000.0,
@@ -8115,6 +8189,220 @@ List jerzeibalowski(DataFrame AllStages, DataFrame stageframe, int matrixformat,
   String chosen_r2indc = r2_indc(yearnumber);
   String chosen_r1indc = r1_indc(yearnumber);
   
+  // Here we create the density corrections under vital rate density dependence
+  double vr1_dcorr = 1.0;
+  double vr2_dcorr = 1.0;
+  double vr3_dcorr = 1.0;
+  double vr4_dcorr = 1.0;
+  double vr5_dcorr = 1.0;
+  double vr6_dcorr = 1.0;
+  double vr7_dcorr = 1.0;
+  double vr8_dcorr = 1.0;
+  double vr9_dcorr = 1.0;
+  double vr10_dcorr = 1.0;
+  double vr11_dcorr = 1.0;
+  double vr12_dcorr = 1.0;
+  double vr13_dcorr = 1.0;
+  double vr14_dcorr = 1.0;
+  
+  if (dens_vr) {
+    // Adult survival
+    if (dvr_yn(0)) {
+      if (dvr_style(0) == 1) {
+        vr1_dcorr = dvr_alpha(0) * exp(-1 * dvr_beta(0) * dens_n(0));
+      } else if (dvr_style(0) == 2) {
+        vr1_dcorr = dvr_alpha(0) / (1 + dvr_beta(0) * dens_n(0));
+      } else if (dvr_style(0) == 3) {
+        vr1_dcorr = 1 / (1 + exp(dvr_alpha(0) * dens_n(0) + dvr_beta(0)));
+      } else if (dvr_style(0) == 4) {
+        vr1_dcorr = 1 - (dens_n(0) / dvr_alpha(0));
+        if (dvr_beta(0) != 0 && vr1_dcorr < -1.0) vr1_dcorr = 0.0; 
+      }
+    }
+    
+    // Adult observation
+    if (dvr_yn(1)) {
+      if (dvr_style(1) == 1) {
+        vr1_dcorr = dvr_alpha(1) * exp(-1 * dvr_beta(1) * dens_n(1));
+      } else if (dvr_style(1) == 2) {
+        vr1_dcorr = dvr_alpha(1) / (1 + dvr_beta(1) * dens_n(1));
+      } else if (dvr_style(1) == 3) {
+        vr1_dcorr = 1 / (1 + exp(dvr_alpha(1) * dens_n(1) + dvr_beta(1)));
+      } else if (dvr_style(1) == 4) {
+        vr1_dcorr = 1 - (dens_n(1) / dvr_alpha(1));
+        if (dvr_beta(1) != 0 && vr1_dcorr < -1.0) vr1_dcorr = 0.0; 
+      }
+    }
+    
+    // Adult sizea
+    if (dvr_yn(2)) {
+      if (dvr_style(2) == 1) {
+        vr1_dcorr = dvr_alpha(2) * exp(-1 * dvr_beta(2) * dens_n(2));
+      } else if (dvr_style(2) == 2) {
+        vr1_dcorr = dvr_alpha(2) / (1 + dvr_beta(2) * dens_n(2));
+      } else if (dvr_style(2) == 3) {
+        vr1_dcorr = 1 / (1 + exp(dvr_alpha(2) * dens_n(2) + dvr_beta(2)));
+      } else if (dvr_style(2) == 4) {
+        vr1_dcorr = 1 - (dens_n(2) / dvr_alpha(2));
+        if (dvr_beta(2) != 0 && vr1_dcorr < -1.0) vr1_dcorr = 0.0; 
+      }
+    }
+    
+    // Adult sizeb
+    if (dvr_yn(3)) {
+      if (dvr_style(3) == 1) {
+        vr1_dcorr = dvr_alpha(3) * exp(-1 * dvr_beta(3) * dens_n(3));
+      } else if (dvr_style(3) == 2) {
+        vr1_dcorr = dvr_alpha(3) / (1 + dvr_beta(3) * dens_n(3));
+      } else if (dvr_style(3) == 3) {
+        vr1_dcorr = 1 / (1 + exp(dvr_alpha(3) * dens_n(3) + dvr_beta(3)));
+      } else if (dvr_style(3) == 4) {
+        vr1_dcorr = 1 - (dens_n(3) / dvr_alpha(3));
+        if (dvr_beta(3) != 0 && vr1_dcorr < -1.0) vr1_dcorr = 0.0; 
+      }
+    }
+    
+    // Adult sizec
+    if (dvr_yn(4)) {
+      if (dvr_style(4) == 1) {
+        vr1_dcorr = dvr_alpha(4) * exp(-1 * dvr_beta(4) * dens_n(4));
+      } else if (dvr_style(4) == 2) {
+        vr1_dcorr = dvr_alpha(4) / (1 + dvr_beta(4) * dens_n(4));
+      } else if (dvr_style(4) == 3) {
+        vr1_dcorr = 1 / (1 + exp(dvr_alpha(4) * dens_n(4) + dvr_beta(4)));
+      } else if (dvr_style(4) == 4) {
+        vr1_dcorr = 1 - (dens_n(4) / dvr_alpha(4));
+        if (dvr_beta(4) != 0 && vr1_dcorr < -1.0) vr1_dcorr = 0.0; 
+      }
+    }
+    
+    // Adult reproduction
+    if (dvr_yn(5)) {
+      if (dvr_style(5) == 1) {
+        vr1_dcorr = dvr_alpha(5) * exp(-1 * dvr_beta(5) * dens_n(5));
+      } else if (dvr_style(5) == 2) {
+        vr1_dcorr = dvr_alpha(5) / (1 + dvr_beta(5) * dens_n(5));
+      } else if (dvr_style(5) == 3) {
+        vr1_dcorr = 1 / (1 + exp(dvr_alpha(5) * dens_n(5) + dvr_beta(5)));
+      } else if (dvr_style(5) == 4) {
+        vr1_dcorr = 1 - (dens_n(5) / dvr_alpha(5));
+        if (dvr_beta(5) != 0 && vr1_dcorr < -1.0) vr1_dcorr = 0.0; 
+      }
+    }
+    
+    // Adult fecundity
+    if (dvr_yn(6)) {
+      if (dvr_style(6) == 1) {
+        vr1_dcorr = dvr_alpha(6) * exp(-1 * dvr_beta(6) * dens_n(6));
+      } else if (dvr_style(6) == 2) {
+        vr1_dcorr = dvr_alpha(6) / (1 + dvr_beta(6) * dens_n(6));
+      } else if (dvr_style(6) == 3) {
+        vr1_dcorr = 1 / (1 + exp(dvr_alpha(6) * dens_n(6) + dvr_beta(6)));
+      } else if (dvr_style(6) == 4) {
+        vr1_dcorr = 1 - (dens_n(6) / dvr_alpha(6));
+        if (dvr_beta(6) != 0 && vr1_dcorr < -1.0) vr1_dcorr = 0.0; 
+      }
+    }
+    
+    // Juvenile survival
+    if (dvr_yn(7)) {
+      if (dvr_style(7) == 1) {
+        vr1_dcorr = dvr_alpha(7) * exp(-1 * dvr_beta(7) * dens_n(7));
+      } else if (dvr_style(7) == 2) {
+        vr1_dcorr = dvr_alpha(7) / (1 + dvr_beta(7) * dens_n(7));
+      } else if (dvr_style(7) == 3) {
+        vr1_dcorr = 1 / (1 + exp(dvr_alpha(7) * dens_n(7) + dvr_beta(7)));
+      } else if (dvr_style(7) == 4) {
+        vr1_dcorr = 1 - (dens_n(7) / dvr_alpha(7));
+        if (dvr_beta(7) != 0 && vr1_dcorr < -1.0) vr1_dcorr = 0.0; 
+      }
+    }
+    
+    // Juvenile observation
+    if (dvr_yn(8)) {
+      if (dvr_style(8) == 1) {
+        vr1_dcorr = dvr_alpha(8) * exp(-1 * dvr_beta(8) * dens_n(8));
+      } else if (dvr_style(8) == 2) {
+        vr1_dcorr = dvr_alpha(8) / (1 + dvr_beta(8) * dens_n(8));
+      } else if (dvr_style(8) == 3) {
+        vr1_dcorr = 1 / (1 + exp(dvr_alpha(8) * dens_n(8) + dvr_beta(8)));
+      } else if (dvr_style(8) == 4) {
+        vr1_dcorr = 1 - (dens_n(8) / dvr_alpha(8));
+        if (dvr_beta(8) != 0 && vr1_dcorr < -1.0) vr1_dcorr = 0.0; 
+      }
+    }
+    
+    // Juvenile sizea
+    if (dvr_yn(9)) {
+      if (dvr_style(9) == 1) {
+        vr1_dcorr = dvr_alpha(9) * exp(-1 * dvr_beta(9) * dens_n(9));
+      } else if (dvr_style(9) == 2) {
+        vr1_dcorr = dvr_alpha(9) / (1 + dvr_beta(9) * dens_n(9));
+      } else if (dvr_style(9) == 3) {
+        vr1_dcorr = 1 / (1 + exp(dvr_alpha(9) * dens_n(9) + dvr_beta(9)));
+      } else if (dvr_style(9) == 4) {
+        vr1_dcorr = 1 - (dens_n(9) / dvr_alpha(9));
+        if (dvr_beta(9) != 0 && vr1_dcorr < -1.0) vr1_dcorr = 0.0; 
+      }
+    }
+    
+    // Juvenile sizeb
+    if (dvr_yn(10)) {
+      if (dvr_style(10) == 1) {
+        vr1_dcorr = dvr_alpha(10) * exp(-1 * dvr_beta(10) * dens_n(10));
+      } else if (dvr_style(10) == 2) {
+        vr1_dcorr = dvr_alpha(10) / (1 + dvr_beta(10) * dens_n(10));
+      } else if (dvr_style(10) == 3) {
+        vr1_dcorr = 1 / (1 + exp(dvr_alpha(10) * dens_n(10) + dvr_beta(10)));
+      } else if (dvr_style(10) == 4) {
+        vr1_dcorr = 1 - (dens_n(10) / dvr_alpha(10));
+        if (dvr_beta(10) != 0 && vr1_dcorr < -1.0) vr1_dcorr = 0.0; 
+      }
+    }
+    
+    // Juvenile sizec
+    if (dvr_yn(11)) {
+      if (dvr_style(11) == 1) {
+        vr1_dcorr = dvr_alpha(11) * exp(-1 * dvr_beta(11) * dens_n(11));
+      } else if (dvr_style(11) == 2) {
+        vr1_dcorr = dvr_alpha(11) / (1 + dvr_beta(11) * dens_n(11));
+      } else if (dvr_style(11) == 3) {
+        vr1_dcorr = 1 / (1 + exp(dvr_alpha(11) * dens_n(11) + dvr_beta(11)));
+      } else if (dvr_style(11) == 4) {
+        vr1_dcorr = 1 - (dens_n(11) / dvr_alpha(11));
+        if (dvr_beta(11) != 0 && vr1_dcorr < -1.0) vr1_dcorr = 0.0; 
+      }
+    }
+    
+    // Juvenile reproduction
+    if (dvr_yn(12)) {
+      if (dvr_style(12) == 1) {
+        vr1_dcorr = dvr_alpha(12) * exp(-1 * dvr_beta(12) * dens_n(12));
+      } else if (dvr_style(12) == 2) {
+        vr1_dcorr = dvr_alpha(12) / (1 + dvr_beta(12) * dens_n(12));
+      } else if (dvr_style(12) == 3) {
+        vr1_dcorr = 1 / (1 + exp(dvr_alpha(12) * dens_n(12) + dvr_beta(12)));
+      } else if (dvr_style(12) == 4) {
+        vr1_dcorr = 1 - (dens_n(12) / dvr_alpha(12));
+        if (dvr_beta(12) != 0 && vr1_dcorr < -1.0) vr1_dcorr = 0.0; 
+      }
+    }
+    
+    // Juvenile maturity
+    if (dvr_yn(13)) {
+      if (dvr_style(13) == 1) {
+        vr1_dcorr = dvr_alpha(13) * exp(-1 * dvr_beta(13) * dens_n(13));
+      } else if (dvr_style(13) == 2) {
+        vr1_dcorr = dvr_alpha(13) / (1 + dvr_beta(13) * dens_n(13));
+      } else if (dvr_style(13) == 3) {
+        vr1_dcorr = 1 / (1 + exp(dvr_alpha(13) * dens_n(13) + dvr_beta(13)));
+      } else if (dvr_style(13) == 4) {
+        vr1_dcorr = 1 - (dens_n(13) / dvr_alpha(13));
+        if (dvr_beta(13) != 0 && vr1_dcorr < -1.0) vr1_dcorr = 0.0; 
+      }
+    }
+  }
+  
   // The output matrix to collect conditional probabilities
   // Matrix out is 0 matrix with n rows & 6 columns: 0 surv, 1 obs, 2 repst,
   // 3 size, 4 size_b, 5 size_c, 6 matst, >6 are test variables
@@ -8160,8 +8448,10 @@ List jerzeibalowski(DataFrame AllStages, DataFrame stageframe, int matrixformat,
             survsigma, grp2o(i), grp1(i), patchnumber, yearnumber, 4, 1, exp_tol,
             theta_tol, ipm_cdf, matrixformat, fecmod, repentry(i), negfec,
             stage2n(i), nostages, 0);
+          out_vec(0) = out_vec(0) * vr1_dcorr;
         } else {
           out_vec(0) = survcoefs(0);
+          out_vec(0) = out_vec(0) * vr1_dcorr;
         }
         if (err_check) out(i, 0) = out_vec(0);
         
@@ -8174,9 +8464,11 @@ List jerzeibalowski(DataFrame AllStages, DataFrame stageframe, int matrixformat,
             obssigma, grp2o(i), grp1(i), patchnumber, yearnumber, 4, 2, exp_tol,
             theta_tol, ipm_cdf, matrixformat, fecmod, repentry(i), negfec,
             stage2n(i), nostages, 0);
+          out_vec(1) = out_vec(1) * vr2_dcorr;
           
         } else {
           out_vec(1) = obscoefs(0);
+          out_vec(1) = out_vec(1) * vr2_dcorr;
         }
         if (err_check) out(i, 1) = out_vec(1);
         
@@ -8195,9 +8487,11 @@ List jerzeibalowski(DataFrame AllStages, DataFrame stageframe, int matrixformat,
               patchnumber, yearnumber, sizedist, 3, exp_tol, theta_tol, ipm_cdf,
               matrixformat, fecmod, repentry(i), negfec, stage2n(i), nostages,
               sizetrunc);
+            out_vec(3) = out_vec(3) * vr3_dcorr;
               
           } else {
             out_vec(3) = 1.0;
+            out_vec(3) = out_vec(3) * vr3_dcorr;
           }
           if (err_check) out(i, 3) = out_vec(3);
           
@@ -8214,8 +8508,10 @@ List jerzeibalowski(DataFrame AllStages, DataFrame stageframe, int matrixformat,
               sizebsigma, grp2o(i), grp1(i), patchnumber, yearnumber, sizebdist,
               4, exp_tol, theta_tol, ipm_cdf, matrixformat, fecmod, repentry(i),
               negfec, stage2n(i), nostages, sizebtrunc);
+            out_vec(4) = out_vec(4) * vr4_dcorr;
           } else {
             out_vec(4) = 1.0;
+            out_vec(4) = out_vec(4) * vr4_dcorr;
           }
           if (err_check) out(i, 4) = out_vec(4);
           
@@ -8232,8 +8528,10 @@ List jerzeibalowski(DataFrame AllStages, DataFrame stageframe, int matrixformat,
               sizecsigma, grp2o(i), grp1(i), patchnumber, yearnumber, sizecdist,
               5, exp_tol, theta_tol, ipm_cdf, matrixformat, fecmod, repentry(i),
               negfec, stage2n(i), nostages, sizectrunc);
+            out_vec(5) = out_vec(5) * vr5_dcorr;
           } else {
             out_vec(5) = 1.0;
+            out_vec(5) = out_vec(5) * vr5_dcorr;
           }
           if (err_check) out(i, 5) = out_vec(5);
           
@@ -8246,15 +8544,19 @@ List jerzeibalowski(DataFrame AllStages, DataFrame stageframe, int matrixformat,
               sizeind_rownames_zi, false, repstsigma, grp2o(i), grp1(i),
               patchnumber, yearnumber, 4, 6, exp_tol, theta_tol, ipm_cdf,
               matrixformat, fecmod, repentry(i), negfec, stage2n(i), nostages, 0);
+            out_vec(2) = out_vec(2) * vr6_dcorr;
               
             if (fl3(i) == 0) {
               out_vec(2) = 1.0 - out_vec(2);
             }
           } else {
             if (fl3(i) == 0) {
-              out_vec(2) = 1.0 - repstcoefs(0);
+              out_vec(2) = repstcoefs(0);
+              out_vec(2) = out_vec(2) * vr6_dcorr;
+              out_vec(2) = 1.0 - out_vec(2);
             } else if (fl3(i) == 1) {
               out_vec(2) = repstcoefs(0);
+              out_vec(2) = out_vec(2) * vr6_dcorr;
             } else {
               out_vec(2) = 0.0;
             }
@@ -8293,6 +8595,7 @@ List jerzeibalowski(DataFrame AllStages, DataFrame stageframe, int matrixformat,
             jsizeind_rownames_zi, false, jmatstsigma, grp2o(i), grp1(i),
             patchnumber, yearnumber, 4, 21, exp_tol, theta_tol, ipm_cdf, matrixformat,
             fecmod, repentry(i), negfec, stage2n(i), nostages, 0);
+          mat_predicted = mat_predicted * vr14_dcorr;
           
           if (mat3(i) > 0.5) {
             out_vec(6) = mat_predicted;
@@ -8301,9 +8604,9 @@ List jerzeibalowski(DataFrame AllStages, DataFrame stageframe, int matrixformat,
           }
         } else {
           if (mat3(i) > 0.5) {
-            out_vec(6) = 1;
+            out_vec(6) = vr14_dcorr;
           } else {
-            out_vec(6) = 0;
+            out_vec(6) = 1 - vr14_dcorr;
           }
         }
         if (err_check) out(i, 6) = out_vec(6);
@@ -8317,8 +8620,10 @@ List jerzeibalowski(DataFrame AllStages, DataFrame stageframe, int matrixformat,
             jsurvsigma, grp2o(i), grp1(i), patchnumber, yearnumber, 4, 8, exp_tol,
             theta_tol, ipm_cdf, matrixformat, fecmod, repentry(i), negfec,
             stage2n(i), nostages, 0);
+          out_vec(0) = out_vec(0) * vr8_dcorr;
         } else {
           out_vec(0) = jsurvcoefs(0);
+          out_vec(0) = out_vec(0) * vr8_dcorr;
         }
         if (err_check) out(i, 0) = out_vec(0);
         
@@ -8331,8 +8636,10 @@ List jerzeibalowski(DataFrame AllStages, DataFrame stageframe, int matrixformat,
             jobssigma, grp2o(i), grp1(i), patchnumber, yearnumber, 4, 9, exp_tol,
             theta_tol, ipm_cdf, matrixformat, fecmod, repentry(i), negfec,
             stage2n(i), nostages, 0);
+          out_vec(1) = out_vec(1) * vr9_dcorr;
         } else {
           out_vec(1) = jobscoefs(0);
+          out_vec(1) = out_vec(1) * vr9_dcorr;
         }
         if (err_check) out(i, 1) = out_vec(1);
         
@@ -8346,8 +8653,10 @@ List jerzeibalowski(DataFrame AllStages, DataFrame stageframe, int matrixformat,
               jsizesigma, grp2o(i), grp1(i), patchnumber, yearnumber, sizedist, 10,
               exp_tol, theta_tol, ipm_cdf, matrixformat, fecmod, repentry(i), negfec,
               stage2n(i), nostages, jsizetrunc);
+            out_vec(3) = out_vec(3) * vr10_dcorr;
           } else {
             out_vec(3) = 1.0;
+            out_vec(3) = out_vec(3) * vr10_dcorr;
           }
           if (err_check) out(i, 3) = out_vec(3);
           
@@ -8360,8 +8669,10 @@ List jerzeibalowski(DataFrame AllStages, DataFrame stageframe, int matrixformat,
               jsizebsigma, grp2o(i), grp1(i), patchnumber, yearnumber, sizebdist, 11,
               exp_tol, theta_tol, ipm_cdf, matrixformat, fecmod, repentry(i), negfec,
               stage2n(i), nostages, jsizebtrunc);
+            out_vec(4) = out_vec(4) * vr11_dcorr;
           } else {
             out_vec(4) = 1.0;
+            out_vec(4) = out_vec(4) * vr11_dcorr;
           }
           if (err_check) out(i, 4) = out_vec(4);
           
@@ -8374,8 +8685,10 @@ List jerzeibalowski(DataFrame AllStages, DataFrame stageframe, int matrixformat,
               jsizecsigma, grp2o(i), grp1(i), patchnumber, yearnumber, sizecdist, 12,
               exp_tol, theta_tol, ipm_cdf, matrixformat, fecmod, repentry(i), negfec,
               stage2n(i), nostages, jsizectrunc);
+            out_vec(5) = out_vec(5) * vr12_dcorr;
           } else {
             out_vec(5) = 1.0;
+            out_vec(5) = out_vec(5) * vr12_dcorr;
           }
           if (err_check) out(i, 5) = out_vec(5);
           
@@ -8388,15 +8701,19 @@ List jerzeibalowski(DataFrame AllStages, DataFrame stageframe, int matrixformat,
               jrepstsigma, grp2o(i), grp1(i), patchnumber, yearnumber, 4, 13, exp_tol,
               theta_tol, ipm_cdf, matrixformat, fecmod, repentry(i), negfec,
               stage2n(i), nostages, 0);
+            out_vec(2) = out_vec(2) * vr13_dcorr;
               
             if (fl3(i) == 0) {
               out_vec(2) = 1.0 - out_vec(2);
             }
           } else {
             if (fl3(i) == 0) {
-              out_vec(2) = 1.0 - jrepstcoefs(0);
+              out_vec(2) = jrepstcoefs(0);
+              out_vec(2) = out_vec(2) * vr13_dcorr;
+              out_vec(2) = 1.0 - out_vec(2);
             } else if (fl3(i) == 1) {
               out_vec(2) = jrepstcoefs(0);
+              out_vec(2) = out_vec(2) * vr13_dcorr;
             } else {
               out_vec(2) = 0.0;
             }
@@ -8442,12 +8759,15 @@ List jerzeibalowski(DataFrame AllStages, DataFrame stageframe, int matrixformat,
           grp2o(i), grp1(i), patchnumber, yearnumber, fecdist, 7, exp_tol,
           theta_tol, ipm_cdf, matrixformat, fecmod, repentry(i), negfec,
           stage2n(i), nostages, fectrunc);
+        fectransmat(k) = fectransmat(k) * vr7_dcorr;
         
       } else if (ovgivenf(i) != -1 ) {
         fectransmat(k) = ovgivenf(i);
+        fectransmat(k) = fectransmat(k) * vr7_dcorr;
       }
     } else if (ovgivenf(i) != -1 ) {
       fectransmat(k) = ovgivenf(i);
+      fectransmat(k) = fectransmat(k) * vr7_dcorr;
     }
   }
   
@@ -8585,7 +8905,20 @@ List jerzeibalowski(DataFrame AllStages, DataFrame stageframe, int matrixformat,
 //' size_b, size_c, reproductive status, fecundity, juvenile survival, juvenile
 //' observation status, juvenile size, juvenile size_b, juvenile size_c,
 //' juvenile reproductive status, and juvenile maturity status.
-//' @param dens A numeric value equal to the density to be used in calculations.
+//' @param dens_vr A logical value indicating whether any vital rates are
+//' density dependent.
+//' @param dvr_yn A logical vector indicating whether each vital rate is density
+//' dependent.
+//' @param dvr_style An integer vector indicating the style of density
+//' dependence for each vital rate.
+//' @param dvr_alpha A numeric vector indicating the value of alpha to use in
+//' density dependence for each vital rate.
+//' @param dvr_beta A numeric vector indicating the value of beta to use in
+//' density dependence for each vital rate.
+//' @param dens_n A numeric vector corresponding to the population size to use
+//' in vital rate density dependence calculations.
+//' @param dens A numeric value equal to the spatial density to be used in
+//' calculations.
 //' @param fecmod A scalar multiplier for fecundity.
 //' @param maxsize The maximum primary size to be used in element estimation.
 //' @param maxsizeb The maximum secondary size to be used in element estimation.
@@ -8654,6 +8987,8 @@ List jerzeibalowski_sp(DataFrame AllStages, DataFrame stageframe, int matrixform
   NumericVector f2_indc, NumericVector f1_indc, StringVector r2_inda,
   StringVector r1_inda, StringVector r2_indb, StringVector r1_indb,
   StringVector r2_indc, StringVector r1_indc, NumericVector dev_terms,
+  bool dens_vr, LogicalVector dvr_yn, IntegerVector dvr_style,
+  NumericVector dvr_alpha, NumericVector dvr_beta, NumericVector dens_n,
   double dens, double fecmod, double maxsize, double maxsizeb, double maxsizec,
   unsigned int firstage, unsigned int finalage, bool negfec, int yearnumber,
   int patchnumber, double exp_tol = 700.0, double theta_tol = 100000000.0,
@@ -9022,6 +9357,220 @@ List jerzeibalowski_sp(DataFrame AllStages, DataFrame stageframe, int matrixform
   String chosen_r2indc = r2_indc(yearnumber);
   String chosen_r1indc = r1_indc(yearnumber);
   
+  // Here we create the density corrections under vital rate density dependence
+  double vr1_dcorr = 1.0;
+  double vr2_dcorr = 1.0;
+  double vr3_dcorr = 1.0;
+  double vr4_dcorr = 1.0;
+  double vr5_dcorr = 1.0;
+  double vr6_dcorr = 1.0;
+  double vr7_dcorr = 1.0;
+  double vr8_dcorr = 1.0;
+  double vr9_dcorr = 1.0;
+  double vr10_dcorr = 1.0;
+  double vr11_dcorr = 1.0;
+  double vr12_dcorr = 1.0;
+  double vr13_dcorr = 1.0;
+  double vr14_dcorr = 1.0;
+  
+  if (dens_vr) {
+    // Adult survival
+    if (dvr_yn(0)) {
+      if (dvr_style(0) == 1) {
+        vr1_dcorr = dvr_alpha(0) * exp(-1 * dvr_beta(0) * dens_n(0));
+      } else if (dvr_style(0) == 2) {
+        vr1_dcorr = dvr_alpha(0) / (1 + dvr_beta(0) * dens_n(0));
+      } else if (dvr_style(0) == 3) {
+        vr1_dcorr = 1 / (1 + exp(dvr_alpha(0) * dens_n(0) + dvr_beta(0)));
+      } else if (dvr_style(0) == 4) {
+        vr1_dcorr = 1 - (dens_n(0) / dvr_alpha(0));
+        if (dvr_beta(0) != 0 && vr1_dcorr < -1.0) vr1_dcorr = 0.0; 
+      }
+    }
+    
+    // Adult observation
+    if (dvr_yn(1)) {
+      if (dvr_style(1) == 1) {
+        vr1_dcorr = dvr_alpha(1) * exp(-1 * dvr_beta(1) * dens_n(1));
+      } else if (dvr_style(1) == 2) {
+        vr1_dcorr = dvr_alpha(1) / (1 + dvr_beta(1) * dens_n(1));
+      } else if (dvr_style(1) == 3) {
+        vr1_dcorr = 1 / (1 + exp(dvr_alpha(1) * dens_n(1) + dvr_beta(1)));
+      } else if (dvr_style(1) == 4) {
+        vr1_dcorr = 1 - (dens_n(1) / dvr_alpha(1));
+        if (dvr_beta(1) != 0 && vr1_dcorr < -1.0) vr1_dcorr = 0.0; 
+      }
+    }
+    
+    // Adult sizea
+    if (dvr_yn(2)) {
+      if (dvr_style(2) == 1) {
+        vr1_dcorr = dvr_alpha(2) * exp(-1 * dvr_beta(2) * dens_n(2));
+      } else if (dvr_style(2) == 2) {
+        vr1_dcorr = dvr_alpha(2) / (1 + dvr_beta(2) * dens_n(2));
+      } else if (dvr_style(2) == 3) {
+        vr1_dcorr = 1 / (1 + exp(dvr_alpha(2) * dens_n(2) + dvr_beta(2)));
+      } else if (dvr_style(2) == 4) {
+        vr1_dcorr = 1 - (dens_n(2) / dvr_alpha(2));
+        if (dvr_beta(2) != 0 && vr1_dcorr < -1.0) vr1_dcorr = 0.0; 
+      }
+    }
+    
+    // Adult sizeb
+    if (dvr_yn(3)) {
+      if (dvr_style(3) == 1) {
+        vr1_dcorr = dvr_alpha(3) * exp(-1 * dvr_beta(3) * dens_n(3));
+      } else if (dvr_style(3) == 2) {
+        vr1_dcorr = dvr_alpha(3) / (1 + dvr_beta(3) * dens_n(3));
+      } else if (dvr_style(3) == 3) {
+        vr1_dcorr = 1 / (1 + exp(dvr_alpha(3) * dens_n(3) + dvr_beta(3)));
+      } else if (dvr_style(3) == 4) {
+        vr1_dcorr = 1 - (dens_n(3) / dvr_alpha(3));
+        if (dvr_beta(3) != 0 && vr1_dcorr < -1.0) vr1_dcorr = 0.0; 
+      }
+    }
+    
+    // Adult sizec
+    if (dvr_yn(4)) {
+      if (dvr_style(4) == 1) {
+        vr1_dcorr = dvr_alpha(4) * exp(-1 * dvr_beta(4) * dens_n(4));
+      } else if (dvr_style(4) == 2) {
+        vr1_dcorr = dvr_alpha(4) / (1 + dvr_beta(4) * dens_n(4));
+      } else if (dvr_style(4) == 3) {
+        vr1_dcorr = 1 / (1 + exp(dvr_alpha(4) * dens_n(4) + dvr_beta(4)));
+      } else if (dvr_style(4) == 4) {
+        vr1_dcorr = 1 - (dens_n(4) / dvr_alpha(4));
+        if (dvr_beta(4) != 0 && vr1_dcorr < -1.0) vr1_dcorr = 0.0; 
+      }
+    }
+    
+    // Adult reproduction
+    if (dvr_yn(5)) {
+      if (dvr_style(5) == 1) {
+        vr1_dcorr = dvr_alpha(5) * exp(-1 * dvr_beta(5) * dens_n(5));
+      } else if (dvr_style(5) == 2) {
+        vr1_dcorr = dvr_alpha(5) / (1 + dvr_beta(5) * dens_n(5));
+      } else if (dvr_style(5) == 3) {
+        vr1_dcorr = 1 / (1 + exp(dvr_alpha(5) * dens_n(5) + dvr_beta(5)));
+      } else if (dvr_style(5) == 4) {
+        vr1_dcorr = 1 - (dens_n(5) / dvr_alpha(5));
+        if (dvr_beta(5) != 0 && vr1_dcorr < -1.0) vr1_dcorr = 0.0; 
+      }
+    }
+    
+    // Adult fecundity
+    if (dvr_yn(6)) {
+      if (dvr_style(6) == 1) {
+        vr1_dcorr = dvr_alpha(6) * exp(-1 * dvr_beta(6) * dens_n(6));
+      } else if (dvr_style(6) == 2) {
+        vr1_dcorr = dvr_alpha(6) / (1 + dvr_beta(6) * dens_n(6));
+      } else if (dvr_style(6) == 3) {
+        vr1_dcorr = 1 / (1 + exp(dvr_alpha(6) * dens_n(6) + dvr_beta(6)));
+      } else if (dvr_style(6) == 4) {
+        vr1_dcorr = 1 - (dens_n(6) / dvr_alpha(6));
+        if (dvr_beta(6) != 0 && vr1_dcorr < -1.0) vr1_dcorr = 0.0; 
+      }
+    }
+    
+    // Juvenile survival
+    if (dvr_yn(7)) {
+      if (dvr_style(7) == 1) {
+        vr1_dcorr = dvr_alpha(7) * exp(-1 * dvr_beta(7) * dens_n(7));
+      } else if (dvr_style(7) == 2) {
+        vr1_dcorr = dvr_alpha(7) / (1 + dvr_beta(7) * dens_n(7));
+      } else if (dvr_style(7) == 3) {
+        vr1_dcorr = 1 / (1 + exp(dvr_alpha(7) * dens_n(7) + dvr_beta(7)));
+      } else if (dvr_style(7) == 4) {
+        vr1_dcorr = 1 - (dens_n(7) / dvr_alpha(7));
+        if (dvr_beta(7) != 0 && vr1_dcorr < -1.0) vr1_dcorr = 0.0; 
+      }
+    }
+    
+    // Juvenile observation
+    if (dvr_yn(8)) {
+      if (dvr_style(8) == 1) {
+        vr1_dcorr = dvr_alpha(8) * exp(-1 * dvr_beta(8) * dens_n(8));
+      } else if (dvr_style(8) == 2) {
+        vr1_dcorr = dvr_alpha(8) / (1 + dvr_beta(8) * dens_n(8));
+      } else if (dvr_style(8) == 3) {
+        vr1_dcorr = 1 / (1 + exp(dvr_alpha(8) * dens_n(8) + dvr_beta(8)));
+      } else if (dvr_style(8) == 4) {
+        vr1_dcorr = 1 - (dens_n(8) / dvr_alpha(8));
+        if (dvr_beta(8) != 0 && vr1_dcorr < -1.0) vr1_dcorr = 0.0; 
+      }
+    }
+    
+    // Juvenile sizea
+    if (dvr_yn(9)) {
+      if (dvr_style(9) == 1) {
+        vr1_dcorr = dvr_alpha(9) * exp(-1 * dvr_beta(9) * dens_n(9));
+      } else if (dvr_style(9) == 2) {
+        vr1_dcorr = dvr_alpha(9) / (1 + dvr_beta(9) * dens_n(9));
+      } else if (dvr_style(9) == 3) {
+        vr1_dcorr = 1 / (1 + exp(dvr_alpha(9) * dens_n(9) + dvr_beta(9)));
+      } else if (dvr_style(9) == 4) {
+        vr1_dcorr = 1 - (dens_n(9) / dvr_alpha(9));
+        if (dvr_beta(9) != 0 && vr1_dcorr < -1.0) vr1_dcorr = 0.0; 
+      }
+    }
+    
+    // Juvenile sizeb
+    if (dvr_yn(10)) {
+      if (dvr_style(10) == 1) {
+        vr1_dcorr = dvr_alpha(10) * exp(-1 * dvr_beta(10) * dens_n(10));
+      } else if (dvr_style(10) == 2) {
+        vr1_dcorr = dvr_alpha(10) / (1 + dvr_beta(10) * dens_n(10));
+      } else if (dvr_style(10) == 3) {
+        vr1_dcorr = 1 / (1 + exp(dvr_alpha(10) * dens_n(10) + dvr_beta(10)));
+      } else if (dvr_style(10) == 4) {
+        vr1_dcorr = 1 - (dens_n(10) / dvr_alpha(10));
+        if (dvr_beta(10) != 0 && vr1_dcorr < -1.0) vr1_dcorr = 0.0; 
+      }
+    }
+    
+    // Juvenile sizec
+    if (dvr_yn(11)) {
+      if (dvr_style(11) == 1) {
+        vr1_dcorr = dvr_alpha(11) * exp(-1 * dvr_beta(11) * dens_n(11));
+      } else if (dvr_style(11) == 2) {
+        vr1_dcorr = dvr_alpha(11) / (1 + dvr_beta(11) * dens_n(11));
+      } else if (dvr_style(11) == 3) {
+        vr1_dcorr = 1 / (1 + exp(dvr_alpha(11) * dens_n(11) + dvr_beta(11)));
+      } else if (dvr_style(11) == 4) {
+        vr1_dcorr = 1 - (dens_n(11) / dvr_alpha(11));
+        if (dvr_beta(11) != 0 && vr1_dcorr < -1.0) vr1_dcorr = 0.0; 
+      }
+    }
+    
+    // Juvenile reproduction
+    if (dvr_yn(12)) {
+      if (dvr_style(12) == 1) {
+        vr1_dcorr = dvr_alpha(12) * exp(-1 * dvr_beta(12) * dens_n(12));
+      } else if (dvr_style(12) == 2) {
+        vr1_dcorr = dvr_alpha(12) / (1 + dvr_beta(12) * dens_n(12));
+      } else if (dvr_style(12) == 3) {
+        vr1_dcorr = 1 / (1 + exp(dvr_alpha(12) * dens_n(12) + dvr_beta(12)));
+      } else if (dvr_style(12) == 4) {
+        vr1_dcorr = 1 - (dens_n(12) / dvr_alpha(12));
+        if (dvr_beta(12) != 0 && vr1_dcorr < -1.0) vr1_dcorr = 0.0; 
+      }
+    }
+    
+    // Juvenile maturity
+    if (dvr_yn(13)) {
+      if (dvr_style(13) == 1) {
+        vr1_dcorr = dvr_alpha(13) * exp(-1 * dvr_beta(13) * dens_n(13));
+      } else if (dvr_style(13) == 2) {
+        vr1_dcorr = dvr_alpha(13) / (1 + dvr_beta(13) * dens_n(13));
+      } else if (dvr_style(13) == 3) {
+        vr1_dcorr = 1 / (1 + exp(dvr_alpha(13) * dens_n(13) + dvr_beta(13)));
+      } else if (dvr_style(13) == 4) {
+        vr1_dcorr = 1 - (dens_n(13) / dvr_alpha(13));
+        if (dvr_beta(13) != 0 && vr1_dcorr < -1.0) vr1_dcorr = 0.0; 
+      }
+    }
+  }
+  
   // The output matrix to collect conditional probabilities
   // Matrix out is 0 matrix with n rows & 6 columns: 0 surv, 1 obs, 2 repst,
   // 3 size, 4 size_b, 5 size_c, 6 matst, >6 are test variables
@@ -9067,8 +9616,10 @@ List jerzeibalowski_sp(DataFrame AllStages, DataFrame stageframe, int matrixform
             survsigma, grp2o(i), grp1(i), patchnumber, yearnumber, 4, 1, exp_tol,
             theta_tol, ipm_cdf, matrixformat, fecmod, repentry(i), negfec,
             stage2n(i), nostages, 0);
+          out_vec(0) = out_vec(0) * vr1_dcorr;
         } else {
           out_vec(0) = survcoefs(0);
+          out_vec(0) = out_vec(0) * vr1_dcorr;
         }
         if (err_check) out(i, 0) = out_vec(0);
         
@@ -9081,9 +9632,11 @@ List jerzeibalowski_sp(DataFrame AllStages, DataFrame stageframe, int matrixform
             obssigma, grp2o(i), grp1(i), patchnumber, yearnumber, 4, 2, exp_tol,
             theta_tol, ipm_cdf, matrixformat, fecmod, repentry(i), negfec,
             stage2n(i), nostages, 0);
+          out_vec(1) = out_vec(1) * vr2_dcorr;
           
         } else {
           out_vec(1) = obscoefs(0);
+          out_vec(1) = out_vec(1) * vr2_dcorr;
         }
         if (err_check) out(i, 1) = out_vec(1);
         
@@ -9102,9 +9655,11 @@ List jerzeibalowski_sp(DataFrame AllStages, DataFrame stageframe, int matrixform
               patchnumber, yearnumber, sizedist, 3, exp_tol, theta_tol, ipm_cdf,
               matrixformat, fecmod, repentry(i), negfec, stage2n(i), nostages,
               sizetrunc);
+            out_vec(3) = out_vec(3) * vr3_dcorr;
               
           } else {
             out_vec(3) = 1.0;
+            out_vec(3) = out_vec(3) * vr3_dcorr;
           }
           if (err_check) out(i, 3) = out_vec(3);
           
@@ -9121,8 +9676,10 @@ List jerzeibalowski_sp(DataFrame AllStages, DataFrame stageframe, int matrixform
               sizebsigma, grp2o(i), grp1(i), patchnumber, yearnumber, sizebdist,
               4, exp_tol, theta_tol, ipm_cdf, matrixformat, fecmod, repentry(i),
               negfec, stage2n(i), nostages, sizebtrunc);
+            out_vec(4) = out_vec(4) * vr4_dcorr;
           } else {
             out_vec(4) = 1.0;
+            out_vec(4) = out_vec(4) * vr4_dcorr;
           }
           if (err_check) out(i, 4) = out_vec(4);
           
@@ -9139,8 +9696,10 @@ List jerzeibalowski_sp(DataFrame AllStages, DataFrame stageframe, int matrixform
               sizecsigma, grp2o(i), grp1(i), patchnumber, yearnumber, sizecdist,
               5, exp_tol, theta_tol, ipm_cdf, matrixformat, fecmod, repentry(i),
               negfec, stage2n(i), nostages, sizectrunc);
+            out_vec(5) = out_vec(5) * vr5_dcorr;
           } else {
             out_vec(5) = 1.0;
+            out_vec(5) = out_vec(5) * vr5_dcorr;
           }
           if (err_check) out(i, 5) = out_vec(5);
           
@@ -9153,15 +9712,19 @@ List jerzeibalowski_sp(DataFrame AllStages, DataFrame stageframe, int matrixform
               sizeind_rownames_zi, false, repstsigma, grp2o(i), grp1(i),
               patchnumber, yearnumber, 4, 6, exp_tol, theta_tol, ipm_cdf,
               matrixformat, fecmod, repentry(i), negfec, stage2n(i), nostages, 0);
+            out_vec(2) = out_vec(2) * vr6_dcorr;
               
             if (fl3(i) == 0) {
               out_vec(2) = 1.0 - out_vec(2);
             }
           } else {
             if (fl3(i) == 0) {
-              out_vec(2) = 1.0 - repstcoefs(0);
+              out_vec(2) = repstcoefs(0);
+              out_vec(2) = out_vec(2) * vr6_dcorr;
+              out_vec(2) = 1.0 - out_vec(2);
             } else if (fl3(i) == 1) {
               out_vec(2) = repstcoefs(0);
+              out_vec(2) = out_vec(2) * vr6_dcorr;
             } else {
               out_vec(2) = 0.0;
             }
@@ -9200,6 +9763,7 @@ List jerzeibalowski_sp(DataFrame AllStages, DataFrame stageframe, int matrixform
             jsizeind_rownames_zi, false, jmatstsigma, grp2o(i), grp1(i),
             patchnumber, yearnumber, 4, 21, exp_tol, theta_tol, ipm_cdf, matrixformat,
             fecmod, repentry(i), negfec, stage2n(i), nostages, 0);
+          mat_predicted = mat_predicted * vr14_dcorr;
           
           if (mat3(i) > 0.5) {
             out_vec(6) = mat_predicted;
@@ -9209,8 +9773,9 @@ List jerzeibalowski_sp(DataFrame AllStages, DataFrame stageframe, int matrixform
         } else {
           if (mat3(i) > 0.5) {
             out_vec(6) = 1;
+            out_vec(6) = out_vec(6) * vr14_dcorr;
           } else {
-            out_vec(6) = 0;
+            out_vec(6) = 1 - vr14_dcorr;
           }
         }
         if (err_check) out(i, 6) = out_vec(6);
@@ -9224,8 +9789,10 @@ List jerzeibalowski_sp(DataFrame AllStages, DataFrame stageframe, int matrixform
             jsurvsigma, grp2o(i), grp1(i), patchnumber, yearnumber, 4, 8, exp_tol,
             theta_tol, ipm_cdf, matrixformat, fecmod, repentry(i), negfec,
             stage2n(i), nostages, 0);
+          out_vec(0) = out_vec(0) * vr8_dcorr;
         } else {
           out_vec(0) = jsurvcoefs(0);
+          out_vec(0) = out_vec(0) * vr8_dcorr;
         }
         if (err_check) out(i, 0) = out_vec(0);
         
@@ -9238,8 +9805,10 @@ List jerzeibalowski_sp(DataFrame AllStages, DataFrame stageframe, int matrixform
             jobssigma, grp2o(i), grp1(i), patchnumber, yearnumber, 4, 9, exp_tol,
             theta_tol, ipm_cdf, matrixformat, fecmod, repentry(i), negfec,
             stage2n(i), nostages, 0);
+          out_vec(1) = out_vec(1) * vr9_dcorr;
         } else {
           out_vec(1) = jobscoefs(0);
+          out_vec(1) = out_vec(1) * vr9_dcorr;
         }
         if (err_check) out(i, 1) = out_vec(1);
         
@@ -9253,8 +9822,10 @@ List jerzeibalowski_sp(DataFrame AllStages, DataFrame stageframe, int matrixform
               jsizesigma, grp2o(i), grp1(i), patchnumber, yearnumber, sizedist, 10,
               exp_tol, theta_tol, ipm_cdf, matrixformat, fecmod, repentry(i), negfec,
               stage2n(i), nostages, jsizetrunc);
+            out_vec(3) = out_vec(3) * vr10_dcorr;
           } else {
             out_vec(3) = 1.0;
+            out_vec(3) = out_vec(3) * vr10_dcorr;
           }
           if (err_check) out(i, 3) = out_vec(3);
           
@@ -9267,8 +9838,10 @@ List jerzeibalowski_sp(DataFrame AllStages, DataFrame stageframe, int matrixform
               jsizebsigma, grp2o(i), grp1(i), patchnumber, yearnumber, sizebdist, 11,
               exp_tol, theta_tol, ipm_cdf, matrixformat, fecmod, repentry(i), negfec,
               stage2n(i), nostages, jsizebtrunc);
+            out_vec(4) = out_vec(4) * vr11_dcorr;
           } else {
             out_vec(4) = 1.0;
+            out_vec(4) = out_vec(4) * vr11_dcorr;
           }
           if (err_check) out(i, 4) = out_vec(4);
           
@@ -9281,8 +9854,10 @@ List jerzeibalowski_sp(DataFrame AllStages, DataFrame stageframe, int matrixform
               jsizecsigma, grp2o(i), grp1(i), patchnumber, yearnumber, sizecdist, 12,
               exp_tol, theta_tol, ipm_cdf, matrixformat, fecmod, repentry(i), negfec,
               stage2n(i), nostages, jsizectrunc);
+            out_vec(5) = out_vec(5) * vr12_dcorr;
           } else {
             out_vec(5) = 1.0;
+            out_vec(5) = out_vec(5) * vr12_dcorr;
           }
           if (err_check) out(i, 5) = out_vec(5);
           
@@ -9295,15 +9870,19 @@ List jerzeibalowski_sp(DataFrame AllStages, DataFrame stageframe, int matrixform
               jrepstsigma, grp2o(i), grp1(i), patchnumber, yearnumber, 4, 13, exp_tol,
               theta_tol, ipm_cdf, matrixformat, fecmod, repentry(i), negfec,
               stage2n(i), nostages, 0);
+            out_vec(2) = out_vec(2) * vr13_dcorr;
               
             if (fl3(i) == 0) {
               out_vec(2) = 1.0 - out_vec(2);
             }
           } else {
             if (fl3(i) == 0) {
-              out_vec(2) = 1.0 - jrepstcoefs(0);
+              out_vec(2) = jrepstcoefs(0);
+              out_vec(2) = out_vec(2) * vr13_dcorr;
+              out_vec(2) = 1.0 - out_vec(2);
             } else if (fl3(i) == 1) {
               out_vec(2) = jrepstcoefs(0);
+              out_vec(2) = out_vec(2) * vr13_dcorr;
             } else {
               out_vec(2) = 0.0;
             }
@@ -9349,12 +9928,15 @@ List jerzeibalowski_sp(DataFrame AllStages, DataFrame stageframe, int matrixform
           grp2o(i), grp1(i), patchnumber, yearnumber, fecdist, 7, exp_tol,
           theta_tol, ipm_cdf, matrixformat, fecmod, repentry(i), negfec,
           stage2n(i), nostages, fectrunc);
+        fectransmat(k) = fectransmat(k) * vr7_dcorr;
         
       } else if (ovgivenf(i) != -1 ) {
         fectransmat(k) = ovgivenf(i);
+        fectransmat(k) = fectransmat(k) * vr7_dcorr;
       }
     } else if (ovgivenf(i) != -1 ) {
       fectransmat(k) = ovgivenf(i);
+      fectransmat(k) = fectransmat(k) * vr7_dcorr;
     }
   }
   
@@ -9593,6 +10175,8 @@ arma::imat foi_index_leslie(List surv_proxy, List fec_proxy) {
 //' function-based Leslie population projection matrices. Used in
 //' \code{\link{fleslie}()}.
 //' 
+//' @name motherbalowski
+//' 
 //' @param actualages An integer vector of all actual ages to be included in the
 //' matrices, in order.
 //' @param ageframe The modified stageframe used in matrix calculations.
@@ -9649,6 +10233,18 @@ arma::imat foi_index_leslie(List surv_proxy, List fec_proxy) {
 //' @param patchnumber An integer specifying which patch to develop matrices
 //' for. Must be in reference to the \code{listofyears} object developed in the
 //' \code{R} matrix estimator function.
+//' @param dens_vr A logical value indicating whether any vital rates are
+//' density dependent.
+//' @param dvr_yn A logical vector indicating whether each vital rate is density
+//' dependent.
+//' @param dvr_style An integer vector indicating the style of density
+//' dependence for each vital rate.
+//' @param dvr_alpha A numeric vector indicating the value of alpha to use in
+//' density dependence for each vital rate.
+//' @param dvr_beta A numeric vector indicating the value of beta to use in
+//' density dependence for each vital rate.
+//' @param dens_n A numeric vector corresponding to the population size to use
+//' in vital rate density dependence calculations.
 //' @param exp_tol A numeric value indicating the maximum limit for the
 //' \code{exp()} function to be used in vital rate calculations. Defaults to
 //' \code{700.0}.
@@ -9671,9 +10267,11 @@ List motherbalowski(IntegerVector actualages, DataFrame ageframe, List survproxy
   NumericVector f1_indc, StringVector r2_inda, StringVector r1_inda,
   StringVector r2_indb, StringVector r1_indb, StringVector r2_indc,
   StringVector r1_indc, double surv_dev, double fec_dev, double dens,
-  double fecmod, unsigned int finalage, bool negfec,
-  int yearnumber, int patchnumber, double exp_tol = 700.0,
-  double theta_tol = 100000000.0, bool simplicity = false) {
+  double fecmod, unsigned int finalage, bool negfec, int yearnumber,
+  int patchnumber, bool dens_vr, LogicalVector dvr_yn, IntegerVector dvr_style,
+  NumericVector dvr_alpha, NumericVector dvr_beta, NumericVector dens_n,
+  double exp_tol = 700.0, double theta_tol = 100000000.0,
+  bool simplicity = false) {
   
   // Determines the size of the matrix
   StringVector sf_agenames = as<StringVector>(ageframe["stage"]);
@@ -12527,6 +13125,8 @@ List modelextract(RObject object, DataFrame paramnames, NumericVector mainyears,
 //' parameters and coordinates them as input into the function-based matrix
 //' estimation functions.
 //' 
+//' @name raymccooney
+//' 
 //' @param listofyears A data frame where the rows designate the exact order of
 //' years and patches to produce matrices for.
 //' @param modelsuite An object of class \code{lefkoMod}, or a similarly
@@ -12647,6 +13247,9 @@ List raymccooney(DataFrame listofyears, List modelsuite, NumericVector mainyears
   double theta_tol = 100000000.0, String ipm_method = "cdf",
   bool err_check = false, bool simplicity = false) {
   
+  // Dud dens_vr inputs
+  Rcpp::DataFrame dvr_frame;
+  
   // listofyears import and settings
   IntegerVector years = listofyears["yearorder"];
   IntegerVector patches = listofyears["patchorder"];
@@ -12758,6 +13361,16 @@ List raymccooney(DataFrame listofyears, List modelsuite, NumericVector mainyears
   int yearnumber {0};
   int patchnumber {0};
   
+  LogicalVector dvr_yn = {false, false, false, false, false, false, false, false,
+    false, false, false, false, false, false};
+  IntegerVector dvr_style = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+  NumericVector dvr_alpha = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+    0.0, 0.0, 0.0, 0.0};
+  NumericVector dvr_beta = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+    0.0, 0.0, 0.0, 0.0};
+  NumericVector dvr_dens = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+    0.0, 0.0, 0.0, 0.0};
+  
   for (int i = 0; i < loy_length; i++) {
     
     yearnumber = years(i) - 1;
@@ -12768,9 +13381,9 @@ List raymccooney(DataFrame listofyears, List modelsuite, NumericVector mainyears
       repst_proxy, fec_proxy, jsurv_proxy, jobs_proxy, jsize_proxy, jsizeb_proxy,
       jsizec_proxy, jrepst_proxy, jmatst_proxy, f2_inda, f1_inda, f2_indb, f1_indb,
       f2_indc, f1_indc, r2_inda, r1_inda, r2_indb, r1_indb, r2_indc, r1_indc,
-      dev_terms, dens, fecmod, maxsize, maxsizeb, maxsizec, firstage, finalage,
-      negfec, yearnumber, patchnumber, exp_tol, theta_tol, ipm_method, err_check,
-      simplicity);
+      dev_terms, false, dvr_yn, dvr_style, dvr_alpha, dvr_beta, dvr_dens, dens,
+      fecmod, maxsize, maxsizeb, maxsizec, firstage, finalage, negfec, yearnumber,
+      patchnumber, exp_tol, theta_tol, ipm_method, err_check, simplicity);
     
     if (!simplicity) A_mats(i) = madsexmadrigal_oneyear["A"];
     F_mats(i) = madsexmadrigal_oneyear["F"];
@@ -12799,6 +13412,8 @@ List raymccooney(DataFrame listofyears, List modelsuite, NumericVector mainyears
 //' 
 //' This function takes the various vital rate models and other parameters and
 //' coordinates them as input into function \code{fleslie()}.
+//' 
+//' @name mothermccooney
 //' 
 //' @param listofyears A data frame where the rows designate the exact order of
 //' years and patches to produce matrices for.
@@ -12891,6 +13506,9 @@ List mothermccooney(DataFrame listofyears, List modelsuite, IntegerVector actual
   bool negfec, double exp_tol = 700.0, double theta_tol = 100000000.0,
   bool err_check = false, bool simplicity = false) {
   
+  // Dud dens_vr inputs
+  Rcpp::DataFrame dvr_frame;
+  
   // listofyears import and settings
   IntegerVector years = listofyears["yearorder"];
   IntegerVector patches = listofyears["patchorder"];
@@ -12919,6 +13537,16 @@ List mothermccooney(DataFrame listofyears, List modelsuite, IntegerVector actual
   int yearnumber {0};
   int patchnumber {0};
   
+  LogicalVector dvr_yn = {false, false, false, false, false, false, false, false,
+    false, false, false, false, false, false};
+  IntegerVector dvr_style = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+  NumericVector dvr_alpha = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+    0.0, 0.0, 0.0, 0.0};
+  NumericVector dvr_beta = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+    0.0, 0.0, 0.0, 0.0};
+  NumericVector dvr_dens = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+    0.0, 0.0, 0.0, 0.0};
+  
   for (int i = 0; i < loy_length; i++) {
     
     yearnumber = years(i) - 1;
@@ -12927,7 +13555,8 @@ List mothermccooney(DataFrame listofyears, List modelsuite, IntegerVector actual
     List madsexmadrigal_oneyear = motherbalowski(actualages, ageframe, surv_proxy,
       fec_proxy, f2_inda, f1_inda, f2_indb, f1_indb, f2_indc, f1_indc, r2_inda,
       r1_inda, r2_indb, r1_indb, r2_indc, r1_indc, surv_dev, fec_dev, dens, fecmod,
-      finalage, negfec, yearnumber, patchnumber, exp_tol, theta_tol, simplicity);
+      finalage, negfec, yearnumber, patchnumber, false, dvr_yn, dvr_style,
+      dvr_alpha, dvr_beta, dvr_dens, exp_tol, theta_tol, simplicity);
     
     if (!simplicity) A_mats(i) = madsexmadrigal_oneyear["A"];
     F_mats(i) = madsexmadrigal_oneyear["F"];
@@ -12999,17 +13628,19 @@ List mothermccooney(DataFrame listofyears, List modelsuite, IntegerVector actual
 //' individuals projected in each stage at each occasion to the nearest
 //' integer. Defaults to \code{FALSE}.
 //' @param substoch An integer value indicating whether to force survival-
-//' transition matrices to be substochastic in density dependent simulations.
-//' Defaults to \code{0}, which does not force substochasticity. Alternatively,
-//' \code{1} forces all survival-transition elements to range from 0.0 to 1.0,
-//' and forces fecundity to be non-negative; and \code{2} forces all column rows
-//' in the survival-transition matrices to total no more than 1.0, in addition
-//' to the actions outlined for option \code{1}.
+//' transition matrices to be substochastic in density dependent and density
+//' independent simulations. Defaults to \code{0}, which does not enforce
+//' substochasticity. Alternatively, \code{1} forces all survival-transition
+//' elements to range from 0.0 to 1.0, and forces fecundity to be non-negative;
+//' and \code{2} forces all column rows in the survival-transition matrices to
+//' total no more than 1.0, in addition to the actions outlined for option
+//' \code{1}. Both settings \code{1} and \code{2} change negative fecundity
+//' elements to \code{0.0}.
 //' @param ipm_method A string indicating what method to use to estimate size
 //' transition probabilities, if size is treated as continuous. Options include:
 //' \code{"midpoint"}, which utilizes the midpoint method; and \code{"CDF"},
 //' which uses the cumulative distribution function. Defaults to \code{"CDF"}.
-//' @param nreps The number of replicate projections.
+//' @param nreps The number of replicate projections. Defaults to \code{1}.
 //' @param times Number of occasions to iterate per replicate. Defaults to
 //' \code{10000}.
 //' @param repmod A scalar multiplier of fecundity. Defaults to \code{1}.
@@ -13029,7 +13660,9 @@ List mothermccooney(DataFrame listofyears, List modelsuite, IntegerVector actual
 //' covariate \code{c} as a random, categorical variable. Otherwise is treated as
 //' a fixed, numeric variable. Defaults to \code{FALSE}.
 //' @param err_check A logical value indicating whether to append extra output
-//' for debugging purposes.
+//' for debugging purposes. Defaults to \code{FALSE}.
+//' @param quiet A logical value indicating whether warning messages should be
+//' suppressed. Defaults to \code{FALSE}.
 //' @param stageframe An object of class \code{stageframe}. These objects are
 //' generated by function \code{\link{sf_create}()}, and include information on
 //' the size, observation status, propagule status, reproduction status,
@@ -13186,6 +13819,10 @@ List mothermccooney(DataFrame listofyears, List modelsuite, IntegerVector actual
 //' dependence that they will be subject to. The data frame used should be an
 //' object of class \code{lefkoDens}, which is the output from function
 //' \code{\link{density_input}()}.
+//' @param density_vr An optional data frame describing density dependence
+//' relationships in vital rates, if such relationships are to be assumed. The
+//' data frame must be of class \code{lefkoDensVR}, which is the output from the
+//' function \code{\link{density_vr}()}.
 //' 
 //' @return A list of class \code{lefkoProj}, which always includes the first
 //' three elements of the following, and also includes the remaining elements
@@ -13217,6 +13854,8 @@ List mothermccooney(DataFrame listofyears, List modelsuite, IntegerVector actual
 //' number of occasions projected per replicate.}
 //' \item{density}{The data frame input under the density option. Only provided
 //' if input by the user.}
+//' \item{density_vr}{The data frame input under the density_vr option. Only
+//' provided if input by the user.}
 //' 
 //' @section Notes:
 //' Population projection can be a very time-consuming activity, and it is most
@@ -13224,7 +13863,7 @@ List mothermccooney(DataFrame listofyears, List modelsuite, IntegerVector actual
 //' created this function to be as quick as possible, but some options will slow
 //' the analysis down. First, the \code{err_check} option should always be set
 //' to \code{FALSE}, as the added created output will not only slow the analysis
-//' down but also potentially crash the memory, if matrices are large enough.
+//' down but also potentially crash the memory if matrices are large enough.
 //' Second, the \code{repvalue} option should be set to \code{FALSE} unless
 //' reproductive values are genuinely needed, since this step requires
 //' concurrent backward projection and so in some cases may double total run
@@ -13236,7 +13875,20 @@ List mothermccooney(DataFrame listofyears, List modelsuite, IntegerVector actual
 //' likely running time, try using a low number of iterations on a single
 //' replicate first. For example, set \code{nreps = 1} and \code{times = 10} for
 //' a trial run. If a full run is set and takes too long, press the STOP button
-//' in RStudio to cancel the projection run.
+//' in RStudio to cancel the projection run, or click \code{esc}.
+//' 
+//' This function currently allows three forms of density dependence. The first
+//' modifies matrix elements on the basis of the input provided in option
+//' \code{density}, and so alters matrix elements once the matrix has already
+//' been created. The second form alters the vital rates estimated, and so
+//' estimates matrix elements using vital rate values already modified by
+//' density. This second form uses the input provided in option
+//' \code{density_vr}. These two forms of density dependence utilize the
+//' projected population size at some time to make these alterations. The third
+//' form of density dependence also alters the vital rates, but using spatial
+//' density supplied via option \code{sp_density} and only in vital rates in
+//' which spatial density is included as a fixed factor in the associated
+//' vital rate model.
 //' 
 //' Consistently positive population growth can quickly lead to population size
 //' numbers larger than can be handled computationally. In that circumstance, a
@@ -13342,7 +13994,7 @@ Rcpp::List f_projection3(DataFrame data, int format, bool prebreeding = true,
   bool integeronly = false, int substoch = 0, String ipm_method = "CDF",
   int nreps = 1, int times = 10000, double repmod = 1.0, double exp_tol = 700.0,
   double theta_tol = 100000000.0, bool random_inda = false, bool random_indb = false,
-  bool random_indc = false, bool err_check = false,
+  bool random_indc = false, bool err_check = false, bool quiet = false,
   Nullable<DataFrame> stageframe = R_NilValue, Nullable<DataFrame> supplement = R_NilValue,
   Nullable<NumericMatrix> repmatrix = R_NilValue, Nullable<DataFrame> overwrite = R_NilValue,
   Nullable<List> modelsuite = R_NilValue, Nullable<DataFrame> paramnames = R_NilValue,
@@ -13357,7 +14009,7 @@ Rcpp::List f_projection3(DataFrame data, int format, bool prebreeding = true,
   Nullable<RObject> jsizec_model = R_NilValue, Nullable<RObject> jrepst_model = R_NilValue,
   Nullable<RObject> jmatst_model = R_NilValue, Nullable<NumericVector> start_vec = R_NilValue,
   Nullable<RObject> start_frame = R_NilValue, Nullable<NumericVector> tweights = R_NilValue,
-  Nullable<RObject> density = R_NilValue) {
+  Nullable<RObject> density = R_NilValue, Nullable<RObject> density_vr = R_NilValue) {
   
   if (format < 1 || format > 5) {
     throw Rcpp::exception("Matrix format is not recognized.", false);
@@ -13372,12 +14024,12 @@ Rcpp::List f_projection3(DataFrame data, int format, bool prebreeding = true,
     throw Rcpp::exception("Option times must equal a positive integer.", false);
   }
   if (format < 4 && (!IntegerVector::is_na(start_age) || !IntegerVector::is_na(last_age))) {
-    Rf_warningcall(R_NilValue, "Start and final ages cannot be used with matrix formats 1-3. Resetting these parameters....");
+    if (!quiet) Rf_warningcall(R_NilValue, "Start and final ages cannot be used with matrix formats 1-3. Resetting these parameters....");
     start_age = 0;
     last_age = 0;
   }
   if (growthonly && repvalue) {
-    Rf_warningcall(R_NilValue, "Option repvalue cannot be set to TRUE if growthonly is set to TRUE. Resetting repvalue to FALSE.");
+    if (!quiet) Rf_warningcall(R_NilValue, "Option repvalue cannot be set to TRUE if growthonly is set to TRUE. Resetting repvalue to FALSE.");
     repvalue = false;
   }
   
@@ -13389,7 +14041,7 @@ Rcpp::List f_projection3(DataFrame data, int format, bool prebreeding = true,
   } else if (ipm_check_mid) {
     ipm_method = "midpoint";
   } else {
-    Rf_warningcall(R_NilValue, "Option ipm_method is not understood. Will use cdf option.");
+    if (!quiet) Rf_warningcall(R_NilValue, "Option ipm_method is not understood. Will use cdf option.");
     ipm_method = "cdf";
   }
 
@@ -13673,10 +14325,12 @@ Rcpp::List f_projection3(DataFrame data, int format, bool prebreeding = true,
     }
     
     if (start_age > age_limit || last_age > age_limit) {
-      Rf_warningcall(R_NilValue, "Entered start_age or last_age is beyond what is found in the dataset.");
+      if (!quiet) Rf_warningcall(R_NilValue,
+        "Entered start_age or last_age is beyond what is found in the dataset.");
     }
     if (fecage_min > age_limit || fecage_max > age_limit) {
-      Rf_warningcall(R_NilValue, "Entered fecage_min or fecage_max is beyond what is found in the dataset.");
+      if (!quiet) Rf_warningcall(R_NilValue,
+        "Entered fecage_min or fecage_max is beyond what is found in the dataset.");
     }
     
     if (last_age < (start_age + 1)) {
@@ -13756,6 +14410,7 @@ Rcpp::List f_projection3(DataFrame data, int format, bool prebreeding = true,
   List all_years_topull(nreps);
   NumericVector years_topull;
   NumericMatrix years_projected (times, nreps);
+  
   int num_years = mainyears.length();
   if (year.isNotNull()) {
     NumericVector year_int (year);
@@ -13764,12 +14419,12 @@ Rcpp::List f_projection3(DataFrame data, int format, bool prebreeding = true,
     if (years_unmatched.length() > 0) {
       throw Rcpp::exception("Some input year values do not match years documented in the dataset.");
     }
-    if (stochastic) throw Rcpp::exception("If option year is set, then projection cannot be stochastic.");
+    if (stochastic) throw Rcpp::exception("If option year is set, then projection cannot be stochastic. Instead, please set time weights via the tweights option.");
     years_topull = year_int;
   } else if (!stochastic) {
     NumericVector year_int = clone(mainyears);
     years_topull = year_int;
-    Rf_warningcall(R_NilValue, "Option year not set, so will cycle through existing years.");
+    if (!quiet) Rf_warningcall(R_NilValue, "Option year not set, so will cycle through existing years.");
   }
   
   NumericVector twinput;
@@ -13812,7 +14467,7 @@ Rcpp::List f_projection3(DataFrame data, int format, bool prebreeding = true,
     CharacterVector patch_one (1);
     patch_one(0) = mainpatches(0);
     patches_topull = patch_one;
-    Rf_warningcall(R_NilValue, "Option patch not set, so will set to first patch/population.");
+    if (!quiet) Rf_warningcall(R_NilValue, "Option patch not set, so will set to first patch/population.");
   }
   
   // Handle spatial density vector
@@ -13920,7 +14575,7 @@ Rcpp::List f_projection3(DataFrame data, int format, bool prebreeding = true,
     
     if (is<NumericVector>(inda_whatever)) {
       if (random_inda) {
-        Rf_warningcall(R_NilValue, "Indcov a appears to be numeric. Will assume that random_inda = FALSE. To alter this behavior, please convert indcov a into a character vector.");
+        if (!quiet) Rf_warningcall(R_NilValue, "Indcov a appears to be numeric. Will assume that random_inda = FALSE. To alter this behavior, please convert indcov a into a character vector.");
         random_inda = false;
       }
       NumericVector inda_another_int = as<NumericVector>(inda_whatever);
@@ -13934,7 +14589,7 @@ Rcpp::List f_projection3(DataFrame data, int format, bool prebreeding = true,
       
     } else if (is<CharacterVector>(inda_whatever)) {
       if (!random_inda) {
-        Rf_warningcall(R_NilValue, "Indcov a appears to be categorical. Will assume that random_inda = TRUE. To alter this behavior, please convert indcov a into a numeric vector.");
+        if (!quiet) Rf_warningcall(R_NilValue, "Indcov a appears to be categorical. Will assume that random_inda = TRUE. To alter this behavior, please convert indcov a into a numeric vector.");
         random_inda = true;
       }
       CharacterVector inda_another_int = as<CharacterVector>(inda_whatever);
@@ -13959,7 +14614,7 @@ Rcpp::List f_projection3(DataFrame data, int format, bool prebreeding = true,
     
     if (is<NumericVector>(indb_whatever)) {
       if (random_indb) {
-        Rf_warningcall(R_NilValue, "Indcov b appears to be numeric. Will assume that random_indb = FALSE. To alter this behavior, please convert indcov b into a character vector.");
+        if (!quiet) Rf_warningcall(R_NilValue, "Indcov b appears to be numeric. Will assume that random_indb = FALSE. To alter this behavior, please convert indcov b into a character vector.");
         random_indb = false;
       }
       NumericVector indb_another_int = as<NumericVector>(indb_whatever);
@@ -13973,7 +14628,7 @@ Rcpp::List f_projection3(DataFrame data, int format, bool prebreeding = true,
       
     } else if (is<CharacterVector>(indb_whatever)) {
       if (!random_indb) {
-        Rf_warningcall(R_NilValue, "Indcov b appears to be categorical. Will assume that random_indb = TRUE. To alter this behavior, please convert indcov b into a numeric vector.");
+        if (!quiet) Rf_warningcall(R_NilValue, "Indcov b appears to be categorical. Will assume that random_indb = TRUE. To alter this behavior, please convert indcov b into a numeric vector.");
         random_indb = true;
       }
       CharacterVector indb_another_int = as<CharacterVector>(indb_whatever);
@@ -13998,7 +14653,7 @@ Rcpp::List f_projection3(DataFrame data, int format, bool prebreeding = true,
     
     if (is<NumericVector>(indc_whatever)) {
       if (random_indc) {
-        Rf_warningcall(R_NilValue, "Indcov c appears to be numeric. Will assume that random_indc = FALSE. To alter this behavior, please convert indcov c into a character vector.");
+        if (!quiet) Rf_warningcall(R_NilValue, "Indcov c appears to be numeric. Will assume that random_indc = FALSE. To alter this behavior, please convert indcov c into a character vector.");
         random_indc = false;
       }
       NumericVector indc_another_int = as<NumericVector>(indc_whatever);
@@ -14012,7 +14667,7 @@ Rcpp::List f_projection3(DataFrame data, int format, bool prebreeding = true,
       
     } else if (is<CharacterVector>(indc_whatever)) {
       if (!random_indc) {
-        Rf_warningcall(R_NilValue, "Indcov c appears to be categorical. Will assume that random_indc = TRUE. To alter this behavior, please convert indcov c into a numeric vector.");
+        if (!quiet) Rf_warningcall(R_NilValue, "Indcov c appears to be categorical. Will assume that random_indc = TRUE. To alter this behavior, please convert indcov c into a numeric vector.");
         random_indc = true;
       }
       CharacterVector indc_another_int = as<CharacterVector>(indc_whatever);
@@ -14044,11 +14699,13 @@ Rcpp::List f_projection3(DataFrame data, int format, bool prebreeding = true,
     r_indc_topull = clone(modelnone);
   }
   
-  if (greaterthan_warning) {
-    Rf_warningcall(R_NilValue, "More values of individual covariates have been supplied than required, so some will be cut.");
-  }
-  if (lessthan_warning) {
-    Rf_warningcall(R_NilValue, "Fewer values of individual covariates have been supplied than required, so input values will be cycled.");
+  if (!quiet) {
+    if (greaterthan_warning) {
+      Rf_warningcall(R_NilValue, "More values of individual covariates have been supplied than required, so some will be cut.");
+    }
+    if (lessthan_warning) {
+      Rf_warningcall(R_NilValue, "Fewer values of individual covariates have been supplied than required, so input values will be cycled.");
+    }
   }
   
   // dev_terms data frame or matrix
@@ -14258,11 +14915,13 @@ Rcpp::List f_projection3(DataFrame data, int format, bool prebreeding = true,
     jmatst_dev_extracted = clone(model0);
   }
   
-  if (greaterthan_warning_dev) {
-    Rf_warningcall(R_NilValue, "More values of intercept deviations have been supplied than required, so some will be cut.");
-  }
-  if (lessthan_warning_dev) {
-    Rf_warningcall(R_NilValue, "Fewer values of intercept deviations have been supplied than required, so input values will be cycled.");
+  if (!quiet) {
+    if (greaterthan_warning_dev) {
+      Rf_warningcall(R_NilValue, "More values of intercept deviations have been supplied than required, so some will be cut.");
+    }
+    if (lessthan_warning_dev) {
+      Rf_warningcall(R_NilValue, "Fewer values of intercept deviations have been supplied than required, so input values will be cycled.");
+    }
   }
   
   // Main for loop adjusting lengths of input vectors
@@ -14412,11 +15071,11 @@ Rcpp::List f_projection3(DataFrame data, int format, bool prebreeding = true,
     NumericVector sizec2n = allstages["sizec2n"];
     NumericVector sizec2o = allstages["sizec2o"];
     
-    NumericVector maxveca = {max(size3), max(size2n), max(size2o)}; // What about NAs?
+    NumericVector maxveca = {max(size3), max(size2n), max(size2o)};
     NumericVector maxvecb = {max(sizeb3), max(sizeb2n), max(sizeb2o)};
     NumericVector maxvecc = {max(sizec3), max(sizec2n), max(sizec2o)};
     
-    maxsize = max(maxveca); // What about NAs?
+    maxsize = max(maxveca);
     maxsizeb = max(maxvecb);
     maxsizec = max(maxvecc);
   }
@@ -14467,25 +15126,74 @@ Rcpp::List f_projection3(DataFrame data, int format, bool prebreeding = true,
     jobs_dev_values(0), jsiz_dev_values(0), jsib_dev_values(0), jsic_dev_values(0),
     jrep_dev_values(0), jmat_dev_values(0)};
   
+  // Vital rate density dependence inputs
+  Rcpp::DataFrame dvr_frame;
+  LogicalVector dvr_yn = {false, false, false, false, false, false, false, false,
+    false, false, false, false, false, false};
+  IntegerVector dvr_style = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+  IntegerVector dvr_delay  = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+  NumericVector dvr_alpha  = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+    0.0, 0.0, 0.0, 0.0};
+  NumericVector dvr_beta  = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+    0.0, 0.0, 0.0, 0.0};
+  bool dens_vr = false;
+  
+  if (density_vr.isNotNull()) {
+    if (!is<DataFrame>(density_vr)) {
+      throw Rcpp::exception("Option density_vr must be a data frame created with function density_vr().");
+    }
+    Rcpp::DataFrame dens_vr_thru(density_vr);
+    dvr_frame = dens_vr_thru;
+    
+    int dvr_vars = dens_vr_thru.size();
+    int dvr_rows = dens_vr_thru.nrows();
+    
+    if (dvr_vars != 6 || dvr_rows != 14) {
+      throw Rcpp::exception("Data frame input for option density_vr does not match the dimensions of output from function density_vr().");
+    }
+    
+    LogicalVector dvr_yn_ = as<LogicalVector>(dens_vr_thru["density_yn"]);
+    IntegerVector dvr_style_ = as<IntegerVector>(dens_vr_thru["style"]);
+    IntegerVector dvr_delay_ = as<IntegerVector>(dens_vr_thru["time_delay"]);
+    NumericVector dvr_alpha_ = as<NumericVector>(dens_vr_thru["alpha"]);
+    NumericVector dvr_beta_ = as<NumericVector>(dens_vr_thru["beta"]);
+    
+    dvr_yn = dvr_yn_;
+    dvr_style = dvr_style_;
+    dvr_delay = dvr_delay_;
+    dvr_alpha = dvr_alpha_;
+    dvr_beta = dvr_beta_;
+    
+    dens_vr = true;
+  }
+
+  // This section produces initial matrices only used to develop certain variables
+  // These are not used in the projections themselves
   if (format < 5) {
+    NumericVector st_dvr_dens = {1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0,
+      1.0, 1.0, 1.0, 1.0, 1.0};
     madsexmadrigal_oneyear = jerzeibalowski(allstages, new_stageframe,
       format, surv_proxy, obs_proxy, size_proxy, sizeb_proxy, sizec_proxy,
       repst_proxy, fec_proxy, jsurv_proxy, jobs_proxy, jsize_proxy, jsizeb_proxy,
       jsizec_proxy, jrepst_proxy, jmatst_proxy, f2_inda_values, f1_inda_values,
       f2_indb_values, f1_indb_values, f2_indc_values, f1_indc_values,
       r2_inda_values, r1_inda_values, r2_indb_values, r1_indb_values,
-      r2_indc_values, r1_indc_values, used_devs, spdensity_projected(0),
+      r2_indc_values, r1_indc_values, used_devs, dens_vr, dvr_yn, dvr_style,
+      dvr_alpha, dvr_beta, st_dvr_dens, spdensity_projected(0),
       repmod, maxsize, maxsizeb, maxsizec, start_age, last_age, false,
       yearnumber, patchnumber, exp_tol, theta_tol, ipm_method, err_check,
       true);
     
   } else {
+    NumericVector st_dvr_dens = {1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0,
+      1.0, 1.0, 1.0, 1.0, 1.0};
     madsexmadrigal_oneyear = motherbalowski(actualages, new_stageframe,
       surv_proxy, fec_proxy, f2_inda_values, f1_inda_values, f2_indb_values,
       f1_indb_values, f2_indc_values, f1_indc_values, r2_inda_values,
       r1_inda_values, r2_indb_values, r1_indb_values, r2_indc_values,
       r1_indc_values, sur_dev_values(0), fec_dev_values(0), spdensity_projected(0),
-      repmod, last_age, false, yearnumber, patchnumber, exp_tol, theta_tol, true);
+      repmod, last_age, false, yearnumber, patchnumber, dens_vr, dvr_yn,
+      dvr_style, dvr_alpha, dvr_beta, st_dvr_dens, exp_tol, theta_tol, true);
   }
   
   Umat = as<arma::mat>(madsexmadrigal_oneyear["U"]);
@@ -14555,7 +15263,7 @@ Rcpp::List f_projection3(DataFrame data, int format, bool prebreeding = true,
     startvec.ones();
   }
   
-  // Density dependence inputs
+  // Matrix element density dependence inputs
   Rcpp::DataFrame dens_input;
   List dens_index;
   double pop_size {0};
@@ -14564,6 +15272,7 @@ Rcpp::List f_projection3(DataFrame data, int format, bool prebreeding = true,
   double changing_colsum {0.0};
   
   int time_delay {1};
+  bool dens_elems = false;
   bool warn_trigger_neg = false;
   bool warn_trigger_1 = false;
   
@@ -14720,6 +15429,12 @@ Rcpp::List f_projection3(DataFrame data, int format, bool prebreeding = true,
     dyn_delay = as<arma::uvec>(dens_input["time_delay"]);
     dyn_type = as<arma::uvec>(dens_input["type"]);
     n_dyn_elems = dyn_index321.n_elem;
+    
+    dens_elems = true;
+  }
+  
+  if (dens_vr && dens_elems) {
+    Rf_warningcall(R_NilValue, "Density dependence should usually be operationalized via either vital rate model parameterization or matrix element operationalization. However, inputs have been provided for both methods.");
   }
   
   // Main projection loop
@@ -14754,6 +15469,9 @@ Rcpp::List f_projection3(DataFrame data, int format, bool prebreeding = true,
   List all_repvalues (nreps);
   arma::mat all_R (nreps, times+1);
   
+  NumericVector usable_densities = {1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0,
+    1.0, 1.0, 1.0, 1.0, 1.0};
+  
   if (sparse_switch == 0 || format == 5) {
     for (int rep = 0; rep < nreps; rep++) {
       
@@ -14771,6 +15489,14 @@ Rcpp::List f_projection3(DataFrame data, int format, bool prebreeding = true,
           jobs_dev_values(i), jsiz_dev_values(i), jsib_dev_values(i), jsic_dev_values(i),
           jrep_dev_values(i), jmat_dev_values(i)};
         
+        if (dens_vr) {
+          for (int j = 0; j < 14; j++) {
+            if (dvr_delay(j) <= i) {
+              usable_densities(j) = Rvecmat(i - dvr_delay(j));
+            }
+          }
+        }
+        
         if (format < 5) {
           madsexmadrigal_oneyear = jerzeibalowski(allstages, new_stageframe,
             format, surv_proxy, obs_proxy, size_proxy, sizeb_proxy, sizec_proxy,
@@ -14778,7 +15504,8 @@ Rcpp::List f_projection3(DataFrame data, int format, bool prebreeding = true,
             jsizec_proxy, jrepst_proxy, jmatst_proxy, f2_inda_values, f1_inda_values,
             f2_indb_values, f1_indb_values, f2_indc_values, f1_indc_values,
             r2_inda_values, r1_inda_values, r2_indb_values, r1_indb_values,
-            r2_indc_values, r1_indc_values, used_devs, spdensity_projected(i),
+            r2_indc_values, r1_indc_values, used_devs, dens_vr, dvr_yn, dvr_style,
+            dvr_alpha, dvr_beta, usable_densities, spdensity_projected(i),
             repmod, maxsize, maxsizeb, maxsizec, start_age, last_age, false,
             yearnumber, patchnumber, exp_tol, theta_tol, ipm_method, err_check,
             true);
@@ -14788,7 +15515,9 @@ Rcpp::List f_projection3(DataFrame data, int format, bool prebreeding = true,
             f1_indb_values, f2_indc_values, f1_indc_values, r2_inda_values,
             r1_inda_values, r2_indb_values, r1_indb_values, r2_indc_values,
             r1_indc_values, sur_dev_values(i), fec_dev_values(i), spdensity_projected(i),
-            repmod, last_age, false, yearnumber, patchnumber, exp_tol, theta_tol, true);
+            repmod, last_age, false, yearnumber, patchnumber, dens_vr, dvr_yn,
+            dvr_style, dvr_alpha, dvr_beta, usable_densities, exp_tol, theta_tol,
+            true);
         }
         
         Umat = as<arma::mat>(madsexmadrigal_oneyear["U"]);
@@ -14860,10 +15589,12 @@ Rcpp::List f_projection3(DataFrame data, int format, bool prebreeding = true,
             
             if (dyn_type(j) == 1 && Umat(dyn_index321(j)) > 1.0 && !warn_trigger_1) {
               warn_trigger_1 = true;
-              Rf_warningcall(R_NilValue, "Some probabilities with value > 1.0 produced during density adjustment.");
+              if (!quiet) Rf_warningcall(R_NilValue,
+                "Some probabilities with value > 1.0 produced during density adjustment.");
             } else if ((Umat(dyn_index321(j)) < 0.0 || Fmat(dyn_index321(j)) < 0.0) && !warn_trigger_neg) {
               warn_trigger_neg = true;
-              Rf_warningcall(R_NilValue, "Some matrix elements with value < 0.0 produced during density adjustment.");
+              if (!quiet) Rf_warningcall(R_NilValue,
+                "Some matrix elements with value < 0.0 produced during density adjustment.");
             }
           }
         }
@@ -14890,7 +15621,7 @@ Rcpp::List f_projection3(DataFrame data, int format, bool prebreeding = true,
         if (!growthonly) {
           wpopproj.col(i+1) = popproj.col(i+1) / Rvecmat(i+1);
           
-          if (repvalue) {
+          if (repvalue && !dens_vr) { // Currently does not handle density dependent reproductive value
             NumericVector second_devs = {sur_dev_values(times - (i+1)), obs_dev_values(times - (i+1)),
               siz_dev_values(times - (i+1)), sib_dev_values(times - (i+1)), sic_dev_values(times - (i+1)),
               rep_dev_values(times - (i+1)), fec_dev_values(times - (i+1)), jsur_dev_values(times - (i+1)),
@@ -14904,7 +15635,8 @@ Rcpp::List f_projection3(DataFrame data, int format, bool prebreeding = true,
                 jsizec_proxy, jrepst_proxy, jmatst_proxy, f2_inda_values, f1_inda_values,
                 f2_indb_values, f1_indb_values, f2_indc_values, f1_indc_values,
                 r2_inda_values, r1_inda_values, r2_indb_values, r1_indb_values,
-                r2_indc_values, r1_indc_values, used_devs, spdensity_projected(times - (i+1)),
+                r2_indc_values, r1_indc_values, used_devs, false, dvr_yn, dvr_style,
+                dvr_alpha, dvr_beta, usable_densities, spdensity_projected(times - (i+1)),
                 repmod, maxsize, maxsizeb, maxsizec, start_age, last_age, false,
                 yearnumber, patchnumber, exp_tol, theta_tol, ipm_method, err_check,
                 true);
@@ -14915,7 +15647,8 @@ Rcpp::List f_projection3(DataFrame data, int format, bool prebreeding = true,
                 r1_inda_values, r2_indb_values, r1_indb_values, r2_indc_values,
                 r1_indc_values, sur_dev_values(times - (i+1)), fec_dev_values(times - (i+1)),
                 spdensity_projected(times - (i+1)), repmod, last_age, false, yearnumber,
-                patchnumber, exp_tol, theta_tol, true);
+                patchnumber, false, dvr_yn, dvr_style, dvr_alpha, dvr_beta,
+                usable_densities, exp_tol, theta_tol, true);
             }
             arma::mat second_U = as<arma::mat>(madsexmadrigal_forward["U"]);
             arma::mat second_F = as<arma::mat>(madsexmadrigal_forward["F"]);
@@ -14965,13 +15698,22 @@ Rcpp::List f_projection3(DataFrame data, int format, bool prebreeding = true,
           jobs_dev_values(i), jsiz_dev_values(i), jsib_dev_values(i), jsic_dev_values(i),
           jrep_dev_values(i), jmat_dev_values(i)};
         
+        if (dens_vr) {
+          for (int j = 0; j < 14; j++) {
+            if (dvr_delay(j) <= i) {
+              usable_densities(j) = Rvecmat(i - dvr_delay(j));
+            }
+          }
+        }
+        
         madsexmadrigal_oneyear = jerzeibalowski_sp(allstages, new_stageframe,
           format, surv_proxy, obs_proxy, size_proxy, sizeb_proxy, sizec_proxy,
           repst_proxy, fec_proxy, jsurv_proxy, jobs_proxy, jsize_proxy, jsizeb_proxy,
           jsizec_proxy, jrepst_proxy, jmatst_proxy, f2_inda_values, f1_inda_values,
           f2_indb_values, f1_indb_values, f2_indc_values, f1_indc_values,
           r2_inda_values, r1_inda_values, r2_indb_values, r1_indb_values,
-          r2_indc_values, r1_indc_values, used_devs, spdensity_projected(i),
+          r2_indc_values, r1_indc_values, used_devs, dens_vr, dvr_yn, dvr_style,
+          dvr_alpha, dvr_beta, usable_densities, spdensity_projected(i),
           repmod, maxsize, maxsizeb, maxsizec, start_age, last_age, false,
           yearnumber, patchnumber, exp_tol, theta_tol, ipm_method, err_check,
           true);
@@ -15047,11 +15789,13 @@ Rcpp::List f_projection3(DataFrame data, int format, bool prebreeding = true,
             
             if (dyn_type(j) == 1 && Umat_sp(dyn_index321(j)) > 1.0 && !warn_trigger_1) {
               warn_trigger_1 = true;
-              Rf_warningcall(R_NilValue, "Some probabilities with value > 1.0 produced during density adjustment.");
+              if (!quiet) Rf_warningcall(R_NilValue,
+                "Some probabilities with value > 1.0 produced during density adjustment.");
             } else if ((Umat_sp(dyn_index321(j)) < 0.0 || Fmat_sp(dyn_index321(j)) < 0.0) &&
               !warn_trigger_neg) {
               warn_trigger_neg = true;
-              Rf_warningcall(R_NilValue, "Some matrix elements with value < 0.0 produced during density adjustment.");
+              if (!quiet) Rf_warningcall(R_NilValue,
+                "Some matrix elements with value < 0.0 produced during density adjustment.");
             }
           }
         }
@@ -15078,7 +15822,7 @@ Rcpp::List f_projection3(DataFrame data, int format, bool prebreeding = true,
         if (!growthonly) {
           wpopproj.col(i+1) = popproj.col(i+1) / Rvecmat(i+1);
           
-          if (repvalue) {
+          if (repvalue && !dens_vr) { // Currently does not handle density dependent reproductive values
             NumericVector second_devs = {sur_dev_values(times - (i+1)), obs_dev_values(times - (i+1)),
               siz_dev_values(times - (i+1)), sib_dev_values(times - (i+1)), sic_dev_values(times - (i+1)),
               rep_dev_values(times - (i+1)), fec_dev_values(times - (i+1)), jsur_dev_values(times - (i+1)),
@@ -15091,10 +15835,12 @@ Rcpp::List f_projection3(DataFrame data, int format, bool prebreeding = true,
               jsizec_proxy, jrepst_proxy, jmatst_proxy, f2_inda_values, f1_inda_values,
               f2_indb_values, f1_indb_values, f2_indc_values, f1_indc_values,
               r2_inda_values, r1_inda_values, r2_indb_values, r1_indb_values,
-              r2_indc_values, r1_indc_values, used_devs, spdensity_projected(times - (i+1)),
+              r2_indc_values, r1_indc_values, used_devs, false, dvr_yn, dvr_style,
+              dvr_alpha, dvr_beta, usable_densities, spdensity_projected(times - (i+1)),
               repmod, maxsize, maxsizeb, maxsizec, start_age, last_age, false,
               yearnumber, patchnumber, exp_tol, theta_tol, ipm_method, err_check,
               true);
+              
             arma::sp_mat second_U = as<arma::sp_mat>(madsexmadrigal_forward["U"]);
             arma::sp_mat second_F = as<arma::sp_mat>(madsexmadrigal_forward["F"]);
             thesecondprophecy_sp = second_U + second_F;
@@ -15145,7 +15891,7 @@ Rcpp::List f_projection3(DataFrame data, int format, bool prebreeding = true,
   repvalues(0) = all_repvalues;
   
   if (err_check) {
-    List output_err(37);
+    List output_err(38);
     
     output_err(0) = projections;
     output_err(1) = stagedist;
@@ -15157,37 +15903,38 @@ Rcpp::List f_projection3(DataFrame data, int format, bool prebreeding = true,
     output_err(7) = newlabels;
     output_err(8) = control;
     output_err(9) = dens_input;
-    output_err(10) = pmnames;
-    output_err(11) = mainyears;
-    output_err(12) = mainpatches;
-    output_err(13) = maingroups;
-    output_err(14) = mainages;
-    output_err(15) = allstages;
-    output_err(16) = surv_proxy;
-    output_err(17) = obs_proxy;
-    output_err(18) = size_proxy;
-    output_err(19) = sizeb_proxy;
-    output_err(20) = sizec_proxy;
-    output_err(21) = repst_proxy;
-    output_err(22) = fec_proxy;
-    output_err(23) = jsurv_proxy;
-    output_err(24) = jobs_proxy;
-    output_err(25) = jsize_proxy;
-    output_err(26) = jsizeb_proxy;
-    output_err(27) = jsizec_proxy;
-    output_err(28) = jrepst_proxy;
-    output_err(29) = jmatst_proxy;
-    output_err(30) = years_projected;
-    output_err(31) = patches_projected;
-    output_err(32) = spdensity_projected;
-    output_err(33) = A_all;
-    output_err(34) = U_all;
-    output_err(35) = F_all;
-    output_err(36) = out_all;
+    output_err(10) = dvr_frame;
+    output_err(11) = pmnames;
+    output_err(12) = mainyears;
+    output_err(13) = mainpatches;
+    output_err(14) = maingroups;
+    output_err(15) = mainages;
+    output_err(16) = allstages;
+    output_err(17) = surv_proxy;
+    output_err(18) = obs_proxy;
+    output_err(19) = size_proxy;
+    output_err(20) = sizeb_proxy;
+    output_err(21) = sizec_proxy;
+    output_err(22) = repst_proxy;
+    output_err(23) = fec_proxy;
+    output_err(24) = jsurv_proxy;
+    output_err(25) = jobs_proxy;
+    output_err(26) = jsize_proxy;
+    output_err(27) = jsizeb_proxy;
+    output_err(28) = jsizec_proxy;
+    output_err(29) = jrepst_proxy;
+    output_err(30) = jmatst_proxy;
+    output_err(31) = years_projected;
+    output_err(32) = patches_projected;
+    output_err(33) = spdensity_projected;
+    output_err(34) = A_all;
+    output_err(35) = U_all;
+    output_err(36) = F_all;
+    output_err(37) = out_all;
     
     CharacterVector output_err_names = {"projection", "stage_dist", "rep_value",
       "pop_size", "ahstages", "hstages", "agestages", "labels", "control", "density",
-      "paramnames", "mainyears", "mainpatches", "maingroups", "mainages",
+      "density_vr", "paramnames", "mainyears", "mainpatches", "maingroups", "mainages",
       "allstages", "surv_proxy", "obs_proxy", "size_proxy", "sizeb_proxy",
       "sizec_proxy", "repst_proxy", "fec_proxy", "jsurv_proxy", "jobs_proxy",
       "jsize_proxy", "jsizeb_proxy", "jsizec_proxy", "jrepst_proxy", "jmatst_proxy",
@@ -15198,7 +15945,7 @@ Rcpp::List f_projection3(DataFrame data, int format, bool prebreeding = true,
     
     output = output_err;
   } else {
-    List output_noerr(10);
+    List output_noerr(11);
     
     output_noerr(0) = projections;
     output_noerr(1) = stagedist;
@@ -15210,9 +15957,11 @@ Rcpp::List f_projection3(DataFrame data, int format, bool prebreeding = true,
     output_noerr(7) = newlabels;
     output_noerr(8) = control;
     output_noerr(9) = dens_input;
+    output_noerr(10) = dvr_frame;
     
     CharacterVector output_noerr_names = {"projection", "stage_dist", "rep_value",
-      "pop_size", "ahstages", "hstages", "agestages", "labels", "control", "density"};
+      "pop_size", "ahstages", "hstages", "agestages", "labels", "control", "density",
+      "density_vr"};
     output_noerr.attr("names") = output_noerr_names;
     output_noerr.attr("class") = output_class;
     
@@ -17083,7 +17832,10 @@ arma::mat proj3dens(arma::vec start_vec, List core_list, arma::uvec mat_order,
 //' density dependence yields matrix values outside of the realm of possibility.
 //' Generally, this means that survival-transition elements altered to values
 //' outside of the interval [0, 1], and negative fecundity values, will both
-//' yield warnings. Defaults to \code{TRUE}.
+//' yield warnings. Defaults to \code{TRUE}, but becomes \code{FALSE} if
+//' \code{quiet = TRUE}.
+//' @param quiet A logical value indicating whether to suppress warnings.
+//' Defaults to \code{FALSE}.
 //' @param year Either a single integer value corresponding to the year to
 //' project, or a vector of \code{times} elements with the year to use at each
 //' time step. If a vector shorter than \code{times} is supplied, then this
@@ -17289,7 +18041,7 @@ arma::mat proj3dens(arma::vec start_vec, List core_list, arma::uvec mat_order,
 Rcpp::List projection3(List mpm, int nreps = 1, int times = 10000,
   bool historical = false, bool stochastic = false, bool standardize = false,
   bool growthonly = true, bool integeronly = false, int substoch = 0,
-  bool sub_warnings = true, Nullable<IntegerVector> year = R_NilValue,
+  bool sub_warnings = true, bool quiet = false, Nullable<IntegerVector> year = R_NilValue,
   Nullable<NumericVector> start_vec = R_NilValue, Nullable<DataFrame> start_frame = R_NilValue,
   Nullable<NumericVector> tweights = R_NilValue, Nullable<DataFrame> density = R_NilValue) {
   
@@ -17311,6 +18063,8 @@ Rcpp::List projection3(List mpm, int nreps = 1, int times = 10000,
   if (substoch < 0 || substoch > 2) {
     throw Rcpp::exception("Option substoch must be set to 0, 1, or 2.", false);
   }
+  
+  if (quiet) sub_warnings = false;
   
   arma::uvec theprophecy(theclairvoyant);
   theprophecy.zeros();
@@ -17477,7 +18231,7 @@ Rcpp::List projection3(List mpm, int nreps = 1, int times = 10000,
       
       for (int i = 0; i < label_elements.length(); i++) {
         if (stringcompare_hard(as<std::string>(label_elements(i)), "patch")) {
-          Rf_warningcall(R_NilValue, "This function takes annual matrices as input. This lefkoMat object appears to be a set of mean matrices, and may lack annual matrices. Will project only the mean.");
+          if (!quiet) Rf_warningcall(R_NilValue, "This function takes annual matrices as input. This lefkoMat object appears to be a set of mean matrices, and may lack annual matrices. Will project only the mean.");
         }
       }
       

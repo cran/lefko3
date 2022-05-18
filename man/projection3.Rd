@@ -15,6 +15,7 @@ projection3(
   integeronly = FALSE,
   substoch = 0L,
   sub_warnings = TRUE,
+  quiet = FALSE,
   year = NULL,
   start_vec = NULL,
   start_frame = NULL,
@@ -63,7 +64,11 @@ to the actions outlined for option \code{1}.}
 density dependence yields matrix values outside of the realm of possibility.
 Generally, this means that survival-transition elements altered to values
 outside of the interval [0, 1], and negative fecundity values, will both
-yield warnings. Defaults to \code{TRUE}.}
+yield warnings. Defaults to \code{TRUE}, but becomes \code{FALSE} if
+\code{quiet = TRUE}.}
+
+\item{quiet}{A logical value indicating whether to suppress warnings.
+Defaults to \code{FALSE}.}
 
 \item{year}{Either a single integer value corresponding to the year to
 project, or a vector of \code{times} elements with the year to use at each

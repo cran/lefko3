@@ -89,11 +89,11 @@ all two-way interactions of size and reproductive status; \code{main},
 includes main effects only of size and reproductive status; \code{size},
 includes only size (also interactions between size in historical model);
 \code{rep}, includes only reproductive status (also interactions between
-status in historical model); and \code{cons}, all vital rates estimated only
-as y-intercepts. If \code{approach = "glm"} and
-\code{year.as.random = FALSE}, then year is also included as a fixed effect,
-and, in the case of \code{full}, included in two-way interactions. Defaults
-to \code{size}.}
+status in historical model); \code{age}, all vital rates estimated with age
+and y-intercepts only; \code{cons}, all vital rates estimated only as
+y-intercepts. If \code{approach = "glm"} and \code{year.as.random = FALSE},
+then year is also included as a fixed effect, and, in the case of
+\code{full}, included in two-way interactions. Defaults to \code{size}.}
 
 \item{bestfit}{A variable indicating the model selection criterion for the
 choice of best-fit model. The default is \code{AICc&k}, which chooses the 
@@ -106,7 +106,10 @@ case the best-fit model is simply the model with the lowest AICc value.}
 linear modeling, with the following options: \code{surv}, survival
 probability; \code{obs}, observation probability; \code{size}, overall size;
 \code{repst}, probability of reproducing; and \code{fec}, amount of
-reproduction (overall fecundity). Defaults to \code{c("surv", "size", "fec")}.}
+reproduction (overall fecundity). May also be set to
+\code{vitalrates = "leslie"}, which is equivalent to setting
+\code{c("surv", "fec")} for a Leslie MPM. Defaults to
+\code{c("surv", "size", "fec")}.}
 
 \item{surv}{A vector indicating the variable names coding for status as alive
 or dead in occasions \emph{t}+1, \emph{t}, and \emph{t}-1, respectively.
@@ -419,6 +422,11 @@ in other functions within this package.
 }
 \section{Notes}{
 
+Setting \code{suite = "cons"} prevents the inclusion of size and reproductive
+status as fixed, independent factors in modeling. However, it does not
+prevent any other terms from being included. Density, age, individual
+covariates, individual identity, patch, and year may all be included.
+
 The mechanics governing model building are fairly robust to errors and
 exceptions. The function attempts to build global models, and simplifies
 models automatically should model building fail. Model building proceeds
@@ -508,6 +516,12 @@ distribution.
 If density dependence is explored through function \code{modelsearch()},
 then the interpretation of density is not the full population size but rather
 the spatial density term included in the dataset.
+
+Users building vital rate models for Leslie matrices must set
+\code{vitalrates = c("surv", "fec")} or \code{vitalrates = "leslie"} rather
+than the default, because only survival and fecundity should be estimated in
+these cases. Also, the \code{suite} setting can be set to either \code{age}
+or \code{cons}, as the results will be exactly the same.
 }
 
 \examples{

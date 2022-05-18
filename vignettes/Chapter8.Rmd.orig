@@ -104,7 +104,7 @@ lathframeln <- sf_create(sizes = sizevector, stagenames = stagevector,
   
   <p style="text-indent: 20px">We also have two choices for use as our reproductive status and fecundity variables. The first choice, `FCODE88` indicates whether a plant flowered. The second choice, `Intactseed88`, indicates the number of seed produced. Flowering plants typically have different demographic characteristics than non-flowering plants, either reflecting reproductive costs, or, conversely, because flowering plants might have more resources and hence higher survival than non-flowering plants. We should separate transitions among these two groups. So, let's use `FCODE88` to indicate reproductive status, and `Intactseed88` to indicate fecundity.</p>
   
-  <p style="text-indent: 20px">Finally, note that in the input to the following function, we utilize a strictly repeating pattern of variable names arranged in the same order for each monitoring occasion. This arrangement allows us to enter only the first variable in each set, as long as `noyears` and `blocksize` are set properly and no gaps or shuffles appear in the dataset. The data management functions that we have created for `lefko3` do not require such repeating patterns, but they do make the required input in the function much shorter and more succinct.</p>
+  <p style="text-indent: 20px">Finally, note that in the input to the following function, we utilize a strictly repeating pattern of variable names arranged in the same order for each monitoring occasion. This arrangement allows us to enter only the first variable in each set, as long as `noyears` and `blocksize` are set properly and no gaps or shuffles appear in the dataset. The data management functions that we have created for `lefko3` do not require such repeating patterns, but they do make the required input in the function much shorter and more succinct. To see a detailed summary of the resulting hfv dataset, remove `full = FALSE` from the `summary_hfv()` call.</p>
 ```{r Ch8.4}
 lathvertln <- verticalize3(lathyrus, noyears = 4, firstyear = 1988,
   patchidcol = "SUBPLOT", individcol = "GENET", blocksize = 9,
@@ -113,7 +113,7 @@ lathvertln <- verticalize3(lathyrus, noyears = 4, firstyear = 1988,
   nonobsacol = "Dormant1988", stageassign = lathframeln,
   stagesize = "sizea", censorcol = "Missing1988", censorkeep = NA,
   NAas0 = TRUE, censor = TRUE)
-#summary(lathvertln)
+summary_hfv(lathvertln, full = FALSE)
 ```
   
   <p style="text-indent: 20px">Before we move on to the next key steps in analysis, let's take a closer look at fecundity. In this dataset, fecundity is mostly a count of intact seeds, and only differs in six cases where the seed output was estimated based on other models. To see this, try the following code.</p>

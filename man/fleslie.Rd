@@ -55,7 +55,9 @@ of ages observed in the population.}
 models. If given, then \code{surv_model}, \code{fec_model}, and 
 \code{paramnames} are not required. No models should include size or
 reproductive status in any occasion, nor should they include any variable for
-occasion \emph{t}-1.}
+occasion \emph{t}-1. Note that the modelsuite must have been created from a
+\code{modelsearch()} run in which \code{vitalrates = c("surv", "fec")} and
+the \code{suite} option was set to either \code{age} or \code{cons}.}
 
 \item{surv_model}{A linear model predicting survival probability. This can be
 a model of class \code{glm} or \code{glmer}, and requires a predicted
@@ -109,10 +111,10 @@ in all matrices, or a vector of such values corresponding to each occasion in
 the dataset. Defaults to \code{NULL}.}
 
 \item{surv_dev}{A numeric value to be added to the y-intercept in the linear
-model for survival probability.}
+model for survival probability. Defaults to \code{0}.}
 
 \item{fec_dev}{A numeric value to be added to the y-intercept in the linear
-model for fecundity.}
+model for fecundity. Defaults to \code{0}.}
 
 \item{density}{A numeric value indicating density value to use to propagate
 matrices. Only needed if density is an explanatory term used in linear

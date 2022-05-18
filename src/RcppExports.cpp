@@ -496,8 +496,8 @@ BEGIN_RCPP
 END_RCPP
 }
 // jerzeibalowski
-List jerzeibalowski(DataFrame AllStages, DataFrame stageframe, int matrixformat, List survproxy, List obsproxy, List sizeproxy, List sizebproxy, List sizecproxy, List repstproxy, List fecproxy, List jsurvproxy, List jobsproxy, List jsizeproxy, List jsizebproxy, List jsizecproxy, List jrepstproxy, List jmatstproxy, NumericVector f2_inda, NumericVector f1_inda, NumericVector f2_indb, NumericVector f1_indb, NumericVector f2_indc, NumericVector f1_indc, StringVector r2_inda, StringVector r1_inda, StringVector r2_indb, StringVector r1_indb, StringVector r2_indc, StringVector r1_indc, NumericVector dev_terms, double dens, double fecmod, double maxsize, double maxsizeb, double maxsizec, unsigned int firstage, unsigned int finalage, bool negfec, int yearnumber, int patchnumber, double exp_tol, double theta_tol, String ipm_method, bool err_check, bool simplicity);
-RcppExport SEXP _lefko3_jerzeibalowski(SEXP AllStagesSEXP, SEXP stageframeSEXP, SEXP matrixformatSEXP, SEXP survproxySEXP, SEXP obsproxySEXP, SEXP sizeproxySEXP, SEXP sizebproxySEXP, SEXP sizecproxySEXP, SEXP repstproxySEXP, SEXP fecproxySEXP, SEXP jsurvproxySEXP, SEXP jobsproxySEXP, SEXP jsizeproxySEXP, SEXP jsizebproxySEXP, SEXP jsizecproxySEXP, SEXP jrepstproxySEXP, SEXP jmatstproxySEXP, SEXP f2_indaSEXP, SEXP f1_indaSEXP, SEXP f2_indbSEXP, SEXP f1_indbSEXP, SEXP f2_indcSEXP, SEXP f1_indcSEXP, SEXP r2_indaSEXP, SEXP r1_indaSEXP, SEXP r2_indbSEXP, SEXP r1_indbSEXP, SEXP r2_indcSEXP, SEXP r1_indcSEXP, SEXP dev_termsSEXP, SEXP densSEXP, SEXP fecmodSEXP, SEXP maxsizeSEXP, SEXP maxsizebSEXP, SEXP maxsizecSEXP, SEXP firstageSEXP, SEXP finalageSEXP, SEXP negfecSEXP, SEXP yearnumberSEXP, SEXP patchnumberSEXP, SEXP exp_tolSEXP, SEXP theta_tolSEXP, SEXP ipm_methodSEXP, SEXP err_checkSEXP, SEXP simplicitySEXP) {
+List jerzeibalowski(DataFrame AllStages, DataFrame stageframe, int matrixformat, List survproxy, List obsproxy, List sizeproxy, List sizebproxy, List sizecproxy, List repstproxy, List fecproxy, List jsurvproxy, List jobsproxy, List jsizeproxy, List jsizebproxy, List jsizecproxy, List jrepstproxy, List jmatstproxy, NumericVector f2_inda, NumericVector f1_inda, NumericVector f2_indb, NumericVector f1_indb, NumericVector f2_indc, NumericVector f1_indc, StringVector r2_inda, StringVector r1_inda, StringVector r2_indb, StringVector r1_indb, StringVector r2_indc, StringVector r1_indc, NumericVector dev_terms, bool dens_vr, LogicalVector dvr_yn, IntegerVector dvr_style, NumericVector dvr_alpha, NumericVector dvr_beta, NumericVector dens_n, double dens, double fecmod, double maxsize, double maxsizeb, double maxsizec, unsigned int firstage, unsigned int finalage, bool negfec, int yearnumber, int patchnumber, double exp_tol, double theta_tol, String ipm_method, bool err_check, bool simplicity);
+RcppExport SEXP _lefko3_jerzeibalowski(SEXP AllStagesSEXP, SEXP stageframeSEXP, SEXP matrixformatSEXP, SEXP survproxySEXP, SEXP obsproxySEXP, SEXP sizeproxySEXP, SEXP sizebproxySEXP, SEXP sizecproxySEXP, SEXP repstproxySEXP, SEXP fecproxySEXP, SEXP jsurvproxySEXP, SEXP jobsproxySEXP, SEXP jsizeproxySEXP, SEXP jsizebproxySEXP, SEXP jsizecproxySEXP, SEXP jrepstproxySEXP, SEXP jmatstproxySEXP, SEXP f2_indaSEXP, SEXP f1_indaSEXP, SEXP f2_indbSEXP, SEXP f1_indbSEXP, SEXP f2_indcSEXP, SEXP f1_indcSEXP, SEXP r2_indaSEXP, SEXP r1_indaSEXP, SEXP r2_indbSEXP, SEXP r1_indbSEXP, SEXP r2_indcSEXP, SEXP r1_indcSEXP, SEXP dev_termsSEXP, SEXP dens_vrSEXP, SEXP dvr_ynSEXP, SEXP dvr_styleSEXP, SEXP dvr_alphaSEXP, SEXP dvr_betaSEXP, SEXP dens_nSEXP, SEXP densSEXP, SEXP fecmodSEXP, SEXP maxsizeSEXP, SEXP maxsizebSEXP, SEXP maxsizecSEXP, SEXP firstageSEXP, SEXP finalageSEXP, SEXP negfecSEXP, SEXP yearnumberSEXP, SEXP patchnumberSEXP, SEXP exp_tolSEXP, SEXP theta_tolSEXP, SEXP ipm_methodSEXP, SEXP err_checkSEXP, SEXP simplicitySEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -531,6 +531,12 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< StringVector >::type r2_indc(r2_indcSEXP);
     Rcpp::traits::input_parameter< StringVector >::type r1_indc(r1_indcSEXP);
     Rcpp::traits::input_parameter< NumericVector >::type dev_terms(dev_termsSEXP);
+    Rcpp::traits::input_parameter< bool >::type dens_vr(dens_vrSEXP);
+    Rcpp::traits::input_parameter< LogicalVector >::type dvr_yn(dvr_ynSEXP);
+    Rcpp::traits::input_parameter< IntegerVector >::type dvr_style(dvr_styleSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type dvr_alpha(dvr_alphaSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type dvr_beta(dvr_betaSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type dens_n(dens_nSEXP);
     Rcpp::traits::input_parameter< double >::type dens(densSEXP);
     Rcpp::traits::input_parameter< double >::type fecmod(fecmodSEXP);
     Rcpp::traits::input_parameter< double >::type maxsize(maxsizeSEXP);
@@ -546,13 +552,13 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< String >::type ipm_method(ipm_methodSEXP);
     Rcpp::traits::input_parameter< bool >::type err_check(err_checkSEXP);
     Rcpp::traits::input_parameter< bool >::type simplicity(simplicitySEXP);
-    rcpp_result_gen = Rcpp::wrap(jerzeibalowski(AllStages, stageframe, matrixformat, survproxy, obsproxy, sizeproxy, sizebproxy, sizecproxy, repstproxy, fecproxy, jsurvproxy, jobsproxy, jsizeproxy, jsizebproxy, jsizecproxy, jrepstproxy, jmatstproxy, f2_inda, f1_inda, f2_indb, f1_indb, f2_indc, f1_indc, r2_inda, r1_inda, r2_indb, r1_indb, r2_indc, r1_indc, dev_terms, dens, fecmod, maxsize, maxsizeb, maxsizec, firstage, finalage, negfec, yearnumber, patchnumber, exp_tol, theta_tol, ipm_method, err_check, simplicity));
+    rcpp_result_gen = Rcpp::wrap(jerzeibalowski(AllStages, stageframe, matrixformat, survproxy, obsproxy, sizeproxy, sizebproxy, sizecproxy, repstproxy, fecproxy, jsurvproxy, jobsproxy, jsizeproxy, jsizebproxy, jsizecproxy, jrepstproxy, jmatstproxy, f2_inda, f1_inda, f2_indb, f1_indb, f2_indc, f1_indc, r2_inda, r1_inda, r2_indb, r1_indb, r2_indc, r1_indc, dev_terms, dens_vr, dvr_yn, dvr_style, dvr_alpha, dvr_beta, dens_n, dens, fecmod, maxsize, maxsizeb, maxsizec, firstage, finalage, negfec, yearnumber, patchnumber, exp_tol, theta_tol, ipm_method, err_check, simplicity));
     return rcpp_result_gen;
 END_RCPP
 }
 // jerzeibalowski_sp
-List jerzeibalowski_sp(DataFrame AllStages, DataFrame stageframe, int matrixformat, List survproxy, List obsproxy, List sizeproxy, List sizebproxy, List sizecproxy, List repstproxy, List fecproxy, List jsurvproxy, List jobsproxy, List jsizeproxy, List jsizebproxy, List jsizecproxy, List jrepstproxy, List jmatstproxy, NumericVector f2_inda, NumericVector f1_inda, NumericVector f2_indb, NumericVector f1_indb, NumericVector f2_indc, NumericVector f1_indc, StringVector r2_inda, StringVector r1_inda, StringVector r2_indb, StringVector r1_indb, StringVector r2_indc, StringVector r1_indc, NumericVector dev_terms, double dens, double fecmod, double maxsize, double maxsizeb, double maxsizec, unsigned int firstage, unsigned int finalage, bool negfec, int yearnumber, int patchnumber, double exp_tol, double theta_tol, String ipm_method, bool err_check, bool simplicity);
-RcppExport SEXP _lefko3_jerzeibalowski_sp(SEXP AllStagesSEXP, SEXP stageframeSEXP, SEXP matrixformatSEXP, SEXP survproxySEXP, SEXP obsproxySEXP, SEXP sizeproxySEXP, SEXP sizebproxySEXP, SEXP sizecproxySEXP, SEXP repstproxySEXP, SEXP fecproxySEXP, SEXP jsurvproxySEXP, SEXP jobsproxySEXP, SEXP jsizeproxySEXP, SEXP jsizebproxySEXP, SEXP jsizecproxySEXP, SEXP jrepstproxySEXP, SEXP jmatstproxySEXP, SEXP f2_indaSEXP, SEXP f1_indaSEXP, SEXP f2_indbSEXP, SEXP f1_indbSEXP, SEXP f2_indcSEXP, SEXP f1_indcSEXP, SEXP r2_indaSEXP, SEXP r1_indaSEXP, SEXP r2_indbSEXP, SEXP r1_indbSEXP, SEXP r2_indcSEXP, SEXP r1_indcSEXP, SEXP dev_termsSEXP, SEXP densSEXP, SEXP fecmodSEXP, SEXP maxsizeSEXP, SEXP maxsizebSEXP, SEXP maxsizecSEXP, SEXP firstageSEXP, SEXP finalageSEXP, SEXP negfecSEXP, SEXP yearnumberSEXP, SEXP patchnumberSEXP, SEXP exp_tolSEXP, SEXP theta_tolSEXP, SEXP ipm_methodSEXP, SEXP err_checkSEXP, SEXP simplicitySEXP) {
+List jerzeibalowski_sp(DataFrame AllStages, DataFrame stageframe, int matrixformat, List survproxy, List obsproxy, List sizeproxy, List sizebproxy, List sizecproxy, List repstproxy, List fecproxy, List jsurvproxy, List jobsproxy, List jsizeproxy, List jsizebproxy, List jsizecproxy, List jrepstproxy, List jmatstproxy, NumericVector f2_inda, NumericVector f1_inda, NumericVector f2_indb, NumericVector f1_indb, NumericVector f2_indc, NumericVector f1_indc, StringVector r2_inda, StringVector r1_inda, StringVector r2_indb, StringVector r1_indb, StringVector r2_indc, StringVector r1_indc, NumericVector dev_terms, bool dens_vr, LogicalVector dvr_yn, IntegerVector dvr_style, NumericVector dvr_alpha, NumericVector dvr_beta, NumericVector dens_n, double dens, double fecmod, double maxsize, double maxsizeb, double maxsizec, unsigned int firstage, unsigned int finalage, bool negfec, int yearnumber, int patchnumber, double exp_tol, double theta_tol, String ipm_method, bool err_check, bool simplicity);
+RcppExport SEXP _lefko3_jerzeibalowski_sp(SEXP AllStagesSEXP, SEXP stageframeSEXP, SEXP matrixformatSEXP, SEXP survproxySEXP, SEXP obsproxySEXP, SEXP sizeproxySEXP, SEXP sizebproxySEXP, SEXP sizecproxySEXP, SEXP repstproxySEXP, SEXP fecproxySEXP, SEXP jsurvproxySEXP, SEXP jobsproxySEXP, SEXP jsizeproxySEXP, SEXP jsizebproxySEXP, SEXP jsizecproxySEXP, SEXP jrepstproxySEXP, SEXP jmatstproxySEXP, SEXP f2_indaSEXP, SEXP f1_indaSEXP, SEXP f2_indbSEXP, SEXP f1_indbSEXP, SEXP f2_indcSEXP, SEXP f1_indcSEXP, SEXP r2_indaSEXP, SEXP r1_indaSEXP, SEXP r2_indbSEXP, SEXP r1_indbSEXP, SEXP r2_indcSEXP, SEXP r1_indcSEXP, SEXP dev_termsSEXP, SEXP dens_vrSEXP, SEXP dvr_ynSEXP, SEXP dvr_styleSEXP, SEXP dvr_alphaSEXP, SEXP dvr_betaSEXP, SEXP dens_nSEXP, SEXP densSEXP, SEXP fecmodSEXP, SEXP maxsizeSEXP, SEXP maxsizebSEXP, SEXP maxsizecSEXP, SEXP firstageSEXP, SEXP finalageSEXP, SEXP negfecSEXP, SEXP yearnumberSEXP, SEXP patchnumberSEXP, SEXP exp_tolSEXP, SEXP theta_tolSEXP, SEXP ipm_methodSEXP, SEXP err_checkSEXP, SEXP simplicitySEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -586,6 +592,12 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< StringVector >::type r2_indc(r2_indcSEXP);
     Rcpp::traits::input_parameter< StringVector >::type r1_indc(r1_indcSEXP);
     Rcpp::traits::input_parameter< NumericVector >::type dev_terms(dev_termsSEXP);
+    Rcpp::traits::input_parameter< bool >::type dens_vr(dens_vrSEXP);
+    Rcpp::traits::input_parameter< LogicalVector >::type dvr_yn(dvr_ynSEXP);
+    Rcpp::traits::input_parameter< IntegerVector >::type dvr_style(dvr_styleSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type dvr_alpha(dvr_alphaSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type dvr_beta(dvr_betaSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type dens_n(dens_nSEXP);
     Rcpp::traits::input_parameter< double >::type dens(densSEXP);
     Rcpp::traits::input_parameter< double >::type fecmod(fecmodSEXP);
     Rcpp::traits::input_parameter< double >::type maxsize(maxsizeSEXP);
@@ -601,7 +613,7 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< String >::type ipm_method(ipm_methodSEXP);
     Rcpp::traits::input_parameter< bool >::type err_check(err_checkSEXP);
     Rcpp::traits::input_parameter< bool >::type simplicity(simplicitySEXP);
-    rcpp_result_gen = Rcpp::wrap(jerzeibalowski_sp(AllStages, stageframe, matrixformat, survproxy, obsproxy, sizeproxy, sizebproxy, sizecproxy, repstproxy, fecproxy, jsurvproxy, jobsproxy, jsizeproxy, jsizebproxy, jsizecproxy, jrepstproxy, jmatstproxy, f2_inda, f1_inda, f2_indb, f1_indb, f2_indc, f1_indc, r2_inda, r1_inda, r2_indb, r1_indb, r2_indc, r1_indc, dev_terms, dens, fecmod, maxsize, maxsizeb, maxsizec, firstage, finalage, negfec, yearnumber, patchnumber, exp_tol, theta_tol, ipm_method, err_check, simplicity));
+    rcpp_result_gen = Rcpp::wrap(jerzeibalowski_sp(AllStages, stageframe, matrixformat, survproxy, obsproxy, sizeproxy, sizebproxy, sizecproxy, repstproxy, fecproxy, jsurvproxy, jobsproxy, jsizeproxy, jsizebproxy, jsizecproxy, jrepstproxy, jmatstproxy, f2_inda, f1_inda, f2_indb, f1_indb, f2_indc, f1_indc, r2_inda, r1_inda, r2_indb, r1_indb, r2_indc, r1_indc, dev_terms, dens_vr, dvr_yn, dvr_style, dvr_alpha, dvr_beta, dens_n, dens, fecmod, maxsize, maxsizeb, maxsizec, firstage, finalage, negfec, yearnumber, patchnumber, exp_tol, theta_tol, ipm_method, err_check, simplicity));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -620,8 +632,8 @@ BEGIN_RCPP
 END_RCPP
 }
 // motherbalowski
-List motherbalowski(IntegerVector actualages, DataFrame ageframe, List survproxy, List fecproxy, NumericVector f2_inda, NumericVector f1_inda, NumericVector f2_indb, NumericVector f1_indb, NumericVector f2_indc, NumericVector f1_indc, StringVector r2_inda, StringVector r1_inda, StringVector r2_indb, StringVector r1_indb, StringVector r2_indc, StringVector r1_indc, double surv_dev, double fec_dev, double dens, double fecmod, unsigned int finalage, bool negfec, int yearnumber, int patchnumber, double exp_tol, double theta_tol, bool simplicity);
-RcppExport SEXP _lefko3_motherbalowski(SEXP actualagesSEXP, SEXP ageframeSEXP, SEXP survproxySEXP, SEXP fecproxySEXP, SEXP f2_indaSEXP, SEXP f1_indaSEXP, SEXP f2_indbSEXP, SEXP f1_indbSEXP, SEXP f2_indcSEXP, SEXP f1_indcSEXP, SEXP r2_indaSEXP, SEXP r1_indaSEXP, SEXP r2_indbSEXP, SEXP r1_indbSEXP, SEXP r2_indcSEXP, SEXP r1_indcSEXP, SEXP surv_devSEXP, SEXP fec_devSEXP, SEXP densSEXP, SEXP fecmodSEXP, SEXP finalageSEXP, SEXP negfecSEXP, SEXP yearnumberSEXP, SEXP patchnumberSEXP, SEXP exp_tolSEXP, SEXP theta_tolSEXP, SEXP simplicitySEXP) {
+List motherbalowski(IntegerVector actualages, DataFrame ageframe, List survproxy, List fecproxy, NumericVector f2_inda, NumericVector f1_inda, NumericVector f2_indb, NumericVector f1_indb, NumericVector f2_indc, NumericVector f1_indc, StringVector r2_inda, StringVector r1_inda, StringVector r2_indb, StringVector r1_indb, StringVector r2_indc, StringVector r1_indc, double surv_dev, double fec_dev, double dens, double fecmod, unsigned int finalage, bool negfec, int yearnumber, int patchnumber, bool dens_vr, LogicalVector dvr_yn, IntegerVector dvr_style, NumericVector dvr_alpha, NumericVector dvr_beta, NumericVector dens_n, double exp_tol, double theta_tol, bool simplicity);
+RcppExport SEXP _lefko3_motherbalowski(SEXP actualagesSEXP, SEXP ageframeSEXP, SEXP survproxySEXP, SEXP fecproxySEXP, SEXP f2_indaSEXP, SEXP f1_indaSEXP, SEXP f2_indbSEXP, SEXP f1_indbSEXP, SEXP f2_indcSEXP, SEXP f1_indcSEXP, SEXP r2_indaSEXP, SEXP r1_indaSEXP, SEXP r2_indbSEXP, SEXP r1_indbSEXP, SEXP r2_indcSEXP, SEXP r1_indcSEXP, SEXP surv_devSEXP, SEXP fec_devSEXP, SEXP densSEXP, SEXP fecmodSEXP, SEXP finalageSEXP, SEXP negfecSEXP, SEXP yearnumberSEXP, SEXP patchnumberSEXP, SEXP dens_vrSEXP, SEXP dvr_ynSEXP, SEXP dvr_styleSEXP, SEXP dvr_alphaSEXP, SEXP dvr_betaSEXP, SEXP dens_nSEXP, SEXP exp_tolSEXP, SEXP theta_tolSEXP, SEXP simplicitySEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -649,10 +661,16 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< bool >::type negfec(negfecSEXP);
     Rcpp::traits::input_parameter< int >::type yearnumber(yearnumberSEXP);
     Rcpp::traits::input_parameter< int >::type patchnumber(patchnumberSEXP);
+    Rcpp::traits::input_parameter< bool >::type dens_vr(dens_vrSEXP);
+    Rcpp::traits::input_parameter< LogicalVector >::type dvr_yn(dvr_ynSEXP);
+    Rcpp::traits::input_parameter< IntegerVector >::type dvr_style(dvr_styleSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type dvr_alpha(dvr_alphaSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type dvr_beta(dvr_betaSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type dens_n(dens_nSEXP);
     Rcpp::traits::input_parameter< double >::type exp_tol(exp_tolSEXP);
     Rcpp::traits::input_parameter< double >::type theta_tol(theta_tolSEXP);
     Rcpp::traits::input_parameter< bool >::type simplicity(simplicitySEXP);
-    rcpp_result_gen = Rcpp::wrap(motherbalowski(actualages, ageframe, survproxy, fecproxy, f2_inda, f1_inda, f2_indb, f1_indb, f2_indc, f1_indc, r2_inda, r1_inda, r2_indb, r1_indb, r2_indc, r1_indc, surv_dev, fec_dev, dens, fecmod, finalage, negfec, yearnumber, patchnumber, exp_tol, theta_tol, simplicity));
+    rcpp_result_gen = Rcpp::wrap(motherbalowski(actualages, ageframe, survproxy, fecproxy, f2_inda, f1_inda, f2_indb, f1_indb, f2_indc, f1_indc, r2_inda, r1_inda, r2_indb, r1_indb, r2_indc, r1_indc, surv_dev, fec_dev, dens, fecmod, finalage, negfec, yearnumber, patchnumber, dens_vr, dvr_yn, dvr_style, dvr_alpha, dvr_beta, dens_n, exp_tol, theta_tol, simplicity));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -765,8 +783,8 @@ BEGIN_RCPP
 END_RCPP
 }
 // f_projection3
-Rcpp::List f_projection3(DataFrame data, int format, bool prebreeding, int start_age, int last_age, int fecage_min, int fecage_max, bool cont, bool stochastic, bool standardize, bool growthonly, bool repvalue, bool integeronly, int substoch, String ipm_method, int nreps, int times, double repmod, double exp_tol, double theta_tol, bool random_inda, bool random_indb, bool random_indc, bool err_check, Nullable<DataFrame> stageframe, Nullable<DataFrame> supplement, Nullable<NumericMatrix> repmatrix, Nullable<DataFrame> overwrite, Nullable<List> modelsuite, Nullable<DataFrame> paramnames, Nullable<NumericVector> year, Nullable<CharacterVector> patch, Nullable<NumericVector> sp_density, Nullable<RObject> ind_terms, Nullable<RObject> dev_terms, Nullable<RObject> surv_model, Nullable<RObject> obs_model, Nullable<RObject> size_model, Nullable<RObject> sizeb_model, Nullable<RObject> sizec_model, Nullable<RObject> repst_model, Nullable<RObject> fec_model, Nullable<RObject> jsurv_model, Nullable<RObject> jobs_model, Nullable<RObject> jsize_model, Nullable<RObject> jsizeb_model, Nullable<RObject> jsizec_model, Nullable<RObject> jrepst_model, Nullable<RObject> jmatst_model, Nullable<NumericVector> start_vec, Nullable<RObject> start_frame, Nullable<NumericVector> tweights, Nullable<RObject> density);
-RcppExport SEXP _lefko3_f_projection3(SEXP dataSEXP, SEXP formatSEXP, SEXP prebreedingSEXP, SEXP start_ageSEXP, SEXP last_ageSEXP, SEXP fecage_minSEXP, SEXP fecage_maxSEXP, SEXP contSEXP, SEXP stochasticSEXP, SEXP standardizeSEXP, SEXP growthonlySEXP, SEXP repvalueSEXP, SEXP integeronlySEXP, SEXP substochSEXP, SEXP ipm_methodSEXP, SEXP nrepsSEXP, SEXP timesSEXP, SEXP repmodSEXP, SEXP exp_tolSEXP, SEXP theta_tolSEXP, SEXP random_indaSEXP, SEXP random_indbSEXP, SEXP random_indcSEXP, SEXP err_checkSEXP, SEXP stageframeSEXP, SEXP supplementSEXP, SEXP repmatrixSEXP, SEXP overwriteSEXP, SEXP modelsuiteSEXP, SEXP paramnamesSEXP, SEXP yearSEXP, SEXP patchSEXP, SEXP sp_densitySEXP, SEXP ind_termsSEXP, SEXP dev_termsSEXP, SEXP surv_modelSEXP, SEXP obs_modelSEXP, SEXP size_modelSEXP, SEXP sizeb_modelSEXP, SEXP sizec_modelSEXP, SEXP repst_modelSEXP, SEXP fec_modelSEXP, SEXP jsurv_modelSEXP, SEXP jobs_modelSEXP, SEXP jsize_modelSEXP, SEXP jsizeb_modelSEXP, SEXP jsizec_modelSEXP, SEXP jrepst_modelSEXP, SEXP jmatst_modelSEXP, SEXP start_vecSEXP, SEXP start_frameSEXP, SEXP tweightsSEXP, SEXP densitySEXP) {
+Rcpp::List f_projection3(DataFrame data, int format, bool prebreeding, int start_age, int last_age, int fecage_min, int fecage_max, bool cont, bool stochastic, bool standardize, bool growthonly, bool repvalue, bool integeronly, int substoch, String ipm_method, int nreps, int times, double repmod, double exp_tol, double theta_tol, bool random_inda, bool random_indb, bool random_indc, bool err_check, bool quiet, Nullable<DataFrame> stageframe, Nullable<DataFrame> supplement, Nullable<NumericMatrix> repmatrix, Nullable<DataFrame> overwrite, Nullable<List> modelsuite, Nullable<DataFrame> paramnames, Nullable<NumericVector> year, Nullable<CharacterVector> patch, Nullable<NumericVector> sp_density, Nullable<RObject> ind_terms, Nullable<RObject> dev_terms, Nullable<RObject> surv_model, Nullable<RObject> obs_model, Nullable<RObject> size_model, Nullable<RObject> sizeb_model, Nullable<RObject> sizec_model, Nullable<RObject> repst_model, Nullable<RObject> fec_model, Nullable<RObject> jsurv_model, Nullable<RObject> jobs_model, Nullable<RObject> jsize_model, Nullable<RObject> jsizeb_model, Nullable<RObject> jsizec_model, Nullable<RObject> jrepst_model, Nullable<RObject> jmatst_model, Nullable<NumericVector> start_vec, Nullable<RObject> start_frame, Nullable<NumericVector> tweights, Nullable<RObject> density, Nullable<RObject> density_vr);
+RcppExport SEXP _lefko3_f_projection3(SEXP dataSEXP, SEXP formatSEXP, SEXP prebreedingSEXP, SEXP start_ageSEXP, SEXP last_ageSEXP, SEXP fecage_minSEXP, SEXP fecage_maxSEXP, SEXP contSEXP, SEXP stochasticSEXP, SEXP standardizeSEXP, SEXP growthonlySEXP, SEXP repvalueSEXP, SEXP integeronlySEXP, SEXP substochSEXP, SEXP ipm_methodSEXP, SEXP nrepsSEXP, SEXP timesSEXP, SEXP repmodSEXP, SEXP exp_tolSEXP, SEXP theta_tolSEXP, SEXP random_indaSEXP, SEXP random_indbSEXP, SEXP random_indcSEXP, SEXP err_checkSEXP, SEXP quietSEXP, SEXP stageframeSEXP, SEXP supplementSEXP, SEXP repmatrixSEXP, SEXP overwriteSEXP, SEXP modelsuiteSEXP, SEXP paramnamesSEXP, SEXP yearSEXP, SEXP patchSEXP, SEXP sp_densitySEXP, SEXP ind_termsSEXP, SEXP dev_termsSEXP, SEXP surv_modelSEXP, SEXP obs_modelSEXP, SEXP size_modelSEXP, SEXP sizeb_modelSEXP, SEXP sizec_modelSEXP, SEXP repst_modelSEXP, SEXP fec_modelSEXP, SEXP jsurv_modelSEXP, SEXP jobs_modelSEXP, SEXP jsize_modelSEXP, SEXP jsizeb_modelSEXP, SEXP jsizec_modelSEXP, SEXP jrepst_modelSEXP, SEXP jmatst_modelSEXP, SEXP start_vecSEXP, SEXP start_frameSEXP, SEXP tweightsSEXP, SEXP densitySEXP, SEXP density_vrSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -794,6 +812,7 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< bool >::type random_indb(random_indbSEXP);
     Rcpp::traits::input_parameter< bool >::type random_indc(random_indcSEXP);
     Rcpp::traits::input_parameter< bool >::type err_check(err_checkSEXP);
+    Rcpp::traits::input_parameter< bool >::type quiet(quietSEXP);
     Rcpp::traits::input_parameter< Nullable<DataFrame> >::type stageframe(stageframeSEXP);
     Rcpp::traits::input_parameter< Nullable<DataFrame> >::type supplement(supplementSEXP);
     Rcpp::traits::input_parameter< Nullable<NumericMatrix> >::type repmatrix(repmatrixSEXP);
@@ -823,7 +842,8 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< Nullable<RObject> >::type start_frame(start_frameSEXP);
     Rcpp::traits::input_parameter< Nullable<NumericVector> >::type tweights(tweightsSEXP);
     Rcpp::traits::input_parameter< Nullable<RObject> >::type density(densitySEXP);
-    rcpp_result_gen = Rcpp::wrap(f_projection3(data, format, prebreeding, start_age, last_age, fecage_min, fecage_max, cont, stochastic, standardize, growthonly, repvalue, integeronly, substoch, ipm_method, nreps, times, repmod, exp_tol, theta_tol, random_inda, random_indb, random_indc, err_check, stageframe, supplement, repmatrix, overwrite, modelsuite, paramnames, year, patch, sp_density, ind_terms, dev_terms, surv_model, obs_model, size_model, sizeb_model, sizec_model, repst_model, fec_model, jsurv_model, jobs_model, jsize_model, jsizeb_model, jsizec_model, jrepst_model, jmatst_model, start_vec, start_frame, tweights, density));
+    Rcpp::traits::input_parameter< Nullable<RObject> >::type density_vr(density_vrSEXP);
+    rcpp_result_gen = Rcpp::wrap(f_projection3(data, format, prebreeding, start_age, last_age, fecage_min, fecage_max, cont, stochastic, standardize, growthonly, repvalue, integeronly, substoch, ipm_method, nreps, times, repmod, exp_tol, theta_tol, random_inda, random_indb, random_indc, err_check, quiet, stageframe, supplement, repmatrix, overwrite, modelsuite, paramnames, year, patch, sp_density, ind_terms, dev_terms, surv_model, obs_model, size_model, sizeb_model, sizec_model, repst_model, fec_model, jsurv_model, jobs_model, jsize_model, jsizeb_model, jsizec_model, jrepst_model, jmatst_model, start_vec, start_frame, tweights, density, density_vr));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -1045,8 +1065,8 @@ BEGIN_RCPP
 END_RCPP
 }
 // projection3
-Rcpp::List projection3(List mpm, int nreps, int times, bool historical, bool stochastic, bool standardize, bool growthonly, bool integeronly, int substoch, bool sub_warnings, Nullable<IntegerVector> year, Nullable<NumericVector> start_vec, Nullable<DataFrame> start_frame, Nullable<NumericVector> tweights, Nullable<DataFrame> density);
-RcppExport SEXP _lefko3_projection3(SEXP mpmSEXP, SEXP nrepsSEXP, SEXP timesSEXP, SEXP historicalSEXP, SEXP stochasticSEXP, SEXP standardizeSEXP, SEXP growthonlySEXP, SEXP integeronlySEXP, SEXP substochSEXP, SEXP sub_warningsSEXP, SEXP yearSEXP, SEXP start_vecSEXP, SEXP start_frameSEXP, SEXP tweightsSEXP, SEXP densitySEXP) {
+Rcpp::List projection3(List mpm, int nreps, int times, bool historical, bool stochastic, bool standardize, bool growthonly, bool integeronly, int substoch, bool sub_warnings, bool quiet, Nullable<IntegerVector> year, Nullable<NumericVector> start_vec, Nullable<DataFrame> start_frame, Nullable<NumericVector> tweights, Nullable<DataFrame> density);
+RcppExport SEXP _lefko3_projection3(SEXP mpmSEXP, SEXP nrepsSEXP, SEXP timesSEXP, SEXP historicalSEXP, SEXP stochasticSEXP, SEXP standardizeSEXP, SEXP growthonlySEXP, SEXP integeronlySEXP, SEXP substochSEXP, SEXP sub_warningsSEXP, SEXP quietSEXP, SEXP yearSEXP, SEXP start_vecSEXP, SEXP start_frameSEXP, SEXP tweightsSEXP, SEXP densitySEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -1060,12 +1080,13 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< bool >::type integeronly(integeronlySEXP);
     Rcpp::traits::input_parameter< int >::type substoch(substochSEXP);
     Rcpp::traits::input_parameter< bool >::type sub_warnings(sub_warningsSEXP);
+    Rcpp::traits::input_parameter< bool >::type quiet(quietSEXP);
     Rcpp::traits::input_parameter< Nullable<IntegerVector> >::type year(yearSEXP);
     Rcpp::traits::input_parameter< Nullable<NumericVector> >::type start_vec(start_vecSEXP);
     Rcpp::traits::input_parameter< Nullable<DataFrame> >::type start_frame(start_frameSEXP);
     Rcpp::traits::input_parameter< Nullable<NumericVector> >::type tweights(tweightsSEXP);
     Rcpp::traits::input_parameter< Nullable<DataFrame> >::type density(densitySEXP);
-    rcpp_result_gen = Rcpp::wrap(projection3(mpm, nreps, times, historical, stochastic, standardize, growthonly, integeronly, substoch, sub_warnings, year, start_vec, start_frame, tweights, density));
+    rcpp_result_gen = Rcpp::wrap(projection3(mpm, nreps, times, historical, stochastic, standardize, growthonly, integeronly, substoch, sub_warnings, quiet, year, start_vec, start_frame, tweights, density));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -1194,14 +1215,14 @@ static const R_CallMethodDef CallEntries[] = {
     {"_lefko3_normalpatrolgroup", (DL_FUNC) &_lefko3_normalpatrolgroup, 4},
     {"_lefko3_minorpatrolgroup", (DL_FUNC) &_lefko3_minorpatrolgroup, 5},
     {"_lefko3_subvertedpatrolgroup", (DL_FUNC) &_lefko3_subvertedpatrolgroup, 7},
-    {"_lefko3_jerzeibalowski", (DL_FUNC) &_lefko3_jerzeibalowski, 45},
-    {"_lefko3_jerzeibalowski_sp", (DL_FUNC) &_lefko3_jerzeibalowski_sp, 45},
+    {"_lefko3_jerzeibalowski", (DL_FUNC) &_lefko3_jerzeibalowski, 51},
+    {"_lefko3_jerzeibalowski_sp", (DL_FUNC) &_lefko3_jerzeibalowski_sp, 51},
     {"_lefko3_thefifthhousemate", (DL_FUNC) &_lefko3_thefifthhousemate, 4},
-    {"_lefko3_motherbalowski", (DL_FUNC) &_lefko3_motherbalowski, 27},
+    {"_lefko3_motherbalowski", (DL_FUNC) &_lefko3_motherbalowski, 33},
     {"_lefko3_modelextract", (DL_FUNC) &_lefko3_modelextract, 8},
     {"_lefko3_raymccooney", (DL_FUNC) &_lefko3_raymccooney, 38},
     {"_lefko3_mothermccooney", (DL_FUNC) &_lefko3_mothermccooney, 32},
-    {"_lefko3_f_projection3", (DL_FUNC) &_lefko3_f_projection3, 53},
+    {"_lefko3_f_projection3", (DL_FUNC) &_lefko3_f_projection3, 55},
     {"_lefko3_turbogeodiesel", (DL_FUNC) &_lefko3_turbogeodiesel, 8},
     {"_lefko3_geodiesel", (DL_FUNC) &_lefko3_geodiesel, 7},
     {"_lefko3_decomp3", (DL_FUNC) &_lefko3_decomp3, 1},
@@ -1218,7 +1239,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_lefko3_proj3", (DL_FUNC) &_lefko3_proj3, 6},
     {"_lefko3_proj3sp", (DL_FUNC) &_lefko3_proj3sp, 6},
     {"_lefko3_proj3dens", (DL_FUNC) &_lefko3_proj3dens, 9},
-    {"_lefko3_projection3", (DL_FUNC) &_lefko3_projection3, 15},
+    {"_lefko3_projection3", (DL_FUNC) &_lefko3_projection3, 16},
     {"_lefko3_slambda3", (DL_FUNC) &_lefko3_slambda3, 5},
     {"_lefko3_stoch_senselas", (DL_FUNC) &_lefko3_stoch_senselas, 5},
     {"_lefko3_bambi3", (DL_FUNC) &_lefko3_bambi3, 2},

@@ -1076,7 +1076,7 @@ diff_lM <- function(mpm1, mpm2) {
     stop("Function diff_lM() requires two lefkoMat objects as input.",
       call. = FALSE)
   }
-  if (class(mpm1) != "lefkoMat" | class(mpm2) != "lefkoMat") {
+  if (!is(mpm1, "lefkoMat") | !is(mpm2, "lefkoMat")) {
     stop("Function diff_lM() requires two lefkoMat objects as input.",
       call. = FALSE)
   }
@@ -1120,5 +1120,111 @@ diff_lM <- function(mpm1, mpm2) {
   class(output) <- "lefkoDiff"
   
   return(output)
+}
+
+#' Summary of Class "hfvdata"
+#'
+#' A function to simplify the viewing of basic information describing
+#' demographic data in historical vertical format (data frames of class
+#' \code{hfvdata}).
+#' 
+#' @param object An object of class \code{hfvdata}.
+#' @param popid A string denoting the name of the variable denoting population
+#' identity.
+#' @param patchid A string denoting the name of the variable denoting patch
+#' identity.
+#' @param individ A string denoting the name of the variable denoting individual
+#' identity.
+#' @param year2id A string denoting the name of the variable denoting the year
+#' in time \emph{t}.
+#' @param full A logical value indicating whether to include basic data frame
+#' summary information in addition to hfvdata-specific summary information.
+#' Defaults to \code{TRUE}.
+#' @param ... Other parameters.
+#' 
+#' @return A summary of the object. The first line shows the numbers of
+#' populations, patches, individuals, and time steps. If \code{full = TRUE}, 
+#' then this is followed by a standard data frame summary of the hfv dataset.
+#' 
+#' @examples
+#' data(cypdata)
+#' 
+#' sizevector <- c(0, 0, 0, 0, 0, 0, 1, 2.5, 4.5, 8, 17.5)
+#' stagevector <- c("SD", "P1", "P2", "P3", "SL", "D", "XSm", "Sm", "Md", "Lg",
+#'   "XLg")
+#' repvector <- c(0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1)
+#' obsvector <- c(0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1)
+#' matvector <- c(0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1)
+#' immvector <- c(0, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0)
+#' propvector <- c(1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)
+#' indataset <- c(0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1)
+#' binvec <- c(0, 0, 0, 0, 0, 0.5, 0.5, 1, 1, 2.5, 7)
+#' 
+#' cypframe_raw <- sf_create(sizes = sizevector, stagenames = stagevector,
+#'   repstatus = repvector, obsstatus = obsvector, matstatus = matvector,
+#'   propstatus = propvector, immstatus = immvector, indataset = indataset,
+#'   binhalfwidth = binvec)
+#' 
+#' cypraw_v1 <- verticalize3(data = cypdata, noyears = 6, firstyear = 2004,
+#'   patchidcol = "patch", individcol = "plantid", blocksize = 4,
+#'   sizeacol = "Inf2.04", sizebcol = "Inf.04", sizeccol = "Veg.04",
+#'   repstracol = "Inf.04", repstrbcol = "Inf2.04", fecacol = "Pod.04",
+#'   stageassign = cypframe_raw, stagesize = "sizeadded", NAas0 = TRUE,
+#'   NRasRep = TRUE)
+#' 
+#' summary_hfv(cypraw_v1)
+#' 
+#' @export
+summary_hfv <- function(object, popid = "popid", patchid = "patchid",
+  individ = "individ", year2id = "year2", full = TRUE, ...) {
+  
+  demodata <- object
+  
+  if (!is(demodata, "hfvdata")) {
+    stop("This summary function requires an object of class hfvdata as input.",
+      call. = FALSE)
+  }
+  
+  matdim <- dim(demodata)
+  
+  if (!is.element(popid, names(demodata))) {
+    stop("Population ID variable not found.", call. = FALSE)
+  }
+  if (!is.element(patchid, names(demodata))) {
+    stop("Patch ID variable not found.", call. = FALSE)
+  }
+  if (!is.element(individ, names(demodata))) {
+    stop("Individual ID variable not found.", call. = FALSE)
+  }
+  if (!is.element(year2id, names(demodata))) {
+    stop("Year at time t ID variable not found.", call. = FALSE)
+  }
+  
+  totalpops <- length(unique(demodata[, popid]))
+  totalpatches <- length(unique(demodata[, patchid]))
+  totalindivs <- length(unique(demodata[, individ]))
+  totalyears <- length(unique(demodata[, year2id]))
+  
+  grammar_rows <- " rows, "
+  grammar_vars <- " variables, "
+  grammar_pops <- " populations, "
+  grammar_patches <- " patches, "
+  grammar_indivs <- " individuals, and "
+  grammar_years <- " time steps."
+  if (matdim[1] == 1) grammar_rows <- " row, "
+  if (matdim[2] == 1) grammar_vars <- " variable, "
+  if (totalpops == 1) grammar_pops <- " population, "
+  if (totalpatches == 1) grammar_patches <- " patch, "
+  if (totalindivs == 1) grammar_indivs <- " individual, and "
+  if (totalyears == 1) grammar_years <- " time step."
+  
+  writeLines(paste0("\nThis hfv dataset contains ", matdim[1], grammar_rows,
+      matdim[2], grammar_vars, totalpops, grammar_pops, totalpatches,
+      grammar_patches, totalindivs, grammar_indivs, totalyears, grammar_years))
+  
+  if (full) {
+    dethonthetoilet <- summary.data.frame(demodata)
+    print(dethonthetoilet, digits = 3)
+  }
 }
 

@@ -223,46 +223,46 @@ historical matrices, or a vector of such values corresponding to each
 occasion in the dataset. Defaults to \code{NULL}.}
 
 \item{surv_dev}{A numeric value to be added to the y-intercept in the linear
-model for survival probability.}
+model for survival probability. Defaults to \code{0}.}
 
 \item{obs_dev}{A numeric value to be added to the y-intercept in the linear
-model for observation probability.}
+model for observation probability. Defaults to \code{0}.}
 
 \item{size_dev}{A numeric value to be added to the y-intercept in the linear
-model for primary size.}
+model for primary size. Defaults to \code{0}.}
 
 \item{sizeb_dev}{A numeric value to be added to the y-intercept in the linear
-model for secondary size.}
+model for secondary size. Defaults to \code{0}.}
 
 \item{sizec_dev}{A numeric value to be added to the y-intercept in the linear
-model for tertiary size.}
+model for tertiary size. Defaults to \code{0}.}
 
 \item{repst_dev}{A numeric value to be added to the y-intercept in the linear
-model for probability of reproduction.}
+model for probability of reproduction. Defaults to \code{0}.}
 
 \item{fec_dev}{A numeric value to be added to the y-intercept in the linear
-model for fecundity.}
+model for fecundity. Defaults to \code{0}.}
 
 \item{jsurv_dev}{A numeric value to be added to the y-intercept in the linear
-model for juvenile survival probability.}
+model for juvenile survival probability. Defaults to \code{0}.}
 
 \item{jobs_dev}{A numeric value to be added to the y-intercept in the linear
-model for juvenile observation probability.}
+model for juvenile observation probability. Defaults to \code{0}.}
 
 \item{jsize_dev}{A numeric value to be added to the y-intercept in the linear
-model for juvenile primary size.}
+model for juvenile primary size. Defaults to \code{0}.}
 
 \item{jsizeb_dev}{A numeric value to be added to the y-intercept in the
-linear model for juvenile secondary size.}
+linear model for juvenile secondary size. Defaults to \code{0}.}
 
 \item{jsizec_dev}{A numeric value to be added to the y-intercept in the
-linear model for juvenile tertiary size.}
+linear model for juvenile tertiary size. Defaults to \code{0}.}
 
 \item{jrepst_dev}{A numeric value to be added to the y-intercept in the
-linear model for juvenile reproduction probability.}
+linear model for juvenile reproduction probability. Defaults to \code{0}.}
 
 \item{jmatst_dev}{A numeric value to be added to the y-intercept in the
-linear model for juvenile maturity probability.}
+linear model for juvenile maturity probability. Defaults to \code{0}.}
 
 \item{density}{A numeric value indicating density value to use to propagate
 matrices. Only needed if density is an explanatory term used in one or more
