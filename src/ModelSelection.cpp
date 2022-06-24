@@ -8,7 +8,9 @@ using namespace arma;
 //'
 //' Function \code{.stovokor()} creates formulae to be used as input in the
 //' global model calls used in function \code{\link{modelsearch}()}.
-//'
+//' 
+//' @name .stovokor
+//' 
 //' @param surv A vector of strings indicating the names of the variables coding
 //' survival.
 //' @param obs A vector of strings indicating the names of the variables coding
@@ -1401,6 +1403,68 @@ List stovokor(StringVector surv, StringVector obs, StringVector size,
   
   if (fullfecmodel == "none") output["full.fec.model"] = 1;
   
+  return output;
+}
+
+//' Creates a Skeleton Paramnames Object for Use in Function-based Modeling
+//' 
+//' Creates a simple skeleton \code{paramnames} object that can be entered as
+//' input in functions \code{\link{flefko2}()}, \code{\link{flefko3}()}, and
+//' \code{\link{aflefko2}()}.
+//' 
+//' @name create_pm
+//' 
+//' @param name_terms A logical value indicating whether to start each variable
+//' name as \code{none} if \code{FALSE}, or as the default \code{modelparams}
+//' name if \code{TRUE}. Defaults to \code{FALSE}.
+//' 
+//' @return A three column data frame, of which the first describes the
+//' parameters in reasonably plain English, the second gives the name of the
+//' parameter within the MPM generating functions, and the third is to be
+//' edited with the names of the variables as they appear in the models.
+//' 
+//' @section Notes:
+//' The third column in the resulting object should be edited with the names only
+//' of those variables actually used in vital rate modeling. This
+//' \code{paramnames} object should apply to all models used in a single MPM
+//' building exercise. So, for example, if the models used include random terms,
+//' then they should all have the same random terms. Fixed terms can vary,
+//' however.
+//' 
+//' @examples 
+//' our_pm <- create_pm()
+//' our_pm
+//' 
+//' @export
+// [[Rcpp::export(create_pm)]]
+DataFrame create_pm(bool name_terms = false) {
+  CharacterVector parameter_names = {"time t", "individual", "patch",
+    "alive in time t+1", "observed in time t+1", "sizea in time t+1",
+    "sizeb in time t+1", "sizec in time t+1", "reproductive status in time t+1",
+    "fecundity in time t+1", "fecundity in time t", "sizea in time t",
+    "sizea in time t-1", "sizeb in time t", "sizeb in time t-1",
+    "sizec in time t", "sizec in time t-1", "reproductive status in time t",
+    "reproductive status in time t-1", "maturity status in time t+1",
+    "maturity status in time t", "age in time t", "density in time t",
+    "individual covariate a in time t", "individual covariate a in time t-1",
+    "individual covariate b in time t", "individual covariate b in time t-1",
+    "individual covariate c in time t", "individual covariate c in time t-1",
+    "stage group in time t", "stage group in time t-1"};
+  CharacterVector mainparams = {"year2", "individ", "patch", "surv3", "obs3",
+    "size3", "sizeb3", "sizec3", "repst3", "fec3", "fec2", "size2", "size1",
+    "sizeb2", "sizeb1", "sizec2", "sizec1", "repst2", "repst1", "matst3",
+    "matst2", "age", "density", "indcova2", "indcova1", "indcovb2", "indcovb1",
+    "indcovc2", "indcovc1", "group2", "group1"};
+  CharacterVector modelparams = {"none", "none", "none", "none", "none",
+    "none", "none", "none", "none", "none", "none", "none", "none", "none",
+    "none", "none", "none", "none", "none", "none", "none", "none", "none",
+    "none", "none", "none", "none", "none", "none", "none", "none"};
+  
+  if (name_terms) modelparams = mainparams;
+  
+  DataFrame output = DataFrame::create(_["parameter_names"] = parameter_names,
+    _["mainparams"] = mainparams, _["modelparams"] = modelparams);
+    
   return output;
 }
 

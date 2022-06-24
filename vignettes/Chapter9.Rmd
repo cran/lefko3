@@ -24,12 +24,7 @@ Figure 9.1. Life history model of *Anthyllis vulneraria*. Solid arrows indicate 
   
 ### BASIC WORKFLOW  
   
-  <p style="text-indent: 20px">Our goal in this exercise will be to import the published MPMs available for these nine populations of *Anthyllis vulneraria*, and to analyze the demographic differences between populations using deterministic and stochastic life table response experiments (LTRE and sLTRE). We will use the matrices analyzed in @davison_demographic_2010, and attempt to reproduce their results. We begin by loading package `lefko3`.</p>
-
-```r
-rm(list=ls(all=TRUE))
-library(lefko3)
-```
+  <p style="text-indent: 20px">Our goal in this exercise will be to import the published MPMs available for these nine populations of *Anthyllis vulneraria*, and to analyze the demographic differences between populations using deterministic and stochastic life table response experiments (LTRE and sLTRE). We will use the matrices analyzed in @davison_demographic_2010, and attempt to reproduce their results.</p>
   
 #### Step 1. Life history model development 
   

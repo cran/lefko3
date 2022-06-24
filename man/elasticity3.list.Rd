@@ -109,7 +109,6 @@ ehrlen3 <- rlefko3(data = lathvert, stageframe = lathframe, year = "all",
 elasticity3(ehrlen3$A, stochastic = TRUE)
 
 # Cypripedium example
-rm(list=ls(all=TRUE))
 data(cypdata)
 
 sizevector <- c(0, 0, 0, 0, 0, 0, 1, 2.5, 4.5, 8, 17.5)

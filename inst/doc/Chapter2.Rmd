@@ -21,10 +21,9 @@ vignette: >
   
 ### BASIC WORKFLOW  
   
-  <p style="text-indent: 20px">The dataset that we have provided is organized in horizontal format, meaning that rows correspond to unique individuals and columns correspond to individual condition in particular observation occasions (which we also refer to as *years* here). The original spreadsheet file used to keep the dataset has a repeating pattern to these columns, with each year having a similarly arranged group of variables. Let's take a look at this dataset. First, we clear memory and load it. We will then look at its dimensions and its summary.</p>
+  <p style="text-indent: 20px">The dataset that we have provided is organized in horizontal format, meaning that rows correspond to unique individuals and columns correspond to individual condition in particular observation occasions (which we also refer to as *years* here). The original spreadsheet file used to keep the dataset has a repeating pattern to these columns, with each year having a similarly arranged group of variables. Let's take a look at this dataset.</p>
 
 ```r
-rm(list=ls(all=TRUE))
 library(lefko3)
 
 data(lathyrus)

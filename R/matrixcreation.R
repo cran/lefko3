@@ -46,17 +46,19 @@
 #' @param data The historical vertical demographic data frame used to estimate
 #' vital rates (class \code{hfvdata}), which is required to initialize times and
 #' patches properly. Variable names should correspond to the naming conventions
-#' in \code{\link{verticalize3}()} and \code{\link{historicalize3}()}.
-#' @param modelsuite A \code{lefkoMod} object holding the vital rate models and
-#' associated metadata. If given, then \code{surv_model}, \code{obs_model}, 
-#' \code{size_model}, \code{sizeb_model}, \code{sizec_model},
-#' \code{repst_model}, \code{fec_model}, \code{jsurv_model}, \code{jobs_model},
-#' \code{jsize_model}, \code{jsizeb_model}, \code{jsizec_model},
-#' \code{jrepst_model}, \code{jmatst_model}, and \code{paramnames} are not
-#' required. One or more of these models should include size or reproductive
-#' status in occasion \emph{t}-1. Although this is optional input, it is
-#' recommended, and without it all vital rate model inputs (named
-#' \code{XX_model}) are required.
+#' in \code{\link{verticalize3}()} and \code{\link{historicalize3}()}. Not
+#' required if option \code{modelsuite} is set to a \code{vrm_input} object.
+#' @param modelsuite One of two kinds of lists. The first is a \code{lefkoMod}
+#' object holding the vital rate models and associated metadata. Alternatively,
+#' an object of class \code{vrm_input} may be provided. If given, then
+#' \code{surv_model}, \code{obs_model}, \code{size_model}, \code{sizeb_model},
+#' \code{sizec_model}, \code{repst_model}, \code{fec_model}, \code{jsurv_model},
+#' \code{jobs_model}, \code{jsize_model}, \code{jsizeb_model},
+#' \code{jsizec_model}, \code{jrepst_model}, \code{jmatst_model}, and
+#' \code{paramnames} are not required. One or more of these models should
+#' include size or reproductive status in occasion \emph{t}-1. Although this is
+#' optional input, it is recommended, and without it all vital rate model inputs
+#' (named \code{XX_model}) are required.
 #' @param surv_model A linear model predicting survival probability. This can 
 #' be a model of class \code{glm} or \code{glmer}, and requires a predicted
 #' binomial variable under a logit link. Ignored if \code{modelsuite} is
@@ -319,6 +321,13 @@
 #' in each column of this matrix matches the associated matrix in column vector
 #' format. Use of this option is generally for the purposes of debugging code.
 #'`
+#' Individual covariates are treated as categorical only if they are set as
+#' random terms. Fixed categorical individual covariates are currently not
+#' allowed. However, such terms may be supplied if the \code{modelsuite} option
+#' is set to a \code{vrm_input} object. In that case, the user should also set
+#' the logical random switch for the individual covariate to be used to 
+#' \code{TRUE} (e.g., \code{random.inda = TRUE}).
+#'
 #' @seealso \code{\link{flefko2}()}
 #' @seealso \code{\link{aflefko2}()}
 #' @seealso \code{\link{arlefko2}()}
@@ -490,6 +499,7 @@ flefko3 <- function(year = "all", patch = "all", stageframe, supplement = NULL,
   err_check = FALSE, exp_tol = 700, theta_tol = 100000000) {
   
   indanames <- indbnames <- indcnames <- yearcol <- patchcol <- NULL
+  nodata <- FALSE
   
   if (tolower(format) == "ehrlen") {
     format_int <- 1
@@ -510,7 +520,7 @@ flefko3 <- function(year = "all", patch = "all", stageframe, supplement = NULL,
   }
   
   if (all(is.null(modelsuite)) & all(is.null(paramnames))) {
-    stop("Function will not work properly without a dataframe of model parameters or
+    stop("Function will not work properly without a dataframe of linear model parameters or
       equivalents supplied either through the modelsuite option or through the paramnames
       input parameter.", call. = FALSE)
   } else if (!all(is.null(modelsuite))) {
@@ -518,6 +528,15 @@ flefko3 <- function(year = "all", patch = "all", stageframe, supplement = NULL,
       paramnames <- modelsuite$paramnames
       yearcol <- paramnames$modelparams[which(paramnames$mainparams == "year2")]
       patchcol <- paramnames$modelparams[which(paramnames$mainparams == "patch")]
+    } else if (is(modelsuite, "vrm_input")) {
+      nodata <- TRUE
+      yearcol <- 0
+      patchcol <- 0
+      modelsuite$paramnames <- create_pm()
+      modelsuite$paramnames$modelparams[c(1:3)] <- modelsuite$paramnames$mainparams[c(1:3)]
+      modelsuite$paramnames$modelparams[c(24:31)] <- modelsuite$paramnames$mainparams[c(24:31)]
+      
+      paramnames <- modelsuite$paramnames
     }
   } else if (!all(is.null(paramnames))) {
     if (is.data.frame(paramnames)) {
@@ -596,20 +615,6 @@ flefko3 <- function(year = "all", patch = "all", stageframe, supplement = NULL,
       set to a constant value of 1", call. = FALSE);
   }
   
-  if (all(is.null(data))) {
-    stop("Need original vertical dataset to set proper limits on year and patch.", 
-      call. = FALSE)
-  }
-  if (!is.data.frame(data)) {
-    stop("Need original vertical dataset used in modeling to proceed.",
-      call. = FALSE)
-  }
-  if (!is(data, "hfvdata")) {
-    warning("Dataset used as input is not of class hfvdata. Will assume that the
-      dataset has been formatted equivalently.", call. = FALSE)
-  }
-  no_vars <- dim(data)[2]
-  
   stageframe_vars <- c("stage", "size", "size_b", "size_c", "min_age", "max_age",
     "repstatus", "obsstatus", "propstatus", "immstatus", "matstatus", "indataset",
     "binhalfwidth_raw", "sizebin_min", "sizebin_max", "sizebin_center",
@@ -620,23 +625,66 @@ flefko3 <- function(year = "all", patch = "all", stageframe, supplement = NULL,
     stop("Please use properly formatted stageframe as input.", call. = FALSE)
   }
   
-  if (is.character(yearcol)) {
-    choicevar <- which(names(data) == yearcol);
-    
-    if (length(choicevar) != 1) {
-      stop("Year variable does not match any variable in the dataset.",
+  if (!nodata) {
+    if (all(is.null(data))) {
+      stop("Need original vertical dataset to set proper limits on year and patch.", 
         call. = FALSE)
     }
-    mainyears <- sort(unique(data[,choicevar]))
-  } else if (is.numeric(yearcol)) {
-    if (any(yearcol < 1) | any(yearcol > no_vars)) {
-      stop("Year variable does not match any variable in the dataset.",
+    if (!is.data.frame(data)) {
+      stop("Need original vertical dataset used in modeling to proceed.",
         call. = FALSE)
     }
+    if (!is(data, "hfvdata")) {
+      warning("Dataset used as input is not of class hfvdata. Will assume that the
+        dataset has been formatted equivalently.", call. = FALSE)
+    }
+    no_vars <- dim(data)[2]
     
-    mainyears <- sort(unique(data[, yearcol]));
+    if (is.character(yearcol)) {
+      choicevar <- which(names(data) == yearcol);
+      
+      if (length(choicevar) != 1) {
+        stop("Year variable does not match any variable in the dataset.",
+          call. = FALSE)
+      }
+      mainyears <- sort(unique(data[,choicevar]))
+    } else if (is.numeric(yearcol)) {
+      if (any(yearcol < 1) | any(yearcol > no_vars)) {
+        stop("Year variable does not match any variable in the dataset.",
+          call. = FALSE)
+      }
+      
+      mainyears <- sort(unique(data[, yearcol]));
+    } else {
+      stop("Need appropriate year variable designation in paramnames.", call. = FALSE)
+    }
+    
+    if (all(is.na(patch)) & !is.na(patchcol)) {
+      warning("Matrix creation may not proceed properly without input in the patch
+        option if a patch term occurs in the vital rate models.", call. = FALSE)
+    }
+    
+    if (is.character(patchcol) & patchcol != "none") {
+      choicevar <- which(names(data) == patchcol);
+      
+      if (length(choicevar) != 1) {
+        stop("Patch variable does not match any variable in the dataset.",
+          call. = FALSE)
+      }
+      mainpatches <- sort(unique(as.character(data[,choicevar])))
+    } else if (is.numeric(patchcol)) {
+      if (any(patchcol < 1) | any(patchcol > no_vars)) {
+        stop("Patch variable does not match any variable in the dataset.",
+          call. = FALSE)
+      }
+      mainpatches <- sort(unique(as.character(data[, patchcol])));
+    } else {
+      mainpatches <- NA
+    }
   } else {
-    stop("Need appropriate year variable designation in paramnames.", call. = FALSE)
+    no_vars <- 0
+    mainyears <- modelsuite$year_frame$years
+    mainpatches <- modelsuite$patch_frame$patches
   }
   
   if (any(is.character(year))) {
@@ -659,35 +707,24 @@ flefko3 <- function(year = "all", patch = "all", stageframe, supplement = NULL,
       call. = FALSE)
   }
   
-  if (all(is.na(patch)) & !is.na(patchcol)) {
-    warning("Matrix creation may not proceed properly without input in the patch
-      option if a patch term occurs in the vital rate models.", call. = FALSE)
-  }
-  
-  if (is.character(patchcol) & patchcol != "none") {
-    choicevar <- which(names(data) == patchcol);
-    
-    if (length(choicevar) != 1) {
-      stop("Patch variable does not match any variable in the dataset.",
-        call. = FALSE)
-    }
-    mainpatches <- sort(unique(as.character(data[,choicevar])))
-  } else if (is.numeric(patchcol)) {
-    if (any(patchcol < 1) | any(patchcol > no_vars)) {
-      stop("Patch variable does not match any variable in the dataset.",
-        call. = FALSE)
-    }
-    mainpatches <- sort(unique(as.character(data[, patchcol])));
-  } else {
-    mainpatches <- NA
-  }
-  
   if (any(is.character(patch))) {
     if (is.element("all", tolower(patch))) {
       patch <- mainpatches
     } else if (!all(is.element(patch, mainpatches))) {
       stop("Patch designation not recognized.", call. = FALSE)
     }
+  }
+  
+  if (!all(is.na(density))) {
+    if (!all(is.numeric(density))) {
+      stop("Density value must be numeric.", call. = FALSE)
+    }
+    
+    if (any(is.na(density))) {
+      density[which(is.na(density))] <- 0
+    }
+  } else {
+    density <- 0
   }
   
   if (!is.null(inda)) {
@@ -702,17 +739,25 @@ flefko3 <- function(year = "all", patch = "all", stageframe, supplement = NULL,
     }
     
     if (random.inda) {
-      indacol <- paramnames$modelparams[which(paramnames$mainparams == "indcova2")]
-      if (indacol == "none") {
-        stop("Individual covariate a not recognized in the modelsuite.", call. = FALSE)
-      }
-      
-      indacol <- which(names(data) == indacol)
-      
-      if (length(indacol) > 0) {
-        indanames <- sort(unique(data[, indacol]))
+      if (!nodata) {
+        indacol <- paramnames$modelparams[which(paramnames$mainparams == "indcova2")]
+        if (indacol == "none") {
+          stop("Individual covariate a not recognized in the modelsuite.", call. = FALSE)
+        }
+        
+        indacol <- which(names(data) == indacol)
+        
+        if (length(indacol) > 0) {
+          indanames <- sort(unique(data[, indacol]))
+        } else {
+          stop("Individual covariate a not recognized in the modelsuite.", call. = FALSE)
+        }
       } else {
-        stop("Individual covariate a not recognized in the modelsuite.", call. = FALSE)
+        if (!is.element("indcova2_frame", names(modelsuite))) {
+          stop("This function cannot use inda input with a vrm_input object that does not include
+              an indcova_frame element.", call. = FALSE)
+        }
+        indanames <- modelsuite$indcova2_frame$indcova
       }
       
       if (any(!is.element(inda, indanames))) {
@@ -771,17 +816,25 @@ flefko3 <- function(year = "all", patch = "all", stageframe, supplement = NULL,
     }
     
     if (random.indb) {
-      indbcol <- paramnames$modelparams[which(paramnames$mainparams == "indcovb2")]
-      if (indbcol == "none") {
-        stop("Individual covariate b not recognized in the modelsuite.", call. = FALSE)
-      }
-      
-      indbcol <- which(names(data) == indbcol)
-      
-      if (length(indbcol) > 0) {
-        indbnames <- sort(unique(data[, indbcol]))
+      if (!nodata) {
+        indbcol <- paramnames$modelparams[which(paramnames$mainparams == "indcovb2")]
+        if (indbcol == "none") {
+          stop("Individual covariate b not recognized in the modelsuite.", call. = FALSE)
+        }
+        
+        indbcol <- which(names(data) == indbcol)
+        
+        if (length(indbcol) > 0) {
+          indbnames <- sort(unique(data[, indbcol]))
+        } else {
+          stop("Individual covariate b not recognized in the modelsuite.", call. = FALSE)
+        }
       } else {
-        stop("Individual covariate b not recognized in the modelsuite.", call. = FALSE)
+        if (!is.element("indcovb2_frame", names(modelsuite))) {
+          stop("This function cannot use indb input with a vrm_input object that does not include
+              an indcovb_frame element.", call. = FALSE)
+        }
+        indbnames <- modelsuite$indcovb2_frame$indcovb
       }
       
       if (any(!is.element(indb, indbnames))) {
@@ -840,17 +893,25 @@ flefko3 <- function(year = "all", patch = "all", stageframe, supplement = NULL,
     }
     
     if (random.indc) {
-      indccol <- paramnames$modelparams[which(paramnames$mainparams == "indcovc2")]
-      if (indccol == "none") {
-        stop("Individual covariate c not recognized in the modelsuite.", call. = FALSE)
-      }
-      
-      indccol <- which(names(data) == indccol)
-      
-      if (length(indccol) > 0) {
-        indcnames <- sort(unique(data[, indccol]))
+      if (!nodata) {
+        indccol <- paramnames$modelparams[which(paramnames$mainparams == "indcovc2")]
+        if (indccol == "none") {
+          stop("Individual covariate c not recognized in the modelsuite.", call. = FALSE)
+        }
+        
+        indccol <- which(names(data) == indccol)
+        
+        if (length(indccol) > 0) {
+          indcnames <- sort(unique(data[, indccol]))
+        } else {
+          stop("Individual covariate c not recognized in the modelsuite.", call. = FALSE)
+        }
       } else {
-        stop("Individual covariate c not recognized in the modelsuite.", call. = FALSE)
+        if (!is.element("indcovc2_frame", names(modelsuite))) {
+          stop("This function cannot use indc input with a vrm_input object that does not include
+              an indcovc_frame element.", call. = FALSE)
+        }
+        indcnames <- modelsuite$indcovc2_frame$indcovc
       }
       
       if (any(!is.element(indc, indcnames))) {
@@ -895,18 +956,6 @@ flefko3 <- function(year = "all", patch = "all", stageframe, supplement = NULL,
     f2.indc <- rep(0, length(mainyears))
     r2.indc <- rep("none", length(mainyears))
     r1.indc <- rep("none", length(mainyears))
-  }
-  
-  if (!all(is.na(density))) {
-    if (!all(is.numeric(density))) {
-      stop("Density value must be numeric.", call. = FALSE)
-    }
-    
-    if (any(is.na(density))) {
-      density[which(is.na(density))] <- 0
-    }
-  } else {
-    density <- 0
   }
   
   if (all(is.null(repmatrix)) & all(is.null(supplement))) {
@@ -1007,7 +1056,7 @@ flefko3 <- function(year = "all", patch = "all", stageframe, supplement = NULL,
     f2.inda, f1.inda, f2.indb, f1.indb, f2.indc, f1.indc, r2.inda, r1.inda,
     r2.indb, r1.indb, r2.indc, r1.indc, dev_terms, density, repmod, firstage = 0,
     finalage = 0, format = format_int, style = 0, cont = 0, filter = 1, negfec,
-    exp_tol, theta_tol, ipm_method, err_check, FALSE)
+    nodata, exp_tol, theta_tol, ipm_method, err_check, FALSE)
   
   ahstages <- stageframe[1:(dim(stageframe)[1] - 1),]
   
@@ -1145,16 +1194,19 @@ flefko3 <- function(year = "all", patch = "all", stageframe, supplement = NULL,
 #' @param data  The historical vertical demographic data frame used to estimate
 #' vital rates (class \code{hfvdata}), which is required to initialize times and
 #' patches properly. Variable names should correspond to the naming conventions
-#' in \code{\link{verticalize3}()} and \code{\link{historicalize3}()}.
-#' @param modelsuite A \code{lefkoMod} object holding the vital rate models and
-#' associated metadata. If given, then \code{surv_model}, \code{obs_model}, 
-#' \code{size_model}, \code{sizeb_model}, \code{sizec_model},
-#' \code{repst_model}, \code{fec_model}, \code{jsurv_model}, \code{jobs_model},
-#' \code{jsize_model}, \code{jsizeb_model}, \code{jsizec_model},
-#' \code{jrepst_model}, \code{jmatst_model}, and \code{paramnames} are not
-#' required. No models should include size or reproductive status in occasion
-#' \emph{t}-1. Although this is optional input, it is recommended, and without
-#' it all vital rate model inputs (named \code{XX_model}) are required.
+#' in \code{\link{verticalize3}()} and \code{\link{historicalize3}()}. Not
+#' required if option \code{modelsuite} is set to a \code{vrm_input} object.
+#' @param modelsuite One of two kinds of lists. The first is a \code{lefkoMod}
+#' object holding the vital rate models and associated metadata. Alternatively,
+#' an object of class \code{vrm_input} may be provided. If given, then
+#' \code{surv_model}, \code{obs_model}, \code{size_model}, \code{sizeb_model},
+#' \code{sizec_model}, \code{repst_model}, \code{fec_model}, \code{jsurv_model},
+#' \code{jobs_model}, \code{jsize_model}, \code{jsizeb_model},
+#' \code{jsizec_model}, \code{jrepst_model}, \code{jmatst_model}, and
+#' \code{paramnames} are not required. No models should include size or
+#' reproductive status in occasion \emph{t}-1. Although this is optional input,
+#' it is recommended, and without it all vital rate model inputs (named
+#' \code{XX_model}) are required.
 #' @param surv_model A linear model predicting survival probability. This can 
 #' be a model of class \code{glm} or \code{glmer}, and requires a predicted
 #' binomial variable under a logit link. Ignored if \code{modelsuite} is
@@ -1418,6 +1470,13 @@ flefko3 <- function(year = "all", patch = "all", stageframe, supplement = NULL,
 #' element in the associated \code{U} matrix. The number and order of elements
 #' in each column of this matrix matches the associated matrix in column vector
 #' format. Use of this option is generally for the purposes of debugging code.
+#' 
+#' Individual covariates are treated as categorical only if they are set as
+#' random terms. Fixed categorical individual covariates are currently not
+#' allowed. However, such terms may be supplied if the \code{modelsuite} option
+#' is set to a \code{vrm_input} object. In that case, the user should also set
+#' the logical random switch for the individual covariate to be used to 
+#' \code{TRUE} (e.g., \code{random.inda = TRUE}).
 #'
 #' @seealso \code{\link{flefko3}()}
 #' @seealso \code{\link{aflefko2}()}
@@ -1573,9 +1632,10 @@ flefko2 <- function(year = "all", patch = "all", stageframe, supplement = NULL,
   theta_tol = 100000000) {
   
   indanames <- indbnames <- indcnames <- yearcol <- patchcol <- NULL
+  nodata <- FALSE
   
   if (all(is.null(modelsuite)) & all(is.null(paramnames))) {
-    stop("Function will not work properly without a dataframe of model parameters or
+    stop("Function will not work properly without a dataframe of linear model parameters or
       equivalents supplied either through the modelsuite option or through the paramnames
       input parameter.", call. = FALSE)
   } else if (!all(is.null(modelsuite))) {
@@ -1583,6 +1643,15 @@ flefko2 <- function(year = "all", patch = "all", stageframe, supplement = NULL,
       paramnames <- modelsuite$paramnames
       yearcol <- paramnames$modelparams[which(paramnames$mainparams == "year2")]
       patchcol <- paramnames$modelparams[which(paramnames$mainparams == "patch")]
+    } else if (is(modelsuite, "vrm_input")) {
+      nodata <- TRUE
+      yearcol <- 0
+      patchcol <- 0
+      modelsuite$paramnames <- create_pm()
+      modelsuite$paramnames$modelparams[c(1:3)] <- modelsuite$paramnames$mainparams[c(1:3)]
+      modelsuite$paramnames$modelparams[c(24:31)] <- modelsuite$paramnames$mainparams[c(24:31)]
+      
+      paramnames <- modelsuite$paramnames
     }
   } else if (!all(is.null(paramnames))) {
     if (is.data.frame(paramnames)) {
@@ -1670,20 +1739,6 @@ flefko2 <- function(year = "all", patch = "all", stageframe, supplement = NULL,
     stop("Option ipm_method not recognized.", call. = FALSE)
   }
   
-  if (all(is.null(data))) {
-    stop("Need original vertical dataset to set proper limits on year and patch.",
-      call. = FALSE)
-  }
-  if (!is.data.frame(data)) {
-    stop("Need original vertical dataset used in modeling to proceed.",
-      call. = FALSE)
-  }
-  if (!is(data, "hfvdata")) {
-    warning("Dataset used as input is not of class hfvdata. Will assume that the
-      dataset has been formatted equivalently.", call. = FALSE)
-  }
-  no_vars <- dim(data)[2]
-  
   stageframe_vars <- c("stage", "size", "size_b", "size_c", "min_age", "max_age",
     "repstatus", "obsstatus", "propstatus", "immstatus", "matstatus", "indataset",
     "binhalfwidth_raw", "sizebin_min", "sizebin_max", "sizebin_center",
@@ -1694,23 +1749,66 @@ flefko2 <- function(year = "all", patch = "all", stageframe, supplement = NULL,
     stop("Please use properly formatted stageframe as input.", call. = FALSE)
   }
   
-  if (is.character(yearcol)) {
-    choicevar <- which(names(data) == yearcol);
-    
-    if (length(choicevar) != 1) {
-      stop("Year variable does not match any variable in the dataset.",
+  if (!nodata) {
+    if (all(is.null(data))) {
+      stop("Need original vertical dataset to set proper limits on year and patch.",
         call. = FALSE)
     }
-    mainyears <- sort(unique(data[,choicevar]))
-  } else if (is.numeric(yearcol)) {
-    if (any(yearcol < 1) | any(yearcol > no_vars)) {
-      stop("Year variable does not match any variable in the dataset.",
+    if (!is.data.frame(data)) {
+      stop("Need original vertical dataset used in modeling to proceed.",
         call. = FALSE)
     }
+    if (!is(data, "hfvdata")) {
+      warning("Dataset used as input is not of class hfvdata. Will assume that the
+        dataset has been formatted equivalently.", call. = FALSE)
+    }
+    no_vars <- dim(data)[2]
     
-    mainyears <- sort(unique(data[, yearcol]));
+    if (is.character(yearcol)) {
+      choicevar <- which(names(data) == yearcol);
+      
+      if (length(choicevar) != 1) {
+        stop("Year variable does not match any variable in the dataset.",
+          call. = FALSE)
+      }
+      mainyears <- sort(unique(data[,choicevar]))
+    } else if (is.numeric(yearcol)) {
+      if (any(yearcol < 1) | any(yearcol > no_vars)) {
+        stop("Year variable does not match any variable in the dataset.",
+          call. = FALSE)
+      }
+      
+      mainyears <- sort(unique(data[, yearcol]));
+    } else {
+      stop("Need appropriate year variable designation.", call. = FALSE)
+    }
+    
+    if (all(is.na(patch)) & !is.na(patchcol)) {
+      warning("Matrix creation may not proceed properly without input in the patch
+        option if patch terms occur in the vital rate models.", call. = FALSE)
+    }
+    
+    if (is.character(patchcol) & patchcol != "none") {
+      choicevar <- which(names(data) == patchcol);
+      
+      if (length(choicevar) != 1) {
+        stop("Patch variable does not match any variable in the dataset.",
+          call. = FALSE)
+      }
+      mainpatches <- sort(unique(as.character(data[,choicevar])))
+    } else if (is.numeric(patchcol)) {
+      if (any(patchcol < 1) | any(patchcol > no_vars)) {
+        stop("Patch variable does not match any variable in the dataset.",
+          call. = FALSE)
+      }
+      mainpatches <- sort(unique(as.character(data[, patchcol])));
+    } else {
+      mainpatches <- NA
+    }
   } else {
-    stop("Need appropriate year variable designation.", call. = FALSE)
+    no_vars <- 0
+    mainyears <- modelsuite$year_frame$years
+    mainpatches <- modelsuite$patch_frame$patches
   }
   
   if (any(is.character(year))) {
@@ -1733,35 +1831,24 @@ flefko2 <- function(year = "all", patch = "all", stageframe, supplement = NULL,
       call. = FALSE)
   }
   
-  if (all(is.na(patch)) & !is.na(patchcol)) {
-    warning("Matrix creation may not proceed properly without input in the patch
-      option if patch terms occur in the vital rate models.", call. = FALSE)
-  }
-  
-  if (is.character(patchcol) & patchcol != "none") {
-    choicevar <- which(names(data) == patchcol);
-    
-    if (length(choicevar) != 1) {
-      stop("Patch variable does not match any variable in the dataset.",
-        call. = FALSE)
-    }
-    mainpatches <- sort(unique(as.character(data[,choicevar])))
-  } else if (is.numeric(patchcol)) {
-    if (any(patchcol < 1) | any(patchcol > no_vars)) {
-      stop("Patch variable does not match any variable in the dataset.",
-        call. = FALSE)
-    }
-    mainpatches <- sort(unique(as.character(data[, patchcol])));
-  } else {
-    mainpatches <- NA
-  }
-  
   if (any(is.character(patch))) {
     if (is.element("all", tolower(patch))) {
       patch <- mainpatches
     } else if (!is.element(patch, mainpatches)) {
       stop("Patch designation not recognized.", call. = FALSE)
     }
+  }
+  
+  if (!all(is.na(density))) {
+    if (!all(is.numeric(density))) {
+      stop("Density value must be numeric.", call. = FALSE)
+    }
+    
+    if (any(is.na(density))) {
+      density[which(is.na(density))] <- 0
+    }
+  } else {
+    density <- 0
   }
   
   if (!is.null(inda)) {
@@ -1771,22 +1858,30 @@ flefko2 <- function(year = "all", patch = "all", stageframe, supplement = NULL,
     }
     
     if (!is.element(length(inda), c(1, 2, length(mainyears)))) {
-      stop("Individual covariate vector a must be empty, or include 1, 2, or as
-        many elements as occasions in the dataset.", call. = FALSE)
+      stop("Individual covariate vector a must be empty, or include 1, 2, or as many elements
+          as occasions in the dataset.", call. = FALSE)
     }
     
     if (random.inda) {
-      indacol <- paramnames$modelparams[which(paramnames$mainparams == "indcova2")]
-      if (indacol == "none") {
-        stop("Individual covariate a not recognized in the modelsuite.", call. = FALSE)
-      }
-      
-      indacol <- which(names(data) == indacol)
-      
-      if (length(indacol) > 0) {
-        indanames <- sort(unique(data[, indacol]))
+      if (!nodata) {
+        indacol <- paramnames$modelparams[which(paramnames$mainparams == "indcova2")]
+        if (indacol == "none") {
+          stop("Individual covariate a not recognized in the modelsuite.", call. = FALSE)
+        }
+        
+        indacol <- which(names(data) == indacol)
+        
+        if (length(indacol) > 0) {
+          indanames <- sort(unique(data[, indacol]))
+        } else {
+          stop("Individual covariate a not recognized in the modelsuite.", call. = FALSE)
+        }
       } else {
-        stop("Individual covariate a not recognized in the modelsuite.", call. = FALSE)
+        if (!is.element("indcova2_frame", names(modelsuite))) {
+          stop("This function cannot use inda input with a vrm_input object that does not include
+              an indcova_frame element.", call. = FALSE)
+        }
+        indanames <- modelsuite$indcova2_frame$indcova
       }
       
       if (any(!is.element(inda, indanames))) {
@@ -1845,17 +1940,25 @@ flefko2 <- function(year = "all", patch = "all", stageframe, supplement = NULL,
     }
     
     if (random.indb) {
-      indbcol <- paramnames$modelparams[which(paramnames$mainparams == "indcovb2")]
-      if (indbcol == "none") {
-        stop("Individual covariate b not recognized in the modelsuite.", call. = FALSE)
-      }
-      
-      indbcol <- which(names(data) == indbcol)
-      
-      if (length(indbcol) > 0) {
-        indbnames <- sort(unique(data[, indbcol]))
+      if (!nodata) {
+        indbcol <- paramnames$modelparams[which(paramnames$mainparams == "indcovb2")]
+        if (indbcol == "none") {
+          stop("Individual covariate b not recognized in the modelsuite.", call. = FALSE)
+        }
+        
+        indbcol <- which(names(data) == indbcol)
+        
+        if (length(indbcol) > 0) {
+          indbnames <- sort(unique(data[, indbcol]))
+        } else {
+          stop("Individual covariate b not recognized in the modelsuite.", call. = FALSE)
+        }
       } else {
-        stop("Individual covariate b not recognized in the modelsuite.", call. = FALSE)
+        if (!is.element("indcovb2_frame", names(modelsuite))) {
+          stop("This function cannot use indb input with a vrm_input object that does not include
+              an indcovb_frame element.", call. = FALSE)
+        }
+        indbnames <- modelsuite$indcovb2_frame$indcovb
       }
       
       if (any(!is.element(indb, indbnames))) {
@@ -1914,17 +2017,25 @@ flefko2 <- function(year = "all", patch = "all", stageframe, supplement = NULL,
     }
     
     if (random.indc) {
-      indccol <- paramnames$modelparams[which(paramnames$mainparams == "indcovc2")]
-      if (indccol == "none") {
-        stop("Individual covariate c not recognized in the modelsuite.", call. = FALSE)
-      }
-      
-      indccol <- which(names(data) == indccol)
-      
-      if (length(indccol) > 0) {
-        indcnames <- sort(unique(data[, indccol]))
+      if(!nodata) {
+        indccol <- paramnames$modelparams[which(paramnames$mainparams == "indcovc2")]
+        if (indccol == "none") {
+          stop("Individual covariate c not recognized in the modelsuite.", call. = FALSE)
+        }
+        
+        indccol <- which(names(data) == indccol)
+        
+        if (length(indccol) > 0) {
+          indcnames <- sort(unique(data[, indccol]))
+        } else {
+          stop("Individual covariate c not recognized in the modelsuite.", call. = FALSE)
+        }
       } else {
-        stop("Individual covariate c not recognized in the modelsuite.", call. = FALSE)
+        if (!is.element("indcovc2_frame", names(modelsuite))) {
+          stop("This function cannot use indc input with a vrm_input object that does not include
+              an indcovc_frame element.", call. = FALSE)
+        }
+        indcnames <- modelsuite$indcovc2_frame$indcovc
       }
       
       if (any(!is.element(indc, indcnames))) {
@@ -1971,20 +2082,6 @@ flefko2 <- function(year = "all", patch = "all", stageframe, supplement = NULL,
     r1.indc <- rep("none", length(mainyears))
   }
   
-  maingroups <- sort(unique(stageframe$group))
-  
-  if (!all(is.na(density))) {
-    if (!all(is.numeric(density))) {
-      stop("Density value must be numeric.", call. = FALSE)
-    }
-    
-    if (any(is.na(density))) {
-      density[which(is.na(density))] <- 0
-    }
-  } else {
-    density <- 0
-  }
-  
   if (all(is.null(repmatrix)) & all(is.null(supplement))) {
     warning("Neither supplemental data nor a reproduction matrix have been supplied.
       All fecundity transitions will be inferred from the stageframe.",
@@ -2021,6 +2118,8 @@ flefko2 <- function(year = "all", patch = "all", stageframe, supplement = NULL,
   stageframe <- melchett$stageframe
   repmatrix <- melchett$repmatrix
   ovtable <- melchett$ovtable
+  
+  maingroups <- sort(unique(stageframe$group))
   
   if (!all(is.null(overwrite)) | !all(is.null(supplement))) {
     if(any(duplicated(ovtable[,1:3]))) {
@@ -2072,7 +2171,7 @@ flefko2 <- function(year = "all", patch = "all", stageframe, supplement = NULL,
     maingroups, indanames, indbnames, indcnames, stageframe, ovtable, repmatrix,
     f2.inda, f1.inda, f2.indb, f1.indb, f2.indc, f1.indc, r2.inda, r1.inda, r2.indb,
     r1.indb, r2.indc, r1.indc, dev_terms, density, repmod, firstage = 0, finalage = 0,
-    format = 1, style = 1, cont = 0, filter = 1, negfec, exp_tol, theta_tol,
+    format = 1, style = 1, cont = 0, filter = 1, negfec, nodata, exp_tol, theta_tol,
     ipm_method, err_check, FALSE)
   
   ahstages <- stageframe[1:(dim(stageframe)[1] - 1),]
@@ -2213,16 +2312,19 @@ flefko2 <- function(year = "all", patch = "all", stageframe, supplement = NULL,
 #' @param data  The historical vertical demographic data frame used to estimate
 #' vital rates (class \code{hfvdata}), which is required to initialize times and
 #' patches properly. Variable names should correspond to the naming conventions
-#' in \code{\link{verticalize3}()} and \code{\link{historicalize3}()}.
-#' @param modelsuite A \code{lefkoMod} object holding the vital rate models and
-#' associated metadata. If given, then \code{surv_model}, \code{obs_model}, 
-#' \code{size_model}, \code{sizeb_model}, \code{sizec_model},
-#' \code{repst_model}, \code{fec_model}, \code{jsurv_model}, \code{jobs_model},
-#' \code{jsize_model}, \code{jsizeb_model}, \code{jsizec_model},
-#' \code{jrepst_model}, \code{jmatst_model}, and \code{paramnames} are not
-#' required. No models should include size or reproductive status in occasion
-#' \emph{t}-1. Although this is optional input, it is recommended, and without
-#' it all vital rate model inputs (named \code{XX_model}) are required.
+#' in \code{\link{verticalize3}()} and \code{\link{historicalize3}()}. Not
+#' required if option \code{modelsuite} is set to a \code{vrm_input} object.
+#' @param modelsuite One of two kinds of lists. The first is a \code{lefkoMod}
+#' object holding the vital rate models and associated metadata. Alternatively,
+#' an object of class \code{vrm_input} may be provided. If given, then
+#' \code{surv_model}, \code{obs_model}, \code{size_model}, \code{sizeb_model},
+#' \code{sizec_model}, \code{repst_model}, \code{fec_model}, \code{jsurv_model},
+#' \code{jobs_model}, \code{jsize_model}, \code{jsizeb_model},
+#' \code{jsizec_model}, \code{jrepst_model}, \code{jmatst_model}, and
+#' \code{paramnames} are not required. No models should include size or
+#' reproductive status in occasion \emph{t}-1. Although this is optional input,
+#' it is recommended, and without it all vital rate model inputs (named
+#' \code{XX_model}) are required.
 #' @param surv_model A linear model predicting survival probability. This can 
 #' be a model of class \code{glm} or \code{glmer}, and requires a predicted
 #' binomial variable under a logit link. Ignored if \code{modelsuite} is
@@ -2498,6 +2600,13 @@ flefko2 <- function(year = "all", patch = "all", stageframe, supplement = NULL,
 #' in each column of this matrix matches the associated matrix in column vector
 #' format. Use of this option is generally for the purposes of debugging code.
 #' 
+#' Individual covariates are treated as categorical only if they are set as
+#' random terms. Fixed categorical individual covariates are currently not
+#' allowed. However, such terms may be supplied if the \code{modelsuite} option
+#' is set to a \code{vrm_input} object. In that case, the user should also set
+#' the logical random switch for the individual covariate to be used to 
+#' \code{TRUE} (e.g., \code{random.inda = TRUE}).
+#'
 #' @seealso \code{\link{flefko3}()}
 #' @seealso \code{\link{flefko2}()}
 #' @seealso \code{\link{fleslie}()}
@@ -2582,9 +2691,10 @@ aflefko2 <- function(year = "all", patch = "all", stageframe, supplement = NULL,
   reduce = FALSE, err_check = FALSE, exp_tol = 700, theta_tol = 100000000) {
   
   indanames <- indbnames <- indcnames <- yearcol <- patchcol <- agecol <- NULL
+  nodata <- FALSE
   
   if (all(is.null(modelsuite)) & all(is.null(paramnames))) {
-    stop("Function will not work properly without a dataframe of model parameters or
+    stop("Function will not work properly without a dataframe of linear model parameters or
       equivalents supplied either through the modelsuite option or through the paramnames
       input parameter.", call. = FALSE)
   } else if (!all(is.null(modelsuite))) {
@@ -2593,6 +2703,15 @@ aflefko2 <- function(year = "all", patch = "all", stageframe, supplement = NULL,
       yearcol <- paramnames$modelparams[which(paramnames$mainparams == "year2")]
       patchcol <- paramnames$modelparams[which(paramnames$mainparams == "patch")]
       agecol <- paramnames$modelparams[which(paramnames$mainparams == "age")]
+    } else if (is(modelsuite, "vrm_input")) {
+      nodata <- TRUE
+      yearcol <- 0
+      patchcol <- 0
+      modelsuite$paramnames <- create_pm()
+      modelsuite$paramnames$modelparams[c(1:3)] <- modelsuite$paramnames$mainparams[c(1:3)]
+      modelsuite$paramnames$modelparams[c(24:31)] <- modelsuite$paramnames$mainparams[c(24:31)]
+      
+      paramnames <- modelsuite$paramnames
     }
   } else if (!all(is.null(paramnames))) {
     if (is.data.frame(paramnames)) {
@@ -2684,20 +2803,6 @@ aflefko2 <- function(year = "all", patch = "all", stageframe, supplement = NULL,
   first_age <- 0
   if (prebreeding) first_age <- 1
   
-  if (all(is.null(data))) {
-    stop("Need original vertical dataset to set proper limits on year and patch.", 
-      call. = FALSE)
-  }
-  if (!is.data.frame(data)) {
-    stop("Need original vertical dataset used in modeling to proceed.",
-      call. = FALSE)
-  }
-  if (!is(data, "hfvdata")) {
-    warning("Dataset used as input is not of class hfvdata. Will assume that the
-      dataset has been formatted equivalently.", call. = FALSE)
-  }
-  no_vars <- dim(data)[2]
-  
   stageframe_vars <- c("stage", "size", "size_b", "size_c", "min_age", "max_age",
     "repstatus", "obsstatus", "propstatus", "immstatus", "matstatus", "indataset",
     "binhalfwidth_raw", "sizebin_min", "sizebin_max", "sizebin_center",
@@ -2708,23 +2813,92 @@ aflefko2 <- function(year = "all", patch = "all", stageframe, supplement = NULL,
     stop("Please use properly formatted stageframe as input.", call. = FALSE)
   }
   
-  if (is.character(yearcol)) {
-    choicevar <- which(names(data) == yearcol);
-    
-    if (length(choicevar) != 1) {
-      stop("Year variable does not match any variable in the dataset.",
+  if (!nodata) {
+    if (all(is.null(data))) {
+      stop("Need original vertical dataset to set proper limits on year and patch.", 
         call. = FALSE)
     }
-    mainyears <- sort(unique(data[,choicevar]))
-  } else if (is.numeric(yearcol)) {
-    if (any(yearcol < 1) | any(yearcol > no_vars)) {
-      stop("Year variable does not match any variable in the dataset.",
+    if (!is.data.frame(data)) {
+      stop("Need original vertical dataset used in modeling to proceed.",
         call. = FALSE)
     }
+    if (!is(data, "hfvdata")) {
+      warning("Dataset used as input is not of class hfvdata. Will assume that the
+        dataset has been formatted equivalently.", call. = FALSE)
+    }
+    no_vars <- dim(data)[2]
     
-    mainyears <- sort(unique(data[, yearcol]));
+    if (is.character(yearcol)) {
+      choicevar <- which(names(data) == yearcol);
+      
+      if (length(choicevar) != 1) {
+        stop("Year variable does not match any variable in the dataset.",
+          call. = FALSE)
+      }
+      mainyears <- sort(unique(data[,choicevar]))
+    } else if (is.numeric(yearcol)) {
+      if (any(yearcol < 1) | any(yearcol > no_vars)) {
+        stop("Year variable does not match any variable in the dataset.",
+          call. = FALSE)
+      }
+      
+      mainyears <- sort(unique(data[, yearcol]));
+    } else {
+      stop("Need appropriate year variable designation.", call. = FALSE)
+    }
+    
+    if (all(is.na(patch)) & !is.na(patchcol)) {
+      warning("Matrix creation may not proceed properly without input in the patch
+        option if patch terms occur in the vital rate models.", call. = FALSE)
+    }
+    
+    if (is.character(patchcol) & patchcol != "none") {
+      choicevar <- which(names(data) == patchcol);
+      
+      if (length(choicevar) != 1) {
+        stop("Patch variable does not match any variable in the dataset.",
+          call. = FALSE)
+      }
+      mainpatches <- sort(unique(as.character(data[,choicevar])))
+    } else if (is.numeric(patchcol)) {
+      if (any(patchcol < 1) | any(patchcol > no_vars)) {
+        stop("Patch variable does not match any variable in the dataset.",
+          call. = FALSE)
+      }
+      mainpatches <- sort(unique(as.character(data[, patchcol])));
+    } else {
+      mainpatches <- NA
+    }
+    
+    if (is.character(agecol)) {
+      choicevar <- which(names(data) == agecol);
+      
+      if (length(choicevar) != 1) {
+        stop("Age variable does not match any variable in the dataset.",
+          call. = FALSE)
+      }
+      mainages <- sort(unique(data[,choicevar]))
+    } else if (is.numeric(agecol)) {
+      if (any(agecol < 1) | any(agecol > no_vars)) {
+        stop("Age variable does not match any variable in the dataset.",
+          call. = FALSE)
+      }
+      
+      mainages <- sort(unique(data[, agecol]));
+    } else {
+      stop("Need appropriate age variable designation.", call. = FALSE)
+    }
   } else {
-    stop("Need appropriate year variable designation.", call. = FALSE)
+    no_vars <- 0
+    mainyears <- modelsuite$year_frame$years
+    mainpatches <- modelsuite$patch_frame$patches
+    
+    if (!is.na(final_age)) {
+      mainages <- c(first_age:final_age)
+    } else {
+      stop("Option final_age must equal a positive integer if a vrm_input object
+          is used in option modelsuite.", call. = FALSE)
+    }
   }
   
   if (any(is.character(year))) {
@@ -2735,24 +2909,6 @@ aflefko2 <- function(year = "all", patch = "all", stageframe, supplement = NULL,
     }
   }
   
-  if (is.character(agecol)) {
-    choicevar <- which(names(data) == agecol);
-    
-    if (length(choicevar) != 1) {
-      stop("Age variable does not match any variable in the dataset.",
-        call. = FALSE)
-    }
-    mainages <- sort(unique(data[,choicevar]))
-  } else if (is.numeric(agecol)) {
-    if (any(agecol < 1) | any(agecol > no_vars)) {
-      stop("Age variable does not match any variable in the dataset.",
-        call. = FALSE)
-    }
-    
-    mainages <- sort(unique(data[, agecol]));
-  } else {
-    stop("Need appropriate age variable designation.", call. = FALSE)
-  }
   min_age <- min(mainages, na.rm = TRUE)
   max_age <- max(mainages, na.rm = TRUE)
   
@@ -2790,35 +2946,24 @@ aflefko2 <- function(year = "all", patch = "all", stageframe, supplement = NULL,
       call. = FALSE)
   }
   
-  if (all(is.na(patch)) & !is.na(patchcol)) {
-    warning("Matrix creation may not proceed properly without input in the patch
-      option if patch terms occur in the vital rate models.", call. = FALSE)
-  }
-  
-  if (is.character(patchcol) & patchcol != "none") {
-    choicevar <- which(names(data) == patchcol);
-    
-    if (length(choicevar) != 1) {
-      stop("Patch variable does not match any variable in the dataset.",
-        call. = FALSE)
-    }
-    mainpatches <- sort(unique(as.character(data[,choicevar])))
-  } else if (is.numeric(patchcol)) {
-    if (any(patchcol < 1) | any(patchcol > no_vars)) {
-      stop("Patch variable does not match any variable in the dataset.",
-        call. = FALSE)
-    }
-    mainpatches <- sort(unique(as.character(data[, patchcol])));
-  } else {
-    mainpatches <- NA
-  }
-  
   if (any(is.character(patch))) {
     if (is.element("all", tolower(patch))) {
       patch <- mainpatches
     } else if (!is.element(patch, mainpatches)) {
       stop("Patch designation not recognized.", call. = FALSE)
     }
+  }
+  
+  if (!all(is.na(density))) {
+    if (!all(is.numeric(density))) {
+      stop("Density value must be numeric.", call. = FALSE)
+    }
+    
+    if (any(is.na(density))) {
+      density[which(is.na(density))] <- 0
+    }
+  } else {
+    density <- 0
   }
   
   if (!is.null(inda)) {
@@ -2833,17 +2978,25 @@ aflefko2 <- function(year = "all", patch = "all", stageframe, supplement = NULL,
     }
     
     if (random.inda) {
-      indacol <- paramnames$modelparams[which(paramnames$mainparams == "indcova2")]
-      if (indacol == "none") {
-        stop("Individual covariate a not recognized in the modelsuite.", call. = FALSE)
-      }
-      
-      indacol <- which(names(data) == indacol)
-      
-      if (length(indacol) > 0) {
-        indanames <- sort(unique(data[, indacol]))
+      if (!nodata) {
+        indacol <- paramnames$modelparams[which(paramnames$mainparams == "indcova2")]
+        if (indacol == "none") {
+          stop("Individual covariate a not recognized in the modelsuite.", call. = FALSE)
+        }
+        
+        indacol <- which(names(data) == indacol)
+        
+        if (length(indacol) > 0) {
+          indanames <- sort(unique(data[, indacol]))
+        } else {
+          stop("Individual covariate a not recognized in the modelsuite.", call. = FALSE)
+        }
       } else {
-        stop("Individual covariate a not recognized in the modelsuite.", call. = FALSE)
+        if (!is.element("indcova2_frame", names(modelsuite))) {
+          stop("This function cannot use inda input with a vrm_input object that does not include
+              an indcova_frame element.", call. = FALSE)
+        }
+        indanames <- modelsuite$indcova2_frame$indcova
       }
       
       if (any(!is.element(inda, indanames))) {
@@ -2902,17 +3055,25 @@ aflefko2 <- function(year = "all", patch = "all", stageframe, supplement = NULL,
     }
     
     if (random.indb) {
-      indbcol <- paramnames$modelparams[which(paramnames$mainparams == "indcovb2")]
-      if (indbcol == "none") {
-        stop("Individual covariate b not recognized in the modelsuite.", call. = FALSE)
-      }
-      
-      indbcol <- which(names(data) == indbcol)
-      
-      if (length(indbcol) > 0) {
-        indbnames <- sort(unique(data[, indbcol]))
+      if (!nodata) {
+        indbcol <- paramnames$modelparams[which(paramnames$mainparams == "indcovb2")]
+        if (indbcol == "none") {
+          stop("Individual covariate b not recognized in the modelsuite.", call. = FALSE)
+        }
+        
+        indbcol <- which(names(data) == indbcol)
+        
+        if (length(indbcol) > 0) {
+          indbnames <- sort(unique(data[, indbcol]))
+        } else {
+          stop("Individual covariate b not recognized in the modelsuite.", call. = FALSE)
+        }
       } else {
-        stop("Individual covariate b not recognized in the modelsuite.", call. = FALSE)
+        if (!is.element("indcovb2_frame", names(modelsuite))) {
+          stop("This function cannot use indb input with a vrm_input object that does not include
+              an indcovb_frame element.", call. = FALSE)
+        }
+        indbnames <- modelsuite$indcovb2_frame$indcovb
       }
       
       if (any(!is.element(indb, indbnames))) {
@@ -2971,17 +3132,25 @@ aflefko2 <- function(year = "all", patch = "all", stageframe, supplement = NULL,
     }
     
     if (random.indc) {
-      indccol <- paramnames$modelparams[which(paramnames$mainparams == "indcovc2")]
-      if (indccol == "none") {
-        stop("Individual covariate c not recognized in the modelsuite.", call. = FALSE)
-      }
-      
-      indccol <- which(names(data) == indccol)
-      
-      if (length(indccol) > 0) {
-        indcnames <- sort(unique(data[, indccol]))
+      if (!nodata) {
+        indccol <- paramnames$modelparams[which(paramnames$mainparams == "indcovc2")]
+        if (indccol == "none") {
+          stop("Individual covariate c not recognized in the modelsuite.", call. = FALSE)
+        }
+        
+        indccol <- which(names(data) == indccol)
+        
+        if (length(indccol) > 0) {
+          indcnames <- sort(unique(data[, indccol]))
+        } else {
+          stop("Individual covariate c not recognized in the modelsuite.", call. = FALSE)
+        }
       } else {
-        stop("Individual covariate c not recognized in the modelsuite.", call. = FALSE)
+        if (!is.element("indcovc2_frame", names(modelsuite))) {
+          stop("This function cannot use indc input with a vrm_input object that does not include
+              an indcovc_frame element.", call. = FALSE)
+        }
+        indcnames <- modelsuite$indcovc2_frame$indcovc
       }
       
       if (any(!is.element(indc, indcnames))) {
@@ -3028,20 +3197,6 @@ aflefko2 <- function(year = "all", patch = "all", stageframe, supplement = NULL,
     r1.indc <- rep("none", length(mainyears))
   }
   
-  maingroups <- sort(unique(stageframe$group))
-  
-  if (!all(is.na(density))) {
-    if (!all(is.numeric(density))) {
-      stop("Density value must be numeric.", call. = FALSE)
-    }
-    
-    if (any(is.na(density))) {
-      density[which(is.na(density))] <- 0
-    }
-  } else {
-    density <- 0
-  }
-  
   if (all(is.null(repmatrix)) & all(is.null(supplement))) {
     warning("Neither supplemental data nor a reproduction matrix have been supplied. 
       All fecundity transitions will be inferred from the stageframe.",
@@ -3078,6 +3233,8 @@ aflefko2 <- function(year = "all", patch = "all", stageframe, supplement = NULL,
   stageframe <- melchett$stageframe
   repmatrix <- melchett$repmatrix
   ovtable <- melchett$ovtable
+  
+  maingroups <- sort(unique(stageframe$group))
   
   if (!all(is.null(overwrite)) | !all(is.null(supplement))) {
     if(any(duplicated(ovtable[,1:3]))) {
@@ -3130,7 +3287,7 @@ aflefko2 <- function(year = "all", patch = "all", stageframe, supplement = NULL,
     f2.inda, f1.inda, f2.indb, f1.indb, f2.indc, f1.indc, r2.inda, r1.inda, r2.indb,
     r1.indb, r2.indc, r1.indc, dev_terms, density, repmod, firstage = first_age,
     finalage = final_age, format = 1, style = 2, cont = continue, filter = 2, negfec,
-    exp_tol, theta_tol, ipm_method, err_check, FALSE)
+    nodata, exp_tol, theta_tol, ipm_method, err_check, FALSE)
   
   ahstages <- stageframe[1:(dim(stageframe)[1] - 1),]
   
@@ -3193,16 +3350,19 @@ aflefko2 <- function(year = "all", patch = "all", stageframe, supplement = NULL,
 #' @param prebreeding A logical value indicating whether the life history model
 #' is a pre-breeding model. Defaults to \code{TRUE}.
 #' @param data The historical vertical demographic data frame used to estimate
-#' vital rates (class \code{hfvdata}). The original data frame is required in
-#' order to initialize occasions and patches properly, and to assess the range
-#' of ages observed in the population.
-#' @param modelsuite An optional \code{lefkoMod} object holding the vital rate
-#' models. If given, then \code{surv_model}, \code{fec_model}, and 
-#' \code{paramnames} are not required. No models should include size or
-#' reproductive status in any occasion, nor should they include any variable for
-#' occasion \emph{t}-1. Note that the modelsuite must have been created from a
-#' \code{modelsearch()} run in which \code{vitalrates = c("surv", "fec")} and
-#' the \code{suite} option was set to either \code{age} or \code{cons}.
+#' vital rates (class \code{hfvdata}). The original data frame is generally
+#' required in order to initialize occasions and patches properly, and to assess
+#' the range of ages observed in the population. Not required if option
+#' \code{modelsuite} is set to a \code{vrm_input} object.
+#' @param modelsuite One of two optional lists. THe first is an optional
+#' \code{lefkoMod} object holding the vital rate models. Alternatively,
+#' an object of class \code{vrm_input} may be provided. If given, then
+#' \code{surv_model}, \code{fec_model}, and \code{paramnames} are not required.
+#' No models should include size or reproductive status in any occasion, nor
+#' should they include any variable for occasion \emph{t}-1. Note that the
+#' modelsuite must have been created from a \code{modelsearch()} run in which
+#' \code{vitalrates = c("surv", "fec")} and the \code{suite} option was set to
+#' either \code{age} or \code{cons}.
 #' @param surv_model A linear model predicting survival probability. This can be
 #' a model of class \code{glm} or \code{glmer}, and requires a predicted
 #' binomial variable under a logit link. Ignored if \code{modelsuite} is
@@ -3313,6 +3473,13 @@ aflefko2 <- function(year = "all", patch = "all", stageframe, supplement = NULL,
 #' states of those variables within the modelsuite. If they do not match, then
 #' they will be treated as zeroes in vital rate estimation.
 #' 
+#' Individual covariates are treated as categorical only if they are set as
+#' random terms. Fixed categorical individual covariates are currently not
+#' allowed. However, such terms may be supplied if the \code{modelsuite} option
+#' is set to a \code{vrm_input} object. In that case, the user should also set
+#' the logical random switch for the individual covariate to be used to 
+#' \code{TRUE} (e.g., \code{random.inda = TRUE}).
+#'
 #' @seealso \code{\link{flefko3}()}
 #' @seealso \code{\link{flefko2}()}
 #' @seealso \code{\link{aflefko2}()}
@@ -3357,14 +3524,14 @@ fleslie <- function(year = "all", patch = "all", prebreeding = TRUE, data = NULL
   theta_tol = 100000000) {
   
   indanames <- indbnames <- indcnames <- yearcol <- patchcol <- agecol <- NULL
-  err_check <- FALSE # Not used except as a remnant placemarker
+  err_check <- nodata <- FALSE
   
   if (!all(is.logical(c(continue, random.inda, random.indb, random.indc, prebreeding, negfec)))) {
     stop("Some logical variables have non-logical inputs.", call. = FALSE)
   }
   
   if (all(is.null(modelsuite)) & all(is.null(paramnames))) {
-    stop("Function will not work properly without a dataframe of model parameters or
+    stop("Function will not work properly without a dataframe of linear model parameters or
       equivalents supplied either through the modelsuite option or through the paramnames
       input parameter.", call. = FALSE)
   } else if (!all(is.null(modelsuite))) {
@@ -3373,6 +3540,15 @@ fleslie <- function(year = "all", patch = "all", prebreeding = TRUE, data = NULL
       yearcol <- paramnames$modelparams[which(paramnames$mainparams == "year2")]
       patchcol <- paramnames$modelparams[which(paramnames$mainparams == "patch")]
       agecol <- paramnames$modelparams[which(paramnames$mainparams == "age")]
+    } else if (is(modelsuite, "vrm_input")) {
+      nodata <- TRUE
+      yearcol <- 0
+      patchcol <- 0
+      modelsuite$paramnames <- create_pm()
+      modelsuite$paramnames$modelparams[c(1:3)] <- modelsuite$paramnames$mainparams[c(1:3)]
+      modelsuite$paramnames$modelparams[c(24:31)] <- modelsuite$paramnames$mainparams[c(24:31)]
+      
+      paramnames <- modelsuite$paramnames
     }
   } else if (!all(is.null(paramnames))) {
     if (is.data.frame(paramnames)) {
@@ -3403,31 +3579,87 @@ fleslie <- function(year = "all", patch = "all", prebreeding = TRUE, data = NULL
       set to a constant value of 1", call. = FALSE);
   }
   
-  if (all(is.null(data))) {
-    stop("Need original vertical dataset to set proper limits on year and patch and assess age properly.", 
-      call. = FALSE)
-  }
-  if (!is.data.frame(data)) {
-    stop("Need original vertical dataset used in modeling to proceed.",
-      call. = FALSE)
-  }
-  if (!is(data, "hfvdata")) {
-    warning("Dataset used as input is not of class hfvdata. Will assume that the
-      dataset has been formatted equivalently.", call. = FALSE)
-  }
-  no_vars <- dim(data)[2]
-  
-  # Now we will check which ages are used
-  if (is.character(agecol)) {
-    choicevar <- which(names(data) == agecol);
-    data$usedobsage <- data[,choicevar]
-    mainages <- sort(unique(data[,choicevar]))
-  } else if (is.numeric(agecol)) {
-    mainages <- sort(unique(data[, agecol]))
-    data$usedobsage <- data[,agecol]
+  if (!nodata) {
+    if (all(is.null(data))) {
+      stop("Need original vertical dataset to set proper limits on year and patch and assess age properly.", 
+        call. = FALSE)
+    }
+    if (!is.data.frame(data)) {
+      stop("Need original vertical dataset used in modeling to proceed.",
+        call. = FALSE)
+    }
+    if (!is(data, "hfvdata")) {
+      warning("Dataset used as input is not of class hfvdata. Will assume that the
+        dataset has been formatted equivalently.", call. = FALSE)
+    }
+    no_vars <- dim(data)[2]
+    
+    if (is.character(yearcol)) {
+      choicevar <- which(names(data) == yearcol);
+      
+      if (length(choicevar) != 1) {
+        stop("Year variable does not match any variable in the dataset.",
+          call. = FALSE)
+      }
+      mainyears <- sort(unique(data[,choicevar]))
+      
+    } else if (is.numeric(yearcol)) {
+      if (any(yearcol < 1) | any(yearcol > no_vars)) {
+        stop("Year variable does not match any variable in the dataset.",
+          call. = FALSE)
+      }
+      mainyears <- sort(unique(data[, yearcol]));
+      
+    } else {
+      stop("Need appropriate year column designation.", call. = FALSE)
+    }
+    
+    if (all(is.na(patch)) & !is.na(patchcol)) {
+      warning("Matrix creation may not proceed properly without input in the patch
+        option if patch terms occur in the vital rate models.", call. = FALSE)
+    }
+    
+    if (is.character(patchcol) & patchcol != "none") {
+      choicevar <- which(names(data) == patchcol);
+      
+      if (length(choicevar) != 1) {
+        stop("Patch variable does not match any variable in the dataset.",
+          call. = FALSE)
+      }
+      mainpatches <- sort(unique(as.character(data[,choicevar])))
+    } else if (is.numeric(patchcol)) {
+      if (any(patchcol < 1) | any(patchcol > no_vars)) {
+        stop("Patch variable does not match any variable in the dataset.",
+          call. = FALSE)
+      }
+      mainpatches <- sort(unique(as.character(data[, patchcol])));
+    } else {
+      mainpatches <- NA
+    }
+    
+    if (is.character(agecol)) {
+      choicevar <- which(names(data) == agecol);
+      data$usedobsage <- data[,choicevar]
+      mainages <- sort(unique(data[,choicevar]))
+    } else if (is.numeric(agecol)) {
+      mainages <- sort(unique(data[, agecol]))
+      data$usedobsage <- data[,agecol]
+    } else {
+      stop("Need appropriate age column designation.", call. = FALSE)
+    }
   } else {
-    stop("Need appropriate age column designation.", call. = FALSE)
+    no_vars <- 0
+    mainyears <- modelsuite$year_frame$years
+    mainpatches <- modelsuite$patch_frame$patches
+    
+    if (!is.na(start_age) & !is.na(last_age)) {
+      mainages <- c(start_age:last_age)
+    } else {
+      stop("Options start_age and last_age must equal positive integers if a vrm_input object
+          is used in option modelsuite.", call. = FALSE)
+    }
   }
+  
   age_limit <- max(mainages) + 1
   
   if (is.na(start_age)) {
@@ -3464,27 +3696,6 @@ fleslie <- function(year = "all", patch = "all", prebreeding = TRUE, data = NULL
       call. = FALSE)
   }
   
-  #Now we'll check time and patch variables
-  if (is.character(yearcol)) {
-    choicevar <- which(names(data) == yearcol);
-    
-    if (length(choicevar) != 1) {
-      stop("Year variable does not match any variable in the dataset.",
-        call. = FALSE)
-    }
-    mainyears <- sort(unique(data[,choicevar]))
-    
-  } else if (is.numeric(yearcol)) {
-    if (any(yearcol < 1) | any(yearcol > no_vars)) {
-      stop("Year variable does not match any variable in the dataset.",
-        call. = FALSE)
-    }
-    mainyears <- sort(unique(data[, yearcol]));
-    
-  } else {
-    stop("Need appropriate year column designation.", call. = FALSE)
-  }
-  
   if (any(is.character(year))) {
     if (is.element("all", tolower(year))) {
       year <- mainyears
@@ -3499,35 +3710,24 @@ fleslie <- function(year = "all", patch = "all", prebreeding = TRUE, data = NULL
       call. = FALSE)
   }
   
-  if (all(is.na(patch)) & !is.na(patchcol)) {
-    warning("Matrix creation may not proceed properly without input in the patch
-      option if patch terms occur in the vital rate models.", call. = FALSE)
-  }
-  
-  if (is.character(patchcol) & patchcol != "none") {
-    choicevar <- which(names(data) == patchcol);
-    
-    if (length(choicevar) != 1) {
-      stop("Patch variable does not match any variable in the dataset.",
-        call. = FALSE)
-    }
-    mainpatches <- sort(unique(as.character(data[,choicevar])))
-  } else if (is.numeric(patchcol)) {
-    if (any(patchcol < 1) | any(patchcol > no_vars)) {
-      stop("Patch variable does not match any variable in the dataset.",
-        call. = FALSE)
-    }
-    mainpatches <- sort(unique(as.character(data[, patchcol])));
-  } else {
-    mainpatches <- NA
-  }
-  
   if (any(is.character(patch))) {
     if (is.element("all", tolower(patch))) {
       patch <- mainpatches
     } else if (!all(is.element(patch, mainpatches))) {
       stop("Patch designation not recognized.", call. = FALSE)
     }
+  }
+  
+  if (!all(is.na(density))) {
+    if (!all(is.numeric(density))) {
+      stop("Density value must be numeric.", call. = FALSE)
+    }
+    
+    if (any(is.na(density))) {
+      density[which(is.na(density))] <- 0
+    }
+  } else {
+    density <- 0
   }
   
   if (!is.null(inda)) {
@@ -3542,17 +3742,25 @@ fleslie <- function(year = "all", patch = "all", prebreeding = TRUE, data = NULL
     }
     
     if (random.inda) {
-      indacol <- paramnames$modelparams[which(paramnames$mainparams == "indcova2")]
-      if (indacol == "none") {
-        stop("Individual covariate a not recognized in the modelsuite.", call. = FALSE)
-      }
-      
-      indacol <- which(names(data) == indacol)
-      
-      if (length(indacol) > 0) {
-        indanames <- sort(unique(data[, indacol]))
+      if (!nodata) {
+        indacol <- paramnames$modelparams[which(paramnames$mainparams == "indcova2")]
+        if (indacol == "none") {
+          stop("Individual covariate a not recognized in the modelsuite.", call. = FALSE)
+        }
+        
+        indacol <- which(names(data) == indacol)
+        
+        if (length(indacol) > 0) {
+          indanames <- sort(unique(data[, indacol]))
+        } else {
+          stop("Individual covariate a not recognized in the modelsuite.", call. = FALSE)
+        }
       } else {
-        stop("Individual covariate a not recognized in the modelsuite.", call. = FALSE)
+        if (!is.element("indcova2_frame", names(modelsuite))) {
+          stop("This function cannot use inda input with a vrm_input object that does not include
+              an indcova_frame element.", call. = FALSE)
+        }
+        indanames <- modelsuite$indcova2_frame$indcova
       }
       
       if (any(!is.element(inda, indanames))) {
@@ -3611,17 +3819,25 @@ fleslie <- function(year = "all", patch = "all", prebreeding = TRUE, data = NULL
     }
     
     if (random.indb) {
-      indbcol <- paramnames$modelparams[which(paramnames$mainparams == "indcovb2")]
-      if (indbcol == "none") {
-        stop("Individual covariate b not recognized in the modelsuite.", call. = FALSE)
-      }
-      
-      indbcol <- which(names(data) == indbcol)
-      
-      if (length(indbcol) > 0) {
-        indbnames <- sort(unique(data[, indbcol]))
+      if (!nodata) {
+        indbcol <- paramnames$modelparams[which(paramnames$mainparams == "indcovb2")]
+        if (indbcol == "none") {
+          stop("Individual covariate b not recognized in the modelsuite.", call. = FALSE)
+        }
+        
+        indbcol <- which(names(data) == indbcol)
+        
+        if (length(indbcol) > 0) {
+          indbnames <- sort(unique(data[, indbcol]))
+        } else {
+          stop("Individual covariate b not recognized in the modelsuite.", call. = FALSE)
+        }
       } else {
-        stop("Individual covariate b not recognized in the modelsuite.", call. = FALSE)
+        if (!is.element("indcovb2_frame", names(modelsuite))) {
+          stop("This function cannot use indb input with a vrm_input object that does not include
+              an indcovb_frame element.", call. = FALSE)
+        }
+        indbnames <- modelsuite$indcovb2_frame$indcovb
       }
       
       if (any(!is.element(indb, indbnames))) {
@@ -3680,17 +3896,25 @@ fleslie <- function(year = "all", patch = "all", prebreeding = TRUE, data = NULL
     }
     
     if (random.indc) {
-      indccol <- paramnames$modelparams[which(paramnames$mainparams == "indcovc2")]
-      if (indccol == "none") {
-        stop("Individual covariate c not recognized in the modelsuite.", call. = FALSE)
-      }
-      
-      indccol <- which(names(data) == indccol)
-      
-      if (length(indccol) > 0) {
-        indcnames <- sort(unique(data[, indccol]))
+      if (!nodata) {
+        indccol <- paramnames$modelparams[which(paramnames$mainparams == "indcovc2")]
+        if (indccol == "none") {
+          stop("Individual covariate c not recognized in the modelsuite.", call. = FALSE)
+        }
+        
+        indccol <- which(names(data) == indccol)
+        
+        if (length(indccol) > 0) {
+          indcnames <- sort(unique(data[, indccol]))
+        } else {
+          stop("Individual covariate c not recognized in the modelsuite.", call. = FALSE)
+        }
       } else {
-        stop("Individual covariate c not recognized in the modelsuite.", call. = FALSE)
+        if (!is.element("indcovc2_frame", names(modelsuite))) {
+          stop("This function cannot use indc input with a vrm_input object that does not include
+              an indcovc_frame element.", call. = FALSE)
+        }
+        indcnames <- modelsuite$indcovc2_frame$indcovc
       }
       
       if (any(!is.element(indc, indcnames))) {
@@ -3737,18 +3961,6 @@ fleslie <- function(year = "all", patch = "all", prebreeding = TRUE, data = NULL
     r1.indc <- rep("none", length(mainyears))
   }
   
-  if (!all(is.na(density))) {
-    if (!all(is.numeric(density))) {
-      stop("Density value must be numeric.", call. = FALSE)
-    }
-    
-    if (any(is.na(density))) {
-      density[which(is.na(density))] <- 0
-    }
-  } else {
-    density <- 0
-  }
-  
   ahages <- .sf_leslie(min_age = start_age, max_age = last_age,
     min_fecage = fecage_min, max_fecage = fecage_max, cont = continue)
   ahages$min_age <- as.integer(ahages$min_age)
@@ -3789,12 +4001,12 @@ fleslie <- function(year = "all", patch = "all", prebreeding = TRUE, data = NULL
   
   dev_terms <- c(surv_dev, fec_dev)
   
-    # Here we run the engine creating matrices and putting them together
+  # Here we run the engine creating matrices and putting them together
   new_madsexmadrigal <- .mothermccooney(listofyears, modelsuite, actualages,
     mainyears, mainpatches, maingroups, indanames, indbnames, indcnames, ahages,
     f2.inda, f1.inda, f2.indb, f1.indb, f2.indc, f1.indc, r2.inda, r1.inda,
     r2.indb, r1.indb, r2.indc, r1.indc, dev_terms, density, repmod, last_age,
-    continue, negfec, exp_tol, theta_tol, err_check, FALSE)
+    continue, negfec, nodata, exp_tol, theta_tol, err_check, FALSE)
 
   qcoutput1 <- NA
   qcoutput2 <- NA

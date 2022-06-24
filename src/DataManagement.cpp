@@ -9,6 +9,8 @@ using namespace arma;
 //' Function \code{pfj()} powers the R function \code{\link{verticalize3}()},
 //' creating the vertical structure and rearranging the data in that shape.
 //' 
+//' @name .pfj
+//' 
 //' @param data The horizontal data file.
 //' @param stageframe The stageframe object describing the life history model.
 //' This should be the full stageframe.
@@ -1839,7 +1841,9 @@ Rcpp::List pfj(DataFrame data, DataFrame stageframe, int noyears, int firstyear,
 //' Function \code{jpf()} is the core kernel for function
 //' \code{\link{historicalize3}()}, creating the historical, vertical structure
 //' and rearranging the data in that shape.
-//'
+//' 
+//' @name .jpf
+//' 
 //' @param data The horizontal data file.
 //' @param stageframe The stageframe object identifying the life history model
 //' being operationalized. This should be the full stageframe.
@@ -3350,6 +3354,8 @@ Rcpp::List jpf(DataFrame data, DataFrame stageframe, int popidcol,
 //' internally by \code{\link{historicalize3}()} and
 //' \code{\link{verticalize3}()}.
 //' 
+//' @name .density3
+//' 
 //' @param data Demographic dataset in historical vertical format.
 //' @param xcol Number of column in \code{data} corresponding to x position.
 //' @param ycol Number of column in \code{data} corresponding to y position.
@@ -3437,6 +3443,8 @@ Rcpp::NumericVector density3(Rcpp::DataFrame data, int xcol, int ycol, int yearc
 //' Function \code{.simplepizzle()} creates a data frame object used by function
 //' \code{\link{hist_null}()} to provide an index for estimation of null
 //' historical matrices from ahistorical MPM inputs.
+//' 
+//' @name .simplepizzle
 //' 
 //' @param StageFrame The stageframe object identifying the life history model
 //' being operationalized.

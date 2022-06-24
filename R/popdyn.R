@@ -3,6 +3,8 @@
 #' \code{lmean()} estimates mean projection matrices as element-wise arithmetic
 #' means.
 #' 
+#' @name lmean
+#' 
 #' @param mats A \code{lefkoMat} object.
 #' @param matsout A string identifying which means to estimate. Option
 #' \code{"pop"} indicates population-level only, \code{"patch"} indicates
@@ -81,7 +83,6 @@
 #' ehrlen3mean$A[[1]]
 #' 
 #' # Cypripedium example
-#' rm(list=ls(all=TRUE))
 #' data(cypdata)
 #' 
 #' sizevector <- c(0, 0, 0, 0, 0, 0, 1, 2.5, 4.5, 8, 17.5)
@@ -277,7 +278,6 @@ lmean <- function(mats, matsout = "all") {
 #' lambda3(ehrlen3mean)
 #' 
 #' # Cypripedium example
-#' rm(list=ls(all=TRUE))
 #' data(cypdata)
 #' 
 #' sizevector <- c(0, 0, 0, 0, 0, 0, 1, 2.5, 4.5, 8, 17.5)
@@ -331,6 +331,8 @@ lambda3 <- function(mats, ...) UseMethod("lambda3")
 #' matrices supplied within \code{lefkoMat} objects. This function can handle
 #' large and sparse matrices, and so can be used with large historical matrices,
 #' IPMs, age x stage matrices, as well as ahistorical matrices.
+#' 
+#' @name lambda3.lefkoMat
 #' 
 #' @param mats An object of class \code{lefkoMat}.
 #' @param sparse A text string indicating whether to use sparse matrix encoding
@@ -402,7 +404,6 @@ lambda3 <- function(mats, ...) UseMethod("lambda3")
 #' lambda3(ehrlen3mean)
 #' 
 #' # Cypripedium example
-#' rm(list=ls(all=TRUE))
 #' data(cypdata)
 #' 
 #' sizevector <- c(0, 0, 0, 0, 0, 0, 1, 2.5, 4.5, 8, 17.5)
@@ -492,6 +493,8 @@ lambda3.lefkoMat <- function(mats, sparse = "auto", ...) {
 #' be used with large historical matrices, IPMs, age x stage matrices, as well
 #' as ahistorical matrices.
 #' 
+#' @name lambda3.matrix
+#' 
 #' @param mats A population projection matrix of class \code{matrix}.
 #' @param sparse A text string indicating whether to use sparse matrix encoding
 #' (\code{"yes"}) or dense matrix encoding (\code{"no"}). Defaults to
@@ -558,7 +561,6 @@ lambda3.lefkoMat <- function(mats, sparse = "auto", ...) {
 #' lambda3(ehrlen3mean$A[[1]])
 #' 
 #' # Cypripedium example
-#' rm(list=ls(all=TRUE))
 #' data(cypdata)
 #' 
 #' sizevector <- c(0, 0, 0, 0, 0, 0, 1, 2.5, 4.5, 8, 17.5)
@@ -633,6 +635,8 @@ lambda3.matrix <- function(mats, sparse = "auto", ...)
 #' historical matrices, IPMs, age x stage matrices, as well as ahistorical
 #' matrices.
 #' 
+#' @name stablestage3
+#' 
 #' @param mats A lefkoMat object, or population projection matrix, for which the
 #' stable stage distribution is desired.
 #' @param ... Other parameters.
@@ -688,7 +692,6 @@ lambda3.matrix <- function(mats, sparse = "auto", ...)
 #' stablestage3(ehrlen3mean)
 #' 
 #' # Cypripedium stochastic example
-#' rm(list=ls(all=TRUE))
 #' data(cypdata)
 #' 
 #' sizevector <- c(0, 0, 0, 0, 0, 0, 1, 2.5, 4.5, 8, 17.5)
@@ -744,6 +747,8 @@ stablestage3 <- function(mats, ...) UseMethod("stablestage3")
 #' analysis. This function can handle large and sparse matrices, and so can be
 #' used with large historical matrices, IPMs, age x stage matrices, as well as
 #' ahistorical matrices.
+#' 
+#' @name stablestage3.lefkoMat
 #' 
 #' @param mats An object of class \code{lefkoMat}.
 #' @param stochastic A logical value indicating whether to use deterministic
@@ -858,7 +863,6 @@ stablestage3 <- function(mats, ...) UseMethod("stablestage3")
 #' stablestage3(ehrlen3mean)
 #' 
 #' # Cypripedium stochastic example
-#' rm(list=ls(all=TRUE))
 #' data(cypdata)
 #' 
 #' sizevector <- c(0, 0, 0, 0, 0, 0, 1, 2.5, 4.5, 8, 17.5)
@@ -1125,6 +1129,8 @@ stablestage3.lefkoMat <- function(mats, stochastic = FALSE, times = 10000,
 #' matrices, and so can be used with large historical matrices, IPMs, 
 #' age x stage matrices, as well as smaller ahistorical matrices.
 #' 
+#' @name stablestage3.matrix
+#' 
 #' @param mats A population projection matrix of class \code{matrix}.
 #' @param sparse A text string indicating whether to use sparse matrix encoding
 #' (\code{"yes"}) or dense matrix encoding (\code{"no"}). Defaults to
@@ -1182,7 +1188,6 @@ stablestage3.lefkoMat <- function(mats, stochastic = FALSE, times = 10000,
 #' stablestage3(ehrlen3mean$A[[1]])
 #' 
 #' # Cypripedium stochastic example
-#' rm(list=ls(all=TRUE))
 #' data(cypdata)
 #' 
 #' sizevector <- c(0, 0, 0, 0, 0, 0, 1, 2.5, 4.5, 8, 17.5)
@@ -1258,6 +1263,8 @@ stablestage3.matrix <- function(mats, sparse = "auto", ...)
 #' historical matrices, IPMs, age x stage matrices, as well as ahistorical
 #' matrices.
 #' 
+#' @name repvalue3
+#' 
 #' @param mats A lefkoMat object, or population projection matrix.
 #' @param ... Other parameters.
 #' 
@@ -1312,7 +1319,6 @@ stablestage3.matrix <- function(mats, sparse = "auto", ...)
 #' repvalue3(ehrlen3mean)
 #' 
 #' # Cypripedium stochastic example
-#' rm(list=ls(all=TRUE))
 #' data(cypdata)
 #' 
 #' sizevector <- c(0, 0, 0, 0, 0, 0, 1, 2.5, 4.5, 8, 17.5)
@@ -1367,6 +1373,8 @@ repvalue3 <- function(mats, ...) UseMethod("repvalue3")
 #' This function can handle large and sparse matrices, and so can be used with
 #' large historical matrices, IPMs, age x stage matrices, as well as ahistorical
 #' matrices.
+#' 
+#' @name repvalue3.lefkoMat
 #' 
 #' @param mats An object of class \code{lefkoMat} object.
 #' @param stochastic A logical value indicating whether to use deterministic
@@ -1482,7 +1490,6 @@ repvalue3 <- function(mats, ...) UseMethod("repvalue3")
 #' repvalue3(ehrlen3mean)
 #' 
 #' # Cypripedium stochastic example
-#' rm(list=ls(all=TRUE))
 #' data(cypdata)
 #' 
 #' sizevector <- c(0, 0, 0, 0, 0, 0, 1, 2.5, 4.5, 8, 17.5)
@@ -1829,6 +1836,8 @@ repvalue3.lefkoMat <- function(mats, stochastic = FALSE, times = 10000,
 #' and so can be used with large historical matrices, IPMs, age x stage
 #' matrices, as well as smaller ahistorical matrices.
 #' 
+#' @name repvalue3.matrix
+#' 
 #' @param mats A population projection matrix.
 #' @param sparse A text string indicating whether to use sparse matrix encoding
 #' (\code{"yes"}) or dense matrix encoding (\code{"no"}). Defaults to
@@ -1889,7 +1898,6 @@ repvalue3.lefkoMat <- function(mats, stochastic = FALSE, times = 10000,
 #' repvalue3(ehrlen3mean$A[[1]])
 #' 
 #' # Cypripedium example
-#' rm(list=ls(all=TRUE))
 #' data(cypdata)
 #' 
 #' sizevector <- c(0, 0, 0, 0, 0, 0, 1, 2.5, 4.5, 8, 17.5)
@@ -1965,6 +1973,8 @@ repvalue3.matrix <- function(mats, sparse = "auto", ...)
 #' This function is made to handle very large and sparse matrices supplied as
 #' \code{lefkoMat} objects, as lists of matrices, and as individual matrices.
 #' 
+#' @name sensitivity3
+#' 
 #' @param mats A lefkoMat object, or population projection matrix, for which
 #' the stable stage distribution is desired.
 #' @param ... Other parameters
@@ -2020,7 +2030,6 @@ repvalue3.matrix <- function(mats, sparse = "auto", ...)
 #' sensitivity3(ehrlen3mean)
 #' 
 #' # Cypripedium example
-#' rm(list=ls(all=TRUE))
 #' data(cypdata)
 #' 
 #' sizevector <- c(0, 0, 0, 0, 0, 0, 1, 2.5, 4.5, 8, 17.5)
@@ -2077,6 +2086,8 @@ sensitivity3 <- function(mats, ...) UseMethod("sensitivity3")
 #' growth rate. This function can handle large and sparse matrices, and so can
 #' be used with large historical matrices, IPMs, age x stage matrices, as well
 #' as smaller ahistorical matrices.
+#' 
+#' @name sensitivity3.lefkoMat
 #' 
 #' @param mats An object of class \code{lefkoMat}.
 #' @param stochastic A logical value determining whether to conduct a
@@ -2161,7 +2172,6 @@ sensitivity3 <- function(mats, ...) UseMethod("sensitivity3")
 #' sensitivity3(ehrlen3, stochastic = TRUE)
 #' 
 #' # Cypripedium example
-#' rm(list=ls(all=TRUE))
 #' data(cypdata)
 #' 
 #' sizevector <- c(0, 0, 0, 0, 0, 0, 1, 2.5, 4.5, 8, 17.5)
@@ -2319,6 +2329,8 @@ sensitivity3.lefkoMat <- function(mats, stochastic = FALSE, steps = 10000,
 #' matrices, IPMs, age x stage matrices, as well as smaller ahistorical
 #' matrices.
 #' 
+#' @name sensitivity3.matrix
+#' 
 #' @param mats An object of class \code{matrix}.
 #' @param sparse A text string indicating whether to use sparse matrix encoding
 #' (\code{"yes"}) or dense matrix encoding (\code{"no"}). Defaults to
@@ -2376,7 +2388,6 @@ sensitivity3.lefkoMat <- function(mats, stochastic = FALSE, steps = 10000,
 #' sensitivity3(ehrlen3mean$A[[1]])
 #' 
 #' # Cypripedium example
-#' rm(list=ls(all=TRUE))
 #' data(cypdata)
 #' 
 #' sizevector <- c(0, 0, 0, 0, 0, 0, 1, 2.5, 4.5, 8, 17.5)
@@ -2448,6 +2459,8 @@ sensitivity3.matrix <- function(mats, sparse = "auto", ...)
 #' matrices must be included in the list. This function can handle large and
 #' sparse matrices, and so can be used with large historical matrices, IPMs,
 #' age x stage matrices, as well as smaller ahistorical matrices.
+#' 
+#' @name sensitivity3.list
 #' 
 #' @param mats An object of class \code{matrix}.
 #' @param stochastic A logical value determining whether to conduct a
@@ -2536,7 +2549,6 @@ sensitivity3.matrix <- function(mats, sparse = "auto", ...)
 #' sensitivity3(ehrlen3$A)
 #' 
 #' # Cypripedium example
-#' rm(list=ls(all=TRUE))
 #' data(cypdata)
 #' 
 #' sizevector <- c(0, 0, 0, 0, 0, 0, 1, 2.5, 4.5, 8, 17.5)
@@ -2661,6 +2673,8 @@ sensitivity3.list <- function(mats, stochastic = FALSE, steps = 10000,
 #' function is made to handle very large and sparse matrices supplied as
 #' \code{lefkoMat} objects, as lists of matrices, and as individual matrices.
 #' 
+#' @name elasticity3
+#' 
 #' @param mats A lefkoMat object, or population projection matrix, for which
 #' the stable stage distribution is desired.
 #' @param ... Other parameters.
@@ -2716,7 +2730,6 @@ sensitivity3.list <- function(mats, stochastic = FALSE, steps = 10000,
 #' elasticity3(ehrlen3mean)
 #' 
 #' # Cypripedium example
-#' rm(list=ls(all=TRUE))
 #' data(cypdata)
 #' 
 #' sizevector <- c(0, 0, 0, 0, 0, 0, 1, 2.5, 4.5, 8, 17.5)
@@ -2773,6 +2786,8 @@ elasticity3 <- function(mats, ...) UseMethod("elasticity3")
 #' function can handle large and sparse matrices, and so can be used with large
 #' historical matrices, IPMs, age x stage matrices, as well as smaller
 #' ahistorical matrices.
+#' 
+#' @name elasticity3.lefkoMat
 #' 
 #' @param mats An object of class \code{lefkoMat}.
 #' @param stochastic A logical value determining whether to conduct a
@@ -2861,7 +2876,6 @@ elasticity3 <- function(mats, ...) UseMethod("elasticity3")
 #' elasticity3(ehrlen3, stochastic = TRUE)
 #' 
 #' # Cypripedium example
-#' rm(list=ls(all=TRUE))
 #' data(cypdata)
 #' 
 #' sizevector <- c(0, 0, 0, 0, 0, 0, 1, 2.5, 4.5, 8, 17.5)
@@ -3017,6 +3031,8 @@ elasticity3.lefkoMat <- function(mats, stochastic = FALSE, steps = 10000,
 #' sparse matrices, and so can be used with large historical matrices, IPMs,
 #' age x stage matrices, as well as smaller ahistorical matrices.
 #' 
+#' @name elasticity3.matrix
+#' 
 #' @param mats An object of class \code{matrix}.
 #' @param sparse A text string indicating whether to use sparse matrix encoding
 #' (\code{"yes"}) or dense matrix encoding (\code{"no"}). Defaults to
@@ -3074,7 +3090,6 @@ elasticity3.lefkoMat <- function(mats, stochastic = FALSE, steps = 10000,
 #' elasticity3(ehrlen3mean$A[[1]])
 #' 
 #' # Cypripedium example
-#' rm(list=ls(all=TRUE))
 #' data(cypdata)
 #' 
 #' sizevector <- c(0, 0, 0, 0, 0, 0, 1, 2.5, 4.5, 8, 17.5)
@@ -3144,6 +3159,8 @@ elasticity3.matrix <- function(mats, sparse = "auto", ...)
 #' of a single matrix. This function can handle large and sparse matrices, and 
 #' so can be used with large historical matrices, IPMs, age x stage matrices,
 #' as well as smaller ahistorical matrices.
+#' 
+#' @name elasticity3.list
 #' 
 #' @param mats A list of objects of class \code{matrix}.
 #' @param stochastic A logical value determining whether to conduct a
@@ -3226,7 +3243,6 @@ elasticity3.matrix <- function(mats, sparse = "auto", ...)
 #' elasticity3(ehrlen3$A, stochastic = TRUE)
 #' 
 #' # Cypripedium example
-#' rm(list=ls(all=TRUE))
 #' data(cypdata)
 #' 
 #' sizevector <- c(0, 0, 0, 0, 0, 0, 1, 2.5, 4.5, 8, 17.5)
@@ -3351,6 +3367,8 @@ elasticity3.list <- function(mats, stochastic = FALSE, steps = 10000,
 #' experiment (LTRE) or stochastic LTRE matrices for the input projection
 #' matrices.
 #' 
+#' @name ltre3
+#' 
 #' @param mats A lefkoMat object, population projection matrix, or list of
 #' population projection matrices.
 #' @param refmats A reference lefkoMat object, or matrix, for use as the
@@ -3412,7 +3430,6 @@ elasticity3.list <- function(mats, stochastic = FALSE, steps = 10000,
 #' ltre3(ehrlen3)
 #' 
 #' # Cypripedium example
-#' rm(list=ls(all=TRUE))
 #' data(cypdata)
 #' 
 #' sizevector <- c(0, 0, 0, 0, 0, 0, 1, 2.5, 4.5, 8, 17.5)
@@ -3463,6 +3480,8 @@ ltre3 <- function(mats, refmats, ...) UseMethod("ltre3")
 #' 
 #' \code{ltre3.lefkoMat()} returns a set of matrices of one-way LTRE (life table
 #' response experiment) or stochastic LTRE matrices contributions.
+#' 
+#' @name ltre3.lefkoMat
 #' 
 #' @param mats An object of class \code{lefkoMat}.
 #' @param refmats A reference lefkoMat object, or matrix, for use as the
@@ -3566,7 +3585,6 @@ ltre3 <- function(mats, refmats, ...) UseMethod("ltre3")
 #' ltre3(ehrlen3, stochastic = TRUE)
 #' 
 #' # Cypripedium example
-#' rm(list=ls(all=TRUE))
 #' data(cypdata)
 #' 
 #' sizevector <- c(0, 0, 0, 0, 0, 0, 1, 2.5, 4.5, 8, 17.5)
@@ -3786,7 +3804,9 @@ ltre3.lefkoMat <- function(mats, refmats = NA, ref = NA, stochastic = FALSE,
 #' Function \code{summary.lefkoElas()} summarizes \code{lefkoElas} objects.
 #' Particularly, it breaks down elasticity values by the kind of ahistorical
 #' and, if applicable, historical transition.
-#'
+#' 
+#' @name summary.lefkoElas
+#' 
 #' @param object A \code{lefkoElas} object.
 #' @param ... Other parameters currently not utilized.
 #' 
@@ -3920,7 +3940,9 @@ summary.lefkoElas <- function(object, ...) {
 #' Function \code{summary.lefkoLTRE()} summarizes \code{lefkoLTRE} objects.
 #' Particularly, it breaks down LTRE contributions by the kind of ahistorical
 #' and, if applicable, historical transition.
-#'
+#' 
+#' @name summary.lefkoLTRE
+#' 
 #' @param object A \code{lefkoLTRE} object.
 #' @param ... Other parameters currently not utilized.
 #' 
@@ -4118,7 +4140,9 @@ summary.lefkoLTRE <- function(object, ...) {
 #' Function \code{summary.lefkoProj()} summarizes \code{lefkoProj} objects.
 #' Particularly, it breaks down the data frames provided in the 
 #' \code{projection} element in ways meaningful for those running simulations.
-#'
+#' 
+#' @name summary.lefkoProj
+#' 
 #' @param object A \code{lefkoProj} object.
 #' @param threshold A threshold population size to be searched for in
 #' projections. Defaults to 1.
@@ -4372,6 +4396,8 @@ summary.lefkoProj <- function(object, threshold = 1, inf_alive = TRUE,
 #' 
 #' Function \code{plot.lefkoProj()} produces plots of \code{lefkoProj} objects.
 #' Acts as a convenient wrapper for the \code{plot.default()} function.
+#' 
+#' @name plot.lefkoProj
 #' 
 #' @param x A \code{lefkoProj} object.
 #' @param variable The focus variable of the plot to produce. Defaults to

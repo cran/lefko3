@@ -304,7 +304,6 @@ overwrite <- function(stage3, stage2, stage1 = NA, eststage3 = NA,
 #' ehrlen3mean$A[[1]]
 #' 
 #' # Cypripedium example
-#' rm(list=ls(all=TRUE))
 #' data(cypdata)
 #' 
 #' sizevector <- c(0, 0, 0, 0, 0, 0, 1, 2.5, 4.5, 8, 17.5)
@@ -613,8 +612,6 @@ supplemental <- function(stage3, stage2, stage1 = NA, eststage3 = NA,
 #'   repst = c("repstatus3", "repstatus2"), zifec = FALSE)
 #' 
 #' # Cypripedium example
-#' rm(list=ls(all=TRUE))
-#' 
 #' data(cypdata)
 #' 
 #' sizevector <- c(0, 0, 0, 0, 0, 0, 1, 2.5, 4.5, 8, 17.5)
@@ -2534,14 +2531,18 @@ start_input <- function(mpm, stage2, stage1 = NA, age2 = NA, value = 1) {
   return(output_tab)
 }
 
-#' Calculate Actual Stage, Age-Stage, or Stage-Pair Distributions
+#' Calculate Actual Stage, Age, Stage-Pair, or Age-Stage Distributions
 #' 
 #' Function \code{actualstage3()} shows the frequencies and proportions of
-#' each stage or stage pair in each year.
+#' each stage, stage pair, age-stage, or age in each year.
 #' 
 #' @name actualstage3
 #' 
 #' @param data A demographic dataset in hfv format.
+#' @param check_stage A logical value indicating whether to assess frequencies
+#' and proportions of stages. Defaults to \code{TRUE}.
+#' @param check_age A logical value indicating whether to assess frequencies and
+#' proportions of ages. Defaults to \code{FALSE}.
 #' @param historical A logical value indicating whether the stage structure
 #' should be ahistorical (\code{FALSE}) or historical (\code{TRUE}). Defaults to
 #' \code{FALSE}.
@@ -2553,16 +2554,23 @@ start_input <- function(mpm, stage2, stage1 = NA, age2 = NA, value = 1) {
 #' @param stagecol A vector of three strings, indicating the stage name columns
 #' for times \emph{t}+1, \emph{t}, and \emph{t}-1, respectively, in \code{data}.
 #' Defaults to \code{stagecol = c("stage3", "stage2", "stage1")}.
+#' @param agecol A single string indicating the age of individuals in time
+#' \emph{t}. Defaults to \code{obsage}.
 #' @param remove.stage A string vector indicating the names of stages to remove
 #' from consideration. Defaults to \code{"NotAlive"}.
 #' 
 #' @return A data frame with the following variables:
 #' \item{rowid}{A string identifier term, equal to the monitoring occasion in
 #' time \emph{t} and the stage index.}
-#' \item{stageindex}{The stageframe index of the stage.}
-#' \item{stage}{The name of each stage, or \code{NA}.}
-#' \item{stage2}{The name of the stage in time \emph{t}.}
-#' \item{stage1}{The name of the stage in time \emph{t}-1, or \code{NA}.}
+#' \item{stageindex}{The stageframe index of the stage. Only output if
+#' \code{check_stage = TRUE}.}
+#' \item{stage}{The name of each stage, or \code{NA}. Only output if
+#' \code{check_stage = TRUE}.}
+#' \item{stage2}{The name of the stage in time \emph{t}. Only output if
+#' \code{check_stage = TRUE}.}
+#' \item{stage1}{The name of the stage in time \emph{t}-1, or \code{NA}. Only
+#' output if \code{check_stage = TRUE}.}
+#' \item{age}{The age at time \emph{t}. Only output if \code{check_age = TRUE}.}
 #' \item{year2}{Monitoring occasion in time \emph{t}.}
 #' \item{frequency}{The number of individuals in the respective stage and time.}
 #' \item{actual_prop}{The proportion of individuals alive in time \emph{t} in
@@ -2578,6 +2586,13 @@ start_input <- function(mpm, stage2, stage1 = NA, age2 = NA, value = 1) {
 #' last time, which is generally found in the \code{stage3} columns of the last
 #' \code{year2} entry in object \code{data}. The default is to treat the
 #' \code{year2} entry for that time as \code{max(year2) + 1}.
+#' 
+#' If \code{check_stage = TRUE} and \code{check_age = FALSE}, then this function
+#' will assess frequencies and proportions of stages or historical stage-pairs.
+#' If both \code{check_stage = TRUE} and \code{check_age = TRUE}, then this
+#' function will assess frequencies and proportions of age-stages. If
+#' \code{check_stage = FALSE} and \code{check_age = TRUE}, then the frequencies
+#' and proportions of ages only will be assessed.
 #' 
 #' Note that no stageframe is required for this function to operate. Stage
 #' names and their order are inferred directly from the object \code{data}.
@@ -2614,24 +2629,38 @@ start_input <- function(mpm, stage2, stage1 = NA, age2 = NA, value = 1) {
 #' all_stage_props
 #' 
 #' @export
-actualstage3 <- function(data, historical = FALSE, year2 = "year2",
+actualstage3 <- function(data, check_stage = TRUE, check_age = FALSE,
+  historical = FALSE, year2 = "year2",
   indices = c("stage3index", "stage2index", "stage1index"),
-  stagecol = c("stage3", "stage2", "stage1"), remove.stage = "NotAlive") {
+  stagecol = c("stage3", "stage2", "stage1"), agecol = "obsage",
+  remove.stage = "NotAlive") {
   
-  aaa.data <- ordered_stages <- ordered_indices <- NULL
+  aaa_data <- age_data <- ordered_stages <- ordered_indices <- NULL
   stagenames <- FALSE
+  
+  if (!check_stage & !check_age) {
+    stop("Options check_stage and check_age cannot both be FALSE.", call. = FALSE)
+  }
+  if (check_age & historical) {
+    stop("Options check_age and historical cannot both be TRUE.", call. = FALSE)
+  }
   
   if (length(indices) < 2) {
     stop("Object indices must contain the names of 3 variables corresponding to stage index
       in times t+1, t, and t-1, respectively", call. = FALSE)
   }
-  if (!all(is.element(indices, names(data)))) {
+  if (check_stage & !all(is.element(indices, names(data)))) {
     stop("Object indices must contain the names of 3 variables corresponding to stage index
       in times t+1, t, and t-1, respectively", call. = FALSE)
   }
   
   if (all(is.element(stagecol, names(data)))) {
     stagenames <- TRUE
+  }
+  
+  if (check_age & (!all(is.element(agecol, names(data))) | length(agecol) != 1)) {
+    stop("Option agecol must match the name of the variable coding for age in time t.",
+      call. = FALSE)
   }
   
   if (length(year2) != 1) {
@@ -2642,121 +2671,1571 @@ actualstage3 <- function(data, historical = FALSE, year2 = "year2",
     stop("Object year2 must equal the name of the variable denoting monitoring occasion in time t",
       call. = FALSE)
   }
-  stage3index <- indices[1]
-  stage2index <- indices[2]
-  stage1index <- indices[3]
   
-  names(data)[which(names(data) == stage3index)] <- "stage3index"
-  names(data)[which(names(data) == stage2index)] <- "stage2index"
-  names(data)[which(names(data) == stage1index)] <- "stage1index"
-  names(data)[which(names(data) == year2)] <- "year2"
-  
-  if (stagenames) {
-    stage3name <- stagecol[1]
-    stage2name <- stagecol[2]
-    stage1name <- stagecol[3]
-    names(data)[which(names(data) == stage3name)] <- "stage3"
-    names(data)[which(names(data) == stage2name)] <- "stage2"
-    names(data)[which(names(data) == stage1name)] <- "stage1"
+  if (check_stage) {
+    stage3index <- indices[1]
+    stage2index <- indices[2]
+    stage1index <- indices[3]
+    
+    names(data)[which(names(data) == stage3index)] <- "stage3index"
+    names(data)[which(names(data) == stage2index)] <- "stage2index"
+    names(data)[which(names(data) == stage1index)] <- "stage1index"
+    names(data)[which(names(data) == year2)] <- "year2"
+    
+    if (stagenames) {
+      stage3name <- stagecol[1]
+      stage2name <- stagecol[2]
+      stage1name <- stagecol[3]
+      names(data)[which(names(data) == stage3name)] <- "stage3"
+      names(data)[which(names(data) == stage2name)] <- "stage2"
+      names(data)[which(names(data) == stage1name)] <- "stage1"
+    }
   }
   
-  data <- data[, c("year2", "stage1", "stage2", "stage3", "stage1index", "stage2index", "stage3index")]
-  all_years <- sort(unique(data$year2), decreasing = TRUE)
-  bits_to_tack_on <- data[which(data$year2 == all_years[1]),]
-  bits_to_tack_on$stage1index <- bits_to_tack_on$stage2index
-  bits_to_tack_on$stage2index <- bits_to_tack_on$stage3index
-  bits_to_tack_on$stage1 <- bits_to_tack_on$stage2
-  bits_to_tack_on$stage2 <- bits_to_tack_on$stage3
+  if (check_age) {
+    names(data)[which(names(data) == agecol)] <- "age"
+  }
+  
+  if (check_stage & check_age) {
+    data <- data[, c("year2", "stage1", "stage2", "stage3", "stage1index",
+      "stage2index", "stage3index", "age")]
+    all_years <- sort(unique(data$year2), decreasing = TRUE)
+    
+    bits_to_tack_on <- data[which(data$year2 == all_years[1]),]
+    bits_to_tack_on$stage1index <- bits_to_tack_on$stage2index
+    bits_to_tack_on$stage2index <- bits_to_tack_on$stage3index
+    bits_to_tack_on$stage1 <- bits_to_tack_on$stage2
+    bits_to_tack_on$stage2 <- bits_to_tack_on$stage3
+    bits_to_tack_on$age <- bits_to_tack_on$age+1
+    
+  } else if (check_stage & !check_age) {
+    data <- data[, c("year2", "stage1", "stage2", "stage3", "stage1index",
+      "stage2index", "stage3index")]
+    all_years <- sort(unique(data$year2), decreasing = TRUE)
+    
+    bits_to_tack_on <- data[which(data$year2 == all_years[1]),]
+    bits_to_tack_on$stage1index <- bits_to_tack_on$stage2index
+    bits_to_tack_on$stage2index <- bits_to_tack_on$stage3index
+    bits_to_tack_on$stage1 <- bits_to_tack_on$stage2
+    bits_to_tack_on$stage2 <- bits_to_tack_on$stage3
+    
+  } else if (!check_stage & check_age) {
+    data <- data[, c("year2", "age")]
+    all_years <- sort(unique(data$year2), decreasing = TRUE)
+    
+    bits_to_tack_on <- data[which(data$year2 == all_years[1]),]
+    bits_to_tack_on$age <- bits_to_tack_on$age+1
+  }
   bits_to_tack_on$year2 <- all_years[1] + 1
   data <- rbind.data.frame(data, bits_to_tack_on)
   
-  allstages <- unique(data$stage2)
-  
-  if (any(nchar(remove.stage) > 0)) {
-    blank.stage <- which(nchar(remove.stage) == 0)
+  if (check_stage) {
+    allstages <- unique(data$stage2)
     
-    if (length(blank.stage) > 0) {
-      remove.stage <- remove.stage[-which(nchar(remove.stage) == 0)]
+    if (any(nchar(remove.stage) > 0)) {
+      blank.stage <- which(nchar(remove.stage) == 0)
+      
+      if (length(blank.stage) > 0) {
+        remove.stage <- remove.stage[-which(nchar(remove.stage) == 0)]
+      }
+      
+      if (any(!is.element(remove.stage, allstages))) {
+        stop("Setting remove.stage includes stages not found in dataset.", call. = FALSE)
+      }
+       rows_to_remove <- which(is.element(data$stage2, remove.stage))
+       if (length(rows_to_remove) > 0) {
+         data <- data[-rows_to_remove,]
+       }
     }
-    
-    if (any(!is.element(remove.stage, allstages))) {
-      stop("Setting remove.stage includes stages not found in dataset.", call. = FALSE)
-    }
-     rows_to_remove <- which(is.element(data$stage2, remove.stage))
-     if (length(rows_to_remove) > 0) {
-       data <- data[-rows_to_remove,]
-     }
   }
   
-  if (!historical) {
-    if (stagenames) {
-      data$stages <- data$stage2
-    }
-    data$stageindex <- data$stage2index
-    
-    aaa.data <- as.data.frame(xtabs(~ stage2index + year2, data), stringsAsFactors = FALSE)
-    names(aaa.data)[which(names(aaa.data) == "stage2index")] <- "stageindex"
-    
-    aaa.data$stage2 <- apply(as.matrix(aaa.data$stageindex), 1, function(X) {
-      data$stage2[which(data$stage2index == X)[1]]
-    })
-    aaa.data$stage1 <- NA
-    
-    ordered_indices <- sort(unique(as.numeric(aaa.data$stageindex)))
-  } else {
-    data$stageindex <- apply(as.matrix(c(1:dim(data)[1])), 1, function(X) {
-      paste(data$stage1index[X], data$stage2index[X])
-    })
-    
-    if (stagenames) {
-      data$stages <- apply(as.matrix(c(1:dim(data)[1])), 1, function(X) {
-        paste(data$stage1[X], data$stage2[X])
+  if (check_stage) {
+    if (!historical) {
+      if (stagenames) {
+        data$stages <- data$stage2
+      }
+      data$stageindex <- data$stage2index
+      
+      if (!check_age) {
+        aaa_data <- as.data.frame(xtabs(~ stage2index + year2, data), stringsAsFactors = FALSE)
+      } else {
+        aaa_data <- as.data.frame(xtabs(~ stage2index + age + year2, data), stringsAsFactors = FALSE)
+      }
+      names(aaa_data)[which(names(aaa_data) == "stage2index")] <- "stageindex"
+      
+      aaa_data$stage2 <- apply(as.matrix(aaa_data$stageindex), 1, function(X) {
+        data$stage2[which(data$stage2index == X)[1]]
       })
+      aaa_data$stage1 <- NA
+      
+      ordered_indices <- sort(unique(as.numeric(aaa_data$stageindex)))
+    } else {
+      data$stageindex <- apply(as.matrix(c(1:dim(data)[1])), 1, function(X) {
+        paste(data$stage1index[X], data$stage2index[X])
+      })
+      
+      if (stagenames) {
+        data$stages <- apply(as.matrix(c(1:dim(data)[1])), 1, function(X) {
+          paste(data$stage1[X], data$stage2[X])
+        })
+      }
+      
+      aaa_data <- as.data.frame(xtabs(~ stageindex + year2, data),
+        stringsAsFactors = FALSE)
+      
+      aaa_data$stage2 <- apply(as.matrix(aaa_data$stageindex), 1, function(X) {
+        data$stage2[which(data$stageindex == X)[1]]
+      })
+      aaa_data$stage1 <- apply(as.matrix(aaa_data$stageindex), 1, function(X) {
+        data$stage1[which(data$stageindex == X)[1]]
+      })
+      
+      ordered_indices <- sort(unique(aaa_data$stageindex))
     }
     
-    aaa.data <- as.data.frame(xtabs(~ stageindex + year2, data), stringsAsFactors = FALSE)
-    
-    aaa.data$stage2 <- apply(as.matrix(aaa.data$stageindex), 1, function(X) {
-      data$stage2[which(data$stageindex == X)[1]]
+    ordered_stages <- apply(as.matrix(ordered_indices), 1, function(X) {
+      acmecanning <- data$stages[which(data$stageindex == X)[1]]
+      if (length(acmecanning) < 1) {
+        acmecanning <- NA
+      }
+      return(acmecanning)
     })
-    aaa.data$stage1 <- apply(as.matrix(aaa.data$stageindex), 1, function(X) {
-      data$stage1[which(data$stageindex == X)[1]]
-    })
     
-    ordered_indices <- sort(unique(aaa.data$stageindex))
+    if (stagenames) {
+      aaa_data$stage <- apply(as.matrix(aaa_data$stageindex), 1, function(X) {
+        return(ordered_stages[which(ordered_indices == X)])
+      })
+    } else {
+      aaa_data$stage <- NA
+    }
+  } else if (check_age) {
+    aaa_data <- as.data.frame(xtabs(~ age + year2, data), stringsAsFactors = FALSE)
   }
-  
-  ordered_stages <- apply(as.matrix(ordered_indices), 1, function(X) {
-    acmecanning <- data$stages[which(data$stageindex == X)[1]]
-    if (length(acmecanning) < 1) {
-      acmecanning <- NA
-    }
-    return(acmecanning)
-  })
   
   totalr <- as.data.frame(xtabs(~ year2, data), stringsAsFactors = FALSE)
   
-  aaa.data$actual_prop <- apply(as.matrix(c(1:dim(aaa.data)[1])), 1, function(X) {
-    a <- aaa.data$Freq[X] / totalr$Freq[which(totalr$year2 == aaa.data$year2[X])]
+  aaa_data$actual_prop <- apply(as.matrix(c(1:dim(aaa_data)[1])), 1, function(X) {
+    a <- aaa_data$Freq[X] / totalr$Freq[which(totalr$year2 == aaa_data$year2[X])]
     return(a)
   })
   
-  aaa.data$rowid <- apply(as.matrix(c(1:dim(aaa.data)[1])), 1, function(X) {
-    paste(aaa.data$year2[X], aaa.data$stageindex[X])
+  aaa_data$rowid <- apply(as.matrix(c(1:dim(aaa_data)[1])), 1, function(X) {
+    if (check_stage & !check_age) {
+      finalout <- paste(aaa_data$year2[X], aaa_data$stageindex[X])
+    } else if (check_stage & check_age) {
+      finalout <- paste(aaa_data$year2[X], aaa_data$stageindex[X], aaa_data$age[X])
+    } else {
+      finalout <- paste(aaa_data$year2[X], aaa_data$age[X])
+    }
+    return(finalout)
   })
   
-  if (stagenames) {
-    aaa.data$stage <- apply(as.matrix(aaa.data$stageindex), 1, function(X) {
-      return(ordered_stages[which(ordered_indices == X)])
-    })
+  if (check_stage & check_age) {
+    aaa_data <- aaa_data[, c("rowid", "stageindex", "stage", "stage2", "stage1",
+      "age", "year2", "Freq", "actual_prop")]
+  } else if (check_stage & !check_age) {
+    aaa_data <- aaa_data[, c("rowid", "stageindex", "stage", "stage2", "stage1",
+      "year2", "Freq", "actual_prop")]
   } else {
-    aaa.data$stage <- NA
+    aaa_data <- aaa_data[, c("rowid", "age", "year2", "Freq", "actual_prop")]
+  }
+  names(aaa_data)[which(names(aaa_data) == "Freq")] <- "frequency"
+  
+  return(aaa_data)
+}
+
+#' Function to Test Integer and Binomial Status of Vectors and Output Results
+#' 
+#' Function \code{.intbin_check()} tests for integer and binomial status of a
+#' specific variable within a data frame.
+#' 
+#' @name .intbin_check
+#' 
+#' @param data The data frame to check.
+#' @param term The variable to assess within object \code{data}.
+#' 
+#' @return This function outputs text assessing the integer and binomial status
+#' of the variable tested. No values or objects are returned.
+#' 
+#' @keywords internal
+#' @noRd
+.intbin_check <- function(data, term) {
+  term_col <- which(names(data) == term)
+  if (length(term_col) == 0) stop("Unrecognized term in dataset.", call. = FALSE)
+  
+  check_term <- .integer_test(data[, term_col])
+  
+  writeLines(paste0("  Variable ", term, " has ", length(which(is.na(data[, term_col]))),
+      " missing values."))
+  
+  if (check_term == 1) {
+    writeLines(paste0("  Variable ", term," may be a floating point variable rather than
+      a binomial variable. One element is not an integer.\n"))
+  } else if (check_term > 0) {
+    writeLines(paste0("  Variable ", term," appears to be a floating point variable rather than
+      a binomial variable. ", check_term, " elements are not integers.\n"))
+  } else {
+    term_int <- as.integer(data[, term_col])
+    term_bin_check <- .binomial_test(term_int)
+    
+    if (term_bin_check == 1) {
+      writeLines(paste0("  Variable ", term," does not appear to be a binomial variable.
+        One element is not 0 or 1.\n"))
+    } else if (term_bin_check > 0) {
+      writeLines(paste0("  Variable ", term," does not appear to be a binomial variable. ",
+        term_bin_check, " elements are not 0 or 1.\n"))
+    } else {
+      writeLines(paste0("  Variable ", term," is a binomial variable.\n"))
+    }
+  }
+}
+
+#' Function to Check Size and Fecundity Variables for Distribution Assumptions
+#' 
+#' Function to assess the distribution of variables coding size or fecundity.
+#' 
+#' @name .sf_dist_check
+#' 
+#' @param data The data frame to check.
+#' @param term The variable to assess within object \code{data}.
+#' @param term2 A variable to use as an independent factor in overdispersion
+#' tests.
+#' 
+#' @return This function outputs text to check whether the variable being tested
+#' conforms to Gaussian, Gamma, Poisson, or negative binomial distribution
+#' assumptions. No value or object is returned.
+#' 
+#' @keywords internal
+#' @noRd
+.sf_dist_check <- function(data, term, term2) {
+  term_col <- which(names(data) == term)
+  if (length(term_col) == 0) stop("Unrecognized term in dataset.", call. = FALSE)
+  
+  correct_var <- data[, term_col]
+  check_term <- .integer_test(correct_var)
+  
+  writeLines(paste0("  Variable ", term, " has ", length(which(is.na(correct_var))),
+      " missing values."))
+  
+  if (check_term == 1) {
+    writeLines(paste0("  Variable ", term,
+      " may be a floating point variable rather than a binomial variable."))
+    writeLines("  One element is not an integer.\n")
+  } else if (check_term > 0) {
+    writeLines(paste0("  Variable ", term,
+        " appears to be a floating point variable."))
+    writeLines(paste0("  ", check_term, " elements are not integers."))
+    writeLines(paste0("  The minimum value of ", term, " is ",
+        signif(min(correct_var, na.rm = TRUE), digits = 4), " and the maximum is ",
+        signif(max(correct_var, na.rm = TRUE), digits = 4), "."))
+    writeLines(paste0("  The mean value of ", term, " is ",
+        signif(mean(correct_var, na.rm = TRUE), digits = 4), " and the variance is ",
+        signif(var(correct_var, na.rm = TRUE), digits = 4), "."))
+    
+    gaus.check <- stats::shapiro.test(correct_var)
+    writeLines(paste0("  The value of the Shapiro-Wilk test of normality is ",
+        signif(gaus.check$statistic, digits = 4), " with P = ",
+        signif(gaus.check$p.value, digits = 4), "."))
+    if (gaus.check$p.value <= 0.05) {
+      writeLines(paste0("  Variable ", term,
+          " differs significantly from a Gaussian distribution.\n"))
+    } else {
+      writeLines(paste0("  Variable ", term,
+          " does not differ significantly from a Gaussian distribution.\n"))
+    }
+  } else {
+    writeLines(paste0("  Variable ", term," appears to be an integer variable.\n"))
   }
   
-  aaa.data <- aaa.data[, c("rowid", "stageindex", "stage", "stage2", "stage1",
-    "year2", "Freq", "actual_prop")]
-  names(aaa.data)[which(names(aaa.data) == "Freq")] <- "frequency"
+  if (any(correct_var < 0)) {
+    writeLines(paste0("  Some elements of ", term, " are negative.\n"))
+  } else if (any(correct_var == 0)) {
+    writeLines(paste0("  Variable ", term, " is fully non-negative.\n"))
+  } else {
+    writeLines(paste0("  Variable ", term, " is fully positive, lacking even 0s.\n"))
+  }
   
-  return(aaa.data)
+  if (check_term == 0) {
+    term2_col <- which(names(data) == term2)
+    if (length(term2_col) == 0) stop("Unrecognized term in dataset.", call. = FALSE)
+    
+    correct_var2 <- data[, term2_col]
+    
+    # Overdispersion test
+    jvmean <- mean(correct_var)
+    jvvar <- stats::var(correct_var)
+    
+    v_pmodel <- stats::glm(correct_var ~ correct_var2)
+    v_qpmodel <- stats::glm(correct_var ~ correct_var2)
+    v_disp <- summary(v_qpmodel)$dispersion
+    v_df <- summary(v_pmodel)$df.residual
+    
+    jvodchip <- stats::pchisq(v_disp * v_df, v_df, lower = FALSE)
+    
+    writeLines("  Overdispersion test:")
+    
+    writeLines(paste0("    Mean ", term," is ", signif(jvmean, digits = 4)))
+    writeLines(paste0("    The variance in ", term," is ", signif(jvvar, digits = 4)))
+    writeLines("    The probability of this dispersion level by chance assuming that")
+    writeLines(paste0("    the true mean ", term," = variance in ", term, ","))
+    writeLines(paste0("    and an alternative hypothesis of overdispersion, is ",
+        signif(jvodchip, digits = 4)))
+    
+    if (jvodchip <= 0.05 & jvvar > jvmean) {
+      writeLines(paste0("    Variable ", term," is significantly overdispersed.\n"))
+    } else if (jvodchip <= 0.05 & jvvar < jvmean) {
+      writeLines(paste0("    Variable ", term," is significantly underdispersed.\n"))
+    } else {
+      writeLines(paste0("    Dispersion level in ", term," matches expectation.\n"))
+    }
+    
+    # Test for zero-inflation and zero-truncation
+    writeLines("  Zero-inflation and truncation tests:")
+    
+    v0est <- exp(-jvmean) #Estimated lambda
+    v0n0 <- sum(correct_var == 0) #Actual no of zeroes
+    
+    v0exp <- length(correct_var) * v0est #Expected no of zeroes
+    
+    jvdbs <- (v0n0 - v0exp)^2 / (v0exp * (1 - v0est) - length(correct_var) * jvmean * (v0est^2))
+    jvzichip <- stats::pchisq(jvdbs, df = 1, lower.tail = FALSE)
+    
+    if (v0n0 < v0exp & jvzichip < 0.50) { #Correction for lower than expected numbers of 0s
+      jvzichip <- 1 - jvzichip
+    }
+    
+    writeLines(paste0("    Mean lambda in ", term," is ", signif(v0est, digits = 4)))
+    writeLines(paste0("    The actual number of 0s in ", term," is ", v0n0))
+    writeLines(paste0("    The expected number of 0s in ", term,
+        " under the null hypothesis is ", signif(v0exp, digits = 4)))
+    writeLines(paste0("    The probability of this deviation in 0s from expectation by chance is ",
+        signif(jvzichip, digits = 4)))
+    
+    if (jvzichip <= 0.05 & v0n0 > v0exp) {
+      writeLines(paste0("    Variable ", term," is significantly zero-inflated.\n"))
+    } else {
+      writeLines(paste0("    Variable ", term," is not significantly zero-inflated.\n"))
+      
+      if (v0n0 == 0) {
+        writeLines(paste0("    Variable ", term,
+            " does not include 0s, suggesting that a zero-truncated distribution may be warranted.\n"))
+      }
+    }
+  }
+}
+
+#' Check Quality and Distributions of hfv Datasets
+#' 
+#' Function \code{hfv_qc()} tests the overall quality of hfv datasets, and also
+#' runs a series of tests to assess which statistical distributions match the
+#' variables within these datasets. The input format is equivalent to the input
+#' format of function \code{\link{modelsearch}()}, allowing users to assess
+#' vital rate variable distributions assuming the same internal dataset
+#' subsetting used by the latter function and simply copy and pasting the
+#' parameter options from one function to the other.
+#' 
+#' @name hfv_qc
+#' 
+#' @param data The vertical dataset to be used for analysis. This dataset should 
+#' be of class \code{hfvdata}, but can also be a data frame formatted similarly
+#' to the output format provided by functions \code{\link{verticalize3}()} or
+#' \code{\link{historicalize3}()}, as long as all needed variables are properly
+#' designated.
+#' @param stageframe The stageframe characterizing the life history model used.
+#' Optional unless \code{test.group = TRUE}, in which case it is required.
+#' Defaults to \code{NULL}.
+#' @param historical A logical variable denoting whether to assess the effects
+#' of state in occasion \emph{t}-1, in addition to state in occasion \emph{t}.
+#' Defaults to \code{TRUE}.
+#' @param suite This describes the global model for each vital rate estimation,
+#' and has the following possible values: \code{full}, includes main effects and
+#' all two-way interactions of size and reproductive status; \code{main},
+#' includes main effects only of size and reproductive status; \code{size},
+#' includes only size (also interactions between size in historical model);
+#' \code{rep}, includes only reproductive status (also interactions between
+#' status in historical model); \code{age}, all vital rates estimated with age
+#' and y-intercepts only; \code{cons}, all vital rates estimated only as
+#' y-intercepts. Defaults to \code{size}.
+#' @param vitalrates A vector describing which vital rates will be estimated via
+#' linear modeling, with the following options: \code{surv}, survival
+#' probability; \code{obs}, observation probability; \code{size}, overall size;
+#' \code{repst}, probability of reproducing; and \code{fec}, amount of
+#' reproduction (overall fecundity). May also be set to
+#' \code{vitalrates = "leslie"}, which is equivalent to setting
+#' \code{c("surv", "fec")} for a Leslie MPM. This choice also determines how
+#' internal data subsetting for vital rate model estimation will work. Defaults
+#' to \code{c("surv", "size", "fec")}.
+#' @param surv A vector indicating the variable names coding for status as alive
+#' or dead in occasions \emph{t}+1, \emph{t}, and \emph{t}-1, respectively.
+#' Defaults to \code{c("alive3", "alive2", "alive1")}.
+#' @param obs A vector indicating the variable names coding for observation
+#' status in occasions \emph{t}+1, \emph{t}, and \emph{t}-1, respectively.
+#' Defaults to \code{c("obsstatus3", "obsstatus2", "obsstatus1")}.
+#' @param size A vector indicating the variable names coding for the primary
+#' size variable on occasions \emph{t}+1, \emph{t}, and \emph{t}-1,
+#' respectively. Defaults to \code{c("sizea3", "sizea2", "sizea1")}.
+#' @param sizeb A vector indicating the variable names coding for the secondary
+#' size variable on occasions \emph{t}+1, \emph{t}, and \emph{t}-1,
+#' respectively. Defaults to \code{c(NA, NA, NA)}, in which case \code{sizeb} is
+#' not used.
+#' @param sizec A vector indicating the variable names coding for the tertiary
+#' size variable on occasions \emph{t}+1, \emph{t}, and \emph{t}-1,
+#' respectively. Defaults to \code{c(NA, NA, NA)}, in which case \code{sizec} is
+#' not used.
+#' @param repst A vector indicating the variable names coding for reproductive
+#' status in occasions \emph{t}+1, \emph{t}, and \emph{t}-1, respectively.
+#' Defaults to \code{c("repstatus3", "repstatus2", "repstatus1")}.
+#' @param fec A vector indicating the variable names coding for fecundity in
+#' occasions \emph{t}+1, \emph{t}, and \emph{t}-1, respectively. Defaults to
+#' \code{c("feca3", "feca2", "feca1")}.
+#' @param stage A vector indicating the variable names coding for stage in
+#' occasions \emph{t}+1, \emph{t}, and \emph{t}-1. Defaults to
+#' \code{c("stage3", "stage2", "stage1")}.
+#' @param matstat A vector indicating the variable names coding for maturity
+#' status in occasions \emph{t}+1, \emph{t}, and \emph{t}-1. Defaults to
+#' \code{c("matstatus3", "matstatus2", "matstatus1")}.
+#' @param indiv A text value indicating the variable name coding individual
+#' identity. Defaults to \code{"individ"}.
+#' @param patch A text value indicating the variable name coding for patch,
+#' where patches are defined as permanent subgroups within the study population.
+#' Defaults to \code{NA}.
+#' @param year A text value indicating the variable coding for observation
+#' occasion \emph{t}. Defaults to \code{year2}.
+#' @param density A text value indicating the name of the variable coding for
+#' spatial density, should the user wish to test spatial density as a fixed
+#' factor affecting vital rates. Defaults to \code{NA}.
+#' @param patch.as.random If set to \code{TRUE} and \code{approach = "mixed"},
+#' then \code{patch} is included as a random factor. If set to \code{FALSE} and
+#' \code{approach = "glm"}, then \code{patch} is included as a fixed factor. All
+#' other combinations of logical value and \code{approach} lead to \code{patch}
+#' not being included in modeling. Defaults to \code{TRUE}.
+#' @param year.as.random If set to \code{TRUE} and \code{approach = "mixed"},
+#' then \code{year} is included as a random factor. If set to \code{FALSE}, then
+#' \code{year} is included as a fixed factor. All other combinations of logical
+#' value and \code{approach} lead to \code{year} not being included in modeling.
+#' Defaults to \code{TRUE}.
+#' @param juvestimate An optional variable denoting the stage name of the
+#' juvenile stage in the vertical dataset. If not \code{NA}, and \code{stage} is
+#' also given (see below), then vital rates listed in \code{vitalrates} other
+#' than \code{fec} will also be estimated from the juvenile stage to all adult
+#' stages. Defaults to \code{NA}, in which case juvenile vital rates are not
+#' estimated.
+#' @param juvsize A logical variable denoting whether size should be used as a
+#' term in models involving transition from the juvenile stage. Defaults to
+#' \code{FALSE}, and is only used if \code{juvestimate} does not equal
+#' \code{NA}.
+#' @param fectime A variable indicating which year of fecundity to use as the
+#' response term in fecundity models. Options include \code{2}, which refers to
+#' occasion \emph{t}, and \code{3}, which refers to occasion \emph{t}+1.
+#' Defaults to \code{2}.
+#' @param censor A vector denoting the names of censoring variables in the
+#' dataset, in order from occasion \emph{t}+1, followed by occasion \emph{t},
+#' and lastly followed by occasion \emph{t}-1. Defaults to \code{NA}.
+#' @param age Designates the name of the variable corresponding to age in time
+#' \emph{t} in the vertical dataset. Defaults to \code{NA}, in which case age
+#' is not included in linear models. Should only be used if building Leslie or
+#' age x stage matrices.
+#' @param indcova Vector designating the names in occasions \emph{t}+1,
+#' \emph{t}, and \emph{t}-1 of an individual covariate. Defaults to \code{NA}.
+#' @param indcovb Vector designating the names in occasions \emph{t}+1,
+#' \emph{t}, and \emph{t}-1 of a second individual covariate. Defaults to
+#' \code{NA}.
+#' @param indcovc Vector designating the names in occasions \emph{t}+1,
+#' \emph{t}, and \emph{t}-1 of a third individual covariate. Defaults to
+#' \code{NA}.
+#' @param random.indcova A logical value indicating whether \code{indcova}
+#' should be treated as a random categorical factor, rather than as a fixed
+#' factor. Defaults to \code{FALSE}.
+#' @param random.indcovb A logical value indicating whether \code{indcovb}
+#' should be treated as a random categorical factor, rather than as a fixed
+#' factor. Defaults to \code{FALSE}.
+#' @param random.indcovc A logical value indicating whether \code{indcovc}
+#' should be treated as a random categorical factor, rather than as a fixed
+#' factor. Defaults to \code{FALSE}.
+#' @param test.group A logical value indicating whether to include the
+#' \code{group} variable from the input \code{stageframe} as a fixed categorical
+#' variable in linear models. Defaults to \code{FALSE}.
+#' @param ... Other parameters.
+#' 
+#' @return This function yields text output describing the subsets to be used in
+#' linear vital rate modeling. No value or object is returned.
+#' 
+#' @section Notes:
+#' This function is meant to handle input as would be supplied to function
+#' \code{modelsearch()}. To use most easily, users may copy all input parameters
+#' from a call to function \code{modelsearch()}, and paste directly within this
+#' function. The exact subsets used in the \code{modelsearch()} run will also be
+#' created here.
+#' 
+#' @examples
+#' \donttest{
+#' # Lathyrus example
+#' data(lathyrus)
+#' 
+#' sizevector <- c(0, 4.6, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 1, 2, 3, 4, 5, 6, 7, 8,
+#'   9)
+#' stagevector <- c("Sd", "Sdl", "Dorm", "Sz1nr", "Sz2nr", "Sz3nr", "Sz4nr",
+#'   "Sz5nr", "Sz6nr", "Sz7nr", "Sz8nr", "Sz9nr", "Sz1r", "Sz2r", "Sz3r", 
+#'   "Sz4r", "Sz5r", "Sz6r", "Sz7r", "Sz8r", "Sz9r")
+#' repvector <- c(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1)
+#' obsvector <- c(0, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1)
+#' matvector <- c(0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1)
+#' immvector <- c(1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)
+#' propvector <- c(1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
+#'   0)
+#' indataset <- c(0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1)
+#' binvec <- c(0, 4.6, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 
+#'   0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5)
+#' 
+#' lathframeln <- sf_create(sizes = sizevector, stagenames = stagevector, 
+#'   repstatus = repvector, obsstatus = obsvector, matstatus = matvector, 
+#'   immstatus = immvector, indataset = indataset, binhalfwidth = binvec, 
+#'   propstatus = propvector)
+#' 
+#' lathvertln <- verticalize3(lathyrus, noyears = 4, firstyear = 1988,
+#'   patchidcol = "SUBPLOT", individcol = "GENET", blocksize = 9, 
+#'   juvcol = "Seedling1988", sizeacol = "lnVol88", repstracol = "Intactseed88",
+#'   fecacol = "Intactseed88", deadacol = "Dead1988", 
+#'   nonobsacol = "Dormant1988", stageassign = lathframeln, stagesize = "sizea",
+#'   censorcol = "Missing1988", censorkeep = NA, NAas0 = TRUE, censor = TRUE)
+#' 
+#' lathvertln$feca2 <- round(lathvertln$feca2)
+#' lathvertln$feca1 <- round(lathvertln$feca1)
+#' lathvertln$feca3 <- round(lathvertln$feca3)
+#' 
+#' hfv_qc(lathvertln, historical = TRUE, suite = "main", 
+#'   vitalrates = c("surv", "obs", "size", "repst", "fec"), juvestimate = "Sdl",
+#'   indiv = "individ", patch = "patchid", year = "year2",year.as.random = TRUE,
+#'   patch.as.random = TRUE)
+#' 
+#' lathmodelsln3 <- modelsearch(lathvertln, historical = TRUE, 
+#'   approach = "mixed", suite = "main", 
+#'   vitalrates = c("surv", "obs", "size", "repst", "fec"), juvestimate = "Sdl",
+#'   bestfit = "AICc&k", sizedist = "gaussian", fecdist = "poisson", 
+#'   indiv = "individ", patch = "patchid", year = "year2",year.as.random = TRUE,
+#'   patch.as.random = TRUE, show.model.tables = TRUE, quiet = TRUE)
+#' 
+#' # Here we use supplemental() to provide overwrite and reproductive info
+#' lathsupp3 <- supplemental(stage3 = c("Sd", "Sd", "Sdl", "Sdl", "mat", "Sd", "Sdl"), 
+#'   stage2 = c("Sd", "Sd", "Sd", "Sd", "Sdl", "rep", "rep"),
+#'   stage1 = c("Sd", "rep", "Sd", "rep", "Sd", "mat", "mat"),
+#'   eststage3 = c(NA, NA, NA, NA, "mat", NA, NA),
+#'   eststage2 = c(NA, NA, NA, NA, "Sdl", NA, NA),
+#'   eststage1 = c(NA, NA, NA, NA, "Sdl", NA, NA),
+#'   givenrate = c(0.345, 0.345, 0.054, 0.054, NA, NA, NA),
+#'   multiplier = c(NA, NA, NA, NA, NA, 0.345, 0.054),
+#'   type = c(1, 1, 1, 1, 1, 3, 3), type_t12 = c(1, 2, 1, 2, 1, 1, 1),
+#'   stageframe = lathframeln, historical = TRUE)
+#' 
+#' lathmat3ln <- flefko3(year = "all", patch = "all", stageframe = lathframeln, 
+#'   modelsuite = lathmodelsln3, data = lathvertln, supplement = lathsupp3, 
+#'   reduce = FALSE)
+#' 
+#' summary(lathmat3ln)
+#' }
+#' 
+#' @export
+hfv_qc <- function(data, stageframe = NULL, historical = TRUE, suite = "size",
+  vitalrates = c("surv", "size", "fec"), surv = c("alive3", "alive2", "alive1"),
+  obs = c("obsstatus3", "obsstatus2", "obsstatus1"),
+  size = c("sizea3", "sizea2", "sizea1"), sizeb = c(NA, NA, NA), 
+  sizec = c(NA, NA, NA), repst = c("repstatus3", "repstatus2", "repstatus1"),
+  fec = c("feca3", "feca2", "feca1"), stage = c("stage3", "stage2", "stage1"),
+  matstat = c("matstatus3", "matstatus2", "matstatus1"),
+  indiv = "individ", patch = NA, year = "year2", density = NA,
+  patch.as.random = TRUE, year.as.random = TRUE, juvestimate = NA,
+  juvsize = FALSE, fectime = 2, censor = NA, age = NA, indcova = NA,
+  indcovb = NA, indcovc = NA, random.indcova = FALSE, random.indcovb = FALSE,
+  random.indcovc = FALSE, test.group = FALSE, ...) {
+  
+  censor1 <- censor2 <- censor3 <- surv.data <- obs.data <- size.data <- NULL
+  sizeb.data <- sizec.data <- juvsizeb.data <- juvsizec.data <- NULL
+  repst.data <- fec.data <- juvsurv.data <- juvobs.data <- NULL
+  juvsize.data <- juvrepst.data <- usedfec <- NULL
+  sizebdist <- sizecdist <- NULL
+  patchcol <- yearcol <- extra_factors <- 0
+  
+  sizeb_used <- sizec_used <- density_used <- indcova_used <- FALSE
+  indcovb_used <- indcovc_used <- FALSE
+  
+  total_vars <- length(names(data))
+  
+  #Input testing, input standardization, and exception handling
+  if (all(class(data) != "hfvdata")) {
+    warning("This function was made to work with standardized historically
+      formatted vertical datasets, as provided by the verticalize() and
+      historicalize() functions. Failure to format the input data properly and
+      designate needed variables appropriately may result in nonsensical output.",
+      call. = FALSE)
+  }
+  
+  if (test.group) {
+    if (is.null(stageframe)) {
+      stop("Cannot test groups without inclusion of appropriate stageframe.",
+        call. = FALSE)
+    } else if (!is.element("stageframe", class(stageframe))) {
+      stop("Cannot test groups without inclusion of appropriate stageframe.",
+        call. = FALSE)
+    } else {
+      all_groups <- unique(stageframe$group)
+      
+      if (length(all_groups) > 1) {
+        extra_factors <- extra_factors + 1;
+        
+        data$group2 <- apply(as.matrix(data$stage2), 1, function(X){
+          found_group <- which(stageframe$stage == X)
+          if (length(found_group) != 1) {
+            if (!is.element(tolower(X), c("notalive", "dead", "almostborn"))) {
+              warning("Some group calls appear to lack a positive ID. Please check
+                group identifications.", call. = FALSE)
+            }
+            group_call <- 0
+          } else {
+            group_call <- stageframe$group[found_group]
+          }
+          return(group_call)
+        })
+        data$group3 <- apply(as.matrix(data$stage3), 1, function(X){
+          found_group <- which(stageframe$stage == X)
+          if (length(found_group) != 1) {
+            if (!is.element(tolower(X), c("notalive", "dead", "almostborn"))) {
+              warning("Some group calls appear to lack a positive ID. Please check
+                group identifications.", call. = FALSE)
+            }
+            group_call <- 0
+          } else {
+            group_call <- stageframe$group[found_group]
+          }
+          return(group_call)
+        })
+        data$group1 <- apply(as.matrix(data$stage1), 1, function(X){
+          found_group <- which(stageframe$stage == X)
+          if (length(found_group) != 1) {
+            if (!is.element(tolower(X), c("notalive", "dead", "almostborn"))) {
+              warning("Some group calls appear to lack a positive ID. Please check
+                group identifications.", call. = FALSE)
+            }
+            group_call <- 0
+          } else {
+            group_call <- stageframe$group[found_group]
+          }
+          return(group_call)
+        })
+      } else {
+        test.group <- FALSE
+        warning("Only one stage group found, so will not test group.", call. = FALSE)
+      }
+    }
+  }
+  
+  if (!requireNamespace("MuMIn", quietly = TRUE)) {
+    stop("Package MuMIn is required. Please install it.",
+      call. = FALSE)
+  }
+  
+  # Here we will use text matching to identify variables
+  vitalrates <- tolower(vitalrates)
+  suite <- tolower(suite)
+  
+  if(length(grep("fu", suite)) > 0) {
+    suite <- "full"
+  } else if(length(grep("fl", suite)) > 0) {
+    suite <- "full"
+  } else if(length(grep("ma", suite)) > 0) {
+    suite <- "main"
+  } else if(length(grep("mn", suite)) > 0) {
+    suite <- "main"
+  } else if(length(grep("si", suite)) > 0) {
+    suite <- "size"
+  } else if(length(grep("sz", suite)) > 0) {
+    suite <- "size"
+  } else if(length(grep("re", suite)) > 0) {
+    suite <- "rep"
+  } else if(length(grep("rp", suite)) > 0) {
+    suite <- "rep"
+  } else if(length(grep("co", suite)) > 0) {
+    suite <- "cons"
+  } else if(length(grep("ag", suite)) > 0) {
+    if (is.na(age)) {
+      stop("Age variable required for age-based and age-by-stage MPMs.", call. = FALSE)
+    }
+    suite <- "cons"
+  }
+  
+  models_to_estimate <- c(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)
+  
+  if (length(grep("su", vitalrates)) > 0) {
+    vitalrates[grep("su", vitalrates)] <- "surv"
+    models_to_estimate[1] <- 1
+  }
+  if (length(grep("sr", vitalrates)) > 0) {
+    vitalrates[grep("sr", vitalrates)] <- "surv"
+    models_to_estimate[1] <- 1
+  }
+  if (length(grep("ob", vitalrates)) > 0) {
+    vitalrates[grep("ob", vitalrates)] <- "obs"
+    models_to_estimate[2] <- 1
+  }
+  if (length(grep("si", vitalrates)) > 0) {
+    vitalrates[grep("si", vitalrates)] <- "size"
+    models_to_estimate[3] <- 1
+  }
+  if (length(grep("sz", vitalrates)) > 0) {
+    vitalrates[grep("sz", vitalrates)] <- "size"
+    models_to_estimate[3] <- 1
+  }
+  if (length(grep("re", vitalrates)) > 0) {
+    vitalrates[grep("re", vitalrates)] <- "repst"
+    models_to_estimate[6] <- 1
+  }
+  if (length(grep("rp", vitalrates)) > 0) {
+    vitalrates[grep("rp", vitalrates)] <- "repst"
+    models_to_estimate[6] <- 1
+  }
+  if (length(grep("fe", vitalrates)) > 0) {
+    vitalrates[grep("fe", vitalrates)] <- "fec"
+    models_to_estimate[7] <- 1
+  }
+  if (length(grep("fc", vitalrates)) > 0) {
+    vitalrates[grep("fc", vitalrates)] <- "fec"
+    models_to_estimate[7] <- 1
+  }
+  if (length(vitalrates) == 1 & length(grep("lesl", vitalrates)) > 0) {
+    vitalrates <- c("surv", "fec")
+    models_to_estimate[1] <- 1
+    models_to_estimate[7] <- 1
+  }
+  
+  distoptions <- c("gaussian", "poisson", "negbin", "gamma")
+  packoptions <- c("mixed", "glm") #The mixed option now handles all mixed models
+  
+  if (length(censor) > 3) {
+    stop("Censor variables should be included either as 1 variable per row in the
+      historical data frame (1 variable in the dataset), or as 1 variable for each of
+      occasions t+1, t, and, if historical, t-1 (2 or 3 variables in the data frame).
+      No more than 3 variables are allowed. If more than one are supplied, then they
+      are assumed to be in order of occasion t+1, t, and t-1, respectively.",
+      call. = FALSE)
+  }
+  if (length(indiv) > 1) {
+    stop("Only one individual identification variable is allowed.",
+      call. = FALSE)
+  }
+  if (length(year) > 1) {
+    stop("Only one time variable is allowed, and it must refer to time t.", call. = FALSE)
+  }
+  if (length(patch) > 1) {
+    stop("Only one patch variable is allowed.", call. = FALSE)
+  }
+  if (length(density) > 1) {
+    stop("Only one density variable is allowed.", call. = FALSE)
+  }
+  if (length(age) > 1) {
+    stop("Only one age variable is allowed.", call. = FALSE)
+  }
+  
+  if (is.element("surv", vitalrates)) {
+    if (length(surv) > 3 | length(surv) == 1) {
+      stop("This function requires 2 (if ahistorical) or 3 (if historical)
+        survival variables as input parameters.", call. = FALSE)}
+    if (all(is.numeric(surv))) {
+      if (any(surv < 1) | any(surv > total_vars)) {
+        stop("Survival variables do not match data frame.",
+          call. = FALSE)
+      } else {
+        surv <- names(data)[surv]
+      }
+    }
+    if (any(!is.element(surv, names(data)))) {
+      stop("Survival variables must match data frame.", call. = FALSE)
+    }
+  }
+  
+  if (is.element("obs", vitalrates)) {
+    if (length(obs) > 3 | length(obs) == 1) {
+      stop("This function requires 2 (if ahistorical) or 3 (if historical)
+        observation variables as input parameters.",
+        call. = FALSE)}
+    if (all(is.numeric(obs))) {
+      if (any(obs < 1) | any(obs > total_vars)) {
+        stop("Observation variables do not match data frame.",
+          call. = FALSE)
+      } else {
+       obs <- names(data)[obs]
+      }
+    }
+    if (any(!is.element(obs, names(data)))) {
+      stop("Observation status variables must match data frame.",
+        call. = FALSE)
+    }
+  }
+  
+  if (is.element("size", vitalrates)) {
+    if (length(size) > 3 | length(size) == 1) {
+      stop("This function requires 2 (if ahistorical) or 3 (if historical) size
+        variables as input parameters.", call. = FALSE)}
+    if (all(is.numeric(size))) {
+      if (any(size < 1) | any(size > total_vars)) {
+        stop("Size variables do not match data frame.",
+          call. = FALSE)
+      } else {
+        size <- names(data)[size]
+      }
+    }
+    if (any(!is.element(size, names(data)))) {
+      stop("Size variables must match data frame.", call. = FALSE)
+    }
+    if (all(!is.na(sizeb))) {
+      if (is.na(sizebdist)) {
+        stop("Need valid choice of distribution for secondary size.", call. = FALSE)
+      }
+      if (length(sizeb) > 3 | length(sizeb) == 1) {
+        stop("This function requires 2 (if ahistorical) or 3 (if historical)
+          secondary size variables as input parameters.",
+          call. = FALSE)}
+      if (all(is.numeric(sizeb))) {
+        if (any(sizeb < 1) | any(sizeb > total_vars)) {
+          stop("Secondary size variables do not match data frame.",
+            call. = FALSE)
+        } else {
+          sizeb <- names(data)[sizeb]
+        }
+      }
+      if (any(!is.element(sizeb, names(data)))) {
+        stop("Secondary size variables must match data frame.",
+          call. = FALSE)
+      }
+      sizeb_used <- 1
+    }
+    if (all(!is.na(sizec))) {
+      if (is.na(sizecdist)) {
+        stop("Need valid choice of distribution for tertiary size.", call. = FALSE)
+      }
+      if (length(sizec) > 3 | length(sizec) == 1) {
+        stop("This function requires 2 (if ahistorical) or 3 (if historical)
+          tertiary size variables as input parameters.",
+          call. = FALSE)}
+      if (all(is.numeric(sizec))) {
+        if (any(sizec < 1) | any(sizec > total_vars)) {
+          stop("Tertiary size variables do not match data frame.",
+            call. = FALSE)
+        } else {
+          sizec <- names(data)[sizec]
+        }
+      }
+      if (any(!is.element(sizec, names(data)))) {
+        stop("Tertiary size variables must match data frame.",
+          call. = FALSE)
+      }
+      sizec_used <- 1
+    }
+  }
+  
+  if (is.element("repst", vitalrates)) {
+    if (length(repst) > 3 | length(repst) == 1) {
+      stop("This function requires 2 (if ahistorical) or 3 (if historical)
+        reproductive status variables as input parameters.",
+        call. = FALSE)}
+    if (all(is.numeric(repst))) {
+      if (any(repst < 1) | any(repst > total_vars)) {
+        stop("Reproductive status variables do not match data frame.",
+          call. = FALSE)
+      } else {
+        repst <- names(data)[repst]
+      }
+    }
+    if (any(!is.element(repst, names(data)))) {
+      stop("Reproductive status variables must match data frame.",
+        call. = FALSE)
+    }
+  }
+  
+  if (is.element("fec", vitalrates)) {
+    if (length(fec) > 3 | length(fec) == 1) {
+      stop("This function requires 2 (if ahistorical) or 3 (if historical)
+        fecundity variables as input parameters.",
+        call. = FALSE)}
+    if (all(is.numeric(fec))) {
+      if (any(fec < 1) | any(fec > total_vars)) {
+        stop("Fecundity variables do not match data frame.",
+          call. = FALSE)
+      } else {
+        fec <- names(data)[fec]
+      }
+    }
+    if (any(!is.element(fec, names(data)))) {
+      stop("Fecundity variables must match data frame.",
+        call. = FALSE)
+    }
+  }
+  
+  if (fectime != 2 & fectime != 3) {
+    stop("fectime must equal 2 or 3, depending on whether fecundity occurs in
+      time t or t+1, respectively (the default is 2).", call. = FALSE)
+  }
+  
+  if (all(!is.na(age))) {
+    if (all(is.numeric(age))) {
+      if (age > 0 & age <= total_vars) {
+        agecol <- age
+        age <- names(data)[agecol]
+      }
+    } else if (length(which(names(data) == age)) == 0) {
+      stop("Variable age must either equal the name of the variable denoting age,
+        or be set to NA.", call. = FALSE)
+    } else {
+      agecol <- which(names(data) == age)
+    }
+    extra_factors <- extra_factors + 1
+  } else {age <- "none"}
+  
+  if (any(!is.na(indcova))) {
+    if (length(indcova) > 3) {
+      warning("Vector indcova holds the exact names of an individual covariate across
+        times t+1, t, and t-1. Only the first three elements will be used.",
+        call. = FALSE)
+      indcova <- indcova[1:3]
+      indcova_used <- TRUE
+    } else if (length(indcova) == 1) {
+      warning("Vector indcova requires the names of an individual covariate across
+        times t+1, t, and, if historical, t-1. Only 1 variable name was supplied,
+        so this individual covariate will not be used.", call. = FALSE)
+      indcova <- c("none", "none", "none")
+    }
+    
+    if (all(is.numeric(indcova), na.rm = TRUE)) {
+      if (all(indcova > 0, na.rm = TRUE) & all(indcova <= total_vars)) {
+        indcova2col <- indcova[2]
+        if (!is.na(indcova[3])) indcova1col <- indcova[3]
+        indcova_used <- TRUE
+      }
+    } else {
+      if (length(which(names(data) == indcova[2])) == 0 && indcova[2] != "none") {
+        stop("Vector indcova must either equal either the exact names of an
+          individual covariate across occasions t+1, t, and t-1, or be set to NA.",
+          call. = FALSE)
+      } else {
+        indcova2col <- which(names(data) == indcova[2])
+        indcova_used <- TRUE
+      }
+      
+      if (length(indcova) == 3) {
+        if (length(which(names(data) == indcova[3])) == 0 && indcova[3] != "none") {
+          stop("Vector indcova must either equal either the exact names of an
+            individual covariate across occasions t+1, t, and t-1, or be set to NA.",
+            call. = FALSE)
+        } else {
+          indcova1col <- which(names(data) == indcova[3])
+          indcova_used <- TRUE
+        }
+      } else {
+        indcova[3] <- "none"
+      }
+    }
+  } else {indcova <- c("none", "none", "none")}
+  
+  if (indcova_used & !random.indcova) {
+    extra_factors <- extra_factors + 1
+  }
+  
+  if (any(!is.na(indcovb))) {
+    if (length(indcovb) > 3) {
+      warning("Vector indcovb holds the exact names of an individual covariate
+        across times t+1, t, and t-1. Only the first three elements will be used.",
+        call. = FALSE)
+      indcovb <- indcovb[1:3]
+      indcovb_used <- TRUE
+    } else if (length(indcovb) == 1) {
+      warning("Vector indcovb requires the names of an individual covariate across
+        times t+1, t, and, if historical, t-1. Only 1 variable name was supplied,
+        so this individual covariate will not be used.", call. = FALSE)
+      indcovb <- c("none", "none", "none")
+    }
+    
+    if (all(is.numeric(indcovb), na.rm = TRUE)) {
+      if (all(indcovb > 0, na.rm = TRUE) & all(indcovb <= total_vars)) {
+        indcovb2col <- indcovb[2]
+        if (!is.na(indcovb[3])) indcovb1col <- indcovb[3]
+        indcovb_used <- TRUE
+      }
+    } else {
+      if (length(which(names(data) == indcovb[2])) == 0 && indcovb[2] != "none") {
+        stop("Vector indcovb must either equal either the exact names of an
+          individual covariate across times t+1, t, and t-1, or be set to NA.",
+          call. = FALSE)
+      } else {
+        indcovb2col <- which(names(data) == indcovb[2])
+        indcovb_used <- TRUE
+      }
+      
+      if (length(indcovb) == 3) {
+        if (length(which(names(data) == indcovb[3])) == 0 && indcovb[3] != "none") {
+          stop("Vector indcovb must either equal either the exact names of an
+            individual covariate across times t+1, t, and t-1, or be set to NA.",
+            call. = FALSE)
+        } else {
+          indcovb1col <- which(names(data) == indcovb[3])
+          indcovb_used <- TRUE
+        }
+      } else {
+        indcovb[3] <- "none"
+      }
+    }
+  } else {indcovb <- c("none", "none", "none")}
+  
+  if (indcovb_used & !random.indcovb) {
+    extra_factors <- extra_factors + 1
+  }
+  
+  if (any(!is.na(indcovc))) {
+    if (length(indcovc) > 3) {
+      warning("Vector indcovc holds the exact names of an individual covariate
+        across times t+1, t, and t-1. Only the first three elements will be used.",
+        call. = FALSE)
+      indcovc <- indcovc[1:3]
+      indcovc_used <- TRUE
+    } else if (length(indcovc) == 1) {
+      warning("Vector indcovc requires the names of an individual covariate across
+        times t+1, t, and, if historical, t-1. Only 1 variable name was supplied,
+        so this individual covariate will not be used.", call. = FALSE)
+      indcovc <- c("none", "none", "none")
+    } 
+    
+    if (all(is.numeric(indcovc), na.rm = TRUE)) {
+      if (all(indcovc > 0, na.rm = TRUE) & all(indcovc <= total_vars)) {
+        indcovc2col <- indcovc[2]
+        if (!is.na(indcovc[3])) indcovc1col <- indcovc[3]
+        indcovc_used <- TRUE
+      }
+    } else {
+      if (length(which(names(data) == indcovc[2])) == 0 && indcovc[2] != "none") {
+        stop("Vector indcovc must either equal either the exact names of an
+          individual covariate across times t+1, t, and t-1, or be set to NA.",
+          call. = FALSE)
+      } else {
+        indcovc2col <- which(names(data) == indcovc[2])
+        indcovc_used <- TRUE
+      }
+      
+      if (length(indcovc) == 3) {
+        if (length(which(names(data) == indcovc[3])) == 0 && indcovc[3] != "none") {
+          stop("Vector indcovc must either equal either the exact names of an
+            individual covariate across times t+1, t, and t-1, or be set to NA.",
+            call. = FALSE)
+        } else {
+          indcovc1col <- which(names(data) == indcovc[3])
+          indcovc_used <- TRUE
+        }
+      } else {
+        indcovc[3] <- "none"
+      }
+    }
+  } else {indcovc <- c("none", "none", "none")}
+  
+  if (indcovc_used & !random.indcovc) {
+    extra_factors <- extra_factors + 1
+  }
+  
+  if (!is.na(indiv)) {
+    if (!is.numeric(indiv) & length(which(names(data) == indiv)) == 0) {
+      stop("Variable indiv must either equal the exact name of the variable denoting
+        individual identity in the dataset, or be set to NA.", call. = FALSE)
+    } else if (is.character(indiv)){
+      indivcol <- which(names(data) == indiv)
+      
+      if (any(is.na(data[,indivcol])) ) {
+        warning("NAs in individual ID variable may cause unexpected behavior in mixed
+          model building. Please rename all individuals with unique names, avoiding NAs.",
+          call. = FALSE)
+      }
+    } else if (is.numeric(indiv)) {
+      if (any(indiv < 1) | any(indiv > total_vars)) {
+        stop("Unable to interpret indiv variable.", call. = FALSE)
+      } else {
+        indivcol <- indiv
+        indiv <- names(data)[indivcol]
+      }
+    } else {
+      stop("Unable to interpret indiv variable.", call. = FALSE)
+    }
+  } else {indiv <- "none"}
+  
+  if (!is.na(patch)) {
+    if (!is.numeric(patch) & length(which(names(data) == patch)) == 0) {
+      stop("Variable patch must either equal the exact name of the variable denoting
+        patch identity in the dataset, or be set to NA.", call. = FALSE)
+    } else if (is.character(patch)) {
+      patchcol <- which(names(data) == patch)
+    } else if (is.numeric(patch)) {
+      if (any(patch < 1) | any(patch > total_vars)) {
+        stop("Unable to interpret patch variable.", call. = FALSE)
+      } else {
+        patchcol <- patch  # Used to be names(data)[patch]
+        patch <- names(data)[patchcol] 
+      }
+    } else {
+      stop("Unable to interpret patch variable.", call. = FALSE)
+    }
+  } else {patch <- "none"}
+  
+  if (patchcol > 0 & !patch.as.random) {
+    extra_factors <- extra_factors + 1
+  }
+  
+  if (!is.na(year)) {
+    if (!is.numeric(year) & length(which(names(data) == year)) == 0) {
+      stop("Variable year must either equal the exact name of the variable denoting
+        occasion t in the dataset, or be set to NA.", call. = FALSE)
+    } else if (is.character(year)) {
+      yearcol <- which(names(data) == year)
+    } else if (is.numeric(year)) {
+      if (any(year < 1) | any(year > total_vars)) {
+        stop("Unable to interpret year variable.", call. = FALSE)
+      } else {
+        yearcol <- year  # Used to be names(data)[year]
+        year <- names(data)[yearcol] 
+      }
+    } else {
+      stop("Unable to interpret year variable.", call. = FALSE)
+    }
+  } else {year <- "none"}
+  
+  if (yearcol > 0 & !year.as.random) {
+    extra_factors <- extra_factors + 1
+  }
+  
+  if (!is.na(density)) {
+    if (!is.numeric(density) & length(which(names(data) == density)) == 0) {
+      stop("Variable density must either equal the exact name of the variable
+        denoting spatial density in occasion t in the dataset, or be set to NA.",
+        call. = FALSE)
+    } else if (is.character(density)) {
+      if (is.element(density, names(data))) {
+        density_used <- TRUE
+      } else {
+        stop("Unable to interpret density variable.", call. = FALSE)
+      }
+    } else if (is.numeric(density)) {
+      if (any(density < 1) | any(density > total_vars)) {
+        stop("Unable to interpret density variable.", call. = FALSE)
+      } else {
+        density <- names(data)[density]
+        density_used <- TRUE
+      }
+    } else {
+      stop("Unable to interpret density variable.", call. = FALSE)
+    }
+  } else {density <- "none"}
+  
+  if (density_used) {
+    extra_factors <- extra_factors + 1
+  }
+  
+  # Here we test the dataset for appropriate stage names
+  if (!is.na(juvestimate)) {
+    if (!any(is.element(stage, names(data)))) {
+      stop("Names of stage variables do not match the dataset.", call. = FALSE)}
+    
+    stage3col <- which(names(data) == stage[1])
+    stage2col <- which(names(data) == stage[2])
+    if (length(stage) == 3) {stage1col <- which(names(data) == stage[3])} else {stage1col <- 0}
+    
+    if (!is.element(juvestimate, unique(data[,stage2col]))) {
+      stop("The stage declared as juvenile via juvestimate is not recognized within
+        the stage2 variable in the dataset.", call. = FALSE)
+    }
+    if (length(matstat) > 3 | length(matstat) == 1) {
+      stop("This function requires 2 (if ahistorical) or 3 (if historical) maturity status
+        variables as input parameters if juvenile parameters are to be estimated.",
+        call. = FALSE)}
+    if (all(is.numeric(matstat))) {
+      if (any(matstat < 1) | any(matstat > total_vars)) {
+        stop("Maturity status variables do not match data frame.",
+          call. = FALSE)
+      } else {
+        matstat <- names(data)[matstat]
+      }
+    }
+    if (any(!is.element(matstat, names(data)))) {
+      stop("Maturity status variables must match data frame.",
+        call. = FALSE)
+    }
+  }
+  
+  if (!is.logical(juvsize)) {
+    stop("Option juvsize must be set to either TRUE or FALSE.", call. = FALSE)
+  }
+  
+  {
+    if (random.indcova | random.indcovb | random.indcovc) {
+      warning("Random covariates can only be included in mixed models. Setting
+        random.indcova, random.indcovb, and random.indcovc to FALSE.",
+        call. = FALSE)
+      random.indcova <- FALSE
+      random.indcovb <- FALSE
+      random.indcovc <- FALSE
+    }
+    
+  }
+  
+  #Now we need to create the input datasets
+  if (!all(is.na(censor))) {
+    if (length(censor) == 1) {
+      data$censor2 <- data[, which(names(data) == censor[1])]
+    } else {
+      data$censor3 <- data[, which(names(data) == censor[1])]
+      data$censor2 <- data[, which(names(data) == censor[2])]
+      if (length(censor) > 2) {
+        data$censor1 <- data[, which(names(data) == censor[3])]
+      }
+    }
+  } else {
+    data$censor2 <- 1
+  }
+  data <- subset(data, censor2 == 1)
+  
+  if (!all(is.na(censor))) {
+    if (length(censor) > 1) {
+      data <- subset(data, censor3 == 1)
+      if (length(censor) > 2) {
+        data <- subset(data, censor1 == 1)
+      }
+    }
+  }
+  
+  if (!is.na(juvestimate)) {
+    juvindivs <- which(data[,stage2col] == juvestimate)
+    adultindivs <- setdiff(c(1:length(data[,stage2col])), juvindivs)
+    
+    if (models_to_estimate[1] == 1) {models_to_estimate[8] = 1}
+    juvsurv.data <- subset(data, data[,stage2col] == juvestimate & data[,which(names(data) == surv[2])] == 1)
+    juvsurv.ind <- length(unique(juvsurv.data[, which(names(juvsurv.data) == indiv)]))
+    juvsurv.trans <- dim(juvsurv.data)[1]
+    
+    if (suite == "full" | suite == "main" | suite == "size") {
+      if (any(is.na(juvsurv.data[, which(names(juvsurv.data) == size[2])]))) {
+        warning("NAs in size variables may cause model selection to fail.",
+          call. = FALSE)
+      }
+      
+      if (historical == TRUE) {
+        if (any(is.na(juvsurv.data[, which(names(juvsurv.data) == size[3])]))) {
+          warning("NAs in size variables may cause model selection to fail.",
+            call. = FALSE)
+        }
+      }
+    }
+    
+    if (suite == "full" | suite == "main" | suite == "rep") {
+      if (any(is.na(juvsurv.data[, which(names(juvsurv.data) == repst[2])]))) {
+        warning("NAs in reproductive status variables may cause model selection to fail.",
+          call. = FALSE)
+      }
+      
+      if (historical == TRUE) {
+        if (any(is.na(juvsurv.data[, which(names(juvsurv.data) == repst[3])]))) {
+          warning("NAs in reproductive status variables may cause model selection to fail.",
+            call. = FALSE)
+        }
+      }
+    }
+    
+    if (is.element(0, juvsurv.data$matstatus3)) {
+      warning("Function modelsearch() assumes that all juveniles either die or transition
+        to maturity within 1 year. Some individuals in this dataset appear to live
+        longer as juveniles than assumptions allow.", call. = FALSE)
+    }
+    
+    juvobs.data <- subset(juvsurv.data, juvsurv.data[, which(names(juvsurv.data) == surv[1])] == 1)
+    juvobs.ind <- length(unique(juvobs.data[, which(names(juvobs.data) == indiv)]))
+    juvobs.trans <- dim(juvobs.data)[1]
+    
+    if (models_to_estimate[2] == 1) {
+      models_to_estimate[9] == 1
+      juvsize.data <- subset(juvobs.data, juvobs.data[, which(names(juvobs.data) == obs[1])] == 1)
+      juvsize.data <- juvsize.data[which(!is.na(juvsize.data[, which(names(juvsize.data) == size[1])])),]
+      
+      if (sizeb_used) {
+        juvsizeb.data <- subset(juvobs.data, juvobs.data[, which(names(juvobs.data) == obs[1])] == 1)
+        juvsizeb.data <- juvsizeb.data[which(!is.na(juvsizeb.data[, which(names(juvsizeb.data) == sizeb[1])])),]
+      }
+      
+      if (sizec_used) {
+        juvsizec.data <- subset(juvobs.data, juvobs.data[, which(names(juvobs.data) == obs[1])] == 1)
+        juvsizec.data <- juvsizec.data[which(!is.na(juvsizec.data[, which(names(juvsizec.data) == sizec[1])])),]
+      }
+    } else {
+      juvsize.data <- juvobs.data
+      juvsize.data <- juvsize.data[which(!is.na(juvsize.data[, which(names(juvsize.data) == size[1])])),]
+      
+      if (sizeb_used) {
+        juvsizeb.data <- juvobs.data
+        juvsizeb.data <- juvsizeb.data[which(!is.na(juvsizeb.data[, which(names(juvsizeb.data) == sizeb[1])])),]
+      }
+      
+      if (sizec_used) {
+        juvsizec.data <- juvobs.data
+        juvsizec.data <- juvsizec.data[which(!is.na(juvsizec.data[, which(names(juvsizec.data) == sizec[1])])),]
+      }
+    }
+    juvsize.ind <- length(unique(juvsize.data[, which(names(juvsize.data) == indiv)]))
+    juvsize.trans <- dim(juvsize.data)[1]
+    
+    if (sizeb_used) {
+      juvsizeb.ind <- length(unique(juvsizeb.data[, which(names(juvsizeb.data) == indiv)]))
+      juvsizeb.trans <- dim(juvsizeb.data)[1]
+    }
+    if (sizec_used) {
+      juvsizec.ind <- length(unique(juvsizec.data[, which(names(juvsizec.data) == indiv)]))
+      juvsizec.trans <- dim(juvsizec.data)[1]
+    }
+    
+    juvrepst.data <- juvsize.data
+    juvrepst.ind <- length(unique(juvrepst.data[, which(names(juvrepst.data) == indiv)]))
+    juvrepst.trans <- dim(juvrepst.data)[1]
+    
+    data <- data[adultindivs,] #This line resets the main dataset to adults only
+  }
+  
+  surv.data <- subset(data, data[,which(names(data) == surv[2])] == 1)
+  surv.ind <- length(unique(surv.data[, which(names(surv.data) == indiv)]))
+  surv.trans <- dim(surv.data)[1]
+  
+  if(any(!suppressWarnings(!is.na(as.numeric(as.character(surv.data[, which(names(surv.data) == size[1])])))))) {
+    warning("Modelsearch(), flefko3(), flefko2(), and aflefko2() are made to work
+      with numeric size variables. Use of categorical variables may result in
+      errors and unexpected behavior.", call. = FALSE)
+  }
+  if (suite == "full" | suite == "main" | suite == "size") {
+    if (any(is.na(surv.data[, which(names(surv.data) == size[2])]))) {
+      warning("NAs in size variables may cause model selection to fail.",
+        call. = FALSE)
+    }
+    if (sizeb_used) {
+      if (any(is.na(surv.data[, which(names(surv.data) == sizeb[2])]))) {
+        warning("NAs in size variables may cause model selection to fail.",
+          call. = FALSE)
+      }
+    }
+    if (sizec_used) {
+      if (any(is.na(surv.data[, which(names(surv.data) == sizec[2])]))) {
+        warning("NAs in size variables may cause model selection to fail.",
+          call. = FALSE)
+      }
+    }
+    
+    if (historical == TRUE) {
+      if (any(is.na(surv.data[, which(names(surv.data) == size[3])]))) {
+        warning("NAs in size variables may cause model selection to fail.",
+          call. = FALSE)
+      }
+      if (sizeb_used) {
+        if (any(is.na(surv.data[, which(names(surv.data) == sizeb[3])]))) {
+          warning("NAs in size variables may cause model selection to fail.",
+            call. = FALSE)
+        }
+      }
+      if (sizec_used) {
+        if (any(is.na(surv.data[, which(names(surv.data) == sizec[3])]))) {
+          warning("NAs in size variables may cause model selection to fail.",
+            call. = FALSE)
+        }
+      }
+    }
+  }
+  if (suite == "full" | suite == "main" | suite == "rep") {
+    if (any(is.na(surv.data[, which(names(surv.data) == repst[2])]))) {
+      warning("NAs in reproductive status variables may cause model selection to fail.",
+        call. = FALSE)
+    }
+    
+    if (historical == TRUE) {
+      if (any(is.na(surv.data[, which(names(surv.data) == repst[3])]))) {
+        warning("NAs in reproductive status variables may cause model selection to fail.",
+          call. = FALSE)
+      }
+    }
+  }
+  
+  obs.data <- subset(surv.data, surv.data[, which(names(surv.data) == surv[1])] == 1)
+  obs.ind <- length(unique(obs.data[, which(names(obs.data) == indiv)]))
+  obs.trans <- dim(obs.data)[1]
+  
+  if (models_to_estimate[2] == 1) {
+    size.data <- subset(obs.data, obs.data[, which(names(obs.data) == obs[1])] == 1)
+    size.data <- size.data[which(!is.na(size.data[, which(names(size.data) == size[1])])),]
+    
+    if (sizeb_used) {
+      sizeb.data <- subset(obs.data, obs.data[, which(names(obs.data) == obs[1])] == 1)
+      sizeb.data <- sizeb.data[which(!is.na(sizeb.data[, which(names(sizeb.data) == sizeb[1])])),]
+    }
+    if (sizec_used) {
+      sizec.data <- subset(obs.data, obs.data[, which(names(obs.data) == obs[1])] == 1)
+      sizec.data <- sizec.data[which(!is.na(sizec.data[, which(names(sizec.data) == sizec[1])])),]
+    }
+  } else {
+    size.data <- obs.data
+    size.data <- size.data[which(!is.na(size.data[, which(names(size.data) == size[1])])),]
+    
+    if (sizeb_used) {
+      sizeb.data <- obs.data
+      sizeb.data <- sizeb.data[which(!is.na(sizeb.data[, which(names(sizeb.data) == sizeb[1])])),]
+    }
+    if (sizec_used) {
+      sizec.data <- obs.data
+      sizec.data <- sizec.data[which(!is.na(sizec.data[, which(names(sizec.data) == sizec[1])])),]
+    }
+  }
+  size.ind <- length(unique(size.data[, which(names(size.data) == indiv)]))
+  size.trans <- dim(size.data)[1]
+  
+  if (sizeb_used) {
+    sizeb.ind <- length(unique(sizeb.data[, which(names(sizeb.data) == indiv)]))
+    sizeb.trans <- dim(sizeb.data)[1]
+  }
+  if (sizec_used) {
+    sizec.ind <- length(unique(sizec.data[, which(names(sizec.data) == indiv)]))
+    sizec.trans <- dim(sizec.data)[1]
+  }
+  
+  repst.data <- size.data
+
+  if (models_to_estimate[6] == 1) {
+    if (fectime == 2) {
+      fec.data <- subset(surv.data, surv.data[, which(names(repst.data) == repst[2])] == 1)
+      fec.data <- fec.data[which(!is.na(fec.data[, which(names(fec.data) == fec[2])])),]
+    } else if (fectime == 3) {
+      fec.data <- subset(surv.data, surv.data[, which(names(repst.data) == repst[1])] == 1)
+      fec.data <- fec.data[which(!is.na(fec.data[, which(names(fec.data) == fec[1])])),]
+    }
+  } else {
+    fec.data <- surv.data
+    if (fectime == 2) {
+      fec.data <- fec.data[which(!is.na(fec.data[, which(names(fec.data) == fec[2])])),]
+    } else if (fectime == 3) {
+      fec.data <- fec.data[which(!is.na(fec.data[, which(names(fec.data) == fec[1])])),]
+    }
+  }
+  fec.ind <- length(unique(fec.data[, which(names(fec.data) == indiv)]))
+  fec.trans <- dim(fec.data)[1]
+  
+  if (is.element("fec", vitalrates)) {
+    if (fectime == 2) {
+      usedfec <- which(names(fec.data) == fec[2])
+    } else if (fectime == 3) {
+      usedfec <- which(names(fec.data) == fec[1])
+    }
+  }
+  
+  # The major variable tests
+  if (is.data.frame(surv.data)) {
+    writeLines("Survival:\n")
+    writeLines(paste0("  Data subset has ", dim(surv.data)[2], " variables and ",
+      dim(surv.data)[1], " transitions.\n"))
+    
+    .intbin_check(surv.data, surv[1])
+  }
+  if (is.data.frame(obs.data)) {
+    writeLines("\nObservation status:\n")
+    writeLines(paste0("  Data subset has ", dim(obs.data)[2], " variables and ",
+      dim(obs.data)[1], " transitions.\n"))
+    
+    .intbin_check(obs.data, obs[1])
+  }
+  
+  if (is.data.frame(size.data)) {
+    writeLines("\nPrimary size:\n")
+    writeLines(paste0("  Data subset has ", dim(size.data)[2], " variables and ",
+      dim(size.data)[1], " transitions.\n"))
+    
+    .sf_dist_check(size.data, size[1], size[2])
+  }
+  if (is.data.frame(sizeb.data)) {
+    writeLines("\nSecondary size:\n")
+    writeLines(paste0("  Data subset has ", dim(sizeb.data)[2], " variables and ",
+      dim(sizeb.data)[1], " transitions.\n"))
+    
+    .sf_dist_check(sizeb.data, sizeb[1], sizeb[2])
+  }
+  if (is.data.frame(sizec.data)) {
+    writeLines("\nTertiary size:\n")
+    writeLines(paste0("  Data subset has ", dim(sizec.data)[2], " variables and ",
+      dim(sizec.data)[1], " transitions.\n"))
+    
+    .sf_dist_check(sizec.data, sizec[1], sizec[2])
+  }
+  
+  if (is.data.frame(repst.data)) {
+    writeLines("\nReproductive status:\n")
+    writeLines(paste0("  Data subset has ", dim(repst.data)[2], " variables and ",
+      dim(repst.data)[1], " transitions.\n"))
+    
+    .intbin_check(repst.data, repst[1])
+  }
+  
+  if (is.data.frame(fec.data)) {
+    writeLines("\nFecundity:\n")
+    writeLines(paste0("  Data subset has ", dim(fec.data)[2], " variables and ",
+      dim(fec.data)[1], " transitions.\n"))
+    
+    if (fectime == 2) {
+      term2 <- size[2]
+    } else {
+      term2 <- size[1]
+    }
+    .sf_dist_check(fec.data, names(fec.data)[usedfec], term2)
+  }
+  
+  if (is.data.frame(juvsurv.data)) {
+    writeLines("\nJuvenile survival:\n")
+    writeLines(paste0("  Data subset has ", dim(juvsurv.data)[2], " variables and ",
+      dim(juvsurv.data)[1], " transitions.\n"))
+    
+    .intbin_check(juvsurv.data, surv[1])
+  }
+  if (is.data.frame(juvobs.data)) {
+    writeLines("\nJuvenile observation status:\n")
+    writeLines(paste0("  Data subset has ", dim(juvobs.data)[2], " variables and ",
+      dim(juvobs.data)[1], " transitions.\n"))
+    
+    .intbin_check(juvobs.data, obs[1])
+  }
+  
+  if (is.data.frame(juvsize.data)) {
+    writeLines("\nJuvenile primary size:\n")
+    writeLines(paste0("  Data subset has ", dim(juvsize.data)[2], " variables and ",
+      dim(juvsize.data)[1], " transitions.\n"))
+    
+    .sf_dist_check(juvsize.data, size[1], size[2])
+  }
+  if (is.data.frame(juvsizeb.data)) {
+    writeLines("\nJuvenile secondary size:\n")
+    writeLines(paste0("  Data subset has ", dim(juvsizeb.data)[2], " variables and ",
+      dim(juvsizeb.data)[1], " transitions.\n"))
+    
+    .sf_dist_check(juvsizeb.data, sizeb[1], sizeb[2])
+  }
+  if (is.data.frame(juvsizec.data)) {
+    writeLines("\nJuvenile tertiary size:\n")
+    writeLines(paste0("  Data subset has ", dim(juvsizec.data)[2], " variables and ",
+      dim(juvsizec.data)[1], " transitions.\n"))
+    
+    .sf_dist_check(juvsizec.data, sizec[1], sizec[2])
+  }
+  
+  if (is.data.frame(juvrepst.data)) {
+    writeLines("\nJuvenile reproductive status:\n")
+    writeLines(paste0("  Data subset has ", dim(juvrepst.data)[2], " variables and ",
+      dim(juvrepst.data)[1], " transitions.\n"))
+    
+    .intbin_check(juvrepst.data, repst[1])
+  }
+  if (is.data.frame(juvobs.data)) {
+    writeLines("\nJuvenile maturity status:\n")
+    writeLines(paste0("  Data subset has ", dim(juvobs.data)[2], " variables and ",
+      dim(juvobs.data)[1], " transitions.\n"))
+    
+    .intbin_check(juvobs.data, matstat[1])
+  }
 }
 

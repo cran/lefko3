@@ -13,6 +13,8 @@ using namespace arma;
 //' \eqn{\phi_{t+1} = \phi_t \alpha e^{-\beta n_t}}. Here, if no
 //' \code{separate_N} vector is provided, then \eqn{n_t = \phi_t}.
 //' 
+//' @name ricker3
+//' 
 //' @param start_value A positive number to start the return vector in time 0.
 //' @param alpha The alpha parameter in the two-parameter Ricker function. Must
 //' be non-negative.
@@ -145,6 +147,8 @@ Rcpp::NumericVector ricker3(double start_value, double alpha, double beta,
 //' The two-parameter Beverton-Holt function is given as 
 //' \eqn{\phi_{t+1} = \phi_t \alpha / (1 + \beta n_t)}. Here, if no
 //' \code{separate_N} vector is provided, then \eqn{n_t = \phi_t}.
+//' 
+//' @name beverton3
 //' 
 //' @param start_value A positive number to start the return vector in time 0.
 //' @param alpha The alpha parameter in the two-parameter Beverton-Holt
@@ -281,6 +285,8 @@ Rcpp::NumericVector beverton3(double start_value, double alpha, double beta,
 //' \eqn{\phi_{t+1} = \phi_t / (1 + e^{\alpha n_t + \beta})}. Here,
 //' if no \code{separate_N} vector is provided, then \eqn{n_t = \phi_t}.
 //' 
+//' @name usher3
+//' 
 //' @param start_value A positive number to start the return vector in time 0.
 //' @param alpha The alpha parameter in the two-parameter Usher
 //' function.
@@ -414,6 +420,8 @@ Rcpp::NumericVector usher3(double start_value, double alpha, double beta,
 //' if no \code{separate_N} vector is provided, then \eqn{n_t = \phi_t}. If
 //' \eqn{\lambda} is not provided, then it defaults to \code{1.0}.
 //' 
+//' @name logistic3
+//' 
 //' @param start_value A positive number to start the return vector in time 0.
 //' @param alpha The carrying capacity K.
 //' @param beta If set to some positive number, then this number is the maximum
@@ -544,3 +552,60 @@ Rcpp::NumericVector logistic3(double start_value, double alpha,
   }
   return output;
 }
+
+//' Function to Test Whether a Numeric Vector Is Composed Only of Integers
+//' 
+//' Function \code{.integer_test()} tests whether the elements of a numeric
+//' vector are integers.
+//' 
+//' @name .integer_test
+//' 
+//' @param numeric_input A numeric vector to be tested.
+//' 
+//' @return This function returns an integer equal to the number of elements
+//' that are not integers in \code{numeric_input}.
+//' 
+//' @keywords internal
+//' @noRd
+// [[Rcpp::export(.integer_test)]]
+int integer_test(NumericVector numeric_input) {
+  int vec_length = numeric_input.length();
+  int non_ints = 0;
+  
+  for (int i = 0; i < vec_length; i++) {
+    if (floor(numeric_input(i)) != ceil(numeric_input(i))) {
+      non_ints++;
+    }
+  }
+  
+  return non_ints;
+}
+
+//' Function to Test Whether an Integer Vector Is Entirely Binomial
+//' 
+//' Function \code{.binomial_test()} tests whether an integer vector is composed
+//' only of \code{0} and \code{1} elements.
+//' 
+//' @name .binomial_test
+//' 
+//' @param integer_input An integer vector to be tested.
+//' 
+//' @return This function returns an integer equal to the number of elements
+//' that are not \code{0}s and \code{1}s.
+//' 
+//' @keywords internal
+//' @noRd
+// [[Rcpp::export(.binomial_test)]]
+int binomial_test(NumericVector integer_input) {
+  int vec_length = integer_input.length();
+  int non_bins = 0;
+  
+  for (int i = 0; i < vec_length; i++) {
+    if (integer_input(i) < 0 || integer_input(i) > 1) {
+      non_bins++;
+    }
+  }
+  
+  return non_bins;
+}
+

@@ -142,7 +142,6 @@ ehrlen3mean <- lmean(ehrlen3)
 stablestage3(ehrlen3mean)
 
 # Cypripedium stochastic example
-rm(list=ls(all=TRUE))
 data(cypdata)
 
 sizevector <- c(0, 0, 0, 0, 0, 0, 1, 2.5, 4.5, 8, 17.5)

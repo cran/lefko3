@@ -3,6 +3,8 @@
 #' This function provides basic information summarizing the characteristics of
 #' conditional matrices derived from a \code{lefkoCondMat} object.
 #' 
+#' @name summary.lefkoCondMat
+#' 
 #' @param object An object of class \code{lefkoCondMat}.
 #' @param ... Other parameters.
 #' 
@@ -142,6 +144,8 @@ summary.lefkoCondMat <- function(object, ...) {
 #' \code{SparseM}, conducting all necessary conversions and automating image
 #' production across all or just specific matrices.
 #' 
+#' @name image3
+#' 
 #' @param mats A lefkoMat object, or a single projection matrix, for which the
 #' dominant eigenvalue is desired.
 #' @param ... Other parameters
@@ -197,8 +201,6 @@ summary.lefkoCondMat <- function(object, ...) {
 #' image3(ehrlen3, used = 1, type = "U")
 #' 
 #' # Cypripedium example
-#' rm(list=ls(all=TRUE))
-#' 
 #' data(cypdata)
 #' 
 #' sizevector <- c(0, 0, 0, 0, 0, 0, 1, 2.5, 4.5, 8, 17.5)
@@ -253,6 +255,8 @@ image3 <- function(mats, ...) UseMethod("image3")
 #' \code{\link[SparseM]{image}()} function in package \code{SparseM}, conducting
 #' all necessary conversions and automating image production across all or just
 #' specific matrices.
+#' 
+#' @name image3.lefkoMat
 #' 
 #' @param mats A \code{lefkoMat} object.
 #' @param used A numeric value or vector designating the matrices to plot. Can
@@ -398,6 +402,8 @@ image3.lefkoMat <- function(mats, used = "all", type = "A", ...) {
 #' function in package \code{SparseM}, conducting all necessary conversions and
 #' automating image production across all or just specific matrices.
 #' 
+#' @name image3.matrix
+#' 
 #' @param mats A \code{matrix} class object.
 #' @param ... Other parameters.
 #' 
@@ -505,6 +511,8 @@ image3.matrix <- function(mats, ...) {
 #' \code{\link[SparseM]{image}()} function in package \code{SparseM},
 #' conducting all necessary conversions and automating image production across
 #' all or just specific matrices.
+#' 
+#' @name image3.list
 #' 
 #' @param mats A \code{list} class object.
 #' @param used A numeric vector of projection matrices within \code{mats} to
@@ -635,6 +643,8 @@ image3.list <- function(mats, used = "all", ...) {
 #' the \code{\link[SparseM]{image}()} function in package \code{SparseM},
 #' conducting all necessary conversions and automating image production across
 #' all or just specific matrices.
+#' 
+#' @name image3.lefkoSens
 #' 
 #' @param mats A \code{lefkoSens} object.
 #' @param used A numeric value or vector designating the matrices to plot. Can
@@ -798,6 +808,8 @@ image3.lefkoSens <- function(mats, used = "all", type = "a", ...) {
 #' conducting all necessary conversions and automating image production across
 #' all or just specific matrices.
 #' 
+#' @name image3.lefkoElas
+#' 
 #' @param mats A \code{lefkoElas} object.
 #' @param used A numeric value or vector designating the matrices to plot. Can
 #' also take the value \code{"all"}, which plots all matrices. Defaults to
@@ -958,6 +970,8 @@ image3.lefkoElas <- function(mats, used = "all", type = "a", ...) {
 #' Function \code{diff_lM()} takes two \code{lefkoMat} objects with completely
 #' equal dimensions, including both the size and number of matrices, and
 #' gives the matrix differences between each corresponding set.
+#' 
+#' @name diff_lM
 #' 
 #' @param mpm1 The first \code{lefkoMat} object.
 #' @param mpm2 The second \code{lefkoMat} object.
@@ -1127,6 +1141,8 @@ diff_lM <- function(mpm1, mpm2) {
 #' A function to simplify the viewing of basic information describing
 #' demographic data in historical vertical format (data frames of class
 #' \code{hfvdata}).
+#' 
+#' @name summary_hfv
 #' 
 #' @param object An object of class \code{hfvdata}.
 #' @param popid A string denoting the name of the variable denoting population

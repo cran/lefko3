@@ -233,6 +233,16 @@ within function-based matrices in which survival transitions are estimated.
 These groups should not be set if transitions are possible between all
 stages regardless of group. To denote specific transitions as estimable
 between stage groups, use the \code{\link{supplemental}()} function.
+
+If importing an IPM rather than building one with \code{lefko3}: Using the
+\code{vrm_input} approach to building function-based MPMs with provided
+linear model slope coefficients requires careful attention to the
+stageframe. Although no hfv data frame needs to be entered in this instance,
+stages for which vital rates are to be estimated via linear models
+parameterized with coefficients provided via function
+\code{\link{vrm_import}()} should be marked as occurring within the dataset,
+while stages for which the provided coefficients should not be used should
+be marked as not occurring within the dataset.
 }
 
 \examples{

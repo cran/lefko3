@@ -8,7 +8,9 @@ using namespace arma;
 //' 
 //' Creates a list of conditional ahistorical matrices in the style noted in
 //' deVries and Caswell (2018).
-//'
+//' 
+//' @name .hoffmannofstuttgart
+//' 
 //' @param mainmat Historical matrix.
 //' @param indices Data frame including the stages at times \emph{t}-1,
 //' \emph{t}, and \emph{t}+1, asvwell as indices corresponding to elements in
@@ -66,6 +68,8 @@ List hoffmannofstuttgart(arma::mat mainmat, DataFrame indices, int ahstages,
 //' ahistorical matrices conditional upon stage in time \emph{t}-1. In effect,
 //' the function takes each historical matrix within a lefkoMat object, and
 //' forms one ahistorical matrix for each stage in time \emph{t}-1.
+//' 
+//' @name cond_hmpm
 //' 
 //' @param hmpm A historical matrix projection model of class \code{lefkoMat}.
 //' @param matchoice A character denoting whether to use A, U, or F matrices.
@@ -334,6 +338,8 @@ Rcpp::List cond_hmpm(List hmpm, Nullable<CharacterVector> matchoice = R_NilValue
 //' Function \code{cond_diff()} takes a set of historical difference matrices
 //' resulting from function \code{\link{diff_lM}()} and decomposes them into 
 //' ahistorical difference matrices conditional upon stage in time \emph{t}-1.
+//' 
+//' @name cond_diff
 //' 
 //' @param lDiff An object of class \code{lefkoDiff}.
 //' @param ref Choice of mpm to use as reference. Defaults to \code{1}, which

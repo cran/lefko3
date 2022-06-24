@@ -27,11 +27,9 @@ Figure 5.1. Life history model of *Cypripedium candidum*. Survival transitions a
 
   <p style="text-indent: 20px">We can see a variety of transitions within this figure. The juvenile stages are limited to fairly simple, progressive transitions. New recruits may enter the population directly from germination of a seed produced the previous year, in which case they start in the protocorm 1 stage, or they may begin as dormant seed. Dormant seed may remain dormant, die, or germinate into the protocorm 1 stage. Protocorms exist for up to 3 years, yielding the protocorm 1, 2, and 3 stages, without any possibility of staying within each of these stages for more than a single year. Protocorm 3 leads to a seedling stage, in which the plant may persist for many years before becoming mature. Here, maturity does not really refer to reproduction *per se*, but rather to a morphology indistinguishable from a reproductive plant except for the lack of a flower. The first mature stage is usually either vegetative dormancy (`Dorm`), during which time the plant does not sprout, or a small, non-flowering adult (`1V`). Once in this portion of the life history, the plant may transition among 49 mature stages, including vegetative dormancy, 1-24 shoots without flowers, or 1-24 shoots with at least one flower (we have never observed a plant bigger than this in the population).</p>
   
-  <p style="text-indent: 20px">The horizontal dataset `cypdata`, and the ahistorical vertical dataset `cypvert` which is the same as `cypdata` but is structured differently, both include only data for the adult stages, and so later we will need to set juvenile transitions to constants from the literature. Let's begin by clearing the memory, loading the package and the dataset, and looking over a summary of the latter.</p>
+  <p style="text-indent: 20px">The horizontal dataset `cypdata`, and the ahistorical vertical dataset `cypvert` which is the same as `cypdata` but is structured differently, both include only data for the adult stages, and so later we will need to set juvenile transitions to constants from the literature. Let's begin by loading the dataset, and looking over a summary.</p>
 
 ```r
-rm(list=ls(all=TRUE))
-library(lefko3)
 data(cypdata)
 #summary(cypdata)
 ```
@@ -71,7 +69,6 @@ comments <- c("Dormant seed", "Yr1 protocorm", "Yr2 protocorm", "Yr3 protocorm",
   "Flo adult 18 stems", "Flo adult 19 stems", "Flo adult 20 stems",
   "Flo adult 21 stems", "Flo adult 22 stems", "Flo adult 23 stems",
   "Flo adult 24 stems")
-
 cypframe <- sf_create(sizes = sizevector, stagenames = stagevector, 
   repstatus = repvector, obsstatus = obsvector, matstatus = matvector, 
   propstatus = propvector, immstatus = immvector, indataset = indataset,
@@ -116,36 +113,82 @@ hist(subset(vertdata, repstatus2 == 1)$feca2, main = "Fecundity in time t",
   <p style="text-indent: 20px">Stem number has a very low mean, and the curve declines fairly smoothly. The Poisson or negative binomial distribution might work for size. Fecundity appears to have many zeros, suggesting that we might need a zero-inflated count distribution. Let's conduct a formal set of tests to determine the appropriate distributions for size and fecundity. The size of zero is actually absorbed in an unobservable stage, vegetative dormancy (stage `D`), so we will not test for zero-inflation in the size variable. However, we will test for zero-inflation in fecundity, since fecundity is measured as the number of fruit pods produced, while all flowering individuals are treated as reproductive and so some individuals must have fecundity of zero.</p>
 
 ```r
-sf_distrib(vertdata, sizea = c("size3added", "size2added"), obs3 = "obsstatus3",
-  fec = c("feca3", "feca2"), repst = c("repstatus3", "repstatus2"),
-  zisizea = FALSE)
-#> Mean sizea is 3.653
+hfv_qc(data = vertdata, vitalrates = c("surv", "obs", "size", "repst", "fec"),
+  suite = "full", size = c("size3added", "size2added", "size1added"))
+#> Survival:
 #> 
-#> The variance in sizea is 13.41
+#>   Data subset has 55 variables and 320 transitions.
 #> 
-#> The probability of this dispersion level by chance assuming that
-#> the true mean sizea = variance in sizea,
-#> and an alternative hypothesis of overdispersion, is 3.721e-138
-#> 
-#> Primary size is significantly overdispersed.
-#> 
-#> Mean fec is 0.8036
-#> 
-#> The variance in fec is 1.601
-#> 
-#> The probability of this dispersion level by chance assuming that
-#> the true mean fec = variance in fec,
-#> and an alternative hypothesis of overdispersion, is 0.07088
-#> 
-#> Dispersion level in fecundity matches expectation.
+#>   Variable alive3 has 0 missing values.
+#>   Variable alive3 is a binomial variable.
 #> 
 #> 
-#> Mean lambda in fec is 0.4477
-#> The actual number of 0s in fec is 65
-#> The expected number of 0s in fec under the null hypothesis is 50.15
-#> The probability of this deviation in 0s from expectation by chance is 1.742e-06
+#> Observation status:
 #> 
-#> Fecundity is significantly zero-inflated.
+#>   Data subset has 55 variables and 303 transitions.
+#> 
+#>   Variable obsstatus3 has 0 missing values.
+#>   Variable obsstatus3 is a binomial variable.
+#> 
+#> 
+#> Primary size:
+#> 
+#>   Data subset has 55 variables and 288 transitions.
+#> 
+#>   Variable size3added has 0 missing values.
+#>   Variable size3added appears to be an integer variable.
+#> 
+#>   Variable size3added is fully positive, lacking even 0s.
+#> 
+#>   Overdispersion test:
+#>     Mean size3added is 3.653
+#>     The variance in size3added is 13.41
+#>     The probability of this dispersion level by chance assuming that
+#>     the true mean size3added = variance in size3added,
+#>     and an alternative hypothesis of overdispersion, is 3.721e-138
+#>     Variable size3added is significantly overdispersed.
+#> 
+#>   Zero-inflation and truncation tests:
+#>     Mean lambda in size3added is 0.02592
+#>     The actual number of 0s in size3added is 0
+#>     The expected number of 0s in size3added under the null hypothesis is 7.465
+#>     The probability of this deviation in 0s from expectation by chance is 0.9964
+#>     Variable size3added is not significantly zero-inflated.
+#> 
+#>     Variable size3added does not include 0s, suggesting that a zero-truncated distribution may be warranted.
+#> 
+#> 
+#> Reproductive status:
+#> 
+#>   Data subset has 55 variables and 288 transitions.
+#> 
+#>   Variable repstatus3 has 0 missing values.
+#>   Variable repstatus3 is a binomial variable.
+#> 
+#> 
+#> Fecundity:
+#> 
+#>   Data subset has 55 variables and 118 transitions.
+#> 
+#>   Variable feca2 has 0 missing values.
+#>   Variable feca2 appears to be an integer variable.
+#> 
+#>   Variable feca2 is fully non-negative.
+#> 
+#>   Overdispersion test:
+#>     Mean feca2 is 0.7881
+#>     The variance in feca2 is 1.536
+#>     The probability of this dispersion level by chance assuming that
+#>     the true mean feca2 = variance in feca2,
+#>     and an alternative hypothesis of overdispersion, is 0.1193
+#>     Dispersion level in feca2 matches expectation.
+#> 
+#>   Zero-inflation and truncation tests:
+#>     Mean lambda in feca2 is 0.4547
+#>     The actual number of 0s in feca2 is 68
+#>     The expected number of 0s in feca2 under the null hypothesis is 53.65
+#>     The probability of this deviation in 0s from expectation by chance is 5.904e-06
+#>     Variable feca2 is significantly zero-inflated.
 ```
   
   <p style="text-indent: 20px">The results of these tests show us that size is overdispersed. Since we have no zeros in size, we will use the zero-truncated negative binomial distribution for this vital rate. Our tests of fecundity show no significant overdispersion, but the number of zeros exceeds expectation, suggesting that we use a zero-inflated Poisson distribution.</p>
@@ -216,7 +259,6 @@ cypsupp3 <- supplemental(stage3 = c("SD", "SD", "P1", "P1", "P2", "P3", "SL",
     "S", "S", "S", "S", "S", "S", "S", "R", "R"), 
   type_t12 = c("S", "F", "S", "F", "S", "S", "S", "S", "S", "S", "S", "S", "S",
     "S", "S", "S", "S", "S", "S", "S", "S", "S", "S"), stageframe = cypframe)
-
 cypsupp2 <- supplemental(stage3 = c("SD", "P1", "P2", "P3", "SL", "SL", "D",
     "V1", "V2", "V3", "SD", "P1"), 
   stage2 = c("SD", "SD", "P1", "P2", "P3", "SL", "SL", "SL", "SL", "SL", "rep",

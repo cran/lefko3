@@ -14,6 +14,7 @@ knitr::opts_chunk$set(
   collapse = TRUE,
   comment = "#>"
 )
+library(lefko3)
 ```
 
   <p style="text-indent: 20px">In this vignette, we use the `lathyrus` dataset to illustrate the estimation of **age-by-stage function-based MPMs**. These are inherently ahistorical MPMs, and so we do not include historical analyses in this vignette. To reduce output size, we have prevented some statements from running if they produce long stretches of output. Examples include most `summary()` calls. In these cases, we include hashtagged versions of these calls, and our text assumes that the user runs these statements without hashtags. This vignette is only a sample analysis. Detailed information and instructions on using `lefko3` are available through a free online e-book called *lefko3: a gentle introduction*, available on <a href = "http://www.sheffersonlab.com/projects">the projects page</a> of the Shefferson lab website. This website also includes links to long-format vignettes and other demonstrations of this package.</p>
@@ -28,12 +29,8 @@ knitr::opts_chunk$set(
   
   <p style="text-indent: 20px">Our goal in this exercise will be to produce ahistorical, age-by-stage function-based matrices using the *Lathyrus* dataset. We will use a different approach to size classification than in previous vignettes, using the natural log of size instead of the normal size shown in the dataset. Our reasoning has to do with the fact that volume is used as the size metric here, and so should have an allometric relationship to some vital rates (note that all size metrics have allometric relationships, but this is clearer when size is based on something more strongly related to mass, as is volume). We will also create both reproductive and non-reproductive stages of the same size classes.</p>
   
-  <p style="text-indent: 20px">The dataset that we have provided is organized in horizontal format, meaning that each row holds all of the data for a single, unique individual, and columns correspond to individual condition in particular monitoring occasions (which we refer to as *years* here, since there was one main census in each year). The original spreadsheet file used to keep the dataset has a repeating pattern to these columns, with each year having a similarly arranged group of variables. Package `lefko3` includes functions to handle data in horizontal format, as well as vertically formatted data (i.e. data for individuals is broken up across rows, where each row is a unique combination of individual and year in occasion *t*).</p>
-  
-  <p style="text-indent: 20px">First, let's clear memory and load the dataset.</p>
+  <p style="text-indent: 20px">The dataset that we have provided is organized in horizontal format, meaning that each row holds all of the data for a single, unique individual, and columns correspond to individual condition in particular monitoring occasions (which we refer to as *years* here, since there was one main census in each year). The original spreadsheet file used to keep the dataset has a repeating pattern to these columns, with each year having a similarly arranged group of variables. Package `lefko3` includes functions to handle data in horizontal format, as well as vertically formatted data (i.e. data for individuals is broken up across rows, where each row is a unique combination of individual and year in occasion *t*). Let's load the dataset.</p>
 ```{r Ch8.0}
-rm(list=ls(all=TRUE))
-library(lefko3)
 data(lathyrus)
 #summary(lathyrus)
 ```
@@ -144,13 +141,15 @@ hist(subset(lathvertln, repstatus2 == 1)$feca2, main = "Fecundity",
   xlab = "Intact seeds produced in occasion t")
 ```
   
-  <p style="text-indent: 20px">We see that the distribution conforms to a classic count variable with a very low mean value. The first bar suggests that there may be too many zeroes, as well. Let's now formally test our assumptions, that the mean equals the variance and that the number of zeroes meets expectation. Both tests use chi-squared distribution-based approaches, with the zero-inflation test in particular based on @van_den_broek_score_1995.</p>
+  <p style="text-indent: 20px">We see that the distribution conforms to a classic count variable with a very low mean value. The first bar suggests that there may be too many zeroes, as well. Let's now formally test our assumptions. We will use the `hfv_qc()` function, which will allow us to assess the quality of the data from the viewpoint of the linear models to be built later. We will use most of the input from the `modelsearch()` call that we will conduct later.</p>
 ```{r Ch8.8}
-sf_distrib(lathvertln, sizea = c("sizea3", "sizea2"), fec = c("feca3", "feca2"),
-  obs3 = "obsstatus3", repst = c("repstatus3", "repstatus2"))
+hfv_qc(data = lathvertln, historical = FALSE, suite = "main",
+  vitalrates = c("surv", "obs", "size", "repst", "fec"), juvestimate = "Sdl",
+  indiv = "individ", year = "year2", age = "obsage", year.as.random = TRUE,
+  patch.as.random = TRUE)
 ```
   
-  <p style="text-indent: 20px">Such significant results for fecundity show us that we should use a zero-inflated negative binomial distribution. We will also treat size as Gaussian.</p>
+  <p style="text-indent: 20px">All of the probability variables look like binomials, so we have no problem there. Size and juvenile size appear to be continuous variables that differ significantly from the assumptions of the Gaussian distribution. However, we will still use a Gaussian distribution in this case, for instructional purposes. Fecundity is a count variable with significant overdispersion and significantly more zeros than expected, so we should use a zero-inflated negative binomial distribution.</p>
   
 #### Step 2b. Provide supplemental information for matrix estimation  
   

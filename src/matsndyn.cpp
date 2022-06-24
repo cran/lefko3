@@ -8,13 +8,13 @@
 using namespace Rcpp;
 using namespace arma;
 
-// Pop Char
+// Core Accessory Functions
 
 //' Append NumericVector to the End of Another NumericVector
 //' 
 //' This function appends one NumericVector fully to another.
 //' 
-//' @name concat_dbl
+//' @name .concat_dbl
 //' 
 //' @param A Any NumericVector.
 //' @param B Any other NumericVector.
@@ -44,7 +44,8 @@ NumericVector concat_dbl(NumericVector x, NumericVector y) {
 //' Returns a new IntegerVector with elements of vector A followed by
 //' elements of vector B.
 //' 
-//' @name concat_int
+//' @name .concat_int
+//' 
 //' @param A Any IntegerVector.
 //' @param B Any other IntegerVector.
 //' 
@@ -73,7 +74,7 @@ IntegerVector concat_int(IntegerVector x, IntegerVector y) {
 //' Returns a new StringVector with elements of vector A followed by
 //' elements of vector B.
 //' 
-//' @name concat_str
+//' @name .concat_str
 //' 
 //' @param A Any StringVector.
 //' @param B Any other StringVector.
@@ -97,6 +98,392 @@ StringVector concat_str(StringVector x, StringVector y) {
   
   return(zconv);
 }
+
+//' Compares Two Strings Literally
+//' 
+//' This function compares two strings element by element. Returns \code{FALSE}
+//' in case of any differences whatsoever.
+//' 
+//' @name stringcompare_hard
+//' 
+//' @param str1 The first string
+//' @param str2 The second string
+//' 
+//' @return A logical value. In case of any difference at all, it will return
+//' \code{FALSE}.
+//' 
+//' @keywords internal
+//' @noRd
+bool stringcompare_hard(std::string str1, std::string str2) {
+  int str1_length = str1.size();
+  int str2_length = str2.size();
+  bool same = true;
+  
+  if (str1_length == str2_length && str1_length > 0) {
+    for (int i = 0; i < str1_length; i++) {
+      if (str1[i] != str2[i]) {
+        same = false;
+      }
+    }
+  } else if (str1_length != str2_length) {
+    same = false;
+  }
+  
+  return same;
+}
+
+//' Compares Two Strings, Assessing Inclusion
+//' 
+//' This function compares two strings, and will assess whether \code{str2} is
+//' contained within \code{str1}.
+//' 
+//' @name stringcompare_soft
+//' 
+//' @param str1 The first string
+//' @param str2 The second string
+//' 
+//' @return A list of two values. The first is a logical value indicating
+//' whether \code{str2} occurs within \code{str1}. The second element is an
+//' integer indicating at what element of \code{str1} \code{str2} begins.
+//' \code{FALSE}.
+//' 
+//' @keywords internal
+//' @noRd
+List stringcompare_soft(std::string str1, std::string str2) {
+  int str1_length = str1.size();
+  int str2_length = str2.size();
+  int rem_check {0};
+  bool same = false;
+  unsigned int start_index {0};
+  
+  if (str1_length >= str2_length && str2_length > 0) {
+    for (int i = 0; i < str1_length; i++) {
+      if (str1[i] != str2[rem_check]) {
+        rem_check = 0;
+        // same = false;
+      } else {
+        if (rem_check == 0) start_index = i;
+        rem_check += 1;
+        if (rem_check >= str2_length) break;
+      }
+    }
+    
+    if (rem_check == str2_length) {
+      same = true;
+    }
+  }
+  
+  List output = List::create(_["contains"] = same, _["start_index"] = start_index);
+  
+  return output;
+}
+
+//' Compares Two Strings, Assessing Inclusion
+//' 
+//' This function compares two strings, and will assess whether \code{str2} is
+//' contained within \code{str1}. It is a simpler version of 
+//' \code{stringcompare_soft()} that yields only the logical result.
+//' 
+//' @name stringcompare_simple
+//' 
+//' @param str1 The first string
+//' @param str2 The second string
+//' @param lower A logical value indicating whether to change all inputs to
+//' lower case before checking.
+//' 
+//' @return A logical value indicating whether \code{str2} occurs within
+//' \code{str1}.
+//' 
+//' @keywords internal
+//' @noRd
+bool stringcompare_simple(std::string str1, std::string str2, bool lower = false) {
+  int str1_length = str1.size();
+  int str2_length = str2.size();
+  int rem_check {0};
+  bool same = false;
+  
+  if (str1_length >= str2_length && str2_length > 0) {
+    for (int i = 0; i < str1_length; i++) {
+      if (!lower) {
+        if (str1[i] != str2[rem_check]) {
+          rem_check = 0;
+        } else {
+          rem_check += 1;
+          if (rem_check >= str2_length) break;
+        }
+      } else {
+        if (tolower(str1[i]) != tolower(str2[rem_check])) {
+          rem_check = 0;
+        } else {
+          rem_check += 1;
+          if (rem_check >= str2_length) break;
+        }
+      }
+    }
+    
+    if (rem_check == str2_length) {
+      same = true;
+    }
+  }
+  
+  return same;
+}
+
+//' Compares Three Strings for Interaction Notation
+//' 
+//' This function compares checks to see if one string is composed of the other
+//' two strings in R's interaction notation.
+//' 
+//' @name stringcompare_x
+//' 
+//' @param str1 The first string. Used for comparison.
+//' @param str2 The second string. Will be incorporated into interaction format.
+//' @param str3 The third string. Will be incorporated into interaction format.
+//' 
+//' @return A logical value. In case of any difference at all, it will return
+//' \code{FALSE}.
+//' 
+//' @keywords internal
+//' @noRd
+bool stringcompare_x(std::string str1, std::string str2, std::string str3) {
+  int str1_length = str1.size();
+  int str2_length = str2.size();
+  int str3_length = str3.size();
+  int combined_length = str2_length + str3_length + 1;
+  bool same = false;
+  bool same1 = true;
+  bool same2 = true;
+  
+  if (str1_length == combined_length && str1_length > 0) {
+    std::string x1 = str2;
+    x1 += ":";
+    x1 += str3;
+    
+    std::string x2 = str3;
+    x2 += ":";
+    x2 += str2;
+    
+    for (int i = 0; i < str1_length; i++) {
+      if (str1[i] != x1[i]) {
+        same1 = false;
+      }
+      if (str1[i] != x2[i]) {
+        same2 = false;
+      }
+    }
+  } else {
+    same1 = false;
+    same2 = false;
+  }
+  
+  if (same1 || same2) same = true;
+  
+  return same;
+}
+
+//' Sort String Elements
+//' 
+//' This function is based on code obtained from R Bloggers
+//' (see https://www.r-bloggers.com/2013/01/handling-strings-with-rcpp/). It
+//' sorts the elements of a string vector in alphabetical order.
+//' 
+//' @name stringsort
+//' 
+//' @param string_input A string vector.
+//' 
+//' @return The sorted string vector.
+//' 
+//' @keywords internal
+//' @noRd
+CharacterVector stringsort(CharacterVector string_input ) {
+  int len = string_input.size();
+  
+  std::vector<std::string> converted(len);
+  for (int i=0; i < len; i++) converted[i] = as<std::string>(string_input(i));
+  std::sort( converted.begin(), converted.end() );
+  
+  CharacterVector new_converted(len);
+  new_converted = converted;
+  
+  return new_converted;
+}
+
+//' Sort Integer Elements
+//' 
+//' This function is based on code obtained from the Rcpp Gallery by Ross
+//' Bennett (see https://gallery.rcpp.org/articles/sorting/). It sorts the
+//' elements of an integer vector.
+//' 
+//' @name int_sort
+//' 
+//' @param int_input An integer vector.
+//' 
+//' @return The sorted integer vector.
+//' 
+//' @keywords internal
+//' @noRd
+IntegerVector int_sort(IntegerVector x) {
+   IntegerVector y = clone(x);
+   std::sort(y.begin(), y.end());
+   
+   return y;
+}
+
+//' Function to Index a Numeric Vector According to a Reference Vector
+//' 
+//' Function \code{refsort_num()} takes a numeric matrix and replaces it with an
+//' integer vector showing the position of each element in the input vector
+//' within the reference vector.
+//' 
+//' @name refsort_num
+//' 
+//' @param vec The matrix to index
+//' @param ref The vector to use as a reference
+//' 
+//' @return An integer vector with integers referring to elements in vector
+//' \code{ref}.
+//' 
+//' @keywords internal
+//' @noRd
+IntegerMatrix refsort_num(NumericMatrix vec, NumericVector ref) {
+  int vec_length = vec.length();
+  int ref_length = ref.length();
+  
+  IntegerMatrix output(vec.nrow(), vec.ncol());
+  
+  for (int i = 0; i < vec_length; i++) {
+    for (int j = 0; j < ref_length; j++) {
+      if (vec[i] == ref[j]) output[i] = j + 1;
+    }
+  }
+  
+  return output;
+}
+
+//' Function to Index a Numeric Vector According to a Reference Vector
+//' 
+//' Function \code{refsort_str()} takes a string vector and replaces it with an
+//' integer vector showing the position of each element in the input vector
+//' within the reference vector.
+//' 
+//' @name refsort_str
+//' 
+//' @param vec The vector to index
+//' @param ref The vector to use as a reference
+//' 
+//' @return An integer vector with integers referring to elements in vector
+//' \code{ref}.
+//' 
+//' @keywords internal
+//' @noRd
+IntegerVector refsort_str(CharacterVector vec, CharacterVector ref) {
+  int vec_length = vec.length();
+  int ref_length = ref.length();
+  
+  IntegerVector output(vec_length);
+  
+  for (int i = 0; i < vec_length; i++) {
+    for (int j = 0; j < ref_length; j++) {
+      if (stringcompare_hard(as<std::string>(vec[i]), as<std::string>(ref[j]))) output[i] = j + 1;
+    }
+  }
+  
+  return output;
+}
+
+//' Vectorize Matrix for Historical Mean Matrix Estimation
+//' 
+//' Function \code{flagrantcrap()} vectorizes core indices of matrices
+//' input as list elements.
+//' 
+//' @name flagrantcrap
+//' 
+//' @param Xmat A matrix originally a part of a list object.
+//' @param allindices A vector of indices to remove from the matrix
+//' 
+//' @return A column vector of specifically called elements from the input
+//' matrix.
+//' 
+//' @keywords internal
+//' @noRd
+arma::vec flagrantcrap(arma::mat Xmat, arma::uvec allindices) {
+  
+  arma::vec newcol = Xmat.elem(allindices);
+  
+  return newcol;
+}
+
+//' Vectorize Matrix for Ahistorical Mean Matrix Estimation
+//' 
+//' Function \code{moreflagrantcrap()} vectorizes matrices input as list
+//' elements.
+//' 
+//' @name moreflagrantcrap
+//' 
+//' @param Xmat A matrix originally a part of a list object.
+//' 
+//' @return A column vector of the input matrix.
+//' 
+//' @keywords internal
+//' @noRd
+arma::vec moreflagrantcrap(arma::mat Xmat) {
+  
+  arma::vec newcol = arma::vectorise(Xmat);
+  
+  return newcol;
+}
+
+//' Calculate Logarithms of Non-Zero Elements of Sparse Matrix
+//' 
+//' Function \code{spmat_log} finds the non-zero elements in a sparse matrix,
+//' calculates their logs, and inserts them back into the matrix and returns it.
+//' Based on code developed by Coatless Professor and posted by him on
+//' StackOverflow.
+//' 
+//' @name spmat_log
+//' 
+//' @param B A sparse matrix. Note that this is assumed to be a population
+//' projection matrix, meaning that all values are either 0 or positive.
+//' 
+//' @return A sparse matrix with non-zero values as logs of the elements in the
+//' input matrix.
+//' 
+//' @keywords internal
+//' @noRd
+arma::sp_mat spmat_log(arma::sp_mat coremat)
+{
+  arma::sp_mat::const_iterator start = coremat.begin();
+  arma::sp_mat::const_iterator end   = coremat.end();
+  arma::sp_mat::const_iterator it = start; 
+  
+  int n = std::distance(start, end);
+  
+  if (n > 0) {
+    arma::umat locs(2, n);
+    arma::uvec temp(2);
+    arma::vec vals(n);
+    arma::vec logvals(n);
+    locs.zeros();
+    temp.zeros();
+    vals.zeros();
+    logvals.zeros();
+    
+    for(int i = 0; i < n; ++i) {
+      temp(0) = it.row();
+      temp(1) = it.col();
+      locs.col(i) = temp;
+      vals(i) = coremat(temp(0), temp(1));
+      logvals(i) = log(vals(i));
+      ++it; // increment
+    }
+    
+    coremat = arma::sp_mat(locs, logvals, coremat.n_rows, coremat.n_cols);
+  }
+  
+  return coremat;
+}
+
+// Pop Char
 
 //' Create Stageframe for Population Matrix Projection Analysis
 //' 
@@ -279,6 +666,16 @@ StringVector concat_str(StringVector x, StringVector y) {
 //' These groups should not be set if transitions are possible between all
 //' stages regardless of group. To denote specific transitions as estimable
 //' between stage groups, use the \code{\link{supplemental}()} function.
+//' 
+//' If importing an IPM rather than building one with \code{lefko3}: Using the
+//' \code{vrm_input} approach to building function-based MPMs with provided
+//' linear model slope coefficients requires careful attention to the
+//' stageframe. Although no hfv data frame needs to be entered in this instance,
+//' stages for which vital rates are to be estimated via linear models
+//' parameterized with coefficients provided via function
+//' \code{\link{vrm_import}()} should be marked as occurring within the dataset,
+//' while stages for which the provided coefficients should not be used should
+//' be marked as not occurring within the dataset.
 //' 
 //' @examples
 //' # Lathyrus example
@@ -2010,7 +2407,7 @@ Rcpp::List sf_create (NumericVector sizes, Nullable<StringVector> stagenames = R
 //' \code{\link{aflefko2}()}, \code{\link{rlefko3}()}, and
 //' \code{\link{rlefko2}()}.
 //' 
-//' @name sf_reassess
+//' @name .sf_reassess
 //' 
 //' @param stageframe The original stageframe.
 //' @param supplement The original supplemental data input
@@ -3319,7 +3716,7 @@ Rcpp::List sf_reassess(DataFrame stageframe, Nullable<DataFrame> supplement,
 //' Leslie MPM in terms of ahistorical stage information. This function is
 //' internal to \code{\link{rleslie}()} and \code{\link{fleslie}()}.
 //' 
-//' @name sf_leslie
+//' @name .sf_leslie
 //' 
 //' @param min_age The first age to include in the matrix.
 //' @param max_age The maximum age to include in the matrix.
@@ -3519,300 +3916,6 @@ Rcpp::List sf_leslie (int min_age, int max_age, int min_fecage,int max_fecage,
 
 // Matrix Extimation
 
-//' Compares Two Strings Literally
-//' 
-//' This function compares two strings element by element. Returns \code{FALSE}
-//' in case of any differences whatsoever.
-//' 
-//' @name stringcompare_hard
-//' 
-//' @param str1 The first string
-//' @param str2 The second string
-//' 
-//' @return A logical value. In case of any difference at all, it will return
-//' \code{FALSE}.
-//' 
-//' @keywords internal
-//' @noRd
-bool stringcompare_hard(std::string str1, std::string str2) {
-  int str1_length = str1.size();
-  int str2_length = str2.size();
-  bool same = true;
-  
-  if (str1_length == str2_length && str1_length > 0) {
-    for (int i = 0; i < str1_length; i++) {
-      if (str1[i] != str2[i]) {
-        same = false;
-      }
-    }
-  } else if (str1_length != str2_length) {
-    same = false;
-  }
-  
-  return same;
-}
-
-//' Compares Two Strings, Assessing Inclusion
-//' 
-//' This function compares two strings, and will assess whether \code{str2} is
-//' contained within \code{str1}.
-//' 
-//' @name stringcompare_soft
-//' 
-//' @param str1 The first string
-//' @param str2 The second string
-//' 
-//' @return A list of two values. The first is a logical value indicating
-//' whether \code{str2} occurs within \code{str1}. The second element is an
-//' integer indicating at what element of \code{str1} \code{str2} begins.
-//' \code{FALSE}.
-//' 
-//' @keywords internal
-//' @noRd
-List stringcompare_soft(std::string str1, std::string str2) {
-  int str1_length = str1.size();
-  int str2_length = str2.size();
-  int rem_check {0};
-  bool same = false;
-  unsigned int start_index {0};
-  
-  //int rem_check = str1_length;
-  
-  if (str1_length >= str2_length && str2_length > 0) {
-    for (int i = 0; i < str1_length; i++) {
-      if (str1[i] != str2[rem_check]) {
-        rem_check = 0;
-        // same = false;
-      } else {
-        if (rem_check == 0) start_index = i;
-        rem_check += 1;
-        if (rem_check >= str2_length) break;
-      }
-    }
-    
-    if (rem_check == str2_length) {
-      same = true;
-    }
-  }
-  
-  List output = List::create(_["contains"] = same, _["start_index"] = start_index);
-  
-  return output;
-}
-
-//' Compares Two Strings, Assessing Inclusion
-//' 
-//' This function compares two strings, and will assess whether \code{str2} is
-//' contained within \code{str1}. It is a simpler version of 
-//' \code{stringcompare_soft()} that yields only the logical result.
-//' 
-//' @name stringcompare_simple
-//' 
-//' @param str1 The first string
-//' @param str2 The second string
-//' @param lower A logical value indicating whether to change all inputs to
-//' lower case before checking.
-//' 
-//' @return A logical value indicating whether \code{str2} occurs within
-//' \code{str1}.
-//' 
-//' @keywords internal
-//' @noRd
-bool stringcompare_simple(std::string str1, std::string str2, bool lower = false) {
-  int str1_length = str1.size();
-  int str2_length = str2.size();
-  int rem_check {0};
-  bool same = false;
-  
-  if (str1_length >= str2_length && str2_length > 0) {
-    for (int i = 0; i < str1_length; i++) {
-      if (!lower) {
-        if (str1[i] != str2[rem_check]) {
-          rem_check = 0;
-        } else {
-          rem_check += 1;
-          if (rem_check >= str2_length) break;
-        }
-      } else {
-        if (tolower(str1[i]) != tolower(str2[rem_check])) {
-          rem_check = 0;
-        } else {
-          rem_check += 1;
-          if (rem_check >= str2_length) break;
-        }
-      }
-    }
-    
-    if (rem_check == str2_length) {
-      same = true;
-    }
-  }
-  
-  return same;
-}
-
-//' Compares Three Strings for Interaction Notation
-//' 
-//' This function compares checks to see if one string is composed of the other
-//' two strings in R's interaction notation.
-//' 
-//' @name stringcompare_x
-//' 
-//' @param str1 The first string. Used for comparison.
-//' @param str2 The second string. Will be incorporated into interaction format.
-//' @param str3 The third string. Will be incorporated into interaction format.
-//' 
-//' @return A logical value. In case of any difference at all, it will return
-//' \code{FALSE}.
-//' 
-//' @keywords internal
-//' @noRd
-bool stringcompare_x(std::string str1, std::string str2, std::string str3) {
-  int str1_length = str1.size();
-  int str2_length = str2.size();
-  int str3_length = str3.size();
-  int combined_length = str2_length + str3_length + 1;
-  bool same = false;
-  bool same1 = true;
-  bool same2 = true;
-  
-  if (str1_length == combined_length && str1_length > 0) {
-    std::string x1 = str2;
-    x1 += ":";
-    x1 += str3;
-    
-    std::string x2 = str3;
-    x2 += ":";
-    x2 += str2;
-    
-    for (int i = 0; i < str1_length; i++) {
-      if (str1[i] != x1[i]) {
-        same1 = false;
-      }
-      if (str1[i] != x2[i]) {
-        same2 = false;
-      }
-    }
-  } else {
-    same1 = false;
-    same2 = false;
-  }
-  
-  if (same1 || same2) same = true;
-  
-  return same;
-}
-
-//' Sort String Elements
-//' 
-//' This function is based on code obtained from R Bloggers
-//' (see https://www.r-bloggers.com/2013/01/handling-strings-with-rcpp/). It
-//' sorts the elements of a string vector in alphabetical order.
-//' 
-//' @name stringsort
-//' 
-//' @param string_input A string vector.
-//' 
-//' @return The sorted string vector.
-//' 
-//' @keywords internal
-//' @noRd
-CharacterVector stringsort(CharacterVector string_input ) {
-  int len = string_input.size();
-  
-  std::vector<std::string> converted(len);
-  for (int i=0; i < len; i++) converted[i] = as<std::string>(string_input(i));
-  std::sort( converted.begin(), converted.end() );
-  
-  CharacterVector new_converted(len);
-  new_converted = converted;
-  
-  return new_converted;
-}
-
-//' Sort Integer Elements
-//' 
-//' This function is based on code obtained from the Rcpp Gallery by Ross
-//' Bennett (see https://gallery.rcpp.org/articles/sorting/). It sorts the
-//' elements of an integer vector.
-//' 
-//' @name int_sort
-//' 
-//' @param int_input An integer vector.
-//' 
-//' @return The sorted integer vector.
-//' 
-//' @keywords internal
-//' @noRd
-IntegerVector int_sort(IntegerVector x) {
-   IntegerVector y = clone(x);
-   std::sort(y.begin(), y.end());
-   
-   return y;
-}
-
-//' Function to Index a Numeric Vector According to a Reference Vector
-//' 
-//' Function \code{refsort_num()} takes a numeric matrix and replaces it with an
-//' integer vector showing the position of each element in the input vector
-//' within the reference vector.
-//' 
-//' @name refsort_num
-//' 
-//' @param vec The matrix to index
-//' @param ref The vector to use as a reference
-//' 
-//' @return An integer vector with integers referring to elements in vector
-//' \code{ref}.
-//' 
-//' @keywords internal
-//' @noRd
-IntegerMatrix refsort_num(NumericMatrix vec, NumericVector ref) {
-  int vec_length = vec.length();
-  int ref_length = ref.length();
-  
-  IntegerMatrix output(vec.nrow(), vec.ncol());
-  
-  for (int i = 0; i < vec_length; i++) {
-    for (int j = 0; j < ref_length; j++) {
-      if (vec[i] == ref[j]) output[i] = j + 1;
-    }
-  }
-  
-  return output;
-}
-
-//' Function to Index a Numeric Vector According to a Reference Vector
-//' 
-//' Function \code{refsort_str()} takes a string vector and replaces it with an
-//' integer vector showing the position of each element in the input vector
-//' within the reference vector.
-//' 
-//' @name refsort_str
-//' 
-//' @param vec The vector to index
-//' @param ref The vector to use as a reference
-//' 
-//' @return An integer vector with integers referring to elements in vector
-//' \code{ref}.
-//' 
-//' @keywords internal
-//' @noRd
-IntegerVector refsort_str(CharacterVector vec, CharacterVector ref) {
-  int vec_length = vec.length();
-  int ref_length = ref.length();
-  
-  IntegerVector output(vec_length);
-  
-  for (int i = 0; i < vec_length; i++) {
-    for (int j = 0; j < ref_length; j++) {
-      if (stringcompare_hard(as<std::string>(vec[i]), as<std::string>(ref[j]))) output[i] = j + 1;
-    }
-  }
-  
-  return output;
-}
-
 //' Create hstages Index Object
 //' 
 //' Function \code{hst_maker()} creates \code{hstages} index data frames from
@@ -3980,7 +4083,7 @@ arma::mat ovreplace(arma::vec allst321, arma::vec idx321old,
 //' \code{\link{normalpatrolgroup}()}, and \code{jerzeibalowski()} to estimate
 //' raw and function-derived matrices.
 //' 
-//' @name theoldpizzle
+//' @name .theoldpizzle
 //'
 //' @param StageFrame The stageframe object identifying the life history model
 //' being operationalized.
@@ -5721,7 +5824,7 @@ Rcpp::List theoldpizzle(DataFrame StageFrame, DataFrame OverWrite,
 //' in raw historical matrices, and serves as the core workhorse function behind
 //' \code{\link{rlefko3}()}.
 //' 
-//' @name specialpatrolgroup
+//' @name .specialpatrolgroup
 //' 
 //' @param sge9l The Allstages data frame developed for \code{rlefko3()}
 //' covering stage pairs across times \emph{t}+1, \emph{t} and \emph{t}-1.
@@ -6011,7 +6114,7 @@ List specialpatrolgroup(DataFrame sge9l, DataFrame sge3, DataFrame MainData,
 //' in raw ahistorical matrices, and serves as the core workhorse function
 //' behind \code{\link{rlefko2}()}.
 //' 
-//' @name normalpatrolgroup
+//' @name .normalpatrolgroup
 //' 
 //' @param sge3 The Allstages data frame developed for \code{rlefko2()} covering
 //' stage pairs across times \emph{t}+1 and \emph{t}. Generally termed
@@ -6184,7 +6287,7 @@ List normalpatrolgroup(DataFrame sge3, DataFrame sge2, DataFrame MainData,
 //' Function \code{minorpatrolgroup()} swiftly calculates matrix transitions
 //' in raw Leslie MPMs, and is used internally in \code{\link{rleslie}()}.
 //' 
-//' @name minorpatrolgroup
+//' @name .minorpatrolgroup
 //' 
 //' @param MainData The demographic dataset modified internally to have needed
 //' variables for living status, reproduction status, and fecundity.
@@ -6278,7 +6381,7 @@ Rcpp::List minorpatrolgroup(DataFrame MainData, DataFrame StageFrame,
 //' transitions in raw ahistorical matrices, and serves as the core workhorse
 //' function behind \code{\link{arlefko2}()}.
 //' 
-//' @name subvertedpatrolgroup
+//' @name .subvertedpatrolgroup
 //' 
 //' @param sge3 The Allstages data frame developed for \code{rlefko2()} covering
 //' stage pairs across times \emph{t}+1 and \emph{t}. Generally termed
@@ -7671,7 +7774,7 @@ double preouterator(List modelproxy, NumericVector maincoefs, arma::imat randind
 //' \code{\link{flefko3}()}, \code{\link{flefko2}()}, and
 //' \code{\link{aflefko2}()}.
 //' 
-//' @name jerzeibalowski
+//' @name .jerzeibalowski
 //' 
 //' @param ppy A data frame showing the population, patch, and year of each
 //' matrix to create, in order.
@@ -8838,7 +8941,7 @@ List jerzeibalowski(DataFrame AllStages, DataFrame stageframe, int matrixformat,
 //' function-based population projection matrices. Used in
 //' \code{f_projection3()}.
 //' 
-//' @name jerzeibalowsk_sp
+//' @name .jerzeibalowsk_sp
 //' 
 //' @param ppy A data frame showing the population, patch, and year of each
 //' matrix to create, in order.
@@ -10007,7 +10110,7 @@ List jerzeibalowski_sp(DataFrame AllStages, DataFrame stageframe, int matrixform
 //' uses the \code{allstages} index to create a historically structured version
 //' of it.
 //' 
-//' @name thefifthhousemate
+//' @name .thefifthhousemate
 //' 
 //' @param mpm The original ahMPM, supplied as a \code{lefkoMat} object.
 //' @param allstages The index dataframe developed by
@@ -10175,7 +10278,7 @@ arma::imat foi_index_leslie(List surv_proxy, List fec_proxy) {
 //' function-based Leslie population projection matrices. Used in
 //' \code{\link{fleslie}()}.
 //' 
-//' @name motherbalowski
+//' @name .motherbalowski
 //' 
 //' @param actualages An integer vector of all actual ages to be included in the
 //' matrices, in order.
@@ -10654,7 +10757,7 @@ List motherbalowski(IntegerVector actualages, DataFrame ageframe, List survproxy
 //' the zero-inflated fixed variables, in the same order as
 //' \code{fixed_zi_vars}. Here, given as \code{NULL}.}
 //' \item{random_zi_vars}{A string vector holding the names of the random
-//' variables in the sero-inflation model. Here, given as \code{NULL}.}
+//' variables in the zero-inflation model. Here, given as \code{NULL}.}
 //' \item{random_zi_slopes}{A numeric vector holding the slope coefficients of
 //' the random variables in the zero-inflation model, in the same order as
 //' \code{random_zi_vars}. Here, given as \code{NULL}.}
@@ -10721,7 +10824,7 @@ List numeric_extractor(NumericVector object) {
 //' \code{fixed_zi_vars}. Not used in \code{lm}/\code{glm}/\code{negbin}
 //' objects.}
 //' \item{random_zi_vars}{A string vector holding the names of the random
-//' variables in the sero-inflation model. Not used in \code{lm}/\code{glm}/
+//' variables in the zero-inflation model. Not used in \code{lm}/\code{glm}/
 //' \code{negbin} objects.}
 //' \item{random_zi_slopes}{A numeric vector holding the slope coefficients of
 //' the random variables in the zero-inflation model, in the same order as
@@ -10826,7 +10929,7 @@ List glm_extractor(List object) {
 //' the zero-inflated fixed variables, in the same order as
 //' \code{fixed_zi_vars}. Not used in \code{vglm} objects.}
 //' \item{random_zi_vars}{A string vector holding the names of the random
-//' variables in the sero-inflation model. Not used in \code{vglm} objects.}
+//' variables in the zero-inflation model. Not used in \code{vglm} objects.}
 //' \item{random_zi_slopes}{A numeric vector holding the slope coefficients of
 //' the random variables in the zero-inflation model, in the same order as
 //' \code{random_zi_vars}. Not used in \code{vglm} objects.}
@@ -10908,7 +11011,7 @@ List vglm_extractor(S4 object) {
 //' random variables, in the same order as \code{random_vars}. Not used in
 //' \code{zeroinfl} objects.}
 //' \item{random_zi_vars}{A string vector holding the names of the random
-//' variables in the sero-inflation model. Not used in \code{zeroinfl} objects.}
+//' variables in the zero-inflation model. Not used in \code{zeroinfl} objects.}
 //' \item{random_zi_slopes}{A numeric vector holding the slope coefficients of
 //' the random variables in the zero-inflation model, in the same order as
 //' \code{random_zi_vars}. Not used in \code{zeroinfl} objects.}
@@ -10999,7 +11102,7 @@ List zeroinfl_extractor(List object) {
 //' \item{random_slopes}{A numeric vector holding the slope coefficients of the
 //' random variables, in the same order as \code{random_vars}.}
 //' \item{random_zi_vars}{A string vector holding the names of the random
-//' variables in the sero-inflation model. Not used in lme4.}
+//' variables in the zero-inflation model. Not used in lme4.}
 //' \item{random_zi_slopes}{A numeric vector holding the slope coefficients of
 //' the random variables in the zero-inflation model, in the same order as
 //' \code{random_zi_vars}. Not used in lme4.}
@@ -11179,7 +11282,7 @@ List lme4_extractor(S4 object) {
 //' \item{random_slopes}{A numeric vector holding the slope coefficients of the
 //' random variables, in the same order as \code{random_vars}.}
 //' \item{random_zi_vars}{A string vector holding the names of the random
-//' variables in the sero-inflation model.}
+//' variables in the zero-inflation model.}
 //' \item{random_zi_slopes}{A numeric vector holding the slope coefficients of
 //' the random variables in the zero-inflation model, in the same order as
 //' \code{random_zi_vars}.}
@@ -11429,9 +11532,10 @@ List glmmTMB_extractor(List object) {
 //' 
 //' @name S3_extractor
 //' 
-//' @param object An S3 vital rate model. Currently, this should be output from
-//' functions \code{lm()}, \code{glm()}, \code{glm.nb()}, \code{zeroinfl()},
-//' and \code{glmmTMB()}.
+//' @param object An S3 vital rate model other than objects of class
+//' \code{vrm_input}. Currently, this should be output from functions
+//' \code{lm()}, \code{glm()}, \code{glm.nb()}, \code{zeroinfl()}, and
+//' \code{glmmTMB()}.
 //' 
 //' @return A list describing the vital rate model in standard output required
 //' from function \code{modelextract()} to operate. Elements currently include:
@@ -11459,7 +11563,7 @@ List glmmTMB_extractor(List object) {
 //' \item{random_slopes}{A numeric vector holding the slope coefficients of the
 //' random variables, in the same order as \code{random_vars}.}
 //' \item{random_zi_vars}{A string vector holding the names of the random
-//' variables in the sero-inflation model.}
+//' variables in the zero-inflation model.}
 //' \item{random_zi_slopes}{A numeric vector holding the slope coefficients of
 //' the random variables in the zero-inflation model, in the same order as
 //' \code{random_zi_vars}.}
@@ -11541,7 +11645,7 @@ List S3_extractor(List object) {
 //' \item{random_slopes}{A numeric vector holding the slope coefficients of the
 //' random variables, in the same order as \code{random_vars}.}
 //' \item{random_zi_vars}{A string vector holding the names of the random
-//' variables in the sero-inflation model.}
+//' variables in the zero-inflation model.}
 //' \item{random_zi_slopes}{A numeric vector holding the slope coefficients of
 //' the random variables in the zero-inflation model, in the same order as
 //' \code{random_zi_vars}.}
@@ -11576,16 +11680,275 @@ List S4_extractor(S4 object) {
   return output;
 }
 
+//' Extract Key Components of vrm_input Objects
+//' 
+//' This function extracts the components of a \code{vrm_input} object for
+//' functions \code{jerzeibalowski()} and \code{motherbalowski()}.
+//' 
+//' @name vrm_extractor
+//' 
+//' @param object A \code{vrm_input} object.
+//' 
+//' @return A list with the following elements:
+//' \item{class}{The exact class of \code{object}. Will be \code{vrm_input}.}
+//' \item{family}{The response distribution.}
+//' \item{dist}{An integer representing the response distribution. \code{0} = 
+//' poisson, \code{1} = negbin, \code{2} = gaussian, \code{3} = gamma, \code{4}
+//' = binomial, and \code{5} = constant.}
+//' \item{zero_inflated}{A logical value indicating whether the distribution is
+//' zero-inflated. Not used in \code{lm}/\code{glm}/\code{negbin} objects. Will
+//' equal \code{FALSE} if \code{dist = 5}.}
+//' \item{zero_truncated}{A logical value indicating whether the distribution is
+//' zero-truncated. Not used in \code{lm}/\code{glm}/\code{negbin} objects. Will
+//' equal \code{FALSE} if \code{dist = 5}.}
+//' \item{all_vars}{A vector holding the names of each variable used by
+//' \code{object}. Will equal only the intercept if \code{dist = 5}.}
+//' \item{fixed_vars}{A string vector holding the names of the fixed variables.
+//' Will equal only the intercept if \code{dist = 5}.}
+//' \item{fixed_slopes}{A numeric vector holding the slope coefficients of the
+//' fixed variables, in the same order as \code{fixed_vars}. Will equal only the
+//' intercept if \code{dist = 5}.}
+//' \item{fixed_zi_vars}{A string vector holding the names of the zero-inflated
+//' fixed variables. Not used in \code{lm}/\code{glm}/\code{negbin} objects.
+//' Will equal \code{NULL} is \code{dist = 5}.}
+//' \item{fixed_zi_slopes}{A numeric vector holding the slope coefficients of
+//' the zero-inflated fixed variables, in the same order as
+//' \code{fixed_zi_vars}. Not used in \code{lm}/\code{glm}/\code{negbin}
+//' objects. Will equal \code{NULL} is \code{dist = 5}.}
+//' \item{random_zi_vars}{A string vector holding the names of the random
+//' variables in the zero-inflation model. Not used in \code{lm}/\code{glm}/
+//' \code{negbin} objects. Will equal \code{NULL} is \code{dist = 5}.}
+//' \item{random_zi_slopes}{A numeric vector holding the slope coefficients of
+//' the random variables in the zero-inflation model, in the same order as
+//' \code{random_zi_vars}. Not used in \code{lm}/\code{glm}/\code{negbin}
+//' objects. Will equal \code{NULL} is \code{dist = 5}.}
+//' \item{sigma}{The residual standard deviation of the model. Defaults to
+//' \code{1.0}.}
+//' \item{theta}{The estimated theta, if the response is negative binomial.
+//' Otherwise, will equal \code{1.0}.}
+//' 
+//' @keywords internal
+//' @noRd
+List vrm_extractor(List object) {
+  std::string object_class = "vrm_input";
+  
+  String distrib = as<String>(object["dist"]);
+  double sigma_theta = object["sigma_theta"];
+  
+  String resp_family = "gaussian";
+  int dist = 2;
+  double theta {1.0};
+  double sigma = sigma_theta;
+  bool zero_inflation = false;
+  bool zero_truncation = false;
+  
+  if (stringcompare_simple(distrib, "poisson")) {
+    resp_family = "poisson";
+    dist = 0;
+  } else if (stringcompare_simple(distrib, "negbin")) {
+    resp_family = "negbin";
+    dist = 1;
+    theta = sigma_theta;
+  } else if (stringcompare_simple(distrib, "gamma")) {
+    resp_family = "gamma";
+    dist = 3;
+  } else if (stringcompare_simple(distrib, "binom")) {
+    resp_family = "binomial";
+    dist = 4;
+  } else if (stringcompare_simple(distrib, "cons")) {
+    resp_family = "constant";
+    dist = 5;
+  }
+  
+  if (stringcompare_simple(distrib, "trunc")) {
+    if (dist == 0 || dist == 1) zero_truncation = true; 
+  }
+  
+  NumericVector coefs = as<NumericVector>(object["fixed_slopes"]);
+  NumericVector zi_coefs = as<NumericVector>(object["fixed_zi"]);
+  
+  CharacterVector all_vars = as<CharacterVector>(object("effects_names"));
+  
+  NumericVector year_slopes = as<NumericVector>(object["year_slopes"]);
+  NumericVector patch_slopes = as<NumericVector>(object["patch_slopes"]);
+  NumericVector indcova2_slopes = as<NumericVector>(object["indcova2_slopes"]);
+  NumericVector indcova1_slopes = as<NumericVector>(object["indcova1_slopes"]);
+  NumericVector indcovb2_slopes = as<NumericVector>(object["indcovb2_slopes"]);
+  NumericVector indcovb1_slopes = as<NumericVector>(object["indcovb1_slopes"]);
+  NumericVector indcovc2_slopes = as<NumericVector>(object["indcovc2_slopes"]);
+  NumericVector indcovc1_slopes = as<NumericVector>(object["indcovc1_slopes"]);
+  
+  NumericVector year_zi = as<NumericVector>(object["year_zi"]);
+  NumericVector patch_zi = as<NumericVector>(object["patch_zi"]);
+  NumericVector indcova2_zi = as<NumericVector>(object["indcova2_zi"]);
+  NumericVector indcova1_zi = as<NumericVector>(object["indcova1_zi"]);
+  NumericVector indcovb2_zi = as<NumericVector>(object["indcovb2_zi"]);
+  NumericVector indcovb1_zi = as<NumericVector>(object["indcovb1_zi"]);
+  NumericVector indcovc2_zi = as<NumericVector>(object["indcovc2_zi"]);
+  NumericVector indcovc1_zi = as<NumericVector>(object["indcovc1_zi"]);
+  
+  double zi_year_sum = sum(year_zi);
+  double zi_patch_sum = sum(patch_zi);
+  double zi_indcova2_sum = sum(indcova2_zi);
+  double zi_indcova1_sum = sum(indcova1_zi);
+  double zi_indcovb2_sum = sum(indcovb2_zi);
+  double zi_indcovb1_sum = sum(indcovb1_zi);
+  double zi_indcovc2_sum = sum(indcovc2_zi);
+  double zi_indcovc1_sum = sum(indcovc1_zi);
+  
+  double zi_sum = zi_year_sum + zi_patch_sum + zi_indcova2_sum + zi_indcova1_sum +
+    zi_indcovb2_sum + zi_indcovb1_sum + zi_indcovc2_sum + zi_indcovc1_sum;
+  
+  if (zi_sum > 0.0) {
+    zero_inflation = true;
+  }
+  
+  if (zero_truncation && zero_inflation) {
+    throw Rcpp::exception("Models cannot be both zero-inflated and zero-truncated.",
+      false);
+  }
+  
+  CharacterVector year_names = as<CharacterVector>(object["year_names"]);
+  CharacterVector patch_names = as<CharacterVector>(object["patch_names"]);
+  CharacterVector indcova_names = as<CharacterVector>(object["indcova_names"]);
+  CharacterVector indcovb_names = as<CharacterVector>(object["indcovb_names"]);
+  CharacterVector indcovc_names = as<CharacterVector>(object["indcovc_names"]);
+  
+  year_slopes.attr("names") = year_names;
+  patch_slopes.attr("names") = patch_names;
+  indcova2_slopes.attr("names") = indcova_names;
+  indcova1_slopes.attr("names") = indcova_names;
+  indcovb2_slopes.attr("names") = indcovb_names;
+  indcovb1_slopes.attr("names") = indcovb_names;
+  indcovc2_slopes.attr("names") = indcovc_names;
+  indcovc1_slopes.attr("names") = indcovc_names;
+  
+  CharacterVector randomvar_names = {"year2", "patch", "indcova2", "indcova1",
+    "indcovb2", "indcovb1", "indcovc2", "indcovc1"};
+  
+  List random_slopes (8);
+  random_slopes(0) = year_slopes;
+  random_slopes(1) = patch_slopes;
+  random_slopes(2) = indcova2_slopes;
+  random_slopes(3) = indcova1_slopes;
+  random_slopes(4) = indcovb2_slopes;
+  random_slopes(5) = indcovb1_slopes;
+  random_slopes(6) = indcovc2_slopes;
+  random_slopes(7) = indcovc1_slopes;
+  
+  List random_zi (8);
+  random_zi(0) = year_zi;
+  random_zi(1) = patch_zi;
+  random_zi(2) = indcova2_zi;
+  random_zi(3) = indcova1_zi;
+  random_zi(4) = indcovb2_zi;
+  random_zi(5) = indcovb1_zi;
+  random_zi(6) = indcovc2_zi;
+  random_zi(7) = indcovc1_zi;
+  
+  List random_names (8);
+  random_names(0) = year_names;
+  random_names(1) = patch_names;
+  random_names(2) = indcova_names;
+  random_names(3) = indcova_names;
+  random_names(4) = indcovb_names;
+  random_names(5) = indcovb_names;
+  random_names(6) = indcovc_names;
+  random_names(7) = indcovc_names;
+  
+  random_slopes.attr("names") = randomvar_names;
+  random_zi.attr("names") = randomvar_names;
+  random_names.attr("names") = randomvar_names;
+  
+  NumericVector group2_slopes = as<NumericVector>(object["group2_slopes"]);
+  NumericVector group1_slopes = as<NumericVector>(object["group1_slopes"]);
+  NumericVector group2_zi = as<NumericVector>(object["group2_zi"]);
+  NumericVector group1_zi = as<NumericVector>(object["group1_zi"]);
+  CharacterVector group2_names = clone(as<CharacterVector>(object["group_names"]));
+  CharacterVector group1_names = clone(as<CharacterVector>(object["group_names"]));
+  CharacterVector group2_zi_names = clone(as<CharacterVector>(object["group_names"]));
+  CharacterVector group1_zi_names = clone(as<CharacterVector>(object["group_names"]));
+  
+  CharacterVector zi_vars = clone(all_vars);
+  
+  int no_group2_slopes = group2_slopes.length();
+  int no_group1_slopes = group1_slopes.length();
+  
+  if (no_group2_slopes > 0) {
+    for (int i = 0; i < no_group2_slopes; i++) {
+      group2_names[i] = "group2" + group2_names[i];
+    }
+    all_vars = concat_str(all_vars, group2_names);
+    coefs = concat_dbl(coefs, group2_slopes);
+  }
+  
+  if (no_group1_slopes > 0) {
+    for (int i = 0; i < no_group1_slopes; i++) {
+      group1_names[i] = "group1" + group1_names[i];
+    }
+    all_vars = concat_str(all_vars, group1_names);
+    coefs = concat_dbl(coefs, group1_slopes);
+  }
+  
+  int no_group2_zi = group2_zi.length();
+  int no_group1_zi = group1_zi.length();
+  
+  if (no_group2_zi > 0) {
+    for (int i = 0; i < no_group2_zi; i++) {
+      group1_zi_names[i] = "group2" + group2_zi_names[i];
+    }
+    zi_vars = concat_str(zi_vars, group2_zi_names);
+    zi_coefs = concat_dbl(zi_coefs, group2_zi);
+  }
+  
+  if (no_group1_zi > 0) {
+    for (int i = 0; i < no_group1_zi; i++) {
+      group1_zi_names[i] = "group1" + group1_zi_names[i];
+    }
+    zi_vars = concat_str(zi_vars, group1_zi_names);
+    zi_coefs = concat_dbl(zi_coefs, group1_zi);
+  }
+  
+  Rcpp::List output;
+  if (dist == 5) {
+    CharacterVector simple_vars = {"Intercept"};
+    NumericVector simple_coefs (1);
+    simple_coefs(0) = coefs(0);
+    
+    output = List::create(_["class"] = object_class, _["family"] = resp_family,
+      _["dist"] = dist, _["zero_inflated"] = false, _["zero_truncated"] = false,
+      _["all_vars"] = simple_vars, _["fixed_vars"] = simple_vars,
+      _["fixed_slopes"] = simple_coefs, _["fixed_zi_vars"] = R_NilValue,
+      _["fixed_zi_slopes"] = R_NilValue, _["random_vars"] = R_NilValue,
+      _["random_slopes"] = R_NilValue, _["random_zi_vars"] = R_NilValue,
+      _["random_zi_slopes"] = R_NilValue, _["sigma"] = sigma, _["theta"] = theta);
+    
+  } else  {
+    output = List::create(_["class"] = object_class, _["family"] = resp_family,
+      _["dist"] = dist, _["zero_inflated"] = zero_inflation,
+      _["zero_truncated"] = zero_truncation, _["all_vars"] = all_vars,
+      _["fixed_vars"] = all_vars, _["fixed_slopes"] = coefs,
+      _["fixed_zi_vars"] = zi_vars, _["fixed_zi_slopes"] = zi_coefs,
+      _["random_vars"] = random_names, _["random_slopes"] = random_slopes,
+      _["random_zi_vars"] = random_names, _["random_zi_slopes"] = random_zi,
+      _["sigma"] = sigma, _["theta"] = theta);
+  }
+  
+  return output;
+}
+
 //' Extract Coefficients From Linear Vital Rate Models
 //' 
-//' Function \code{modelextract()} extracts coefficient values from linear
+//' Function \code{.modelextract()} extracts coefficient values from linear
 //' models estimated through various linear modeling functions in R, to estimate
 //' vital rates in \code{lefko3}. Used to supply coefficients to
 //' \code{\link{flefko3}()}, \code{\link{flefko2}()}, \code{\link{fleslie()}},
 //' and \code{\link{aflefko2}()}.
 //' 
+//' @name .modelextract
+//' 
 //' @param object A linear model estimated through one of the methods used in
-//' function \code{\link{modelsearch}()}.
+//' function \code{\link{modelsearch}()}, or a \code{vrm_input} object.
 //' @param paramnames Data frame giving the names of standard coefficients
 //' required by matrix creation functions.
 //' @param mainyears A vector of the names of the monitoring occasions.
@@ -11598,6 +11961,9 @@ List S4_extractor(S4 object) {
 //' \code{b}, when that individual covariate is categorical.
 //' @param mainindcovc A vector denoting values of individual covariate
 //' \code{c}, when that individual covariate is categorical.
+//' @param nodata A logical value used to determine whether to use
+//' \code{vrm_input} methods. Defaults to \code{FALSE}, in which case models
+//' were developed with function \code{modelsearch()}.
 //' 
 //' @return This function returns a list with the following elements:
 //' \item{coefficients}{Vector of fixed effect coefficients.}
@@ -11648,7 +12014,7 @@ List S4_extractor(S4 object) {
 // [[Rcpp::export(.modelextract)]]
 List modelextract(RObject object, DataFrame paramnames, NumericVector mainyears,
   CharacterVector mainpatches, RObject maingroups, RObject mainindcova,
-  RObject mainindcovb, RObject mainindcovc) {
+  RObject mainindcovb, RObject mainindcovc, bool nodata = false) {
   
   CharacterVector fixed_zi_vars;
   NumericVector fixed_zi_slopes;
@@ -11673,8 +12039,13 @@ List modelextract(RObject object, DataFrame paramnames, NumericVector mainyears,
   List core_components;
   if (object.isS4()) {
     core_components = S4_extractor(as<S4>(object));
-  } else if (is<List>(object)) {
+    
+  } else if (is<List>(object) && !nodata) {
     core_components = S3_extractor(as<List>(object));
+    
+  } else if (nodata) {
+    core_components = vrm_extractor(as<List>(object));
+    
   } else {
     core_components = numeric_extractor(as<NumericVector>(object));
   }
@@ -11730,7 +12101,7 @@ List modelextract(RObject object, DataFrame paramnames, NumericVector mainyears,
   std::string group2var = as<std::string>(modelparam_names(29));
   std::string group1var = as<std::string>(modelparam_names(30));
   
-  int no_fixed_zi_vars = fixed_zi_vars.length();
+  int no_fixed_zi_slopes = fixed_zi_slopes.length();
   
   int no_years = mainyears.length();
   CharacterVector mainyears_text(mainyears);
@@ -11762,6 +12133,7 @@ List modelextract(RObject object, DataFrame paramnames, NumericVector mainyears,
   zerogroup2_coefs.attr("names") = maingroups_text;
   zerogroup1_coefs.attr("names") = maingroups_text;
   
+  // Individual covariates
   CharacterVector indcova_names;
   CharacterVector indcovb_names;
   CharacterVector indcovc_names;
@@ -11861,6 +12233,10 @@ List modelextract(RObject object, DataFrame paramnames, NumericVector mainyears,
       zeroindcovc1s.attr("names") = indcovc_names;
     }
   }
+  
+  // Rcout << "no_fixed_vars: " << no_fixed_vars << "\n";
+  // Rcout << "no_fixed_zi_vars: " << no_fixed_zi_vars << "\n";
+  // Rcout << "no_fixed_zi_slopes: " << no_fixed_zi_slopes << "\n";
   
   NumericVector coef_vec(283);
   
@@ -12327,7 +12703,7 @@ List modelextract(RObject object, DataFrame paramnames, NumericVector mainyears,
     }
   }
   
-  for (int i = 0; i < no_fixed_zi_vars; i++) {
+  for (int i = 0; i < no_fixed_zi_slopes; i++) {
     for (int j = 0; j < no_years; j++) {
       if (stringcompare_simple(as<std::string>(fixed_zi_vars(i)), as<std::string>(mainyears_text(j)))) {
         zeroyear_coefs(j) = fixed_zi_slopes(i);
@@ -12401,393 +12777,394 @@ List modelextract(RObject object, DataFrame paramnames, NumericVector mainyears,
       }
     }
     
-    if (stringcompare_simple(as<std::string>(fixed_zi_vars(i)), "ntercep")) {
-      coef_vec(46) = fixed_zi_slopes(i);
-    }
-    if (stringcompare_hard(as<std::string>(fixed_zi_vars(i)), repst1var)) {
-      coef_vec(47) = fixed_zi_slopes(i);
-    }
-    if (stringcompare_hard(as<std::string>(fixed_zi_vars(i)), repst2var)) {
-      coef_vec(48) = fixed_zi_slopes(i);
-    }
-    if (stringcompare_hard(as<std::string>(fixed_zi_vars(i)), size1var)) {
-      coef_vec(49) = fixed_zi_slopes(i);
-    }
-    if (stringcompare_hard(as<std::string>(fixed_zi_vars(i)), size2var)) {
-      coef_vec(50) = fixed_zi_slopes(i);
-    }
-    if (stringcompare_x(as<std::string>(fixed_zi_vars(i)), repst1var, repst2var)) {
-      coef_vec(51) = fixed_zi_slopes(i);
-    }
-    if (stringcompare_x(as<std::string>(fixed_zi_vars(i)), size1var, size2var)) {
-      coef_vec(52) = fixed_zi_slopes(i);
-    }
-    if (stringcompare_x(as<std::string>(fixed_zi_vars(i)), size1var, repst1var)) {
-      coef_vec(53) = fixed_zi_slopes(i);
-    }
-    if (stringcompare_x(as<std::string>(fixed_zi_vars(i)), size2var, repst2var)) {
-      coef_vec(54) = fixed_zi_slopes(i);
-    }
-    if (stringcompare_x(as<std::string>(fixed_zi_vars(i)), size2var, repst1var)) {
-      coef_vec(55) = fixed_zi_slopes(i);
-    }
-    if (stringcompare_x(as<std::string>(fixed_zi_vars(i)), size1var, repst2var)) {
-      coef_vec(56) = fixed_zi_slopes(i);
-    }
-    if (stringcompare_hard(as<std::string>(fixed_zi_vars(i)), agevar)) {
-      coef_vec(57) = fixed_zi_slopes(i);
-    }
-    if (stringcompare_x(as<std::string>(fixed_zi_vars(i)), size1var, agevar)) {
-      coef_vec(58) = fixed_zi_slopes(i);
-    }
-    if (stringcompare_x(as<std::string>(fixed_zi_vars(i)), size2var, agevar)) {
-      coef_vec(59) = fixed_zi_slopes(i);
-    }
-    if (stringcompare_x(as<std::string>(fixed_zi_vars(i)), repst1var, agevar)) {
-      coef_vec(60) = fixed_zi_slopes(i);
-    }
-    if (stringcompare_x(as<std::string>(fixed_zi_vars(i)), repst2var, agevar)) {
-      coef_vec(61) = fixed_zi_slopes(i);
-    }
-    if (stringcompare_hard(as<std::string>(fixed_zi_vars(i)), indcova2var)) {
-      coef_vec(62) = fixed_zi_slopes(i);
-    }
-    if (stringcompare_hard(as<std::string>(fixed_zi_vars(i)), indcovb2var)) {
-      coef_vec(63) = fixed_zi_slopes(i);
-    }
-    if (stringcompare_hard(as<std::string>(fixed_zi_vars(i)), indcovc2var)) {
-      coef_vec(64) = fixed_zi_slopes(i);
-    }
-    if (stringcompare_hard(as<std::string>(fixed_zi_vars(i)), indcova1var)) {
-      coef_vec(65) = fixed_zi_slopes(i);
-    }
-    if (stringcompare_hard(as<std::string>(fixed_zi_vars(i)), indcovb1var)) {
-      coef_vec(66) = fixed_zi_slopes(i);
-    }
-    if (stringcompare_hard(as<std::string>(fixed_zi_vars(i)), indcovc1var)) {
-      coef_vec(67) = fixed_zi_slopes(i);
-    }
-    if (stringcompare_x(as<std::string>(fixed_zi_vars(i)), indcova2var, size2var)) {
-      coef_vec(68) = fixed_zi_slopes(i);
-    }
-    if (stringcompare_x(as<std::string>(fixed_zi_vars(i)), indcovb2var, size2var)) {
-      coef_vec(69) = fixed_zi_slopes(i);
-    }
-    if (stringcompare_x(as<std::string>(fixed_zi_vars(i)), indcovc2var, size2var)) {
-      coef_vec(70) = fixed_zi_slopes(i);
-    }
-    if (stringcompare_x(as<std::string>(fixed_zi_vars(i)), indcova2var, repst2var)) {
-      coef_vec(71) = fixed_zi_slopes(i);
-    }
-    if (stringcompare_x(as<std::string>(fixed_zi_vars(i)), indcovb2var, repst2var)) {
-      coef_vec(72) = fixed_zi_slopes(i);
-    }
-    if (stringcompare_x(as<std::string>(fixed_zi_vars(i)), indcovc2var, repst2var)) {
-      coef_vec(73) = fixed_zi_slopes(i);
-    }
-    if (stringcompare_x(as<std::string>(fixed_zi_vars(i)), indcova1var, size1var)) {
-      coef_vec(74) = fixed_zi_slopes(i);
-    }
-    if (stringcompare_x(as<std::string>(fixed_zi_vars(i)), indcovb1var, size1var)) {
-      coef_vec(75) = fixed_zi_slopes(i);
-    }
-    if (stringcompare_x(as<std::string>(fixed_zi_vars(i)), indcovc1var, size1var)) {
-      coef_vec(76) = fixed_zi_slopes(i);
-    }
-    if (stringcompare_x(as<std::string>(fixed_zi_vars(i)), indcova1var, repst1var)) {
-      coef_vec(77) = fixed_zi_slopes(i);
-    }
-    if (stringcompare_x(as<std::string>(fixed_zi_vars(i)), indcovb1var, repst1var)) {
-      coef_vec(78) = fixed_zi_slopes(i);
-    }
-    if (stringcompare_x(as<std::string>(fixed_zi_vars(i)), indcovc1var, repst1var)) {
-      coef_vec(79) = fixed_zi_slopes(i);
-    }
-    if (stringcompare_x(as<std::string>(fixed_zi_vars(i)), indcova2var, indcovb2var)) {
-      coef_vec(80) = fixed_zi_slopes(i);
-    }
-    if (stringcompare_x(as<std::string>(fixed_zi_vars(i)), indcova2var, indcovc2var)) {
-      coef_vec(81) = fixed_zi_slopes(i);
-    }
-    if (stringcompare_x(as<std::string>(fixed_zi_vars(i)), indcovb2var, indcovc2var)) {
-      coef_vec(82) = fixed_zi_slopes(i);
-    }
-    if (stringcompare_x(as<std::string>(fixed_zi_vars(i)), indcova1var, indcovb1var)) {
-      coef_vec(83) = fixed_zi_slopes(i);
-    }
-    if (stringcompare_x(as<std::string>(fixed_zi_vars(i)), indcova1var, indcovc1var)) {
-      coef_vec(84) = fixed_zi_slopes(i);
-    }
-    if (stringcompare_x(as<std::string>(fixed_zi_vars(i)), indcovb1var, indcovc1var)) {
-      coef_vec(85) = fixed_zi_slopes(i);
-    }
-    if (stringcompare_x(as<std::string>(fixed_zi_vars(i)), indcova2var, indcovb1var)) {
-      coef_vec(86) = fixed_zi_slopes(i);
-    }
-    if (stringcompare_x(as<std::string>(fixed_zi_vars(i)), indcova1var, indcovb2var)) {
-      coef_vec(87) = fixed_zi_slopes(i);
-    }
-    if (stringcompare_x(as<std::string>(fixed_zi_vars(i)), indcova2var, indcovc1var)) {
-      coef_vec(88) = fixed_zi_slopes(i);
-    }
-    if (stringcompare_x(as<std::string>(fixed_zi_vars(i)), indcova1var, indcovc2var)) {
-      coef_vec(89) = fixed_zi_slopes(i);
-    }
-    if (stringcompare_x(as<std::string>(fixed_zi_vars(i)), indcovb2var, indcovc1var)) {
-      coef_vec(90) = fixed_zi_slopes(i);
-    }
-    if (stringcompare_x(as<std::string>(fixed_zi_vars(i)), indcovb1var, indcovc2var)) {
-      coef_vec(91) = fixed_zi_slopes(i);
-    }
-    
-    
-    // New coefficients
-    if (stringcompare_hard(as<std::string>(fixed_zi_vars(i)), sizeb2var)) {
-      coef_vec(200) = fixed_zi_slopes(i);
-    }
-    if (stringcompare_hard(as<std::string>(fixed_zi_vars(i)), sizeb1var)) {
-      coef_vec(201) = fixed_zi_slopes(i);
-    }
-    if (stringcompare_hard(as<std::string>(fixed_zi_vars(i)), sizec2var)) {
-      coef_vec(202) = fixed_zi_slopes(i);
-    }
-    if (stringcompare_hard(as<std::string>(fixed_zi_vars(i)), sizec1var)) {
-      coef_vec(203) = fixed_zi_slopes(i);
-    }
-    if (stringcompare_hard(as<std::string>(fixed_zi_vars(i)), densityvar)) {
-      coef_vec(204) = fixed_zi_slopes(i);
-    }
-    if (stringcompare_x(as<std::string>(fixed_zi_vars(i)), sizeb1var, sizeb2var)) {
-      coef_vec(205) = fixed_zi_slopes(i);
-    }
-    if (stringcompare_x(as<std::string>(fixed_zi_vars(i)), sizec1var, sizec2var)) {
-      coef_vec(206) = fixed_zi_slopes(i);
-    }
-    if (stringcompare_x(as<std::string>(fixed_zi_vars(i)), size1var, sizeb1var)) {
-      coef_vec(207) = fixed_zi_slopes(i);
-    }
-    if (stringcompare_x(as<std::string>(fixed_zi_vars(i)), size1var, sizec1var)) {
-      coef_vec(208) = fixed_zi_slopes(i);
-    }
-    if (stringcompare_x(as<std::string>(fixed_zi_vars(i)), sizeb1var, sizec1var)) {
-      coef_vec(209) = fixed_zi_slopes(i);
-    }
-    if (stringcompare_x(as<std::string>(fixed_zi_vars(i)), size2var, sizeb2var)) {
-      coef_vec(210) = fixed_zi_slopes(i);
-    }
-    if (stringcompare_x(as<std::string>(fixed_zi_vars(i)), size2var, sizec2var)) {
-      coef_vec(211) = fixed_zi_slopes(i);
-    }
-    if (stringcompare_x(as<std::string>(fixed_zi_vars(i)), sizeb2var, sizec2var)) {
-      coef_vec(212) = fixed_zi_slopes(i);
-    }
-    if (stringcompare_x(as<std::string>(fixed_zi_vars(i)), size1var, sizeb2var)) {
-      coef_vec(213) = fixed_zi_slopes(i);
-    }
-    if (stringcompare_x(as<std::string>(fixed_zi_vars(i)), size1var, sizec2var)) {
-      coef_vec(214) = fixed_zi_slopes(i);
-    }
-    if (stringcompare_x(as<std::string>(fixed_zi_vars(i)), sizeb1var, sizec2var)) {
-      coef_vec(215) = fixed_zi_slopes(i);
-    }
-    if (stringcompare_x(as<std::string>(fixed_zi_vars(i)), size2var, sizeb1var)) {
-      coef_vec(216) = fixed_zi_slopes(i);
-    }
-    if (stringcompare_x(as<std::string>(fixed_zi_vars(i)), size2var, sizec1var)) {
-      coef_vec(217) = fixed_zi_slopes(i);
-    }
-    if (stringcompare_x(as<std::string>(fixed_zi_vars(i)), sizeb2var, sizec1var)) {
-      coef_vec(218) = fixed_zi_slopes(i);
-    }
-    if (stringcompare_x(as<std::string>(fixed_zi_vars(i)), size2var, densityvar)) {
-      coef_vec(219) = fixed_zi_slopes(i);
-    }
-    if (stringcompare_x(as<std::string>(fixed_zi_vars(i)), sizeb2var, densityvar)) {
-      coef_vec(220) = fixed_zi_slopes(i);
-    }
-    if (stringcompare_x(as<std::string>(fixed_zi_vars(i)), sizec2var, densityvar)) {
-      coef_vec(221) = fixed_zi_slopes(i);
-    }
-    if (stringcompare_x(as<std::string>(fixed_zi_vars(i)), size1var, densityvar)) {
-      coef_vec(222) = fixed_zi_slopes(i);
-    }
-    if (stringcompare_x(as<std::string>(fixed_zi_vars(i)), sizeb1var, densityvar)) {
-      coef_vec(223) = fixed_zi_slopes(i);
-    }
-    if (stringcompare_x(as<std::string>(fixed_zi_vars(i)), sizec1var, densityvar)) {
-      coef_vec(224) = fixed_zi_slopes(i);
-    }
-    if (stringcompare_x(as<std::string>(fixed_zi_vars(i)), repst2var, densityvar)) {
-      coef_vec(225) = fixed_zi_slopes(i);
-    }
-    if (stringcompare_x(as<std::string>(fixed_zi_vars(i)), repst1var, densityvar)) {
-      coef_vec(226) = fixed_zi_slopes(i);
-    }
-    if (stringcompare_x(as<std::string>(fixed_zi_vars(i)), sizeb2var, repst2var)) {
-      coef_vec(227) = fixed_zi_slopes(i);
-    }
-    if (stringcompare_x(as<std::string>(fixed_zi_vars(i)), sizec2var, repst2var)) {
-      coef_vec(228) = fixed_zi_slopes(i);
-    }
-    // 229 = 0
-    if (stringcompare_x(as<std::string>(fixed_zi_vars(i)), sizeb1var, repst1var)) {
-      coef_vec(230) = fixed_zi_slopes(i);
-    }
-    if (stringcompare_x(as<std::string>(fixed_zi_vars(i)), sizeb2var, repst1var)) {
-      coef_vec(231) = fixed_zi_slopes(i);
-    }
-    if (stringcompare_x(as<std::string>(fixed_zi_vars(i)), sizeb1var, repst2var)) {
-      coef_vec(232) = fixed_zi_slopes(i);
-    }
-    if (stringcompare_x(as<std::string>(fixed_zi_vars(i)), sizec1var, repst1var)) {
-      coef_vec(233) = fixed_zi_slopes(i);
-    }
-    if (stringcompare_x(as<std::string>(fixed_zi_vars(i)), sizec2var, repst1var)) {
-      coef_vec(234) = fixed_zi_slopes(i);
-    }
-    if (stringcompare_x(as<std::string>(fixed_zi_vars(i)), sizec1var, repst2var)) {
-      coef_vec(235) = fixed_zi_slopes(i);
-    }
-    if (stringcompare_x(as<std::string>(fixed_zi_vars(i)), sizeb2var, agevar)) {
-      coef_vec(236) = fixed_zi_slopes(i);
-    }
-    if (stringcompare_x(as<std::string>(fixed_zi_vars(i)), sizec2var, agevar)) {
-      coef_vec(237) = fixed_zi_slopes(i);
-    }
-    if (stringcompare_x(as<std::string>(fixed_zi_vars(i)), densityvar, agevar)) {
-      coef_vec(238) = fixed_zi_slopes(i);
-    }
-    if (stringcompare_x(as<std::string>(fixed_zi_vars(i)), sizeb1var, agevar)) {
-      coef_vec(239) = fixed_zi_slopes(i);
-    }
-    if (stringcompare_x(as<std::string>(fixed_zi_vars(i)), sizec1var, agevar)) {
-      coef_vec(240) = fixed_zi_slopes(i);
-    }
-    if (stringcompare_x(as<std::string>(fixed_zi_vars(i)), indcova2var, sizeb2var)) {
-      coef_vec(241) = fixed_zi_slopes(i);
-    }
-    if (stringcompare_x(as<std::string>(fixed_zi_vars(i)), indcova2var, sizec2var)) {
-      coef_vec(242) = fixed_zi_slopes(i);
-    }
-    if (stringcompare_x(as<std::string>(fixed_zi_vars(i)), indcova2var, densityvar)) {
-      coef_vec(243) = fixed_zi_slopes(i);
-    }
-    if (stringcompare_x(as<std::string>(fixed_zi_vars(i)), indcova1var, sizeb1var)) {
-      coef_vec(244) = fixed_zi_slopes(i);
-    }
-    if (stringcompare_x(as<std::string>(fixed_zi_vars(i)), indcova1var, sizec1var)) {
-      coef_vec(245) = fixed_zi_slopes(i);
-    }
-    if (stringcompare_x(as<std::string>(fixed_zi_vars(i)), indcova1var, sizeb2var)) {
-      coef_vec(246) = fixed_zi_slopes(i);
-    }
-    if (stringcompare_x(as<std::string>(fixed_zi_vars(i)), indcova1var, sizec2var)) {
-      coef_vec(247) = fixed_zi_slopes(i);
-    }
-    if (stringcompare_x(as<std::string>(fixed_zi_vars(i)), indcova2var, sizeb1var)) {
-      coef_vec(248) = fixed_zi_slopes(i);
-    }
-    if (stringcompare_x(as<std::string>(fixed_zi_vars(i)), indcova2var, sizec1var)) {
-      coef_vec(249) = fixed_zi_slopes(i);
-    }
-    if (stringcompare_x(as<std::string>(fixed_zi_vars(i)), indcova1var, densityvar)) {
-      coef_vec(250) = fixed_zi_slopes(i);
-    }
-    if (stringcompare_x(as<std::string>(fixed_zi_vars(i)), indcovb2var, sizeb2var)) {
-      coef_vec(251) = fixed_zi_slopes(i);
-    }
-    if (stringcompare_x(as<std::string>(fixed_zi_vars(i)), indcovb2var, sizec2var)) {
-      coef_vec(252) = fixed_zi_slopes(i);
-    }
-    if (stringcompare_x(as<std::string>(fixed_zi_vars(i)), indcovb2var, densityvar)) {
-      coef_vec(253) = fixed_zi_slopes(i);
-    }
-    if (stringcompare_x(as<std::string>(fixed_zi_vars(i)), indcovb1var, sizeb1var)) {
-      coef_vec(254) = fixed_zi_slopes(i);
-    }
-    if (stringcompare_x(as<std::string>(fixed_zi_vars(i)), indcovb1var, sizec1var)) {
-      coef_vec(255) = fixed_zi_slopes(i);
-    }
-    if (stringcompare_x(as<std::string>(fixed_zi_vars(i)), indcovb1var, sizeb2var)) {
-      coef_vec(256) = fixed_zi_slopes(i);
-    }
-    if (stringcompare_x(as<std::string>(fixed_zi_vars(i)), indcovb1var, sizec2var)) {
-      coef_vec(257) = fixed_zi_slopes(i);
-    }
-    if (stringcompare_x(as<std::string>(fixed_zi_vars(i)), indcovb2var, sizeb1var)) {
-      coef_vec(258) = fixed_zi_slopes(i);
-    }
-    if (stringcompare_x(as<std::string>(fixed_zi_vars(i)), indcovb2var, sizec1var)) {
-      coef_vec(259) = fixed_zi_slopes(i);
-    }
-    if (stringcompare_x(as<std::string>(fixed_zi_vars(i)), indcovb1var, densityvar)) {
-      coef_vec(260) = fixed_zi_slopes(i);
-    }
-    if (stringcompare_x(as<std::string>(fixed_zi_vars(i)), indcovc2var, sizeb2var)) {
-      coef_vec(261) = fixed_zi_slopes(i);
-    }
-    if (stringcompare_x(as<std::string>(fixed_zi_vars(i)), indcovc2var, sizec2var)) {
-      coef_vec(262) = fixed_zi_slopes(i);
-    }
-    if (stringcompare_x(as<std::string>(fixed_zi_vars(i)), indcovc2var, densityvar)) {
-      coef_vec(263) = fixed_zi_slopes(i);
-    }
-    if (stringcompare_x(as<std::string>(fixed_zi_vars(i)), indcovc1var, sizeb1var)) {
-      coef_vec(264) = fixed_zi_slopes(i);
-    }
-    if (stringcompare_x(as<std::string>(fixed_zi_vars(i)), indcovc1var, sizec1var)) {
-      coef_vec(265) = fixed_zi_slopes(i);
-    }
-    if (stringcompare_x(as<std::string>(fixed_zi_vars(i)), indcovc1var, sizeb2var)) {
-      coef_vec(266) = fixed_zi_slopes(i);
-    }
-    if (stringcompare_x(as<std::string>(fixed_zi_vars(i)), indcovc1var, sizec2var)) {
-      coef_vec(267) = fixed_zi_slopes(i);
-    }
-    if (stringcompare_x(as<std::string>(fixed_zi_vars(i)), indcovc2var, sizeb1var)) {
-      coef_vec(268) = fixed_zi_slopes(i);
-    }
-    if (stringcompare_x(as<std::string>(fixed_zi_vars(i)), indcovc2var, sizec1var)) {
-      coef_vec(269) = fixed_zi_slopes(i);
-    }
-    if (stringcompare_x(as<std::string>(fixed_zi_vars(i)), indcovc1var, densityvar)) {
-      coef_vec(270) = fixed_zi_slopes(i);
-    }
-    if (stringcompare_x(as<std::string>(fixed_zi_vars(i)), indcova2var, size1var)) {
-      coef_vec(271) = fixed_zi_slopes(i);
-    }
-    if (stringcompare_x(as<std::string>(fixed_zi_vars(i)), indcovb2var, size1var)) {
-      coef_vec(272) = fixed_zi_slopes(i);
-    }
-    if (stringcompare_x(as<std::string>(fixed_zi_vars(i)), indcovc2var, size1var)) {
-      coef_vec(273) = fixed_zi_slopes(i);
-    }
-    if (stringcompare_x(as<std::string>(fixed_zi_vars(i)), indcova1var, size2var)) {
-      coef_vec(274) = fixed_zi_slopes(i);
-    }
-    if (stringcompare_x(as<std::string>(fixed_zi_vars(i)), indcovb1var, size2var)) {
-      coef_vec(275) = fixed_zi_slopes(i);
-    }
-    if (stringcompare_x(as<std::string>(fixed_zi_vars(i)), indcovc1var, size2var)) {
-      coef_vec(276) = fixed_zi_slopes(i);
-    }
-    if (stringcompare_x(as<std::string>(fixed_zi_vars(i)), indcova2var, repst1var)) {
-      coef_vec(277) = fixed_zi_slopes(i);
-    }
-    if (stringcompare_x(as<std::string>(fixed_zi_vars(i)), indcovb2var, repst1var)) {
-      coef_vec(278) = fixed_zi_slopes(i);
-    }
-    if (stringcompare_x(as<std::string>(fixed_zi_vars(i)), indcovc2var, repst1var)) {
-      coef_vec(279) = fixed_zi_slopes(i);
-    }
-    if (stringcompare_x(as<std::string>(fixed_zi_vars(i)), indcova1var, repst2var)) {
-      coef_vec(280) = fixed_zi_slopes(i);
-    }
-    if (stringcompare_x(as<std::string>(fixed_zi_vars(i)), indcovb1var, repst2var)) {
-      coef_vec(281) = fixed_zi_slopes(i);
-    }
-    if (stringcompare_x(as<std::string>(fixed_zi_vars(i)), indcovc1var, repst2var)) {
-      coef_vec(282) = fixed_zi_slopes(i);
+    if (no_fixed_zi_slopes > 0) {
+      if (stringcompare_simple(as<std::string>(fixed_zi_vars(i)), "ntercep")) {
+        coef_vec(46) = fixed_zi_slopes(i);
+      }
+      if (stringcompare_hard(as<std::string>(fixed_zi_vars(i)), repst1var)) {
+        coef_vec(47) = fixed_zi_slopes(i);
+      }
+      if (stringcompare_hard(as<std::string>(fixed_zi_vars(i)), repst2var)) {
+        coef_vec(48) = fixed_zi_slopes(i);
+      }
+      if (stringcompare_hard(as<std::string>(fixed_zi_vars(i)), size1var)) {
+        coef_vec(49) = fixed_zi_slopes(i);
+      }
+      if (stringcompare_hard(as<std::string>(fixed_zi_vars(i)), size2var)) {
+        coef_vec(50) = fixed_zi_slopes(i);
+      }
+      if (stringcompare_x(as<std::string>(fixed_zi_vars(i)), repst1var, repst2var)) {
+        coef_vec(51) = fixed_zi_slopes(i);
+      }
+      if (stringcompare_x(as<std::string>(fixed_zi_vars(i)), size1var, size2var)) {
+        coef_vec(52) = fixed_zi_slopes(i);
+      }
+      if (stringcompare_x(as<std::string>(fixed_zi_vars(i)), size1var, repst1var)) {
+        coef_vec(53) = fixed_zi_slopes(i);
+      }
+      if (stringcompare_x(as<std::string>(fixed_zi_vars(i)), size2var, repst2var)) {
+        coef_vec(54) = fixed_zi_slopes(i);
+      }
+      if (stringcompare_x(as<std::string>(fixed_zi_vars(i)), size2var, repst1var)) {
+        coef_vec(55) = fixed_zi_slopes(i);
+      }
+      if (stringcompare_x(as<std::string>(fixed_zi_vars(i)), size1var, repst2var)) {
+        coef_vec(56) = fixed_zi_slopes(i);
+      }
+      if (stringcompare_hard(as<std::string>(fixed_zi_vars(i)), agevar)) {
+        coef_vec(57) = fixed_zi_slopes(i);
+      }
+      if (stringcompare_x(as<std::string>(fixed_zi_vars(i)), size1var, agevar)) {
+        coef_vec(58) = fixed_zi_slopes(i);
+      }
+      if (stringcompare_x(as<std::string>(fixed_zi_vars(i)), size2var, agevar)) {
+        coef_vec(59) = fixed_zi_slopes(i);
+      }
+      if (stringcompare_x(as<std::string>(fixed_zi_vars(i)), repst1var, agevar)) {
+        coef_vec(60) = fixed_zi_slopes(i);
+      }
+      if (stringcompare_x(as<std::string>(fixed_zi_vars(i)), repst2var, agevar)) {
+        coef_vec(61) = fixed_zi_slopes(i);
+      }
+      if (stringcompare_hard(as<std::string>(fixed_zi_vars(i)), indcova2var)) {
+        coef_vec(62) = fixed_zi_slopes(i);
+      }
+      if (stringcompare_hard(as<std::string>(fixed_zi_vars(i)), indcovb2var)) {
+        coef_vec(63) = fixed_zi_slopes(i);
+      }
+      if (stringcompare_hard(as<std::string>(fixed_zi_vars(i)), indcovc2var)) {
+        coef_vec(64) = fixed_zi_slopes(i);
+      }
+      if (stringcompare_hard(as<std::string>(fixed_zi_vars(i)), indcova1var)) {
+        coef_vec(65) = fixed_zi_slopes(i);
+      }
+      if (stringcompare_hard(as<std::string>(fixed_zi_vars(i)), indcovb1var)) {
+        coef_vec(66) = fixed_zi_slopes(i);
+      }
+      if (stringcompare_hard(as<std::string>(fixed_zi_vars(i)), indcovc1var)) {
+        coef_vec(67) = fixed_zi_slopes(i);
+      }
+      if (stringcompare_x(as<std::string>(fixed_zi_vars(i)), indcova2var, size2var)) {
+        coef_vec(68) = fixed_zi_slopes(i);
+      }
+      if (stringcompare_x(as<std::string>(fixed_zi_vars(i)), indcovb2var, size2var)) {
+        coef_vec(69) = fixed_zi_slopes(i);
+      }
+      if (stringcompare_x(as<std::string>(fixed_zi_vars(i)), indcovc2var, size2var)) {
+        coef_vec(70) = fixed_zi_slopes(i);
+      }
+      if (stringcompare_x(as<std::string>(fixed_zi_vars(i)), indcova2var, repst2var)) {
+        coef_vec(71) = fixed_zi_slopes(i);
+      }
+      if (stringcompare_x(as<std::string>(fixed_zi_vars(i)), indcovb2var, repst2var)) {
+        coef_vec(72) = fixed_zi_slopes(i);
+      }
+      if (stringcompare_x(as<std::string>(fixed_zi_vars(i)), indcovc2var, repst2var)) {
+        coef_vec(73) = fixed_zi_slopes(i);
+      }
+      if (stringcompare_x(as<std::string>(fixed_zi_vars(i)), indcova1var, size1var)) {
+        coef_vec(74) = fixed_zi_slopes(i);
+      }
+      if (stringcompare_x(as<std::string>(fixed_zi_vars(i)), indcovb1var, size1var)) {
+        coef_vec(75) = fixed_zi_slopes(i);
+      }
+      if (stringcompare_x(as<std::string>(fixed_zi_vars(i)), indcovc1var, size1var)) {
+        coef_vec(76) = fixed_zi_slopes(i);
+      }
+      if (stringcompare_x(as<std::string>(fixed_zi_vars(i)), indcova1var, repst1var)) {
+        coef_vec(77) = fixed_zi_slopes(i);
+      }
+      if (stringcompare_x(as<std::string>(fixed_zi_vars(i)), indcovb1var, repst1var)) {
+        coef_vec(78) = fixed_zi_slopes(i);
+      }
+      if (stringcompare_x(as<std::string>(fixed_zi_vars(i)), indcovc1var, repst1var)) {
+        coef_vec(79) = fixed_zi_slopes(i);
+      }
+      if (stringcompare_x(as<std::string>(fixed_zi_vars(i)), indcova2var, indcovb2var)) {
+        coef_vec(80) = fixed_zi_slopes(i);
+      }
+      if (stringcompare_x(as<std::string>(fixed_zi_vars(i)), indcova2var, indcovc2var)) {
+        coef_vec(81) = fixed_zi_slopes(i);
+      }
+      if (stringcompare_x(as<std::string>(fixed_zi_vars(i)), indcovb2var, indcovc2var)) {
+        coef_vec(82) = fixed_zi_slopes(i);
+      }
+      if (stringcompare_x(as<std::string>(fixed_zi_vars(i)), indcova1var, indcovb1var)) {
+        coef_vec(83) = fixed_zi_slopes(i);
+      }
+      if (stringcompare_x(as<std::string>(fixed_zi_vars(i)), indcova1var, indcovc1var)) {
+        coef_vec(84) = fixed_zi_slopes(i);
+      }
+      if (stringcompare_x(as<std::string>(fixed_zi_vars(i)), indcovb1var, indcovc1var)) {
+        coef_vec(85) = fixed_zi_slopes(i);
+      }
+      if (stringcompare_x(as<std::string>(fixed_zi_vars(i)), indcova2var, indcovb1var)) {
+        coef_vec(86) = fixed_zi_slopes(i);
+      }
+      if (stringcompare_x(as<std::string>(fixed_zi_vars(i)), indcova1var, indcovb2var)) {
+        coef_vec(87) = fixed_zi_slopes(i);
+      }
+      if (stringcompare_x(as<std::string>(fixed_zi_vars(i)), indcova2var, indcovc1var)) {
+        coef_vec(88) = fixed_zi_slopes(i);
+      }
+      if (stringcompare_x(as<std::string>(fixed_zi_vars(i)), indcova1var, indcovc2var)) {
+        coef_vec(89) = fixed_zi_slopes(i);
+      }
+      if (stringcompare_x(as<std::string>(fixed_zi_vars(i)), indcovb2var, indcovc1var)) {
+        coef_vec(90) = fixed_zi_slopes(i);
+      }
+      if (stringcompare_x(as<std::string>(fixed_zi_vars(i)), indcovb1var, indcovc2var)) {
+        coef_vec(91) = fixed_zi_slopes(i);
+      }
+      
+      // New coefficients
+      if (stringcompare_hard(as<std::string>(fixed_zi_vars(i)), sizeb2var)) {
+        coef_vec(200) = fixed_zi_slopes(i);
+      }
+      if (stringcompare_hard(as<std::string>(fixed_zi_vars(i)), sizeb1var)) {
+        coef_vec(201) = fixed_zi_slopes(i);
+      }
+      if (stringcompare_hard(as<std::string>(fixed_zi_vars(i)), sizec2var)) {
+        coef_vec(202) = fixed_zi_slopes(i);
+      }
+      if (stringcompare_hard(as<std::string>(fixed_zi_vars(i)), sizec1var)) {
+        coef_vec(203) = fixed_zi_slopes(i);
+      }
+      if (stringcompare_hard(as<std::string>(fixed_zi_vars(i)), densityvar)) {
+        coef_vec(204) = fixed_zi_slopes(i);
+      }
+      if (stringcompare_x(as<std::string>(fixed_zi_vars(i)), sizeb1var, sizeb2var)) {
+        coef_vec(205) = fixed_zi_slopes(i);
+      }
+      if (stringcompare_x(as<std::string>(fixed_zi_vars(i)), sizec1var, sizec2var)) {
+        coef_vec(206) = fixed_zi_slopes(i);
+      }
+      if (stringcompare_x(as<std::string>(fixed_zi_vars(i)), size1var, sizeb1var)) {
+        coef_vec(207) = fixed_zi_slopes(i);
+      }
+      if (stringcompare_x(as<std::string>(fixed_zi_vars(i)), size1var, sizec1var)) {
+        coef_vec(208) = fixed_zi_slopes(i);
+      }
+      if (stringcompare_x(as<std::string>(fixed_zi_vars(i)), sizeb1var, sizec1var)) {
+        coef_vec(209) = fixed_zi_slopes(i);
+      }
+      if (stringcompare_x(as<std::string>(fixed_zi_vars(i)), size2var, sizeb2var)) {
+        coef_vec(210) = fixed_zi_slopes(i);
+      }
+      if (stringcompare_x(as<std::string>(fixed_zi_vars(i)), size2var, sizec2var)) {
+        coef_vec(211) = fixed_zi_slopes(i);
+      }
+      if (stringcompare_x(as<std::string>(fixed_zi_vars(i)), sizeb2var, sizec2var)) {
+        coef_vec(212) = fixed_zi_slopes(i);
+      }
+      if (stringcompare_x(as<std::string>(fixed_zi_vars(i)), size1var, sizeb2var)) {
+        coef_vec(213) = fixed_zi_slopes(i);
+      }
+      if (stringcompare_x(as<std::string>(fixed_zi_vars(i)), size1var, sizec2var)) {
+        coef_vec(214) = fixed_zi_slopes(i);
+      }
+      if (stringcompare_x(as<std::string>(fixed_zi_vars(i)), sizeb1var, sizec2var)) {
+        coef_vec(215) = fixed_zi_slopes(i);
+      }
+      if (stringcompare_x(as<std::string>(fixed_zi_vars(i)), size2var, sizeb1var)) {
+        coef_vec(216) = fixed_zi_slopes(i);
+      }
+      if (stringcompare_x(as<std::string>(fixed_zi_vars(i)), size2var, sizec1var)) {
+        coef_vec(217) = fixed_zi_slopes(i);
+      }
+      if (stringcompare_x(as<std::string>(fixed_zi_vars(i)), sizeb2var, sizec1var)) {
+        coef_vec(218) = fixed_zi_slopes(i);
+      }
+      if (stringcompare_x(as<std::string>(fixed_zi_vars(i)), size2var, densityvar)) {
+        coef_vec(219) = fixed_zi_slopes(i);
+      }
+      if (stringcompare_x(as<std::string>(fixed_zi_vars(i)), sizeb2var, densityvar)) {
+        coef_vec(220) = fixed_zi_slopes(i);
+      }
+      if (stringcompare_x(as<std::string>(fixed_zi_vars(i)), sizec2var, densityvar)) {
+        coef_vec(221) = fixed_zi_slopes(i);
+      }
+      if (stringcompare_x(as<std::string>(fixed_zi_vars(i)), size1var, densityvar)) {
+        coef_vec(222) = fixed_zi_slopes(i);
+      }
+      if (stringcompare_x(as<std::string>(fixed_zi_vars(i)), sizeb1var, densityvar)) {
+        coef_vec(223) = fixed_zi_slopes(i);
+      }
+      if (stringcompare_x(as<std::string>(fixed_zi_vars(i)), sizec1var, densityvar)) {
+        coef_vec(224) = fixed_zi_slopes(i);
+      }
+      if (stringcompare_x(as<std::string>(fixed_zi_vars(i)), repst2var, densityvar)) {
+        coef_vec(225) = fixed_zi_slopes(i);
+      }
+      if (stringcompare_x(as<std::string>(fixed_zi_vars(i)), repst1var, densityvar)) {
+        coef_vec(226) = fixed_zi_slopes(i);
+      }
+      if (stringcompare_x(as<std::string>(fixed_zi_vars(i)), sizeb2var, repst2var)) {
+        coef_vec(227) = fixed_zi_slopes(i);
+      }
+      if (stringcompare_x(as<std::string>(fixed_zi_vars(i)), sizec2var, repst2var)) {
+        coef_vec(228) = fixed_zi_slopes(i);
+      }
+      // 229 = 0
+      if (stringcompare_x(as<std::string>(fixed_zi_vars(i)), sizeb1var, repst1var)) {
+        coef_vec(230) = fixed_zi_slopes(i);
+      }
+      if (stringcompare_x(as<std::string>(fixed_zi_vars(i)), sizeb2var, repst1var)) {
+        coef_vec(231) = fixed_zi_slopes(i);
+      }
+      if (stringcompare_x(as<std::string>(fixed_zi_vars(i)), sizeb1var, repst2var)) {
+        coef_vec(232) = fixed_zi_slopes(i);
+      }
+      if (stringcompare_x(as<std::string>(fixed_zi_vars(i)), sizec1var, repst1var)) {
+        coef_vec(233) = fixed_zi_slopes(i);
+      }
+      if (stringcompare_x(as<std::string>(fixed_zi_vars(i)), sizec2var, repst1var)) {
+        coef_vec(234) = fixed_zi_slopes(i);
+      }
+      if (stringcompare_x(as<std::string>(fixed_zi_vars(i)), sizec1var, repst2var)) {
+        coef_vec(235) = fixed_zi_slopes(i);
+      }
+      if (stringcompare_x(as<std::string>(fixed_zi_vars(i)), sizeb2var, agevar)) {
+        coef_vec(236) = fixed_zi_slopes(i);
+      }
+      if (stringcompare_x(as<std::string>(fixed_zi_vars(i)), sizec2var, agevar)) {
+        coef_vec(237) = fixed_zi_slopes(i);
+      }
+      if (stringcompare_x(as<std::string>(fixed_zi_vars(i)), densityvar, agevar)) {
+        coef_vec(238) = fixed_zi_slopes(i);
+      }
+      if (stringcompare_x(as<std::string>(fixed_zi_vars(i)), sizeb1var, agevar)) {
+        coef_vec(239) = fixed_zi_slopes(i);
+      }
+      if (stringcompare_x(as<std::string>(fixed_zi_vars(i)), sizec1var, agevar)) {
+        coef_vec(240) = fixed_zi_slopes(i);
+      }
+      if (stringcompare_x(as<std::string>(fixed_zi_vars(i)), indcova2var, sizeb2var)) {
+        coef_vec(241) = fixed_zi_slopes(i);
+      }
+      if (stringcompare_x(as<std::string>(fixed_zi_vars(i)), indcova2var, sizec2var)) {
+        coef_vec(242) = fixed_zi_slopes(i);
+      }
+      if (stringcompare_x(as<std::string>(fixed_zi_vars(i)), indcova2var, densityvar)) {
+        coef_vec(243) = fixed_zi_slopes(i);
+      }
+      if (stringcompare_x(as<std::string>(fixed_zi_vars(i)), indcova1var, sizeb1var)) {
+        coef_vec(244) = fixed_zi_slopes(i);
+      }
+      if (stringcompare_x(as<std::string>(fixed_zi_vars(i)), indcova1var, sizec1var)) {
+        coef_vec(245) = fixed_zi_slopes(i);
+      }
+      if (stringcompare_x(as<std::string>(fixed_zi_vars(i)), indcova1var, sizeb2var)) {
+        coef_vec(246) = fixed_zi_slopes(i);
+      }
+      if (stringcompare_x(as<std::string>(fixed_zi_vars(i)), indcova1var, sizec2var)) {
+        coef_vec(247) = fixed_zi_slopes(i);
+      }
+      if (stringcompare_x(as<std::string>(fixed_zi_vars(i)), indcova2var, sizeb1var)) {
+        coef_vec(248) = fixed_zi_slopes(i);
+      }
+      if (stringcompare_x(as<std::string>(fixed_zi_vars(i)), indcova2var, sizec1var)) {
+        coef_vec(249) = fixed_zi_slopes(i);
+      }
+      if (stringcompare_x(as<std::string>(fixed_zi_vars(i)), indcova1var, densityvar)) {
+        coef_vec(250) = fixed_zi_slopes(i);
+      }
+      if (stringcompare_x(as<std::string>(fixed_zi_vars(i)), indcovb2var, sizeb2var)) {
+        coef_vec(251) = fixed_zi_slopes(i);
+      }
+      if (stringcompare_x(as<std::string>(fixed_zi_vars(i)), indcovb2var, sizec2var)) {
+        coef_vec(252) = fixed_zi_slopes(i);
+      }
+      if (stringcompare_x(as<std::string>(fixed_zi_vars(i)), indcovb2var, densityvar)) {
+        coef_vec(253) = fixed_zi_slopes(i);
+      }
+      if (stringcompare_x(as<std::string>(fixed_zi_vars(i)), indcovb1var, sizeb1var)) {
+        coef_vec(254) = fixed_zi_slopes(i);
+      }
+      if (stringcompare_x(as<std::string>(fixed_zi_vars(i)), indcovb1var, sizec1var)) {
+        coef_vec(255) = fixed_zi_slopes(i);
+      }
+      if (stringcompare_x(as<std::string>(fixed_zi_vars(i)), indcovb1var, sizeb2var)) {
+        coef_vec(256) = fixed_zi_slopes(i);
+      }
+      if (stringcompare_x(as<std::string>(fixed_zi_vars(i)), indcovb1var, sizec2var)) {
+        coef_vec(257) = fixed_zi_slopes(i);
+      }
+      if (stringcompare_x(as<std::string>(fixed_zi_vars(i)), indcovb2var, sizeb1var)) {
+        coef_vec(258) = fixed_zi_slopes(i);
+      }
+      if (stringcompare_x(as<std::string>(fixed_zi_vars(i)), indcovb2var, sizec1var)) {
+        coef_vec(259) = fixed_zi_slopes(i);
+      }
+      if (stringcompare_x(as<std::string>(fixed_zi_vars(i)), indcovb1var, densityvar)) {
+        coef_vec(260) = fixed_zi_slopes(i);
+      }
+      if (stringcompare_x(as<std::string>(fixed_zi_vars(i)), indcovc2var, sizeb2var)) {
+        coef_vec(261) = fixed_zi_slopes(i);
+      }
+      if (stringcompare_x(as<std::string>(fixed_zi_vars(i)), indcovc2var, sizec2var)) {
+        coef_vec(262) = fixed_zi_slopes(i);
+      }
+      if (stringcompare_x(as<std::string>(fixed_zi_vars(i)), indcovc2var, densityvar)) {
+        coef_vec(263) = fixed_zi_slopes(i);
+      }
+      if (stringcompare_x(as<std::string>(fixed_zi_vars(i)), indcovc1var, sizeb1var)) {
+        coef_vec(264) = fixed_zi_slopes(i);
+      }
+      if (stringcompare_x(as<std::string>(fixed_zi_vars(i)), indcovc1var, sizec1var)) {
+        coef_vec(265) = fixed_zi_slopes(i);
+      }
+      if (stringcompare_x(as<std::string>(fixed_zi_vars(i)), indcovc1var, sizeb2var)) {
+        coef_vec(266) = fixed_zi_slopes(i);
+      }
+      if (stringcompare_x(as<std::string>(fixed_zi_vars(i)), indcovc1var, sizec2var)) {
+        coef_vec(267) = fixed_zi_slopes(i);
+      }
+      if (stringcompare_x(as<std::string>(fixed_zi_vars(i)), indcovc2var, sizeb1var)) {
+        coef_vec(268) = fixed_zi_slopes(i);
+      }
+      if (stringcompare_x(as<std::string>(fixed_zi_vars(i)), indcovc2var, sizec1var)) {
+        coef_vec(269) = fixed_zi_slopes(i);
+      }
+      if (stringcompare_x(as<std::string>(fixed_zi_vars(i)), indcovc1var, densityvar)) {
+        coef_vec(270) = fixed_zi_slopes(i);
+      }
+      if (stringcompare_x(as<std::string>(fixed_zi_vars(i)), indcova2var, size1var)) {
+        coef_vec(271) = fixed_zi_slopes(i);
+      }
+      if (stringcompare_x(as<std::string>(fixed_zi_vars(i)), indcovb2var, size1var)) {
+        coef_vec(272) = fixed_zi_slopes(i);
+      }
+      if (stringcompare_x(as<std::string>(fixed_zi_vars(i)), indcovc2var, size1var)) {
+        coef_vec(273) = fixed_zi_slopes(i);
+      }
+      if (stringcompare_x(as<std::string>(fixed_zi_vars(i)), indcova1var, size2var)) {
+        coef_vec(274) = fixed_zi_slopes(i);
+      }
+      if (stringcompare_x(as<std::string>(fixed_zi_vars(i)), indcovb1var, size2var)) {
+        coef_vec(275) = fixed_zi_slopes(i);
+      }
+      if (stringcompare_x(as<std::string>(fixed_zi_vars(i)), indcovc1var, size2var)) {
+        coef_vec(276) = fixed_zi_slopes(i);
+      }
+      if (stringcompare_x(as<std::string>(fixed_zi_vars(i)), indcova2var, repst1var)) {
+        coef_vec(277) = fixed_zi_slopes(i);
+      }
+      if (stringcompare_x(as<std::string>(fixed_zi_vars(i)), indcovb2var, repst1var)) {
+        coef_vec(278) = fixed_zi_slopes(i);
+      }
+      if (stringcompare_x(as<std::string>(fixed_zi_vars(i)), indcovc2var, repst1var)) {
+        coef_vec(279) = fixed_zi_slopes(i);
+      }
+      if (stringcompare_x(as<std::string>(fixed_zi_vars(i)), indcova1var, repst2var)) {
+        coef_vec(280) = fixed_zi_slopes(i);
+      }
+      if (stringcompare_x(as<std::string>(fixed_zi_vars(i)), indcovb1var, repst2var)) {
+        coef_vec(281) = fixed_zi_slopes(i);
+      }
+      if (stringcompare_x(as<std::string>(fixed_zi_vars(i)), indcovc1var, repst2var)) {
+        coef_vec(282) = fixed_zi_slopes(i);
+      }
     }
   }
   
@@ -12802,7 +13179,7 @@ List modelextract(RObject object, DataFrame paramnames, NumericVector mainyears,
     random_slopes = random_slopes_;
     
     CharacterVector random_names = random_vars.attr("names");
-    int no_random_vars = random_names.length();
+    int no_random_vars = random_slopes.length();
     
     for (int i = 0; i < no_random_vars; i++) {
       if (stringcompare_hard(as<std::string>(random_names(i)), year2var)) {
@@ -12834,13 +13211,17 @@ List modelextract(RObject object, DataFrame paramnames, NumericVector mainyears,
       }
       
       if (stringcompare_hard(as<std::string>(random_names(i)), indcova2var)) {
+        // Rcout << "\n random indcova2 sorter reached \n";
         CharacterVector ran_inda2_names = random_vars[i];
         NumericVector ran_inda2_slopes = random_slopes[i];
         int no_ran_inda2_slopes = ran_inda2_names.length();
       
         for (int j = 0; j < no_ran_inda2_slopes; j++) {
           for (int k = 0; k < no_indcova_names; k++) {
+            // Rcout << "ran_inda2_names(j) = " << ran_inda2_names(j) << "\n";
+            // Rcout << "indcova_names(k) = " << indcova_names(k) << "\n";
             if (stringcompare_hard(as<std::string>(ran_inda2_names(j)), as<std::string>(indcova_names(k)))) {
+              // Rcout << "\n random indcova2 sorting... \n";
               indcova2s(k) = ran_inda2_slopes(j);
             }
           }
@@ -12922,13 +13303,13 @@ List modelextract(RObject object, DataFrame paramnames, NumericVector mainyears,
     
     if (random_zi_slopes.length() > 0) {
       CharacterVector random_zi_names = random_zi_vars.attr("names");
-      int no_random_zi_vars = random_zi_names.length();
+      int no_random_zi_vars = random_zi_slopes.length();
       
       for (int i = 0; i < no_random_zi_vars; i++) {
         if (stringcompare_hard(as<std::string>(random_zi_names(i)), year2var)) {
           CharacterVector ran_zi_year_names = random_zi_vars[i];
           NumericVector ran_zi_year_slopes = random_zi_slopes[i];
-          int no_ran_zi_year_slopes = ran_zi_year_names.length();
+          int no_ran_zi_year_slopes = ran_zi_year_slopes.length();
           
           for (int j = 0; j < no_ran_zi_year_slopes; j++) {
             for (int k = 0; k < no_years; k++) {
@@ -12942,11 +13323,12 @@ List modelextract(RObject object, DataFrame paramnames, NumericVector mainyears,
         if (stringcompare_hard(as<std::string>(random_zi_names(i)), patchvar)) {
           CharacterVector ran_zi_patch_names = random_zi_vars[i];
           NumericVector ran_zi_patch_slopes = random_zi_slopes[i];
-          int no_ran_zi_patch_slopes = ran_zi_patch_names.length();
+          int no_ran_zi_patch_slopes = ran_zi_patch_slopes.length();
           
           for (int j = 0; j < no_ran_zi_patch_slopes; j++) {
             for (int k = 0; k < no_patches; k++) {
-              if (stringcompare_hard(as<std::string>(ran_zi_patch_names(j)), as<std::string>(mainpatches(k)))) {
+              if (stringcompare_hard(as<std::string>(ran_zi_patch_names(j)),
+                  as<std::string>(mainpatches(k)))) {
                 zeropatch_coefs(k) = ran_zi_patch_slopes(j);
               }
             }
@@ -12956,7 +13338,7 @@ List modelextract(RObject object, DataFrame paramnames, NumericVector mainyears,
         if (stringcompare_hard(as<std::string>(random_zi_names(i)), indcova2var)) {
           CharacterVector ran_zi_inda2_names = random_zi_vars[i];
           NumericVector ran_zi_inda2_slopes = random_zi_slopes[i];
-          int no_ran_zi_inda2_slopes = ran_zi_inda2_names.length();
+          int no_ran_zi_inda2_slopes = ran_zi_inda2_slopes.length();
         
           for (int j = 0; j < no_ran_zi_inda2_slopes; j++) {
             for (int k = 0; k < no_indcova_names; k++) {
@@ -12970,7 +13352,7 @@ List modelextract(RObject object, DataFrame paramnames, NumericVector mainyears,
         if (stringcompare_hard(as<std::string>(random_zi_names(i)), indcova1var)) {
           CharacterVector ran_zi_inda1_names = random_zi_vars[i];
           NumericVector ran_zi_inda1_slopes = random_zi_slopes[i];
-          int no_ran_zi_inda1_slopes = ran_zi_inda1_names.length();
+          int no_ran_zi_inda1_slopes = ran_zi_inda1_slopes.length();
         
           for (int j = 0; j < no_ran_zi_inda1_slopes; j++) {
             for (int k = 0; k < no_indcova_names; k++) {
@@ -12984,7 +13366,7 @@ List modelextract(RObject object, DataFrame paramnames, NumericVector mainyears,
         if (stringcompare_hard(as<std::string>(random_zi_names(i)), indcovb2var)) {
           CharacterVector ran_zi_indb2_names = random_zi_vars[i];
           NumericVector ran_zi_indb2_slopes = random_zi_slopes[i];
-          int no_ran_zi_indb2_slopes = ran_zi_indb2_names.length();
+          int no_ran_zi_indb2_slopes = ran_zi_indb2_slopes.length();
         
           for (int j = 0; j < no_ran_zi_indb2_slopes; j++) {
             for (int k = 0; k < no_indcovb_names; k++) {
@@ -12998,7 +13380,7 @@ List modelextract(RObject object, DataFrame paramnames, NumericVector mainyears,
         if (stringcompare_hard(as<std::string>(random_zi_names(i)), indcovb1var)) {
           CharacterVector ran_zi_indb1_names = random_zi_vars[i];
           NumericVector ran_zi_indb1_slopes = random_zi_slopes[i];
-          int no_ran_zi_indb1_slopes = ran_zi_indb1_names.length();
+          int no_ran_zi_indb1_slopes = ran_zi_indb1_slopes.length();
         
           for (int j = 0; j < no_ran_zi_indb1_slopes; j++) {
             for (int k = 0; k < no_indcovb_names; k++) {
@@ -13012,7 +13394,7 @@ List modelextract(RObject object, DataFrame paramnames, NumericVector mainyears,
         if (stringcompare_hard(as<std::string>(random_zi_names(i)), indcovc2var)) {
           CharacterVector ran_zi_indc2_names = random_zi_vars[i];
           NumericVector ran_zi_indc2_slopes = random_zi_slopes[i];
-          int no_ran_zi_indc2_slopes = ran_zi_indc2_names.length();
+          int no_ran_zi_indc2_slopes = ran_zi_indc2_slopes.length();
         
           for (int j = 0; j < no_ran_zi_indc2_slopes; j++) {
             for (int k = 0; k < no_indcovc_names; k++) {
@@ -13026,7 +13408,7 @@ List modelextract(RObject object, DataFrame paramnames, NumericVector mainyears,
         if (stringcompare_hard(as<std::string>(random_zi_names(i)), indcovc1var)) {
           CharacterVector ran_zi_indc1_names = random_zi_vars[i];
           NumericVector ran_zi_indc1_slopes = random_zi_slopes[i];
-          int no_ran_zi_indc1_slopes = ran_zi_indc1_names.length();
+          int no_ran_zi_indc1_slopes = ran_zi_indc1_slopes.length();
         
           for (int j = 0; j < no_ran_zi_indc1_slopes; j++) {
             for (int k = 0; k < no_indcovc_names; k++) {
@@ -13037,7 +13419,6 @@ List modelextract(RObject object, DataFrame paramnames, NumericVector mainyears,
             }
           }
         }
-        
       }
     }
   }
@@ -13121,17 +13502,18 @@ List modelextract(RObject object, DataFrame paramnames, NumericVector mainyears,
 
 //' Key Function Passing Models and Other Parameters to Matrix Estimators
 //' 
-//' Function \code{raymccooney()} takes the various vital rate models and other
+//' Function \code{.raymccooney()} takes the various vital rate models and other
 //' parameters and coordinates them as input into the function-based matrix
 //' estimation functions.
 //' 
-//' @name raymccooney
+//' @name .raymccooney
 //' 
 //' @param listofyears A data frame where the rows designate the exact order of
 //' years and patches to produce matrices for.
-//' @param modelsuite An object of class \code{lefkoMod}, or a similarly
-//' structured list object. All 14 vital rate models and the \code{paramnames}
-//' data frame are required.
+//' @param modelsuite An object of class \code{lefkoMod}, a similarly structured
+//' list object, or a \code{vrm_input} object. All 14 vital rate models and the
+//' \code{paramnames} data frame are required if not using a \code{vrm_input}
+//' object.
 //' @param mainyears A numeric vector of all times at time \emph{t}.
 //' @param mainpatches A string vector of patch names.
 //' @param maingroups A string vector of stage group names.
@@ -13207,6 +13589,10 @@ List modelextract(RObject object, DataFrame paramnames, NumericVector mainyears,
 //' \code{2}: filter out rows with \code{aliveandequal == -1}.
 //' @param negfec A logical value denoting whether to change negative estimated
 //' fecundity to 0.
+//' @param nodata A logical value indicating whether the modelsuite contains
+//' all parameter coefficients and no hfv dataset is provided (\code{TRUE}), or
+//' whether an hfv dataset and a true modelsuite are provided (\code{FALSE}).
+//' Defaults to \code{FALSE}.
 //' @param exp_tol A numeric value indicating the maximum limit for the
 //' \code{exp()} function to be used in vital rate calculations. Defaults to
 //' \code{700.0}.
@@ -13243,7 +13629,7 @@ List raymccooney(DataFrame listofyears, List modelsuite, NumericVector mainyears
   StringVector r1_inda, StringVector r2_indb, StringVector r1_indb,
   StringVector r2_indc, StringVector r1_indc, NumericVector dev_terms,
   double dens, double fecmod, int firstage, int finalage, int format, int style,
-  int cont, int filter, bool negfec, double exp_tol = 700.0,
+  int cont, int filter, bool negfec, bool nodata = false, double exp_tol = 700.0,
   double theta_tol = 100000000.0, String ipm_method = "cdf",
   bool err_check = false, bool simplicity = false) {
   
@@ -13293,64 +13679,1221 @@ List raymccooney(DataFrame listofyears, List modelsuite, NumericVector mainyears
   double maxsizeb = max(maxvecb);
   double maxsizec = max(maxvecc);
   
-  RObject surv_model = modelsuite["survival_model"];
-  RObject obs_model = modelsuite["observation_model"];
-  RObject size_model = modelsuite["size_model"];
-  RObject sizeb_model = modelsuite["sizeb_model"];
-  RObject sizec_model = modelsuite["sizec_model"];
-  RObject repst_model = modelsuite["repstatus_model"];
-  RObject fec_model = modelsuite["fecundity_model"];
-  RObject jsurv_model = modelsuite["juv_survival_model"];
-  RObject jobs_model = modelsuite["juv_observation_model"];
-  RObject jsize_model = modelsuite["juv_size_model"];
-  RObject jsizeb_model = modelsuite["juv_sizeb_model"];
-  RObject jsizec_model = modelsuite["juv_sizec_model"];
-  RObject jrepst_model = modelsuite["juv_reproduction_model"];
-  RObject jmatst_model = modelsuite["juv_maturity_model"];
-  DataFrame paramnames = as<DataFrame>(modelsuite["paramnames"]);
+  // Move model summaries to appropriate RObjects
+  RObject surv_model;
+  RObject obs_model;
+  RObject size_model;
+  RObject sizeb_model;
+  RObject sizec_model;
+  RObject repst_model;
+  RObject fec_model;
+  RObject jsurv_model;
+  RObject jobs_model;
+  RObject jsize_model;
+  RObject jsizeb_model;
+  RObject jsizec_model;
+  RObject jrepst_model;
+  RObject jmatst_model;
+  DataFrame paramnames;
   
-  List surv_proxy = modelextract(surv_model, paramnames,
-    mainyears, mainpatches, maingroups,
-    mainindcova, mainindcovb, mainindcovc);
-  List obs_proxy = modelextract(obs_model, paramnames,
-    mainyears, mainpatches, maingroups,
-    mainindcova, mainindcovb, mainindcovc);
-  List size_proxy = modelextract(size_model, paramnames,
-    mainyears, mainpatches, maingroups,
-    mainindcova, mainindcovb, mainindcovc);
-  List sizeb_proxy = modelextract(sizeb_model, paramnames,
-    mainyears, mainpatches, maingroups,
-    mainindcova, mainindcovb, mainindcovc);
-  List sizec_proxy = modelextract(sizec_model, paramnames,
-    mainyears, mainpatches, maingroups,
-    mainindcova, mainindcovb, mainindcovc);
-  List repst_proxy = modelextract(repst_model, paramnames,
-    mainyears, mainpatches, maingroups,
-    mainindcova, mainindcovb, mainindcovc);
-  List fec_proxy = modelextract(fec_model, paramnames,
-    mainyears, mainpatches, maingroups,
-    mainindcova, mainindcovb, mainindcovc);
-  List jsurv_proxy = modelextract(jsurv_model, paramnames,
-    mainyears, mainpatches, maingroups,
-    mainindcova, mainindcovb, mainindcovc);
-  List jobs_proxy = modelextract(jobs_model, paramnames,
-    mainyears, mainpatches, maingroups,
-    mainindcova, mainindcovb, mainindcovc);
-  List jsize_proxy = modelextract(jsize_model, paramnames,
-    mainyears, mainpatches, maingroups,
-    mainindcova, mainindcovb, mainindcovc);
-  List jsizeb_proxy = modelextract(jsizeb_model, paramnames,
-    mainyears, mainpatches, maingroups,
-    mainindcova, mainindcovb, mainindcovc);
-  List jsizec_proxy = modelextract(jsizec_model, paramnames,
-    mainyears, mainpatches, maingroups,
-    mainindcova, mainindcovb, mainindcovc);
-  List jrepst_proxy = modelextract(jrepst_model, paramnames,
-    mainyears, mainpatches, maingroups,
-    mainindcova, mainindcovb, mainindcovc);
-  List jmatst_proxy = modelextract(jmatst_model, paramnames,
-    mainyears, mainpatches, maingroups,
-    mainindcova, mainindcovb, mainindcovc);
+  if (nodata) {
+    DataFrame vrm_frame = as<DataFrame>(modelsuite["vrm_frame"]);
+    DataFrame year_frame = as<DataFrame>(modelsuite["year_frame"]);
+    DataFrame patch_frame = as<DataFrame>(modelsuite["patch_frame"]);
+    DataFrame group2_frame = as<DataFrame>(modelsuite["group2_frame"]);
+    DataFrame group1_frame = as<DataFrame>(modelsuite["group1_frame"]);
+    DataFrame dist_frame = as<DataFrame>(modelsuite["dist_frame"]);
+    NumericVector st_frame = as<NumericVector>(modelsuite["st_frame"]);
+    
+    CharacterVector main_effect_1 = as<CharacterVector>(vrm_frame["main_effect_1"]);
+    CharacterVector effects_names = clone(main_effect_1);
+    
+    CharacterVector main_effect_2;
+    if (main_effect_1.length() > 20) {
+      main_effect_2 = as<CharacterVector>(vrm_frame["main_effect_2"]);
+      
+      for (int i = 0; i < main_effect_1.length(); i++) {
+        if (i > 16) {
+          effects_names(i) += ":";
+          effects_names(i) += main_effect_2(i);
+        }
+      }
+    }
+    
+    NumericVector year_names = as<NumericVector>(year_frame["years"]);
+    CharacterVector patch_names = as<CharacterVector>(patch_frame["patches"]);
+    NumericVector group_names = as<NumericVector>(group2_frame["groups"]);
+    
+    bool zi_yn = false;
+    
+    int vrm_length = vrm_frame.length();
+    
+    NumericVector surv_num = as<NumericVector>(vrm_frame["surv"]);
+    NumericVector obs_num = as<NumericVector>(vrm_frame["obs"]);
+    NumericVector sizea_num = as<NumericVector>(vrm_frame["sizea"]);
+    NumericVector sizeb_num = as<NumericVector>(vrm_frame["sizeb"]);
+    NumericVector sizec_num = as<NumericVector>(vrm_frame["sizec"]);
+    NumericVector repst_num = as<NumericVector>(vrm_frame["repst"]);
+    NumericVector fec_num = as<NumericVector>(vrm_frame["fec"]);
+    NumericVector jsurv_num = as<NumericVector>(vrm_frame["jsurv"]);
+    NumericVector jobs_num = as<NumericVector>(vrm_frame["jobs"]);
+    NumericVector jsizea_num = as<NumericVector>(vrm_frame["jsizea"]);
+    NumericVector jsizeb_num = as<NumericVector>(vrm_frame["jsizeb"]);
+    NumericVector jsizec_num = as<NumericVector>(vrm_frame["jsizec"]);
+    NumericVector jrepst_num = as<NumericVector>(vrm_frame["jrepst"]);
+    NumericVector jmatst_num = as<NumericVector>(vrm_frame["jmatst"]);
+    
+    NumericVector surv_year = as<NumericVector>(year_frame["surv"]);
+    NumericVector obs_year = as<NumericVector>(year_frame["obs"]);
+    NumericVector sizea_year = as<NumericVector>(year_frame["sizea"]);
+    NumericVector sizeb_year = as<NumericVector>(year_frame["sizeb"]);
+    NumericVector sizec_year = as<NumericVector>(year_frame["sizec"]);
+    NumericVector repst_year = as<NumericVector>(year_frame["repst"]);
+    NumericVector fec_year = as<NumericVector>(year_frame["fec"]);
+    NumericVector jsurv_year = as<NumericVector>(year_frame["jsurv"]);
+    NumericVector jobs_year = as<NumericVector>(year_frame["jobs"]);
+    NumericVector jsizea_year = as<NumericVector>(year_frame["jsizea"]);
+    NumericVector jsizeb_year = as<NumericVector>(year_frame["jsizeb"]);
+    NumericVector jsizec_year = as<NumericVector>(year_frame["jsizec"]);
+    NumericVector jrepst_year = as<NumericVector>(year_frame["jrepst"]);
+    NumericVector jmatst_year = as<NumericVector>(year_frame["jmatst"]);
+    
+    NumericVector surv_patch = as<NumericVector>(patch_frame["surv"]);
+    NumericVector obs_patch = as<NumericVector>(patch_frame["obs"]);
+    NumericVector sizea_patch = as<NumericVector>(patch_frame["sizea"]);
+    NumericVector sizeb_patch = as<NumericVector>(patch_frame["sizeb"]);
+    NumericVector sizec_patch = as<NumericVector>(patch_frame["sizec"]);
+    NumericVector repst_patch = as<NumericVector>(patch_frame["repst"]);
+    NumericVector fec_patch = as<NumericVector>(patch_frame["fec"]);
+    NumericVector jsurv_patch = as<NumericVector>(patch_frame["jsurv"]);
+    NumericVector jobs_patch = as<NumericVector>(patch_frame["jobs"]);
+    NumericVector jsizea_patch = as<NumericVector>(patch_frame["jsizea"]);
+    NumericVector jsizeb_patch = as<NumericVector>(patch_frame["jsizeb"]);
+    NumericVector jsizec_patch = as<NumericVector>(patch_frame["jsizec"]);
+    NumericVector jrepst_patch = as<NumericVector>(patch_frame["jrepst"]);
+    NumericVector jmatst_patch = as<NumericVector>(patch_frame["jmatst"]);
+    
+    NumericVector surv_group2 = as<NumericVector>(group2_frame["surv"]);
+    NumericVector obs_group2 = as<NumericVector>(group2_frame["obs"]);
+    NumericVector sizea_group2 = as<NumericVector>(group2_frame["sizea"]);
+    NumericVector sizeb_group2 = as<NumericVector>(group2_frame["sizeb"]);
+    NumericVector sizec_group2 = as<NumericVector>(group2_frame["sizec"]);
+    NumericVector repst_group2 = as<NumericVector>(group2_frame["repst"]);
+    NumericVector fec_group2 = as<NumericVector>(group2_frame["fec"]);
+    NumericVector jsurv_group2 = as<NumericVector>(group2_frame["jsurv"]);
+    NumericVector jobs_group2 = as<NumericVector>(group2_frame["jobs"]);
+    NumericVector jsizea_group2 = as<NumericVector>(group2_frame["jsizea"]);
+    NumericVector jsizeb_group2 = as<NumericVector>(group2_frame["jsizeb"]);
+    NumericVector jsizec_group2 = as<NumericVector>(group2_frame["jsizec"]);
+    NumericVector jrepst_group2 = as<NumericVector>(group2_frame["jrepst"]);
+    NumericVector jmatst_group2 = as<NumericVector>(group2_frame["jmatst"]);
+    
+    NumericVector surv_group1 = as<NumericVector>(group1_frame["surv"]);
+    NumericVector obs_group1 = as<NumericVector>(group1_frame["obs"]);
+    NumericVector sizea_group1 = as<NumericVector>(group1_frame["sizea"]);
+    NumericVector sizeb_group1 = as<NumericVector>(group1_frame["sizeb"]);
+    NumericVector sizec_group1 = as<NumericVector>(group1_frame["sizec"]);
+    NumericVector repst_group1 = as<NumericVector>(group1_frame["repst"]);
+    NumericVector fec_group1 = as<NumericVector>(group1_frame["fec"]);
+    NumericVector jsurv_group1 = as<NumericVector>(group1_frame["jsurv"]);
+    NumericVector jobs_group1 = as<NumericVector>(group1_frame["jobs"]);
+    NumericVector jsizea_group1 = as<NumericVector>(group1_frame["jsizea"]);
+    NumericVector jsizeb_group1 = as<NumericVector>(group1_frame["jsizeb"]);
+    NumericVector jsizec_group1 = as<NumericVector>(group1_frame["jsizec"]);
+    NumericVector jrepst_group1 = as<NumericVector>(group1_frame["jrepst"]);
+    NumericVector jmatst_group1 = as<NumericVector>(group1_frame["jmatst"]);
+    
+    StringVector distribs = as<StringVector>(dist_frame["dist"]);
+    String surv_dist = distribs(0);
+    String obs_dist = distribs(1);
+    String sizea_dist = distribs(2);
+    String sizeb_dist = distribs(3);
+    String sizec_dist = distribs(4);
+    String repst_dist = distribs(5);
+    String fec_dist = distribs(6);
+    String jsurv_dist = distribs(7);
+    String jobs_dist = distribs(8);
+    String jsizea_dist = distribs(9);
+    String jsizeb_dist = distribs(10);
+    String jsizec_dist = distribs(11);
+    String jrepst_dist = distribs(12);
+    String jmatst_dist = distribs(13);
+    
+    double sizea_st = st_frame(2);
+    double sizeb_st = st_frame(3);
+    double sizec_st = st_frame(4);
+    double fec_st = st_frame(6);
+    double jsizea_st = st_frame(9);
+    double jsizeb_st = st_frame(10);
+    double jsizec_st = st_frame(11);
+    
+    NumericVector sizea_zi;
+    NumericVector sizeb_zi;
+    NumericVector sizec_zi;
+    NumericVector fec_zi;
+    NumericVector jsizea_zi;
+    NumericVector jsizeb_zi;
+    NumericVector jsizec_zi;
+    
+    NumericVector year_sizea_zi;
+    NumericVector year_sizeb_zi;
+    NumericVector year_sizec_zi;
+    NumericVector year_fec_zi;
+    NumericVector year_jsizea_zi;
+    NumericVector year_jsizeb_zi;
+    NumericVector year_jsizec_zi;
+    
+    NumericVector patch_sizea_zi;
+    NumericVector patch_sizeb_zi;
+    NumericVector patch_sizec_zi;
+    NumericVector patch_fec_zi;
+    NumericVector patch_jsizea_zi;
+    NumericVector patch_jsizeb_zi;
+    NumericVector patch_jsizec_zi;
+    
+    NumericVector group2_sizea_zi;
+    NumericVector group2_sizeb_zi;
+    NumericVector group2_sizec_zi;
+    NumericVector group2_fec_zi;
+    NumericVector group2_jsizea_zi;
+    NumericVector group2_jsizeb_zi;
+    NumericVector group2_jsizec_zi;
+    
+    NumericVector group1_sizea_zi;
+    NumericVector group1_sizeb_zi;
+    NumericVector group1_sizec_zi;
+    NumericVector group1_fec_zi;
+    NumericVector group1_jsizea_zi;
+    NumericVector group1_jsizeb_zi;
+    NumericVector group1_jsizec_zi;
+    
+    NumericVector dud_zi;
+    
+    if (vrm_length > 16) {
+      zi_yn = true;
+      
+      sizea_zi = as<NumericVector>(vrm_frame["sizea_zi"]);
+      sizeb_zi = as<NumericVector>(vrm_frame["sizeb_zi"]);
+      sizec_zi = as<NumericVector>(vrm_frame["sizec_zi"]);
+      fec_zi = as<NumericVector>(vrm_frame["fec_zi"]);
+      jsizea_zi = as<NumericVector>(vrm_frame["jsizea_zi"]);
+      jsizeb_zi = as<NumericVector>(vrm_frame["jsizeb_zi"]);
+      jsizec_zi = as<NumericVector>(vrm_frame["jsizec_zi"]);
+      
+      year_sizea_zi = as<NumericVector>(year_frame["sizea_zi"]);
+      year_sizeb_zi = as<NumericVector>(year_frame["sizeb_zi"]);
+      year_sizec_zi = as<NumericVector>(year_frame["sizec_zi"]);
+      year_fec_zi = as<NumericVector>(year_frame["fec_zi"]);
+      year_jsizea_zi = as<NumericVector>(year_frame["jsizea_zi"]);
+      year_jsizeb_zi = as<NumericVector>(year_frame["jsizeb_zi"]);
+      year_jsizec_zi = as<NumericVector>(year_frame["jsizec_zi"]);
+      
+      patch_sizea_zi = as<NumericVector>(patch_frame["sizea_zi"]);
+      patch_sizeb_zi = as<NumericVector>(patch_frame["sizeb_zi"]);
+      patch_sizec_zi = as<NumericVector>(patch_frame["sizec_zi"]);
+      patch_fec_zi = as<NumericVector>(patch_frame["fec_zi"]);
+      patch_jsizea_zi = as<NumericVector>(patch_frame["jsizea_zi"]);
+      patch_jsizeb_zi = as<NumericVector>(patch_frame["jsizeb_zi"]);
+      patch_jsizec_zi = as<NumericVector>(patch_frame["jsizec_zi"]);
+      
+      group2_sizea_zi = as<NumericVector>(group2_frame["sizea_zi"]);
+      group2_sizeb_zi = as<NumericVector>(group2_frame["sizeb_zi"]);
+      group2_sizec_zi = as<NumericVector>(group2_frame["sizec_zi"]);
+      group2_fec_zi = as<NumericVector>(group2_frame["fec_zi"]);
+      group2_jsizea_zi = as<NumericVector>(group2_frame["jsizea_zi"]);
+      group2_jsizeb_zi = as<NumericVector>(group2_frame["jsizeb_zi"]);
+      group2_jsizec_zi = as<NumericVector>(group2_frame["jsizec_zi"]);
+      
+      group1_sizea_zi = as<NumericVector>(group1_frame["sizea_zi"]);
+      group1_sizeb_zi = as<NumericVector>(group1_frame["sizeb_zi"]);
+      group1_sizec_zi = as<NumericVector>(group1_frame["sizec_zi"]);
+      group1_fec_zi = as<NumericVector>(group1_frame["fec_zi"]);
+      group1_jsizea_zi = as<NumericVector>(group1_frame["jsizea_zi"]);
+      group1_jsizeb_zi = as<NumericVector>(group1_frame["jsizeb_zi"]);
+      group1_jsizec_zi = as<NumericVector>(group1_frame["jsizec_zi"]);
+    }
+    
+    CharacterVector indcova_names;
+    CharacterVector indcovb_names;
+    CharacterVector indcovc_names;
+    
+    NumericVector surv_indcova2;
+    NumericVector surv_indcovb2;
+    NumericVector surv_indcovc2;
+    NumericVector obs_indcova2;
+    NumericVector obs_indcovb2;
+    NumericVector obs_indcovc2;
+    NumericVector sizea_indcova2;
+    NumericVector sizea_indcovb2;
+    NumericVector sizea_indcovc2;
+    NumericVector sizeb_indcova2;
+    NumericVector sizeb_indcovb2;
+    NumericVector sizeb_indcovc2;
+    NumericVector sizec_indcova2;
+    NumericVector sizec_indcovb2;
+    NumericVector sizec_indcovc2;
+    NumericVector repst_indcova2;
+    NumericVector repst_indcovb2;
+    NumericVector repst_indcovc2;
+    NumericVector fec_indcova2;
+    NumericVector fec_indcovb2;
+    NumericVector fec_indcovc2;
+    NumericVector jsurv_indcova2;
+    NumericVector jsurv_indcovb2;
+    NumericVector jsurv_indcovc2;
+    NumericVector jobs_indcova2;
+    NumericVector jobs_indcovb2;
+    NumericVector jobs_indcovc2;
+    NumericVector jsizea_indcova2;
+    NumericVector jsizea_indcovb2;
+    NumericVector jsizea_indcovc2;
+    NumericVector jsizeb_indcova2;
+    NumericVector jsizeb_indcovb2;
+    NumericVector jsizeb_indcovc2;
+    NumericVector jsizec_indcova2;
+    NumericVector jsizec_indcovb2;
+    NumericVector jsizec_indcovc2;
+    NumericVector jrepst_indcova2;
+    NumericVector jrepst_indcovb2;
+    NumericVector jrepst_indcovc2;
+    NumericVector jmatst_indcova2;
+    NumericVector jmatst_indcovb2;
+    NumericVector jmatst_indcovc2;
+    
+    NumericVector sizea_indcova2_zi;
+    NumericVector sizea_indcovb2_zi;
+    NumericVector sizea_indcovc2_zi;
+    NumericVector sizeb_indcova2_zi;
+    NumericVector sizeb_indcovb2_zi;
+    NumericVector sizeb_indcovc2_zi;
+    NumericVector sizec_indcova2_zi;
+    NumericVector sizec_indcovb2_zi;
+    NumericVector sizec_indcovc2_zi;
+    NumericVector fec_indcova2_zi;
+    NumericVector fec_indcovb2_zi;
+    NumericVector fec_indcovc2_zi;
+    NumericVector jsizea_indcova2_zi;
+    NumericVector jsizea_indcovb2_zi;
+    NumericVector jsizea_indcovc2_zi;
+    NumericVector jsizeb_indcova2_zi;
+    NumericVector jsizeb_indcovb2_zi;
+    NumericVector jsizeb_indcovc2_zi;
+    NumericVector jsizec_indcova2_zi;
+    NumericVector jsizec_indcovb2_zi;
+    NumericVector jsizec_indcovc2_zi;
+    
+    NumericVector surv_indcova1;
+    NumericVector surv_indcovb1;
+    NumericVector surv_indcovc1;
+    NumericVector obs_indcova1;
+    NumericVector obs_indcovb1;
+    NumericVector obs_indcovc1;
+    NumericVector sizea_indcova1;
+    NumericVector sizea_indcovb1;
+    NumericVector sizea_indcovc1;
+    NumericVector sizeb_indcova1;
+    NumericVector sizeb_indcovb1;
+    NumericVector sizeb_indcovc1;
+    NumericVector sizec_indcova1;
+    NumericVector sizec_indcovb1;
+    NumericVector sizec_indcovc1;
+    NumericVector repst_indcova1;
+    NumericVector repst_indcovb1;
+    NumericVector repst_indcovc1;
+    NumericVector fec_indcova1;
+    NumericVector fec_indcovb1;
+    NumericVector fec_indcovc1;
+    NumericVector jsurv_indcova1;
+    NumericVector jsurv_indcovb1;
+    NumericVector jsurv_indcovc1;
+    NumericVector jobs_indcova1;
+    NumericVector jobs_indcovb1;
+    NumericVector jobs_indcovc1;
+    NumericVector jsizea_indcova1;
+    NumericVector jsizea_indcovb1;
+    NumericVector jsizea_indcovc1;
+    NumericVector jsizeb_indcova1;
+    NumericVector jsizeb_indcovb1;
+    NumericVector jsizeb_indcovc1;
+    NumericVector jsizec_indcova1;
+    NumericVector jsizec_indcovb1;
+    NumericVector jsizec_indcovc1;
+    NumericVector jrepst_indcova1;
+    NumericVector jrepst_indcovb1;
+    NumericVector jrepst_indcovc1;
+    NumericVector jmatst_indcova1;
+    NumericVector jmatst_indcovb1;
+    NumericVector jmatst_indcovc1;
+    
+    NumericVector sizea_indcova1_zi;
+    NumericVector sizea_indcovb1_zi;
+    NumericVector sizea_indcovc1_zi;
+    NumericVector sizeb_indcova1_zi;
+    NumericVector sizeb_indcovb1_zi;
+    NumericVector sizeb_indcovc1_zi;
+    NumericVector sizec_indcova1_zi;
+    NumericVector sizec_indcovb1_zi;
+    NumericVector sizec_indcovc1_zi;
+    NumericVector fec_indcova1_zi;
+    NumericVector fec_indcovb1_zi;
+    NumericVector fec_indcovc1_zi;
+    NumericVector jsizea_indcova1_zi;
+    NumericVector jsizea_indcovb1_zi;
+    NumericVector jsizea_indcovc1_zi;
+    NumericVector jsizeb_indcova1_zi;
+    NumericVector jsizeb_indcovb1_zi;
+    NumericVector jsizeb_indcovc1_zi;
+    NumericVector jsizec_indcova1_zi;
+    NumericVector jsizec_indcovb1_zi;
+    NumericVector jsizec_indcovc1_zi;
+    
+    int modelsuite_length = modelsuite.length();
+    CharacterVector modelsuite_names = modelsuite.attr("names");
+    
+    for (int i = 0; i < modelsuite_length; i++) {
+      if (stringcompare_hard(as<std::string>(modelsuite_names[i]), "indcova2_frame")) {
+        DataFrame indcova2_frame = as<DataFrame>(modelsuite["indcova2_frame"]);
+        
+        indcova_names = indcova2_frame["indcova"];
+        
+        surv_indcova2 = indcova2_frame["surv"];
+        obs_indcova2 = indcova2_frame["obs"];
+        sizea_indcova2 = indcova2_frame["sizea"];
+        sizeb_indcova2 = indcova2_frame["sizeb"];
+        sizec_indcova2 = indcova2_frame["sizec"];
+        repst_indcova2 = indcova2_frame["repst"];
+        fec_indcova2 = indcova2_frame["fec"];
+        
+        jsurv_indcova2 = indcova2_frame["jsurv"];
+        jobs_indcova2 = indcova2_frame["jobs"];
+        jsizea_indcova2 = indcova2_frame["jsizea"];
+        jsizeb_indcova2 = indcova2_frame["jsizeb"];
+        jsizec_indcova2 = indcova2_frame["jsizec"];
+        jrepst_indcova2 = indcova2_frame["jrepst"];
+        jmatst_indcova2 = indcova2_frame["jmatst"];
+        
+        if (zi_yn) {
+          sizea_indcova2_zi = indcova2_frame["sizea_zi"];
+          sizeb_indcova2_zi = indcova2_frame["sizeb_zi"];
+          sizec_indcova2_zi = indcova2_frame["sizec_zi"];
+          fec_indcova2_zi = indcova2_frame["fec_zi"];
+          jsizea_indcova2_zi = indcova2_frame["jsizea_zi"];
+          jsizeb_indcova2_zi = indcova2_frame["jsizeb_zi"];
+          jsizec_indcova2_zi = indcova2_frame["jsizec_zi"];
+        }
+      }
+      
+      if (stringcompare_hard(as<std::string>(modelsuite_names[i]), "indcova1_frame")) {
+        DataFrame indcova1_frame = as<DataFrame>(modelsuite["indcova1_frame"]);
+        
+        indcova_names = indcova1_frame["indcova"];
+        
+        surv_indcova1 = indcova1_frame["surv"];
+        obs_indcova1 = indcova1_frame["obs"];
+        sizea_indcova1 = indcova1_frame["sizea"];
+        sizeb_indcova1 = indcova1_frame["sizeb"];
+        sizec_indcova1 = indcova1_frame["sizec"];
+        repst_indcova1 = indcova1_frame["repst"];
+        fec_indcova1 = indcova1_frame["fec"];
+        
+        jsurv_indcova1 = indcova1_frame["jsurv"];
+        jobs_indcova1 = indcova1_frame["jobs"];
+        jsizea_indcova1 = indcova1_frame["jsizea"];
+        jsizeb_indcova1 = indcova1_frame["jsizeb"];
+        jsizec_indcova1 = indcova1_frame["jsizec"];
+        jrepst_indcova1 = indcova1_frame["jrepst"];
+        jmatst_indcova1 = indcova1_frame["jmatst"];
+        
+        if (zi_yn) {
+          sizea_indcova1_zi = indcova1_frame["sizea_zi"];
+          sizeb_indcova1_zi = indcova1_frame["sizeb_zi"];
+          sizec_indcova1_zi = indcova1_frame["sizec_zi"];
+          fec_indcova1_zi = indcova1_frame["fec_zi"];
+          jsizea_indcova1_zi = indcova1_frame["jsizea_zi"];
+          jsizeb_indcova1_zi = indcova1_frame["jsizeb_zi"];
+          jsizec_indcova1_zi = indcova1_frame["jsizec_zi"];
+        }
+      }
+      
+      if (stringcompare_hard(as<std::string>(modelsuite_names[i]), "indcovb2_frame")) {
+        DataFrame indcovb2_frame = as<DataFrame>(modelsuite["indcovb2_frame"]);
+        
+        indcovb_names = indcovb2_frame["indcovb"];
+        
+        surv_indcovb2 = indcovb2_frame["surv"];
+        obs_indcovb2 = indcovb2_frame["obs"];
+        sizea_indcovb2 = indcovb2_frame["sizea"];
+        sizeb_indcovb2 = indcovb2_frame["sizeb"];
+        sizec_indcovb2 = indcovb2_frame["sizec"];
+        repst_indcovb2 = indcovb2_frame["repst"];
+        fec_indcovb2 = indcovb2_frame["fec"];
+        
+        jsurv_indcovb2 = indcovb2_frame["jsurv"];
+        jobs_indcovb2 = indcovb2_frame["jobs"];
+        jsizea_indcovb2 = indcovb2_frame["jsizea"];
+        jsizeb_indcovb2 = indcovb2_frame["jsizeb"];
+        jsizec_indcovb2 = indcovb2_frame["jsizec"];
+        jrepst_indcovb2 = indcovb2_frame["jrepst"];
+        jmatst_indcovb2 = indcovb2_frame["jmatst"];
+        
+        if (zi_yn) {
+          sizea_indcovb2_zi = indcovb2_frame["sizea_zi"];
+          sizeb_indcovb2_zi = indcovb2_frame["sizeb_zi"];
+          sizec_indcovb2_zi = indcovb2_frame["sizec_zi"];
+          fec_indcovb2_zi = indcovb2_frame["fec_zi"];
+          jsizea_indcovb2_zi = indcovb2_frame["jsizea_zi"];
+          jsizeb_indcovb2_zi = indcovb2_frame["jsizeb_zi"];
+          jsizec_indcovb2_zi = indcovb2_frame["jsizec_zi"];
+        }
+      }
+      
+      if (stringcompare_hard(as<std::string>(modelsuite_names[i]), "indcovb1_frame")) {
+        DataFrame indcovb1_frame = as<DataFrame>(modelsuite["indcovb1_frame"]);
+        
+        indcovb_names = indcovb1_frame["indcovb"];
+        
+        surv_indcovb1 = indcovb1_frame["surv"];
+        obs_indcovb1 = indcovb1_frame["obs"];
+        sizea_indcovb1 = indcovb1_frame["sizea"];
+        sizeb_indcovb1 = indcovb1_frame["sizeb"];
+        sizec_indcovb1 = indcovb1_frame["sizec"];
+        repst_indcovb1 = indcovb1_frame["repst"];
+        fec_indcovb1 = indcovb1_frame["fec"];
+        
+        jsurv_indcovb1 = indcovb1_frame["jsurv"];
+        jobs_indcovb1 = indcovb1_frame["jobs"];
+        jsizea_indcovb1 = indcovb1_frame["jsizea"];
+        jsizeb_indcovb1 = indcovb1_frame["jsizeb"];
+        jsizec_indcovb1 = indcovb1_frame["jsizec"];
+        jrepst_indcovb1 = indcovb1_frame["jrepst"];
+        jmatst_indcovb1 = indcovb1_frame["jmatst"];
+        
+        if (zi_yn) {
+          sizea_indcovb1_zi = indcovb1_frame["sizea_zi"];
+          sizeb_indcovb1_zi = indcovb1_frame["sizeb_zi"];
+          sizec_indcovb1_zi = indcovb1_frame["sizec_zi"];
+          fec_indcovb1_zi = indcovb1_frame["fec_zi"];
+          jsizea_indcovb1_zi = indcovb1_frame["jsizea_zi"];
+          jsizeb_indcovb1_zi = indcovb1_frame["jsizeb_zi"];
+          jsizec_indcovb1_zi = indcovb1_frame["jsizec_zi"];
+        }
+      }
+      
+      if (stringcompare_hard(as<std::string>(modelsuite_names[i]), "indcovc2_frame")) {
+        DataFrame indcovc2_frame = as<DataFrame>(modelsuite["indcovc2_frame"]);
+        
+        indcovc_names = indcovc2_frame["indcovc"];
+        
+        surv_indcovc2 = indcovc2_frame["surv"];
+        obs_indcovc2 = indcovc2_frame["obs"];
+        sizea_indcovc2 = indcovc2_frame["sizea"];
+        sizeb_indcovc2 = indcovc2_frame["sizeb"];
+        sizec_indcovc2 = indcovc2_frame["sizec"];
+        repst_indcovc2 = indcovc2_frame["repst"];
+        fec_indcovc2 = indcovc2_frame["fec"];
+        
+        jsurv_indcovc2 = indcovc2_frame["jsurv"];
+        jobs_indcovc2 = indcovc2_frame["jobs"];
+        jsizea_indcovc2 = indcovc2_frame["jsizea"];
+        jsizeb_indcovc2 = indcovc2_frame["jsizeb"];
+        jsizec_indcovc2 = indcovc2_frame["jsizec"];
+        jrepst_indcovc2 = indcovc2_frame["jrepst"];
+        jmatst_indcovc2 = indcovc2_frame["jmatst"];
+        
+        if (zi_yn) {
+          sizea_indcovc2_zi = indcovc2_frame["sizea_zi"];
+          sizeb_indcovc2_zi = indcovc2_frame["sizeb_zi"];
+          sizec_indcovc2_zi = indcovc2_frame["sizec_zi"];
+          fec_indcovc2_zi = indcovc2_frame["fec_zi"];
+          jsizea_indcovc2_zi = indcovc2_frame["jsizea_zi"];
+          jsizeb_indcovc2_zi = indcovc2_frame["jsizeb_zi"];
+          jsizec_indcovc2_zi = indcovc2_frame["jsizec_zi"];
+        }
+      }
+      
+      if (stringcompare_hard(as<std::string>(modelsuite_names[i]), "indcovc1_frame")) {
+        DataFrame indcovc1_frame = as<DataFrame>(modelsuite["indcovc1_frame"]);
+        
+        indcovc_names = indcovc1_frame["indcovc"];
+        
+        surv_indcovc1 = indcovc1_frame["surv"];
+        obs_indcovc1 = indcovc1_frame["obs"];
+        sizea_indcovc1 = indcovc1_frame["sizea"];
+        sizeb_indcovc1 = indcovc1_frame["sizeb"];
+        sizec_indcovc1 = indcovc1_frame["sizec"];
+        repst_indcovc1 = indcovc1_frame["repst"];
+        fec_indcovc1 = indcovc1_frame["fec"];
+        
+        jsurv_indcovc1 = indcovc1_frame["jsurv"];
+        jobs_indcovc1 = indcovc1_frame["jobs"];
+        jsizea_indcovc1 = indcovc1_frame["jsizea"];
+        jsizeb_indcovc1 = indcovc1_frame["jsizeb"];
+        jsizec_indcovc1 = indcovc1_frame["jsizec"];
+        jrepst_indcovc1 = indcovc1_frame["jrepst"];
+        jmatst_indcovc1 = indcovc1_frame["jmatst"];
+        
+        if (zi_yn) {
+          sizea_indcovc1_zi = indcovc1_frame["sizea_zi"];
+          sizeb_indcovc1_zi = indcovc1_frame["sizeb_zi"];
+          sizec_indcovc1_zi = indcovc1_frame["sizec_zi"];
+          fec_indcovc1_zi = indcovc1_frame["fec_zi"];
+          jsizea_indcovc1_zi = indcovc1_frame["jsizea_zi"];
+          jsizeb_indcovc1_zi = indcovc1_frame["jsizeb_zi"];
+          jsizec_indcovc1_zi = indcovc1_frame["jsizec_zi"];
+        }
+      }
+    }
+    
+    CharacterVector list_names = {"fixed_slopes", "year_slopes", "patch_slopes",
+      "group2_slopes", "dist", "zi", "fixed_zi", "year_zi", "patch_zi",
+      "group2_zi", "indcova_names", "indcova2_slopes", "indcova2_zi",
+      "indcovb_names", "indcovb2_slopes", "indcovb2_zi", "indcovc_names",
+      "indcovc2_slopes", "indcovc2_zi", "year_names", "patch_names",
+      "group_names", "main_effect_1", "main_effect_2", "sigma_theta",
+      "effects_names", "group1_slopes", "group1_zi", "indcova1_slopes",
+      "indcovb1_slopes", "indcovc1_slopes", "indcova1_zi", "indcovb1_zi",
+      "indcovc1_zi"};
+      
+    List surv_list(34);
+    surv_list(0) = surv_num;
+    surv_list(1) = surv_year;
+    surv_list(2) = surv_patch;
+    surv_list(3) = surv_group2;
+    surv_list(4) = surv_dist;
+    surv_list(5) = false;
+    surv_list(6) = dud_zi;
+    surv_list(7) = dud_zi;
+    surv_list(8) = dud_zi;
+    surv_list(9) = dud_zi;
+    surv_list(10) = indcova_names;
+    surv_list(11) = surv_indcova2;
+    surv_list(12) = dud_zi;
+    surv_list(13) = indcovb_names;
+    surv_list(14) = surv_indcovb2;
+    surv_list(15) = dud_zi;
+    surv_list(16) = indcovc_names;
+    surv_list(17) = surv_indcovc2;
+    surv_list(18) = dud_zi;
+    surv_list(19) = year_names;
+    surv_list(20) = patch_names;
+    surv_list(21) = group_names;
+    surv_list(22) = main_effect_1;
+    surv_list(23) = main_effect_2;
+    surv_list(24) = 1.0;
+    surv_list(25) = effects_names;
+    surv_list(26) = surv_group1;
+    surv_list(27) = dud_zi;
+    surv_list(28) = surv_indcova1;
+    surv_list(29) = surv_indcovb1;
+    surv_list(30) = surv_indcovc1;
+    surv_list(31) = dud_zi;
+    surv_list(32) = dud_zi;
+    surv_list(33) = dud_zi;
+    
+    List obs_list(34);
+    obs_list(0) = obs_num;
+    obs_list(1) = obs_year;
+    obs_list(2) = obs_patch;
+    obs_list(3) = obs_group2;
+    obs_list(4) = obs_dist;
+    obs_list(5) = false;
+    obs_list(6) = dud_zi;
+    obs_list(7) = dud_zi;
+    obs_list(8) = dud_zi;
+    obs_list(9) = dud_zi;
+    obs_list(10) = indcova_names;
+    obs_list(11) = obs_indcova2;
+    obs_list(12) = dud_zi;
+    obs_list(13) = indcovb_names;
+    obs_list(14) = obs_indcovb2;
+    obs_list(15) = dud_zi;
+    obs_list(16) = indcovc_names;
+    obs_list(17) = obs_indcovc2;
+    obs_list(18) = dud_zi;
+    obs_list(19) = year_names;
+    obs_list(20) = patch_names;
+    obs_list(21) = group_names;
+    obs_list(22) = main_effect_1;
+    obs_list(23) = main_effect_2;
+    obs_list(24) = 1.0;
+    obs_list(25) = effects_names;
+    obs_list(26) = obs_group1;
+    obs_list(27) = dud_zi;
+    obs_list(28) = obs_indcova1;
+    obs_list(29) = obs_indcovb1;
+    obs_list(30) = obs_indcovc1;
+    obs_list(31) = dud_zi;
+    obs_list(32) = dud_zi;
+    obs_list(33) = dud_zi;
+    
+    List sizea_list(34);
+    sizea_list(0) = sizea_num;
+    sizea_list(1) = sizea_year;
+    sizea_list(2) = sizea_patch;
+    sizea_list(3) = sizea_group2;
+    sizea_list(4) = sizea_dist;
+    sizea_list(5) = zi_yn;
+    sizea_list(6) = sizea_zi;
+    sizea_list(7) = year_sizea_zi;
+    sizea_list(8) = patch_sizea_zi;
+    sizea_list(9) = group2_sizea_zi;
+    sizea_list(10) = indcova_names;
+    sizea_list(11) = sizea_indcova2;
+    sizea_list(12) = sizea_indcova2_zi;
+    sizea_list(13) = indcovb_names;
+    sizea_list(14) = sizea_indcovb2;
+    sizea_list(15) = sizea_indcovb2_zi;
+    sizea_list(16) = indcovc_names;
+    sizea_list(17) = sizea_indcovc2;
+    sizea_list(18) = sizea_indcovc2_zi;
+    sizea_list(19) = year_names;
+    sizea_list(20) = patch_names;
+    sizea_list(21) = group_names;
+    sizea_list(22) = main_effect_1;
+    sizea_list(23) = main_effect_2;
+    sizea_list(24) = sizea_st;
+    sizea_list(25) = effects_names;
+    sizea_list(26) = sizea_group1;
+    sizea_list(27) = group1_sizea_zi;
+    sizea_list(28) = sizea_indcova1;
+    sizea_list(29) = sizea_indcovb1;
+    sizea_list(30) = sizea_indcovc1;
+    sizea_list(31) = sizea_indcova1_zi;
+    sizea_list(32) = sizea_indcovb1_zi;
+    sizea_list(33) = sizea_indcovc1_zi;
+    
+    List sizeb_list(34);
+    sizeb_list(0) = sizeb_num;
+    sizeb_list(1) = sizeb_year;
+    sizeb_list(2) = sizeb_patch;
+    sizeb_list(3) = sizeb_group2;
+    sizeb_list(4) = sizeb_dist;
+    sizeb_list(5) = zi_yn;
+    sizeb_list(6) = sizeb_zi;
+    sizeb_list(7) = year_sizeb_zi;
+    sizeb_list(8) = patch_sizeb_zi;
+    sizeb_list(9) = group2_sizeb_zi;
+    sizeb_list(10) = indcova_names;
+    sizeb_list(11) = sizeb_indcova2;
+    sizeb_list(12) = sizeb_indcova2_zi;
+    sizeb_list(13) = indcovb_names;
+    sizeb_list(14) = sizeb_indcovb2;
+    sizeb_list(15) = sizeb_indcovb2_zi;
+    sizeb_list(16) = indcovc_names;
+    sizeb_list(17) = sizeb_indcovc2;
+    sizeb_list(18) = sizeb_indcovc2_zi;
+    sizeb_list(19) = year_names;
+    sizeb_list(20) = patch_names;
+    sizeb_list(21) = group_names;
+    sizeb_list(22) = main_effect_1;
+    sizeb_list(23) = main_effect_2;
+    sizeb_list(24) = sizeb_st;
+    sizeb_list(25) = effects_names;
+    sizeb_list(26) = sizeb_group1;
+    sizeb_list(27) = group1_sizeb_zi;
+    sizeb_list(28) = sizeb_indcova1;
+    sizeb_list(29) = sizeb_indcovb1;
+    sizeb_list(30) = sizeb_indcovc1;
+    sizeb_list(31) = sizeb_indcova1_zi;
+    sizeb_list(32) = sizeb_indcovb1_zi;
+    sizeb_list(33) = sizeb_indcovc1_zi;
+    
+    List sizec_list(34);
+    sizec_list(0) = sizec_num;
+    sizec_list(1) = sizec_year;
+    sizec_list(2) = sizec_patch;
+    sizec_list(3) = sizec_group2;
+    sizec_list(4) = sizec_dist;
+    sizec_list(5) = zi_yn;
+    sizec_list(6) = sizec_zi;
+    sizec_list(7) = year_sizec_zi;
+    sizec_list(8) = patch_sizec_zi;
+    sizec_list(9) = group2_sizec_zi;
+    sizec_list(10) = indcova_names;
+    sizec_list(11) = sizec_indcova2;
+    sizec_list(12) = sizec_indcova2_zi;
+    sizec_list(13) = indcovb_names;
+    sizec_list(14) = sizec_indcovb2;
+    sizec_list(15) = sizec_indcovb2_zi;
+    sizec_list(16) = indcovc_names;
+    sizec_list(17) = sizec_indcovc2;
+    sizec_list(18) = sizec_indcovc2_zi;
+    sizec_list(19) = year_names;
+    sizec_list(20) = patch_names;
+    sizec_list(21) = group_names;
+    sizec_list(22) = main_effect_1;
+    sizec_list(23) = main_effect_2;
+    sizec_list(24) = sizec_st;
+    sizec_list(25) = effects_names;
+    sizec_list(26) = sizec_group1;
+    sizec_list(27) = group1_sizec_zi;
+    sizec_list(28) = sizec_indcova1;
+    sizec_list(29) = sizec_indcovb1;
+    sizec_list(30) = sizec_indcovc1;
+    sizec_list(31) = sizec_indcova1_zi;
+    sizec_list(32) = sizec_indcovb1_zi;
+    sizec_list(33) = sizec_indcovc1_zi;
+    
+    List repst_list(34);
+    repst_list(0) = repst_num;
+    repst_list(1) = repst_year;
+    repst_list(2) = repst_patch;
+    repst_list(3) = repst_group2;
+    repst_list(4) = repst_dist;
+    repst_list(5) = false;
+    repst_list(6) = dud_zi;
+    repst_list(7) = dud_zi;
+    repst_list(8) = dud_zi;
+    repst_list(9) = dud_zi;
+    repst_list(10) = indcova_names;
+    repst_list(11) = repst_indcova2;
+    repst_list(12) = dud_zi;
+    repst_list(13) = indcovb_names;
+    repst_list(14) = repst_indcovb2;
+    repst_list(15) = dud_zi;
+    repst_list(16) = indcovc_names;
+    repst_list(17) = repst_indcovc2;
+    repst_list(18) = dud_zi;
+    repst_list(19) = year_names;
+    repst_list(20) = patch_names;
+    repst_list(21) = group_names;
+    repst_list(22) = main_effect_1;
+    repst_list(23) = main_effect_2;
+    repst_list(24) = 1.0;
+    repst_list(25) = effects_names;
+    repst_list(26) = repst_group1;
+    repst_list(27) = dud_zi;
+    repst_list(28) = repst_indcova1;
+    repst_list(29) = repst_indcovb1;
+    repst_list(30) = repst_indcovc1;
+    repst_list(31) = dud_zi;
+    repst_list(32) = dud_zi;
+    repst_list(33) = dud_zi;
+    
+    List fec_list(34);
+    fec_list(0) = fec_num;
+    fec_list(1) = fec_year;
+    fec_list(2) = fec_patch;
+    fec_list(3) = fec_group2;
+    fec_list(4) = fec_dist;
+    fec_list(5) = zi_yn;
+    fec_list(6) = fec_zi;
+    fec_list(7) = year_fec_zi;
+    fec_list(8) = patch_fec_zi;
+    fec_list(9) = group2_fec_zi;
+    fec_list(10) = indcova_names;
+    fec_list(11) = fec_indcova2;
+    fec_list(12) = fec_indcova2_zi;
+    fec_list(13) = indcovb_names;
+    fec_list(14) = fec_indcovb2;
+    fec_list(15) = fec_indcovb2_zi;
+    fec_list(16) = indcovc_names;
+    fec_list(17) = fec_indcovc2;
+    fec_list(18) = fec_indcovc2_zi;
+    fec_list(19) = year_names;
+    fec_list(20) = patch_names;
+    fec_list(21) = group_names;
+    fec_list(22) = main_effect_1;
+    fec_list(23) = main_effect_2;
+    fec_list(24) = fec_st;
+    fec_list(25) = effects_names;
+    fec_list(26) = fec_group1;
+    fec_list(27) = group1_fec_zi;
+    fec_list(28) = fec_indcova1;
+    fec_list(29) = fec_indcovb1;
+    fec_list(30) = fec_indcovc1;
+    fec_list(31) = fec_indcova1_zi;
+    fec_list(32) = fec_indcovb1_zi;
+    fec_list(33) = fec_indcovc1_zi;
+    
+    List jsurv_list(34);
+    jsurv_list(0) = jsurv_num;
+    jsurv_list(1) = jsurv_year;
+    jsurv_list(2) = jsurv_patch;
+    jsurv_list(3) = jsurv_group2;
+    jsurv_list(4) = jsurv_dist;
+    jsurv_list(5) = false;
+    jsurv_list(6) = dud_zi;
+    jsurv_list(7) = dud_zi;
+    jsurv_list(8) = dud_zi;
+    jsurv_list(9) = dud_zi;
+    jsurv_list(10) = indcova_names;
+    jsurv_list(11) = jsurv_indcova2;
+    jsurv_list(12) = dud_zi;
+    jsurv_list(13) = indcovb_names;
+    jsurv_list(14) = jsurv_indcovb2;
+    jsurv_list(15) = dud_zi;
+    jsurv_list(16) = indcovc_names;
+    jsurv_list(17) = jsurv_indcovc2;
+    jsurv_list(18) = dud_zi;
+    jsurv_list(19) = year_names;
+    jsurv_list(20) = patch_names;
+    jsurv_list(21) = group_names;
+    jsurv_list(22) = main_effect_1;
+    jsurv_list(23) = main_effect_2;
+    jsurv_list(24) = 1.0;
+    jsurv_list(25) = effects_names;
+    jsurv_list(26) = jsurv_group1;
+    jsurv_list(27) = dud_zi;
+    jsurv_list(28) = jsurv_indcova1;
+    jsurv_list(29) = jsurv_indcovb1;
+    jsurv_list(30) = jsurv_indcovc1;
+    jsurv_list(31) = dud_zi;
+    jsurv_list(32) = dud_zi;
+    jsurv_list(33) = dud_zi;
+    
+    List jobs_list(34);
+    jobs_list(0) = jobs_num;
+    jobs_list(1) = jobs_year;
+    jobs_list(2) = jobs_patch;
+    jobs_list(3) = jobs_group2;
+    jobs_list(4) = jobs_dist;
+    jobs_list(5) = false;
+    jobs_list(6) = dud_zi;
+    jobs_list(7) = dud_zi;
+    jobs_list(8) = dud_zi;
+    jobs_list(9) = dud_zi;
+    jobs_list(10) = indcova_names;
+    jobs_list(11) = jobs_indcova2;
+    jobs_list(12) = dud_zi;
+    jobs_list(13) = indcovb_names;
+    jobs_list(14) = jobs_indcovb2;
+    jobs_list(15) = dud_zi;
+    jobs_list(16) = indcovc_names;
+    jobs_list(17) = jobs_indcovc2;
+    jobs_list(18) = dud_zi;
+    jobs_list(19) = year_names;
+    jobs_list(20) = patch_names;
+    jobs_list(21) = group_names;
+    jobs_list(22) = main_effect_1;
+    jobs_list(23) = main_effect_2;
+    jobs_list(24) = 1.0;
+    jobs_list(25) = effects_names;
+    jobs_list(26) = jobs_group1;
+    jobs_list(27) = dud_zi;
+    jobs_list(28) = jobs_indcova1;
+    jobs_list(29) = jobs_indcovb1;
+    jobs_list(30) = jobs_indcovc1;
+    jobs_list(31) = dud_zi;
+    jobs_list(32) = dud_zi;
+    jobs_list(33) = dud_zi;
+    
+    List jsizea_list(34);
+    jsizea_list(0) = jsizea_num;
+    jsizea_list(1) = jsizea_year;
+    jsizea_list(2) = jsizea_patch;
+    jsizea_list(3) = jsizea_group2;
+    jsizea_list(4) = jsizea_dist;
+    jsizea_list(5) = zi_yn;
+    jsizea_list(6) = jsizea_zi;
+    jsizea_list(7) = year_jsizea_zi;
+    jsizea_list(8) = patch_jsizea_zi;
+    jsizea_list(9) = group2_jsizea_zi;
+    jsizea_list(10) = indcova_names;
+    jsizea_list(11) = jsizea_indcova2;
+    jsizea_list(12) = jsizea_indcova2_zi;
+    jsizea_list(13) = indcovb_names;
+    jsizea_list(14) = jsizea_indcovb2;
+    jsizea_list(15) = jsizea_indcovb2_zi;
+    jsizea_list(16) = indcovc_names;
+    jsizea_list(17) = jsizea_indcovc2;
+    jsizea_list(18) = jsizea_indcovc2_zi;
+    jsizea_list(19) = year_names;
+    jsizea_list(20) = patch_names;
+    jsizea_list(21) = group_names;
+    jsizea_list(22) = main_effect_1;
+    jsizea_list(23) = main_effect_2;
+    jsizea_list(24) = jsizea_st;
+    jsizea_list(25) = effects_names;
+    jsizea_list(26) = jsizea_group1;
+    jsizea_list(27) = group1_jsizea_zi;
+    jsizea_list(28) = jsizea_indcova1;
+    jsizea_list(29) = jsizea_indcovb1;
+    jsizea_list(30) = jsizea_indcovc1;
+    jsizea_list(31) = jsizea_indcova1_zi;
+    jsizea_list(32) = jsizea_indcovb1_zi;
+    jsizea_list(33) = jsizea_indcovc1_zi;
+    
+    List jsizeb_list(34);
+    jsizeb_list(0) = jsizeb_num;
+    jsizeb_list(1) = jsizeb_year;
+    jsizeb_list(2) = jsizeb_patch;
+    jsizeb_list(3) = jsizeb_group2;
+    jsizeb_list(4) = jsizeb_dist;
+    jsizeb_list(5) = zi_yn;
+    jsizeb_list(6) = jsizeb_zi;
+    jsizeb_list(7) = year_jsizeb_zi;
+    jsizeb_list(8) = patch_jsizeb_zi;
+    jsizeb_list(9) = group2_jsizeb_zi;
+    jsizeb_list(10) = indcova_names;
+    jsizeb_list(11) = jsizeb_indcova2;
+    jsizeb_list(12) = jsizeb_indcova2_zi;
+    jsizeb_list(13) = indcovb_names;
+    jsizeb_list(14) = jsizeb_indcovb2;
+    jsizeb_list(15) = jsizeb_indcovb2_zi;
+    jsizeb_list(16) = indcovc_names;
+    jsizeb_list(17) = jsizeb_indcovc2;
+    jsizeb_list(18) = jsizeb_indcovc2_zi;
+    jsizeb_list(19) = year_names;
+    jsizeb_list(20) = patch_names;
+    jsizeb_list(21) = group_names;
+    jsizeb_list(22) = main_effect_1;
+    jsizeb_list(23) = main_effect_2;
+    jsizeb_list(24) = jsizeb_st;
+    jsizeb_list(25) = effects_names;
+    jsizeb_list(26) = jsizeb_group1;
+    jsizeb_list(27) = group1_jsizeb_zi;
+    jsizeb_list(28) = jsizeb_indcova1;
+    jsizeb_list(29) = jsizeb_indcovb1;
+    jsizeb_list(30) = jsizeb_indcovc1;
+    jsizeb_list(31) = jsizeb_indcova1_zi;
+    jsizeb_list(32) = jsizeb_indcovb1_zi;
+    jsizeb_list(33) = jsizeb_indcovc1_zi;
+    
+    List jsizec_list(34);
+    jsizec_list(0) = jsizec_num;
+    jsizec_list(1) = jsizec_year;
+    jsizec_list(2) = jsizec_patch;
+    jsizec_list(3) = jsizec_group2;
+    jsizec_list(4) = jsizec_dist;
+    jsizec_list(5) = zi_yn;
+    jsizec_list(6) = jsizec_zi;
+    jsizec_list(7) = year_jsizec_zi;
+    jsizec_list(8) = patch_jsizec_zi;
+    jsizec_list(9) = group2_jsizec_zi;
+    jsizec_list(10) = indcova_names;
+    jsizec_list(11) = jsizec_indcova2;
+    jsizec_list(12) = jsizec_indcova2_zi;
+    jsizec_list(13) = indcovb_names;
+    jsizec_list(14) = jsizec_indcovb2;
+    jsizec_list(15) = jsizec_indcovb2_zi;
+    jsizec_list(16) = indcovc_names;
+    jsizec_list(17) = jsizec_indcovc2;
+    jsizec_list(18) = jsizec_indcovc2_zi;
+    jsizec_list(19) = year_names;
+    jsizec_list(20) = patch_names;
+    jsizec_list(21) = group_names;
+    jsizec_list(22) = main_effect_1;
+    jsizec_list(23) = main_effect_2;
+    jsizec_list(24) = jsizec_st;
+    jsizec_list(25) = effects_names;
+    jsizec_list(26) = jsizec_group1;
+    jsizec_list(27) = group1_jsizec_zi;
+    jsizec_list(28) = jsizec_indcova1;
+    jsizec_list(29) = jsizec_indcovb1;
+    jsizec_list(30) = jsizec_indcovc1;
+    jsizec_list(31) = jsizec_indcova1_zi;
+    jsizec_list(32) = jsizec_indcovb1_zi;
+    jsizec_list(33) = jsizec_indcovc1_zi;
+    
+    List jrepst_list(34);
+    jrepst_list(0) = jrepst_num;
+    jrepst_list(1) = jrepst_year;
+    jrepst_list(2) = jrepst_patch;
+    jrepst_list(3) = jrepst_group2;
+    jrepst_list(4) = jrepst_dist;
+    jrepst_list(5) = false;
+    jrepst_list(6) = dud_zi;
+    jrepst_list(7) = dud_zi;
+    jrepst_list(8) = dud_zi;
+    jrepst_list(9) = dud_zi;
+    jrepst_list(10) = indcova_names;
+    jrepst_list(11) = jrepst_indcova2;
+    jrepst_list(12) = dud_zi;
+    jrepst_list(13) = indcovb_names;
+    jrepst_list(14) = jrepst_indcovb2;
+    jrepst_list(15) = dud_zi;
+    jrepst_list(16) = indcovc_names;
+    jrepst_list(17) = jrepst_indcovc2;
+    jrepst_list(18) = dud_zi;
+    jrepst_list(19) = year_names;
+    jrepst_list(20) = patch_names;
+    jrepst_list(21) = group_names;
+    jrepst_list(22) = main_effect_1;
+    jrepst_list(23) = main_effect_2;
+    jrepst_list(24) = 1.0;
+    jrepst_list(25) = effects_names;
+    jrepst_list(26) = jrepst_group1;
+    jrepst_list(27) = dud_zi;
+    jrepst_list(28) = jrepst_indcova1;
+    jrepst_list(29) = jrepst_indcovb1;
+    jrepst_list(30) = jrepst_indcovc1;
+    jrepst_list(31) = dud_zi;
+    jrepst_list(32) = dud_zi;
+    jrepst_list(33) = dud_zi;
+    
+    List jmatst_list(34);
+    jmatst_list(0) = jmatst_num;
+    jmatst_list(1) = jmatst_year;
+    jmatst_list(2) = jmatst_patch;
+    jmatst_list(3) = jmatst_group2;
+    jmatst_list(4) = jmatst_dist;
+    jmatst_list(5) = false;
+    jmatst_list(6) = dud_zi;
+    jmatst_list(7) = dud_zi;
+    jmatst_list(8) = dud_zi;
+    jmatst_list(9) = dud_zi;
+    jmatst_list(10) = indcova_names;
+    jmatst_list(11) = jmatst_indcova2;
+    jmatst_list(12) = dud_zi;
+    jmatst_list(13) = indcovb_names;
+    jmatst_list(14) = jmatst_indcovb2;
+    jmatst_list(15) = dud_zi;
+    jmatst_list(16) = indcovc_names;
+    jmatst_list(17) = jmatst_indcovc2;
+    jmatst_list(18) = dud_zi;
+    jmatst_list(19) = year_names;
+    jmatst_list(20) = patch_names;
+    jmatst_list(21) = group_names;
+    jmatst_list(22) = main_effect_1;
+    jmatst_list(23) = main_effect_2;
+    jmatst_list(24) = 1.0;
+    jmatst_list(25) = effects_names;
+    jmatst_list(26) = jmatst_group1;
+    jmatst_list(27) = dud_zi;
+    jmatst_list(28) = jmatst_indcova1;
+    jmatst_list(29) = jmatst_indcovb1;
+    jmatst_list(30) = jmatst_indcovc1;
+    jmatst_list(31) = dud_zi;
+    jmatst_list(32) = dud_zi;
+    jmatst_list(33) = dud_zi;
+    
+    surv_model = surv_list;
+    obs_model = obs_list;
+    size_model = sizea_list;
+    sizeb_model = sizeb_list;
+    sizec_model = sizec_list;
+    repst_model = repst_list;
+    fec_model = fec_list;
+    
+    jsurv_model = jsurv_list;
+    jobs_model = jobs_list;
+    jsize_model = jsizea_list;
+    jsizeb_model = jsizeb_list;
+    jsizec_model = jsizec_list;
+    jrepst_model = jrepst_list;
+    jmatst_model = jmatst_list;
+    
+    surv_model.attr("names") = list_names;
+    obs_model.attr("names") = list_names;
+    size_model.attr("names") = list_names;
+    sizeb_model.attr("names") = list_names;
+    sizec_model.attr("names") = list_names;
+    repst_model.attr("names") = list_names;
+    fec_model.attr("names") = list_names;
+    jsurv_model.attr("names") = list_names;
+    jobs_model.attr("names") = list_names;
+    jsize_model.attr("names") = list_names;
+    jsizeb_model.attr("names") = list_names;
+    jsizec_model.attr("names") = list_names;
+    jrepst_model.attr("names") = list_names;
+    jmatst_model.attr("names") = list_names;
+    
+    paramnames = as<DataFrame>(modelsuite["paramnames"]);
+    CharacterVector modelparams = as<CharacterVector>(paramnames["modelparams"]);
+    CharacterVector mainparams = as<CharacterVector>(paramnames["mainparams"]);
+    CharacterVector parameter_names = as<CharacterVector>(paramnames["parameter_names"]);
+    
+    bool current_check = false;
+    for (int i = 0; i < modelparams.length(); i++) {
+      for (int j = 0; j < 17; j++) {
+        current_check = stringcompare_hard(as<std::string>(mainparams(i)), as<std::string>(main_effect_1(j)));
+        
+        if (current_check) modelparams(i) = main_effect_1(j);
+      }
+    }
+    
+    paramnames = DataFrame::create(_["parameter_names"] = parameter_names,
+      _["mainparams"] = mainparams, _["modelparams"] = modelparams);
+      
+  } else {
+    surv_model = modelsuite["survival_model"];
+    obs_model = modelsuite["observation_model"];
+    size_model = modelsuite["size_model"];
+    sizeb_model = modelsuite["sizeb_model"];
+    sizec_model = modelsuite["sizec_model"];
+    repst_model = modelsuite["repstatus_model"];
+    fec_model = modelsuite["fecundity_model"];
+    
+    jsurv_model = modelsuite["juv_survival_model"];
+    jobs_model = modelsuite["juv_observation_model"];
+    jsize_model = modelsuite["juv_size_model"];
+    jsizeb_model = modelsuite["juv_sizeb_model"];
+    jsizec_model = modelsuite["juv_sizec_model"];
+    jrepst_model = modelsuite["juv_reproduction_model"];
+    jmatst_model = modelsuite["juv_maturity_model"];
+    
+    paramnames = as<DataFrame>(modelsuite["paramnames"]);
+  }
+  
+  List surv_proxy = modelextract(surv_model, paramnames, mainyears, mainpatches,
+    maingroups, mainindcova, mainindcovb, mainindcovc, nodata);
+  List obs_proxy = modelextract(obs_model, paramnames, mainyears, mainpatches,
+    maingroups, mainindcova, mainindcovb, mainindcovc, nodata);
+  List size_proxy = modelextract(size_model, paramnames, mainyears, mainpatches,
+    maingroups, mainindcova, mainindcovb, mainindcovc, nodata);
+  List sizeb_proxy = modelextract(sizeb_model, paramnames, mainyears,
+    mainpatches, maingroups, mainindcova, mainindcovb, mainindcovc, nodata);
+  List sizec_proxy = modelextract(sizec_model, paramnames, mainyears,
+    mainpatches, maingroups, mainindcova, mainindcovb, mainindcovc, nodata);
+  List repst_proxy = modelextract(repst_model, paramnames, mainyears,
+    mainpatches, maingroups, mainindcova, mainindcovb, mainindcovc, nodata);
+  List fec_proxy = modelextract(fec_model, paramnames, mainyears, mainpatches,
+    maingroups, mainindcova, mainindcovb, mainindcovc, nodata);
+  List jsurv_proxy = modelextract(jsurv_model, paramnames, mainyears,
+    mainpatches, maingroups, mainindcova, mainindcovb, mainindcovc, nodata);
+  List jobs_proxy = modelextract(jobs_model, paramnames, mainyears, mainpatches,
+    maingroups, mainindcova, mainindcovb, mainindcovc, nodata);
+  List jsize_proxy = modelextract(jsize_model, paramnames, mainyears,
+    mainpatches, maingroups, mainindcova, mainindcovb, mainindcovc, nodata);
+  List jsizeb_proxy = modelextract(jsizeb_model, paramnames, mainyears,
+    mainpatches, maingroups, mainindcova, mainindcovb, mainindcovc, nodata);
+  List jsizec_proxy = modelextract(jsizec_model, paramnames, mainyears,
+    mainpatches, maingroups, mainindcova, mainindcovb, mainindcovc, nodata);
+  List jrepst_proxy = modelextract(jrepst_model, paramnames, mainyears,
+    mainpatches, maingroups, mainindcova, mainindcovb, mainindcovc, nodata);
+  List jmatst_proxy = modelextract(jmatst_model, paramnames, mainyears,
+    mainpatches, maingroups, mainindcova, mainindcovb, mainindcovc, nodata);
+  
+  /*
+  // Here is a temporary output list for testing purposes
+  List NewOutput_a(15);
+  NewOutput_a(0) = surv_model;
+  NewOutput_a(1) = obs_model;
+  NewOutput_a(2) = size_model;
+  NewOutput_a(3) = sizeb_model;
+  NewOutput_a(4) = sizec_model;
+  NewOutput_a(5) = repst_model;
+  NewOutput_a(6) = fec_model;
+  NewOutput_a(7) = jsurv_model;
+  NewOutput_a(8) = jobs_model;
+  NewOutput_a(9) = jsize_model;
+  NewOutput_a(10) = jsizeb_model;
+  NewOutput_a(11) = jsizec_model;
+  NewOutput_a(12) = jrepst_model;
+  NewOutput_a(13) = jmatst_model;
+  NewOutput_a(14) = paramnames;
+  
+  List NewOutput_b(14);
+  NewOutput_b(0) = surv_proxy;
+  NewOutput_b(1) = obs_proxy;
+  NewOutput_b(2) = size_proxy;
+  NewOutput_b(3) = sizeb_proxy;
+  NewOutput_b(4) = sizec_proxy;
+  NewOutput_b(5) = repst_proxy;
+  NewOutput_b(6) = fec_proxy;
+  NewOutput_b(7) = jsurv_proxy;
+  NewOutput_b(8) = jobs_proxy;
+  NewOutput_b(9) = jsize_proxy;
+  NewOutput_b(10) = jsizeb_proxy;
+  NewOutput_b(11) = jsizec_proxy;
+  NewOutput_b(12) = jrepst_proxy;
+  NewOutput_b(13) = jmatst_proxy;
+  
+  List NewOutput = List::create(_["Part1"] = NewOutput_a, _["Part2"] = NewOutput_b);
+  
+  return NewOutput;
+  */
   
   // Now we create the matrices and order them within the correct lsit structure
   List A_mats(loy_length);
@@ -13413,13 +14956,14 @@ List raymccooney(DataFrame listofyears, List modelsuite, NumericVector mainyears
 //' This function takes the various vital rate models and other parameters and
 //' coordinates them as input into function \code{fleslie()}.
 //' 
-//' @name mothermccooney
+//' @name .mothermccooney
 //' 
 //' @param listofyears A data frame where the rows designate the exact order of
 //' years and patches to produce matrices for.
-//' @param modelsuite An object of class \code{lefkoMod}, or a similarly
-//' structured list object. Survival model, fecundity model, and the
-//' \code{paramnames} data frame are required.
+//' @param modelsuite An object of class \code{lefkoMod}, a similarly structured
+//' list object, or a \code{vrm_input} object. Survival model, fecundity model,
+//' and the \code{paramnames} data frame are required if not using a
+//' \code{vrm_input} object.
 //' @param actualages An integer vector of all actual ages to be included in the
 //' matrices, in order.
 //' @param mainyears A numeric vector of all times at time \emph{t}.
@@ -13477,6 +15021,10 @@ List raymccooney(DataFrame listofyears, List modelsuite, NumericVector mainyears
 //' age.
 //' @param negfec A logical value denoting whether to change negative estimated
 //' fecundity to 0.
+//' @param nodata A logical value indicating whether the modelsuite contains
+//' all parameter coefficients and no hfv dataset is provided (\code{TRUE}), or
+//' whether an hfv dataset and a true modelsuite are provided (\code{FALSE}).
+//' Defaults to \code{FALSE}.
 //' @param exp_tol A numeric value indicating the maximum limit for the
 //' \code{exp()} function to be used in vital rate calculations. Defaults to
 //' \code{700.0}.
@@ -13503,8 +15051,9 @@ List mothermccooney(DataFrame listofyears, List modelsuite, IntegerVector actual
   StringVector r2_inda, StringVector r1_inda, StringVector r2_indb,
   StringVector r1_indb, StringVector r2_indc, StringVector r1_indc,
   NumericVector dev_terms, double dens, double fecmod, int finalage, int cont,
-  bool negfec, double exp_tol = 700.0, double theta_tol = 100000000.0,
-  bool err_check = false, bool simplicity = false) {
+  bool negfec, bool nodata = false, double exp_tol = 700.0,
+  double theta_tol = 100000000.0, bool err_check = false,
+  bool simplicity = false) {
   
   // Dud dens_vr inputs
   Rcpp::DataFrame dvr_frame;
@@ -13518,16 +15067,297 @@ List mothermccooney(DataFrame listofyears, List modelsuite, IntegerVector actual
   double surv_dev = dev_terms(0);
   double fec_dev = dev_terms(1);
   
-  RObject surv_model = modelsuite["survival_model"];
-  RObject fec_model = modelsuite["fecundity_model"];
-  DataFrame paramnames = as<DataFrame>(modelsuite["paramnames"]);
+  // Move model summaries to appropriate RObjects
+  RObject surv_model;
+  RObject fec_model;
+  DataFrame paramnames;
   
-  List surv_proxy = modelextract(surv_model, paramnames,
-    mainyears, mainpatches, maingroups,
-    mainindcova, mainindcovb, mainindcovc);
-  List fec_proxy = modelextract(fec_model, paramnames,
-    mainyears, mainpatches, maingroups,
-    mainindcova, mainindcovb, mainindcovc);
+  if (nodata) {
+    DataFrame vrm_frame = as<DataFrame>(modelsuite["vrm_frame"]);
+    DataFrame year_frame = as<DataFrame>(modelsuite["year_frame"]);
+    DataFrame patch_frame = as<DataFrame>(modelsuite["patch_frame"]);
+    DataFrame group2_frame = as<DataFrame>(modelsuite["group2_frame"]);
+    DataFrame group1_frame = as<DataFrame>(modelsuite["group1_frame"]);
+    DataFrame dist_frame = as<DataFrame>(modelsuite["dist_frame"]);
+    NumericVector st_frame = as<NumericVector>(modelsuite["st_frame"]);
+    
+    CharacterVector main_effect_1 = as<CharacterVector>(vrm_frame["main_effect_1"]);
+    CharacterVector effects_names = clone(main_effect_1);
+    
+    CharacterVector main_effect_2;
+    if (main_effect_1.length() > 20) {
+      main_effect_2 = as<CharacterVector>(vrm_frame["main_effect_2"]);
+      
+      for (int i = 0; i < main_effect_1.length(); i++) {
+        if (i > 16) {
+          effects_names(i) += ":";
+          effects_names(i) += main_effect_2(i);
+        }
+      }
+    }
+    
+    NumericVector year_names = as<NumericVector>(year_frame["years"]);
+    CharacterVector patch_names = as<CharacterVector>(patch_frame["patches"]);
+    NumericVector group_names = as<NumericVector>(group2_frame["groups"]);
+    
+    bool zi_yn = false;
+    
+    int vrm_length = vrm_frame.length();
+    
+    NumericVector surv_num = as<NumericVector>(vrm_frame["surv"]);
+    NumericVector fec_num = as<NumericVector>(vrm_frame["fec"]);
+    
+    NumericVector surv_year = as<NumericVector>(year_frame["surv"]);
+    NumericVector fec_year = as<NumericVector>(year_frame["fec"]);
+    NumericVector surv_patch = as<NumericVector>(patch_frame["surv"]);
+    NumericVector fec_patch = as<NumericVector>(patch_frame["fec"]);
+    NumericVector surv_group2 = as<NumericVector>(group2_frame["surv"]);
+    NumericVector fec_group2 = as<NumericVector>(group2_frame["fec"]);
+    NumericVector surv_group1 = as<NumericVector>(group1_frame["surv"]);
+    NumericVector fec_group1 = as<NumericVector>(group1_frame["fec"]);
+    
+    StringVector distribs = as<StringVector>(dist_frame["dist"]);
+    String surv_dist = distribs(0);
+    String fec_dist = distribs(6);
+    
+    double fec_st = st_frame(6);
+    
+    NumericVector fec_zi;
+    NumericVector year_fec_zi;
+    NumericVector patch_fec_zi;
+    NumericVector group2_fec_zi;
+    NumericVector group1_fec_zi;
+    
+    NumericVector dud_zi;
+    
+    if (vrm_length > 16) {
+      zi_yn = true;
+      
+      fec_zi = as<NumericVector>(vrm_frame["fec_zi"]);
+      year_fec_zi = as<NumericVector>(year_frame["fec_zi"]);
+      patch_fec_zi = as<NumericVector>(patch_frame["fec_zi"]);
+      group2_fec_zi = as<NumericVector>(group2_frame["fec_zi"]);
+      group1_fec_zi = as<NumericVector>(group1_frame["fec_zi"]);
+    }
+    
+    CharacterVector indcova_names;
+    CharacterVector indcovb_names;
+    CharacterVector indcovc_names;
+    
+    NumericVector surv_indcova2;
+    NumericVector surv_indcovb2;
+    NumericVector surv_indcovc2;
+    NumericVector fec_indcova2;
+    NumericVector fec_indcovb2;
+    NumericVector fec_indcovc2;
+    
+    NumericVector fec_indcova2_zi;
+    NumericVector fec_indcovb2_zi;
+    NumericVector fec_indcovc2_zi;
+    
+    NumericVector surv_indcova1;
+    NumericVector surv_indcovb1;
+    NumericVector surv_indcovc1;
+    NumericVector fec_indcova1;
+    NumericVector fec_indcovb1;
+    NumericVector fec_indcovc1;
+    
+    NumericVector fec_indcova1_zi;
+    NumericVector fec_indcovb1_zi;
+    NumericVector fec_indcovc1_zi;
+    
+    int modelsuite_length = modelsuite.length();
+    CharacterVector modelsuite_names = modelsuite.attr("names");
+    
+    for (int i = 0; i < modelsuite_length; i++) {
+      if (stringcompare_hard(as<std::string>(modelsuite_names[i]), "indcova2_frame")) {
+        DataFrame indcova2_frame = as<DataFrame>(modelsuite["indcova2_frame"]);
+        
+        indcova_names = indcova2_frame["indcova"];
+        surv_indcova2 = indcova2_frame["surv"];
+        fec_indcova2 = indcova2_frame["fec"];
+        
+        if (zi_yn) {
+          fec_indcova2_zi = indcova2_frame["fec_zi"];
+        }
+      }
+      
+      if (stringcompare_hard(as<std::string>(modelsuite_names[i]), "indcova1_frame")) {
+        DataFrame indcova1_frame = as<DataFrame>(modelsuite["indcova1_frame"]);
+        
+        indcova_names = indcova1_frame["indcova"];
+        surv_indcova1 = indcova1_frame["surv"];
+        fec_indcova1 = indcova1_frame["fec"];
+        
+        if (zi_yn) {
+          fec_indcova1_zi = indcova1_frame["fec_zi"];
+        }
+      }
+      
+      if (stringcompare_hard(as<std::string>(modelsuite_names[i]), "indcovb2_frame")) {
+        DataFrame indcovb2_frame = as<DataFrame>(modelsuite["indcovb2_frame"]);
+        
+        indcovb_names = indcovb2_frame["indcovb"];
+        surv_indcovb2 = indcovb2_frame["surv"];
+        fec_indcovb2 = indcovb2_frame["fec"];
+        
+        if (zi_yn) {
+          fec_indcovb2_zi = indcovb2_frame["fec_zi"];
+        }
+      }
+      
+      if (stringcompare_hard(as<std::string>(modelsuite_names[i]), "indcovb1_frame")) {
+        DataFrame indcovb1_frame = as<DataFrame>(modelsuite["indcovb1_frame"]);
+        
+        indcovb_names = indcovb1_frame["indcovb"];
+        surv_indcovb1 = indcovb1_frame["surv"];
+        fec_indcovb1 = indcovb1_frame["fec"];
+        
+        if (zi_yn) {
+          fec_indcovb1_zi = indcovb1_frame["fec_zi"];
+        }
+      }
+      
+      if (stringcompare_hard(as<std::string>(modelsuite_names[i]), "indcovc2_frame")) {
+        DataFrame indcovc2_frame = as<DataFrame>(modelsuite["indcovc2_frame"]);
+        
+        indcovc_names = indcovc2_frame["indcovc"];
+        surv_indcovc2 = indcovc2_frame["surv"];
+        fec_indcovc2 = indcovc2_frame["fec"];
+        
+        if (zi_yn) {
+          fec_indcovc2_zi = indcovc2_frame["fec_zi"];
+        }
+      }
+      
+      if (stringcompare_hard(as<std::string>(modelsuite_names[i]), "indcovc1_frame")) {
+        DataFrame indcovc1_frame = as<DataFrame>(modelsuite["indcovc1_frame"]);
+        
+        indcovc_names = indcovc1_frame["indcovc"];
+        surv_indcovc1 = indcovc1_frame["surv"];
+        fec_indcovc1 = indcovc1_frame["fec"];
+        
+        if (zi_yn) {
+          fec_indcovc1_zi = indcovc1_frame["fec_zi"];
+        }
+      }
+    }
+    
+    CharacterVector list_names = {"fixed_slopes", "year_slopes", "patch_slopes",
+      "group2_slopes", "dist", "zi", "fixed_zi", "year_zi", "patch_zi",
+      "group2_zi", "indcova_names", "indcova2_slopes", "indcova2_zi",
+      "indcovb_names", "indcovb2_slopes", "indcovb2_zi", "indcovc_names",
+      "indcovc2_slopes", "indcovc2_zi", "year_names", "patch_names",
+      "group_names", "main_effect_1", "main_effect_2", "sigma_theta",
+      "effects_names", "group1_slopes", "group1_zi", "indcova1_slopes",
+      "indcovb1_slopes", "indcovc1_slopes", "indcova1_zi", "indcovb1_zi",
+      "indcovc1_zi"};
+      
+    List surv_list(34);
+    surv_list(0) = surv_num;
+    surv_list(1) = surv_year;
+    surv_list(2) = surv_patch;
+    surv_list(3) = surv_group2;
+    surv_list(4) = surv_dist;
+    surv_list(5) = false;
+    surv_list(6) = dud_zi;
+    surv_list(7) = dud_zi;
+    surv_list(8) = dud_zi;
+    surv_list(9) = dud_zi;
+    surv_list(10) = indcova_names;
+    surv_list(11) = surv_indcova2;
+    surv_list(12) = dud_zi;
+    surv_list(13) = indcovb_names;
+    surv_list(14) = surv_indcovb2;
+    surv_list(15) = dud_zi;
+    surv_list(16) = indcovc_names;
+    surv_list(17) = surv_indcovc2;
+    surv_list(18) = dud_zi;
+    surv_list(19) = year_names;
+    surv_list(20) = patch_names;
+    surv_list(21) = group_names;
+    surv_list(22) = main_effect_1;
+    surv_list(23) = main_effect_2;
+    surv_list(24) = 1.0;
+    surv_list(25) = effects_names;
+    surv_list(26) = surv_group1;
+    surv_list(27) = dud_zi;
+    surv_list(28) = surv_indcova1;
+    surv_list(29) = surv_indcovb1;
+    surv_list(30) = surv_indcovc1;
+    surv_list(31) = dud_zi;
+    surv_list(32) = dud_zi;
+    surv_list(33) = dud_zi;
+    
+    List fec_list(34);
+    fec_list(0) = fec_num;
+    fec_list(1) = fec_year;
+    fec_list(2) = fec_patch;
+    fec_list(3) = fec_group2;
+    fec_list(4) = fec_dist;
+    fec_list(5) = zi_yn;
+    fec_list(6) = fec_zi;
+    fec_list(7) = year_fec_zi;
+    fec_list(8) = patch_fec_zi;
+    fec_list(9) = group2_fec_zi;
+    fec_list(10) = indcova_names;
+    fec_list(11) = fec_indcova2;
+    fec_list(12) = fec_indcova2_zi;
+    fec_list(13) = indcovb_names;
+    fec_list(14) = fec_indcovb2;
+    fec_list(15) = fec_indcovb2_zi;
+    fec_list(16) = indcovc_names;
+    fec_list(17) = fec_indcovc2;
+    fec_list(18) = fec_indcovc2_zi;
+    fec_list(19) = year_names;
+    fec_list(20) = patch_names;
+    fec_list(21) = group_names;
+    fec_list(22) = main_effect_1;
+    fec_list(23) = main_effect_2;
+    fec_list(24) = fec_st;
+    fec_list(25) = effects_names;
+    fec_list(26) = fec_group1;
+    fec_list(27) = group1_fec_zi;
+    fec_list(28) = fec_indcova1;
+    fec_list(29) = fec_indcovb1;
+    fec_list(30) = fec_indcovc1;
+    fec_list(31) = fec_indcova1_zi;
+    fec_list(32) = fec_indcovb1_zi;
+    fec_list(33) = fec_indcovc1_zi;
+    
+    surv_model = surv_list;
+    fec_model = fec_list;
+    
+    surv_model.attr("names") = list_names;
+    fec_model.attr("names") = list_names;
+    
+    paramnames = as<DataFrame>(modelsuite["paramnames"]);
+    CharacterVector modelparams = as<CharacterVector>(paramnames["modelparams"]);
+    CharacterVector mainparams = as<CharacterVector>(paramnames["mainparams"]);
+    CharacterVector parameter_names = as<CharacterVector>(paramnames["parameter_names"]);
+    
+    bool current_check = false;
+    for (int i = 0; i < modelparams.length(); i++) {
+      for (int j = 0; j < 17; j++) {
+        current_check = stringcompare_hard(as<std::string>(mainparams(i)), as<std::string>(main_effect_1(j)));
+        
+        if (current_check) modelparams(i) = main_effect_1(j);
+      }
+    }
+    
+    paramnames = DataFrame::create(_["parameter_names"] = parameter_names,
+      _["mainparams"] = mainparams, _["modelparams"] = modelparams);
+      
+  } else {
+    surv_model = modelsuite["survival_model"];
+    fec_model = modelsuite["fecundity_model"];
+    paramnames = as<DataFrame>(modelsuite["paramnames"]);
+  }
+  
+  List surv_proxy = modelextract(surv_model, paramnames, mainyears, mainpatches,
+    maingroups, mainindcova, mainindcovb, mainindcovc, nodata);
+  List fec_proxy = modelextract(fec_model, paramnames, mainyears, mainpatches,
+    maingroups, mainindcova, mainindcovb, mainindcovc, nodata);
   
   // Now we create the matrices and order them within the correct list structure
   List A_mats(loy_length);
@@ -13987,14 +15817,14 @@ List mothermccooney(DataFrame listofyears, List modelsuite, IntegerVector actual
 //' 
 //' @export f_projection3
 // [[Rcpp::export]]
-Rcpp::List f_projection3(DataFrame data, int format, bool prebreeding = true,
-  int start_age = NA_INTEGER, int last_age = NA_INTEGER, int fecage_min = NA_INTEGER,
-  int fecage_max = NA_INTEGER, bool cont = true, bool stochastic = false,
-  bool standardize = false, bool growthonly = true, bool repvalue = false,
-  bool integeronly = false, int substoch = 0, String ipm_method = "CDF",
-  int nreps = 1, int times = 10000, double repmod = 1.0, double exp_tol = 700.0,
-  double theta_tol = 100000000.0, bool random_inda = false, bool random_indb = false,
-  bool random_indc = false, bool err_check = false, bool quiet = false,
+Rcpp::List f_projection3(int format, bool prebreeding = true, int start_age = NA_INTEGER,
+  int last_age = NA_INTEGER, int fecage_min = NA_INTEGER, int fecage_max = NA_INTEGER,
+  bool cont = true, bool stochastic = false, bool standardize = false,
+  bool growthonly = true, bool repvalue = false, bool integeronly = false,
+  int substoch = 0, String ipm_method = "CDF", int nreps = 1, int times = 10000,
+  double repmod = 1.0, double exp_tol = 700.0, double theta_tol = 100000000.0,
+  bool random_inda = false, bool random_indb = false, bool random_indc = false,
+  bool err_check = false, bool quiet = false, Nullable<DataFrame> data = R_NilValue,
   Nullable<DataFrame> stageframe = R_NilValue, Nullable<DataFrame> supplement = R_NilValue,
   Nullable<NumericMatrix> repmatrix = R_NilValue, Nullable<DataFrame> overwrite = R_NilValue,
   Nullable<List> modelsuite = R_NilValue, Nullable<DataFrame> paramnames = R_NilValue,
@@ -14062,6 +15892,7 @@ Rcpp::List f_projection3(DataFrame data, int format, bool prebreeding = true,
   RObject jrepmodl;
   RObject jmatmodl;
   DataFrame pmnames;
+  bool nodata = false; // Tag for dealing with vrm_input
   
   int modelcheck {0};
   NumericVector model1 = {1.0};
@@ -14071,28 +15902,1151 @@ Rcpp::List f_projection3(DataFrame data, int format, bool prebreeding = true,
   
   if (modelsuite.isNotNull()) {
     Rcpp::List ms_intermediate(modelsuite);
+    String ms_class = ms_intermediate.attr("class");
     msuite = ms_intermediate;
     
-    surmodl = msuite["survival_model"];
-    obsmodl = msuite["observation_model"];
-    sizmodl = msuite["size_model"];
-    sibmodl = msuite["sizeb_model"];
-    sicmodl = msuite["sizec_model"];
-    repmodl = msuite["repstatus_model"];
-    fecmodl = msuite["fecundity_model"];
-    jsurmodl = msuite["juv_survival_model"];
-    jobsmodl = msuite["juv_observation_model"];
-    jsizmodl = msuite["juv_size_model"];
-    jsibmodl = msuite["juv_sizeb_model"];
-    jsicmodl = msuite["juv_sizec_model"];
-    jrepmodl = msuite["juv_reproduction_model"];
-    jmatmodl = msuite["juv_maturity_model"];
-    
-    pmnames = as<DataFrame>(msuite["paramnames"]);
-    
-    pmn_provided = true;
-    modelcheck++;
-    
+    if (stringcompare_simple(ms_class, "lefkoMo")) {
+      surmodl = msuite["survival_model"];
+      obsmodl = msuite["observation_model"];
+      sizmodl = msuite["size_model"];
+      sibmodl = msuite["sizeb_model"];
+      sicmodl = msuite["sizec_model"];
+      repmodl = msuite["repstatus_model"];
+      fecmodl = msuite["fecundity_model"];
+      jsurmodl = msuite["juv_survival_model"];
+      jobsmodl = msuite["juv_observation_model"];
+      jsizmodl = msuite["juv_size_model"];
+      jsibmodl = msuite["juv_sizeb_model"];
+      jsicmodl = msuite["juv_sizec_model"];
+      jrepmodl = msuite["juv_reproduction_model"];
+      jmatmodl = msuite["juv_maturity_model"];
+      
+      pmnames = as<DataFrame>(msuite["paramnames"]);
+      
+      pmn_provided = true;
+      modelcheck++;
+    } else if (stringcompare_simple(ms_class, "vrm")) {
+      nodata = true;
+      
+      DataFrame vrm_frame = as<DataFrame>(msuite["vrm_frame"]);
+      DataFrame year_frame = as<DataFrame>(msuite["year_frame"]);
+      DataFrame patch_frame = as<DataFrame>(msuite["patch_frame"]);
+      DataFrame group2_frame = as<DataFrame>(msuite["group2_frame"]);
+      DataFrame group1_frame = as<DataFrame>(msuite["group1_frame"]);
+      DataFrame dist_frame = as<DataFrame>(msuite["dist_frame"]);
+      NumericVector st_frame = as<NumericVector>(msuite["st_frame"]);
+      
+      CharacterVector main_effect_1 = as<CharacterVector>(vrm_frame["main_effect_1"]);
+      CharacterVector effects_names = clone(main_effect_1);
+      
+      CharacterVector main_effect_2;
+      if (main_effect_1.length() > 20) {
+        main_effect_2 = as<CharacterVector>(vrm_frame["main_effect_2"]);
+        
+        for (int i = 0; i < main_effect_1.length(); i++) {
+          if (i > 16) {
+            effects_names(i) += ":";
+            effects_names(i) += main_effect_2(i);
+          }
+        }
+      }
+      
+      NumericVector year_names = as<NumericVector>(year_frame["years"]);
+      CharacterVector patch_names = as<CharacterVector>(patch_frame["patches"]);
+      NumericVector group_names = as<NumericVector>(group2_frame["groups"]);
+      
+      bool zi_yn = false;
+      
+      int vrm_length = vrm_frame.length();
+      
+      NumericVector surv_num = as<NumericVector>(vrm_frame["surv"]);
+      NumericVector obs_num = as<NumericVector>(vrm_frame["obs"]);
+      NumericVector sizea_num = as<NumericVector>(vrm_frame["sizea"]);
+      NumericVector sizeb_num = as<NumericVector>(vrm_frame["sizeb"]);
+      NumericVector sizec_num = as<NumericVector>(vrm_frame["sizec"]);
+      NumericVector repst_num = as<NumericVector>(vrm_frame["repst"]);
+      NumericVector fec_num = as<NumericVector>(vrm_frame["fec"]);
+      NumericVector jsurv_num = as<NumericVector>(vrm_frame["jsurv"]);
+      NumericVector jobs_num = as<NumericVector>(vrm_frame["jobs"]);
+      NumericVector jsizea_num = as<NumericVector>(vrm_frame["jsizea"]);
+      NumericVector jsizeb_num = as<NumericVector>(vrm_frame["jsizeb"]);
+      NumericVector jsizec_num = as<NumericVector>(vrm_frame["jsizec"]);
+      NumericVector jrepst_num = as<NumericVector>(vrm_frame["jrepst"]);
+      NumericVector jmatst_num = as<NumericVector>(vrm_frame["jmatst"]);
+      
+      NumericVector surv_year = as<NumericVector>(year_frame["surv"]);
+      NumericVector obs_year = as<NumericVector>(year_frame["obs"]);
+      NumericVector sizea_year = as<NumericVector>(year_frame["sizea"]);
+      NumericVector sizeb_year = as<NumericVector>(year_frame["sizeb"]);
+      NumericVector sizec_year = as<NumericVector>(year_frame["sizec"]);
+      NumericVector repst_year = as<NumericVector>(year_frame["repst"]);
+      NumericVector fec_year = as<NumericVector>(year_frame["fec"]);
+      NumericVector jsurv_year = as<NumericVector>(year_frame["jsurv"]);
+      NumericVector jobs_year = as<NumericVector>(year_frame["jobs"]);
+      NumericVector jsizea_year = as<NumericVector>(year_frame["jsizea"]);
+      NumericVector jsizeb_year = as<NumericVector>(year_frame["jsizeb"]);
+      NumericVector jsizec_year = as<NumericVector>(year_frame["jsizec"]);
+      NumericVector jrepst_year = as<NumericVector>(year_frame["jrepst"]);
+      NumericVector jmatst_year = as<NumericVector>(year_frame["jmatst"]);
+      
+      NumericVector surv_patch = as<NumericVector>(patch_frame["surv"]);
+      NumericVector obs_patch = as<NumericVector>(patch_frame["obs"]);
+      NumericVector sizea_patch = as<NumericVector>(patch_frame["sizea"]);
+      NumericVector sizeb_patch = as<NumericVector>(patch_frame["sizeb"]);
+      NumericVector sizec_patch = as<NumericVector>(patch_frame["sizec"]);
+      NumericVector repst_patch = as<NumericVector>(patch_frame["repst"]);
+      NumericVector fec_patch = as<NumericVector>(patch_frame["fec"]);
+      NumericVector jsurv_patch = as<NumericVector>(patch_frame["jsurv"]);
+      NumericVector jobs_patch = as<NumericVector>(patch_frame["jobs"]);
+      NumericVector jsizea_patch = as<NumericVector>(patch_frame["jsizea"]);
+      NumericVector jsizeb_patch = as<NumericVector>(patch_frame["jsizeb"]);
+      NumericVector jsizec_patch = as<NumericVector>(patch_frame["jsizec"]);
+      NumericVector jrepst_patch = as<NumericVector>(patch_frame["jrepst"]);
+      NumericVector jmatst_patch = as<NumericVector>(patch_frame["jmatst"]);
+      
+      NumericVector surv_group2 = as<NumericVector>(group2_frame["surv"]);
+      NumericVector obs_group2 = as<NumericVector>(group2_frame["obs"]);
+      NumericVector sizea_group2 = as<NumericVector>(group2_frame["sizea"]);
+      NumericVector sizeb_group2 = as<NumericVector>(group2_frame["sizeb"]);
+      NumericVector sizec_group2 = as<NumericVector>(group2_frame["sizec"]);
+      NumericVector repst_group2 = as<NumericVector>(group2_frame["repst"]);
+      NumericVector fec_group2 = as<NumericVector>(group2_frame["fec"]);
+      NumericVector jsurv_group2 = as<NumericVector>(group2_frame["jsurv"]);
+      NumericVector jobs_group2 = as<NumericVector>(group2_frame["jobs"]);
+      NumericVector jsizea_group2 = as<NumericVector>(group2_frame["jsizea"]);
+      NumericVector jsizeb_group2 = as<NumericVector>(group2_frame["jsizeb"]);
+      NumericVector jsizec_group2 = as<NumericVector>(group2_frame["jsizec"]);
+      NumericVector jrepst_group2 = as<NumericVector>(group2_frame["jrepst"]);
+      NumericVector jmatst_group2 = as<NumericVector>(group2_frame["jmatst"]);
+      
+      NumericVector surv_group1 = as<NumericVector>(group1_frame["surv"]);
+      NumericVector obs_group1 = as<NumericVector>(group1_frame["obs"]);
+      NumericVector sizea_group1 = as<NumericVector>(group1_frame["sizea"]);
+      NumericVector sizeb_group1 = as<NumericVector>(group1_frame["sizeb"]);
+      NumericVector sizec_group1 = as<NumericVector>(group1_frame["sizec"]);
+      NumericVector repst_group1 = as<NumericVector>(group1_frame["repst"]);
+      NumericVector fec_group1 = as<NumericVector>(group1_frame["fec"]);
+      NumericVector jsurv_group1 = as<NumericVector>(group1_frame["jsurv"]);
+      NumericVector jobs_group1 = as<NumericVector>(group1_frame["jobs"]);
+      NumericVector jsizea_group1 = as<NumericVector>(group1_frame["jsizea"]);
+      NumericVector jsizeb_group1 = as<NumericVector>(group1_frame["jsizeb"]);
+      NumericVector jsizec_group1 = as<NumericVector>(group1_frame["jsizec"]);
+      NumericVector jrepst_group1 = as<NumericVector>(group1_frame["jrepst"]);
+      NumericVector jmatst_group1 = as<NumericVector>(group1_frame["jmatst"]);
+      
+      StringVector distribs = as<StringVector>(dist_frame["dist"]);
+      String surv_dist = distribs(0);
+      String obs_dist = distribs(1);
+      String sizea_dist = distribs(2);
+      String sizeb_dist = distribs(3);
+      String sizec_dist = distribs(4);
+      String repst_dist = distribs(5);
+      String fec_dist = distribs(6);
+      String jsurv_dist = distribs(7);
+      String jobs_dist = distribs(8);
+      String jsizea_dist = distribs(9);
+      String jsizeb_dist = distribs(10);
+      String jsizec_dist = distribs(11);
+      String jrepst_dist = distribs(12);
+      String jmatst_dist = distribs(13);
+      
+      double sizea_st = st_frame(2);
+      double sizeb_st = st_frame(3);
+      double sizec_st = st_frame(4);
+      double fec_st = st_frame(6);
+      double jsizea_st = st_frame(9);
+      double jsizeb_st = st_frame(10);
+      double jsizec_st = st_frame(11);
+      
+      NumericVector sizea_zi;
+      NumericVector sizeb_zi;
+      NumericVector sizec_zi;
+      NumericVector fec_zi;
+      NumericVector jsizea_zi;
+      NumericVector jsizeb_zi;
+      NumericVector jsizec_zi;
+      
+      NumericVector year_sizea_zi;
+      NumericVector year_sizeb_zi;
+      NumericVector year_sizec_zi;
+      NumericVector year_fec_zi;
+      NumericVector year_jsizea_zi;
+      NumericVector year_jsizeb_zi;
+      NumericVector year_jsizec_zi;
+      
+      NumericVector patch_sizea_zi;
+      NumericVector patch_sizeb_zi;
+      NumericVector patch_sizec_zi;
+      NumericVector patch_fec_zi;
+      NumericVector patch_jsizea_zi;
+      NumericVector patch_jsizeb_zi;
+      NumericVector patch_jsizec_zi;
+      
+      NumericVector group2_sizea_zi;
+      NumericVector group2_sizeb_zi;
+      NumericVector group2_sizec_zi;
+      NumericVector group2_fec_zi;
+      NumericVector group2_jsizea_zi;
+      NumericVector group2_jsizeb_zi;
+      NumericVector group2_jsizec_zi;
+      
+      NumericVector group1_sizea_zi;
+      NumericVector group1_sizeb_zi;
+      NumericVector group1_sizec_zi;
+      NumericVector group1_fec_zi;
+      NumericVector group1_jsizea_zi;
+      NumericVector group1_jsizeb_zi;
+      NumericVector group1_jsizec_zi;
+      
+      NumericVector dud_zi;
+      
+      if (vrm_length > 16) {
+        zi_yn = true;
+        
+        sizea_zi = as<NumericVector>(vrm_frame["sizea_zi"]);
+        sizeb_zi = as<NumericVector>(vrm_frame["sizeb_zi"]);
+        sizec_zi = as<NumericVector>(vrm_frame["sizec_zi"]);
+        fec_zi = as<NumericVector>(vrm_frame["fec_zi"]);
+        jsizea_zi = as<NumericVector>(vrm_frame["jsizea_zi"]);
+        jsizeb_zi = as<NumericVector>(vrm_frame["jsizeb_zi"]);
+        jsizec_zi = as<NumericVector>(vrm_frame["jsizec_zi"]);
+        
+        year_sizea_zi = as<NumericVector>(year_frame["sizea_zi"]);
+        year_sizeb_zi = as<NumericVector>(year_frame["sizeb_zi"]);
+        year_sizec_zi = as<NumericVector>(year_frame["sizec_zi"]);
+        year_fec_zi = as<NumericVector>(year_frame["fec_zi"]);
+        year_jsizea_zi = as<NumericVector>(year_frame["jsizea_zi"]);
+        year_jsizeb_zi = as<NumericVector>(year_frame["jsizeb_zi"]);
+        year_jsizec_zi = as<NumericVector>(year_frame["jsizec_zi"]);
+        
+        patch_sizea_zi = as<NumericVector>(patch_frame["sizea_zi"]);
+        patch_sizeb_zi = as<NumericVector>(patch_frame["sizeb_zi"]);
+        patch_sizec_zi = as<NumericVector>(patch_frame["sizec_zi"]);
+        patch_fec_zi = as<NumericVector>(patch_frame["fec_zi"]);
+        patch_jsizea_zi = as<NumericVector>(patch_frame["jsizea_zi"]);
+        patch_jsizeb_zi = as<NumericVector>(patch_frame["jsizeb_zi"]);
+        patch_jsizec_zi = as<NumericVector>(patch_frame["jsizec_zi"]);
+        
+        group2_sizea_zi = as<NumericVector>(group2_frame["sizea_zi"]);
+        group2_sizeb_zi = as<NumericVector>(group2_frame["sizeb_zi"]);
+        group2_sizec_zi = as<NumericVector>(group2_frame["sizec_zi"]);
+        group2_fec_zi = as<NumericVector>(group2_frame["fec_zi"]);
+        group2_jsizea_zi = as<NumericVector>(group2_frame["jsizea_zi"]);
+        group2_jsizeb_zi = as<NumericVector>(group2_frame["jsizeb_zi"]);
+        group2_jsizec_zi = as<NumericVector>(group2_frame["jsizec_zi"]);
+        
+        group1_sizea_zi = as<NumericVector>(group1_frame["sizea_zi"]);
+        group1_sizeb_zi = as<NumericVector>(group1_frame["sizeb_zi"]);
+        group1_sizec_zi = as<NumericVector>(group1_frame["sizec_zi"]);
+        group1_fec_zi = as<NumericVector>(group1_frame["fec_zi"]);
+        group1_jsizea_zi = as<NumericVector>(group1_frame["jsizea_zi"]);
+        group1_jsizeb_zi = as<NumericVector>(group1_frame["jsizeb_zi"]);
+        group1_jsizec_zi = as<NumericVector>(group1_frame["jsizec_zi"]);
+      }
+      
+      CharacterVector indcova_names;
+      CharacterVector indcovb_names;
+      CharacterVector indcovc_names;
+      
+      NumericVector surv_indcova2;
+      NumericVector surv_indcovb2;
+      NumericVector surv_indcovc2;
+      NumericVector obs_indcova2;
+      NumericVector obs_indcovb2;
+      NumericVector obs_indcovc2;
+      NumericVector sizea_indcova2;
+      NumericVector sizea_indcovb2;
+      NumericVector sizea_indcovc2;
+      NumericVector sizeb_indcova2;
+      NumericVector sizeb_indcovb2;
+      NumericVector sizeb_indcovc2;
+      NumericVector sizec_indcova2;
+      NumericVector sizec_indcovb2;
+      NumericVector sizec_indcovc2;
+      NumericVector repst_indcova2;
+      NumericVector repst_indcovb2;
+      NumericVector repst_indcovc2;
+      NumericVector fec_indcova2;
+      NumericVector fec_indcovb2;
+      NumericVector fec_indcovc2;
+      NumericVector jsurv_indcova2;
+      NumericVector jsurv_indcovb2;
+      NumericVector jsurv_indcovc2;
+      NumericVector jobs_indcova2;
+      NumericVector jobs_indcovb2;
+      NumericVector jobs_indcovc2;
+      NumericVector jsizea_indcova2;
+      NumericVector jsizea_indcovb2;
+      NumericVector jsizea_indcovc2;
+      NumericVector jsizeb_indcova2;
+      NumericVector jsizeb_indcovb2;
+      NumericVector jsizeb_indcovc2;
+      NumericVector jsizec_indcova2;
+      NumericVector jsizec_indcovb2;
+      NumericVector jsizec_indcovc2;
+      NumericVector jrepst_indcova2;
+      NumericVector jrepst_indcovb2;
+      NumericVector jrepst_indcovc2;
+      NumericVector jmatst_indcova2;
+      NumericVector jmatst_indcovb2;
+      NumericVector jmatst_indcovc2;
+      
+      NumericVector sizea_indcova2_zi;
+      NumericVector sizea_indcovb2_zi;
+      NumericVector sizea_indcovc2_zi;
+      NumericVector sizeb_indcova2_zi;
+      NumericVector sizeb_indcovb2_zi;
+      NumericVector sizeb_indcovc2_zi;
+      NumericVector sizec_indcova2_zi;
+      NumericVector sizec_indcovb2_zi;
+      NumericVector sizec_indcovc2_zi;
+      NumericVector fec_indcova2_zi;
+      NumericVector fec_indcovb2_zi;
+      NumericVector fec_indcovc2_zi;
+      NumericVector jsizea_indcova2_zi;
+      NumericVector jsizea_indcovb2_zi;
+      NumericVector jsizea_indcovc2_zi;
+      NumericVector jsizeb_indcova2_zi;
+      NumericVector jsizeb_indcovb2_zi;
+      NumericVector jsizeb_indcovc2_zi;
+      NumericVector jsizec_indcova2_zi;
+      NumericVector jsizec_indcovb2_zi;
+      NumericVector jsizec_indcovc2_zi;
+      
+      NumericVector surv_indcova1;
+      NumericVector surv_indcovb1;
+      NumericVector surv_indcovc1;
+      NumericVector obs_indcova1;
+      NumericVector obs_indcovb1;
+      NumericVector obs_indcovc1;
+      NumericVector sizea_indcova1;
+      NumericVector sizea_indcovb1;
+      NumericVector sizea_indcovc1;
+      NumericVector sizeb_indcova1;
+      NumericVector sizeb_indcovb1;
+      NumericVector sizeb_indcovc1;
+      NumericVector sizec_indcova1;
+      NumericVector sizec_indcovb1;
+      NumericVector sizec_indcovc1;
+      NumericVector repst_indcova1;
+      NumericVector repst_indcovb1;
+      NumericVector repst_indcovc1;
+      NumericVector fec_indcova1;
+      NumericVector fec_indcovb1;
+      NumericVector fec_indcovc1;
+      NumericVector jsurv_indcova1;
+      NumericVector jsurv_indcovb1;
+      NumericVector jsurv_indcovc1;
+      NumericVector jobs_indcova1;
+      NumericVector jobs_indcovb1;
+      NumericVector jobs_indcovc1;
+      NumericVector jsizea_indcova1;
+      NumericVector jsizea_indcovb1;
+      NumericVector jsizea_indcovc1;
+      NumericVector jsizeb_indcova1;
+      NumericVector jsizeb_indcovb1;
+      NumericVector jsizeb_indcovc1;
+      NumericVector jsizec_indcova1;
+      NumericVector jsizec_indcovb1;
+      NumericVector jsizec_indcovc1;
+      NumericVector jrepst_indcova1;
+      NumericVector jrepst_indcovb1;
+      NumericVector jrepst_indcovc1;
+      NumericVector jmatst_indcova1;
+      NumericVector jmatst_indcovb1;
+      NumericVector jmatst_indcovc1;
+      
+      NumericVector sizea_indcova1_zi;
+      NumericVector sizea_indcovb1_zi;
+      NumericVector sizea_indcovc1_zi;
+      NumericVector sizeb_indcova1_zi;
+      NumericVector sizeb_indcovb1_zi;
+      NumericVector sizeb_indcovc1_zi;
+      NumericVector sizec_indcova1_zi;
+      NumericVector sizec_indcovb1_zi;
+      NumericVector sizec_indcovc1_zi;
+      NumericVector fec_indcova1_zi;
+      NumericVector fec_indcovb1_zi;
+      NumericVector fec_indcovc1_zi;
+      NumericVector jsizea_indcova1_zi;
+      NumericVector jsizea_indcovb1_zi;
+      NumericVector jsizea_indcovc1_zi;
+      NumericVector jsizeb_indcova1_zi;
+      NumericVector jsizeb_indcovb1_zi;
+      NumericVector jsizeb_indcovc1_zi;
+      NumericVector jsizec_indcova1_zi;
+      NumericVector jsizec_indcovb1_zi;
+      NumericVector jsizec_indcovc1_zi;
+      
+      int modelsuite_length = msuite.length();
+      CharacterVector modelsuite_names = msuite.attr("names");
+      
+      for (int i = 0; i < modelsuite_length; i++) {
+        if (stringcompare_hard(as<std::string>(modelsuite_names[i]), "indcova2_frame")) {
+          DataFrame indcova2_frame = as<DataFrame>(msuite["indcova2_frame"]);
+          
+          indcova_names = indcova2_frame["indcova"];
+          
+          surv_indcova2 = indcova2_frame["surv"];
+          obs_indcova2 = indcova2_frame["obs"];
+          sizea_indcova2 = indcova2_frame["sizea"];
+          sizeb_indcova2 = indcova2_frame["sizeb"];
+          sizec_indcova2 = indcova2_frame["sizec"];
+          repst_indcova2 = indcova2_frame["repst"];
+          fec_indcova2 = indcova2_frame["fec"];
+          
+          jsurv_indcova2 = indcova2_frame["jsurv"];
+          jobs_indcova2 = indcova2_frame["jobs"];
+          jsizea_indcova2 = indcova2_frame["jsizea"];
+          jsizeb_indcova2 = indcova2_frame["jsizeb"];
+          jsizec_indcova2 = indcova2_frame["jsizec"];
+          jrepst_indcova2 = indcova2_frame["jrepst"];
+          jmatst_indcova2 = indcova2_frame["jmatst"];
+          
+          if (zi_yn) {
+            sizea_indcova2_zi = indcova2_frame["sizea_zi"];
+            sizeb_indcova2_zi = indcova2_frame["sizeb_zi"];
+            sizec_indcova2_zi = indcova2_frame["sizec_zi"];
+            fec_indcova2_zi = indcova2_frame["fec_zi"];
+            jsizea_indcova2_zi = indcova2_frame["jsizea_zi"];
+            jsizeb_indcova2_zi = indcova2_frame["jsizeb_zi"];
+            jsizec_indcova2_zi = indcova2_frame["jsizec_zi"];
+          }
+        }
+        
+        if (stringcompare_hard(as<std::string>(modelsuite_names[i]), "indcova1_frame")) {
+          DataFrame indcova1_frame = as<DataFrame>(msuite["indcova1_frame"]);
+          
+          indcova_names = indcova1_frame["indcova"];
+          
+          surv_indcova1 = indcova1_frame["surv"];
+          obs_indcova1 = indcova1_frame["obs"];
+          sizea_indcova1 = indcova1_frame["sizea"];
+          sizeb_indcova1 = indcova1_frame["sizeb"];
+          sizec_indcova1 = indcova1_frame["sizec"];
+          repst_indcova1 = indcova1_frame["repst"];
+          fec_indcova1 = indcova1_frame["fec"];
+          
+          jsurv_indcova1 = indcova1_frame["jsurv"];
+          jobs_indcova1 = indcova1_frame["jobs"];
+          jsizea_indcova1 = indcova1_frame["jsizea"];
+          jsizeb_indcova1 = indcova1_frame["jsizeb"];
+          jsizec_indcova1 = indcova1_frame["jsizec"];
+          jrepst_indcova1 = indcova1_frame["jrepst"];
+          jmatst_indcova1 = indcova1_frame["jmatst"];
+          
+          if (zi_yn) {
+            sizea_indcova1_zi = indcova1_frame["sizea_zi"];
+            sizeb_indcova1_zi = indcova1_frame["sizeb_zi"];
+            sizec_indcova1_zi = indcova1_frame["sizec_zi"];
+            fec_indcova1_zi = indcova1_frame["fec_zi"];
+            jsizea_indcova1_zi = indcova1_frame["jsizea_zi"];
+            jsizeb_indcova1_zi = indcova1_frame["jsizeb_zi"];
+            jsizec_indcova1_zi = indcova1_frame["jsizec_zi"];
+          }
+        }
+        
+        if (stringcompare_hard(as<std::string>(modelsuite_names[i]), "indcovb2_frame")) {
+          DataFrame indcovb2_frame = as<DataFrame>(msuite["indcovb2_frame"]);
+          
+          indcovb_names = indcovb2_frame["indcovb"];
+          
+          surv_indcovb2 = indcovb2_frame["surv"];
+          obs_indcovb2 = indcovb2_frame["obs"];
+          sizea_indcovb2 = indcovb2_frame["sizea"];
+          sizeb_indcovb2 = indcovb2_frame["sizeb"];
+          sizec_indcovb2 = indcovb2_frame["sizec"];
+          repst_indcovb2 = indcovb2_frame["repst"];
+          fec_indcovb2 = indcovb2_frame["fec"];
+          
+          jsurv_indcovb2 = indcovb2_frame["jsurv"];
+          jobs_indcovb2 = indcovb2_frame["jobs"];
+          jsizea_indcovb2 = indcovb2_frame["jsizea"];
+          jsizeb_indcovb2 = indcovb2_frame["jsizeb"];
+          jsizec_indcovb2 = indcovb2_frame["jsizec"];
+          jrepst_indcovb2 = indcovb2_frame["jrepst"];
+          jmatst_indcovb2 = indcovb2_frame["jmatst"];
+          
+          if (zi_yn) {
+            sizea_indcovb2_zi = indcovb2_frame["sizea_zi"];
+            sizeb_indcovb2_zi = indcovb2_frame["sizeb_zi"];
+            sizec_indcovb2_zi = indcovb2_frame["sizec_zi"];
+            fec_indcovb2_zi = indcovb2_frame["fec_zi"];
+            jsizea_indcovb2_zi = indcovb2_frame["jsizea_zi"];
+            jsizeb_indcovb2_zi = indcovb2_frame["jsizeb_zi"];
+            jsizec_indcovb2_zi = indcovb2_frame["jsizec_zi"];
+          }
+        }
+        
+        if (stringcompare_hard(as<std::string>(modelsuite_names[i]), "indcovb1_frame")) {
+          DataFrame indcovb1_frame = as<DataFrame>(msuite["indcovb1_frame"]);
+          
+          indcovb_names = indcovb1_frame["indcovb"];
+          
+          surv_indcovb1 = indcovb1_frame["surv"];
+          obs_indcovb1 = indcovb1_frame["obs"];
+          sizea_indcovb1 = indcovb1_frame["sizea"];
+          sizeb_indcovb1 = indcovb1_frame["sizeb"];
+          sizec_indcovb1 = indcovb1_frame["sizec"];
+          repst_indcovb1 = indcovb1_frame["repst"];
+          fec_indcovb1 = indcovb1_frame["fec"];
+          
+          jsurv_indcovb1 = indcovb1_frame["jsurv"];
+          jobs_indcovb1 = indcovb1_frame["jobs"];
+          jsizea_indcovb1 = indcovb1_frame["jsizea"];
+          jsizeb_indcovb1 = indcovb1_frame["jsizeb"];
+          jsizec_indcovb1 = indcovb1_frame["jsizec"];
+          jrepst_indcovb1 = indcovb1_frame["jrepst"];
+          jmatst_indcovb1 = indcovb1_frame["jmatst"];
+          
+          if (zi_yn) {
+            sizea_indcovb1_zi = indcovb1_frame["sizea_zi"];
+            sizeb_indcovb1_zi = indcovb1_frame["sizeb_zi"];
+            sizec_indcovb1_zi = indcovb1_frame["sizec_zi"];
+            fec_indcovb1_zi = indcovb1_frame["fec_zi"];
+            jsizea_indcovb1_zi = indcovb1_frame["jsizea_zi"];
+            jsizeb_indcovb1_zi = indcovb1_frame["jsizeb_zi"];
+            jsizec_indcovb1_zi = indcovb1_frame["jsizec_zi"];
+          }
+        }
+        
+        if (stringcompare_hard(as<std::string>(modelsuite_names[i]), "indcovc2_frame")) {
+          DataFrame indcovc2_frame = as<DataFrame>(msuite["indcovc2_frame"]);
+          
+          indcovc_names = indcovc2_frame["indcovc"];
+          
+          surv_indcovc2 = indcovc2_frame["surv"];
+          obs_indcovc2 = indcovc2_frame["obs"];
+          sizea_indcovc2 = indcovc2_frame["sizea"];
+          sizeb_indcovc2 = indcovc2_frame["sizeb"];
+          sizec_indcovc2 = indcovc2_frame["sizec"];
+          repst_indcovc2 = indcovc2_frame["repst"];
+          fec_indcovc2 = indcovc2_frame["fec"];
+          
+          jsurv_indcovc2 = indcovc2_frame["jsurv"];
+          jobs_indcovc2 = indcovc2_frame["jobs"];
+          jsizea_indcovc2 = indcovc2_frame["jsizea"];
+          jsizeb_indcovc2 = indcovc2_frame["jsizeb"];
+          jsizec_indcovc2 = indcovc2_frame["jsizec"];
+          jrepst_indcovc2 = indcovc2_frame["jrepst"];
+          jmatst_indcovc2 = indcovc2_frame["jmatst"];
+          
+          if (zi_yn) {
+            sizea_indcovc2_zi = indcovc2_frame["sizea_zi"];
+            sizeb_indcovc2_zi = indcovc2_frame["sizeb_zi"];
+            sizec_indcovc2_zi = indcovc2_frame["sizec_zi"];
+            fec_indcovc2_zi = indcovc2_frame["fec_zi"];
+            jsizea_indcovc2_zi = indcovc2_frame["jsizea_zi"];
+            jsizeb_indcovc2_zi = indcovc2_frame["jsizeb_zi"];
+            jsizec_indcovc2_zi = indcovc2_frame["jsizec_zi"];
+          }
+        }
+        
+        if (stringcompare_hard(as<std::string>(modelsuite_names[i]), "indcovc1_frame")) {
+          DataFrame indcovc1_frame = as<DataFrame>(msuite["indcovc1_frame"]);
+          
+          indcovc_names = indcovc1_frame["indcovc"];
+          
+          surv_indcovc1 = indcovc1_frame["surv"];
+          obs_indcovc1 = indcovc1_frame["obs"];
+          sizea_indcovc1 = indcovc1_frame["sizea"];
+          sizeb_indcovc1 = indcovc1_frame["sizeb"];
+          sizec_indcovc1 = indcovc1_frame["sizec"];
+          repst_indcovc1 = indcovc1_frame["repst"];
+          fec_indcovc1 = indcovc1_frame["fec"];
+          
+          jsurv_indcovc1 = indcovc1_frame["jsurv"];
+          jobs_indcovc1 = indcovc1_frame["jobs"];
+          jsizea_indcovc1 = indcovc1_frame["jsizea"];
+          jsizeb_indcovc1 = indcovc1_frame["jsizeb"];
+          jsizec_indcovc1 = indcovc1_frame["jsizec"];
+          jrepst_indcovc1 = indcovc1_frame["jrepst"];
+          jmatst_indcovc1 = indcovc1_frame["jmatst"];
+          
+          if (zi_yn) {
+            sizea_indcovc1_zi = indcovc1_frame["sizea_zi"];
+            sizeb_indcovc1_zi = indcovc1_frame["sizeb_zi"];
+            sizec_indcovc1_zi = indcovc1_frame["sizec_zi"];
+            fec_indcovc1_zi = indcovc1_frame["fec_zi"];
+            jsizea_indcovc1_zi = indcovc1_frame["jsizea_zi"];
+            jsizeb_indcovc1_zi = indcovc1_frame["jsizeb_zi"];
+            jsizec_indcovc1_zi = indcovc1_frame["jsizec_zi"];
+          }
+        }
+      }
+      
+      CharacterVector list_names = {"fixed_slopes", "year_slopes", "patch_slopes",
+        "group2_slopes", "dist", "zi", "fixed_zi", "year_zi", "patch_zi",
+        "group2_zi", "indcova_names", "indcova2_slopes", "indcova2_zi",
+        "indcovb_names", "indcovb2_slopes", "indcovb2_zi", "indcovc_names",
+        "indcovc2_slopes", "indcovc2_zi", "year_names", "patch_names",
+        "group_names", "main_effect_1", "main_effect_2", "sigma_theta",
+        "effects_names", "group1_slopes", "group1_zi", "indcova1_slopes",
+        "indcovb1_slopes", "indcovc1_slopes", "indcova1_zi", "indcovb1_zi",
+        "indcovc1_zi"};
+        
+      List surv_list(34);
+      surv_list(0) = surv_num;
+      surv_list(1) = surv_year;
+      surv_list(2) = surv_patch;
+      surv_list(3) = surv_group2;
+      surv_list(4) = surv_dist;
+      surv_list(5) = false;
+      surv_list(6) = dud_zi;
+      surv_list(7) = dud_zi;
+      surv_list(8) = dud_zi;
+      surv_list(9) = dud_zi;
+      surv_list(10) = indcova_names;
+      surv_list(11) = surv_indcova2;
+      surv_list(12) = dud_zi;
+      surv_list(13) = indcovb_names;
+      surv_list(14) = surv_indcovb2;
+      surv_list(15) = dud_zi;
+      surv_list(16) = indcovc_names;
+      surv_list(17) = surv_indcovc2;
+      surv_list(18) = dud_zi;
+      surv_list(19) = year_names;
+      surv_list(20) = patch_names;
+      surv_list(21) = group_names;
+      surv_list(22) = main_effect_1;
+      surv_list(23) = main_effect_2;
+      surv_list(24) = 1.0;
+      surv_list(25) = effects_names;
+      surv_list(26) = surv_group1;
+      surv_list(27) = dud_zi;
+      surv_list(28) = surv_indcova1;
+      surv_list(29) = surv_indcovb1;
+      surv_list(30) = surv_indcovc1;
+      surv_list(31) = dud_zi;
+      surv_list(32) = dud_zi;
+      surv_list(33) = dud_zi;
+      
+      List obs_list(34);
+      obs_list(0) = obs_num;
+      obs_list(1) = obs_year;
+      obs_list(2) = obs_patch;
+      obs_list(3) = obs_group2;
+      obs_list(4) = obs_dist;
+      obs_list(5) = false;
+      obs_list(6) = dud_zi;
+      obs_list(7) = dud_zi;
+      obs_list(8) = dud_zi;
+      obs_list(9) = dud_zi;
+      obs_list(10) = indcova_names;
+      obs_list(11) = obs_indcova2;
+      obs_list(12) = dud_zi;
+      obs_list(13) = indcovb_names;
+      obs_list(14) = obs_indcovb2;
+      obs_list(15) = dud_zi;
+      obs_list(16) = indcovc_names;
+      obs_list(17) = obs_indcovc2;
+      obs_list(18) = dud_zi;
+      obs_list(19) = year_names;
+      obs_list(20) = patch_names;
+      obs_list(21) = group_names;
+      obs_list(22) = main_effect_1;
+      obs_list(23) = main_effect_2;
+      obs_list(24) = 1.0;
+      obs_list(25) = effects_names;
+      obs_list(26) = obs_group1;
+      obs_list(27) = dud_zi;
+      obs_list(28) = obs_indcova1;
+      obs_list(29) = obs_indcovb1;
+      obs_list(30) = obs_indcovc1;
+      obs_list(31) = dud_zi;
+      obs_list(32) = dud_zi;
+      obs_list(33) = dud_zi;
+      
+      List sizea_list(34);
+      sizea_list(0) = sizea_num;
+      sizea_list(1) = sizea_year;
+      sizea_list(2) = sizea_patch;
+      sizea_list(3) = sizea_group2;
+      sizea_list(4) = sizea_dist;
+      sizea_list(5) = zi_yn;
+      sizea_list(6) = sizea_zi;
+      sizea_list(7) = year_sizea_zi;
+      sizea_list(8) = patch_sizea_zi;
+      sizea_list(9) = group2_sizea_zi;
+      sizea_list(10) = indcova_names;
+      sizea_list(11) = sizea_indcova2;
+      sizea_list(12) = sizea_indcova2_zi;
+      sizea_list(13) = indcovb_names;
+      sizea_list(14) = sizea_indcovb2;
+      sizea_list(15) = sizea_indcovb2_zi;
+      sizea_list(16) = indcovc_names;
+      sizea_list(17) = sizea_indcovc2;
+      sizea_list(18) = sizea_indcovc2_zi;
+      sizea_list(19) = year_names;
+      sizea_list(20) = patch_names;
+      sizea_list(21) = group_names;
+      sizea_list(22) = main_effect_1;
+      sizea_list(23) = main_effect_2;
+      sizea_list(24) = sizea_st;
+      sizea_list(25) = effects_names;
+      sizea_list(26) = sizea_group1;
+      sizea_list(27) = group1_sizea_zi;
+      sizea_list(28) = sizea_indcova1;
+      sizea_list(29) = sizea_indcovb1;
+      sizea_list(30) = sizea_indcovc1;
+      sizea_list(31) = sizea_indcova1_zi;
+      sizea_list(32) = sizea_indcovb1_zi;
+      sizea_list(33) = sizea_indcovc1_zi;
+      
+      List sizeb_list(34);
+      sizeb_list(0) = sizeb_num;
+      sizeb_list(1) = sizeb_year;
+      sizeb_list(2) = sizeb_patch;
+      sizeb_list(3) = sizeb_group2;
+      sizeb_list(4) = sizeb_dist;
+      sizeb_list(5) = zi_yn;
+      sizeb_list(6) = sizeb_zi;
+      sizeb_list(7) = year_sizeb_zi;
+      sizeb_list(8) = patch_sizeb_zi;
+      sizeb_list(9) = group2_sizeb_zi;
+      sizeb_list(10) = indcova_names;
+      sizeb_list(11) = sizeb_indcova2;
+      sizeb_list(12) = sizeb_indcova2_zi;
+      sizeb_list(13) = indcovb_names;
+      sizeb_list(14) = sizeb_indcovb2;
+      sizeb_list(15) = sizeb_indcovb2_zi;
+      sizeb_list(16) = indcovc_names;
+      sizeb_list(17) = sizeb_indcovc2;
+      sizeb_list(18) = sizeb_indcovc2_zi;
+      sizeb_list(19) = year_names;
+      sizeb_list(20) = patch_names;
+      sizeb_list(21) = group_names;
+      sizeb_list(22) = main_effect_1;
+      sizeb_list(23) = main_effect_2;
+      sizeb_list(24) = sizeb_st;
+      sizeb_list(25) = effects_names;
+      sizeb_list(26) = sizeb_group1;
+      sizeb_list(27) = group1_sizeb_zi;
+      sizeb_list(28) = sizeb_indcova1;
+      sizeb_list(29) = sizeb_indcovb1;
+      sizeb_list(30) = sizeb_indcovc1;
+      sizeb_list(31) = sizeb_indcova1_zi;
+      sizeb_list(32) = sizeb_indcovb1_zi;
+      sizeb_list(33) = sizeb_indcovc1_zi;
+      
+      List sizec_list(34);
+      sizec_list(0) = sizec_num;
+      sizec_list(1) = sizec_year;
+      sizec_list(2) = sizec_patch;
+      sizec_list(3) = sizec_group2;
+      sizec_list(4) = sizec_dist;
+      sizec_list(5) = zi_yn;
+      sizec_list(6) = sizec_zi;
+      sizec_list(7) = year_sizec_zi;
+      sizec_list(8) = patch_sizec_zi;
+      sizec_list(9) = group2_sizec_zi;
+      sizec_list(10) = indcova_names;
+      sizec_list(11) = sizec_indcova2;
+      sizec_list(12) = sizec_indcova2_zi;
+      sizec_list(13) = indcovb_names;
+      sizec_list(14) = sizec_indcovb2;
+      sizec_list(15) = sizec_indcovb2_zi;
+      sizec_list(16) = indcovc_names;
+      sizec_list(17) = sizec_indcovc2;
+      sizec_list(18) = sizec_indcovc2_zi;
+      sizec_list(19) = year_names;
+      sizec_list(20) = patch_names;
+      sizec_list(21) = group_names;
+      sizec_list(22) = main_effect_1;
+      sizec_list(23) = main_effect_2;
+      sizec_list(24) = sizec_st;
+      sizec_list(25) = effects_names;
+      sizec_list(26) = sizec_group1;
+      sizec_list(27) = group1_sizec_zi;
+      sizec_list(28) = sizec_indcova1;
+      sizec_list(29) = sizec_indcovb1;
+      sizec_list(30) = sizec_indcovc1;
+      sizec_list(31) = sizec_indcova1_zi;
+      sizec_list(32) = sizec_indcovb1_zi;
+      sizec_list(33) = sizec_indcovc1_zi;
+      
+      List repst_list(34);
+      repst_list(0) = repst_num;
+      repst_list(1) = repst_year;
+      repst_list(2) = repst_patch;
+      repst_list(3) = repst_group2;
+      repst_list(4) = repst_dist;
+      repst_list(5) = false;
+      repst_list(6) = dud_zi;
+      repst_list(7) = dud_zi;
+      repst_list(8) = dud_zi;
+      repst_list(9) = dud_zi;
+      repst_list(10) = indcova_names;
+      repst_list(11) = repst_indcova2;
+      repst_list(12) = dud_zi;
+      repst_list(13) = indcovb_names;
+      repst_list(14) = repst_indcovb2;
+      repst_list(15) = dud_zi;
+      repst_list(16) = indcovc_names;
+      repst_list(17) = repst_indcovc2;
+      repst_list(18) = dud_zi;
+      repst_list(19) = year_names;
+      repst_list(20) = patch_names;
+      repst_list(21) = group_names;
+      repst_list(22) = main_effect_1;
+      repst_list(23) = main_effect_2;
+      repst_list(24) = 1.0;
+      repst_list(25) = effects_names;
+      repst_list(26) = repst_group1;
+      repst_list(27) = dud_zi;
+      repst_list(28) = repst_indcova1;
+      repst_list(29) = repst_indcovb1;
+      repst_list(30) = repst_indcovc1;
+      repst_list(31) = dud_zi;
+      repst_list(32) = dud_zi;
+      repst_list(33) = dud_zi;
+      
+      List fec_list(34);
+      fec_list(0) = fec_num;
+      fec_list(1) = fec_year;
+      fec_list(2) = fec_patch;
+      fec_list(3) = fec_group2;
+      fec_list(4) = fec_dist;
+      fec_list(5) = zi_yn;
+      fec_list(6) = fec_zi;
+      fec_list(7) = year_fec_zi;
+      fec_list(8) = patch_fec_zi;
+      fec_list(9) = group2_fec_zi;
+      fec_list(10) = indcova_names;
+      fec_list(11) = fec_indcova2;
+      fec_list(12) = fec_indcova2_zi;
+      fec_list(13) = indcovb_names;
+      fec_list(14) = fec_indcovb2;
+      fec_list(15) = fec_indcovb2_zi;
+      fec_list(16) = indcovc_names;
+      fec_list(17) = fec_indcovc2;
+      fec_list(18) = fec_indcovc2_zi;
+      fec_list(19) = year_names;
+      fec_list(20) = patch_names;
+      fec_list(21) = group_names;
+      fec_list(22) = main_effect_1;
+      fec_list(23) = main_effect_2;
+      fec_list(24) = fec_st;
+      fec_list(25) = effects_names;
+      fec_list(26) = fec_group1;
+      fec_list(27) = group1_fec_zi;
+      fec_list(28) = fec_indcova1;
+      fec_list(29) = fec_indcovb1;
+      fec_list(30) = fec_indcovc1;
+      fec_list(31) = fec_indcova1_zi;
+      fec_list(32) = fec_indcovb1_zi;
+      fec_list(33) = fec_indcovc1_zi;
+      
+      List jsurv_list(34);
+      jsurv_list(0) = jsurv_num;
+      jsurv_list(1) = jsurv_year;
+      jsurv_list(2) = jsurv_patch;
+      jsurv_list(3) = jsurv_group2;
+      jsurv_list(4) = jsurv_dist;
+      jsurv_list(5) = false;
+      jsurv_list(6) = dud_zi;
+      jsurv_list(7) = dud_zi;
+      jsurv_list(8) = dud_zi;
+      jsurv_list(9) = dud_zi;
+      jsurv_list(10) = indcova_names;
+      jsurv_list(11) = jsurv_indcova2;
+      jsurv_list(12) = dud_zi;
+      jsurv_list(13) = indcovb_names;
+      jsurv_list(14) = jsurv_indcovb2;
+      jsurv_list(15) = dud_zi;
+      jsurv_list(16) = indcovc_names;
+      jsurv_list(17) = jsurv_indcovc2;
+      jsurv_list(18) = dud_zi;
+      jsurv_list(19) = year_names;
+      jsurv_list(20) = patch_names;
+      jsurv_list(21) = group_names;
+      jsurv_list(22) = main_effect_1;
+      jsurv_list(23) = main_effect_2;
+      jsurv_list(24) = 1.0;
+      jsurv_list(25) = effects_names;
+      jsurv_list(26) = jsurv_group1;
+      jsurv_list(27) = dud_zi;
+      jsurv_list(28) = jsurv_indcova1;
+      jsurv_list(29) = jsurv_indcovb1;
+      jsurv_list(30) = jsurv_indcovc1;
+      jsurv_list(31) = dud_zi;
+      jsurv_list(32) = dud_zi;
+      jsurv_list(33) = dud_zi;
+      
+      List jobs_list(34);
+      jobs_list(0) = jobs_num;
+      jobs_list(1) = jobs_year;
+      jobs_list(2) = jobs_patch;
+      jobs_list(3) = jobs_group2;
+      jobs_list(4) = jobs_dist;
+      jobs_list(5) = false;
+      jobs_list(6) = dud_zi;
+      jobs_list(7) = dud_zi;
+      jobs_list(8) = dud_zi;
+      jobs_list(9) = dud_zi;
+      jobs_list(10) = indcova_names;
+      jobs_list(11) = jobs_indcova2;
+      jobs_list(12) = dud_zi;
+      jobs_list(13) = indcovb_names;
+      jobs_list(14) = jobs_indcovb2;
+      jobs_list(15) = dud_zi;
+      jobs_list(16) = indcovc_names;
+      jobs_list(17) = jobs_indcovc2;
+      jobs_list(18) = dud_zi;
+      jobs_list(19) = year_names;
+      jobs_list(20) = patch_names;
+      jobs_list(21) = group_names;
+      jobs_list(22) = main_effect_1;
+      jobs_list(23) = main_effect_2;
+      jobs_list(24) = 1.0;
+      jobs_list(25) = effects_names;
+      jobs_list(26) = jobs_group1;
+      jobs_list(27) = dud_zi;
+      jobs_list(28) = jobs_indcova1;
+      jobs_list(29) = jobs_indcovb1;
+      jobs_list(30) = jobs_indcovc1;
+      jobs_list(31) = dud_zi;
+      jobs_list(32) = dud_zi;
+      jobs_list(33) = dud_zi;
+      
+      List jsizea_list(34);
+      jsizea_list(0) = jsizea_num;
+      jsizea_list(1) = jsizea_year;
+      jsizea_list(2) = jsizea_patch;
+      jsizea_list(3) = jsizea_group2;
+      jsizea_list(4) = jsizea_dist;
+      jsizea_list(5) = zi_yn;
+      jsizea_list(6) = jsizea_zi;
+      jsizea_list(7) = year_jsizea_zi;
+      jsizea_list(8) = patch_jsizea_zi;
+      jsizea_list(9) = group2_jsizea_zi;
+      jsizea_list(10) = indcova_names;
+      jsizea_list(11) = jsizea_indcova2;
+      jsizea_list(12) = jsizea_indcova2_zi;
+      jsizea_list(13) = indcovb_names;
+      jsizea_list(14) = jsizea_indcovb2;
+      jsizea_list(15) = jsizea_indcovb2_zi;
+      jsizea_list(16) = indcovc_names;
+      jsizea_list(17) = jsizea_indcovc2;
+      jsizea_list(18) = jsizea_indcovc2_zi;
+      jsizea_list(19) = year_names;
+      jsizea_list(20) = patch_names;
+      jsizea_list(21) = group_names;
+      jsizea_list(22) = main_effect_1;
+      jsizea_list(23) = main_effect_2;
+      jsizea_list(24) = jsizea_st;
+      jsizea_list(25) = effects_names;
+      jsizea_list(26) = jsizea_group1;
+      jsizea_list(27) = group1_jsizea_zi;
+      jsizea_list(28) = jsizea_indcova1;
+      jsizea_list(29) = jsizea_indcovb1;
+      jsizea_list(30) = jsizea_indcovc1;
+      jsizea_list(31) = jsizea_indcova1_zi;
+      jsizea_list(32) = jsizea_indcovb1_zi;
+      jsizea_list(33) = jsizea_indcovc1_zi;
+      
+      List jsizeb_list(34);
+      jsizeb_list(0) = jsizeb_num;
+      jsizeb_list(1) = jsizeb_year;
+      jsizeb_list(2) = jsizeb_patch;
+      jsizeb_list(3) = jsizeb_group2;
+      jsizeb_list(4) = jsizeb_dist;
+      jsizeb_list(5) = zi_yn;
+      jsizeb_list(6) = jsizeb_zi;
+      jsizeb_list(7) = year_jsizeb_zi;
+      jsizeb_list(8) = patch_jsizeb_zi;
+      jsizeb_list(9) = group2_jsizeb_zi;
+      jsizeb_list(10) = indcova_names;
+      jsizeb_list(11) = jsizeb_indcova2;
+      jsizeb_list(12) = jsizeb_indcova2_zi;
+      jsizeb_list(13) = indcovb_names;
+      jsizeb_list(14) = jsizeb_indcovb2;
+      jsizeb_list(15) = jsizeb_indcovb2_zi;
+      jsizeb_list(16) = indcovc_names;
+      jsizeb_list(17) = jsizeb_indcovc2;
+      jsizeb_list(18) = jsizeb_indcovc2_zi;
+      jsizeb_list(19) = year_names;
+      jsizeb_list(20) = patch_names;
+      jsizeb_list(21) = group_names;
+      jsizeb_list(22) = main_effect_1;
+      jsizeb_list(23) = main_effect_2;
+      jsizeb_list(24) = jsizeb_st;
+      jsizeb_list(25) = effects_names;
+      jsizeb_list(26) = jsizeb_group1;
+      jsizeb_list(27) = group1_jsizeb_zi;
+      jsizeb_list(28) = jsizeb_indcova1;
+      jsizeb_list(29) = jsizeb_indcovb1;
+      jsizeb_list(30) = jsizeb_indcovc1;
+      jsizeb_list(31) = jsizeb_indcova1_zi;
+      jsizeb_list(32) = jsizeb_indcovb1_zi;
+      jsizeb_list(33) = jsizeb_indcovc1_zi;
+      
+      List jsizec_list(34);
+      jsizec_list(0) = jsizec_num;
+      jsizec_list(1) = jsizec_year;
+      jsizec_list(2) = jsizec_patch;
+      jsizec_list(3) = jsizec_group2;
+      jsizec_list(4) = jsizec_dist;
+      jsizec_list(5) = zi_yn;
+      jsizec_list(6) = jsizec_zi;
+      jsizec_list(7) = year_jsizec_zi;
+      jsizec_list(8) = patch_jsizec_zi;
+      jsizec_list(9) = group2_jsizec_zi;
+      jsizec_list(10) = indcova_names;
+      jsizec_list(11) = jsizec_indcova2;
+      jsizec_list(12) = jsizec_indcova2_zi;
+      jsizec_list(13) = indcovb_names;
+      jsizec_list(14) = jsizec_indcovb2;
+      jsizec_list(15) = jsizec_indcovb2_zi;
+      jsizec_list(16) = indcovc_names;
+      jsizec_list(17) = jsizec_indcovc2;
+      jsizec_list(18) = jsizec_indcovc2_zi;
+      jsizec_list(19) = year_names;
+      jsizec_list(20) = patch_names;
+      jsizec_list(21) = group_names;
+      jsizec_list(22) = main_effect_1;
+      jsizec_list(23) = main_effect_2;
+      jsizec_list(24) = jsizec_st;
+      jsizec_list(25) = effects_names;
+      jsizec_list(26) = jsizec_group1;
+      jsizec_list(27) = group1_jsizec_zi;
+      jsizec_list(28) = jsizec_indcova1;
+      jsizec_list(29) = jsizec_indcovb1;
+      jsizec_list(30) = jsizec_indcovc1;
+      jsizec_list(31) = jsizec_indcova1_zi;
+      jsizec_list(32) = jsizec_indcovb1_zi;
+      jsizec_list(33) = jsizec_indcovc1_zi;
+      
+      List jrepst_list(34);
+      jrepst_list(0) = jrepst_num;
+      jrepst_list(1) = jrepst_year;
+      jrepst_list(2) = jrepst_patch;
+      jrepst_list(3) = jrepst_group2;
+      jrepst_list(4) = jrepst_dist;
+      jrepst_list(5) = false;
+      jrepst_list(6) = dud_zi;
+      jrepst_list(7) = dud_zi;
+      jrepst_list(8) = dud_zi;
+      jrepst_list(9) = dud_zi;
+      jrepst_list(10) = indcova_names;
+      jrepst_list(11) = jrepst_indcova2;
+      jrepst_list(12) = dud_zi;
+      jrepst_list(13) = indcovb_names;
+      jrepst_list(14) = jrepst_indcovb2;
+      jrepst_list(15) = dud_zi;
+      jrepst_list(16) = indcovc_names;
+      jrepst_list(17) = jrepst_indcovc2;
+      jrepst_list(18) = dud_zi;
+      jrepst_list(19) = year_names;
+      jrepst_list(20) = patch_names;
+      jrepst_list(21) = group_names;
+      jrepst_list(22) = main_effect_1;
+      jrepst_list(23) = main_effect_2;
+      jrepst_list(24) = 1.0;
+      jrepst_list(25) = effects_names;
+      jrepst_list(26) = jrepst_group1;
+      jrepst_list(27) = dud_zi;
+      jrepst_list(28) = jrepst_indcova1;
+      jrepst_list(29) = jrepst_indcovb1;
+      jrepst_list(30) = jrepst_indcovc1;
+      jrepst_list(31) = dud_zi;
+      jrepst_list(32) = dud_zi;
+      jrepst_list(33) = dud_zi;
+      
+      List jmatst_list(34);
+      jmatst_list(0) = jmatst_num;
+      jmatst_list(1) = jmatst_year;
+      jmatst_list(2) = jmatst_patch;
+      jmatst_list(3) = jmatst_group2;
+      jmatst_list(4) = jmatst_dist;
+      jmatst_list(5) = false;
+      jmatst_list(6) = dud_zi;
+      jmatst_list(7) = dud_zi;
+      jmatst_list(8) = dud_zi;
+      jmatst_list(9) = dud_zi;
+      jmatst_list(10) = indcova_names;
+      jmatst_list(11) = jmatst_indcova2;
+      jmatst_list(12) = dud_zi;
+      jmatst_list(13) = indcovb_names;
+      jmatst_list(14) = jmatst_indcovb2;
+      jmatst_list(15) = dud_zi;
+      jmatst_list(16) = indcovc_names;
+      jmatst_list(17) = jmatst_indcovc2;
+      jmatst_list(18) = dud_zi;
+      jmatst_list(19) = year_names;
+      jmatst_list(20) = patch_names;
+      jmatst_list(21) = group_names;
+      jmatst_list(22) = main_effect_1;
+      jmatst_list(23) = main_effect_2;
+      jmatst_list(24) = 1.0;
+      jmatst_list(25) = effects_names;
+      jmatst_list(26) = jmatst_group1;
+      jmatst_list(27) = dud_zi;
+      jmatst_list(28) = jmatst_indcova1;
+      jmatst_list(29) = jmatst_indcovb1;
+      jmatst_list(30) = jmatst_indcovc1;
+      jmatst_list(31) = dud_zi;
+      jmatst_list(32) = dud_zi;
+      jmatst_list(33) = dud_zi;
+      
+      surv_list.attr("names") = list_names;
+      obs_list.attr("names") = list_names;
+      sizea_list.attr("names") = list_names;
+      sizeb_list.attr("names") = list_names;
+      sizec_list.attr("names") = list_names;
+      repst_list.attr("names") = list_names;
+      fec_list.attr("names") = list_names;
+      jsurv_list.attr("names") = list_names;
+      jobs_list.attr("names") = list_names;
+      jsizea_list.attr("names") = list_names;
+      jsizeb_list.attr("names") = list_names;
+      jsizec_list.attr("names") = list_names;
+      jrepst_list.attr("names") = list_names;
+      jmatst_list.attr("names") = list_names;
+      
+      surmodl = surv_list;
+      obsmodl = obs_list;
+      sizmodl = sizea_list;
+      sibmodl = sizeb_list;
+      sicmodl = sizec_list;
+      repmodl = repst_list;
+      fecmodl = fec_list;
+      
+      jsurmodl = jsurv_list;
+      jobsmodl = jobs_list;
+      jsizmodl = jsizea_list;
+      jsibmodl = jsizeb_list;
+      jsicmodl = jsizec_list;
+      jrepmodl = jrepst_list;
+      jmatmodl = jmatst_list;
+      
+      CharacterVector parameter_names = {"time t", "individual", "patch",
+        "alive in time t+1", "observed in time t+1", "sizea in time t+1",
+        "sizeb in time t+1", "sizec in time t+1", "reproductive status in time t+1",
+        "fecundity in time t+1", "fecundity in time t", "sizea in time t",
+        "sizea in time t-1", "sizeb in time t", "sizeb in time t-1",
+        "sizec in time t", "sizec in time t-1", "reproductive status in time t",
+        "reproductive status in time t-1", "maturity status in time t+1",
+        "maturity status in time t", "age in time t", "density in time t",
+        "individual covariate a in time t", "individual covariate a in time t-1",
+        "individual covariate b in time t", "individual covariate b in time t-1",
+        "individual covariate c in time t", "individual covariate c in time t-1",
+        "stage group in time t", "stage group in time t-1"};
+      CharacterVector mainparams = {"year2", "individ", "patch", "surv3",
+        "obs3", "size3", "sizeb3", "sizec3", "repst3", "fec3", "fec2", "size2",
+        "size1", "sizeb2", "sizeb1", "sizec2", "sizec1", "repst2", "repst1",
+        "matst3", "matst2", "age", "density", "indcova2", "indcova1",
+        "indcovb2", "indcovb1", "indcovc2", "indcovc1", "group2", "group1"};
+      CharacterVector modelparams = clone(mainparams);
+      
+      DataFrame pm_names = DataFrame::create(_["parameter_names"] = parameter_names,
+        _["mainparams"] = mainparams, _["modelparams"] = modelparams);
+      
+      pmnames = pm_names;
+      pmn_provided = true; // Not sure about this one
+    } else {
+      throw Rcpp::exception("Option modelsuite must be set to a lefkoMod or vrm_input object, or individual models must be supplied with modelsuite not set.", false);
+    }
   } else {
     if (surv_model.isNotNull()) {
       RObject sum_intermediate = RObject(surv_model);
@@ -14201,7 +17155,8 @@ Rcpp::List f_projection3(DataFrame data, int format, bool prebreeding = true,
       pmn_provided = true;
     }
   }
-  if (modelcheck == 0) {
+  
+  if (modelcheck == 0 && !nodata) {
     throw Rcpp::exception("This function requires a lefkoMod object or vital rate models.", false);
   }
   if (!pmn_provided) {
@@ -14232,7 +17187,6 @@ Rcpp::List f_projection3(DataFrame data, int format, bool prebreeding = true,
   }
   
   // Demographic data
-  int no_vars = data.length();
   int used_yearcol {-1};
   int used_patchcol {-1};
   int used_agecol {-1};
@@ -14253,46 +17207,69 @@ Rcpp::List f_projection3(DataFrame data, int format, bool prebreeding = true,
   std::string group2var = as<std::string>(modelparam_names(29));
   std::string group1var = as<std::string>(modelparam_names(30));
   
-  CharacterVector data_names = data.attr("names");
-  
-  for (int i = 0; i < no_vars; i++) {
-    if (stringcompare_hard(as<std::string>(data_names(i)), year2var)) {
-      used_yearcol = i;
-    }
-    if (stringcompare_hard(as<std::string>(data_names(i)), patchvar)) {
-      used_patchcol = i;
-    }
-    if (stringcompare_hard(as<std::string>(data_names(i)), agevar)) {
-      used_agecol = i;
-    }
-    if (stringcompare_hard(as<std::string>(data_names(i)), indcova2var)) {
-      used_indacol = i;
-    }
-    if (stringcompare_hard(as<std::string>(data_names(i)), indcovb2var)) {
-      used_indbcol = i;
-    }
-    if (stringcompare_hard(as<std::string>(data_names(i)), indcovc2var)) {
-      used_indccol = i;
-    }
-  }
-  if (used_yearcol < 0 || used_yearcol > (no_vars - 1)) {
-    throw Rcpp::exception("Correct variable in dataset for time t not found. Is paramnames object correct?", 
-      false);
-  }
-  IntegerVector all_years = as<IntegerVector>(data[used_yearcol]);
-  IntegerVector all_years_x = unique(all_years);
-  IntegerVector mainyears_int = int_sort(all_years_x);
-  NumericVector mainyears = as<NumericVector>(mainyears_int);
-  
+  IntegerVector mainyears_int;
+  NumericVector mainyears;
   CharacterVector mainpatches;
+  DataFrame true_data;
   
-  if (used_patchcol > -1) {
-    CharacterVector all_patches = as<CharacterVector>(data[used_patchcol]);
-    CharacterVector mainpatches_int = unique(all_patches);
+  if (data.isNotNull() && !nodata) {
+    true_data = DataFrame(data);
+    int no_vars = true_data.length();
+    CharacterVector data_names = true_data.attr("names");
     
-    mainpatches = stringsort(mainpatches_int);
+    for (int i = 0; i < no_vars; i++) {
+      if (stringcompare_hard(as<std::string>(data_names(i)), year2var)) {
+        used_yearcol = i;
+      }
+      if (stringcompare_hard(as<std::string>(data_names(i)), patchvar)) {
+        used_patchcol = i;
+      }
+      if (stringcompare_hard(as<std::string>(data_names(i)), agevar)) {
+        used_agecol = i;
+      }
+      if (stringcompare_hard(as<std::string>(data_names(i)), indcova2var)) {
+        used_indacol = i;
+      }
+      if (stringcompare_hard(as<std::string>(data_names(i)), indcovb2var)) {
+        used_indbcol = i;
+      }
+      if (stringcompare_hard(as<std::string>(data_names(i)), indcovc2var)) {
+        used_indccol = i;
+      }
+    }
+    if (used_yearcol < 0 || used_yearcol > (no_vars - 1)) {
+      throw Rcpp::exception("Correct variable in dataset for time t not found. Is paramnames object correct?", 
+        false);
+    }
+    IntegerVector all_years = as<IntegerVector>(true_data[used_yearcol]);
+    IntegerVector all_years_x = unique(all_years);
+    mainyears_int = int_sort(all_years_x);
+    mainyears = as<NumericVector>(mainyears_int);
+    
+    if (used_patchcol > -1) {
+      CharacterVector all_patches = as<CharacterVector>(true_data[used_patchcol]);
+      CharacterVector mainpatches_int = unique(all_patches);
+      
+      mainpatches = stringsort(mainpatches_int);
+    } else {
+      mainpatches = {NA_STRING};
+    }
+  
+  } else if (!data.isNotNull() && !nodata) {
+    throw Rcpp::exception("Please also supply the original hfv dataset if using a lefkoMod object.",
+      false);
+      
   } else {
-    mainpatches = {NA_STRING};
+    DataFrame year_frame = as<DataFrame>(msuite["year_frame"]);
+    IntegerVector year_names = as<IntegerVector>(year_frame["years"]);
+    mainyears_int = year_names;
+    mainyears = as<NumericVector>(mainyears_int);
+    
+    DataFrame patch_frame = as<DataFrame>(msuite["patch_frame"]);
+    CharacterVector all_patches = as<CharacterVector>(patch_frame["patches"]);
+    CharacterVector mainpatches_int = unique(all_patches);
+    mainpatches = stringsort(mainpatches_int);
+    
   }
   
   IntegerVector mainages;
@@ -14300,13 +17277,6 @@ Rcpp::List f_projection3(DataFrame data, int format, bool prebreeding = true,
   int age_limit {0};
   
   if (format > 3) { // Age and age-by-stage cases
-    if (used_agecol > -1) {
-      IntegerVector all_ages = as<IntegerVector>(data[used_agecol]);
-      IntegerVector mainages_pre = unique(all_ages);
-      mainages = int_sort(mainages_pre);
-    }
-    age_limit = max(mainages) + 1;
-    
     if (IntegerVector::is_na(start_age)) {
       if (prebreeding) {
         start_age = 1;
@@ -14314,6 +17284,29 @@ Rcpp::List f_projection3(DataFrame data, int format, bool prebreeding = true,
         start_age = 0;
       }
     }
+    
+    if (data.isNotNull() && !nodata) {
+      if (used_agecol > -1) {
+        IntegerVector all_ages = as<IntegerVector>(true_data[used_agecol]);
+        IntegerVector mainages_pre = unique(all_ages);
+        mainages = int_sort(mainages_pre);
+        
+      }
+    } else {
+      if (IntegerVector::is_na(last_age)) {
+        throw Rcpp::exception("Option last_age must be entered if using a vrm_input object.",
+          false);
+      }
+      
+      if (last_age <= start_age) {
+        throw Rcpp::exception("Option last_age must be greater than start_age.",
+          false);
+      }
+      mainages = seq(last_age, start_age);
+    }
+    
+    age_limit = max(mainages) + 1;
+    
     if (IntegerVector::is_na(last_age)) {
       last_age = max(mainages) + 1;
     }
@@ -14349,61 +17342,113 @@ Rcpp::List f_projection3(DataFrame data, int format, bool prebreeding = true,
   CharacterVector indb_names_ch;
   CharacterVector indc_names_ch;
   
-  if (used_indacol > -1) {
-    if (random_inda) {
-      CharacterVector inda_data = as<CharacterVector>(data[used_indacol]);
-      CharacterVector unique_a = unique(inda_data);
-      CharacterVector sorted_a = stringsort(unique_a);
-      inda_names_ch = sorted_a;
-      
-      inda_names = as<RObject>(sorted_a);
-      
+  if (!nodata) {
+    if (used_indacol > -1) {
+      if (random_inda) {
+        CharacterVector inda_data = as<CharacterVector>(true_data[used_indacol]);
+        CharacterVector unique_a = unique(inda_data);
+        CharacterVector sorted_a = stringsort(unique_a);
+        inda_names_ch = sorted_a;
+        
+        inda_names = as<RObject>(sorted_a);
+        
+      } else {
+        IntegerVector notrandom_a = {0};
+        inda_names = as<RObject>(notrandom_a);
+      }
     } else {
       IntegerVector notrandom_a = {0};
       inda_names = as<RObject>(notrandom_a);
+      random_inda = false;
     }
-  } else {
-    IntegerVector notrandom_a = {0};
-    inda_names = as<RObject>(notrandom_a);
-    random_inda = false;
-  }
-  
-  if (used_indbcol > -1) {
-    if (random_indb) {
-      CharacterVector indb_data = as<CharacterVector>(data[used_indbcol]);
-      CharacterVector unique_b = unique(indb_data);
-      CharacterVector sorted_b = stringsort(unique_b);
-      indb_names_ch = sorted_b;
-      
-      indb_names = as<RObject>(sorted_b);
-      
+    
+    if (used_indbcol > -1) {
+      if (random_indb) {
+        CharacterVector indb_data = as<CharacterVector>(true_data[used_indbcol]);
+        CharacterVector unique_b = unique(indb_data);
+        CharacterVector sorted_b = stringsort(unique_b);
+        indb_names_ch = sorted_b;
+        
+        indb_names = as<RObject>(sorted_b);
+        
+      } else {
+        IntegerVector notrandom_b = {0};
+        indb_names = as<RObject>(notrandom_b);
+      }
     } else {
       IntegerVector notrandom_b = {0};
       indb_names = as<RObject>(notrandom_b);
+      random_indb = false;
     }
-  } else {
-    IntegerVector notrandom_b = {0};
-    indb_names = as<RObject>(notrandom_b);
-    random_indb = false;
-  }
-  
-  if (used_indccol > -1) {
-    if (random_indc) {
-      CharacterVector indc_data = as<CharacterVector>(data[used_indccol]);
-      CharacterVector unique_c = unique(indc_data);
-      CharacterVector sorted_c = stringsort(unique_c);
-      indc_names_ch = sorted_c;
-      
-      indc_names = as<RObject>(sorted_c);
-      
+    
+    if (used_indccol > -1) {
+      if (random_indc) {
+        CharacterVector indc_data = as<CharacterVector>(true_data[used_indccol]);
+        CharacterVector unique_c = unique(indc_data);
+        CharacterVector sorted_c = stringsort(unique_c);
+        indc_names_ch = sorted_c;
+        
+        indc_names = as<RObject>(sorted_c);
+        
+      } else {
+        IntegerVector notrandom_c = {0};
+        indc_names = as<RObject>(notrandom_c);
+      }
     } else {
       IntegerVector notrandom_c = {0};
       indc_names = as<RObject>(notrandom_c);
+      random_indc = false;
     }
   } else {
-    IntegerVector notrandom_c = {0};
-    indc_names = as<RObject>(notrandom_c);
-    random_indc = false;
+    CharacterVector ms_names = msuite.attr("names");
+    bool indcova_inc = false;
+    bool indcovb_inc = false;
+    bool indcovc_inc = false;
+    
+    for (int i = 0; i < ms_names.length(); i++) {
+      if (stringcompare_simple(as<std::string>(ms_names(i)), "indcova2_frame")) indcova_inc = true;
+      if (stringcompare_simple(as<std::string>(ms_names(i)), "indcovb2_frame")) indcovb_inc = true;
+      if (stringcompare_simple(as<std::string>(ms_names(i)), "indcovc2_frame")) indcovc_inc = true;
+    }
+    
+    if (indcova_inc) {
+      DataFrame ica_frame = as<DataFrame>(msuite["indcova2_frame"]);
+      CharacterVector sorted_a = as<CharacterVector>(ica_frame["indcova"]);
+      
+      inda_names_ch = sorted_a;
+      
+      inda_names = as<RObject>(sorted_a);
+    } else {
+      IntegerVector notrandom_a = {0};
+      inda_names = as<RObject>(notrandom_a);
+      random_inda = false;
+    }
+    
+    if (indcovb_inc) {
+      DataFrame icb_frame = as<DataFrame>(msuite["indcovb2_frame"]);
+      CharacterVector sorted_b = as<CharacterVector>(icb_frame["indcovb"]);
+      
+      indb_names_ch = sorted_b;
+      
+      indb_names = as<RObject>(sorted_b);
+    } else {
+      IntegerVector notrandom_b = {0};
+      indb_names = as<RObject>(notrandom_b);
+      random_indb = false;
+    }
+    
+    if (indcovc_inc) {
+      DataFrame icc_frame = as<DataFrame>(msuite["indcovc2_frame"]);
+      CharacterVector sorted_c = as<CharacterVector>(icc_frame["indcovc"]);
+      
+      indc_names_ch = sorted_c;
+      
+      indc_names = as<RObject>(sorted_c);
+    } else {
+      IntegerVector notrandom_c = {0};
+      indc_names = as<RObject>(notrandom_c);
+      random_indc = false;
+    }
   }
   
   // Check years and patches entries
@@ -15082,33 +18127,33 @@ Rcpp::List f_projection3(DataFrame data, int format, bool prebreeding = true,
   
   // modelextract proxy lists
   List surv_proxy = modelextract(surmodl, pmnames, mainyears, mainpatches,
-    maingroups, inda_names, indb_names, indc_names);
+    maingroups, inda_names, indb_names, indc_names, nodata);
   List obs_proxy = modelextract(obsmodl, pmnames, mainyears, mainpatches,
-    maingroups, inda_names, indb_names, indc_names);
+    maingroups, inda_names, indb_names, indc_names, nodata);
   List size_proxy = modelextract(sizmodl, pmnames, mainyears, mainpatches,
-    maingroups, inda_names, indb_names, indc_names);
+    maingroups, inda_names, indb_names, indc_names, nodata);
   List sizeb_proxy = modelextract(sibmodl, pmnames, mainyears, mainpatches,
-    maingroups, inda_names, indb_names, indc_names);
+    maingroups, inda_names, indb_names, indc_names, nodata);
   List sizec_proxy = modelextract(sicmodl, pmnames, mainyears, mainpatches,
-    maingroups, inda_names, indb_names, indc_names);
+    maingroups, inda_names, indb_names, indc_names, nodata);
   List repst_proxy = modelextract(repmodl, pmnames, mainyears, mainpatches,
-    maingroups, inda_names, indb_names, indc_names);
+    maingroups, inda_names, indb_names, indc_names, nodata);
   List fec_proxy = modelextract(fecmodl, pmnames, mainyears, mainpatches,
-    maingroups, inda_names, indb_names, indc_names);
+    maingroups, inda_names, indb_names, indc_names, nodata);
   List jsurv_proxy = modelextract(jsurmodl, pmnames, mainyears, mainpatches,
-    maingroups, inda_names, indb_names, indc_names);
+    maingroups, inda_names, indb_names, indc_names, nodata);
   List jobs_proxy = modelextract(jobsmodl, pmnames, mainyears, mainpatches,
-    maingroups, inda_names, indb_names, indc_names);
+    maingroups, inda_names, indb_names, indc_names, nodata);
   List jsize_proxy = modelextract(jsizmodl, pmnames, mainyears, mainpatches,
-    maingroups, inda_names, indb_names, indc_names);
+    maingroups, inda_names, indb_names, indc_names, nodata);
   List jsizeb_proxy = modelextract(jsibmodl, pmnames, mainyears, mainpatches,
-    maingroups, inda_names, indb_names, indc_names);
+    maingroups, inda_names, indb_names, indc_names, nodata);
   List jsizec_proxy = modelextract(jsicmodl, pmnames, mainyears, mainpatches,
-    maingroups, inda_names, indb_names, indc_names);
+    maingroups, inda_names, indb_names, indc_names, nodata);
   List jrepst_proxy = modelextract(jrepmodl, pmnames, mainyears, mainpatches,
-    maingroups, inda_names, indb_names, indc_names);
+    maingroups, inda_names, indb_names, indc_names, nodata);
   List jmatst_proxy = modelextract(jmatmodl, pmnames, mainyears, mainpatches,
-    maingroups, inda_names, indb_names, indc_names);
+    maingroups, inda_names, indb_names, indc_names, nodata);
   
   // Main projection set-up
   int yearnumber {0};
@@ -15269,7 +18314,6 @@ Rcpp::List f_projection3(DataFrame data, int format, bool prebreeding = true,
   double pop_size {0};
   double changing_element_U {0.0};
   double changing_element_F {0.0};
-  double changing_colsum {0.0};
   
   int time_delay {1};
   bool dens_elems = false;
@@ -15479,7 +18523,7 @@ Rcpp::List f_projection3(DataFrame data, int format, bool prebreeding = true,
       arma::rowvec theseventhgrandson = startvec.as_row();
       
       for (int i = 0; i < times; i++) {
-        if (i % 50 == 0) Rcpp::checkUserInterrupt();
+        if (i % 25 == 0) Rcpp::checkUserInterrupt();
         
         yearnumber = years_int(i, rep) - 1;
         patchnumber = patches_int(i) - 1;
@@ -15559,23 +18603,27 @@ Rcpp::List f_projection3(DataFrame data, int format, bool prebreeding = true,
                 (1 - used_popsize / dyn_alpha(j)); // Fi*(1 - ALPHA/n)
             }
             
-            if (substoch == 1) {
-              if (changing_element_U > 1.0 && dyn_type(j) == 1) {
+            if (substoch == 1 && dyn_type(j) == 1) {
+              if (changing_element_U > 1.0) {
                 changing_element_U = 1.0;
               } else if (changing_element_U < 0.0) {
                 changing_element_U = 0.0;
               }
             } else if (substoch == 2 && dyn_type(j) == 1) {
-              double barnyard_antics {0.0};
               arma::vec given_col = Umat.col(dyn_index_col(j));
               arma::uvec gc_negs = find(given_col < 0.0);
-              if (gc_negs.n_elem > 0) {
-                barnyard_antics = sum(given_col(gc_negs));
-              }
-              changing_colsum = sum(given_col) - Umat(dyn_index321(j)) - barnyard_antics;
+              arma::uvec gc_pos = find(given_col > 0.0);
               
-              if (changing_element_U > (1.0 - changing_colsum)) {
-                changing_element_U = (1.0 - changing_colsum);
+              double barnyard_antics = sum(given_col(gc_pos)) - Umat(dyn_index321(j)) + changing_element_U;
+              
+              if (barnyard_antics > 1.0 && changing_element_U > 0.0) {
+                double proposed_element_U = changing_element_U - barnyard_antics * (changing_element_U / barnyard_antics);
+                
+                if (proposed_element_U >= 0.0) {
+                  changing_element_U = proposed_element_U;
+                } else {
+                  changing_element_U = 0.0;
+                }
               } else if (changing_element_U < 0.0) {
                 changing_element_U = 0.0;
               }
@@ -15688,7 +18736,7 @@ Rcpp::List f_projection3(DataFrame data, int format, bool prebreeding = true,
     
     for (int rep = 0; rep < nreps; rep++) {
       for (int i = 0; i < times; i++) {
-        if (i % 50 == 0) Rcpp::checkUserInterrupt();
+        if (i % 25 == 0) Rcpp::checkUserInterrupt();
         
         yearnumber = years_int(i, rep) - 1;
         patchnumber = patches_int(i) - 1;
@@ -15757,28 +18805,31 @@ Rcpp::List f_projection3(DataFrame data, int format, bool prebreeding = true,
                 (1 - used_popsize / dyn_alpha(j)); // Fi*(1 - ALPHA/n)
             }
             
-            if (substoch == 1) {
-              if (changing_element_U > 1.0 && dyn_type(j) == 1) {
+            if (substoch == 1 && dyn_type(j) == 1) {
+              if (changing_element_U > 1.0) {
                 changing_element_U = 1.0;
               } else if (changing_element_U < 0.0) {
                 changing_element_U = 0.0;
               }
               
             } else if (substoch == 2 && dyn_type(j) == 1) {
-              double barnyard_antics {0.0};
               arma::vec given_col = arma::vec(Umat_sp.col(dyn_index_col(j)));
               arma::uvec gc_negs = find(given_col < 0.0);
-              if (gc_negs.n_elem > 0) {
-                barnyard_antics = sum(given_col(gc_negs));
-              }
-              changing_colsum = sum(given_col) - Umat_sp(dyn_index321(j)) - barnyard_antics;
+              arma::uvec gc_pos = find(given_col > 0.0);
               
-              if (changing_element_U > (1.0 - changing_colsum)) {
-                changing_element_U = (1.0 - changing_colsum);
+              double barnyard_antics = sum(given_col(gc_pos)) - Umat_sp(dyn_index321(j)) + changing_element_U;
+              
+              if (barnyard_antics > 1.0 && changing_element_U > 0.0) {
+                double proposed_element_U = changing_element_U - barnyard_antics * (changing_element_U / barnyard_antics);
+                
+                if (proposed_element_U >= 0.0) {
+                  changing_element_U = proposed_element_U;
+                } else {
+                  changing_element_U = 0.0;
+                }
               } else if (changing_element_U < 0.0) {
                 changing_element_U = 0.0;
               }
-              
             } else if (substoch > 0 && dyn_type(j) == 2) {
               if (changing_element_F < 0.0) {
                 changing_element_F = 0.0;
@@ -15973,104 +19024,12 @@ Rcpp::List f_projection3(DataFrame data, int format, bool prebreeding = true,
 
 // pop dynamics
 
-//' Vectorize Matrix for Historical Mean Matrix Estimation
-//' 
-//' Function \code{flagrantcrap()} vectorizes core indices of matrices
-//' input as list elements.
-//' 
-//' @name flagrantcrap
-//' 
-//' @param Xmat A matrix originally a part of a list object.
-//' @param allindices A vector of indices to remove from the matrix
-//' 
-//' @return A column vector of specifically called elements from the input
-//' matrix.
-//' 
-//' @keywords internal
-//' @noRd
-arma::vec flagrantcrap(arma::mat Xmat, arma::uvec allindices) {
-  
-  arma::vec newcol = Xmat.elem(allindices);
-  
-  return newcol;
-}
-
-//' Vectorize Matrix for Ahistorical Mean Matrix Estimation
-//' 
-//' Function \code{moreflagrantcrap()} vectorizes matrices input as list
-//' elements.
-//' 
-//' @name moreflagrantcrap
-//' 
-//' @param Xmat A matrix originally a part of a list object.
-//' 
-//' @return A column vector of the input matrix.
-//' 
-//' @keywords internal
-//' @noRd
-arma::vec moreflagrantcrap(arma::mat Xmat) {
-  
-  arma::vec newcol = arma::vectorise(Xmat);
-  
-  return newcol;
-}
-
-//' Calculate Logarithms of Non-Zero Elements of Sparse Matrix
-//' 
-//' Function \code{spmat_log} finds the non-zero elements in a sparse matrix,
-//' calculates their logs, and inserts them back into the matrix and returns it.
-//' Based on code developed by Coatless Professor and posted by him on
-//' StackOverflow.
-//' 
-//' @name spmat_log
-//' 
-//' @param B A sparse matrix. Note that this is assumed to be a population
-//' projection matrix, meaning that all values are either 0 or positive.
-//' 
-//' @return A sparse matrix with non-zero values as logs of the elements in the
-//' input matrix.
-//' 
-//' @keywords internal
-//' @noRd
-arma::sp_mat spmat_log(arma::sp_mat coremat)
-{
-  arma::sp_mat::const_iterator start = coremat.begin();
-  arma::sp_mat::const_iterator end   = coremat.end();
-  arma::sp_mat::const_iterator it = start; 
-  
-  int n = std::distance(start, end);
-  
-  if (n > 0) {
-    arma::umat locs(2, n);
-    arma::uvec temp(2);
-    arma::vec vals(n);
-    arma::vec logvals(n);
-    locs.zeros();
-    temp.zeros();
-    vals.zeros();
-    logvals.zeros();
-    
-    for(int i = 0; i < n; ++i) {
-      temp(0) = it.row();
-      temp(1) = it.col();
-      locs.col(i) = temp;
-      vals(i) = coremat(temp(0), temp(1));
-      logvals(i) = log(vals(i));
-      ++it; // increment
-    }
-    
-    coremat = arma::sp_mat(locs, logvals, coremat.n_rows, coremat.n_cols);
-  }
-  
-  return coremat;
-}
-
 //' Estimates Mean LefkoMat Object for Historical MPM
 //' 
 //' Function \code{turbogeodiesel()} estimates mean historical population
 //' projection matrices, treating the mean as element-wise arithmetic.
 //' 
-//' @name turbogeodiesel
+//' @name .turbogeodiesel
 //' 
 //' @param loy A data frame denoting the population, patch, and occasion
 //' designation for each matrix. Includes a total of 9 variables.
@@ -16343,7 +19302,7 @@ List turbogeodiesel(DataFrame loy, List Umats, List Fmats, DataFrame hstages,
 //' function can handle both normal ahistorical MPMs and age x stage ahistorical
 //' MPMs.
 //' 
-//' @name geodiesel
+//' @name .geodiesel
 //' 
 //' @param loy A data frame denoting the population, patch, and occasion
 //' designation of each matrix. Includes a total of 9 variables.
@@ -16589,7 +19548,7 @@ List geodiesel(DataFrame loy, List Umats, List Fmats, DataFrame agestages,
 //' left eigenvectors estimated for a matrix by the \code{eig_gen}() function
 //' in the C++ Armadillo library. Works with dense matrices.
 //' 
-//' @name decomp3
+//' @name .decomp3
 //' 
 //' @param Amat A population projection matrix of class \code{matrix}.
 //'
@@ -16619,7 +19578,7 @@ List decomp3(arma::mat Amat) {
 //' left eigenvectors estimated for a matrix by the \code{eigs_gen}() function
 //' in the C++ Armadillo library. Works with sparse matrices.
 //' 
-//' @name decomp3sp
+//' @name .decomp3sp
 //' 
 //' @param Amat A population projection matrix of class \code{matrix}.
 //'
@@ -16653,7 +19612,7 @@ List decomp3sp(arma::mat Amat) {
 //' eigenvectors estimated for a matrix by the \code{eigs_gen}() function
 //' in the C++ Armadillo library. Works with sparse matrices.
 //' 
-//' @name decomp3sp_inp
+//' @name .decomp3sp_inp
 //' 
 //' @param Amat A population projection matrix of class \code{matrix}.
 //'
@@ -16690,7 +19649,7 @@ List decomp3sp_inp(arma::sp_mat spAmat) {
 //' \code{lambda3matrix()} returns the dominant eigenvalue of a single
 //' dense or sparse projection matrix, provided in dense matrix format.
 //' 
-//' @name lambda3matrix
+//' @name .lambda3matrix
 //' 
 //' @param Amat A population projection matrix of class \code{matrix}.
 //' @param sparse A logical value indicating whether to use sparse matrix
@@ -16728,7 +19687,7 @@ double lambda3matrix(arma::mat Amat, bool sparse) {
 //' \code{ss3matrix()} returns the stable stage distribution for a 
 //' dense or sparse population matrix.
 //' 
-//' @name ss3matrix
+//' @name .ss3matrix
 //' 
 //' @param Amat A population projection matrix of class \code{matrix}.
 //' @param sparse A logical value indicating whether to use sparse or dense
@@ -16774,7 +19733,7 @@ arma::vec ss3matrix(arma::mat Amat, bool sparse) {
 //' these on the basis of stage description information provided in the
 //' \code{lefkoMat} object used as input in that function).
 //' 
-//' @name rv3matrix
+//' @name .rv3matrix
 //' 
 //' @param Amat A population projection matrix of class \code{matrix}.
 //' @param sparse A logical value indicating whether to use sparse or dense
@@ -16820,7 +19779,7 @@ arma::vec rv3matrix(arma::mat Amat, bool sparse) {
 //' format). This is accomplished via the \code{eig_gen}() and \code{eigs_gen}()
 //' functions in the C++ Armadillo library.
 //' 
-//' @name sens3matrix
+//' @name .sens3matrix
 //' 
 //' @param Amat A population projection matrix of class \code{matrix}.
 //' @param sparse A logical value indicating whether to use sparse or dense
@@ -16887,7 +19846,7 @@ arma::mat sens3matrix(arma::mat Amat, bool sparse) {
 //' is accomplished via the \code{eigs_gen}() function in the C++ Armadillo
 //' library.
 //' 
-//' @name sens3sp_matrix
+//' @name .sens3sp_matrix
 //' 
 //' @param Aspmat A population projection matrix in sparse matrix format.
 //' @param refmat A sparse matrix used for reference to create associated 0s in
@@ -16952,7 +19911,7 @@ arma::sp_mat sens3sp_matrix(arma::sp_mat Aspmat, arma::sp_mat refmat) {
 //' sensitivity for each life history stage. This is accomplished via the 
 //' \code{eigs_gen}() function in the C++ Armadillo library.
 //' 
-//' @name sens3hlefko
+//' @name .sens3hlefko
 //' 
 //' @param Amat A population projection matrix of class \code{matrix}.
 //' @param ahstages An integar vector of unique ahistorical stages.
@@ -17060,7 +20019,7 @@ List sens3hlefko(arma::mat Amat, DataFrame ahstages, DataFrame hstages) {
 //' format. This is accomplished via the \code{eig_gen}() and \code{eigs_gen}()
 //' functions in the C++ Armadillo library.
 //' 
-//' @name elas3matrix
+//' @name .elas3matrix
 //' 
 //' @param Amat A population projection matrix of class \code{matrix}.
 //' @param sparse A logical value indicating whether to use sparse or dense
@@ -17128,7 +20087,7 @@ arma::mat elas3matrix(arma::mat Amat, bool sparse) {
 //' for each life history stage. This is accomplished via the \code{eigs_gen}()
 //' function in the C++ Armadillo library.
 //' 
-//' @name elas3hlefko
+//' @name .elas3hlefko
 //' 
 //' @param Amat A population projection matrix.
 //' @param ahstages An integar vector of unique ahistorical stages.
@@ -17204,7 +20163,7 @@ List elas3hlefko(arma::mat Amat, DataFrame ahstages, DataFrame hstages) {
 //' Function \code{proj3()} runs the matrix projections used in other functions
 //' in package \code{lefko3}.
 //' 
-//' @name proj3
+//' @name .proj3
 //' 
 //' @param start_vec The starting population vector for the projection.
 //' @param core_list A list of full projection matrices, corresponding to the 
@@ -17364,7 +20323,7 @@ arma::mat proj3(arma::vec start_vec, List core_list, arma::uvec mat_order,
 //' functions in package \code{lefko3}, but only when the input is sparse. This
 //' is a slimmed down version of function \code{proj3()}
 //' 
-//' @name proj3sp
+//' @name .proj3sp
 //' 
 //' @param start_vec The starting population vector for the projection.
 //' @param core_list A list of full projection matrices, corresponding to
@@ -17470,7 +20429,7 @@ arma::mat proj3sp(arma::vec start_vec, List core_list, arma::uvec mat_order,
 //' 
 //' Function \code{proj3dens()} runs density-dependent matrix projections.
 //' 
-//' @name proj3dens
+//' @name .proj3dens
 //' 
 //' @param start_vec The starting population vector for the projection.
 //' @param core_list A list of full projection matrices, corresponding to the 
@@ -17571,7 +20530,6 @@ arma::mat proj3dens(arma::vec start_vec, List core_list, arma::uvec mat_order,
   }
   
   double changing_element {0.0};
-  double changing_colsum {0.0};
   
   if (sparse_switch == 0) {
     // Dense matrix projection
@@ -17608,23 +20566,27 @@ arma::mat proj3dens(arma::vec start_vec, List core_list, arma::uvec mat_order,
               (1 - used_popsize / dyn_alpha(j)); // Fi*(1 - ALPHA/n)
           }
           
-          if (substoch == 1) {
-            if (changing_element > 1.0 && dyn_type(j) == 1) {
+          if (substoch == 1 && dyn_type(j) == 1) {
+            if (changing_element > 1.0) {
               changing_element = 1.0;
             } else if (changing_element < 0.0) {
               changing_element = 0.0;
             }
           } else if (substoch == 2 && dyn_type(j) == 1) {
-            double barnyard_antics {0.0};
             arma::vec given_col = theprophecy.col(dyn_index_col(j));
             arma::uvec gc_negs = find(given_col < 0.0);
-            if (gc_negs.n_elem > 0) {
-              barnyard_antics = sum(given_col(gc_negs));
-            }
-            changing_colsum = sum(given_col) - theprophecy(dyn_index321(j)) - barnyard_antics;
+            arma::uvec gc_pos = find(given_col > 0.0);
             
-            if (changing_element > (1.0 - changing_colsum)) {
-              changing_element = (1.0 - changing_colsum);
+            double barnyard_antics = sum(given_col(gc_pos)) - theprophecy(dyn_index321(j)) + changing_element;
+            
+            if (barnyard_antics > 1.0 && changing_element > 0.0) {
+              double proposed_element = changing_element - barnyard_antics * (changing_element / barnyard_antics);
+              
+              if (proposed_element >= 0.0) {
+                changing_element = proposed_element;
+              } else {
+                changing_element = 0.0;
+              }
             } else if (changing_element < 0.0) {
               changing_element = 0.0;
             }
@@ -17725,16 +20687,20 @@ arma::mat proj3dens(arma::vec start_vec, List core_list, arma::uvec mat_order,
               changing_element = 0.0;
             }
           } else if (substoch == 2 && dyn_type(j) == 1) {
-            double barnyard_antics {0.0};
             arma::vec given_col = arma::vec(sparse_prophecy.col(dyn_index_col(j)));
             arma::uvec gc_negs = find(given_col < 0.0);
-            if (gc_negs.n_elem > 0) {
-              barnyard_antics = sum(given_col(gc_negs));
-            }
-            changing_colsum = sum(given_col) - sparse_prophecy(dyn_index321(j)) - barnyard_antics;
+            arma::uvec gc_pos = find(given_col > 0.0);
             
-            if (changing_element > (1.0 - changing_colsum)) {
-              changing_element = (1.0 - changing_colsum);
+            double barnyard_antics = sum(given_col(gc_pos)) - sparse_prophecy(dyn_index321(j)) + changing_element;
+            
+            if (barnyard_antics > 1.0 && changing_element > 0.0) {
+              double proposed_element = changing_element - barnyard_antics * (changing_element / barnyard_antics);
+              
+              if (proposed_element >= 0.0) {
+                changing_element = proposed_element;
+              } else {
+                changing_element = 0.0;
+              }
             } else if (changing_element < 0.0) {
               changing_element = 0.0;
             }
@@ -19241,7 +22207,7 @@ DataFrame slambda3(List mpm, int times = 10000, bool historical = false,
 //' log population growth estimated per simulated occasion (as given in equation 2
 //' in Tuljapurkar, Horvitz, and Pascarella 2003). 
 //' 
-//' @name stoch_senselas
+//' @name .stoch_senselas
 //' 
 //' @param mpm A matrix projection model of class \code{lefkoMat}, or a list of
 //' full matrix projection matrices.
@@ -19776,7 +22742,7 @@ Rcpp::List stoch_senselas(List mpm, int times = 10000, bool historical = false,
 //' Function \code{bambi3()} creates an index of estimable elements in
 //' historical matrices, and details the kind of transition that it is.
 //' 
-//' @name bambi3
+//' @name .bambi3
 //' 
 //' @param stages This is the core stageframe held by \code{mats}, equivalent to
 //' \code{ahstages}.
@@ -20033,7 +22999,7 @@ DataFrame bambi3(DataFrame stages, DataFrame hstages) {
 //' Function \code{bambi2()} creates an index of estimable elements in
 //' ahistorical matrices, and details the kind of transition that it is.
 //' 
-//' @name bambi2
+//' @name .bambi2
 //' 
 //' @param stages This is the core stageframe held by \code{mats}, equivalent to
 //' \code{ahstages}.
@@ -20146,7 +23112,7 @@ DataFrame bambi2(DataFrame stages) {
 //' matrices, and LTRE contributions from LTRE and sLTRE matrices, according to
 //' the categories developed by functions \code{bambi2()} and \code{bambi3()}.
 //' 
-//' @name demolition3
+//' @name .demolition3
 //' 
 //' @param e_amat A single elasticity, LTRE, or sLTRE matrix.
 //' @param bambesque This is the output from \code{bambi2()} or \code{bambi3()}
@@ -21084,7 +24050,7 @@ List demolition3(arma::mat e_amat, DataFrame bambesque,
 //' \code{ltre3matrix()} returns the one-way fixed deterministic LTRE matrix of
 //' a dense or sparse set of input matrices.
 //' 
-//' @name ltre3matrix
+//' @name .ltre3matrix
 //' 
 //' @param Amats A list of population projection matrices (not an entire
 //' \code{lefkoMat} object.
@@ -21209,7 +24175,7 @@ arma::cube ltre3matrix(List Amats, Rcpp::IntegerVector refnum,
 //' \code{sltre3matrix()} returns the one-way stochastic LTRE matrix of
 //' a dense or sparse set of input matrices.
 //' 
-//' @name sltre3matrix
+//' @name .sltre3matrix
 //' 
 //' @param Amats A list of population projection matrices (not an entire
 //' \code{lefkoMat} object).

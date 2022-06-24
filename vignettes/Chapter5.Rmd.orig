@@ -14,6 +14,7 @@ knitr::opts_chunk$set(
   collapse = TRUE,
   comment = "#>"
 )
+library(lefko3)
 ```
 
   <p style="text-indent: 20px">In this vignette, we will use the `cypdata` dataset to illustrate the estimation of **function-based MPMs**. To reduce file size, we have prevented some statements from running if they produce long stretches of output. Examples include most `summary()` calls - we include hashtagged versions of these calls, and our text assumes that the user runs these statements without hashtags. We have also written this vignette using the default Ehrlén format for all historical MPMs. All examples can be run in deVries format as well. This vignette is only a sample analysis. Detailed information and instructions on using `lefko3` are available through a free online e-book called *lefko3: a gentle introduction*, available on <a href = "http://www.sheffersonlab.com/projects">the projects page</a> of the Shefferson lab website. This website also includes links to long-format vignettes and other demonstrations of this package.</p>
@@ -32,10 +33,8 @@ Figure 5.1. Life history model of *Cypripedium candidum*. Survival transitions a
 
   <p style="text-indent: 20px">We can see a variety of transitions within this figure. The juvenile stages are limited to fairly simple, progressive transitions. New recruits may enter the population directly from germination of a seed produced the previous year, in which case they start in the protocorm 1 stage, or they may begin as dormant seed. Dormant seed may remain dormant, die, or germinate into the protocorm 1 stage. Protocorms exist for up to 3 years, yielding the protocorm 1, 2, and 3 stages, without any possibility of staying within each of these stages for more than a single year. Protocorm 3 leads to a seedling stage, in which the plant may persist for many years before becoming mature. Here, maturity does not really refer to reproduction *per se*, but rather to a morphology indistinguishable from a reproductive plant except for the lack of a flower. The first mature stage is usually either vegetative dormancy (`Dorm`), during which time the plant does not sprout, or a small, non-flowering adult (`1V`). Once in this portion of the life history, the plant may transition among 49 mature stages, including vegetative dormancy, 1-24 shoots without flowers, or 1-24 shoots with at least one flower (we have never observed a plant bigger than this in the population).</p>
   
-  <p style="text-indent: 20px">The horizontal dataset `cypdata`, and the ahistorical vertical dataset `cypvert` which is the same as `cypdata` but is structured differently, both include only data for the adult stages, and so later we will need to set juvenile transitions to constants from the literature. Let's begin by clearing the memory, loading the package and the dataset, and looking over a summary of the latter.</p>
+  <p style="text-indent: 20px">The horizontal dataset `cypdata`, and the ahistorical vertical dataset `cypvert` which is the same as `cypdata` but is structured differently, both include only data for the adult stages, and so later we will need to set juvenile transitions to constants from the literature. Let's begin by loading the dataset, and looking over a summary.</p>
 ```{r Ch5.0}
-rm(list=ls(all=TRUE))
-library(lefko3)
 data(cypdata)
 #summary(cypdata)
 ```
@@ -74,7 +73,6 @@ comments <- c("Dormant seed", "Yr1 protocorm", "Yr2 protocorm", "Yr3 protocorm",
   "Flo adult 18 stems", "Flo adult 19 stems", "Flo adult 20 stems",
   "Flo adult 21 stems", "Flo adult 22 stems", "Flo adult 23 stems",
   "Flo adult 24 stems")
-
 cypframe <- sf_create(sizes = sizevector, stagenames = stagevector, 
   repstatus = repvector, obsstatus = obsvector, matstatus = matvector, 
   propstatus = propvector, immstatus = immvector, indataset = indataset,
@@ -112,9 +110,8 @@ hist(subset(vertdata, repstatus2 == 1)$feca2, main = "Fecundity in time t",
   
   <p style="text-indent: 20px">Stem number has a very low mean, and the curve declines fairly smoothly. The Poisson or negative binomial distribution might work for size. Fecundity appears to have many zeros, suggesting that we might need a zero-inflated count distribution. Let's conduct a formal set of tests to determine the appropriate distributions for size and fecundity. The size of zero is actually absorbed in an unobservable stage, vegetative dormancy (stage `D`), so we will not test for zero-inflation in the size variable. However, we will test for zero-inflation in fecundity, since fecundity is measured as the number of fruit pods produced, while all flowering individuals are treated as reproductive and so some individuals must have fecundity of zero.</p>
 ```{r Ch5.4}
-sf_distrib(vertdata, sizea = c("size3added", "size2added"), obs3 = "obsstatus3",
-  fec = c("feca3", "feca2"), repst = c("repstatus3", "repstatus2"),
-  zisizea = FALSE)
+hfv_qc(data = vertdata, vitalrates = c("surv", "obs", "size", "repst", "fec"),
+  suite = "full", size = c("size3added", "size2added", "size1added"))
 ```
   
   <p style="text-indent: 20px">The results of these tests show us that size is overdispersed. Since we have no zeros in size, we will use the zero-truncated negative binomial distribution for this vital rate. Our tests of fecundity show no significant overdispersion, but the number of zeros exceeds expectation, suggesting that we use a zero-inflated Poisson distribution.</p>
@@ -178,7 +175,6 @@ cypsupp3 <- supplemental(stage3 = c("SD", "SD", "P1", "P1", "P2", "P3", "SL",
     "S", "S", "S", "S", "S", "S", "S", "R", "R"), 
   type_t12 = c("S", "F", "S", "F", "S", "S", "S", "S", "S", "S", "S", "S", "S",
     "S", "S", "S", "S", "S", "S", "S", "S", "S", "S"), stageframe = cypframe)
-
 cypsupp2 <- supplemental(stage3 = c("SD", "P1", "P2", "P3", "SL", "SL", "D",
     "V1", "V2", "V3", "SD", "P1"), 
   stage2 = c("SD", "SD", "P1", "P2", "P3", "SL", "SL", "SL", "SL", "SL", "rep",

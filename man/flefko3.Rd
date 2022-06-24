@@ -103,18 +103,20 @@ function supplements overwrite data provided in \code{supplement}.}
 \item{data}{The historical vertical demographic data frame used to estimate
 vital rates (class \code{hfvdata}), which is required to initialize times and
 patches properly. Variable names should correspond to the naming conventions
-in \code{\link{verticalize3}()} and \code{\link{historicalize3}()}.}
+in \code{\link{verticalize3}()} and \code{\link{historicalize3}()}. Not
+required if option \code{modelsuite} is set to a \code{vrm_input} object.}
 
-\item{modelsuite}{A \code{lefkoMod} object holding the vital rate models and
-associated metadata. If given, then \code{surv_model}, \code{obs_model}, 
-\code{size_model}, \code{sizeb_model}, \code{sizec_model},
-\code{repst_model}, \code{fec_model}, \code{jsurv_model}, \code{jobs_model},
-\code{jsize_model}, \code{jsizeb_model}, \code{jsizec_model},
-\code{jrepst_model}, \code{jmatst_model}, and \code{paramnames} are not
-required. One or more of these models should include size or reproductive
-status in occasion \emph{t}-1. Although this is optional input, it is
-recommended, and without it all vital rate model inputs (named
-\code{XX_model}) are required.}
+\item{modelsuite}{One of two kinds of lists. The first is a \code{lefkoMod}
+object holding the vital rate models and associated metadata. Alternatively,
+an object of class \code{vrm_input} may be provided. If given, then
+\code{surv_model}, \code{obs_model}, \code{size_model}, \code{sizeb_model},
+\code{sizec_model}, \code{repst_model}, \code{fec_model}, \code{jsurv_model},
+\code{jobs_model}, \code{jsize_model}, \code{jsizeb_model},
+\code{jsizec_model}, \code{jrepst_model}, \code{jmatst_model}, and
+\code{paramnames} are not required. One or more of these models should
+include size or reproductive status in occasion \emph{t}-1. Although this is
+optional input, it is recommended, and without it all vital rate model inputs
+(named \code{XX_model}) are required.}
 
 \item{surv_model}{A linear model predicting survival probability. This can 
 be a model of class \code{glm} or \code{glmer}, and requires a predicted
@@ -431,6 +433,12 @@ element in the associated \code{U} matrix. The number and order of elements
 in each column of this matrix matches the associated matrix in column vector
 format. Use of this option is generally for the purposes of debugging code.
 `
+Individual covariates are treated as categorical only if they are set as
+random terms. Fixed categorical individual covariates are currently not
+allowed. However, such terms may be supplied if the \code{modelsuite} option
+is set to a \code{vrm_input} object. In that case, the user should also set
+the logical random switch for the individual covariate to be used to 
+\code{TRUE} (e.g., \code{random.inda = TRUE}).
 }
 
 \examples{

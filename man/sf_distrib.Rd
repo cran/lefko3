@@ -144,8 +144,6 @@ sf_distrib(lathvertln, sizea = c("sizea3", "sizea2"), fec = c("feca3", "feca2"),
   repst = c("repstatus3", "repstatus2"), zifec = FALSE)
 
 # Cypripedium example
-rm(list=ls(all=TRUE))
-
 data(cypdata)
 
 sizevector <- c(0, 0, 0, 0, 0, 0, 1, 2.5, 4.5, 8, 17.5)

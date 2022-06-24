@@ -6,6 +6,8 @@
 #' Function \code{pfj()} powers the R function \code{\link{verticalize3}()},
 #' creating the vertical structure and rearranging the data in that shape.
 #' 
+#' @name .pfj
+#' 
 #' @param data The horizontal data file.
 #' @param stageframe The stageframe object describing the life history model.
 #' This should be the full stageframe.
@@ -104,7 +106,9 @@
 #' Function \code{jpf()} is the core kernel for function
 #' \code{\link{historicalize3}()}, creating the historical, vertical structure
 #' and rearranging the data in that shape.
-#'
+#' 
+#' @name .jpf
+#' 
 #' @param data The horizontal data file.
 #' @param stageframe The stageframe object identifying the life history model
 #' being operationalized. This should be the full stageframe.
@@ -226,6 +230,8 @@
 #' internally by \code{\link{historicalize3}()} and
 #' \code{\link{verticalize3}()}.
 #' 
+#' @name .density3
+#' 
 #' @param data Demographic dataset in historical vertical format.
 #' @param xcol Number of column in \code{data} corresponding to x position.
 #' @param ycol Number of column in \code{data} corresponding to y position.
@@ -260,6 +266,8 @@
 #' \code{\link{hist_null}()} to provide an index for estimation of null
 #' historical matrices from ahistorical MPM inputs.
 #' 
+#' @name .simplepizzle
+#' 
 #' @param StageFrame The stageframe object identifying the life history model
 #' being operationalized.
 #' @param format Integer indicating whether historical matrices should be in
@@ -283,7 +291,9 @@
 #' 
 #' Creates a list of conditional ahistorical matrices in the style noted in
 #' deVries and Caswell (2018).
-#'
+#' 
+#' @name .hoffmannofstuttgart
+#' 
 #' @param mainmat Historical matrix.
 #' @param indices Data frame including the stages at times \emph{t}-1,
 #' \emph{t}, and \emph{t}+1, asvwell as indices corresponding to elements in
@@ -305,6 +315,8 @@
 #' ahistorical matrices conditional upon stage in time \emph{t}-1. In effect,
 #' the function takes each historical matrix within a lefkoMat object, and
 #' forms one ahistorical matrix for each stage in time \emph{t}-1.
+#' 
+#' @name cond_hmpm
 #' 
 #' @param hmpm A historical matrix projection model of class \code{lefkoMat}.
 #' @param matchoice A character denoting whether to use A, U, or F matrices.
@@ -392,6 +404,8 @@ cond_hmpm <- function(hmpm, matchoice = NULL, err_check = NULL) {
 #' Function \code{cond_diff()} takes a set of historical difference matrices
 #' resulting from function \code{\link{diff_lM}()} and decomposes them into 
 #' ahistorical difference matrices conditional upon stage in time \emph{t}-1.
+#' 
+#' @name cond_diff
 #' 
 #' @param lDiff An object of class \code{lefkoDiff}.
 #' @param ref Choice of mpm to use as reference. Defaults to \code{1}, which
@@ -525,6 +539,8 @@ cond_diff <- function(lDiff, ref = 1L, matchoice = NULL, err_check = NULL) {
 #' \eqn{\phi_{t+1} = \phi_t \alpha e^{-\beta n_t}}. Here, if no
 #' \code{separate_N} vector is provided, then \eqn{n_t = \phi_t}.
 #' 
+#' @name ricker3
+#' 
 #' @param start_value A positive number to start the return vector in time 0.
 #' @param alpha The alpha parameter in the two-parameter Ricker function. Must
 #' be non-negative.
@@ -584,6 +600,8 @@ ricker3 <- function(start_value, alpha, beta, time_steps = 100L, time_lag = 1L, 
 #' The two-parameter Beverton-Holt function is given as 
 #' \eqn{\phi_{t+1} = \phi_t \alpha / (1 + \beta n_t)}. Here, if no
 #' \code{separate_N} vector is provided, then \eqn{n_t = \phi_t}.
+#' 
+#' @name beverton3
 #' 
 #' @param start_value A positive number to start the return vector in time 0.
 #' @param alpha The alpha parameter in the two-parameter Beverton-Holt
@@ -646,6 +664,8 @@ beverton3 <- function(start_value, alpha, beta, time_steps = 100L, time_lag = 1L
 #' \eqn{\phi_{t+1} = \phi_t / (1 + e^{\alpha n_t + \beta})}. Here,
 #' if no \code{separate_N} vector is provided, then \eqn{n_t = \phi_t}.
 #' 
+#' @name usher3
+#' 
 #' @param start_value A positive number to start the return vector in time 0.
 #' @param alpha The alpha parameter in the two-parameter Usher
 #' function.
@@ -707,6 +727,8 @@ usher3 <- function(start_value, alpha, beta, time_steps = 100L, time_lag = 1L, p
 #' if no \code{separate_N} vector is provided, then \eqn{n_t = \phi_t}. If
 #' \eqn{\lambda} is not provided, then it defaults to \code{1.0}.
 #' 
+#' @name logistic3
+#' 
 #' @param start_value A positive number to start the return vector in time 0.
 #' @param alpha The carrying capacity K.
 #' @param beta If set to some positive number, then this number is the maximum
@@ -761,11 +783,49 @@ logistic3 <- function(start_value, alpha, beta = 0.0, lambda = 1.0, time_steps =
     .Call('_lefko3_logistic3', PACKAGE = 'lefko3', start_value, alpha, beta, lambda, time_steps, time_lag, pre0_subs, pre0_value, substoch, separate_N)
 }
 
+#' Function to Test Whether a Numeric Vector Is Composed Only of Integers
+#' 
+#' Function \code{.integer_test()} tests whether the elements of a numeric
+#' vector are integers.
+#' 
+#' @name .integer_test
+#' 
+#' @param numeric_input A numeric vector to be tested.
+#' 
+#' @return This function returns an integer equal to the number of elements
+#' that are not integers in \code{numeric_input}.
+#' 
+#' @keywords internal
+#' @noRd
+.integer_test <- function(numeric_input) {
+    .Call('_lefko3_integer_test', PACKAGE = 'lefko3', numeric_input)
+}
+
+#' Function to Test Whether an Integer Vector Is Entirely Binomial
+#' 
+#' Function \code{.binomial_test()} tests whether an integer vector is composed
+#' only of \code{0} and \code{1} elements.
+#' 
+#' @name .binomial_test
+#' 
+#' @param integer_input An integer vector to be tested.
+#' 
+#' @return This function returns an integer equal to the number of elements
+#' that are not \code{0}s and \code{1}s.
+#' 
+#' @keywords internal
+#' @noRd
+.binomial_test <- function(integer_input) {
+    .Call('_lefko3_binomial_test', PACKAGE = 'lefko3', integer_input)
+}
+
 #' Main Formula Creation for Function \code{modelsearch()}
 #'
 #' Function \code{.stovokor()} creates formulae to be used as input in the
 #' global model calls used in function \code{\link{modelsearch}()}.
-#'
+#' 
+#' @name .stovokor
+#' 
 #' @param surv A vector of strings indicating the names of the variables coding
 #' survival.
 #' @param obs A vector of strings indicating the names of the variables coding
@@ -846,6 +906,40 @@ logistic3 <- function(start_value, alpha, beta = 0.0, lambda = 1.0, time_steps =
 #' @noRd
 .stovokor <- function(surv, obs, size, sizeb, sizec, repst, fec, matstat, vitalrates, historical, suite, approach, nojuvs, age, indcova, indcovb, indcovc, indiv, patch, year, pasrand, yasrand, iaasrand, ibasrand, icasrand, fectime, juvsize, sizebused, sizecused, grouptest, densitycol, densityused, indcovaused, indcovbused, indcovcused) {
     .Call('_lefko3_stovokor', PACKAGE = 'lefko3', surv, obs, size, sizeb, sizec, repst, fec, matstat, vitalrates, historical, suite, approach, nojuvs, age, indcova, indcovb, indcovc, indiv, patch, year, pasrand, yasrand, iaasrand, ibasrand, icasrand, fectime, juvsize, sizebused, sizecused, grouptest, densitycol, densityused, indcovaused, indcovbused, indcovcused)
+}
+
+#' Creates a Skeleton Paramnames Object for Use in Function-based Modeling
+#' 
+#' Creates a simple skeleton \code{paramnames} object that can be entered as
+#' input in functions \code{\link{flefko2}()}, \code{\link{flefko3}()}, and
+#' \code{\link{aflefko2}()}.
+#' 
+#' @name create_pm
+#' 
+#' @param name_terms A logical value indicating whether to start each variable
+#' name as \code{none} if \code{FALSE}, or as the default \code{modelparams}
+#' name if \code{TRUE}. Defaults to \code{FALSE}.
+#' 
+#' @return A three column data frame, of which the first describes the
+#' parameters in reasonably plain English, the second gives the name of the
+#' parameter within the MPM generating functions, and the third is to be
+#' edited with the names of the variables as they appear in the models.
+#' 
+#' @section Notes:
+#' The third column in the resulting object should be edited with the names only
+#' of those variables actually used in vital rate modeling. This
+#' \code{paramnames} object should apply to all models used in a single MPM
+#' building exercise. So, for example, if the models used include random terms,
+#' then they should all have the same random terms. Fixed terms can vary,
+#' however.
+#' 
+#' @examples 
+#' our_pm <- create_pm()
+#' our_pm
+#' 
+#' @export
+create_pm <- function(name_terms = FALSE) {
+    .Call('_lefko3_create_pm', PACKAGE = 'lefko3', name_terms)
 }
 
 #' Compares Two Strings Literally
@@ -985,6 +1079,57 @@ NULL
 #' 
 #' @return An integer vector with integers referring to elements in vector
 #' \code{ref}.
+#' 
+#' @keywords internal
+#' @noRd
+NULL
+
+#' Vectorize Matrix for Historical Mean Matrix Estimation
+#' 
+#' Function \code{flagrantcrap()} vectorizes core indices of matrices
+#' input as list elements.
+#' 
+#' @name flagrantcrap
+#' 
+#' @param Xmat A matrix originally a part of a list object.
+#' @param allindices A vector of indices to remove from the matrix
+#' 
+#' @return A column vector of specifically called elements from the input
+#' matrix.
+#' 
+#' @keywords internal
+#' @noRd
+NULL
+
+#' Vectorize Matrix for Ahistorical Mean Matrix Estimation
+#' 
+#' Function \code{moreflagrantcrap()} vectorizes matrices input as list
+#' elements.
+#' 
+#' @name moreflagrantcrap
+#' 
+#' @param Xmat A matrix originally a part of a list object.
+#' 
+#' @return A column vector of the input matrix.
+#' 
+#' @keywords internal
+#' @noRd
+NULL
+
+#' Calculate Logarithms of Non-Zero Elements of Sparse Matrix
+#' 
+#' Function \code{spmat_log} finds the non-zero elements in a sparse matrix,
+#' calculates their logs, and inserts them back into the matrix and returns it.
+#' Based on code developed by Coatless Professor and posted by him on
+#' StackOverflow.
+#' 
+#' @name spmat_log
+#' 
+#' @param B A sparse matrix. Note that this is assumed to be a population
+#' projection matrix, meaning that all values are either 0 or positive.
+#' 
+#' @return A sparse matrix with non-zero values as logs of the elements in the
+#' input matrix.
 #' 
 #' @keywords internal
 #' @noRd
@@ -1428,7 +1573,7 @@ NULL
 #' the zero-inflated fixed variables, in the same order as
 #' \code{fixed_zi_vars}. Here, given as \code{NULL}.}
 #' \item{random_zi_vars}{A string vector holding the names of the random
-#' variables in the sero-inflation model. Here, given as \code{NULL}.}
+#' variables in the zero-inflation model. Here, given as \code{NULL}.}
 #' \item{random_zi_slopes}{A numeric vector holding the slope coefficients of
 #' the random variables in the zero-inflation model, in the same order as
 #' \code{random_zi_vars}. Here, given as \code{NULL}.}
@@ -1474,7 +1619,7 @@ NULL
 #' \code{fixed_zi_vars}. Not used in \code{lm}/\code{glm}/\code{negbin}
 #' objects.}
 #' \item{random_zi_vars}{A string vector holding the names of the random
-#' variables in the sero-inflation model. Not used in \code{lm}/\code{glm}/
+#' variables in the zero-inflation model. Not used in \code{lm}/\code{glm}/
 #' \code{negbin} objects.}
 #' \item{random_zi_slopes}{A numeric vector holding the slope coefficients of
 #' the random variables in the zero-inflation model, in the same order as
@@ -1523,7 +1668,7 @@ NULL
 #' the zero-inflated fixed variables, in the same order as
 #' \code{fixed_zi_vars}. Not used in \code{vglm} objects.}
 #' \item{random_zi_vars}{A string vector holding the names of the random
-#' variables in the sero-inflation model. Not used in \code{vglm} objects.}
+#' variables in the zero-inflation model. Not used in \code{vglm} objects.}
 #' \item{random_zi_slopes}{A numeric vector holding the slope coefficients of
 #' the random variables in the zero-inflation model, in the same order as
 #' \code{random_zi_vars}. Not used in \code{vglm} objects.}
@@ -1571,7 +1716,7 @@ NULL
 #' random variables, in the same order as \code{random_vars}. Not used in
 #' \code{zeroinfl} objects.}
 #' \item{random_zi_vars}{A string vector holding the names of the random
-#' variables in the sero-inflation model. Not used in \code{zeroinfl} objects.}
+#' variables in the zero-inflation model. Not used in \code{zeroinfl} objects.}
 #' \item{random_zi_slopes}{A numeric vector holding the slope coefficients of
 #' the random variables in the zero-inflation model, in the same order as
 #' \code{random_zi_vars}. Not used in \code{zeroinfl} objects.}
@@ -1624,7 +1769,7 @@ NULL
 #' \item{random_slopes}{A numeric vector holding the slope coefficients of the
 #' random variables, in the same order as \code{random_vars}.}
 #' \item{random_zi_vars}{A string vector holding the names of the random
-#' variables in the sero-inflation model. Not used in lme4.}
+#' variables in the zero-inflation model. Not used in lme4.}
 #' \item{random_zi_slopes}{A numeric vector holding the slope coefficients of
 #' the random variables in the zero-inflation model, in the same order as
 #' \code{random_zi_vars}. Not used in lme4.}
@@ -1676,7 +1821,7 @@ NULL
 #' \item{random_slopes}{A numeric vector holding the slope coefficients of the
 #' random variables, in the same order as \code{random_vars}.}
 #' \item{random_zi_vars}{A string vector holding the names of the random
-#' variables in the sero-inflation model.}
+#' variables in the zero-inflation model.}
 #' \item{random_zi_slopes}{A numeric vector holding the slope coefficients of
 #' the random variables in the zero-inflation model, in the same order as
 #' \code{random_zi_vars}.}
@@ -1701,9 +1846,10 @@ NULL
 #' 
 #' @name S3_extractor
 #' 
-#' @param object An S3 vital rate model. Currently, this should be output from
-#' functions \code{lm()}, \code{glm()}, \code{glm.nb()}, \code{zeroinfl()},
-#' and \code{glmmTMB()}.
+#' @param object An S3 vital rate model other than objects of class
+#' \code{vrm_input}. Currently, this should be output from functions
+#' \code{lm()}, \code{glm()}, \code{glm.nb()}, \code{zeroinfl()}, and
+#' \code{glmmTMB()}.
 #' 
 #' @return A list describing the vital rate model in standard output required
 #' from function \code{modelextract()} to operate. Elements currently include:
@@ -1731,7 +1877,7 @@ NULL
 #' \item{random_slopes}{A numeric vector holding the slope coefficients of the
 #' random variables, in the same order as \code{random_vars}.}
 #' \item{random_zi_vars}{A string vector holding the names of the random
-#' variables in the sero-inflation model.}
+#' variables in the zero-inflation model.}
 #' \item{random_zi_slopes}{A numeric vector holding the slope coefficients of
 #' the random variables in the zero-inflation model, in the same order as
 #' \code{random_zi_vars}.}
@@ -1786,7 +1932,7 @@ NULL
 #' \item{random_slopes}{A numeric vector holding the slope coefficients of the
 #' random variables, in the same order as \code{random_vars}.}
 #' \item{random_zi_vars}{A string vector holding the names of the random
-#' variables in the sero-inflation model.}
+#' variables in the zero-inflation model.}
 #' \item{random_zi_slopes}{A numeric vector holding the slope coefficients of
 #' the random variables in the zero-inflation model, in the same order as
 #' \code{random_zi_vars}.}
@@ -1804,52 +1950,52 @@ NULL
 #' @noRd
 NULL
 
-#' Vectorize Matrix for Historical Mean Matrix Estimation
+#' Extract Key Components of vrm_input Objects
 #' 
-#' Function \code{flagrantcrap()} vectorizes core indices of matrices
-#' input as list elements.
+#' This function extracts the components of a \code{vrm_input} object for
+#' functions \code{jerzeibalowski()} and \code{motherbalowski()}.
 #' 
-#' @name flagrantcrap
+#' @name vrm_extractor
 #' 
-#' @param Xmat A matrix originally a part of a list object.
-#' @param allindices A vector of indices to remove from the matrix
+#' @param object A \code{vrm_input} object.
 #' 
-#' @return A column vector of specifically called elements from the input
-#' matrix.
-#' 
-#' @keywords internal
-#' @noRd
-NULL
-
-#' Vectorize Matrix for Ahistorical Mean Matrix Estimation
-#' 
-#' Function \code{moreflagrantcrap()} vectorizes matrices input as list
-#' elements.
-#' 
-#' @name moreflagrantcrap
-#' 
-#' @param Xmat A matrix originally a part of a list object.
-#' 
-#' @return A column vector of the input matrix.
-#' 
-#' @keywords internal
-#' @noRd
-NULL
-
-#' Calculate Logarithms of Non-Zero Elements of Sparse Matrix
-#' 
-#' Function \code{spmat_log} finds the non-zero elements in a sparse matrix,
-#' calculates their logs, and inserts them back into the matrix and returns it.
-#' Based on code developed by Coatless Professor and posted by him on
-#' StackOverflow.
-#' 
-#' @name spmat_log
-#' 
-#' @param B A sparse matrix. Note that this is assumed to be a population
-#' projection matrix, meaning that all values are either 0 or positive.
-#' 
-#' @return A sparse matrix with non-zero values as logs of the elements in the
-#' input matrix.
+#' @return A list with the following elements:
+#' \item{class}{The exact class of \code{object}. Will be \code{vrm_input}.}
+#' \item{family}{The response distribution.}
+#' \item{dist}{An integer representing the response distribution. \code{0} = 
+#' poisson, \code{1} = negbin, \code{2} = gaussian, \code{3} = gamma, \code{4}
+#' = binomial, and \code{5} = constant.}
+#' \item{zero_inflated}{A logical value indicating whether the distribution is
+#' zero-inflated. Not used in \code{lm}/\code{glm}/\code{negbin} objects. Will
+#' equal \code{FALSE} if \code{dist = 5}.}
+#' \item{zero_truncated}{A logical value indicating whether the distribution is
+#' zero-truncated. Not used in \code{lm}/\code{glm}/\code{negbin} objects. Will
+#' equal \code{FALSE} if \code{dist = 5}.}
+#' \item{all_vars}{A vector holding the names of each variable used by
+#' \code{object}. Will equal only the intercept if \code{dist = 5}.}
+#' \item{fixed_vars}{A string vector holding the names of the fixed variables.
+#' Will equal only the intercept if \code{dist = 5}.}
+#' \item{fixed_slopes}{A numeric vector holding the slope coefficients of the
+#' fixed variables, in the same order as \code{fixed_vars}. Will equal only the
+#' intercept if \code{dist = 5}.}
+#' \item{fixed_zi_vars}{A string vector holding the names of the zero-inflated
+#' fixed variables. Not used in \code{lm}/\code{glm}/\code{negbin} objects.
+#' Will equal \code{NULL} is \code{dist = 5}.}
+#' \item{fixed_zi_slopes}{A numeric vector holding the slope coefficients of
+#' the zero-inflated fixed variables, in the same order as
+#' \code{fixed_zi_vars}. Not used in \code{lm}/\code{glm}/\code{negbin}
+#' objects. Will equal \code{NULL} is \code{dist = 5}.}
+#' \item{random_zi_vars}{A string vector holding the names of the random
+#' variables in the zero-inflation model. Not used in \code{lm}/\code{glm}/
+#' \code{negbin} objects. Will equal \code{NULL} is \code{dist = 5}.}
+#' \item{random_zi_slopes}{A numeric vector holding the slope coefficients of
+#' the random variables in the zero-inflation model, in the same order as
+#' \code{random_zi_vars}. Not used in \code{lm}/\code{glm}/\code{negbin}
+#' objects. Will equal \code{NULL} is \code{dist = 5}.}
+#' \item{sigma}{The residual standard deviation of the model. Defaults to
+#' \code{1.0}.}
+#' \item{theta}{The estimated theta, if the response is negative binomial.
+#' Otherwise, will equal \code{1.0}.}
 #' 
 #' @keywords internal
 #' @noRd
@@ -1859,7 +2005,7 @@ NULL
 #' 
 #' This function appends one NumericVector fully to another.
 #' 
-#' @name concat_dbl
+#' @name .concat_dbl
 #' 
 #' @param A Any NumericVector.
 #' @param B Any other NumericVector.
@@ -1878,7 +2024,8 @@ NULL
 #' Returns a new IntegerVector with elements of vector A followed by
 #' elements of vector B.
 #' 
-#' @name concat_int
+#' @name .concat_int
+#' 
 #' @param A Any IntegerVector.
 #' @param B Any other IntegerVector.
 #' 
@@ -1896,7 +2043,7 @@ NULL
 #' Returns a new StringVector with elements of vector A followed by
 #' elements of vector B.
 #' 
-#' @name concat_str
+#' @name .concat_str
 #' 
 #' @param A Any StringVector.
 #' @param B Any other StringVector.
@@ -2092,6 +2239,16 @@ NULL
 #' stages regardless of group. To denote specific transitions as estimable
 #' between stage groups, use the \code{\link{supplemental}()} function.
 #' 
+#' If importing an IPM rather than building one with \code{lefko3}: Using the
+#' \code{vrm_input} approach to building function-based MPMs with provided
+#' linear model slope coefficients requires careful attention to the
+#' stageframe. Although no hfv data frame needs to be entered in this instance,
+#' stages for which vital rates are to be estimated via linear models
+#' parameterized with coefficients provided via function
+#' \code{\link{vrm_import}()} should be marked as occurring within the dataset,
+#' while stages for which the provided coefficients should not be used should
+#' be marked as not occurring within the dataset.
+#' 
 #' @examples
 #' # Lathyrus example
 #' data(lathyrus)
@@ -2195,7 +2352,7 @@ sf_create <- function(sizes, stagenames = NULL, sizesb = NULL, sizesc = NULL, re
 #' \code{\link{aflefko2}()}, \code{\link{rlefko3}()}, and
 #' \code{\link{rlefko2}()}.
 #' 
-#' @name sf_reassess
+#' @name .sf_reassess
 #' 
 #' @param stageframe The original stageframe.
 #' @param supplement The original supplemental data input
@@ -2226,7 +2383,7 @@ sf_create <- function(sizes, stagenames = NULL, sizesb = NULL, sizesc = NULL, re
 #' Leslie MPM in terms of ahistorical stage information. This function is
 #' internal to \code{\link{rleslie}()} and \code{\link{fleslie}()}.
 #' 
-#' @name sf_leslie
+#' @name .sf_leslie
 #' 
 #' @param min_age The first age to include in the matrix.
 #' @param max_age The maximum age to include in the matrix.
@@ -2314,7 +2471,7 @@ sf_create <- function(sizes, stagenames = NULL, sizesb = NULL, sizesc = NULL, re
 #' \code{\link{normalpatrolgroup}()}, and \code{jerzeibalowski()} to estimate
 #' raw and function-derived matrices.
 #' 
-#' @name theoldpizzle
+#' @name .theoldpizzle
 #'
 #' @param StageFrame The stageframe object identifying the life history model
 #' being operationalized.
@@ -2352,7 +2509,7 @@ sf_create <- function(sizes, stagenames = NULL, sizesb = NULL, sizesc = NULL, re
 #' in raw historical matrices, and serves as the core workhorse function behind
 #' \code{\link{rlefko3}()}.
 #' 
-#' @name specialpatrolgroup
+#' @name .specialpatrolgroup
 #' 
 #' @param sge9l The Allstages data frame developed for \code{rlefko3()}
 #' covering stage pairs across times \emph{t}+1, \emph{t} and \emph{t}-1.
@@ -2385,7 +2542,7 @@ sf_create <- function(sizes, stagenames = NULL, sizesb = NULL, sizesc = NULL, re
 #' in raw ahistorical matrices, and serves as the core workhorse function
 #' behind \code{\link{rlefko2}()}.
 #' 
-#' @name normalpatrolgroup
+#' @name .normalpatrolgroup
 #' 
 #' @param sge3 The Allstages data frame developed for \code{rlefko2()} covering
 #' stage pairs across times \emph{t}+1 and \emph{t}. Generally termed
@@ -2411,7 +2568,7 @@ sf_create <- function(sizes, stagenames = NULL, sizesb = NULL, sizesc = NULL, re
 #' Function \code{minorpatrolgroup()} swiftly calculates matrix transitions
 #' in raw Leslie MPMs, and is used internally in \code{\link{rleslie}()}.
 #' 
-#' @name minorpatrolgroup
+#' @name .minorpatrolgroup
 #' 
 #' @param MainData The demographic dataset modified internally to have needed
 #' variables for living status, reproduction status, and fecundity.
@@ -2438,7 +2595,7 @@ sf_create <- function(sizes, stagenames = NULL, sizesb = NULL, sizesc = NULL, re
 #' transitions in raw ahistorical matrices, and serves as the core workhorse
 #' function behind \code{\link{arlefko2}()}.
 #' 
-#' @name subvertedpatrolgroup
+#' @name .subvertedpatrolgroup
 #' 
 #' @param sge3 The Allstages data frame developed for \code{rlefko2()} covering
 #' stage pairs across times \emph{t}+1 and \emph{t}. Generally termed
@@ -2470,7 +2627,7 @@ sf_create <- function(sizes, stagenames = NULL, sizesb = NULL, sizesc = NULL, re
 #' \code{\link{flefko3}()}, \code{\link{flefko2}()}, and
 #' \code{\link{aflefko2}()}.
 #' 
-#' @name jerzeibalowski
+#' @name .jerzeibalowski
 #' 
 #' @param ppy A data frame showing the population, patch, and year of each
 #' matrix to create, in order.
@@ -2618,7 +2775,7 @@ sf_create <- function(sizes, stagenames = NULL, sizesb = NULL, sizesc = NULL, re
 #' function-based population projection matrices. Used in
 #' \code{f_projection3()}.
 #' 
-#' @name jerzeibalowsk_sp
+#' @name .jerzeibalowsk_sp
 #' 
 #' @param ppy A data frame showing the population, patch, and year of each
 #' matrix to create, in order.
@@ -2767,7 +2924,7 @@ sf_create <- function(sizes, stagenames = NULL, sizesb = NULL, sizesc = NULL, re
 #' uses the \code{allstages} index to create a historically structured version
 #' of it.
 #' 
-#' @name thefifthhousemate
+#' @name .thefifthhousemate
 #' 
 #' @param mpm The original ahMPM, supplied as a \code{lefkoMat} object.
 #' @param allstages The index dataframe developed by
@@ -2793,7 +2950,7 @@ sf_create <- function(sizes, stagenames = NULL, sizesb = NULL, sizesc = NULL, re
 #' function-based Leslie population projection matrices. Used in
 #' \code{\link{fleslie}()}.
 #' 
-#' @name motherbalowski
+#' @name .motherbalowski
 #' 
 #' @param actualages An integer vector of all actual ages to be included in the
 #' matrices, in order.
@@ -2884,14 +3041,16 @@ sf_create <- function(sizes, stagenames = NULL, sizesb = NULL, sizesc = NULL, re
 
 #' Extract Coefficients From Linear Vital Rate Models
 #' 
-#' Function \code{modelextract()} extracts coefficient values from linear
+#' Function \code{.modelextract()} extracts coefficient values from linear
 #' models estimated through various linear modeling functions in R, to estimate
 #' vital rates in \code{lefko3}. Used to supply coefficients to
 #' \code{\link{flefko3}()}, \code{\link{flefko2}()}, \code{\link{fleslie()}},
 #' and \code{\link{aflefko2}()}.
 #' 
+#' @name .modelextract
+#' 
 #' @param object A linear model estimated through one of the methods used in
-#' function \code{\link{modelsearch}()}.
+#' function \code{\link{modelsearch}()}, or a \code{vrm_input} object.
 #' @param paramnames Data frame giving the names of standard coefficients
 #' required by matrix creation functions.
 #' @param mainyears A vector of the names of the monitoring occasions.
@@ -2904,6 +3063,9 @@ sf_create <- function(sizes, stagenames = NULL, sizesb = NULL, sizesc = NULL, re
 #' \code{b}, when that individual covariate is categorical.
 #' @param mainindcovc A vector denoting values of individual covariate
 #' \code{c}, when that individual covariate is categorical.
+#' @param nodata A logical value used to determine whether to use
+#' \code{vrm_input} methods. Defaults to \code{FALSE}, in which case models
+#' were developed with function \code{modelsearch()}.
 #' 
 #' @return This function returns a list with the following elements:
 #' \item{coefficients}{Vector of fixed effect coefficients.}
@@ -2951,23 +3113,24 @@ sf_create <- function(sizes, stagenames = NULL, sizesb = NULL, sizesc = NULL, re
 #' 
 #' @keywords internal
 #' @noRd
-.modelextract <- function(object, paramnames, mainyears, mainpatches, maingroups, mainindcova, mainindcovb, mainindcovc) {
-    .Call('_lefko3_modelextract', PACKAGE = 'lefko3', object, paramnames, mainyears, mainpatches, maingroups, mainindcova, mainindcovb, mainindcovc)
+.modelextract <- function(object, paramnames, mainyears, mainpatches, maingroups, mainindcova, mainindcovb, mainindcovc, nodata = FALSE) {
+    .Call('_lefko3_modelextract', PACKAGE = 'lefko3', object, paramnames, mainyears, mainpatches, maingroups, mainindcova, mainindcovb, mainindcovc, nodata)
 }
 
 #' Key Function Passing Models and Other Parameters to Matrix Estimators
 #' 
-#' Function \code{raymccooney()} takes the various vital rate models and other
+#' Function \code{.raymccooney()} takes the various vital rate models and other
 #' parameters and coordinates them as input into the function-based matrix
 #' estimation functions.
 #' 
-#' @name raymccooney
+#' @name .raymccooney
 #' 
 #' @param listofyears A data frame where the rows designate the exact order of
 #' years and patches to produce matrices for.
-#' @param modelsuite An object of class \code{lefkoMod}, or a similarly
-#' structured list object. All 14 vital rate models and the \code{paramnames}
-#' data frame are required.
+#' @param modelsuite An object of class \code{lefkoMod}, a similarly structured
+#' list object, or a \code{vrm_input} object. All 14 vital rate models and the
+#' \code{paramnames} data frame are required if not using a \code{vrm_input}
+#' object.
 #' @param mainyears A numeric vector of all times at time \emph{t}.
 #' @param mainpatches A string vector of patch names.
 #' @param maingroups A string vector of stage group names.
@@ -3043,6 +3206,10 @@ sf_create <- function(sizes, stagenames = NULL, sizesb = NULL, sizesc = NULL, re
 #' \code{2}: filter out rows with \code{aliveandequal == -1}.
 #' @param negfec A logical value denoting whether to change negative estimated
 #' fecundity to 0.
+#' @param nodata A logical value indicating whether the modelsuite contains
+#' all parameter coefficients and no hfv dataset is provided (\code{TRUE}), or
+#' whether an hfv dataset and a true modelsuite are provided (\code{FALSE}).
+#' Defaults to \code{FALSE}.
 #' @param exp_tol A numeric value indicating the maximum limit for the
 #' \code{exp()} function to be used in vital rate calculations. Defaults to
 #' \code{700.0}.
@@ -3069,8 +3236,8 @@ sf_create <- function(sizes, stagenames = NULL, sizesb = NULL, sizesc = NULL, re
 #' 
 #' @keywords internal
 #' @noRd
-.raymccooney <- function(listofyears, modelsuite, mainyears, mainpatches, maingroups, mainindcova, mainindcovb, mainindcovc, StageFrame, OverWrite, repmatrix, f2_inda, f1_inda, f2_indb, f1_indb, f2_indc, f1_indc, r2_inda, r1_inda, r2_indb, r1_indb, r2_indc, r1_indc, dev_terms, dens, fecmod, firstage, finalage, format, style, cont, filter, negfec, exp_tol = 700.0, theta_tol = 100000000.0, ipm_method = "cdf", err_check = FALSE, simplicity = FALSE) {
-    .Call('_lefko3_raymccooney', PACKAGE = 'lefko3', listofyears, modelsuite, mainyears, mainpatches, maingroups, mainindcova, mainindcovb, mainindcovc, StageFrame, OverWrite, repmatrix, f2_inda, f1_inda, f2_indb, f1_indb, f2_indc, f1_indc, r2_inda, r1_inda, r2_indb, r1_indb, r2_indc, r1_indc, dev_terms, dens, fecmod, firstage, finalage, format, style, cont, filter, negfec, exp_tol, theta_tol, ipm_method, err_check, simplicity)
+.raymccooney <- function(listofyears, modelsuite, mainyears, mainpatches, maingroups, mainindcova, mainindcovb, mainindcovc, StageFrame, OverWrite, repmatrix, f2_inda, f1_inda, f2_indb, f1_indb, f2_indc, f1_indc, r2_inda, r1_inda, r2_indb, r1_indb, r2_indc, r1_indc, dev_terms, dens, fecmod, firstage, finalage, format, style, cont, filter, negfec, nodata = FALSE, exp_tol = 700.0, theta_tol = 100000000.0, ipm_method = "cdf", err_check = FALSE, simplicity = FALSE) {
+    .Call('_lefko3_raymccooney', PACKAGE = 'lefko3', listofyears, modelsuite, mainyears, mainpatches, maingroups, mainindcova, mainindcovb, mainindcovc, StageFrame, OverWrite, repmatrix, f2_inda, f1_inda, f2_indb, f1_indb, f2_indc, f1_indc, r2_inda, r1_inda, r2_indb, r1_indb, r2_indc, r1_indc, dev_terms, dens, fecmod, firstage, finalage, format, style, cont, filter, negfec, nodata, exp_tol, theta_tol, ipm_method, err_check, simplicity)
 }
 
 #' Function Passing Models and Other Parameters to Leslie Matrix Estimator
@@ -3078,13 +3245,14 @@ sf_create <- function(sizes, stagenames = NULL, sizesb = NULL, sizesc = NULL, re
 #' This function takes the various vital rate models and other parameters and
 #' coordinates them as input into function \code{fleslie()}.
 #' 
-#' @name mothermccooney
+#' @name .mothermccooney
 #' 
 #' @param listofyears A data frame where the rows designate the exact order of
 #' years and patches to produce matrices for.
-#' @param modelsuite An object of class \code{lefkoMod}, or a similarly
-#' structured list object. Survival model, fecundity model, and the
-#' \code{paramnames} data frame are required.
+#' @param modelsuite An object of class \code{lefkoMod}, a similarly structured
+#' list object, or a \code{vrm_input} object. Survival model, fecundity model,
+#' and the \code{paramnames} data frame are required if not using a
+#' \code{vrm_input} object.
 #' @param actualages An integer vector of all actual ages to be included in the
 #' matrices, in order.
 #' @param mainyears A numeric vector of all times at time \emph{t}.
@@ -3142,6 +3310,10 @@ sf_create <- function(sizes, stagenames = NULL, sizesb = NULL, sizesc = NULL, re
 #' age.
 #' @param negfec A logical value denoting whether to change negative estimated
 #' fecundity to 0.
+#' @param nodata A logical value indicating whether the modelsuite contains
+#' all parameter coefficients and no hfv dataset is provided (\code{TRUE}), or
+#' whether an hfv dataset and a true modelsuite are provided (\code{FALSE}).
+#' Defaults to \code{FALSE}.
 #' @param exp_tol A numeric value indicating the maximum limit for the
 #' \code{exp()} function to be used in vital rate calculations. Defaults to
 #' \code{700.0}.
@@ -3159,8 +3331,8 @@ sf_create <- function(sizes, stagenames = NULL, sizesb = NULL, sizesc = NULL, re
 #' 
 #' @keywords internal
 #' @noRd
-.mothermccooney <- function(listofyears, modelsuite, actualages, mainyears, mainpatches, maingroups, mainindcova, mainindcovb, mainindcovc, ageframe, f2_inda, f1_inda, f2_indb, f1_indb, f2_indc, f1_indc, r2_inda, r1_inda, r2_indb, r1_indb, r2_indc, r1_indc, dev_terms, dens, fecmod, finalage, cont, negfec, exp_tol = 700.0, theta_tol = 100000000.0, err_check = FALSE, simplicity = FALSE) {
-    .Call('_lefko3_mothermccooney', PACKAGE = 'lefko3', listofyears, modelsuite, actualages, mainyears, mainpatches, maingroups, mainindcova, mainindcovb, mainindcovc, ageframe, f2_inda, f1_inda, f2_indb, f1_indb, f2_indc, f1_indc, r2_inda, r1_inda, r2_indb, r1_indb, r2_indc, r1_indc, dev_terms, dens, fecmod, finalage, cont, negfec, exp_tol, theta_tol, err_check, simplicity)
+.mothermccooney <- function(listofyears, modelsuite, actualages, mainyears, mainpatches, maingroups, mainindcova, mainindcovb, mainindcovc, ageframe, f2_inda, f1_inda, f2_indb, f1_indb, f2_indc, f1_indc, r2_inda, r1_inda, r2_indb, r1_indb, r2_indc, r1_indc, dev_terms, dens, fecmod, finalage, cont, negfec, nodata = FALSE, exp_tol = 700.0, theta_tol = 100000000.0, err_check = FALSE, simplicity = FALSE) {
+    .Call('_lefko3_mothermccooney', PACKAGE = 'lefko3', listofyears, modelsuite, actualages, mainyears, mainpatches, maingroups, mainindcova, mainindcovb, mainindcovc, ageframe, f2_inda, f1_inda, f2_indb, f1_indb, f2_indc, f1_indc, r2_inda, r1_inda, r2_indb, r1_indb, r2_indc, r1_indc, dev_terms, dens, fecmod, finalage, cont, negfec, nodata, exp_tol, theta_tol, err_check, simplicity)
 }
 
 #' Project Function-based Matrix Projection Model
@@ -3576,8 +3748,8 @@ sf_create <- function(sizes, stagenames = NULL, sizesb = NULL, sizesc = NULL, re
 #' }
 #' 
 #' @export f_projection3
-f_projection3 <- function(data, format, prebreeding = TRUE, start_age = NA_integer_, last_age = NA_integer_, fecage_min = NA_integer_, fecage_max = NA_integer_, cont = TRUE, stochastic = FALSE, standardize = FALSE, growthonly = TRUE, repvalue = FALSE, integeronly = FALSE, substoch = 0L, ipm_method = "CDF", nreps = 1L, times = 10000L, repmod = 1.0, exp_tol = 700.0, theta_tol = 100000000.0, random_inda = FALSE, random_indb = FALSE, random_indc = FALSE, err_check = FALSE, quiet = FALSE, stageframe = NULL, supplement = NULL, repmatrix = NULL, overwrite = NULL, modelsuite = NULL, paramnames = NULL, year = NULL, patch = NULL, sp_density = NULL, ind_terms = NULL, dev_terms = NULL, surv_model = NULL, obs_model = NULL, size_model = NULL, sizeb_model = NULL, sizec_model = NULL, repst_model = NULL, fec_model = NULL, jsurv_model = NULL, jobs_model = NULL, jsize_model = NULL, jsizeb_model = NULL, jsizec_model = NULL, jrepst_model = NULL, jmatst_model = NULL, start_vec = NULL, start_frame = NULL, tweights = NULL, density = NULL, density_vr = NULL) {
-    .Call('_lefko3_f_projection3', PACKAGE = 'lefko3', data, format, prebreeding, start_age, last_age, fecage_min, fecage_max, cont, stochastic, standardize, growthonly, repvalue, integeronly, substoch, ipm_method, nreps, times, repmod, exp_tol, theta_tol, random_inda, random_indb, random_indc, err_check, quiet, stageframe, supplement, repmatrix, overwrite, modelsuite, paramnames, year, patch, sp_density, ind_terms, dev_terms, surv_model, obs_model, size_model, sizeb_model, sizec_model, repst_model, fec_model, jsurv_model, jobs_model, jsize_model, jsizeb_model, jsizec_model, jrepst_model, jmatst_model, start_vec, start_frame, tweights, density, density_vr)
+f_projection3 <- function(format, prebreeding = TRUE, start_age = NA_integer_, last_age = NA_integer_, fecage_min = NA_integer_, fecage_max = NA_integer_, cont = TRUE, stochastic = FALSE, standardize = FALSE, growthonly = TRUE, repvalue = FALSE, integeronly = FALSE, substoch = 0L, ipm_method = "CDF", nreps = 1L, times = 10000L, repmod = 1.0, exp_tol = 700.0, theta_tol = 100000000.0, random_inda = FALSE, random_indb = FALSE, random_indc = FALSE, err_check = FALSE, quiet = FALSE, data = NULL, stageframe = NULL, supplement = NULL, repmatrix = NULL, overwrite = NULL, modelsuite = NULL, paramnames = NULL, year = NULL, patch = NULL, sp_density = NULL, ind_terms = NULL, dev_terms = NULL, surv_model = NULL, obs_model = NULL, size_model = NULL, sizeb_model = NULL, sizec_model = NULL, repst_model = NULL, fec_model = NULL, jsurv_model = NULL, jobs_model = NULL, jsize_model = NULL, jsizeb_model = NULL, jsizec_model = NULL, jrepst_model = NULL, jmatst_model = NULL, start_vec = NULL, start_frame = NULL, tweights = NULL, density = NULL, density_vr = NULL) {
+    .Call('_lefko3_f_projection3', PACKAGE = 'lefko3', format, prebreeding, start_age, last_age, fecage_min, fecage_max, cont, stochastic, standardize, growthonly, repvalue, integeronly, substoch, ipm_method, nreps, times, repmod, exp_tol, theta_tol, random_inda, random_indb, random_indc, err_check, quiet, data, stageframe, supplement, repmatrix, overwrite, modelsuite, paramnames, year, patch, sp_density, ind_terms, dev_terms, surv_model, obs_model, size_model, sizeb_model, sizec_model, repst_model, fec_model, jsurv_model, jobs_model, jsize_model, jsizeb_model, jsizec_model, jrepst_model, jmatst_model, start_vec, start_frame, tweights, density, density_vr)
 }
 
 #' Estimates Mean LefkoMat Object for Historical MPM
@@ -3585,7 +3757,7 @@ f_projection3 <- function(data, format, prebreeding = TRUE, start_age = NA_integ
 #' Function \code{turbogeodiesel()} estimates mean historical population
 #' projection matrices, treating the mean as element-wise arithmetic.
 #' 
-#' @name turbogeodiesel
+#' @name .turbogeodiesel
 #' 
 #' @param loy A data frame denoting the population, patch, and occasion
 #' designation for each matrix. Includes a total of 9 variables.
@@ -3615,7 +3787,7 @@ f_projection3 <- function(data, format, prebreeding = TRUE, start_age = NA_integ
 #' function can handle both normal ahistorical MPMs and age x stage ahistorical
 #' MPMs.
 #' 
-#' @name geodiesel
+#' @name .geodiesel
 #' 
 #' @param loy A data frame denoting the population, patch, and occasion
 #' designation of each matrix. Includes a total of 9 variables.
@@ -3643,7 +3815,7 @@ f_projection3 <- function(data, format, prebreeding = TRUE, start_age = NA_integ
 #' left eigenvectors estimated for a matrix by the \code{eig_gen}() function
 #' in the C++ Armadillo library. Works with dense matrices.
 #' 
-#' @name decomp3
+#' @name .decomp3
 #' 
 #' @param Amat A population projection matrix of class \code{matrix}.
 #'
@@ -3663,7 +3835,7 @@ f_projection3 <- function(data, format, prebreeding = TRUE, start_age = NA_integ
 #' left eigenvectors estimated for a matrix by the \code{eigs_gen}() function
 #' in the C++ Armadillo library. Works with sparse matrices.
 #' 
-#' @name decomp3sp
+#' @name .decomp3sp
 #' 
 #' @param Amat A population projection matrix of class \code{matrix}.
 #'
@@ -3683,7 +3855,7 @@ f_projection3 <- function(data, format, prebreeding = TRUE, start_age = NA_integ
 #' eigenvectors estimated for a matrix by the \code{eigs_gen}() function
 #' in the C++ Armadillo library. Works with sparse matrices.
 #' 
-#' @name decomp3sp_inp
+#' @name .decomp3sp_inp
 #' 
 #' @param Amat A population projection matrix of class \code{matrix}.
 #'
@@ -3707,7 +3879,7 @@ f_projection3 <- function(data, format, prebreeding = TRUE, start_age = NA_integ
 #' \code{lambda3matrix()} returns the dominant eigenvalue of a single
 #' dense or sparse projection matrix, provided in dense matrix format.
 #' 
-#' @name lambda3matrix
+#' @name .lambda3matrix
 #' 
 #' @param Amat A population projection matrix of class \code{matrix}.
 #' @param sparse A logical value indicating whether to use sparse matrix
@@ -3729,7 +3901,7 @@ f_projection3 <- function(data, format, prebreeding = TRUE, start_age = NA_integ
 #' \code{ss3matrix()} returns the stable stage distribution for a 
 #' dense or sparse population matrix.
 #' 
-#' @name ss3matrix
+#' @name .ss3matrix
 #' 
 #' @param Amat A population projection matrix of class \code{matrix}.
 #' @param sparse A logical value indicating whether to use sparse or dense
@@ -3757,7 +3929,7 @@ f_projection3 <- function(data, format, prebreeding = TRUE, start_age = NA_integ
 #' these on the basis of stage description information provided in the
 #' \code{lefkoMat} object used as input in that function).
 #' 
-#' @name rv3matrix
+#' @name .rv3matrix
 #' 
 #' @param Amat A population projection matrix of class \code{matrix}.
 #' @param sparse A logical value indicating whether to use sparse or dense
@@ -3782,7 +3954,7 @@ f_projection3 <- function(data, format, prebreeding = TRUE, start_age = NA_integ
 #' format). This is accomplished via the \code{eig_gen}() and \code{eigs_gen}()
 #' functions in the C++ Armadillo library.
 #' 
-#' @name sens3matrix
+#' @name .sens3matrix
 #' 
 #' @param Amat A population projection matrix of class \code{matrix}.
 #' @param sparse A logical value indicating whether to use sparse or dense
@@ -3803,7 +3975,7 @@ f_projection3 <- function(data, format, prebreeding = TRUE, start_age = NA_integ
 #' is accomplished via the \code{eigs_gen}() function in the C++ Armadillo
 #' library.
 #' 
-#' @name sens3sp_matrix
+#' @name .sens3sp_matrix
 #' 
 #' @param Aspmat A population projection matrix in sparse matrix format.
 #' @param refmat A sparse matrix used for reference to create associated 0s in
@@ -3827,7 +3999,7 @@ f_projection3 <- function(data, format, prebreeding = TRUE, start_age = NA_integ
 #' sensitivity for each life history stage. This is accomplished via the 
 #' \code{eigs_gen}() function in the C++ Armadillo library.
 #' 
-#' @name sens3hlefko
+#' @name .sens3hlefko
 #' 
 #' @param Amat A population projection matrix of class \code{matrix}.
 #' @param ahstages An integar vector of unique ahistorical stages.
@@ -3853,7 +4025,7 @@ f_projection3 <- function(data, format, prebreeding = TRUE, start_age = NA_integ
 #' format. This is accomplished via the \code{eig_gen}() and \code{eigs_gen}()
 #' functions in the C++ Armadillo library.
 #' 
-#' @name elas3matrix
+#' @name .elas3matrix
 #' 
 #' @param Amat A population projection matrix of class \code{matrix}.
 #' @param sparse A logical value indicating whether to use sparse or dense
@@ -3874,7 +4046,7 @@ f_projection3 <- function(data, format, prebreeding = TRUE, start_age = NA_integ
 #' for each life history stage. This is accomplished via the \code{eigs_gen}()
 #' function in the C++ Armadillo library.
 #' 
-#' @name elas3hlefko
+#' @name .elas3hlefko
 #' 
 #' @param Amat A population projection matrix.
 #' @param ahstages An integar vector of unique ahistorical stages.
@@ -3897,7 +4069,7 @@ f_projection3 <- function(data, format, prebreeding = TRUE, start_age = NA_integ
 #' Function \code{proj3()} runs the matrix projections used in other functions
 #' in package \code{lefko3}.
 #' 
-#' @name proj3
+#' @name .proj3
 #' 
 #' @param start_vec The starting population vector for the projection.
 #' @param core_list A list of full projection matrices, corresponding to the 
@@ -3935,7 +4107,7 @@ f_projection3 <- function(data, format, prebreeding = TRUE, start_age = NA_integ
 #' functions in package \code{lefko3}, but only when the input is sparse. This
 #' is a slimmed down version of function \code{proj3()}
 #' 
-#' @name proj3sp
+#' @name .proj3sp
 #' 
 #' @param start_vec The starting population vector for the projection.
 #' @param core_list A list of full projection matrices, corresponding to
@@ -3972,7 +4144,7 @@ f_projection3 <- function(data, format, prebreeding = TRUE, start_age = NA_integ
 #' 
 #' Function \code{proj3dens()} runs density-dependent matrix projections.
 #' 
-#' @name proj3dens
+#' @name .proj3dens
 #' 
 #' @param start_vec The starting population vector for the projection.
 #' @param core_list A list of full projection matrices, corresponding to the 
@@ -4425,7 +4597,7 @@ slambda3 <- function(mpm, times = 10000L, historical = FALSE, dense_only = FALSE
 #' log population growth estimated per simulated occasion (as given in equation 2
 #' in Tuljapurkar, Horvitz, and Pascarella 2003). 
 #' 
-#' @name stoch_senselas
+#' @name .stoch_senselas
 #' 
 #' @param mpm A matrix projection model of class \code{lefkoMat}, or a list of
 #' full matrix projection matrices.
@@ -4467,7 +4639,7 @@ slambda3 <- function(mpm, times = 10000L, historical = FALSE, dense_only = FALSE
 #' Function \code{bambi3()} creates an index of estimable elements in
 #' historical matrices, and details the kind of transition that it is.
 #' 
-#' @name bambi3
+#' @name .bambi3
 #' 
 #' @param stages This is the core stageframe held by \code{mats}, equivalent to
 #' \code{ahstages}.
@@ -4506,7 +4678,7 @@ slambda3 <- function(mpm, times = 10000L, historical = FALSE, dense_only = FALSE
 #' Function \code{bambi2()} creates an index of estimable elements in
 #' ahistorical matrices, and details the kind of transition that it is.
 #' 
-#' @name bambi2
+#' @name .bambi2
 #' 
 #' @param stages This is the core stageframe held by \code{mats}, equivalent to
 #' \code{ahstages}.
@@ -4538,7 +4710,7 @@ slambda3 <- function(mpm, times = 10000L, historical = FALSE, dense_only = FALSE
 #' matrices, and LTRE contributions from LTRE and sLTRE matrices, according to
 #' the categories developed by functions \code{bambi2()} and \code{bambi3()}.
 #' 
-#' @name demolition3
+#' @name .demolition3
 #' 
 #' @param e_amat A single elasticity, LTRE, or sLTRE matrix.
 #' @param bambesque This is the output from \code{bambi2()} or \code{bambi3()}
@@ -4580,7 +4752,7 @@ slambda3 <- function(mpm, times = 10000L, historical = FALSE, dense_only = FALSE
 #' \code{ltre3matrix()} returns the one-way fixed deterministic LTRE matrix of
 #' a dense or sparse set of input matrices.
 #' 
-#' @name ltre3matrix
+#' @name .ltre3matrix
 #' 
 #' @param Amats A list of population projection matrices (not an entire
 #' \code{lefkoMat} object.
@@ -4606,7 +4778,7 @@ slambda3 <- function(mpm, times = 10000L, historical = FALSE, dense_only = FALSE
 #' \code{sltre3matrix()} returns the one-way stochastic LTRE matrix of
 #' a dense or sparse set of input matrices.
 #' 
-#' @name sltre3matrix
+#' @name .sltre3matrix
 #' 
 #' @param Amats A list of population projection matrices (not an entire
 #' \code{lefkoMat} object).

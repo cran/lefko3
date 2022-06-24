@@ -47,17 +47,20 @@ patch names or a vector thereof.}
 is a pre-breeding model. Defaults to \code{TRUE}.}
 
 \item{data}{The historical vertical demographic data frame used to estimate
-vital rates (class \code{hfvdata}). The original data frame is required in
-order to initialize occasions and patches properly, and to assess the range
-of ages observed in the population.}
+vital rates (class \code{hfvdata}). The original data frame is generally
+required in order to initialize occasions and patches properly, and to assess
+the range of ages observed in the population. Not required if option
+\code{modelsuite} is set to a \code{vrm_input} object.}
 
-\item{modelsuite}{An optional \code{lefkoMod} object holding the vital rate
-models. If given, then \code{surv_model}, \code{fec_model}, and 
-\code{paramnames} are not required. No models should include size or
-reproductive status in any occasion, nor should they include any variable for
-occasion \emph{t}-1. Note that the modelsuite must have been created from a
-\code{modelsearch()} run in which \code{vitalrates = c("surv", "fec")} and
-the \code{suite} option was set to either \code{age} or \code{cons}.}
+\item{modelsuite}{One of two optional lists. THe first is an optional
+\code{lefkoMod} object holding the vital rate models. Alternatively,
+an object of class \code{vrm_input} may be provided. If given, then
+\code{surv_model}, \code{fec_model}, and \code{paramnames} are not required.
+No models should include size or reproductive status in any occasion, nor
+should they include any variable for occasion \emph{t}-1. Note that the
+modelsuite must have been created from a \code{modelsearch()} run in which
+\code{vitalrates = c("surv", "fec")} and the \code{suite} option was set to
+either \code{age} or \code{cons}.}
 
 \item{surv_model}{A linear model predicting survival probability. This can be
 a model of class \code{glm} or \code{glmer}, and requires a predicted
@@ -198,6 +201,13 @@ lead to erroneous calculations, and may lead to fatal errors.
 Care should be taken to match the random status of year and patch to the
 states of those variables within the modelsuite. If they do not match, then
 they will be treated as zeroes in vital rate estimation.
+
+Individual covariates are treated as categorical only if they are set as
+random terms. Fixed categorical individual covariates are currently not
+allowed. However, such terms may be supplied if the \code{modelsuite} option
+is set to a \code{vrm_input} object. In that case, the user should also set
+the logical random switch for the individual covariate to be used to 
+\code{TRUE} (e.g., \code{random.inda = TRUE}).
 }
 
 \examples{

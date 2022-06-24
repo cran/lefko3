@@ -6,6 +6,8 @@
 #' tested, and model quality control data. The final output can be used as input
 #' in other functions within this package.
 #' 
+#' @name modelsearch
+#' 
 #' @param data The vertical dataset to be used for analysis. This dataset should 
 #' be of class \code{hfvdata}, but can also be a data frame formatted similarly
 #' to the output format provided by functions \code{\link{verticalize3}()} or
@@ -44,8 +46,9 @@
 #' \code{repst}, probability of reproducing; and \code{fec}, amount of
 #' reproduction (overall fecundity). May also be set to
 #' \code{vitalrates = "leslie"}, which is equivalent to setting
-#' \code{c("surv", "fec")} for a Leslie MPM. Defaults to
-#' \code{c("surv", "size", "fec")}.
+#' \code{c("surv", "fec")} for a Leslie MPM. This choice also determines how
+#' internal data subsetting for vital rate model estimation will work. Defaults
+#' to \code{c("surv", "size", "fec")}.
 #' @param surv A vector indicating the variable names coding for status as alive
 #' or dead in occasions \emph{t}+1, \emph{t}, and \emph{t}-1, respectively.
 #' Defaults to \code{c("alive3", "alive2", "alive1")}.
@@ -2401,7 +2404,9 @@ modelsearch <- function(data, stageframe = NULL, historical = TRUE,
 #' Function \code{.headmaster_ritual()} creates global model, dredges, and finds
 #' the best-fit model given a core vital rate, dataset, and starting model
 #' formula, and then passes it back to function \code{\link{modelsearch}()}.
-#'
+#' 
+#' @name .headmaster_ritual
+#' 
 #' @param vrate An integer value indicating which model to build, as follows:
 #' \code{1}: Adult survival probability, \code{2}: Adult observation
 #' probability, \code{3}: Adult primary size, \code{4}: Adult reproduction
@@ -2879,6 +2884,8 @@ modelsearch <- function(data, stageframe = NULL, historical = TRUE,
 #' A function that gets used repeatedly in \code{\link{.headmaster_ritual}()} to
 #' build the global model to be dredged in function \code{\link{modelsearch}()}.
 #' 
+#' @name .levindurosier
+
 #' @param usedformula The formula to be used in the linear modeling call.
 #' @param subdata The data subset to be used in the linear modeling call.
 #' @param approach Statistical approach, currently either "mixed" or "glm".
@@ -3087,6 +3094,8 @@ modelsearch <- function(data, stageframe = NULL, historical = TRUE,
 #' #' currently only handles this for binomial models, and performs it as a
 #' comparison of the actual and predicted responses from the respective model.
 #' 
+#' @name .accu_predict
+#' 
 #' @param bestfitmodel The best-fit model to be passed.
 #' @param subdata The dataset to be used for accuracy testing.
 #' @param param The name of the response parameter to be used in accuracy
@@ -3174,6 +3183,8 @@ modelsearch <- function(data, stageframe = NULL, historical = TRUE,
 #' the best-fit models, summarizes the numbers of models in the model tables,
 #' shows the criterion used to determine the best-fit models, and provides some
 #' basic quality control information.
+#' 
+#' @name summary.lefkoMod
 #' 
 #' @param object An R object of class \code{lefkoMod} resulting from
 #' \code{\link{modelsearch}()}.
@@ -3564,53 +3575,630 @@ summary.lefkoMod <- function(object, ...) {
   }
 }
 
-#' Creates a Skeleton Paramnames Object for Use in Function-based Modeling
+#' Import Vital Rate Model Factor Values for Function-based MPM Development
 #' 
-#' Creates a simple skeleton \code{paramnames} object that can be entered as
-#' input in functions \code{\link{flefko2}()}, \code{\link{flefko3}()}, and
-#' \code{\link{aflefko2}()}.
+#' Function \code{vrm_import()} builds a skeleton list holding data frames and
+#' vectors that can be used to import coefficient values for the factors of the
+#' vital rate models used to build function-based MPMs or run function-based
+#' projections.
 #' 
-#' @return A three column data frame, of which the first describes the
-#' parameters in reasonably plain English, the second gives the name of the
-#' parameter within the MPM generating functions, and the third is to be
-#' edited with the names of the variables as they appear in the models.
+#' @name vrm_import
+#' 
+#' @param years A numeric vector of the years or times at time \code{t} to be
+#' modeled.
+#' @param patches A string or numeric vector of the patch names to be modeled.
+#' @param groups An integer vector of stage groups to be modeled. Defaults to a
+#' vector with a single element with value \code{0}.
+#' @param interactions A logical value indicating whether to include two-way
+#' interactions between main effects (\code{TRUE}), or only main effects
+#' (\code{FALSE}). Defaults to \code{FALSE}.
+#' @param zi A logical value indicating whether to include coefficients for the
+#' binomial components of zero-inflation models. Defaults to \code{FALSE}.
+#' @param cat.indcova If individual covariate a is categorical, then this term
+#' should equal a string vector of the names of the categories. Defaults to
+#' \code{NULL}, in which case individual covariate a is either not used or is
+#' numeric.
+#' @param cat.indcovb If individual covariate b is categorical, then this term
+#' should equal a string vector of the names of the categories. Defaults to
+#' \code{NULL}, in which case individual covariate b is either not used or is
+#' numeric.
+#' @param cat.indcovc If individual covariate c is categorical, then this term
+#' should equal a string vector of the names of the categories. Defaults to
+#' \code{NULL}, in which case individual covariate c is either not used or is
+#' numeric.
+#' @param dist.sizea A string value giving the distribution of the variable
+#' coding primary size. Can equal \code{"none"}, \code{"gamma"},
+#' \code{"gaussian"}, \code{"poisson"}, \code{"negbin"}, or \code{"constant"}.
+#' Defaults to \code{"gaussian"}.
+#' @param dist.sizeb A string value giving the distribution of the variable
+#' coding secondary size. Can equal \code{"none"}, \code{"gamma"},
+#' \code{"gaussian"}, \code{"poisson"}, \code{"negbin"}, or \code{"constant"}.
+#' Defaults to \code{"constant"}.
+#' @param dist.sizec A string value giving the distribution of the variable
+#' coding tertiary size. Can equal \code{"none"}, \code{"gamma"},
+#' \code{"gaussian"}, \code{"poisson"}, \code{"negbin"}, or \code{"constant"}.
+#' Defaults to \code{"constant"}.
+#' @param dist.fec A string value giving the distribution of the variable
+#' coding fecundity. Can equal \code{"none"}, \code{"gamma"},
+#' \code{"gaussian"}, \code{"poisson"}, or \code{"negbin"}. Defaults to
+#' \code{"gaussian"}.
+#' @param trunc.sizea A logical value indicating whether the distribution of the
+#' primary size variable should be zero-truncated. Defaults to \code{FALSE}.
+#' Currently only works with the Poisson and negative binomial distributions.
+#' @param trunc.sizeb A logical value indicating whether the distribution of the
+#' secondary size variable should be zero-truncated. Defaults to \code{FALSE}.
+#' Currently only works with the Poisson and negative binomial distributions.
+#' @param trunc.sizec A logical value indicating whether the distribution of the
+#' tertiary size variable should be zero-truncated. Defaults to \code{FALSE}.
+#' Currently only works with the Poisson and negative binomial distributions.
+#' @param trunc.fec A logical value indicating whether the distribution of the
+#' fecundity variable should be zero-truncated. Defaults to \code{FALSE}.
+#' Currently only works with the Poisson and negative binomial distributions.
+#' @param use.juv A logical value indicating whether to utilize juvenile vital
+#' rates. If \code{FALSE}, then all juvenile vital rates will be set to
+#' \code{constant} distributions. Defaults to \code{FALSE}.
+#' 
+#' @return A list of class \code{vrm_input}, with up to 13 elements including:
+#' \item{vrm_frame}{A data frame holding the main slope coefficients for the
+#' linear vital rate models.}
+#' \item{year_frame}{A data frame holding the main slope coefficients for the
+#' year at time t terms in the linear vital rate models.}
+#' \item{patch_frame}{A data frame holding the main slope coefficients for the
+#' patch terms in the linear vital rate models.}
+#' \item{group2_frame}{A data frame holding the main slope coefficients for the
+#' stage group terms in time \emph{t} in the linear vital rate models.}
+#' \item{group1_frame}{A data frame holding the main slope coefficients for the
+#' stage group terms in time \emph{t}-1 in the linear vital rate models.}
+#' \item{dist_frame}{A data frame giving the distributions of all variables,
+#' including primary, secondary, and tertiary size, and fecundity. Some
+#' variables begin as \code{constant}.}
+#' \item{indcova2_frame}{A data frame holding the main slope coefficients for
+#' the categorical individual covariate a terms in time \emph{t} in the linear
+#' vital rate models.}
+#' \item{indcova1_frame}{A data frame holding the main slope coefficients for
+#' the categorical individual covariate a terms in time \emph{t}-1 in the linear
+#' vital rate models.}
+#' \item{indcovb2_frame}{A data frame holding the main slope coefficients for
+#' the categorical individual covariate b terms in time \emph{t} in the linear
+#' vital rate models.}
+#' \item{indcovb1_frame}{A data frame holding the main slope coefficients for
+#' the categorical individual covariate b terms in time \emph{t}-1 in the linear
+#' vital rate models.}
+#' \item{indcovc2_frame}{A data frame holding the main slope coefficients for
+#' the categorical individual covariate c terms in time \emph{t} in the linear
+#' vital rate models.}
+#' \item{indcovc1_frame}{A data frame holding the main slope coefficients for
+#' the categorical individual covariate c terms in time \emph{t}-1 in the linear
+#' vital rate models.}
+#' \item{st_frame}{A data frame holding values of sigma or theta for use in
+#' Gaussian or negative binomial response terms, respectively.}
+#' 
+#' The first element, called \code{vrm_frame}, is a data frame with the
+#' following 18 variables:
+#' \item{main_effect_1}{The main effect for which coefficients are to be
+#' entered.}
+#' \item{main_1_defined}{A more natural explanation of \code{main_effect_1}.}
+#' \item{main_effect_2}{If given, then indicates another effect in a two-way
+#' interaction with \code{main_effect_1}.}
+#' \item{main_2_defined}{A more natural explanation of \code{main_effect_2}.}
+#' \item{surv}{A vector of coefficients for the factors in the model of adult
+#' survival.}
+#' \item{obs}{A vector of coefficients for the factors in the model of adult
+#' observation status.}
+#' \item{sizea}{A vector of coefficients for the factors in the model of adult
+#' primary size.}
+#' \item{sizeb}{A vector of coefficients for the factors in the model of adult
+#' secondary size.}
+#' \item{sizec}{A vector of coefficients for the factors in the model of adult
+#' tertiary size.}
+#' \item{repst}{A vector of coefficients for the factors in the model of adult
+#' reproductive status.}
+#' \item{fec}{A vector of coefficients for the factors in the model of adult
+#' fecundity.}
+#' \item{jsurv}{A vector of coefficients for the factors in the model of
+#' juvenile survival.}
+#' \item{jobs}{A vector of coefficients for the factors in the model of juvenile
+#' observation status.}
+#' \item{jsize}{A vector of coefficients for the factors in the model of
+#' juvenile primary size.}
+#' \item{jsizeb}{A vector of coefficients for the factors in the model of
+#' juvenile secondary size.}
+#' \item{jsizec}{A vector of coefficients for the factors in the model of
+#' juvenile tertiary size.}
+#' \item{jrepst}{A vector of coefficients for the factors in the model of
+#' juvenile reproductive status, for individuals maturing in the current time
+#' step.}
+#' \item{jmat}{A vector of coefficients for the factors in the model of maturity
+#' status, for individuals capable of maturing at the current time step.}
+#' \item{sizea_zi}{A vector of coefficients for the factors in the binomial
+#' component of the zero-inflated model of adult primary size, if zero-inflated
+#' models are being used.}
+#' \item{sizeb_zi}{A vector of coefficients for the factors in the binomial
+#' component of the zero-inflated model of adult secondary size, if
+#' zero-inflated models are being used.}
+#' \item{sizec_zi}{A vector of coefficients for the factors in the binomial
+#' component of the zero-inflated model of adult tertiary size, if zero-inflated
+#' models are being used.}
+#' \item{fec_zi}{A vector of coefficients for the factors in the binomial
+#' component of the zero-inflated model of fecundity, if zero-inflated models
+#' are being used.}
+#' \item{jsizea_zi}{A vector of coefficients for the factors in the binomial
+#' component of the zero-inflated model of juvenile primary size, if
+#' zero-inflated models are being used.}
+#' \item{jsizeb_zi}{A vector of coefficients for the factors in the binomial
+#' component of the zero-inflated model of juvenile secondary size, if
+#' zero-inflated models are being used.}
+#' \item{jsizec_zi}{A vector of coefficients for the factors in the binomial
+#' component of the zero-inflated model of juvenile tertiary size, if
+#' zero-inflated models are being used.}
 #' 
 #' @section Notes:
-#' The third column in the resulting object should be edited with the names only
-#' of those variables actually used in vital rate modeling. This
-#' \code{paramnames} object should apply to all models used in a single MPM
-#' building exercise. So, for example, if the models used include random terms,
-#' then they should all have the same random terms. Fixed terms can vary,
-#' however.
+#' All coefficients across all data frames are initially set to \code{0}. After
+#' using this function to create the skeleton list, all relevant coefficient
+#' values should be set to non-zero values equal to the respective slope from
+#' the appropriate linear model, and any vital rate model to be used should
+#' have its distribution set to \code{"binom"}, \code{"gaussian"},
+#' \code{"gamma"}, \code{"poisson"}, or \code{"negbin"}. Unused vital rates
+#' should be set to \code{"constant"}, and the first element of the correspoding
+#' column in \code{vrm_frame} (corresponding to the y-intercept) should be set
+#' to the constant value to utilize (generally \code{1}). If no values are
+#' manually edited, then function-based MPM generator functions will not be able
+#' to generate valid MPMs.
 #' 
-#' @examples 
-#' our_pm <- create_pm()
-#' our_pm
+#' Users should never change the labels or the order of terms in the data frames
+#' and vectors produced via this function, nor should they ever changes the
+#' names of core list elements in the \code{vrm_input} object. Doing so will
+#' result either in fatal errors or erroneous matrix calculations.
+#' 
+#' Using the \code{vrm_input} approach to building function-based MPMs requires
+#' careful attention to the stageframe. Although no hfv data frame needs to be
+#' entered, stages for which vital rates are to be estimated via linear models
+#' parameterized with coefficients provided via function \code{vrm_import()}
+#' should be marked as occurring within the dataset, while stages for which
+#' the provided coefficients should not be used should be marked as not
+#' occurring within the dataset.
+#' 
+#' Coefficients added to zero-inflation models can only be added to primary
+#' size, secondary size, tertiary size, fecundity, and the juvenile versions of
+#' primary, secondary, and tertiary size. Care must be taken to include zero-
+#' inflated coefficients only for variables without size-truncated
+#' distributions. Adding such terms will result in fatal errors during matrix
+#' creation.
+#' 
+#' @examples
+#' data(lathyrus)
+#' 
+#' sizevector <- c(0, 100, 0, 1, 7100)
+#' stagevector <- c("Sd", "Sdl", "Dorm", "ipm", "ipm")
+#' repvector <- c(0, 0, 0, 1, 1)
+#' obsvector <- c(0, 1, 0, 1, 1)
+#' matvector <- c(0, 0, 1, 1, 1)
+#' immvector <- c(1, 1, 0, 0, 0)
+#' propvector <- c(1, 0, 0, 0, 0)
+#' indataset <- c(0, 1, 1, 1, 1)
+#' binvec <- c(0, 100, 0.5, 1, 1)
+#' comments <- c("Dormant seed", "Seedling", "Dormant", "ipm adult stage",
+#'   "ipm adult stage")
+#' lathframeipm <- sf_create(sizes = sizevector, stagenames = stagevector, 
+#'   repstatus = repvector, obsstatus = obsvector, propstatus = propvector,
+#'   immstatus = immvector, matstatus = matvector, comments = comments,
+#'   indataset = indataset, binhalfwidth = binvec, ipmbins = 100, roundsize = 3)
+#' 
+#' lathsupp2 <- supplemental(stage3 = c("Sd", "Sdl", "Sd", "Sdl"),
+#'   stage2 = c("Sd", "Sd", "rep", "rep"),
+#'   givenrate = c(0.345, 0.054, NA, NA),
+#'   multiplier = c(NA, NA, 0.345, 0.054),
+#'   type = c(1, 1, 3, 3), stageframe = lathframeipm, historical = FALSE)
+#' 
+#' lath_vrm <- vrm_import(years = c(1988:1990), zi = TRUE, dist.fec = "negbin",
+#'   use.juv = TRUE)
+#' 
+#' lath_vrm$vrm_frame$surv[1] <- 2.32571
+#' lath_vrm$vrm_frame$surv[2] <- 0.00109
+#' lath_vrm$vrm_frame$obs[1] <- 2.230
+#' lath_vrm$vrm_frame$sizea[1] <- 164.0695
+#' lath_vrm$vrm_frame$sizea[2] <- 0.6211
+#' lath_vrm$vrm_frame$fec[1] <- 1.517
+#' lath_vrm$vrm_frame$fec_zi[1] <- 6.252765
+#' lath_vrm$vrm_frame$fec_zi[2] <- -0.007313
+#' lath_vrm$vrm_frame$jsurv[1] <- 1.03
+#' lath_vrm$vrm_frame$jobs[1] <- 10.390
+#' lath_vrm$vrm_frame$jsizea[1] <- 3.0559
+#' lath_vrm$vrm_frame$jsizea[2] <- 0.8482
+#' 
+#' lath_vrm$year_frame$fec[c(1:3)] <- c(-0.41749627, 0.51421684, -0.07964038)
+#' lath_vrm$year_frame$fec_zi[c(1:3)] <- c(3.741475e-07, -7.804715e-08,
+#'   -2.533755e-07)
+#' lath_vrm$year_frame$sizea[c(1:3)] <- c(96.3244, -240.8036, 144.4792)
+#' lath_vrm$year_frame$jobs[c(1:3)] <- c(-0.7459843, 0.6118826, -0.9468618)
+#' lath_vrm$year_frame$jsizea[c(1:3)] <- c(0.5937962, 1.4551236, -2.0489198)
+#' 
+#' lath_vrm$dist_frame$dist[2] <- "binom"
+#' lath_vrm$dist_frame$dist[9] <- "binom"
+#' 
+#' lath_vrm$st_frame[3] <- 503.6167
+#' lath_vrm$st_frame[7] <- 0.2342114
+#' lath_vrm$st_frame[10] <- 5.831
+#' 
+#' lath_vrm$vrm_frame$sizeb[1] <- 1
+#' lath_vrm$vrm_frame$sizec[1] <- 1
+#' lath_vrm$vrm_frame$repst[1] <- 1
+#' lath_vrm$vrm_frame$jsizeb[1] <- 1
+#' lath_vrm$vrm_frame$jsizec[1] <- 1
+#' lath_vrm$vrm_frame$jrepst[1] <- 1
+#' lath_vrm$vrm_frame$jmatst[1] <- 1
+#' 
+#' lathmat2_importipm <- flefko2(stageframe = lathframeipm,
+#'   modelsuite = lath_vrm, supplement = lathsupp2, reduce = FALSE)
+#' 
+#' summary(lathmat2_importipm)
 #' 
 #' @export
-create_pm <- function() {
-  parameter_names <- c("time t", "individual", "patch", "alive in time t+1",
-    "observed in time t+1", "sizea in time t+1", "sizeb in time t+1",
-    "sizec in time t+1", "reproductive status in time t+1",
-    "fecundity in time t+1", "fecundity in time t", "sizea in time t",
-    "sizea in time t-1", "sizeb in time t", "sizeb in time t-1",
-    "sizec in time t", "sizec in time t-1", "reproductive status in time t",
-    "reproductive status in time t-1", "maturity status in time t+1",
-    "maturity status in time t", "age in time t", "density in time t",
-    "individual covariate a in time t", "individual covariate a in time t-1",
-    "individual covariate b in time t", "individual covariate b in time t-1",
-    "individual covariate c in time t", "individual covariate c in time t-1",
-    "stage group in time t", "stage group in time t-1")
-  mainparams <- c("year2", "individ", "patch", "surv3", "obs3", "size3",
-    "sizeb3", "sizec3", "repst3", "fec3", "fec2", "size2", "size1", "sizeb2",
-    "sizeb1", "sizec2", "sizec1", "repst2", "repst1", "matst3", "matst2", "age",
-    "density", "indcova2", "indcova1", "indcovb2", "indcovb1", "indcovc2",
-    "indcovc1", "group2", "group1")
-  modelparams <- c("none", "none", "none", "none", "none", "none", "none",
-    "none", "none", "none", "none", "none", "none", "none", "none", "none",
-    "none", "none", "none", "none", "none", "none", "none", "none", "none",
-    "none", "none", "none", "none", "none", "none")
+vrm_import <- function(years = NULL, patches = c(1), groups = c(0),
+  interactions = FALSE, zi = FALSE, cat.indcova = NULL, cat.indcovb = NULL,
+  cat.indcovc = NULL, dist.sizea = "gaussian", dist.sizeb = "constant",
+  dist.sizec = "constant", dist.fec = "gaussian", trunc.sizea = FALSE,
+  trunc.sizeb = FALSE, trunc.sizec = FALSE, trunc.fec = FALSE,
+  use.juv = FALSE) {
   
-  output <- cbind.data.frame(parameter_names, mainparams, modelparams)
+  dist.sizea <- tolower(dist.sizea)
+  dist.sizeb <- tolower(dist.sizeb)
+  dist.sizec <- tolower(dist.sizec)
+  dist.fec <- tolower(dist.fec)
+  
+  dist.possibilities <- c("none", "gamma", "gaussian", "poisson", "negbin",
+    "constant")
+  
+  if (length(dist.sizea) != 1 | !is.element(dist.sizea[1], dist.possibilities)) {
+    stop("Option dist.sizea must be set to a single value. Options include:
+      none, gamma, gaussian, poisson, negbin, or constant.", call. = FALSE)
+  }
+  if (length(dist.sizeb) != 1 | !is.element(dist.sizeb[1], dist.possibilities)) {
+    stop("Option dist.sizeb must be set to a single value. Options include:
+      none, gamma, gaussian, poisson, negbin, or constant.", call. = FALSE)
+  }
+  if (length(dist.sizec) != 1 | !is.element(dist.sizec[1], dist.possibilities)) {
+    stop("Option dist.sizec must be set to a single value. Options include:
+      none, gamma, gaussian, poisson, negbin, or constant.", call. = FALSE)
+  }
+  if (length(dist.fec) != 1 | !is.element(dist.fec[1], dist.possibilities)) {
+    stop("Option dist.fec must be set to a single value. Options include:
+      none, gamma, gaussian, poisson, negbin, or constant.", call. = FALSE)
+  }
+  
+  if (trunc.sizea) {
+    if (dist.sizea == "poisson") {
+      dist.sizea <- "truncated_poisson"
+    } else if (dist.sizea == "negbin") {
+      dist.sizea <- "truncated_negbin"
+    } else {
+      stop("Zero truncation can currently be incorporated only in Poisson and
+          negative binomial models.", call. = FALSE)
+    }
+  }
+  if (trunc.sizeb) {
+    if (dist.sizeb == "poisson") {
+      dist.sizeb <- "truncated_poisson"
+    } else if (dist.sizeb == "negbin") {
+      dist.sizeb <- "truncated_negbin"
+    } else {
+      stop("Zero truncation can currently be incorporated only in Poisson and
+          negative binomial models.", call. = FALSE)
+    }
+  }
+  if (trunc.sizec) {
+    if (dist.sizec == "poisson") {
+      dist.sizec <- "truncated_poisson"
+    } else if (dist.sizec == "negbin") {
+      dist.sizec <- "truncated_negbin"
+    } else {
+      stop("Zero truncation can currently be incorporated only in Poisson and
+          negative binomial models.", call. = FALSE)
+    }
+  }
+  if (trunc.fec) {
+    if (dist.fec == "poisson") {
+      dist.fec <- "truncated_poisson"
+    } else if (dist.fec == "negbin") {
+      dist.fec <- "truncated_negbin"
+    } else {
+      stop("Zero truncation can currently be incorporated only in Poisson and
+          negative binomial models.", call. = FALSE)
+    }
+  }
+  
+  if (is.null(years)) stop("Option years must equal a numeric vector.", call. = FALSE);
+  if (!is.numeric(years)) stop("Option years must equal a numeric vector.", call. = FALSE);
+  
+  num_years <- length(years)
+  num_patches <- length(patches)
+  num_groups <- length(groups)
+  
+  main_effects <- c("intercept", "size2", "size1", "sizeb2", "sizeb1", "sizec2",
+    "sizec1", "repst2", "repst1", "age", "density", "indcova2", "indcova1",
+    "indcovb2", "indcovb1", "indcovc2", "indcovc1")
+  main_defined <- c("y-intercept", "sizea in time t", "sizea in time t-1",
+    "sizeb in time t", "sizeb in time t-1", "sizec in time t", "sizec in time t-1",
+    "reproductive status in time t", "reproductive status in time t-1",
+    "age in time t", "density in time t", "individual covariate a in time t",
+    "individual covariate a in time t-1", "individual covariate b in time t",
+    "individual covariate b in time t-1", "individual covariate c in time t",
+    "individual covariate c in time t-1")
+  
+  main1 <- main_effects
+  main1_def <- main_defined
+  
+  basic_length <- 17
+  if (interactions) {
+    main2 <- c("", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "")
+    main2_def <- c("", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "")
+    
+    basic_length <- basic_length + 111
+    
+    extended_terms_1 <- c(main_effects[9], main_effects[3], main_effects[3],
+      main_effects[2], main_effects[2], main_effects[3], main_effects[10],
+      main_effects[10], main_effects[10], main_effects[10], main_effects[12],
+      main_effects[14], main_effects[16], main_effects[12], main_effects[14],
+      main_effects[16], main_effects[13], main_effects[15], main_effects[17],
+      main_effects[13], main_effects[15], main_effects[17], main_effects[12],
+      main_effects[12], main_effects[14], main_effects[13], main_effects[13],
+      main_effects[15], main_effects[12], main_effects[13], main_effects[12],
+      main_effects[13], main_effects[14], main_effects[15], main_effects[4],
+      main_effects[6], main_effects[3], main_effects[3], main_effects[5],
+      main_effects[2], main_effects[2], main_effects[4], main_effects[3],
+      main_effects[3], main_effects[5], main_effects[2], main_effects[2],
+      main_effects[4], main_effects[11], main_effects[11], main_effects[11],
+      main_effects[11], main_effects[11], main_effects[11], main_effects[11],
+      main_effects[11], main_effects[4], main_effects[6], main_effects[5],
+      main_effects[4], main_effects[5], main_effects[7], main_effects[6],
+      main_effects[7], main_effects[4], main_effects[6], main_effects[11],
+      main_effects[5], main_effects[7], main_effects[12], main_effects[12],
+      main_effects[12], main_effects[13], main_effects[13], main_effects[13],
+      main_effects[13], main_effects[12], main_effects[12], main_effects[13],
+      main_effects[14], main_effects[14], main_effects[14], main_effects[15],
+      main_effects[15], main_effects[15], main_effects[15], main_effects[14],
+      main_effects[14], main_effects[15], main_effects[16], main_effects[16],
+      main_effects[16], main_effects[17], main_effects[17], main_effects[17],
+      main_effects[17], main_effects[16], main_effects[16], main_effects[17],
+      main_effects[12], main_effects[14], main_effects[16], main_effects[13],
+      main_effects[15], main_effects[17], main_effects[12], main_effects[14],
+      main_effects[16], main_effects[13], main_effects[15], main_effects[17])
+    
+    extended_terms_2 <- c(main_effects[8], main_effects[2], main_effects[9],
+      main_effects[8], main_effects[9], main_effects[8], main_effects[3],
+      main_effects[2], main_effects[9], main_effects[8], main_effects[2],
+      main_effects[2], main_effects[2], main_effects[8], main_effects[8],
+      main_effects[8], main_effects[3], main_effects[3], main_effects[3],
+      main_effects[9], main_effects[9], main_effects[9], main_effects[14],
+      main_effects[16], main_effects[16], main_effects[15], main_effects[17],
+      main_effects[17], main_effects[15], main_effects[14], main_effects[17],
+      main_effects[16], main_effects[17], main_effects[16], main_effects[5],
+      main_effects[7], main_effects[5], main_effects[7], main_effects[7],
+      main_effects[4], main_effects[6], main_effects[6], main_effects[4],
+      main_effects[6], main_effects[6], main_effects[5], main_effects[7],
+      main_effects[7], main_effects[2], main_effects[4], main_effects[6],
+      main_effects[3], main_effects[5], main_effects[7], main_effects[8],
+      main_effects[9], main_effects[8], main_effects[8], main_effects[9],
+      main_effects[9], main_effects[8], main_effects[9], main_effects[9],
+      main_effects[8], main_effects[10], main_effects[10], main_effects[10],
+      main_effects[10], main_effects[10], main_effects[4], main_effects[6],
+      main_effects[11], main_effects[5], main_effects[7], main_effects[4],
+      main_effects[6], main_effects[5], main_effects[7], main_effects[11],
+      main_effects[4], main_effects[6], main_effects[11], main_effects[5],
+      main_effects[7], main_effects[4], main_effects[6], main_effects[5],
+      main_effects[7], main_effects[11], main_effects[4], main_effects[6],
+      main_effects[11], main_effects[5], main_effects[7], main_effects[4],
+      main_effects[6], main_effects[5], main_effects[7], main_effects[11],
+      main_effects[3], main_effects[3], main_effects[3], main_effects[2],
+      main_effects[2], main_effects[2], main_effects[9], main_effects[9],
+      main_effects[9], main_effects[8], main_effects[8], main_effects[8])
+    
+    ext_terms_1_def <- c(main_defined[9], main_defined[3], main_defined[3],
+      main_defined[2], main_defined[2], main_defined[3], main_defined[10],
+      main_defined[10], main_defined[10], main_defined[10], main_defined[12],
+      main_defined[14], main_defined[16], main_defined[12], main_defined[14],
+      main_defined[16], main_defined[13], main_defined[15], main_defined[17],
+      main_defined[13], main_defined[15], main_defined[17], main_defined[12],
+      main_defined[12], main_defined[14], main_defined[13], main_defined[13],
+      main_defined[15], main_defined[12], main_defined[13], main_defined[12],
+      main_defined[13], main_defined[14], main_defined[15], main_defined[4],
+      main_defined[6], main_defined[3], main_defined[3], main_defined[5],
+      main_defined[2], main_defined[2], main_defined[4], main_defined[3],
+      main_defined[3], main_defined[5], main_defined[2], main_defined[2],
+      main_defined[4], main_defined[11], main_defined[11], main_defined[11],
+      main_defined[11], main_defined[11], main_defined[11], main_defined[11],
+      main_defined[11], main_defined[4], main_defined[6], main_defined[5],
+      main_defined[4], main_defined[5], main_defined[7], main_defined[6],
+      main_defined[7], main_defined[4], main_defined[6], main_defined[11],
+      main_defined[5], main_defined[7], main_defined[12], main_defined[12],
+      main_defined[12], main_defined[13], main_defined[13], main_defined[13],
+      main_defined[13], main_defined[12], main_defined[12], main_defined[13],
+      main_defined[14], main_defined[14], main_defined[14], main_defined[15],
+      main_defined[15], main_defined[15], main_defined[15], main_defined[14],
+      main_defined[14], main_defined[15], main_defined[16], main_defined[16],
+      main_defined[16], main_defined[17], main_defined[17], main_defined[17],
+      main_defined[17], main_defined[16], main_defined[16], main_defined[17],
+      main_defined[12], main_defined[14], main_defined[16], main_defined[13],
+      main_defined[15], main_defined[17], main_defined[12], main_defined[14],
+      main_defined[16], main_defined[13], main_defined[15], main_defined[17])
+    
+    ext_terms_2_def <- c(main_defined[8], main_defined[2], main_defined[9],
+      main_defined[8], main_defined[9], main_defined[8], main_defined[3],
+      main_defined[2], main_defined[9], main_defined[8], main_defined[2],
+      main_defined[2], main_defined[2], main_defined[8], main_defined[8],
+      main_defined[8], main_defined[3], main_defined[3], main_defined[3],
+      main_defined[9], main_defined[9], main_defined[9], main_defined[14],
+      main_defined[16], main_defined[16], main_defined[15], main_defined[17],
+      main_defined[17], main_defined[15], main_defined[14], main_defined[17],
+      main_defined[16], main_defined[17], main_defined[16], main_defined[5],
+      main_defined[7], main_defined[5], main_defined[7], main_defined[7],
+      main_defined[4], main_defined[6], main_defined[6], main_defined[4],
+      main_defined[6], main_defined[6], main_defined[5], main_defined[7],
+      main_defined[7], main_defined[2], main_defined[4], main_defined[6],
+      main_defined[3], main_defined[5], main_defined[7], main_defined[8],
+      main_defined[9], main_defined[8], main_defined[8], main_defined[9],
+      main_defined[9], main_defined[8], main_defined[9], main_defined[9],
+      main_defined[8], main_defined[10], main_defined[10], main_defined[10],
+      main_defined[10], main_defined[10], main_defined[4], main_defined[6],
+      main_defined[11], main_defined[5], main_defined[7], main_defined[4],
+      main_defined[6], main_defined[5], main_defined[7], main_defined[11],
+      main_defined[4], main_defined[6], main_defined[11], main_defined[5],
+      main_defined[7], main_defined[4], main_defined[6], main_defined[5],
+      main_defined[7], main_defined[11], main_defined[4], main_defined[6],
+      main_defined[11], main_defined[5], main_defined[7], main_defined[4],
+      main_defined[6], main_defined[5], main_defined[7], main_defined[11],
+      main_defined[3], main_defined[3], main_defined[3], main_defined[2],
+      main_defined[2], main_defined[2], main_defined[9], main_defined[9],
+      main_defined[9], main_defined[8], main_defined[8], main_defined[8])
+    
+    main1 <- c(main1, extended_terms_1)
+    main2 <- c(main2, extended_terms_2)
+    main1_def <- c(main1_def, ext_terms_1_def)
+    main2_def <- c(main2_def, ext_terms_2_def)
+  }
+  basic_double_vec <- rep(0.0, basic_length)
+  year_double_vec <- rep(0.0, num_years)
+  patch_double_vec <- rep(0.0, num_patches)
+  group_double_vec <- rep(0.0, num_groups)
+  
+  out_data <- if (!interactions) {
+    cbind.data.frame(main_effect_1 = main1, main_1_defined = main1_def,
+      surv = basic_double_vec, obs = basic_double_vec, sizea = basic_double_vec,
+      sizeb = basic_double_vec, sizec = basic_double_vec, repst = basic_double_vec,
+      fec = basic_double_vec, jsurv = basic_double_vec, jobs = basic_double_vec,
+      jsizea = basic_double_vec, jsizeb = basic_double_vec, jsizec = basic_double_vec,
+      jrepst = basic_double_vec, jmatst = basic_double_vec)
+  } else {
+    cbind.data.frame(main_effect_1 = main1, main_1_defined = main1_def,
+      main_effect_2 = main2, main_2_defined = main2_def, surv = basic_double_vec,
+      obs = basic_double_vec, sizea = basic_double_vec, sizeb = basic_double_vec,
+      sizec = basic_double_vec, repst = basic_double_vec, fec = basic_double_vec,
+      jsurv = basic_double_vec, jobs = basic_double_vec, jsizea = basic_double_vec,
+      jsizeb = basic_double_vec, jsizec = basic_double_vec,
+      jrepst = basic_double_vec, jmatst = basic_double_vec)
+  }
+  
+  term_names <- c("surv", "obs", "sizea", "sizeb", "sizec", "repst", "fec",
+    "jsurv", "jobs", "jsizea", "jsizeb", "jsizec", "jrepst", "jmatst")
+  
+  year_frame <- cbind.data.frame(years, year_double_vec, year_double_vec,
+    year_double_vec, year_double_vec, year_double_vec, year_double_vec,
+    year_double_vec, year_double_vec, year_double_vec, year_double_vec,
+    year_double_vec, year_double_vec, year_double_vec, year_double_vec)
+  patch_frame <- cbind.data.frame(patches, patch_double_vec, patch_double_vec,
+    patch_double_vec, patch_double_vec, patch_double_vec, patch_double_vec,
+    patch_double_vec, patch_double_vec, patch_double_vec, patch_double_vec,
+    patch_double_vec, patch_double_vec, patch_double_vec, patch_double_vec)
+  group2_frame <- cbind.data.frame(groups, group_double_vec, group_double_vec,
+    group_double_vec, group_double_vec, group_double_vec, group_double_vec,
+    group_double_vec, group_double_vec, group_double_vec, group_double_vec,
+    group_double_vec, group_double_vec, group_double_vec, group_double_vec)
+  
+  names(year_frame)[2:15] <- term_names
+  names(patch_frame)[2:15] <- term_names
+  names(group2_frame)[2:15] <- term_names
+  
+  if (zi) {
+    out_data <- cbind.data.frame(out_data, sizea_zi = basic_double_vec,
+      sizeb_zi = basic_double_vec, sizec_zi = basic_double_vec,
+      fec_zi = basic_double_vec, jsizea_zi = basic_double_vec,
+      jsizeb_zi = basic_double_vec, jsizec_zi = basic_double_vec)
+    year_frame <- cbind.data.frame(year_frame, sizea_zi = year_double_vec,
+      sizeb_zi = year_double_vec, sizec_zi = year_double_vec,
+      fec_zi = year_double_vec, jsizea_zi = year_double_vec,
+      jsizeb_zi = year_double_vec, jsizec_zi = year_double_vec)
+    patch_frame <- cbind.data.frame(patch_frame, sizea_zi = patch_double_vec,
+      sizeb_zi = patch_double_vec, sizec_zi = patch_double_vec,
+      fec_zi = patch_double_vec, jsizea_zi = patch_double_vec,
+      jsizeb_zi = patch_double_vec, jsizec_zi = patch_double_vec)
+    group2_frame <- cbind.data.frame(group2_frame, sizea_zi = group_double_vec,
+      sizeb_zi = group_double_vec, sizec_zi = group_double_vec,
+      fec_zi = group_double_vec, jsizea_zi = group_double_vec,
+      jsizeb_zi = group_double_vec, jsizec_zi = group_double_vec)
+  }
+  
+  dist_frame <- cbind.data.frame(response = term_names,
+    dist = c("binom", "constant", dist.sizea, dist.sizeb, dist.sizec, "constant",
+      dist.fec, "binom", "constant", dist.sizea, dist.sizeb, dist.sizec,
+      "constant", "constant"))
+  if (!use.juv) {
+    dist_frame$dist[8] = "constant"
+    dist_frame$dist[10] = "constant"
+    dist_frame$dist[11] = "constant"
+    dist_frame$dist[12] = "constant"
+  }
+  st_frame <- rep(1.0, 14)
+  names(st_frame) <- term_names
+  
+  out_list <- list(vrm_frame = out_data, year_frame = year_frame,
+    patch_frame = patch_frame, group2_frame = group2_frame,
+    group1_frame = group2_frame, dist_frame = dist_frame, st_frame = st_frame)
+  
+  if (!is.null(cat.indcova)) {
+    ica_length <- length(cat.indcova)
+    ica_double_vec <- rep(0.0, ica_length)
+    ica_frame <- cbind.data.frame(cat.indcova, ica_double_vec, ica_double_vec,
+      ica_double_vec, ica_double_vec, ica_double_vec, ica_double_vec,
+      ica_double_vec, ica_double_vec, ica_double_vec, ica_double_vec,
+      ica_double_vec, ica_double_vec, ica_double_vec, ica_double_vec)
+    names(ica_frame)[1] <- "indcova"
+    names(ica_frame)[2:15] <- term_names
+    
+    if (zi) {
+      ica_frame <- cbind.data.frame(ica_frame, sizea_zi = ica_double_vec,
+      sizeb_zi = ica_double_vec, sizec_zi = ica_double_vec,
+      fec_zi = ica_double_vec, jsizea_zi = ica_double_vec,
+      jsizeb_zi = ica_double_vec, jsizec_zi = ica_double_vec)
+    }
+    
+    out_list$indcova2_frame <- ica_frame
+    out_list$indcova1_frame <- ica_frame
+  }
+  
+  if (!is.null(cat.indcovb)) {
+    icb_length <- length(cat.indcovb)
+    icb_double_vec <- rep(0.0, icb_length)
+    icb_frame <- cbind.data.frame(cat.indcovb, icb_double_vec, icb_double_vec,
+      icb_double_vec, icb_double_vec, icb_double_vec, icb_double_vec,
+      icb_double_vec, icb_double_vec, icb_double_vec, icb_double_vec,
+      icb_double_vec, icb_double_vec, icb_double_vec, icb_double_vec)
+    names(icb_frame)[1] <- "indcovb"
+    names(icb_frame)[2:15] <- term_names
+    
+    if (zi) {
+      icb_frame <- cbind.data.frame(icb_frame, sizea_zi = icb_double_vec,
+      sizeb_zi = icb_double_vec, sizec_zi = icb_double_vec,
+      fec_zi = icb_double_vec, jsizea_zi = icb_double_vec,
+      jsizeb_zi = icb_double_vec, jsizec_zi = icb_double_vec)
+    }
+    
+    out_list$indcovb2_frame <- icb_frame
+    out_list$indcovb1_frame <- icb_frame
+  }
+  
+  if (!is.null(cat.indcovc)) {
+    icc_length <- length(cat.indcovc)
+    icc_double_vec <- rep(0.0, icc_length)
+    icc_frame <- cbind.data.frame(cat.indcovc, icc_double_vec, icc_double_vec,
+      icc_double_vec, icc_double_vec, icc_double_vec, icc_double_vec,
+      icc_double_vec, icc_double_vec, icc_double_vec, icc_double_vec,
+      icc_double_vec, icc_double_vec, icc_double_vec, icc_double_vec)
+    names(icc_frame)[1] <- "indcovc"
+    names(icc_frame)[2:15] <- term_names
+    
+    if (zi) {
+      icc_frame <- cbind.data.frame(icc_frame, sizea_zi = icc_double_vec,
+      sizeb_zi = icc_double_vec, sizec_zi = icc_double_vec,
+      fec_zi = icc_double_vec, jsizea_zi = icc_double_vec,
+      jsizeb_zi = icc_double_vec, jsizec_zi = icc_double_vec)
+    }
+    
+    out_list$indcovc2_frame <- icc_frame
+    out_list$indcovc1_frame <- icc_frame
+  }
+  
+  class(out_list) <- "vrm_input"
+  
+  return(out_list)
 }
 

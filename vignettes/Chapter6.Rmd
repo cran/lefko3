@@ -23,13 +23,9 @@ vignette: >
   
   <p style="text-indent: 20px">An IPM is a kind of function-based MPM in which transitions are modeled on a continuous state variable rather than discrete stages [@ellner_integral_2006]. A size metric is often used as this continuous state variable. In practice, all size-classified matrix projection models including IPMs require discretized size classes. So, although size is modeled on the Gaussian distribution, the actual stages developed break size up into many fine-scale, equally sized classes or bins. Although the number of these bins varies from analysis to analysis, package `lefko3` uses a default of 100 (this can be changed as an option). Because vital rates are modeled rather than directly calculated from the data, the number of individuals moving through any particular size class on any particular occasion does not need to be considered in determining stage boundaries (as they would be in raw MPM estimation). IPMs are often *complex*, meaning that they include some life history stages that fall outside of the size classifications developed for the matrices, such as dormant seeds or juveniles.</p>
   
-  <p style="text-indent: 20px">The dataset that we have provided is organized in horizontal format, meaning that each row holds all of the data for a single, unique individual, and columns correspond to individual condition in particular monitoring occasions (which we refer to as *years* here, since there was one main census in each year). The original spreadsheet file used to keep the dataset has a repeating pattern to these columns, with each year having a similarly arranged group of variables. Package `lefko3` includes functions to handle data in horizontal format, as well as vertically formatted data (i.e. data for individuals is broken up across rows, where each row is a unique combination of individual and year in occasion *t*).</p>
-
-  <p style="text-indent: 20px">First, we will clear memory, and load the package and the dataset.</p>
+  <p style="text-indent: 20px">The dataset that we have provided is organized in horizontal format, meaning that each row holds all of the data for a single, unique individual, and columns correspond to individual condition in particular monitoring occasions (which we refer to as *years* here, since there was one main census in each year). The original spreadsheet file used to keep the dataset has a repeating pattern to these columns, with each year having a similarly arranged group of variables. Let's load the dataset.</p>
 
 ```r
-rm(list=ls(all=TRUE))
-library(lefko3)
 data(lathyrus)
 #summary(lathyrus)
 ```
@@ -123,32 +119,124 @@ hist(subset(lathvertipm, repstatus2 == 1)$feca2, main = "Fecundity",
 
 ![Figure 6.2. Histogram of fecundity in occasion t](Ch6.5-1.png)
   
-  <p style="text-indent: 20px">We see that the distribution seems to conform to a classic count variable with a very low mean value. The first bar suggests that there may be too many zeros to use a standard Poisson or negative binomial distribution. But to make that decision, let's formally test the two assumptions of $mean = variance$ and no excess zeros. Both tests use chi-squared distribution-based approaches, with the zero-inflation test based on @van_den_broek_score_1995. The following line will assess all of this in fecundity, but can also assess size if necessary (we will treat size as conforming to a Gaussian distribution, so will not test these assumptions with it).</p>
+  <p style="text-indent: 20px">We see that the distribution conforms to a classic count variable with a very low mean value. The first bar suggests that there may be too many zeroes, as well. Let's now formally test our assumptions. We will use the `hfv_qc()` function, which will allow us to assess the quality of the data from the viewpoint of the linear models to be built later. We will use most of the input from the `modelsearch()` call that we will conduct later.</p>
 
 ```r
-sf_distrib(lathvertipm, sizea = c("sizea3", "sizea2"), fec = c("feca3", "feca2"),
-  repst = c("repstatus3", "repstatus2"), obs3 = "obsstatus3")
-#> Non-integer values detected, so will not test for overdispersion and zero-inflation in sizea
-#> Mean fec is 4.825
+hfv_qc(data = lathvertipm, suite = "size",
+  vitalrates = c("surv", "obs", "size", "fec"), juvestimate = "Sdl",
+  indiv = "individ", year = "year2", age = "obsage", year.as.random = TRUE)
+#> Survival:
 #> 
-#> The variance in fec is 72.74
+#>   Data subset has 43 variables and 2267 transitions.
 #> 
-#> The probability of this dispersion level by chance assuming that
-#> the true mean fec = variance in fec,
-#> and an alternative hypothesis of overdispersion, is 0
-#> 
-#> Fecundity is significantly overdispersed.
+#>   Variable alive3 has 0 missing values.
+#>   Variable alive3 is a binomial variable.
 #> 
 #> 
-#> Mean lambda in fec is 0.008029
-#> The actual number of 0s in fec is 302
-#> The expected number of 0s in fec under the null hypothesis is 4.352
-#> The probability of this deviation in 0s from expectation by chance is 0
+#> Observation status:
 #> 
-#> Fecundity is significantly zero-inflated.
+#>   Data subset has 43 variables and 2122 transitions.
+#> 
+#>   Variable obsstatus3 has 0 missing values.
+#>   Variable obsstatus3 is a binomial variable.
+#> 
+#> 
+#> Primary size:
+#> 
+#>   Data subset has 43 variables and 1916 transitions.
+#> 
+#>   Variable sizea3 has 0 missing values.
+#>   Variable sizea3 appears to be a floating point variable.
+#>   1256 elements are not integers.
+#>   The minimum value of sizea3 is 3.4 and the maximum is 6646.
+#>   The mean value of sizea3 is 512.8 and the variance is 507200.
+#>   The value of the Shapiro-Wilk test of normality is 0.7134 with P = 3.014e-49.
+#>   Variable sizea3 differs significantly from a Gaussian distribution.
+#> 
+#>   Variable sizea3 is fully positive, lacking even 0s.
+#> 
+#> 
+#> Reproductive status:
+#> 
+#>   Data subset has 43 variables and 1916 transitions.
+#> 
+#>   Variable repstatus3 has 0 missing values.
+#>   Variable repstatus3 is a binomial variable.
+#> 
+#> 
+#> Fecundity:
+#> 
+#>   Data subset has 43 variables and 2267 transitions.
+#> 
+#>   Variable feca2 has 0 missing values.
+#>   Variable feca2 appears to be an integer variable.
+#> 
+#>   Variable feca2 is fully non-negative.
+#> 
+#>   Overdispersion test:
+#>     Mean feca2 is 1.278
+#>     The variance in feca2 is 23.13
+#>     The probability of this dispersion level by chance assuming that
+#>     the true mean feca2 = variance in feca2,
+#>     and an alternative hypothesis of overdispersion, is 0
+#>     Variable feca2 is significantly overdispersed.
+#> 
+#>   Zero-inflation and truncation tests:
+#>     Mean lambda in feca2 is 0.2785
+#>     The actual number of 0s in feca2 is 2000
+#>     The expected number of 0s in feca2 under the null hypothesis is 631.4
+#>     The probability of this deviation in 0s from expectation by chance is 0
+#>     Variable feca2 is significantly zero-inflated.
+#> 
+#> 
+#> Juvenile survival:
+#> 
+#>   Data subset has 43 variables and 285 transitions.
+#> 
+#>   Variable alive3 has 0 missing values.
+#>   Variable alive3 is a binomial variable.
+#> 
+#> 
+#> Juvenile observation status:
+#> 
+#>   Data subset has 43 variables and 210 transitions.
+#> 
+#>   Variable obsstatus3 has 0 missing values.
+#>   Variable obsstatus3 is a binomial variable.
+#> 
+#> 
+#> Juvenile primary size:
+#> 
+#>   Data subset has 43 variables and 193 transitions.
+#> 
+#>   Variable sizea3 has 0 missing values.
+#>   Variable sizea3 appears to be a floating point variable.
+#>   127 elements are not integers.
+#>   The minimum value of sizea3 is 2.1 and the maximum is 61.
+#>   The mean value of sizea3 is 11.23 and the variance is 50.81.
+#>   The value of the Shapiro-Wilk test of normality is 0.5997 with P = 5.72e-21.
+#>   Variable sizea3 differs significantly from a Gaussian distribution.
+#> 
+#>   Variable sizea3 is fully positive, lacking even 0s.
+#> 
+#> 
+#> Juvenile reproductive status:
+#> 
+#>   Data subset has 43 variables and 193 transitions.
+#> 
+#>   Variable repstatus3 has 0 missing values.
+#>   Variable repstatus3 is a binomial variable.
+#> 
+#> 
+#> Juvenile maturity status:
+#> 
+#>   Data subset has 43 variables and 210 transitions.
+#> 
+#>   Variable matstatus3 has 0 missing values.
+#>   Variable matstatus3 is a binomial variable.
 ```
   
-  <p style="text-indent: 20px">Such significant results for both fecundity distribution tests show us that we really need to use a zero-inflated negative binomial distribution.</p>
+  <p style="text-indent: 20px">All of the probability variables look like binomials, so we have no problem there. Size and juvenile size appear to be continuous variables that differ significantly from the assumptions of the Gaussian distribution. However, we will still use a Gaussian distribution in this case, for instructional purposes. Fecundity is a count variable with significant overdispersion and significantly more zeros than expected, so we should use a zero-inflated negative binomial distribution.</p>
   
 #### Step 2b: Develop supplemental information for matrix estimation  
   

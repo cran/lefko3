@@ -2,19 +2,28 @@
 % Please edit documentation in R/popchar.R
 \name{actualstage3}
 \alias{actualstage3}
-\title{Calculate Actual Stage, Age-Stage, or Stage-Pair Distributions}
+\title{Calculate Actual Stage, Age, Stage-Pair, or Age-Stage Distributions}
 \usage{
 actualstage3(
   data,
+  check_stage = TRUE,
+  check_age = FALSE,
   historical = FALSE,
   year2 = "year2",
   indices = c("stage3index", "stage2index", "stage1index"),
   stagecol = c("stage3", "stage2", "stage1"),
+  agecol = "obsage",
   remove.stage = "NotAlive"
 )
 }
 \arguments{
 \item{data}{A demographic dataset in hfv format.}
+
+\item{check_stage}{A logical value indicating whether to assess frequencies
+and proportions of stages. Defaults to \code{TRUE}.}
+
+\item{check_age}{A logical value indicating whether to assess frequencies and
+proportions of ages. Defaults to \code{FALSE}.}
 
 \item{historical}{A logical value indicating whether the stage structure
 should be ahistorical (\code{FALSE}) or historical (\code{TRUE}). Defaults to
@@ -31,6 +40,9 @@ Defaults to \code{c("stage3index", "stage2index", "stage1index")}.}
 for times \emph{t}+1, \emph{t}, and \emph{t}-1, respectively, in \code{data}.
 Defaults to \code{stagecol = c("stage3", "stage2", "stage1")}.}
 
+\item{agecol}{A single string indicating the age of individuals in time
+\emph{t}. Defaults to \code{obsage}.}
+
 \item{remove.stage}{A string vector indicating the names of stages to remove
 from consideration. Defaults to \code{"NotAlive"}.}
 }
@@ -38,10 +50,15 @@ from consideration. Defaults to \code{"NotAlive"}.}
 A data frame with the following variables:
 \item{rowid}{A string identifier term, equal to the monitoring occasion in
 time \emph{t} and the stage index.}
-\item{stageindex}{The stageframe index of the stage.}
-\item{stage}{The name of each stage, or \code{NA}.}
-\item{stage2}{The name of the stage in time \emph{t}.}
-\item{stage1}{The name of the stage in time \emph{t}-1, or \code{NA}.}
+\item{stageindex}{The stageframe index of the stage. Only output if
+\code{check_stage = TRUE}.}
+\item{stage}{The name of each stage, or \code{NA}. Only output if
+\code{check_stage = TRUE}.}
+\item{stage2}{The name of the stage in time \emph{t}. Only output if
+\code{check_stage = TRUE}.}
+\item{stage1}{The name of the stage in time \emph{t}-1, or \code{NA}. Only
+output if \code{check_stage = TRUE}.}
+\item{age}{The age at time \emph{t}. Only output if \code{check_age = TRUE}.}
 \item{year2}{Monitoring occasion in time \emph{t}.}
 \item{frequency}{The number of individuals in the respective stage and time.}
 \item{actual_prop}{The proportion of individuals alive in time \emph{t} in
@@ -49,7 +66,7 @@ the respective stage.}
 }
 \description{
 Function \code{actualstage3()} shows the frequencies and proportions of
-each stage or stage pair in each year.
+each stage, stage pair, age-stage, or age in each year.
 }
 \section{Notes}{
 
@@ -62,6 +79,13 @@ Frequencies and proportions will be calculated for all times, including the
 last time, which is generally found in the \code{stage3} columns of the last
 \code{year2} entry in object \code{data}. The default is to treat the
 \code{year2} entry for that time as \code{max(year2) + 1}.
+
+If \code{check_stage = TRUE} and \code{check_age = FALSE}, then this function
+will assess frequencies and proportions of stages or historical stage-pairs.
+If both \code{check_stage = TRUE} and \code{check_age = TRUE}, then this
+function will assess frequencies and proportions of age-stages. If
+\code{check_stage = FALSE} and \code{check_age = TRUE}, then the frequencies
+and proportions of ages only will be assessed.
 
 Note that no stageframe is required for this function to operate. Stage
 names and their order are inferred directly from the object \code{data}.

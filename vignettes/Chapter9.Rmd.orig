@@ -14,6 +14,7 @@ knitr::opts_chunk$set(
   collapse = TRUE,
   comment = "#>"
 )
+library(lefko3)
 ```
 
   <p style="text-indent: 20px">In this vignette, we will import a MPM created elsewhere into `lefko3` and analyze it via LTRE and sLTRE analysis. These are inherently ahistorical MPMs, and so we do not include historical analyses in this vignette. To reduce output size, we have prevented some statements from running if they produce long stretches of output. Examples include most `summary()` calls. In these cases, we include hashtagged versions of these calls, and our text assumes that the user runs these statements without hashtags. This vignette is only a sample analysis. Detailed information and instructions on using `lefko3` are available through a free online e-book called *lefko3: a gentle introduction*, available on <a href = "http://www.sheffersonlab.com/projects">the projects page</a> of the Shefferson lab website. This website also includes links to long-format vignettes and other demonstrations of this package.</p>
@@ -29,11 +30,7 @@ Figure 9.1. Life history model of *Anthyllis vulneraria*. Solid arrows indicate 
   
 ### BASIC WORKFLOW  
   
-  <p style="text-indent: 20px">Our goal in this exercise will be to import the published MPMs available for these nine populations of *Anthyllis vulneraria*, and to analyze the demographic differences between populations using deterministic and stochastic life table response experiments (LTRE and sLTRE). We will use the matrices analyzed in @davison_demographic_2010, and attempt to reproduce their results. We begin by loading package `lefko3`.</p>
-```{r Ch9.0}
-rm(list=ls(all=TRUE))
-library(lefko3)
-```
+  <p style="text-indent: 20px">Our goal in this exercise will be to import the published MPMs available for these nine populations of *Anthyllis vulneraria*, and to analyze the demographic differences between populations using deterministic and stochastic life table response experiments (LTRE and sLTRE). We will use the matrices analyzed in @davison_demographic_2010, and attempt to reproduce their results.</p>
   
 #### Step 1. Life history model development 
   

@@ -282,12 +282,13 @@ matrix projection models, whether historical or not). As this package
 has developed, we have broadened the scope of this package to include
 age-classified, age-by-stage, and stage-classified MPMs and IPMs, with
 function-based MPMs and IPMs capable of handling a large range of
-possible response distributions. We have also prioritized the
-development of core algorithms and methods to construct these models
-quickly, efficiently, and at least relatively painlessly. Finally, we
-have incorporated quality control routines in the core functions of all
-steps of the workflow, giving users the opportunity to assess where
-weaknesses and errors lie.
+possible response distributions. We have also added the ability to
+project matrices and IPMs in customized, complex ways. Through it all,
+we have prioritized the development of core algorithms and methods to
+construct these models and projections quickly, efficiently, and at
+least relatively painlessly. Finally, we have incorporated quality
+control routines in the core functions of all steps of the workflow,
+giving users the opportunity to assess where weaknesses and errors lie.
 </p>
 <p style="text-indent: 20px">
 Package <code>lefko3</code> introduces a complete suite of functions
@@ -300,13 +301,13 @@ models may be estimated using demographic datasets with this
 standardized format, and these models take the form of generalized
 linear or mixed linear models using a variety of response distributions.
 Matrix estimation functions produce all necessary matrices from a single
-dataset, including all times, patches, and populations in a single shot,
-and do so quickly through core binaries engineered for speed and
-accuracy. Deterministic and stochastic analysis functions allow
-sensitivity analysis, elasticity analysis, LTRE analysis, etc.
-Projection functions allow density dependent and independent, as well as
-stochastic, cyclical, and replicated projections for even quite complex
-situations.
+dataset, including all times, patches, and populations in a single
+output object, and do so quickly through core binaries engineered for
+speed and accuracy. Deterministic and stochastic analysis functions
+allow sensitivity analysis, elasticity analysis, LTRE analysis, etc.
+Projection functions allow density dependent and independent with or
+without enforced substochasticity, as well as stochastic, cyclical, and
+replicated projections for even quite complex situations.
 </p>
 <p style="text-indent: 20px">
 This vignette was written as a basic introduction to the concepts and
@@ -1751,8 +1752,8 @@ as a function of stage in occasion <em>t</em>-1 by taking the associated
 column sums of these conditional matrices.
 </p>
 </div>
-<div id="step-4a.-importing-matrices" class="section level3">
-<h3>Step 4a. Importing matrices</h3>
+<div id="step-4a.-importing-matrices-and-ipms" class="section level3">
+<h3>Step 4a. Importing matrices and IPMs</h3>
 <p style="text-indent: 20px">
 Some population ecologists will wish to utilize the power and
 functionality of <code>lefko3</code> on already existing matrices.
@@ -1768,6 +1769,15 @@ Function <code>create_lM()</code> runs several quality checks on the
 input data, and assuming that there are no obvious inconsistencies,
 yields the final <code>lefkoMat</code> object for further use in
 analysis.
+</p>
+<p style="text-indent: 20px">
+Users may also import IPMs. If the characteristics of the kernels
+propagating an IPM are properly described in a publication, and the
+kernel is composed of generalized linear models or generalized linear
+mixed models, then function <code>vrm_import()</code> allows this
+information to be input into <code>lefko3</code> and used to recreate
+the IPMs in discretized form. Please see <strong>lefko3: a gentle
+introduction</strong> for more information, or see the function example.
 </p>
 </div>
 <div id="step-5.-mpm-analyses" class="section level3">
@@ -2253,19 +2263,6 @@ implement this version in <code>lefko3</code> as well.
 </div>
 <div id="further-analyses" class="section level4">
 <h4>Further analyses</h4>
-<p style="text-indent: 20px">
-Package <code>lefko3</code> includes two general projection functions,
-<code>projection3()</code> and <code>f_projection3()</code>. The former
-projects matrices that have already been created, while the latter
-creates new function-based MPMs (including IPMs) at each time step.
-These functions both include the capability to conduct replicate
-simulations, as well as density dependence. Unlike other packages and
-methods, these functions are engineered for speed, and also include the
-capability to enforce substochasticity. Please see our book,
-<strong>lefko3: a gentle introduction</strong>, for more details (on the
-<a href="http://www.sheffersonlab.com/projects.html">Projects page</a>
-of www.sheffersonlab.com).
-</p>
 <p style="text-indent: 20px">
 Users can take the MPMs produced by MPM creation functions in package
 <code>lefko3</code> and plug them into MPM or matrix analysis functions

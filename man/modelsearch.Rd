@@ -108,8 +108,9 @@ probability; \code{obs}, observation probability; \code{size}, overall size;
 \code{repst}, probability of reproducing; and \code{fec}, amount of
 reproduction (overall fecundity). May also be set to
 \code{vitalrates = "leslie"}, which is equivalent to setting
-\code{c("surv", "fec")} for a Leslie MPM. Defaults to
-\code{c("surv", "size", "fec")}.}
+\code{c("surv", "fec")} for a Leslie MPM. This choice also determines how
+internal data subsetting for vital rate model estimation will work. Defaults
+to \code{c("surv", "size", "fec")}.}
 
 \item{surv}{A vector indicating the variable names coding for status as alive
 or dead in occasions \emph{t}+1, \emph{t}, and \emph{t}-1, respectively.
