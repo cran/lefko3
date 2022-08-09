@@ -819,128 +819,55 @@ logistic3 <- function(start_value, alpha, beta = 0.0, lambda = 1.0, time_steps =
     .Call('_lefko3_binomial_test', PACKAGE = 'lefko3', integer_input)
 }
 
-#' Main Formula Creation for Function \code{modelsearch()}
-#'
-#' Function \code{.stovokor()} creates formulae to be used as input in the
-#' global model calls used in function \code{\link{modelsearch}()}.
+#' Append NumericVector to the End of Another NumericVector
 #' 
-#' @name .stovokor
+#' This function appends one NumericVector fully to another.
 #' 
-#' @param surv A vector of strings indicating the names of the variables coding
-#' survival.
-#' @param obs A vector of strings indicating the names of the variables coding
-#' observation status.
-#' @param size A vector of strings indicating the names of the variables coding
-#' primary size.
-#' @param sizeb A vector of strings indicating the names of the variables
-#' coding secondary size.
-#' @param sizec A vector of strings indicating the names of the variables
-#' coding tertiary size.
-#' @param repst A vector of strings indicating the names of the variables
-#' coding reproductive status.
-#' @param fec A vector of strings indicating the names of the variables coding
-#' fecundity.
-#' @param matstat A vector of strings indicating the names of the variables
-#' coding for maturity status.
-#' @param vitalrates A vector of strings indicating which vital rates will be
-#' estimated.
-#' @param historical A logical value indicating whether to create global models
-#' with historical effects.
-#' @param suite A string indicating the scope of independent factors included
-#' in the global models. Options include \code{"full"}, \code{"main"},
-#' \code{"size"}, \code{"rep"}, and \code{"const"}.
-#' @param approach A string indicating whether to use mixed model encoding 
-#' (\code{"mixed"}) or GLM encoding (\code{"glm"}).
-#' @param nojuvs A logical value indicating that juvenile rates should be
-#' estimated (\code{FALSE}) or not (\code{TRUE}).
-#' @param age A string indicating the name of the variable coding age.
-#' @param indcova A vector of strings indicating the names in times \emph{t}+1,
-#' \emph{t}, and \emph{t}-1 of a specific individual covariate used in the
-#' dataset.
-#' @param indcovb A vector of strings indicating the names in times \emph{t}+1,
-#' \emph{t}, and \emph{t}-1 of a specific individual covariate used in the
-#' dataset.
-#' @param indcovc A vector of strings indicating the names in times \emph{t}+1,
-#' \emph{t}, and \emph{t}-1 of a specific individual covariate used in the
-#' dataset.
-#' @param indiv A string indicating the name of the variable coding individual
-#' identity.
-#' @param patch A string indicating the name of the variable coding patch
-#' identity.
-#' @param year A string indicating the name of the variable coding time
-#' \emph{t}.
-#' @param pasrand A logical value indicating whether to treat patch as a random
-#' variable within mixed models.
-#' @param yasrand A logical value indicating whether to treat year as a random
-#' variable within mixed models.
-#' @param iaasrand A logical value indicating whether to treat indcova as
-#' random.
-#' @param ibasrand A logical value indicating whether to treat indcovb as
-#' random.
-#' @param icasrand A logical value indicating whether to treat indcovc as
-#' random.
-#' @param fectime An integer indicating whether to use reproductive output in
-#' time \emph{t} (2) or time \emph{t}+1 (3) as the response for fecundity.
-#' @param juvsize A logical value indicating whether to include size terms in
-#' juvenile models.
-#' @param sizebused A logical value denoting if secondary size variables are to
-#' be used.
-#' @param sizecused A logical value denoting if tertiary size variables are to
-#' be used.
-#' @param grouptest A logical value indicating whether to test for group
-#' effect.
-#' @param densitycol The name of the density variable, or \code{"none"}.
-#' @param densityused A logical value indicating whether the density variable
-#' is to be used.
-#' @param indcovaused Logical value indicating whether individual covariate a
-#' is used.
-#' @param indcovbused Logical value indicating whether individual covariate b
-#' is used.
-#' @param indcovcused Logical value indicating whether individual covariate c
-#' is used.
+#' @name concat_dbl
 #' 
-#' @return Vector of 9 strings, each a formula to be used as input in function.
-#' \code{modelsearch()}.
+#' @param A Any NumericVector.
+#' @param B Any other NumericVector.
+#' 
+#' @return Returns a new NumericVector with elements of vector A followed by
+#' elements of vector B.
 #'
 #' @keywords internal
 #' @noRd
-.stovokor <- function(surv, obs, size, sizeb, sizec, repst, fec, matstat, vitalrates, historical, suite, approach, nojuvs, age, indcova, indcovb, indcovc, indiv, patch, year, pasrand, yasrand, iaasrand, ibasrand, icasrand, fectime, juvsize, sizebused, sizecused, grouptest, densitycol, densityused, indcovaused, indcovbused, indcovcused) {
-    .Call('_lefko3_stovokor', PACKAGE = 'lefko3', surv, obs, size, sizeb, sizec, repst, fec, matstat, vitalrates, historical, suite, approach, nojuvs, age, indcova, indcovb, indcovc, indiv, patch, year, pasrand, yasrand, iaasrand, ibasrand, icasrand, fectime, juvsize, sizebused, sizecused, grouptest, densitycol, densityused, indcovaused, indcovbused, indcovcused)
-}
+NULL
 
-#' Creates a Skeleton Paramnames Object for Use in Function-based Modeling
+#' Append IntegerVector to the End of Another IntegerVector
 #' 
-#' Creates a simple skeleton \code{paramnames} object that can be entered as
-#' input in functions \code{\link{flefko2}()}, \code{\link{flefko3}()}, and
-#' \code{\link{aflefko2}()}.
+#' Returns a new IntegerVector with elements of vector A followed by
+#' elements of vector B.
 #' 
-#' @name create_pm
+#' @name concat_int
 #' 
-#' @param name_terms A logical value indicating whether to start each variable
-#' name as \code{none} if \code{FALSE}, or as the default \code{modelparams}
-#' name if \code{TRUE}. Defaults to \code{FALSE}.
+#' @param A Any IntegerVector.
+#' @param B Any other IntegerVector.
 #' 
-#' @return A three column data frame, of which the first describes the
-#' parameters in reasonably plain English, the second gives the name of the
-#' parameter within the MPM generating functions, and the third is to be
-#' edited with the names of the variables as they appear in the models.
+#' @return Returns a new IntegerVector with elements of vector A followed by
+#' elements of vector B.
 #' 
-#' @section Notes:
-#' The third column in the resulting object should be edited with the names only
-#' of those variables actually used in vital rate modeling. This
-#' \code{paramnames} object should apply to all models used in a single MPM
-#' building exercise. So, for example, if the models used include random terms,
-#' then they should all have the same random terms. Fixed terms can vary,
-#' however.
+#' @keywords internal
+#' @noRd
+NULL
+
+#' Append StringVector to the End of Another StringVector
 #' 
-#' @examples 
-#' our_pm <- create_pm()
-#' our_pm
+#' Returns a new StringVector with elements of vector A followed by
+#' elements of vector B.
 #' 
-#' @export
-create_pm <- function(name_terms = FALSE) {
-    .Call('_lefko3_create_pm', PACKAGE = 'lefko3', name_terms)
-}
+#' @name concat_str
+#' 
+#' @param A Any StringVector.
+#' @param B Any other StringVector.
+#' 
+#' @return Returns a new StringVector with elements of vector A followed by
+#' elements of vector B.
+#' 
+#' @keywords internal
+#' @noRd
+NULL
 
 #' Compares Two Strings Literally
 #' 
@@ -1135,6 +1062,22 @@ NULL
 #' @noRd
 NULL
 
+#' Resize an IntegerVector
+#' 
+#' This function resizes an IntegerVector. It is based on code provided by Dirk
+#' Eddelbuettel on StackExchange
+#' (https://stackoverflow.com/questions/13782943/how-to-resize-a-numericvector).
+#' 
+#' @name shrink
+#' 
+#' @param x_int An IntegerVector.
+#' 
+#' @return A new IntegerVector exactly one element smaller than \code{x_int}.
+#' 
+#' @keywords internal
+#' @noRd
+NULL
+
 #' Create hstages Index Object
 #' 
 #' Function \code{hst_maker()} creates \code{hstages} index data frames from
@@ -1167,372 +1110,6 @@ NULL
 #' \item{stage_id}{Integer index of stage.}
 #' \item{stage}{String name of stage.}
 #' \item{age}{The age of stage in current time.}
-#' 
-#' @keywords internal
-#' @noRd
-NULL
-
-#' Re-index Projection Matrix On Basis of Overwrite Table
-#' 
-#' Function \code{ovreplace()} takes matrix indices provided by functions
-#' \code{\link{rlefko3}()}, \code{\link{rlefko2}()}, \code{\link{flefko3}()},
-#' \code{\link{flefko2}()}, and \code{\link{aflefko2}()} and updates them with
-#' information provided in the overwrite table used as input in that function.
-#' 
-#' @name ovreplace
-#' 
-#' @param allst321 Vector containing the original element-by-element matrix
-#' index.
-#' @param idx321old Vector containing the indices of matrix elements to be
-#' updated.
-#' @param idx321new Vector containing the replacement matrix element indices.
-#' @param convtype Vector denoting survival transition (1), fecundity (2), or
-#' fecundity multiplier (3).
-#' @param eststag3 Vector of new stages in time \emph{t}+1.
-#' @param gvnrate Vector of replacement transition values.
-#' @param multipl Vector of fecundity multipliers.
-#' 
-#' @return A matrix. Column 1 is the given rate for a survival transitions,
-#' Column 2 is the proxy transition to be used to estimate that transition.
-#' Column 3 is the given rate for a fecundity transitions. Column 4 is the
-#' proxy transition to be used to estimate that transition. Column 5 is a
-#' vector of fecundity multipliers, in cases where no given rate or proxy is to
-#' be used but fecundity is to be multiplied by some value. Column 6 is a
-#' vector of survival transition multipliers. Column 7 is a vector of fecundity
-#' transition multipliers.
-#' 
-#' @keywords internal
-#' @noRd
-NULL
-
-#' Creates Matrices of Year and Patch Terms in Models
-#' 
-#' Function \code{revelations()} creates a matrix holding either the year or
-#' patch coefficients from all vital rate models. This reduces memory load in
-#' functions \code{\link{jerzeibalowski}()}, which may be important in some
-#' systems or compilers.
-#' 
-#' @name revelations
-#' 
-#' @param survproxy The proxy vital rate model covering survival from the main
-#' matrix estimator function.
-#' @param obsproxy The proxy vital rate model covering observation status from
-#' the main matrix estimator function.
-#' @param sizeproxy The proxy vital rate model covering primary size from the
-#' main matrix estimator function.
-#' @param sizebproxy The proxy vital rate model covering secondary size from
-#' the main matrix estimator function.
-#' @param sizecproxy The proxy vital rate model covering tertiary size from the
-#' main matrix estimator function.
-#' @param repstproxy The proxy vital rate model covering reproductive status
-#' from the main matrix estimator function.
-#' @param fecproxy The proxy vital rate model covering fecundity from the main
-#' matrix estimator function.
-#' @param jsurvproxy The proxy vital rate model covering juvenile survival from
-#' the main matrix estimator function.
-#' @param jobsproxy The proxy vital rate model covering juvenile observation
-#' status from the main matrix estimator function.
-#' @param jsizeproxy The proxy vital rate model covering juvenile primary size
-#' from the main matrix estimator function.
-#' @param jsizebproxy The proxy vital rate model covering juvenile secondary
-#' size from the main matrix estimator function.
-#' @param jsizecproxy The proxy vital rate model covering juvenile tertiary
-#' size from the main matrix estimator function.
-#' @param jrepstproxy The proxy vital rate model covering juvenile reproductive
-#' status from the main matrix estimator function.
-#' @param jmatstproxy The proxy vital rate model covering juvenile probability
-#' of becoming mature from the main matrix estimator function.
-#' @param mat_switch An integer coding for year (\code{1}) or patch (\code{2}).
-#' 
-#' @return A matrix with 14 columns corresponding to the number of vital rates
-#' and number of columns equal to the number of year or patches.
-#' 
-#' @keywords internal
-#' @noRd
-NULL
-
-#' Creates a Summation of Most Terms Needed in Vital Rate Calculation
-#' 
-#' Function \code{rimeotam()} provides the majority of the work in creating
-#' the linear model sum to be used in vital rate estimation in the MPM. Works
-#' specifically with functions \code{\link{jerzeibalowski}()} and
-#' \code{\link{motherbalowski}()}.
-#' 
-#' @name rimeotam
-#' 
-#' @param maincoefs The coefficients portion of the vital rate model proxy.
-#' @param fl1_i Reproductive status in time \emph{t}*-1.
-#' @param fl2n_i Reproductive status in time \emph{t}.
-#' @param sz1_i Primary size in time \emph{t}-1.
-#' @param sz2o_i Primary size in time \emph{t}.
-#' @param szb1_i Secondary size in time \emph{t}-1.
-#' @param szb2o_i Secondary size in time \emph{t}.
-#' @param szc1_i Tertiary size in time \emph{t}-1.
-#' @param szc2o_i Tertiary size in time \emph{t}.
-#' @param aage2_i Used age in time \emph{t}.
-#' @param inda_1 Value of numeric individual covariate a in time \emph{t}-1.
-#' @param inda_2 Value of numeric individual covariate a in time \emph{t}.
-#' @param indb_1 Value of numeric individual covariate b in time \emph{t}-1.
-#' @param indb_2 Value of numeric individual covariate b in time \emph{t}.
-#' @param indc_1 Value of numeric individual covariate c in time \emph{t}-1.
-#' @param indc_2 Value of numeric individual covariate c in time \emph{t}.
-#' @param used_dens Density value used.
-#' @param zi A logical value indicating whether model coefficients refer to the
-#' zero inflation portion of a model.
-#' 
-#' @return A single numeric value giving the sum of the products of the linear
-#' coefficients and the used status values.
-#' 
-#' @keywords internal
-#' @noRd
-NULL
-
-#' Counts Numbers of Elements in Each Random Individual Covariate Portion of
-#' Model
-#' 
-#' Function \code{foi_counter()} counts the number of elements in each random
-#' individual covariate and returns that as a vector.
-#' 
-#' @name foi_counter
-#' 
-#' @param modelproxy A list holding the contents of a model processed with
-#' function \code{\link{.modelextract}()}
-#' @param zi A logical value indicating whether to focus on the zero-inflation
-#' parameters.
-#' 
-#' @return A 6 element vector holding the numbers of elements in each random
-#' individual covariate in a model (either the cont portion or the zi portion).
-#' 
-#' @keywords internal
-#' @noRd
-NULL
-
-#' Create Vector of Random Individual Covariate Terms
-#' 
-#' Function \code{flightoficarus()} creates vectors of random covariate
-#' terms.
-#' 
-#' @name flightoficarus
-#' 
-#' @param modelproxy A model proxy list extracted with function
-#' \code{\link{.modelextract}()}.
-#' 
-#' @return A vector of numeric values for random categorical terms. The order
-#' is: 1) cov a time 2, 2) cov a time 1, 3) cov b time 2, 4) cov b time 1,
-#' 5) cov c time 2, and 6) cov c time 1. Rows may vary, but must be the same
-#' length for each model.
-#' 
-#' @keywords internal
-#' @noRd
-NULL
-
-#' Create Concatenated Vector of Random Individual Covariate Term Names
-#' 
-#' Function \code{bootson()} creates a concatenated string vector holding all
-#' covariate term names.
-#' 
-#' @name bootson
-#' 
-#' @param modelproxy A model proxy list extracted with function
-#' \code{\link{.modelextract}()}.
-#' 
-#' @return A vector holding all covariate name terms. The order is: 1) cov a
-#' time 2, 2) cov a time 1, 3) cov b time 2, 4) cov b time 1, 5) cov c time 2,
-#' and 6) cov c time 1. Note that the element order is the same as in function
-#' \code{\link{.flightoficarus}()}.
-#' 
-#' @keywords internal
-#' @noRd
-NULL
-
-#' Create Vector of Random Individual Covariate Terms for Zero-Inflated Models
-#' 
-#' Function \code{zero_flightoficarus()} creates vectors of random covariate
-#' terms from the binomial portion of a zero-inflated model.
-#' 
-#' @name zero_flightoficarus
-#' 
-#' @param modelproxy A model proxy list extracted with function
-#' \code{\link{.modelextract}()}.
-#' 
-#' @return A vector of numeric values for random categorical terms. The order
-#' is: 1) cov a time 2, 2) cov a time 1, 3) cov b time 2, 4) cov b time 1,
-#' 5) cov c time 2, and 6) cov c time 1. Rows may vary, but must be the same
-#' length for each model.
-#' 
-#' @keywords internal
-#' @noRd
-NULL
-
-#' Create Concatenated Vector of Random Individual Covariate Term Names from
-#' a Zero-Inflated Model
-#' 
-#' Function \code{zero_bootson()} creates a concatenated string vector holding
-#' all covariate term names from the binomial portion of a zero-inflated model.
-#' 
-#' @name zero_bootson
-#' 
-#' @param modelproxy A model proxy list extracted with function
-#' \code{\link{.modelextract}()}.
-#' 
-#' @return A vector holding all covariate name terms. The order is: 1) cov a
-#' time 2, 2) cov a time 1, 3) cov b time 2, 4) cov b time 1, 5) cov c time 2,
-#' and 6) cov c time 1. Note that the element order is the same as in function
-#' \code{\link{.zero_flightoficarus}()}.
-#' 
-#' @keywords internal
-#' @noRd
-NULL
-
-#' Create Index of Element Numbers for Random Individual Covariate Terms
-#' 
-#' Function \code{foi_index()} creates a matrix indexing the end points of
-#' each random individual covariate in the utilized vectors.
-#' 
-#' @name foi_index
-#' 
-#' @param surv_proxy Adult survival model proxy.
-#' @param obs_proxy Adult observation status model proxy.
-#' @param size_proxy Adult primary size model proxy.
-#' @param sizeb_proxy Adult secondary size model proxy.
-#' @param sizec_proxy Adult tertiary size model proxy.
-#' @param repst_proxy Adult reproductive status model proxy.
-#' @param fec_proxy Adult fecundity model proxy.
-#' @param jsurv_proxy Juvenile survival model proxy.
-#' @param jobs_proxy Juvenile observation status model proxy.
-#' @param jsize_proxy Juvenile primary size model proxy.
-#' @param jsizeb_proxy Juvenile secondary size model proxy.
-#' @param jsizec_proxy Juvenile tertiary size model proxy.
-#' @param jrepst_proxy Juvenile reproductive status model proxy.
-#' @param jmatst_proxy Juvenile maturity status model proxy.
-#' 
-#' @return An integer matrix with 6 rows and 20 columns. The columns contain
-#' the number of elements in each random individual covariate term, with the
-#' row order being: 1) cov a t2, 2) cov a t1, 3) cov b t2, 4) cov b t1,
-#' 5) cov c t2, and 6) cov c t1.
-#' 
-#' @keywords internal
-#' @noRd
-NULL
-
-#' Estimate Value for Vital Rate Based on Inputs
-#' 
-#' Function \code{preouterator()} calculates the value of the vital rate called
-#' for by the function \code{jerzeibalowski()}..
-#' 
-#' @name preouterator
-#' 
-#' @param modelproxy A model_proxy object derived from function
-#' \code{modelextract()}.
-#' @param maincoefs The coefficients portion of the vital rate model proxy.
-#' @param randindex An integer matrix indexing all random covariates for all
-#' vital rates.
-#' @param dev_terms A numeric vector containing the deviations to the linear
-#' models input by the user. The order is: survival, observation status, size,
-#' size_b, size_c, reproductive status, fecundity, juvenile survival, juvenile
-#' observation status, juvenile size, juvenile size_b, juvenile size_c,
-#' and juvenile reproductive status.
-#' @param vitalyear A matrix with year coefficients for all vital rates.
-#' @param vitalpatch A matrix with patch coefficients for all vital rates.
-#' @param chosen_r2inda A string identifying random covariate a in time t.
-#' @param chosen_r1inda A string identifying random covariate a in time t-1.
-#' @param chosen_r2indb A string identifying random covariate b in time t.
-#' @param chosen_r1indb A string identifying random covariate b in time t-1.
-#' @param chosen_r2indc A string identifying random covariate c in time t.
-#' @param chosen_r1indc A string identifying random covariate c in time t-1.
-#' @param status_terms A NumericVector containing, in order: fl1_i, fl2n_i,
-#' sz1_i, sz2o_i, szb1_i, szb2o_i, szc1_i, szc2o_i, aage2_i, inda_1, inda_2,
-#' indb_1, indb_2, indc_1, indc_2, used_dens, sz3_i, szb3_i, szc3_i,
-#' binwidth3_i, binbwidth3_i, and bincwidth3_i.
-#' @param modelgroups2 A vector of group slope coefficients for time t.
-#' @param modelgroups1 A vector of group slope coefficients for time t-1.
-#' @param modelgroups2zi A vector of zero-inflation model group slope
-#' coefficients for time t.
-#' @param modelgroups1zi A vector of zero-inflation model group slope
-#' coefficients for time t-1.
-#' @param modelyearzi A vector of zero-inflation model time slope coefficients.
-#' @param modelpatchzi A vector of zero-inflation model patch slope coefficients.
-#' @param modelind A vector of individual covariate slope coefficients.
-#' @param modelind_rownames A string vector with the names of the individual
-#' covariate coefficients.
-#' @param modelindzi A vector of individual covariate slope coefficients.
-#' @param modelind_rownames_zi A string vector with the names of the individual
-#' covariate coefficients.
-#' @param zi A logical value indicating whether model coefficients refer to the
-#' zero inflation portion of a model.
-#' @param sigma The sigma term in the \code{modelproxy} object.
-#' @param grp2o_i Stage group number in time \emph{t}.
-#' @param grp1_i Stage group number in time \emph{t}-1.
-#' @param patchnumber An integer index for pop-patch.
-#' @param yearnumber An integer index for monitoring occasion in time \emph{t}.
-#' @param vitaldist A parameter specifying the distribution of the vital rate.
-#' Current options are: Poisson (0), negative binomial (1), Gaussian (2),
-#' Gamma (3), and binomial (4).
-#' @param vitalrate An integer specifying the vital rate. 1 = surv, 2 = obs,
-#' 3 = size, 4 = sizeb, 5 = sizec, 6 = repst, 7 = fec, 8 = jsurv, 9 = jobs,
-#' 10 = jsize, 11 = jsizeb, 12 = jsizec, 13 = jrepst, 14 = jmatst.
-#' @param exp_tol A numeric value indicating the maximum limit for the
-#' \code{exp()} function to be used in vital rate calculations. Defaults to
-#' \code{700.0}.
-#' @param theta_tol A numeric value indicating a maximum value for theta in
-#' negative binomial probability density estimation. Defaults to
-#' \code{100000000.0}.
-#' @param ipm_cdf A logical value indicating whether to use the cumulative
-#' density function to estimate size transitions in continuous distributions
-#' (\code{true}), or the midpoint method (\code{false}).
-#' @param matrixformat An integer representing the style of matrix to develop.
-#' Options include Ehrlen-format hMPM (1), deVries-format hMPM (2), ahMPM (3),
-#' and age-by-stage MPM (4).
-#' @param fecmod A scalar multiplier for fecundity.
-#' @param repentry_i Rep entry value for time t+1.
-#' @param negfec A logical value denoting whether to change negative estimated
-#' fecundity to 0.
-#' @param stage2n_i Numeric index of stage in time t.
-#' @param nostages The total number of stages in the stageframe.
-#' @param modeltrunc An integer coding for zero-truncation status.
-#' 
-#' @return A class double numeric value for the vital rate being estimated.
-#' 
-#' @keywords internal
-#' @noRd
-NULL
-
-#' Creates Matrices of Year and Patch Terms in Leslie Models
-#' 
-#' Function \code{revelations_leslie()} creates a matrix holding either the
-#' year or patch coefficients from Leslie vital rate models. This reduces
-#' memory load in function \code{\link{motherbalowski}()}.
-#' 
-#' @name revelations_leslie
-#' 
-#' @param survproxy The proxy vital rate model covering survival from the main
-#' matrix estimator function.
-#' @param fecproxy The proxy vital rate model covering fecundity from the main
-#' matrix estimator function.
-#' 
-#' @return A matrix with 2 columns corresponding to the number of vital rates
-#' and number of columns equal to the number of year or patches.
-#' 
-#' @keywords internal
-#' @noRd
-NULL
-
-#' Create Index of Element Numbers for Random Individual Covariate Terms in
-#' Leslie Models
-#' 
-#' Function \code{foi_index_leslie()} creates a matrix indexing the end points
-#' of each random individual covariate in the utilized vectors. Used in
-#' function \code{\link{motherbalowski}()}.
-#' 
-#' @name foi_index_leslie
-#' 
-#' @param surv_proxy Adult survival model proxy.
-#' @param fec_proxy Adult fecundity model proxy.
-#' 
-#' @return An integer matrix with 6 rows and 3 columns. The columns contain the
-#' number of elements in each random individual covariate term, with the row
-#' order being: 1) cov a t2, 2) cov a t1, 3) cov b t2, 4) cov b t1,
-#' 5) cov c t2, and 6) cov c t1.
 #' 
 #' @keywords internal
 #' @noRd
@@ -2001,61 +1578,506 @@ NULL
 #' @noRd
 NULL
 
-#' Append NumericVector to the End of Another NumericVector
+#' Creates Matrices of Year and Patch Terms in Models
 #' 
-#' This function appends one NumericVector fully to another.
+#' Function \code{revelations()} creates a matrix holding either the year or
+#' patch coefficients from all vital rate models. This reduces memory load in
+#' functions \code{\link{jerzeibalowski}()}, which may be important in some
+#' systems or compilers.
 #' 
-#' @name .concat_dbl
+#' @name revelations
 #' 
-#' @param A Any NumericVector.
-#' @param B Any other NumericVector.
+#' @param survproxy The proxy vital rate model covering survival from the main
+#' matrix estimator function.
+#' @param obsproxy The proxy vital rate model covering observation status from
+#' the main matrix estimator function.
+#' @param sizeproxy The proxy vital rate model covering primary size from the
+#' main matrix estimator function.
+#' @param sizebproxy The proxy vital rate model covering secondary size from
+#' the main matrix estimator function.
+#' @param sizecproxy The proxy vital rate model covering tertiary size from the
+#' main matrix estimator function.
+#' @param repstproxy The proxy vital rate model covering reproductive status
+#' from the main matrix estimator function.
+#' @param fecproxy The proxy vital rate model covering fecundity from the main
+#' matrix estimator function.
+#' @param jsurvproxy The proxy vital rate model covering juvenile survival from
+#' the main matrix estimator function.
+#' @param jobsproxy The proxy vital rate model covering juvenile observation
+#' status from the main matrix estimator function.
+#' @param jsizeproxy The proxy vital rate model covering juvenile primary size
+#' from the main matrix estimator function.
+#' @param jsizebproxy The proxy vital rate model covering juvenile secondary
+#' size from the main matrix estimator function.
+#' @param jsizecproxy The proxy vital rate model covering juvenile tertiary
+#' size from the main matrix estimator function.
+#' @param jrepstproxy The proxy vital rate model covering juvenile reproductive
+#' status from the main matrix estimator function.
+#' @param jmatstproxy The proxy vital rate model covering juvenile probability
+#' of becoming mature from the main matrix estimator function.
+#' @param mat_switch An integer coding for year (\code{1}) or patch (\code{2}).
 #' 
-#' @return Returns a new NumericVector with elements of vector A followed by
-#' elements of vector B.
+#' @return A matrix with 14 columns corresponding to the number of vital rates
+#' and number of columns equal to the number of year or patches.
+#' 
+#' @keywords internal
+#' @noRd
+NULL
+
+#' Creates a Summation of Most Terms Needed in Vital Rate Calculation
+#' 
+#' Function \code{rimeotam()} provides the majority of the work in creating
+#' the linear model sum to be used in vital rate estimation in the MPM. Works
+#' specifically with functions \code{\link{jerzeibalowski}()} and
+#' \code{\link{motherbalowski}()}.
+#' 
+#' @name rimeotam
+#' 
+#' @param maincoefs The coefficients portion of the vital rate model proxy.
+#' @param fl1_i Reproductive status in time \emph{t}*-1.
+#' @param fl2n_i Reproductive status in time \emph{t}.
+#' @param sz1_i Primary size in time \emph{t}-1.
+#' @param sz2o_i Primary size in time \emph{t}.
+#' @param szb1_i Secondary size in time \emph{t}-1.
+#' @param szb2o_i Secondary size in time \emph{t}.
+#' @param szc1_i Tertiary size in time \emph{t}-1.
+#' @param szc2o_i Tertiary size in time \emph{t}.
+#' @param aage2_i Used age in time \emph{t}.
+#' @param inda_1 Value of numeric individual covariate a in time \emph{t}-1.
+#' @param inda_2 Value of numeric individual covariate a in time \emph{t}.
+#' @param indb_1 Value of numeric individual covariate b in time \emph{t}-1.
+#' @param indb_2 Value of numeric individual covariate b in time \emph{t}.
+#' @param indc_1 Value of numeric individual covariate c in time \emph{t}-1.
+#' @param indc_2 Value of numeric individual covariate c in time \emph{t}.
+#' @param used_dens Density value used.
+#' @param zi A logical value indicating whether model coefficients refer to the
+#' zero inflation portion of a model.
+#' 
+#' @return A single numeric value giving the sum of the products of the linear
+#' coefficients and the used status values.
+#' 
+#' @keywords internal
+#' @noRd
+NULL
+
+#' Counts Numbers of Elements in Each Random Individual Covariate Portion of
+#' Model
+#' 
+#' Function \code{foi_counter()} counts the number of elements in each random
+#' individual covariate and returns that as a vector.
+#' 
+#' @name foi_counter
+#' 
+#' @param modelproxy A list holding the contents of a model processed with
+#' function \code{\link{.modelextract}()}
+#' @param zi A logical value indicating whether to focus on the zero-inflation
+#' parameters.
+#' 
+#' @return A 6 element vector holding the numbers of elements in each random
+#' individual covariate in a model (either the cont portion or the zi portion).
+#' 
+#' @keywords internal
+#' @noRd
+NULL
+
+#' Create Vector of Random Individual Covariate Terms
+#' 
+#' Function \code{flightoficarus()} creates vectors of random covariate
+#' terms.
+#' 
+#' @name flightoficarus
+#' 
+#' @param modelproxy A model proxy list extracted with function
+#' \code{\link{.modelextract}()}.
+#' 
+#' @return A vector of numeric values for random categorical terms. The order
+#' is: 1) cov a time 2, 2) cov a time 1, 3) cov b time 2, 4) cov b time 1,
+#' 5) cov c time 2, and 6) cov c time 1. Rows may vary, but must be the same
+#' length for each model.
+#' 
+#' @keywords internal
+#' @noRd
+NULL
+
+#' Create Concatenated Vector of Random Individual Covariate Term Names
+#' 
+#' Function \code{bootson()} creates a concatenated string vector holding all
+#' covariate term names.
+#' 
+#' @name bootson
+#' 
+#' @param modelproxy A model proxy list extracted with function
+#' \code{\link{.modelextract}()}.
+#' 
+#' @return A vector holding all covariate name terms. The order is: 1) cov a
+#' time 2, 2) cov a time 1, 3) cov b time 2, 4) cov b time 1, 5) cov c time 2,
+#' and 6) cov c time 1. Note that the element order is the same as in function
+#' \code{\link{.flightoficarus}()}.
+#' 
+#' @keywords internal
+#' @noRd
+NULL
+
+#' Create Vector of Random Individual Covariate Terms for Zero-Inflated Models
+#' 
+#' Function \code{zero_flightoficarus()} creates vectors of random covariate
+#' terms from the binomial portion of a zero-inflated model.
+#' 
+#' @name zero_flightoficarus
+#' 
+#' @param modelproxy A model proxy list extracted with function
+#' \code{\link{.modelextract}()}.
+#' 
+#' @return A vector of numeric values for random categorical terms. The order
+#' is: 1) cov a time 2, 2) cov a time 1, 3) cov b time 2, 4) cov b time 1,
+#' 5) cov c time 2, and 6) cov c time 1. Rows may vary, but must be the same
+#' length for each model.
+#' 
+#' @keywords internal
+#' @noRd
+NULL
+
+#' Create Concatenated Vector of Random Individual Covariate Term Names from
+#' a Zero-Inflated Model
+#' 
+#' Function \code{zero_bootson()} creates a concatenated string vector holding
+#' all covariate term names from the binomial portion of a zero-inflated model.
+#' 
+#' @name zero_bootson
+#' 
+#' @param modelproxy A model proxy list extracted with function
+#' \code{\link{.modelextract}()}.
+#' 
+#' @return A vector holding all covariate name terms. The order is: 1) cov a
+#' time 2, 2) cov a time 1, 3) cov b time 2, 4) cov b time 1, 5) cov c time 2,
+#' and 6) cov c time 1. Note that the element order is the same as in function
+#' \code{\link{.zero_flightoficarus}()}.
+#' 
+#' @keywords internal
+#' @noRd
+NULL
+
+#' Create Index of Element Numbers for Random Individual Covariate Terms
+#' 
+#' Function \code{foi_index()} creates a matrix indexing the end points of
+#' each random individual covariate in the utilized vectors.
+#' 
+#' @name foi_index
+#' 
+#' @param surv_proxy Adult survival model proxy.
+#' @param obs_proxy Adult observation status model proxy.
+#' @param size_proxy Adult primary size model proxy.
+#' @param sizeb_proxy Adult secondary size model proxy.
+#' @param sizec_proxy Adult tertiary size model proxy.
+#' @param repst_proxy Adult reproductive status model proxy.
+#' @param fec_proxy Adult fecundity model proxy.
+#' @param jsurv_proxy Juvenile survival model proxy.
+#' @param jobs_proxy Juvenile observation status model proxy.
+#' @param jsize_proxy Juvenile primary size model proxy.
+#' @param jsizeb_proxy Juvenile secondary size model proxy.
+#' @param jsizec_proxy Juvenile tertiary size model proxy.
+#' @param jrepst_proxy Juvenile reproductive status model proxy.
+#' @param jmatst_proxy Juvenile maturity status model proxy.
+#' 
+#' @return An integer matrix with 6 rows and 20 columns. The columns contain
+#' the number of elements in each random individual covariate term, with the
+#' row order being: 1) cov a t2, 2) cov a t1, 3) cov b t2, 4) cov b t1,
+#' 5) cov c t2, and 6) cov c t1.
+#' 
+#' @keywords internal
+#' @noRd
+NULL
+
+#' Creates Matrices of Year and Patch Terms in Leslie Models
+#' 
+#' Function \code{revelations_leslie()} creates a matrix holding either the
+#' year or patch coefficients from Leslie vital rate models. This reduces
+#' memory load in function \code{\link{motherbalowski}()}.
+#' 
+#' @name revelations_leslie
+#' 
+#' @param survproxy The proxy vital rate model covering survival from the main
+#' matrix estimator function.
+#' @param fecproxy The proxy vital rate model covering fecundity from the main
+#' matrix estimator function.
+#' 
+#' @return A matrix with 2 columns corresponding to the number of vital rates
+#' and number of columns equal to the number of year or patches.
+#' 
+#' @keywords internal
+#' @noRd
+NULL
+
+#' Create Index of Element Numbers for Random Individual Covariate Terms in
+#' Leslie Models
+#' 
+#' Function \code{foi_index_leslie()} creates a matrix indexing the end points
+#' of each random individual covariate in the utilized vectors. Used in
+#' function \code{\link{motherbalowski}()}.
+#' 
+#' @name foi_index_leslie
+#' 
+#' @param surv_proxy Adult survival model proxy.
+#' @param fec_proxy Adult fecundity model proxy.
+#' 
+#' @return An integer matrix with 6 rows and 3 columns. The columns contain the
+#' number of elements in each random individual covariate term, with the row
+#' order being: 1) cov a t2, 2) cov a t1, 3) cov b t2, 4) cov b t1,
+#' 5) cov c t2, and 6) cov c t1.
+#' 
+#' @keywords internal
+#' @noRd
+NULL
+
+#' Extract Coefficients From Linear Vital Rate Models
+#' 
+#' Function \code{modelextract()} extracts coefficient values from linear
+#' models estimated through various linear modeling functions in R, to estimate
+#' vital rates in \code{lefko3}. Used to supply coefficients to
+#' \code{\link{flefko3}()}, \code{\link{flefko2}()}, \code{\link{fleslie()}},
+#' and \code{\link{aflefko2}()}.
+#' 
+#' @name modelextract
+#' 
+#' @param object A linear model estimated through one of the methods used in
+#' function \code{\link{modelsearch}()}, or a \code{vrm_input} object.
+#' @param paramnames Data frame giving the names of standard coefficients
+#' required by matrix creation functions.
+#' @param mainyears A vector of the names of the monitoring occasions.
+#' @param mainpatches A vector of the names of the patches. Should be \code{NA}
+#' if no patches specified.
+#' @param maingroups A vector of the names of all stage groups.
+#' @param mainindcova A vector denoting values of individual covariate
+#' \code{a}, when that individual covariate is categorical.
+#' @param mainindcovb A vector denoting values of individual covariate
+#' \code{b}, when that individual covariate is categorical.
+#' @param mainindcovc A vector denoting values of individual covariate
+#' \code{c}, when that individual covariate is categorical.
+#' @param nodata A logical value used to determine whether to use
+#' \code{vrm_input} methods. Defaults to \code{FALSE}, in which case models
+#' were developed with function \code{modelsearch()}.
+#' 
+#' @return This function returns a list with the following elements:
+#' \item{coefficients}{Vector of fixed effect coefficients.}
+#' \item{years}{Vector of occasion coefficients, typically random.}
+#' \item{zeroyear}{Vector of zero-inflated occasion coefficients, typically
+#' random.}
+#' \item{patches}{Vector of patch coefficients, typically random.}
+#' \item{zeropatch}{Vector of zero-inflated patch coefficients, typically
+#' random.}
+#' \item{groups2}{Vector of group coefficients for time t.}
+#' \item{groups1}{Vector of group coefficients for time t-1.}
+#' \item{zerogroups2}{Vector of zero-inflated group coefficients for time t.}
+#' \item{zerogroups1}{Vector of zero-inflated group coefficients for time t-1.}
+#' \item{indcova2s}{Vector of individual covariate \code{a} values for time t.}
+#' \item{indcova1s}{Vector of individual covariate \code{a} values for time t-1.}
+#' \item{indcovb2s}{Vector of individual covariate \code{b} values for time t.}
+#' \item{indcovb1s}{Vector of individual covariate \code{b} values for time t-1.}
+#' \item{indcovc2s}{Vector of individual covariate \code{c} values for time t.}
+#' \item{indcovc1s}{Vector of individual covariate \code{c} values for time t-1.}
+#' \item{zeroindcova2s}{Vector of zero-inflated individual covariate \code{a}
+#' values for time t.}
+#' \item{zeroindcova1s}{Vector of zero-inflated individual covariate \code{a}
+#' values for time t-1.}
+#' \item{zeroindcovb2s}{Vector of zero-inflated individual covariate \code{b}
+#' values for time t.}
+#' \item{zeroindcovb1s}{Vector of zero-inflated individual covariate \code{b}
+#' values for time t-1.}
+#' \item{zeroindcovc2s}{Vector of zero-inflated individual covariate \code{c}
+#' values for time t.}
+#' \item{zeroindcovc1s}{Vector of zero-inflated individual covariate \code{c}
+#' values for time t-1.}
+#' \item{class}{The R class of the vital rate model.}
+#' \item{family}{The response distribution.}
+#' \item{dist}{An integer representing the response distribution. \code{0} = 
+#' poisson, \code{1} = negbin, \code{2} = gaussian, \code{3} = gamma, \code{4}
+#' = binomial, and \code{5} = constant.}
+#' \item{zero_inflated}{A logical value indicating whether the distribution is
+#' zero-inflated.}
+#' \item{zero_truncated}{A logical value indicating whether the distribution is
+#' zero-truncated.}
+#' \item{sigma}{The residual standard deviation of the model. Defaults to
+#' \code{1.0}. Equivalent output to package lme4's \code{sigma()} function.}
+#' \item{theta}{The scale parameter theta used in the negative binomial
+#' distribution. Defaults to \code{1.0}.}
+#' 
+#' @keywords internal
+#' @noRd
+NULL
+
+#' Full Eigen Analysis of a Single Dense Matrix
+#' 
+#' Function \code{decomp3()} returns all eigenvalues, right eigenvectors, and
+#' left eigenvectors estimated for a matrix by the \code{eig_gen}() function
+#' in the C++ Armadillo library. Works with dense matrices.
+#' 
+#' @name decomp3
+#' 
+#' @param Amat A population projection matrix of class \code{matrix}.
 #'
+#' @return This function returns all estimated eigenvalues, right
+#' eigenvectors, and left eigenvectors of a single matrix. This output is
+#' provided as a list with three parts, named appropriately.
+#' 
 #' @keywords internal
 #' @noRd
-.concat_dbl <- function(x, y) {
-    .Call('_lefko3_concat_dbl', PACKAGE = 'lefko3', x, y)
-}
+NULL
 
-#' Append IntegerVector to the End of Another IntegerVector
+#' Full Eigen Analysis of a Single Sparse Matrix
 #' 
-#' Returns a new IntegerVector with elements of vector A followed by
-#' elements of vector B.
+#' Function \code{decomp3sp()} returns all eigenvalues, right eigenvectors, and
+#' left eigenvectors estimated for a matrix by the \code{eigs_gen}() function
+#' in the C++ Armadillo library. Works with sparse matrices.
 #' 
-#' @name .concat_int
+#' @name decomp3sp
 #' 
-#' @param A Any IntegerVector.
-#' @param B Any other IntegerVector.
-#' 
-#' @return Returns a new IntegerVector with elements of vector A followed by
-#' elements of vector B.
+#' @param Amat A population projection matrix of class \code{matrix}.
+#'
+#' @return This function returns all estimated eigenvalues, right
+#' eigenvectors, and left eigenvectors of a single matrix. This output is
+#' provided as a list with three parts, named appropriately.
 #' 
 #' @keywords internal
 #' @noRd
-.concat_int <- function(x, y) {
-    .Call('_lefko3_concat_int', PACKAGE = 'lefko3', x, y)
-}
+NULL
 
-#' Append StringVector to the End of Another StringVector
+#' Full Eigen Analysis of a Single Sparse Matrix, with Sparse Input
 #' 
-#' Returns a new StringVector with elements of vector A followed by
-#' elements of vector B.
+#' \code{decomp3sp_inp()} returns all eigenvalues, right eigenvectors, and left
+#' eigenvectors estimated for a matrix by the \code{eigs_gen}() function
+#' in the C++ Armadillo library. Works with sparse matrices.
 #' 
-#' @name .concat_str
+#' @name decomp3sp_inp
 #' 
-#' @param A Any StringVector.
-#' @param B Any other StringVector.
+#' @param Amat A population projection matrix of class \code{matrix}.
+#'
+#' @return This function returns all estimated eigenvalues, right
+#' eigenvectors, and left eigenvectors of a single matrix. This output is
+#' provided as a list with three parts, named appropriately.
 #' 
-#' @return Returns a new StringVector with elements of vector A followed by
-#' elements of vector B.
+#' @section Notes:
+#' This function works slightly differently from function \code{decomp3sp()} in
+#' that the latter function requires a sparse matrix provided in dense format,
+#' while this function requires a sparse matrix in sparse format.
 #' 
 #' @keywords internal
 #' @noRd
-.concat_str <- function(x, y) {
-    .Call('_lefko3_concat_str', PACKAGE = 'lefko3', x, y)
-}
+NULL
+
+#' Re-index Projection Matrix On Basis of Overwrite Table
+#' 
+#' Function \code{ovreplace()} takes matrix indices provided by functions
+#' \code{\link{rlefko3}()}, \code{\link{rlefko2}()}, \code{\link{flefko3}()},
+#' \code{\link{flefko2}()}, and \code{\link{aflefko2}()} and updates them with
+#' information provided in the overwrite table used as input in that function.
+#' 
+#' @name ovreplace
+#' 
+#' @param allst321 Vector containing the original element-by-element matrix
+#' index.
+#' @param idx321old Vector containing the indices of matrix elements to be
+#' updated.
+#' @param idx321new Vector containing the replacement matrix element indices.
+#' @param convtype Vector denoting survival transition (1), fecundity (2), or
+#' fecundity multiplier (3).
+#' @param eststag3 Vector of new stages in time \emph{t}+1.
+#' @param gvnrate Vector of replacement transition values.
+#' @param multipl Vector of fecundity multipliers.
+#' 
+#' @return A matrix. Column 1 is the given rate for a survival transitions,
+#' Column 2 is the proxy transition to be used to estimate that transition.
+#' Column 3 is the given rate for a fecundity transitions. Column 4 is the
+#' proxy transition to be used to estimate that transition. Column 5 is a
+#' vector of fecundity multipliers, in cases where no given rate or proxy is to
+#' be used but fecundity is to be multiplied by some value. Column 6 is a
+#' vector of survival transition multipliers. Column 7 is a vector of fecundity
+#' transition multipliers.
+#' 
+#' @keywords internal
+#' @noRd
+NULL
+
+#' Estimate Value for Vital Rate Based on Inputs
+#' 
+#' Function \code{preouterator()} calculates the value of the vital rate called
+#' for by the function \code{jerzeibalowski()}..
+#' 
+#' @name preouterator
+#' 
+#' @param modelproxy A model_proxy object derived from function
+#' \code{modelextract()}.
+#' @param maincoefs The coefficients portion of the vital rate model proxy.
+#' @param randindex An integer matrix indexing all random covariates for all
+#' vital rates.
+#' @param dev_terms A numeric vector containing the deviations to the linear
+#' models input by the user. The order is: survival, observation status, size,
+#' size_b, size_c, reproductive status, fecundity, juvenile survival, juvenile
+#' observation status, juvenile size, juvenile size_b, juvenile size_c,
+#' and juvenile reproductive status.
+#' @param vitalyear A matrix with year coefficients for all vital rates.
+#' @param vitalpatch A matrix with patch coefficients for all vital rates.
+#' @param chosen_r2inda A string identifying random covariate a in time t.
+#' @param chosen_r1inda A string identifying random covariate a in time t-1.
+#' @param chosen_r2indb A string identifying random covariate b in time t.
+#' @param chosen_r1indb A string identifying random covariate b in time t-1.
+#' @param chosen_r2indc A string identifying random covariate c in time t.
+#' @param chosen_r1indc A string identifying random covariate c in time t-1.
+#' @param status_terms A NumericVector containing, in order: fl1_i, fl2n_i,
+#' sz1_i, sz2o_i, szb1_i, szb2o_i, szc1_i, szc2o_i, aage2_i, inda_1, inda_2,
+#' indb_1, indb_2, indc_1, indc_2, used_dens, sz3_i, szb3_i, szc3_i,
+#' binwidth3_i, binbwidth3_i, and bincwidth3_i.
+#' @param modelgroups2 A vector of group slope coefficients for time t.
+#' @param modelgroups1 A vector of group slope coefficients for time t-1.
+#' @param modelgroups2zi A vector of zero-inflation model group slope
+#' coefficients for time t.
+#' @param modelgroups1zi A vector of zero-inflation model group slope
+#' coefficients for time t-1.
+#' @param modelyearzi A vector of zero-inflation model time slope coefficients.
+#' @param modelpatchzi A vector of zero-inflation model patch slope coefficients.
+#' @param modelind A vector of individual covariate slope coefficients.
+#' @param modelind_rownames A string vector with the names of the individual
+#' covariate coefficients.
+#' @param modelindzi A vector of individual covariate slope coefficients.
+#' @param modelind_rownames_zi A string vector with the names of the individual
+#' covariate coefficients.
+#' @param zi A logical value indicating whether model coefficients refer to the
+#' zero inflation portion of a model.
+#' @param sigma The sigma term in the \code{modelproxy} object.
+#' @param grp2o_i Stage group number in time \emph{t}.
+#' @param grp1_i Stage group number in time \emph{t}-1.
+#' @param patchnumber An integer index for pop-patch.
+#' @param yearnumber An integer index for monitoring occasion in time \emph{t}.
+#' @param vitaldist A parameter specifying the distribution of the vital rate.
+#' Current options are: Poisson (0), negative binomial (1), Gaussian (2),
+#' Gamma (3), and binomial (4).
+#' @param vitalrate An integer specifying the vital rate. 1 = surv, 2 = obs,
+#' 3 = size, 4 = sizeb, 5 = sizec, 6 = repst, 7 = fec, 8 = jsurv, 9 = jobs,
+#' 10 = jsize, 11 = jsizeb, 12 = jsizec, 13 = jrepst, 14 = jmatst.
+#' @param exp_tol A numeric value indicating the maximum limit for the
+#' \code{exp()} function to be used in vital rate calculations. Defaults to
+#' \code{700.0}.
+#' @param theta_tol A numeric value indicating a maximum value for theta in
+#' negative binomial probability density estimation. Defaults to
+#' \code{100000000.0}.
+#' @param ipm_cdf A logical value indicating whether to use the cumulative
+#' density function to estimate size transitions in continuous distributions
+#' (\code{true}), or the midpoint method (\code{false}).
+#' @param matrixformat An integer representing the style of matrix to develop.
+#' Options include Ehrlen-format hMPM (1), deVries-format hMPM (2), ahMPM (3),
+#' and age-by-stage MPM (4).
+#' @param fecmod A scalar multiplier for fecundity.
+#' @param repentry_i Rep entry value for time t+1.
+#' @param negfec A logical value denoting whether to change negative estimated
+#' fecundity to 0.
+#' @param stage2n_i Numeric index of stage in time t.
+#' @param nostages The total number of stages in the stageframe.
+#' @param modeltrunc An integer coding for zero-truncation status.
+#' 
+#' @return A class double numeric value for the vital rate being estimated.
+#' 
+#' @keywords internal
+#' @noRd
+NULL
 
 #' Create Stageframe for Population Matrix Projection Analysis
 #' 
@@ -2771,11 +2793,11 @@ sf_create <- function(sizes, stagenames = NULL, sizesb = NULL, sizesc = NULL, re
 
 #' Estimate All Elements of Function-based Population Projection Sparse Matrix
 #' 
-#' Function \code{jerzeibalowsk_sp()} swiftly calculates matrix elements in
+#' Function \code{jerzeibalowski_sp()} swiftly calculates matrix elements in
 #' function-based population projection matrices. Used in
 #' \code{f_projection3()}.
 #' 
-#' @name .jerzeibalowsk_sp
+#' @name .jerzeibalowski_sp
 #' 
 #' @param ppy A data frame showing the population, patch, and year of each
 #' matrix to create, in order.
@@ -2927,8 +2949,10 @@ sf_create <- function(sizes, stagenames = NULL, sizesb = NULL, sizesc = NULL, re
 #' @name .thefifthhousemate
 #' 
 #' @param mpm The original ahMPM, supplied as a \code{lefkoMat} object.
-#' @param allstages The index dataframe developed by
-#' \code{\link{.simplepizzle}()}.
+#' @param allstages The index dataframe named \code{allstages}, in the third
+#' element of output developed by \code{\link{.simplepizzle}()}.
+#' @param hstages The index dataframe named \code{hstages}, in the second
+#' element of output developed by \code{\link{.simplepizzle}()}.
 #' @param stageframe The ahistorical stageframe supplied by
 #' \code{\link{.simplepizzle}()}.
 #' @param format Integer indicating whether historical matrices should be in
@@ -2940,8 +2964,8 @@ sf_create <- function(sizes, stagenames = NULL, sizesb = NULL, sizesc = NULL, re
 #' 
 #' @keywords internal
 #' @noRd
-.thefifthhousemate <- function(mpm, allstages, stageframe, format) {
-    .Call('_lefko3_thefifthhousemate', PACKAGE = 'lefko3', mpm, allstages, stageframe, format)
+.thefifthhousemate <- function(mpm, allstages, hstages, stageframe, imp_allowed, format) {
+    .Call('_lefko3_thefifthhousemate', PACKAGE = 'lefko3', mpm, allstages, hstages, stageframe, imp_allowed, format)
 }
 
 #' Estimate All Elements of Function-based Population Projection Matrix
@@ -3037,84 +3061,6 @@ sf_create <- function(sizes, stagenames = NULL, sizesb = NULL, sizesc = NULL, re
 #' @noRd
 .motherbalowski <- function(actualages, ageframe, survproxy, fecproxy, f2_inda, f1_inda, f2_indb, f1_indb, f2_indc, f1_indc, r2_inda, r1_inda, r2_indb, r1_indb, r2_indc, r1_indc, surv_dev, fec_dev, dens, fecmod, finalage, negfec, yearnumber, patchnumber, dens_vr, dvr_yn, dvr_style, dvr_alpha, dvr_beta, dens_n, exp_tol = 700.0, theta_tol = 100000000.0, simplicity = FALSE) {
     .Call('_lefko3_motherbalowski', PACKAGE = 'lefko3', actualages, ageframe, survproxy, fecproxy, f2_inda, f1_inda, f2_indb, f1_indb, f2_indc, f1_indc, r2_inda, r1_inda, r2_indb, r1_indb, r2_indc, r1_indc, surv_dev, fec_dev, dens, fecmod, finalage, negfec, yearnumber, patchnumber, dens_vr, dvr_yn, dvr_style, dvr_alpha, dvr_beta, dens_n, exp_tol, theta_tol, simplicity)
-}
-
-#' Extract Coefficients From Linear Vital Rate Models
-#' 
-#' Function \code{.modelextract()} extracts coefficient values from linear
-#' models estimated through various linear modeling functions in R, to estimate
-#' vital rates in \code{lefko3}. Used to supply coefficients to
-#' \code{\link{flefko3}()}, \code{\link{flefko2}()}, \code{\link{fleslie()}},
-#' and \code{\link{aflefko2}()}.
-#' 
-#' @name .modelextract
-#' 
-#' @param object A linear model estimated through one of the methods used in
-#' function \code{\link{modelsearch}()}, or a \code{vrm_input} object.
-#' @param paramnames Data frame giving the names of standard coefficients
-#' required by matrix creation functions.
-#' @param mainyears A vector of the names of the monitoring occasions.
-#' @param mainpatches A vector of the names of the patches. Should be \code{NA}
-#' if no patches specified.
-#' @param maingroups A vector of the names of all stage groups.
-#' @param mainindcova A vector denoting values of individual covariate
-#' \code{a}, when that individual covariate is categorical.
-#' @param mainindcovb A vector denoting values of individual covariate
-#' \code{b}, when that individual covariate is categorical.
-#' @param mainindcovc A vector denoting values of individual covariate
-#' \code{c}, when that individual covariate is categorical.
-#' @param nodata A logical value used to determine whether to use
-#' \code{vrm_input} methods. Defaults to \code{FALSE}, in which case models
-#' were developed with function \code{modelsearch()}.
-#' 
-#' @return This function returns a list with the following elements:
-#' \item{coefficients}{Vector of fixed effect coefficients.}
-#' \item{years}{Vector of occasion coefficients, typically random.}
-#' \item{zeroyear}{Vector of zero-inflated occasion coefficients, typically
-#' random.}
-#' \item{patches}{Vector of patch coefficients, typically random.}
-#' \item{zeropatch}{Vector of zero-inflated patch coefficients, typically
-#' random.}
-#' \item{groups2}{Vector of group coefficients for time t.}
-#' \item{groups1}{Vector of group coefficients for time t-1.}
-#' \item{zerogroups2}{Vector of zero-inflated group coefficients for time t.}
-#' \item{zerogroups1}{Vector of zero-inflated group coefficients for time t-1.}
-#' \item{indcova2s}{Vector of individual covariate \code{a} values for time t.}
-#' \item{indcova1s}{Vector of individual covariate \code{a} values for time t-1.}
-#' \item{indcovb2s}{Vector of individual covariate \code{b} values for time t.}
-#' \item{indcovb1s}{Vector of individual covariate \code{b} values for time t-1.}
-#' \item{indcovc2s}{Vector of individual covariate \code{c} values for time t.}
-#' \item{indcovc1s}{Vector of individual covariate \code{c} values for time t-1.}
-#' \item{zeroindcova2s}{Vector of zero-inflated individual covariate \code{a}
-#' values for time t.}
-#' \item{zeroindcova1s}{Vector of zero-inflated individual covariate \code{a}
-#' values for time t-1.}
-#' \item{zeroindcovb2s}{Vector of zero-inflated individual covariate \code{b}
-#' values for time t.}
-#' \item{zeroindcovb1s}{Vector of zero-inflated individual covariate \code{b}
-#' values for time t-1.}
-#' \item{zeroindcovc2s}{Vector of zero-inflated individual covariate \code{c}
-#' values for time t.}
-#' \item{zeroindcovc1s}{Vector of zero-inflated individual covariate \code{c}
-#' values for time t-1.}
-#' \item{class}{The R class of the vital rate model.}
-#' \item{family}{The response distribution.}
-#' \item{dist}{An integer representing the response distribution. \code{0} = 
-#' poisson, \code{1} = negbin, \code{2} = gaussian, \code{3} = gamma, \code{4}
-#' = binomial, and \code{5} = constant.}
-#' \item{zero_inflated}{A logical value indicating whether the distribution is
-#' zero-inflated.}
-#' \item{zero_truncated}{A logical value indicating whether the distribution is
-#' zero-truncated.}
-#' \item{sigma}{The residual standard deviation of the model. Defaults to
-#' \code{1.0}. Equivalent output to package lme4's \code{sigma()} function.}
-#' \item{theta}{The scale parameter theta used in the negative binomial
-#' distribution. Defaults to \code{1.0}.}
-#' 
-#' @keywords internal
-#' @noRd
-.modelextract <- function(object, paramnames, mainyears, mainpatches, maingroups, mainindcova, mainindcovb, mainindcovc, nodata = FALSE) {
-    .Call('_lefko3_modelextract', PACKAGE = 'lefko3', object, paramnames, mainyears, mainpatches, maingroups, mainindcova, mainindcovb, mainindcovc, nodata)
 }
 
 #' Key Function Passing Models and Other Parameters to Matrix Estimators
@@ -3652,6 +3598,16 @@ sf_create <- function(sizes, stagenames = NULL, sizesb = NULL, sizesc = NULL, re
 #' which spatial density is included as a fixed factor in the associated
 #' vital rate model.
 #' 
+#' When running density dependent simulations involving user-set exponents,
+#' such as the beta term in the Ricker function and both the alpha and beta
+#' terms in the Usher function, values above or below the computer limits may
+#' cause unpredictable behavior. Noted odd behavior includes sudden shifts in
+#' population size to negative values. This function produces warnings when
+#' such values are used, and the values used for warnings may be reset with the
+#' \code{exp_tol} term. In addition, this function resets beta values for the
+#' Ricker function automatically to positive or negative \code{exp_tol}, giving
+#' a warning when doing so.
+#' 
 #' Consistently positive population growth can quickly lead to population size
 #' numbers larger than can be handled computationally. In that circumstance, a
 #' continuously rising population size will suddenly become \code{NaN} for the
@@ -3807,93 +3763,6 @@ f_projection3 <- function(format, prebreeding = TRUE, start_age = NA_integer_, l
 #' @noRd
 .geodiesel <- function(loy, Umats, Fmats, agestages, stages, patchmats, popmats) {
     .Call('_lefko3_geodiesel', PACKAGE = 'lefko3', loy, Umats, Fmats, agestages, stages, patchmats, popmats)
-}
-
-#' Full Eigen Analysis of a Single Dense Matrix
-#' 
-#' Function \code{decomp3()} returns all eigenvalues, right eigenvectors, and
-#' left eigenvectors estimated for a matrix by the \code{eig_gen}() function
-#' in the C++ Armadillo library. Works with dense matrices.
-#' 
-#' @name .decomp3
-#' 
-#' @param Amat A population projection matrix of class \code{matrix}.
-#'
-#' @return This function returns all estimated eigenvalues, right
-#' eigenvectors, and left eigenvectors of a single matrix. This output is
-#' provided as a list with three parts, named appropriately.
-#' 
-#' @keywords internal
-#' @noRd
-.decomp3 <- function(Amat) {
-    .Call('_lefko3_decomp3', PACKAGE = 'lefko3', Amat)
-}
-
-#' Full Eigen Analysis of a Single Sparse Matrix
-#' 
-#' Function \code{decomp3sp()} returns all eigenvalues, right eigenvectors, and
-#' left eigenvectors estimated for a matrix by the \code{eigs_gen}() function
-#' in the C++ Armadillo library. Works with sparse matrices.
-#' 
-#' @name .decomp3sp
-#' 
-#' @param Amat A population projection matrix of class \code{matrix}.
-#'
-#' @return This function returns all estimated eigenvalues, right
-#' eigenvectors, and left eigenvectors of a single matrix. This output is
-#' provided as a list with three parts, named appropriately.
-#' 
-#' @keywords internal
-#' @noRd
-.decomp3sp <- function(Amat) {
-    .Call('_lefko3_decomp3sp', PACKAGE = 'lefko3', Amat)
-}
-
-#' Full Eigen Analysis of a Single Sparse Matrix, with Sparse Input
-#' 
-#' \code{decomp3sp_inp()} returns all eigenvalues, right eigenvectors, and left
-#' eigenvectors estimated for a matrix by the \code{eigs_gen}() function
-#' in the C++ Armadillo library. Works with sparse matrices.
-#' 
-#' @name .decomp3sp_inp
-#' 
-#' @param Amat A population projection matrix of class \code{matrix}.
-#'
-#' @return This function returns all estimated eigenvalues, right
-#' eigenvectors, and left eigenvectors of a single matrix. This output is
-#' provided as a list with three parts, named appropriately.
-#' 
-#' @section Notes:
-#' This function works slightly differently from function \code{decomp3sp()} in
-#' that the latter function requires a sparse matrix provided in dense format,
-#' while this function requires a sparse matrix in sparse format.
-#' 
-#' @keywords internal
-#' @noRd
-.decomp3sp_inp <- function(spAmat) {
-    .Call('_lefko3_decomp3sp_inp', PACKAGE = 'lefko3', spAmat)
-}
-
-#' Estimate Deterministic Population Growth Rate of Any Matrix
-#' 
-#' \code{lambda3matrix()} returns the dominant eigenvalue of a single
-#' dense or sparse projection matrix, provided in dense matrix format.
-#' 
-#' @name .lambda3matrix
-#' 
-#' @param Amat A population projection matrix of class \code{matrix}.
-#' @param sparse A logical value indicating whether to use sparse matrix
-#' format.
-#'
-#' @return This function returns the dominant eigenvalue of the matrix. This
-#' is given as the largest real part of all eigenvalues estimated via the 
-#' \code{eig_gen}() and \code{eigs_gen}() functions in the C++ Armadillo
-#' library.
-#' 
-#' @keywords internal
-#' @noRd
-.lambda3matrix <- function(Amat, sparse) {
-    .Call('_lefko3_lambda3matrix', PACKAGE = 'lefko3', Amat, sparse)
 }
 
 #' Estimate Stable Stage Distribution of Any Population Matrix
@@ -4231,6 +4100,9 @@ f_projection3 <- function(format, prebreeding = TRUE, start_age = NA_integer_, l
 #' and forces fecundity to be non-negative; and \code{2} forces all column rows
 #' in the survival-transition matrices to total no more than 1.0, in addition
 #' to the actions outlined for option \code{1}.
+#' @param exp_tol A numeric value used to indicate a maximum value to set
+#' exponents to in the core kernel to prevent numerical overflow. Defaults to
+#' \code{700}.
 #' @param sub_warnings A logical value indicating whether to warn the user if
 #' density dependence yields matrix values outside of the realm of possibility.
 #' Generally, this means that survival-transition elements altered to values
@@ -4322,6 +4194,14 @@ f_projection3 <- function(format, prebreeding = TRUE, start_age = NA_integer_, l
 #' \code{density} is input. If this object is not included, then density
 #' independent projections will be set up. Note that currently, density
 #' dependent projections can only be performed with \code{lefkoMat} objects.
+#' 
+#' When running density dependent simulations involving user-set exponents,
+#' such as the beta term in the Ricker function and both the alpha and beta
+#' terms in the Usher function, values above or below the computer limits may
+#' cause unpredictable behavior. Noted odd behavior includes sudden shifts in
+#' population size to negative values. This function produces warnings when
+#' such values are used, and the values used for warnings may be reset with the
+#' \code{exp_tol} term.
 #' 
 #' The stage distributions and reproductive values produced are not the
 #' asymptotic values as would be given by the standardized right and left
@@ -4440,8 +4320,8 @@ f_projection3 <- function(format, prebreeding = TRUE, start_age = NA_integer_, l
 #' cypstoch <- projection3(cypmatrix3r, nreps = 5, stochastic = TRUE)
 #' 
 #' @export projection3
-projection3 <- function(mpm, nreps = 1L, times = 10000L, historical = FALSE, stochastic = FALSE, standardize = FALSE, growthonly = TRUE, integeronly = FALSE, substoch = 0L, sub_warnings = TRUE, quiet = FALSE, year = NULL, start_vec = NULL, start_frame = NULL, tweights = NULL, density = NULL) {
-    .Call('_lefko3_projection3', PACKAGE = 'lefko3', mpm, nreps, times, historical, stochastic, standardize, growthonly, integeronly, substoch, sub_warnings, quiet, year, start_vec, start_frame, tweights, density)
+projection3 <- function(mpm, nreps = 1L, times = 10000L, historical = FALSE, stochastic = FALSE, standardize = FALSE, growthonly = TRUE, integeronly = FALSE, substoch = 0L, exp_tol = 700.0, sub_warnings = TRUE, quiet = FALSE, year = NULL, start_vec = NULL, start_frame = NULL, tweights = NULL, density = NULL) {
+    .Call('_lefko3_projection3', PACKAGE = 'lefko3', mpm, nreps, times, historical, stochastic, standardize, growthonly, integeronly, substoch, exp_tol, sub_warnings, quiet, year, start_vec, start_frame, tweights, density)
 }
 
 #' Estimate Stochastic Population Growth Rate
@@ -4811,5 +4691,362 @@ slambda3 <- function(mpm, times = 10000L, historical = FALSE, dense_only = FALSE
 #' @noRd
 .sltre3matrix <- function(Amats, loy, refnum, refmats_ = NULL, tweights_ = NULL, steps = 10000L, burnin = 3000L, sparse = FALSE) {
     .Call('_lefko3_sltre3matrix', PACKAGE = 'lefko3', Amats, loy, refnum, refmats_, tweights_, steps, burnin, sparse)
+}
+
+#' Main Formula Creation for Function \code{modelsearch()}
+#'
+#' Function \code{.stovokor()} creates formulae to be used as input in the
+#' global model calls used in function \code{\link{modelsearch}()}.
+#' 
+#' @name .stovokor
+#' 
+#' @param surv A vector of strings indicating the names of the variables coding
+#' survival.
+#' @param obs A vector of strings indicating the names of the variables coding
+#' observation status.
+#' @param size A vector of strings indicating the names of the variables coding
+#' primary size.
+#' @param sizeb A vector of strings indicating the names of the variables
+#' coding secondary size.
+#' @param sizec A vector of strings indicating the names of the variables
+#' coding tertiary size.
+#' @param repst A vector of strings indicating the names of the variables
+#' coding reproductive status.
+#' @param fec A vector of strings indicating the names of the variables coding
+#' fecundity.
+#' @param matstat A vector of strings indicating the names of the variables
+#' coding for maturity status.
+#' @param vitalrates A vector of strings indicating which vital rates will be
+#' estimated.
+#' @param historical A logical value indicating whether to create global models
+#' with historical effects.
+#' @param suite A string indicating the scope of independent factors included
+#' in the global models. Options include \code{"full"}, \code{"main"},
+#' \code{"size"}, \code{"rep"}, and \code{"const"}.
+#' @param approach A string indicating whether to use mixed model encoding 
+#' (\code{"mixed"}) or GLM encoding (\code{"glm"}).
+#' @param nojuvs A logical value indicating that juvenile rates should be
+#' estimated (\code{FALSE}) or not (\code{TRUE}).
+#' @param age A string indicating the name of the variable coding age.
+#' @param indcova A vector of strings indicating the names in times \emph{t}+1,
+#' \emph{t}, and \emph{t}-1 of a specific individual covariate used in the
+#' dataset.
+#' @param indcovb A vector of strings indicating the names in times \emph{t}+1,
+#' \emph{t}, and \emph{t}-1 of a specific individual covariate used in the
+#' dataset.
+#' @param indcovc A vector of strings indicating the names in times \emph{t}+1,
+#' \emph{t}, and \emph{t}-1 of a specific individual covariate used in the
+#' dataset.
+#' @param indiv A string indicating the name of the variable coding individual
+#' identity.
+#' @param patch A string indicating the name of the variable coding patch
+#' identity.
+#' @param year A string indicating the name of the variable coding time
+#' \emph{t}.
+#' @param pasrand A logical value indicating whether to treat patch as a random
+#' variable within mixed models.
+#' @param yasrand A logical value indicating whether to treat year as a random
+#' variable within mixed models.
+#' @param iaasrand A logical value indicating whether to treat indcova as
+#' random.
+#' @param ibasrand A logical value indicating whether to treat indcovb as
+#' random.
+#' @param icasrand A logical value indicating whether to treat indcovc as
+#' random.
+#' @param fectime An integer indicating whether to use reproductive output in
+#' time \emph{t} (2) or time \emph{t}+1 (3) as the response for fecundity.
+#' @param juvsize A logical value indicating whether to include size terms in
+#' juvenile models.
+#' @param sizebused A logical value denoting if secondary size variables are to
+#' be used.
+#' @param sizecused A logical value denoting if tertiary size variables are to
+#' be used.
+#' @param grouptest A logical value indicating whether to test for group
+#' effect.
+#' @param densitycol The name of the density variable, or \code{"none"}.
+#' @param densityused A logical value indicating whether the density variable
+#' is to be used.
+#' @param indcovaused Logical value indicating whether individual covariate a
+#' is used.
+#' @param indcovbused Logical value indicating whether individual covariate b
+#' is used.
+#' @param indcovcused Logical value indicating whether individual covariate c
+#' is used.
+#' 
+#' @return Vector of 9 strings, each a formula to be used as input in function.
+#' \code{modelsearch()}.
+#'
+#' @keywords internal
+#' @noRd
+.stovokor <- function(surv, obs, size, sizeb, sizec, repst, fec, matstat, vitalrates, historical, suite, approach, nojuvs, age, indcova, indcovb, indcovc, indiv, patch, year, pasrand, yasrand, iaasrand, ibasrand, icasrand, fectime, juvsize, sizebused, sizecused, grouptest, densitycol, densityused, indcovaused, indcovbused, indcovcused) {
+    .Call('_lefko3_stovokor', PACKAGE = 'lefko3', surv, obs, size, sizeb, sizec, repst, fec, matstat, vitalrates, historical, suite, approach, nojuvs, age, indcova, indcovb, indcovc, indiv, patch, year, pasrand, yasrand, iaasrand, ibasrand, icasrand, fectime, juvsize, sizebused, sizecused, grouptest, densitycol, densityused, indcovaused, indcovbused, indcovcused)
+}
+
+#' Creates a Skeleton Paramnames Object for Use in Function-based Modeling
+#' 
+#' Creates a simple skeleton \code{paramnames} object that can be entered as
+#' input in functions \code{\link{flefko2}()}, \code{\link{flefko3}()}, and
+#' \code{\link{aflefko2}()}.
+#' 
+#' @name create_pm
+#' 
+#' @param name_terms A logical value indicating whether to start each variable
+#' name as \code{none} if \code{FALSE}, or as the default \code{modelparams}
+#' name if \code{TRUE}. Defaults to \code{FALSE}.
+#' 
+#' @return A three column data frame, of which the first describes the
+#' parameters in reasonably plain English, the second gives the name of the
+#' parameter within the MPM generating functions, and the third is to be
+#' edited with the names of the variables as they appear in the models.
+#' 
+#' @section Notes:
+#' The third column in the resulting object should be edited with the names only
+#' of those variables actually used in vital rate modeling. This
+#' \code{paramnames} object should apply to all models used in a single MPM
+#' building exercise. So, for example, if the models used include random terms,
+#' then they should all have the same random terms. Fixed terms can vary,
+#' however.
+#' 
+#' @examples 
+#' our_pm <- create_pm()
+#' our_pm
+#' 
+#' @export
+create_pm <- function(name_terms = FALSE) {
+    .Call('_lefko3_create_pm', PACKAGE = 'lefko3', name_terms)
+}
+
+#' Calculate Actual Stage, Age, Stage-Pair, or Age-Stage Distributions
+#' 
+#' Function \code{actualstage3()} shows the frequencies and proportions of
+#' each stage, stage pair, age-stage, or age in each year.
+#' 
+#' @name actualstage3
+#' 
+#' @param data A demographic dataset in hfv format.
+#' @param check_stage A logical value indicating whether to assess frequencies
+#' and proportions of stages. Defaults to \code{TRUE}.
+#' @param check_age A logical value indicating whether to assess frequencies and
+#' proportions of ages. Defaults to \code{FALSE}.
+#' @param historical A logical value indicating whether the stage structure
+#' should be ahistorical (\code{FALSE}) or historical (\code{TRUE}). Defaults to
+#' \code{FALSE}.
+#' @param year2 A string value indicating the name of the variable coding for
+#' monitoring occasion at time \emph{t}. Defaults to \code{"year2"}.
+#' @param indices A vector of three strings, indicating the stage indices for
+#' times \emph{t}+1, \emph{t}, and \emph{t}-1, respectively, in \code{data}.
+#' Defaults to \code{c("stage3index", "stage2index", "stage1index")}.
+#' @param stagecol A vector of three strings, indicating the stage name columns
+#' for times \emph{t}+1, \emph{t}, and \emph{t}-1, respectively, in \code{data}.
+#' Defaults to \code{stagecol = c("stage3", "stage2", "stage1")}.
+#' @param agecol A single string indicating the age of individuals in time
+#' \emph{t}. Defaults to \code{"obsage"}.
+#' @param remove_stage A string vector indicating the names of stages to remove
+#' from consideration. Defaults to \code{"NotAlive"}.
+#' @param t1_allow A string vector indicating which stages to be removed should
+#' be allowed in the stage at time \emph{t}-1 portion of historical stage
+#' pairs, if \code{historical = TRUE}. Defaults to \code{"NotAlive"}. Can also
+#' be set to \code{"none"}.
+#' 
+#' @return A data frame with the following variables:
+#' \item{rowid}{A string identifier term, equal to the monitoring occasion in
+#' time \emph{t} and the stage index.}
+#' \item{stageindex}{The stageframe index of the stage. Only output if
+#' \code{check_stage = TRUE}.}
+#' \item{stage}{The name of each stage, or \code{NA}. Only output if
+#' \code{check_stage = TRUE}.}
+#' \item{stage2}{The name of the stage in time \emph{t}. Only output if
+#' \code{check_stage = TRUE}.}
+#' \item{stage1}{The name of the stage in time \emph{t}-1, or \code{NA}. Only
+#' output if \code{check_stage = TRUE}.}
+#' \item{age}{The age at time \emph{t}. Only output if \code{check_age = TRUE}.}
+#' \item{year2}{Monitoring occasion in time \emph{t}.}
+#' \item{frequency}{The number of individuals in the respective stage and time.}
+#' \item{actual_prop}{The proportion of individuals alive in time \emph{t} in
+#' the respective stage.}
+#' 
+#' @section Notes:
+#' This function produces frequencies and proportions of stages in hfv formatted
+#' data using stage index variables rather than stage name variables, and so
+#' requires the former. The latter is only required if the user wants to know
+#' the associated stage names.
+#' 
+#' Frequencies and proportions will be calculated for all times, including the
+#' last time, which is generally found in the \code{stage3} columns of the last
+#' \code{year2} entry in object \code{data}. The default is to treat the
+#' \code{year2} entry for that time as \code{max(year2) + 1}.
+#' 
+#' If \code{check_stage = TRUE} and \code{check_age = FALSE}, then this function
+#' will assess frequencies and proportions of stages or historical stage-pairs.
+#' If both \code{check_stage = TRUE} and \code{check_age = TRUE}, then this
+#' function will assess frequencies and proportions of age-stages. If
+#' \code{check_stage = FALSE} and \code{check_age = TRUE}, then the frequencies
+#' and proportions of ages only will be assessed.
+#' 
+#' Note that no stageframe is required for this function to operate. Stage
+#' names and their order are inferred directly from the object \code{data}.
+#' 
+#' @examples
+#' sizevector <- c(0, 0, 0, 0, 0, 0, 1, 3, 6, 11, 19.5)
+#' stagevector <- c("SD", "P1", "P2", "P3", "SL", "D", "XSm", "Sm", "Md", "Lg",
+#'   "XLg")
+#' repvector <- c(0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1)
+#' obsvector <- c(0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1)
+#' matvector <- c(0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1)
+#' immvector <- c(0, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0)
+#' propvector <- c(1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)
+#' indataset <- c(0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1)
+#' binvec <- c(0, 0, 0, 0, 0, 0.5, 0.5, 1.5, 1.5, 3.5, 5)
+#' comments <- c("Dormant seed", "1st yr protocorm", "2nd yr protocorm",
+#'   "3rd yr protocorm", "Seedling", "Dormant adult",
+#'   "Extra small adult (1 shoot)", "Small adult (2-4 shoots)",
+#'   "Medium adult (5-7 shoots)", "Large adult (8-14 shoots)",
+#'   "Extra large adult (>14 shoots)")
+#' cypframe_raw <- sf_create(sizes = sizevector, stagenames = stagevector, 
+#'   repstatus = repvector, obsstatus = obsvector, matstatus = matvector,
+#'   propstatus = propvector, immstatus = immvector, indataset = indataset, 
+#'   binhalfwidth = binvec, comments = comments)
+#' 
+#' cypraw_v1 <- verticalize3(data = cypdata, noyears = 6, firstyear = 2004, 
+#'   patchidcol = "patch", individcol = "plantid", blocksize = 4,
+#'   sizeacol = "Inf2.04", sizebcol = "Inf.04", sizeccol = "Veg.04",
+#'   repstracol = "Inf.04", repstrbcol = "Inf2.04", fecacol = "Pod.04",
+#'   stageassign = cypframe_raw, stagesize = "sizeadded", NAas0 = TRUE,
+#'   NRasRep = TRUE, age_offset = 4)
+#' 
+#' all_stage_props_ah <- actualstage3(cypraw_v1)
+#' all_stage_props_h <- actualstage3(cypraw_v1, historical = TRUE)
+#' all_stage_props_h_NANotAllow <- actualstage3(cypraw_v1, historical = TRUE,
+#'   t1_allow = "none")
+#' all_stage_props_as <- actualstage3(cypraw_v1, check_age = TRUE)
+#' all_age_props <- actualstage3(cypraw_v1, check_stage = FALSE,
+#'   check_age = TRUE)
+#' 
+#' @export actualstage3
+actualstage3 <- function(data, check_stage = TRUE, check_age = FALSE, historical = FALSE, year2 = NULL, indices = NULL, stagecol = NULL, agecol = NULL, remove_stage = NULL, t1_allow = NULL) {
+    .Call('_lefko3_actualstage3', PACKAGE = 'lefko3', data, check_stage, check_age, historical, year2, indices, stagecol, agecol, remove_stage, t1_allow)
+}
+
+#' Function \code{lambda3()} is a generic function that returns the dominant
+#' eigenvalue of a matrix, set of dominant eigenvalues of a set of matrices,
+#' or set of dominant eigenvalues for a \code{lefkoMat} object. It can handle
+#' large and sparse matrices supplied as \code{lefkoMat} objects or as
+#' individual matrices, and can be used with large historical matrices, IPMs, 
+#' age x stage matrices, as well as smaller ahistorical matrices.
+#' 
+#' @param mpm A lefkoMat object, a list of projection matrices, or a single
+#' projection matrix.
+#' @param sparse A string set to \code{"auto"} (the default), \code{"yes"}, or
+#' \code{"no"}. If set to \code{"auto"}, then will determine whether to use
+#' sparse matrix methods automatically.
+#' 
+#' @return The value returned depends on the class of the \code{mats} argument.
+#' If a \code{lefkoMat} object is provided, then this function will return the
+#' \code{labels} data frame with a new column named \code{lambda} showing the
+#' dominant eigenvalues for each matrix. If a list of matrices is provided,
+#' then this function will produce a numeric vector with the dominant
+#' eigenvalues provided in order of matrix. If a single matrix is provided,
+#' then this function will return the dominant eigenvalue of that matrix. Only
+#' the largest real parts of the eigenvalues are returned.
+#' 
+#' @section Notes:
+#' If \code{sparse = "auto"} (the default), then R will use sparse matrix
+#' eigenanalysis if the matrices are both sparse (i.e, percentage of matrix
+#' elements that are non-zero <= 50%) and have more than 100 rows.
+#' 
+#' @seealso \code{\link{slambda3}()}
+#' 
+#' @examples
+#' # Lathyrus example
+#' data(lathyrus)
+#' 
+#' sizevector <- c(0, 100, 13, 127, 3730, 3800, 0)
+#' stagevector <- c("Sd", "Sdl", "VSm", "Sm", "VLa", "Flo", "Dorm")
+#' repvector <- c(0, 0, 0, 0, 0, 1, 0)
+#' obsvector <- c(0, 1, 1, 1, 1, 1, 0)
+#' matvector <- c(0, 0, 1, 1, 1, 1, 1)
+#' immvector <- c(1, 1, 0, 0, 0, 0, 0)
+#' propvector <- c(1, 0, 0, 0, 0, 0, 0)
+#' indataset <- c(0, 1, 1, 1, 1, 1, 1)
+#' binvec <- c(0, 100, 11, 103, 3500, 3800, 0.5)
+#' 
+#' lathframe <- sf_create(sizes = sizevector, stagenames = stagevector,
+#'   repstatus = repvector, obsstatus = obsvector, matstatus = matvector,
+#'   immstatus = immvector, indataset = indataset, binhalfwidth = binvec,
+#'   propstatus = propvector)
+#' 
+#' lathvert <- verticalize3(lathyrus, noyears = 4, firstyear = 1988,
+#'   patchidcol = "SUBPLOT", individcol = "GENET", blocksize = 9,
+#'   juvcol = "Seedling1988", sizeacol = "Volume88", repstracol = "FCODE88",
+#'   fecacol = "Intactseed88", deadacol = "Dead1988",
+#'   nonobsacol = "Dormant1988", stageassign = lathframe, stagesize = "sizea",
+#'   censorcol = "Missing1988", censorkeep = NA, censor = TRUE)
+#' 
+#' lathsupp3 <- supplemental(stage3 = c("Sd", "Sd", "Sdl", "Sdl", "Sd", "Sdl", "mat"),
+#'   stage2 = c("Sd", "Sd", "Sd", "Sd", "rep", "rep", "Sdl"),
+#'   stage1 = c("Sd", "rep", "Sd", "rep", "npr", "npr", "Sd"),
+#'   eststage3 = c(NA, NA, NA, NA, NA, NA, "mat"),
+#'   eststage2 = c(NA, NA, NA, NA, NA, NA, "Sdl"),
+#'   eststage1 = c(NA, NA, NA, NA, NA, NA, "NotAlive"),
+#'   givenrate = c(0.345, 0.345, 0.054, 0.054, NA, NA, NA),
+#'   multiplier = c(NA, NA, NA, NA, 0.345, 0.054, NA),
+#'   type = c(1, 1, 1, 1, 3, 3, 1), type_t12 = c(1, 2, 1, 2, 1, 1, 1),
+#'   stageframe = lathframe, historical = TRUE)
+#' 
+#' ehrlen3 <- rlefko3(data = lathvert, stageframe = lathframe, year = "all", 
+#'   stages = c("stage3", "stage2", "stage1"), supplement = lathsupp3,
+#'   yearcol = "year2", indivcol = "individ")
+#' 
+#' ehrlen3mean <- lmean(ehrlen3)
+#' lambda3(ehrlen3mean)
+#' 
+#' # Cypripedium example
+#' data(cypdata)
+#' 
+#' sizevector <- c(0, 0, 0, 0, 0, 0, 1, 2.5, 4.5, 8, 17.5)
+#' stagevector <- c("SD", "P1", "P2", "P3", "SL", "D", "XSm", "Sm", "Md", "Lg",
+#'   "XLg")
+#' repvector <- c(0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1)
+#' obsvector <- c(0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1)
+#' matvector <- c(0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1)
+#' immvector <- c(0, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0)
+#' propvector <- c(1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)
+#' indataset <- c(0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1)
+#' binvec <- c(0, 0, 0, 0, 0, 0.5, 0.5, 1, 1, 2.5, 7)
+#' 
+#' cypframe_raw <- sf_create(sizes = sizevector, stagenames = stagevector,
+#'   repstatus = repvector, obsstatus = obsvector, matstatus = matvector,
+#'   propstatus = propvector, immstatus = immvector, indataset = indataset,
+#'   binhalfwidth = binvec)
+#' 
+#' cypraw_v1 <- verticalize3(data = cypdata, noyears = 6, firstyear = 2004,
+#'   patchidcol = "patch", individcol = "plantid", blocksize = 4,
+#'   sizeacol = "Inf2.04", sizebcol = "Inf.04", sizeccol = "Veg.04",
+#'   repstracol = "Inf.04", repstrbcol = "Inf2.04", fecacol = "Pod.04",
+#'   stageassign = cypframe_raw, stagesize = "sizeadded", NAas0 = TRUE,
+#'   NRasRep = TRUE)
+#' 
+#' # Here we use supplemental() to provide overwrite and reproductive info
+#' cypsupp2r <- supplemental(stage3 = c("SD", "P1", "P2", "P3", "SL", "D", 
+#'     "XSm", "Sm", "SD", "P1"),
+#'   stage2 = c("SD", "SD", "P1", "P2", "P3", "SL", "SL", "SL", "rep",
+#'     "rep"),
+#'   eststage3 = c(NA, NA, NA, NA, NA, "D", "XSm", "Sm", NA, NA),
+#'   eststage2 = c(NA, NA, NA, NA, NA, "XSm", "XSm", "XSm", NA, NA),
+#'   givenrate = c(0.10, 0.20, 0.20, 0.20, 0.25, NA, NA, NA, NA, NA),
+#'   multiplier = c(NA, NA, NA, NA, NA, NA, NA, NA, 0.5, 0.5),
+#'   type =c(1, 1, 1, 1, 1, 1, 1, 1, 3, 3),
+#'   stageframe = cypframe_raw, historical = FALSE)
+#' 
+#' cypmatrix2r <- rlefko2(data = cypraw_v1, stageframe = cypframe_raw, 
+#'   year = "all", patch = "all", stages = c("stage3", "stage2", "stage1"),
+#'   size = c("size3added", "size2added"), supplement = cypsupp2r,
+#'   yearcol = "year2", patchcol = "patchid", indivcol = "individ")
+#' 
+#' lambda3(cypmatrix2r)
+#' 
+#' @export lambda3
+lambda3 <- function(mpm, sparse = "auto") {
+    .Call('_lefko3_lambda3', PACKAGE = 'lefko3', mpm, sparse)
 }
 

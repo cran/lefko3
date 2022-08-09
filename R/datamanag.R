@@ -3940,6 +3940,8 @@ subset_lM <- function(lM, mat_num = NA, pop = NA, patch = NA, year = NA) {
 #' @param mpm An ahistorical MPM of class \code{lefkoMat}.
 #' @param format An integer stipulating whether historical matrices should be
 #' produced in Ehrlen format (\code{1}) or deVries format (\code{2}).
+#' @param imp_allowed A logical value indicating whether to allow impossible
+#' transitions. Defaults to \code{FALSE}.
 #' @param err_check A logical value indicating whether to output the main index
 #' used to sort elements in the matrices.
 #' 
@@ -3950,6 +3952,11 @@ subset_lM <- function(lM, mat_num = NA, pop = NA, patch = NA, year = NA) {
 #' corresponding to the rows and columns of the new matrices. If
 #' \code{err_check = TRUE}, then a data frame showing the values used to
 #' determine element index values is also exported.
+#' 
+#' @section Notes:
+#' Allowing impossible transitions creates historically-formatted matrices that
+#' are capable of yielding the same dominant eigenvalues as the ahistorical
+#' matrices supplied as inputs.
 #' 
 #' @examples
 #' sizevector <- c(1, 1, 2, 3)
@@ -3992,7 +3999,7 @@ subset_lM <- function(lM, mat_num = NA, pop = NA, patch = NA, year = NA) {
 #' nullmodel2 <- hist_null(anth_lefkoMat, 2) # deVries format
 #' 
 #' @export
-hist_null <- function(mpm, format = 1, err_check = FALSE) {
+hist_null <- function(mpm, format = 1, imp_allowed = FALSE, err_check = FALSE) {
   if (!is(mpm, "lefkoMat")) {
     stop("Function hist_null requires an object of class lefkoMat as input.",
       call. = FALSE)
@@ -4006,7 +4013,8 @@ hist_null <- function(mpm, format = 1, err_check = FALSE) {
   
   allstages <- .simplepizzle(mpm$ahstages, format)
   
-  redone_mpms <- .thefifthhousemate(mpm, allstages$allstages, allstages$ahstages, format)
+  redone_mpms <- .thefifthhousemate(mpm, allstages$allstages, allstages$hstages,
+    allstages$ahstages, imp_allowed, format)
   
   if (is.element("dataqc", names(mpm)) & is.element("matrixqc", names(mpm))) {
     totalutransitions <- sum(unlist(lapply(redone_mpms$U, function(X) {length(which(X != 0))})))

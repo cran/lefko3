@@ -30,7 +30,7 @@ on each vital rate. Options include \code{0}: no density dependence,
 \code{2}, \code{beverton}, \code{bev}, and \code{b} for the Beverton-Holt
 function; \code{3}, \code{usher}, \code{ush}, and \code{u} for the Usher
 function; and \code{4}, \code{logistic}, \code{log}, and \code{l} for the
-logistic function. Defaults to 14 values of \code{1}.}
+logistic function. Defaults to 14 values of \code{0}.}
 
 \item{time_delay}{A 14 element vector indicating the number of occasions back
 on which density dependence operates. Defaults to 14 values of \code{1}, and

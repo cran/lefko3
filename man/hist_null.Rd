@@ -4,13 +4,16 @@
 \alias{hist_null}
 \title{Create Historical MPMs Assuming No Influence of Individual History}
 \usage{
-hist_null(mpm, format = 1, err_check = FALSE)
+hist_null(mpm, format = 1, imp_allowed = FALSE, err_check = FALSE)
 }
 \arguments{
 \item{mpm}{An ahistorical MPM of class \code{lefkoMat}.}
 
 \item{format}{An integer stipulating whether historical matrices should be
 produced in Ehrlen format (\code{1}) or deVries format (\code{2}).}
+
+\item{imp_allowed}{A logical value indicating whether to allow impossible
+transitions. Defaults to \code{FALSE}.}
 
 \item{err_check}{A logical value indicating whether to output the main index
 used to sort elements in the matrices.}
@@ -30,6 +33,13 @@ MPMs in the structure of historical MPMs. These MPMs have the same dimensions
 and stage structure of hMPMs but assume no influence of individual history,
 and so can be compared to actual hMPMs.
 }
+\section{Notes}{
+
+Allowing impossible transitions creates historically-formatted matrices that
+are capable of yielding the same dominant eigenvalues as the ahistorical
+matrices supplied as inputs.
+}
+
 \examples{
 sizevector <- c(1, 1, 2, 3)
 stagevector <- c("Sdl", "Veg", "SmFlo", "LFlo")

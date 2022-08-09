@@ -294,6 +294,9 @@
 #' reproduction probability.}
 #' \item{juv_maturity_table}{Full dredge model table of the probability of
 #' an immature individual transitioning to maturity.}
+#' \item{paramnames}{A data frame showing the names of variables from the input
+#' data frame used in modeling, their associated standardized names in linear
+#' models, and a brief comment describing each variable.}
 #' \item{criterion}{Character variable denoting the criterion used to determine
 #' the best-fit model.}
 #' \item{qc}{Data frame with five variables: 1) Name of vital rate, 2) number

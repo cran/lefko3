@@ -1,5 +1,5 @@
 ---
-title: "Lathyrus vernus function-based age-by-stage MPMs"
+title: "Lathyrus vernus function-based age-by-stage MPMs, LTRE and sLTRE analysis"
 author: Richard P. Shefferson, Shun Kurokawa, and Johan Ehrlén
 output: rmarkdown::html_vignette
 bibliography: Lefko3Tutorial.bib
@@ -106,38 +106,40 @@ lathframeln <- sf_create(sizes = sizevector, stagenames = stagevector,
   <p style="text-indent: 20px">We also have two choices for use as our reproductive status and fecundity variables. The first choice, `FCODE88` indicates whether a plant flowered. The second choice, `Intactseed88`, indicates the number of seed produced. Flowering plants typically have different demographic characteristics than non-flowering plants, either reflecting reproductive costs, or, conversely, because flowering plants might have more resources and hence higher survival than non-flowering plants. We should separate transitions among these two groups. So, let's use `FCODE88` to indicate reproductive status, and `Intactseed88` to indicate fecundity.</p>
   
   <p style="text-indent: 20px">Finally, note that in the input to the following function, we utilize a strictly repeating pattern of variable names arranged in the same order for each monitoring occasion. This arrangement allows us to enter only the first variable in each set, as long as `noyears` and `blocksize` are set properly and no gaps or shuffles appear in the dataset. The data management functions that we have created for `lefko3` do not require such repeating patterns, but they do make the required input in the function much shorter and more succinct. To see a detailed summary of the resulting hfv dataset, remove `full = FALSE` from the `summary_hfv()` call.</p>
+  
+  <p style="text-indent: 20px">Note that prior to standardizing the dataset, we will create a new variable to code individual identity, since different plants in different subpopulations use the same identifiers.</p>
 
 ```r
+lathyrus$indiv_id <- paste(lathyrus$SUBPLOT, lathyrus$GENET)
+
 lathvertln <- verticalize3(lathyrus, noyears = 4, firstyear = 1988,
-  patchidcol = "SUBPLOT", individcol = "GENET", blocksize = 9,
+  patchidcol = "SUBPLOT", individcol = "indiv_id", blocksize = 9,
   juvcol = "Seedling1988", sizeacol = "lnVol88", repstracol = "FCODE88",
   fecacol = "Intactseed88", deadacol = "Dead1988",
   nonobsacol = "Dormant1988", stageassign = lathframeln,
   stagesize = "sizea", censorcol = "Missing1988", censorkeep = NA,
-  NAas0 = TRUE, censor = TRUE)
-#> hfv dataset has been censored using a non-repeating censor variable.
-#>       Please check the resulting dataset with the summary_hfv() function to make
-#>       sure that not too much has been removed from the original dataset.
+  NAas0 = TRUE, censorRepeat = TRUE, censor = TRUE)
+
 summary_hfv(lathvertln, full = FALSE)
 #> 
-#> This hfv dataset contains 2552 rows, 42 variables, 1 population, 6 patches, 276 individuals, and 3 time steps.
+#> This hfv dataset contains 2527 rows, 42 variables, 1 population, 6 patches, 1053 individuals, and 3 time steps.
 ```
   
   <p style="text-indent: 20px">Before we move on to the next key steps in analysis, let's take a closer look at fecundity. In this dataset, fecundity is mostly a count of intact seeds, and only differs in six cases where the seed output was estimated based on other models. To see this, try the following code.</p>
 
 ```r
 writeLines(paste0("Length of fecundity vaiable in t+1: ", length(lathvertln$feca3)))
-#> Length of fecundity vaiable in t+1: 2552
+#> Length of fecundity vaiable in t+1: 2527
 writeLines(paste0("# non-integer entries: ", length(which(lathvertln$feca3 != 
     round(lathvertln$feca3)))))
 #> # non-integer entries: 0
 writeLines(paste0("Length of fecundity variable in t: ", length(lathvertln$feca2)))
-#> Length of fecundity variable in t: 2552
+#> Length of fecundity variable in t: 2527
 writeLines(paste0("# non-integer entries: ", length(which(lathvertln$feca2 != 
     round(lathvertln$feca2)))))
 #> # non-integer entries: 6
 writeLines(paste0("Length of fecundity variable in t-1: ", length(lathvertln$feca1)))
-#> Length of fecundity variable in t-1: 2552
+#> Length of fecundity variable in t-1: 2527
 writeLines(paste0("# non-integer entries: ", length(which(lathvertln$feca1 != 
     round(lathvertln$feca1)))))
 #> # non-integer entries: 6
@@ -165,13 +167,11 @@ hist(subset(lathvertln, repstatus2 == 1)$feca2, main = "Fecundity",
   <p style="text-indent: 20px">We see that the distribution conforms to a classic count variable with a very low mean value. The first bar suggests that there may be too many zeroes, as well. Let's now formally test our assumptions. We will use the `hfv_qc()` function, which will allow us to assess the quality of the data from the viewpoint of the linear models to be built later. We will use most of the input from the `modelsearch()` call that we will conduct later.</p>
 
 ```r
-hfv_qc(data = lathvertln, historical = FALSE, suite = "main",
-  vitalrates = c("surv", "obs", "size", "repst", "fec"), juvestimate = "Sdl",
-  indiv = "individ", year = "year2", age = "obsage", year.as.random = TRUE,
-  patch.as.random = TRUE)
+hfv_qc(data = lathvertln, vitalrates = c("surv", "obs", "size", "repst", "fec"),
+  juvestimate = "Sdl", indiv = "individ", year = "year2", age = "obsage")
 #> Survival:
 #> 
-#>   Data subset has 43 variables and 2267 transitions.
+#>   Data subset has 43 variables and 2246 transitions.
 #> 
 #>   Variable alive3 has 0 missing values.
 #>   Variable alive3 is a binomial variable.
@@ -179,7 +179,7 @@ hfv_qc(data = lathvertln, historical = FALSE, suite = "main",
 #> 
 #> Observation status:
 #> 
-#>   Data subset has 43 variables and 2122 transitions.
+#>   Data subset has 43 variables and 2121 transitions.
 #> 
 #>   Variable obsstatus3 has 0 missing values.
 #>   Variable obsstatus3 is a binomial variable.
@@ -210,7 +210,7 @@ hfv_qc(data = lathvertln, historical = FALSE, suite = "main",
 #> 
 #> Fecundity:
 #> 
-#>   Data subset has 43 variables and 601 transitions.
+#>   Data subset has 43 variables and 599 transitions.
 #> 
 #>   Variable feca2 has 0 missing values.
 #>   Variable feca2 appears to be an integer variable.
@@ -218,24 +218,24 @@ hfv_qc(data = lathvertln, historical = FALSE, suite = "main",
 #>   Variable feca2 is fully non-negative.
 #> 
 #>   Overdispersion test:
-#>     Mean feca2 is 4.805
-#>     The variance in feca2 is 70.23
+#>     Mean feca2 is 4.791
+#>     The variance in feca2 is 70.14
 #>     The probability of this dispersion level by chance assuming that
 #>     the true mean feca2 = variance in feca2,
 #>     and an alternative hypothesis of overdispersion, is 0
 #>     Variable feca2 is significantly overdispersed.
 #> 
 #>   Zero-inflation and truncation tests:
-#>     Mean lambda in feca2 is 0.008186
-#>     The actual number of 0s in feca2 is 335
-#>     The expected number of 0s in feca2 under the null hypothesis is 4.92
+#>     Mean lambda in feca2 is 0.008302
+#>     The actual number of 0s in feca2 is 334
+#>     The expected number of 0s in feca2 under the null hypothesis is 4.973
 #>     The probability of this deviation in 0s from expectation by chance is 0
 #>     Variable feca2 is significantly zero-inflated.
 #> 
 #> 
 #> Juvenile survival:
 #> 
-#>   Data subset has 43 variables and 285 transitions.
+#>   Data subset has 43 variables and 281 transitions.
 #> 
 #>   Variable alive3 has 0 missing values.
 #>   Variable alive3 is a binomial variable.
@@ -369,6 +369,7 @@ lathmodelsln2 <- modelsearch(lathvertln, historical = FALSE,
   bestfit = "AICc&k", sizedist = "gaussian", fecdist = "negbin",
   indiv = "individ", year = "year2", age = "obsage", year.as.random = TRUE,
   patch.as.random = TRUE, show.model.tables = TRUE, fec.zero = TRUE, quiet = TRUE)
+
 lathmodelsln2p <- modelsearch(lathvertln, historical = FALSE,
   approach = "mixed", suite = "main",
   vitalrates = c("surv", "obs", "size", "repst", "fec"), juvestimate = "Sdl",
@@ -376,6 +377,7 @@ lathmodelsln2p <- modelsearch(lathvertln, historical = FALSE,
   indiv = "individ", patch = "patchid", year = "year2", age = "obsage",
   year.as.random = TRUE, patch.as.random = TRUE, show.model.tables = TRUE,
   fec.zero = TRUE, quiet = TRUE)
+
 #summary(lathmodelsln2)
 #summary(lathmodelsln2p)
 ```
@@ -384,7 +386,7 @@ lathmodelsln2p <- modelsearch(lathvertln, historical = FALSE,
   
   <p style="text-indent: 20px">In developing these linear models, the `modelsearch()` function created a series of nested datasets to estimate vital rates as conditional rates and probabilities. The exact subsets created depend on which parameters were called for. It is important to consider which are required, and particular attention needs to be paid if there are size classes with sizes of 0. In these situations, it is best to consider a size of 0 as unobservable, and so to introduce observation status as a vital rate to absorb these sizes. This sets up datasets for size estimation that do not include 0 in the response term, because all 0 responses are already absorbed by observation status.</p>
   
-  <p style="text-indent: 20px">A look at the summaries shows that the best-fit models vary in complexity. Age is important in four of the adult vital rates, in both the population-only model set as well as the patch model set. For example, survival is influenced by reproductive status and age in the current year, as well as by patch, individual identity, and year, while observation status is not influenced by age. We can see these models explicitly, as well as the model tables developed, by calling them directly from the lefkoMod object. The accuracy of our models has a tendency to be in the mid-range, meaning that it is likely that we have not included some important factors accounting for variability in at least some of our vital rates.</p>
+  <p style="text-indent: 20px">A look at the summaries shows that the best-fit models vary in complexity. Age is important in three of the adult vital rates, in both the population-only model set as well as the patch model set. For example, survival is influenced by reproductive status and age in the current year, as well as by patch, individual identity, and year, while observation status is not influenced by age. We can see these models explicitly, as well as the model tables developed, by calling them directly from the lefkoMod object. The accuracy of our models has a tendency to be in the mid-range, meaning that it is likely that we have not included some important factors accounting for variability in at least some of our vital rates.</p>
   
 #### Step 4. MPM estimation 
   
@@ -394,9 +396,11 @@ lathmodelsln2p <- modelsearch(lathvertln, historical = FALSE,
 lathmat2age <- aflefko2(year = "all", stageframe = lathframeln,
   modelsuite = lathmodelsln2, data = lathvertln, supplement = lathsupp2,
   final_age = 3, continue = TRUE, reduce = FALSE)
+
 lathmat2agep <- aflefko2(year = "all", patch = "all", stageframe = lathframeln,
   modelsuite = lathmodelsln2p, data = lathvertln, supplement = lathsupp2,
   final_age = 3, continue = TRUE, reduce = FALSE)
+
 #summary(lathmat2age)
 #summary(lathmat2agep)
 ```
@@ -416,7 +420,7 @@ image3(lathmat2age, used = 1)
 #> NULL
 ```
   
-  <p style="text-indent: 20px">The clear squares refer to zero elements, and the red elements refer to non-zero values corresponding to survival transitions and fecundity. The vast number of zeros may be surprising, but this matrix is a supermatrix organized by age first, with stage organizing within-age blocks. The first age is age 0, which cannot be adult, and age 1 corresponds to seedlings, leading to most non-zero elements in the adult portion. The adult block occurs from age 2, and this block can perpetuate indefinitely. The number of elements estimated is greater now than in the typical ahistorical MPM, because now we have added age as a major factor for analysis. This matrix is overwhelmingly composed of elements that must be 0, and so it is a rather sparse matrix ((726 + 36)  / 3969 = 19.2% of elements).</p>
+  <p style="text-indent: 20px">The clear squares refer to zero elements, and the red elements refer to non-zero values corresponding to survival transitions and fecundity. The vast number of zeros may be surprising, but this matrix is a supermatrix organized by age first, with stage organizing within-age blocks. The first age is age 0, which cannot be adult, and age 1 corresponds to seedlings, leading to most non-zero elements in the adult portion. The adult block occurs from age 2, and this block can perpetuate indefinitely. The number of elements estimated is greater now than in the typical ahistorical MPM, because now we have added age as a major factor for analysis. This matrix is overwhelmingly composed of elements that must be 0, and so it is a rather sparse matrix ((1070.67 + 54)  / 3969 = 28.3% of elements).</p>
   
   <p style="text-indent: 20px">We can see the order of ages and stages using the `agestages` element of the lefkoMat object we produced, as below. Note that our matrix is 63 rows by 63 columns, and this object gives us the exact order used.</p>
 
@@ -446,14 +450,14 @@ sl2 <- slambda3(lathmat2age) #Stochastic growth rate
 sl2$expa <- exp(sl2$a)
 
 par(mfrow = c(1,2))
-plot(lambda ~ year2, data = lambda2, ylim = c(0.90, 0.98),xlab = "Year",
+plot(lambda ~ year2, data = lambda2, ylim = c(0.90, 1.02),xlab = "Year",
   ylab = expression(lambda), type = "l", lty= 1, lwd = 2, bty = "n")
 abline(a = lambda2m$lambda[1], b = 0, lty = 2, lwd= 2, col = "orangered")
 abline(a = sl2$expa[1], b = 0, lty = 2, lwd= 3, col = "darkred")
 legend("bottomleft", c("det annual", "det mean", "stochastic"), lty = c(1, 2, 2),
   col = c("black", "orangered", "darkred"), lwd = c(2, 2, 3), bty = "n")
 
-plot(lambda ~ patch, data = lambda2mp[1:6,], ylim = c(0.90, 0.98), xlab = "Patch",
+plot(lambda ~ patch, data = lambda2mp[1:6,], ylim = c(0.90, 1.02), xlab = "Patch",
   ylab = expression(lambda), type = "l", lty= 1, lwd = 2, bty = "n")
 abline(a = lambda2m$lambda[1], b = 0, lty = 2, lwd= 2, col = "orangered")
 abline(a = sl2$expa[1], b = 0, lty = 2, lwd= 2, col = "darkred")
@@ -494,7 +498,7 @@ legend("topright", c("deterministic", "stochastic"), col = c("black", "red"),
 
 ![Figure 8.6. Stable and long-run stage distribution](Ch8.16-1.png)
   
-  <p style="text-indent: 20px">The stable stage distribution shows high levels of dormant seeds and mid- to large-sized adults, followed by dormant adults. Small-sized adults comprise the smallest part of the stable age-stage structure. Deterministic and stochastic analyses show more or less the same results.</p>
+  <p style="text-indent: 20px">The stable stage distribution shows high levels of dormant seeds and mid- to large-sized adults. Small-sized adults comprise the smallest part of the stable age-stage structure. Deterministic and stochastic analyses show more or less the same results.</p>
   
   <p style="text-indent: 20px">Now let's take look at the reproductive values. We'll go straight to the plots, as with the stable stage distribution.</p>
 
@@ -513,7 +517,7 @@ legend("topleft", c("deterministic", "stochastic"), col = c("black", "red"),
 
 ![Figure 8.7. Age-stage reproductive values](Ch8.17-1.png)
   
-  <p style="text-indent: 20px">We see reproductive values above 0 starting with dormant adults, and generally increasing into larger sizes with some interesting patterns in ages 2 and 3. These patterns hold in both deterministic and stochastic analyses.</p>
+  <p style="text-indent: 20px">We see reproductive values above 0 starting with dormant adults, and generally staying roughly equivalent with minor changes in ages 2 and 3. These patterns hold in both deterministic and stochastic analyses.</p>
   
   <p style="text-indent: 20px">We will next assess to which matrix elements $\lambda$ is most sensitive and elastic to changes in. As before, we will look at both deterministic and stochastic sensitivities.</p>
 
@@ -524,21 +528,21 @@ lathmat2msens_s <- sensitivity3(lathmat2age, stochastic = TRUE)
 
 writeLines(paste0("The highest deterministic sensitivity value: ",
   max(lathmat2msens$ah_sensmats[[1]][which(lathmat2mean$A[[1]] > 0)])))
-#> The highest deterministic sensitivity value: 0.14396564929191
+#> The highest deterministic sensitivity value: 0.169962282585086
 writeLines(paste0("This value is associated with element: ",
   which(lathmat2msens$ah_sensmats[[1]] == 
     max(lathmat2msens$ah_sensmats[[1]][which(lathmat2mean$A[[1]] > 0)]))))
-#> This value is associated with element: 3838
+#> This value is associated with element: 3762
 writeLines(paste0("The highest stochastic sensitivity value: ",
   max(lathmat2msens_s$ah_sensmats[[1]][which(lathmat2mean$A[[1]] > 0)])))
-#> The highest stochastic sensitivity value: 0.151083270853861
+#> The highest stochastic sensitivity value: 0.170521519010051
 writeLines(paste0("This value is associated with element: ",
   which(lathmat2msens_s$ah_sensmats[[1]] ==
     max(lathmat2msens_s$ah_sensmats[[1]][which(lathmat2mean$A[[1]] > 0)]))))
-#> This value is associated with element: 3838
+#> This value is associated with element: 3762
 ```
   
-  <p style="text-indent: 20px">The highest deterministic sensitivity value in both analyses appears to be associated with the transition from non-flowering six-sprouted adults in age 3 or higher to flowering four-sprouted adult (element 3208, in column 51, row 58). The highest stochastic sensitivity value is assocaited with the transition from flowering seven-sprouted adult in age 3 or higher to flowering five-sprouted adult (element 3838, in column 61, row 59). Inspecting the sensitivity matrix (type `lathmat2msens$ah_sensmats[[1]]` to view the full deterministic sensitivity matrix, or `lathmat2msens_s$ah_sensmats[[1]]` to view the full stochastic sensitivity matrix) also shows that transitions near these elements are associated with rather high sensitivities.</p>
+  <p style="text-indent: 20px">The highest deterministic and stochastic sensitivity values appear to be associated with the transition from flowering six-sprouted adults in age 3 or higher to dormant adult (element 3762, in column 45, row 60). Inspecting the sensitivity matrix (type `lathmat2msens$ah_sensmats[[1]]` to view the full deterministic sensitivity matrix, or `lathmat2msens_s$ah_sensmats[[1]]` to view the full stochastic sensitivity matrix) also shows that transitions near these elements are associated with rather high sensitivities.</p>
   
   <p style="text-indent: 20px">Let's now assess the elasticity of $\lambda$ or $\text{log} \lambda$ to matrix elements.</p>
 
@@ -549,19 +553,19 @@ lathmat2melas_s <- elasticity3(lathmat2age, stochastic = TRUE)
 
 writeLines(paste0("The highest deterministic elasticity value: ",
   max(lathmat2melas$ah_elasmats[[1]][which(lathmat2mean$A[[1]] > 0)])))
-#> The highest deterministic elasticity value: 0.0332105403473359
+#> The highest deterministic elasticity value: 0.032295012978665
 writeLines(paste0("The largest determnistic elasticity is associated with element: ",
   which(lathmat2melas$ah_elasmats[[1]] == max(lathmat2melas$ah_elasmats[[1]]))))
-#> The largest determnistic elasticity is associated with element: 3841
+#> The largest determnistic elasticity is associated with element: 3201
 writeLines(paste0("The highest stochastic elasticity value: ",
   max(lathmat2melas_s$ah_elasmats[[1]][which(lathmat2mean$A[[1]] > 0)])))
-#> The highest stochastic elasticity value: 0.033524701358656
+#> The highest stochastic elasticity value: 0.0321934658121956
 writeLines(paste0("The largest stochastic elasticity is associated with element: ",
   which(lathmat2melas_s$ah_elasmats[[1]] == max(lathmat2melas_s$ah_elasmats[[1]]))))
-#> The largest stochastic elasticity is associated with element: 3841
+#> The largest stochastic elasticity is associated with element: 3903
 ```
   
-  <p style="text-indent: 20px">Both deterministic and stochastic analyses show that population growth rate is most elastic to element 2820, which is in column 45 and row 48. Checking our stageframe shows that this element is associated with transition from dormant adult age 3 or higher to non-flowering three-sprouted adult.</p>
+  <p style="text-indent: 20px">The deterministic analysis shows the highest elasticity associated with element 3201 (col 51, row 51, stasis as a six-sprouted non-reproductive 3yr old or older adult), while the stochastic analysis show that population growth rate is most elastic to element 3903, which is in column 62 and row 60 (transition from three year old or older eight-sprouted reproductive adult to six-sprouted reproductive adult).</p>
   
   <p style="text-indent: 20px">Elasticity values can be treated as additive and sum to 1.0 within single matrices. This allows us to make interesting comparisons, such as to compare the elasticity of population growth rate to changes in transitions associated with specific stages. Let's conduct such an analysis, and plot the results.</p>
 
@@ -585,7 +589,7 @@ legend("topleft", c("deterministic", "stochastic"), col = c("black", "orangered"
 
 ![Figure 8.8. Elasticities by age-stage](Ch8.20-1.png)
   
-  <p style="text-indent: 20px">We see in the analysis above that in both the deterministic and stochastic cases, the population growth rate is most elastic to changes associated with flowering and non-flowering mid-sized adults, and with vegetatively dormant adults, in the highest ages. Juvenile stages and dormant seeds have little influence.</p>
+  <p style="text-indent: 20px">We see in the analysis above that in both the deterministic and stochastic cases, the population growth rate is most elastic to changes associated with flowering and non-flowering mid-sized adults, and to some extent with vegetatively dormant adults, in the highest ages. Juvenile stages and dormant seeds have little influence.</p>
   
   <p style="text-indent: 20px">Our estimated elasticities can also be summarized by transition type. Let's take a look at a plot, using the `summary.lefkoElas()` function to help us assess these transition types.</p>
 
@@ -606,7 +610,7 @@ legend("topright", c("deterministic", "stochastic"), col = c("black", "orangered
 
 ![Figure 8.9. Elasticities by transition type](Ch8.21-1.png)
   
-  <p style="text-indent: 20px">We see in the plot above that deterministic and stochastic analyses agree strongly about the importance and influence of transition types to population growth rate. Specifically, the population growth rate is most strongly elastic in response to changes in growth transitions, and almost completely inelastic to changes in fecundity. Shrinkage is also fairly influential.</p>
+  <p style="text-indent: 20px">We see in the plot above that deterministic and stochastic analyses agree strongly about the importance and influence of transition types to population growth rate. Specifically, the population growth rate is most strongly elastic in response to changes in growth transitions, and almost completely inelastic to changes in fecundity. Shrinkage is almost as influential as growth.</p>
   
   <p style="text-indent: 20px">In addition to sensitivity and elasticity analyses, we can use package `lefko3` to assess the actual impacts of demographic shifts or differences on the population growth rate. Two tools for this purpose are the life table response experiment (LTRE), and its stochastic version the stochastic life table response experiment (sLTRE). Both are available via the `ltre3()` function. Below, we perform a standard deterministic LTRE to assess the impact of space on the population growth rate. This is done via a comparison of patch-level demography to the grand mean matrix, which is the default comparison if no reference matrices are provided. Remove the hashtag from the second line to see the full structure of the resulting object. Particularly, you will notice that the first element, `ltre_det`, is a list of six matrices. These matrices show the actual impact of the difference in elements between the respective patch-level matrix and the reference matrix (here, the grand population mean matrix) on the population growth rate $\lambda$. After this, we see similar structure to the input `lefkoMat` object, including the stageframe and order of matrices.</p>
 
@@ -631,66 +635,66 @@ lathmat2m_sltre <- ltre3(lathmat2agep, stochastic = TRUE, rseed = 42)
 ```r
 writeLines(paste0("Highest (i.e most positive) deterministic LTRE contribution: ",
   max(lathmat2m_ltre$ltre_det[[1]])))
-#> Highest (i.e most positive) deterministic LTRE contribution: 0.00184635504067327
+#> Highest (i.e most positive) deterministic LTRE contribution: 0.00466456538585736
 writeLines(paste0("Highest deterministic LTRE contribution is associated with element: ",
   which(lathmat2m_ltre$ltre_det[[1]] == max(lathmat2m_ltre$ltre_det[[1]]))))
-#> Highest deterministic LTRE contribution is associated with element: 3841
+#> Highest deterministic LTRE contribution is associated with element: 3776
 writeLines(paste0("Lowest (i.e. most negative) deterministic LTRE contribution: ",
   min(lathmat2m_ltre$ltre_det[[1]])))
-#> Lowest (i.e. most negative) deterministic LTRE contribution: -0.00235987126640427
+#> Lowest (i.e. most negative) deterministic LTRE contribution: -0.00238412572627671
 writeLines(paste0("Lowest deterministic LTRE contribution is associated with element: ",
   which(lathmat2m_ltre$ltre_det[[1]] == min(lathmat2m_ltre$ltre_det[[1]]))))
-#> Lowest deterministic LTRE contribution is associated with element: 3825
+#> Lowest deterministic LTRE contribution is associated with element: 3202
 
 writeLines(paste0("Highest stochastic mean LTRE contribution: ",
   max(lathmat2m_sltre$ltre_mean[[1]])))
-#> Highest stochastic mean LTRE contribution: 0.00176132067911133
+#> Highest stochastic mean LTRE contribution: 0.00414473235217995
 writeLines(paste0("Highest stochastic mean LTRE contribution is associated with element: ",
   which(lathmat2m_sltre$ltre_mean[[1]] == max(lathmat2m_sltre$ltre_mean[[1]]))))
-#> Highest stochastic mean LTRE contribution is associated with element: 3841
+#> Highest stochastic mean LTRE contribution is associated with element: 3776
 writeLines(paste0("Lowest stochastic mean LTRE contribution: ",
   min(lathmat2m_sltre$ltre_mean[[1]])))
-#> Lowest stochastic mean LTRE contribution: -0.00267096555627256
+#> Lowest stochastic mean LTRE contribution: -0.00259991872270772
 writeLines(paste0("Lowest stochastic mean LTRE contribution is associated with element: ",
   which(lathmat2m_sltre$ltre_mean[[1]] == min(lathmat2m_sltre$ltre_mean[[1]]))))
-#> Lowest stochastic mean LTRE contribution is associated with element: 3825
+#> Lowest stochastic mean LTRE contribution is associated with element: 3769
 
 writeLines(paste0("Highest stochastic SD LTRE contribution: ",
   max(lathmat2m_sltre$ltre_sd[[1]])))
-#> Highest stochastic SD LTRE contribution: 3.37901045579132e-05
+#> Highest stochastic SD LTRE contribution: 0.000236585221617357
 writeLines(paste0("Highest stochastic SD LTRE contribution is associated with element: ",
   which(lathmat2m_sltre$ltre_sd[[1]] == max(lathmat2m_sltre$ltre_sd[[1]]))))
-#> Highest stochastic SD LTRE contribution is associated with element: 3138
+#> Highest stochastic SD LTRE contribution is associated with element: 3905
 writeLines(paste0("Lowest stochastic SD LTRE contribution: ",
   min(lathmat2m_sltre$ltre_sd[[1]])))
-#> Lowest stochastic SD LTRE contribution: -2.95205258298888e-05
+#> Lowest stochastic SD LTRE contribution: -0.000279417936748466
 writeLines(paste0("Lowest stochastic SD LTRE contribution is associated with element: ",
   which(lathmat2m_sltre$ltre_sd[[1]] == min(lathmat2m_sltre$ltre_sd[[1]]))))
-#> Lowest stochastic SD LTRE contribution is associated with element: 3841
+#> Lowest stochastic SD LTRE contribution is associated with element: 3779
 
 writeLines(paste0("Total positive deterministic LTRE contributions: ",
   sum(lathmat2m_ltre$ltre_det[[1]][which(lathmat2m_ltre$ltre_det[[1]] > 0)])))
-#> Total positive deterministic LTRE contributions: 0.0341116763064364
+#> Total positive deterministic LTRE contributions: 0.052912800561096
 writeLines(paste0("Total negative deterministic LTRE contributions: ",
   sum(lathmat2m_ltre$ltre_det[[1]][which(lathmat2m_ltre$ltre_det[[1]] < 0)])))
-#> Total negative deterministic LTRE contributions: -0.0255192566804928
+#> Total negative deterministic LTRE contributions: -0.0506097184494596
 writeLines(paste0("\nTotal positive stochastic mean LTRE contributions: ",
   sum(lathmat2m_sltre$ltre_mean[[1]][which(lathmat2m_sltre$ltre_mean[[1]] > 0)])))
 #> 
-#> Total positive stochastic mean LTRE contributions: 0.0342840015465079
+#> Total positive stochastic mean LTRE contributions: 0.0483855502148139
 writeLines(paste0("Total negative stochastic mean LTRE contributions: ",
   sum(lathmat2m_sltre$ltre_mean[[1]][which(lathmat2m_sltre$ltre_mean[[1]] < 0)])))
-#> Total negative stochastic mean LTRE contributions: -0.0290170479685542
+#> Total negative stochastic mean LTRE contributions: -0.0564229314490349
 writeLines(paste0("\nTotal positive stochastic SD LTRE contributions: ",
   sum(lathmat2m_sltre$ltre_sd[[1]][which(lathmat2m_sltre$ltre_sd[[1]] > 0)])))
 #> 
-#> Total positive stochastic SD LTRE contributions: 0.000288501420787641
+#> Total positive stochastic SD LTRE contributions: 0.00189451228943649
 writeLines(paste0("Total negative stochastic SD LTRE contributions: ",
   sum(lathmat2m_sltre$ltre_sd[[1]][which(lathmat2m_sltre$ltre_sd[[1]] < 0)])))
-#> Total negative stochastic SD LTRE contributions: -0.000580097782208445
+#> Total negative stochastic SD LTRE contributions: -0.00161932890028915
 ```
   
-  <p style="text-indent: 20px">All LTRE outputs show very small contributions from individual elements. However, element 3841 appears to be the most positive in both the deterministic and stochastic mean cases. This is the stasis transition for seven-sprouted flowering adults. Variability in elements appears to have much smaller impact on $log \lambda$ than shifts in the means do.</p>
+  <p style="text-indent: 20px">All LTRE outputs show very small contributions from individual elements. Variability in elements appears to have much smaller impact on $log \lambda$ than shifts in the means do.</p>
   
   <p style="text-indent: 20px">Second, we will identify which age-stages exert the strongest impact on the population growth rate.</p>
 
@@ -718,9 +722,9 @@ ltre_as_names <- apply(as.matrix(c(1:length(lathmat2agep$agestages$stage))), 1,
     paste(lathmat2agep$agestages$stage[X], lathmat2agep$agestages$age[X])
   })
 barplot(t(ltresums_pos), beside = T, col = c("black", "grey", "red"),
-  ylim = c(-0.006, 0.006))
+  ylim = c(-0.010, 0.010))
 barplot(t(ltresums_neg), beside = T, col = c("black", "grey", "red"), add = TRUE)
-text(cex=0.5, y = -0.0065, x = seq(from = 0, to = 3.98*length(ltre_as_names),
+text(cex=0.5, y = -0.0095, x = seq(from = 0, to = 3.98*length(ltre_as_names),
     by = 4), ltre_as_names, xpd=TRUE, srt=45)
 legend("topleft", c("deterministic", "stochastic mean", "stochastic SD"),
   col = c("black", "grey", "red"), pch = 15, bty = "n")
@@ -744,11 +748,11 @@ ltresums_tneg <- cbind(lathmat2m_ltre_summary$ahist_det$matrix1_neg,
   lathmat2m_sltre_summary$ahist_sd$matrix1_neg)
 
 barplot(t(ltresums_tpos), beside = T, col = c("black", "grey", "red"),
-  ylim = c(-0.03, 0.03))
+  ylim = c(-0.04, 0.04))
 barplot(t(ltresums_tneg), beside = T, col = c("black", "grey", "red"),
   add = TRUE)
 abline(0, 0, lty = 3)
-text(cex=0.85, y = -0.040, x = seq(from = 2, 
+text(cex=0.85, y = -0.050, x = seq(from = 2, 
     to = 3.98*length(lathmat2m_ltre_summary$ahist_det$category), by = 4),
   lathmat2m_ltre_summary$ahist_det$category, xpd=TRUE, srt=45)
 legend("topleft", c("deterministic", "stochastic mean", "stochastic SD"),

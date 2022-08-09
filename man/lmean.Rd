@@ -43,8 +43,8 @@ vertical dataset used as input. Only output from \code{lefkoMat} objects
 resulting from raw matrix estimation.}
 }
 \description{
-\code{lmean()} estimates mean projection matrices as element-wise arithmetic
-means.
+Function \code{lmean()} estimates mean projection matrices as element-wise
+arithmetic means.
 }
 \examples{
 # Lathyrus example

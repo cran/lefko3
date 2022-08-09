@@ -433,6 +433,16 @@ density supplied via option \code{sp_density} and only in vital rates in
 which spatial density is included as a fixed factor in the associated
 vital rate model.
 
+When running density dependent simulations involving user-set exponents,
+such as the beta term in the Ricker function and both the alpha and beta
+terms in the Usher function, values above or below the computer limits may
+cause unpredictable behavior. Noted odd behavior includes sudden shifts in
+population size to negative values. This function produces warnings when
+such values are used, and the values used for warnings may be reset with the
+\code{exp_tol} term. In addition, this function resets beta values for the
+Ricker function automatically to positive or negative \code{exp_tol}, giving
+a warning when doing so.
+
 Consistently positive population growth can quickly lead to population size
 numbers larger than can be handled computationally. In that circumstance, a
 continuously rising population size will suddenly become \code{NaN} for the

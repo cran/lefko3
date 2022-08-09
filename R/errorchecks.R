@@ -1235,8 +1235,9 @@ summary_hfv <- function(object, popid = "popid", patchid = "patchid",
   if (totalyears == 1) grammar_years <- " time step."
   
   writeLines(paste0("\nThis hfv dataset contains ", matdim[1], grammar_rows,
-      matdim[2], grammar_vars, totalpops, grammar_pops, totalpatches,
-      grammar_patches, totalindivs, grammar_indivs, totalyears, grammar_years))
+      matdim[2], grammar_vars, totalpops, grammar_pops))
+  writeLines(paste0(totalpatches, grammar_patches, totalindivs, grammar_indivs,
+      totalyears, grammar_years))
   
   if (full) {
     dethonthetoilet <- summary.data.frame(demodata)

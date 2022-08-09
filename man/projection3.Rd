@@ -14,6 +14,7 @@ projection3(
   growthonly = TRUE,
   integeronly = FALSE,
   substoch = 0L,
+  exp_tol = 700,
   sub_warnings = TRUE,
   quiet = FALSE,
   year = NULL,
@@ -59,6 +60,10 @@ Defaults to \code{0}, which does not force substochasticity. Alternatively,
 and forces fecundity to be non-negative; and \code{2} forces all column rows
 in the survival-transition matrices to total no more than 1.0, in addition
 to the actions outlined for option \code{1}.}
+
+\item{exp_tol}{A numeric value used to indicate a maximum value to set
+exponents to in the core kernel to prevent numerical overflow. Defaults to
+\code{700}.}
 
 \item{sub_warnings}{A logical value indicating whether to warn the user if
 density dependence yields matrix values outside of the realm of possibility.
@@ -170,6 +175,14 @@ Density dependent projections are automatically set up if object
 \code{density} is input. If this object is not included, then density
 independent projections will be set up. Note that currently, density
 dependent projections can only be performed with \code{lefkoMat} objects.
+
+When running density dependent simulations involving user-set exponents,
+such as the beta term in the Ricker function and both the alpha and beta
+terms in the Usher function, values above or below the computer limits may
+cause unpredictable behavior. Noted odd behavior includes sudden shifts in
+population size to negative values. This function produces warnings when
+such values are used, and the values used for warnings may be reset with the
+\code{exp_tol} term.
 
 The stage distributions and reproductive values produced are not the
 asymptotic values as would be given by the standardized right and left

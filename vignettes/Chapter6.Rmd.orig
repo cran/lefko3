@@ -71,13 +71,17 @@ lathframeipm <- sf_create(sizes = sizevector, stagenames = stagevector,
   <p style="text-indent: 20px">To work with this dataset, we first need to format the data into *vertical format*, in which each row corresponds to the state of a single individual in two (if ahistorical) or three (if historical) consecutive time intervals. Because this is an IPM, we will need to estimate linear models of vital rates. This will require us to avoid NAs in size and fecundity (fortunately, in this dataset, NA is equivalent to 0), so we will set `NAas0 = TRUE` to inform R to treat NAs as zeroes. We will also set `NRasRep = TRUE` because we will assume that all adult stages other than dormancy are reproductive, and there are mature individuals in the dataset that do not reproduce but need to be included in reproductive stages (setting this option to `TRUE` makes sure that the reproductive status of non-reproductive individuals in potentially reproductive stages is set to 1, although the actual fecundity is not altered). Finally, we will ignore patches marked in the dataset and estimate matrices only for the full population, in order to preserve statistical power for vital rate modeling in historical IPM analysis.</p>
   
   <p style="text-indent: 20px">In the input to `verticalize3()` below, we utilize a repeating pattern of variable names arranged in the same order for each monitoring occasion. This arrangement allows us to enter only the first variable in each set, as long as `noyears` and `blocksize` are set properly and no gaps or shuffles appear in the dataset. The data management functions that we have created for `lefko3` do not require such repeating patterns, but they do make the required input in the function much shorter and more succinct. To see a more detailed summary of the standardized dataset, please remove `full = FALSE` from the `summary_hfv()` call.</p>
+  
+  <p style="text-indent: 20px">Note that prior to standardizing the dataset, we will create a new variable to code individual identity, since different plants in different subpopulations use the same identifiers.</p>
 ```{r Ch6.2}
+lathyrus$indiv_id <- paste(lathyrus$SUBPLOT, lathyrus$GENET)
+
 lathvertipm <- verticalize3(lathyrus, noyears = 4, firstyear = 1988, 
-  individcol = "GENET", blocksize = 9, juvcol = "Seedling1988", 
+  individcol = "indiv_id", blocksize = 9, juvcol = "Seedling1988", 
   sizeacol = "Volume88", repstracol = "FCODE88", fecacol = "Intactseed88", 
   deadacol = "Dead1988", nonobsacol = "Dormant1988", stageassign = lathframeipm,
-  stagesize = "sizea", censorcol = "Missing1988",censorkeep = NA, censor = TRUE,
-  NAas0 = TRUE, NRasRep = TRUE)
+  stagesize = "sizea", censorcol = "Missing1988", censorkeep = NA,
+  censorRepeat = TRUE, censor = TRUE, NAas0 = TRUE, NRasRep = TRUE)
 summary_hfv(lathvertipm, full = FALSE)
 ```
   
@@ -111,9 +115,8 @@ hist(subset(lathvertipm, repstatus2 == 1)$feca2, main = "Fecundity",
   
   <p style="text-indent: 20px">We see that the distribution conforms to a classic count variable with a very low mean value. The first bar suggests that there may be too many zeroes, as well. Let's now formally test our assumptions. We will use the `hfv_qc()` function, which will allow us to assess the quality of the data from the viewpoint of the linear models to be built later. We will use most of the input from the `modelsearch()` call that we will conduct later.</p>
 ```{r Ch6.6}
-hfv_qc(data = lathvertipm, suite = "size",
-  vitalrates = c("surv", "obs", "size", "fec"), juvestimate = "Sdl",
-  indiv = "individ", year = "year2", age = "obsage", year.as.random = TRUE)
+hfv_qc(data = lathvertipm, vitalrates = c("surv", "obs", "size", "fec"),
+  juvestimate = "Sdl", indiv = "individ", year = "year2", age = "obsage")
 ```
   
   <p style="text-indent: 20px">All of the probability variables look like binomials, so we have no problem there. Size and juvenile size appear to be continuous variables that differ significantly from the assumptions of the Gaussian distribution. However, we will still use a Gaussian distribution in this case, for instructional purposes. Fecundity is a count variable with significant overdispersion and significantly more zeros than expected, so we should use a zero-inflated negative binomial distribution.</p>
@@ -127,6 +130,7 @@ lathsupp2 <- supplemental(stage3 = c("Sd", "Sdl", "Sd", "Sdl"),
   givenrate = c(0.345, 0.054, NA, NA),
   multiplier = c(NA, NA, 0.345, 0.054),
   type = c(1, 1, 3, 3), stageframe = lathframeipm, historical = FALSE)
+
 lathsupp3 <- supplemental(stage3 = c("Sd", "Sd", "Sdl", "Sdl", "npr", "Sd", "Sdl"), 
   stage2 = c("Sd", "Sd", "Sd", "Sd", "Sdl", "rep", "rep"),
   stage1 = c("Sd", "rep", "Sd", "rep", "Sd", "mat", "mat"),
@@ -137,6 +141,7 @@ lathsupp3 <- supplemental(stage3 = c("Sd", "Sd", "Sdl", "Sdl", "npr", "Sd", "Sdl
   multiplier = c(NA, NA, NA, NA, NA, 0.345, 0.054),
   type = c(1, 1, 1, 1, 1, 3, 3), type_t12 = c(1, 2, 1, 2, 1, 1, 1),
   stageframe = lathframeipm, historical = TRUE)
+
 #lathsupp2
 #lathsupp3
 ```
@@ -342,7 +347,7 @@ writeLines("Highest historical stochastic sensitivity is associated with
 which(lath3ipmsens_s$h_sensmats[[1]] == max(lath3ipmsens_s$h_sensmats[[1]][which(lath3ipmmean$A[[1]] > 0)]))
 ```
   
-  <p style="text-indent: 20px">Our sensitivity analyses generally suggest that population growth rate is most sensitive to element 273, which is the third column (271 / 103 = 2.650) and the 67th row and so is associated with the transition from vegetative dormancy to one of the mid-to-large-sized adult stages. Deterministic analysis of the hMPM concurs with this (see the historically-corrected output). Historical deterministic and stochastic sensitivity analyses both suggest that population growth rate is most sensitive to changes in element 2, which is the transition from dormant seed in times *t*-1 and *t* to seedling in time *t*+1. Historical stochastic sensitivity also shows an importance to element 105, but this is a biologically impossible transition requiring the individual to be in the dormant seed and seedling stage concurrently in time *t*. So, sensitivity analysis strongly suggests that vegetative dormancy and mid-sized adults have strong impacts on population growth rate.</p>
+  <p style="text-indent: 20px">Our sensitivity analyses generally suggest that population growth rate is most sensitive to element 273, which is the third column (273 / 103 = 2.650) and the 67th row and so is associated with the transition from vegetative dormancy to one of the mid-to-large-sized adult stages. Deterministic analysis of the hMPM concurs with this (see the historically-corrected output). Historical deterministic and stochastic sensitivity analyses both suggest that population growth rate is most sensitive to changes in element 2, which is the transition from dormant seed in times *t*-1 and *t* to seedling in time *t*+1. Historical stochastic sensitivity also shows an importance to element 105, but this is a biologically impossible transition requiring the individual to be in the dormant seed and seedling stage concurrently in time *t*. So, sensitivity analysis strongly suggests that vegetative dormancy and mid-sized adults have strong impacts on population growth rate.</p>
   
   <p style="text-indent: 20px">We will now move on to elasticity analysis. We will reduce the number of occasion steps simulated in the stochastic historical analysis to reduce the amount of computer processing time (this might take several hours even with the number of steps reduced). We will also remove the sensitivity analyses from memory.</p>
 ```{r Ch6.20}
@@ -376,7 +381,7 @@ writeLines("\nThe highest historical stochastic elasticity is associated with
 which(lath3ipmelas_s$h_elasmats[[1]] == max(lath3ipmelas_s$h_elasmats[[1]]))
 ```
   
-  <p style="text-indent: 20px">Ahistorical analyses agree that $\lambda$ is most elastic in response to stasis in vegetative dormancy (element 209 is the element in the third column, 209 / 103 = 2.029, and the third row, 209 - (103 * 2) = 3). The historical analyses both agree that population growth rate is most elastic to changes in element 10,717, which is in the 2nd column and the 108th row and corresponds to the transition from dormant seed in time *t*-1 and seedling in time *t* to one of the smallest adult stages in time *t*+1. Historically-corrected deterministic and stochastic results suggest that elements 2 and 5 are most crucial, and these correspond to the transitions from dormant seed to seedling and small adult (second size class). Now let's plot the elasticity of $\lambda$ to transitions from both perspectives.</p>
+  <p style="text-indent: 20px">Ahistorical analyses agree that $\lambda$ is most elastic in response to growth from vegetative dormancy to a smaller sized adult (element 214 is the element in the third column, 214 / 103 = 2.078, and the eighth row, 214 - (103 * 2) = 8). The historical analyses both agree that population growth rate is most elastic to changes in element 10,717, which is in the 2nd column and the 108th row and corresponds to the transition from dormant seed in time *t*-1 and seedling in time *t* to one of the smallest adult stages in time *t*+1. Historically-corrected deterministic and stochastic results suggest that elements 214 and 5 are most crucial, with the latter corresponding to the transition from dormant seed to extremely small adult (second size class). Now let's plot the elasticity of $\lambda$ to transitions from both perspectives.</p>
 ```{r Ch6.21, fig.cap = "Figure 6.7. Ahistorical vs. historically-corrected elasticity of lambda to stage"}
 elas_put_together <- cbind.data.frame(colSums(lath2ipmelas$ah_elasmats[[1]]), 
   colSums(lath3ipmelas$ah_elasmats[[1]]), colSums(lath2ipmelas_s$ah_elasmats[[1]]), 
@@ -393,7 +398,7 @@ legend("topright", c("det ahist", "det hist", "sto ahist", "sto hist"),
 par(lty = lty.o)
 ```
   
-  <p style="text-indent: 20px">The plot of these distributions shows the strong importance of vegetative dormancy and small adults. The tallest bars in ahistorical analyses correspond to dormant adults. Historical analyses reduce the importance of dormant adults somewhat, and show a greater importance to slightl larger adults than in the ahistorical case.</p>
+  <p style="text-indent: 20px">The plot of these distributions shows the strong importance of vegetative dormancy and small adults. The tallest bars in ahistorical analyses correspond to dormant adults. Historical analyses reduce the importance of dormant adults somewhat, and show a greater importance to slightly larger adults than in the ahistorical case.</p>
   
   <p style="text-indent: 20px">Now let's take a look at the summed elasticities of different kinds of transitions, beginning with a comparison of ahistorical to historically-corrected transitions.</p>
 ```{r Ch6.22, fig.cap = "Figure 6.8. Ahistorical vs. historically-corrected elasticity of lambda to transitions"}
