@@ -482,7 +482,7 @@ lathmodelsln3 <- modelsearch(lathvertln, historical = TRUE,
   vitalrates = c("surv", "obs", "size", "repst", "fec"), juvestimate = "Sdl",
   bestfit = "AICc&k", sizedist = "gaussian", fecdist = "poisson", 
   indiv = "individ", patch = "patchid", year = "year2", year.as.random = TRUE,
-  patch.as.random = TRUE, show.model.tables = TRUE, quiet = TRUE)
+  patch.as.random = TRUE, show.model.tables = TRUE, quiet = "partial")
 
 lathsupp3 <- supplemental(stage3 = c("Sd", "Sd", "Sdl", "Sdl", "mat", "Sd", "Sdl"), 
   stage2 = c("Sd", "Sd", "Sd", "Sd", "Sdl", "rep", "rep"),
@@ -553,7 +553,8 @@ vertmodels3f <- modelsearch(vert.data.f, historical = TRUE, suite = "main",
   sizeb = c("sizeb3", "sizeb2", "sizeb1"), sizec = c("sizec3", "sizec2", "sizec1"),
   approach = "glm", vitalrates = c("surv", "obs", "size", "repst", "fec"),
   sizedist = "negbin", sizebdist = "poisson", sizecdist = "poisson",
-  fecdist = "poisson", patch.as.random = TRUE, year.as.random = TRUE)
+  fecdist = "poisson", patch.as.random = TRUE, year.as.random = TRUE,
+  quiet = "partial")
 
 vertsupp3f <- supplemental(stage3 = c("DS", "P1", "DS", "P1", "P2", "P2", "P3",
     "Sdl", "Sdl", "Sdl", "Dorm", "V1 I0 D0", "V2 I0 D0", "V3 I0 D0", "Dorm",

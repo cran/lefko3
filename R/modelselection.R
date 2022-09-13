@@ -212,9 +212,13 @@
 #' @param accuracy A logical value indicating whether to test accuracy of
 #' models. See \code{Notes} section for details on hoew accuracy is assessed.
 #' Defaults to \code{TRUE}.
-#' @param quiet If set to TRUE, then model building and selection will proceed
-#' with most warnings and diagnostic messages silenced. Defaults to
-#' \code{FALSE}.
+#' @param quiet May be a logical value, or any one of the strings \code{"yes"},
+#' \code{"no"}, or \code{"partial"}. If set to \code{TRUE} or \code{"yes"}, then
+#' model building and selection will proceed with most warnings and diagnostic
+#' messages silenced. If set to \code{FALSE} or |code{"no"}, then all warnings
+#' and diagnostic messages will be displayed. If set to \code{"partial"}, then
+#' only messages related to transitions between different vital rate models will
+#' be displayed. Defaults to \code{FALSE}.
 #' 
 #' @return This function yields an object of class \code{lefkoMod}, which is a
 #' list in which the first 14 elements are the best-fit models for survival,
@@ -366,10 +370,9 @@
 #' distribution, including survival, observation status, reproductive status,
 #' and juvenile version of these, accuracy is calculated as the percent of
 #' predicted responses equal to actual responses. In all other models, accuracy
-#' is actually the conditional R-wquared using package \code{MuMIn}'s
-#' \code{\link[MuMIn]{r.squaredGLMM}()} function, estimated via the delta
-#' method. When this method fails, \code{modelsearch()} calculates McFadden's
-#' pseudo R-squared. If this fails, then \code{NA} is returned.
+#' is actually assessed as a simple R-squared in which the observed response
+#' values per data subset are compared to the predicted response values
+#' according to each best-fit model.
 #' 
 #' Care must be taken to build models that test the impacts of state in occasion
 #' \emph{t}-1 for historical models, and that do not test these impacts for
@@ -448,7 +451,7 @@
 #'   vitalrates = c("surv", "obs", "size", "repst", "fec"), juvestimate = "Sdl",
 #'   bestfit = "AICc&k", sizedist = "gaussian", fecdist = "poisson", 
 #'   indiv = "individ", patch = "patchid", year = "year2",year.as.random = TRUE,
-#'   patch.as.random = TRUE, show.model.tables = TRUE, quiet = TRUE)
+#'   patch.as.random = TRUE, show.model.tables = TRUE, quiet = "partial")
 #' 
 #' # Here we use supplemental() to provide overwrite and reproductive info
 #' lathsupp3 <- supplemental(stage3 = c("Sd", "Sd", "Sdl", "Sdl", "mat", "Sd", "Sdl"), 
@@ -496,12 +499,37 @@ modelsearch <- function(data, stageframe = NULL, historical = TRUE,
   patchcol <- yearcol <- extra_factors <- 0
   
   sizeb_used <- sizec_used <- density_used <- indcova_used <- FALSE
-  indcovb_used <- indcovc_used <- FALSE
+  indcovb_used <- indcovc_used <- quiet.mileposts <- FALSE
   
   total_vars <- length(names(data))
   
+  if (is.logical(quiet)) {
+    quiet.mileposts <- quiet
+  } else if (is.character(quiet)){
+    quiet.char <- tolower(quiet)
+    
+    if (grepl("y", quiet.char)) {
+      quiet <- TRUE
+      quiet.mileposts <- TRUE
+    } else if (grepl("n", quiet.char)) {
+      quiet <- FALSE
+      quiet.mileposts <- FALSE
+    } else if (grepl("par", quiet.char)) {
+      quiet <- TRUE
+      quiet.mileposts <- FALSE
+    } else {
+      warning("Option quiet not set to recognized input. Will set to FALSE.",
+        call. = FALSE)
+      quiet <- FALSE
+    }
+  } else {
+    warning("Option quiet not set to recognized input. Will set to FALSE.",
+      call. = FALSE)
+    quiet <- FALSE
+  }
+  
   #Input testing, input standardization, and exception handling
-  if (all(class(data) != "hfvdata")) {
+  if (all(!is(data, "hfvdata"))) {
     warning("This function was made to work with standardized historically
       formatted vertical datasets, as provided by the verticalize() and
       historicalize() functions. Failure to format the input data properly and
@@ -513,7 +541,7 @@ modelsearch <- function(data, stageframe = NULL, historical = TRUE,
     if (is.null(stageframe)) {
       stop("Cannot test groups without inclusion of appropriate stageframe.",
         call. = FALSE)
-    } else if (!is.element("stageframe", class(stageframe))) {
+    } else if (!is(stageframe, "stageframe")) {
       stop("Cannot test groups without inclusion of appropriate stageframe.",
         call. = FALSE)
     } else {
@@ -1438,8 +1466,8 @@ modelsearch <- function(data, stageframe = NULL, historical = TRUE,
   
   if(any(!suppressWarnings(!is.na(as.numeric(as.character(surv.data[, which(names(surv.data) == size[1])])))))) {
     warning("Modelsearch(), flefko3(), flefko2(), and aflefko2() are made to work
-      with numeric size variables. Use of categorical variables may result in
-      errors and unexpected behavior.", call. = FALSE)
+      with numeric size variables. Omitting size or using categorical size variables may
+      result in errors or unexpected behavior.", call. = FALSE)
   }
   if (suite == "full" | suite == "main" | suite == "size") {
     if (any(is.na(surv.data[, which(names(surv.data) == size[2])]))) {
@@ -1787,7 +1815,7 @@ modelsearch <- function(data, stageframe = NULL, historical = TRUE,
     if (is.element(0, surv.data[, chosen_var]) & is.element(1, surv.data[, chosen_var])) {
       
       surv.global.list <- .headmaster_ritual(vrate = 1, approach = approach,
-        dist = "binom", zero = FALSE, truncz = FALSE, quiet = quiet,
+        dist = "binom", zero = FALSE, truncz = FALSE, quiet = quiet, quiet.mil = quiet.mileposts,
         usedformula = formulae$full.surv.model, subdata = surv.data,
         vind = surv.ind, vtrans = surv.trans, suite = suite,
         global.only = global.only, criterion = used.criterion,
@@ -1835,7 +1863,7 @@ modelsearch <- function(data, stageframe = NULL, historical = TRUE,
     if (is.element(0, obs.data[, chosen_var]) & is.element(1, obs.data[, chosen_var])) {
         
       obs.global.list <- .headmaster_ritual(vrate = 2, approach = approach, 
-        dist = "binom", zero = FALSE, truncz = FALSE, quiet = quiet, 
+        dist = "binom", zero = FALSE, truncz = FALSE, quiet = quiet, quiet.mil = quiet.mileposts,
         usedformula = formulae$full.obs.model, subdata = obs.data,
         vind = obs.ind, vtrans = obs.trans, suite = suite,
         global.only = global.only, criterion = used.criterion,
@@ -1881,7 +1909,7 @@ modelsearch <- function(data, stageframe = NULL, historical = TRUE,
   if (!is.numeric(formulae$full.size.model) & nchar(formulae$full.size.model) > 1) {
     
     size.global.list <- .headmaster_ritual(vrate = 3, approach = approach, 
-      dist = sizedist, zero = size.zero, truncz = size.trunc, quiet = quiet, 
+      dist = sizedist, zero = size.zero, truncz = size.trunc, quiet = quiet, quiet.mil = quiet.mileposts,
       usedformula = formulae$full.size.model, subdata = size.data,
       vind = size.ind, vtrans = size.trans, suite = suite,
       global.only = global.only, criterion = used.criterion, bestfit = bestfit,
@@ -1898,9 +1926,9 @@ modelsearch <- function(data, stageframe = NULL, historical = TRUE,
     size.bf <- size.global.list$bf.model
     size.null <- size.global.list$null.model
     
-    size.accuracy <- .accu_predict(bestfitmodel = size.bf,
-      subdata = size.data, param = size[1], style = 2,
-      nullmodel = size.null, quiet = quiet, check = accuracy)
+    size.accuracy <- .accu_predict(bestfitmodel = size.bf, subdata = size.data,
+      param = size[1], style = 2, nullmodel = size.null, dist = sizedist,
+      trunc = size.trunc, approach = approach, quiet = quiet, check = accuracy)
     
   } else {
     size.global.model <- 1
@@ -1913,7 +1941,7 @@ modelsearch <- function(data, stageframe = NULL, historical = TRUE,
   if (!is.numeric(formulae$full.sizeb.model) & nchar(formulae$full.sizeb.model) > 1) {
     
     sizeb.global.list <- .headmaster_ritual(vrate = 10, approach = approach, 
-      dist = sizebdist, zero = sizeb.zero, truncz = sizeb.trunc, quiet = quiet, 
+      dist = sizebdist, zero = sizeb.zero, truncz = sizeb.trunc, quiet = quiet, quiet.mil = quiet.mileposts,
       usedformula = formulae$full.sizeb.model, subdata = sizeb.data,
       vind = sizeb.ind, vtrans = sizeb.trans, suite = suite,
       global.only = global.only, criterion = used.criterion, bestfit = bestfit,
@@ -1930,9 +1958,9 @@ modelsearch <- function(data, stageframe = NULL, historical = TRUE,
     sizeb.bf <- sizeb.global.list$bf.model
     sizeb.null <- sizeb.global.list$null.model
     
-    sizeb.accuracy <- .accu_predict(bestfitmodel = sizeb.bf,
-      subdata = sizeb.data, param = sizeb[1], style = 2,
-      nullmodel = sizeb.null, quiet = quiet, check = accuracy)
+    sizeb.accuracy <- .accu_predict(bestfitmodel = sizeb.bf, subdata = sizeb.data,
+      param = sizeb[1], style = 2, nullmodel = sizeb.null, dist = sizebdist,
+      trunc = sizeb.trunc, approach = approach, quiet = quiet, check = accuracy)
     
   } else {
     sizeb.global.model <- 1
@@ -1945,7 +1973,7 @@ modelsearch <- function(data, stageframe = NULL, historical = TRUE,
   if (!is.numeric(formulae$full.sizec.model) & nchar(formulae$full.sizec.model) > 1) {
     
     sizec.global.list <- .headmaster_ritual(vrate = 11, approach = approach, 
-      dist = sizecdist, zero = sizec.zero, truncz = sizec.trunc, quiet = quiet, 
+      dist = sizecdist, zero = sizec.zero, truncz = sizec.trunc, quiet = quiet, quiet.mil = quiet.mileposts,
       usedformula = formulae$full.sizec.model, subdata = sizec.data,
       vind = sizec.ind, vtrans = sizec.trans, suite = suite,
       global.only = global.only, criterion = used.criterion, bestfit = bestfit,
@@ -1962,9 +1990,9 @@ modelsearch <- function(data, stageframe = NULL, historical = TRUE,
     sizec.bf <- sizec.global.list$bf.model
     sizec.null <- sizec.global.list$null.model
     
-    sizec.accuracy <- .accu_predict(bestfitmodel = sizec.bf,
-      subdata = sizec.data, param = sizec[1], style = 2,
-      nullmodel = sizec.null, quiet = quiet, check = accuracy)
+    sizec.accuracy <- .accu_predict(bestfitmodel = sizec.bf, subdata = sizec.data,
+      param = sizec[1], style = 2, nullmodel = sizec.null, dist = sizecdist,
+      trunc = sizec.trunc, approach = approach, quiet = quiet, check = accuracy)
     
   } else {
     sizec.global.model <- 1
@@ -1978,7 +2006,7 @@ modelsearch <- function(data, stageframe = NULL, historical = TRUE,
     chosen_var <- which(names(repst.data) == repst[1])
     if (is.element(0, repst.data[, chosen_var]) & is.element(1, repst.data[, chosen_var])) {
       repst.global.list <- .headmaster_ritual(vrate = 4, approach = approach, 
-        dist = "binom", zero = FALSE, truncz = FALSE, quiet = quiet, 
+        dist = "binom", zero = FALSE, truncz = FALSE, quiet = quiet, quiet.mil = quiet.mileposts,
         usedformula = formulae$full.repst.model, subdata = repst.data,
         vind = repst.ind, vtrans = repst.trans, suite = suite,
         global.only = global.only, criterion = used.criterion,
@@ -2024,7 +2052,7 @@ modelsearch <- function(data, stageframe = NULL, historical = TRUE,
   if (!is.numeric(formulae$full.fec.model) & nchar(formulae$full.fec.model) > 1) {
     
     fec.global.list <- .headmaster_ritual(vrate = 5, approach = approach, 
-      dist = fecdist, zero = fec.zero, truncz = fec.trunc, quiet = quiet, 
+      dist = fecdist, zero = fec.zero, truncz = fec.trunc, quiet = quiet, quiet.mil = quiet.mileposts,
       usedformula = formulae$full.fec.model, subdata = fec.data,
       vind = fec.ind, vtrans = fec.trans, suite = suite,
       global.only = global.only, criterion = used.criterion, bestfit = bestfit,
@@ -2043,7 +2071,8 @@ modelsearch <- function(data, stageframe = NULL, historical = TRUE,
     
     fec.accuracy <- .accu_predict(bestfitmodel = fec.bf, subdata = fec.data,
       param = names(fec.data)[usedfec], style = 2, nullmodel = fec.null,
-      quiet = quiet, check = accuracy)
+      dist = fecdist, trunc = fec.trunc, approach = approach, quiet = quiet,
+      check = accuracy)
     
   } else {
     fec.global.model <- 1
@@ -2058,7 +2087,7 @@ modelsearch <- function(data, stageframe = NULL, historical = TRUE,
     if (is.element(0, juvsurv.data[, chosen_var]) & is.element(1, juvsurv.data[, chosen_var])) {
       
       juv.surv.global.list <- .headmaster_ritual(vrate = 6, approach = approach,
-        dist = "binom", zero = FALSE, truncz = FALSE, quiet = quiet,
+        dist = "binom", zero = FALSE, truncz = FALSE, quiet = quiet, quiet.mil = quiet.mileposts,
         usedformula = formulae$juv.surv.model, subdata = juvsurv.data,
         vind = juvsurv.ind, vtrans = juvsurv.trans, suite = suite,
         global.only = global.only, criterion = used.criterion,
@@ -2099,7 +2128,7 @@ modelsearch <- function(data, stageframe = NULL, historical = TRUE,
     if (is.element(0, juvobs.data[, chosen_var]) & is.element(1, juvobs.data[, chosen_var])) {
       
       juv.matst.global.list <- .headmaster_ritual(vrate = 14, approach = approach,
-        dist = "binom", zero = FALSE, truncz = FALSE, quiet = quiet,
+        dist = "binom", zero = FALSE, truncz = FALSE, quiet = quiet, quiet.mil = quiet.mileposts,
         usedformula = formulae$juv.matst.model, subdata = juvobs.data,
         vind = juvobs.ind, vtrans = juvobs.trans, suite = suite,
         global.only = global.only, criterion = used.criterion,
@@ -2154,7 +2183,7 @@ modelsearch <- function(data, stageframe = NULL, historical = TRUE,
     if (is.element(0, juvobs.data[, chosen_var]) & is.element(1, juvobs.data[, chosen_var])) {
       
       juv.obs.global.list <- .headmaster_ritual(vrate = 7, approach = approach,
-        dist = "binom", zero = FALSE, truncz = FALSE, quiet = quiet,
+        dist = "binom", zero = FALSE, truncz = FALSE, quiet = quiet, quiet.mil = quiet.mileposts,
         usedformula = formulae$juv.obs.model, subdata = juvobs.data,
         vind = juvobs.ind, vtrans = juvobs.trans, suite = suite,
         global.only = global.only, criterion = used.criterion,
@@ -2200,7 +2229,7 @@ modelsearch <- function(data, stageframe = NULL, historical = TRUE,
   if (!is.numeric(formulae$juv.size.model) & nchar(formulae$juv.size.model) > 1) {
     
     juv.size.global.list <- .headmaster_ritual(vrate = 8, approach = approach, 
-      dist = sizedist, zero = jsize.zero, truncz = jsize.trunc, quiet = quiet, 
+      dist = sizedist, zero = jsize.zero, truncz = jsize.trunc, quiet = quiet, quiet.mil = quiet.mileposts,
       usedformula = formulae$juv.size.model, subdata = juvsize.data,
       vind = juvsize.ind, vtrans = juvsize.trans, suite = suite,
       global.only = global.only, criterion = used.criterion, bestfit = bestfit,
@@ -2219,7 +2248,8 @@ modelsearch <- function(data, stageframe = NULL, historical = TRUE,
     
     juvsize.accuracy <- .accu_predict(bestfitmodel = juvsize.bf,
       subdata = juvsize.data, param = size[1], style = 2,
-      nullmodel = juvsize.null, quiet = quiet, check = accuracy)
+      nullmodel = juvsize.null, dist = sizedist, trunc = jsize.trunc,
+      approach = approach, quiet = quiet, check = accuracy)
     
   } else {
     juv.size.global.model <- 1
@@ -2232,7 +2262,7 @@ modelsearch <- function(data, stageframe = NULL, historical = TRUE,
   if (!is.numeric(formulae$juv.sizeb.model) & nchar(formulae$juv.sizeb.model) > 1) {
     
     juv.sizeb.global.list <- .headmaster_ritual(vrate = 12, approach = approach, 
-      dist = sizebdist, zero = jsizeb.zero, truncz = jsizeb.trunc, quiet = quiet, 
+      dist = sizebdist, zero = jsizeb.zero, truncz = jsizeb.trunc, quiet = quiet, quiet.mil = quiet.mileposts,
       usedformula = formulae$juv.sizeb.model, subdata = juvsizeb.data,
       vind = juvsizeb.ind, vtrans = juvsizeb.trans, suite = suite,
       global.only = global.only, criterion = used.criterion, bestfit = bestfit,
@@ -2251,7 +2281,8 @@ modelsearch <- function(data, stageframe = NULL, historical = TRUE,
     
     juvsizeb.accuracy <- .accu_predict(bestfitmodel = juvsizeb.bf,
       subdata = juvsizeb.data, param = sizeb[1], style = 2,
-      nullmodel = juvsizeb.null, quiet = quiet, check = accuracy)
+      nullmodel = juvsizeb.null, dist = sizebdist, trunc = jsizeb.trunc,
+      approach = approach, quiet = quiet, check = accuracy)
     
   } else {
     juv.sizeb.global.model <- 1
@@ -2264,7 +2295,7 @@ modelsearch <- function(data, stageframe = NULL, historical = TRUE,
   if (!is.numeric(formulae$juv.sizec.model) & nchar(formulae$juv.sizec.model) > 1) {
     
     juv.sizec.global.list <- .headmaster_ritual(vrate = 13, approach = approach, 
-      dist = sizecdist, zero = jsizec.zero, truncz = jsizec.trunc, quiet = quiet, 
+      dist = sizecdist, zero = jsizec.zero, truncz = jsizec.trunc, quiet = quiet, quiet.mil = quiet.mileposts,
       usedformula = formulae$juv.sizec.model, subdata = juvsizec.data,
       vind = juvsizec.ind, vtrans = juvsizec.trans, suite = suite,
       global.only = global.only, criterion = used.criterion, bestfit = bestfit,
@@ -2283,7 +2314,8 @@ modelsearch <- function(data, stageframe = NULL, historical = TRUE,
     
     juvsizec.accuracy <- .accu_predict(bestfitmodel = juvsizec.bf,
       subdata = juvsizec.data, param = sizec[1], style = 2,
-      nullmodel = juvsizec.null, quiet = quiet, check = accuracy)
+      nullmodel = juvsizec.null, dist = sizecdist, trunc = jsizec.trunc,
+      approach = approach, quiet = quiet, check = accuracy)
     
   } else {
     juv.sizec.global.model <- 1
@@ -2297,7 +2329,7 @@ modelsearch <- function(data, stageframe = NULL, historical = TRUE,
     chosen_var <- which(names(juvrepst.data) == repst[1])
     if (is.element(0, juvrepst.data[, chosen_var]) & is.element(1, juvrepst.data[, chosen_var])) {
       juv.repst.global.list <- .headmaster_ritual(vrate = 9, approach = approach, 
-        dist = "binom", zero = FALSE, truncz = FALSE, quiet = quiet, 
+        dist = "binom", zero = FALSE, truncz = FALSE, quiet = quiet, quiet.mil = quiet.mileposts,
         usedformula = formulae$juv.repst.model, subdata = juvrepst.data,
         vind = juvrepst.ind, vtrans = juvrepst.trans, suite = suite,
         global.only = global.only, criterion = used.criterion,
@@ -2341,7 +2373,7 @@ modelsearch <- function(data, stageframe = NULL, historical = TRUE,
     juvrepst.accuracy <- NA
   }
   
-  if (!quiet & global.only == FALSE) {message("\nFinished selecting best-fit models.\n")}
+  if (!quiet.mileposts & global.only == FALSE) {message("\nFinished selecting best-fit models.\n")}
   
   qcoutput <- cbind.data.frame(
     c("survival", "observation", "size", "sizeb", "sizec", "reproduction", "fecundity",
@@ -2433,6 +2465,8 @@ modelsearch <- function(data, stageframe = NULL, historical = TRUE,
 #' Defaults to \code{FALSE}.
 #' @param quiet A logical value indicating whether to issue diagnostic messages
 #' while running. Defaults to \code{FALSE}.
+#' @param quiet.mil A logical value indicating whether to issue model milepost
+#' messages. Defaults to \code{FALSE}.
 #' @param usedformula The specific formula to use in modeling, entered as text
 #' in list format.
 #' @param subdata The data frame to use in modeling.
@@ -2482,10 +2516,11 @@ modelsearch <- function(data, stageframe = NULL, historical = TRUE,
 #' @keywords internal
 #' @noRd
 .headmaster_ritual <- function(vrate, approach = "mixed", dist = NA,
-  zero = FALSE, truncz = FALSE, quiet = FALSE, usedformula, subdata, vind,
-  vtrans, suite, global.only = FALSE, criterion = "AICc", bestfit = "AICc&k",
-  correction.patch, correction.year, correction.indiv, alt_formula,
-  alt_nocovsformula, alt_glmformula, extra_fac, null_model = FALSE) {
+  zero = FALSE, truncz = FALSE, quiet = FALSE, quiet.mil = FALSE, usedformula,
+  subdata, vind, vtrans, suite, global.only = FALSE, criterion = "AICc",
+  bestfit = "AICc&k", correction.patch, correction.year, correction.indiv,
+  alt_formula, alt_nocovsformula, alt_glmformula, extra_fac,
+  null_model = FALSE) {
   
   old <- options()
   on.exit(options(old))
@@ -2500,46 +2535,46 @@ modelsearch <- function(data, stageframe = NULL, historical = TRUE,
   }
   
   if (vrate == 1) {
-    if (!quiet) {message("\nDeveloping global model of survival probability...\n");}
+    if (!quiet.mil) {message("\nDeveloping global model of survival probability...\n");}
     binom.model = TRUE
   } else if (vrate == 2) {
-    if (!quiet) {message("\nDeveloping global model of observation probability...\n");}
+    if (!quiet.mil) {message("\nDeveloping global model of observation probability...\n");}
     binom.model = TRUE
   } else if (vrate == 3) {
-    if (!quiet) {message("\nDeveloping global model of size...\n");}
+    if (!quiet.mil) {message("\nDeveloping global model of size...\n");}
     binom.model = FALSE
   } else if (vrate == 4) {
-    if (!quiet) {message("\nDeveloping global model of reproduction probability...\n");}
+    if (!quiet.mil) {message("\nDeveloping global model of reproduction probability...\n");}
     binom.model = TRUE
   } else if (vrate == 5) {
-    if (!quiet) {message("\nDeveloping global model of fecundity...\n");}
+    if (!quiet.mil) {message("\nDeveloping global model of fecundity...\n");}
     binom.model = FALSE
   } else if (vrate == 6) {
-    if (!quiet) {message("\nDeveloping global model of juvenile survival probability...\n");}
+    if (!quiet.mil) {message("\nDeveloping global model of juvenile survival probability...\n");}
     binom.model = TRUE
   } else if (vrate == 7) {
-    if (!quiet) {message("\nDeveloping global model of juvenile observation probability...\n");}
+    if (!quiet.mil) {message("\nDeveloping global model of juvenile observation probability...\n");}
     binom.model = TRUE
   } else if (vrate == 8) {
-    if (!quiet) {message("\nDeveloping global model of juvenile size...\n");}
+    if (!quiet.mil) {message("\nDeveloping global model of juvenile size...\n");}
     binom.model = FALSE
   } else if (vrate == 9) {
-    if (!quiet) {message("\nDeveloping global model of juvenile reproduction probability...\n");}
+    if (!quiet.mil) {message("\nDeveloping global model of juvenile reproduction probability...\n");}
     binom.model = TRUE
   } else if (vrate == 10) {
-    if (!quiet) {message("\nDeveloping global model of secondary size...\n");}
+    if (!quiet.mil) {message("\nDeveloping global model of secondary size...\n");}
     binom.model = FALSE
   } else if (vrate == 11) {
-    if (!quiet) {message("\nDeveloping global model of tertiary size...\n");}
+    if (!quiet.mil) {message("\nDeveloping global model of tertiary size...\n");}
     binom.model = FALSE
   } else if (vrate == 12) {
-    if (!quiet) {message("\nDeveloping global model of juvenile secondary size...\n");}
+    if (!quiet.mil) {message("\nDeveloping global model of juvenile secondary size...\n");}
     binom.model = FALSE
   } else if (vrate == 13) {
-    if (!quiet) {message("\nDeveloping global model of juvenile tertiary size...\n");}
+    if (!quiet.mil) {message("\nDeveloping global model of juvenile tertiary size...\n");}
     binom.model = FALSE
   } else if (vrate == 14) {
-    if (!quiet) {message("\nDeveloping global model of juvenile maturity status...\n");}
+    if (!quiet.mil) {message("\nDeveloping global model of juvenile maturity status...\n");}
     binom.model = TRUE
   } else {
     stop("Vital rate model not recognized.", call. = FALSE)
@@ -2548,7 +2583,7 @@ modelsearch <- function(data, stageframe = NULL, historical = TRUE,
   global.model <- .levindurosier(usedformula, subdata, approach, binom.model,
     dist, truncz, zero, quiet)
   
-  if (any(class(global.model) == "try-error")) {
+  if (any(is(global.model, "try-error"))) {
     if (!is.na(alt_formula)) {
       nox.model <- alt_formula
     } else {
@@ -2564,7 +2599,7 @@ modelsearch <- function(data, stageframe = NULL, historical = TRUE,
         dist, truncz, zero, quiet)
     }
     
-    if (any(class(global.model) == "try-error")) {
+    if (any(is(global.model, "try-error"))) {
       nopat.model <- nox.model
       
       if (!is.na(correction.patch)) {
@@ -2581,7 +2616,7 @@ modelsearch <- function(data, stageframe = NULL, historical = TRUE,
       }
     }
     
-    if (any(class(global.model) == "try-error")) {
+    if (any(is(global.model, "try-error"))) {
       noyr.model <- nopat.model
       
       if (!is.na(correction.year)) {
@@ -2598,7 +2633,7 @@ modelsearch <- function(data, stageframe = NULL, historical = TRUE,
       }
     }
     
-    if (any(class(global.model) == "try-error")) {
+    if (any(is(global.model, "try-error"))) {
       nocovs.model <- alt_nocovsformula
       
       if (!quiet) {
@@ -2609,7 +2644,7 @@ modelsearch <- function(data, stageframe = NULL, historical = TRUE,
         dist, truncz, zero, quiet)
     }
     
-    if (any(class(global.model) == "try-error")) {
+    if (any(is(global.model, "try-error"))) {
       nocovpat.model <- nocovs.model
       
       if (!is.na(correction.patch)) {
@@ -2626,7 +2661,7 @@ modelsearch <- function(data, stageframe = NULL, historical = TRUE,
       }
     }
     
-    if (any(class(global.model) == "try-error")) {
+    if (any(is(global.model, "try-error"))) {
       nocovyr.model <- nocovpat.model
       
       if (!is.na(correction.year)) {
@@ -2643,7 +2678,7 @@ modelsearch <- function(data, stageframe = NULL, historical = TRUE,
       }
     }
     
-    if (any(class(global.model) == "try-error")) {
+    if (any(is(global.model, "try-error"))) {
       noind.model <- usedformula
       
       if (!is.na(correction.indiv)) {
@@ -2661,7 +2696,7 @@ modelsearch <- function(data, stageframe = NULL, historical = TRUE,
     }
     
     # The no random term version
-    if (any(class(global.model) == "try-error") & approach == "mixed") {
+    if (any(is(global.model, "try-error")) & approach == "mixed") {
       noran.model <- alt_glmformula
       
       if (!quiet) {
@@ -2672,8 +2707,8 @@ modelsearch <- function(data, stageframe = NULL, historical = TRUE,
         binom.model, dist, truncz, zero, quiet)
     }
     
-    if (any(class(global.model) == "try-error")) {
-      if (!quiet) {
+    if (any(is(global.model, "try-error"))) {
+      if (!quiet.mil) {
         if (vrate == 1) {
           message("\nCould not properly estimate a global model for survival probability.")
         } else if (vrate == 2) {
@@ -2718,33 +2753,33 @@ modelsearch <- function(data, stageframe = NULL, historical = TRUE,
   
   if (!cutswitch) {
     if (vrate == 1) {
-      if (!quiet) {message("\nGlobal model of survival probability developed. Proceeding with model dredge...\n");}
+      if (!quiet.mil) {message("\nGlobal model of survival probability developed. Proceeding with model dredge...\n");}
     } else if (vrate == 2) {
-      if (!quiet) {message("\nGlobal model of observation probability developed. Proceeding with model dredge...\n");}
+      if (!quiet.mil) {message("\nGlobal model of observation probability developed. Proceeding with model dredge...\n");}
     } else if (vrate == 3) {
-      if (!quiet) {message("\nGlobal model of primary size developed. Proceeding with model dredge...\n");}
+      if (!quiet.mil) {message("\nGlobal model of primary size developed. Proceeding with model dredge...\n");}
     } else if (vrate == 4) {
-      if (!quiet) {message("\nGlobal model of reproduction probability developed. Proceeding with model dredge...\n");}
+      if (!quiet.mil) {message("\nGlobal model of reproduction probability developed. Proceeding with model dredge...\n");}
     } else if (vrate == 5) {
-      if (!quiet) {message("\nGlobal model of fecundity developed. Proceeding with model dredge...\n");}
+      if (!quiet.mil) {message("\nGlobal model of fecundity developed. Proceeding with model dredge...\n");}
     } else if (vrate == 6) {
-      if (!quiet) {message("\nGlobal model of juvenile survival probability developed. Proceeding with model dredge...\n");}
+      if (!quiet.mil) {message("\nGlobal model of juvenile survival probability developed. Proceeding with model dredge...\n");}
     } else if (vrate == 7) {
-      if (!quiet) {message("\nGlobal model of juvenile observation probability developed. Proceeding with model dredge...\n");}
+      if (!quiet.mil) {message("\nGlobal model of juvenile observation probability developed. Proceeding with model dredge...\n");}
     } else if (vrate == 8) {
-      if (!quiet) {message("\nGlobal model of juvenile primary size developed. Proceeding with model dredge...\n");}
+      if (!quiet.mil) {message("\nGlobal model of juvenile primary size developed. Proceeding with model dredge...\n");}
     } else if (vrate == 9) {
-      if (!quiet) {message("\nGlobal model of juvenile reproduction probability developed. Proceeding with model dredge...\n");}
+      if (!quiet.mil) {message("\nGlobal model of juvenile reproduction probability developed. Proceeding with model dredge...\n");}
     } else if (vrate == 10) {
-      if (!quiet) {message("\nGlobal model of secondary size developed. Proceeding with model dredge...\n");}
+      if (!quiet.mil) {message("\nGlobal model of secondary size developed. Proceeding with model dredge...\n");}
     } else if (vrate == 11) {
-      if (!quiet) {message("\nGlobal model of tertiary size developed. Proceeding with model dredge...\n");}
+      if (!quiet.mil) {message("\nGlobal model of tertiary size developed. Proceeding with model dredge...\n");}
     } else if (vrate == 12) {
-      if (!quiet) {message("\nGlobal model of juvenile secondary size developed. Proceeding with model dredge...\n");}
+      if (!quiet.mil) {message("\nGlobal model of juvenile secondary size developed. Proceeding with model dredge...\n");}
     } else if (vrate == 13) {
-      if (!quiet) {message("\nGlobal model of juvenile tertiary size developed. Proceeding with model dredge...\n");}
+      if (!quiet.mil) {message("\nGlobal model of juvenile tertiary size developed. Proceeding with model dredge...\n");}
     } else if (vrate == 14) {
-      if (!quiet) {message("\nGlobal model of juvenile maturity status developed. Proceeding with model dredge...\n");}
+      if (!quiet.mil) {message("\nGlobal model of juvenile maturity status developed. Proceeding with model dredge...\n");}
     }
     
     model.table <- NA
@@ -2753,7 +2788,7 @@ modelsearch <- function(data, stageframe = NULL, historical = TRUE,
     if (extra_fac > 0) override <- TRUE
     
     #This is the section where we dredge the models
-    if (override & !global.only & !any(class(global.model) == "vglm")) {
+    if (override & !global.only & !any(is(global.model, "vglm"))) {
   
       if (usedformula != 1) {
         options(na.action = "na.fail")
@@ -2765,7 +2800,7 @@ modelsearch <- function(data, stageframe = NULL, historical = TRUE,
         }
         null.model.num <- which(model.table$df == min(model.table$df))[1]
         
-        if (any(class(model.table) == "try-error")) {
+        if (any(is(model.table, "try-error")) & !quiet.mil) {
           if (vrate == 1) {
             message("\nDredge of survival probability failed.\n")
           } else if (vrate == 2) {
@@ -2801,7 +2836,7 @@ modelsearch <- function(data, stageframe = NULL, historical = TRUE,
     
     #Here we extract the best-fit model
     if (length(grep("&k", bestfit)) > 0) {
-      if (any(class(model.table) == "model.selection")) {
+      if (any(is(model.table, "model.selection"))) {
         if (!quiet) {
           if (vrate == 1) {
             message("\nExtracting best-fit model of survival probability.\n")
@@ -2855,7 +2890,7 @@ modelsearch <- function(data, stageframe = NULL, historical = TRUE,
       }
       
     } else {
-      if (any(class(model.table) == "model.selection")) {
+      if (any(is(model.table, "model.selection"))) {
         if (!quiet) {
           message("\nExtracting best-fit model.\n")
         }
@@ -3090,12 +3125,12 @@ modelsearch <- function(data, stageframe = NULL, historical = TRUE,
 #' distribution, including survival, observation status, reproductive status,
 #' and juvenile version of these, accuracy is calculated as the percent of
 #' predicted responses equal to actual responses. In all other models, accuracy
-#' is actually the conditional R\textsuperscript{2} using package \code{MuMIn}'s
-#' \code{\link[MuMIn]{r.squaredGLMM}()} function, estimated via the delta
-#' method. When this method fails, \code{modelsearch()} calculates McFadden's
-#' pseudo-R\textsuperscript{2}. If this fails, then \code{NA} is returned.
-#' #' currently only handles this for binomial models, and performs it as a
-#' comparison of the actual and predicted responses from the respective model.
+#' is assessed as a basic R\textsuperscript{2} in which the function predicts
+#' the expected value for each data point in the model subset according to the
+#' given best-fit model, and the sum of squared differences between these
+#' predicted and observed values are used in the classic sum of squares
+#' calculation of R\textsuperscript{2}. If this fails, then \code{NA} is 
+#' returned.
 #' 
 #' @name .accu_predict
 #' 
@@ -3107,6 +3142,11 @@ modelsearch <- function(data, stageframe = NULL, historical = TRUE,
 #' or package \code{MuMIn}'s conditional R2 (2). Defaults to \code{1}.
 #' @param nullmodel A null (y-intercept only) model from the model table. Only
 #' used to calculate McFadden's pseudo-R2. Defaults to \code{NA}.
+#' @param dist The core probability distribution to assume.
+#' @param trunc A logical value indicating whether the probability distribution
+#' to be used should be zero-truncated.
+#' @param approach A text value indicating whether th use \code{"glm"} or
+#' \code{"mixed"} models.
 #' @param quiet A logical value indicating whether to allow warning messages to
 #' be displayed (\code{FALSE}) or suppressed (\code{TRUE}).
 #' Defaults to \code{FALSE}.
@@ -3119,63 +3159,60 @@ modelsearch <- function(data, stageframe = NULL, historical = TRUE,
 #' @keywords internal
 #' @noRd
 .accu_predict <- function(bestfitmodel, subdata = NA, param, style = 1,
-  nullmodel = NA, quiet = FALSE, check = TRUE) {
+  nullmodel = NA, dist = "binom", trunc = FALSE, approach = "mixed",
+  quiet = FALSE, check = TRUE) {
   
   pred_vec <- NULL
   accuracy <- NA 
   
-  if (check & !any(class(bestfitmodel) == "vglm")) {
-    if (!is.numeric(bestfitmodel) & !is.element("NULL", class(bestfitmodel))) {
-      if (style == 1) {
-        
+  #if (check & !any(class(bestfitmodel) == "vglm")) {
+    if (!is.numeric(bestfitmodel) & !is(bestfitmodel, "NULL")) {
+      
+      if (is(bestfitmodel, "vglm")) {
+        pred_vec <- VGAM::predictvglm(bestfitmodel, newdata = subdata,
+          type = "response")
+      } else {
         pred_vec <- stats::predict(bestfitmodel, newdata = subdata,
           type = "response")
+      }
+      
+      test_vec <- subdata[,which(names(subdata) == param)]
+      
+      if (style == 1) {
         pred_vec <- round(pred_vec)
         
-        test_vec <- subdata[,which(names(subdata) == param)]
-        
         results_vec <- pred_vec - test_vec
+        results_vec <- results_vec[!is.na(results_vec)]
         
         accuracy <- length(which(results_vec == 0)) / length(results_vec)
         
       } else if (style == 2) {
         
-        if (quiet) {
-          accuracy.table <- suppressWarnings(suppressMessages(try(MuMIn::r.squaredGLMM(bestfitmodel),
-              silent = quiet)))
-        } else {
-          accuracy.table <- try(MuMIn::r.squaredGLMM(bestfitmodel), silent = quiet)
+        if (approach == "mixed") {
+          if (dist == "poisson" | dist == "negbin") {
+            pred_vec <- round(pred_vec)
+            if (trunc) {
+              pred_vec <- pred_vec + 1
+            }
+          }
         }
+        results_vec <- pred_vec - test_vec
+        results_vec <- results_vec[!is.na(results_vec)]
         
-        if (any(class(accuracy.table) == "try-error")) {
-          if (all(is.numeric(bestfitmodel))) {
-            all_dat_values <- unique(subdata[,which(names(subdata) == param)])
-            if (length(all_dat_values) == 1) {
-              accuracy <- 1
-            }
-          } else {
-            bf_log <- logLik(bestfitmodel)[1]
-            null_log <- logLik(nullmodel)[1]
-          
-            accuracy <- 1 - (bf_log / null_log)
-          }
-          
-          if (is.numeric(accuracy)) {
-            if (!is.na(accuracy)) {
-              if (accuracy < 0 | accuracy > 1) accuracy <- NA
-            }
-          } else {accuracy <- NA}
-          
-        } else if (!suppressWarnings(all(is.na(nullmodel)))) {
-          if (is.element("delta", rownames(accuracy.table))) {
-            accuracy <- accuracy.table["delta","R2c"]
-          } else {
-            accuracy <- accuracy.table[1,"R2c"]
-          }
-        }
+        squares_vec <- (results_vec * results_vec)
+        sum_squares <- sum(squares_vec)
+        
+        mean_y <- mean(test_vec, na.rm = TRUE)
+        
+        base_total <- test_vec - mean_y
+        base_total <- base_total[!is.na(base_total)]
+        base_squares <- base_total * base_total
+        sum_base_squares <- sum(base_squares)
+        
+        accuracy <- 1.000 - (sum_squares / sum_base_squares)
+        
       }
     }
-  }
   
   return(accuracy)
 }
@@ -3244,7 +3281,7 @@ modelsearch <- function(data, stageframe = NULL, historical = TRUE,
 #'   bestfit = "AICc&k", sizedist = "gaussian", fecdist = "poisson",
 #'   indiv = "individ", patch = "patchid", year = "year2",
 #'   year.as.random = TRUE, patch.as.random = TRUE, show.model.tables = TRUE,
-#'   quiet = TRUE)
+#'   quiet = "partial")
 #' 
 #' summary(lathmodelsln2)
 #' }
@@ -3310,7 +3347,7 @@ summary.lefkoMod <- function(object, ...) {
   
   writeLines(paste0("\n\n\n"))
   if (!is.logical(modelsuite$survival_model) & 
-      is.element("model.selection", class(modelsuite$survival_table))) {
+      is(modelsuite$survival_table, "model.selection")) {
     writeLines(paste0("\nNumber of models in survival table: ", 
         dim(modelsuite$survival_table)[1]))
   } else if (!is.logical(modelsuite$survival_model)) {
@@ -3320,7 +3357,7 @@ summary.lefkoMod <- function(object, ...) {
   }
   
   if (!is.logical(modelsuite$observation_model) & 
-      is.element("model.selection", class(modelsuite$observation_table))) {
+      is(modelsuite$observation_table, "model.selection")) {
     writeLines(paste0("\nNumber of models in observation table: ", 
         dim(modelsuite$observation_table)[1]))
   } else if (!is.logical(modelsuite$observation_model)) {
@@ -3330,7 +3367,7 @@ summary.lefkoMod <- function(object, ...) {
   }
   
   if (!is.logical(modelsuite$size_model) & 
-      is.element("model.selection", class(modelsuite$size_table))) {
+      is(modelsuite$size_table, "model.selection")) {
     writeLines(paste0("\nNumber of models in size table: ", 
         dim(modelsuite$size_table)[1]))
   } else if (!is.logical(modelsuite$size_model)) {
@@ -3340,7 +3377,7 @@ summary.lefkoMod <- function(object, ...) {
   }
   
   if (!is.logical(modelsuite$sizeb_model) & 
-      is.element("model.selection", class(modelsuite$sizeb_table))) {
+      is(modelsuite$sizeb_table, "model.selection")) {
     writeLines(paste0("\nNumber of models in secondary size table: ", 
         dim(modelsuite$sizeb_table)[1]))
   } else if (!is.logical(modelsuite$sizeb_model)) {
@@ -3350,7 +3387,7 @@ summary.lefkoMod <- function(object, ...) {
   }
   
   if (!is.logical(modelsuite$sizec_model) & 
-      is.element("model.selection", class(modelsuite$sizec_table))) {
+      is(modelsuite$sizec_table, "model.selection")) {
     writeLines(paste0("\nNumber of models in tertiary size table: ", 
         dim(modelsuite$sizec_table)[1]))
   } else if (!is.logical(modelsuite$sizec_model)) {
@@ -3360,7 +3397,7 @@ summary.lefkoMod <- function(object, ...) {
   }
   
   if (!is.logical(modelsuite$repstatus_model) & 
-      is.element("model.selection", class(modelsuite$repstatus_table))) {
+      is(modelsuite$repstatus_table, "model.selection")) {
     writeLines(paste0("\nNumber of models in reproduction status table: ", 
         dim(modelsuite$repstatus_table)[1]))
   } else if (!is.logical(modelsuite$repstatus_model)) {
@@ -3370,7 +3407,7 @@ summary.lefkoMod <- function(object, ...) {
   }
   
   if (!is.logical(modelsuite$fecundity_model) & 
-      is.element("model.selection", class(modelsuite$fecundity_table))) {
+      is(modelsuite$fecundity_table, "model.selection")) {
     writeLines(paste0("\nNumber of models in fecundity table: ", 
         dim(modelsuite$fecundity_table)[1]))
   } else if (!is.logical(modelsuite$fecundity_model)) {
@@ -3380,7 +3417,7 @@ summary.lefkoMod <- function(object, ...) {
   }
   
   if (!is.logical(modelsuite$juv_survival_model) & 
-      is.element("model.selection", class(modelsuite$juv_survival_table))) {
+      is(modelsuite$juv_survival_table, "model.selection")) {
     writeLines(paste0("\nNumber of models in juvenile survival table: ", 
         dim(modelsuite$juv_survival_table)[1]))
   } else if (!is.logical(modelsuite$juv_survival_model)) {
@@ -3390,7 +3427,7 @@ summary.lefkoMod <- function(object, ...) {
   }
   
   if (!is.logical(modelsuite$juv_observation_model) & 
-      is.element("model.selection", class(modelsuite$juv_observation_table))) {
+      is(modelsuite$juv_observation_table, "model.selection")) {
     writeLines(paste0("\nNumber of models in juvenile observation table: ", 
         dim(modelsuite$juv_observation_table)[1]))
   } else if (!is.logical(modelsuite$juv_observation_model)) {
@@ -3400,7 +3437,7 @@ summary.lefkoMod <- function(object, ...) {
   }
   
   if (!is.logical(modelsuite$juv_size_model) & 
-      is.element("model.selection", class(modelsuite$juv_size_table))) {
+      is(modelsuite$juv_size_table, "model.selection")) {
     writeLines(paste0("\nNumber of models in juvenile size table: ", 
         dim(modelsuite$juv_size_table)[1]))
   } else if (!is.logical(modelsuite$juv_size_model)) {
@@ -3410,7 +3447,7 @@ summary.lefkoMod <- function(object, ...) {
   }
   
   if (!is.logical(modelsuite$juv_sizeb_model) & 
-      is.element("model.selection", class(modelsuite$juv_sizeb_table))) {
+      is(modelsuite$juv_sizeb_table, "model.selection")) {
     writeLines(paste0("\nNumber of models in juvenile secondary size table: ", 
         dim(modelsuite$juv_sizeb_table)[1]))
   } else if (!is.logical(modelsuite$juv_sizeb_model)) {
@@ -3420,7 +3457,7 @@ summary.lefkoMod <- function(object, ...) {
   }
   
   if (!is.logical(modelsuite$juv_sizec_model) & 
-      is.element("model.selection", class(modelsuite$juv_sizec_table))) {
+      is(modelsuite$juv_sizec_table, "model.selection")) {
     writeLines(paste0("\nNumber of models in juvenile tertiary size table: ", 
         dim(modelsuite$juv_sizec_table)[1]))
   } else if (!is.logical(modelsuite$juv_sizec_model)) {
@@ -3430,7 +3467,7 @@ summary.lefkoMod <- function(object, ...) {
   }
   
   if (!is.logical(modelsuite$juv_reproduction_model) & 
-      is.element("model.selection", class(modelsuite$juv_reproduction_table))) {
+      is(modelsuite$juv_reproduction_table, "model.selection")) {
     writeLines(paste0("\nNumber of models in juvenile reproduction table: ", 
         dim(modelsuite$juv_reproduction_table)[1]))
   } else if (!is.logical(modelsuite$juv_reproduction_model)) {
@@ -3440,7 +3477,7 @@ summary.lefkoMod <- function(object, ...) {
   }
   
   if (!is.logical(modelsuite$juv_maturity_model) & 
-      is.element("model.selection", class(modelsuite$juv_maturity_table))) {
+      is(modelsuite$juv_maturity_table, "model.selection")) {
     writeLines(paste0("\nNumber of models in juvenile maturity table: ", 
         dim(modelsuite$juv_maturity_table)[1]))
   } else if (!is.logical(modelsuite$juv_maturity_model)) {
@@ -3457,124 +3494,124 @@ summary.lefkoMod <- function(object, ...) {
   writeLines(paste0("\n\n\n"))
   writeLines("\nQuality control:\n")
   if (modelsuite$qc[1,2] > 0) {
-    writeLines(paste0("Survival estimated with ", modelsuite$qc[1,2], 
+    writeLines(paste0("Survival model estimated with ", modelsuite$qc[1,2], 
         " individuals and ", modelsuite$qc[1,3], " individual transitions."))
-    writeLines(paste0("Survival accuracy is ", round(modelsuite$qc[1,"accuracy"], 3), "."))
+    writeLines(paste0("Survival model accuracy is ", round(modelsuite$qc[1,"accuracy"], 3), "."))
   } else {
-    writeLines("Survival not estimated.")
+    writeLines("Survival model not estimated.")
   }
   
   if (modelsuite$qc[2,2] > 0) {
-    writeLines(paste0("Observation estimated with ", modelsuite$qc[2,2], 
+    writeLines(paste0("Observation status model estimated with ", modelsuite$qc[2,2], 
         " individuals and ", modelsuite$qc[2,3], " individual transitions."))
-    writeLines(paste0("Observation accuracy is ", round(modelsuite$qc[2,"accuracy"], 3), "."))
+    writeLines(paste0("Observation status model accuracy is ", round(modelsuite$qc[2,"accuracy"], 3), "."))
   } else {
-    writeLines("Observation probability not estimated.")
+    writeLines("Observation status model not estimated.")
   }
   
   if (modelsuite$qc[3,2] > 0) {
-    writeLines(paste0("Primary size estimated with ", modelsuite$qc[3,2], 
+    writeLines(paste0("Primary size model estimated with ", modelsuite$qc[3,2], 
         " individuals and ", modelsuite$qc[3,3], " individual transitions."))
-    writeLines(paste0("Primary size pseudo R-squared is ",
+    writeLines(paste0("Primary size model R-squared is ",
       round(modelsuite$qc[3,"accuracy"], 3), "."))
   } else {
-    writeLines("Primary size transition not estimated.")
+    writeLines("Primary size model not estimated.")
   }
   
   if (modelsuite$qc[4,2] > 0) {
-    writeLines(paste0("Secondary size estimated with ", modelsuite$qc[4,2], 
+    writeLines(paste0("Secondary size model estimated with ", modelsuite$qc[4,2], 
         " individuals and ", modelsuite$qc[4,3], " individual transitions."))
-    writeLines(paste0("Secondary size pseudo R-squared is ",
+    writeLines(paste0("Secondary size model R-squared is ",
       round(modelsuite$qc[4,"accuracy"], 3), "."))
   } else {
-    writeLines("Secondary size transition not estimated.")
+    writeLines("Secondary size model not estimated.")
   }
   
   if (modelsuite$qc[5,2] > 0) {
-    writeLines(paste0("Tertiary size estimated with ", modelsuite$qc[5,2], 
+    writeLines(paste0("Tertiary size model estimated with ", modelsuite$qc[5,2], 
         " individuals and ", modelsuite$qc[5,3], " individual transitions."))
-    writeLines(paste0("Tertiary size pseudo R-squared is ",
+    writeLines(paste0("Tertiary size model R-squared is ",
       round(modelsuite$qc[5,"accuracy"], 3), "."))
   } else {
-    writeLines("Tertiary size transition not estimated.")
+    writeLines("Tertiary size model not estimated.")
   }
   
   if (modelsuite$qc[6,2] > 0) {
-    writeLines(paste0("Reproductive status estimated with ", modelsuite$qc[6,2], 
+    writeLines(paste0("Reproductive status model estimated with ", modelsuite$qc[6,2], 
         " individuals and ", modelsuite$qc[6,3], " individual transitions."))
-   writeLines(paste0("Reproductive status accuracy is ", round(modelsuite$qc[6,"accuracy"], 3), "."))
+   writeLines(paste0("Reproductive status model accuracy is ", round(modelsuite$qc[6,"accuracy"], 3), "."))
    } else {
-    writeLines("Reproduction probability not estimated.")
+    writeLines("Reproductive status model not estimated.")
   }
   
   if (modelsuite$qc[7,2] > 0) {
-    writeLines(paste0("Fecundity estimated with ", modelsuite$qc[7,2], 
+    writeLines(paste0("Fecundity model estimated with ", modelsuite$qc[7,2], 
         " individuals and ", modelsuite$qc[7,3], " individual transitions."))
-    writeLines(paste0("Fecundity pseudo R-squared is ",
+    writeLines(paste0("Fecundity model R-squared is ",
         round(modelsuite$qc[7,"accuracy"], 3), "."))
   } else {
-    writeLines("Fecundity not estimated.")
+    writeLines("Fecundity model not estimated.")
   }
   
   if (modelsuite$qc[8,2] > 0) {
-    writeLines(paste0("Juvenile survival estimated with ", modelsuite$qc[8,2], 
+    writeLines(paste0("Juvenile survival model estimated with ", modelsuite$qc[8,2], 
         " individuals and ", modelsuite$qc[8,3], " individual transitions."))
-   writeLines(paste0("Juvenile survival accuracy is ", round(modelsuite$qc[8,"accuracy"], 3), "."))
+   writeLines(paste0("Juvenile survival model accuracy is ", round(modelsuite$qc[8,"accuracy"], 3), "."))
    } else {
-    writeLines("Juvenile survival not estimated.")
+    writeLines("Juvenile survival model not estimated.")
   }
   
   if (modelsuite$qc[9,2] > 0) {
-    writeLines(paste0("Juvenile observation estimated with ", modelsuite$qc[9,2], 
+    writeLines(paste0("Juvenile observation status model estimated with ", modelsuite$qc[9,2], 
         " individuals and ", modelsuite$qc[9,3], " individual transitions."))
-   writeLines(paste0("Juvenile observation accuracy is ", round(modelsuite$qc[9,"accuracy"], 3), "."))
+   writeLines(paste0("Juvenile observation status model accuracy is ", round(modelsuite$qc[9,"accuracy"], 3), "."))
   } else {
-    writeLines("Juvenile observation probability not estimated.")
+    writeLines("Juvenile observation status model not estimated.")
   }
   
   if (modelsuite$qc[10,2] > 0) {
-    writeLines(paste0("Juvenile primary size estimated with ", modelsuite$qc[10,2], 
+    writeLines(paste0("Juvenile primary size model estimated with ", modelsuite$qc[10,2], 
         " individuals and ", modelsuite$qc[10,3], " individual transitions."))
-    writeLines(paste0("Juvenile primary size pseudo R-squared is ",
+    writeLines(paste0("Juvenile primary size model R-squared is ",
       round(modelsuite$qc[10,"accuracy"], 3), "."))
   } else {
-    writeLines("Juvenile primary size transition not estimated.")
+    writeLines("Juvenile primary size model not estimated.")
   }
   
   if (modelsuite$qc[11,2] > 0) {
-    writeLines(paste0("Juvenile secondary size estimated with ", modelsuite$qc[11,2],
+    writeLines(paste0("Juvenile secondary size model estimated with ", modelsuite$qc[11,2],
         " individuals and ", modelsuite$qc[11,3], " individual transitions."))
-    writeLines(paste0("Juvenile secondary size pseudo R-squared is ",
+    writeLines(paste0("Juvenile secondary size model R-squared is ",
       round(modelsuite$qc[11,"accuracy"], 3), "."))
   } else {
-    writeLines("Juvenile secondary size transition not estimated.")
+    writeLines("Juvenile secondary size model not estimated.")
   }
   
   if (modelsuite$qc[12,2] > 0) {
-    writeLines(paste0("Juvenile tertiary size estimated with ", modelsuite$qc[12,2],
+    writeLines(paste0("Juvenile tertiary size model estimated with ", modelsuite$qc[12,2],
         " individuals and ", modelsuite$qc[12,3], " individual transitions."))
-    writeLines(paste0("Juvenile tertiary size pseudo R-squared is ",
+    writeLines(paste0("Juvenile tertiary size model R-squared is ",
       round(modelsuite$qc[12,"accuracy"], 3), "."))
   } else {
-    writeLines("Juvenile tertiary size transition not estimated.")
+    writeLines("Juvenile tertiary size model not estimated.")
   }
   
   if (modelsuite$qc[13,2] > 0) {
-    writeLines(paste0("Juvenile reproduction estimated with ", modelsuite$qc[13,2],
+    writeLines(paste0("Juvenile reproductive status model estimated with ", modelsuite$qc[13,2],
         " individuals and ", modelsuite$qc[13,3], " individual transitions."))
-    writeLines(paste0("Juvenile reproductive status accuracy is ",
+    writeLines(paste0("Juvenile reproductive status model accuracy is ",
         round(modelsuite$qc[13,"accuracy"], 3), "."))
   } else {
-    writeLines("Juvenile reproduction probability not estimated.")
+    writeLines("Juvenile reproductive status model not estimated.")
   }
   
   if (modelsuite$qc[14,2] > 0) {
-    writeLines(paste0("Juvenile maturity estimated with ", modelsuite$qc[14,2],
+    writeLines(paste0("Juvenile maturity model estimated with ", modelsuite$qc[14,2],
         " individuals and ", modelsuite$qc[14,3], " individual transitions."))
-    writeLines(paste0("Juvenile maturity status accuracy is ",
+    writeLines(paste0("Juvenile maturity status model accuracy is ",
         round(modelsuite$qc[14,"accuracy"], 3), "."))
   } else {
-    writeLines("Juvenile maturity probability not estimated.")
+    writeLines("Juvenile maturity status model not estimated.")
   }
 }
 

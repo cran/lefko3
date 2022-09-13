@@ -2000,7 +2000,7 @@ NULL
 #' Estimate Value for Vital Rate Based on Inputs
 #' 
 #' Function \code{preouterator()} calculates the value of the vital rate called
-#' for by the function \code{jerzeibalowski()}..
+#' for by the function \code{jerzeibalowski()}.
 #' 
 #' @name preouterator
 #' 
@@ -4816,6 +4816,32 @@ create_pm <- function(name_terms = FALSE) {
     .Call('_lefko3_create_pm', PACKAGE = 'lefko3', name_terms)
 }
 
+#' Check and Reorganize Density Input Table Into Usable Format
+#' 
+#' Function \code{density_reassess()} takes a density input table as supplied
+#' by the \code{\link{density_input}()} function, and checks and rearranges it
+#' into a single, complete density input table.
+#' 
+#' @name density_reassess
+#' 
+#' @param stageframe The correct stageframe, already modified by
+#' \code{\link{.sf_reassess}()}.
+#' @param dens_inp The density input data frame as is toward the end of
+#' \code{\link{density_input}()}.
+#' @param agestages The agestages element from the used \code{lefkoMat} object.
+#' Only needed if an age-by-stage MPM will be used.
+#' @param historical A logical value denoting whether MPM is historical.
+#' Defaults to \code{FALSE}.
+#' @param agebystage A logical value denoting whether MPM is age-by-stage.
+#' Defaults to \code{FALSE}.
+#' 
+#' @return A corrected density input deta frame, usable in density-dependent
+#' MPM creation.
+#' 
+#' @keywords internal
+#' @noRd
+NULL
+
 #' Calculate Actual Stage, Age, Stage-Pair, or Age-Stage Distributions
 #' 
 #' Function \code{actualstage3()} shows the frequencies and proportions of
@@ -4925,6 +4951,188 @@ create_pm <- function(name_terms = FALSE) {
 #' @export actualstage3
 actualstage3 <- function(data, check_stage = TRUE, check_age = FALSE, historical = FALSE, year2 = NULL, indices = NULL, stagecol = NULL, agecol = NULL, remove_stage = NULL, t1_allow = NULL) {
     .Call('_lefko3_actualstage3', PACKAGE = 'lefko3', data, check_stage, check_age, historical, year2, indices, stagecol, agecol, remove_stage, t1_allow)
+}
+
+#' Create a Data Frame of Density Dependence Relationships in Matrix Elements
+#' 
+#' Function \code{density_input()} provides all necessary data to incorporate
+#' density dependence into a \code{lefkoMat} object, a list of matrices, or a
+#' single matrix. Four forms of density dependence are allowed, including the
+#' Ricker function, the Beverton-Holt function, the Usher function, and the
+#' logistic function. In each case, density must have an effect with at least a
+#' one time-step delay (see Notes). The resulting data frame provides a guide
+#' for other \code{lefko3} functions to modify matrix elements by density.
+#'
+#' @name density_input
+#' 
+#' @param mpm The \code{lefkoMat} object that will be subject to density
+#' dependent projection.
+#' @param stage3 A vector showing the name or number of the stage in occasion
+#' \emph{t}+1 in the transitions to be affected by density. Abbreviations for
+#' groups of stages are also usable (see Notes).
+#' @param stage2 A vector showing the name or number of the stage in occasion
+#' \emph{t} in the transition to be affected by density. Abbreviations for
+#' groups of stages are also usable (see Notes).
+#' @param stage1 A vector showing the name or number of the stage in occasion
+#' \emph{t}-1 in the transition to be affected by density. Only needed if a
+#' historical MPM is used. Abbreviations for groups of stages are also usable
+#' (see Notes).
+#' @param age2 A vector showing the age of the stage in occasion \emph{t} in the
+#' transition to be affected by density. Only needed if an age-by-stage MPM is
+#' used.
+#' @param style A vector coding for the style of density dependence on each
+#' transition subject to density dependence. Options include \code{1},
+#' \code{ricker}, \code{ric}, or \code{r} for the Ricker function; \code{2},
+#' \code{beverton}, \code{bev}, and \code{b} for the Beverton-Holt function;
+#' \code{3}, \code{usher}, \code{ush}, and \code{u} for the Usher function; and
+#' \code{4}, \code{logistic}, \code{log}, and \code{l} for the logistic
+#' function. If only a single code is provided, then all noted transitions are
+#' assumed to be subject to this style of density dependence. Defaults to
+#' \code{ricker}.
+#' @param time_delay An integer vector indicating the number of occasions back
+#' on which density dependence operates. Defaults to \code{1}, and may not equal
+#' any integer less than 1. If a single number is input, then all noted
+#' transitions are assumed to be subject to this time delay.  Defaults to
+#' \code{1}.
+#' @param alpha A vector indicating the numeric values to use as the
+#' alpha term in the two parameter Ricker, Beverton-Holt, or Usher function, or
+#' the value of the carrying capacity \emph{K} to use in the logistic equation
+#' (see \code{Notes} section for more on this term). If a single number is
+#' provided, then all noted transitions are assumed to be subject to this value
+#' of alpha. Defaults to \code{1}.
+#' @param beta A vector indicating the numeric values to use as the beta term in
+#' the two parameter Ricker, Beverton-Holt, or Usher function. Used to indicate
+#' whether to use \emph{K} as a hard limit in the logistic equation (see section
+#' \code{Notes} below). If a single number is provided, then all noted
+#' transitions are assumed to be subject to this value of \code{beta}. Defaults
+#' to \code{1}.
+#' @param type A vector denoting the kind of transition between occasions
+#' \emph{t} and \emph{t}+1 to be replaced. This should be entered as \code{1},
+#' \code{S}, or \code{s} for the replacement of a survival transition; or 
+#' \code{2}, \code{F}, or \code{f} for the replacement of a fecundity
+#' transition. If empty or not provided, then defaults to \code{1} for survival
+#' transition.
+#' @param type_t12 An optional vector denoting the kind of transition between
+#' occasions \emph{t}-1 and \emph{t}. Only necessary if a historical MPM in
+#' deVries format is desired. This should be entered as \code{1}, \code{S}, or
+#' \code{s} for a survival transition; or \code{2}, \code{F}, or \code{f} for a
+#' fecundity transitions. Defaults to \code{1} for survival transition, with
+#' impacts only on the construction of deVries-format hMPMs.
+#' 
+#' @return A data frame of class \code{lefkoDens}. This object can be used as
+#' input in function \code{\link{projection3}()}.
+#' 
+#' Variables in this object include the following:
+#' \item{stage3}{Stage at occasion \emph{t}+1 in the transition to be replaced.}
+#' \item{stage2}{Stage at occasion \emph{t} in the transition to be replaced.}
+#' \item{stage1}{Stage at occasion \emph{t}-1 in the transition to be replaced,
+#' if applicable.}
+#' \item{age2}{Age at occasion \emph{t} in the transition to be replaced, if
+#' applicable.}
+#' \item{style}{Style of density dependence, coded as 1, 2, 3, or 4 for the
+#' Ricker, Beverton-Holt, Usher, or logistic function, respectively.}
+#' \item{time_delay}{The time delay on density dependence, in time steps.}
+#' \item{alpha}{The value of alpha in the Ricker, Beverton-Holt, or Usher
+#' function, or the value of carrying capacity, \emph{K}, in the logistic
+#' function.}
+#' \item{beta}{The value of beta in the Ricker, Beverton-Holt, or Usher
+#' function.}
+#' \item{type}{Designates whether the transition from occasion \emph{t} to
+#' occasion \emph{t}+1 is a survival transition probability (1), or a fecundity
+#' rate (2).}
+#' \item{type_t12}{Designates whether the transition from occasion \emph{t}-1 to
+#' occasion \emph{t} is a survival transition probability (1), a fecundity rate
+#' (2).}
+#' 
+#' @section Notes:
+#' This function provides inputs when density dependence is operationalized
+#' directly on matrix elements. It can be used in both \code{projection3()} and
+#' \code{f_projection3()}. Users wishing to modify vital rate functions by
+#' density dependence functions for use in function-based projections with
+#' function \code{f_projection3()} should use function \code{density_vr()} to
+#' provide the correct inputs.
+#' 
+#' The parameters \code{alpha} and \code{beta} are applied according to the
+#' two-parameter Ricker function, the two-parameter Beverton-Holt function, the
+#' two-parameter Usher function, or the one-parameter logistic function.
+#' Although the default is that a 1 time step delay is assumed, greater time
+#' delays can be set through the \code{time_delay} option.
+#' 
+#' Entries in \code{stage3}, \code{stage2}, and \code{stage1} can include
+#' abbreviations for groups of stages. Use \code{rep} if all reproductive stages
+#' are to be used, \code{nrep} if all mature but non-reproductive stages are to
+#' be used, \code{mat} if all mature stages are to be used, \code{immat} if all
+#' immature stages are to be used, \code{prop} if all propagule stages are to be
+#' used, \code{npr} if all non-propagule stages are to be used, \code{obs} if
+#' all observable stages are to be used, \code{nobs} if all unobservable stages
+#' are to be used, and leave empty or use \code{all} if all stages in stageframe
+#' are to be used.
+#' 
+#' When using the logistic function, it is possible that the time delay used in
+#' density dependent simulations will cause matrix elements to become negative.
+#' To prevent this behavior, set the associated \code{beta} term to \code{1.0}.
+#' Doing so will set \code{K} as the hard limit in the logistic equation,
+#' essentially setting a minimum limit at \code{0} for all matrix elements
+#' modified.
+#' 
+#' @seealso \code{\link{start_input}()}
+#' @seealso \code{\link{projection3}()}
+#' 
+#' @examples
+#' \donttest{
+#' # Lathyrus example
+#' data(lathyrus)
+#' 
+#' sizevector <- c(0, 100, 13, 127, 3730, 3800, 0)
+#' stagevector <- c("Sd", "Sdl", "VSm", "Sm", "VLa", "Flo", "Dorm")
+#' repvector <- c(0, 0, 0, 0, 0, 1, 0)
+#' obsvector <- c(0, 1, 1, 1, 1, 1, 0)
+#' matvector <- c(0, 0, 1, 1, 1, 1, 1)
+#' immvector <- c(1, 1, 0, 0, 0, 0, 0)
+#' propvector <- c(1, 0, 0, 0, 0, 0, 0)
+#' indataset <- c(0, 1, 1, 1, 1, 1, 1)
+#' binvec <- c(0, 100, 11, 103, 3500, 3800, 0.5)
+#' 
+#' lathframe <- sf_create(sizes = sizevector, stagenames = stagevector,
+#'   repstatus = repvector, obsstatus = obsvector, matstatus = matvector,
+#'   immstatus = immvector, indataset = indataset, binhalfwidth = binvec,
+#'   propstatus = propvector)
+#' 
+#' lathvert <- verticalize3(lathyrus, noyears = 4, firstyear = 1988,
+#'   patchidcol = "SUBPLOT", individcol = "GENET", blocksize = 9,
+#'   juvcol = "Seedling1988", sizeacol = "Volume88", repstracol = "FCODE88",
+#'   fecacol = "Intactseed88", deadacol = "Dead1988",
+#'   nonobsacol = "Dormant1988", stageassign = lathframe, stagesize = "sizea",
+#'   censorcol = "Missing1988", censorkeep = NA, censor = TRUE)
+#' 
+#' lathsupp3 <- supplemental(stage3 = c("Sd", "Sd", "Sdl", "Sdl", "Sd", "Sdl", "mat"),
+#'   stage2 = c("Sd", "Sd", "Sd", "Sd", "rep", "rep", "Sdl"),
+#'   stage1 = c("Sd", "rep", "Sd", "rep", "npr", "npr", "Sd"),
+#'   eststage3 = c(NA, NA, NA, NA, NA, NA, "mat"),
+#'   eststage2 = c(NA, NA, NA, NA, NA, NA, "Sdl"),
+#'   eststage1 = c(NA, NA, NA, NA, NA, NA, "NotAlive"),
+#'   givenrate = c(0.345, 0.345, 0.054, 0.054, NA, NA, NA),
+#'   multiplier = c(NA, NA, NA, NA, 0.345, 0.054, NA),
+#'   type = c(1, 1, 1, 1, 3, 3, 1), type_t12 = c(1, 2, 1, 2, 1, 1, 1),
+#'   stageframe = lathframe, historical = TRUE)
+#' 
+#' ehrlen3 <- rlefko3(data = lathvert, stageframe = lathframe, year = "all", 
+#'   stages = c("stage3", "stage2", "stage1"), supplement = lathsupp3,
+#'   yearcol = "year2", indivcol = "individ")
+#' 
+#' ehrlen3mean <- lmean(ehrlen3)
+#' 
+#' e3d <- density_input(ehrlen3mean, stage3 = c("Sd", "Sdl"),
+#'   stage2 = c("rep", "rep"), stage1 = c("all", "all"), style = 1,
+#'   time_delay = 1, alpha = 1, beta = 0, type = c(2, 2), type_t12 = c(1, 1))
+#' 
+#' lathproj <- projection3(ehrlen3, nreps = 5, stochastic = TRUE, substoch = 2,
+#'   density = e3d)
+#' }
+#' 
+#' @export density_input
+density_input <- function(mpm, stage3, stage2, stage1 = NULL, age2 = NULL, style = NULL, time_delay = NULL, alpha = NULL, beta = NULL, type = NULL, type_t12 = NULL) {
+    .Call('_lefko3_density_input', PACKAGE = 'lefko3', mpm, stage3, stage2, stage1, age2, style, time_delay, alpha, beta, type, type_t12)
 }
 
 #' Function \code{lambda3()} is a generic function that returns the dominant

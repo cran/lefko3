@@ -121,13 +121,20 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
   for (var i = 0; i < sheets.length; i++) {
     if (sheets[i].ownerNode.dataset["origin"] !== "pandoc") continue;
     try { var rules = sheets[i].cssRules; } catch (e) { continue; }
-    for (var j = 0; j < rules.length; j++) {
+    var j = 0;
+    while (j < rules.length) {
       var rule = rules[j];
       // check if there is a div.sourceCode rule
-      if (rule.type !== rule.STYLE_RULE || rule.selectorText !== "div.sourceCode") continue;
+      if (rule.type !== rule.STYLE_RULE || rule.selectorText !== "div.sourceCode") {
+        j++;
+        continue;
+      }
       var style = rule.style.cssText;
       // check if color or background-color is set
-      if (rule.style.color === '' && rule.style.backgroundColor === '') continue;
+      if (rule.style.color === '' && rule.style.backgroundColor === '') {
+        j++;
+        continue;
+      }
       // replace div.sourceCode by a pre.sourceCode rule
       sheets[i].deleteRule(j);
       sheets[i].insertRule('pre.sourceCode{' + style + '}', j);
@@ -532,7 +539,8 @@ with plant identity marked in each row.
 <span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">stageassign =</span> cypframe, <span class="at">stagesize =</span> <span class="st">&quot;sizeadded&quot;</span>, <span class="at">NAas0 =</span> <span class="cn">TRUE</span>)</span>
 <span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a><span class="fu">summary_hfv</span>(vertdata, <span class="at">full =</span> <span class="cn">FALSE</span>)</span>
 <span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; </span></span>
-<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; This hfv dataset contains 320 rows, 54 variables, 1 population, 3 patches, 74 individuals, and 5 time steps.</span></span></code></pre></div>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; This hfv dataset contains 320 rows, 54 variables, 1 population, </span></span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 3 patches, 74 individuals, and 5 time steps.</span></span></code></pre></div>
 <p style="text-indent: 20px">
 In the above code, we described the input dataset in a way that allows R
 to reorganize it appropriately. Note that in the input to the function,
@@ -734,7 +742,8 @@ identity to reorganize datasets into historical vertical format.
 <span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a>  <span class="at">NAas0 =</span> <span class="cn">TRUE</span>, <span class="at">reduce =</span> <span class="cn">TRUE</span>)</span>
 <span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a><span class="fu">summary_hfv</span>(vertdata2, <span class="at">full =</span> <span class="cn">FALSE</span>)</span>
 <span id="cb7-10"><a href="#cb7-10" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; </span></span>
-<span id="cb7-11"><a href="#cb7-11" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; This hfv dataset contains 320 rows, 54 variables, 1 population, 3 patches, 74 individuals, and 5 time steps.</span></span></code></pre></div>
+<span id="cb7-11"><a href="#cb7-11" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; This hfv dataset contains 320 rows, 54 variables, 1 population, </span></span>
+<span id="cb7-12"><a href="#cb7-12" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 3 patches, 74 individuals, and 5 time steps.</span></span></code></pre></div>
 <p style="text-indent: 20px">
 If we compare the dimensions of the new vertical datasets, we find that
 the lengths of the datasets are the same in terms of rows and columns,
@@ -1146,10 +1155,10 @@ above are actually only usable for the construction of historical
 models. We can also see that although the accuracy of our survival and
 observation status models is very high (94.7% and 95% respectively), the
 accuracy of our reproductive status model is only fair (71.5%), and the
-pseudo R<sup>2</sup> for fecundity is only 32%. For comparison, we may
-wish to estimate ahistorical models. In that case, we also need linear
-models in which the global models tested do not include state at
-occasion <em>t</em>-1, as below.
+R<sup>2</sup> for primary size and fecundity are 84.0% and 54.9%,
+respectively. For comparison, we may wish to estimate ahistorical
+models. In that case, we also need linear models in which the global
+models tested do not include state at occasion <em>t</em>-1, as below.
 </p>
 <div class="sourceCode" id="cb10"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>cypmodels2 <span class="ot">&lt;-</span> <span class="fu">modelsearch</span>(vertdata, <span class="at">historical =</span> <span class="cn">FALSE</span>, <span class="at">approach =</span> <span class="st">&quot;mixed&quot;</span>, </span>
 <span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">vitalrates =</span> <span class="fu">c</span>(<span class="st">&quot;surv&quot;</span>, <span class="st">&quot;obs&quot;</span>, <span class="st">&quot;size&quot;</span>, <span class="st">&quot;repst&quot;</span>, <span class="st">&quot;fec&quot;</span>), <span class="at">sizedist =</span> <span class="st">&quot;negbin&quot;</span>, </span>
@@ -1159,16 +1168,16 @@ occasion <em>t</em>-1, as below.
 <p style="text-indent: 20px">
 Fewer models were estimated per dredge, since fewer parameters were
 tested in the global models (size and reproductive status in occasion
-<em>t</em>-1 were not included). So, the best-fit models should look a
-little bit different. However, a more thorough comparison will show that
-many of the best-fit models are similar between historical and
-ahistorical analysis, and that the only model different is the primary
-size model, which now shows only a y-intercept and random terms for
-monitoring occasion and individual. This is not guaranteed - in this
-case, it may be that the relatively small number of years and small
-overall sample size leaves too little power to find an impact of
-historical status on most vital rates. However, with size impacted by
-history, the choice of a historical model is better here.
+<em>t</em>-1 were not included). Since historical terms were not tested,
+the best-fit model for primary size should look different. A thorough
+comparison will show that many of the best-fit models are similar
+between historical and ahistorical analysis, and that the only model
+different is the primary size model, which now shows only a y-intercept
+and random terms for monitoring occasion and individual. In this case,
+it may be that the relatively small number of years and small overall
+sample size leaves too little power to find an impact of historical
+status on most vital rates. However, with size impacted by history, the
+choice of a historical model is better here.
 </p>
 </div>
 <div id="step-4.-mpm-estimation" class="section level4">

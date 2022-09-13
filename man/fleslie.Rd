@@ -229,7 +229,7 @@ lathvert_age <- subset(lathvert_base, firstseen > 1988)
 lathmodels2_age <- modelsearch(lathvert_age, historical = FALSE,
   approach = "mixed", suite = "cons", bestfit = "AICc&k", age = "obsage",
   vitalrates = c("surv", "fec"), fecdist = "poisson", indiv = "individ",
-  year = "year2", show.model.tables = TRUE, quiet = TRUE)
+  year = "year2", show.model.tables = TRUE, quiet = "partial")
 
 lathmat2fleslie <- fleslie(year = "all", data = lathvert_age,
   modelsuite = lathmodels2_age, fecage_min = 1)

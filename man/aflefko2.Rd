@@ -502,7 +502,7 @@ lathmodelsln2 <- modelsearch(lathvertln, historical = FALSE,
   bestfit = "AICc&k", sizedist = "gaussian", fecdist = "poisson",
   indiv = "individ", patch = "patchid", year = "year2", age = "obsage",
   year.as.random = TRUE, patch.as.random = TRUE, show.model.tables = TRUE,
-  quiet = TRUE)
+  quiet = "partial")
 
 # Here we use supplemental() to provide overwrite and reproductive info
 lathsupp2 <- supplemental(stage3 = c("Sd", "Sdl", "Sd", "Sdl"), 

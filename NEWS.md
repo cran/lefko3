@@ -1,10 +1,39 @@
-# lefko3 5.4.2 2022-08-08
+# lefko3 5.5.0 (2022-09-14)
+
+## NEW FEATURES
+
+* Function modelsearch() now allows "partial" option, which shows model milepost
+  messages but silences all others. Also allows "yes" and "no" in place of TRUE
+  and FALSE.
+* Function density_input() has been rewritten to handle all standard stage
+  shorthand codes.
+
+## USER-VISIBLE CHANGES
+
+* NEWS file corrected to show version numbers.
+* Function modelsearch() now uses a simple R-squared approach to assess
+  accuracy of all models except binomial models, which is assessed as
+  traditional logistic accuracy.
+* Vignettes updated to reflect changes to accuracy calculation.
+* End-of-line characters added to most warnings to prevent all warnings mixing
+  together into single messages.
+
+## BUG FIXES
+
+* Corrected issue causing Linux-based matrix estimation to yield negative matrix
+  element values in some instances involving truncated distributions.
+* Fixed issue in density adjustment protocol used by function f_projection3()
+  that would force all density adjustment onto survival probability.
+* Corrected issue causing negative accuracy to be estimated for zero-truncated
+  models in modelsearch().
+
+# lefko3 5.4.2 (2022-08-08)
 
 ## USER-VISIBLE CHANGES
 
 * NEWS file has been reformatted to conform to CRAN Markdown specifications.
 
-# lefko3 5.4.1 2022-07-29
+# lefko3 5.4.1 (2022-07-29)
 
 ## USER-VISIBLE CHANGES
 
@@ -13,7 +42,7 @@
 * Exponent tolerance limits and warnings added to functions projection3() and
   f_projection3(). Warnings and help file notes have also been added.
 
-# lefko3 5.4.0 2022-07-21
+# lefko3 5.4.0 (2022-07-21)
 
 ## NEW FEATURES
 
@@ -44,7 +73,7 @@
 
 * Reference matrix warnings in ltre3() have been corrected.
 
-# lefko3 5.3.0 2022-06-24
+# lefko3 5.3.0 (2022-06-24)
 
 ## NEW FEATURES
 
@@ -82,7 +111,7 @@
 * Fix bug omitting substochasticity correction in fecundity under some
   conditions when function f_projection3() is run with substoch = 2.
 
-# lefko3 5.2.0 2022-05-18
+# lefko3 5.2.0 (2022-05-18)
 
 ## NEW FEATURES
 
@@ -144,7 +173,7 @@
 * Fixed incorrect fecundity summation in rlefko3(), resulting from miscounting
   offspring from individuals dying the transition in which they reproduced.
 
-# lefko3 5.1.0 2022-04-01
+# lefko3 5.1.0 (2022-04-01)
 
 ## NEW FEATURES
 
@@ -181,7 +210,7 @@
   size probabilities when the probability of a 0 under the un-truncated
   distribution was sufficiently high.
 
-# lefko3 5.0.1 2022-03-08
+# lefko3 5.0.1 (2022-03-08)
 
 ## USER-VISIBLE CHANGES
 
@@ -191,7 +220,7 @@
 
 * Updated primitive class checks in some functions.
 
-# lefko3 5.0.0 2022-03-01
+# lefko3 5.0.0 (2022-03-01)
 
 ## NEW FEATURES
 
@@ -251,7 +280,7 @@
 
 * Function create_pm() updated to handle maturity status models.
 
-# lefko3 4.2.0 2022-01-17
+# lefko3 4.2.0 (2022-01-17)
 
 ## NEW FEATURES
 
@@ -380,13 +409,13 @@
   in projection3() to issue substochasticity warnings continuously regardless of
   actual substochasticity violation.
 
-# lefko3 4.1.1 2021-12-07
+# lefko3 4.1.1 (2021-12-07)
 
 ## BUG FIXES
 
 * Fixed C++ runtime error in function hist_null().
 
-# lefko3 4.1.0 2021-12-06
+# lefko3 4.1.0 (2021-12-06)
 
 ## NEW FEATURES
 
@@ -443,7 +472,7 @@
 * Corrected incorrect assignment of stages in flefko3(), flefko2(), and
   aflefko2() based on use of groups in supplement tables.
 
-# lefko3 4.0.1 2021-11-15
+# lefko3 4.0.1 (2021-11-15)
 
 ## BUG FIXES
 
@@ -451,7 +480,7 @@
 
 * Problems with mathjaxr integration fixed.
 
-# lefko3 4.0.0 2021-11-14
+# lefko3 4.0.0 (2021-11-14)
 
 ## NEW FEATURES
 
@@ -542,7 +571,7 @@
   transition-survival probabilities and fecundities when patchcol or popcol is
   given without any respective specific patch or pop options given.
 
-# lefko3 3.8.0 2021-09-08
+# lefko3 3.8.0 (2021-09-08)
 
 ## NEW FEATURES
 
@@ -585,7 +614,7 @@
 * Fixed issue preventing proper handling of historical matrix inputs in function
   create_lM().
 
-# lefko3 3.7.0 2021-08-18
+# lefko3 3.7.0 (2021-08-18)
 
 ## NEW FEATURES
 
@@ -625,7 +654,7 @@
 * Fixed memory leak affecting sparse matrices in projection3() and related
   functions.
 
-# lefko3 3.6.0 2021-07-21
+# lefko3 3.6.0 (2021-07-21)
 
 ## NEW FEATURES
 
@@ -637,7 +666,7 @@
 * All population dynamics analysis functions have been substantially sped up
   through better memory management techniques.
 
-# lefko3 3.5.3 2021-07-14
+# lefko3 3.5.3 (2021-07-14)
 
 ## NEW FEATURES
 
@@ -659,7 +688,7 @@
 * Corrected static_cast issue that might prevent package installation in
   Solaris systems.
 
-# lefko3 3.5.2 2021-07-12
+# lefko3 3.5.2 (2021-07-12)
 
 ## USER-VISIBLE CHANGES
 
@@ -670,7 +699,7 @@
 
 * Examples have been updated for clarity and consistency.
 
-# lefko3 3.5.1 2021-07-07
+# lefko3 3.5.1 (2021-07-07)
 
 ## NEW FEATURES
 
@@ -693,7 +722,7 @@
 * Corrected improper handling of prior forms of entry stages in raw historical 
   MPMs.
 
-# lefko3 3.5.0 2021-06-29
+# lefko3 3.5.0 (2021-06-29)
 
 ## NEW FEATURES
 
@@ -739,7 +768,7 @@
 
 * Typos and other issues corrected in vignettes.
 
-# lefko3 3.4.0 2021-03-31
+# lefko3 3.4.0 (2021-03-31)
 
 ## NEW FEATURES
 
@@ -807,7 +836,7 @@
 
 * Corrected memory leak issue in aflefko2().
 
-# lefko3 3.3.2 2021-02-25
+# lefko3 3.3.2 (2021-02-25)
 
 ## BUG FIXES
 
@@ -820,7 +849,7 @@
 
 * Corrected memory allocation issue in historicalize3().
 
-# lefko3 3.3.1 2021-02-23
+# lefko3 3.3.1 (2021-02-23)
 
 ## USER-VISIBLE CHANGES
 
@@ -828,7 +857,7 @@
 
 * Help file typos fixed.
 
-# lefko3 3.3.0 2021-02-21
+# lefko3 3.3.0 (2021-02-21)
 
 ## NEW FEATURES
 
@@ -878,7 +907,7 @@
 
 * Fixed minor issue in summary.lefkoMat() output text.
 
-# lefko3 3.2.0 2021-01-03
+# lefko3 3.2.0 (2021-01-03)
 
 ## NEW FEATURES
 
@@ -916,7 +945,7 @@
 * Corrected incorrect overwrite() call in lathyrus example used in function
   flefko3() and all population dynamics analysis functions.
 
-# lefko3 3.1.2 2020-11-16
+# lefko3 3.1.2 (2020-11-16)
 
 ## BUG FIXES
 
@@ -924,14 +953,14 @@
   which affected the creation and interpretation of the $labels element in
   atrix estimation.
 
-# lefko3 3.1.1 2020-11-13
+# lefko3 3.1.1 (2020-11-13)
 
 ## BUG FIXES
 
 * Fixed bug in lmean() function resulting from an implicit cast and affecting
   users operating lefko3 on Solaris systems.
 
-# lefko3 3.1.0 2020-11-08
+# lefko3 3.1.0 (2020-11-08)
 
 ## NEW FEATURES
 
@@ -953,7 +982,7 @@
 * Corrected parameterization of negative binomial distribution in function
   modelsarch().
 
-# lefko3 3.0.0 2020-10-22
+# lefko3 3.0.0 (2020-10-22)
 
 ## NEW FEATURES
 
@@ -984,7 +1013,7 @@
 * Function summary.lefkoMat() now also shows which vital rate models were not
   estimated.
 
-# lefko3 2.4.2 2020-09-12
+# lefko3 2.4.2 (2020-09-12)
 
 ## USER-VISIBLE CHANGES
 
@@ -1004,7 +1033,7 @@
 * Bugs in Cypripedium candidum vignettes and examples caused by incomplete
   overwrite tables fixed.
 
-# lefko3 2.3.0 2020-08-18
+# lefko3 2.3.0 (2020-08-18)
 
 ## USER-VISIBLE CHANGES
 
@@ -1022,7 +1051,7 @@
 * Bug fixed that could, under some circumstances, lead to individuals being
   treated as dead when not observed for a period of more than a year.
 
-# lefko3 2.2.2 2020-07-28
+# lefko3 2.2.2 (2020-07-28)
 
 ## USER-VISIBLE CHANGES
 
@@ -1037,7 +1066,7 @@
 * Fixed calculation of observed lifespan in functions verticalize3() and
   historicalize3().
 
-# lefko3 2.2.1 2020-07-18
+# lefko3 2.2.1 (2020-07-18)
 
 ## USER-VISIBLE CHANGES
 
@@ -1051,7 +1080,7 @@
 
 * Fixed bugs in repvalue3.lefkoMat() and repvalue3.matrix().
 
-# lefko3 2.2.0 2020-07-08
+# lefko3 2.2.0 (2020-07-08)
 
 ## USER-VISIBLE CHANGES
 
@@ -1063,7 +1092,7 @@
 
 * Fixed bugs in summary.lefkoMod().
 
-# lefko3 2.1.0 2020-07-06
+# lefko3 2.1.0 (2020-07-06)
 
 ## NEW FEATURES
 
@@ -1078,7 +1107,7 @@
 
 * Scattered bugs eliminated.
 
-# lefko3 2.0.0 2020-06-27
+# lefko3 2.0.0 (2020-06-27)
 
 ## NEW FEATURES
 
@@ -1107,7 +1136,7 @@
 
 * Eliminated problems with class interpretation in modelsearch().
 
-# lefko3 1.0.0 2020-03-24
+# lefko3 1.0.0 (2020-03-24)
 
 ## NEW FEATURES
 
@@ -1126,7 +1155,7 @@
 
 * Bugs corrected in probability and rate estimation functions.
 
-# lefko3 0.13.1 2020-02-16
+# lefko3 0.13.1 (2020-02-16)
 
 ## USER-VISIBLE CHANGES
 
@@ -1136,20 +1165,20 @@
 
 * Cleaned up bugs discovered in rlefko3().
 
-# lefko3 0.13.0 2020-02-14
+# lefko3 0.13.0 (2020-02-14)
 
 ## USER-VISIBLE CHANGES
 
 * Re-developed core functions of rlefko3() with Rcpp and RcppArmadillo,
   substantially reducing run time.
 
-# lefko3 0.12.1 2020-02-11
+# lefko3 0.12.1 (2020-02-11)
 
 ## USER-VISIBLE CHANGES
 
 * Re-developed rlefko3() function per new approach to rlefko2().
 
-# lefko3 0.12.0 2020-02-05
+# lefko3 0.12.0 (2020-02-05)
 
 ## NEW FEATURES
 
@@ -1165,7 +1194,7 @@
 
 * Eliminated class lefkoMatMulti.
 
-# lefko3 0.11.0 2020-01-31
+# lefko3 0.11.0 (2020-01-31)
 
 ## NEW FEATURES
 
@@ -1176,7 +1205,7 @@
 
 * Created new S3 summary.lefkoMatMulti() function.
 
-# lefko3 0.10.2 2020-01-29
+# lefko3 0.10.2 (2020-01-29)
 
 ## NEW FEATURES
 
@@ -1186,7 +1215,7 @@
 
 * Massive changes and improvements to tutorials.
 
-# lefko3 0.10.1 2020-01-22
+# lefko3 0.10.1 (2020-01-22)
 
 ## NEW FEATURES
 
@@ -1194,7 +1223,7 @@
 
 * Added an S3 summary function for class lefkoMod.
 
-# lefko3 0.10.0 2020-01-19
+# lefko3 0.10.0 (2020-01-19)
 
 ## NEW FEATURES
 
@@ -1206,7 +1235,7 @@
 
 * Replaced all flw and frt entries with repst and fec.
 
-# lefko3 0.9.0 2020-01-15
+# lefko3 0.9.0 (2020-01-15)
 
 ## NEW FEATURES
 
@@ -1216,13 +1245,13 @@
 
 * Formatted code and help files.
 
-# lefko3 0.8.3 2020-01-11
+# lefko3 0.8.3 (2020-01-11)
 
 ## USER-VISIBLE CHANGES
 
 * Eliminated year effect warnings by option.
 
-# lefko3 0.8.2 2020-01-10
+# lefko3 0.8.2 (2020-01-10)
 
 ## NEW FEATURES
 
@@ -1231,7 +1260,7 @@
 * Gave matrix creation functions the ability to create output with lists of A,
   T, and F matrices for all years requested.
 
-# lefko3 0.8.1 2020-01-10
+# lefko3 0.8.1 (2020-01-10)
 
 ## NEW FEATURES
 
@@ -1242,13 +1271,13 @@
 
 * Synchronized data management function to modelsearch() function.
 
-# lefko3 0.8.0 2020-01-01
+# lefko3 0.8.0 (2020-01-01)
 
 ## NEW FEATURES
 
 * Added modelsearch() function to handle model building and selection workflow.
 
-# lefko3 0.7.0 2019-11-22
+# lefko3 0.7.0 (2019-11-22)
 
 ## NEW FEATURES
 
@@ -1258,14 +1287,14 @@
 
 * Fixed overwriting and estimating portions of matrix creation functions.
 
-# lefko3 0.6.1 2019-11-22
+# lefko3 0.6.1 (2019-11-22)
 
 ## BUG FIXES
 
 * Fixed overwriting portion of matrix design, so that given transitions are
   properly added to historical matrices.
 
-# lefko3 0.6.0 2019-11-20
+# lefko3 0.6.0 (2019-11-20)
 
 ## NEW FEATURES
 
@@ -1276,13 +1305,13 @@
 
 * Matrix design reworked to make everything faster.
 
-# lefko3 0.5.1 2019-11-19
+# lefko3 0.5.1 (2019-11-19)
 
 ## NEW FEATURES
 
 * Rebuilt flefko2() to use C++ precompiled probability density functions.
 
-# lefko3 0.5.0 2019-11-18
+# lefko3 0.5.0 (2019-11-18)
 
 ## NEW FEATURES
 
@@ -1296,7 +1325,7 @@
 
 * Corrected issues in help files.
 
-# lefko3 0.4.4 2019-11-11
+# lefko3 0.4.4 (2019-11-11)
 
 ## NEW FEATURES
 
@@ -1306,7 +1335,7 @@
 
 * Changed plantid variable name to individ.
 
-# lefko3 0.4.3 2019-11-08
+# lefko3 0.4.3 (2019-11-08)
 
 ## NEW FEATURES
 
@@ -1320,19 +1349,19 @@
 
 * Corrected links throughout.
 
-# lefko3 0.4.2 2019-11-07
+# lefko3 0.4.2 (2019-11-07)
 
 ## NEW FEATURES
 
 * Added ability to handle character column names to verticalize_h().
 
-# lefko3 0.4.1 2019-11-06
+# lefko3 0.4.1 (2019-11-06)
 
 ## BUG FIXES
 
 * Corrected issues in verticalize_h function.
 
-# lefko3 0.4.0 2019-11-03
+# lefko3 0.4.0 (2019-11-03)
 
 ## NEW FEATURES
 
@@ -1342,7 +1371,7 @@
 
 * Added GPL license.
 
-# lefko3 0.3.1 2019-11-02
+# lefko3 0.3.1 (2019-11-02)
 
 ## BUG FIXES
 
@@ -1351,7 +1380,7 @@
 * Corrected the method of using proxy transitions from certain juvenile
   stages to mature stages in all lefko functions.
 
-# lefko3 0.3.0 2019-11-01
+# lefko3 0.3.0 (2019-11-01)
 
 ## USER-VISIBLE CHANGES
 
@@ -1361,7 +1390,7 @@
 * Standardized terms in more functions for cross-compatibility and easier
   workflow.
 
-# lefko3 0.2.1 2019-10-29
+# lefko3 0.2.1 (2019-10-29)
 
 ## NEW FEATURES
 
@@ -1371,7 +1400,7 @@
 
 * First version of rlefko3() created.
 
-# lefko3 0.1.1 2019-10-26
+# lefko3 0.1.1 (2019-10-26)
 
 ## NEW FEATURES
 
@@ -1384,7 +1413,7 @@
 
 * Documentation improvements.
 
-# lefko3 0.1.0 2019-10-25
+# lefko3 0.1.0 (2019-10-25)
 
 ## NEW FEATURES
 

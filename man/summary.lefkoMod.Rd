@@ -70,7 +70,7 @@ lathmodelsln2 <- modelsearch(lathvertln, historical = FALSE,
   bestfit = "AICc&k", sizedist = "gaussian", fecdist = "poisson",
   indiv = "individ", patch = "patchid", year = "year2",
   year.as.random = TRUE, patch.as.random = TRUE, show.model.tables = TRUE,
-  quiet = TRUE)
+  quiet = "partial")
 
 summary(lathmodelsln2)
 }

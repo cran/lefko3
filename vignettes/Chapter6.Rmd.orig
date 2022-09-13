@@ -210,7 +210,7 @@ lathmodels3ipm <- modelsearch(lathvertipm, historical = TRUE, approach = "mixed"
 #summary(lathmodels3ipm)
 ```
   
-  <p style="text-indent: 20px">We see here, as before, that size in occasion *t*-1 exerts an influence on some vital rates, including survival to occasion *t*+1 and size in occasion *t*+1. So, the historical IPM is the correct choice here. Accuracy is also quite high for adult survival and juvenile and adult observation, but lower elsewhere.</p>
+  <p style="text-indent: 20px">We see here, as before, that size in occasion *t*-1 exerts an influence on some vital rates, including survival to occasion *t*+1 and size in occasion *t*+1. So, the historical IPM is the correct choice here. Accuracy is also quite high for adult survival and juvenile and adult observation, but quite poor for primary size and fecundity (R^2^ is 0.546 and 0.443, respectively).</p>
   
   <p style="text-indent: 20px">We will also create an ahistorical IPM for comparison. For that purpose, we will create the ahistorical linear model set.</p>
 ```{r Ch6.9}

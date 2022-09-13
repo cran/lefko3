@@ -1149,6 +1149,27 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// density_input
+DataFrame density_input(List mpm, RObject stage3, RObject stage2, Nullable<RObject> stage1, Nullable<RObject> age2, Nullable<RObject> style, Nullable<RObject> time_delay, Nullable<RObject> alpha, Nullable<RObject> beta, Nullable<RObject> type, Nullable<RObject> type_t12);
+RcppExport SEXP _lefko3_density_input(SEXP mpmSEXP, SEXP stage3SEXP, SEXP stage2SEXP, SEXP stage1SEXP, SEXP age2SEXP, SEXP styleSEXP, SEXP time_delaySEXP, SEXP alphaSEXP, SEXP betaSEXP, SEXP typeSEXP, SEXP type_t12SEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< List >::type mpm(mpmSEXP);
+    Rcpp::traits::input_parameter< RObject >::type stage3(stage3SEXP);
+    Rcpp::traits::input_parameter< RObject >::type stage2(stage2SEXP);
+    Rcpp::traits::input_parameter< Nullable<RObject> >::type stage1(stage1SEXP);
+    Rcpp::traits::input_parameter< Nullable<RObject> >::type age2(age2SEXP);
+    Rcpp::traits::input_parameter< Nullable<RObject> >::type style(styleSEXP);
+    Rcpp::traits::input_parameter< Nullable<RObject> >::type time_delay(time_delaySEXP);
+    Rcpp::traits::input_parameter< Nullable<RObject> >::type alpha(alphaSEXP);
+    Rcpp::traits::input_parameter< Nullable<RObject> >::type beta(betaSEXP);
+    Rcpp::traits::input_parameter< Nullable<RObject> >::type type(typeSEXP);
+    Rcpp::traits::input_parameter< Nullable<RObject> >::type type_t12(type_t12SEXP);
+    rcpp_result_gen = Rcpp::wrap(density_input(mpm, stage3, stage2, stage1, age2, style, time_delay, alpha, beta, type, type_t12));
+    return rcpp_result_gen;
+END_RCPP
+}
 // lambda3
 RObject lambda3(RObject mpm, String sparse);
 RcppExport SEXP _lefko3_lambda3(SEXP mpmSEXP, SEXP sparseSEXP) {
@@ -1214,6 +1235,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_lefko3_stovokor", (DL_FUNC) &_lefko3_stovokor, 35},
     {"_lefko3_create_pm", (DL_FUNC) &_lefko3_create_pm, 1},
     {"_lefko3_actualstage3", (DL_FUNC) &_lefko3_actualstage3, 10},
+    {"_lefko3_density_input", (DL_FUNC) &_lefko3_density_input, 11},
     {"_lefko3_lambda3", (DL_FUNC) &_lefko3_lambda3, 2},
     {NULL, NULL, 0}
 };

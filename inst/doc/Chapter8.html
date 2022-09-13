@@ -121,13 +121,20 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
   for (var i = 0; i < sheets.length; i++) {
     if (sheets[i].ownerNode.dataset["origin"] !== "pandoc") continue;
     try { var rules = sheets[i].cssRules; } catch (e) { continue; }
-    for (var j = 0; j < rules.length; j++) {
+    var j = 0;
+    while (j < rules.length) {
       var rule = rules[j];
       // check if there is a div.sourceCode rule
-      if (rule.type !== rule.STYLE_RULE || rule.selectorText !== "div.sourceCode") continue;
+      if (rule.type !== rule.STYLE_RULE || rule.selectorText !== "div.sourceCode") {
+        j++;
+        continue;
+      }
       var style = rule.style.cssText;
       // check if color or background-color is set
-      if (rule.style.color === '' && rule.style.backgroundColor === '') continue;
+      if (rule.style.color === '' && rule.style.backgroundColor === '') {
+        j++;
+        continue;
+      }
       // replace div.sourceCode by a pre.sourceCode rule
       sheets[i].deleteRule(j);
       sheets[i].insertRule('pre.sourceCode{' + style + '}', j);
@@ -661,7 +668,8 @@ different subpopulations use the same identifiers.
 <span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a><span class="fu">summary_hfv</span>(lathvertln, <span class="at">full =</span> <span class="cn">FALSE</span>)</span>
 <span id="cb5-12"><a href="#cb5-12" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; </span></span>
-<span id="cb5-13"><a href="#cb5-13" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; This hfv dataset contains 2527 rows, 42 variables, 1 population, 6 patches, 1053 individuals, and 3 time steps.</span></span></code></pre></div>
+<span id="cb5-13"><a href="#cb5-13" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; This hfv dataset contains 2527 rows, 42 variables, 1 population, </span></span>
+<span id="cb5-14"><a href="#cb5-14" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 6 patches, 1053 individuals, and 3 time steps.</span></span></code></pre></div>
 <p style="text-indent: 20px">
 Before we move on to the next key steps in analysis, let’s take a closer
 look at fecundity. In this dataset, fecundity is mostly a count of
@@ -1087,10 +1095,10 @@ example, survival is influenced by reproductive status and age in the
 current year, as well as by patch, individual identity, and year, while
 observation status is not influenced by age. We can see these models
 explicitly, as well as the model tables developed, by calling them
-directly from the lefkoMod object. The accuracy of our models has a
-tendency to be in the mid-range, meaning that it is likely that we have
-not included some important factors accounting for variability in at
-least some of our vital rates.
+directly from the lefkoMod object. The accuracy of many of our models is
+high, but some are mid-range and juvenile size is abysmally low, meaning
+that it is likely that we have not included some important factors
+accounting for variability in at least some of our vital rates.
 </p>
 </div>
 <div id="step-4.-mpm-estimation" class="section level4">
@@ -1434,8 +1442,8 @@ similar structure to the input <code>lefkoMat</code> object, including
 the stageframe and order of matrices.
 </p>
 <div class="sourceCode" id="cb24"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a>lathmat2m_ltre <span class="ot">&lt;-</span> <span class="fu">ltre3</span>(lathmat2pmean)</span>
-<span id="cb24-2"><a href="#cb24-2" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; Warning: Matrices input as mats will also be used as reference matrices.</span></span>
-<span id="cb24-3"><a href="#cb24-3" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; Using all refmats matrices as reference matrices.</span></span>
+<span id="cb24-2"><a href="#cb24-2" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; Warning: Matrices input as mats will also be used in reference matrix calculation.</span></span>
+<span id="cb24-3"><a href="#cb24-3" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; Using all refmats matrices in reference matrix calculation.</span></span>
 <span id="cb24-4"><a href="#cb24-4" aria-hidden="true" tabindex="-1"></a><span class="co">#lathmat2m_ltre</span></span></code></pre></div>
 <p style="text-indent: 20px">
 The sLTRE produces output that is a bit different. Here, we see two
@@ -1450,8 +1458,8 @@ standard LTRE shows the impact of changes in matrix elements on <span class="mat
 changes in the mean and the variability of matrix elements on <span class="math inline">\(\text{log} \lambda\)</span>.
 </p>
 <div class="sourceCode" id="cb25"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a>lathmat2m_sltre <span class="ot">&lt;-</span> <span class="fu">ltre3</span>(lathmat2agep, <span class="at">stochastic =</span> <span class="cn">TRUE</span>, <span class="at">rseed =</span> <span class="dv">42</span>)</span>
-<span id="cb25-2"><a href="#cb25-2" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; Warning: Matrices input as mats will also be used as reference matrices.</span></span>
-<span id="cb25-3"><a href="#cb25-3" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; Using all refmats matrices as reference matrices.</span></span>
+<span id="cb25-2"><a href="#cb25-2" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; Warning: Matrices input as mats will also be used in reference matrix calculation.</span></span>
+<span id="cb25-3"><a href="#cb25-3" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; Using all refmats matrices in reference matrix calculation.</span></span>
 <span id="cb25-4"><a href="#cb25-4" aria-hidden="true" tabindex="-1"></a><span class="co">#lathmat2m_sltre</span></span></code></pre></div>
 <p style="text-indent: 20px">
 The output objects are large and can take a great deal of effort to look

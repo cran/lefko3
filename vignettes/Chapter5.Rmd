@@ -90,7 +90,8 @@ vertdata <- verticalize3(data = cypdata, noyears = 6, firstyear = 2004,
   stageassign = cypframe, stagesize = "sizeadded", NAas0 = TRUE)
 summary_hfv(vertdata, full = FALSE)
 #> 
-#> This hfv dataset contains 320 rows, 54 variables, 1 population, 3 patches, 74 individuals, and 5 time steps.
+#> This hfv dataset contains 320 rows, 54 variables, 1 population, 
+#> 3 patches, 74 individuals, and 5 time steps.
 ```
   
   <p style="text-indent: 20px">In the above code, we described the input dataset in a way that allows R to reorganize it appropriately. Note that in the input to the function, we utilized a repeating pattern of variable names arranged in the same order for each monitoring occasion. This arrangement allows us to enter only the first variable in each set, as long as `noyears` and `blocksize` are set properly and no gaps or shuffles appear among columns in the dataset. `lefko3`'s data management functions do not require such repeating patterns, but such patterns do make the required function input much more succinct. Without these patterns, column names should be input as vectors in the correct temporal order for each input option, and the `blocksize` option should be omitted.</p>
@@ -219,7 +220,8 @@ vertdata2 <- historicalize3(data = cypvert, patchidcol = "patch",
   NAas0 = TRUE, reduce = TRUE)
 summary_hfv(vertdata2, full = FALSE)
 #> 
-#> This hfv dataset contains 320 rows, 54 variables, 1 population, 3 patches, 74 individuals, and 5 time steps.
+#> This hfv dataset contains 320 rows, 54 variables, 1 population, 
+#> 3 patches, 74 individuals, and 5 time steps.
 ```
   
   <p style="text-indent: 20px">If we compare the dimensions of the new vertical datasets, we find that the lengths of the datasets are the same in terms of rows and columns, and the variables and data are the same although the order of the columns and rows might not match (see the summaries for comparison).</p>
@@ -351,7 +353,7 @@ cypmodels3 <- modelsearch(vertdata, historical = TRUE, approach = "mixed",
   
   <p style="text-indent: 20px">As `modelsearch` works, it produces text describing its current processes and any issues encountered. It is quite likely that many warning messages will appear, and these may be of use in understanding the dataset and how well it conforms to analytical assumptions. We have silenced most of this with the `quiet = TRUE` option, although some red text still indicates a few warnings that have slipped through. These are not to be terribly concerned about. However, we encourage users to allow the function to run unsilenced in case of severe modeling problems. Please read the documentation for functions `lm()` (`stats` package), `glm()` (`stats` package), `glm.nb()` (`MASS` package), `lmer()` (`lme4` package), `glmer()` (`lme4` package), `glmmTMB()` (`glmmTMB` package), `zeroinfl()` (`pscl` package), `vglm()` (`VGAM` package), and `dredge()` (`MuMIn` package) for further information on the sources of problems in such models.</p>
   
-  <p style="text-indent: 20px">In the output, we see historical terms determining primary size, suggesting that we cannot ignore history. As such, the models created above are actually only usable for the construction of historical models. We can also see that although the accuracy of our survival and observation status models is very high (94.7% and 95% respectively), the accuracy of our reproductive status model is only fair (71.5%), and the pseudo R^2^ for fecundity is only 32%. For comparison, we may wish to estimate ahistorical models. In that case, we also need linear models in which the global models tested do not include state at occasion *t*-1, as below.</p>
+  <p style="text-indent: 20px">In the output, we see historical terms determining primary size, suggesting that we cannot ignore history. As such, the models created above are actually only usable for the construction of historical models. We can also see that although the accuracy of our survival and observation status models is very high (94.7% and 95% respectively), the accuracy of our reproductive status model is only fair (71.5%), and the R^2^ for primary size and fecundity are 84.0% and 54.9%, respectively. For comparison, we may wish to estimate ahistorical models. In that case, we also need linear models in which the global models tested do not include state at occasion *t*-1, as below.</p>
 
 ```r
 cypmodels2 <- modelsearch(vertdata, historical = FALSE, approach = "mixed", 
@@ -361,7 +363,7 @@ cypmodels2 <- modelsearch(vertdata, historical = FALSE, approach = "mixed",
 #summary(cypmodels2)
 ```
   
-  <p style="text-indent: 20px">Fewer models were estimated per dredge, since fewer parameters were tested in the global models (size and reproductive status in occasion *t*-1 were not included). So, the best-fit models should look a little bit different. However, a more thorough comparison will show that many of the best-fit models are similar between historical and ahistorical analysis, and that the only model different is the primary size model, which now shows only a y-intercept and random terms for monitoring occasion and individual. This is not guaranteed - in this case, it may be that the relatively small number of years and small overall sample size leaves too little power to find an impact of historical status on most vital rates. However, with size impacted by history, the choice of a historical model is better here.</p>
+  <p style="text-indent: 20px">Fewer models were estimated per dredge, since fewer parameters were tested in the global models (size and reproductive status in occasion *t*-1 were not included). Since historical terms were not tested, the best-fit model for primary size should look different. A thorough comparison will show that many of the best-fit models are similar between historical and ahistorical analysis, and that the only model different is the primary size model, which now shows only a y-intercept and random terms for monitoring occasion and individual. In this case, it may be that the relatively small number of years and small overall sample size leaves too little power to find an impact of historical status on most vital rates. However, with size impacted by history, the choice of a historical model is better here.</p>
   
 #### Step 4. MPM estimation 
   

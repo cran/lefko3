@@ -482,7 +482,7 @@ lathmodelsln2 <- modelsearch(lathvertln, historical = FALSE,
   bestfit = "AICc&k", sizedist = "gaussian", fecdist = "poisson",
   indiv = "individ", patch = "patchid", year = "year2",
   year.as.random = TRUE, patch.as.random = TRUE, show.model.tables = TRUE,
-  quiet = TRUE)
+  quiet = "partial")
 
 # Here we use supplemental to provide overwrite and reproductive info
 lathsupp2 <- supplemental(stage3 = c("Sd", "Sdl", "Sd", "Sdl"), 
@@ -549,7 +549,8 @@ vertmodels2f <- modelsearch(vert.data.f, historical = FALSE, suite = "main",
   sizeb = c("sizeb3", "sizeb2", "sizeb1"), sizec = c("sizec3", "sizec2", "sizec1"),
   approach = "glm", vitalrates = c("surv", "obs", "size", "repst", "fec"),
   sizedist = "negbin", sizebdist = "poisson", sizecdist = "poisson",
-  fecdist = "poisson", patch.as.random = TRUE, year.as.random = TRUE)
+  fecdist = "poisson", patch.as.random = TRUE, year.as.random = TRUE,
+  quiet = "partial")
 
 vertsupp2f <- supplemental(stage3 = c("DS", "P1", "P2", "P3", "Sdl", "Sdl",
     "Dorm", "V1 I0 D0", "V2 I0 D0", "V3 I0 D0", "DS", "P1"),

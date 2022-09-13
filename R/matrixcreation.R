@@ -377,7 +377,7 @@
 #'   vitalrates = c("surv", "obs", "size", "repst", "fec"), juvestimate = "Sdl",
 #'   bestfit = "AICc&k", sizedist = "gaussian", fecdist = "poisson", 
 #'   indiv = "individ", patch = "patchid", year = "year2", year.as.random = TRUE,
-#'   patch.as.random = TRUE, show.model.tables = TRUE, quiet = TRUE)
+#'   patch.as.random = TRUE, show.model.tables = TRUE, quiet = "partial")
 #' 
 #' lathsupp3 <- supplemental(stage3 = c("Sd", "Sd", "Sdl", "Sdl", "mat", "Sd", "Sdl"), 
 #'   stage2 = c("Sd", "Sd", "Sd", "Sd", "Sdl", "rep", "rep"),
@@ -448,7 +448,8 @@
 #'   sizeb = c("sizeb3", "sizeb2", "sizeb1"), sizec = c("sizec3", "sizec2", "sizec1"),
 #'   approach = "glm", vitalrates = c("surv", "obs", "size", "repst", "fec"),
 #'   sizedist = "negbin", sizebdist = "poisson", sizecdist = "poisson",
-#'   fecdist = "poisson", patch.as.random = TRUE, year.as.random = TRUE)
+#'   fecdist = "poisson", patch.as.random = TRUE, year.as.random = TRUE,
+#'   quiet = "partial")
 #' 
 #' vertsupp3f <- supplemental(stage3 = c("DS", "P1", "DS", "P1", "P2", "P2", "P3",
 #'     "Sdl", "Sdl", "Sdl", "Dorm", "V1 I0 D0", "V2 I0 D0", "V3 I0 D0", "Dorm",
@@ -1529,7 +1530,7 @@ flefko3 <- function(year = "all", patch = "all", stageframe, supplement = NULL,
 #'   bestfit = "AICc&k", sizedist = "gaussian", fecdist = "poisson",
 #'   indiv = "individ", patch = "patchid", year = "year2",
 #'   year.as.random = TRUE, patch.as.random = TRUE, show.model.tables = TRUE,
-#'   quiet = TRUE)
+#'   quiet = "partial")
 #' 
 #' # Here we use supplemental to provide overwrite and reproductive info
 #' lathsupp2 <- supplemental(stage3 = c("Sd", "Sdl", "Sd", "Sdl"), 
@@ -1596,7 +1597,8 @@ flefko3 <- function(year = "all", patch = "all", stageframe, supplement = NULL,
 #'   sizeb = c("sizeb3", "sizeb2", "sizeb1"), sizec = c("sizec3", "sizec2", "sizec1"),
 #'   approach = "glm", vitalrates = c("surv", "obs", "size", "repst", "fec"),
 #'   sizedist = "negbin", sizebdist = "poisson", sizecdist = "poisson",
-#'   fecdist = "poisson", patch.as.random = TRUE, year.as.random = TRUE)
+#'   fecdist = "poisson", patch.as.random = TRUE, year.as.random = TRUE,
+#'   quiet = "partial")
 #' 
 #' vertsupp2f <- supplemental(stage3 = c("DS", "P1", "P2", "P3", "Sdl", "Sdl",
 #'     "Dorm", "V1 I0 D0", "V2 I0 D0", "V3 I0 D0", "DS", "P1"),
@@ -2660,7 +2662,7 @@ flefko2 <- function(year = "all", patch = "all", stageframe, supplement = NULL,
 #'   bestfit = "AICc&k", sizedist = "gaussian", fecdist = "poisson",
 #'   indiv = "individ", patch = "patchid", year = "year2", age = "obsage",
 #'   year.as.random = TRUE, patch.as.random = TRUE, show.model.tables = TRUE,
-#'   quiet = TRUE)
+#'   quiet = "partial")
 #' 
 #' # Here we use supplemental() to provide overwrite and reproductive info
 #' lathsupp2 <- supplemental(stage3 = c("Sd", "Sdl", "Sd", "Sdl"), 
@@ -3507,7 +3509,7 @@ aflefko2 <- function(year = "all", patch = "all", stageframe, supplement = NULL,
 #' lathmodels2_age <- modelsearch(lathvert_age, historical = FALSE,
 #'   approach = "mixed", suite = "cons", bestfit = "AICc&k", age = "obsage",
 #'   vitalrates = c("surv", "fec"), fecdist = "poisson", indiv = "individ",
-#'   year = "year2", show.model.tables = TRUE, quiet = TRUE)
+#'   year = "year2", show.model.tables = TRUE, quiet = "partial")
 #' 
 #' lathmat2fleslie <- fleslie(year = "all", data = lathvert_age,
 #'   modelsuite = lathmodels2_age, fecage_min = 1)

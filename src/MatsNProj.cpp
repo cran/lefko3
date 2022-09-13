@@ -661,7 +661,7 @@ Rcpp::List sf_create (NumericVector sizes, Nullable<StringVector> stagenames = R
   if (ipmbins < 2) {
     throw Rcpp::exception("Please enter a valid integer greater than 1 for ipmbins option.", false);
   } else if (ipmbins > 100) {
-    Rf_warningcall(R_NilValue, "High ipmbin numbers may lead to dramatic decreases in statistical power and overparameterized matrices.");
+    Rf_warningcall(R_NilValue, "High ipmbin numbers may lead to dramatic decreases in statistical power and overparameterized matrices.\n");
   }
   
   // Now the automated size classification processing
@@ -1967,35 +1967,35 @@ Rcpp::List sf_reassess(DataFrame stageframe, Nullable<DataFrame> supplement,
   arma::mat repmatrix_true;
   int newsupp_rows {0};
   
-  StringVector stagevec = stageframe["stage"];
-  NumericVector origsizevec = stageframe["size"];
-  NumericVector origsizebvec = stageframe["size_b"];
-  NumericVector origsizecvec = stageframe["size_c"];
-  NumericVector minagevec = stageframe["min_age"];
-  NumericVector maxagevec = stageframe["max_age"];
-  arma::uvec repvec = stageframe["repstatus"];
-  arma::uvec obsvec = stageframe["obsstatus"];
-  arma::uvec propvec = stageframe["propstatus"];
-  arma::uvec immvec = stageframe["immstatus"];
-  arma::uvec matvec = stageframe["matstatus"];
-  arma::uvec indvec = stageframe["indataset"];
-  NumericVector binvec = stageframe["binhalfwidth_raw"];
-  NumericVector binbvec = stageframe["binhalfwidthb_raw"];
-  NumericVector bincvec = stageframe["binhalfwidthc_raw"];
-  NumericVector sizeminvec = stageframe["sizebin_min"];
-  NumericVector sizemaxvec = stageframe["sizebin_max"];
-  NumericVector sizectrvec = stageframe["sizebin_center"];
-  NumericVector sizewidthvec = stageframe["sizebin_width"];
-  NumericVector sizebminvec = stageframe["sizebinb_min"];
-  NumericVector sizebmaxvec = stageframe["sizebinb_max"];
-  NumericVector sizebctrvec = stageframe["sizebinb_center"];
-  NumericVector sizebwidthvec = stageframe["sizebinb_width"];
-  NumericVector sizecminvec = stageframe["sizebinc_min"];
-  NumericVector sizecmaxvec = stageframe["sizebinc_max"];
-  NumericVector sizecctrvec = stageframe["sizebinc_center"];
-  NumericVector sizecwidthvec = stageframe["sizebinc_width"];
-  arma::ivec groupvec = stageframe["group"];
-  StringVector comvec = stageframe["comments"];
+  StringVector stagevec = as<StringVector>(stageframe["stage"]);
+  NumericVector origsizevec = as<NumericVector>(stageframe["size"]);
+  NumericVector origsizebvec = as<NumericVector>(stageframe["size_b"]);
+  NumericVector origsizecvec = as<NumericVector>(stageframe["size_c"]);
+  NumericVector minagevec = as<NumericVector>(stageframe["min_age"]);
+  NumericVector maxagevec = as<NumericVector>(stageframe["max_age"]);
+  arma::uvec repvec = as<arma::uvec>(stageframe["repstatus"]);
+  arma::uvec obsvec = as<arma::uvec>(stageframe["obsstatus"]);
+  arma::uvec propvec = as<arma::uvec>(stageframe["propstatus"]);
+  arma::uvec immvec = as<arma::uvec>(stageframe["immstatus"]);
+  arma::uvec matvec = as<arma::uvec>(stageframe["matstatus"]);
+  arma::uvec indvec = as<arma::uvec>(stageframe["indataset"]);
+  NumericVector binvec = as<NumericVector>(stageframe["binhalfwidth_raw"]);
+  NumericVector binbvec = as<NumericVector>(stageframe["binhalfwidthb_raw"]);
+  NumericVector bincvec = as<NumericVector>(stageframe["binhalfwidthc_raw"]);
+  NumericVector sizeminvec = as<NumericVector>(stageframe["sizebin_min"]);
+  NumericVector sizemaxvec = as<NumericVector>(stageframe["sizebin_max"]);
+  NumericVector sizectrvec = as<NumericVector>(stageframe["sizebin_center"]);
+  NumericVector sizewidthvec = as<NumericVector>(stageframe["sizebin_width"]);
+  NumericVector sizebminvec = as<NumericVector>(stageframe["sizebinb_min"]);
+  NumericVector sizebmaxvec = as<NumericVector>(stageframe["sizebinb_max"]);
+  NumericVector sizebctrvec = as<NumericVector>(stageframe["sizebinb_center"]);
+  NumericVector sizebwidthvec = as<NumericVector>(stageframe["sizebinb_width"]);
+  NumericVector sizecminvec = as<NumericVector>(stageframe["sizebinc_min"]);
+  NumericVector sizecmaxvec = as<NumericVector>(stageframe["sizebinc_max"]);
+  NumericVector sizecctrvec = as<NumericVector>(stageframe["sizebinc_center"]);
+  NumericVector sizecwidthvec = as<NumericVector>(stageframe["sizebinc_width"]);
+  arma::ivec groupvec = as<arma::ivec>(stageframe["group"]);
+  StringVector comvec = as<StringVector>(stageframe["comments"]);
   
   StringVector stage3_supp;
   StringVector stage2_supp;
@@ -2073,7 +2073,7 @@ Rcpp::List sf_reassess(DataFrame stageframe, Nullable<DataFrame> supplement,
       
       if (rev_checksum == 0) {
         repentryvec(0) = 1;
-        Rf_warningcall(R_NilValue, "No information on reproductive entry stages provided. Assuming the first stage is the entry stage into the life cycle.");
+        Rf_warningcall(R_NilValue, "No information on reproductive entry stages provided. Assuming the first stage is the entry stage into the life cycle.\n");
       }
       
       arma::mat token_mat(stageframe_length, stageframe_length, fill::zeros);
@@ -2198,7 +2198,7 @@ Rcpp::List sf_reassess(DataFrame stageframe, Nullable<DataFrame> supplement,
     int rev_checksum = sum(repentryvec);
     if(rev_checksum == 0) {
       repentryvec(0) = 1;
-      Rf_warningcall(R_NilValue, "No information on reproductive entry stages provided. Assuming the first stage is the entry stage into the life cycle.");
+      Rf_warningcall(R_NilValue, "No information on reproductive entry stages provided. Assuming the first stage is the entry stage into the life cycle.\n");
     }
     
     arma::mat token_mat(stageframe_length, stageframe_length, fill::zeros);
@@ -9722,7 +9722,7 @@ List subvertedpatrolgroup(DataFrame sge3, DataFrame sge2, DataFrame MainData,
 //' Estimate Value for Vital Rate Based on Inputs
 //' 
 //' Function \code{preouterator()} calculates the value of the vital rate called
-//' for by the function \code{jerzeibalowski()}..
+//' for by the function \code{jerzeibalowski()}.
 //' 
 //' @name preouterator
 //' 
@@ -10055,6 +10055,7 @@ double preouterator(List modelproxy, NumericVector maincoefs, arma::imat randind
           } else {
             all_out = main_out;
           }
+          if (all_out < 0.0) all_out = 0.0; // Eliminates issues in some versions of Linux
           
           if (modeltrunc == 1) {
             double den_corr = (1.0 - (exp(-1 * lambda)));
@@ -10083,7 +10084,7 @@ double preouterator(List modelproxy, NumericVector maincoefs, arma::imat randind
             double den_corr {1.0};
             if (modeltrunc == 1) den_corr = (1.0 - (exp(-1 * lambda)));
             if (den_corr == 0.0 || NumericVector::is_na(den_corr)) {
-              den_corr = 1 / (exp_tol * exp_tol);
+              den_corr = 1.0 / (exp_tol * exp_tol);
             }
             
             current_prob += ((pow(lambda, Used_size3) * exp(-1.0 * lambda)) / sizefac) / den_corr;
@@ -10136,6 +10137,7 @@ double preouterator(List modelproxy, NumericVector maincoefs, arma::imat randind
           current_prob += exp(raw_prob) / den_corr;
         }
         all_out = current_prob;
+        if (all_out < 0.0) all_out = 0.0; // Eliminates issues in some versions of Linux
         
         // Rcout << "Negbin: y: " << y << " y0: " << y0 << " alpha: " << alpha <<
         //   " mu: " << mu << " current_prob: " << current_prob << "\n";
@@ -10820,182 +10822,182 @@ List jerzeibalowski(DataFrame AllStages, DataFrame stageframe, int matrixformat,
     // Adult observation
     if (dvr_yn(1)) {
       if (dvr_style(1) == 1) {
-        vr1_dcorr = dvr_alpha(1) * exp(-1 * dvr_beta(1) * dens_n(1));
+        vr2_dcorr = dvr_alpha(1) * exp(-1 * dvr_beta(1) * dens_n(1));
       } else if (dvr_style(1) == 2) {
-        vr1_dcorr = dvr_alpha(1) / (1 + dvr_beta(1) * dens_n(1));
+        vr2_dcorr = dvr_alpha(1) / (1 + dvr_beta(1) * dens_n(1));
       } else if (dvr_style(1) == 3) {
-        vr1_dcorr = 1 / (1 + exp(dvr_alpha(1) * dens_n(1) + dvr_beta(1)));
+        vr2_dcorr = 1 / (1 + exp(dvr_alpha(1) * dens_n(1) + dvr_beta(1)));
       } else if (dvr_style(1) == 4) {
-        vr1_dcorr = 1 - (dens_n(1) / dvr_alpha(1));
-        if (dvr_beta(1) != 0 && vr1_dcorr < -1.0) vr1_dcorr = 0.0; 
+        vr2_dcorr = 1 - (dens_n(1) / dvr_alpha(1));
+        if (dvr_beta(1) != 0 && vr2_dcorr < -1.0) vr2_dcorr = 0.0; 
       }
     }
     
     // Adult sizea
     if (dvr_yn(2)) {
       if (dvr_style(2) == 1) {
-        vr1_dcorr = dvr_alpha(2) * exp(-1 * dvr_beta(2) * dens_n(2));
+        vr3_dcorr = dvr_alpha(2) * exp(-1 * dvr_beta(2) * dens_n(2));
       } else if (dvr_style(2) == 2) {
-        vr1_dcorr = dvr_alpha(2) / (1 + dvr_beta(2) * dens_n(2));
+        vr3_dcorr = dvr_alpha(2) / (1 + dvr_beta(2) * dens_n(2));
       } else if (dvr_style(2) == 3) {
-        vr1_dcorr = 1 / (1 + exp(dvr_alpha(2) * dens_n(2) + dvr_beta(2)));
+        vr3_dcorr = 1 / (1 + exp(dvr_alpha(2) * dens_n(2) + dvr_beta(2)));
       } else if (dvr_style(2) == 4) {
-        vr1_dcorr = 1 - (dens_n(2) / dvr_alpha(2));
-        if (dvr_beta(2) != 0 && vr1_dcorr < -1.0) vr1_dcorr = 0.0; 
+        vr3_dcorr = 1 - (dens_n(2) / dvr_alpha(2));
+        if (dvr_beta(2) != 0 && vr3_dcorr < -1.0) vr3_dcorr = 0.0; 
       }
     }
     
     // Adult sizeb
     if (dvr_yn(3)) {
       if (dvr_style(3) == 1) {
-        vr1_dcorr = dvr_alpha(3) * exp(-1 * dvr_beta(3) * dens_n(3));
+        vr4_dcorr = dvr_alpha(3) * exp(-1 * dvr_beta(3) * dens_n(3));
       } else if (dvr_style(3) == 2) {
-        vr1_dcorr = dvr_alpha(3) / (1 + dvr_beta(3) * dens_n(3));
+        vr4_dcorr = dvr_alpha(3) / (1 + dvr_beta(3) * dens_n(3));
       } else if (dvr_style(3) == 3) {
-        vr1_dcorr = 1 / (1 + exp(dvr_alpha(3) * dens_n(3) + dvr_beta(3)));
+        vr4_dcorr = 1 / (1 + exp(dvr_alpha(3) * dens_n(3) + dvr_beta(3)));
       } else if (dvr_style(3) == 4) {
-        vr1_dcorr = 1 - (dens_n(3) / dvr_alpha(3));
-        if (dvr_beta(3) != 0 && vr1_dcorr < -1.0) vr1_dcorr = 0.0; 
+        vr4_dcorr = 1 - (dens_n(3) / dvr_alpha(3));
+        if (dvr_beta(3) != 0 && vr4_dcorr < -1.0) vr4_dcorr = 0.0; 
       }
     }
     
     // Adult sizec
     if (dvr_yn(4)) {
       if (dvr_style(4) == 1) {
-        vr1_dcorr = dvr_alpha(4) * exp(-1 * dvr_beta(4) * dens_n(4));
+        vr5_dcorr = dvr_alpha(4) * exp(-1 * dvr_beta(4) * dens_n(4));
       } else if (dvr_style(4) == 2) {
-        vr1_dcorr = dvr_alpha(4) / (1 + dvr_beta(4) * dens_n(4));
+        vr5_dcorr = dvr_alpha(4) / (1 + dvr_beta(4) * dens_n(4));
       } else if (dvr_style(4) == 3) {
-        vr1_dcorr = 1 / (1 + exp(dvr_alpha(4) * dens_n(4) + dvr_beta(4)));
+        vr5_dcorr = 1 / (1 + exp(dvr_alpha(4) * dens_n(4) + dvr_beta(4)));
       } else if (dvr_style(4) == 4) {
-        vr1_dcorr = 1 - (dens_n(4) / dvr_alpha(4));
-        if (dvr_beta(4) != 0 && vr1_dcorr < -1.0) vr1_dcorr = 0.0; 
+        vr5_dcorr = 1 - (dens_n(4) / dvr_alpha(4));
+        if (dvr_beta(4) != 0 && vr5_dcorr < -1.0) vr5_dcorr = 0.0; 
       }
     }
     
     // Adult reproduction
     if (dvr_yn(5)) {
       if (dvr_style(5) == 1) {
-        vr1_dcorr = dvr_alpha(5) * exp(-1 * dvr_beta(5) * dens_n(5));
+        vr6_dcorr = dvr_alpha(5) * exp(-1 * dvr_beta(5) * dens_n(5));
       } else if (dvr_style(5) == 2) {
-        vr1_dcorr = dvr_alpha(5) / (1 + dvr_beta(5) * dens_n(5));
+        vr6_dcorr = dvr_alpha(5) / (1 + dvr_beta(5) * dens_n(5));
       } else if (dvr_style(5) == 3) {
-        vr1_dcorr = 1 / (1 + exp(dvr_alpha(5) * dens_n(5) + dvr_beta(5)));
+        vr6_dcorr = 1 / (1 + exp(dvr_alpha(5) * dens_n(5) + dvr_beta(5)));
       } else if (dvr_style(5) == 4) {
-        vr1_dcorr = 1 - (dens_n(5) / dvr_alpha(5));
-        if (dvr_beta(5) != 0 && vr1_dcorr < -1.0) vr1_dcorr = 0.0; 
+        vr6_dcorr = 1 - (dens_n(5) / dvr_alpha(5));
+        if (dvr_beta(5) != 0 && vr6_dcorr < -1.0) vr6_dcorr = 0.0; 
       }
     }
     
     // Adult fecundity
     if (dvr_yn(6)) {
       if (dvr_style(6) == 1) {
-        vr1_dcorr = dvr_alpha(6) * exp(-1 * dvr_beta(6) * dens_n(6));
+        vr7_dcorr = dvr_alpha(6) * exp(-1 * dvr_beta(6) * dens_n(6));
       } else if (dvr_style(6) == 2) {
-        vr1_dcorr = dvr_alpha(6) / (1 + dvr_beta(6) * dens_n(6));
+        vr7_dcorr = dvr_alpha(6) / (1 + dvr_beta(6) * dens_n(6));
       } else if (dvr_style(6) == 3) {
-        vr1_dcorr = 1 / (1 + exp(dvr_alpha(6) * dens_n(6) + dvr_beta(6)));
+        vr7_dcorr = 1 / (1 + exp(dvr_alpha(6) * dens_n(6) + dvr_beta(6)));
       } else if (dvr_style(6) == 4) {
-        vr1_dcorr = 1 - (dens_n(6) / dvr_alpha(6));
-        if (dvr_beta(6) != 0 && vr1_dcorr < -1.0) vr1_dcorr = 0.0; 
+        vr7_dcorr = 1 - (dens_n(6) / dvr_alpha(6));
+        if (dvr_beta(6) != 0 && vr7_dcorr < -1.0) vr7_dcorr = 0.0; 
       }
     }
     
     // Juvenile survival
     if (dvr_yn(7)) {
       if (dvr_style(7) == 1) {
-        vr1_dcorr = dvr_alpha(7) * exp(-1 * dvr_beta(7) * dens_n(7));
+        vr8_dcorr = dvr_alpha(7) * exp(-1 * dvr_beta(7) * dens_n(7));
       } else if (dvr_style(7) == 2) {
-        vr1_dcorr = dvr_alpha(7) / (1 + dvr_beta(7) * dens_n(7));
+        vr8_dcorr = dvr_alpha(7) / (1 + dvr_beta(7) * dens_n(7));
       } else if (dvr_style(7) == 3) {
-        vr1_dcorr = 1 / (1 + exp(dvr_alpha(7) * dens_n(7) + dvr_beta(7)));
+        vr8_dcorr = 1 / (1 + exp(dvr_alpha(7) * dens_n(7) + dvr_beta(7)));
       } else if (dvr_style(7) == 4) {
-        vr1_dcorr = 1 - (dens_n(7) / dvr_alpha(7));
-        if (dvr_beta(7) != 0 && vr1_dcorr < -1.0) vr1_dcorr = 0.0; 
+        vr8_dcorr = 1 - (dens_n(7) / dvr_alpha(7));
+        if (dvr_beta(7) != 0 && vr8_dcorr < -1.0) vr8_dcorr = 0.0; 
       }
     }
     
     // Juvenile observation
     if (dvr_yn(8)) {
       if (dvr_style(8) == 1) {
-        vr1_dcorr = dvr_alpha(8) * exp(-1 * dvr_beta(8) * dens_n(8));
+        vr9_dcorr = dvr_alpha(8) * exp(-1 * dvr_beta(8) * dens_n(8));
       } else if (dvr_style(8) == 2) {
-        vr1_dcorr = dvr_alpha(8) / (1 + dvr_beta(8) * dens_n(8));
+        vr9_dcorr = dvr_alpha(8) / (1 + dvr_beta(8) * dens_n(8));
       } else if (dvr_style(8) == 3) {
-        vr1_dcorr = 1 / (1 + exp(dvr_alpha(8) * dens_n(8) + dvr_beta(8)));
+        vr9_dcorr = 1 / (1 + exp(dvr_alpha(8) * dens_n(8) + dvr_beta(8)));
       } else if (dvr_style(8) == 4) {
-        vr1_dcorr = 1 - (dens_n(8) / dvr_alpha(8));
-        if (dvr_beta(8) != 0 && vr1_dcorr < -1.0) vr1_dcorr = 0.0; 
+        vr9_dcorr = 1 - (dens_n(8) / dvr_alpha(8));
+        if (dvr_beta(8) != 0 && vr9_dcorr < -1.0) vr9_dcorr = 0.0; 
       }
     }
     
     // Juvenile sizea
     if (dvr_yn(9)) {
       if (dvr_style(9) == 1) {
-        vr1_dcorr = dvr_alpha(9) * exp(-1 * dvr_beta(9) * dens_n(9));
+        vr10_dcorr = dvr_alpha(9) * exp(-1 * dvr_beta(9) * dens_n(9));
       } else if (dvr_style(9) == 2) {
-        vr1_dcorr = dvr_alpha(9) / (1 + dvr_beta(9) * dens_n(9));
+        vr10_dcorr = dvr_alpha(9) / (1 + dvr_beta(9) * dens_n(9));
       } else if (dvr_style(9) == 3) {
-        vr1_dcorr = 1 / (1 + exp(dvr_alpha(9) * dens_n(9) + dvr_beta(9)));
+        vr10_dcorr = 1 / (1 + exp(dvr_alpha(9) * dens_n(9) + dvr_beta(9)));
       } else if (dvr_style(9) == 4) {
-        vr1_dcorr = 1 - (dens_n(9) / dvr_alpha(9));
-        if (dvr_beta(9) != 0 && vr1_dcorr < -1.0) vr1_dcorr = 0.0; 
+        vr10_dcorr = 1 - (dens_n(9) / dvr_alpha(9));
+        if (dvr_beta(9) != 0 && vr10_dcorr < -1.0) vr10_dcorr = 0.0; 
       }
     }
     
     // Juvenile sizeb
     if (dvr_yn(10)) {
       if (dvr_style(10) == 1) {
-        vr1_dcorr = dvr_alpha(10) * exp(-1 * dvr_beta(10) * dens_n(10));
+        vr11_dcorr = dvr_alpha(10) * exp(-1 * dvr_beta(10) * dens_n(10));
       } else if (dvr_style(10) == 2) {
-        vr1_dcorr = dvr_alpha(10) / (1 + dvr_beta(10) * dens_n(10));
+        vr11_dcorr = dvr_alpha(10) / (1 + dvr_beta(10) * dens_n(10));
       } else if (dvr_style(10) == 3) {
-        vr1_dcorr = 1 / (1 + exp(dvr_alpha(10) * dens_n(10) + dvr_beta(10)));
+        vr11_dcorr = 1 / (1 + exp(dvr_alpha(10) * dens_n(10) + dvr_beta(10)));
       } else if (dvr_style(10) == 4) {
-        vr1_dcorr = 1 - (dens_n(10) / dvr_alpha(10));
-        if (dvr_beta(10) != 0 && vr1_dcorr < -1.0) vr1_dcorr = 0.0; 
+        vr11_dcorr = 1 - (dens_n(10) / dvr_alpha(10));
+        if (dvr_beta(10) != 0 && vr11_dcorr < -1.0) vr11_dcorr = 0.0; 
       }
     }
     
     // Juvenile sizec
     if (dvr_yn(11)) {
       if (dvr_style(11) == 1) {
-        vr1_dcorr = dvr_alpha(11) * exp(-1 * dvr_beta(11) * dens_n(11));
+        vr12_dcorr = dvr_alpha(11) * exp(-1 * dvr_beta(11) * dens_n(11));
       } else if (dvr_style(11) == 2) {
-        vr1_dcorr = dvr_alpha(11) / (1 + dvr_beta(11) * dens_n(11));
+        vr12_dcorr = dvr_alpha(11) / (1 + dvr_beta(11) * dens_n(11));
       } else if (dvr_style(11) == 3) {
-        vr1_dcorr = 1 / (1 + exp(dvr_alpha(11) * dens_n(11) + dvr_beta(11)));
+        vr12_dcorr = 1 / (1 + exp(dvr_alpha(11) * dens_n(11) + dvr_beta(11)));
       } else if (dvr_style(11) == 4) {
-        vr1_dcorr = 1 - (dens_n(11) / dvr_alpha(11));
-        if (dvr_beta(11) != 0 && vr1_dcorr < -1.0) vr1_dcorr = 0.0; 
+        vr12_dcorr = 1 - (dens_n(11) / dvr_alpha(11));
+        if (dvr_beta(11) != 0 && vr12_dcorr < -1.0) vr12_dcorr = 0.0; 
       }
     }
     
     // Juvenile reproduction
     if (dvr_yn(12)) {
       if (dvr_style(12) == 1) {
-        vr1_dcorr = dvr_alpha(12) * exp(-1 * dvr_beta(12) * dens_n(12));
+        vr13_dcorr = dvr_alpha(12) * exp(-1 * dvr_beta(12) * dens_n(12));
       } else if (dvr_style(12) == 2) {
-        vr1_dcorr = dvr_alpha(12) / (1 + dvr_beta(12) * dens_n(12));
+        vr13_dcorr = dvr_alpha(12) / (1 + dvr_beta(12) * dens_n(12));
       } else if (dvr_style(12) == 3) {
-        vr1_dcorr = 1 / (1 + exp(dvr_alpha(12) * dens_n(12) + dvr_beta(12)));
+        vr13_dcorr = 1 / (1 + exp(dvr_alpha(12) * dens_n(12) + dvr_beta(12)));
       } else if (dvr_style(12) == 4) {
-        vr1_dcorr = 1 - (dens_n(12) / dvr_alpha(12));
-        if (dvr_beta(12) != 0 && vr1_dcorr < -1.0) vr1_dcorr = 0.0; 
+        vr13_dcorr = 1 - (dens_n(12) / dvr_alpha(12));
+        if (dvr_beta(12) != 0 && vr13_dcorr < -1.0) vr13_dcorr = 0.0; 
       }
     }
     
     // Juvenile maturity
     if (dvr_yn(13)) {
       if (dvr_style(13) == 1) {
-        vr1_dcorr = dvr_alpha(13) * exp(-1 * dvr_beta(13) * dens_n(13));
+        vr14_dcorr = dvr_alpha(13) * exp(-1 * dvr_beta(13) * dens_n(13));
       } else if (dvr_style(13) == 2) {
-        vr1_dcorr = dvr_alpha(13) / (1 + dvr_beta(13) * dens_n(13));
+        vr14_dcorr = dvr_alpha(13) / (1 + dvr_beta(13) * dens_n(13));
       } else if (dvr_style(13) == 3) {
-        vr1_dcorr = 1 / (1 + exp(dvr_alpha(13) * dens_n(13) + dvr_beta(13)));
+        vr14_dcorr = 1 / (1 + exp(dvr_alpha(13) * dens_n(13) + dvr_beta(13)));
       } else if (dvr_style(13) == 4) {
-        vr1_dcorr = 1 - (dens_n(13) / dvr_alpha(13));
-        if (dvr_beta(13) != 0 && vr1_dcorr < -1.0) vr1_dcorr = 0.0; 
+        vr14_dcorr = 1 - (dens_n(13) / dvr_alpha(13));
+        if (dvr_beta(13) != 0 && vr14_dcorr < -1.0) vr14_dcorr = 0.0; 
       }
     }
   }
@@ -11005,11 +11007,12 @@ List jerzeibalowski(DataFrame AllStages, DataFrame stageframe, int matrixformat,
   // 3 size, 4 size_b, 5 size_c, 6 matst, >6 are test variables
   if (err_check) {
     NumericMatrix zeroform(n, 7);
+    std::fill(zeroform.begin(), zeroform.end(), 0.0); // Added for Linux issues
     out = zeroform;
     CharacterVector out_names = {"surv", "obs", "repst", "sizea", "sizeb", "sizec", "matst"};
     colnames(out) = out_names;
   }
-  NumericVector out_vec(7);
+  NumericVector out_vec(7, 0.0);
   
   arma::mat survtransmat(matrixdim, matrixdim, fill::zeros);
   arma::mat fectransmat(matrixdim, matrixdim, fill::zeros);
@@ -11018,6 +11021,7 @@ List jerzeibalowski(DataFrame AllStages, DataFrame stageframe, int matrixformat,
   double jsurv_coefsadded = sum(jsurvcoefs);
   double mat_predicted {0.0};
   unsigned int k {0};
+  
   // The following loop runs through each line of AllStages, and so runs through
   // each estimable element in the matrix
   for(int i = 0; i < n; i++) {
@@ -11338,7 +11342,7 @@ List jerzeibalowski(DataFrame AllStages, DataFrame stageframe, int matrixformat,
         survtransmat(k) = out_vec(0) * out_vec(1) * out_vec(2) * out_vec(3) *
           out_vec(4) * out_vec(5) * out_vec(6);
       }
-    } else if (ovgivent(i) != -1) {
+    } else if (ovgivent(i) != -1.0) {
       // All other transitions
       
       survtransmat(k) = ovgivent(i);
@@ -11358,17 +11362,17 @@ List jerzeibalowski(DataFrame AllStages, DataFrame stageframe, int matrixformat,
           stage2n(i), nostages, fectrunc);
         fectransmat(k) = fectransmat(k) * vr7_dcorr;
         
-      } else if (ovgivenf(i) != -1 ) {
+      } else if (ovgivenf(i) != -1.0) {
         fectransmat(k) = ovgivenf(i);
         fectransmat(k) = fectransmat(k) * vr7_dcorr;
       }
-    } else if (ovgivenf(i) != -1 ) {
+    } else if (ovgivenf(i) != -1.0) {
       fectransmat(k) = ovgivenf(i);
       fectransmat(k) = fectransmat(k) * vr7_dcorr;
     }
   }
   
-  double ov_mult {0};
+  double ov_mult {0.0};
   if (replacementst > 0) {
     for (int i = 0; i < replacementst; i++) {
       
@@ -11988,182 +11992,182 @@ List jerzeibalowski_sp(DataFrame AllStages, DataFrame stageframe, int matrixform
     // Adult observation
     if (dvr_yn(1)) {
       if (dvr_style(1) == 1) {
-        vr1_dcorr = dvr_alpha(1) * exp(-1 * dvr_beta(1) * dens_n(1));
+        vr2_dcorr = dvr_alpha(1) * exp(-1 * dvr_beta(1) * dens_n(1));
       } else if (dvr_style(1) == 2) {
-        vr1_dcorr = dvr_alpha(1) / (1 + dvr_beta(1) * dens_n(1));
+        vr2_dcorr = dvr_alpha(1) / (1 + dvr_beta(1) * dens_n(1));
       } else if (dvr_style(1) == 3) {
-        vr1_dcorr = 1 / (1 + exp(dvr_alpha(1) * dens_n(1) + dvr_beta(1)));
+        vr2_dcorr = 1 / (1 + exp(dvr_alpha(1) * dens_n(1) + dvr_beta(1)));
       } else if (dvr_style(1) == 4) {
-        vr1_dcorr = 1 - (dens_n(1) / dvr_alpha(1));
-        if (dvr_beta(1) != 0 && vr1_dcorr < -1.0) vr1_dcorr = 0.0; 
+        vr2_dcorr = 1 - (dens_n(1) / dvr_alpha(1));
+        if (dvr_beta(1) != 0 && vr2_dcorr < -1.0) vr2_dcorr = 0.0; 
       }
     }
     
     // Adult sizea
     if (dvr_yn(2)) {
       if (dvr_style(2) == 1) {
-        vr1_dcorr = dvr_alpha(2) * exp(-1 * dvr_beta(2) * dens_n(2));
+        vr3_dcorr = dvr_alpha(2) * exp(-1 * dvr_beta(2) * dens_n(2));
       } else if (dvr_style(2) == 2) {
-        vr1_dcorr = dvr_alpha(2) / (1 + dvr_beta(2) * dens_n(2));
+        vr3_dcorr = dvr_alpha(2) / (1 + dvr_beta(2) * dens_n(2));
       } else if (dvr_style(2) == 3) {
-        vr1_dcorr = 1 / (1 + exp(dvr_alpha(2) * dens_n(2) + dvr_beta(2)));
+        vr3_dcorr = 1 / (1 + exp(dvr_alpha(2) * dens_n(2) + dvr_beta(2)));
       } else if (dvr_style(2) == 4) {
-        vr1_dcorr = 1 - (dens_n(2) / dvr_alpha(2));
-        if (dvr_beta(2) != 0 && vr1_dcorr < -1.0) vr1_dcorr = 0.0; 
+        vr3_dcorr = 1 - (dens_n(2) / dvr_alpha(2));
+        if (dvr_beta(2) != 0 && vr3_dcorr < -1.0) vr3_dcorr = 0.0; 
       }
     }
     
     // Adult sizeb
     if (dvr_yn(3)) {
       if (dvr_style(3) == 1) {
-        vr1_dcorr = dvr_alpha(3) * exp(-1 * dvr_beta(3) * dens_n(3));
+        vr4_dcorr = dvr_alpha(3) * exp(-1 * dvr_beta(3) * dens_n(3));
       } else if (dvr_style(3) == 2) {
-        vr1_dcorr = dvr_alpha(3) / (1 + dvr_beta(3) * dens_n(3));
+        vr4_dcorr = dvr_alpha(3) / (1 + dvr_beta(3) * dens_n(3));
       } else if (dvr_style(3) == 3) {
-        vr1_dcorr = 1 / (1 + exp(dvr_alpha(3) * dens_n(3) + dvr_beta(3)));
+        vr4_dcorr = 1 / (1 + exp(dvr_alpha(3) * dens_n(3) + dvr_beta(3)));
       } else if (dvr_style(3) == 4) {
-        vr1_dcorr = 1 - (dens_n(3) / dvr_alpha(3));
-        if (dvr_beta(3) != 0 && vr1_dcorr < -1.0) vr1_dcorr = 0.0; 
+        vr4_dcorr = 1 - (dens_n(3) / dvr_alpha(3));
+        if (dvr_beta(3) != 0 && vr4_dcorr < -1.0) vr4_dcorr = 0.0; 
       }
     }
     
     // Adult sizec
     if (dvr_yn(4)) {
       if (dvr_style(4) == 1) {
-        vr1_dcorr = dvr_alpha(4) * exp(-1 * dvr_beta(4) * dens_n(4));
+        vr5_dcorr = dvr_alpha(4) * exp(-1 * dvr_beta(4) * dens_n(4));
       } else if (dvr_style(4) == 2) {
-        vr1_dcorr = dvr_alpha(4) / (1 + dvr_beta(4) * dens_n(4));
+        vr5_dcorr = dvr_alpha(4) / (1 + dvr_beta(4) * dens_n(4));
       } else if (dvr_style(4) == 3) {
-        vr1_dcorr = 1 / (1 + exp(dvr_alpha(4) * dens_n(4) + dvr_beta(4)));
+        vr5_dcorr = 1 / (1 + exp(dvr_alpha(4) * dens_n(4) + dvr_beta(4)));
       } else if (dvr_style(4) == 4) {
-        vr1_dcorr = 1 - (dens_n(4) / dvr_alpha(4));
-        if (dvr_beta(4) != 0 && vr1_dcorr < -1.0) vr1_dcorr = 0.0; 
+        vr5_dcorr = 1 - (dens_n(4) / dvr_alpha(4));
+        if (dvr_beta(4) != 0 && vr5_dcorr < -1.0) vr5_dcorr = 0.0; 
       }
     }
     
     // Adult reproduction
     if (dvr_yn(5)) {
       if (dvr_style(5) == 1) {
-        vr1_dcorr = dvr_alpha(5) * exp(-1 * dvr_beta(5) * dens_n(5));
+        vr6_dcorr = dvr_alpha(5) * exp(-1 * dvr_beta(5) * dens_n(5));
       } else if (dvr_style(5) == 2) {
-        vr1_dcorr = dvr_alpha(5) / (1 + dvr_beta(5) * dens_n(5));
+        vr6_dcorr = dvr_alpha(5) / (1 + dvr_beta(5) * dens_n(5));
       } else if (dvr_style(5) == 3) {
-        vr1_dcorr = 1 / (1 + exp(dvr_alpha(5) * dens_n(5) + dvr_beta(5)));
+        vr6_dcorr = 1 / (1 + exp(dvr_alpha(5) * dens_n(5) + dvr_beta(5)));
       } else if (dvr_style(5) == 4) {
-        vr1_dcorr = 1 - (dens_n(5) / dvr_alpha(5));
-        if (dvr_beta(5) != 0 && vr1_dcorr < -1.0) vr1_dcorr = 0.0; 
+        vr6_dcorr = 1 - (dens_n(5) / dvr_alpha(5));
+        if (dvr_beta(5) != 0 && vr6_dcorr < -1.0) vr6_dcorr = 0.0; 
       }
     }
     
     // Adult fecundity
     if (dvr_yn(6)) {
       if (dvr_style(6) == 1) {
-        vr1_dcorr = dvr_alpha(6) * exp(-1 * dvr_beta(6) * dens_n(6));
+        vr7_dcorr = dvr_alpha(6) * exp(-1 * dvr_beta(6) * dens_n(6));
       } else if (dvr_style(6) == 2) {
-        vr1_dcorr = dvr_alpha(6) / (1 + dvr_beta(6) * dens_n(6));
+        vr7_dcorr = dvr_alpha(6) / (1 + dvr_beta(6) * dens_n(6));
       } else if (dvr_style(6) == 3) {
-        vr1_dcorr = 1 / (1 + exp(dvr_alpha(6) * dens_n(6) + dvr_beta(6)));
+        vr7_dcorr = 1 / (1 + exp(dvr_alpha(6) * dens_n(6) + dvr_beta(6)));
       } else if (dvr_style(6) == 4) {
-        vr1_dcorr = 1 - (dens_n(6) / dvr_alpha(6));
-        if (dvr_beta(6) != 0 && vr1_dcorr < -1.0) vr1_dcorr = 0.0; 
+        vr7_dcorr = 1 - (dens_n(6) / dvr_alpha(6));
+        if (dvr_beta(6) != 0 && vr7_dcorr < -1.0) vr7_dcorr = 0.0; 
       }
     }
     
     // Juvenile survival
     if (dvr_yn(7)) {
       if (dvr_style(7) == 1) {
-        vr1_dcorr = dvr_alpha(7) * exp(-1 * dvr_beta(7) * dens_n(7));
+        vr8_dcorr = dvr_alpha(7) * exp(-1 * dvr_beta(7) * dens_n(7));
       } else if (dvr_style(7) == 2) {
-        vr1_dcorr = dvr_alpha(7) / (1 + dvr_beta(7) * dens_n(7));
+        vr8_dcorr = dvr_alpha(7) / (1 + dvr_beta(7) * dens_n(7));
       } else if (dvr_style(7) == 3) {
-        vr1_dcorr = 1 / (1 + exp(dvr_alpha(7) * dens_n(7) + dvr_beta(7)));
+        vr8_dcorr = 1 / (1 + exp(dvr_alpha(7) * dens_n(7) + dvr_beta(7)));
       } else if (dvr_style(7) == 4) {
-        vr1_dcorr = 1 - (dens_n(7) / dvr_alpha(7));
-        if (dvr_beta(7) != 0 && vr1_dcorr < -1.0) vr1_dcorr = 0.0; 
+        vr8_dcorr = 1 - (dens_n(7) / dvr_alpha(7));
+        if (dvr_beta(7) != 0 && vr8_dcorr < -1.0) vr8_dcorr = 0.0; 
       }
     }
     
     // Juvenile observation
     if (dvr_yn(8)) {
       if (dvr_style(8) == 1) {
-        vr1_dcorr = dvr_alpha(8) * exp(-1 * dvr_beta(8) * dens_n(8));
+        vr9_dcorr = dvr_alpha(8) * exp(-1 * dvr_beta(8) * dens_n(8));
       } else if (dvr_style(8) == 2) {
-        vr1_dcorr = dvr_alpha(8) / (1 + dvr_beta(8) * dens_n(8));
+        vr9_dcorr = dvr_alpha(8) / (1 + dvr_beta(8) * dens_n(8));
       } else if (dvr_style(8) == 3) {
-        vr1_dcorr = 1 / (1 + exp(dvr_alpha(8) * dens_n(8) + dvr_beta(8)));
+        vr9_dcorr = 1 / (1 + exp(dvr_alpha(8) * dens_n(8) + dvr_beta(8)));
       } else if (dvr_style(8) == 4) {
-        vr1_dcorr = 1 - (dens_n(8) / dvr_alpha(8));
-        if (dvr_beta(8) != 0 && vr1_dcorr < -1.0) vr1_dcorr = 0.0; 
+        vr9_dcorr = 1 - (dens_n(8) / dvr_alpha(8));
+        if (dvr_beta(8) != 0 && vr9_dcorr < -1.0) vr9_dcorr = 0.0; 
       }
     }
     
     // Juvenile sizea
     if (dvr_yn(9)) {
       if (dvr_style(9) == 1) {
-        vr1_dcorr = dvr_alpha(9) * exp(-1 * dvr_beta(9) * dens_n(9));
+        vr10_dcorr = dvr_alpha(9) * exp(-1 * dvr_beta(9) * dens_n(9));
       } else if (dvr_style(9) == 2) {
-        vr1_dcorr = dvr_alpha(9) / (1 + dvr_beta(9) * dens_n(9));
+        vr10_dcorr = dvr_alpha(9) / (1 + dvr_beta(9) * dens_n(9));
       } else if (dvr_style(9) == 3) {
-        vr1_dcorr = 1 / (1 + exp(dvr_alpha(9) * dens_n(9) + dvr_beta(9)));
+        vr10_dcorr = 1 / (1 + exp(dvr_alpha(9) * dens_n(9) + dvr_beta(9)));
       } else if (dvr_style(9) == 4) {
-        vr1_dcorr = 1 - (dens_n(9) / dvr_alpha(9));
-        if (dvr_beta(9) != 0 && vr1_dcorr < -1.0) vr1_dcorr = 0.0; 
+        vr10_dcorr = 1 - (dens_n(9) / dvr_alpha(9));
+        if (dvr_beta(9) != 0 && vr10_dcorr < -1.0) vr10_dcorr = 0.0; 
       }
     }
     
     // Juvenile sizeb
     if (dvr_yn(10)) {
       if (dvr_style(10) == 1) {
-        vr1_dcorr = dvr_alpha(10) * exp(-1 * dvr_beta(10) * dens_n(10));
+        vr11_dcorr = dvr_alpha(10) * exp(-1 * dvr_beta(10) * dens_n(10));
       } else if (dvr_style(10) == 2) {
-        vr1_dcorr = dvr_alpha(10) / (1 + dvr_beta(10) * dens_n(10));
+        vr11_dcorr = dvr_alpha(10) / (1 + dvr_beta(10) * dens_n(10));
       } else if (dvr_style(10) == 3) {
-        vr1_dcorr = 1 / (1 + exp(dvr_alpha(10) * dens_n(10) + dvr_beta(10)));
+        vr11_dcorr = 1 / (1 + exp(dvr_alpha(10) * dens_n(10) + dvr_beta(10)));
       } else if (dvr_style(10) == 4) {
-        vr1_dcorr = 1 - (dens_n(10) / dvr_alpha(10));
-        if (dvr_beta(10) != 0 && vr1_dcorr < -1.0) vr1_dcorr = 0.0; 
+        vr11_dcorr = 1 - (dens_n(10) / dvr_alpha(10));
+        if (dvr_beta(10) != 0 && vr11_dcorr < -1.0) vr11_dcorr = 0.0; 
       }
     }
     
     // Juvenile sizec
     if (dvr_yn(11)) {
       if (dvr_style(11) == 1) {
-        vr1_dcorr = dvr_alpha(11) * exp(-1 * dvr_beta(11) * dens_n(11));
+        vr12_dcorr = dvr_alpha(11) * exp(-1 * dvr_beta(11) * dens_n(11));
       } else if (dvr_style(11) == 2) {
-        vr1_dcorr = dvr_alpha(11) / (1 + dvr_beta(11) * dens_n(11));
+        vr12_dcorr = dvr_alpha(11) / (1 + dvr_beta(11) * dens_n(11));
       } else if (dvr_style(11) == 3) {
-        vr1_dcorr = 1 / (1 + exp(dvr_alpha(11) * dens_n(11) + dvr_beta(11)));
+        vr12_dcorr = 1 / (1 + exp(dvr_alpha(11) * dens_n(11) + dvr_beta(11)));
       } else if (dvr_style(11) == 4) {
-        vr1_dcorr = 1 - (dens_n(11) / dvr_alpha(11));
-        if (dvr_beta(11) != 0 && vr1_dcorr < -1.0) vr1_dcorr = 0.0; 
+        vr12_dcorr = 1 - (dens_n(11) / dvr_alpha(11));
+        if (dvr_beta(11) != 0 && vr12_dcorr < -1.0) vr12_dcorr = 0.0; 
       }
     }
     
     // Juvenile reproduction
     if (dvr_yn(12)) {
       if (dvr_style(12) == 1) {
-        vr1_dcorr = dvr_alpha(12) * exp(-1 * dvr_beta(12) * dens_n(12));
+        vr13_dcorr = dvr_alpha(12) * exp(-1 * dvr_beta(12) * dens_n(12));
       } else if (dvr_style(12) == 2) {
-        vr1_dcorr = dvr_alpha(12) / (1 + dvr_beta(12) * dens_n(12));
+        vr13_dcorr = dvr_alpha(12) / (1 + dvr_beta(12) * dens_n(12));
       } else if (dvr_style(12) == 3) {
-        vr1_dcorr = 1 / (1 + exp(dvr_alpha(12) * dens_n(12) + dvr_beta(12)));
+        vr13_dcorr = 1 / (1 + exp(dvr_alpha(12) * dens_n(12) + dvr_beta(12)));
       } else if (dvr_style(12) == 4) {
-        vr1_dcorr = 1 - (dens_n(12) / dvr_alpha(12));
-        if (dvr_beta(12) != 0 && vr1_dcorr < -1.0) vr1_dcorr = 0.0; 
+        vr13_dcorr = 1 - (dens_n(12) / dvr_alpha(12));
+        if (dvr_beta(12) != 0 && vr13_dcorr < -1.0) vr13_dcorr = 0.0; 
       }
     }
     
     // Juvenile maturity
     if (dvr_yn(13)) {
       if (dvr_style(13) == 1) {
-        vr1_dcorr = dvr_alpha(13) * exp(-1 * dvr_beta(13) * dens_n(13));
+        vr14_dcorr = dvr_alpha(13) * exp(-1 * dvr_beta(13) * dens_n(13));
       } else if (dvr_style(13) == 2) {
-        vr1_dcorr = dvr_alpha(13) / (1 + dvr_beta(13) * dens_n(13));
+        vr14_dcorr = dvr_alpha(13) / (1 + dvr_beta(13) * dens_n(13));
       } else if (dvr_style(13) == 3) {
-        vr1_dcorr = 1 / (1 + exp(dvr_alpha(13) * dens_n(13) + dvr_beta(13)));
+        vr14_dcorr = 1 / (1 + exp(dvr_alpha(13) * dens_n(13) + dvr_beta(13)));
       } else if (dvr_style(13) == 4) {
-        vr1_dcorr = 1 - (dens_n(13) / dvr_alpha(13));
-        if (dvr_beta(13) != 0 && vr1_dcorr < -1.0) vr1_dcorr = 0.0; 
+        vr14_dcorr = 1 - (dens_n(13) / dvr_alpha(13));
+        if (dvr_beta(13) != 0 && vr14_dcorr < -1.0) vr14_dcorr = 0.0; 
       }
     }
   }
@@ -14578,7 +14582,7 @@ List raymccooney(DataFrame listofyears, List modelsuite, NumericVector mainyears
   return NewOutput;
   */
   
-  // Now we create the matrices and order them within the correct lsit structure
+  // Now we create the matrices and order them within the correct list structure
   List A_mats(loy_length);
   List F_mats(loy_length);
   List U_mats(loy_length);
@@ -15547,12 +15551,12 @@ Rcpp::List f_projection3(int format, bool prebreeding = true, int start_age = NA
     throw Rcpp::exception("Option times must equal a positive integer.", false);
   }
   if (format < 4 && (!IntegerVector::is_na(start_age) || !IntegerVector::is_na(last_age))) {
-    if (!quiet) Rf_warningcall(R_NilValue, "Start and final ages cannot be used with matrix formats 1-3. Resetting these parameters....");
+    if (!quiet) Rf_warningcall(R_NilValue, "Start and final ages cannot be used with matrix formats 1-3. Resetting these parameters....\n");
     start_age = 0;
     last_age = 0;
   }
   if (growthonly && repvalue) {
-    if (!quiet) Rf_warningcall(R_NilValue, "Option repvalue cannot be set to TRUE if growthonly is set to TRUE. Resetting repvalue to FALSE.");
+    if (!quiet) Rf_warningcall(R_NilValue, "Option repvalue cannot be set to TRUE if growthonly is set to TRUE. Resetting repvalue to FALSE.\n");
     repvalue = false;
   }
   
@@ -15564,7 +15568,7 @@ Rcpp::List f_projection3(int format, bool prebreeding = true, int start_age = NA
   } else if (ipm_check_mid) {
     ipm_method = "midpoint";
   } else {
-    if (!quiet) Rf_warningcall(R_NilValue, "Option ipm_method is not understood. Will use cdf option.");
+    if (!quiet) Rf_warningcall(R_NilValue, "Option ipm_method is not understood. Will use cdf option.\n");
     ipm_method = "cdf";
   }
 
@@ -17012,11 +17016,11 @@ Rcpp::List f_projection3(int format, bool prebreeding = true, int start_age = NA
     
     if (start_age > age_limit || last_age > age_limit) {
       if (!quiet) Rf_warningcall(R_NilValue,
-        "Entered start_age or last_age is beyond what is found in the dataset.");
+        "Entered start_age or last_age is beyond what is found in the dataset.\n");
     }
     if (fecage_min > age_limit || fecage_max > age_limit) {
       if (!quiet) Rf_warningcall(R_NilValue,
-        "Entered fecage_min or fecage_max is beyond what is found in the dataset.");
+        "Entered fecage_min or fecage_max is beyond what is found in the dataset.\n");
     }
     
     if (last_age < (start_age + 1)) {
@@ -17162,7 +17166,7 @@ Rcpp::List f_projection3(int format, bool prebreeding = true, int start_age = NA
   } else if (!stochastic) {
     NumericVector year_int = clone(mainyears);
     years_topull = year_int;
-    if (!quiet) Rf_warningcall(R_NilValue, "Option year not set, so will cycle through existing years.");
+    if (!quiet) Rf_warningcall(R_NilValue, "Option year not set, so will cycle through existing years.\n");
   }
   
   NumericVector twinput;
@@ -17205,7 +17209,7 @@ Rcpp::List f_projection3(int format, bool prebreeding = true, int start_age = NA
     CharacterVector patch_one (1);
     patch_one(0) = mainpatches(0);
     patches_topull = patch_one;
-    if (!quiet) Rf_warningcall(R_NilValue, "Option patch not set, so will set to first patch/population.");
+    if (!quiet) Rf_warningcall(R_NilValue, "Option patch not set, so will set to first patch/population.\n");
   }
   
   // Handle spatial density vector
@@ -17313,7 +17317,7 @@ Rcpp::List f_projection3(int format, bool prebreeding = true, int start_age = NA
     
     if (is<NumericVector>(inda_whatever)) {
       if (random_inda) {
-        if (!quiet) Rf_warningcall(R_NilValue, "Indcov a appears to be numeric. Will assume that random_inda = FALSE. To alter this behavior, please convert indcov a into a character vector.");
+        if (!quiet) Rf_warningcall(R_NilValue, "Indcov a appears to be numeric. Will assume that random_inda = FALSE. To alter this behavior, please convert indcov a into a character vector.\n");
         random_inda = false;
       }
       NumericVector inda_another_int = as<NumericVector>(inda_whatever);
@@ -17327,7 +17331,7 @@ Rcpp::List f_projection3(int format, bool prebreeding = true, int start_age = NA
       
     } else if (is<CharacterVector>(inda_whatever)) {
       if (!random_inda) {
-        if (!quiet) Rf_warningcall(R_NilValue, "Indcov a appears to be categorical. Will assume that random_inda = TRUE. To alter this behavior, please convert indcov a into a numeric vector.");
+        if (!quiet) Rf_warningcall(R_NilValue, "Indcov a appears to be categorical. Will assume that random_inda = TRUE. To alter this behavior, please convert indcov a into a numeric vector.\n");
         random_inda = true;
       }
       CharacterVector inda_another_int = as<CharacterVector>(inda_whatever);
@@ -17352,7 +17356,7 @@ Rcpp::List f_projection3(int format, bool prebreeding = true, int start_age = NA
     
     if (is<NumericVector>(indb_whatever)) {
       if (random_indb) {
-        if (!quiet) Rf_warningcall(R_NilValue, "Indcov b appears to be numeric. Will assume that random_indb = FALSE. To alter this behavior, please convert indcov b into a character vector.");
+        if (!quiet) Rf_warningcall(R_NilValue, "Indcov b appears to be numeric. Will assume that random_indb = FALSE. To alter this behavior, please convert indcov b into a character vector.\n");
         random_indb = false;
       }
       NumericVector indb_another_int = as<NumericVector>(indb_whatever);
@@ -17366,7 +17370,7 @@ Rcpp::List f_projection3(int format, bool prebreeding = true, int start_age = NA
       
     } else if (is<CharacterVector>(indb_whatever)) {
       if (!random_indb) {
-        if (!quiet) Rf_warningcall(R_NilValue, "Indcov b appears to be categorical. Will assume that random_indb = TRUE. To alter this behavior, please convert indcov b into a numeric vector.");
+        if (!quiet) Rf_warningcall(R_NilValue, "Indcov b appears to be categorical. Will assume that random_indb = TRUE. To alter this behavior, please convert indcov b into a numeric vector.\n");
         random_indb = true;
       }
       CharacterVector indb_another_int = as<CharacterVector>(indb_whatever);
@@ -17391,7 +17395,7 @@ Rcpp::List f_projection3(int format, bool prebreeding = true, int start_age = NA
     
     if (is<NumericVector>(indc_whatever)) {
       if (random_indc) {
-        if (!quiet) Rf_warningcall(R_NilValue, "Indcov c appears to be numeric. Will assume that random_indc = FALSE. To alter this behavior, please convert indcov c into a character vector.");
+        if (!quiet) Rf_warningcall(R_NilValue, "Indcov c appears to be numeric. Will assume that random_indc = FALSE. To alter this behavior, please convert indcov c into a character vector.\n");
         random_indc = false;
       }
       NumericVector indc_another_int = as<NumericVector>(indc_whatever);
@@ -17405,7 +17409,7 @@ Rcpp::List f_projection3(int format, bool prebreeding = true, int start_age = NA
       
     } else if (is<CharacterVector>(indc_whatever)) {
       if (!random_indc) {
-        if (!quiet) Rf_warningcall(R_NilValue, "Indcov c appears to be categorical. Will assume that random_indc = TRUE. To alter this behavior, please convert indcov c into a numeric vector.");
+        if (!quiet) Rf_warningcall(R_NilValue, "Indcov c appears to be categorical. Will assume that random_indc = TRUE. To alter this behavior, please convert indcov c into a numeric vector.\n");
         random_indc = true;
       }
       CharacterVector indc_another_int = as<CharacterVector>(indc_whatever);
@@ -17439,10 +17443,10 @@ Rcpp::List f_projection3(int format, bool prebreeding = true, int start_age = NA
   
   if (!quiet) {
     if (greaterthan_warning) {
-      Rf_warningcall(R_NilValue, "More values of individual covariates have been supplied than required, so some will be cut.");
+      Rf_warningcall(R_NilValue, "More values of individual covariates have been supplied than required, so some will be cut.\n");
     }
     if (lessthan_warning) {
-      Rf_warningcall(R_NilValue, "Fewer values of individual covariates have been supplied than required, so input values will be cycled.");
+      Rf_warningcall(R_NilValue, "Fewer values of individual covariates have been supplied than required, so input values will be cycled.\n");
     }
   }
   
@@ -17655,10 +17659,10 @@ Rcpp::List f_projection3(int format, bool prebreeding = true, int start_age = NA
   
   if (!quiet) {
     if (greaterthan_warning_dev) {
-      Rf_warningcall(R_NilValue, "More values of intercept deviations have been supplied than required, so some will be cut.");
+      Rf_warningcall(R_NilValue, "More values of intercept deviations have been supplied than required, so some will be cut.\n");
     }
     if (lessthan_warning_dev) {
-      Rf_warningcall(R_NilValue, "Fewer values of intercept deviations have been supplied than required, so input values will be cycled.");
+      Rf_warningcall(R_NilValue, "Fewer values of intercept deviations have been supplied than required, so input values will be cycled.\n");
     }
   }
   
@@ -17912,11 +17916,11 @@ Rcpp::List f_projection3(int format, bool prebreeding = true, int start_age = NA
         if (dvr_style_(i) == 1) {
           if (dvr_beta_(i) > exp_tol) {
             Rf_warningcall(R_NilValue,
-              "Values of beta used in the Ricker function should be set to limits within positive and negative exp_tol values. Resetting...");
+              "Values of beta used in the Ricker function should be set to limits within positive and negative exp_tol values. Resetting...\n");
             dvr_beta_(i) = exp_tol;
           } else if (dvr_beta_(i) < (-1.0 * exp_tol)) {
             Rf_warningcall(R_NilValue,
-              "Values of beta used in the Ricker function should be set to limits within positive and negative exp_tol values. Resetting...");
+              "Values of beta used in the Ricker function should be set to limits within positive and negative exp_tol values. Resetting...\n");
             dvr_beta_(i) = -1 * exp_tol;
           }
         } else if (dvr_style_(i) == 3) {
@@ -17924,10 +17928,10 @@ Rcpp::List f_projection3(int format, bool prebreeding = true, int start_age = NA
           
           if (summed_stuff > exp_tol) {
             Rf_warningcall(R_NilValue,
-              "Values of alpha and beta used in the Usher function may be too high. Results may be unpredictable.");
+              "Values of alpha and beta used in the Usher function may be too high. Results may be unpredictable.\n");
           } else if (summed_stuff < (-1.0 * exp_tol)) {
             Rf_warningcall(R_NilValue,
-              "Values of alpha and beta used in the Usher function may be too high. Results may be unpredictable.");
+              "Values of alpha and beta used in the Usher function may be too high. Results may be unpredictable.\n");
           }
         }
       }
@@ -18212,11 +18216,11 @@ Rcpp::List f_projection3(int format, bool prebreeding = true, int start_age = NA
       if (dyn_style(i) == 1) {
         if (dyn_beta(i) > exp_tol) {
           Rf_warningcall(R_NilValue,
-            "Values of beta used in the Ricker function should be set to limits within positive and negative exp_tol values. Resetting...");
+            "Values of beta used in the Ricker function should be set to limits within positive and negative exp_tol values. Resetting...\n");
           dyn_beta(i) = exp_tol;
         } else if (dyn_beta(i) < (-1.0 * exp_tol)) {
           Rf_warningcall(R_NilValue,
-            "Values of beta used in the Ricker function should be set to limits within positive and negative exp_tol values. Resetting...");
+            "Values of beta used in the Ricker function should be set to limits within positive and negative exp_tol values. Resetting...\n");
           dyn_beta(i) = -1 * exp_tol;
         }
       } else if (dyn_style(i) == 3) {
@@ -18224,10 +18228,10 @@ Rcpp::List f_projection3(int format, bool prebreeding = true, int start_age = NA
         
         if (summed_stuff > exp_tol) {
           Rf_warningcall(R_NilValue,
-            "Values of alpha and beta used in the Usher function may be too high. Results may be unpredictable.");
+            "Values of alpha and beta used in the Usher function may be too high. Results may be unpredictable.\n");
         } else if (summed_stuff < (-1.0 * exp_tol)) {
           Rf_warningcall(R_NilValue,
-            "Values of alpha and beta used in the Usher function may be too high. Results may be unpredictable.");
+            "Values of alpha and beta used in the Usher function may be too high. Results may be unpredictable.\n");
         }
       }
     }
@@ -18235,7 +18239,7 @@ Rcpp::List f_projection3(int format, bool prebreeding = true, int start_age = NA
   }
   
   if (dens_vr && dens_elems) {
-    Rf_warningcall(R_NilValue, "Density dependence should usually be operationalized via either vital rate model parameterization or matrix element operationalization. However, inputs have been provided for both methods.");
+    Rf_warningcall(R_NilValue, "Density dependence should usually be operationalized via either vital rate model parameterization or matrix element operationalization. However, inputs have been provided for both methods.\n");
   }
   
   // Main projection loop
@@ -18395,11 +18399,11 @@ Rcpp::List f_projection3(int format, bool prebreeding = true, int start_age = NA
             if (dyn_type(j) == 1 && Umat(dyn_index321(j)) > 1.0 && !warn_trigger_1) {
               warn_trigger_1 = true;
               if (!quiet) Rf_warningcall(R_NilValue,
-                "Some probabilities with value > 1.0 produced during density adjustment.");
+                "Some probabilities with value > 1.0 produced during density adjustment.\n");
             } else if ((Umat(dyn_index321(j)) < 0.0 || Fmat(dyn_index321(j)) < 0.0) && !warn_trigger_neg) {
               warn_trigger_neg = true;
               if (!quiet) Rf_warningcall(R_NilValue,
-                "Some matrix elements with value < 0.0 produced during density adjustment.");
+                "Some matrix elements with value < 0.0 produced during density adjustment.\n");
             }
           }
         }
@@ -18598,12 +18602,12 @@ Rcpp::List f_projection3(int format, bool prebreeding = true, int start_age = NA
             if (dyn_type(j) == 1 && Umat_sp(dyn_index321(j)) > 1.0 && !warn_trigger_1) {
               warn_trigger_1 = true;
               if (!quiet) Rf_warningcall(R_NilValue,
-                "Some probabilities with value > 1.0 produced during density adjustment.");
+                "Some probabilities with value > 1.0 produced during density adjustment.\n");
             } else if ((Umat_sp(dyn_index321(j)) < 0.0 || Fmat_sp(dyn_index321(j)) < 0.0) &&
               !warn_trigger_neg) {
               warn_trigger_neg = true;
               if (!quiet) Rf_warningcall(R_NilValue,
-                "Some matrix elements with value < 0.0 produced during density adjustment.");
+                "Some matrix elements with value < 0.0 produced during density adjustment.\n");
             }
           }
         }
@@ -20217,10 +20221,10 @@ arma::mat proj3dens(arma::vec start_vec, List core_list, arma::uvec mat_order,
           if (allow_warnings) {
             if (dyn_type(j) == 1 && theprophecy(dyn_index321(j)) > 1.0 && !warn_trigger_1) {
               warn_trigger_1 = true;
-              Rf_warningcall(R_NilValue, "Some probabilities with value > 1.0 produced during density adjustment.");
+              Rf_warningcall(R_NilValue, "Some probabilities with value > 1.0 produced during density adjustment.\n");
             } else if (theprophecy(dyn_index321(j)) < 0.0 && !warn_trigger_neg) {
               warn_trigger_neg = true;
-              Rf_warningcall(R_NilValue, "Some matrix elements with value < 0.0 produced during density adjustment.");
+              Rf_warningcall(R_NilValue, "Some matrix elements with value < 0.0 produced during density adjustment.\n");
             }
           }
         }
@@ -20331,10 +20335,10 @@ arma::mat proj3dens(arma::vec start_vec, List core_list, arma::uvec mat_order,
           if (allow_warnings) {
             if (dyn_type(j) == 1 && sparse_prophecy(dyn_index321(j)) > 1.0 && !warn_trigger_1) {
               warn_trigger_1 = true;
-              Rf_warningcall(R_NilValue, "Some probabilities with value > 1.0 produced during density adjustment.");
+              Rf_warningcall(R_NilValue, "Some probabilities with value > 1.0 produced during density adjustment.\n");
             } else if (sparse_prophecy(dyn_index321(j)) < 0.0 && !warn_trigger_neg) {
               warn_trigger_neg = true;
-              Rf_warningcall(R_NilValue, "Some matrix elements with value < 0.0 produced during density adjustment.");
+              Rf_warningcall(R_NilValue, "Some matrix elements with value < 0.0 produced during density adjustment.\n");
             }
           }
         }
@@ -20829,20 +20833,20 @@ Rcpp::List projection3(List mpm, int nreps = 1, int times = 10000,
         if (dyn_style(i) == 1) {
           if (dyn_beta(i) > exp_tol) {
             Rf_warningcall(R_NilValue,
-              "Values of beta used in the Ricker function may be too high. Results may be unpredictable.");
+              "Values of beta used in the Ricker function may be too high. Results may be unpredictable.\n");
           } else if (dyn_beta(i) < (-1.0 * exp_tol)) {
             Rf_warningcall(R_NilValue,
-              "Values of beta used in the Ricker function may be too high. Results may be unpredictable.");
+              "Values of beta used in the Ricker function may be too high. Results may be unpredictable.\n");
           }
         } else if (dyn_style(i) == 3) {
           double summed_stuff = dyn_alpha(i) + dyn_beta(i);
           
           if (summed_stuff > exp_tol) {
             Rf_warningcall(R_NilValue,
-              "Values of alpha and beta used in the Usher function may be too high. Results may be unpredictable.");
+              "Values of alpha and beta used in the Usher function may be too high. Results may be unpredictable.\n");
           } else if (summed_stuff < (-1.0 * exp_tol)) {
             Rf_warningcall(R_NilValue,
-              "Values of alpha and beta used in the Usher function may be too high. Results may be unpredictable.");
+              "Values of alpha and beta used in the Usher function may be too high. Results may be unpredictable.\n");
           }
         }
       }
@@ -20856,7 +20860,7 @@ Rcpp::List projection3(List mpm, int nreps = 1, int times = 10000,
       
       for (int i = 0; i < label_elements.length(); i++) {
         if (stringcompare_hard(as<std::string>(label_elements(i)), "patch")) {
-          if (!quiet) Rf_warningcall(R_NilValue, "This function takes annual matrices as input. This lefkoMat object appears to be a set of mean matrices, and may lack annual matrices. Will project only the mean.");
+          if (!quiet) Rf_warningcall(R_NilValue, "This function takes annual matrices as input. This lefkoMat object appears to be a set of mean matrices, and may lack annual matrices. Will project only the mean.\n");
         }
       }
       
@@ -21917,7 +21921,7 @@ Rcpp::List stoch_senselas(List mpm, int times = 10000, bool historical = false,
     DataFrame agestages = as<DataFrame>(mpm["agestages"]);
     
     if (labels.length() < 3) {
-      Rf_warningcall(R_NilValue, "This function takes annual matrices as input. This lefkoMat object appears to be a set of mean matrices, and may lack annual matrices.");
+      Rf_warningcall(R_NilValue, "This function takes annual matrices as input. This lefkoMat object appears to be a set of mean matrices, and may lack annual matrices.\n");
     }
     
     // Here we assess ahistorical versions of historical
