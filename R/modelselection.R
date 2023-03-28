@@ -23,7 +23,8 @@
 #' default is \code{"mixed"}, which uses the mixed model approach utilized in 
 #' packages \code{lme4} and \code{glmmTMB}. Other options include \code{"glm"},
 #' which uses generalized linear modeling assuming that all factors are fixed.
-#' @param suite This describes the global model for each vital rate estimation,
+#' @param suite Either a single string value or a vector of 14 strings for each
+#' vital rate model. Describes the global model for each vital rate estimation,
 #' and has the following possible values: \code{full}, includes main effects and
 #' all two-way interactions of size and reproductive status; \code{main},
 #' includes main effects only of size and reproductive status; \code{size},
@@ -33,7 +34,13 @@
 #' and y-intercepts only; \code{cons}, all vital rates estimated only as
 #' y-intercepts. If \code{approach = "glm"} and \code{year.as.random = FALSE},
 #' then year is also included as a fixed effect, and, in the case of
-#' \code{full}, included in two-way interactions. Defaults to \code{size}.
+#' \code{full}, included in two-way interactions. Order of models in the
+#' string vector if more than 1 value is used is: 1) survival, 2) observation,
+#' 3) primary size, 4) secondary size, 5) tertiary size, 6) reproductive status,
+#' 7) fecundity, 8) juvenile survival, 9) juvenile observation, 10) juvenile
+#' primary size, 11) juvenile secondary size, 12) juvenile tertiary size, 13)
+#' juvenile reproductive status, and 14) juvenile maturity status. Defaults to
+#' \code{size}.
 #' @param bestfit A variable indicating the model selection criterion for the
 #' choice of best-fit model. The default is \code{AICc&k}, which chooses the 
 #' best-fit model as the model with the lowest AICc or, if not the same model,
@@ -88,6 +95,14 @@
 #' @param density A text value indicating the name of the variable coding for
 #' spatial density, should the user wish to test spatial density as a fixed
 #' factor affecting vital rates. Defaults to \code{NA}.
+#' @param test.density Either a logical value indicating whether to include
+#' \code{density} as a fixed categorical variable in linear models, or a logical
+#' vector of such values for 14 models, in order: 1) survival, 2) observation,
+#' 3) primary size, 4) secondary size, 5) tertiary size, 6) reproductive
+#' status, 7) fecundity, 8) juvenile survival, 9) juvenile observation,
+#' 10) juvenile primary size, 11) juvenile secondary size, 12) juvenile
+#' tertiary size, 13) juvenile reproductive status, and 14) juvenile maturity
+#' status. Defaults to \code{FALSE}.
 #' @param sizedist The probability distribution used to model primary size.
 #' Options include \code{"gaussian"} for the Normal distribution (default),
 #' \code{"poisson"} for the Poisson distribution, \code{"negbin"} for the
@@ -185,6 +200,14 @@
 #' \emph{t} in the vertical dataset. Defaults to \code{NA}, in which case age
 #' is not included in linear models. Should only be used if building Leslie or
 #' age x stage matrices.
+#' @param test.age Either a logical value indicating whether to include
+#' \code{age} as a fixed categorical variable in linear models, or a logical
+#' vector of such values for 14 models, in order: 1) survival, 2) observation,
+#' 3) primary size, 4) secondary size, 5) tertiary size, 6) reproductive
+#' status, 7) fecundity, 8) juvenile survival, 9) juvenile observation,
+#' 10) juvenile primary size, 11) juvenile secondary size, 12) juvenile
+#' tertiary size, 13) juvenile reproductive status, and 14) juvenile maturity
+#' status. Defaults to \code{FALSE}.
 #' @param indcova Vector designating the names in occasions \emph{t}+1,
 #' \emph{t}, and \emph{t}-1 of an individual covariate. Defaults to \code{NA}.
 #' @param indcovb Vector designating the names in occasions \emph{t}+1,
@@ -202,15 +225,44 @@
 #' @param random.indcovc A logical value indicating whether \code{indcovc}
 #' should be treated as a random categorical factor, rather than as a fixed
 #' factor. Defaults to \code{FALSE}.
-#' @param test.group A logical value indicating whether to include the
+#' @param test.indcova Either a logical value indicating whether to include the
+#' \code{indcova} variable as a fixed categorical variable in linear models, or
+#' a logical vector of such values for 14 models, in order: 1) survival,
+#' 2) observation, 3) primary size, 4) secondary size, 5) tertiary size,
+#' 6) reproductive status, 7) fecundity, 8) juvenile survival, 9) juvenile
+#' observation, 10) juvenile primary size, 11) juvenile secondary size,
+#' 12) juvenile tertiary size, 13) juvenile reproductive status, and
+#' 14) juvenile maturity status. Defaults to \code{FALSE}.
+#' @param test.indcovb Either a logical value indicating whether to include the
+#' \code{indcovb} variable as a fixed categorical variable in linear models, or
+#' a logical vector of such values for 14 models, in order: 1) survival,
+#' 2) observation, 3) primary size, 4) secondary size, 5) tertiary size,
+#' 6) reproductive status, 7) fecundity, 8) juvenile survival, 9) juvenile
+#' observation, 10) juvenile primary size, 11) juvenile secondary size,
+#' 12) juvenile tertiary size, 13) juvenile reproductive status, and
+#' 14) juvenile maturity status. Defaults to \code{FALSE}.
+#' @param test.indcovc Either a logical value indicating whether to include the
+#' \code{indcovc} variable as a fixed categorical variable in linear models, or
+#' a logical vector of such values for 14 models, in order: 1) survival,
+#' 2) observation, 3) primary size, 4) secondary size, 5) tertiary size,
+#' 6) reproductive status, 7) fecundity, 8) juvenile survival, 9) juvenile
+#' observation, 10) juvenile primary size, 11) juvenile secondary size,
+#' 12) juvenile tertiary size, 13) juvenile reproductive status, and
+#' 14) juvenile maturity status. Defaults to \code{FALSE}.
+#' @param test.group Either a logical value indicating whether to include the
 #' \code{group} variable from the input \code{stageframe} as a fixed categorical
-#' variable in linear models. Defaults to \code{FALSE}.
+#' variable in linear models, or a logical vector of such values for 14 models,
+#' in order: 1) survival, 2) observation, 3) primary size, 4) secondary size,
+#' 5) tertiary size, 6) reproductive status, 7) fecundity, 8) juvenile survival,
+#' 9) juvenile observation, 10) juvenile primary size, 11) juvenile secondary
+#' size, 12) juvenile tertiary size, 13) juvenile reproductive status, and
+#' 14) juvenile maturity status. Defaults to \code{FALSE}.
 #' @param show.model.tables If set to TRUE, then includes full modeling tables
 #' in the output. Defaults to \code{TRUE}.
 #' @param global.only If set to TRUE, then only global models will be built and
 #' evaluated. Defaults to \code{FALSE}.
 #' @param accuracy A logical value indicating whether to test accuracy of
-#' models. See \code{Notes} section for details on hoew accuracy is assessed.
+#' models. See \code{Notes} section for details on how accuracy is assessed.
 #' Defaults to \code{TRUE}.
 #' @param quiet May be a logical value, or any one of the strings \code{"yes"},
 #' \code{"no"}, or \code{"partial"}. If set to \code{TRUE} or \code{"yes"}, then
@@ -310,6 +362,19 @@
 #' section.}
 #' 
 #' @section Notes:
+#' When \code{modelsearch()} is called, it first trims the dataset down to just
+#' the variables that will be used, and just data for complete cases in those
+#' variables. It then builds global models for all vital rates and runs them. If
+#' a global model fails, then the function proceeds by dropping any two-way
+#' interactions and trying again. If this fails, then the function will continue
+#' to attempt dropping terms, first patch, then year, then individual
+#' covariates, then combinatons of the above, and finally individual identity.
+#' If these attempts fail and the approach used is \code{mixed}, then the
+#' function will try running a glm version of the original failed model, and use
+#' that as a global model if it runs properly. Finally, if all attempts fail,
+#' then the function returns a \code{1} to allow model building assuming a
+#' constant rate or probability.
+#' 
 #' Setting \code{suite = "cons"} prevents the inclusion of size and reproductive
 #' status as fixed, independent factors in modeling. However, it does not
 #' prevent any other terms from being included. Density, age, individual
@@ -332,15 +397,6 @@
 #' the dataset will lead to a best-fit model for that response represented by a
 #' single constant value.
 #' 
-#' When \code{modelsearch()} is called, it first builds global models for all
-#' vital rates and runs them. If a global model fails, then the function
-#' proceeds by dropping any two-way interactions and trying again. If this
-#' fails, then function will continue to drop key terms (typically random terms
-#' or individual covariates) until something rune. The last attempt if running a
-#' mixed set of models is to try a glm version of the original failed model, and
-#' use that as a global model if it runs properly. Finally, if all attempts
-#' fail, then the function returns a \code{1}.
-#' 
 #' Exhaustive model building and selection proceeds via the
 #' \code{\link[MuMIn]{dredge}()} function in package \code{MuMIn}. This function
 #' is verbose, so that any errors and warnings developed during model building,
@@ -351,11 +407,11 @@
 #' warnings during dredging can be interpreted using the documentation for that
 #' package. Errors occurring during dredging lead to the adoption of the global
 #' model as the best-fit, and the user should view all logged errors and
-#' warnings to determine the best way to proceed. The \code{quiet = TRUE} option
-#' can be used to silence dredge warnings, but users should note that automated
-#' model selection can be viewed as a black box, and so care should be taken to
-#' ensure that the models run make biological sense, and that model quality is
-#' prioritized.
+#' warnings to determine the best way to proceed. The \code{quiet = TRUE} and
+#' \code{quiet = "partial"} options can be used to silence dredge warnings, but
+#' users should note that automated model selection can be viewed as a black
+#' box, and so care should be taken to ensure that the models run make
+#' biological sense, and that model quality is prioritized.
 #' 
 #' Exhaustive model selection through dredging works best with larger datasets
 #' and fewer tested parameters. Setting \code{suite = "full"} may initiate a
@@ -363,7 +419,13 @@
 #' historical, individual covariates are used, or a zero-inflated distribution
 #' is assumed. In such cases, the number of models built and tested will run at
 #' least in the millions. Small datasets will also increase the error associated
-#' with these tests, leading to adoption of simpler models overall.
+#' with these tests, leading to adoption of simpler models overall. Note also
+#' that zero-inflated models are processed as two models, and so include twice
+#' the assumed number of parameters. If \code{suite = "full"}, then this
+#' function will switch to a main effects global model for the zero-inflated
+#' parameter models if the total number of parameters to test rises above the
+#' limits imposed by the \code{\link[MuMIn]{dredge}()} function in package
+#' \code{MuMIn}.
 #' 
 #' Accuracy of vital rate models is calculated differently depending on vital
 #' rate and assumed distribution. For all vital rates assuming a binomial
@@ -372,7 +434,9 @@
 #' predicted responses equal to actual responses. In all other models, accuracy
 #' is actually assessed as a simple R-squared in which the observed response
 #' values per data subset are compared to the predicted response values
-#' according to each best-fit model.
+#' according to each best-fit model. Note that some situations in which factor
+#' variables are used may result in failure to assess accuracy. In these cases,
+#' function \code{modelsearch()} simply yields \code{NA} values.
 #' 
 #' Care must be taken to build models that test the impacts of state in occasion
 #' \emph{t}-1 for historical models, and that do not test these impacts for
@@ -410,9 +474,16 @@
 #' these cases. Also, the \code{suite} setting can be set to either \code{age}
 #' or \code{cons}, as the results will be exactly the same.
 #' 
+#' Users wishing to test age, density, group, or individual covariates, must
+#' include \code{test.age = TRUE}, \code{test.density = TRUE},
+#' \code{test.group = TRUE}, or \code{test.indcova = TRUE} (or
+#' \code{test.indcovb = TRUE} or \code{test.indcovc = TRUE}, whichever is most
+#' appropriate), respectively, in addition to stipulating the name of the
+#' variable within the dataset. The default for these options is always
+#' \code{FALSE}.
+#' 
 #' @examples
 #' \donttest{
-#' # Lathyrus example
 #' data(lathyrus)
 #' 
 #' sizevector <- c(0, 4.6, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 1, 2, 3, 4, 5, 6, 7, 8,
@@ -468,8 +539,6 @@
 #' lathmat3ln <- flefko3(year = "all", patch = "all", stageframe = lathframeln, 
 #'   modelsuite = lathmodelsln3, data = lathvertln, supplement = lathsupp3, 
 #'   reduce = FALSE)
-#' 
-#' summary(lathmat3ln)
 #' }
 #' 
 #' @export
@@ -477,31 +546,42 @@ modelsearch <- function(data, stageframe = NULL, historical = TRUE,
   approach = "mixed", suite = "size", bestfit = "AICc&k",
   vitalrates = c("surv", "size", "fec"), surv = c("alive3", "alive2", "alive1"),
   obs = c("obsstatus3", "obsstatus2", "obsstatus1"),
-  size = c("sizea3", "sizea2", "sizea1"), sizeb = c(NA, NA, NA), 
+  size = c("sizea3", "sizea2", "sizea1"), sizeb = c(NA, NA, NA),
   sizec = c(NA, NA, NA), repst = c("repstatus3", "repstatus2", "repstatus1"),
   fec = c("feca3", "feca2", "feca1"), stage = c("stage3", "stage2", "stage1"),
-  matstat = c("matstatus3", "matstatus2", "matstatus1"),
-  indiv = "individ", patch = NA, year = "year2", density = NA,
+  matstat = c("matstatus3", "matstatus2", "matstatus1"), indiv = "individ",
+  patch = NA, year = "year2", density = NA, test.density = FALSE,
   sizedist = "gaussian", sizebdist = NA, sizecdist = NA, fecdist = "gaussian",
   size.zero = FALSE, sizeb.zero = FALSE, sizec.zero = FALSE, size.trunc = FALSE,
   sizeb.trunc = FALSE, sizec.trunc = FALSE, fec.zero = FALSE, fec.trunc = FALSE,
   patch.as.random = TRUE, year.as.random = TRUE, juvestimate = NA,
   juvsize = FALSE, jsize.zero = FALSE, jsizeb.zero = FALSE, jsizec.zero = FALSE,
   jsize.trunc = FALSE, jsizeb.trunc = FALSE, jsizec.trunc = FALSE, fectime = 2,
-  censor = NA, age = NA, indcova = NA, indcovb = NA, indcovc = NA,
-  random.indcova = FALSE, random.indcovb = FALSE, random.indcovc = FALSE,
-  test.group = FALSE, show.model.tables = TRUE, global.only = FALSE,
-  accuracy = TRUE, quiet = FALSE) {
+  censor = NA, age = NA, test.age = FALSE, indcova = NA, indcovb = NA,
+  indcovc = NA, random.indcova = FALSE, random.indcovb = FALSE,
+  random.indcovc = FALSE, test.indcova = FALSE, test.indcovb = FALSE,
+  test.indcovc = FALSE, test.group = FALSE, show.model.tables = TRUE,
+  global.only = FALSE, accuracy = TRUE, quiet = FALSE) {
   
   censor1 <- censor2 <- censor3 <- surv.data <- obs.data <- size.data <- NULL
   repst.data <- fec.data <- juvsurv.data <- juvobs.data <- NULL
   juvsize.data <- juvrepst.data <- usedfec <- NULL
-  patchcol <- yearcol <- extra_factors <- 0
+  patchcol <- yearcol <- indivcol <- agecol <- 0
+  indcova2col <- indcova1col <- indcovb2col <- indcovb1col <- indcovc2col <- 0
+  indcovc1col <- stage3col <- stage2col <- stage1col <- 0
   
-  sizeb_used <- sizec_used <- density_used <- indcova_used <- FALSE
-  indcovb_used <- indcovc_used <- quiet.mileposts <- FALSE
+  indcova_fac <- indcovb_fac <- indcovc_fac <- FALSE
+  sizeb_used <- sizec_used <- density_used <- FALSE
+  quiet.mileposts <- FALSE
+  
+  extra_factors <- rep(0, 14)
   
   total_vars <- length(names(data))
+  
+  if (!requireNamespace("MuMIn", quietly = TRUE)) {
+    stop("Package MuMIn is required. Please install it.",
+      call. = FALSE)
+  }
   
   if (is.logical(quiet)) {
     quiet.mileposts <- quiet
@@ -518,26 +598,164 @@ modelsearch <- function(data, stageframe = NULL, historical = TRUE,
       quiet <- TRUE
       quiet.mileposts <- FALSE
     } else {
-      warning("Option quiet not set to recognized input. Will set to FALSE.",
+      warning("Option quiet not set to recognized input. Will set to FALSE.\n",
         call. = FALSE)
       quiet <- FALSE
     }
   } else {
-    warning("Option quiet not set to recognized input. Will set to FALSE.",
+    warning("Option quiet not set to recognized input. Will set to FALSE.\n",
       call. = FALSE)
     quiet <- FALSE
   }
   
   #Input testing, input standardization, and exception handling
   if (all(!is(data, "hfvdata"))) {
-    warning("This function was made to work with standardized historically
-      formatted vertical datasets, as provided by the verticalize() and
-      historicalize() functions. Failure to format the input data properly and
-      designate needed variables appropriately may result in nonsensical output.",
+    warning("This function was made to work with standardized historically formatted vertical
+      datasets. Failure to format the input data properly may result in nonsensical output.\n",
       call. = FALSE)
   }
   
-  if (test.group) {
+  if (!all(is.character(approach)) | length(approach) != 1) {
+    stop("Option approach must be a single text value.", call. = FALSE)
+  }
+  if (!all(is.character(bestfit)) | length(bestfit) != 1) {
+    stop("Option bestfit must be a single text value.", call. = FALSE)
+  }
+  if ((!all(is.character(juvestimate)) & !all(is.numeric(juvestimate)) & !all(is.na(juvestimate))) |
+      length(juvestimate) != 1) {
+    stop("Option juvestimate must be a single text or integer value, or a single NA.",
+      call. = FALSE)
+  }
+  
+  if ((!all(is.character(indiv)) & !all(is.numeric(indiv)) & !all(is.na(indiv))) |
+      length(indiv) != 1) {
+    stop("Option indiv must be a single text or integer value, or a single NA.",
+      call. = FALSE)
+  }
+  if ((!all(is.character(patch)) & !all(is.numeric(patch)) & !all(is.na(patch))) |
+      length(patch) != 1) {
+    stop("Option patch must be a single text or integer value, or a single NA.",
+      call. = FALSE)
+  }
+  if ((!all(is.character(year)) & !all(is.numeric(year)) & !all(is.na(year))) |
+      length(year) != 1) {
+    stop("Option year must be a single text or integer value, or a single NA.",
+      call. = FALSE)
+  }
+  if ((!all(is.character(density)) & !all(is.numeric(density)) & !all(is.na(density))) |
+      length(density) != 1) {
+    stop("Option density must be a single text or integer value, or a single NA.",
+      call. = FALSE)
+  }
+  if ((!all(is.character(age)) & !all(is.numeric(age)) & !all(is.na(age))) |
+      length(age) != 1) {
+    stop("Option age must be a single text or integer value, or a single NA.",
+      call. = FALSE)
+  }
+  
+  if ((!all(is.character(sizedist)) & !all(is.na(sizedist))) | length(sizedist) != 1) {
+    stop("Option sizedist must be a single text value, or a single NA.",
+      call. = FALSE)
+  }
+  if ((!all(is.character(sizebdist)) & !all(is.na(sizebdist))) | length(sizebdist) != 1) {
+    stop("Option sizebdist must be a single text value, or a single NA.",
+      call. = FALSE)
+  }
+  if ((!all(is.character(sizecdist)) & !all(is.na(sizecdist))) | length(sizecdist) != 1) {
+    stop("Option sizecdist must be a single text value, or a single NA.",
+      call. = FALSE)
+  }
+  if ((!all(is.character(fecdist)) & !all(is.na(fecdist))) | length(fecdist) != 1) {
+    stop("Option fecdist must be a single text value, or a single NA.",
+      call. = FALSE)
+  }
+  
+  if (!all(is.logical(size.zero)) | length(size.zero) != 1) {
+    stop("Option size.zero must be a single logical value.", call. = FALSE)
+  }
+  if (!all(is.logical(size.trunc)) | length(size.trunc) != 1) {
+    stop("Option size.trunc must be a single logical value.", call. = FALSE)
+  }
+  if (!all(is.logical(sizeb.zero)) | length(sizeb.zero) != 1) {
+    stop("Option sizeb.zero must be a single logical value.", call. = FALSE)
+  }
+  if (!all(is.logical(sizeb.trunc)) | length(sizeb.trunc) != 1) {
+    stop("Option sizeb.trunc must be a single logical value.", call. = FALSE)
+  }
+  if (!all(is.logical(sizec.zero)) | length(sizec.zero) != 1) {
+    stop("Option sizec.zero must be a single logical value.", call. = FALSE)
+  }
+  if (!all(is.logical(sizec.trunc)) | length(sizec.trunc) != 1) {
+    stop("Option sizec.trunc must be a single logical value.", call. = FALSE)
+  }
+  if (!all(is.logical(fec.zero)) | length(fec.zero) != 1) {
+    stop("Option fec.zero must be a single logical value.", call. = FALSE)
+  }
+  if (!all(is.logical(fec.trunc)) | length(fec.trunc) != 1) {
+    stop("Option fec.trunc must be a single logical value.", call. = FALSE)
+  }
+  if (!all(is.logical(juvsize)) | length(juvsize) != 1) {
+    stop("Option juvsize must be a single logical value.", call. = FALSE)
+  }
+  if (!all(is.logical(random.indcova)) | length(random.indcova) != 1) {
+    stop("Option random.indcova must be a single logical value.", call. = FALSE)
+  }
+  if (!all(is.logical(random.indcovb)) | length(random.indcovb) != 1) {
+    stop("Option random.indcovb must be a single logical value.", call. = FALSE)
+  }
+  if (!all(is.logical(random.indcovc)) | length(random.indcovc) != 1) {
+    stop("Option random.indcovc must be a single logical value.", call. = FALSE)
+  }
+  if (!all(is.logical(year.as.random)) | length(year.as.random) != 1) {
+    stop("Option year.as.random must be a single logical value.", call. = FALSE)
+  }
+  if (!all(is.logical(patch.as.random)) | length(patch.as.random) != 1) {
+    stop("Option patch.as.random must be a single logical value.", call. = FALSE)
+  }
+  
+  if (length(suite) == 1) suite <- rep(suite, 14)
+  if (!is.character(suite) | length(suite) != 14) {
+    stop("Option suite must be a single text value or vector of 14 such values.",
+      call. = FALSE)
+  }
+  
+  if (length(test.age) == 1) test.age <- rep(test.age, 14)
+  if (!is.logical(test.age) | length(test.age) != 14) {
+    stop("Option test.age must be a logical value or vector of 14 such values.",
+      call. = FALSE)
+  }
+  
+  if (length(test.density) == 1) test.density <- rep(test.density, 14)
+  if (!is.logical(test.density) | length(test.density) != 14) {
+    stop("Option test.density must be a logical value or vector of 14 such values.",
+      call. = FALSE)
+  }
+  
+  if (length(test.group) == 1) test.group <- rep(test.group, 14)
+  if (!is.logical(test.group) | length(test.group) != 14) {
+    stop("Option test.group must be a logical value or vector of 14 such values.",
+      call. = FALSE)
+  }
+  
+  if (length(test.indcova) == 1) test.indcova <- rep(test.indcova, 14)
+  if (!is.logical(test.indcova) | length(test.indcova) != 14) {
+    stop("Option test.indcova must be a logical value or vector of 14 such values.",
+      call. = FALSE)
+  }
+  
+  if (length(test.indcovb) == 1) test.indcovb <- rep(test.indcovb, 14)
+  if (!is.logical(test.indcovb) | length(test.indcovb) != 14) {
+    stop("Option test.indcovb must be a logical value or vector of 14 such values.",
+      call. = FALSE)
+  }
+  
+  if (length(test.indcovc) == 1) test.indcovc <- rep(test.indcovc, 14)
+  if (!is.logical(test.indcovc) | length(test.indcovc) != 14) {
+    stop("Option test.indcovc must be a logical value or vector of 14 such values.",
+      call. = FALSE)
+  }
+  
+  if (any(test.group)) {
     if (is.null(stageframe)) {
       stop("Cannot test groups without inclusion of appropriate stageframe.",
         call. = FALSE)
@@ -548,14 +766,14 @@ modelsearch <- function(data, stageframe = NULL, historical = TRUE,
       all_groups <- unique(stageframe$group)
       
       if (length(all_groups) > 1) {
-        extra_factors <- extra_factors + 1;
+        extra_factors[test.group] <- extra_factors[test.group] + 1;     # This might be a problem
         
         data$group2 <- apply(as.matrix(data$stage2), 1, function(X){
           found_group <- which(stageframe$stage == X)
           if (length(found_group) != 1) {
             if (!is.element(tolower(X), c("notalive", "dead", "almostborn"))) {
               warning("Some group calls appear to lack a positive ID. Please check
-                group identifications.", call. = FALSE)
+                group identifications.\n", call. = FALSE)
             }
             group_call <- 0
           } else {
@@ -568,7 +786,7 @@ modelsearch <- function(data, stageframe = NULL, historical = TRUE,
           if (length(found_group) != 1) {
             if (!is.element(tolower(X), c("notalive", "dead", "almostborn"))) {
               warning("Some group calls appear to lack a positive ID. Please check
-                group identifications.", call. = FALSE)
+                group identifications.\n", call. = FALSE)
             }
             group_call <- 0
           } else {
@@ -581,7 +799,7 @@ modelsearch <- function(data, stageframe = NULL, historical = TRUE,
           if (length(found_group) != 1) {
             if (!is.element(tolower(X), c("notalive", "dead", "almostborn"))) {
               warning("Some group calls appear to lack a positive ID. Please check
-                group identifications.", call. = FALSE)
+                group identifications.\n", call. = FALSE)
             }
             group_call <- 0
           } else {
@@ -590,15 +808,10 @@ modelsearch <- function(data, stageframe = NULL, historical = TRUE,
           return(group_call)
         })
       } else {
-        test.group <- FALSE
-        warning("Only one stage group found, so will not test group.", call. = FALSE)
+        test.group <- rep(FALSE, 14)
+        warning("Only one stage group found, so will not test group.\n", call. = FALSE)
       }
     }
-  }
-  
-  if (!requireNamespace("MuMIn", quietly = TRUE)) {
-    stop("Package MuMIn is required. Please install it.",
-      call. = FALSE)
   }
   
   if (size.zero & size.trunc) {
@@ -647,28 +860,29 @@ modelsearch <- function(data, stageframe = NULL, historical = TRUE,
   }
   
   if(length(grep("fu", suite)) > 0) {
-    suite <- "full"
+    suite[grepl("fu", suite)] <- "full"
   } else if(length(grep("fl", suite)) > 0) {
-    suite <- "full"
+    suite[grepl("fl", suite)] <- "full"
   } else if(length(grep("ma", suite)) > 0) {
-    suite <- "main"
+    suite[grepl("ma", suite)] <- "main"
   } else if(length(grep("mn", suite)) > 0) {
-    suite <- "main"
+    suite[grepl("mn", suite)] <- "main"
   } else if(length(grep("si", suite)) > 0) {
-    suite <- "size"
+    suite[grepl("si", suite)] <- "size"
   } else if(length(grep("sz", suite)) > 0) {
-    suite <- "size"
+    suite[grepl("sz", suite)] <- "size"
   } else if(length(grep("re", suite)) > 0) {
-    suite <- "rep"
+    suite[grepl("re", suite)] <- "rep"
   } else if(length(grep("rp", suite)) > 0) {
-    suite <- "rep"
+    suite[grepl("rp", suite)] <- "rep"
   } else if(length(grep("co", suite)) > 0) {
-    suite <- "cons"
+    suite[grepl("co", suite)] <- "cons"
   } else if(length(grep("ag", suite)) > 0) {
     if (is.na(age)) {
-      stop("Age variable required for age-based and age-by-stage MPMs.", call. = FALSE)
+      stop("Age variable required for age-based and age-by-stage MPMs.",
+        call. = FALSE)
     }
-    suite <- "cons"
+    suite[grepl("ag", suite)] <- "cons"
   }
   
   if (length(grep("&k", bestfit)) > 0) {
@@ -716,31 +930,31 @@ modelsearch <- function(data, stageframe = NULL, historical = TRUE,
   }
   
   if (length(grep("su", vitalrates)) > 0) {
-    vitalrates[grep("su", vitalrates)] <- "surv"
+    vitalrates[grepl("su", vitalrates)] <- "surv"
   }
   if (length(grep("sr", vitalrates)) > 0) {
-    vitalrates[grep("sr", vitalrates)] <- "surv"
+    vitalrates[grepl("sr", vitalrates)] <- "surv"
   }
   if (length(grep("ob", vitalrates)) > 0) {
-    vitalrates[grep("ob", vitalrates)] <- "obs"
+    vitalrates[grepl("ob", vitalrates)] <- "obs"
   }
   if (length(grep("si", vitalrates)) > 0) {
-    vitalrates[grep("si", vitalrates)] <- "size"
+    vitalrates[grepl("si", vitalrates)] <- "size"
   }
   if (length(grep("sz", vitalrates)) > 0) {
-    vitalrates[grep("sz", vitalrates)] <- "size"
+    vitalrates[grepl("sz", vitalrates)] <- "size"
   }
   if (length(grep("re", vitalrates)) > 0) {
-    vitalrates[grep("re", vitalrates)] <- "repst"
+    vitalrates[grepl("re", vitalrates)] <- "repst"
   }
   if (length(grep("rp", vitalrates)) > 0) {
-    vitalrates[grep("rp", vitalrates)] <- "repst"
+    vitalrates[grepl("rp", vitalrates)] <- "repst"
   }
   if (length(grep("fe", vitalrates)) > 0) {
-    vitalrates[grep("fe", vitalrates)] <- "fec"
+    vitalrates[grepl("fe", vitalrates)] <- "fec"
   }
   if (length(grep("fc", vitalrates)) > 0) {
-    vitalrates[grep("fc", vitalrates)] <- "fec"
+    vitalrates[grepl("fc", vitalrates)] <- "fec"
   }
   if (length(vitalrates) == 1 & length(grep("lesl", vitalrates)) > 0) {
     vitalrates <- c("surv", "fec")
@@ -752,24 +966,25 @@ modelsearch <- function(data, stageframe = NULL, historical = TRUE,
     if (any(sizedist == "negbin", na.rm = TRUE) | any(sizebdist == "negbin", na.rm = TRUE) |
       any(sizecdist == "negbin", na.rm = TRUE) | any(fecdist == "negbin", na.rm = TRUE)) {
       
-      stop("Package glmmTMB needed to develop mixed size or fecundity models
-        with a negative binomial distribution.", call. = FALSE)
+      stop("Package glmmTMB is required to develop mixed size or fecundity models with
+        negative binomial distributions. Please install it.", call. = FALSE)
     }
   } else if (any(sizedist != "gaussian", na.rm = TRUE) | any(sizebdist != "gaussian", na.rm = TRUE) | 
       any(sizecdist != "gaussian", na.rm = TRUE)) {
     if (!requireNamespace("glmmTMB", quietly = TRUE)) {
       if (size.trunc | sizeb.trunc | sizec.trunc | size.zero | sizeb.zero | sizec.zero) {
-        stop("Package glmmTMB needed to develop mixed size models with
-          zero-truncated or zero-inflated distributions.", call. = FALSE)
+        stop("Package glmmTMB is required to develop mixed size or fecundity models with
+          zero-truncated or zero-inflated distributions. Please install it.",
+          call. = FALSE)
       }
     }
   } else if (any(fecdist != "gaussian", na.rm = TRUE)) {
     if (fec.trunc & !requireNamespace("glmmTMB", quietly = TRUE)) {
-      stop("Package glmmTMB needed to develop mixed fecundity models with
-        zero-truncated distribution.", call. = FALSE)}
+      stop("Package glmmTMB needed to develop mixed fecundity models with zero-truncated
+        distributions. Please install it.", call. = FALSE)}
     if (fec.zero & !requireNamespace("glmmTMB", quietly = TRUE)) {
-      stop("Package glmmTMB needed to develop mixed fecundity models with
-        zero-inflated distribution.", call. = FALSE)}
+      stop("Package glmmTMB needed to develop mixed fecundity models with zero-inflated
+        distributions. Please install it.", call. = FALSE)}
   }
   
   if (approach == "glm") {
@@ -777,23 +992,23 @@ modelsearch <- function(data, stageframe = NULL, historical = TRUE,
         any(sizecdist != "gaussian", na.rm = TRUE)) {
       if (size.trunc | sizeb.trunc | sizec.trunc) {
         if (!requireNamespace("VGAM", quietly = TRUE)) {
-        stop("Package VGAM needed to develop non-Gaussian size GLMs with 
-          zero-truncated distribution.", call. = FALSE)
+        stop("Package VGAM needed to develop non-Gaussian size GLMs with zero-truncated
+          distributions. Please install it.", call. = FALSE)
         }
       } else if (size.zero | sizeb.zero | sizec.zero) {
         if (!requireNamespace("pscl", quietly = TRUE)) {
-        stop("Package pscl needed to develop non-Gaussian size GLMs with
-          zero-inflated distribution.", call. = FALSE)
+        stop("Package pscl needed to develop non-Gaussian size GLMs with zero-inflated
+          distributions. Please install it.", call. = FALSE)
         }
       }
     }
     if (any(fecdist != "gaussian", na.rm = TRUE)) {
       if (fec.trunc & !requireNamespace("VGAM", quietly = TRUE)) {
-        stop("Package VGAM needed to develop non-Gaussian fecundity GLMs with
-          zero-truncated distribution.", call. = FALSE)}
+        stop("Package VGAM needed to develop non-Gaussian fecundity GLMs with zero-truncated
+          distributions. Please install it.", call. = FALSE)}
       if (fec.zero & !requireNamespace("pscl", quietly = TRUE)) {
-        stop("Package pscl needed to develop non-Gaussian fecundity GLMs with
-          zero-inflated distribution.", call. = FALSE)}
+        stop("Package pscl needed to develop non-Gaussian fecundity GLMs with zero-inflated
+          distributions. Please install it.", call. = FALSE)}
     }
   }
   
@@ -820,59 +1035,40 @@ modelsearch <- function(data, stageframe = NULL, historical = TRUE,
     stop("Censor variables should be included either as 1 variable per row in the
       historical data frame (1 variable in the dataset), or as 1 variable for each of
       occasions t+1, t, and, if historical, t-1 (2 or 3 variables in the data frame).
-      No more than 3 variables are allowed. If more than one are supplied, then they
-      are assumed to be in order of occasion t+1, t, and t-1, respectively.",
+      No more than 3 censor variables are allowed. If more than 1 are supplied, then
+      they will be assumed to be in order of occasion t+1, t, and t-1, respectively.",
       call. = FALSE)
-  }
-  if (length(indiv) > 1) {
-    stop("Only one individual identification variable is allowed.",
-      call. = FALSE)
-  }
-  if (length(year) > 1) {
-    stop("Only one time variable is allowed, and it must refer to time t.", call. = FALSE)
-  }
-  if (length(patch) > 1) {
-    stop("Only one patch variable is allowed.", call. = FALSE)
-  }
-  if (length(density) > 1) {
-    stop("Only one density variable is allowed.", call. = FALSE)
-  }
-  if (length(age) > 1) {
-    stop("Only one age variable is allowed.", call. = FALSE)
   }
   
   if (is.element("surv", vitalrates)) {
     if (length(surv) > 3 | length(surv) == 1) {
-      stop("This function requires 2 (if ahistorical) or 3 (if historical)
-        survival variables as input parameters.", call. = FALSE)}
+      stop("This function requires 2 (if ahistorical) or 3 (if historical) survival
+        variables as input parameters, corresponding to survival status in times
+        t+1, t, and, if historical, t-1, respectively.", call. = FALSE)}
     if (all(is.numeric(surv))) {
       if (any(surv < 1) | any(surv > total_vars)) {
-        stop("Survival variables do not match data frame.",
+        stop("Survival variable names do not match variables in data frame.",
           call. = FALSE)
-      } else {
-        surv <- names(data)[surv]
-      }
+      } else surv <- names(data)[surv]
     }
     if (any(!is.element(surv, names(data)))) {
-      stop("Survival variables must match data frame.", call. = FALSE)
+      stop("Survival variable names do not match variables in data frame.", call. = FALSE)
     }
   }
   
   if (is.element("obs", vitalrates)) {
     if (length(obs) > 3 | length(obs) == 1) {
       stop("This function requires 2 (if ahistorical) or 3 (if historical)
-        observation variables as input parameters.",
+        observation status variables as input parameters.",
         call. = FALSE)}
     if (all(is.numeric(obs))) {
       if (any(obs < 1) | any(obs > total_vars)) {
-        stop("Observation variables do not match data frame.",
+        stop("Observation status variable names do not match variables in data frame.",
           call. = FALSE)
-      } else {
-       obs <- names(data)[obs]
-      }
+      } else obs <- names(data)[obs]
     }
     if (any(!is.element(obs, names(data)))) {
-      stop("Observation status variables must match data frame.",
+      stop("Observation status variable names do not match variables in data frame.",
         call. = FALSE)
     }
   }
@@ -883,14 +1079,13 @@ modelsearch <- function(data, stageframe = NULL, historical = TRUE,
         variables as input parameters.", call. = FALSE)}
     if (all(is.numeric(size))) {
       if (any(size < 1) | any(size > total_vars)) {
-        stop("Size variables do not match data frame.",
+        stop("Primary size variable names do not match variables in data frame.",
           call. = FALSE)
-      } else {
-        size <- names(data)[size]
-      }
+      } else size <- names(data)[size]
     }
     if (any(!is.element(size, names(data)))) {
-      stop("Size variables must match data frame.", call. = FALSE)
+      stop("Primary size variable names do not match variables in data frame.",
+        call. = FALSE)
     }
     if (all(!is.na(sizeb))) {
       if (is.na(sizebdist)) {
@@ -902,14 +1097,12 @@ modelsearch <- function(data, stageframe = NULL, historical = TRUE,
           call. = FALSE)}
       if (all(is.numeric(sizeb))) {
         if (any(sizeb < 1) | any(sizeb > total_vars)) {
-          stop("Secondary size variables do not match data frame.",
+          stop("Secondary size variable names do not match variables in data frame.",
             call. = FALSE)
-        } else {
-          sizeb <- names(data)[sizeb]
-        }
+        } else sizeb <- names(data)[sizeb]
       }
       if (any(!is.element(sizeb, names(data)))) {
-        stop("Secondary size variables must match data frame.",
+        stop("Secondary size variable names do not match variables in data frame.",
           call. = FALSE)
       }
       sizeb_used <- 1
@@ -924,14 +1117,12 @@ modelsearch <- function(data, stageframe = NULL, historical = TRUE,
           call. = FALSE)}
       if (all(is.numeric(sizec))) {
         if (any(sizec < 1) | any(sizec > total_vars)) {
-          stop("Tertiary size variables do not match data frame.",
+          stop("Tertiary size variable names do not match variables in data frame.",
             call. = FALSE)
-        } else {
-          sizec <- names(data)[sizec]
-        }
+        } else sizec <- names(data)[sizec]
       }
       if (any(!is.element(sizec, names(data)))) {
-        stop("Tertiary size variables must match data frame.",
+        stop("Tertiary variable names do not match variables in data frame.",
           call. = FALSE)
       }
       sizec_used <- 1
@@ -945,14 +1136,12 @@ modelsearch <- function(data, stageframe = NULL, historical = TRUE,
         call. = FALSE)}
     if (all(is.numeric(repst))) {
       if (any(repst < 1) | any(repst > total_vars)) {
-        stop("Reproductive status variables do not match data frame.",
+        stop("Reproductive status variable names do not match variables in data frame.",
           call. = FALSE)
-      } else {
-        repst <- names(data)[repst]
-      }
+      } else repst <- names(data)[repst]
     }
     if (any(!is.element(repst, names(data)))) {
-      stop("Reproductive status variables must match data frame.",
+      stop("Reproductive status variable names do not match variables in data frame.",
         call. = FALSE)
     }
   }
@@ -964,25 +1153,24 @@ modelsearch <- function(data, stageframe = NULL, historical = TRUE,
         call. = FALSE)}
     if (all(is.numeric(fec))) {
       if (any(fec < 1) | any(fec > total_vars)) {
-        stop("Fecundity variables do not match data frame.",
+        stop("Fecundity variable names do not match variables in data frame.",
           call. = FALSE)
-      } else {
-        fec <- names(data)[fec]
-      }
+      } else fec <- names(data)[fec]
     }
     if (any(!is.element(fec, names(data)))) {
-      stop("Fecundity variables must match data frame.",
+      stop("Fecundity variable names do not match variables in data framee.",
         call. = FALSE)
     }
   }
   
   if (fectime != 2 & fectime != 3) {
-    stop("fectime must equal 2 or 3, depending on whether fecundity occurs in
-      time t or t+1, respectively (the default is 2).", call. = FALSE)
+    stop("Option fectime must equal 2 or 3, depending on whether fecundity occurs in
+      time t or t+1, respectively (the default is 2, corresponding to time t).",
+      call. = FALSE)
   }
   
-  if (all(!is.na(age))) {
-    if (all(is.numeric(age))) {
+  if (!is.na(age)) {
+    if (is.numeric(age)) {
       if (age > 0 & age <= total_vars) {
         agecol <- age
         age <- names(data)[agecol]
@@ -990,182 +1178,173 @@ modelsearch <- function(data, stageframe = NULL, historical = TRUE,
     } else if (length(which(names(data) == age)) == 0) {
       stop("Variable age must either equal the name of the variable denoting age,
         or be set to NA.", call. = FALSE)
-    } else {
-      agecol <- which(names(data) == age)
-    }
-    extra_factors <- extra_factors + 1
-  } else {age <- "none"}
+    } else agecol <- which(names(data) == age)
+    
+    extra_factors[test.age] <- extra_factors[test.age] + 1 
+    
+  } else {
+    age <- "none"
+    test.age <- rep(FALSE, 14)
+  }
   
   if (any(!is.na(indcova))) {
     if (length(indcova) > 3) {
-      warning("Vector indcova holds the exact names of an individual covariate across
-        times t+1, t, and t-1. Only the first three elements will be used.",
+      warning("Vector indcova holds the exact names of an individual covariate across times t+1,
+        t, and, if historical, t-1. Only the first three elements will be used.\n",
         call. = FALSE)
       indcova <- indcova[1:3]
-      indcova_used <- TRUE
     } else if (length(indcova) == 1) {
-      warning("Vector indcova requires the names of an individual covariate across
-        times t+1, t, and, if historical, t-1. Only 1 variable name was supplied,
-        so this individual covariate will not be used.", call. = FALSE)
+      warning("Vector indcova requires the names of an individual covariate across times t+1,
+        t, and, if historical, t-1. Only 1 variable name was supplied, so this individual
+        covariate will not be used.\n", call. = FALSE)
       indcova <- c("none", "none", "none")
+      test.indcova <- rep(FALSE, 14)
     }
     
     if (all(is.numeric(indcova), na.rm = TRUE)) {
       if (all(indcova > 0, na.rm = TRUE) & all(indcova <= total_vars)) {
         indcova2col <- indcova[2]
+        if (is.character(data[,indcova2col]) | is.factor(data[,indcova2col])) indcova_fac <- TRUE
         if (!is.na(indcova[3])) indcova1col <- indcova[3]
-        indcova_used <- TRUE
       }
     } else {
       if (length(which(names(data) == indcova[2])) == 0 && indcova[2] != "none") {
-        stop("Vector indcova must either equal either the exact names of an
-          individual covariate across occasions t+1, t, and t-1, or be set to NA.",
+        stop("Vector indcova must either equal either the exact names of an individual
+          covariate across occasions t+1, t, and, if historical, t-1, or be set to NA.",
           call. = FALSE)
       } else {
         indcova2col <- which(names(data) == indcova[2])
-        indcova_used <- TRUE
+        if (is.character(data[,indcova2col]) | is.factor(data[,indcova2col])) indcova_fac <- TRUE
       }
       
       if (length(indcova) == 3) {
         if (length(which(names(data) == indcova[3])) == 0 && indcova[3] != "none") {
-          stop("Vector indcova must either equal either the exact names of an
-            individual covariate across occasions t+1, t, and t-1, or be set to NA.",
+          stop("Vector indcova must either equal either the exact names of an individual
+            covariate across occasions t+1, t, and, if historical, t-1, or be set to NA.",
             call. = FALSE)
         } else {
           indcova1col <- which(names(data) == indcova[3])
-          indcova_used <- TRUE
         }
-      } else {
-        indcova[3] <- "none"
-      }
+      } else indcova[3] <- "none"
     }
-  } else {indcova <- c("none", "none", "none")}
-  
-  if (indcova_used & !random.indcova) {
-    extra_factors <- extra_factors + 1
+  } else {
+    indcova <- c("none", "none", "none")
+    test.indcova <- rep(FALSE, 14)
   }
   
   if (any(!is.na(indcovb))) {
     if (length(indcovb) > 3) {
-      warning("Vector indcovb holds the exact names of an individual covariate
-        across times t+1, t, and t-1. Only the first three elements will be used.",
-        call. = FALSE)
+      warning("Vector indcovb holds the exact names of an individual covariate across times t+1,
+        t, and, if historical, t-1. Only the first three elements will be used.\n", call. = FALSE)
       indcovb <- indcovb[1:3]
-      indcovb_used <- TRUE
     } else if (length(indcovb) == 1) {
-      warning("Vector indcovb requires the names of an individual covariate across
-        times t+1, t, and, if historical, t-1. Only 1 variable name was supplied,
-        so this individual covariate will not be used.", call. = FALSE)
+      warning("Vector indcovb requires the names of an individual covariate across times t+1,
+        t, and, if historical, t-1. Only 1 variable name was supplied, so this individual
+        covariate will not be used.\n", call. = FALSE)
       indcovb <- c("none", "none", "none")
+      test.indcovb <- rep(FALSE, 14)
     }
     
     if (all(is.numeric(indcovb), na.rm = TRUE)) {
       if (all(indcovb > 0, na.rm = TRUE) & all(indcovb <= total_vars)) {
         indcovb2col <- indcovb[2]
+        if (is.character(data[,indcovb2col]) | is.factor(data[,indcovb2col])) indcovb_fac <- TRUE
         if (!is.na(indcovb[3])) indcovb1col <- indcovb[3]
-        indcovb_used <- TRUE
       }
     } else {
       if (length(which(names(data) == indcovb[2])) == 0 && indcovb[2] != "none") {
-        stop("Vector indcovb must either equal either the exact names of an
-          individual covariate across times t+1, t, and t-1, or be set to NA.",
+        stop("Vector indcovb must either equal either the exact names of an individual
+          covariate across times t+1, t, and, if historical, t-1, or be set to NA.",
           call. = FALSE)
       } else {
         indcovb2col <- which(names(data) == indcovb[2])
-        indcovb_used <- TRUE
+        if (is.character(data[,indcovb2col]) | is.factor(data[,indcovb2col])) indcovb_fac <- TRUE
       }
       
       if (length(indcovb) == 3) {
         if (length(which(names(data) == indcovb[3])) == 0 && indcovb[3] != "none") {
-          stop("Vector indcovb must either equal either the exact names of an
-            individual covariate across times t+1, t, and t-1, or be set to NA.",
+          stop("Vector indcovb must either equal either the exact names of an individual
+            covariate across times t+1, t, and, if historical, t-1, or be set to NA.",
             call. = FALSE)
         } else {
           indcovb1col <- which(names(data) == indcovb[3])
-          indcovb_used <- TRUE
         }
-      } else {
-        indcovb[3] <- "none"
-      }
+      } else indcovb[3] <- "none"
     }
-  } else {indcovb <- c("none", "none", "none")}
-  
-  if (indcovb_used & !random.indcovb) {
-    extra_factors <- extra_factors + 1
+  } else {
+    indcovb <- c("none", "none", "none")
+    test.indcovb <- rep(FALSE, 14)
   }
   
   if (any(!is.na(indcovc))) {
     if (length(indcovc) > 3) {
-      warning("Vector indcovc holds the exact names of an individual covariate
-        across times t+1, t, and t-1. Only the first three elements will be used.",
+      warning("Vector indcovc holds the exact names of an individual covariate across times t+1,
+        t, and, if historical, t-1. Only the first three elements will be used.\n",
         call. = FALSE)
       indcovc <- indcovc[1:3]
-      indcovc_used <- TRUE
     } else if (length(indcovc) == 1) {
-      warning("Vector indcovc requires the names of an individual covariate across
-        times t+1, t, and, if historical, t-1. Only 1 variable name was supplied,
-        so this individual covariate will not be used.", call. = FALSE)
+      warning("Vector indcovc requires the names of an individual covariate across times t+1,
+        t, and, if historical, t-1. Only 1 variable name was supplied, so this individual
+        covariate will not be used.\n", call. = FALSE)
       indcovc <- c("none", "none", "none")
+      test.indcovc <- rep(FALSE, 14)
     } 
     
     if (all(is.numeric(indcovc), na.rm = TRUE)) {
       if (all(indcovc > 0, na.rm = TRUE) & all(indcovc <= total_vars)) {
         indcovc2col <- indcovc[2]
+        if (is.character(data[,indcovc2col]) | is.factor(data[,indcovc2col])) indcovc_fac <- TRUE
         if (!is.na(indcovc[3])) indcovc1col <- indcovc[3]
-        indcovc_used <- TRUE
       }
     } else {
       if (length(which(names(data) == indcovc[2])) == 0 && indcovc[2] != "none") {
-        stop("Vector indcovc must either equal either the exact names of an
-          individual covariate across times t+1, t, and t-1, or be set to NA.",
+        stop("Vector indcovc must either equal either the exact names of an individual
+          covariate across times t+1, t, and, if historical, t-1, or be set to NA.",
           call. = FALSE)
       } else {
         indcovc2col <- which(names(data) == indcovc[2])
-        indcovc_used <- TRUE
+        if (is.character(data[,indcovc2col]) | is.factor(data[,indcovc2col])) indcovc_fac <- TRUE
       }
       
       if (length(indcovc) == 3) {
         if (length(which(names(data) == indcovc[3])) == 0 && indcovc[3] != "none") {
-          stop("Vector indcovc must either equal either the exact names of an
-            individual covariate across times t+1, t, and t-1, or be set to NA.",
+          stop("Vector indcovc must either equal either the exact names of an individual
+            covariate across times t+1, t, and, if historical, t-1, or be set to NA.",
             call. = FALSE)
         } else {
           indcovc1col <- which(names(data) == indcovc[3])
-          indcovc_used <- TRUE
         }
-      } else {
-        indcovc[3] <- "none"
-      }
+      } else indcovc[3] <- "none"
     }
-  } else {indcovc <- c("none", "none", "none")}
-  
-  if (indcovc_used & !random.indcovc) {
-    extra_factors <- extra_factors + 1
+  } else {
+    indcovc <- c("none", "none", "none")
+    test.indcovc <- rep(FALSE, 14)
   }
   
   if (!is.na(indiv)) {
     if (!is.numeric(indiv) & length(which(names(data) == indiv)) == 0) {
       stop("Variable indiv must either equal the exact name of the variable denoting
         individual identity in the dataset, or be set to NA.", call. = FALSE)
-    } else if (is.character(indiv)){
+    } else if (is.character(indiv)) {
       indivcol <- which(names(data) == indiv)
       
       if (any(is.na(data[,indivcol])) & approach == "mixed") {
-        warning("NAs in individual ID variable may cause unexpected behavior in mixed
-          model building. Please rename all individuals with unique names, avoiding NAs.",
+        warning("NA values in the individual identity variable may cause unexpected behavior in
+          mixed modeling. Please rename all individuals with unique names, avoiding NAs.\n",
           call. = FALSE)
       }
     } else if (is.numeric(indiv)) {
       if (any(indiv < 1) | any(indiv > total_vars)) {
-        stop("Unable to interpret indiv variable.", call. = FALSE)
+        stop("Unable to interpret individual identity variable.", call. = FALSE)
       } else {
         indivcol <- indiv
         indiv <- names(data)[indivcol]
       }
-    } else {
-      stop("Unable to interpret indiv variable.", call. = FALSE)
-    }
-  } else {indiv <- "none"}
+    } else stop("Unable to interpret individual identity variable.", call. = FALSE)
+  } else {
+    stop("Function modelsearch() requires an individual identity variable. If none exists in the dataset,
+      then please create and use a variable coding for row identity in the dataset.", call. = FALSE)
+  }
   
   if (!is.na(patch)) {
     if (!is.numeric(patch) & length(which(names(data) == patch)) == 0) {
@@ -1175,51 +1354,37 @@ modelsearch <- function(data, stageframe = NULL, historical = TRUE,
       patchcol <- which(names(data) == patch)
     } else if (is.numeric(patch)) {
       if (any(patch < 1) | any(patch > total_vars)) {
-        stop("Unable to interpret patch variable.", call. = FALSE)
+        stop("Unable to interpret patch identity variable.", call. = FALSE)
       } else {
-        patchcol <- patch  # Used to be names(data)[patch]
+        patchcol <- patch
         patch <- names(data)[patchcol] 
       }
-    } else {
-      stop("Unable to interpret patch variable.", call. = FALSE)
-    }
+    } else stop("Unable to interpret patch identity variable.", call. = FALSE)
   } else {patch <- "none"}
-  
-  if (patchcol > 0 & !patch.as.random) {
-    extra_factors <- extra_factors + 1
-  }
   
   if (!is.na(year)) {
     if (!is.numeric(year) & length(which(names(data) == year)) == 0) {
       stop("Variable year must either equal the exact name of the variable denoting
-        occasion t in the dataset, or be set to NA.", call. = FALSE)
+        time t in the dataset, or be set to NA.", call. = FALSE)
     } else if (is.character(year)) {
       yearcol <- which(names(data) == year)
     } else if (is.numeric(year)) {
       if (any(year < 1) | any(year > total_vars)) {
-        stop("Unable to interpret year variable.", call. = FALSE)
+        stop("Unable to interpret year (time t) identity variable.", call. = FALSE)
       } else {
-        yearcol <- year  # Used to be names(data)[year]
+        yearcol <- year
         year <- names(data)[yearcol] 
       }
-    } else {
-      stop("Unable to interpret year variable.", call. = FALSE)
-    }
+    } else stop("Unable to interpret year (time t) identity variable.", call. = FALSE)
   } else {year <- "none"}
-  
-  if (yearcol > 0 & !year.as.random) {
-    extra_factors <- extra_factors + 1
-  }
   
   if (!is.na(density)) {
     if (!is.numeric(density) & length(which(names(data) == density)) == 0) {
       stop("Variable density must either equal the exact name of the variable
-        denoting spatial density in occasion t in the dataset, or be set to NA.",
+        denoting spatial density in time t, or be set to NA.",
         call. = FALSE)
     } else if (is.character(density)) {
-      if (is.element(density, names(data))) {
-        density_used <- TRUE
-      } else {
+      if (!is.element(density, names(data))) {
         stop("Unable to interpret density variable.", call. = FALSE)
       }
     } else if (is.numeric(density)) {
@@ -1227,64 +1392,60 @@ modelsearch <- function(data, stageframe = NULL, historical = TRUE,
         stop("Unable to interpret density variable.", call. = FALSE)
       } else {
         density <- names(data)[density]
-        density_used <- TRUE
       }
-    } else {
-      stop("Unable to interpret density variable.", call. = FALSE)
-    }
-  } else {density <- "none"}
-  
-  if (density_used) {
-    extra_factors <- extra_factors + 1
+    } else stop("Unable to interpret density variable.", call. = FALSE)
+  } else {
+    density <- "none"
+    test.density <- rep(FALSE, 14)
   }
   
-  # Here we test the dataset for appropriate stage names
+  # Test for appropriate stage names
   if (!is.na(juvestimate)) {
     if (!any(is.element(stage, names(data)))) {
-      stop("Names of stage variables do not match the dataset.", call. = FALSE)}
+      stop("Stage variable names do not match variables in the dataset.",
+        call. = FALSE)
+      }
     
     stage3col <- which(names(data) == stage[1])
     stage2col <- which(names(data) == stage[2])
-    if (length(stage) == 3) {stage1col <- which(names(data) == stage[3])} else {stage1col <- 0}
+    if (length(stage) == 3) {
+      stage1col <- which(names(data) == stage[3])
+    } else {stage1col <- 0}
     
     if (!is.element(juvestimate, unique(data[,stage2col]))) {
       stop("The stage declared as juvenile via juvestimate is not recognized within
-        the stage2 variable in the dataset.", call. = FALSE)
+        the variable coding stage in time t.", call. = FALSE)
     }
     if (length(matstat) > 3 | length(matstat) == 1) {
       stop("This function requires 2 (if ahistorical) or 3 (if historical) maturity status
-        variables as input parameters if juvenile parameters are to be estimated.",
+        variables if juvenile parameters are to be estimated.",
         call. = FALSE)}
     if (all(is.numeric(matstat))) {
       if (any(matstat < 1) | any(matstat > total_vars)) {
-        stop("Maturity status variables do not match data frame.",
+        stop("Maturity status variable names do not match variables in the dataset.",
           call. = FALSE)
       } else {
         matstat <- names(data)[matstat]
       }
     }
     if (any(!is.element(matstat, names(data)))) {
-      stop("Maturity status variables must match data frame.",
+      stop("Maturity status variable names do not match variables in the dataset.",
         call. = FALSE)
     }
   }
   
-  if (!is.logical(juvsize)) {
-    stop("Option juvsize must be set to either TRUE or FALSE.", call. = FALSE)
-  }
-  
-  #Now we check whether the best-fit criterion is appropriate
+  # Check whether the best-fit criterion is appropriate
   if (!is.element(bestfit, c("aicc", "aicc&k"))) {
-    stop("bestfit must equal either 'AICc' or 'AICc&k', with the latter as the default.",
+    stop("Option bestfit must equal either 'AICc' or 'AICc&k' (the default).",
       call. = FALSE)
   }
-  #This variable will be used once dredging is done to determine best-fit models
-  used.criterion <- "AICc"
+  used.criterion <- "AICc" # Used once dredging is done to determine best-fit models
   
   if (approach != "mixed") {
     if (random.indcova | random.indcovb | random.indcovc) {
-      warning("Random covariates can only be included in mixed models. Setting
-        random.indcova, random.indcovb, and random.indcovc to FALSE.",
+      warning("Random covariates cannot be included in glms. Setting random.indcova,
+        random.indcovb, and random.indcovc to FALSE. If random covariates are
+        needed, then please set approach = 'mixed'.\n",
         call. = FALSE)
       random.indcova <- FALSE
       random.indcovb <- FALSE
@@ -1292,58 +1453,50 @@ modelsearch <- function(data, stageframe = NULL, historical = TRUE,
     }
     
     if (patch.as.random) {
-      warning("Patch can only be random in mixed models. Setting patch.as.random to FALSE.",
+      warning("Patch cannot be random in glms. If patch should be random, then
+        please set approach = 'mixed'. Setting patch.as.random to FALSE.\n",
         call. = FALSE)
       patch.as.random = FALSE
     }
     
     if (year.as.random) {
-      warning("Year can only be random in mixed models. Setting year.as.random to FALSE.",
+      warning("Year cannot be random in glms. If year should be random, then
+        please set approach = 'mixed'. Setting year.as.random to FALSE.\n",
         call. = FALSE)
       year.as.random = FALSE
     }
   }
   
-  #The next section creates the text lines needed for the main model calls, based on function input
+  # Model call creation
   formulae <- .stovokor(surv, obs, size, sizeb, sizec, repst, fec, matstat,
-    vitalrates, historical, suite, approach, is.na(juvestimate), age, indcova,
-    indcovb, indcovc, indiv, patch, year, patch.as.random, year.as.random,
-    random.indcova, random.indcovb, random.indcovc, fectime, juvsize,
-    sizeb_used, sizec_used, test.group, density, density_used, indcova_used,
-    indcovb_used, indcovc_used)
+    vitalrates, historical, suite, approach, is.na(juvestimate), juvsize, indiv,
+    patch, year, age, density, indcova, indcovb, indcovc, sizeb_used,
+    sizec_used, test.group, test.age, test.density, test.indcova, test.indcovb,
+    test.indcovc, patch.as.random, year.as.random, random.indcova,
+    random.indcovb, random.indcovc, indcova_fac, indcovb_fac, indcovc_fac,
+    fectime, size.zero, sizeb.zero, sizec.zero, jsize.zero, jsizeb.zero,
+    jsizec.zero)
   
-  if (suite == "full") {
-    alt.formulae <- .stovokor(surv, obs, size, sizeb, sizec, repst, fec,
-      matstat, vitalrates, historical, suite = "main", approach,
-      is.na(juvestimate), age, indcova, indcovb, indcovc, indiv, patch, year,
-      patch.as.random, year.as.random, random.indcova, random.indcovb,
-      random.indcovc, fectime, juvsize, sizeb_used, sizec_used, test.group,
-      density, density_used, indcova_used, indcovb_used, indcovc_used)
-  } else {
-    alt.formulae <- list(full.surv.model = NA, full.obs.model = NA, full.size.model = NA,
-      full.sizeb.model = NA, full.sizec.model = NA, full.repst.model = NA, full.fec.model = NA,
-      juv.surv.model = NA, juv.obs.model = NA, juv.size.model = NA, just.sizeb.model = NA,
-      juve.sizec.model = NA, juve.repst.model = NA, juv.matst.model = NA)
+  vars_used_pm <- formulae$main$paramnames$modelparams[which(formulae$main$paramnames$modelparams != "none")]
+  if (all(!test.group)) {
+    vars_used_pm <- vars_used_pm[which(vars_used_pm != "group2")]
+    vars_used_pm <- vars_used_pm[which(vars_used_pm != "group1")]
   }
-  
-  alt.nocovs.formulae <- .stovokor(surv, obs, size, sizeb, sizec, repst, fec,
-    matstat, vitalrates, historical, suite, approach, is.na(juvestimate), age,
-    indcova, indcovb, indcovc, indiv, patch, year, patch.as.random,
-    year.as.random, FALSE, FALSE, FALSE, fectime, juvsize,
-    sizeb_used, sizec_used, test.group, density, density_used, FALSE,
-    FALSE, FALSE)
-  
-  if (approach == "mixed") {
-    alt.glm.formulae <- .stovokor(surv, obs, size, sizeb, sizec, repst, fec,
-      matstat, vitalrates, historical, suite, "glm", is.na(juvestimate), age,
-      indcova, indcovb, indcovc, indiv, patch, year, FALSE, FALSE, FALSE, FALSE,
-      FALSE, fectime, juvsize, sizeb_used, sizec_used, test.group, density,
-      density_used, indcova_used, indcovb_used, indcovc_used)
-  } else {
-    alt.glm.formulae <- formulae
+  # These bits need to be corrected for extra_factors being an integer vector
+  if (any(test.indcova) & !random.indcova) {
+    extra_factors[which(test.indcova)] <- extra_factors[which(test.indcova)] + 1
   }
+  if (any(test.indcovb) & !random.indcovb) {
+    extra_factors[test.indcovb] <- extra_factors[test.indcovb] + 1
+  }
+  if (any(test.indcovc) & !random.indcovc) {
+    extra_factors[test.indcovc] <- extra_factors[test.indcovc] + 1
+  }
+  if (patchcol > 0 & !patch.as.random) extra_factors <- extra_factors + 1
+  if (yearcol > 0 & !year.as.random) extra_factors <- extra_factors + 1
+  if (density_used) extra_factors <- extra_factors + 1
   
-  #Now we need to create the input datasets
+  # Create the input datasets
   if (!all(is.na(censor))) {
     if (length(censor) == 1) {
       data$censor2 <- data[, which(names(data) == censor[1])]
@@ -1372,177 +1525,253 @@ modelsearch <- function(data, stageframe = NULL, historical = TRUE,
     juvindivs <- which(data[,stage2col] == juvestimate)
     adultindivs <- setdiff(c(1:length(data[,stage2col])), juvindivs)
     
-    juvsurv.data <- subset(data, data[,stage2col] == juvestimate & data[,which(names(data) == surv[2])] == 1)
-    juvsurv.ind <- length(unique(juvsurv.data[, which(names(juvsurv.data) == indiv)]))
-    juvsurv.trans <- dim(juvsurv.data)[1]
-    
-    if (suite == "full" | suite == "main" | suite == "size") {
-      if (any(is.na(juvsurv.data[, which(names(juvsurv.data) == size[2])]))) {
-        warning("NAs in size variables may cause model selection to fail.",
-          call. = FALSE)
-      }
-      
-      if (historical == TRUE) {
-        if (any(is.na(juvsurv.data[, which(names(juvsurv.data) == size[3])]))) {
-          warning("NAs in size variables may cause model selection to fail.",
-            call. = FALSE)
-        }
-      }
-    }
-    
-    if (suite == "full" | suite == "main" | suite == "rep") {
-      if (any(is.na(juvsurv.data[, which(names(juvsurv.data) == repst[2])]))) {
-        warning("NAs in reproductive status variables may cause model selection to fail.",
-          call. = FALSE)
-      }
-      
-      if (historical == TRUE) {
-        if (any(is.na(juvsurv.data[, which(names(juvsurv.data) == repst[3])]))) {
-          warning("NAs in reproductive status variables may cause model selection to fail.",
-            call. = FALSE)
-        }
-      }
-    }
-    
-    if (is.element(0, juvsurv.data$matstatus3)) {
-      warning("Function modelsearch() assumes that all juveniles either die or transition
-        to maturity within 1 year. Some individuals in this dataset appear to live
-        longer as juveniles than assumptions allow.", call. = FALSE)
-    }
-    
-    juvobs.data <- subset(juvsurv.data, juvsurv.data[, which(names(juvsurv.data) == surv[1])] == 1)
-    juvobs.ind <- length(unique(juvobs.data[, which(names(juvobs.data) == indiv)]))
-    juvobs.trans <- dim(juvobs.data)[1]
-    
-    if (formulae$full.obs.model != 1) {
-      juvsize.data <- subset(juvobs.data, juvobs.data[, which(names(juvobs.data) == obs[1])] == 1)
-      juvsize.data <- juvsize.data[which(!is.na(juvsize.data[, which(names(juvsize.data) == size[1])])),]
-      
-      if (sizeb_used) {
-        juvsizeb.data <- subset(juvobs.data, juvobs.data[, which(names(juvobs.data) == obs[1])] == 1)
-        juvsizeb.data <- juvsizeb.data[which(!is.na(juvsizeb.data[, which(names(juvsizeb.data) == sizeb[1])])),]
-      }
-      
-      if (sizec_used) {
-        juvsizec.data <- subset(juvobs.data, juvobs.data[, which(names(juvobs.data) == obs[1])] == 1)
-        juvsizec.data <- juvsizec.data[which(!is.na(juvsizec.data[, which(names(juvsizec.data) == sizec[1])])),]
-      }
-    } else {
-      juvsize.data <- juvobs.data
-      juvsize.data <- juvsize.data[which(!is.na(juvsize.data[, which(names(juvsize.data) == size[1])])),]
-      
-      if (sizeb_used) {
-        juvsizeb.data <- juvobs.data
-        juvsizeb.data <- juvsizeb.data[which(!is.na(juvsizeb.data[, which(names(juvsizeb.data) == sizeb[1])])),]
-      }
-      
-      if (sizec_used) {
-        juvsizec.data <- juvobs.data
-        juvsizec.data <- juvsizec.data[which(!is.na(juvsizec.data[, which(names(juvsizec.data) == sizec[1])])),]
-      }
-    }
-    juvsize.ind <- length(unique(juvsize.data[, which(names(juvsize.data) == indiv)]))
-    juvsize.trans <- dim(juvsize.data)[1]
-    
-    if (sizeb_used) {
-      juvsizeb.ind <- length(unique(juvsizeb.data[, which(names(juvsizeb.data) == indiv)]))
-      juvsizeb.trans <- dim(juvsizeb.data)[1]
-    }
-    if (sizec_used) {
-      juvsizec.ind <- length(unique(juvsizec.data[, which(names(juvsizec.data) == indiv)]))
-      juvsizec.trans <- dim(juvsizec.data)[1]
-    }
-    
-    juvrepst.data <- juvsize.data
-    juvrepst.ind <- length(unique(juvrepst.data[, which(names(juvrepst.data) == indiv)]))
-    juvrepst.trans <- dim(juvrepst.data)[1]
-    
-    data <- data[adultindivs,] #This line resets the main dataset to adults only
+    adult.data <- data[adultindivs,]
+    juv.data <- data[juvindivs,]
+  } else {
+    adult.data <- data
   }
   
-  surv.data <- subset(data, data[,which(names(data) == surv[2])] == 1)
+  if (is.numeric(formulae$main$full.surv.model)) {surv.global.model <- formulae$main$full.surv.model}
+  if (is.numeric(formulae$main$full.obs.model)) {obs.global.model <- formulae$main$full.obs.model}
+  if (is.numeric(formulae$main$full.size.model)) {size.global.model <- formulae$main$full.size.model}
+  if (is.numeric(formulae$main$full.sizeb.model)) {sizeb.global.model <- formulae$main$full.sizeb.model}
+  if (is.numeric(formulae$main$full.sizec.model)) {sizec.global.model <- formulae$main$full.sizec.model}
+  if (is.numeric(formulae$main$full.repst.model)) {repst.global.model <- formulae$main$full.repst.model}
+  if (is.numeric(formulae$main$full.fec.model)) {fec.global.model <- formulae$main$full.fec.model}
+  
+  if (is.numeric(formulae$main$juv.surv.model)) {juv.surv.global.model <- formulae$main$juv.surv.model}
+  if (is.numeric(formulae$main$juv.obs.model)) {juv.obs.global.model <- formulae$main$juv.obs.model}
+  if (is.numeric(formulae$main$juv.size.model)) {juv.size.global.model <- formulae$main$juv.size.model}
+  if (is.numeric(formulae$main$juv.sizeb.model)) {juv.sizeb.global.model <- formulae$main$juv.sizeb.model}
+  if (is.numeric(formulae$main$juv.sizec.model)) {juv.sizec.global.model <- formulae$main$juv.sizec.model}
+  if (is.numeric(formulae$main$juv.repst.model)) {juv.repst.global.model <- formulae$main$juv.repst.model}
+  if (is.numeric(formulae$main$juv.matst.model)) {juv.matst.global.model <- formulae$main$juv.matst.model}
+  
+  if (is.character(formulae$main$juv.matst.model)) {
+    if (formulae$main$juv.matst.model == "none") {
+      juv.matst.global.model <- 1
+    }
+  }
+  
+  surv.table <- obs.table <- size.table <- sizeb.table <- sizec.table <- repst.table <- NA
+  juvsurv.table <- juvobs.table <- juvsize.table <- juvsizeb.table <- juvsizec.table <- NA
+  fec.table <- juvrepst.table <- juvmatst.table <- NA
+  
+  surv.bf <- obs.bf <- size.bf <- sizeb.bf <- sizec.bf <- repst.bf <- fec.bf <- NA
+  juvsurv.bf <- juvobs.bf <- juvsize.bf <- juvsizeb.bf <- juvsizec.bf <- juvrepst.bf <- juvmatst.bf <- NA
+  
+  # Corrections to model structure, used to run global models
+  correction.indiv <- c(gsub("individ", indiv, " + (1 | individ)", fixed = TRUE),
+    gsub("individ", indiv, "(1 | individ)", fixed = TRUE),
+    gsub("individ", indiv, " + individ", fixed = TRUE),
+    gsub("individ", indiv, "individ", fixed = TRUE))
+  
+  correction.year <- c(gsub("yr", year, " + (1 | yr)", fixed = TRUE),
+    gsub("yr", year, "(1 | yr)", fixed = TRUE),
+    gsub("yr", year, " + yr", fixed = TRUE),
+    gsub("yr", year, "yr", fixed = TRUE))
+  
+  correction.patch <- c(gsub("patch", patch, " + (1 | patch)", fixed = TRUE),
+    gsub("patch", patch, "(1 | patch)", fixed = TRUE),
+    gsub("patch", patch, " + patch", fixed = TRUE),
+    gsub("patch", patch, "patch", fixed = TRUE))
+  
+  # Global model builds
+  # Survival probability
+  surv.data <- subset(adult.data, adult.data[,which(names(adult.data) == surv[2])] == 1)
+  surv.data <- surv.data[,vars_used_pm]
+  surv.data <- surv.data[complete.cases(surv.data),]
+  
   surv.ind <- length(unique(surv.data[, which(names(surv.data) == indiv)]))
   surv.trans <- dim(surv.data)[1]
   
-  if(any(!suppressWarnings(!is.na(as.numeric(as.character(surv.data[, which(names(surv.data) == size[1])])))))) {
-    warning("Modelsearch(), flefko3(), flefko2(), and aflefko2() are made to work
-      with numeric size variables. Omitting size or using categorical size variables may
-      result in errors or unexpected behavior.", call. = FALSE)
+  surv.uns <- unique(surv.data[,which(names(surv.data) == surv[1])])
+  
+  if (length(surv.uns) == 1) {
+    warning("Survival to time t+1 appears to be constant, and so will be set to constant.\n",
+      call. = FALSE)
+    formulae$main$full.surv.model <- surv.uns[1]
+    formulae$alternate$full.surv.model <- surv.uns[1]
+    formulae$glm.alternate$full.surv.model <- surv.uns[1]
+    formulae$nocovs.alternate$full.surv.model <- surv.uns[1]
   }
-  if (suite == "full" | suite == "main" | suite == "size") {
-    if (any(is.na(surv.data[, which(names(surv.data) == size[2])]))) {
-      warning("NAs in size variables may cause model selection to fail.",
-        call. = FALSE)
-    }
-    if (sizeb_used) {
-      if (any(is.na(surv.data[, which(names(surv.data) == sizeb[2])]))) {
-        warning("NAs in size variables may cause model selection to fail.",
-          call. = FALSE)
-      }
-    }
-    if (sizec_used) {
-      if (any(is.na(surv.data[, which(names(surv.data) == sizec[2])]))) {
-        warning("NAs in size variables may cause model selection to fail.",
-          call. = FALSE)
-      }
-    }
+  
+  
+  
+  
+  
+  
+  
+  if (!is.numeric(formulae$main$full.surv.model) &
+      nchar(formulae$main$full.surv.model) > 1) {
     
-    if (historical == TRUE) {
-      if (any(is.na(surv.data[, which(names(surv.data) == size[3])]))) {
-        warning("NAs in size variables may cause model selection to fail.",
+    if(any(!suppressWarnings(!is.na(as.numeric(as.character(surv.data[, 
+          which(names(surv.data) == size[1])])))))) {
+      warning("Function modelsearch() and function-based MPM estimation functions work 
+        only with numeric size variables. Omitting size or using categorical size 
+        variables mayresult in errors or unexpected behavior.\n", call. = FALSE)
+    }
+    if (any(suite == "full") | any(suite == "main") | any(suite == "size")) {
+      if (any(is.na(surv.data[, which(names(surv.data) == size[2])]))) {
+        warning("NA values in size variables may cause model selection to fail.\n",
           call. = FALSE)
       }
       if (sizeb_used) {
-        if (any(is.na(surv.data[, which(names(surv.data) == sizeb[3])]))) {
-          warning("NAs in size variables may cause model selection to fail.",
+        if (any(is.na(surv.data[, which(names(surv.data) == sizeb[2])]))) {
+          warning("NA values in size variables may cause model selection to fail.\n",
             call. = FALSE)
         }
       }
       if (sizec_used) {
-        if (any(is.na(surv.data[, which(names(surv.data) == sizec[3])]))) {
-          warning("NAs in size variables may cause model selection to fail.",
+        if (any(is.na(surv.data[, which(names(surv.data) == sizec[2])]))) {
+          warning("NA values in size variables may cause model selection to fail.\n",
+            call. = FALSE)
+        }
+      }
+      
+      if (historical == TRUE) {
+        if (any(is.na(surv.data[, which(names(surv.data) == size[3])]))) {
+          warning("NA values in size variables may cause model selection to fail.\n",
+            call. = FALSE)
+        }
+        if (sizeb_used) {
+          if (any(is.na(surv.data[, which(names(surv.data) == sizeb[3])]))) {
+            warning("NA values in size variables may cause model selection to fail.\n",
+              call. = FALSE)
+          }
+        }
+        if (sizec_used) {
+          if (any(is.na(surv.data[, which(names(surv.data) == sizec[3])]))) {
+            warning("NA values in size variables may cause model selection to fail.\n",
+              call. = FALSE)
+          }
+        }
+      }
+    }
+    if (any(suite == "full") | any(suite == "main") | any(suite == "rep")) {
+      if (any(is.na(surv.data[, which(names(surv.data) == repst[2])]))) {
+        warning("NA values in reproductive status variables may cause model selection to fail.\n",
+          call. = FALSE)
+      }
+      
+      if (historical == TRUE) {
+        if (any(is.na(surv.data[, which(names(surv.data) == repst[3])]))) {
+          warning("NA values in reproductive status variables may cause model selection to fail.\n",
             call. = FALSE)
         }
       }
     }
-  }
-  if (suite == "full" | suite == "main" | suite == "rep") {
-    if (any(is.na(surv.data[, which(names(surv.data) == repst[2])]))) {
-      warning("NAs in reproductive status variables may cause model selection to fail.",
-        call. = FALSE)
-    }
     
-    if (historical == TRUE) {
-      if (any(is.na(surv.data[, which(names(surv.data) == repst[3])]))) {
-        warning("NAs in reproductive status variables may cause model selection to fail.",
-          call. = FALSE)
-      }
+    chosen_var <- which(names(surv.data) == surv[1])
+    
+    if (is.element(0, surv.data[, chosen_var]) & is.element(1, surv.data[, chosen_var])) {
+      
+      nosurvterms = c(formulae$main$total_terms[1], formulae$alternate$total_terms[1],
+        formulae$glm.alternate$total_terms[1], formulae$nocovs.alternate$total_terms[1])
+      
+      surv.global.list <- .headmaster_ritual(vrate = 1, approach = approach,
+        dist = "binom", zero = FALSE, truncz = FALSE, quiet = quiet,
+        quiet.mil = quiet.mileposts, usedformula = formulae$main$full.surv.model,
+        subdata = surv.data, vind = surv.ind, vtrans = surv.trans,
+        suite = suite[1], global.only = global.only, criterion = used.criterion,
+        bestfit = bestfit, correction.patch, correction.year, correction.indiv,
+        alt_formula = formulae$alternate$full.surv.model,
+        alt_nocovsformula = formulae$nocovs.alternate$full.surv.model,
+        alt_glmformula = formulae$glm.alternate$full.surv.model,
+        extra_fac = extra_factors[1], noterms = nosurvterms)
+      
+      surv.global.model <- surv.global.list$model
+      surv.ind <- surv.global.list$ind
+      surv.trans <- surv.global.list$trans
+      surv.table <- surv.global.list$table
+      surv.bf <- surv.global.list$bf_model
+      
+      surv.accuracy <- .accu_predict(bestfitmodel = surv.bf,
+        subdata = surv.data, param = surv[1], quiet = quiet, check = accuracy)
+      
+    } else if (is.element(0, surv.data[, chosen_var])) {
+      if (!quiet) {message("\nSurvival status is constant so will not model it.\n")}
+      formulae$main$full.surv.model <- 1
+      surv.global.model <- surv.bf <- 1
+      surv.ind <- surv.trans <- 0
+      surv.accuracy <- 1
+    } else {
+      if (!quiet) {message("\nSurvival status is constant so will not model it.\n")}
+      formulae$main$full.surv.model <- 1
+      surv.global.model <- surv.bf <- surv.ind <- surv.trans <- 0
+      surv.accuracy <- 1
     }
+  } else {
+    surv.global.model <- surv.bf <- 1
+    surv.ind <- surv.trans <- 0
+    surv.accuracy <- NA
   }
   
-  surv.uns <- unique(surv.data[,which(names(surv.data) == surv[1])])
-  if (length(surv.uns) == 1) {
-    warning("Survival to occasion t+1 appears to be constant, and so will be set to a constant.",
-      call. = FALSE)
-    formulae$full.surv.model <- surv.uns[1]
-    alt.formulae$full.surv.model <- surv.uns[1]
-  }
-  
+  # Observation status
   obs.data <- subset(surv.data, surv.data[, which(names(surv.data) == surv[1])] == 1)
+  chosen_var <- which(names(obs.data) == obs[1])
   obs.ind <- length(unique(obs.data[, which(names(obs.data) == indiv)]))
   obs.trans <- dim(obs.data)[1]
-  
-  if (formulae$full.obs.model != 1) {
+    
+  if (formulae$main$full.obs.model != 1) {
     obs.uns <- unique(obs.data[,which(names(obs.data) == obs[1])])
     if (length(obs.uns) == 1) {
-      warning("Observation in occasion t+1 appears to be constant, and so will be
-        set to a constant.", call. = FALSE)
-    formulae$full.obs.model <- obs.uns[1]
-    alt.formulae$full.obs.model <- obs.uns[1]
+      warning("Observation in time t+1 appears to be constant, and so will be set to constant.\n",
+        call. = FALSE)
+      formulae$main$full.obs.model <- obs.uns[1]
+      formulae$alternate$full.obs.model <- obs.uns[1]
+      formulae$glm.alternate$full.obs.model <- obs.uns[1]
+      formulae$nocovs.alternate$full.obs.model <- obs.uns[1]
     }
   }
   
-  if (formulae$full.obs.model != 1) {
+  if (!is.numeric(formulae$main$full.obs.model) & nchar(formulae$main$full.obs.model) > 1) {
+    if (is.element(0, obs.data[, chosen_var]) & is.element(1, obs.data[, chosen_var]) &
+        nchar(formulae$main$full.obs.model) > 1) {
+      
+      noobsterms = c(formulae$main$total_terms[2], formulae$alternate$total_terms[2],
+        formulae$glm.alternate$total_terms[2], formulae$nocovs.alternate$total_terms[2])
+      
+      obs.global.list <- .headmaster_ritual(vrate = 2, approach = approach, 
+        dist = "binom", zero = FALSE, truncz = FALSE, quiet = quiet,
+        quiet.mil = quiet.mileposts, usedformula = formulae$main$full.obs.model,
+        subdata = obs.data, vind = obs.ind, vtrans = obs.trans,
+        suite = suite[2], global.only = global.only, criterion = used.criterion,
+        bestfit = bestfit, correction.patch, correction.year, correction.indiv,
+        alt_formula = formulae$alternate$full.obs.model,
+        alt_nocovsformula = formulae$nocovs.alternate$full.obs.model,
+        alt_glmformula = formulae$glm.alternate$full.obs.model,
+        extra_fac = extra_factors[2], noterms = noobsterms)
+      
+      obs.global.model <- obs.global.list$model
+      obs.ind <- obs.global.list$ind
+      obs.trans <- obs.global.list$trans
+      obs.table <- obs.global.list$table
+      obs.bf <- obs.global.list$bf_model
+      
+      obs.accuracy <- .accu_predict(bestfitmodel = obs.bf, subdata = obs.data,
+        param = obs[1], quiet = quiet, check = accuracy)
+      
+    } else if (!is.element(0, obs.data[, chosen_var])) {
+      if (!quiet) {message("\nObservation status is constant so will not model it.\n")}
+      formulae$main$full.obs.model <- 1
+      obs.global.model <- obs.bf <- 1
+      obs.ind <- obs.trans <- 0
+      obs.accuracy <- 1
+    } else {
+      if (!quiet) {message("\nObservation status is constant so will not model it.\n")}
+      formulae$main$full.obs.model <- 1
+      obs.global.model <- obs.bf <- obs.ind <- obs.trans <- 0
+      obs.accuracy <- 1
+    }
+  } else {
+    obs.global.model <- obs.bf <- 1
+    obs.ind <- obs.trans <- 0
+    obs.accuracy <- NA
+  }
+  
+  # Primary size
+  if (formulae$main$full.obs.model != 1) {
     size.data <- subset(obs.data, obs.data[, which(names(obs.data) == obs[1])] == 1)
     size.data <- size.data[which(!is.na(size.data[, which(names(size.data) == size[1])])),]
     
@@ -1570,65 +1799,268 @@ modelsearch <- function(data, stageframe = NULL, historical = TRUE,
   size.ind <- length(unique(size.data[, which(names(size.data) == indiv)]))
   size.trans <- dim(size.data)[1]
   
+  if (formulae$main$full.size.model != 1) {
+    size.uns <- unique(size.data[,which(names(size.data) == size[1])])
+    if (length(size.uns) == 1) {
+      warning("Primary size in time t+1 appears to be constant, and so will be set to constant.\n",
+        call. = FALSE)
+      formulae$main$full.size.model <- size.uns[1]
+      formulae$alternate$full.size.model <- size.uns[1]
+      formulae$glm.alternate$full.size.model <- size.uns[1]
+      formulae$nocovs.alternate$full.size.model <- size.uns[1]
+    }
+  }
+  
+  if (!is.numeric(formulae$main$full.size.model)) {
+    if (sizedist == "poisson" | sizedist == "negbin") {
+      if (any(size.data[, which(names(size.data) == size[1])] != 
+          round(size.data[, which(names(size.data) == size[1])]))) {
+        stop("Primary size variables must be composed only of integers for the Poisson
+          or negative binomial distributions to be used.", call. = FALSE)
+      }
+    } else if (sizedist == "gamma") {
+      if (any(size.data[, which(names(size.data) == size[1])] < 0, na.rm = TRUE)) {
+        stop("Primary size variables must be non-negative for the gamma distribution to be used.",
+          call. = FALSE)
+      }
+    }
+  }
+    
+  if (!is.numeric(formulae$main$full.size.model) & nchar(formulae$main$full.size.model) > 1) {
+    nosizeterms = c(formulae$main$total_terms[3], formulae$alternate$total_terms[3],
+      formulae$glm.alternate$total_terms[3], formulae$nocovs.alternate$total_terms[3])
+      
+    size.global.list <- .headmaster_ritual(vrate = 3, approach = approach, 
+      dist = sizedist, zero = size.zero, truncz = size.trunc, quiet = quiet,
+      quiet.mil = quiet.mileposts, usedformula = formulae$main$full.size.model,
+      subdata = size.data, vind = size.ind, vtrans = size.trans,
+      suite = suite[3], global.only = global.only, criterion = used.criterion,
+      bestfit = bestfit, correction.patch, correction.year, correction.indiv,
+      alt_formula = formulae$alternate$full.size.model,
+      alt_nocovsformula = formulae$nocovs.alternate$full.size.model,
+      alt_glmformula = formulae$glm.alternate$full.size.model,
+      extra_fac = extra_factors[3], noterms = nosizeterms, null_model = TRUE)
+    
+    size.global.model <- size.global.list$model
+    size.ind <- size.global.list$ind
+    size.trans <- size.global.list$trans
+    size.table <- size.global.list$table
+    size.bf <- size.global.list$bf_model
+    size.null <- size.global.list$null_model
+    
+    size.accuracy <- .accu_predict(bestfitmodel = size.bf, subdata = size.data,
+      param = size[1], style = 2, nullmodel = size.null, dist = sizedist,
+      trunc = size.trunc, approach = approach, quiet = quiet, check = accuracy)
+    
+  } else {
+    size.global.model <- size.bf <- 1
+    size.ind <- size.trans <- 0
+    size.accuracy <- NA
+  }
+  
+  # Secondary size
   if (sizeb_used) {
     sizeb.ind <- length(unique(sizeb.data[, which(names(sizeb.data) == indiv)]))
     sizeb.trans <- dim(sizeb.data)[1]
+    
+    if (formulae$main$full.sizeb.model != 1) {
+      sizeb.uns <- unique(sizeb.data[,which(names(sizeb.data) == sizeb[1])])
+      if (length(sizeb.uns) == 1) {
+        warning("Secondary size in time t+1 appears to be constant, and so will be set to constant.\n",
+          call. = FALSE)
+        formulae$main$full.sizeb.model <- sizeb.uns[1]
+        formulae$alternate$full.sizeb.model <- sizeb.uns[1]
+        formulae$glm.alternate$full.sizeb.model <- sizeb.uns[1]
+        formulae$nocovs.alternate$full.sizeb.model <- sizeb.uns[1]
+      }
+    }
+    
+    if (!is.numeric(formulae$main$full.sizeb.model)) {
+      if (sizebdist == "poisson" | sizebdist == "negbin") {
+        if (any(sizeb.data[, which(names(sizeb.data) == sizeb[1])] != 
+            round(sizeb.data[, which(names(sizeb.data) == sizeb[1])]))) {
+          stop("Secondary size variables must be composed only of integers for the Poisson
+            or negative binomial distributions to be used.", call. = FALSE)
+        }
+      } else if (sizebdist == "gamma") {
+        if (any(sizeb.data[, which(names(sizeb.data) == sizeb[1])] < 0, na.rm = TRUE)) {
+          stop("Secondary size variables must be non-negative for the gamma distribution to be used.",
+            call. = FALSE)
+        }
+      }
+    }
   }
+  
+  if (sizeb_used & !is.numeric(formulae$main$full.sizeb.model) & nchar(formulae$main$full.sizeb.model) > 1) {
+    nosizebterms = c(formulae$main$total_terms[4], formulae$alternate$total_terms[4],
+      formulae$glm.alternate$total_terms[4], formulae$nocovs.alternate$total_terms[4])
+      
+    sizeb.global.list <- .headmaster_ritual(vrate = 10, approach = approach, 
+      dist = sizebdist, zero = sizeb.zero, truncz = sizeb.trunc, quiet = quiet,
+      quiet.mil = quiet.mileposts, usedformula = formulae$main$full.sizeb.model,
+      subdata = sizeb.data, vind = sizeb.ind, vtrans = sizeb.trans,
+      suite = suite[4], global.only = global.only, criterion = used.criterion,
+      bestfit = bestfit, correction.patch, correction.year, correction.indiv,
+      alt_formula = formulae$alternate$full.sizeb.model,
+      alt_nocovsformula = formulae$nocovs.alternate$full.sizeb.model,
+      alt_glmformula = formulae$glm.alternate$full.sizeb.model,
+      extra_fac = extra_factors[4], noterms = nosizebterms, null_model = TRUE)
+    
+    sizeb.global.model <- sizeb.global.list$model
+    sizeb.ind <- sizeb.global.list$ind
+    sizeb.trans <- sizeb.global.list$trans
+    sizeb.table <- sizeb.global.list$table
+    sizeb.bf <- sizeb.global.list$bf_model
+    sizeb.null <- sizeb.global.list$null_model
+    
+    sizeb.accuracy <- .accu_predict(bestfitmodel = sizeb.bf, subdata = sizeb.data,
+      param = sizeb[1], style = 2, nullmodel = sizeb.null, dist = sizebdist,
+      trunc = sizeb.trunc, approach = approach, quiet = quiet, check = accuracy)
+    
+  } else {
+    sizeb.global.model <- sizeb.bf <- 1
+    sizeb.ind <- sizeb.trans <- 0
+    sizeb.accuracy <- NA
+  }
+  
+  # Tertiary size
   if (sizec_used) {
     sizec.ind <- length(unique(sizec.data[, which(names(sizec.data) == indiv)]))
     sizec.trans <- dim(sizec.data)[1]
-  }
-  
-  if (formulae$full.size.model != 1) {
-    size.uns <- unique(size.data[,which(names(size.data) == size[1])])
-    if (length(size.uns) == 1) {
-      warning("Size in occasion t+1 appears to be constant, and so will be set to a constant.",
-        call. = FALSE)
-    formulae$full.size.model <- size.uns[1]
-    alt.formulae$full.size.model <- size.uns[1]
+    
+    if (formulae$main$full.sizec.model != 1) {
+      sizec.uns <- unique(sizec.data[,which(names(sizec.data) == sizec[1])])
+      if (length(sizec.uns) == 1) {
+        warning("Tertiary size in time t+1 appears to be constant, and so will be set to constant.\n",
+          call. = FALSE)
+        formulae$main$full.sizec.model <- sizec.uns[1]
+        formulae$alternate$full.sizec.model <- sizec.uns[1]
+        formulae$glm.alternate$full.sizec.model <- sizec.uns[1]
+        formulae$nocovs.alternate$full.sizec.model <- sizec.uns[1]
+      }
+    }
+    
+    if (!is.numeric(formulae$main$full.sizec.model)) {
+      if (sizecdist == "poisson" | sizecdist == "negbin") {
+        if (any(sizec.data[, which(names(sizec.data) == sizec[1])] != 
+            round(sizec.data[, which(names(sizec.data) == sizec[1])]))) {
+          stop("Tertiary size variables must be composed only of integers for the Poisson
+            or negative binomial distributions to be used.", call. = FALSE)
+        }
+      } else if (sizecdist == "gamma") {
+        if (any(sizec.data[, which(names(sizec.data) == sizec[1])] < 0, na.rm = TRUE)) {
+          stop("Tertiary size variables must be non-negative for the gamma distribution to be used.",
+            call. = FALSE)
+        }
+      }
     }
   }
   
-  if (formulae$full.sizeb.model != 1 & sizeb_used) {
-    sizeb.uns <- unique(sizeb.data[,which(names(sizeb.data) == sizeb[1])])
-    if (length(sizeb.uns) == 1) {
-      warning("Sizeb in occasion t+1 appears to be constant, and so will be set to a constant.",
-        call. = FALSE)
-    formulae$full.sizeb.model <- sizeb.uns[1]
-    alt.formulae$full.sizeb.model <- sizeb.uns[1]
-    }
+  if (sizec_used & !is.numeric(formulae$main$full.sizec.model) & nchar(formulae$main$full.sizec.model) > 1) {
+    nosizecterms = c(formulae$main$total_terms[5], formulae$alternate$total_terms[5],
+      formulae$glm.alternate$total_terms[5], formulae$nocovs.alternate$total_terms[5])
+      
+    sizec.global.list <- .headmaster_ritual(vrate = 11, approach = approach, 
+      dist = sizecdist, zero = sizec.zero, truncz = sizec.trunc, quiet = quiet,
+      quiet.mil = quiet.mileposts, usedformula = formulae$main$full.sizec.model,
+      subdata = sizec.data, vind = sizec.ind, vtrans = sizec.trans,
+      suite = suite[5], global.only = global.only, criterion = used.criterion,
+      bestfit = bestfit, correction.patch, correction.year, correction.indiv,
+      alt_formula = formulae$alternate$full.sizec.model,
+      alt_nocovsformula = formulae$nocovs.alternate$full.sizec.model,
+      alt_glmformula = formulae$glm.alternate$full.sizec.model,
+      extra_fac = extra_factors[5], noterms = nosizecterms, null_model = TRUE)
+    
+    sizec.global.model <- sizec.global.list$model
+    sizec.ind <- sizec.global.list$ind
+    sizec.trans <- sizec.global.list$trans
+    sizec.table <- sizec.global.list$table
+    sizec.bf <- sizec.global.list$bf_model
+    sizec.null <- sizec.global.list$null_model
+    
+    sizec.accuracy <- .accu_predict(bestfitmodel = sizec.bf, subdata = sizec.data,
+      param = sizec[1], style = 2, nullmodel = sizec.null, dist = sizecdist,
+      trunc = sizec.trunc, approach = approach, quiet = quiet, check = accuracy)
+    
+  } else {
+    sizec.global.model <- sizec.bf <- 1
+    sizec.ind <- sizec.trans <- 0
+    sizec.accuracy <- NA
   }
   
-  if (formulae$full.sizec.model != 1 & sizec_used) {
-    sizec.uns <- unique(sizec.data[,which(names(sizec.data) == sizec[1])])
-    if (length(sizec.uns) == 1) {
-      warning("Sizec in occasion t+1 appears to be constant, and so will be set to a constant.",
-        call. = FALSE)
-    formulae$full.sizec.model <- sizec.uns[1]
-    alt.formulae$full.sizec.model <- sizec.uns[1]
-    }
-  }
-  
+  # Reproductive status
   repst.data <- size.data
   repst.ind <- length(unique(repst.data[, which(names(repst.data) == indiv)]))
   repst.trans <- dim(repst.data)[1]
   
-  if (formulae$full.repst.model != 1) {
+  if (formulae$main$full.repst.model != 1) {
     repst.uns <- unique(repst.data[,which(names(repst.data) == repst[1])])
     if (length(repst.uns) == 1) {
-      warning("Reproductive status in occasion t+1 appears to be constant, and so will
-        be set to a constant.", call. = FALSE)
-      formulae$full.repst.model <- repst.uns[1]
-      alt.formulae$full.repst.model <- repst.uns[1]
+      warning("Reproductive status in time t+1 appears to be constant, and so will be set to constant.\n",
+        call. = FALSE)
+      formulae$main$full.repst.model <- repst.uns[1]
+      formulae$alternate$full.repst.model <- repst.uns[1]
+      formulae$glm.alternate$full.repst.model <- repst.uns[1]
+      formulae$nocovs.alternate$full.repst.model <- repst.uns[1]
     }
   }
   
-  if (formulae$full.repst.model != 1) {
+  if (!is.numeric(formulae$main$full.repst.model) & nchar(formulae$main$full.repst.model) > 1) {
+    chosen_var <- which(names(repst.data) == repst[1])
+    if (is.element(0, repst.data[, chosen_var]) & is.element(1, repst.data[, chosen_var])) {
+      
+      norepstterms = c(formulae$main$total_terms[6], formulae$alternate$total_terms[6],
+        formulae$glm.alternate$total_terms[6], formulae$nocovs.alternate$total_terms[6])
+      
+      repst.global.list <- .headmaster_ritual(vrate = 4, approach = approach, 
+        dist = "binom", zero = FALSE, truncz = FALSE, quiet = quiet,
+        quiet.mil = quiet.mileposts, usedformula = formulae$main$full.repst.model,
+        subdata = repst.data, vind = repst.ind, vtrans = repst.trans,
+        suite = suite[6], global.only = global.only, criterion = used.criterion,
+        bestfit = bestfit, correction.patch, correction.year, correction.indiv,
+        alt_formula = formulae$alternate$full.repst.model,
+        alt_nocovsformula = formulae$nocovs.alternate$full.repst.model,
+        alt_glmformula = formulae$glm.alternate$full.repst.model,
+        extra_fac = extra_factors[6], noterms = norepstterms)
+      
+      repst.global.model <- repst.global.list$model
+      repst.ind <- repst.global.list$ind
+      repst.trans <- repst.global.list$trans
+      repst.table <- repst.global.list$table
+      repst.bf <- repst.global.list$bf_model
+      
+      repst.accuracy <- .accu_predict(bestfitmodel = repst.bf,
+        subdata = repst.data, param = repst[1], quiet = quiet, check = accuracy)
+      
+    } else if (!is.element(0, repst.data[, chosen_var])) {
+      if (!quiet) {
+        message("\nReproductive status is constant so will not model it.\n")
+      }
+      formulae$main$full.repst.model <- 1
+      repst.global.model <- repst.bf <- 1
+      repst.ind <- repst.trans <- 0
+      repst.accuracy <- 1
+    } else {
+      if (!quiet) {
+        message("\nReproductive status is constant so will not model it.\n")
+      }
+      formulae$main$full.repst.model <- 1
+      repst.global.model <- repst.bf <- repst.ind <- repst.trans <- 0
+      repst.accuracy <- 1
+    }
+  } else {
+    repst.global.model <- repst.bf <- 1
+    repst.ind <- repst.trans <- 0
+    repst.accuracy <- NA
+  }
+  
+  # Fecundity
+  if (formulae$main$full.repst.model != 1) {
     if (fectime == 2) {
-      fec.data <- subset(surv.data, surv.data[, which(names(repst.data) == repst[2])] == 1)
+      fec.data <- subset(surv.data, surv.data[, which(names(surv.data) == repst[2])] == 1)
       fec.data <- fec.data[which(!is.na(fec.data[, which(names(fec.data) == fec[2])])),]
     } else if (fectime == 3) {
-      fec.data <- subset(surv.data, surv.data[, which(names(repst.data) == repst[1])] == 1)
+      fec.data <- subset(surv.data, surv.data[, which(names(surv.data) == repst[1])] == 1)
       fec.data <- fec.data[which(!is.na(fec.data[, which(names(fec.data) == fec[1])])),]
     }
   } else {
@@ -1638,11 +2070,30 @@ modelsearch <- function(data, stageframe = NULL, historical = TRUE,
     } else if (fectime == 3) {
       fec.data <- fec.data[which(!is.na(fec.data[, which(names(fec.data) == fec[1])])),]
     }
+    
   }
   fec.ind <- length(unique(fec.data[, which(names(fec.data) == indiv)]))
   fec.trans <- dim(fec.data)[1]
   
-  if (formulae$full.fec.model != 1) {
+  if (formulae$main$full.fec.model != 1) {
+    if (!is.numeric(formulae$main$full.fec.model)) {
+      if (is.element(fecdist, c("poisson", "negbin"))) {
+        if (any(fec.data[, usedfec] != round(fec.data[, usedfec]))) {
+          stop("Fecundity variables must be composed only of integers for the Poisson
+            or negative binomial distributions to be used.", call. = FALSE)
+        }
+      } else if (fecdist == "gamma" & any(fec.data[, usedfec] < 0, na.rm = TRUE)) {
+        stop("Fecundity variables must be non-negative for the gamma distribution to be used.",
+          call. = FALSE)
+      }
+    }
+    if (is.element("fec", vitalrates)) {
+      if (fectime == 2) {
+        usedfec <- which(names(fec.data) == fec[2])
+      } else if (fectime == 3) {
+        usedfec <- which(names(fec.data) == fec[1])
+      }
+    }
     if (fectime == 2) {
       fec.uns <- unique(fec.data[,which(names(fec.data) == fec[2])])
     } else {
@@ -1650,424 +2101,36 @@ modelsearch <- function(data, stageframe = NULL, historical = TRUE,
     }
     
     if (length(fec.uns) == 1) {
-      warning("Fecundity appears to be constant, and so will be set to a constant.",
+      warning("Fecundity appears to be constant, and so will be set to constant.\n",
         call. = FALSE)
-      formulae$full.fec.model <- fec.uns[1]
-      alt.formulae$full.fec.model <- fec.uns[1]
+      formulae$main$full.fec.model <- fec.uns[1]
+      formulae$alternate$full.fec.model <- fec.uns[1]
+      formulae$glm.alternate$full.fec.model <- fec.uns[1]
+      formulae$nocovs.alternate$full.fec.model <- fec.uns[1]
     }
   }
   
-  #Now we check for exceptions to size and fecundity in the dataset
-  if (!is.numeric(formulae$full.size.model)) {
-    if (sizedist == "poisson" | sizedist == "negbin") {
-      if (any(size.data[, which(names(size.data) == size[1])] != 
-          round(size.data[, which(names(size.data) == size[1])]))) {
-        stop("Size variables must be composed only of integers for the Poisson or
-          negative binomial distributions to be used.", call. = FALSE)
-      }
+  if (!is.numeric(formulae$main$full.fec.model) & nchar(formulae$main$full.fec.model) > 1) {
+    nofecterms = c(formulae$main$total_terms[7], formulae$alternate$total_terms[7],
+      formulae$glm.alternate$total_terms[7], formulae$nocovs.alternate$total_terms[7])
       
-      if (!is.na(juvestimate)) {
-        if (any(juvsize.data[, which(names(juvsize.data) == size[1])] != 
-            round(juvsize.data[, which(names(juvsize.data) == size[1])]))) {
-          stop("Size variables must be composed only of integers for the Poisson or
-            negative binomial distributions to be used.", call. = FALSE)
-        }
-      }
-    }
-  } else if (sizedist == "gamma") {
-    if (any(size.data[, which(names(size.data) == size[1])] < 0, na.rm = TRUE)) {
-      stop("Size variables must be non-negative for the gamma distribution to be used.",
-        call. = FALSE)
-    }
-    
-    if (!is.na(juvestimate)) {
-      if (any(juvsize.data[, which(names(juvsize.data) == size[1])]  < 0, na.rm = TRUE)) {
-        stop("Size variables must be non-negative for the gamma distribution to be used.",
-          call. = FALSE)
-      }
-    }
-  }
-    
-  if (!is.numeric(formulae$full.sizeb.model) & sizeb_used) {
-    if (sizebdist == "poisson" | sizebdist == "negbin") {
-      if (any(sizeb.data[, which(names(sizeb.data) == sizeb[1])] != 
-          round(sizeb.data[, which(names(sizeb.data) == sizeb[1])]))) {
-        stop("Secondary size variables must be composed only of integers for the Poisson
-          or negative binomial distributions to be used.", call. = FALSE)
-      }
-      
-      if (!is.na(juvestimate)) {
-        if (any(juvsizeb.data[, which(names(juvsizeb.data) == sizeb[1])] != 
-            round(juvsizeb.data[, which(names(juvsizeb.data) == sizeb[1])]))) {
-          stop("Secondary size variables must be composed only of integers for the Poisson
-            or negative binomial distributions to be used.", call. = FALSE)
-        }
-      }
-    }
-  } else if (sizebdist == "gamma" & sizeb_used) {
-    if (any(sizeb.data[, which(names(sizeb.data) == sizeb[1])] < 0, na.rm = TRUE)) {
-      stop("Secondary size variables must be non-negative for the gamma distribution to be used.",
-        call. = FALSE)
-    }
-    
-    if (!is.na(juvestimate)) {
-      if (any(juvsizeb.data[, which(names(juvsizeb.data) == sizeb[1])]  < 0, na.rm = TRUE)) {
-        stop("Secondary size variables must be non-negative for the gamma distribution to be used.",
-          call. = FALSE)
-      }
-    }
-  }
-  
-  if (!is.numeric(formulae$full.sizec.model) & sizec_used) {
-    if (sizecdist == "poisson" | sizecdist == "negbin") {
-      if (any(sizec.data[, which(names(sizec.data) == sizec[1])] != 
-          round(sizec.data[, which(names(sizec.data) == sizec[1])]))) {
-        stop("Tertiary size variables must be composed only of integers for the Poisson
-          or negative binomial distributions to be used.", call. = FALSE)
-      }
-      
-      if (!is.na(juvestimate)) {
-        if (any(juvsizec.data[, which(names(juvsizec.data) == sizec[1])] != 
-            round(juvsizec.data[, which(names(juvsizec.data) == sizec[1])]))) {
-          stop("Tertiary size variables must be composed only of integers for the Poisson
-            or negative binomial distributions to be used.", call. = FALSE)
-        }
-      }
-    }
-  } else if (sizecdist == "gamma" & sizec_used) {
-    if (any(sizec.data[, which(names(sizec.data) == sizec[1])] < 0, na.rm = TRUE)) {
-      stop("Tertiary size variables must be non-negative for the gamma distribution to be used.",
-        call. = FALSE)
-    }
-    
-    if (!is.na(juvestimate)) {
-      if (any(juvsizec.data[, which(names(juvsizec.data) == sizec[1])]  < 0, na.rm = TRUE)) {
-        stop("Tertiary size variables must be non-negative for the gamma distribution to be used.",
-          call. = FALSE)
-      }
-    }
-  }
-  
-  if (is.element("fec", vitalrates)) {
-    if (fectime == 2) {
-      usedfec <- which(names(fec.data) == fec[2])
-    } else if (fectime == 3) {
-      usedfec <- which(names(fec.data) == fec[1])
-    }
-  }
-  
-  if (is.element(fecdist, c("poisson", "negbin")) & !is.numeric(formulae$full.fec.model)) {
-    if (any(fec.data[, usedfec] != round(fec.data[, usedfec]))) {
-      stop("Fecundity variables must be composed only of integers for the Poisson
-        or negative binomial distributions to be used.", call. = FALSE)
-    }
-  } else if (fecdist == "gamma" & any(fec.data[, usedfec] < 0, na.rm = TRUE)) {
-    stop("Fecundity variables must be non-negative for the gamma distribution to be used.",
-      call. = FALSE)
-  }
-  
-  #Now we run the modeling exercises
-  if (is.numeric(formulae$full.surv.model)) {surv.global.model <- formulae$full.surv.model}
-  if (is.numeric(formulae$full.obs.model)) {obs.global.model <- formulae$full.obs.model}
-  if (is.numeric(formulae$full.size.model)) {size.global.model <- formulae$full.size.model}
-  if (is.numeric(formulae$full.sizeb.model)) {sizeb.global.model <- formulae$full.sizeb.model}
-  if (is.numeric(formulae$full.sizec.model)) {sizec.global.model <- formulae$full.sizec.model}
-  if (is.numeric(formulae$full.repst.model)) {repst.global.model <- formulae$full.repst.model}
-  if (is.numeric(formulae$full.fec.model)) {fec.global.model <- formulae$full.fec.model}
-  
-  if (is.numeric(formulae$juv.surv.model)) {juv.surv.global.model <- formulae$juv.surv.model}
-  if (is.numeric(formulae$juv.obs.model)) {juv.obs.global.model <- formulae$juv.obs.model}
-  if (is.numeric(formulae$juv.size.model)) {juv.size.global.model <- formulae$juv.size.model}
-  if (is.numeric(formulae$juv.sizeb.model)) {juv.sizeb.global.model <- formulae$juv.sizeb.model}
-  if (is.numeric(formulae$juv.sizec.model)) {juv.sizec.global.model <- formulae$juv.sizec.model}
-  if (is.numeric(formulae$juv.repst.model)) {juv.repst.global.model <- formulae$juv.repst.model}
-  if (is.numeric(formulae$juv.matst.model)) {juv.matst.global.model <- formulae$juv.matst.model}
-  if (is.character(formulae$juv.matst.model)) {
-    if (formulae$juv.matst.model == "none") {
-      juv.matst.global.model <- 1
-    }
-  }
-  
-  surv.table <- obs.table <- size.table <- sizeb.table <- sizec.table <- repst.table <- NA
-  juvsurv.table <- juvobs.table <- juvsize.table <- juvsizeb.table <- juvsizec.table <- NA
-  fec.table <- juvrepst.table <- juvmatst.table <- NA
-  
-  surv.bf <- obs.bf <- size.bf <- sizeb.bf <- sizec.bf <- repst.bf <- fec.bf <- NA
-  juvsurv.bf <- juvobs.bf <- juvsize.bf <- juvsizeb.bf <- juvsizec.bf <- juvrepst.bf <- juvmatst.bf <- NA
-  
-  #A few more corrections to the model structure, used in running the global models
-  correction.indiv <- gsub("individ", indiv, " + (1 | individ)", fixed = TRUE)
-  if(approach == "mixed" & year.as.random) {
-    correction.year <- gsub("yr", year, " + (1 | yr)", fixed = TRUE)
-  } else {
-    correction.year <- gsub("yr", year, " + yr", fixed = TRUE)
-  }
-  if (approach == "mixed" & patch.as.random) {
-    correction.patch <- gsub("patch", patch, " + (1 | patch)", fixed = TRUE)
-  } else {
-    correction.patch <- gsub("patch", patch, " + patch", fixed = TRUE)
-  }
-  
-  #Here we run the global models
-  if (!is.numeric(formulae$full.surv.model) & nchar(formulae$full.surv.model) > 1) {
-    
-    chosen_var <- which(names(surv.data) == surv[1])
-    if (is.element(0, surv.data[, chosen_var]) & is.element(1, surv.data[, chosen_var])) {
-      
-      surv.global.list <- .headmaster_ritual(vrate = 1, approach = approach,
-        dist = "binom", zero = FALSE, truncz = FALSE, quiet = quiet, quiet.mil = quiet.mileposts,
-        usedformula = formulae$full.surv.model, subdata = surv.data,
-        vind = surv.ind, vtrans = surv.trans, suite = suite,
-        global.only = global.only, criterion = used.criterion,
-        bestfit = bestfit, correction.patch, correction.year, correction.indiv,
-        alt_formula = alt.formulae$full.surv.model,
-        alt_nocovsformula = alt.nocovs.formulae$full.surv.model,
-        alt_glmformula = alt.glm.formulae$full.surv.model, extra_fac = extra_factors)
-      
-      surv.global.model <- surv.global.list$model
-      surv.ind <- surv.global.list$ind
-      surv.trans <- surv.global.list$trans
-      surv.table <- surv.global.list$table
-      surv.bf <- surv.global.list$bf.model
-      
-      surv.accuracy <- .accu_predict(bestfitmodel = surv.bf,
-        subdata = surv.data, param = surv[1], quiet = quiet, check = accuracy)
-      
-    } else if (!is.element(0, surv.data[, chosen_var])) {
-      if (!quiet) {message("\nSurvival response is constant so will not model it.")}
-      formulae$full.surv.model <- 1
-      surv.global.model <- 1
-      surv.bf <- 1
-      surv.ind <- 0
-      surv.trans <- 0
-      surv.accuracy <- 1
-    } else {
-      if (!quiet) {message("\nSurvival response is constant so will not model it.")}
-      formulae$full.surv.model <- 1
-      surv.global.model <- 0
-      surv.bf <- 0
-      surv.ind <- 0
-      surv.trans <- 0
-      surv.accuracy <- 1
-    }
-  } else {
-    surv.global.model <- 1
-    surv.bf <- 1
-    surv.ind <- 0
-    surv.trans <- 0
-    surv.accuracy <- NA
-  }
-  
-  chosen_var <- which(names(obs.data) == obs[1])
-  if (!is.numeric(formulae$full.obs.model) & nchar(formulae$full.obs.model) > 1) {
-    if (is.element(0, obs.data[, chosen_var]) & is.element(1, obs.data[, chosen_var])) {
-        
-      obs.global.list <- .headmaster_ritual(vrate = 2, approach = approach, 
-        dist = "binom", zero = FALSE, truncz = FALSE, quiet = quiet, quiet.mil = quiet.mileposts,
-        usedformula = formulae$full.obs.model, subdata = obs.data,
-        vind = obs.ind, vtrans = obs.trans, suite = suite,
-        global.only = global.only, criterion = used.criterion,
-        bestfit = bestfit, correction.patch, correction.year, correction.indiv,
-        alt_formula = alt.formulae$full.obs.model,
-        alt_nocovsformula = alt.nocovs.formulae$full.obs.model,
-        alt_glmformula = alt.glm.formulae$full.obs.model, extra_fac = extra_factors)
-      
-      obs.global.model <- obs.global.list$model
-      obs.ind <- obs.global.list$ind
-      obs.trans <- obs.global.list$trans
-      obs.table <- obs.global.list$table
-      obs.bf <- obs.global.list$bf.model
-      
-      obs.accuracy <- .accu_predict(bestfitmodel = obs.bf, subdata = obs.data,
-        param = obs[1], quiet = quiet, check = accuracy)
-      
-    } else if (!is.element(0, obs.data[, chosen_var])) {
-      if (!quiet) {message("\nObservation response is constant so will not model it.")}
-      formulae$full.obs.model <- 1
-      obs.global.model <- 1
-      obs.bf <- 1
-      obs.ind <- 0
-      obs.trans <- 0
-      obs.accuracy <- 1
-    } else {
-      if (!quiet) {message("\nObservation response is constant so will not model it.")}
-      formulae$full.obs.model <- 1
-      obs.global.model <- 0
-      obs.bf <- 0
-      obs.ind <- 0
-      obs.trans <- 0
-      obs.accuracy <- 1
-    }
-  } else {
-    obs.global.model <- 1
-    obs.bf <- 1
-    obs.ind <- 0
-    obs.trans <- 0
-    obs.accuracy <- NA
-  }
-  
-  if (!is.numeric(formulae$full.size.model) & nchar(formulae$full.size.model) > 1) {
-    
-    size.global.list <- .headmaster_ritual(vrate = 3, approach = approach, 
-      dist = sizedist, zero = size.zero, truncz = size.trunc, quiet = quiet, quiet.mil = quiet.mileposts,
-      usedformula = formulae$full.size.model, subdata = size.data,
-      vind = size.ind, vtrans = size.trans, suite = suite,
-      global.only = global.only, criterion = used.criterion, bestfit = bestfit,
-      correction.patch, correction.year, correction.indiv,
-      alt_formula = alt.formulae$full.size.model,
-      alt_nocovsformula = alt.nocovs.formulae$full.size.model,
-      alt_glmformula = alt.glm.formulae$full.size.model, extra_fac = extra_factors,
-      null_model = TRUE)
-    
-    size.global.model <- size.global.list$model
-    size.ind <- size.global.list$ind
-    size.trans <- size.global.list$trans
-    size.table <- size.global.list$table
-    size.bf <- size.global.list$bf.model
-    size.null <- size.global.list$null.model
-    
-    size.accuracy <- .accu_predict(bestfitmodel = size.bf, subdata = size.data,
-      param = size[1], style = 2, nullmodel = size.null, dist = sizedist,
-      trunc = size.trunc, approach = approach, quiet = quiet, check = accuracy)
-    
-  } else {
-    size.global.model <- 1
-    size.bf <- 1
-    size.ind <- 0
-    size.trans <- 0
-    size.accuracy <- NA
-  }
-  
-  if (!is.numeric(formulae$full.sizeb.model) & nchar(formulae$full.sizeb.model) > 1) {
-    
-    sizeb.global.list <- .headmaster_ritual(vrate = 10, approach = approach, 
-      dist = sizebdist, zero = sizeb.zero, truncz = sizeb.trunc, quiet = quiet, quiet.mil = quiet.mileposts,
-      usedformula = formulae$full.sizeb.model, subdata = sizeb.data,
-      vind = sizeb.ind, vtrans = sizeb.trans, suite = suite,
-      global.only = global.only, criterion = used.criterion, bestfit = bestfit,
-      correction.patch, correction.year, correction.indiv,
-      alt_formula = alt.formulae$full.sizeb.model,
-      alt_nocovsformula = alt.nocovs.formulae$full.sizeb.model,
-      alt_glmformula = alt.glm.formulae$full.sizeb.model, extra_fac = extra_factors,
-      null_model = TRUE)
-    
-    sizeb.global.model <- sizeb.global.list$model
-    sizeb.ind <- sizeb.global.list$ind
-    sizeb.trans <- sizeb.global.list$trans
-    sizeb.table <- sizeb.global.list$table
-    sizeb.bf <- sizeb.global.list$bf.model
-    sizeb.null <- sizeb.global.list$null.model
-    
-    sizeb.accuracy <- .accu_predict(bestfitmodel = sizeb.bf, subdata = sizeb.data,
-      param = sizeb[1], style = 2, nullmodel = sizeb.null, dist = sizebdist,
-      trunc = sizeb.trunc, approach = approach, quiet = quiet, check = accuracy)
-    
-  } else {
-    sizeb.global.model <- 1
-    sizeb.bf <- 1
-    sizeb.ind <- 0
-    sizeb.trans <- 0
-    sizeb.accuracy <- NA
-  }
-  
-  if (!is.numeric(formulae$full.sizec.model) & nchar(formulae$full.sizec.model) > 1) {
-    
-    sizec.global.list <- .headmaster_ritual(vrate = 11, approach = approach, 
-      dist = sizecdist, zero = sizec.zero, truncz = sizec.trunc, quiet = quiet, quiet.mil = quiet.mileposts,
-      usedformula = formulae$full.sizec.model, subdata = sizec.data,
-      vind = sizec.ind, vtrans = sizec.trans, suite = suite,
-      global.only = global.only, criterion = used.criterion, bestfit = bestfit,
-      correction.patch, correction.year, correction.indiv,
-      alt_formula = alt.formulae$full.sizec.model,
-      alt_nocovsformula = alt.nocovs.formulae$full.sizec.model,
-      alt_glmformula = alt.glm.formulae$full.sizec.model, extra_fac = extra_factors,
-      null_model = TRUE)
-    
-    sizec.global.model <- sizec.global.list$model
-    sizec.ind <- sizec.global.list$ind
-    sizec.trans <- sizec.global.list$trans
-    sizec.table <- sizec.global.list$table
-    sizec.bf <- sizec.global.list$bf.model
-    sizec.null <- sizec.global.list$null.model
-    
-    sizec.accuracy <- .accu_predict(bestfitmodel = sizec.bf, subdata = sizec.data,
-      param = sizec[1], style = 2, nullmodel = sizec.null, dist = sizecdist,
-      trunc = sizec.trunc, approach = approach, quiet = quiet, check = accuracy)
-    
-  } else {
-    sizec.global.model <- 1
-    sizec.bf <- 1
-    sizec.ind <- 0
-    sizec.trans <- 0
-    sizec.accuracy <- NA
-  }
-  
-  if (!is.numeric(formulae$full.repst.model) & nchar(formulae$full.repst.model) > 1) {
-    chosen_var <- which(names(repst.data) == repst[1])
-    if (is.element(0, repst.data[, chosen_var]) & is.element(1, repst.data[, chosen_var])) {
-      repst.global.list <- .headmaster_ritual(vrate = 4, approach = approach, 
-        dist = "binom", zero = FALSE, truncz = FALSE, quiet = quiet, quiet.mil = quiet.mileposts,
-        usedformula = formulae$full.repst.model, subdata = repst.data,
-        vind = repst.ind, vtrans = repst.trans, suite = suite,
-        global.only = global.only, criterion = used.criterion,
-        bestfit = bestfit, correction.patch, correction.year, correction.indiv,
-        alt_formula = alt.formulae$full.repst.model,
-        alt_nocovsformula = alt.nocovs.formulae$full.repst.model,
-        alt_glmformula = alt.glm.formulae$full.repst.model, extra_fac = extra_factors)
-      
-      repst.global.model <- repst.global.list$model
-      repst.ind <- repst.global.list$ind
-      repst.trans <- repst.global.list$trans
-      repst.table <- repst.global.list$table
-      repst.bf <- repst.global.list$bf.model
-      
-      repst.accuracy <- .accu_predict(bestfitmodel = repst.bf,
-        subdata = repst.data, param = repst[1], quiet = quiet, check = accuracy)
-      
-    } else if (!is.element(0, repst.data[, chosen_var])) {
-      if (!quiet) {message("\nReproductive status response is constant so will not model it.")}
-      formulae$full.repst.model <- 1
-      repst.global.model <- 1
-      repst.bf <- 1
-      repst.ind <- 0
-      repst.trans <- 0
-      repst.accuracy <- 1
-    } else {
-      if (!quiet) {message("\nReproductive status response is constant so will not model it.")}
-      formulae$full.repst.model <- 1
-      repst.global.model <- 0
-      repst.bf <- 0
-      repst.ind <- 0
-      repst.trans <- 0
-      repst.accuracy <- 1
-    }
-  } else {
-    repst.global.model <- 1
-    repst.bf <- 1
-    repst.ind <- 0
-    repst.trans <- 0
-    repst.accuracy <- NA
-  }
-  
-  if (!is.numeric(formulae$full.fec.model) & nchar(formulae$full.fec.model) > 1) {
-    
     fec.global.list <- .headmaster_ritual(vrate = 5, approach = approach, 
-      dist = fecdist, zero = fec.zero, truncz = fec.trunc, quiet = quiet, quiet.mil = quiet.mileposts,
-      usedformula = formulae$full.fec.model, subdata = fec.data,
-      vind = fec.ind, vtrans = fec.trans, suite = suite,
+      dist = fecdist, zero = fec.zero, truncz = fec.trunc, quiet = quiet,
+      quiet.mil = quiet.mileposts, usedformula = formulae$main$full.fec.model,
+      subdata = fec.data, vind = fec.ind, vtrans = fec.trans, suite = suite[7],
       global.only = global.only, criterion = used.criterion, bestfit = bestfit,
       correction.patch, correction.year, correction.indiv,
-      alt_formula = alt.formulae$full.fec.model,
-      alt_nocovsformula = alt.nocovs.formulae$full.fec.model,
-      alt_glmformula = alt.glm.formulae$full.fec.model, extra_fac = extra_factors,
-      null_model = TRUE)
+      alt_formula = formulae$alternate$full.fec.model,
+      alt_nocovsformula = formulae$nocovs.alternate$full.fec.model,
+      alt_glmformula = formulae$glm.alternate$full.fec.model,
+      extra_fac = extra_factors[7], noterms = nofecterms, null_model = TRUE)
     
     fec.global.model <- fec.global.list$model
     fec.ind <- fec.global.list$ind
     fec.trans <- fec.global.list$trans
     fec.table <- fec.global.list$table
-    fec.bf <- fec.global.list$bf.model
-    fec.null <- fec.global.list$null.model
+    fec.bf <- fec.global.list$bf_model
+    fec.null <- fec.global.list$null_model
     
     fec.accuracy <- .accu_predict(bestfitmodel = fec.bf, subdata = fec.data,
       param = names(fec.data)[usedfec], style = 2, nullmodel = fec.null,
@@ -2075,310 +2138,621 @@ modelsearch <- function(data, stageframe = NULL, historical = TRUE,
       check = accuracy)
     
   } else {
-    fec.global.model <- 1
-    fec.bf <- 1
-    fec.ind <- 0
-    fec.trans <- 0
+    fec.global.model <- fec.bf <- 1
+    fec.ind <- fec.trans <- 0
     fec.accuracy <- NA
   }
   
-  if (!is.numeric(formulae$juv.surv.model) & nchar(formulae$juv.surv.model) > 1) {
+  # Juvenile survival probability and maturity status
+  if (!is.na(juvestimate) & !is.numeric(formulae$main$juv.surv.model) & nchar(formulae$main$juv.surv.model) > 1) {
+    juvsurv.data <- subset(juv.data, juv.data[,stage2col] == juvestimate & juv.data[,which(names(juv.data) == surv[2])] == 1)
+    juvsurv.data <- juvsurv.data[,vars_used_pm]
+    juvsurv.data <- juvsurv.data[complete.cases(juvsurv.data),]
+    if (dim(juvsurv.data)[1] < 2) formulae$main$juv.surv.model = 1
+    juvsurv.ind <- length(unique(juvsurv.data[, which(names(juvsurv.data) == indiv)]))
+    juvsurv.trans <- dim(juvsurv.data)[1]
+    
+    if (formulae$main$juv.surv.model != 1) {
+      juvsurv.uns <- unique(juvsurv.data[,which(names(juvsurv.data) == surv[1])])
+      if (length(juvsurv.uns) == 1) {
+        warning("Juvenile survival status in time t+1 appears to be constant, and so will be set to constant.\n",
+          call. = FALSE)
+        formulae$main$juv.surv.model <- juvsurv.uns[1]
+        formulae$alternate$juv.surv.model <- juvsurv.uns[1]
+        formulae$glm.alternate$juv.surv.model <- juvsurv.uns[1]
+        formulae$nocovs.alternate$juv.surv.model <- juvsurv.uns[1]
+      }
+    }
+    
+    if (any(suite == "full") | any(suite == "main") | any(suite == "size")) {
+      if (any(is.na(juvsurv.data[, which(names(juvsurv.data) == size[2])]))) {
+        warning("NAs in size variables may cause model selection to fail.\n",
+          call. = FALSE)
+      }
+      
+      if (historical == TRUE) {
+        if (any(is.na(juvsurv.data[, which(names(juvsurv.data) == size[3])]))) {
+          warning("NAs in size variables may cause model selection to fail.\n",
+            call. = FALSE)
+        }
+      }
+    }
+    
+    if (any(suite == "full") | any(suite == "main") | any(suite == "rep")) {
+      if (any(is.na(juvsurv.data[, which(names(juvsurv.data) == repst[2])]))) {
+        warning("NAs in reproductive status variables may cause model selection to fail.\n",
+          call. = FALSE)
+      }
+      
+      if (historical == TRUE) {
+        if (any(is.na(juvsurv.data[, which(names(juvsurv.data) == repst[3])]))) {
+          warning("NAs in reproductive status variables may cause model selection to fail.\n",
+            call. = FALSE)
+        }
+      }
+    }
+    
+    if (is.element(0, juvsurv.data$matstatus3)) {
+      warning("Function modelsearch() assumes that all juveniles either die or transition
+        to maturity within 1 year. Some individuals in this dataset appear to live
+        longer as juveniles than assumptions allow.\n", call. = FALSE)
+    }
+    
     chosen_var <- which(names(juvsurv.data) == surv[1])
-    if (is.element(0, juvsurv.data[, chosen_var]) & is.element(1, juvsurv.data[, chosen_var])) {
+    
+    if (is.element(0, juvsurv.data[, chosen_var]) & is.element(1, juvsurv.data[, chosen_var]) & 
+        nchar(formulae$main$juv.surv.model) > 1) {
+      nojsurvterms = c(formulae$main$total_terms[8], formulae$alternate$total_terms[8],
+        formulae$glm.alternate$total_terms[8], formulae$nocovs.alternate$total_terms[8])
       
       juv.surv.global.list <- .headmaster_ritual(vrate = 6, approach = approach,
-        dist = "binom", zero = FALSE, truncz = FALSE, quiet = quiet, quiet.mil = quiet.mileposts,
-        usedformula = formulae$juv.surv.model, subdata = juvsurv.data,
-        vind = juvsurv.ind, vtrans = juvsurv.trans, suite = suite,
-        global.only = global.only, criterion = used.criterion,
+        dist = "binom", zero = FALSE, truncz = FALSE, quiet = quiet,
+        quiet.mil = quiet.mileposts, usedformula = formulae$main$juv.surv.model,
+        subdata = juvsurv.data, vind = juvsurv.ind, vtrans = juvsurv.trans,
+        suite = suite[8], global.only = global.only, criterion = used.criterion,
         bestfit = bestfit, correction.patch, correction.year, correction.indiv,
-        alt_formula = alt.formulae$juv.surv.model,
-        alt_nocovsformula = alt.nocovs.formulae$juv.surv.model,
-        alt_glmformula = alt.glm.formulae$juv.surv.model, extra_fac = extra_factors)
+        alt_formula = formulae$alternate$juv.surv.model,
+        alt_nocovsformula = formulae$nocovs.alternate$juv.surv.model,
+        alt_glmformula = formulae$glm.alternate$juv.surv.model,
+        extra_fac = extra_factors[8], noterms = nojsurvterms)
       
       juv.surv.global.model <- juv.surv.global.list$model
       juvsurv.ind <- juv.surv.global.list$ind
       juvsurv.trans <- juv.surv.global.list$trans
       juvsurv.table <- juv.surv.global.list$table
-      juvsurv.bf <- juv.surv.global.list$bf.model
+      juvsurv.bf <- juv.surv.global.list$bf_model
       
       juvsurv.accuracy <- .accu_predict(bestfitmodel = juvsurv.bf,
         subdata = juvsurv.data, param = surv[1], quiet = quiet,
         check = accuracy)
         
     } else if (!is.element(0, juvsurv.data[, chosen_var])) {
-      if (!quiet) {message("\nJuvenile survival response is constant so will not model it.")}
-      formulae$juv.surv.model <- 1
-      juv.surv.global.model <- 1
-      juvsurv.bf <- 1
-      juvsurv.ind <- 0
-      juvsurv.trans <- 0
+      if (!quiet) {
+        message("\nJuvenile survival status is constant so will not model it.\n")
+      }
+      formulae$main$juv.surv.model <- 1
+      juv.surv.global.model <- juvsurv.bf <- 1
+      juvsurv.ind <- juvsurv.trans <- 0
       juvsurv.accuracy <- 1
     } else {
-      if (!quiet) {message("\nJuvenile survival response is constant so will not model it.")}
-      formulae$juv.surv.model <- 1
-      juv.surv.global.model <- 0
-      juvsurv.bf <- 0
-      juvsurv.ind <- 0
-      juvsurv.trans <- 0
+      if (!quiet) {
+        message("\nJuvenile survival status is constant so will not model it.\n")
+      }
+      formulae$main$juv.surv.model <- 1
+      juv.surv.global.model <- juvsurv.bf <- juvsurv.ind <- juvsurv.trans <- 0
       juvsurv.accuracy <- 1
     }
     
-    chosen_var <- which(names(juvobs.data) == matstat[1])
-    if (is.element(0, juvobs.data[, chosen_var]) & is.element(1, juvobs.data[, chosen_var])) {
-      
-      juv.matst.global.list <- .headmaster_ritual(vrate = 14, approach = approach,
-        dist = "binom", zero = FALSE, truncz = FALSE, quiet = quiet, quiet.mil = quiet.mileposts,
-        usedformula = formulae$juv.matst.model, subdata = juvobs.data,
-        vind = juvobs.ind, vtrans = juvobs.trans, suite = suite,
-        global.only = global.only, criterion = used.criterion,
-        bestfit = bestfit, correction.patch, correction.year, correction.indiv,
-        alt_formula = alt.formulae$juv.matst.model,
-        alt_nocovsformula = alt.nocovs.formulae$juv.matst.model,
-        alt_glmformula = alt.glm.formulae$juv.matst.model, extra_fac = extra_factors)
-      
-      juv.matst.global.model <- juv.matst.global.list$model
-      juvmatst.ind <- juv.matst.global.list$ind
-      juvmatst.trans <- juv.matst.global.list$trans
-      juvmatst.table <- juv.matst.global.list$table
-      juvmatst.bf <- juv.matst.global.list$bf.model
-      
-      juvmatst.accuracy <- .accu_predict(bestfitmodel = juvmatst.bf,
-        subdata = juvobs.data, param = matstat[1], quiet = quiet,
-        check = accuracy)
+    juvmatst.data <- subset(juvsurv.data, juvsurv.data[, which(names(juvsurv.data) == surv[1])] == 1)
+    if (dim(juvmatst.data)[1] < 2) formulae$main$juv.matst.model = 1
+    chosen_var <- which(names(juvmatst.data) == matstat[1])
+    
+    if (formulae$main$juv.matst.model != 1) {
+      juvmatst.uns <- unique(juvmatst.data[,which(names(juvmatst.data) == surv[1])])
+      if (length(juvmatst.uns) == 1) {
+        warning("Juvenile maturity status in time t+1 appears to be constant, and so will be set to constant.\n",
+          call. = FALSE)
+        formulae$main$juv.matst.model <- juvmatst.uns[1]
+        formulae$alternate$juv.matst.model <- juvmatst.uns[1]
+        formulae$glm.alternate$juv.matst.model <- juvmatst.uns[1]
+        formulae$nocovs.alternate$juv.matst.model <- juvmatst.uns[1]
+      }
+    }
+    
+    if (any(suite == "full") | any(suite == "main") | any(suite == "size")) {
+      if (is.element(0, juvmatst.data[, chosen_var]) & is.element(1, juvmatst.data[, chosen_var]) & 
+          nchar(formulae$main$juv.matst.model) > 1) {
         
-    } else if (!is.element(0, juvobs.data[, chosen_var])) {
-      if (!quiet) {message("\nJuvenile maturity status response is constant so will not model it.")}
-      formulae$juv.matst.model <- 1
-      juv.matst.global.model <- 1
-      juvmatst.bf <- 1
-      juvmatst.ind <- 0
-      juvmatst.trans <- 0
-      juvmatst.accuracy <- 1
+        nojmatstterms = c(formulae$main$total_terms[14], formulae$alternate$total_terms[14],
+          formulae$glm.alternate$total_terms[14], formulae$nocovs.alternate$total_terms[14])
+        
+        juv.matst.global.list <- .headmaster_ritual(vrate = 14, approach = approach,
+          dist = "binom", zero = FALSE, truncz = FALSE, quiet = quiet,
+          quiet.mil = quiet.mileposts, usedformula = formulae$main$juv.matst.model,
+          subdata = juvmatst.data, vind = juvobs.ind, vtrans = juvobs.trans,
+          suite = suite[14], global.only = global.only, criterion = used.criterion,
+          bestfit = bestfit, correction.patch, correction.year, correction.indiv,
+          alt_formula = formulae$alternate$juv.matst.model,
+          alt_nocovsformula = formulae$nocovs.alternate$juv.matst.model,
+          alt_glmformula = formulae$glm.alternate$juv.matst.model,
+          extra_fac = extra_factors[14], noterms = nojmatstterms)
+        
+        juv.matst.global.model <- juv.matst.global.list$model
+        juvmatst.ind <- juv.matst.global.list$ind
+        juvmatst.trans <- juv.matst.global.list$trans
+        juvmatst.table <- juv.matst.global.list$table
+        juvmatst.bf <- juv.matst.global.list$bf_model
+        
+        juvmatst.accuracy <- .accu_predict(bestfitmodel = juvmatst.bf,
+          subdata = juvmatst.data, param = matstat[1], quiet = quiet,
+          check = accuracy)
+          
+      } else if (!is.element(0, juvmatst.data[, chosen_var])) {
+        if (!quiet) {
+          message("\nJuvenile maturity status is constant so will not model it.\n")
+        }
+        formulae$main$juv.matst.model <- 1
+        juv.matst.global.model <- juvmatst.bf <- 1
+        juvmatst.ind <- juvmatst.trans <- 0
+        juvmatst.accuracy <- 1
+      } else {
+        if (!quiet) {
+          message("\nJuvenile maturity status is constant so will not model it.\n")
+        }
+        formulae$main$juv.matst.model <- 1
+        juv.matst.global.model <- juvmatst.bf <- juvmatst.ind <- juvmatst.trans <- 0
+        juvmatst.accuracy <- 1
+      }
     } else {
-      if (!quiet) {message("\nJuvenile maturity status response is constant so will not model it.")}
-      formulae$juv.matst.model <- 1
-      juv.matst.global.model <- 0
-      juvmatst.bf <- 0
-      juvmatst.ind <- 0
-      juvmatst.trans <- 0
-      juvmatst.accuracy <- 1
+      juv.surv.global.model <- juvsurv.bf <- 1
+      juvsurv.ind <- juvsurv.trans <- 0
+      juvsurv.accuracy <- NA
+      
+      juv.matst.global.model <- juvmatst.bf <- 1
+      juvmatst.ind <- juvmatst.trans <- 0
+      juvmatst.accuracy <- NA
     }
   } else {
-    juv.surv.global.model <- 1
-    juvsurv.bf <- 1
-    juvsurv.ind <- 0
-    juvsurv.trans <- 0
+    juv.surv.global.model <- juvsurv.bf <- 1
+    juvsurv.ind <- juvsurv.trans <- 0
     juvsurv.accuracy <- NA
     
-    juv.matst.global.model <- 1
-    juvmatst.bf <- 1
-    juvmatst.ind <- 0
-    juvmatst.trans <- 0
+    juv.matst.global.model <- juvmatst.bf <- 1
+    juvmatst.ind <- juvmatst.trans <- 0
     juvmatst.accuracy <- NA
   }
   
-  if (!is.numeric(formulae$juv.obs.model) & nchar(formulae$juv.obs.model) > 1) {
+  # Juvenile observation status
+  if (!is.na(juvestimate) & !is.numeric(formulae$main$juv.obs.model) & nchar(formulae$main$juv.obs.model) > 1) {
+    juvsurv.data <- subset(juv.data, juv.data[,stage2col] == juvestimate & juv.data[,which(names(juv.data) == surv[2])] == 1)
+    juvsurv.data <- juvsurv.data[,vars_used_pm]
+    juvsurv.data <- juvsurv.data[complete.cases(juvsurv.data),]
+    juvobs.data <- subset(juvsurv.data, juvsurv.data[, which(names(juvsurv.data) == surv[1])] == 1)
+    juvobs.ind <- length(unique(juvobs.data[, which(names(juvobs.data) == indiv)]))
+    juvobs.trans <- dim(juvobs.data)[1]
+    if (juvobs.trans < 2) formulae$main$juv.obs.model = 1
+    
+    if (formulae$main$juv.obs.model != 1) {
+      juvobs.uns <- unique(juvobs.data[,which(names(juvobs.data) == obs[1])])
+      if (length(juvobs.uns) == 1) {
+        warning("Juvenile observation status in time t+1 appears to be constant, and so will be set to constant.\n",
+          call. = FALSE)
+        formulae$main$juv.obs.model <- juvobs.uns[1]
+        formulae$alternate$juv.obs.model <- juvobs.uns[1]
+        formulae$glm.alternate$juv.obs.model <- juvobs.uns[1]
+        formulae$nocovs.alternate$juv.obs.model <- juvobs.uns[1]
+      }
+    }
+    
     chosen_var <- which(names(juvobs.data) == obs[1])
-    if (is.element(0, juvobs.data[, chosen_var]) & is.element(1, juvobs.data[, chosen_var])) {
+    
+    if (is.element(0, juvobs.data[, chosen_var]) & is.element(1, juvobs.data[, chosen_var]) &
+        nchar(formulae$main$juv.obs.model)) {
+      nojobsterms = c(formulae$main$total_terms[9], formulae$alternate$total_terms[9],
+        formulae$glm.alternate$total_terms[9], formulae$nocovs.alternate$total_terms[9])
       
       juv.obs.global.list <- .headmaster_ritual(vrate = 7, approach = approach,
-        dist = "binom", zero = FALSE, truncz = FALSE, quiet = quiet, quiet.mil = quiet.mileposts,
-        usedformula = formulae$juv.obs.model, subdata = juvobs.data,
-        vind = juvobs.ind, vtrans = juvobs.trans, suite = suite,
-        global.only = global.only, criterion = used.criterion,
+        dist = "binom", zero = FALSE, truncz = FALSE, quiet = quiet,
+        quiet.mil = quiet.mileposts, usedformula = formulae$main$juv.obs.model,
+        subdata = juvobs.data, vind = juvobs.ind, vtrans = juvobs.trans,
+        suite = suite[9], global.only = global.only, criterion = used.criterion,
         bestfit = bestfit, correction.patch, correction.year, correction.indiv,
-        alt_formula = alt.formulae$juv.obs.model,
-        alt_nocovsformula = alt.nocovs.formulae$juv.obs.model,
-        alt_glmformula = alt.glm.formulae$juv.obs.model, extra_fac = extra_factors)
+        alt_formula = formulae$alternate$juv.obs.model,
+        alt_nocovsformula = formulae$nocovs.alternate$juv.obs.model,
+        alt_glmformula = formulae$glm.alternate$juv.obs.model,
+        extra_fac = extra_factors[9], noterms = nojobsterms)
       
       juv.obs.global.model <- juv.obs.global.list$model
       juvobs.ind <- juv.obs.global.list$ind
       juvobs.trans <- juv.obs.global.list$trans
       juvobs.table <- juv.obs.global.list$table
-      juvobs.bf <- juv.obs.global.list$bf.model
+      juvobs.bf <- juv.obs.global.list$bf_model
       
       juvobs.accuracy <- .accu_predict(bestfitmodel = juvobs.bf,
         subdata = juvobs.data, param = obs[1], quiet = quiet, check = accuracy)
         
     } else if (!is.element(0, juvobs.data[, chosen_var])) {
-      if (!quiet) {message("\nJuvenile observation response is constant so will not model it.")}
-      formulae$juv.obs.model <- 1
-      juv.obs.global.model <- 1
-      juvobs.bf <- 1
-      juvobs.ind <- 0
-      juvobs.trans <- 0
+      if (!quiet) {
+        message("\nJuvenile observation status is constant so will not model it.\n")
+      }
+      formulae$main$juv.obs.model <- 1
+      juv.obs.global.model <- juvobs.bf <- 1
+      juvobs.ind <- juvobs.trans <- 0
       juvobs.accuracy <- 1
     } else {
-      if (!quiet) {message("\nJuvenile observation response is constant so will not model it.")}
-      formulae$juv.obs.model <- 1
-      juv.obs.global.model <- 0
-      juvobs.bf <- 0
-      juvobs.ind <- 0
-      juvobs.trans <- 0
+      if (!quiet) {
+        message("\nJuvenile observation status is constant so will not model it.\n")
+      }
+      formulae$main$juv.obs.model <- 1
+      juv.obs.global.model <- juvobs.bf <- juvobs.ind <- juvobs.trans <- 0
       juvobs.accuracy <- 1
     }
   } else {
-    juv.obs.global.model <- 1
-    juvobs.bf <- 1
-    juvobs.ind <- 0
-    juvobs.trans <- 0
+    juv.obs.global.model <- juvobs.bf <- 1
+    juvobs.ind <- juvobs.trans <- 0
     juvobs.accuracy <- NA
   }
   
-  if (!is.numeric(formulae$juv.size.model) & nchar(formulae$juv.size.model) > 1) {
+  # Juvenile primary size
+  if (!is.na(juvestimate) & !is.numeric(formulae$main$juv.size.model) & nchar(formulae$main$juv.size.model) > 1) {
+    juvsurv.data <- subset(juv.data, juv.data[,stage2col] == juvestimate & juv.data[,which(names(juv.data) == surv[2])] == 1)
+    juvsurv.data <- juvsurv.data[,vars_used_pm]
+    juvsurv.data <- juvsurv.data[complete.cases(juvsurv.data),]
+    juvobs.data <- subset(juvsurv.data, juvsurv.data[, which(names(juvsurv.data) == surv[1])] == 1)
     
-    juv.size.global.list <- .headmaster_ritual(vrate = 8, approach = approach, 
-      dist = sizedist, zero = jsize.zero, truncz = jsize.trunc, quiet = quiet, quiet.mil = quiet.mileposts,
-      usedformula = formulae$juv.size.model, subdata = juvsize.data,
-      vind = juvsize.ind, vtrans = juvsize.trans, suite = suite,
-      global.only = global.only, criterion = used.criterion, bestfit = bestfit,
-      correction.patch, correction.year, correction.indiv,
-      alt_formula = alt.formulae$juv.size.model,
-      alt_nocovsformula = alt.nocovs.formulae$juv.size.model,
-      alt_glmformula = alt.glm.formulae$juv.size.model, extra_fac = extra_factors,
-      null_model = TRUE)
+    if (formulae$main$juv.obs.model != 1) {
+      juvsize.data <- subset(juvobs.data, juvobs.data[, which(names(juvobs.data) == obs[1])] == 1)
+      juvsize.data <- juvsize.data[which(!is.na(juvsize.data[, which(names(juvsize.data) == size[1])])),]
+      
+      if (sizeb_used) {
+        juvsizeb.data <- subset(juvobs.data, juvobs.data[, which(names(juvobs.data) == obs[1])] == 1)
+        juvsizeb.data <- juvsizeb.data[which(!is.na(juvsizeb.data[, which(names(juvsizeb.data) == sizeb[1])])),]
+      }
+      
+      if (sizec_used) {
+        juvsizec.data <- subset(juvobs.data, juvobs.data[, which(names(juvobs.data) == obs[1])] == 1)
+        juvsizec.data <- juvsizec.data[which(!is.na(juvsizec.data[, which(names(juvsizec.data) == sizec[1])])),]
+      }
+    } else {
+      juvsize.data <- juvobs.data
+      juvsize.data <- juvsize.data[which(!is.na(juvsize.data[, which(names(juvsize.data) == size[1])])),]
+      
+      if (sizeb_used) {
+        juvsizeb.data <- juvobs.data
+        juvsizeb.data <- juvsizeb.data[which(!is.na(juvsizeb.data[, which(names(juvsizeb.data) == sizeb[1])])),]
+      }
+      
+      if (sizec_used) {
+        juvsizec.data <- juvobs.data
+        juvsizec.data <- juvsizec.data[which(!is.na(juvsizec.data[, which(names(juvsizec.data) == sizec[1])])),]
+      }
+    }
     
-    juv.size.global.model <- juv.size.global.list$model
-    juvsize.ind <- juv.size.global.list$ind
-    juvsize.trans <- juv.size.global.list$trans
-    juvsize.table <- juv.size.global.list$table
-    juvsize.bf <- juv.size.global.list$bf.model
-    juvsize.null <- juv.size.global.list$null.model
+    if (formulae$main$juv.size.model != 1) {
+      juvsize.uns <- unique(juvsize.data[,which(names(juvsize.data) == size[1])])
+      if (length(juvsize.uns) == 1) {
+        warning("Juvenile primary size in time t+1 appears to be constant, and so will be set to constant.\n",
+          call. = FALSE)
+        formulae$main$juv.size.model <- juvsize.uns[1]
+        formulae$alternate$juv.size.model <- juvsize.uns[1]
+        formulae$glm.alternate$juv.size.model <- juvsize.uns[1]
+        formulae$nocovs.alternate$juv.size.model <- juvsize.uns[1]
+      }
+    }
+    if (sizedist != "gamma") {
+      if (sizedist == "poisson" | sizedist == "negbin") {
+        if (any(juvsize.data[, which(names(juvsize.data) == size[1])] != 
+            round(juvsize.data[, which(names(juvsize.data) == size[1])]))) {
+          stop("Primary size variables must be composed only of integers for the Poisson
+            or negative binomial distributions to be used.", call. = FALSE)
+        }
+      }
+    } else {
+      if (any(juvsize.data[, which(names(juvsize.data) == size[1])]  < 0, na.rm = TRUE)) {
+        stop("Primary size variables must be non-negative for the gamma distribution to be used.",
+          call. = FALSE)
+      }
+    }
     
-    juvsize.accuracy <- .accu_predict(bestfitmodel = juvsize.bf,
-      subdata = juvsize.data, param = size[1], style = 2,
-      nullmodel = juvsize.null, dist = sizedist, trunc = jsize.trunc,
-      approach = approach, quiet = quiet, check = accuracy)
+    juvsize.ind <- length(unique(juvsize.data[, which(names(juvsize.data) == indiv)]))
+    juvsize.trans <- dim(juvsize.data)[1]
+    if (juvsize.trans < 2) formulae$main$juv.size.model = 1
     
+    if (nchar(formulae$main$juv.size.model) > 1) {
+      nojsizeterms = c(formulae$main$total_terms[10], formulae$alternate$total_terms[10],
+        formulae$glm.alternate$total_terms[10], formulae$nocovs.alternate$total_terms[10])
+      
+      juv.size.global.list <- .headmaster_ritual(vrate = 8, approach = approach, 
+        dist = sizedist, zero = jsize.zero, truncz = jsize.trunc, quiet = quiet,
+        quiet.mil = quiet.mileposts, usedformula = formulae$main$juv.size.model,
+        subdata = juvsize.data, vind = juvsize.ind, vtrans = juvsize.trans,
+        suite = suite[10], global.only = global.only, criterion = used.criterion,
+        bestfit = bestfit, correction.patch, correction.year, correction.indiv,
+        alt_formula = formulae$alternate$juv.size.model,
+        alt_nocovsformula = formulae$nocovs.alternate$juv.size.model,
+        alt_glmformula = formulae$glm.alternate$juv.size.model,
+        extra_fac = extra_factors[10], noterms = nojsizeterms, null_model = TRUE)
+      
+      juv.size.global.model <- juv.size.global.list$model
+      juvsize.ind <- juv.size.global.list$ind
+      juvsize.trans <- juv.size.global.list$trans
+      juvsize.table <- juv.size.global.list$table
+      juvsize.bf <- juv.size.global.list$bf_model
+      juvsize.null <- juv.size.global.list$null_model
+      
+      juvsize.accuracy <- .accu_predict(bestfitmodel = juvsize.bf,
+        subdata = juvsize.data, param = size[1], style = 2,
+        nullmodel = juvsize.null, dist = sizedist, trunc = jsize.trunc,
+        approach = approach, quiet = quiet, check = accuracy)
+    } else {
+      if (!quiet) {
+        message("\nJuvenile primary size is constant so will not model it.\n")
+      }
+      juv.size.global.model <- juvsize.bf <- 1
+      juvsize.ind <- juvsize.trans <- 0
+      juvsize.accuracy <- NA
+    }
   } else {
-    juv.size.global.model <- 1
-    juvsize.bf <- 1
-    juvsize.ind <- 0
-    juvsize.trans <- 0
+    juv.size.global.model <- juvsize.bf <- 1
+    juvsize.ind <- juvsize.trans <- 0
     juvsize.accuracy <- NA
   }
   
-  if (!is.numeric(formulae$juv.sizeb.model) & nchar(formulae$juv.sizeb.model) > 1) {
+  # Juvenile secondary size
+  if (sizeb_used & !is.na(juvestimate) & !is.numeric(formulae$main$juv.sizeb.model) &
+      nchar(formulae$main$juv.sizeb.model) > 1) {
+    if (formulae$main$juv.sizeb.model != 1) {
+      juvsizeb.uns <- unique(juvsizeb.data[,which(names(juvsizeb.data) == sizeb[1])])
+      if (length(juvsizeb.uns) == 1) {
+        warning("Juvenile secondary size in time t+1 appears to be constant, and so will be set to constant.\n",
+          call. = FALSE)
+        formulae$main$juv.sizeb.model <- juvsizeb.uns[1]
+        formulae$alternate$juv.sizeb.model <- juvsizeb.uns[1]
+        formulae$glm.alternate$juv.sizeb.model <- juvsizeb.uns[1]
+        formulae$nocovs.alternate$juv.sizeb.model <- juvsizeb.uns[1]
+      }
+    }
+    if (sizebdist != "gamma") {
+      if (sizebdist == "poisson" | sizebdist == "negbin") {
+        if (any(juvsizeb.data[, which(names(juvsizeb.data) == sizeb[1])] != 
+            round(juvsizeb.data[, which(names(juvsizeb.data) == sizeb[1])]))) {
+          stop("Secondary size variables must be composed only of integers for the Poisson
+            or negative binomial distributions to be used.", call. = FALSE)
+        }
+      }
+    } else {
+      if (any(juvsizeb.data[, which(names(juvsizeb.data) == sizeb[1])]  < 0, na.rm = TRUE)) {
+        stop("Secondary size variables must be non-negative for the gamma distribution to be used.",
+          call. = FALSE)
+      }
+    }
     
-    juv.sizeb.global.list <- .headmaster_ritual(vrate = 12, approach = approach, 
-      dist = sizebdist, zero = jsizeb.zero, truncz = jsizeb.trunc, quiet = quiet, quiet.mil = quiet.mileposts,
-      usedformula = formulae$juv.sizeb.model, subdata = juvsizeb.data,
-      vind = juvsizeb.ind, vtrans = juvsizeb.trans, suite = suite,
-      global.only = global.only, criterion = used.criterion, bestfit = bestfit,
-      correction.patch, correction.year, correction.indiv,
-      alt_formula = alt.formulae$juv.sizeb.model,
-      alt_nocovsformula = alt.nocovs.formulae$juv.sizeb.model,
-      alt_glmformula = alt.glm.formulae$juv.sizeb.model, extra_fac = extra_factors,
-      null_model = TRUE)
+    juvsizeb.ind <- length(unique(juvsizeb.data[, which(names(juvsizeb.data) == indiv)]))
+    juvsizeb.trans <- dim(juvsizeb.data)[1]
+    if (juvsizeb.trans < 2) formulae$main$juv.sizeb.model = 1
     
-    juv.sizeb.global.model <- juv.sizeb.global.list$model
-    juvsizeb.ind <- juv.sizeb.global.list$ind
-    juvsizeb.trans <- juv.sizeb.global.list$trans
-    juvsizeb.table <- juv.sizeb.global.list$table
-    juvsizeb.bf <- juv.sizeb.global.list$bf.model
-    juvsizeb.null <- juv.sizeb.global.list$null.model
-    
-    juvsizeb.accuracy <- .accu_predict(bestfitmodel = juvsizeb.bf,
-      subdata = juvsizeb.data, param = sizeb[1], style = 2,
-      nullmodel = juvsizeb.null, dist = sizebdist, trunc = jsizeb.trunc,
-      approach = approach, quiet = quiet, check = accuracy)
-    
+    if (nchar(formulae$main$juv.sizeb.model) > 1) {
+      nojsizebterms = c(formulae$main$total_terms[11], formulae$alternate$total_terms[11],
+        formulae$glm.alternate$total_terms[11], formulae$nocovs.alternate$total_terms[11])
+      
+      juv.sizeb.global.list <- .headmaster_ritual(vrate = 12, approach = approach, 
+        dist = sizebdist, zero = jsizeb.zero, truncz = jsizeb.trunc, quiet = quiet,
+        quiet.mil = quiet.mileposts, usedformula = formulae$main$juv.sizeb.model,
+        subdata = juvsizeb.data, vind = juvsizeb.ind, vtrans = juvsizeb.trans,
+        suite = suite[11], global.only = global.only, criterion = used.criterion,
+        bestfit = bestfit, correction.patch, correction.year, correction.indiv,
+        alt_formula = formulae$alternate$juv.sizeb.model,
+        alt_nocovsformula = formulae$nocovs.alternate$juv.sizeb.model,
+        alt_glmformula = formulae$glm.alternate$juv.sizeb.model,
+        extra_fac = extra_factors[11], noterms = nojsizebterms, null_model = TRUE)
+      
+      juv.sizeb.global.model <- juv.sizeb.global.list$model
+      juvsizeb.ind <- juv.sizeb.global.list$ind
+      juvsizeb.trans <- juv.sizeb.global.list$trans
+      juvsizeb.table <- juv.sizeb.global.list$table
+      juvsizeb.bf <- juv.sizeb.global.list$bf_model
+      juvsizeb.null <- juv.sizeb.global.list$null_model
+      
+      juvsizeb.accuracy <- .accu_predict(bestfitmodel = juvsizeb.bf,
+        subdata = juvsizeb.data, param = sizeb[1], style = 2,
+        nullmodel = juvsizeb.null, dist = sizebdist, trunc = jsizeb.trunc,
+        approach = approach, quiet = quiet, check = accuracy)
+    } else {
+      if (!quiet) {
+        message("\nJuvenile secondary size is constant so will not model it.\n")
+      }
+      juv.sizeb.global.model <- juvsizeb.bf <- 1
+      juvsizeb.ind <- juvsizeb.trans <- 0
+      juvsizeb.accuracy <- NA
+    }
   } else {
-    juv.sizeb.global.model <- 1
-    juvsizeb.bf <- 1
-    juvsizeb.ind <- 0
-    juvsizeb.trans <- 0
+    juv.sizeb.global.model <- juvsizeb.bf <- 1
+    juvsizeb.ind <- juvsizeb.trans <- 0
     juvsizeb.accuracy <- NA
   }
   
-  if (!is.numeric(formulae$juv.sizec.model) & nchar(formulae$juv.sizec.model) > 1) {
+  # Juvenile tertiary size
+  if (sizec_used & !is.na(juvestimate) & !is.numeric(formulae$main$juv.sizec.model) &
+      nchar(formulae$main$juv.sizec.model) > 1) {
+    if (sizecdist != "gamma") {
+      if (sizecdist == "poisson" | sizecdist == "negbin") {
+        if (any(juvsizec.data[, which(names(juvsizec.data) == sizec[1])] != 
+            round(juvsizec.data[, which(names(juvsizec.data) == sizec[1])]))) {
+          stop("Tertiary size variables must be composed only of integers for the Poisson
+            or negative binomial distributions to be used.", call. = FALSE)
+        }
+      }
+    } else {
+      if (any(juvsizec.data[, which(names(juvsizec.data) == sizec[1])]  < 0, na.rm = TRUE)) {
+        stop("Tertiary size variables must be non-negative for the gamma distribution to be used.",
+          call. = FALSE)
+      }
+    }
     
-    juv.sizec.global.list <- .headmaster_ritual(vrate = 13, approach = approach, 
-      dist = sizecdist, zero = jsizec.zero, truncz = jsizec.trunc, quiet = quiet, quiet.mil = quiet.mileposts,
-      usedformula = formulae$juv.sizec.model, subdata = juvsizec.data,
-      vind = juvsizec.ind, vtrans = juvsizec.trans, suite = suite,
-      global.only = global.only, criterion = used.criterion, bestfit = bestfit,
-      correction.patch, correction.year, correction.indiv,
-      alt_formula = alt.formulae$juv.sizec.model,
-      alt_nocovsformula = alt.nocovs.formulae$juv.sizec.model,
-      alt_glmformula = alt.glm.formulae$juv.sizec.model, extra_fac = extra_factors,
-      null_model = TRUE)
+    if (formulae$main$juv.sizec.model != 1) {
+      juvsizec.uns <- unique(juvsizec.data[,which(names(juvsizec.data) == sizec[1])])
+      if (length(juvsizec.uns) == 1) {
+        warning("Juvenile tertiary size in time t+1 appears to be constant, and so will be set to constant.\n",
+          call. = FALSE)
+        formulae$main$juv.sizec.model <- juvsizec.uns[1]
+        formulae$alternate$juv.sizec.model <- juvsizec.uns[1]
+        formulae$glm.alternate$juv.sizec.model <- juvsizec.uns[1]
+        formulae$nocovs.alternate$juv.sizec.model <- juvsizec.uns[1]
+      }
+    }
     
-    juv.sizec.global.model <- juv.sizec.global.list$model
-    juvsizec.ind <- juv.sizec.global.list$ind
-    juvsizec.trans <- juv.sizec.global.list$trans
-    juvsizec.table <- juv.sizec.global.list$table
-    juvsizec.bf <- juv.sizec.global.list$bf.model
-    juvsizec.null <- juv.sizec.global.list$null.model
+    juvsizec.ind <- length(unique(juvsizec.data[, which(names(juvsizec.data) == indiv)]))
+    juvsizec.trans <- dim(juvsizec.data)[1]
+    if (juvsizec.trans < 2) formulae$main$juv.sizec.model = 1
     
-    juvsizec.accuracy <- .accu_predict(bestfitmodel = juvsizec.bf,
-      subdata = juvsizec.data, param = sizec[1], style = 2,
-      nullmodel = juvsizec.null, dist = sizecdist, trunc = jsizec.trunc,
-      approach = approach, quiet = quiet, check = accuracy)
-    
+    if (nchar(formulae$main$juv.sizec.model) > 1) {
+      nojsizecterms = c(formulae$main$total_terms[12], formulae$alternate$total_terms[12],
+        formulae$glm.alternate$total_terms[12], formulae$nocovs.alternate$total_terms[12])
+      
+      juv.sizec.global.list <- .headmaster_ritual(vrate = 13, approach = approach, 
+        dist = sizecdist, zero = jsizec.zero, truncz = jsizec.trunc, quiet = quiet,
+        quiet.mil = quiet.mileposts, usedformula = formulae$main$juv.sizec.model,
+        subdata = juvsizec.data, vind = juvsizec.ind, vtrans = juvsizec.trans,
+        suite = suite[12], global.only = global.only, criterion = used.criterion,
+        bestfit = bestfit, correction.patch, correction.year, correction.indiv,
+        alt_formula = formulae$alternate$juv.sizec.model,
+        alt_nocovsformula = formulae$nocovs.alternate$juv.sizec.model,
+        alt_glmformula = formulae$glm.alternate$juv.sizec.model,
+        extra_fac = extra_factors[12], noterms = nojsizecterms, null_model = TRUE)
+      
+      juv.sizec.global.model <- juv.sizec.global.list$model
+      juvsizec.ind <- juv.sizec.global.list$ind
+      juvsizec.trans <- juv.sizec.global.list$trans
+      juvsizec.table <- juv.sizec.global.list$table
+      juvsizec.bf <- juv.sizec.global.list$bf_model
+      juvsizec.null <- juv.sizec.global.list$null_model
+      
+      juvsizec.accuracy <- .accu_predict(bestfitmodel = juvsizec.bf,
+        subdata = juvsizec.data, param = sizec[1], style = 2,
+        nullmodel = juvsizec.null, dist = sizecdist, trunc = jsizec.trunc,
+        approach = approach, quiet = quiet, check = accuracy)
+    } else {
+      if (!quiet) {
+        message("\nJuvenile tertiary size is constant so will not model it.\n")
+      }
+      juv.sizec.global.model <- juvsizec.bf <- 1
+      juvsizec.ind <- juvsizec.trans <- 0
+      juvsizec.accuracy <- NA
+    }
   } else {
-    juv.sizec.global.model <- 1
-    juvsizec.bf <- 1
-    juvsizec.ind <- 0
-    juvsizec.trans <- 0
+    juv.sizec.global.model <- juvsizec.bf <- 1
+    juvsizec.ind <- juvsizec.trans <- 0
     juvsizec.accuracy <- NA
   }
   
-  if (!is.numeric(formulae$juv.repst.model) & nchar(formulae$juv.repst.model) > 1) {
+  # Juvenile reproductive status
+  if (!is.na(juvestimate) & !is.numeric(formulae$main$juv.repst.model) &
+      nchar(formulae$main$juv.repst.model) > 1) {
+    juvsurv.data <- subset(juv.data, juv.data[,stage2col] == juvestimate & juv.data[,which(names(juv.data) == surv[2])] == 1)
+    juvsurv.data <- juvsurv.data[,vars_used_pm]
+    juvsurv.data <- juvsurv.data[complete.cases(juvsurv.data),]
+    juvobs.data <- subset(juvsurv.data, juvsurv.data[, which(names(juvsurv.data) == surv[1])] == 1)
+    
+    if (formulae$main$juv.obs.model != 1) {
+      juvsize.data <- subset(juvobs.data, juvobs.data[, which(names(juvobs.data) == obs[1])] == 1)
+      juvsize.data <- juvsize.data[which(!is.na(juvsize.data[, which(names(juvsize.data) == size[1])])),]
+      
+      if (sizeb_used) {
+        juvsizeb.data <- subset(juvobs.data, juvobs.data[, which(names(juvobs.data) == obs[1])] == 1)
+        juvsizeb.data <- juvsizeb.data[which(!is.na(juvsizeb.data[, which(names(juvsizeb.data) == sizeb[1])])),]
+      }
+      
+      if (sizec_used) {
+        juvsizec.data <- subset(juvobs.data, juvobs.data[, which(names(juvobs.data) == obs[1])] == 1)
+        juvsizec.data <- juvsizec.data[which(!is.na(juvsizec.data[, which(names(juvsizec.data) == sizec[1])])),]
+      }
+    } else {
+      juvsize.data <- juvobs.data
+      juvsize.data <- juvsize.data[which(!is.na(juvsize.data[, which(names(juvsize.data) == size[1])])),]
+      
+      if (sizeb_used) {
+        juvsizeb.data <- juvobs.data
+        juvsizeb.data <- juvsizeb.data[which(!is.na(juvsizeb.data[, which(names(juvsizeb.data) == sizeb[1])])),]
+      }
+      
+      if (sizec_used) {
+        juvsizec.data <- juvobs.data
+        juvsizec.data <- juvsizec.data[which(!is.na(juvsizec.data[, which(names(juvsizec.data) == sizec[1])])),]
+      }
+    }
+    juvrepst.data <- juvsize.data
+    juvrepst.ind <- length(unique(juvrepst.data[, which(names(juvrepst.data) == indiv)]))
+    juvrepst.trans <- dim(juvrepst.data)[1]
+    if (juvrepst.trans < 2) formulae$main$juv.repst.model = 1
     chosen_var <- which(names(juvrepst.data) == repst[1])
-    if (is.element(0, juvrepst.data[, chosen_var]) & is.element(1, juvrepst.data[, chosen_var])) {
+    
+    if (formulae$main$juv.repst.model != 1) {
+      juvrepst.uns <- unique(juvrepst.data[,which(names(juvrepst.data) == repst[1])])
+      if (length(juvrepst.uns) == 1) {
+        warning("Juvenile reproductive status in time t+1 appears to be constant, and so will be set to constant.\n",
+          call. = FALSE)
+        formulae$main$juv.repst.model <- juvrepst.uns[1]
+        formulae$alternate$juv.repst.model <- juvrepst.uns[1]
+        formulae$glm.alternate$juv.repst.model <- juvrepst.uns[1]
+        formulae$nocovs.alternate$juv.repst.model <- juvrepst.uns[1]
+      }
+    }
+    
+    if (is.element(0, juvrepst.data[, chosen_var]) & is.element(1, juvrepst.data[, chosen_var]) & 
+        nchar(formulae$main$juv.repst.model) > 1) {
+      nojrepstterms = c(formulae$main$total_terms[13], formulae$alternate$total_terms[13],
+        formulae$glm.alternate$total_terms[13], formulae$nocovs.alternate$total_terms[13])
+      
       juv.repst.global.list <- .headmaster_ritual(vrate = 9, approach = approach, 
-        dist = "binom", zero = FALSE, truncz = FALSE, quiet = quiet, quiet.mil = quiet.mileposts,
-        usedformula = formulae$juv.repst.model, subdata = juvrepst.data,
-        vind = juvrepst.ind, vtrans = juvrepst.trans, suite = suite,
-        global.only = global.only, criterion = used.criterion,
+        dist = "binom", zero = FALSE, truncz = FALSE, quiet = quiet,
+        quiet.mil = quiet.mileposts, usedformula = formulae$main$juv.repst.model,
+        subdata = juvrepst.data, vind = juvrepst.ind, vtrans = juvrepst.trans,
+        suite = suite[13], global.only = global.only, criterion = used.criterion,
         bestfit = bestfit, correction.patch, correction.year, correction.indiv,
-        alt_formula = alt.formulae$juv.repst.model,
-        alt_nocovsformula = alt.nocovs.formulae$juv.repst.model,
-        alt_glmformula = alt.glm.formulae$juv.repst.model, extra_fac = extra_factors)
+        alt_formula = formulae$alternate$juv.repst.model,
+        alt_nocovsformula = formulae$nocovs.alternate$juv.repst.model,
+        alt_glmformula = formulae$glm.alternate$juv.repst.model,
+        extra_fac = extra_factors[13], noterms = nojrepstterms)
       
       juv.repst.global.model <- juv.repst.global.list$model
       juvrepst.ind <- juv.repst.global.list$ind
       juvrepst.trans <- juv.repst.global.list$trans
       juvrepst.table <- juv.repst.global.list$table
-      juvrepst.bf <- juv.repst.global.list$bf.model
+      juvrepst.bf <- juv.repst.global.list$bf_model
       
       juvrepst.accuracy <- .accu_predict(bestfitmodel = juvrepst.bf,
         subdata = juvrepst.data, param = repst[1], quiet = quiet,
         check = accuracy)
       
     } else if (!is.element(0, juvrepst.data[, chosen_var])) {
-      if (!quiet) {message("\nJuvenile reproductive status response is constant so will not model it.")}
-      formulae$juv.repst.model <- 1
-      juv.repst.global.model <- 1
-      juvrepst.bf <- 1
-      juvrepst.ind <- 0
-      juvrepst.trans <- 0
+      if (!quiet) {
+        message("\nJuvenile reproductive status is constant so will not model it.\n")
+      }
+      formulae$main$juv.repst.model <- 1
+      juv.repst.global.model <- juvrepst.bf <- 1
+      juvrepst.ind <- juvrepst.trans <- 0
       juvrepst.accuracy <- 1
     } else {
-      if (!quiet) {message("\nJuvenile reproductive status response is constant so will not model it.")}
-      formulae$juv.repst.model <- 1
-      juv.repst.global.model <- 0
-      juvrepst.bf <- 0
-      juvrepst.ind <- 0
-      juvrepst.trans <- 0
+      if (!quiet) {
+        message("\nJuvenile reproductive status is constant so will not model it.\n")
+      }
+      formulae$main$juv.repst.model <- 1
+      juv.repst.global.model <- juvrepst.bf <- juvrepst.ind <- juvrepst.trans <- 0
       juvrepst.accuracy <- 1
     }
   } else {
-    juv.repst.global.model <- 1
-    juvrepst.bf <- 1
-    juvrepst.ind <- 0
-    juvrepst.trans <- 0
+    juv.repst.global.model <- juvrepst.bf <- 1
+    juvrepst.ind <- juvrepst.trans <- 0
     juvrepst.accuracy <- NA
   }
   
   if (!quiet.mileposts & global.only == FALSE) {message("\nFinished selecting best-fit models.\n")}
   
-  qcoutput <- cbind.data.frame(
-    c("survival", "observation", "size", "sizeb", "sizec", "reproduction", "fecundity",
-      "juvenile_survival", "juvnile_observation", "juvenile_size", "juvenile_sizeb",
-      "juvenile_sizec", "juvenile_reproduction", "juvenile_maturity"),
+  # Final output
+  qcoutput <- cbind.data.frame(c("survival", "observation", "size", "sizeb", "sizec",
+      "reproduction", "fecundity", "juvenile_survival", "juvnile_observation",
+      "juvenile_size", "juvenile_sizeb", "juvenile_sizec", "juvenile_reproduction",
+      "juvenile_maturity"),
     c(surv.ind, obs.ind, size.ind, sizeb.ind, sizec.ind, repst.ind, fec.ind, juvsurv.ind,
       juvobs.ind, juvsize.ind, juvsizeb.ind, juvsizec.ind, juvrepst.ind, juvmatst.ind),
     c(surv.trans, obs.trans, size.trans, sizeb.trans, sizec.trans, repst.trans, fec.trans,
@@ -2388,8 +2762,8 @@ modelsearch <- function(data, stageframe = NULL, historical = TRUE,
       "binomial", "binomial", sizedist, sizebdist, sizecdist, "binomial", "binomial"),
     c(surv.accuracy, obs.accuracy, size.accuracy, sizeb.accuracy, sizec.accuracy,
       repst.accuracy, fec.accuracy, juvsurv.accuracy, juvobs.accuracy, juvsize.accuracy, 
-      juvsizeb.accuracy, juvsizec.accuracy, juvrepst.accuracy, juvmatst.accuracy)
-  )
+      juvsizeb.accuracy, juvsizec.accuracy, juvrepst.accuracy, juvmatst.accuracy))
+  
   names(qcoutput) <- c("vital_rate", "individuals", "transitions",
     "distribution", "accuracy")
   
@@ -2427,7 +2801,7 @@ modelsearch <- function(data, stageframe = NULL, historical = TRUE,
     juv_survival_table = juvsurv.table, juv_observation_table = juvobs.table,
     juv_size_table = juvsize.table, juv_sizeb_table = juvsizeb.table,
     juv_sizec_table = juvsizec.table, juv_reproduction_table = juvrepst.table,
-    juv_maturity_table = juvmatst.table, paramnames = formulae$paramnames, 
+    juv_maturity_table = juvmatst.table, paramnames = formulae$main$paramnames, 
     criterion = bestfit, qc = qcoutput)
   class(full.output) <- "lefkoMod"
   
@@ -2506,6 +2880,9 @@ modelsearch <- function(data, stageframe = NULL, historical = TRUE,
 #' @param extra_fac An integer giving the number of extra fixed factors to
 #' include in the model. Primarily used to determine whether to dredge models
 #' if \code{suite = "cons"}.
+#' @param noterms An integer vector with four elements, comprising of the
+#' number of terms in the main model formula, alternate model formula,
+#' glm alternate model formula, and nocovs alternate model formula.
 #' @param null_model A logical value indicating whether to extract the null
 #' (y-intercept only) model.
 #'
@@ -2519,13 +2896,13 @@ modelsearch <- function(data, stageframe = NULL, historical = TRUE,
   zero = FALSE, truncz = FALSE, quiet = FALSE, quiet.mil = FALSE, usedformula,
   subdata, vind, vtrans, suite, global.only = FALSE, criterion = "AICc",
   bestfit = "AICc&k", correction.patch, correction.year, correction.indiv,
-  alt_formula, alt_nocovsformula, alt_glmformula, extra_fac,
+  alt_formula, alt_nocovsformula, alt_glmformula, extra_fac, noterms,
   null_model = FALSE) {
   
   old <- options()
   on.exit(options(old))
   
-  model.null <- null.model.num <- NA
+  model_null <- null_model_num <- df.models <- NA
   override <- cutswitch <- FALSE
   
   if (!is.na(dist)) {
@@ -2534,54 +2911,167 @@ modelsearch <- function(data, stageframe = NULL, historical = TRUE,
     }
   }
   
+  strange_vrates <- c(3, 5, 8, 10, 11, 12, 13)
+  if (is.element(vrate, strange_vrates)) {
+    if ((dist == "negbin" | dist == "poisson") & zero) {
+      if (noterms[1] > 15) {
+        if (noterms[2] > 0 & noterms[2] < 16) {
+          usedformula <- alt_formula
+          message("\nToo many terms for zero-inflated models. Will use a smaller set for those models.\n")
+        } else if (noterms[4] > 0 & noterms[4] < 16) {
+          usedformula <- alt_nocovsformula
+          message("\nToo many terms for zero-inflated models. Will use a smaller set for those models.\n")
+        } else if (noterms[3] > 0 & noterms[3] < 16) {
+          usedformula <- alt_glmformula
+          message("\nToo many terms for zero-inflated models. Will use a smaller set for those models.\n")
+        }
+      }
+    }
+  }
+  
   if (vrate == 1) {
-    if (!quiet.mil) {message("\nDeveloping global model of survival probability...\n");}
+    if (!quiet.mil) {
+      if (usedformula != "none") {
+        message("\nDeveloping global model of survival probability...\n");
+      } else {
+        message("\nSurvival probability will be treated as constant.\n")
+      }
+    }
     binom.model = TRUE
   } else if (vrate == 2) {
-    if (!quiet.mil) {message("\nDeveloping global model of observation probability...\n");}
+    if (!quiet.mil) {
+      if (usedformula != "none") {
+        message("\nDeveloping global model of observation probability...\n");
+      } else {
+        message("\nObservation probability will be treated as constant.\n")
+      }
+    }
     binom.model = TRUE
   } else if (vrate == 3) {
-    if (!quiet.mil) {message("\nDeveloping global model of size...\n");}
+    if (!quiet.mil) {
+      if (usedformula != "none") {
+        message("\nDeveloping global model of primary size...\n");
+      } else {
+        message("\nPrimary size will be treated as constant.\n")
+      }
+    }
     binom.model = FALSE
   } else if (vrate == 4) {
-    if (!quiet.mil) {message("\nDeveloping global model of reproduction probability...\n");}
+    if (!quiet.mil) {
+      if (usedformula != "none") {
+        message("\nDeveloping global model of reproduction probability...\n");
+      } else {
+        message("\nReproduction probability will be treated as constant.\n")
+      }
+    }
     binom.model = TRUE
   } else if (vrate == 5) {
-    if (!quiet.mil) {message("\nDeveloping global model of fecundity...\n");}
+    if (!quiet.mil) {
+      if (usedformula != "none") {
+        message("\nDeveloping global model of fecundity...\n");
+      } else {
+        message("\nFecundity will be treated as constant.\n")
+      }
+    }
     binom.model = FALSE
   } else if (vrate == 6) {
-    if (!quiet.mil) {message("\nDeveloping global model of juvenile survival probability...\n");}
+    if (!quiet.mil) {
+      if (usedformula != "none") {
+        message("\nDeveloping global model of juvenile survival probability...\n");
+      } else {
+        message("\nJuvenile survival probability will be treated as constant.\n")
+      }
+    }
     binom.model = TRUE
   } else if (vrate == 7) {
-    if (!quiet.mil) {message("\nDeveloping global model of juvenile observation probability...\n");}
+    if (!quiet.mil) {
+      if (usedformula != "none") {
+        message("\nDeveloping global model of juvenile observation probability...\n");
+      } else {
+        message("\nJuvenile observation probability will be treated as constant.\n")
+      }
+    }
     binom.model = TRUE
   } else if (vrate == 8) {
-    if (!quiet.mil) {message("\nDeveloping global model of juvenile size...\n");}
+    if (!quiet.mil) {
+      if (usedformula != "none") {
+        message("\nDeveloping global model of juvenile primary size...\n");
+      } else {
+        message("\nJuvenile primary size will be treated as constant.\n")
+      }
+    }
     binom.model = FALSE
   } else if (vrate == 9) {
-    if (!quiet.mil) {message("\nDeveloping global model of juvenile reproduction probability...\n");}
+    if (!quiet.mil) {
+      if (usedformula != "none") {
+        message("\nDeveloping global model of juvenile reproduction probability...\n");
+      } else {
+        message("\nJuvenile reproduction probability will be treated as constant.\n")
+      }
+    }
     binom.model = TRUE
   } else if (vrate == 10) {
-    if (!quiet.mil) {message("\nDeveloping global model of secondary size...\n");}
+    if (!quiet.mil) {
+      if (usedformula != "none") {
+        message("\nDeveloping global model of secondary size...\n");
+      } else {
+        message("\nSecondary size will be treated as constant.\n")
+      }
+    }
     binom.model = FALSE
   } else if (vrate == 11) {
-    if (!quiet.mil) {message("\nDeveloping global model of tertiary size...\n");}
+    if (!quiet.mil) {
+      if (usedformula != "none") {
+        message("\nDeveloping global model of tertiary size...\n");
+      } else {
+        message("\nTertiary size will be treated as constant.\n")
+      }
+    }
     binom.model = FALSE
   } else if (vrate == 12) {
-    if (!quiet.mil) {message("\nDeveloping global model of juvenile secondary size...\n");}
+    if (!quiet.mil) {
+      if (usedformula != "none") {
+        message("\nDeveloping global model of juvenile secondary size...\n");
+      } else {
+        message("\nJuvenile secondary size will be treated as constant.\n")
+      }
+    }
     binom.model = FALSE
   } else if (vrate == 13) {
-    if (!quiet.mil) {message("\nDeveloping global model of juvenile tertiary size...\n");}
+    if (!quiet.mil) {
+      if (usedformula != "none") {
+        message("\nDeveloping global model of juvenile tertiary size...\n");
+      } else {
+        message("\nJuvenile tertiary size will be treated as constant.\n")
+      }
+    }
     binom.model = FALSE
   } else if (vrate == 14) {
-    if (!quiet.mil) {message("\nDeveloping global model of juvenile maturity status...\n");}
+    if (!quiet.mil) {
+      if (usedformula != "none") {
+        message("\nDeveloping global model of juvenile maturity probability...\n");
+      } else {
+        message("\nJuvenile maturity probability will be treated as constant.\n")
+      }
+    }
     binom.model = TRUE
   } else {
     stop("Vital rate model not recognized.", call. = FALSE)
   }
   
-  global.model <- .levindurosier(usedformula, subdata, approach, binom.model,
-    dist, truncz, zero, quiet)
+  if (usedformula != "none") {
+    global.model <- .levindurosier(usedformula, subdata, approach, binom.model,
+      dist, truncz, zero, quiet)
+  } else {
+    global.model <- 1
+    vind <- 0
+    vtrans <- 0
+    model_bf <- global.model
+    model_null <- global.model
+    model_table <- NA
+    
+    cutswitch <- TRUE
+  }
   
   if (any(is(global.model, "try-error"))) {
     if (!is.na(alt_formula)) {
@@ -2602,11 +3092,12 @@ modelsearch <- function(data, stageframe = NULL, historical = TRUE,
     if (any(is(global.model, "try-error"))) {
       nopat.model <- nox.model
       
-      if (!is.na(correction.patch)) {
-        nopat.model <- gsub(correction.patch, "", nopat.model, fixed = TRUE)
+      cor_patch <- apply(as.matrix(c(1:4)), 1, function(X) {grepl(correction.patch[X], nopat.model)})
+      if (any(cor_patch)) {
+        nopat.model <- gsub(correction.patch[which(cor_patch)[1]], "", nopat.model, fixed = TRUE)
       }
       
-      if (nox.model != nopat.model) {
+      if (nopat.model != nox.model) {
         if (!quiet) {
           message("\nGlobal model estimation difficulties.
             Attempting a global model without a patch term.")
@@ -2617,13 +3108,14 @@ modelsearch <- function(data, stageframe = NULL, historical = TRUE,
     }
     
     if (any(is(global.model, "try-error"))) {
-      noyr.model <- nopat.model
+      noyr.model <- nox.model
       
-      if (!is.na(correction.year)) {
-        noyr.model <- gsub(correction.year, "", noyr.model, fixed = TRUE)
+      cor_year <- apply(as.matrix(c(1:4)), 1, function(X) {grepl(correction.year[X], noyr.model)})
+      if (any(cor_year)) {
+        noyr.model <- gsub(correction.year[which(cor_year)[1]], "", noyr.model, fixed = TRUE)
       }
       
-      if (noyr.model != nopat.model) {
+      if (noyr.model != nox.model) {
         if (!quiet) {
           message("\nGlobal model estimation difficulties.
             Attempting a global model without a year term.")
@@ -2647,8 +3139,9 @@ modelsearch <- function(data, stageframe = NULL, historical = TRUE,
     if (any(is(global.model, "try-error"))) {
       nocovpat.model <- nocovs.model
       
-      if (!is.na(correction.patch)) {
-        nocovpat.model <- gsub(correction.patch, "", nocovpat.model, fixed = TRUE)
+      cor_patch <- apply(as.matrix(c(1:4)), 1, function(X) {grepl(correction.patch[X], nocovpat.model)})
+      if (any(cor_patch)) {
+        nocovpat.model <- gsub(correction.patch[which(cor_patch)[1]], "", nocovpat.model, fixed = TRUE)
       }
       
       if (nocovpat.model != nocovs.model) {
@@ -2662,10 +3155,11 @@ modelsearch <- function(data, stageframe = NULL, historical = TRUE,
     }
     
     if (any(is(global.model, "try-error"))) {
-      nocovyr.model <- nocovpat.model
+      nocovyr.model <- nocovs.model
       
-      if (!is.na(correction.year)) {
-        nocovyr.model <- gsub(correction.year, "", nocovyr.model, fixed = TRUE)
+      cor_year <- apply(as.matrix(c(1:4)), 1, function(X) {grepl(correction.year[X], nocovyr.model)})
+      if (any(cor_year)) {
+        nocovyr.model <- gsub(correction.year[which(cor_year)[1]], "", nocovyr.model, fixed = TRUE)
       }
       
       if (nocovyr.model != nocovpat.model) {
@@ -2681,8 +3175,9 @@ modelsearch <- function(data, stageframe = NULL, historical = TRUE,
     if (any(is(global.model, "try-error"))) {
       noind.model <- usedformula
       
-      if (!is.na(correction.indiv)) {
-        noind.model <- gsub(correction.indiv, "", noind.model, fixed = TRUE)
+      cor_indiv <- apply(as.matrix(c(1:4)), 1, function(X) {grepl(correction.indiv[X], noind.model)})
+      if (any(cor_indiv)) {
+        noind.model <- gsub(correction.indiv[which(cor_indiv)[1]], "", noind.model, fixed = TRUE)
       }
       
       if (noind.model != usedformula) {
@@ -2743,9 +3238,9 @@ modelsearch <- function(data, stageframe = NULL, historical = TRUE,
       global.model <- 1
       vind <- 0
       vtrans <- 0
-      model.bf <- global.model
-      model.null <- global.model
-      model.table <- NA
+      model_bf <- global.model
+      model_null <- global.model
+      model_table <- NA
       
       cutswitch <- TRUE
     }
@@ -2782,7 +3277,7 @@ modelsearch <- function(data, stageframe = NULL, historical = TRUE,
       if (!quiet.mil) {message("\nGlobal model of juvenile maturity status developed. Proceeding with model dredge...\n");}
     }
     
-    model.table <- NA
+    model_table <- NA
     
     if (suite != "cons") override <- TRUE
     if (extra_fac > 0) override <- TRUE
@@ -2793,14 +3288,17 @@ modelsearch <- function(data, stageframe = NULL, historical = TRUE,
       if (usedformula != 1) {
         options(na.action = "na.fail")
         if (!quiet) {
-          model.table <- try(MuMIn::dredge(global.model, rank = criterion), silent = FALSE)
+          model_table <- try(MuMIn::dredge(global.model, rank = criterion), silent = FALSE)
         } else {
-          model.table <- suppressWarnings(suppressMessages(try(MuMIn::dredge(global.model, 
+          model_table <- suppressWarnings(suppressMessages(try(MuMIn::dredge(global.model, 
                   rank = criterion), silent = TRUE)))
         }
-        null.model.num <- which(model.table$df == min(model.table$df))[1]
+        null_model_num <- try(which(model_table$df == min(model_table$df))[1])
+        if (is(null_model_num, "try-error")) {
+          stop("Currently used model cannot be run. Try running with fewer parameters.", call. = FALSE)
+        }
         
-        if (any(is(model.table, "try-error")) & !quiet.mil) {
+        if (is(model_table, "try-error") & !quiet.mil) {
           if (vrate == 1) {
             message("\nDredge of survival probability failed.\n")
           } else if (vrate == 2) {
@@ -2836,7 +3334,7 @@ modelsearch <- function(data, stageframe = NULL, historical = TRUE,
     
     #Here we extract the best-fit model
     if (length(grep("&k", bestfit)) > 0) {
-      if (any(is(model.table, "model.selection"))) {
+      if (any(is(model_table, "model.selection"))) {
         if (!quiet) {
           if (vrate == 1) {
             message("\nExtracting best-fit model of survival probability.\n")
@@ -2869,50 +3367,54 @@ modelsearch <- function(data, stageframe = NULL, historical = TRUE,
           }
         }
         
-        relevant.models <- which(model.table$delta <= 2)
-        df.models <- which(model.table$df[relevant.models] == min(model.table$df[relevant.models]))
-        if (length(df.models) > 1) {
-          df.models <- min(df.models)
+        if (is.na(model_table$delta[1])) {
+          df.models <- c(1)
+        } else {
+          relevant.models <- which(model_table$delta <= 2)
+          df.models <- which(model_table$df[relevant.models] == min(model_table$df[relevant.models]))
+          if (length(df.models) > 1) {
+            df.models <- min(df.models)
+          }
         }
         if (quiet) {
-          model.bf <- suppressWarnings(suppressMessages(eval(stats::getCall(model.table, min(df.models)))))
+          model_bf <- suppressWarnings(suppressMessages(eval(stats::getCall(model_table, df.models[1]))))
           if (null_model) {
-            model.null <- suppressWarnings(suppressMessages(eval(stats::getCall(model.table, null.model.num))))
+            model_null <- suppressWarnings(suppressMessages(eval(stats::getCall(model_table, null_model_num))))
           }
         } else {
-          model.bf <- eval(stats::getCall(model.table, min(df.models)))
+          model_bf <- eval(stats::getCall(model_table, df.models[1]))
           if (null_model) {
-            model.null <- eval(stats::getCall(model.table, null.model.num))
+            model_null <- eval(stats::getCall(model_table, null_model_num))
           }
         }
       } else {
-        model.bf <- global.model
+        model_bf <- global.model
       }
       
     } else {
-      if (any(is(model.table, "model.selection"))) {
+      if (any(is(model_table, "model.selection"))) {
         if (!quiet) {
           message("\nExtracting best-fit model.\n")
         }
         
         if (quiet) {
-          model.bf <- suppressWarnings(suppressMessages(eval(stats::getCall(model.table, 1))))
+          model_bf <- suppressWarnings(suppressMessages(eval(stats::getCall(model_table, 1))))
           if (null_model) {
-            model.null <- suppressWarnings(suppressMessages(eval(stats::getCall(model.table, null.model.num))))
+            model_null <- suppressWarnings(suppressMessages(eval(stats::getCall(model_table, null_model_num))))
           }
         } else {
-          model.bf <- eval(stats::getCall(model.table, 1))
+          model_bf <- eval(stats::getCall(model_table, 1))
           if (null_model) {
-            model.null <- eval(stats::getCall(model.table, null.model.num))
+            model_null <- eval(stats::getCall(model_table, null_model_num))
           }
         }
       } else {
-        model.bf <- global.model
+        model_bf <- global.model
       }
     }
   }
   output <- list(model = global.model, ind = vind, trans = vtrans,
-    bf.model = model.bf, null.model = model.null, table = model.table)
+    bf_model = model_bf, null_model = model_null, table = model_table)
   
   return(output)
 }
@@ -2923,7 +3425,7 @@ modelsearch <- function(data, stageframe = NULL, historical = TRUE,
 #' build the global model to be dredged in function \code{\link{modelsearch}()}.
 #' 
 #' @name .levindurosier
-
+#' 
 #' @param usedformula The formula to be used in the linear modeling call.
 #' @param subdata The data subset to be used in the linear modeling call.
 #' @param approach Statistical approach, currently either "mixed" or "glm".
@@ -2949,72 +3451,72 @@ modelsearch <- function(data, stageframe = NULL, historical = TRUE,
   if (!quiet) {
     if (approach == "mixed" & !is.na(dist)) {
       if (binom.model) {
-        global.model <- try(lme4::glmer(formula = stats::as.formula(usedformula), 
+        global_model <- try(lme4::glmer(formula = stats::as.formula(usedformula), 
             data = subdata, family = "binomial"), silent = quiet)
       } else {
         if (dist == "gaussian") {
-          global.model <- try(lme4::lmer(formula = stats::as.formula(usedformula),
+          global_model <- try(lme4::lmer(formula = stats::as.formula(usedformula),
               data = subdata), silent = quiet)
         } else if (dist == "gamma") {
-            global.model <- try(lme4::glmer(formula = stats::as.formula(usedformula),
+            global_model <- try(lme4::glmer(formula = stats::as.formula(usedformula),
                 data = subdata, family = "Gamma"), silent = quiet)
         } else if (!truncz) {
           if (dist == "poisson" & !zero) {
-            global.model <- try(lme4::glmer(formula = stats::as.formula(usedformula),
+            global_model <- try(lme4::glmer(formula = stats::as.formula(usedformula),
                 data = subdata, family = "poisson"), silent = quiet)
           } else if (dist == "poisson" & zero) {
-            global.model <- try(glmmTMB::glmmTMB(formula = stats::as.formula(usedformula),
+            global_model <- try(glmmTMB::glmmTMB(formula = stats::as.formula(usedformula),
                 data = subdata, ziformula=~., family = "poisson"), silent = quiet)
           } else if (dist == "negbin" & !zero) {
-            global.model <- try(glmmTMB::glmmTMB(formula = stats::as.formula(usedformula),
+            global_model <- try(glmmTMB::glmmTMB(formula = stats::as.formula(usedformula),
                 data = subdata, ziformula=~0, family = glmmTMB::nbinom2), silent = quiet)
           } else if (dist == "negbin" & zero) {
-            global.model <- try(glmmTMB::glmmTMB(formula = stats::as.formula(usedformula),
+            global_model <- try(glmmTMB::glmmTMB(formula = stats::as.formula(usedformula),
                 data = subdata, ziformula=~., family = glmmTMB::nbinom2), silent = quiet)
           }
         } else if (truncz) {
           if (dist == "poisson" & !zero) {
-            global.model <- try(glmmTMB::glmmTMB(formula = stats::as.formula(usedformula),
+            global_model <- try(glmmTMB::glmmTMB(formula = stats::as.formula(usedformula),
                 data = subdata, family = glmmTMB::truncated_poisson), silent = quiet)
           } else if (dist == "negbin" & !zero) {
-            global.model <- try(glmmTMB::glmmTMB(formula = stats::as.formula(usedformula),
+            global_model <- try(glmmTMB::glmmTMB(formula = stats::as.formula(usedformula),
                 data = subdata, ziformula=~0, family = glmmTMB::truncated_nbinom2), silent = quiet)
           }
         }
       }
     } else if (approach == "glm" & !is.na(dist)) {
       if (binom.model) {
-        global.model <- try(stats::glm(formula = stats::as.formula(usedformula),
+        global_model <- try(stats::glm(formula = stats::as.formula(usedformula),
             data = subdata, family = "binomial"), silent = quiet)
       } else {
         if (dist == "gaussian") {
-          global.model <- try(stats::lm(formula = stats::as.formula(usedformula),
+          global_model <- try(stats::lm(formula = stats::as.formula(usedformula),
               data = subdata), silent = quiet)
         } else if (dist == "gamma") {
-          global.model <- try(stats::glm(formula = stats::as.formula(usedformula),
+          global_model <- try(stats::glm(formula = stats::as.formula(usedformula),
               data = subdata, family = "Gamma"), silent = quiet)
         } else if (!truncz) {
           if (dist == "poisson" & !zero) {
-            global.model <- try(stats::glm(formula = stats::as.formula(usedformula),
+            global_model <- try(stats::glm(formula = stats::as.formula(usedformula),
                 data = subdata, family = "poisson"), silent = quiet)
           } else if (dist == "poisson" & zero) {
-            global.model <- try(pscl::zeroinfl(formula = stats::as.formula(usedformula),
+            global_model <- try(pscl::zeroinfl(formula = stats::as.formula(usedformula),
                 data = subdata, dist = "poisson"), silent = quiet)
           } else if (dist == "negbin" & !zero) {
-            global.model <- try(MASS::glm.nb(formula = stats::as.formula(usedformula),
+            global_model <- try(MASS::glm.nb(formula = stats::as.formula(usedformula),
                 data = subdata), silent = quiet)
           } else if (dist == "negbin" & zero) {
-            global.model <- try(pscl::zeroinfl(formula = stats::as.formula(usedformula), 
+            global_model <- try(pscl::zeroinfl(formula = stats::as.formula(usedformula), 
                 data = subdata, dist = "negbin"), silent = quiet)
           }
         } else if (truncz) {
           usedformula <- gsub(" + 1", "", usedformula, fixed = TRUE)
           
           if (dist == "poisson" & !zero) {
-            global.model <- try(VGAM::vglm(formula = stats::as.formula(usedformula),
+            global_model <- try(VGAM::vglm(formula = stats::as.formula(usedformula),
                 data = subdata, family = VGAM::pospoisson()), silent = quiet)
           } else if (dist == "negbin" & !zero) {
-            global.model <- try(VGAM::vglm(formula = stats::as.formula(usedformula),
+            global_model <- try(VGAM::vglm(formula = stats::as.formula(usedformula),
                 data = subdata, family = VGAM::posnegbinomial()), silent = quiet)
           }
         }
@@ -3025,42 +3527,42 @@ modelsearch <- function(data, stageframe = NULL, historical = TRUE,
   } else {
     if (approach == "mixed" & !is.na(dist)) {
       if (binom.model) {
-        global.model <- suppressWarnings(suppressMessages(try(lme4::glmer(formula =
+        global_model <- suppressWarnings(suppressMessages(try(lme4::glmer(formula =
             stats::as.formula(usedformula), data = subdata, family = "binomial"),
             silent = quiet)))
       } else {
         if (dist == "gaussian") {
-          global.model <- suppressWarnings(suppressMessages(try(lme4::lmer(formula =
+          global_model <- suppressWarnings(suppressMessages(try(lme4::lmer(formula =
               stats::as.formula(usedformula), data = subdata), silent = quiet)))
         } else if (dist == "gamma") {
-            global.model <- suppressWarnings(suppressMessages(try(lme4::glmer(formula =
+            global_model <- suppressWarnings(suppressMessages(try(lme4::glmer(formula =
                 stats::as.formula(usedformula), data = subdata, family = "Gamma"),
                 silent = quiet)))
         } else if (!truncz) {
           if (dist == "poisson" & !zero) {
-            global.model <- suppressWarnings(suppressMessages(try(lme4::glmer(formula =
+            global_model <- suppressWarnings(suppressMessages(try(lme4::glmer(formula =
                 stats::as.formula(usedformula), data = subdata, family = "poisson"),
                 silent = quiet)))
           } else if (dist == "poisson" & zero) {
-            global.model <- suppressWarnings(suppressMessages(try(glmmTMB::glmmTMB(formula = 
+            global_model <- suppressWarnings(suppressMessages(try(glmmTMB::glmmTMB(formula = 
                 stats::as.formula(usedformula), data = subdata, ziformula=~., family = "poisson"),
                 silent = quiet)))
           } else if (dist == "negbin" & !zero) {
-            global.model <- suppressWarnings(suppressMessages(try(glmmTMB::glmmTMB(formula = 
+            global_model <- suppressWarnings(suppressMessages(try(glmmTMB::glmmTMB(formula = 
                 stats::as.formula(usedformula), data = subdata, ziformula=~0,
                 family = glmmTMB::nbinom2), silent = quiet)))
           } else if (dist == "negbin" & zero) {
-            global.model <- suppressWarnings(suppressMessages(try(glmmTMB::glmmTMB(formula = 
+            global_model <- suppressWarnings(suppressMessages(try(glmmTMB::glmmTMB(formula = 
                 stats::as.formula(usedformula), data = subdata, ziformula=~.,
                 family = glmmTMB::nbinom2), silent = quiet)))
           }
         } else if (truncz) {
           if (dist == "poisson" & !zero) {
-            global.model <- suppressWarnings(suppressMessages(try(glmmTMB::glmmTMB(formula = 
+            global_model <- suppressWarnings(suppressMessages(try(glmmTMB::glmmTMB(formula = 
                 stats::as.formula(usedformula), data = subdata,
                 family = glmmTMB::truncated_poisson), silent = quiet)))
           } else if (dist == "negbin" & !zero) {
-            global.model <- suppressWarnings(suppressMessages(try(glmmTMB::glmmTMB(formula = 
+            global_model <- suppressWarnings(suppressMessages(try(glmmTMB::glmmTMB(formula = 
                 stats::as.formula(usedformula), data = subdata, ziformula=~0,
                 family = glmmTMB::truncated_nbinom2), silent = quiet)))
           }
@@ -3068,31 +3570,31 @@ modelsearch <- function(data, stageframe = NULL, historical = TRUE,
       }
     } else if (approach == "glm" & !is.na(dist)) {
       if (binom.model) {
-        global.model <- suppressWarnings(suppressMessages(try(stats::glm(formula =
+        global_model <- suppressWarnings(suppressMessages(try(stats::glm(formula =
             stats::as.formula(usedformula), data = subdata, family = "binomial"),
             silent = quiet)))
       } else {
         if (dist == "gaussian") {
-          global.model <- suppressWarnings(suppressMessages(try(stats::lm(formula =
+          global_model <- suppressWarnings(suppressMessages(try(stats::lm(formula =
               stats::as.formula(usedformula), data = subdata), silent = quiet)))
         } else if (dist == "gamma") {
-          global.model <- suppressWarnings(suppressMessages(try(stats::glm(formula =
+          global_model <- suppressWarnings(suppressMessages(try(stats::glm(formula =
               stats::as.formula(usedformula), data = subdata, family = "Gamma"),
               silent = quiet)))
         } else if (!truncz) {
           if (dist == "poisson" & !zero) {
-            global.model <- suppressWarnings(suppressMessages(try(stats::glm(formula =
+            global_model <- suppressWarnings(suppressMessages(try(stats::glm(formula =
                 stats::as.formula(usedformula), data = subdata, family = "poisson"),
                 silent = quiet)))
           } else if (dist == "poisson" & zero) {
-            global.model <- suppressWarnings(suppressMessages(try(pscl::zeroinfl(formula = 
+            global_model <- suppressWarnings(suppressMessages(try(pscl::zeroinfl(formula = 
                 stats::as.formula(usedformula), data = subdata, dist = "poisson"),
                 silent = quiet)))
           } else if (dist == "negbin" & !zero) {
-            global.model <- suppressWarnings(suppressMessages(try(MASS::glm.nb(formula = 
+            global_model <- suppressWarnings(suppressMessages(try(MASS::glm.nb(formula = 
                 stats::as.formula(usedformula), data = subdata), silent = quiet)))
           } else if (dist == "negbin" & zero) {
-            global.model <- suppressWarnings(suppressMessages(try(pscl::zeroinfl(formula = 
+            global_model <- suppressWarnings(suppressMessages(try(pscl::zeroinfl(formula = 
                 stats::as.formula(usedformula), data = subdata, dist = "negbin"),
                 silent = quiet)))
           }
@@ -3100,11 +3602,11 @@ modelsearch <- function(data, stageframe = NULL, historical = TRUE,
           usedformula <- gsub(" + 1", "", usedformula, fixed = TRUE)
           
           if (dist == "poisson" & !zero) {
-            global.model <- suppressWarnings(suppressMessages(try(VGAM::vglm(formula =
+            global_model <- suppressWarnings(suppressMessages(try(VGAM::vglm(formula =
                 stats::as.formula(usedformula), data = subdata, family = VGAM::pospoisson()),
                 silent = quiet)))
           } else if (dist == "negbin" & !zero) {
-            global.model <- suppressWarnings(suppressMessages(try(VGAM::vglm(formula =
+            global_model <- suppressWarnings(suppressMessages(try(VGAM::vglm(formula =
                 stats::as.formula(usedformula), data = subdata, family = VGAM::posnegbinomial()),
                 silent = quiet)))
           }
@@ -3114,7 +3616,7 @@ modelsearch <- function(data, stageframe = NULL, historical = TRUE,
       stop("Modeling approach not recognized.", call. = FALSE)
     }
   }
-  return(global.model)
+  return(global_model)
 }
 
 #' Estimate Accuracy of Binomial Model
@@ -3165,54 +3667,58 @@ modelsearch <- function(data, stageframe = NULL, historical = TRUE,
   pred_vec <- NULL
   accuracy <- NA 
   
-  #if (check & !any(class(bestfitmodel) == "vglm")) {
-    if (!is.numeric(bestfitmodel) & !is(bestfitmodel, "NULL")) {
+  if (!is.numeric(bestfitmodel) & !is(bestfitmodel, "NULL")) {
+    
+    if (is(bestfitmodel, "vglm")) {
+      pred_vec <- try(VGAM::predictvglm(bestfitmodel, newdata = subdata,
+        type = "response"), silent = TRUE)
+      if (is(pred_vec, "try-error")) return(NA)
+    } else {
+      pred_vec <- try(stats::predict(bestfitmodel, newdata = subdata,
+        type = "response"), silent = TRUE)
+      if (is(pred_vec, "try-error")) return(NA)
+    }
+    
+    test_vec <- subdata[,which(names(subdata) == param)]
+    
+    if (style == 1) {
+      pred_vec <- round(pred_vec)
       
-      if (is(bestfitmodel, "vglm")) {
-        pred_vec <- VGAM::predictvglm(bestfitmodel, newdata = subdata,
-          type = "response")
-      } else {
-        pred_vec <- stats::predict(bestfitmodel, newdata = subdata,
-          type = "response")
-      }
+      results_vec <- pred_vec - test_vec
+      results_vec <- results_vec[!is.na(results_vec)]
       
-      test_vec <- subdata[,which(names(subdata) == param)]
+      accuracy <- length(which(results_vec == 0)) / length(results_vec)
       
-      if (style == 1) {
-        pred_vec <- round(pred_vec)
-        
-        results_vec <- pred_vec - test_vec
-        results_vec <- results_vec[!is.na(results_vec)]
-        
-        accuracy <- length(which(results_vec == 0)) / length(results_vec)
-        
-      } else if (style == 2) {
-        
-        if (approach == "mixed") {
-          if (dist == "poisson" | dist == "negbin") {
-            pred_vec <- round(pred_vec)
-            if (trunc) {
-              pred_vec <- pred_vec + 1
-            }
+    } else if (style == 2) {
+      
+      mean_y <- mean(test_vec, na.rm = TRUE)
+      used_test_vec <- test_vec
+      
+      if (approach == "mixed") {
+        if (dist == "poisson" | dist == "negbin") {
+          pred_vec <- round(pred_vec)
+          mean_y <- round(mean_y)
+          used_test_vec <- round(used_test_vec)
+          if (trunc) {
+            pred_vec <- pred_vec + 1
           }
         }
-        results_vec <- pred_vec - test_vec
-        results_vec <- results_vec[!is.na(results_vec)]
-        
-        squares_vec <- (results_vec * results_vec)
-        sum_squares <- sum(squares_vec)
-        
-        mean_y <- mean(test_vec, na.rm = TRUE)
-        
-        base_total <- test_vec - mean_y
-        base_total <- base_total[!is.na(base_total)]
-        base_squares <- base_total * base_total
-        sum_base_squares <- sum(base_squares)
-        
-        accuracy <- 1.000 - (sum_squares / sum_base_squares)
-        
       }
+      results_vec <- pred_vec - test_vec
+      results_vec <- results_vec[!is.na(results_vec)]
+      
+      squares_vec <- (results_vec * results_vec)
+      sum_squares <- sum(squares_vec)
+      
+      base_total <- used_test_vec - mean_y
+      base_total <- base_total[!is.na(base_total)]
+      base_squares <- base_total * base_total
+      sum_base_squares <- sum(base_squares)
+      
+      accuracy <- 1.000 - (sum_squares / sum_base_squares)
+      
     }
+  }
   
   return(accuracy)
 }

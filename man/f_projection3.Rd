@@ -18,7 +18,7 @@ f_projection3(
   repvalue = FALSE,
   integeronly = FALSE,
   substoch = 0L,
-  ipm_method = "CDF",
+  ipm_cdf = TRUE,
   nreps = 1L,
   times = 10000L,
   repmod = 1,
@@ -59,7 +59,8 @@ f_projection3(
   start_frame = NULL,
   tweights = NULL,
   density = NULL,
-  density_vr = NULL
+  density_vr = NULL,
+  sparse = NULL
 )
 }
 \arguments{
@@ -123,10 +124,10 @@ total no more than 1.0, in addition to the actions outlined for option
 \code{1}. Both settings \code{1} and \code{2} change negative fecundity
 elements to \code{0.0}.}
 
-\item{ipm_method}{A string indicating what method to use to estimate size
-transition probabilities, if size is treated as continuous. Options include:
-\code{"midpoint"}, which utilizes the midpoint method; and \code{"CDF"},
-which uses the cumulative distribution function. Defaults to \code{"CDF"}.}
+\item{ipm_cdf}{A logical value indicating whether to estimate size
+transitions using the cumulative density function in cases with continuous
+distributions. Defaults to \code{TRUE}, with the midpoint method used if
+\code{FALSE}.}
 
 \item{nreps}{The number of replicate projections. Defaults to \code{1}.}
 
@@ -355,6 +356,13 @@ object of class \code{lefkoDens}, which is the output from function
 relationships in vital rates, if such relationships are to be assumed. The
 data frame must be of class \code{lefkoDensVR}, which is the output from the
 function \code{\link{density_vr}()}.}
+
+\item{sparse}{A text string indicating whether to use sparse matrix encoding
+(\code{"yes"}) or dense matrix encoding (\code{"no"}). Defaults to
+\code{"auto"}, in which case sparse matrix encoding is used with square
+matrices with at least 50 rows and no more than 50\% of elements with values
+greater than zero. Can also be entered as a logical value if forced sparse
+(\code{TRUE}) or forced dense (\code{FALSE}) projection is desired.}
 }
 \value{
 A list of class \code{lefkoProj}, which always includes the first
@@ -374,15 +382,15 @@ structure is the same as in \code{\link{projection3}()}.}
 \item{pop_size}{A list of matrices showing the total population size in each
 occasion per replicate (row within data frame) per pop-patch or population
 (list element). Only a single pop-patch or population is allowed in
-\code{f_projection3()}}
+\code{f_projection3()}.}
 \item{labels}{A data frame showing the order of populations and patches in
 item \code{projection}.}
 \item{ahstages}{The original stageframe used in the study.}
 \item{hstages}{A data frame showing the order of historical stage pairs.}
 \item{agestages}{A data frame showing the order of age-stage pairs.}
-\item{labels}{A short data frame indicating the population (always \code{1},
+\item{labels}{A short data frame indicating the population (always \code{1}),
 and patch (either the numeric index of the single chosen patch, or \code{1}
-in all other cases).)}
+in all other cases).}
 \item{control}{A short vector indicating the number of replicates and the
 number of occasions projected per replicate.}
 \item{density}{The data frame input under the density option. Only provided
@@ -395,24 +403,23 @@ Function \code{f_projection3()} develops and projects function-based matrix
 models. Unlike \code{\link{projection3}()}, which uses matrices provided as
 input via already created \code{lefkoMat} objects, function
 \code{f_projection3()} creates matrices at each time step from vital rate
-models and parameter inputs provided. Projections may be deterministic or
-stochastic, and may be density dependent in either case. Replicates may also
-be produced.
+models and parameter inputs provided. Projections may be stochastic or not,
+and may be density dependent in either case. Also handles replication.
 }
 \section{Notes}{
 
 Population projection can be a very time-consuming activity, and it is most
 time-consuming when matrices need to be created at each time step. We have
-created this function to be as quick as possible, but some options will slow
-the analysis down. First, the \code{err_check} option should always be set
-to \code{FALSE}, as the added created output will not only slow the analysis
+created this function to work as quickly as possible, but some options will
+slow analysis. First, the \code{err_check} option should always be set to
+\code{FALSE}, as the added created output will not only slow the analysis
 down but also potentially crash the memory if matrices are large enough.
 Second, the \code{repvalue} option should be set to \code{FALSE} unless
 reproductive values are genuinely needed, since this step requires
 concurrent backward projection and so in some cases may double total run
 time. Finally, if the only needed data is the total population size and
-actual age/stage structure at each time step, then setting \code{growthonly
-= TRUE} will yield the quickest possible run time.
+age/stage structure at each time step, then setting \code{growthonly = TRUE}
+will yield the quickest possible run time.
 
 Projections with large matrices may take a long time to run. To assess the
 likely running time, try using a low number of iterations on a single
@@ -450,11 +457,16 @@ remainder of the projection.
 
 This function does not reduce the dimensionality of matrices developed for
 projection.
+
+Speed can sometimes be increased by shifting from automatic sparse matrix
+determination to forced dense or sparse matrix projection. This will most
+likely occur when matrices have between 30 and 300 rows and columns.
+Defaults work best when matrices are very small and dense, or very large and
+sparse.
 }
 
 \examples{
 \donttest{
-# Lathyrus projection example with historical matrices
 data(lathyrus)
 
 sizevector <- c(0, 4.6, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 1, 2, 3, 4, 5, 6, 7, 8,
@@ -493,7 +505,7 @@ lathmodelsln3 <- modelsearch(lathvertln, historical = TRUE,
   vitalrates = c("surv", "obs", "size", "repst", "fec"), juvestimate = "Sdl",
   bestfit = "AICc&k", sizedist = "gaussian", fecdist = "poisson", 
   indiv = "individ", patch = "patchid", year = "year2", year.as.random = TRUE,
-  patch.as.random = TRUE, show.model.tables = TRUE, quiet = TRUE)
+  patch.as.random = TRUE, show.model.tables = TRUE, quiet = "partial")
 
 lathsupp3 <- supplemental(stage3 = c("Sd", "Sd", "Sdl", "Sdl", "mat", "Sd", "Sdl"), 
   stage2 = c("Sd", "Sd", "Sd", "Sd", "Sdl", "rep", "rep"),
@@ -518,16 +530,9 @@ e3d <- density_input(lathmat3ln, stage3 = c("Sd", "Sdl"),
   stage2 = c("rep", "rep"), stage1 = c("all", "all"), style = 1,
   time_delay = 1, alpha = 1, beta = 0, type = c(2, 2), type_t12 = c(1, 1))
 
-trial7 <- f_projection3(format = 1, data = lathvertln,
-  modelsuite = lathmodelsln3, stageframe = lathframeln, nreps = 2,
-  times = 1000, stochastic = TRUE, standardize = FALSE, growthonly = TRUE,
-  integeronly = FALSE, substoch = 0)
-summary(trial7)
-
-# Now with density dependence and a set start vector
 trial7a <- f_projection3(format = 1, data = lathvertln,
   modelsuite = lathmodelsln3, stageframe = lathframeln, nreps = 2,
-  times = 1000, stochastic = TRUE, standardize = FALSE, growthonly = TRUE,
+  times = 100, stochastic = TRUE, standardize = FALSE, growthonly = TRUE,
   integeronly = FALSE, substoch = 0, sp_density = 0, start_frame = e3m_sv,
   density = e3d)
 summary(trial7a)

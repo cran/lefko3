@@ -10,7 +10,7 @@
   times = 10000,
   tweights = NA,
   seed = NA,
-  sparse = "auto",
+  force_sparse = "auto",
   ...
 )
 }
@@ -30,9 +30,11 @@ equal weighting.}
 
 \item{seed}{A number to use as a random number seed.}
 
-\item{sparse}{A text string indicating whether to use sparse matrix encoding
-(\code{"yes"}) or dense matrix encoding (\code{"no"}). Defaults to
-\code{"auto"}.}
+\item{force_sparse}{A text string indicating whether to use sparse matrix
+encoding (\code{"yes"}) when supplied with standard matrices. Defaults to
+\code{"auto"}, in which case sparse matrix encoding is used with square
+matrices with at least 50 rows and no more than 50\% of elements with values
+greater than zero.}
 
 \item{...}{Other parameters.}
 }
@@ -95,53 +97,14 @@ occasions are used, then all are used. Note that because reproductive values
 in stochastic simulations can change greatly in the initial portion of the
 run, we encourage a minimum 2000 projected occasions per simulation, with
 10000 preferred.
+
+Speed can sometimes be increased by shifting from automatic sparse matrix
+determination to forced dense or sparse matrix projection. This will most
+likely occur when matrices have several hundred rows and columns. Defaults
+work best when matrices are very small and dense, or very large and sparse.
 }
 
 \examples{
-# Lathyrus deterministic example
-data(lathyrus)
-
-sizevector <- c(0, 100, 13, 127, 3730, 3800, 0)
-stagevector <- c("Sd", "Sdl", "VSm", "Sm", "VLa", "Flo", "Dorm")
-repvector <- c(0, 0, 0, 0, 0, 1, 0)
-obsvector <- c(0, 1, 1, 1, 1, 1, 0)
-matvector <- c(0, 0, 1, 1, 1, 1, 1)
-immvector <- c(1, 1, 0, 0, 0, 0, 0)
-propvector <- c(1, 0, 0, 0, 0, 0, 0)
-indataset <- c(0, 1, 1, 1, 1, 1, 1)
-binvec <- c(0, 100, 11, 103, 3500, 3800, 0.5)
-
-lathframe <- sf_create(sizes = sizevector, stagenames = stagevector,
-  repstatus = repvector, obsstatus = obsvector, matstatus = matvector,
-  immstatus = immvector, indataset = indataset, binhalfwidth = binvec,
-  propstatus = propvector)
-
-lathvert <- verticalize3(lathyrus, noyears = 4, firstyear = 1988,
-  patchidcol = "SUBPLOT", individcol = "GENET", blocksize = 9,
-  juvcol = "Seedling1988", sizeacol = "Volume88", repstracol = "FCODE88",
-  fecacol = "Intactseed88", deadacol = "Dead1988",
-  nonobsacol = "Dormant1988", stageassign = lathframe, stagesize = "sizea",
-  censorcol = "Missing1988", censorkeep = NA, censor = TRUE)
-
-lathsupp3 <- supplemental(stage3 = c("Sd", "Sd", "Sdl", "Sdl", "Sd", "Sdl", "mat"),
-  stage2 = c("Sd", "Sd", "Sd", "Sd", "rep", "rep", "Sdl"),
-  stage1 = c("Sd", "rep", "Sd", "rep", "npr", "npr", "Sd"),
-  eststage3 = c(NA, NA, NA, NA, NA, NA, "mat"),
-  eststage2 = c(NA, NA, NA, NA, NA, NA, "Sdl"),
-  eststage1 = c(NA, NA, NA, NA, NA, NA, "NotAlive"),
-  givenrate = c(0.345, 0.345, 0.054, 0.054, NA, NA, NA),
-  multiplier = c(NA, NA, NA, NA, 0.345, 0.054, NA),
-  type = c(1, 1, 1, 1, 3, 3, 1), type_t12 = c(1, 2, 1, 2, 1, 1, 1),
-  stageframe = lathframe, historical = TRUE)
-
-ehrlen3 <- rlefko3(data = lathvert, stageframe = lathframe, year = "all", 
-  stages = c("stage3", "stage2", "stage1"), supplement = lathsupp3,
-  yearcol = "year2", indivcol = "individ")
-
-ehrlen3mean <- lmean(ehrlen3)
-repvalue3(ehrlen3mean)
-
-# Cypripedium stochastic example
 data(cypdata)
 
 sizevector <- c(0, 0, 0, 0, 0, 0, 1, 2.5, 4.5, 8, 17.5)
@@ -191,4 +154,8 @@ repvalue3(cypmatrix2r, stochastic = TRUE)
 \code{\link{repvalue3}()}
 
 \code{\link{repvalue3.matrix}()}
+
+\code{\link{repvalue3.dgCMatrix}()}
+
+\code{\link{repvalue3.list}()}
 }

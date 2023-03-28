@@ -25,7 +25,6 @@ Particularly, it breaks down elasticity values by the kind of ahistorical
 and, if applicable, historical transition.
 }
 \examples{
-# Lathyrus example
 data(lathyrus)
 
 sizevector <- c(0, 100, 13, 127, 3730, 3800, 0)

@@ -11,6 +11,7 @@ summary_hfv(
   individ = "individ",
   year2id = "year2",
   full = TRUE,
+  err_check = TRUE,
   ...
 )
 }
@@ -33,18 +34,33 @@ in time \emph{t}.}
 summary information in addition to hfvdata-specific summary information.
 Defaults to \code{TRUE}.}
 
+\item{err_check}{A logical value indicating whether to check for errors in
+stage assignment.}
+
 \item{...}{Other parameters.}
 }
 \value{
 A summary of the object. The first line shows the numbers of
 populations, patches, individuals, and time steps. If \code{full = TRUE}, 
 then this is followed by a standard data frame summary of the hfv dataset.
+If \code{err_check = TRUE}, then a subset of the original data frame input
+as \code{object} is exported with only rows showing stage assignment issues.
 }
 \description{
 A function to simplify the viewing of basic information describing
 demographic data in historical vertical format (data frames of class
 \code{hfvdata}).
 }
+\section{Notes}{
+
+Stage assignment issue identified by option \code{err_check} fall under two
+categories. First, all rows showing \code{NoMatch} as the identified stage
+for \code{stage1}, \code{stage2}, or \code{stage3} are identified. Second,
+all rows showing \code{stage1 = "NotAlive"} and \code{alive1 = 1},
+\code{stage2 = "NotAlive"} and \code{alive2 = 1}, or
+\code{stage3 = "NotAlive"} and \code{alive3 = 1} are identified.
+}
+
 \examples{
 data(cypdata)
 

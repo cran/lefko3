@@ -2,22 +2,22 @@
 % Please edit documentation in R/RcppExports.R
 \name{lambda3}
 \alias{lambda3}
-\title{Function \code{lambda3()} is a generic function that returns the dominant
-eigenvalue of a matrix, set of dominant eigenvalues of a set of matrices,
-or set of dominant eigenvalues for a \code{lefkoMat} object. It can handle
-large and sparse matrices supplied as \code{lefkoMat} objects or as
-individual matrices, and can be used with large historical matrices, IPMs, 
-age x stage matrices, as well as smaller ahistorical matrices.}
+\title{Estimate Deterministic Population Growth Rate As Dominant Eigenvalue}
 \usage{
-lambda3(mpm, sparse = "auto")
+lambda3(mpm, force_sparse = NULL)
 }
 \arguments{
 \item{mpm}{A lefkoMat object, a list of projection matrices, or a single
 projection matrix.}
 
-\item{sparse}{A string set to \code{"auto"} (the default), \code{"yes"}, or
-\code{"no"}. If set to \code{"auto"}, then will determine whether to use
-sparse matrix methods automatically.}
+\item{force_sparse}{A logical value or string detailing whether to force
+sparse matrix encoding for simple matrix input. Defaults to \code{"auto"},
+which only forces sparse matrix coding if simple matrices are input that are
+both sparse (i.e, percentage of matrix elements that are non-zero <= 50%)
+and have more than 20 rows. Can also be set to \code{"yes"}, \code{"no"},
+\code{TRUE}, or \code{FALSE}. Note that sparse matrix coding is always used
+for \code{lefkoMat} objects with matrices in sparse format (class
+\code{dgCMatrix}).}
 }
 \value{
 The value returned depends on the class of the \code{mats} argument.
@@ -37,13 +37,6 @@ large and sparse matrices supplied as \code{lefkoMat} objects or as
 individual matrices, and can be used with large historical matrices, IPMs, 
 age x stage matrices, as well as smaller ahistorical matrices.
 }
-\section{Notes}{
-
-If \code{sparse = "auto"} (the default), then R will use sparse matrix
-eigenanalysis if the matrices are both sparse (i.e, percentage of matrix
-elements that are non-zero <= 50%) and have more than 100 rows.
-}
-
 \examples{
 # Lathyrus example
 data(lathyrus)

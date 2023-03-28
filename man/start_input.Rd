@@ -63,7 +63,6 @@ to be used.
 }
 
 \examples{
-# Lathyrus example
 data(lathyrus)
 
 sizevector <- c(0, 100, 13, 127, 3730, 3800, 0)

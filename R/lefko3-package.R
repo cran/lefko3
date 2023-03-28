@@ -44,13 +44,13 @@
 #' @importFrom grDevices palette xy.coords
 #' @importFrom lme4 fixef glmer lmer ranef VarCorr
 #' @importFrom MASS glm.nb
+#' @importFrom Matrix colSums
 #' @importFrom methods is
 #' @importFrom MuMIn dredge
 #' @importFrom pscl zeroinfl
 #' @importFrom Rcpp evalCpp
-#' @importFrom SparseM as.matrix.csr image
 #' @importFrom stats getCall glm lm na.action na.fail na.omit rnorm sd setNames xtabs
-#' @importFrom stats as.formula median pchisq poisson var logLik
+#' @importFrom stats as.formula median pchisq poisson var logLik complete.cases
 #' @importFrom VGAM posnegbinomial pospoisson vglm predictvglm
 #' @useDynLib lefko3
 #' @name lefko3

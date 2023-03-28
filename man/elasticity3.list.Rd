@@ -10,13 +10,13 @@
   steps = 10000,
   time_weights = NA,
   historical = FALSE,
-  sparse = "auto",
+  force_sparse = "auto",
   append_mats = FALSE,
   ...
 )
 }
 \arguments{
-\item{mats}{A list of objects of class \code{matrix}.}
+\item{mats}{A list of objects of class \code{matrix} or \code{dgCMatrix}.}
 
 \item{stochastic}{A logical value determining whether to conduct a
 deterministic (FALSE) or stochastic (TRUE) elasticity analysis. Defaults to
@@ -31,9 +31,11 @@ annual matrices. Defaults to equal weighting among occasions.}
 \item{historical}{A logical value denoting whether the input matrices are
 historical. Defaults to FALSE.}
 
-\item{sparse}{A text string indicating whether to use sparse matrix encoding
-(\code{"yes"}) or dense matrix encoding (\code{"no"}). Defaults to
-\code{"auto"}.}
+\item{force_sparse}{A text string indicating whether to use sparse matrix
+encoding (\code{"yes"}) or not (\code{"no"}) with standard matrix input.
+Defaults to \code{"auto"}, in which case sparse matrix encoding is used with
+square matrices with at least 50 rows and no more than 50\% of elements with
+values greater than zero.}
 
 \item{append_mats}{A logical value indicating whether to include the original
 matrices input as object \code{mats} in the output \code{lefkoElas} object.}
@@ -45,8 +47,8 @@ This function returns an object of class \code{lefkoElas}, which is a
 list with 8 elements. The first, \code{h_elasmats}, is a list of historical
 elasticity matrices, though in the standard list case it returns a NULL
 value. The second, \code{ah_elasmats}, is a list of ahistorical elasticity
-matrices. The third element, \code{h_stages}, the fourth element,
-\code{agestages}, and the fifth element, \code{ah_stages}, are set to NULL.
+matrices. The third element, \code{hstages}, the fourth element,
+\code{agestages}, and the fifth element, \code{ahstages}, are set to NULL.
 The last 3 elements are the original A matrices in element A, followed by
 NULL values for the U and F elements.
 }
@@ -63,6 +65,12 @@ Matrix Population Models). Stochastic elasticities are estimated as eqn.
 14.99 in Caswell (2001). Note that stochastic elasticities are of stochastic
 \eqn{\lambda}, while stochastic sensitivities are with regard to the log of
 the stochastic \eqn{\lambda}.
+
+Speed can sometimes be increased by shifting from automatic sparse matrix
+determination to forced dense or sparse matrix projection. This will most
+likely occur when matrices have between 30 and 300 rows and columns.
+Defaults work best when matrices are very small and dense, or very large and
+sparse.
 }
 
 \examples{
@@ -159,4 +167,8 @@ elasticity3(cypmatrix2r$A)
 \code{\link{elasticity3.lefkoMat}()}
 
 \code{\link{elasticity3.matrix}()}
+
+\code{\link{elasticity3.dgCMatrix}()}
+
+\code{\link{summary.lefkoElas}()}
 }

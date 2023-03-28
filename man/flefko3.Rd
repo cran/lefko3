@@ -54,9 +54,11 @@ flefko3(
   format = "ehrlen",
   ipm_method = "CDF",
   reduce = FALSE,
+  simple = FALSE,
   err_check = FALSE,
   exp_tol = 700,
-  theta_tol = 1e+08
+  theta_tol = 1e+08,
+  sparse_output = FALSE
 )
 }
 \arguments{
@@ -305,11 +307,13 @@ associated solely with \code{0} transitions. These are only removed in cases
 where the associated row and column sums in ALL matrices estimated equal 0. 
 Defaults to \code{FALSE}.}
 
-\item{err_check}{A logical value indicating whether to append matrices of
-vital rate probabilities associated with each matrix to the \code{lefkoMat}
-object generated. These matrices are developed internally and can be used for
-error checking (see element \code{out} in Value section below for details).
-Defaults to \code{FALSE}.}
+\item{simple}{A logical value indicating whether to produce \code{A},
+\code{U}, and \code{F} matrices, or only the latter two. Defaults to
+\code{FALSE}, in which case all three are output.}
+
+\item{err_check}{A logical value indicating whether to append extra
+information used in matrix calculation within the output list. Defaults to
+\code{FALSE}.}
 
 \item{exp_tol}{A numeric value used to indicate a maximum value to set
 exponents to in the core kernel to prevent numerical overflow. Defaults to
@@ -318,6 +322,10 @@ exponents to in the core kernel to prevent numerical overflow. Defaults to
 \item{theta_tol}{A numeric value used to indicate a maximum value to theta as
 used in the negative binomial probability density kernel. Defaults to
 \code{100000000}, but can be reset to other values during error checking.}
+
+\item{sparse_output}{A logical value indicating whether to output matrices
+in sparse format. Defaults to \code{FALSE}, in which case all matrices are
+output in standard matrix format.}
 }
 \value{
 If all inputs are properly formatted, then this function will return
@@ -326,11 +334,14 @@ projection model and all of its metadata. The structure has the following
 elements:
 
 \item{A}{A list of full projection matrices in order of sorted patches and
-occasion times. All matrices output in R's \code{matrix} class.}
+occasion times. All matrices output in R's \code{matrix} class, or in
+the \code{dgCMatrix} class from the \code{Matrix} package if sparse.}
 \item{U}{A list of survival transition matrices sorted as in \code{A}. All 
-matrices output in R's \code{matrix} class.}
+matrices output in R's \code{matrix} class, or in the \code{dgCMatrix} class
+from the \code{Matrix} package if sparse.}
 \item{F}{A list of fecundity matrices sorted as in \code{A}. All matrices 
-output in R's \code{matrix} class.}
+output in R's \code{matrix} class, or in the \code{dgCMatrix} class from the
+\code{Matrix} package if sparse.}
 \item{hstages}{A data frame matrix showing the pairing of ahistorical stages
 used to create historical stage pairs.}
 \item{agestages}{A data frame showing age-stage pairs. In this function, it
@@ -341,6 +352,8 @@ status as an entry stage through reproduction.}
 \item{labels}{A data frame giving the population, patch, and year of each
 matrix in order. In \code{flefko3()}, only one population may be analyzed at
 once.}
+\item{dataqc}{A vector showing the numbers of individuals and rows in the
+vertical dataset used as input.}
 \item{matrixqc}{A short vector describing the number of non-zero elements in
 \code{U} and \code{F} matrices, and the number of annual matrices.}
 \item{modelqc}{This is the \code{qc} portion of the \code{modelsuite} input.}
@@ -499,21 +512,19 @@ lathmat3ln <- flefko3(year = "all", patch = "all", stageframe = lathframeln,
   modelsuite = lathmodelsln3, data = lathvertln, supplement = lathsupp3, 
   reduce = FALSE)
 
-summary(lathmat3ln)
-
 #Cypripedium example using three size metrics for classification
 data(cypdata)
-sizevector.f <- c(0, 0, 0, 0, 0, 0, seq(1, 12, by = 1), seq(0, 9, by = 1),
+sizevector_f <- c(0, 0, 0, 0, 0, 0, seq(1, 12, by = 1), seq(0, 9, by = 1),
   seq(0, 8, by = 1), seq(0, 7, by = 1), seq(0, 6, by = 1), seq(0, 5, by = 1),
   seq(0, 4, by = 1), seq(0, 3, by = 1), 0, 1, 2, 0, 1, 0, 
   0, 0, 1, 0)
-sizebvector.f <- c(0, 0, 0, 0, 0, 0, rep(0, 12), rep(1, 10), rep(2, 9),
+sizebvector_f <- c(0, 0, 0, 0, 0, 0, rep(0, 12), rep(1, 10), rep(2, 9),
   rep(3, 8), rep(4, 7), rep(5, 6), rep(6, 5), rep(7, 4), rep(8, 3), 9, 9, 10, 
   0, 1, 1, 2)
-sizecvector.f <- c(0, 0, 0, 0, 0, 0, rep(0, 12), rep(0, 10), rep(0, 9),
+sizecvector_f <- c(0, 0, 0, 0, 0, 0, rep(0, 12), rep(0, 10), rep(0, 9),
   rep(0, 8), rep(0, 7), rep(0, 6), rep(0, 5), rep(0, 4), 0, 0, 0, 0, 0, 0, 
   1, 1, 1, 1)
-stagevector.f <- c("DS", "P1", "P2", "P3", "Sdl", "Dorm", "V1 I0 D0",
+stagevector_f <- c("DS", "P1", "P2", "P3", "Sdl", "Dorm", "V1 I0 D0",
   "V2 I0 D0", "V3 I0 D0", "V4 I0 D0", "V5 I0 D0", "V6 I0 D0", "V7 I0 D0",
   "V8 I0 D0", "V9 I0 D0", "V10 I0 D0", "V11 I0 D0", "V12 I0 D0", "V0 I1 D0",
   "V1 I1 D0", "V2 I1 D0", "V3 I1 D0", "V4 I1 D0", "V5 I1 D0", "V6 I1 D0",
@@ -526,30 +537,30 @@ stagevector.f <- c("DS", "P1", "P2", "P3", "Sdl", "Dorm", "V1 I0 D0",
   "V3 I6 D0", "V4 I6 D0", "V0 I7 D0", "V1 I7 D0", "V2 I7 D0", "V3 I7 D0",
   "V0 I8 D0", "V1 I8 D0", "V2 I8 D0", "V0 I9 D0", "V1 I9 D0", "V0 I10 D0",
   "V0 I0 D1", "V0 I1 D1", "V1 I1 D1", "V0 I2 D1")
-repvector.f <- c(0, 0, 0, 0, 0, rep(0, 13), rep(1, 59))
-obsvector.f <- c(0, 0, 0, 0, 0, 0, rep(1, 71))
-matvector.f <- c(0, 0, 0, 0, 0, rep(1, 72))
-immvector.f <- c(0, 1, 1, 1, 1, rep(0, 72))
-propvector.f <- c(1, rep(0, 76))
-indataset.f <- c(0, 0, 0, 0, 0, rep(1, 72))
-binvec.f <- c(0, 0, 0, 0, 0, rep(0.5, 72))
-binbvec.f <- c(0, 0, 0, 0, 0, rep(0.5, 72))
-bincvec.f <- c(0, 0, 0, 0, 0, rep(0.5, 72))
+repvector_f <- c(0, 0, 0, 0, 0, rep(0, 13), rep(1, 59))
+obsvector_f <- c(0, 0, 0, 0, 0, 0, rep(1, 71))
+matvector_f <- c(0, 0, 0, 0, 0, rep(1, 72))
+immvector_f <- c(0, 1, 1, 1, 1, rep(0, 72))
+propvector_f <- c(1, rep(0, 76))
+indataset_f <- c(0, 0, 0, 0, 0, rep(1, 72))
+binvec_f <- c(0, 0, 0, 0, 0, rep(0.5, 72))
+binbvec_f <- c(0, 0, 0, 0, 0, rep(0.5, 72))
+bincvec_f <- c(0, 0, 0, 0, 0, rep(0.5, 72))
 
-vertframe.f <- sf_create(sizes = sizevector.f, sizesb = sizebvector.f,
-  sizesc = sizecvector.f, stagenames = stagevector.f, repstatus = repvector.f,
-  obsstatus = obsvector.f, propstatus = propvector.f, immstatus = immvector.f,
-  matstatus = matvector.f, indataset = indataset.f, binhalfwidth = binvec.f,
-  binhalfwidthb = binbvec.f, binhalfwidthc = bincvec.f)
+vertframe_f <- sf_create(sizes = sizevector_f, sizesb = sizebvector_f,
+  sizesc = sizecvector_f, stagenames = stagevector_f, repstatus = repvector_f,
+  obsstatus = obsvector_f, propstatus = propvector_f, immstatus = immvector_f,
+  matstatus = matvector_f, indataset = indataset_f, binhalfwidth = binvec_f,
+  binhalfwidthb = binbvec_f, binhalfwidthc = bincvec_f)
 
-vert.data.f <- verticalize3(cypdata, noyears = 6, firstyear = 2004,
+vert_data_f <- verticalize3(cypdata, noyears = 6, firstyear = 2004,
   individcol = "plantid", blocksize = 4, sizeacol = "Veg.04",
   sizebcol = "Inf.04", sizeccol = "Inf2.04", repstracol = "Inf.04",
   repstrbcol = "Inf2.04", fecacol = "Pod.04", censorcol = "censor",
-  censorkeep = 1, censorRepeat = FALSE, stageassign = vertframe.f,
+  censorkeep = 1, censorRepeat = FALSE, stageassign = vertframe_f,
   stagesize = "sizeabc", NAas0 = TRUE, censor = FALSE)
 
-vertmodels3f <- modelsearch(vert.data.f, historical = TRUE, suite = "main",
+vertmodels3f <- modelsearch(vert_data_f, historical = TRUE, suite = "main",
   sizeb = c("sizeb3", "sizeb2", "sizeb1"), sizec = c("sizec3", "sizec2", "sizec1"),
   approach = "glm", vitalrates = c("surv", "obs", "size", "repst", "fec"),
   sizedist = "negbin", sizebdist = "poisson", sizecdist = "poisson",
@@ -582,15 +593,16 @@ vertsupp3f <- supplemental(stage3 = c("DS", "P1", "DS", "P1", "P2", "P2", "P3",
     3, 3),
   type_t12 = c(1, 1, 2, 2, 1, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
     1, 1, 1),
-  stageframe = vertframe.f, historical = TRUE)
+  stageframe = vertframe_f, historical = TRUE)
 
-vert.mats.f3 <- flefko3(stageframe = vertframe.f, supplement = vertsupp3f, 
-  data = vert.data.f, modelsuite = vertmodels3f)
-summary(vert.mats.f3)
+vert_mats_f3 <- flefko3(stageframe = vertframe_f, supplement = vertsupp3f, 
+  data = vert_data_f, modelsuite = vertmodels3f)
 }
 
 }
 \seealso{
+\code{\link{mpm_create}()}
+
 \code{\link{flefko2}()}
 
 \code{\link{aflefko2}()}

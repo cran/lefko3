@@ -121,7 +121,7 @@ where patches are defined as permanent subgroups within the study population.
 Defaults to \code{NA}.}
 
 \item{year}{A text value indicating the variable coding for observation
-occasion \emph{t}. Defaults to \code{year2}.}
+occasion \emph{t}. Defaults to \code{"year2"}.}
 
 \item{density}{A text value indicating the name of the variable coding for
 spatial density, should the user wish to test spatial density as a fixed
@@ -217,8 +217,6 @@ created here.
 }
 
 \examples{
-\donttest{
-# Lathyrus example
 data(lathyrus)
 
 sizevector <- c(0, 4.6, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 1, 2, 3, 4, 5, 6, 7, 8,
@@ -256,31 +254,5 @@ hfv_qc(lathvertln, historical = TRUE, suite = "main",
   vitalrates = c("surv", "obs", "size", "repst", "fec"), juvestimate = "Sdl",
   indiv = "individ", patch = "patchid", year = "year2",year.as.random = TRUE,
   patch.as.random = TRUE)
-
-lathmodelsln3 <- modelsearch(lathvertln, historical = TRUE, 
-  approach = "mixed", suite = "main", 
-  vitalrates = c("surv", "obs", "size", "repst", "fec"), juvestimate = "Sdl",
-  bestfit = "AICc&k", sizedist = "gaussian", fecdist = "poisson", 
-  indiv = "individ", patch = "patchid", year = "year2",year.as.random = TRUE,
-  patch.as.random = TRUE, show.model.tables = TRUE, quiet = TRUE)
-
-# Here we use supplemental() to provide overwrite and reproductive info
-lathsupp3 <- supplemental(stage3 = c("Sd", "Sd", "Sdl", "Sdl", "mat", "Sd", "Sdl"), 
-  stage2 = c("Sd", "Sd", "Sd", "Sd", "Sdl", "rep", "rep"),
-  stage1 = c("Sd", "rep", "Sd", "rep", "Sd", "mat", "mat"),
-  eststage3 = c(NA, NA, NA, NA, "mat", NA, NA),
-  eststage2 = c(NA, NA, NA, NA, "Sdl", NA, NA),
-  eststage1 = c(NA, NA, NA, NA, "Sdl", NA, NA),
-  givenrate = c(0.345, 0.345, 0.054, 0.054, NA, NA, NA),
-  multiplier = c(NA, NA, NA, NA, NA, 0.345, 0.054),
-  type = c(1, 1, 1, 1, 1, 3, 3), type_t12 = c(1, 2, 1, 2, 1, 1, 1),
-  stageframe = lathframeln, historical = TRUE)
-
-lathmat3ln <- flefko3(year = "all", patch = "all", stageframe = lathframeln, 
-  modelsuite = lathmodelsln3, data = lathvertln, supplement = lathsupp3, 
-  reduce = FALSE)
-
-summary(lathmat3ln)
-}
 
 }

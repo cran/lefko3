@@ -59,6 +59,7 @@ historicalize3(
   prebreeding = TRUE,
   age_offset = 0,
   reduce = TRUE,
+  a2check = FALSE,
   quiet = FALSE
 )
 }
@@ -283,6 +284,12 @@ is pre-breeding. If so, then \code{1} is added to all ages. Defaults to
 some invariant state variables should be removed from the output dataset.
 Defaults to \code{TRUE}.}
 
+\item{a2check}{A logical variable indicating whether to retain all data with
+living status at occasion \emph{t}. Defaults to \code{FALSE}, in which case
+data for occasions in which the individual is not alive in time \emph{t} is
+not retained. This option should be kept \code{FALSE}, except to inspect
+potential errors in the dataset.}
+
 \item{quiet}{A logical variable indicating whether to silence warnings.
 Defaults to \code{FALSE}.}
 }
@@ -430,8 +437,6 @@ cypframe_raw <- sf_create(sizes = sizevector, stagenames = stagevector,
   propstatus = propvector, immstatus = immvector, indataset = indataset,
   binhalfwidth = binvec)
 
-cypframe_raw
-
 cypraw_v2 <- historicalize3(data = cypvert, patchidcol = "patch", 
   individcol = "plantid", year2col = "year2", sizea2col = "Inf2.2", 
   sizea3col = "Inf2.3", sizeb2col = "Inf.2", sizeb3col = "Inf.3", 
@@ -440,26 +445,5 @@ cypraw_v2 <- historicalize3(data = cypvert, patchidcol = "patch",
   feca2col = "Pod.2", feca3col = "Pod.3", repstrrel = 2, 
   stageassign = cypframe_raw, stagesize = "sizeadded", censorcol = "censor",
   censor = FALSE, NAas0 = TRUE, NRasRep = TRUE, reduce = TRUE)
-  
-cypsupp2r <- supplemental(stage3 = c("SD", "P1", "P2", "P3", "SL", "D", 
-    "XSm", "Sm", "SD", "P1"),
-  stage2 = c("SD", "SD", "P1", "P2", "P3", "SL", "SL", "SL", "rep",
-    "rep"),
-  eststage3 = c(NA, NA, NA, NA, NA, "D", "XSm", "Sm", NA, NA),
-  eststage2 = c(NA, NA, NA, NA, NA, "XSm", "XSm", "XSm", NA, NA),
-  givenrate = c(0.10, 0.20, 0.20, 0.20, 0.25, NA, NA, NA, NA, NA),
-  multiplier = c(NA, NA, NA, NA, NA, NA, NA, NA, 0.5, 0.5),
-  type =c(1, 1, 1, 1, 1, 1, 1, 1, 3, 3),
-  stageframe = cypframe_raw, historical = FALSE)
-
-cypmatrix2r <- rlefko2(data = cypraw_v2, stageframe = cypframe_raw, 
-  year = "all", patch = "all", stages = c("stage3", "stage2"),
-  size = c("size3added", "size2added"), supplement = cypsupp2r,
-  yearcol = "year2", patchcol = "patchid", indivcol = "individ")
-  
-cypmatrix2r$A[[intersect(which(cypmatrix2r$labels$patch == "A"), 
-  which(cypmatrix2r$labels$year2 == 2004))]]
-
-lambda3(cypmatrix2r)
 
 }

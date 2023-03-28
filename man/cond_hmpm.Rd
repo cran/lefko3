@@ -30,6 +30,8 @@ used to create historical stage pairs.}
 ahistorical stages.}
 \item{labels}{A data frame showing the patch and year of each input full A 
 matrix in order.}
+\item{err_check}{An optional data frame showing the order of used element
+indices to create conditional matrices.}
 }
 \description{
 Function \code{cond_hmpm()} takes historical MPMs and decomposes them into 

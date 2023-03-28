@@ -6,13 +6,14 @@
 \usage{
 fleslie(
   year = "all",
-  patch = "all",
+  patch = NULL,
   prebreeding = TRUE,
   data = NULL,
   modelsuite = NULL,
   surv_model = NULL,
   fec_model = NULL,
   paramnames = NULL,
+  supplement = NULL,
   start_age = NA,
   last_age = NA,
   fecage_min = NA,
@@ -29,8 +30,12 @@ fleslie(
   random.indb = FALSE,
   random.indc = FALSE,
   negfec = FALSE,
+  reduce = FALSE,
+  simple = FALSE,
+  err_check = FALSE,
   exp_tol = 700,
-  theta_tol = 1e+08
+  theta_tol = 1e+08,
+  sparse_output = FALSE
 )
 }
 \arguments{
@@ -81,6 +86,14 @@ third showing the equivalent terms used in modeling (must be named
 \code{modelparams}). Function \code{\link{create_pm}()} can be used to
 create a skeleton \code{paramnames} object, which can then be edited. Only
 required if \code{modelsuite} is not supplied.}
+
+\item{supplement}{An optional data frame of class \code{lefkoSD} that
+provides supplemental data that should be incorporated into the MPM. Three
+kinds of data may be integrated this way: transitions to be estimated via the
+use of proxy transitions, transition overwrites from the literature or
+supplemental studies, and transition multipliers for survival and fecundity.
+This data frame should be produced using the \code{\link{supplemental}()}
+function.}
 
 \item{start_age}{The age from which to start the matrix. Defaults to
 \code{NA}, in which case age \code{1} is used if \code{prebreeding = TRUE},
@@ -140,6 +153,19 @@ a fixed, numeric variable. Defaults to \code{FALSE}.}
 \item{negfec}{A logical value denoting whether fecundity values estimated to
 be negative should be reset to \code{0}. Defaults to \code{FALSE}.}
 
+\item{reduce}{A logical value denoting whether to remove ages associated
+solely with \code{0} transitions. These are only removed in cases where the
+associated row and column sums in ALL matrices estimated equal 0. Defaults to
+\code{FALSE}, and should generally not be used in age-based MPMs.}
+
+\item{simple}{A logical value indicating whether to produce \code{A},
+\code{U}, and \code{F} matrices, or only the latter two. Defaults to
+\code{FALSE}, in which case all three are output.}
+
+\item{err_check}{A logical value indicating whether to append extra
+information used in matrix calculation within the output list. Defaults to
+\code{FALSE}.}
+
 \item{exp_tol}{A numeric value used to indicate a maximum value to set
 exponents to in the core kernel to prevent numerical overflow. Defaults to
 \code{700}.}
@@ -147,6 +173,10 @@ exponents to in the core kernel to prevent numerical overflow. Defaults to
 \item{theta_tol}{A numeric value used to indicate a maximum value to theta as
 used in the negative binomial probability density kernel. Defaults to
 \code{100000000}, but can be reset to other values during error checking.}
+
+\item{sparse_output}{A logical value indicating whether to output matrices
+in sparse format. Defaults to \code{FALSE}, in which case all matrices are
+output in standard matrix format.}
 }
 \value{
 If all inputs are properly formatted, then this function will return
@@ -155,20 +185,31 @@ projection model and all of its metadata. Its structure has the following
 elements:
 
 \item{A}{A list of full projection matrices in order of sorted patches and
-occasions. All matrices output in R's \code{matrix} class.}
+occasions. All matrices output in R's \code{matrix} class, or in
+the \code{dgCMatrix} class from the \code{Matrix} package if sparse.}
 \item{U}{A list of survival transition matrices sorted as in \code{A}. All 
-matrices output in R's \code{matrix} class.}
+matrices output in R's \code{matrix} class, or in the \code{dgCMatrix} class
+from the \code{Matrix} package if sparse.}
 \item{F}{A list of fecundity matrices sorted as in \code{A}. All matrices 
-output in R's \code{matrix} class.}
+output in R's \code{matrix} class, or in the \code{dgCMatrix} class from the
+\code{Matrix} package if sparse.}
 \item{hstages}{Set to \code{NA} for Leslie MPMs.}
 \item{agestages}{Set to \code{NA} for Leslie MPMs.}
 \item{ahstages}{A data frame detailing the characteristics of associated
 ages, in the form of a modified stageframe including reproduction status.}
 \item{labels}{A data frame giving the patch and year of each matrix in order.
 In \code{fleslie()}, only one population may be analyzed at once.}
-\item{matrixqc}{A short vector describing the number of non-zero elements
-in \code{U} and \code{F} matrices, and the number of annual matrices.}
-\item{modelqc}{This is the \code{qc} portion of the modelsuite input.}
+\item{dataqc}{A vector showing the numbers of individuals and rows in the
+vertical dataset used as input.}
+\item{matrixqc}{A short vector describing the number of non-zero elements in
+\code{U} and \code{F} matrices, and the number of annual matrices.}
+\item{modelqc}{This is the \code{qc} portion of the \code{modelsuite} input.}
+\item{prob_out}{An optional element only added if \code{err_check = TRUE}.
+This is a list of vital rate probability matrices, with 7 columns in the
+order of survival, observation probability, reproduction probability, primary
+size transition probability, secondary size transition probability, tertiary
+size transition probability, and probability of juvenile transition to
+maturity.}
 }
 \description{
 Function \code{fleslie()} returns age-based (Leslie) MPMs corresponding to
@@ -233,11 +274,11 @@ lathmodels2_age <- modelsearch(lathvert_age, historical = FALSE,
 
 lathmat2fleslie <- fleslie(year = "all", data = lathvert_age,
   modelsuite = lathmodels2_age, fecage_min = 1)
-
-summary(lathmat2fleslie)
 }
 }
 \seealso{
+\code{\link{mpm_create}()}
+
 \code{\link{flefko3}()}
 
 \code{\link{flefko2}()}

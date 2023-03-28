@@ -8,8 +8,8 @@ slambda3(
   mpm,
   times = 10000L,
   historical = FALSE,
-  dense_only = FALSE,
-  tweights = NULL
+  tweights = NULL,
+  force_sparse = NULL
 )
 }
 \arguments{
@@ -23,16 +23,17 @@ is a list of matrices, rather than a \code{lefkoMat} object. Defaults to
 \code{FALSE} for the former case, and overridden by information supplied in
 the \code{lefkoMat} object for the latter case.}
 
-\item{dense_only}{A logical value indicating whether to force matrices to be
-run in dense format. Defaults to \code{FALSE}, and should only be used if
-errors occur when running under default conditions.}
-
 \item{tweights}{Numeric vector denoting the probabilistic weightings of
 annual matrices. Defaults to equal weighting among occasions.}
+
+\item{force_sparse}{A text string indicating whether to force sparse matrix 
+encoding (\code{"yes"}) or not (\code{"no"}) if the MPM is composed of
+simple matrices. Defaults to \code{"auto"}, in which case sparse matrix
+encoding is used with simple square matrices with at least 50 rows and no
+more than 50\% of elements with values greater than zero.}
 }
 \value{
 A data frame with the following variables:
-
 \item{pop}{The identity of the population.}
 \item{patch}{The identity of the patch.}
 \item{a}{Estimate of stochastic growth rate, estimated as the arithmetic
@@ -53,7 +54,7 @@ The log stochastic population growth rate, \eqn{a}, is as given in equation
 2 of Tuljapurkar, Horvitz, and Pascarella 2003. This term is estimated via
 projection of randomly sampled matrices, similarly to the procedure outlined
 in Box 7.4 of Morris and Doak (2002).
- 
+
 Stochastic growth rate is estimated both at the patch level and at the
 population level. Population level estimates will be noted at the end of the
 data frame with 0 entries for patch designation.
@@ -61,51 +62,17 @@ data frame with 0 entries for patch designation.
 Weightings given in \code{tweights} do not need to sum to 1. Final
 weightings used will be based on the proportion per element of the sum of
 elements in the user-supplied vector.
+
+Speed can sometimes be increased by shifting from automatic sparse matrix
+determination to forced dense or sparse matrix projection. This will most
+likely occur when matrices have between 30 and 300 rows and columns.
+Defaults work best when matrices are very small and dense, or very large and
+sparse.
 }
 
 \examples{
-# Lathyrus example
-data(lathyrus)
-
-sizevector <- c(0, 100, 13, 127, 3730, 3800, 0)
-stagevector <- c("Sd", "Sdl", "VSm", "Sm", "VLa", "Flo", "Dorm")
-repvector <- c(0, 0, 0, 0, 0, 1, 0)
-obsvector <- c(0, 1, 1, 1, 1, 1, 0)
-matvector <- c(0, 0, 1, 1, 1, 1, 1)
-immvector <- c(1, 1, 0, 0, 0, 0, 0)
-propvector <- c(1, 0, 0, 0, 0, 0, 0)
-indataset <- c(0, 1, 1, 1, 1, 1, 1)
-binvec <- c(0, 100, 11, 103, 3500, 3800, 0.5)
-
-lathframe <- sf_create(sizes = sizevector, stagenames = stagevector,
-  repstatus = repvector, obsstatus = obsvector, matstatus = matvector,
-  immstatus = immvector, indataset = indataset, binhalfwidth = binvec,
-  propstatus = propvector)
-
-lathvert <- verticalize3(lathyrus, noyears = 4, firstyear = 1988,
-  patchidcol = "SUBPLOT", individcol = "GENET", blocksize = 9,
-  juvcol = "Seedling1988", sizeacol = "Volume88", repstracol = "FCODE88",
-  fecacol = "Intactseed88", deadacol = "Dead1988",
-  nonobsacol = "Dormant1988", stageassign = lathframe, stagesize = "sizea",
-  censorcol = "Missing1988", censorkeep = NA, censor = TRUE)
-
-lathsupp3 <- supplemental(stage3 = c("Sd", "Sd", "Sdl", "Sdl", "Sd", "Sdl"), 
-  stage2 = c("Sd", "Sd", "Sd", "Sd", "rep", "rep"),
-  stage1 = c("Sd", "rep", "Sd", "rep", "all", "all"), 
-  givenrate = c(0.345, 0.345, 0.054, 0.054, NA, NA),
-  multiplier = c(NA, NA, NA, NA, 0.345, 0.054),
-  type = c(1, 1, 1, 1, 3, 3), type_t12 = c(1, 2, 1, 2, 1, 1),
-  stageframe = lathframe, historical = TRUE)
-
-ehrlen3 <- rlefko3(data = lathvert, stageframe = lathframe,
-  year = c(1989, 1990), stages = c("stage3", "stage2", "stage1"),
-  supplement = lathsupp3, yearcol = "year2", indivcol = "individ")
-
-slambda3(ehrlen3)
-
-# Cypripedium example
 data(cypdata)
- 
+
 sizevector <- c(0, 0, 0, 0, 0, 0, 1, 2.5, 4.5, 8, 17.5)
 stagevector <- c("SD", "P1", "P2", "P3", "SL", "D", "XSm", "Sm", "Md", "Lg",
   "XLg")
@@ -155,7 +122,6 @@ cypmatrix3r <- rlefko3(data = cypraw_v1, stageframe = cypframe_raw,
   supplement = cypsupp3r, yearcol = "year2", 
   patchcol = "patchid", indivcol = "individ")
 
-cypstoch <- slambda3(cypmatrix3r, dense_only = TRUE)
-cypstoch
+cypstoch <- slambda3(cypmatrix3r)
 
 }

@@ -33,7 +33,9 @@ Defaults to \code{FALSE}.}
 
 \item{sparse}{A text string indicating whether to use sparse matrix encoding
 (\code{"yes"}) or dense matrix encoding (\code{"no"}). Defaults to
-\code{"auto"}.}
+\code{"auto"}, in which case sparse matrix encoding is used with square
+matrices with at least 50 rows and no more than 50\% of elements with values
+greater than zero.}
 
 \item{append_mats}{A logical value indicating whether to include the original
 matrices input as object \code{mats} in the output \code{lefkoSense} object.
@@ -47,8 +49,8 @@ list of 8 elements. The first, \code{h_sensmats}, is a list of historical
 sensitivity matrices (\code{NULL} if an ahMPM is used as input). The second,
 \code{ah_elasmats}, is a list of ahistorical sensitivity matrices if an ahMPM
 is used as input (\code{NULL} if an hMPM is used as input). The third
-element, \code{h_stages}, the fourth element, \code{agestages}, and the fifth
-element, \code{ah_stages}, are \code{NULL}. The last 3 elements include the
+element, \code{hstages}, the fourth element, \code{agestages}, and the fifth
+element, \code{ahstages}, are \code{NULL}. The last 3 elements include the
 original A matrices supplied (as the \code{A} element), followed by
 \code{NULL}s for the U and F elements.
 }
@@ -62,6 +64,9 @@ age x stage matrices, as well as smaller ahistorical matrices.
 }
 \section{Notes}{
 
+All sensitivity matrix outputs from this function are in standard matrix
+format.
+
 Deterministic sensitivities are estimated as eqn. 9.14 in Caswell (2001,
 Matrix Population Models). Stochastic sensitivities are estimated as eqn.
 14.97 in Caswell (2001). Note that stochastic sensitivities are with regard
@@ -71,6 +76,12 @@ Currently, this function does not estimate equivalent ahistorical stochastic
 sensitivities for input historical matrices, due to the lack of guidance
 input on the order of stages (guidance is provided within \code{lefkoMat}
 objects).
+
+Speed can sometimes be increased by shifting from automatic sparse matrix
+determination to forced dense or sparse matrix projection. This will most
+likely occur when matrices have between 30 and 300 rows and columns.
+Defaults work best when matrices are very small and dense, or very large and
+sparse.
 }
 
 \examples{
@@ -167,4 +178,6 @@ sensitivity3(cypmatrix2r$A)
 \code{\link{sensitivity3.lefkoMat}()}
 
 \code{\link{sensitivity3.matrix}()}
+
+\code{\link{sensitivity3.dgCMatrix}()}
 }

@@ -189,9 +189,10 @@
 #' some invariant state variables should be removed from the output dataset.
 #' Defaults to \code{TRUE}.
 #' @param a2check A logical variable indicating whether to retain all data with
-#' living status at occasion \emph{t} equal to 0. Defaults to \code{FALSE}, and
-#' should be kept \code{FALSE} except to inspect potential errors in the
-#' dataset.
+#' living status at occasion \emph{t}. Defaults to \code{FALSE}, in which case
+#' data for occasions in which the individual is not alive in time \emph{t} is
+#' not retained. This option should be kept \code{FALSE}, except to inspect
+#' potential errors in the dataset.
 #' @param quiet A logical variable indicating whether to silence warnings.
 #' Defaults to \code{FALSE}.
 #' 
@@ -334,118 +335,6 @@
 #'   nonobsacol = "Dormant1988", stageassign = lathframe, stagesize = "sizea",
 #'   censorcol = "Missing1988", censorkeep = NA, censor = TRUE)
 #' 
-#' lathsupp3 <- supplemental(stage3 = c("Sd", "Sd", "Sdl", "Sdl", "Sd", "Sdl", "mat"),
-#'   stage2 = c("Sd", "Sd", "Sd", "Sd", "rep", "rep", "Sdl"),
-#'   stage1 = c("Sd", "rep", "Sd", "rep", "npr", "npr", "Sd"),
-#'   eststage3 = c(NA, NA, NA, NA, NA, NA, "mat"),
-#'   eststage2 = c(NA, NA, NA, NA, NA, NA, "Sdl"),
-#'   eststage1 = c(NA, NA, NA, NA, NA, NA, "NotAlive"),
-#'   givenrate = c(0.345, 0.345, 0.054, 0.054, NA, NA, NA),
-#'   multiplier = c(NA, NA, NA, NA, 0.345, 0.054, NA),
-#'   type = c(1, 1, 1, 1, 3, 3, 1), type_t12 = c(1, 2, 1, 2, 1, 1, 1),
-#'   stageframe = lathframe, historical = TRUE)
-#' 
-#' ehrlen3 <- rlefko3(data = lathvert, stageframe = lathframe, year = "all", 
-#'   stages = c("stage3", "stage2", "stage1"), supplement = lathsupp3,
-#'   yearcol = "year2", indivcol = "individ")
-#' 
-#' ehrlen3mean <- lmean(ehrlen3)
-#' ehrlen3mean$A[[1]]
-#' 
-#' # Lathyrus example without blocksize - when no repeated patterns exist in
-#' # variable order and all variables names are specified
-#' data(lathyrus)
-#' 
-#' sizevector <- c(0, 100, 13, 127, 3730, 3800, 0)
-#' stagevector <- c("Sd", "Sdl", "VSm", "Sm", "VLa", "Flo", "Dorm")
-#' repvector <- c(0, 0, 0, 0, 0, 1, 0)
-#' obsvector <- c(0, 1, 1, 1, 1, 1, 0)
-#' matvector <- c(0, 0, 1, 1, 1, 1, 1)
-#' immvector <- c(1, 1, 0, 0, 0, 0, 0)
-#' propvector <- c(1, 0, 0, 0, 0, 0, 0)
-#' indataset <- c(0, 1, 1, 1, 1, 1, 1)
-#' binvec <- c(0, 100, 11, 103, 3500, 3800, 0.5)
-#' 
-#' lathframe <- sf_create(sizes = sizevector, stagenames = stagevector,
-#'   repstatus = repvector, obsstatus = obsvector, matstatus = matvector,
-#'   immstatus = immvector, indataset = indataset, binhalfwidth = binvec,
-#'   propstatus = propvector)
-#' 
-#' lathvert <- verticalize3(lathyrus, noyears = 4, firstyear = 1988,
-#'   patchidcol = "SUBPLOT", individcol = "GENET",
-#'   juvcol = c("Seedling1988", "Seedling1989", "Seedling1990", "Seedling1991"),
-#'   sizeacol = c("Volume88", "Volume89", "Volume90", "Volume91"),
-#'   repstracol = c("FCODE88", "FCODE89", "FCODE90", "FCODE91"),
-#'   fecacol = c("Intactseed88", "Intactseed89", "Intactseed90", "Intactseed91"),
-#'   deadacol = c("Dead1988", "Dead1989", "Dead1990", "Dead1991"),
-#'   nonobsacol = c("Dormant1988", "Dormant1989", "Dormant1990", "Dormant1991"),
-#'   censorcol = c("Missing1988", "Missing1989", "Missing1990", "Missing1991"), 
-#'   stageassign = lathframe, stagesize = "sizea",
-#'   censorkeep = NA, censor = TRUE)
-#' 
-#' lathsupp3 <- supplemental(stage3 = c("Sd", "Sd", "Sdl", "Sdl", "Sd", "Sdl", "mat"),
-#'   stage2 = c("Sd", "Sd", "Sd", "Sd", "rep", "rep", "Sdl"),
-#'   stage1 = c("Sd", "rep", "Sd", "rep", "npr", "npr", "Sd"),
-#'   eststage3 = c(NA, NA, NA, NA, NA, NA, "mat"),
-#'   eststage2 = c(NA, NA, NA, NA, NA, NA, "Sdl"),
-#'   eststage1 = c(NA, NA, NA, NA, NA, NA, "NotAlive"),
-#'   givenrate = c(0.345, 0.345, 0.054, 0.054, NA, NA, NA),
-#'   multiplier = c(NA, NA, NA, NA, 0.345, 0.054, NA),
-#'   type = c(1, 1, 1, 1, 3, 3, 1), type_t12 = c(1, 2, 1, 2, 1, 1, 1),
-#'   stageframe = lathframe, historical = TRUE)
-#' 
-#' ehrlen3 <- rlefko3(data = lathvert, stageframe = lathframe, year = "all", 
-#'   stages = c("stage3", "stage2", "stage1"), supplement = lathsupp3,
-#'   yearcol = "year2", indivcol = "individ")
-#' 
-#' ehrlen3mean <- lmean(ehrlen3)
-#' ehrlen3mean$A[[1]]
-#' 
-#' # Cypripedium example using blocksize
-#' data(cypdata)
-#' 
-#' sizevector <- c(0, 0, 0, 0, 0, 0, 1, 2.5, 4.5, 8, 17.5)
-#' stagevector <- c("SD", "P1", "P2", "P3", "SL", "D", "XSm", "Sm", "Md", "Lg",
-#'   "XLg")
-#' repvector <- c(0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1)
-#' obsvector <- c(0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1)
-#' matvector <- c(0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1)
-#' immvector <- c(0, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0)
-#' propvector <- c(1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)
-#' indataset <- c(0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1)
-#' binvec <- c(0, 0, 0, 0, 0, 0.5, 0.5, 1, 1, 2.5, 7)
-#' 
-#' cypframe_raw <- sf_create(sizes = sizevector, stagenames = stagevector,
-#'   repstatus = repvector, obsstatus = obsvector, matstatus = matvector,
-#'   propstatus = propvector, immstatus = immvector, indataset = indataset,
-#'   binhalfwidth = binvec)
-#' 
-#' cypraw_v1 <- verticalize3(data = cypdata, noyears = 6, firstyear = 2004,
-#'   patchidcol = "patch", individcol = "plantid", blocksize = 4,
-#'   sizeacol = "Inf2.04", sizebcol = "Inf.04", sizeccol = "Veg.04",
-#'   repstracol = "Inf.04", repstrbcol = "Inf2.04", fecacol = "Pod.04",
-#'   stageassign = cypframe_raw, stagesize = "sizeadded", NAas0 = TRUE,
-#'   NRasRep = TRUE)
-#' 
-#' cypsupp2r <- supplemental(stage3 = c("SD", "P1", "P2", "P3", "SL", "D", 
-#'     "XSm", "Sm", "SD", "P1"),
-#'   stage2 = c("SD", "SD", "P1", "P2", "P3", "SL", "SL", "SL", "rep",
-#'     "rep"),
-#'   eststage3 = c(NA, NA, NA, NA, NA, "D", "XSm", "Sm", NA, NA),
-#'   eststage2 = c(NA, NA, NA, NA, NA, "XSm", "XSm", "XSm", NA, NA),
-#'   givenrate = c(0.10, 0.20, 0.20, 0.20, 0.25, NA, NA, NA, NA, NA),
-#'   multiplier = c(NA, NA, NA, NA, NA, NA, NA, NA, 0.5, 0.5),
-#'   type =c(1, 1, 1, 1, 1, 1, 1, 1, 3, 3),
-#'   stageframe = cypframe_raw, historical = FALSE)
-#' 
-#' cypmatrix2r <- rlefko2(data = cypraw_v1, stageframe = cypframe_raw, 
-#'   year = "all", patch = "all", stages = c("stage3", "stage2", "stage1"),
-#'   size = c("size3added", "size2added"), supplement = cypsupp2r,
-#'   yearcol = "year2", patchcol = "patchid", indivcol = "individ")
-#' 
-#' cyp2mean <- lmean(cypmatrix2r)
-#' cyp2mean
-#' 
 #' # Cypripedium example using partial repeat patterns with blocksize and part
 #' # explicit variable name cast
 #' data(cypdata)
@@ -474,25 +363,6 @@
 #'   fecacol = "Pod.04", stageassign = cypframe_raw, stagesize = "sizeadded",
 #'   NAas0 = TRUE, NRasRep = TRUE)
 #' 
-#' cypsupp2r <- supplemental(stage3 = c("SD", "P1", "P2", "P3", "SL", "D", 
-#'     "XSm", "Sm", "SD", "P1"),
-#'   stage2 = c("SD", "SD", "P1", "P2", "P3", "SL", "SL", "SL", "rep",
-#'     "rep"),
-#'   eststage3 = c(NA, NA, NA, NA, NA, "D", "XSm", "Sm", NA, NA),
-#'   eststage2 = c(NA, NA, NA, NA, NA, "XSm", "XSm", "XSm", NA, NA),
-#'   givenrate = c(0.10, 0.20, 0.20, 0.20, 0.25, NA, NA, NA, NA, NA),
-#'   multiplier = c(NA, NA, NA, NA, NA, NA, NA, NA, 0.5, 0.5),
-#'   type =c(1, 1, 1, 1, 1, 1, 1, 1, 3, 3),
-#'   stageframe = cypframe_raw, historical = FALSE)
-#' 
-#' cypmatrix2r <- rlefko2(data = cypraw_v1, stageframe = cypframe_raw, 
-#'   year = "all", patch = "all", stages = c("stage3", "stage2", "stage1"),
-#'   size = c("size3added", "size2added"), supplement = cypsupp2r,
-#'   yearcol = "year2", patchcol = "patchid", indivcol = "individ")
-#' 
-#' cyp2mean <- lmean(cypmatrix2r)
-#' cyp2mean
-#' 
 #' @export
 verticalize3 <- function(data, noyears, firstyear = 1, popidcol = 0,
   patchidcol = 0, individcol= 0, blocksize = NA, xcol = 0, ycol = 0, juvcol = 0,
@@ -508,9 +378,7 @@ verticalize3 <- function(data, noyears, firstyear = 1, popidcol = 0,
   stassign <- rowid <- alive2 <- indataset <- censor1 <- censor2 <- NULL
   censor3 <- censbool <- NULL
   
-  popid <- NA
-  patchid <- NA
-  individ <- NA
+  popid <- patchid <- individ <- NA
   RepasObs <- FALSE
   
   #This first section tests the input for valid entries
@@ -867,7 +735,6 @@ verticalize3 <- function(data, noyears, firstyear = 1, popidcol = 0,
     }
   }
   
-  
   if (censor) {
     if (length(censorcol) == 1 & blocksize != 0) {
       fullcenvec <- as.vector(apply(as.matrix(c(1:noyears)), 1, function(X) {
@@ -890,7 +757,7 @@ verticalize3 <- function(data, noyears, firstyear = 1, popidcol = 0,
     censbool <- FALSE
   }
   
-  popdata <- .pfj(data, stageassign, noyears, firstyear, (popidcol - 1),
+  popdatareal <- .pfj(data, stageassign, noyears, firstyear, (popidcol - 1),
     (patchidcol - 1), (individcol - 1), blocksize, (xcol - 1), (ycol - 1),
     (juvcol - 1), (sizeacol - 1), (sizebcol - 1), (sizeccol - 1),
     (repstracol - 1), (repstrbcol - 1), (fecacol - 1), (fecbcol - 1),
@@ -898,19 +765,9 @@ verticalize3 <- function(data, noyears, firstyear = 1, popidcol = 0,
     (deadacol - 1), (obsacol - 1), (nonobsacol - 1), (censorcol - 1),
     (stagecol - 1), repstrrel, fecrel, NAas0, NRasRep, RepasObs, NOasObs,
     stassign, stagesizecol, censorkeep, censbool, censorRepeat, coordsRepeat,
-    quiet)
+    a2check, reduce, quiet)
   
-  if (a2check) {    # This whole if-else statement was originally just the line stating: popdatareal <- subset(popdata, subset = (alive2 == 1))
-    popdatareal <- popdata
-  } else {
-    popdatareal <- subset(popdata, subset = (alive2 == 1))
-  }
-  
-  if (any(!is.na(popdatareal$popid))) {popdatareal$popid <- as.factor(popdatareal$popid)}
-  
-  if (any(!is.na(popdatareal$patchid))) {popdatareal$patchid <- as.factor(popdatareal$patchid)}
-  
-  if (censor) {
+  if ("censor2" %in% colnames(popdatareal) & censor) {
     popdatareal <- subset(popdatareal, censor1 == censorkeep)
     popdatareal <- subset(popdatareal, censor2 == censorkeep)
     popdatareal <- subset(popdatareal, censor3 == censorkeep)
@@ -919,233 +776,6 @@ verticalize3 <- function(data, noyears, firstyear = 1, popidcol = 0,
   if (!is.na(spacing)) {
     popdatareal$density <- .density3(popdatareal, which(names(popdatareal) == "xpos2"),
       which(names(popdatareal) == "ypos2"), which(names(popdatareal) == "year2"), spacing)
-  }
-  
-  if (reduce) {
-    if (all(is.na(popdatareal$xpos1)) | length(unique(popdatareal$xpos1)) == 1) {popdatareal <- popdatareal[,-c(which(names(popdatareal) =="xpos1"))]}
-    if (all(is.na(popdatareal$ypos1)) | length(unique(popdatareal$ypos1)) == 1) {popdatareal <- popdatareal[,-c(which(names(popdatareal) =="ypos1"))]}
-    if (all(is.na(popdatareal$xpos2)) | length(unique(popdatareal$xpos2)) == 1) {popdatareal <- popdatareal[,-c(which(names(popdatareal) =="xpos2"))]}
-    if (all(is.na(popdatareal$ypos2)) | length(unique(popdatareal$ypos2)) == 1) {popdatareal <- popdatareal[,-c(which(names(popdatareal) =="ypos2"))]}
-    if (all(is.na(popdatareal$xpos3)) | length(unique(popdatareal$xpos3)) == 1) {popdatareal <- popdatareal[,-c(which(names(popdatareal) =="xpos3"))]}
-    if (all(is.na(popdatareal$ypos3)) | length(unique(popdatareal$ypos3)) == 1) {popdatareal <- popdatareal[,-c(which(names(popdatareal) =="ypos3"))]}
-    
-    if (!is.na(censorkeep)) {
-      if (censorcol[1] > 0 & censor) {
-        if (all(popdatareal$censor1 == popdatareal$censor1[1])) {
-          popdatareal <- popdatareal[,-c(which(names(popdatareal) =="censor1"))]
-        }
-      }
-      if (censorcol[1] > 0 & censor) {
-        if (all(popdatareal$censor2 == popdatareal$censor2[1])) {
-          popdatareal <- popdatareal[,-c(which(names(popdatareal) =="censor2"))]
-        }
-      }
-      if (censorcol[1] > 0 & censor) {
-        if (all(popdatareal$censor3 == popdatareal$censor3[1])) {
-          popdatareal <- popdatareal[,-c(which(names(popdatareal) =="censor3"))]
-        }
-      }
-    } else {
-      if (censorcol[1] > 0 & censor) {
-        if (all(is.na(popdatareal$censor1))) {
-          popdatareal <- popdatareal[,-c(which(names(popdatareal) =="censor1"))]
-        }
-      }
-      if (censorcol[1] > 0 & censor) {
-        if (all(is.na(popdatareal$censor2))) {
-          popdatareal <- popdatareal[,-c(which(names(popdatareal) =="censor2"))]
-        }
-      }
-      if (censorcol[1] > 0 & censor) {
-        if (all(is.na(popdatareal$censor3))) {
-          popdatareal <- popdatareal[,-c(which(names(popdatareal) =="censor3"))]
-        }
-      }
-    }
-    
-    if (all(is.na(popdatareal$sizea1)) | length(unique(popdatareal$sizea1)) == 1) {
-      popdatareal <- popdatareal[,-c(which(names(popdatareal) =="sizea1"))]
-    }
-    if (all(is.na(popdatareal$sizea2)) | length(unique(popdatareal$sizea2)) == 1) {
-      popdatareal <- popdatareal[,-c(which(names(popdatareal) =="sizea2"))]
-    }
-    if (all(is.na(popdatareal$sizea3)) | length(unique(popdatareal$sizea3)) == 1) {
-      popdatareal <- popdatareal[,-c(which(names(popdatareal) =="sizea3"))]
-    }
-    
-    if (all(is.na(popdatareal$sizeb1)) | length(unique(popdatareal$sizeb1)) == 1) {
-      popdatareal <- popdatareal[,-c(which(names(popdatareal) =="sizeb1"))]
-    }
-    if (all(is.na(popdatareal$sizeb2)) | length(unique(popdatareal$sizeb2)) == 1) {
-      popdatareal <- popdatareal[,-c(which(names(popdatareal) =="sizeb2"))]
-    }
-    if (all(is.na(popdatareal$sizeb3)) | length(unique(popdatareal$sizeb3)) == 1) {
-      popdatareal <- popdatareal[,-c(which(names(popdatareal) =="sizeb3"))]
-    }
-    
-    if (all(is.na(popdatareal$sizec1)) | length(unique(popdatareal$sizec1)) == 1) {
-      popdatareal <- popdatareal[,-c(which(names(popdatareal) =="sizec1"))]
-    }
-    if (all(is.na(popdatareal$sizec2)) | length(unique(popdatareal$sizec2)) == 1) {
-      popdatareal <- popdatareal[,-c(which(names(popdatareal) =="sizec2"))]
-    }
-    if (all(is.na(popdatareal$sizec3)) | length(unique(popdatareal$sizec3)) == 1) {
-      popdatareal <- popdatareal[,-c(which(names(popdatareal) =="sizec3"))]
-    }
-    
-    if (isTRUE(all.equal(popdatareal$size1added, popdatareal$sizea1))) {
-      popdatareal <- popdatareal[,-c(which(names(popdatareal) == "size1added"))]
-    } else if (all(is.na(popdatareal$size1added)) | length(unique(popdatareal$size1added)) == 1) {
-      popdatareal <- popdatareal[,-c(which(names(popdatareal) == "size1added"))]
-    }
-    if (isTRUE(all.equal(popdatareal$size2added, popdatareal$sizea2))) {
-      popdatareal <- popdatareal[,-c(which(names(popdatareal) == "size2added"))]
-    } else if (all(is.na(popdatareal$size2added)) | length(unique(popdatareal$size2added)) == 1) {
-      popdatareal <- popdatareal[,-c(which(names(popdatareal) == "size2added"))]
-    }
-    if (isTRUE(all.equal(popdatareal$size3added, popdatareal$sizea3))) {
-      popdatareal <- popdatareal[,-c(which(names(popdatareal) == "size3added"))]
-    } else if (all(is.na(popdatareal$size3added)) | length(unique(popdatareal$size3added)) == 1) {
-      popdatareal <- popdatareal[,-c(which(names(popdatareal) == "size3added"))]
-    }
-    
-    if (all(is.na(popdatareal$repstra1)) | length(unique(popdatareal$repstra1)) == 1) {
-      popdatareal <- popdatareal[,-c(which(names(popdatareal) == "repstra1"))]
-    }
-    if (all(is.na(popdatareal$repstra2)) | length(unique(popdatareal$repstra2)) == 1) {
-      popdatareal <- popdatareal[,-c(which(names(popdatareal) == "repstra2"))]
-    }
-    if (all(is.na(popdatareal$repstra3)) | length(unique(popdatareal$repstra3)) == 1) {
-      popdatareal <- popdatareal[,-c(which(names(popdatareal) == "repstra3"))]
-    }
-    
-    if (all(is.na(popdatareal$repstrb1)) | length(unique(popdatareal$repstrb1)) == 1) {
-      popdatareal <- popdatareal[,-c(which(names(popdatareal) == "repstrb1"))]
-    }
-    if (all(is.na(popdatareal$repstrb2)) | length(unique(popdatareal$repstrb2)) == 1) {
-      popdatareal <- popdatareal[,-c(which(names(popdatareal) == "repstrb2"))]
-    }
-    if (all(is.na(popdatareal$repstrb3)) | length(unique(popdatareal$repstrb3)) == 1) {
-      popdatareal <- popdatareal[,-c(which(names(popdatareal) == "repstrb3"))]
-    }
-    
-    if (isTRUE(all.equal(popdatareal$repstr1added, popdatareal$repstr1a))) {
-      popdatareal <- popdatareal[,-c(which(names(popdatareal) =="repstr1added"))]
-    } else if (all(is.na(popdatareal$repstr1added)) | length(unique(popdatareal$repstr1added)) == 1) {
-      popdatareal <- popdatareal[,-c(which(names(popdatareal) =="repstr1added"))]
-    }
-    if (isTRUE(all.equal(popdatareal$repstr2added, popdatareal$repstr2a))) {
-      popdatareal <- popdatareal[,-c(which(names(popdatareal) =="repstr2added"))]
-    } else if (all(is.na(popdatareal$repstr2added)) | length(unique(popdatareal$repstr2added)) == 1) {
-      popdatareal <- popdatareal[,-c(which(names(popdatareal) =="repstr2added"))]
-    }
-    if (isTRUE(all.equal(popdatareal$repstr3added, popdatareal$repstr3a))) {
-      popdatareal <- popdatareal[,-c(which(names(popdatareal) =="repstr3added"))]
-    } else if (all(is.na(popdatareal$repstr3added)) | length(unique(popdatareal$repstr3added)) == 1) {
-      popdatareal <- popdatareal[,-c(which(names(popdatareal) =="repstr3added"))]
-    }
-    
-    if (all(is.na(popdatareal$feca1)) | length(unique(popdatareal$feca1)) == 1) {
-      popdatareal <- popdatareal[,-c(which(names(popdatareal) =="feca1"))]
-    }
-    if (all(is.na(popdatareal$feca2)) | length(unique(popdatareal$feca2)) == 1) {
-      popdatareal <- popdatareal[,-c(which(names(popdatareal) =="feca2"))]
-    }
-    if (all(is.na(popdatareal$feca3)) | length(unique(popdatareal$feca3)) == 1) {
-      popdatareal <- popdatareal[,-c(which(names(popdatareal) =="feca3"))]
-    }
-    
-    if (all(is.na(popdatareal$fecb1)) | length(unique(popdatareal$fecb1)) == 1) {
-      popdatareal <- popdatareal[,-c(which(names(popdatareal) =="fecb1"))]
-    }
-    if (all(is.na(popdatareal$fecb2)) | length(unique(popdatareal$fecb2)) == 1) {
-      popdatareal <- popdatareal[,-c(which(names(popdatareal) =="fecb2"))]
-    }
-    if (all(is.na(popdatareal$fecb3)) | length(unique(popdatareal$fecb3)) == 1) {
-      popdatareal <- popdatareal[,-c(which(names(popdatareal) =="fecb3"))]
-    }
-    
-    if (isTRUE(all.equal(popdatareal$fec1added, popdatareal$feca1))) {
-      popdatareal <- popdatareal[,-c(which(names(popdatareal) =="fec1added"))]
-    } else if (all(is.na(popdatareal$fec1added)) | length(unique(popdatareal$fec1added)) == 1) {
-      popdatareal <- popdatareal[,-c(which(names(popdatareal) =="fec1added"))]
-    }
-    if (isTRUE(all.equal(popdatareal$fec2added, popdatareal$feca2))) {
-      popdatareal <- popdatareal[,-c(which(names(popdatareal) =="fec2added"))]
-    } else if (all(is.na(popdatareal$fec2added)) | length(unique(popdatareal$fec2added)) == 1) {
-      popdatareal <- popdatareal[,-c(which(names(popdatareal) =="fec2added"))]
-    }
-    if (isTRUE(all.equal(popdatareal$fec3added, popdatareal$feca3))) {
-      popdatareal <- popdatareal[,-c(which(names(popdatareal) =="fec3added"))]
-    } else if (all(is.na(popdatareal$fec3added)) | length(unique(popdatareal$fec3added)) == 1) {
-      popdatareal <- popdatareal[,-c(which(names(popdatareal) =="fec3added"))]
-    }
-    
-    if (all(is.na(popdatareal$indcova1)) | length(unique(popdatareal$indcova1)) == 1) {
-      popdatareal <- popdatareal[,-c(which(names(popdatareal) =="indcova1"))]
-    }
-    if (all(is.na(popdatareal$indcova2)) | length(unique(popdatareal$indcova2)) == 1) {
-      popdatareal <- popdatareal[,-c(which(names(popdatareal) =="indcova2"))]
-    }
-    if (all(is.na(popdatareal$indcova3)) | length(unique(popdatareal$indcova3)) == 1) {
-      popdatareal <- popdatareal[,-c(which(names(popdatareal) =="indcova3"))]
-    }
-    
-    if (all(is.na(popdatareal$indcovb1)) | length(unique(popdatareal$indcovb1)) == 1) {
-      popdatareal <- popdatareal[,-c(which(names(popdatareal) =="indcovb1"))]
-    }
-    if (all(is.na(popdatareal$indcovb2)) | length(unique(popdatareal$indcovb2)) == 1) {
-      popdatareal <- popdatareal[,-c(which(names(popdatareal) =="indcovb2"))]
-    }
-    if (all(is.na(popdatareal$indcovb3)) | length(unique(popdatareal$indcovb3)) == 1) {
-      popdatareal <- popdatareal[,-c(which(names(popdatareal) =="indcovb3"))]
-    }
-    
-    if (all(is.na(popdatareal$indcovc1)) | length(unique(popdatareal$indcovc1)) == 1) {
-      popdatareal <- popdatareal[,-c(which(names(popdatareal) =="indcovc1"))]
-    }
-    if (all(is.na(popdatareal$indcovc2)) | length(unique(popdatareal$indcovc2)) == 1) {
-      popdatareal <- popdatareal[,-c(which(names(popdatareal) =="indcovc2"))]
-    }
-    if (all(is.na(popdatareal$indcovc3)) | length(unique(popdatareal$indcovc3)) == 1) {
-      popdatareal <- popdatareal[,-c(which(names(popdatareal) =="indcovc3"))]
-    }
-    
-    if (all(popdatareal$obsstatus1 == popdatareal$obsstatus1[1])) {
-      popdatareal <- popdatareal[,-c(which(names(popdatareal) =="obsstatus1"))]
-    }
-    if (all(popdatareal$obsstatus2 == popdatareal$obsstatus2[1])) {
-      popdatareal <- popdatareal[,-c(which(names(popdatareal) =="obsstatus2"))]
-    }
-    if (all(popdatareal$obsstatus3 == popdatareal$obsstatus3[1])) {
-      popdatareal <- popdatareal[,-c(which(names(popdatareal) =="obsstatus3"))]
-    }
-    
-    if (all(popdatareal$repstatus1 == popdatareal$repstatus1[1])) {
-      popdatareal <- popdatareal[,-c(which(names(popdatareal) =="repstatus1"))]
-    }
-    if (all(popdatareal$repstatus2 == popdatareal$repstatus2[1])) {
-      popdatareal <- popdatareal[,-c(which(names(popdatareal) =="repstatus2"))]
-    }
-    if (all(popdatareal$repstatus3 == popdatareal$repstatus3[1])) {
-      popdatareal <- popdatareal[,-c(which(names(popdatareal) =="repstatus3"))]
-    }
-    
-    if (all(popdatareal$fecstatus1 == popdatareal$fecstatus1[1])) {
-      popdatareal <- popdatareal[,-c(which(names(popdatareal) =="fecstatus1"))]
-    }
-    if (all(popdatareal$fecstatus2 == popdatareal$fecstatus2[1])) {
-      popdatareal <- popdatareal[,-c(which(names(popdatareal) =="fecstatus2"))]
-    }
-    if (all(popdatareal$fecstatus3 == popdatareal$fecstatus3[1])) {
-      popdatareal <- popdatareal[,-c(which(names(popdatareal) =="fecstatus3"))]
-    }
-    
-    if (!censor) {
-      popdatareal <- popdatareal[,-c(which(names(popdatareal) =="censor1"))]
-      popdatareal <- popdatareal[,-c(which(names(popdatareal) =="censor2"))]
-      popdatareal <- popdatareal[,-c(which(names(popdatareal) =="censor3"))]
-    }
   }
   
   popdatareal$obsage <- popdatareal$obsage + age_offset
@@ -1335,6 +965,11 @@ verticalize3 <- function(data, noyears, firstyear = 1, popidcol = 0,
 #' @param reduce A logical variable determining whether unused variables and
 #' some invariant state variables should be removed from the output dataset.
 #' Defaults to \code{TRUE}.
+#' @param a2check A logical variable indicating whether to retain all data with
+#' living status at occasion \emph{t}. Defaults to \code{FALSE}, in which case
+#' data for occasions in which the individual is not alive in time \emph{t} is
+#' not retained. This option should be kept \code{FALSE}, except to inspect
+#' potential errors in the dataset.
 #' @param quiet A logical variable indicating whether to silence warnings.
 #' Defaults to \code{FALSE}.
 #' 
@@ -1472,8 +1107,6 @@ verticalize3 <- function(data, noyears, firstyear = 1, popidcol = 0,
 #'   propstatus = propvector, immstatus = immvector, indataset = indataset,
 #'   binhalfwidth = binvec)
 #' 
-#' cypframe_raw
-#' 
 #' cypraw_v2 <- historicalize3(data = cypvert, patchidcol = "patch", 
 #'   individcol = "plantid", year2col = "year2", sizea2col = "Inf2.2", 
 #'   sizea3col = "Inf2.3", sizeb2col = "Inf.2", sizeb3col = "Inf.3", 
@@ -1482,27 +1115,6 @@ verticalize3 <- function(data, noyears, firstyear = 1, popidcol = 0,
 #'   feca2col = "Pod.2", feca3col = "Pod.3", repstrrel = 2, 
 #'   stageassign = cypframe_raw, stagesize = "sizeadded", censorcol = "censor",
 #'   censor = FALSE, NAas0 = TRUE, NRasRep = TRUE, reduce = TRUE)
-#'   
-#' cypsupp2r <- supplemental(stage3 = c("SD", "P1", "P2", "P3", "SL", "D", 
-#'     "XSm", "Sm", "SD", "P1"),
-#'   stage2 = c("SD", "SD", "P1", "P2", "P3", "SL", "SL", "SL", "rep",
-#'     "rep"),
-#'   eststage3 = c(NA, NA, NA, NA, NA, "D", "XSm", "Sm", NA, NA),
-#'   eststage2 = c(NA, NA, NA, NA, NA, "XSm", "XSm", "XSm", NA, NA),
-#'   givenrate = c(0.10, 0.20, 0.20, 0.20, 0.25, NA, NA, NA, NA, NA),
-#'   multiplier = c(NA, NA, NA, NA, NA, NA, NA, NA, 0.5, 0.5),
-#'   type =c(1, 1, 1, 1, 1, 1, 1, 1, 3, 3),
-#'   stageframe = cypframe_raw, historical = FALSE)
-#' 
-#' cypmatrix2r <- rlefko2(data = cypraw_v2, stageframe = cypframe_raw, 
-#'   year = "all", patch = "all", stages = c("stage3", "stage2"),
-#'   size = c("size3added", "size2added"), supplement = cypsupp2r,
-#'   yearcol = "year2", patchcol = "patchid", indivcol = "individ")
-#'   
-#' cypmatrix2r$A[[intersect(which(cypmatrix2r$labels$patch == "A"), 
-#'   which(cypmatrix2r$labels$year2 == 2004))]]
-#' 
-#' lambda3(cypmatrix2r)
 #'
 #' @export
 historicalize3 <- function(data, popidcol = 0, patchidcol = 0, individcol, 
@@ -1516,7 +1128,7 @@ historicalize3 <- function(data, popidcol = 0, patchidcol = 0, individcol,
   stage3col = 0, juv2col = 0, juv3col = 0, stageassign = NA, stagesize = NA,
   censor = FALSE, censorcol = 0, censorkeep = 0, spacing = NA, NAas0 = FALSE,
   NRasRep = FALSE, NOasObs = FALSE, prebreeding = TRUE, age_offset = 0,
-  reduce = TRUE, quiet = FALSE) {
+  reduce = TRUE, a2check = FALSE, quiet = FALSE) {
   
   alive2 <- indataset <- censor1 <- censor2 <- censor3 <- censbool <- NULL
   
@@ -2063,238 +1675,16 @@ historicalize3 <- function(data, popidcol = 0, patchidcol = 0, individcol,
     (dead2col - 1), (dead3col - 1), (obs2col - 1), (obs3col - 1),
     (nonobs2col - 1), (nonobs3col - 1), repstrrel, fecrel, (stage2col - 1),
     (stage3col - 1), (censorcol - 1), NAas0, NRasRep, NOasObs, stassign,
-    stagesizecol, censorkeep, censbool, quiet)
+    stagesizecol, censorkeep, censbool, a2check, reduce, quiet)
   
-  popdata <- subset(popdata, alive2 == 1)
-  
-  if (censor) {
+  if ("censor2" %in% colnames(popdata) & censor) {
     popdata <- subset(popdata, censor1 == censorkeep & censor2 == censorkeep)
     popdata <- subset(popdata, censor3 == censorkeep)
   }
   
-  if (!is.na(spacing)) {
+  if (!is.na(spacing) & "xpos2" %in% colnames(popdata)) {
     popdata$density <- .density3(popdata, which(names(popdata) == "xpos2"), 
       which(names(popdata) == "ypos2"), which(names(popdata) == "year2"), spacing)
-  }
-  
-  if (reduce) {
-    if (all(is.na(popdata$xpos1)) | length(unique(popdata$xpos1)) == 1) {
-      popdata <- popdata[,-c(which(names(popdata) == "xpos1"))]
-    } else if (isTRUE(all.equal(sort(unique(popdata$xpos1)), c(-1,0)))) {
-      popdata <- popdata[,-c(which(names(popdata) == "xpos1"))]
-    }
-    if (all(is.na(popdata$ypos1)) | length(unique(popdata$ypos1)) == 1) {
-      popdata <- popdata[,-c(which(names(popdata) == "ypos1"))]
-    } else if (isTRUE(all.equal(sort(unique(popdata$ypos1)), c(-1,0)))) {
-      popdata <- popdata[,-c(which(names(popdata) == "ypos1"))]
-    }
-    
-    if (all(is.na(popdata$xpos2)) | length(unique(popdata$xpos2)) == 1) {
-      popdata <- popdata[,-c(which(names(popdata) == "xpos2"))]
-    } else if (isTRUE(all.equal(sort(unique(popdata$xpos2)), c(-1,0)))) {
-      popdata <- popdata[,-c(which(names(popdata) == "xpos2"))]
-    }
-    if (all(is.na(popdata$ypos2)) | length(unique(popdata$ypos2)) == 1) {
-      popdata <- popdata[,-c(which(names(popdata) == "ypos2"))]
-    } else if (isTRUE(all.equal(sort(unique(popdata$ypos2)), c(-1,0)))) {
-      popdata <- popdata[,-c(which(names(popdata) == "ypos2"))]
-    }
-    if (all(is.na(popdata$xpos3)) | length(unique(popdata$xpos3)) == 1) {
-      popdata <- popdata[,-c(which(names(popdata) == "xpos3"))]
-    } else if (isTRUE(all.equal(sort(unique(popdata$xpos3)), c(-1,0)))) {
-      popdata <- popdata[,-c(which(names(popdata) == "xpos3"))]
-    }
-    if (all(is.na(popdata$ypos3)) | length(unique(popdata$ypos3)) == 1) {
-      popdata <- popdata[,-c(which(names(popdata) == "ypos3"))]
-    } else if (isTRUE(all.equal(sort(unique(popdata$ypos3)), c(-1,0)))) {
-      popdata <- popdata[,-c(which(names(popdata) == "ypos3"))]
-    }
-    
-    if (all(is.na(popdata$censor1)) | length(unique(popdata$censor1)) == 1) {
-      popdata <- popdata[,-c(which(names(popdata) =="censor1"))]
-    }
-    if (all(is.na(popdata$censor2)) | length(unique(popdata$censor2)) == 1) {
-      popdata <- popdata[,-c(which(names(popdata) =="censor2"))]
-    }
-    if (all(is.na(popdata$censor3)) | length(unique(popdata$censor3)) == 1) {
-      popdata <- popdata[,-c(which(names(popdata) =="censor3"))]
-    }
-    
-    if (all(is.na(popdata$sizea1)) | length(unique(popdata$sizea1)) == 1) {
-      popdata <- popdata[,-c(which(names(popdata) =="sizea1"))]
-    }
-    if (all(is.na(popdata$sizea2)) | length(unique(popdata$sizea2)) == 1) {
-      popdata <- popdata[,-c(which(names(popdata) =="sizea2"))]
-    }
-    if (all(is.na(popdata$sizea3)) | length(unique(popdata$sizea3)) == 1) {
-      popdata <- popdata[,-c(which(names(popdata) =="sizea3"))]
-    }
-    
-    if (all(is.na(popdata$sizeb1)) | length(unique(popdata$sizeb1)) == 1) {
-      popdata <- popdata[,-c(which(names(popdata) =="sizeb1"))]
-    }
-    if (all(is.na(popdata$sizeb2)) | length(unique(popdata$sizeb2)) == 1) {
-      popdata <- popdata[,-c(which(names(popdata) =="sizeb2"))]
-    }
-    if (all(is.na(popdata$sizeb3)) | length(unique(popdata$sizeb3)) == 1) {
-      popdata <- popdata[,-c(which(names(popdata) =="sizeb3"))]
-    }
-    
-    if (all(is.na(popdata$sizec1)) | length(unique(popdata$sizec1)) == 1) {
-      popdata <- popdata[,-c(which(names(popdata) =="sizec1"))]
-    }
-    if (all(is.na(popdata$sizec2)) | length(unique(popdata$sizec2)) == 1) {
-      popdata <- popdata[,-c(which(names(popdata) =="sizec2"))]
-    }
-    if (all(is.na(popdata$sizec3)) | length(unique(popdata$sizec3)) == 1) {
-      popdata <- popdata[,-c(which(names(popdata) =="sizec3"))]
-    }
-    
-    if (isTRUE(all.equal(popdata$size1added, popdata$sizea1))) {
-      popdata <- popdata[,-c(which(names(popdata) == "size1added"))]
-    } else if (all(is.na(popdata$size1added)) | length(unique(popdata$size1added)) == 1) {
-      popdata <- popdata[,-c(which(names(popdata) == "size1added"))]
-    }
-    if (isTRUE(all.equal(popdata$size2added, popdata$sizea2))) {
-      popdata <- popdata[,-c(which(names(popdata) == "size2added"))]
-    } else if (all(is.na(popdata$size2added)) | length(unique(popdata$size2added)) == 1) {
-      popdata <- popdata[,-c(which(names(popdata) == "size2added"))]
-    }
-    if (isTRUE(all.equal(popdata$size3added, popdata$sizea3))) {
-      popdata <- popdata[,-c(which(names(popdata) == "size3added"))]
-    } else if (all(is.na(popdata$size3added)) | length(unique(popdata$size3added)) == 1) {
-      popdata <- popdata[,-c(which(names(popdata) == "size3added"))]
-    }
-    
-    if (all(is.na(popdata$repstra1)) | length(unique(popdata$repstra1)) == 1) {
-      popdata <- popdata[,-c(which(names(popdata) == "repstra1"))]
-    }
-    if (all(is.na(popdata$repstra2)) | length(unique(popdata$repstra2)) == 1) {
-      popdata <- popdata[,-c(which(names(popdata) == "repstra2"))]
-    }
-    if (all(is.na(popdata$repstra3)) | length(unique(popdata$repstra3)) == 1) {
-      popdata <- popdata[,-c(which(names(popdata) == "repstra3"))]
-    }
-    
-    if (all(is.na(popdata$repstrb1)) | length(unique(popdata$repstrb1)) == 1) {
-      popdata <- popdata[,-c(which(names(popdata) == "repstrb1"))]
-    }
-    if (all(is.na(popdata$repstrb2)) | length(unique(popdata$repstrb2)) == 1) {
-      popdata <- popdata[,-c(which(names(popdata) == "repstrb2"))]
-    }
-    if (all(is.na(popdata$repstrb3)) | length(unique(popdata$repstrb3)) == 1) {
-      popdata <- popdata[,-c(which(names(popdata) == "repstrb3"))]
-    }
-    
-    if (isTRUE(all.equal(popdata$repstr1added, popdata$repstr1a))) {
-      popdata <- popdata[,-c(which(names(popdata) =="repstr1added"))]
-    } else if (all(is.na(popdata$repstr1added)) | length(unique(popdata$repstr1added)) == 1) {
-      popdata <- popdata[,-c(which(names(popdata) =="repstr1added"))]
-    }
-    if (isTRUE(all.equal(popdata$repstr2added, popdata$repstr2a))) {
-      popdata <- popdata[,-c(which(names(popdata) =="repstr2added"))]
-    } else if (all(is.na(popdata$repstr2added)) | length(unique(popdata$repstr2added)) == 1) {
-      popdata <- popdata[,-c(which(names(popdata) =="repstr2added"))]
-    }
-    if (isTRUE(all.equal(popdata$repstr3added, popdata$repstr3a))) {
-      popdata <- popdata[,-c(which(names(popdata) =="repstr3added"))]
-    } else if (all(is.na(popdata$repstr3added)) | length(unique(popdata$repstr3added)) == 1) {
-      popdata <- popdata[,-c(which(names(popdata) =="repstr3added"))]
-    }
-    
-    if (all(is.na(popdata$feca1)) | length(unique(popdata$feca1)) == 1) {
-      popdata <- popdata[,-c(which(names(popdata) =="feca1"))]
-    }
-    if (all(is.na(popdata$feca2)) | length(unique(popdata$feca2)) == 1) {
-      popdata <- popdata[,-c(which(names(popdata) =="feca2"))]
-    }
-    if (all(is.na(popdata$feca3)) | length(unique(popdata$feca3)) == 1) {
-      popdata <- popdata[,-c(which(names(popdata) =="feca3"))]
-    }
-    
-    if (all(is.na(popdata$fecb1)) | length(unique(popdata$fecb1)) == 1) {
-      popdata <- popdata[,-c(which(names(popdata) =="fecb1"))]
-    }
-    if (all(is.na(popdata$fecb2)) | length(unique(popdata$fecb2)) == 1) {
-      popdata <- popdata[,-c(which(names(popdata) =="fecb2"))]
-    }
-    if (all(is.na(popdata$fecb3)) | length(unique(popdata$fecb3)) == 1) {
-      popdata <- popdata[,-c(which(names(popdata) =="fecb3"))]
-    }
-    
-    if (isTRUE(all.equal(popdata$fec1added, popdata$feca1))) {
-      popdata <- popdata[,-c(which(names(popdata) =="fec1added"))]
-    } else if (all(is.na(popdata$fec1added)) | length(unique(popdata$fec1added)) == 1) {
-      popdata <- popdata[,-c(which(names(popdata) =="fec1added"))]
-    }
-    if (isTRUE(all.equal(popdata$fec2added, popdata$feca2))) {
-      popdata <- popdata[,-c(which(names(popdata) =="fec2added"))]
-    } else if (all(is.na(popdata$fec2added)) | length(unique(popdata$fec2added)) == 1) {
-      popdata <- popdata[,-c(which(names(popdata) =="fec2added"))]
-    }
-    if (isTRUE(all.equal(popdata$fec3added, popdata$feca3))) {
-      popdata <- popdata[,-c(which(names(popdata) =="fec3added"))]
-    } else if (all(is.na(popdata$fec3added)) | length(unique(popdata$fec3added)) == 1) {
-      popdata <- popdata[,-c(which(names(popdata) =="fec3added"))]
-    }
-    
-    if (all(is.na(popdata$indcova1)) | length(unique(popdata$indcova1)) == 1) {
-      popdata <- popdata[,-c(which(names(popdata) =="indcova1"))]
-    }
-    if (all(is.na(popdata$indcova2)) | length(unique(popdata$indcova2)) == 1) {
-      popdata <- popdata[,-c(which(names(popdata) =="indcova2"))]
-    }
-    if (all(is.na(popdata$indcova3)) | length(unique(popdata$indcova3)) == 1) {
-      popdata <- popdata[,-c(which(names(popdata) =="indcova3"))]
-    }
-    if (all(is.na(popdata$indcovb1)) | length(unique(popdata$indcovb1)) == 1) {
-      popdata <- popdata[,-c(which(names(popdata) =="indcovb1"))]
-    }
-    if (all(is.na(popdata$indcovb2)) | length(unique(popdata$indcovb2)) == 1) {
-      popdata <- popdata[,-c(which(names(popdata) =="indcovb2"))]
-    }
-    if (all(is.na(popdata$indcovb3)) | length(unique(popdata$indcovb3)) == 1) {
-      popdata <- popdata[,-c(which(names(popdata) =="indcovb3"))]
-    }
-    if (all(is.na(popdata$indcovc1)) | length(unique(popdata$indcovc1)) == 1) {
-      popdata <- popdata[,-c(which(names(popdata) =="indcovc1"))]
-    }
-    if (all(is.na(popdata$indcovc2)) | length(unique(popdata$indcovc2)) == 1) {
-      popdata <- popdata[,-c(which(names(popdata) =="indcovc2"))]
-    }
-    if (all(is.na(popdata$indcovc3)) | length(unique(popdata$indcovc3)) == 1) {
-      popdata <- popdata[,-c(which(names(popdata) =="indcovc3"))]
-    }
-    
-    if (all(popdata$obsstatus1 == popdata$obsstatus1[1])) {
-      popdata <- popdata[,-c(which(names(popdata) =="obsstatus1"))]
-    }
-    if (all(popdata$obsstatus2 == popdata$obsstatus2[1])) {
-      popdata <- popdata[,-c(which(names(popdata) =="obsstatus2"))]
-    }
-    if (all(popdata$obsstatus3 == popdata$obsstatus3[1])) {
-      popdata <- popdata[,-c(which(names(popdata) =="obsstatus3"))]
-    }
-    
-    if (all(popdata$repstatus1 == popdata$repstatus1[1])) {
-      popdata <- popdata[,-c(which(names(popdata) =="repstatus1"))]
-    }
-    if (all(popdata$repstatus2 == popdata$repstatus2[1])) {
-      popdata <- popdata[,-c(which(names(popdata) =="repstatus2"))]
-    }
-    if (all(popdata$repstatus3 == popdata$repstatus3[1])) {
-      popdata <- popdata[,-c(which(names(popdata) =="repstatus3"))]
-    }
-    
-    if (all(popdata$fecstatus1 == popdata$fecstatus1[1])) {
-      popdata <- popdata[,-c(which(names(popdata) =="fecstatus1"))]
-    }
-    if (all(popdata$fecstatus2 == popdata$fecstatus2[1])) {
-      popdata <- popdata[,-c(which(names(popdata) =="fecstatus2"))]
-    }
-    if (all(popdata$fecstatus3 == popdata$fecstatus3[1])) {
-      popdata <- popdata[,-c(which(names(popdata) =="fecstatus3"))]
-    }
   }
   
   popdata$obsage <- popdata$obsage + age_offset
@@ -2302,10 +1692,176 @@ historicalize3 <- function(data, popidcol = 0, patchidcol = 0, individcol,
   return(popdata)
 }
 
+#' Import MPM from COMPADRE or COMADRE Database
+#' 
+#' Function \code{.import_Com()} imports matrices from the COMPADRE and COMADRE
+#' databases, given knowledge of the corresponding \code{MatrixID}, and builds
+#' them into a \code{lefkoMat} object. Users are encourage to explore package
+#' \code{Rcompadre} for further details of the use of these databases.
+#' 
+#' @name .import_Com
+#' 
+#' @param matrix_id The values of \code{MatrixID} from the used database
+#' corresponding to the matrices to import.
+#' @param database The holding the COMPADRE or COMADRE database, as in the
+#' global environment.
+#' @param add_FC A logical value indicating whether to sum the \code{matF} and
+#' \code{matC} matrices to produce the \code{F} matrix. If \code{FALSE}, then
+#' only uses the \code{matF} matrix. Defaults to \code{TRUE}.
+#' 
+#' @return A \code{lefkoMat} object with the following elements:
+#' \item{A}{A list of full projection matrices in order of sorted populations,
+#' patches, and occasions. All matrices output in the matrix class.}
+#' \item{U}{A list of survival transition matrices sorted as in A. All matrices
+#' output in the matrix class.}
+#' \item{F}{A list of fecundity matrices sorted as in A. All matrices output in
+#' the matrix class.}
+#' \item{ahstages}{A data frame detailing the characteristics of associated
+#' ahistorical stages, in the form of a modified stageframe that includes status
+#' as an entry stage through reproduction.}
+#' \item{hstages}{A single value of \code{NA}.}
+#' \item{agestages}{A single value of \code{NA}.}
+#' \item{labels}{A data frame giving the population, patch, and year of each
+#' matrix in order. Taken from the \code{MatrixPopulation},
+#' \code{MatrixTreatment}, and \code{MatrixStartYear} variables in the database
+#' metadata.}
+#' \item{matrixqc}{A short vector describing the number of non-zero elements in
+#' \code{U} and \code{F} matrices, and the number of annual matrices.}
+#' 
+#' @keywords internal
+#' @noRd
+.import_Com <- function(matrix_id, database, add_FC = TRUE) {
+  output <- core_indices <- meta_data <- stage_lists <- matrices <- NULL
+  A_mats <- U_mats <- F_mats <- NULL
+  db_format <- num_mats <- stages_num <- 0
+  
+  if (!is.null(database)) {
+    if (is(database, "CompadreDB")) {
+      core_indices <- which(is.element(database@data$MatrixID, matrix_id))
+      meta_data <- as.data.frame(database@data[core_indices,-1])
+      format <- 1
+    } else if (is.list(database)) {
+      core_indices <- which(is.element(database$metadata$MatrixID, matrix_id))
+      meta_data <- database$metadata[core_indices,]
+      format <- 2
+    } else {
+      stop("Object database not recognized.", call. = FALSE)
+    }
+    
+    if (length(core_indices) == 0) stop("Entered matrix_id cannot be found.", call. = FALSE)
+    num_mats <- length(core_indices)
+    num_mats_vec <- as.matrix(c(1:num_mats))
+    
+    if (format == 1) {
+      stage_lists <- apply(num_mats_vec, 1, function(X) {
+        return(database@data$mat[[core_indices[X]]]@matrixClass)
+      })
+      
+      matrices <- apply(num_mats_vec, 1, function(X) {
+        return(database@data$mat[[core_indices[X]]])
+      })
+      
+      A_mats <- lapply(matrices, function(X) {
+        return(X@matA)
+      })
+      
+      U_mats <- lapply(matrices, function(X) {
+        return(X@matU)
+      })
+      
+      F_mats <- lapply(matrices, function(X) {
+        if (add_FC) {
+          return(X@matF + X@matC)
+        } else {
+          return(X@matF)
+        }
+      })
+    } else if (format == 2) {
+      stage_lists <- apply(num_mats_vec, 1, function(X) {
+        return(database$matrixClass[[core_indices[X]]])
+      })
+      
+      matrices <- apply(num_mats_vec, 1, function(X) {
+        return(database$mat[[core_indices[X]]])
+      })
+      
+      A_mats <- lapply(matrices, function(X) {
+        return(X$matA)
+      })
+      
+      U_mats <- lapply(matrices, function(X) {
+        return(X$matU)
+      })
+      
+      F_mats <- lapply(matrices, function(X) {
+        if (add_FC) {
+          return(X$matF + X$matC)
+        } else {
+          return(X$matF)
+        }
+      })
+    }
+    
+    check_rows <- apply(num_mats_vec, 1, function(X) {
+      return(dim(A_mats[[X]])[1])
+    })
+    if (length(unique(check_rows)) > 1) {
+      stop("Input matrices appear to be of unequal dimension.", call. = FALSE)
+    }
+    stages_num <- check_rows[1]
+    
+    found_elems_U <- apply(num_mats_vec, 1, function(X) {
+      return(length(which(U_mats[[X]] > 0.0)))
+    })
+    found_elems_F <- apply(num_mats_vec, 1, function(X) {
+      return(length(which(F_mats[[X]] > 0.0)))
+    })
+    matrix_qc <- c(sum(found_elems_U), sum(found_elems_F), num_mats)
+    
+    reprod_stages_sum <- t(apply(num_mats_vec, 1, function(X) {
+      workup1 <- colSums(F_mats[[X]])
+    }))
+    reprod_stages <- colSums(reprod_stages_sum)
+    reprod_stages[which(reprod_stages > 0)] <- 1
+    
+    entry_stages_sum <- t(apply(num_mats_vec, 1, function(X) {
+      workup1 <- rowSums(F_mats[[X]])
+    }))
+    entry_stages <- colSums(entry_stages_sum)
+    entry_stages[which(entry_stages > 0)] <- 1
+    
+    mature_stages <- rep(0, stages_num)
+    mature_stages[which(entry_stages == 0)] <- 1
+    mature_stages[which(reprod_stages > 0)] <- 1
+    
+    pops <- meta_data$MatrixPopulation
+    patches <- meta_data$MatrixTreatment
+    years <- meta_data$MatrixStartYear
+    labels <- data.frame(pop = pops, patch = patches, year2 = years)
+    
+    new_sf <- sf_skeleton(stages_num)
+    new_sf$repstatus <- reprod_stages
+    new_sf$immstatus <- entry_stages
+    new_sf$matstatus <- mature_stages
+    new_sf$comments <- stage_lists[[1]]$MatrixClassAuthor
+    
+    output <- list(A = A_mats, U = U_mats, F = F_mats, ahstages = new_sf,
+      hstages = as.data.frame(NA), agestages = as.data.frame(NA),
+      labels = labels, matrixqc = matrix_qc)
+    class(output) <- "lefkoMat"
+  } else {
+    message("Please load either the COMPADRE or COMADRE database.")
+  }
+  
+  return(output)
+}
+
 #' Create lefkoMat Object from Given Input Matrices
 #' 
-#' Function \code{create_lM()} creates lefkoMat objects from supplied matrices
-#' and extra information.
+#' Function \code{.import_mats()} creates lefkoMat objects from supplied
+#' matrices and extra information.
+#' 
+#' @name .import_mats
 #' 
 #' @param mats A list of A matrices.
 #' @param stageframe A stageframe describing all stages utilized.
@@ -2339,294 +1895,9 @@ historicalize3 <- function(data, popidcol = 0, patchidcol = 0, individcol,
 #' a short quality control section used by the \code{\link{summary.lefkoMat}()}
 #' function.
 #' 
-#' @section Notes:
-#' U and F decomposition assumes that elements holding fecundity values are
-#' to be interpreted solely as fecundity rates. Users wishing to split these
-#' elements between fecundity and survival should do so manually after running
-#' this function.
-#' 
-#' Age-by-stage MPMs require an \code{agestages} data frame outlining the order
-#' of age-stages. This data frame has 3 variables: \code{stage_id}, which is the
-#' number of the stage as labelled by the equivalently named variable in the
-#' \code{stageframe}; \code{stage}, which is the official name of the stage as
-#' given in the equivalently named variable in the \code{stageframe}; and
-#' \code{age}, which of course gives the age associated with the stage at that
-#' time. The number of rows must be equal to the number of rows and columns of
-#' each entered matrix.
-#' 
-#' @seealso \code{\link{add_lM}()}
-#' @seealso \code{\link{delete_lM}()}
-#' @seealso \code{\link{subset_lM}()}
-#' 
-#' @examples
-#' # These matrices are of 9 populations of the plant species Anthyllis
-#' # vulneraria, and were originally published in Davison et al. (2010) Journal
-#' # of Ecology 98:255-267 (doi: 10.1111/j.1365-2745.2009.01611.x).
-#' 
-#' sizevector <- c(1, 1, 2, 3) # These sizes are not from the original paper
-#' stagevector <- c("Sdl", "Veg", "SmFlo", "LFlo")
-#' repvector <- c(0, 0, 1, 1)
-#' obsvector <- c(1, 1, 1, 1)
-#' matvector <- c(0, 1, 1, 1)
-#' immvector <- c(1, 0, 0, 0)
-#' propvector <- c(0, 0, 0, 0)
-#' indataset <- c(1, 1, 1, 1)
-#' binvec <- c(0.5, 0.5, 0.5, 0.5)
-#' 
-#' anthframe <- sf_create(sizes = sizevector, stagenames = stagevector,
-#'   repstatus = repvector, obsstatus = obsvector, matstatus = matvector,
-#'   immstatus = immvector, indataset = indataset, binhalfwidth = binvec,
-#'   propstatus = propvector)
-#' 
-#' # POPN C 2003-2004
-#' XC3 <- matrix(c(0, 0, 1.74, 1.74,
-#' 0.208333333, 0, 0, 0.057142857,
-#' 0.041666667, 0.076923077, 0, 0,
-#' 0.083333333, 0.076923077, 0.066666667, 0.028571429), 4, 4, byrow = TRUE)
-#' 
-#' # 2004-2005
-#' XC4 <- matrix(c(0, 0, 0.3, 0.6,
-#' 0.32183908, 0.142857143, 0, 0,
-#' 0.16091954, 0.285714286, 0, 0,
-#' 0.252873563, 0.285714286, 0.5, 0.6), 4, 4, byrow = TRUE)
-#' 
-#' # 2005-2006
-#' XC5 <- matrix(c(0, 0, 0.50625, 0.675,
-#' 0, 0, 0, 0.035714286,
-#' 0.1, 0.068965517, 0.0625, 0.107142857,
-#' 0.3, 0.137931034, 0, 0.071428571), 4, 4, byrow = TRUE)
-#' 
-#' # POPN E 2003-2004
-#' XE3 <- matrix(c(0, 0, 2.44, 6.569230769,
-#' 0.196428571, 0, 0, 0,
-#' 0.125, 0.5, 0, 0,
-#' 0.160714286, 0.5, 0.133333333, 0.076923077), 4, 4, byrow = TRUE)
-#' 
-#' XE4 <- matrix(c(0, 0, 0.45, 0.646153846,
-#' 0.06557377, 0.090909091, 0.125, 0,
-#' 0.032786885, 0, 0.125, 0.076923077,
-#' 0.049180328, 0, 0.125, 0.230769231), 4, 4, byrow = TRUE)
-#' 
-#' XE5 <- matrix(c(0, 0, 2.85, 3.99,
-#' 0.083333333, 0, 0, 0,
-#' 0, 0, 0, 0,
-#' 0.416666667, 0.1, 0, 0.1), 4, 4, byrow = TRUE)
-#' 
-#' # POPN F 2003-2004
-#' XF3 <- matrix(c(0, 0, 1.815, 7.058333333,
-#' 0.075949367, 0, 0.05, 0.083333333,
-#' 0.139240506, 0, 0, 0.25,
-#' 0.075949367, 0, 0, 0.083333333), 4, 4, byrow = TRUE)
-#' 
-#' XF4 <- matrix(c(0, 0, 1.233333333, 7.4,
-#' 0.223880597, 0, 0.111111111, 0.142857143,
-#' 0.134328358, 0.272727273, 0.166666667, 0.142857143,
-#' 0.119402985, 0.363636364, 0.055555556, 0.142857143), 4, 4, byrow = TRUE)
-#' 
-#' XF5 <- matrix(c(0, 0, 1.06, 3.372727273,
-#' 0.073170732, 0.025, 0.033333333, 0,
-#' 0.036585366, 0.15, 0.1, 0.136363636,
-#' 0.06097561, 0.225, 0.166666667, 0.272727273), 4, 4, byrow = TRUE)
-#' 
-#' # POPN G 2003-2004
-#' XG3 <- matrix(c(0, 0, 0.245454545, 2.1,
-#' 0, 0, 0.045454545, 0,
-#' 0.125, 0, 0.090909091, 0,
-#' 0.125, 0, 0.090909091, 0.333333333), 4, 4, byrow = TRUE)
-#' 
-#' XG4 <- matrix(c(0, 0, 1.1, 1.54,
-#' 0.111111111, 0, 0, 0,
-#' 0, 0, 0, 0,
-#' 0.111111111, 0, 0, 0), 4, 4, byrow = TRUE)
-#' 
-#' XG5 <- matrix(c(0, 0, 0, 1.5,
-#' 0, 0, 0, 0,
-#' 0.090909091, 0, 0, 0,
-#' 0.545454545, 0.5, 0, 0.5), 4, 4, byrow = TRUE)
-#' 
-#' # POPN L 2003-2004
-#' XL3 <- matrix(c(0, 0, 1.785365854, 1.856521739,
-#' 0.128571429, 0, 0, 0.010869565,
-#' 0.028571429, 0, 0, 0,
-#' 0.014285714, 0, 0, 0.02173913), 4, 4, byrow = TRUE)
-#' 
-#' XL4 <- matrix(c(0, 0, 14.25, 16.625,
-#' 0.131443299, 0.057142857, 0, 0.25,
-#' 0.144329897, 0, 0, 0,
-#' 0.092783505, 0.2, 0, 0.25), 4, 4, byrow = TRUE)
-#' 
-#' XL5 <- matrix(c(0, 0, 0.594642857, 1.765909091,
-#' 0, 0, 0.017857143, 0,
-#' 0.021052632, 0.018518519, 0.035714286, 0.045454545,
-#' 0.021052632, 0.018518519, 0.035714286, 0.068181818), 4, 4, byrow = TRUE)
-#' 
-#' # POPN O 2003-2004
-#' XO3 <- matrix(c(0, 0, 11.5, 2.775862069,
-#' 0.6, 0.285714286, 0.333333333, 0.24137931,
-#' 0.04, 0.142857143, 0, 0,
-#' 0.16, 0.285714286, 0, 0.172413793), 4, 4, byrow = TRUE)
-#' 
-#' XO4 <- matrix(c(0, 0, 3.78, 1.225,
-#' 0.28358209, 0.171052632, 0, 0.166666667,
-#' 0.084577114, 0.026315789, 0, 0.055555556,
-#' 0.139303483, 0.447368421, 0, 0.305555556), 4, 4, byrow = TRUE)
-#' 
-#' XO5 <- matrix(c(0, 0, 1.542857143, 1.035616438,
-#' 0.126984127, 0.105263158, 0.047619048, 0.054794521,
-#' 0.095238095, 0.157894737, 0.19047619, 0.082191781,
-#' 0.111111111, 0.223684211, 0, 0.356164384), 4, 4, byrow = TRUE)
-#' 
-#' # POPN Q 2003-2004
-#' XQ3 <- matrix(c(0, 0, 0.15, 0.175,
-#' 0, 0, 0, 0,
-#' 0, 0, 0, 0,
-#' 1, 0, 0, 0), 4, 4, byrow = TRUE)
-#' 
-#' XQ4 <- matrix(c(0, 0, 0, 0.25,
-#' 0, 0, 0, 0,
-#' 0, 0, 0, 0,
-#' 1, 0.666666667, 0, 1), 4, 4, byrow = TRUE)
-#' 
-#' XQ5 <- matrix(c(0, 0, 0, 1.428571429,
-#' 0, 0, 0, 0.142857143,
-#' 0.25, 0, 0, 0,
-#' 0.25, 0, 0, 0.571428571), 4, 4, byrow = TRUE)
-#' 
-#' # POPN R 2003-2004
-#' XR3 <- matrix(c(0, 0, 0.7, 0.6125,
-#' 0.25, 0, 0, 0.125,
-#' 0, 0, 0, 0,
-#' 0.25, 0.166666667, 0, 0.25), 4, 4, byrow = TRUE)
-#' 
-#' XR4 <- matrix(c(0, 0, 0, 0.6,
-#' 0.285714286, 0, 0, 0,
-#' 0.285714286, 0.333333333, 0, 0,
-#' 0.285714286, 0.333333333, 0, 1), 4, 4, byrow = TRUE)
-#' 
-#' XR5 <- matrix(c(0, 0, 0.7, 0.6125,
-#' 0, 0, 0, 0,
-#' 0, 0, 0, 0,
-#' 0.333333333, 0, 0.333333333, 0.625), 4, 4, byrow = TRUE)
-#' 
-#' # POPN S 2003-2004
-#' XS3 <- matrix(c(0, 0, 2.1, 0.816666667,
-#' 0.166666667, 0, 0, 0,
-#' 0, 0, 0, 0,
-#' 0, 0, 0, 0.166666667), 4, 4, byrow = TRUE)
-#' 
-#' XS4 <- matrix(c(0, 0, 0, 7,
-#' 0.333333333, 0.5, 0, 0,
-#' 0, 0, 0, 0,
-#' 0.333333333, 0, 0, 1), 4, 4, byrow = TRUE)
-#' 
-#' XS5 <- matrix(c(0, 0, 0, 1.4,
-#' 0, 0, 0, 0,
-#' 0, 0, 0, 0.2,
-#' 0.111111111, 0.75, 0, 0.2), 4, 4, byrow = TRUE)
-#' 
-#' mats_list <- list(XC3, XC4, XC5, XE3, XE4, XE5, XF3, XF4, XF5, XG3, XG4, XG5,
-#'   XL3, XL4, XL5, XO3, XO4, XO5, XQ3, XQ4, XQ5, XR3, XR4, XR5, XS3, XS4, XS5)
-#' 
-#' yr_ord <- c(1, 2, 3, 1, 2, 3, 1, 2, 3, 1, 2, 3, 1, 2, 3, 1, 2, 3, 1, 2, 3, 1,
-#'   2, 3, 1, 2, 3)
-#' 
-#' pch_ord <- c(1, 1, 1, 2, 2, 2, 3, 3, 3, 4, 4, 4, 5, 5, 5, 6, 6, 6, 7, 7, 7,
-#'   8, 8, 8, 9, 9, 9)
-#' 
-#' anth_lefkoMat <- create_lM(mats_list, anthframe, hstages = NA, historical = FALSE,
-#'   poporder = 1, patchorder = pch_ord, yearorder = yr_ord)
-#'   
-#' anth_lefkoMat
-#' 
-#' # A theoretical example showcasing historical matrices
-#' 
-#' sizevector <- c(1, 2, 3) # These sizes are not from the original paper
-#' stagevector <- c("Sdl", "Veg", "Flo")
-#' repvector <- c(0, 0, 1)
-#' obsvector <- c(1, 1, 1)
-#' matvector <- c(0, 1, 1)
-#' immvector <- c(1, 0, 0)
-#' propvector <- c(1, 0, 0)
-#' indataset <- c(1, 1, 1)
-#' binvec <- c(0.5, 0.5, 0.5)
-#' 
-#' exframe <- sf_create(sizes = sizevector, stagenames = stagevector,
-#'   repstatus = repvector, obsstatus = obsvector, matstatus = matvector,
-#'   immstatus = immvector, indataset = indataset, binhalfwidth = binvec,
-#'   propstatus = propvector)
-#' 
-#' A1 <- matrix(c(0.10, 0, 0, 0.12, 0, 0, 0.15, 0, 0,
-#'   0.15, 0, 0, 0.17, 0, 0, 0.20, 0, 0,
-#'   0.20, 0, 0, 0.22, 0, 0, 0.25, 0, 0,
-#'   0, 0.20, 0, 0, 0.22, 0, 0, 0.25, 0,
-#'   0, 0.25, 0, 0, 0.27, 0, 0, 0.30, 0,
-#'   0, 0.30, 0, 0, 0.32, 0, 0, 0.35, 0,
-#'   0, 0, 2.00, 0, 0, 3.00, 0, 0, 4.00,
-#'   0, 0, 0.35, 0, 0, 0.37, 0, 0, 0.40,
-#'   0, 0, 0.40, 0, 0, 0.42, 0, 0, 0.45), 9, 9, byrow = TRUE)
-#' 
-#' A2 <- matrix(c(0.10, 0, 0, 0.12, 0, 0, 0.15, 0, 0,
-#'   0.15, 0, 0, 0.17, 0, 0, 0.20, 0, 0,
-#'   0.20, 0, 0, 0.22, 0, 0, 0.25, 0, 0,
-#'   0, 0.20, 0, 0, 0.22, 0, 0, 0.25, 0,
-#'   0, 0.25, 0, 0, 0.27, 0, 0, 0.30, 0,
-#'   0, 0.30, 0, 0, 0.32, 0, 0, 0.35, 0,
-#'   0, 0, 5.00, 0, 0, 6.00, 0, 0, 7.00,
-#'   0, 0, 0.35, 0, 0, 0.37, 0, 0, 0.40,
-#'   0, 0, 0.40, 0, 0, 0.42, 0, 0, 0.45), 9, 9, byrow = TRUE)
-#' 
-#' A3 <- matrix(c(0.10, 0, 0, 0.12, 0, 0, 0.15, 0, 0,
-#'   0.15, 0, 0, 0.17, 0, 0, 0.20, 0, 0,
-#'   0.20, 0, 0, 0.22, 0, 0, 0.25, 0, 0,
-#'   0, 0.20, 0, 0, 0.22, 0, 0, 0.25, 0,
-#'   0, 0.25, 0, 0, 0.27, 0, 0, 0.30, 0,
-#'   0, 0.30, 0, 0, 0.32, 0, 0, 0.35, 0,
-#'   0, 0, 8.00, 0, 0, 9.00, 0, 0, 10.00,
-#'   0, 0, 0.35, 0, 0, 0.37, 0, 0, 0.40,
-#'   0, 0, 0.40, 0, 0, 0.42, 0, 0, 0.45), 9, 9, byrow = TRUE)
-#' 
-#' B1 <- matrix(c(0.10, 0, 0, 0.12, 0, 0, 0.15, 0, 0,
-#'   0.15, 0, 0, 0.17, 0, 0, 0.20, 0, 0,
-#'   0.20, 0, 0, 0.22, 0, 0, 0.25, 0, 0,
-#'   0, 0.20, 0, 0, 0.22, 0, 0, 0.25, 0,
-#'   0, 0.25, 0, 0, 0.27, 0, 0, 0.30, 0,
-#'   0, 0.30, 0, 0, 0.32, 0, 0, 0.35, 0,
-#'   0, 0, 11.00, 0, 0, 12.00, 0, 0, 13.00,
-#'   0, 0, 0.35, 0, 0, 0.37, 0, 0, 0.40,
-#'   0, 0, 0.40, 0, 0, 0.42, 0, 0, 0.45), 9, 9, byrow = TRUE)
-#' 
-#' B2 <- matrix(c(0.10, 0, 0, 0.12, 0, 0, 0.15, 0, 0,
-#'   0.15, 0, 0, 0.17, 0, 0, 0.20, 0, 0,
-#'   0.20, 0, 0, 0.22, 0, 0, 0.25, 0, 0,
-#'   0, 0.20, 0, 0, 0.22, 0, 0, 0.25, 0,
-#'   0, 0.25, 0, 0, 0.27, 0, 0, 0.30, 0,
-#'   0, 0.30, 0, 0, 0.32, 0, 0, 0.35, 0,
-#'   0, 0, 14.00, 0, 0, 15.00, 0, 0, 16.00,
-#'   0, 0, 0.35, 0, 0, 0.37, 0, 0, 0.40,
-#'   0, 0, 0.40, 0, 0, 0.42, 0, 0, 0.45), 9, 9, byrow = TRUE)
-#' 
-#' B3 <- matrix(c(0.10, 0, 0, 0.12, 0, 0, 0.15, 0, 0,
-#'   0.15, 0, 0, 0.17, 0, 0, 0.20, 0, 0,
-#'   0.20, 0, 0, 0.22, 0, 0, 0.25, 0, 0,
-#'   0, 0.20, 0, 0, 0.22, 0, 0, 0.25, 0,
-#'   0, 0.25, 0, 0, 0.27, 0, 0, 0.30, 0,
-#'   0, 0.30, 0, 0, 0.32, 0, 0, 0.35, 0,
-#'   0, 0, 17.00, 0, 0, 18.00, 0, 0, 19.00,
-#'   0, 0, 0.35, 0, 0, 0.37, 0, 0, 0.40,
-#'   0, 0, 0.40, 0, 0, 0.42, 0, 0, 0.45), 9, 9, byrow = TRUE)
-#' 
-#' histmats <- list(A1, A2, A3, B1, B2, B3)
-#' stageframe <- exframe
-#' pch_ord <- c("A", "A", "A", "B", "B", "B")
-#' yr_ord <- c(1, 2, 3, 1, 2, 3)
-#' 
-#' hist_trial <- create_lM(histmats, exframe, historical = TRUE, UFdecomp = TRUE,
-#'   entrystage = 1, patchorder = pch_ord, yearorder = yr_ord)
-#'   
-#' hist_trial
-#' 
-#' @export
-create_lM <- function(mats, stageframe, hstages = NA, agestages = NA,
+#' @keywords internal
+#' @noRd
+.import_mats <- function(mats, stageframe, hstages = NA, agestages = NA,
   historical = FALSE, agebystage = FALSE, UFdecomp = TRUE, entrystage = 1,
   poporder = 1, patchorder = 1, yearorder = NA) {
   
@@ -2853,6 +2124,265 @@ create_lM <- function(mats, stageframe, hstages = NA, agestages = NA,
   return(output)
 }
 
+#' Create lefkoMat Object from Given Input Matrices or an MPM Database
+#' 
+#' Function \code{create_lM()} creates lefkoMat objects from supplied matrices
+#' and extra information, or from a supplied MPM database such as COMPADRE or
+#' COMADRE.
+#' 
+#' @name create_lM
+
+#' @param mats A list of A matrices, or, if importing from a matrix database
+#' such as COMPADRE or COMADRE, then the object holding the database.
+#' @param stageframe A stageframe describing all stages utilized.
+#' @param hstages A data frame outlining the order of historical stages, if
+#' matrices provided in \code{mats} are historical. Defaults to NA.
+#' @param agestages A data frame outlining the order of ahistorical age-stages,
+#' if age-by-stage matrices are provided.
+#' @param historical A logical value indicating whether input matrices are
+#' historical or not. Defaults to FALSE.
+#' @param agebystage A logical value indicating whether input matrices are
+#' ahistorical age-by-stage matrices. If TRUE, then object \code{agestages} is
+#' required. Defaults to FALSE.
+#' @param UFdecomp A logical value indicating whether U and F matrices should be
+#' inferred. Defaults to TRUE.
+#' @param entrystage The stage or stages produced by reproductive individuals.
+#' Used to determine which transitions are reproductive for U-F decomposition.
+#' Defaults to \code{1}, which corresponds to the first stage in the stageframe.
+#' @param poporder The order of populations in the list supplied in object
+#' \code{mats}. Defaults to 1.
+#' @param patchorder The order of patches in the list supplied in object
+#' \code{mats}. Defaults to 1.
+#' @param yearorder The order of monitoring occasions in the list supplied in
+#' object \code{mats}. Defaults to NA, which leads to each matrix within each
+#' population-patch combination being a different monitoring occasion.
+#' @param matrix_id The values of \code{MatrixID} from the used database
+#' corresponding to the matrices to import, if importing from a database. Not
+#' used if importing a list of matrices.
+#' @param add_FC A logical value indicating whether to sum the \code{matF} and
+#' \code{matC} matrices to produce the \code{F} matrix. If \code{FALSE}, then
+#' only uses the \code{matF} matrix. Only used if importing from the COMPADRE or
+#' COMADRE database. Defaults to \code{TRUE}.
+#' 
+#' @return A \code{lefkoMat} object incorporating the matrices input in object
+#' \code{mats} as object \code{A}, their U and F decompositions in objects
+#' \code{U} and \code{F} (if requested), the provided stageframe as object
+#' \code{ahstages}, the order of historical stages as object \code{hstages} (if
+#' \code{historical = TRUE}), the order of matrices as object \code{labels}, and
+#' a short quality control section used by the \code{\link{summary.lefkoMat}()}
+#' function.
+#' 
+#' @section Notes for importing lists of matrices:
+#' U and F decomposition assumes that elements holding fecundity values are
+#' to be interpreted solely as fecundity rates. Users wishing to split these
+#' elements between fecundity and survival should do so manually after running
+#' this function.
+#' 
+#' Age-by-stage MPMs require an \code{agestages} data frame outlining the order
+#' of age-stages. This data frame has 3 variables: \code{stage_id}, which is the
+#' number of the stage as labelled by the equivalently named variable in the
+#' \code{stageframe}; \code{stage}, which is the official name of the stage as
+#' given in the equivalently named variable in the \code{stageframe}; and
+#' \code{age}, which of course gives the age associated with the stage at that
+#' time. The number of rows must be equal to the number of rows and columns of
+#' each entered matrix.
+#' 
+#' @section Notes for importing from COMPADRE or COMADRE:
+#' For this function to operate, users must have either the COMPADRE database
+#' or the COMADRE database loaded into the global environment. Note that the
+#' sample databases supplied within package \code{Rcompadre} will not work with
+#' this function.
+#' 
+#' This function does not and cannot replace the wonderful tools offered to
+#' explore the COMPADRE and COMADRE packages. Please see package
+#' \code{Rcompadre} to use those tools. Note that function \code{import_Com()}
+#' has no relationship to the \code{Rcompadre} development team.
+#' 
+#' Function \code{import_Com()} requires that the dimensions of all matrices
+#' imported into a single \code{lefkoMat} object be equal.
+#' 
+#' The reproductive and maturity status of each stage is determined by patterns
+#' assessed within the \code{F} matrices. Users should check that these values
+#' make sense.
+#' 
+#' Stage names may be edited manually afterward.
+#' 
+#' @seealso \code{\link{add_lM}()}
+#' @seealso \code{\link{delete_lM}()}
+#' @seealso \code{\link{subset_lM}()}
+#' 
+#' @examples
+#' # These matrices are of 9 populations of the plant species Anthyllis
+#' # vulneraria, and were originally published in Davison et al. (2010) Journal
+#' # of Ecology 98:255-267 (doi: 10.1111/j.1365-2745.2009.01611.x).
+#' 
+#' sizevector <- c(1, 1, 2, 3) # These sizes are not from the original paper
+#' stagevector <- c("Sdl", "Veg", "SmFlo", "LFlo")
+#' repvector <- c(0, 0, 1, 1)
+#' obsvector <- c(1, 1, 1, 1)
+#' matvector <- c(0, 1, 1, 1)
+#' immvector <- c(1, 0, 0, 0)
+#' propvector <- c(0, 0, 0, 0)
+#' indataset <- c(1, 1, 1, 1)
+#' binvec <- c(0.5, 0.5, 0.5, 0.5)
+#' 
+#' anthframe <- sf_create(sizes = sizevector, stagenames = stagevector,
+#'   repstatus = repvector, obsstatus = obsvector, matstatus = matvector,
+#'   immstatus = immvector, indataset = indataset, binhalfwidth = binvec,
+#'   propstatus = propvector)
+#' 
+#' # POPN C 2003-2004
+#' XC3 <- matrix(c(0, 0, 1.74, 1.74,
+#' 0.208333333, 0, 0, 0.057142857,
+#' 0.041666667, 0.076923077, 0, 0,
+#' 0.083333333, 0.076923077, 0.066666667, 0.028571429), 4, 4, byrow = TRUE)
+#' 
+#' # 2004-2005
+#' XC4 <- matrix(c(0, 0, 0.3, 0.6,
+#' 0.32183908, 0.142857143, 0, 0,
+#' 0.16091954, 0.285714286, 0, 0,
+#' 0.252873563, 0.285714286, 0.5, 0.6), 4, 4, byrow = TRUE)
+#' 
+#' # 2005-2006
+#' XC5 <- matrix(c(0, 0, 0.50625, 0.675,
+#' 0, 0, 0, 0.035714286,
+#' 0.1, 0.068965517, 0.0625, 0.107142857,
+#' 0.3, 0.137931034, 0, 0.071428571), 4, 4, byrow = TRUE)
+#' 
+#' # POPN E 2003-2004
+#' XE3 <- matrix(c(0, 0, 2.44, 6.569230769,
+#' 0.196428571, 0, 0, 0,
+#' 0.125, 0.5, 0, 0,
+#' 0.160714286, 0.5, 0.133333333, 0.076923077), 4, 4, byrow = TRUE)
+#' 
+#' XE4 <- matrix(c(0, 0, 0.45, 0.646153846,
+#' 0.06557377, 0.090909091, 0.125, 0,
+#' 0.032786885, 0, 0.125, 0.076923077,
+#' 0.049180328, 0, 0.125, 0.230769231), 4, 4, byrow = TRUE)
+#' 
+#' XE5 <- matrix(c(0, 0, 2.85, 3.99,
+#' 0.083333333, 0, 0, 0,
+#' 0, 0, 0, 0,
+#' 0.416666667, 0.1, 0, 0.1), 4, 4, byrow = TRUE)
+#' 
+#' mats_list <- list(XC3, XC4, XC5, XE3, XE4, XE5)
+#' yr_ord <- c(1, 2, 3, 1, 2, 3)
+#' pch_ord <- c(1, 1, 1, 2, 2, 2)
+#' 
+#' anth_lefkoMat <- create_lM(mats_list, anthframe, hstages = NA,
+#'   historical = FALSE, poporder = 1, patchorder = pch_ord, yearorder = yr_ord)
+#' 
+#' # A theoretical example showcasing historical matrices
+#' sizevector <- c(1, 2, 3) # These sizes are not from the original paper
+#' stagevector <- c("Sdl", "Veg", "Flo")
+#' repvector <- c(0, 0, 1)
+#' obsvector <- c(1, 1, 1)
+#' matvector <- c(0, 1, 1)
+#' immvector <- c(1, 0, 0)
+#' propvector <- c(1, 0, 0)
+#' indataset <- c(1, 1, 1)
+#' binvec <- c(0.5, 0.5, 0.5)
+#' 
+#' exframe <- sf_create(sizes = sizevector, stagenames = stagevector,
+#'   repstatus = repvector, obsstatus = obsvector, matstatus = matvector,
+#'   immstatus = immvector, indataset = indataset, binhalfwidth = binvec,
+#'   propstatus = propvector)
+#' 
+#' A1 <- matrix(c(0.10, 0, 0, 0.12, 0, 0, 0.15, 0, 0,
+#'   0.15, 0, 0, 0.17, 0, 0, 0.20, 0, 0,
+#'   0.20, 0, 0, 0.22, 0, 0, 0.25, 0, 0,
+#'   0, 0.20, 0, 0, 0.22, 0, 0, 0.25, 0,
+#'   0, 0.25, 0, 0, 0.27, 0, 0, 0.30, 0,
+#'   0, 0.30, 0, 0, 0.32, 0, 0, 0.35, 0,
+#'   0, 0, 2.00, 0, 0, 3.00, 0, 0, 4.00,
+#'   0, 0, 0.35, 0, 0, 0.37, 0, 0, 0.40,
+#'   0, 0, 0.40, 0, 0, 0.42, 0, 0, 0.45), 9, 9, byrow = TRUE)
+#' 
+#' A2 <- matrix(c(0.10, 0, 0, 0.12, 0, 0, 0.15, 0, 0,
+#'   0.15, 0, 0, 0.17, 0, 0, 0.20, 0, 0,
+#'   0.20, 0, 0, 0.22, 0, 0, 0.25, 0, 0,
+#'   0, 0.20, 0, 0, 0.22, 0, 0, 0.25, 0,
+#'   0, 0.25, 0, 0, 0.27, 0, 0, 0.30, 0,
+#'   0, 0.30, 0, 0, 0.32, 0, 0, 0.35, 0,
+#'   0, 0, 5.00, 0, 0, 6.00, 0, 0, 7.00,
+#'   0, 0, 0.35, 0, 0, 0.37, 0, 0, 0.40,
+#'   0, 0, 0.40, 0, 0, 0.42, 0, 0, 0.45), 9, 9, byrow = TRUE)
+#' 
+#' A3 <- matrix(c(0.10, 0, 0, 0.12, 0, 0, 0.15, 0, 0,
+#'   0.15, 0, 0, 0.17, 0, 0, 0.20, 0, 0,
+#'   0.20, 0, 0, 0.22, 0, 0, 0.25, 0, 0,
+#'   0, 0.20, 0, 0, 0.22, 0, 0, 0.25, 0,
+#'   0, 0.25, 0, 0, 0.27, 0, 0, 0.30, 0,
+#'   0, 0.30, 0, 0, 0.32, 0, 0, 0.35, 0,
+#'   0, 0, 8.00, 0, 0, 9.00, 0, 0, 10.00,
+#'   0, 0, 0.35, 0, 0, 0.37, 0, 0, 0.40,
+#'   0, 0, 0.40, 0, 0, 0.42, 0, 0, 0.45), 9, 9, byrow = TRUE)
+#' 
+#' B1 <- matrix(c(0.10, 0, 0, 0.12, 0, 0, 0.15, 0, 0,
+#'   0.15, 0, 0, 0.17, 0, 0, 0.20, 0, 0,
+#'   0.20, 0, 0, 0.22, 0, 0, 0.25, 0, 0,
+#'   0, 0.20, 0, 0, 0.22, 0, 0, 0.25, 0,
+#'   0, 0.25, 0, 0, 0.27, 0, 0, 0.30, 0,
+#'   0, 0.30, 0, 0, 0.32, 0, 0, 0.35, 0,
+#'   0, 0, 11.00, 0, 0, 12.00, 0, 0, 13.00,
+#'   0, 0, 0.35, 0, 0, 0.37, 0, 0, 0.40,
+#'   0, 0, 0.40, 0, 0, 0.42, 0, 0, 0.45), 9, 9, byrow = TRUE)
+#' 
+#' B2 <- matrix(c(0.10, 0, 0, 0.12, 0, 0, 0.15, 0, 0,
+#'   0.15, 0, 0, 0.17, 0, 0, 0.20, 0, 0,
+#'   0.20, 0, 0, 0.22, 0, 0, 0.25, 0, 0,
+#'   0, 0.20, 0, 0, 0.22, 0, 0, 0.25, 0,
+#'   0, 0.25, 0, 0, 0.27, 0, 0, 0.30, 0,
+#'   0, 0.30, 0, 0, 0.32, 0, 0, 0.35, 0,
+#'   0, 0, 14.00, 0, 0, 15.00, 0, 0, 16.00,
+#'   0, 0, 0.35, 0, 0, 0.37, 0, 0, 0.40,
+#'   0, 0, 0.40, 0, 0, 0.42, 0, 0, 0.45), 9, 9, byrow = TRUE)
+#' 
+#' B3 <- matrix(c(0.10, 0, 0, 0.12, 0, 0, 0.15, 0, 0,
+#'   0.15, 0, 0, 0.17, 0, 0, 0.20, 0, 0,
+#'   0.20, 0, 0, 0.22, 0, 0, 0.25, 0, 0,
+#'   0, 0.20, 0, 0, 0.22, 0, 0, 0.25, 0,
+#'   0, 0.25, 0, 0, 0.27, 0, 0, 0.30, 0,
+#'   0, 0.30, 0, 0, 0.32, 0, 0, 0.35, 0,
+#'   0, 0, 17.00, 0, 0, 18.00, 0, 0, 19.00,
+#'   0, 0, 0.35, 0, 0, 0.37, 0, 0, 0.40,
+#'   0, 0, 0.40, 0, 0, 0.42, 0, 0, 0.45), 9, 9, byrow = TRUE)
+#' 
+#' histmats <- list(A1, A2, A3, B1, B2, B3)
+#' stageframe <- exframe
+#' pch_ord <- c("A", "A", "A", "B", "B", "B")
+#' yr_ord <- c(1, 2, 3, 1, 2, 3)
+#' 
+#' hist_trial <- create_lM(histmats, exframe, historical = TRUE,
+#'   UFdecomp = TRUE, entrystage = 1, patchorder = pch_ord, yearorder = yr_ord)
+#'   
+#' @export
+create_lM <- function(mats, stageframe = NULL, hstages = NA, agestages = NA,
+  historical = FALSE, agebystage = FALSE, UFdecomp = TRUE, entrystage = 1,
+  poporder = 1, patchorder = 1, yearorder = NA, matrix_id = NULL, add_FC = TRUE) {
+  
+  output <- NULL
+  
+  if (is(mats, "CompadreDB")) {
+    output <- .import_Com(matrix_id = matrix_id, database = mats,
+      add_FC = add_FC)
+  } else if (is.list(mats)) {
+    if (is.matrix(mats[[1]])) {
+      output <- .import_mats(mats = mats, stageframe = stageframe,
+        hstages = hstages, agestages = agestages, historical = historical,
+        agebystage = agebystage, UFdecomp = UFdecomp, entrystage = entrystage,
+        poporder = poporder, patchorder = patchorder, yearorder = yearorder)
+    } else if ("metadata" %in% names(mats)) {
+      output <- .import_Com(matrix_id = matrix_id, database = mats,
+        add_FC = add_FC)
+    }
+  } else {
+    stop("Object mats must be an object of class list, or a database holding matrices.", call. = FALSE)
+  }
+  
+  return(output)
+}
+
 #' Add Matrices to lefkoMat Object
 #' 
 #' Function \code{add_lM()} adds matrices to lefkoMat objects.
@@ -2950,131 +2480,13 @@ create_lM <- function(mats, stageframe, hstages = NA, agestages = NA,
 #' 0, 0, 0, 0,
 #' 0.416666667, 0.1, 0, 0.1), 4, 4, byrow = TRUE)
 #' 
-#' # POPN F 2003-2004
-#' XF3 <- matrix(c(0, 0, 1.815, 7.058333333,
-#' 0.075949367, 0, 0.05, 0.083333333,
-#' 0.139240506, 0, 0, 0.25,
-#' 0.075949367, 0, 0, 0.083333333), 4, 4, byrow = TRUE)
+#' mats_list <- list(XC3, XC4, XC5, XE3, XE4, XE5)
+#' yr_ord <- c(1, 2, 3, 1, 2, 3)
+#' pch_ord <- c(1, 1, 1, 2, 2, 2)
 #' 
-#' XF4 <- matrix(c(0, 0, 1.233333333, 7.4,
-#' 0.223880597, 0, 0.111111111, 0.142857143,
-#' 0.134328358, 0.272727273, 0.166666667, 0.142857143,
-#' 0.119402985, 0.363636364, 0.055555556, 0.142857143), 4, 4, byrow = TRUE)
-#' 
-#' XF5 <- matrix(c(0, 0, 1.06, 3.372727273,
-#' 0.073170732, 0.025, 0.033333333, 0,
-#' 0.036585366, 0.15, 0.1, 0.136363636,
-#' 0.06097561, 0.225, 0.166666667, 0.272727273), 4, 4, byrow = TRUE)
-#' 
-#' # POPN G 2003-2004
-#' XG3 <- matrix(c(0, 0, 0.245454545, 2.1,
-#' 0, 0, 0.045454545, 0,
-#' 0.125, 0, 0.090909091, 0,
-#' 0.125, 0, 0.090909091, 0.333333333), 4, 4, byrow = TRUE)
-#' 
-#' XG4 <- matrix(c(0, 0, 1.1, 1.54,
-#' 0.111111111, 0, 0, 0,
-#' 0, 0, 0, 0,
-#' 0.111111111, 0, 0, 0), 4, 4, byrow = TRUE)
-#' 
-#' XG5 <- matrix(c(0, 0, 0, 1.5,
-#' 0, 0, 0, 0,
-#' 0.090909091, 0, 0, 0,
-#' 0.545454545, 0.5, 0, 0.5), 4, 4, byrow = TRUE)
-#' 
-#' # POPN L 2003-2004
-#' XL3 <- matrix(c(0, 0, 1.785365854, 1.856521739,
-#' 0.128571429, 0, 0, 0.010869565,
-#' 0.028571429, 0, 0, 0,
-#' 0.014285714, 0, 0, 0.02173913), 4, 4, byrow = TRUE)
-#' 
-#' XL4 <- matrix(c(0, 0, 14.25, 16.625,
-#' 0.131443299, 0.057142857, 0, 0.25,
-#' 0.144329897, 0, 0, 0,
-#' 0.092783505, 0.2, 0, 0.25), 4, 4, byrow = TRUE)
-#' 
-#' XL5 <- matrix(c(0, 0, 0.594642857, 1.765909091,
-#' 0, 0, 0.017857143, 0,
-#' 0.021052632, 0.018518519, 0.035714286, 0.045454545,
-#' 0.021052632, 0.018518519, 0.035714286, 0.068181818), 4, 4, byrow = TRUE)
-#' 
-#' # POPN O 2003-2004
-#' XO3 <- matrix(c(0, 0, 11.5, 2.775862069,
-#' 0.6, 0.285714286, 0.333333333, 0.24137931,
-#' 0.04, 0.142857143, 0, 0,
-#' 0.16, 0.285714286, 0, 0.172413793), 4, 4, byrow = TRUE)
-#' 
-#' XO4 <- matrix(c(0, 0, 3.78, 1.225,
-#' 0.28358209, 0.171052632, 0, 0.166666667,
-#' 0.084577114, 0.026315789, 0, 0.055555556,
-#' 0.139303483, 0.447368421, 0, 0.305555556), 4, 4, byrow = TRUE)
-#' 
-#' XO5 <- matrix(c(0, 0, 1.542857143, 1.035616438,
-#' 0.126984127, 0.105263158, 0.047619048, 0.054794521,
-#' 0.095238095, 0.157894737, 0.19047619, 0.082191781,
-#' 0.111111111, 0.223684211, 0, 0.356164384), 4, 4, byrow = TRUE)
-#' 
-#' # POPN Q 2003-2004
-#' XQ3 <- matrix(c(0, 0, 0.15, 0.175,
-#' 0, 0, 0, 0,
-#' 0, 0, 0, 0,
-#' 1, 0, 0, 0), 4, 4, byrow = TRUE)
-#' 
-#' XQ4 <- matrix(c(0, 0, 0, 0.25,
-#' 0, 0, 0, 0,
-#' 0, 0, 0, 0,
-#' 1, 0.666666667, 0, 1), 4, 4, byrow = TRUE)
-#' 
-#' XQ5 <- matrix(c(0, 0, 0, 1.428571429,
-#' 0, 0, 0, 0.142857143,
-#' 0.25, 0, 0, 0,
-#' 0.25, 0, 0, 0.571428571), 4, 4, byrow = TRUE)
-#' 
-#' # POPN R 2003-2004
-#' XR3 <- matrix(c(0, 0, 0.7, 0.6125,
-#' 0.25, 0, 0, 0.125,
-#' 0, 0, 0, 0,
-#' 0.25, 0.166666667, 0, 0.25), 4, 4, byrow = TRUE)
-#' 
-#' XR4 <- matrix(c(0, 0, 0, 0.6,
-#' 0.285714286, 0, 0, 0,
-#' 0.285714286, 0.333333333, 0, 0,
-#' 0.285714286, 0.333333333, 0, 1), 4, 4, byrow = TRUE)
-#' 
-#' XR5 <- matrix(c(0, 0, 0.7, 0.6125,
-#' 0, 0, 0, 0,
-#' 0, 0, 0, 0,
-#' 0.333333333, 0, 0.333333333, 0.625), 4, 4, byrow = TRUE)
-#' 
-#' # POPN S 2003-2004
-#' XS3 <- matrix(c(0, 0, 2.1, 0.816666667,
-#' 0.166666667, 0, 0, 0,
-#' 0, 0, 0, 0,
-#' 0, 0, 0, 0.166666667), 4, 4, byrow = TRUE)
-#' 
-#' XS4 <- matrix(c(0, 0, 0, 7,
-#' 0.333333333, 0.5, 0, 0,
-#' 0, 0, 0, 0,
-#' 0.333333333, 0, 0, 1), 4, 4, byrow = TRUE)
-#' 
-#' XS5 <- matrix(c(0, 0, 0, 1.4,
-#' 0, 0, 0, 0,
-#' 0, 0, 0, 0.2,
-#' 0.111111111, 0.75, 0, 0.2), 4, 4, byrow = TRUE)
-#' 
-#' mats_list <- list(XC3, XC4, XC5, XE3, XE4, XE5, XF3, XF4, XF5, XG3, XG4, XG5,
-#'   XL3, XL4, XL5, XO3, XO4, XO5, XQ3, XQ4, XQ5, XR3, XR4, XR5, XS3, XS4, XS5)
-#' 
-#' yr_ord <- c(1, 2, 3, 1, 2, 3, 1, 2, 3, 1, 2, 3, 1, 2, 3, 1, 2, 3, 1, 2, 3, 1,
-#'   2, 3, 1, 2, 3)
-#' 
-#' pch_ord <- c(1, 1, 1, 2, 2, 2, 3, 3, 3, 4, 4, 4, 5, 5, 5, 6, 6, 6, 7, 7, 7,
-#'   8, 8, 8, 9, 9, 9)
-#' 
-#' anth_lefkoMat <- create_lM(mats_list, anthframe, hstages = NA, historical = FALSE,
-#'   poporder = 1, patchorder = pch_ord, yearorder = yr_ord)
+#' anth_lefkoMat <- create_lM(mats_list, anthframe, hstages = NA,
+#'   historical = FALSE, poporder = 1, patchorder = pch_ord, yearorder = yr_ord)
 #'   
-#' # POPN H (EXCLDED FROM ANALYSIS B/C OF UNREALISTIC ELASTICITIES)
 #' XH3 <- matrix(c(0, 0, 0.1125, 1.05,
 #' 0.2, 0, 0, 0,
 #' 0, 0.5, 0, 0,
@@ -3097,19 +2509,17 @@ create_lM <- function(mats, stageframe, hstages = NA, agestages = NA,
 #' 
 #' XH5 <- matrix(c(0, 0, 0.2, 1.05,
 #' 0, 0, 0, 0,
-#' 0.001, 0.001, 0.333333333, 0, #ELEMENTS (3,1),(4,1),(3,2) REPLACED W NONZERO
+#' 0.001, 0.001, 0.333333333, 0,
 #' 0.001, 0, 0, 0), 4, 4, byrow = TRUE)
 #' 
 #' XH5u <- matrix(c(0, 0, 0, 0,
 #' 0, 0, 0, 0,
-#' 0.001, 0.001, 0.333333333, 0, #ELEMENTS (3,1),(4,1),(3,2) REPLACED W NONZERO
+#' 0.001, 0.001, 0.333333333, 0,
 #' 0.001, 0, 0, 0), 4, 4, byrow = TRUE)
 #' 
 #' anth_lefkoMat <- add_lM(anth_lefkoMat, Amats = list(XH3, XH4, XH5),
-#'   Umats = list(XH3u, XH4u, XH5u), patch = c(10, 10, 10), year = c(1, 2, 3))
+#'   Umats = list(XH3u, XH4u, XH5u), patch = c(3, 3, 3), year = c(1, 2, 3))
 #'   
-#' anth_lefkoMat
-#' 
 #' @export
 add_lM <- function(lM, Amats = NA, Umats = NA, Fmats = NA, UFdecomp = FALSE,
   entrystage = 1, pop = NA, patch = NA, year = NA) {
@@ -3433,132 +2843,14 @@ add_lM <- function(lM, Amats = NA, Umats = NA, Fmats = NA, UFdecomp = FALSE,
 #' 0, 0, 0, 0,
 #' 0.416666667, 0.1, 0, 0.1), 4, 4, byrow = TRUE)
 #' 
-#' # POPN F 2003-2004
-#' XF3 <- matrix(c(0, 0, 1.815, 7.058333333,
-#' 0.075949367, 0, 0.05, 0.083333333,
-#' 0.139240506, 0, 0, 0.25,
-#' 0.075949367, 0, 0, 0.083333333), 4, 4, byrow = TRUE)
+#' mats_list <- list(XC3, XC4, XC5, XE3, XE4, XE5)
+#' yr_ord <- c(1, 2, 3, 1, 2, 3)
+#' pch_ord <- c(1, 1, 1, 2, 2, 2)
 #' 
-#' XF4 <- matrix(c(0, 0, 1.233333333, 7.4,
-#' 0.223880597, 0, 0.111111111, 0.142857143,
-#' 0.134328358, 0.272727273, 0.166666667, 0.142857143,
-#' 0.119402985, 0.363636364, 0.055555556, 0.142857143), 4, 4, byrow = TRUE)
-#' 
-#' XF5 <- matrix(c(0, 0, 1.06, 3.372727273,
-#' 0.073170732, 0.025, 0.033333333, 0,
-#' 0.036585366, 0.15, 0.1, 0.136363636,
-#' 0.06097561, 0.225, 0.166666667, 0.272727273), 4, 4, byrow = TRUE)
-#' 
-#' # POPN G 2003-2004
-#' XG3 <- matrix(c(0, 0, 0.245454545, 2.1,
-#' 0, 0, 0.045454545, 0,
-#' 0.125, 0, 0.090909091, 0,
-#' 0.125, 0, 0.090909091, 0.333333333), 4, 4, byrow = TRUE)
-#' 
-#' XG4 <- matrix(c(0, 0, 1.1, 1.54,
-#' 0.111111111, 0, 0, 0,
-#' 0, 0, 0, 0,
-#' 0.111111111, 0, 0, 0), 4, 4, byrow = TRUE)
-#' 
-#' XG5 <- matrix(c(0, 0, 0, 1.5,
-#' 0, 0, 0, 0,
-#' 0.090909091, 0, 0, 0,
-#' 0.545454545, 0.5, 0, 0.5), 4, 4, byrow = TRUE)
-#' 
-#' # POPN L 2003-2004
-#' XL3 <- matrix(c(0, 0, 1.785365854, 1.856521739,
-#' 0.128571429, 0, 0, 0.010869565,
-#' 0.028571429, 0, 0, 0,
-#' 0.014285714, 0, 0, 0.02173913), 4, 4, byrow = TRUE)
-#' 
-#' XL4 <- matrix(c(0, 0, 14.25, 16.625,
-#' 0.131443299, 0.057142857, 0, 0.25,
-#' 0.144329897, 0, 0, 0,
-#' 0.092783505, 0.2, 0, 0.25), 4, 4, byrow = TRUE)
-#' 
-#' XL5 <- matrix(c(0, 0, 0.594642857, 1.765909091,
-#' 0, 0, 0.017857143, 0,
-#' 0.021052632, 0.018518519, 0.035714286, 0.045454545,
-#' 0.021052632, 0.018518519, 0.035714286, 0.068181818), 4, 4, byrow = TRUE)
-#' 
-#' # POPN O 2003-2004
-#' XO3 <- matrix(c(0, 0, 11.5, 2.775862069,
-#' 0.6, 0.285714286, 0.333333333, 0.24137931,
-#' 0.04, 0.142857143, 0, 0,
-#' 0.16, 0.285714286, 0, 0.172413793), 4, 4, byrow = TRUE)
-#' 
-#' XO4 <- matrix(c(0, 0, 3.78, 1.225,
-#' 0.28358209, 0.171052632, 0, 0.166666667,
-#' 0.084577114, 0.026315789, 0, 0.055555556,
-#' 0.139303483, 0.447368421, 0, 0.305555556), 4, 4, byrow = TRUE)
-#' 
-#' XO5 <- matrix(c(0, 0, 1.542857143, 1.035616438,
-#' 0.126984127, 0.105263158, 0.047619048, 0.054794521,
-#' 0.095238095, 0.157894737, 0.19047619, 0.082191781,
-#' 0.111111111, 0.223684211, 0, 0.356164384), 4, 4, byrow = TRUE)
-#' 
-#' # POPN Q 2003-2004
-#' XQ3 <- matrix(c(0, 0, 0.15, 0.175,
-#' 0, 0, 0, 0,
-#' 0, 0, 0, 0,
-#' 1, 0, 0, 0), 4, 4, byrow = TRUE)
-#' 
-#' XQ4 <- matrix(c(0, 0, 0, 0.25,
-#' 0, 0, 0, 0,
-#' 0, 0, 0, 0,
-#' 1, 0.666666667, 0, 1), 4, 4, byrow = TRUE)
-#' 
-#' XQ5 <- matrix(c(0, 0, 0, 1.428571429,
-#' 0, 0, 0, 0.142857143,
-#' 0.25, 0, 0, 0,
-#' 0.25, 0, 0, 0.571428571), 4, 4, byrow = TRUE)
-#' 
-#' # POPN R 2003-2004
-#' XR3 <- matrix(c(0, 0, 0.7, 0.6125,
-#' 0.25, 0, 0, 0.125,
-#' 0, 0, 0, 0,
-#' 0.25, 0.166666667, 0, 0.25), 4, 4, byrow = TRUE)
-#' 
-#' XR4 <- matrix(c(0, 0, 0, 0.6,
-#' 0.285714286, 0, 0, 0,
-#' 0.285714286, 0.333333333, 0, 0,
-#' 0.285714286, 0.333333333, 0, 1), 4, 4, byrow = TRUE)
-#' 
-#' XR5 <- matrix(c(0, 0, 0.7, 0.6125,
-#' 0, 0, 0, 0,
-#' 0, 0, 0, 0,
-#' 0.333333333, 0, 0.333333333, 0.625), 4, 4, byrow = TRUE)
-#' 
-#' # POPN S 2003-2004
-#' XS3 <- matrix(c(0, 0, 2.1, 0.816666667,
-#' 0.166666667, 0, 0, 0,
-#' 0, 0, 0, 0,
-#' 0, 0, 0, 0.166666667), 4, 4, byrow = TRUE)
-#' 
-#' XS4 <- matrix(c(0, 0, 0, 7,
-#' 0.333333333, 0.5, 0, 0,
-#' 0, 0, 0, 0,
-#' 0.333333333, 0, 0, 1), 4, 4, byrow = TRUE)
-#' 
-#' XS5 <- matrix(c(0, 0, 0, 1.4,
-#' 0, 0, 0, 0,
-#' 0, 0, 0, 0.2,
-#' 0.111111111, 0.75, 0, 0.2), 4, 4, byrow = TRUE)
-#' 
-#' mats_list <- list(XC3, XC4, XC5, XE3, XE4, XE5, XF3, XF4, XF5, XG3, XG4, XG5,
-#'   XL3, XL4, XL5, XO3, XO4, XO5, XQ3, XQ4, XQ5, XR3, XR4, XR5, XS3, XS4, XS5)
-#' 
-#' yr_ord <- c(1, 2, 3, 1, 2, 3, 1, 2, 3, 1, 2, 3, 1, 2, 3, 1, 2, 3, 1, 2, 3, 1,
-#'   2, 3, 1, 2, 3)
-#' 
-#' pch_ord <- c(1, 1, 1, 2, 2, 2, 3, 3, 3, 4, 4, 4, 5, 5, 5, 6, 6, 6, 7, 7, 7,
-#'   8, 8, 8, 9, 9, 9)
-#' 
-#' anth_lefkoMat <- create_lM(mats_list, anthframe, hstages = NA, historical = FALSE,
-#'   poporder = 1, patchorder = pch_ord, yearorder = yr_ord)
+#' anth_lefkoMat <- create_lM(mats_list, anthframe, hstages = NA,
+#'   historical = FALSE, poporder = 1, patchorder = pch_ord, yearorder = yr_ord)
 #'   
-#' smaller_anth_lM <- delete_lM(anth_lefkoMat, patch = 3)
-#' smaller_anth_lM
+#' smaller_anth_lM <- delete_lM(anth_lefkoMat, patch = 2)
 #' 
 #' @export
 delete_lM <- function(lM, mat_num = NA, pop = NA, patch = NA, year = NA) {
@@ -3848,7 +3140,6 @@ delete_lM <- function(lM, mat_num = NA, pop = NA, patch = NA, year = NA) {
 #'   
 #' smaller_anth_lM <- subset_lM(anth_lefkoMat, patch = c(1, 2, 3), 
 #'   year = c(1, 2))
-#' smaller_anth_lM
 #' 
 #' @export
 subset_lM <- function(lM, mat_num = NA, pop = NA, patch = NA, year = NA) {
@@ -3928,136 +3219,5 @@ subset_lM <- function(lM, mat_num = NA, pop = NA, patch = NA, year = NA) {
   rownames(lM$labels) <- seq(from = 1, to = length(lM$A))
   
   return(lM)
-}
-
-#' Create Historical MPMs Assuming No Influence of Individual History
-#' 
-#' Function \code{hist_null()} uses ahistorical MPMs to create the equivalent
-#' MPMs in the structure of historical MPMs. These MPMs have the same dimensions
-#' and stage structure of hMPMs but assume no influence of individual history,
-#' and so can be compared to actual hMPMs.
-#' 
-#' @param mpm An ahistorical MPM of class \code{lefkoMat}.
-#' @param format An integer stipulating whether historical matrices should be
-#' produced in Ehrlen format (\code{1}) or deVries format (\code{2}).
-#' @param imp_allowed A logical value indicating whether to allow impossible
-#' transitions. Defaults to \code{FALSE}.
-#' @param err_check A logical value indicating whether to output the main index
-#' used to sort elements in the matrices.
-#' 
-#' @return An object of class \code{lefkoMat}, with the same list structure as
-#' the input object, but with \code{A}, \code{U}, and \code{F} elements replaced
-#' with lists of historically-structured matrices, and with element
-#' \code{hstages} changed from \code{NA} to an index of stage pairs
-#' corresponding to the rows and columns of the new matrices. If
-#' \code{err_check = TRUE}, then a data frame showing the values used to
-#' determine element index values is also exported.
-#' 
-#' @section Notes:
-#' Allowing impossible transitions creates historically-formatted matrices that
-#' are capable of yielding the same dominant eigenvalues as the ahistorical
-#' matrices supplied as inputs.
-#' 
-#' @examples
-#' sizevector <- c(1, 1, 2, 3)
-#' stagevector <- c("Sdl", "Veg", "SmFlo", "LFlo")
-#' repvector <- c(0, 0, 1, 1)
-#' obsvector <- c(1, 1, 1, 1)
-#' matvector <- c(0, 1, 1, 1)
-#' immvector <- c(1, 0, 0, 0)
-#' propvector <- c(0, 0, 0, 0)
-#' indataset <- c(1, 1, 1, 1)
-#' binvec <- c(0.5, 0.5, 0.5, 0.5)
-#' 
-#' anthframe <- sf_create(sizes = sizevector, stagenames = stagevector,
-#'   repstatus = repvector, obsstatus = obsvector, matstatus = matvector,
-#'   immstatus = immvector, indataset = indataset, binhalfwidth = binvec,
-#'   propstatus = propvector)
-#' 
-#' # POPN C 2003-2004
-#' XC3 <- matrix(c(0, 0, 1.74, 1.74,
-#' 0.208333333, 0, 0, 0.057142857,
-#' 0.041666667, 0.076923077, 0, 0,
-#' 0.083333333, 0.076923077, 0.066666667, 0.028571429), 4, 4, byrow = TRUE)
-#' 
-#' # 2004-2005
-#' XC4 <- matrix(c(0, 0, 0.3, 0.6,
-#' 0.32183908, 0.142857143, 0, 0,
-#' 0.16091954, 0.285714286, 0, 0,
-#' 0.252873563, 0.285714286, 0.5, 0.6), 4, 4, byrow = TRUE)
-#' 
-#' mats_list <- list(XC3, XC4)
-#' yr_ord <- c(1, 2)
-#' pch_ord <- c(1, 1)
-#' 
-#' anth_lefkoMat <- create_lM(mats_list, anthframe, hstages = NA, historical = FALSE,
-#'   poporder = 1, patchorder = pch_ord, yearorder = yr_ord)
-#'   
-#' anth_lefkoMat
-#' 
-#' nullmodel1 <- hist_null(anth_lefkoMat, 1) # Ehrlen format
-#' nullmodel2 <- hist_null(anth_lefkoMat, 2) # deVries format
-#' 
-#' @export
-hist_null <- function(mpm, format = 1, imp_allowed = FALSE, err_check = FALSE) {
-  if (!is(mpm, "lefkoMat")) {
-    stop("Function hist_null requires an object of class lefkoMat as input.",
-      call. = FALSE)
-  }
-  if (!is.na(mpm$hstages)) {
-    stop("Input MPM must be ahistorical.", call. = FALSE)
-  }
-  if (!is.na(mpm$agestages)) {
-    stop("Input MPM must be ahistorical, and cannot be age-by-stage.", call. = FALSE)
-  }
-  
-  allstages <- .simplepizzle(mpm$ahstages, format)
-  
-  redone_mpms <- .thefifthhousemate(mpm, allstages$allstages, allstages$hstages,
-    allstages$ahstages, imp_allowed, format)
-  
-  if (is.element("dataqc", names(mpm)) & is.element("matrixqc", names(mpm))) {
-    totalutransitions <- sum(unlist(lapply(redone_mpms$U, function(X) {length(which(X != 0))})))
-    totalftransitions <- sum(unlist(lapply(redone_mpms$F, function(X) {length(which(X != 0))})))
-    totalmatrices <- length(redone_mpms$U)
-    
-    qcoutput1 <- c(totalutransitions, totalftransitions, totalmatrices)
-    
-    new_mpm <- list(A = redone_mpms$A, U = redone_mpms$U, F = redone_mpms$F,
-      agestages = mpm$agestages, hstages = allstages$hstages,
-      ahstages = allstages$ahstages, labels = mpm$labels,
-      matrixqc = qcoutput1, dataqc = mpm$dataqc)
-  } else if (is.element("matrixqc", names(mpm)) & is.element("modelqc", names(mpm))) {
-    totalutransitions <- sum(unlist(lapply(redone_mpms$U, function(X) {length(which(X != 0))})))
-    totalftransitions <- sum(unlist(lapply(redone_mpms$F, function(X) {length(which(X != 0))})))
-    totalmatrices <- length(redone_mpms$U)
-    
-    qcoutput1 <- c(totalutransitions, totalftransitions, totalmatrices)
-    
-    new_mpm <- list(A = redone_mpms$A, U = redone_mpms$U, F = redone_mpms$F,
-      agestages = mpm$agestages, hstages = allstages$hstages,
-      ahstages = allstages$ahstages, labels = mpm$labels,
-      matrixqc = qcoutput1, modelqc = mpm$modelqc)
-  } else if (is.element("matrixqc", names(mpm))) {
-    totalutransitions <- sum(unlist(lapply(redone_mpms$U, function(X) {length(which(X != 0))})))
-    totalftransitions <- sum(unlist(lapply(redone_mpms$F, function(X) {length(which(X != 0))})))
-    totalmatrices <- length(redone_mpms$U)
-    
-    qcoutput1 <- c(totalutransitions, totalftransitions, totalmatrices)
-    
-    new_mpm <- list(A = redone_mpms$A, U = redone_mpms$U, F = redone_mpms$F,
-      agestages = mpm$agestages, hstages = allstages$hstages,
-      ahstages = allstages$ahstages, labels = mpm$labels, matrixqc = qcoutput1)
-  } else {
-    new_mpm <- list(A = redone_mpms$A, U = redone_mpms$U, F = redone_mpms$F,
-      agestages = mpm$agestages, hstages = allstages$hstages,
-      ahstages = allstages$ahstages, labels = mpm$labels)
-  }
-  
-  if (err_check) new_mpm <- append(new_mpm, allstages)
-  
-  class(new_mpm) <- "lefkoMat"
-  
-  return(new_mpm)
 }
 

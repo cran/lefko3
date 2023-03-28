@@ -73,13 +73,22 @@ Rcpp::NumericVector ricker3(double start_value, double alpha, double beta,
   
   bool base_N = false;
   
-  if (start_value <= 0.0) throw Rcpp::exception("Option start_value must be positive.", false);
-  if (alpha < 0.0) throw Rcpp::exception("Option alpha must be non-negative.", false);
-  if (time_lag < 1) throw Rcpp::exception("Option time_lag must be positive.", false);
-  if (pre0_subs && pre0_value <= 0.0) {
-    throw Rcpp::exception("Option pre0_value must be positive if pre0_subs is set to TRUE", false);
+  if (start_value <= 0.0) {
+    throw Rcpp::exception("Option start_value must be positive.", false);
   }
-  if (substoch < 0 || substoch > 2) throw Rcpp::exception("Option substoch must equal 0, 1, or 2", false);
+  if (alpha < 0.0) {
+    throw Rcpp::exception("Option alpha must be non-negative.", false);
+  }
+  if (time_lag < 1) {
+    throw Rcpp::exception("Option time_lag must be positive.", false);
+  }
+  if (pre0_subs && pre0_value <= 0.0) {
+    throw Rcpp::exception("Option pre0_value must be positive if pre0_subs is set to TRUE",
+      false);
+  }
+  if (substoch < 0 || substoch > 2) {
+    throw Rcpp::exception("Option substoch must equal 0, 1, or 2", false);
+  }
   
   if (separate_N.isNotNull()) {
     base_N = true;
@@ -93,7 +102,9 @@ Rcpp::NumericVector ricker3(double start_value, double alpha, double beta,
     }
   }
   
-  if (time_steps < 1) throw Rcpp::exception("Option time_steps must be positive.", false);
+  if (time_steps < 1) {
+    throw Rcpp::exception("Option time_steps must be positive.", false);
+  }
   
   NumericVector output(time_steps + 1);
   double used_phi {0.0};
@@ -209,14 +220,25 @@ Rcpp::NumericVector beverton3(double start_value, double alpha, double beta,
   
   bool base_N = false;
   
-  if (start_value <= 0.0) throw Rcpp::exception("Option start_value must be positive.", false);
-  if (alpha < 0.0) throw Rcpp::exception("Option alpha must be non-negative.", false);
-  if (beta < 0.0) throw Rcpp::exception("Option beta must be non-negative.", false);
-  if (time_lag < 1) throw Rcpp::exception("Option time_lag must be positive.", false);
-  if (pre0_subs && pre0_value <= 0.0) {
-    throw Rcpp::exception("Option pre0_value must be positive if pre0_subs is set to TRUE", false);
+  if (start_value <= 0.0) {
+    throw Rcpp::exception("Option start_value must be positive.", false);
   }
-  if (substoch < 0 || substoch > 2) throw Rcpp::exception("Option substoch must equal 0, 1, or 2", false);
+  if (alpha < 0.0) {
+    throw Rcpp::exception("Option alpha must be non-negative.", false);
+  }
+  if (beta < 0.0) {
+    throw Rcpp::exception("Option beta must be non-negative.", false);
+  }
+  if (time_lag < 1) {
+    throw Rcpp::exception("Option time_lag must be positive.", false);
+  }
+  if (pre0_subs && pre0_value <= 0.0) {
+    throw Rcpp::exception("Option pre0_value must be positive if pre0_subs is set to TRUE",
+      false);
+  }
+  if (substoch < 0 || substoch > 2) {
+    throw Rcpp::exception("Option substoch must equal 0, 1, or 2", false);
+  }
   
   if (separate_N.isNotNull()) {
     base_N = true;
@@ -230,7 +252,8 @@ Rcpp::NumericVector beverton3(double start_value, double alpha, double beta,
     }
   }
   
-  if (time_steps < 1) throw Rcpp::exception("Option time_steps must be positive.", false);
+  if (time_steps < 1) throw Rcpp::exception("Option time_steps must be positive.",
+    false);
   
   NumericVector output(time_steps + 1);
   double used_phi {0.0};
@@ -345,12 +368,19 @@ Rcpp::NumericVector usher3(double start_value, double alpha, double beta,
   
   bool base_N = false;
   
-  if (start_value <= 0.0) throw Rcpp::exception("Option start_value must be positive.", false);
-  if (time_lag < 1) throw Rcpp::exception("Option time_lag must be positive.", false);
-  if (pre0_subs && pre0_value <= 0.0) {
-    throw Rcpp::exception("Option pre0_value must be positive if pre0_subs is set to TRUE", false);
+  if (start_value <= 0.0) {
+    throw Rcpp::exception("Option start_value must be positive.", false);
   }
-  if (substoch < 0 || substoch > 2) throw Rcpp::exception("Option substoch must equal 0, 1, or 2", false);
+  if (time_lag < 1) {
+    throw Rcpp::exception("Option time_lag must be positive.", false);
+  }
+  if (pre0_subs && pre0_value <= 0.0) {
+    throw Rcpp::exception("Option pre0_value must be positive if pre0_subs is set to TRUE",
+      false);
+  }
+  if (substoch < 0 || substoch > 2) {
+    throw Rcpp::exception("Option substoch must equal 0, 1, or 2", false);
+  }
   
   if (separate_N.isNotNull()) {
     base_N = true;
@@ -364,7 +394,8 @@ Rcpp::NumericVector usher3(double start_value, double alpha, double beta,
     }
   }
   
-  if (time_steps < 1) throw Rcpp::exception("Option time_steps must be positive.", false);
+  if (time_steps < 1) throw Rcpp::exception("Option time_steps must be positive.",
+    false);
   
   NumericVector output(time_steps + 1);
   double used_phi {0.0};
@@ -482,14 +513,25 @@ Rcpp::NumericVector logistic3(double start_value, double alpha,
   
   bool base_N = false;
   
-  if (start_value <= 0.0) throw Rcpp::exception("Option start_value must be positive.", false);
-  if (alpha <= 0.0) throw Rcpp::exception("Option alpha must be positive.", false);
-  if (lambda < 0.0) throw Rcpp::exception("Option lambda must be non-negative.", false);
-  if (time_lag < 1) throw Rcpp::exception("Option time_lag must be positive.", false);
-  if (pre0_subs && pre0_value <= 0.0) {
-    throw Rcpp::exception("Option pre0_value must be positive if pre0_subs is set to TRUE", false);
+  if (start_value <= 0.0) {
+    throw Rcpp::exception("Option start_value must be positive.", false);
   }
-  if (substoch < 0 || substoch > 2) throw Rcpp::exception("Option substoch must equal 0, 1, or 2", false);
+  if (alpha <= 0.0) {
+    throw Rcpp::exception("Option alpha must be positive.", false);
+  }
+  if (lambda < 0.0) {
+    throw Rcpp::exception("Option lambda must be non-negative.", false);
+  }
+  if (time_lag < 1) {
+    throw Rcpp::exception("Option time_lag must be positive.", false);
+  }
+  if (pre0_subs && pre0_value <= 0.0) {
+    throw Rcpp::exception("Option pre0_value must be positive if pre0_subs is set to TRUE",
+      false);
+  }
+  if (substoch < 0 || substoch > 2) {
+    throw Rcpp::exception("Option substoch must equal 0, 1, or 2", false);
+  }
   
   if (separate_N.isNotNull()) {
     base_N = true;
@@ -503,7 +545,8 @@ Rcpp::NumericVector logistic3(double start_value, double alpha,
     }
   }
   
-  if (time_steps < 1) throw Rcpp::exception("Option time_steps must be positive.", false);
+  if (time_steps < 1) throw Rcpp::exception("Option time_steps must be positive.",
+    false);
   
   NumericVector output(time_steps + 1);
   double used_phi {0.0};

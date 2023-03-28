@@ -12,19 +12,23 @@
 \item{...}{Other parameters currently not utilized.}
 }
 \value{
-A list composed of 2 (if deterministic) or 4 (if stochastic) data
-frames. If deterministic, then \code{hist_det} is a data
-frame showing the summed LTRE contributions for all 16 kinds of historical
-transition per matrix, with each column corresponding to each A matrix in
-order, followed by all summed positive and all summed negative contributions.
-Object \code{ahist_det} is a data frame showing the summed LTRE
-contributions for all 4 kinds of ahistorical transition per matrix, with
-order as before, followed by summed positive and summed negative
-contributions. If stochastic, then \code{hist_mean} and \code{hist_sd} are
-the summed LTRE contributions for the mean vital rates and variability in
-vital rates, respectively, according to all 16 historical transition types,
-followed by summed positive and negative contributions, and \code{ahist_mean}
-and \code{ahist_sd} are the equivalent ahistorical versions.
+A list of data frames. In all cases, the first data frame is one
+showing the positive, negative, and total contributions of elements in
+each LTRE contribution matrix. If not a SNA-LTRE, then there are an
+additional two (if deterministic) or four (if stochastic) data frames. If
+deterministic, then \code{hist_det} is a data frame showing the summed LTRE
+contributions for all 16 kinds of historical transition per matrix, with each
+column corresponding to each A matrix in order, followed by all summed
+positive and all summed negative contributions. Object \code{ahist_det} is a
+data frame showing the summed LTRE contributions for all four kinds of
+ahistorical transition per matrix, with order as before, followed by summed
+positive and summed negative contributions. If stochastic, then
+\code{hist_mean} and \code{hist_sd} are the summed LTRE contributions for the
+mean vital rates and variability in vital rates, respectively, according to
+all 16 historical transition types, followed by summed positive and negative
+contributions, and \code{ahist_mean} and \code{ahist_sd} are the equivalent
+ahistorical versions. The output for the SNA-LTRE also includes the
+logs of the deterministic lambda estimted through function \code{ltre3()}.
 }
 \description{
 Function \code{summary.lefkoLTRE()} summarizes \code{lefkoLTRE} objects.
@@ -32,7 +36,6 @@ Particularly, it breaks down LTRE contributions by the kind of ahistorical
 and, if applicable, historical transition.
 }
 \examples{
-# Lathyrus example
 data(lathyrus)
 
 sizevector <- c(0, 100, 13, 127, 3730, 3800, 0)

@@ -35,13 +35,10 @@ data(anthyllis)
 \description{
 A \code{lefkoMat} object containing projection matrices developed from
 demographic data gathered on nine \emph{Anthyllis vulneraria} populations
-from 2003 to 2006 in southwestern Belgium. These matrices were originally
-published in Davison et al. (2010; Journal of Eccology 98(2): 255-267).
+from 2003 to 2006 in southwestern Belgium.
 }
 \examples{
 data(anthyllis)
-
-summary(anthyllis)
 
 lambda3(anthyllis)
 }

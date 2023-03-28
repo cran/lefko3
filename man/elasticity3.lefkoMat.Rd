@@ -9,7 +9,7 @@
   stochastic = FALSE,
   steps = 10000,
   time_weights = NA,
-  sparse = "auto",
+  force_sparse = "auto",
   append_mats = FALSE,
   ...
 )
@@ -27,9 +27,11 @@ simulation. Defaults to 10,000.}
 \item{time_weights}{Numeric vector denoting the probabilistic weightings of
 annual matrices. Defaults to equal weighting among occasions.}
 
-\item{sparse}{A text string indicating whether to use sparse matrix encoding
-(\code{"yes"}) or dense matrix encoding (\code{"no"}). Defaults to
-\code{"auto"}.}
+\item{force_sparse}{A text string indicating whether to use sparse matrix
+encoding (\code{"yes"}) or not (\code{"no"}) with standard matrix input.
+Defaults to \code{"auto"}, in which case sparse matrix encoding is used with
+square matrices with at least 50 rows and no more than 50\% of elements with
+values greater than zero.}
 
 \item{append_mats}{A logical value indicating whether to include the original
 A, U, and F matrices in the output \code{lefkoElas} object.}
@@ -39,17 +41,17 @@ A, U, and F matrices in the output \code{lefkoElas} object.}
 \value{
 This function returns an object of class \code{lefkoElas}, which is a
 list with 8 elements. The first, \code{h_elasmats}, is a list of historical
-elasticity matrices (NULL if an ahMPM is used as input). The second,
+elasticity matrices (\code{NULL} if an ahMPM is used as input). The second,
 \code{ah_elasmats}, is a list of either ahistorical elasticity matrices if an
 ahMPM is used as input, or, if an hMPM is used as input, then the result is a
 list of elasticity matrices in which historical elasticities have been summed
 by the stage in occasions \emph{t} and \emph{t}+1 to produce
 historically-corrected elasticity matrices, which are equivalent in dimension
 to ahistorical elasticity matrices but reflect the effects of stage in
-occasion \emph{t}-1. The third element, \code{h_stages}, is a data frame
+occasion \emph{t}-1. The third element, \code{hstages}, is a data frame
 showing historical stage pairs (NULL if ahMPM used as input). The fourth
 element, \code{agestages}, shows age-stage combinations in the order used in
-age-by-stage MPMs, if suppled. The fifth element, \code{ah_stages}, is a data
+age-by-stage MPMs, if suppled. The fifth element, \code{ahstages}, is a data
 frame showing the order of ahistorical stages. The last 3 elements are the A,
 U, and F portions of the input.
 }
@@ -70,6 +72,12 @@ Matrix Population Models). Stochastic elasticities are estimated as eqn.
 14.99 in Caswell (2001). Note that stochastic elasticities are of the
 stochastic \eqn{\lambda}, while stochastic sensitivities are with regard to
 the log of the stochastic \eqn{\lambda}.
+
+Speed can sometimes be increased by shifting from automatic sparse matrix
+determination to forced dense or sparse matrix projection. This will most
+likely occur when matrices have between 30 and 300 rows and columns.
+Defaults work best when matrices are very small and dense, or very large and
+sparse.
 }
 
 \examples{
@@ -162,6 +170,8 @@ elasticity3(cypmatrix2r)
 }
 \seealso{
 \code{\link{elasticity3}()}
+
+\code{\link{elasticity3.dgCMatrix}()}
 
 \code{\link{elasticity3.matrix}()}
 

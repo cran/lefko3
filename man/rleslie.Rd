@@ -16,18 +16,23 @@ rleslie(
   fec = c("feca3", "feca2", "feca1"),
   agecol = "obsage",
   year = "all",
-  pop = NA,
-  patch = NA,
-  yearcol = NA,
-  popcol = NA,
-  patchcol = NA,
-  indivcol = NA,
+  supplement = NULL,
+  pop = NULL,
+  patch = NULL,
+  yearcol = NULL,
+  popcol = NULL,
+  patchcol = NULL,
+  indivcol = NULL,
   censor = FALSE,
-  censorcol = NA,
+  censorcol = NULL,
   censorkeep = 0,
   fectime = 2,
   fecmod = 1,
-  prebreeding = TRUE
+  prebreeding = TRUE,
+  reduce = FALSE,
+  simple = FALSE,
+  err_check = FALSE,
+  sparse_output = FALSE
 )
 }
 \arguments{
@@ -72,6 +77,14 @@ of such values, given in values associated with the \code{year} term used in
 vital rate model development. Can also equal \code{"all"}, in which case
 matrices will be estimated for all occasion times. Defaults to \code{"all"}.}
 
+\item{supplement}{An optional data frame of class \code{lefkoSD} that
+provides supplemental data that should be incorporated into the MPM. Three
+kinds of data may be integrated this way: transitions to be estimated via the
+use of proxy transitions, transition overwrites from the literature or
+supplemental studies, and transition multipliers for survival and fecundity.
+This data frame should be produced using the \code{\link{supplemental}()}
+function.}
+
 \item{pop}{A variable designating which populations will have matrices
 estimated. Should be set to specific population names, or to \code{"all"} if
 all populations should have matrices estimated.}
@@ -110,6 +123,23 @@ the variable given for \code{fec} in time \emph{t} (\code{2}) or time
 
 \item{prebreeding}{A logical value indicating whether the life history model
 is a pre-breeding model. Defaults to \code{TRUE}.}
+
+\item{reduce}{A logical value denoting whether to remove ages associated with
+only zero transitions. These are removed only if the respective row and
+column sums in ALL matrices estimated equal 0. Defaults to \code{FALSE}, and
+should generally not be used in age-based MPMs.}
+
+\item{simple}{A logical value indicating whether to produce \code{A},
+\code{U}, and \code{F} matrices, or only the latter two. Defaults to
+\code{FALSE}, in which case all three are output.}
+
+\item{err_check}{A logical value indicating whether to append extra
+information used in matrix calculation within the output list. Defaults to
+\code{FALSE}.}
+
+\item{sparse_output}{A logical value indicating whether to output matrices
+in sparse format. Defaults to \code{FALSE}, in which case all matrices are
+output in standard matrix format.}
 }
 \value{
 If all inputs are properly formatted, then this function will return
@@ -118,11 +148,14 @@ projection model and all of its metadata. Its structure is a list with the
 following elements:
 
 \item{A}{A list of full projection matrices in order of sorted populations,
-patches, and occasions. All matrices output in the \code{matrix} class.}
+patches, and occasions. All matrices output in the \code{matrix} class, or in
+the \code{dgCMatrix} class from the \code{Matrix} package if sparse.}
 \item{U}{A list of survival transition matrices sorted as in \code{A}. All 
-matrices output in the \code{matrix} class.}
+matrices output in the \code{matrix} class, or in the \code{dgCMatrix} class
+from the \code{Matrix} package if sparse.}
 \item{F}{A list of fecundity matrices sorted as in \code{A}. All matrices 
-output in the \code{matrix} class.}
+output in the \code{matrix} class, or in the \code{dgCMatrix} class from the
+\code{Matrix} package if sparse.}
 \item{hstages}{A data frame matrix showing the pairing of ahistorical stages
 used to create historical stage pairs. Set to NA for ahistorical matrices.}
 \item{agestages}{A data frame showing age-stage pairs. In this function, it
@@ -132,10 +165,12 @@ ahistorical stages, in the form of a modified stageframe that includes
 status as an entry stage through reproduction.}
 \item{labels}{A data frame giving the population, patch, and year of each 
 matrix in order.}
-\item{matrixqc}{A short vector describing the number of non-zero elements
-in \code{U} and \code{F} matrices, and the number of annual matrices.}
 \item{dataqc}{A vector showing the numbers of individuals and rows in the
 vertical dataset used as input.}
+\item{matrixqc}{A short vector describing the number of non-zero elements in
+\code{U} and \code{F} matrices, and the number of annual matrices.}
+\item{modelqc}{This is the \code{qc} portion of the \code{modelsuite} input
+in function-based MPMs. Empty in this function.}
 }
 \description{
 Function \code{rleslie()} returns raw Leslie MPMs, including the
@@ -161,22 +196,22 @@ lead to erroneous calculations, and may lead to fatal errors.
 }
 
 \examples{
-# Cypripedium example
 data(cypdata)
 
 cypraw_v1 <- verticalize3(data = cypdata, noyears = 6, firstyear = 2004,
   patchidcol = "patch", individcol = "plantid", blocksize = 4,
   sizeacol = "Inf2.04", sizebcol = "Inf.04", sizeccol = "Veg.04",
   repstracol = "Inf.04", repstrbcol = "Inf2.04", fecacol = "Pod.04",
-  NAas0 = TRUE, NRasRep = TRUE)
+  age_offset = 3, NAas0 = TRUE, NRasRep = TRUE)
 
-cyp_rl <- rleslie(data = cypraw_v1, start_age = 0, last_age = 4, continue = TRUE,
-  fecage_min = 3, fecage_max = 4, year = "all", pop = NA, patch = "all",
-  yearcol = "year2", popcol = NA, patchcol = "patchid", indivcol = "individ")
-cyp_rl
+cyp_rl <- rleslie(data = cypraw_v1, start_age = 0, last_age = 4,
+  continue = TRUE, fecage_min = 3, year = "all", pop = NA, patch = "all",
+  yearcol = "year2", patchcol = "patchid", indivcol = "individ")
 
 }
 \seealso{
+\code{\link{mpm_create}()}
+
 \code{\link{flefko3}()}
 
 \code{\link{flefko2}()}

@@ -30,13 +30,13 @@ document.addEventListener('DOMContentLoaded', function(e) {
 </script>
 
 <style type="text/css">
-  code{white-space: pre-wrap;}
-  span.smallcaps{font-variant: small-caps;}
-  span.underline{text-decoration: underline;}
-  div.column{display: inline-block; vertical-align: top; width: 50%;}
-  div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
-  ul.task-list{list-style: none;}
-    </style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+span.underline{text-decoration: underline;}
+div.column{display: inline-block; vertical-align: top; width: 50%;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+</style>
 
 
 
@@ -44,25 +44,25 @@ document.addEventListener('DOMContentLoaded', function(e) {
 
 
 <style type="text/css">
-/* for pandoc --citeproc since 2.11 */
+
 div.csl-bib-body { }
 div.csl-entry {
-  clear: both;
+clear: both;
 }
 .hanging div.csl-entry {
-  margin-left:2em;
-  text-indent:-2em;
+margin-left:2em;
+text-indent:-2em;
 }
 div.csl-left-margin {
-  min-width:2em;
-  float:left;
+min-width:2em;
+float:left;
 }
 div.csl-right-inline {
-  margin-left:2em;
-  padding-left:1em;
+margin-left:2em;
+padding-left:1em;
 }
 div.csl-indent {
-  margin-left: 2em;
+margin-left: 2em;
 }
 </style>
 
@@ -272,64 +272,40 @@ construction and analysis of matrix projection models (MPMs) and
 integral projection models (IPMs) <span class="citation">(Shefferson,
 Kurokawa, and Ehrlén 2021)</span>. It was originally developed to
 estimate and analyze <em>historical</em> size-classified matrix
-projection models (hMPMs), which are matrices designed to include not
-only current state but also past history in terms of previous states,
-where stages are defined in terms of size. Such matrices are large,
-typically having dimensions higher than their standard, ahistorical
-counterparts (the latter will be hereafter referred to as ahistorical
-MPMs, or ahMPMs, while the acronym MPM will be used to refer to all
-matrix projection models, whether historical or not). As this package
-has developed, we have broadened the scope of this package to include
+projection models (hMPMs), which not only current state but also past
+history in terms of previous states. hMPM matrices are large, typically
+having dimensions higher than their standard, ahistorical counterparts
+(the latter will be hereafter referred to as ahistorical MPMs, or
+ahMPMs, while the acronym MPM will be used to refer to all matrix
+projection models, whether historical or not). As this package has
+developed, we have broadened the scope of this package to include
 age-classified, age-by-stage, and stage-classified MPMs and IPMs, with
 function-based MPMs and IPMs capable of handling a large range of
 possible response distributions. We have also added the ability to
 project matrices and IPMs in customized, complex ways. Through it all,
 we have prioritized the development of core algorithms and methods to
 construct these models and projections quickly, efficiently, and at
-least relatively painlessly. Finally, we have incorporated quality
-control routines in the core functions of all steps of the workflow,
-giving users the opportunity to assess where weaknesses and errors lie.
-</p>
-<p style="text-indent: 20px">
-Package <code>lefko3</code> introduces a complete suite of functions
-covering the MPM/IPM workflow, from dataset management to model
-construction to the analysis of population dynamics. Dataset management
-functions standardize demographic datasets from the dominant formats
-into a format that facilitates matrix parameterization while accounting
-for individual identity and other parameters. Demographic vital rate
-models may be estimated using demographic datasets with this
-standardized format, and these models take the form of generalized
-linear or mixed linear models using a variety of response distributions.
-Matrix estimation functions produce all necessary matrices from a single
-dataset, including all times, patches, and populations in a single
-output object, and do so quickly through core binaries engineered for
-speed and accuracy. Deterministic and stochastic analysis functions
-allow sensitivity analysis, elasticity analysis, LTRE analysis, etc.
-Projection functions allow density dependent and independent with or
-without enforced substochasticity, as well as stochastic, cyclical, and
-replicated projections for even quite complex situations.
+least relatively painlessly. Perhaps most importantly, we have
+incorporated quality control routines in the core functions of all steps
+of the workflow, giving users the opportunity to assess where weaknesses
+and errors lie.
 </p>
 <p style="text-indent: 20px">
 This vignette was written as a basic introduction to the concepts and
 methods underlying <code>lefko3</code>. The target audience is everyone
 from beginners with little knowledge of population ecology and even less
 of <em>R</em>, to experienced ecologists with advanced working knowledge
-of <em>R</em> and the analysis of population dynamics. In addition to
-this vignette, which covers the concepts, background, and workflow
-underlying the package, we have created an online book entitled
-<strong>lefko3: a gentle introduction</strong>, and a series of
-vignettes focused on specific practical examples using the package to
-run suites of comprehensive analyses. The book covers all major uses of
-the package and contains lots of basic information and examples, and the
-vignettes show the development of raw and function-based MPMs, IPMs, and
-age-by-stage MPMs using two datasets included in <code>lefko3</code>: a
-dataset from a Swedish population of the perennial herb <em>Lathyrus
-vernus</em>, and a dataset from an American population of the
-terrestrial orchid <em>Cypripedium candidum</em>. In addition, we have
-created a number of long-format vignettes and video tutorials. All of
+of <em>R</em> and the analysis of population dynamics. We have also
+created an online book entitled <strong>lefko3: a gentle
+introduction</strong>, and a series of vignettes focused on specific
+practical examples using the package to run suites of comprehensive
+analyses. The book covers all major uses of the package and contains
+basic through advanced information and examples, and the vignettes show
+the development of raw and function-based MPMs, IPMs, and age-by-stage
+MPMs using three demographic datasets and one published MPM. All of
 these materials are available on the
-<a href="http://www.sheffersonlab.com/projects">projects page</a> of
-the <a href="http://www.sheffersonlab.com/">Shefferson lab
+<a href="http://www.sheffersonlab.com/projects.html">projects page</a>
+of the <a href="http://www.sheffersonlab.com/">Shefferson lab
 website</a>.
 </p>
 </div>
@@ -340,18 +316,17 @@ website</a>.
 <p style="text-indent: 20px">
 Matrix projection models (MPMs) are representations of the dynamics of a
 population across all life history stages deemed relevant, across the
-most relevant time interval (typically one year, but sometimes
-different, and assumed to be consistent within each analysis). They
-require a complete model of the organism’s life history prior to
-construction, and this model must explicitly describe all life stages
-and all life history transitions to be modeled. Each stage is mutually
-exclusive, meaning that an individual can only be in a single stage at a
-given time. Each stage is represented in the matrix by a single column
-and a single row. Each transition takes exactly one full time step,
-which needs to be defined consistently and should be equivalent to the
-approximate amount of time between consecutive monitoring occasions.
-Matrix elements (<span class="math inline">\(a_{kj}\)</span>) show
-either the probability of transition for an individual in stage <span class="math inline">\(j\)</span> at occasion <em>t</em> (along the
+most relevant time interval (typically one year, and assumed to be
+consistent within each analysis). They require a complete model of the
+organism’s life history prior to construction, and this model must
+explicitly describe all life stages and all life history transitions to
+be modeled. Each stage is mutually exclusive, meaning that an individual
+can only be in a single stage at a given time. Each stage is represented
+in the matrix by a single column and a single row. Each transition takes
+exactly one full time step, which needs to be defined consistently and
+should be equivalent to the approximate amount of time between
+consecutive monitoring occasions. Matrix elements (<span class="math inline">\(a_{kj}\)</span>) show either the probability of
+transition for an individual in stage <span class="math inline">\(j\)</span> at occasion <em>t</em> (along the
 columns), to stage <span class="math inline">\(k\)</span> at occasion
 <em>t</em>+1 (along the rows), or the mean rate of production of new
 recruits into stage <span class="math inline">\(k\)</span> at occasion
@@ -1309,6 +1284,7 @@ developed using the <code>supplemental()</code> function. This function
 allows users to create a data frame detailing:
 </p>
 <ol style="list-style-type: decimal">
+<li>specific transitions to set as the main fecundity transitions;</li>
 <li>specific transitions to set as constants;</li>
 <li>specific transitions to estimate via proxy transitions;</li>
 <li>specific multipliers for fecundity in cases in which fecundity
@@ -1674,36 +1650,21 @@ models developed using the functions and packages mentioned before.
 <div id="step-4-estimate-matrices" class="section level3">
 <h3>Step 4: Estimate matrices</h3>
 <p style="text-indent: 20px">
-MPM creation can be accomplished with eight different functions:
-</p>
-<ol style="list-style-type: decimal">
-<li><p><code>rlefko2()</code> - Creates raw ahistorical stage-classified
-MPMs given a dataset, a stageframe, and a supplement table.</p></li>
-<li><p><code>rlefko3()</code> - Creates raw historical stage-classified
-MPMs given a dataset, a stageframe, and a supplement table.</p></li>
-<li><p><code>arlefko2()</code> - Creates raw ahistorical age-by-stage
-MPMs given a dataset, a stageframe, and a supplement table.</p></li>
-<li><p><code>rleslie()</code> - Creates raw age-classified MPMs given a
-dataset, a stageframe, and a supplement table</p></li>
-<li><p><code>flefko2()</code> - Creates function-based ahistorical MPMs
-and IPMs given a dataset, a set of models, a stageframe, and a
-supplement table.</p></li>
-<li><p><code>flefko3()</code> - Creates function-based historical MPMs
-and IPMs given a dataset, a set of models, a stageframe, and a
-supplement table.</p></li>
-<li><p><code>aflefko2()</code> - Creates function-based ahistorical
-age-by-stage MPMs given a dataset, a set of models, a stageframe, and a
-supplement table.</p></li>
-<li><p><code>fleslie()</code> - Creates function-based age-classified
-MPMs given a dataset, a set of models, a stageframe, and a supplement
-table.</p></li>
-</ol>
-<p style="text-indent: 20px">
-These functions incorporate binary kernels developed to handle the
-estimation of matrix elements quickly and efficiently. A single run of
-<code>flefko3()</code>, for example, should be able to yield all annual
-matrices for all patches for the <em>Cypripedium candidum</em> dataset
-provided with <code>lefko3</code> in under a half-minute on most
+MPM creation can be accomplished with nine different functions:
+<code>rlefko2()</code> for raw ahistorical stage-classified MPMs,
+<code>rlefko3()</code> for raw historical stage-classified MPMs,
+<code>arlefko2()</code> for raw ahistorical age-by-stage MPMs,
+<code>rleslie()</code> for raw age-classified MPMs,
+<code>flefko2()</code> for function-based ahistorical MPMs and IPMs,
+<code>flefko3()</code> for function-based historical MPMs and IPMs,
+<code>aflefko2()</code> for function-based ahistorical age-by-stage
+MPMs, <code>fleslie()</code> for function-based age-classified MPMs, and
+<code>mpm_create()</code> as a general, all-purpose MPM and IPM creation
+function. These functions incorporate binary kernels developed to handle
+the estimation of matrix elements quickly and efficiently. A single run
+of <code>flefko3()</code>, for example, should be able to yield all
+annual matrices for all patches for the <em>Cypripedium candidum</em>
+dataset provided with <code>lefko3</code> in under a half-minute on most
 machines (14s or so on RPS’ 2019 MacBook Pro with 2.3 GHz 8-Core Intel
 Core i9). Parallel computing should not be necessary even with the
 slowest of current machines, provided that the machine is current enough
@@ -1827,8 +1788,8 @@ of various sorts, including even cyclical and unequally weighted
 stochastic projections.
 </p>
 </div>
-<div id="density-independent-vs.-density-dependence-analysis" class="section level4">
-<h4>Density independent vs. density dependence analysis</h4>
+<div id="density-independent-vs.-density-dependent-analysis" class="section level4">
+<h4>Density independent vs. density dependent analysis</h4>
 <p style="text-indent: 20px">
 Package <code>lefko3</code> also provides the ability to conduct density
 dependent projections. Readers of the density dependence literature will
@@ -2242,7 +2203,12 @@ or more treatments on the log stochastic growth rate, <span class="math inline">
 treatment and reference here are not single matrices, but sets of
 matrices that vary randomly across time. Here, we assume that <span class="math inline">\(log\lambda^{(m)}\)</span> and <span class="math inline">\(log\lambda^{(R)}\)</span> are the log stochastic
 growth rates of the treatment MPM and the reference MPM, respectively.
-Package <code>lefko3</code> currently implements the <span class="citation">Davison et al. (2010)</span> simulated sLTRE, where:
+</p>
+<p style="text-indent: 20px">
+Package <code>lefko3</code> currently implements two kinds of sLTRE. The
+first, which we refer to in the documentation as ‘sLTRE’, is the
+simulated sLTRE described in <span class="citation">Davison et al.
+(2010)</span>, where:
 </p>
 <p><span class="math display">\[\begin{equation}
 \tag{30}
@@ -2257,8 +2223,17 @@ and standard deviation, respectively, of the element at row <span class="math in
 <code>ltre3()</code> handles all of these calculations.</p>
 <p style="text-indent: 20px">
 <span class="citation">Davison et al. (2013)</span> presented an
-analytical solution to the sLTRE, and we are currently working to
-implement this version in <code>lefko3</code> as well.
+analytical solution to the sLTRE refered to as the small-noise
+approximation LTRE, or ‘SNA-LTRE’. Package <code>lefko3</code> also
+implements this form. Here, the difference in the stochastic growth rate
+<span class="math inline">\(\text{log}\lambda_S\)</span> between the
+treatment group and the reference group is decomposed into contributions
+from differences in mean elements, in element elasticities, in element
+coefficients of variation, and in element correlations. This analysis
+will likely appeal most to those seeking to conduct stochastic LTREs,
+and we urge users to read <span class="citation">Davison et al.
+(2013)</span> and the LTRE chapter in <em>lefko3: a gentle
+introduction</em> for a better understanding of this analysis.
 </p>
 </div>
 <div id="further-analyses" class="section level4">

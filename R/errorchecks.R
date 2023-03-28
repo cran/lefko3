@@ -124,7 +124,7 @@ summary.lefkoCondMat <- function(object, ...) {
   matdim <- dim(firstcondmat)
   
   writeLines(paste0("\nThis lefkoCondMat object contains ", prevstages,
-      " conditional matrices per historical matrix,"))
+      " conditional matrices per historical matrix."))
   writeLines(paste0("It covers ", numhistmats, " main historical matrices."))
   writeLines(paste0("Each conditional matrix is a square matrix with ", matdim[1],
       " rows and columns, and a total of ", matdim[1]*matdim[1], " elements."))
@@ -139,10 +139,7 @@ summary.lefkoCondMat <- function(object, ...) {
 
 #' Create Matrix Image
 #' 
-#' Function \code{image3()} is a generic function that creates matrix plots. It
-#' acts as a wrapper for the \code{\link[SparseM]{image}()} function in package
-#' \code{SparseM}, conducting all necessary conversions and automating image
-#' production across all or just specific matrices.
+#' Function \code{image3()} is a generic function that creates matrix plots.
 #' 
 #' @name image3
 #' 
@@ -200,61 +197,13 @@ summary.lefkoCondMat <- function(object, ...) {
 #' 
 #' image3(ehrlen3, used = 1, type = "U")
 #' 
-#' # Cypripedium example
-#' data(cypdata)
-#' 
-#' sizevector <- c(0, 0, 0, 0, 0, 0, 1, 2.5, 4.5, 8, 17.5)
-#' stagevector <- c("SD", "P1", "P2", "P3", "SL", "D", "XSm", "Sm", "Md", "Lg",
-#'   "XLg")
-#' repvector <- c(0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1)
-#' obsvector <- c(0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1)
-#' matvector <- c(0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1)
-#' immvector <- c(0, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0)
-#' propvector <- c(1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)
-#' indataset <- c(0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1)
-#' binvec <- c(0, 0, 0, 0, 0, 0.5, 0.5, 1, 1, 2.5, 7)
-#' 
-#' cypframe_raw <- sf_create(sizes = sizevector, stagenames = stagevector,
-#'   repstatus = repvector, obsstatus = obsvector, matstatus = matvector,
-#'   propstatus = propvector, immstatus = immvector, indataset = indataset,
-#'   binhalfwidth = binvec)
-#' 
-#' cypraw_v1 <- verticalize3(data = cypdata, noyears = 6, firstyear = 2004,
-#'   patchidcol = "patch", individcol = "plantid", blocksize = 4,
-#'   sizeacol = "Inf2.04", sizebcol = "Inf.04", sizeccol = "Veg.04",
-#'   repstracol = "Inf.04", repstrbcol = "Inf2.04", fecacol = "Pod.04",
-#'   stageassign = cypframe_raw, stagesize = "sizeadded", NAas0 = TRUE,
-#'   NRasRep = TRUE)
-#' 
-#' # Here we use supplemental() to provide overwrite and reproductive info
-#' cypsupp2r <- supplemental(stage3 = c("SD", "P1", "P2", "P3", "SL", "D", 
-#'     "XSm", "Sm", "SD", "P1"),
-#'   stage2 = c("SD", "SD", "P1", "P2", "P3", "SL", "SL", "SL", "rep",
-#'     "rep"),
-#'   eststage3 = c(NA, NA, NA, NA, NA, "D", "XSm", "Sm", NA, NA),
-#'   eststage2 = c(NA, NA, NA, NA, NA, "XSm", "XSm", "XSm", NA, NA),
-#'   givenrate = c(0.10, 0.20, 0.20, 0.20, 0.25, NA, NA, NA, NA, NA),
-#'   multiplier = c(NA, NA, NA, NA, NA, NA, NA, NA, 0.5, 0.5),
-#'   type =c(1, 1, 1, 1, 1, 1, 1, 1, 3, 3),
-#'   stageframe = cypframe_raw, historical = FALSE)
-#' 
-#' cypmatrix2r <- rlefko2(data = cypraw_v1, stageframe = cypframe_raw, 
-#'   year = "all", patch = "all", stages = c("stage3", "stage2", "stage1"),
-#'   size = c("size3added", "size2added"), supplement = cypsupp2r,
-#'   yearcol = "year2", patchcol = "patchid", indivcol = "individ")
-#' 
-#' image3(cypmatrix2r, used = 1, type = "U")
-#' 
 #' @export
 image3 <- function(mats, ...) UseMethod("image3")
 
 #' Create Matrix Image(s) for lefkoMat Object
 #' 
 #' Function \code{image3.lefkoMat} plots matrix images for matrices supplied
-#' within \code{lefkoMat} objects. This function operates as a wrapper for the
-#' \code{\link[SparseM]{image}()} function in package \code{SparseM}, conducting
-#' all necessary conversions and automating image production across all or just
-#' specific matrices.
+#' within \code{lefkoMat} objects.
 #' 
 #' @name image3.lefkoMat
 #' 
@@ -312,51 +261,6 @@ image3 <- function(mats, ...) UseMethod("image3")
 #' 
 #' image3(ehrlen3, used = 1, type = "U")
 #' 
-#' # Cypripedium example
-#' data(cypdata)
-#' 
-#' sizevector <- c(0, 0, 0, 0, 0, 0, 1, 2.5, 4.5, 8, 17.5)
-#' stagevector <- c("SD", "P1", "P2", "P3", "SL", "D", "XSm", "Sm", "Md", "Lg",
-#'   "XLg")
-#' repvector <- c(0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1)
-#' obsvector <- c(0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1)
-#' matvector <- c(0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1)
-#' immvector <- c(0, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0)
-#' propvector <- c(1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)
-#' indataset <- c(0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1)
-#' binvec <- c(0, 0, 0, 0, 0, 0.5, 0.5, 1, 1, 2.5, 7)
-#' 
-#' cypframe_raw <- sf_create(sizes = sizevector, stagenames = stagevector,
-#'   repstatus = repvector, obsstatus = obsvector, matstatus = matvector,
-#'   propstatus = propvector, immstatus = immvector, indataset = indataset,
-#'   binhalfwidth = binvec)
-#' 
-#' cypraw_v1 <- verticalize3(data = cypdata, noyears = 6, firstyear = 2004,
-#'   patchidcol = "patch", individcol = "plantid", blocksize = 4,
-#'   sizeacol = "Inf2.04", sizebcol = "Inf.04", sizeccol = "Veg.04",
-#'   repstracol = "Inf.04", repstrbcol = "Inf2.04", fecacol = "Pod.04",
-#'   stageassign = cypframe_raw, stagesize = "sizeadded", NAas0 = TRUE,
-#'   NRasRep = TRUE)
-#' 
-#' # Here we use supplemental() to provide overwrite and reproductive info
-#' cypsupp2r <- supplemental(stage3 = c("SD", "P1", "P2", "P3", "SL", "D", 
-#'     "XSm", "Sm", "SD", "P1"),
-#'   stage2 = c("SD", "SD", "P1", "P2", "P3", "SL", "SL", "SL", "rep",
-#'     "rep"),
-#'   eststage3 = c(NA, NA, NA, NA, NA, "D", "XSm", "Sm", NA, NA),
-#'   eststage2 = c(NA, NA, NA, NA, NA, "XSm", "XSm", "XSm", NA, NA),
-#'   givenrate = c(0.10, 0.20, 0.20, 0.20, 0.25, NA, NA, NA, NA, NA),
-#'   multiplier = c(NA, NA, NA, NA, NA, NA, NA, NA, 0.5, 0.5),
-#'   type =c(1, 1, 1, 1, 1, 1, 1, 1, 3, 3),
-#'   stageframe = cypframe_raw, historical = FALSE)
-#' 
-#' cypmatrix2r <- rlefko2(data = cypraw_v1, stageframe = cypframe_raw, 
-#'   year = "all", patch = "all", stages = c("stage3", "stage2", "stage1"),
-#'   size = c("size3added", "size2added"), supplement = cypsupp2r,
-#'   yearcol = "year2", patchcol = "patchid", indivcol = "individ")
-#' 
-#' image3(cypmatrix2r, used = 1, type = "U")
-#' 
 #' @export
 image3.lefkoMat <- function(mats, used = "all", type = "A", ...) {
   
@@ -391,16 +295,20 @@ image3.lefkoMat <- function(mats, used = "all", type = "A", ...) {
     chosen_list <- mats$A[chosen_mat]
   }
   
-  lapply(chosen_list, function(X) {SparseM::image(SparseM::as.matrix.csr(X),
-    col =c("white", "red"))})
+  if (is(chosen_list[[1]], "dgCMatrix")) {
+    lapply(chosen_list, function(X) {Matrix::image(X, xlab = "", ylab = "", 
+      sub = "", col.regions = c("white", "red"), lwd = 0,
+      at = c(0, 0.0000000000001, Inf), drop.unused.levels = FALSE)})
+  } else {
+    lapply(chosen_list, function(X) {Matrix::image(Matrix::Matrix(X, sparse = TRUE),
+      xlab = "", ylab = "", sub = "", col.regions = c("white", "red"), lwd = 0,
+      at = c(0, 0.0000000000001, Inf), drop.unused.levels = FALSE)})
+  }
 }
 
 #' Create a Matrix Image for a Single Matrix
 #' 
-#' Function \code{image3.matrix} plots a matrix image for a single matrix. This
-#' function operates as a wrapper for the \code{\link[SparseM]{image}()}
-#' function in package \code{SparseM}, conducting all necessary conversions and
-#' automating image production across all or just specific matrices.
+#' Function \code{image3.matrix} plots a matrix image for a single matrix.
 #' 
 #' @name image3.matrix
 #' 
@@ -449,68 +357,86 @@ image3.lefkoMat <- function(mats, used = "all", type = "A", ...) {
 #' 
 #' ehrlen3 <- rlefko3(data = lathvert, stageframe = lathframe, year = "all", 
 #'   stages = c("stage3", "stage2", "stage1"), supplement = lathsupp3,
-#'   yearcol = "year2", indivcol = "individ")
+#'   yearcol = "year2", indivcol = "individ", sparse_output = FALSE)
 #' 
 #' image3(ehrlen3$U[[1]])
-#' 
-#' # Cypripedium example
-#' data(cypdata)
-#' 
-#' sizevector <- c(0, 0, 0, 0, 0, 0, 1, 2.5, 4.5, 8, 17.5)
-#' stagevector <- c("SD", "P1", "P2", "P3", "SL", "D", "XSm", "Sm", "Md", "Lg",
-#'   "XLg")
-#' repvector <- c(0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1)
-#' obsvector <- c(0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1)
-#' matvector <- c(0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1)
-#' immvector <- c(0, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0)
-#' propvector <- c(1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)
-#' indataset <- c(0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1)
-#' binvec <- c(0, 0, 0, 0, 0, 0.5, 0.5, 1, 1, 2.5, 7)
-#' 
-#' cypframe_raw <- sf_create(sizes = sizevector, stagenames = stagevector,
-#'   repstatus = repvector, obsstatus = obsvector, matstatus = matvector,
-#'   propstatus = propvector, immstatus = immvector, indataset = indataset,
-#'   binhalfwidth = binvec)
-#' 
-#' cypraw_v1 <- verticalize3(data = cypdata, noyears = 6, firstyear = 2004,
-#'   patchidcol = "patch", individcol = "plantid", blocksize = 4,
-#'   sizeacol = "Inf2.04", sizebcol = "Inf.04", sizeccol = "Veg.04",
-#'   repstracol = "Inf.04", repstrbcol = "Inf2.04", fecacol = "Pod.04",
-#'   stageassign = cypframe_raw, stagesize = "sizeadded", NAas0 = TRUE,
-#'   NRasRep = TRUE)
-#' 
-#' # Here we use supplemental() to provide overwrite and reproductive info
-#' cypsupp2r <- supplemental(stage3 = c("SD", "P1", "P2", "P3", "SL", "D", 
-#'     "XSm", "Sm", "SD", "P1"),
-#'   stage2 = c("SD", "SD", "P1", "P2", "P3", "SL", "SL", "SL", "rep",
-#'     "rep"),
-#'   eststage3 = c(NA, NA, NA, NA, NA, "D", "XSm", "Sm", NA, NA),
-#'   eststage2 = c(NA, NA, NA, NA, NA, "XSm", "XSm", "XSm", NA, NA),
-#'   givenrate = c(0.10, 0.20, 0.20, 0.20, 0.25, NA, NA, NA, NA, NA),
-#'   multiplier = c(NA, NA, NA, NA, NA, NA, NA, NA, 0.5, 0.5),
-#'   type =c(1, 1, 1, 1, 1, 1, 1, 1, 3, 3),
-#'   stageframe = cypframe_raw, historical = FALSE)
-#' 
-#' cypmatrix2r <- rlefko2(data = cypraw_v1, stageframe = cypframe_raw, 
-#'   year = "all", patch = "all", stages = c("stage3", "stage2", "stage1"),
-#'   size = c("size3added", "size2added"), supplement = cypsupp2r,
-#'   yearcol = "year2", patchcol = "patchid", indivcol = "individ")
-#' 
-#' image3(cypmatrix2r$U[[1]])
 #' 
 #' @export
 image3.matrix <- function(mats, ...) {
   
-  SparseM::image(SparseM::as.matrix.csr(mats), col =c("white", "red"))
+  Matrix::image(Matrix::Matrix(mats, sparse = TRUE), xlab = "", ylab = "",
+    sub = "", col.regions = c("white", "red"), lwd = 0,
+    at = c(0, 0.0000000000001, Inf), drop.unused.levels = FALSE)
+}
+
+#' Create a Matrix Image for a Single Sparse Matrix
+#' 
+#' Function \code{image3.dgCMatrix} plots a matrix image for a single sparse
+#' matrix.
+#' 
+#' @name image3.dgCMatrix
+#' 
+#' @param mats A \code{matrix} class object.
+#' @param ... Other parameters.
+#' 
+#' @return Plots a matrix image, or series of matrix images, denoting non-zero
+#' elements as red space and zero elements as white space.
+#' 
+#' @examples 
+#' # Lathyrus example
+#' data(lathyrus)
+#' 
+#' sizevector <- c(0, 100, 13, 127, 3730, 3800, 0)
+#' stagevector <- c("Sd", "Sdl", "VSm", "Sm", "VLa", "Flo", "Dorm")
+#' repvector <- c(0, 0, 0, 0, 0, 1, 0)
+#' obsvector <- c(0, 1, 1, 1, 1, 1, 0)
+#' matvector <- c(0, 0, 1, 1, 1, 1, 1)
+#' immvector <- c(1, 1, 0, 0, 0, 0, 0)
+#' propvector <- c(1, 0, 0, 0, 0, 0, 0)
+#' indataset <- c(0, 1, 1, 1, 1, 1, 1)
+#' binvec <- c(0, 100, 11, 103, 3500, 3800, 0.5)
+#' 
+#' lathframe <- sf_create(sizes = sizevector, stagenames = stagevector,
+#'   repstatus = repvector, obsstatus = obsvector, matstatus = matvector,
+#'   immstatus = immvector, indataset = indataset, binhalfwidth = binvec,
+#'   propstatus = propvector)
+#' 
+#' lathvert <- verticalize3(lathyrus, noyears = 4, firstyear = 1988,
+#'   patchidcol = "SUBPLOT", individcol = "GENET", blocksize = 9,
+#'   juvcol = "Seedling1988", sizeacol = "Volume88", repstracol = "FCODE88",
+#'   fecacol = "Intactseed88", deadacol = "Dead1988",
+#'   nonobsacol = "Dormant1988", stageassign = lathframe, stagesize = "sizea",
+#'   censorcol = "Missing1988", censorkeep = NA, censor = TRUE)
+#' 
+#' lathsupp3 <- supplemental(stage3 = c("Sd", "Sd", "Sdl", "Sdl", "Sd", "Sdl", "mat"),
+#'   stage2 = c("Sd", "Sd", "Sd", "Sd", "rep", "rep", "Sdl"),
+#'   stage1 = c("Sd", "rep", "Sd", "rep", "npr", "npr", "Sd"),
+#'   eststage3 = c(NA, NA, NA, NA, NA, NA, "mat"),
+#'   eststage2 = c(NA, NA, NA, NA, NA, NA, "Sdl"),
+#'   eststage1 = c(NA, NA, NA, NA, NA, NA, "NotAlive"),
+#'   givenrate = c(0.345, 0.345, 0.054, 0.054, NA, NA, NA),
+#'   multiplier = c(NA, NA, NA, NA, 0.345, 0.054, NA),
+#'   type = c(1, 1, 1, 1, 3, 3, 1), type_t12 = c(1, 2, 1, 2, 1, 1, 1),
+#'   stageframe = lathframe, historical = TRUE)
+#' 
+#' ehrlen3 <- rlefko3(data = lathvert, stageframe = lathframe, year = "all", 
+#'   stages = c("stage3", "stage2", "stage1"), supplement = lathsupp3,
+#'   yearcol = "year2", indivcol = "individ", sparse_output = TRUE)
+#' 
+#' image3(ehrlen3$U[[1]])
+#' 
+#' @export
+image3.dgCMatrix <- function(mats, ...) {
+  
+  Matrix::image(mats, xlab = "", ylab = "", sub = "",
+    col.regions = c("white", "red"), lwd = 0, at = c(0, 0.0000000000001, Inf),
+    drop.unused.levels = FALSE)
 }
 
 #' Create Matrix Images for Matrices in a List
 #' 
-#' Function \code{image3.matrix} plots matrix images for matrices contained in a
-#' list of matrices. This function operates as a wrapper for the
-#' \code{\link[SparseM]{image}()} function in package \code{SparseM},
-#' conducting all necessary conversions and automating image production across
-#' all or just specific matrices.
+#' Function \code{image3.list} plots matrix images for matrices contained in a
+#' list of matrices.
 #' 
 #' @name image3.list
 #' 
@@ -563,51 +489,6 @@ image3.matrix <- function(mats, ...) {
 #' 
 #' image3(ehrlen3$A, used = 1)
 #' 
-#' # Cypripedium example
-#' data(cypdata)
-#' 
-#' sizevector <- c(0, 0, 0, 0, 0, 0, 1, 2.5, 4.5, 8, 17.5)
-#' stagevector <- c("SD", "P1", "P2", "P3", "SL", "D", "XSm", "Sm", "Md", "Lg",
-#'   "XLg")
-#' repvector <- c(0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1)
-#' obsvector <- c(0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1)
-#' matvector <- c(0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1)
-#' immvector <- c(0, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0)
-#' propvector <- c(1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)
-#' indataset <- c(0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1)
-#' binvec <- c(0, 0, 0, 0, 0, 0.5, 0.5, 1, 1, 2.5, 7)
-#' 
-#' cypframe_raw <- sf_create(sizes = sizevector, stagenames = stagevector,
-#'   repstatus = repvector, obsstatus = obsvector, matstatus = matvector,
-#'   propstatus = propvector, immstatus = immvector, indataset = indataset,
-#'   binhalfwidth = binvec)
-#' 
-#' cypraw_v1 <- verticalize3(data = cypdata, noyears = 6, firstyear = 2004,
-#'   patchidcol = "patch", individcol = "plantid", blocksize = 4,
-#'   sizeacol = "Inf2.04", sizebcol = "Inf.04", sizeccol = "Veg.04",
-#'   repstracol = "Inf.04", repstrbcol = "Inf2.04", fecacol = "Pod.04",
-#'   stageassign = cypframe_raw, stagesize = "sizeadded", NAas0 = TRUE,
-#'   NRasRep = TRUE)
-#' 
-#' # Here we use supplemental() to provide overwrite and reproductive info
-#' cypsupp2r <- supplemental(stage3 = c("SD", "P1", "P2", "P3", "SL", "D", 
-#'     "XSm", "Sm", "SD", "P1"),
-#'   stage2 = c("SD", "SD", "P1", "P2", "P3", "SL", "SL", "SL", "rep",
-#'     "rep"),
-#'   eststage3 = c(NA, NA, NA, NA, NA, "D", "XSm", "Sm", NA, NA),
-#'   eststage2 = c(NA, NA, NA, NA, NA, "XSm", "XSm", "XSm", NA, NA),
-#'   givenrate = c(0.10, 0.20, 0.20, 0.20, 0.25, NA, NA, NA, NA, NA),
-#'   multiplier = c(NA, NA, NA, NA, NA, NA, NA, NA, 0.5, 0.5),
-#'   type =c(1, 1, 1, 1, 1, 1, 1, 1, 3, 3),
-#'   stageframe = cypframe_raw, historical = FALSE)
-#' 
-#' cypmatrix2r <- rlefko2(data = cypraw_v1, stageframe = cypframe_raw, 
-#'   year = "all", patch = "all", stages = c("stage3", "stage2", "stage1"),
-#'   size = c("size3added", "size2added"), supplement = cypsupp2r,
-#'   yearcol = "year2", patchcol = "patchid", indivcol = "individ")
-#' 
-#' image3(cypmatrix2r$A, used = 1)
-#' 
 #' @export
 image3.list <- function(mats, used = "all", ...) {
   
@@ -627,22 +508,24 @@ image3.list <- function(mats, used = "all", ...) {
   
   chosen_list <- mats[chosen_mat]
   
-  lapply(chosen_list, function(X) {
-    if (!is.matrix(X)) {
-      stop("Chosen elements include non-matrix objects. Please choose only list elements containing matrix objects.",
-        call. = FALSE)
-    }
-    SparseM::image(SparseM::as.matrix.csr(X), col =c("white", "red"))}
-  )
+  if (is(chosen_list[[1]], "dgCMatrix")) {
+    lapply(chosen_list, function(X) {Matrix::image(X, xlab = "", ylab = "", 
+      sub = "", col.regions = c("white", "red"), lwd = 0,
+      at = c(0, 0.0000000000001, Inf), drop.unused.levels = FALSE)})
+  } else if (is.matrix(chosen_list[[1]])) {
+    lapply(chosen_list, function(X) {Matrix::image(Matrix::Matrix(X, sparse = TRUE),
+      xlab = "", ylab = "", sub = "", col.regions = c("white", "red"), lwd = 0,
+      at = c(0, 0.0000000000001, Inf), drop.unused.levels = FALSE)})
+  } else {
+    stop("Chosen elements include non-matrix objects. Please choose only list
+      elements containing matrix objects.", call. = FALSE)
+  }
 }
 
 #' Create Matrix Image(s) for lefkoSens Object
 #' 
 #' Function \code{image3.lefkoSens} plots matrix images for sensitivity matrices
-#' supplied within \code{lefkoSens} objects. This function operates as a wrapper
-#' the \code{\link[SparseM]{image}()} function in package \code{SparseM},
-#' conducting all necessary conversions and automating image production across
-#' all or just specific matrices.
+#' supplied within \code{lefkoSens} objects.
 #' 
 #' @name image3.lefkoSens
 #' 
@@ -704,52 +587,6 @@ image3.list <- function(mats, used = "all", ...) {
 #' 
 #' image3(ehrlen_sens, used = 1, type = "h")
 #' 
-#' # Cypripedium example
-#' data(cypdata)
-#' 
-#' sizevector <- c(0, 0, 0, 0, 0, 0, 1, 2.5, 4.5, 8, 17.5)
-#' stagevector <- c("SD", "P1", "P2", "P3", "SL", "D", "XSm", "Sm", "Md", "Lg",
-#'   "XLg")
-#' repvector <- c(0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1)
-#' obsvector <- c(0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1)
-#' matvector <- c(0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1)
-#' immvector <- c(0, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0)
-#' propvector <- c(1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)
-#' indataset <- c(0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1)
-#' binvec <- c(0, 0, 0, 0, 0, 0.5, 0.5, 1, 1, 2.5, 7)
-#' 
-#' cypframe_raw <- sf_create(sizes = sizevector, stagenames = stagevector,
-#'   repstatus = repvector, obsstatus = obsvector, matstatus = matvector,
-#'   propstatus = propvector, immstatus = immvector, indataset = indataset,
-#'   binhalfwidth = binvec)
-#' 
-#' cypraw_v1 <- verticalize3(data = cypdata, noyears = 6, firstyear = 2004,
-#'   patchidcol = "patch", individcol = "plantid", blocksize = 4,
-#'   sizeacol = "Inf2.04", sizebcol = "Inf.04", sizeccol = "Veg.04",
-#'   repstracol = "Inf.04", repstrbcol = "Inf2.04", fecacol = "Pod.04",
-#'   stageassign = cypframe_raw, stagesize = "sizeadded", NAas0 = TRUE,
-#'   NRasRep = TRUE)
-#' 
-#' # Here we use supplemental() to provide overwrite and reproductive info
-#' cypsupp2r <- supplemental(stage3 = c("SD", "P1", "P2", "P3", "SL", "D", 
-#'     "XSm", "Sm", "SD", "P1"),
-#'   stage2 = c("SD", "SD", "P1", "P2", "P3", "SL", "SL", "SL", "rep",
-#'     "rep"),
-#'   eststage3 = c(NA, NA, NA, NA, NA, "D", "XSm", "Sm", NA, NA),
-#'   eststage2 = c(NA, NA, NA, NA, NA, "XSm", "XSm", "XSm", NA, NA),
-#'   givenrate = c(0.10, 0.20, 0.20, 0.20, 0.25, NA, NA, NA, NA, NA),
-#'   multiplier = c(NA, NA, NA, NA, NA, NA, NA, NA, 0.5, 0.5),
-#'   type =c(1, 1, 1, 1, 1, 1, 1, 1, 3, 3),
-#'   stageframe = cypframe_raw, historical = FALSE)
-#' 
-#' cypmatrix2r <- rlefko2(data = cypraw_v1, stageframe = cypframe_raw, 
-#'   year = "all", patch = "all", stages = c("stage3", "stage2", "stage1"),
-#'   size = c("size3added", "size2added"), supplement = cypsupp2r,
-#'   yearcol = "year2", patchcol = "patchid", indivcol = "individ")
-#' 
-#' cypsens <- sensitivity3(cypmatrix2r)
-#' image3(cypsens, used = 1, type = "a")
-#' 
 #' @export
 image3.lefkoSens <- function(mats, used = "all", type = "a", ...) {
   
@@ -796,17 +633,21 @@ image3.lefkoSens <- function(mats, used = "all", type = "a", ...) {
     }
   }
   
-  lapply(chosen_list, function(X) {SparseM::image(SparseM::as.matrix.csr(X),
-    col =c("white", "red"))})
+  if (is(chosen_list[[1]], "dgCMatrix")) {
+    lapply(chosen_list, function(X) {Matrix::image(X, xlab = "", ylab = "", 
+      sub = "", col.regions = c("white", "red"), lwd = 0,
+      at = c(0, 0.0000000000001, Inf), drop.unused.levels = FALSE)})
+  } else {
+    lapply(chosen_list, function(X) {Matrix::image(Matrix::Matrix(X, sparse = TRUE),
+      xlab = "", ylab = "", sub = "", col.regions = c("white", "red"), lwd = 0,
+      at = c(0, 0.0000000000001, Inf), drop.unused.levels = FALSE)})
+  }
 }
 
 #' Create Matrix Image(s) for lefkoElas Object
 #' 
 #' Function \code{image3.lefkoElas} plots matrix images for elasticity matrices
-#' supplied within \code{lefkoElas} objects. This function operates as a wrapper
-#' the \code{\link[SparseM]{image}()} function in package \code{SparseM},
-#' conducting all necessary conversions and automating image production across
-#' all or just specific matrices.
+#' supplied within \code{lefkoElas} objects.
 #' 
 #' @name image3.lefkoElas
 #' 
@@ -868,53 +709,6 @@ image3.lefkoSens <- function(mats, used = "all", type = "a", ...) {
 #' 
 #' image3(ehrlen_elas, used = 1, type = "h")
 #' 
-#' # Cypripedium example
-#' data(cypdata)
-#' 
-#' sizevector <- c(0, 0, 0, 0, 0, 0, 1, 2.5, 4.5, 8, 17.5)
-#' stagevector <- c("SD", "P1", "P2", "P3", "SL", "D", "XSm", "Sm", "Md", "Lg",
-#'   "XLg")
-#' repvector <- c(0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1)
-#' obsvector <- c(0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1)
-#' matvector <- c(0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1)
-#' immvector <- c(0, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0)
-#' propvector <- c(1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)
-#' indataset <- c(0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1)
-#' binvec <- c(0, 0, 0, 0, 0, 0.5, 0.5, 1, 1, 2.5, 7)
-#' 
-#' cypframe_raw <- sf_create(sizes = sizevector, stagenames = stagevector,
-#'   repstatus = repvector, obsstatus = obsvector, matstatus = matvector,
-#'   propstatus = propvector, immstatus = immvector, indataset = indataset,
-#'   binhalfwidth = binvec)
-#' 
-#' cypraw_v1 <- verticalize3(data = cypdata, noyears = 6, firstyear = 2004,
-#'   patchidcol = "patch", individcol = "plantid", blocksize = 4,
-#'   sizeacol = "Inf2.04", sizebcol = "Inf.04", sizeccol = "Veg.04",
-#'   repstracol = "Inf.04", repstrbcol = "Inf2.04", fecacol = "Pod.04",
-#'   stageassign = cypframe_raw, stagesize = "sizeadded", NAas0 = TRUE,
-#'   NRasRep = TRUE)
-#' 
-#' # Here we use supplemental() to provide overwrite and reproductive info
-#' cypsupp2r <- supplemental(stage3 = c("SD", "P1", "P2", "P3", "SL", "D", 
-#'     "XSm", "Sm", "SD", "P1"),
-#'   stage2 = c("SD", "SD", "P1", "P2", "P3", "SL", "SL", "SL", "rep",
-#'     "rep"),
-#'   eststage3 = c(NA, NA, NA, NA, NA, "D", "XSm", "Sm", NA, NA),
-#'   eststage2 = c(NA, NA, NA, NA, NA, "XSm", "XSm", "XSm", NA, NA),
-#'   givenrate = c(0.10, 0.20, 0.20, 0.20, 0.25, NA, NA, NA, NA, NA),
-#'   multiplier = c(NA, NA, NA, NA, NA, NA, NA, NA, 0.5, 0.5),
-#'   type =c(1, 1, 1, 1, 1, 1, 1, 1, 3, 3),
-#'   stageframe = cypframe_raw, historical = FALSE)
-#' 
-#' cypmatrix2r <- rlefko2(data = cypraw_v1, stageframe = cypframe_raw, 
-#'   year = "all", patch = "all", stages = c("stage3", "stage2", "stage1"),
-#'   size = c("size3added", "size2added"), supplement = cypsupp2r,
-#'   yearcol = "year2", patchcol = "patchid", indivcol = "individ")
-#' 
-#' cypelas <- elasticity3(cypmatrix2r)
-#' 
-#' image3(cypelas, used = 1, type = "a")
-#' 
 #' @export
 image3.lefkoElas <- function(mats, used = "all", type = "a", ...) {
   
@@ -961,8 +755,15 @@ image3.lefkoElas <- function(mats, used = "all", type = "a", ...) {
     }
   }
   
-  lapply(chosen_list, function(X) {SparseM::image(SparseM::as.matrix.csr(X),
-    col =c("white", "red"))})
+  if (is(chosen_list[[1]], "dgCMatrix")) {
+    lapply(chosen_list, function(X) {Matrix::image(X, xlab = "", ylab = "", 
+      sub = "", col.regions = c("white", "red"), lwd = 0,
+      at = c(0, 0.0000000000001, Inf), drop.unused.levels = FALSE)})
+  } else {
+    lapply(chosen_list, function(X) {Matrix::image(Matrix::Matrix(X, sparse = TRUE),
+      xlab = "", ylab = "", sub = "", col.regions = c("white", "red"), lwd = 0,
+      at = c(0, 0.0000000000001, Inf), drop.unused.levels = FALSE)})
+  }
 }
 
 #' Calculate Difference Matrices Between lefkoMat Objects of Equal Dimensions
@@ -1122,7 +923,7 @@ diff_lM <- function(mpm1, mpm2) {
     return(newmat)
   })
   
-  if (any((mpm1$labels$year2 - mpm2$labels$year2) != 0)) {
+  if (any((mpm1$labels$year2 != mpm2$labels$year2))) {
     warning("Input lefkoMat objects have seemingly different labels objects.",
       call. = FALSE)
   }
@@ -1156,11 +957,23 @@ diff_lM <- function(mpm1, mpm2) {
 #' @param full A logical value indicating whether to include basic data frame
 #' summary information in addition to hfvdata-specific summary information.
 #' Defaults to \code{TRUE}.
+#' @param err_check A logical value indicating whether to check for errors in
+#' stage assignment.
 #' @param ... Other parameters.
 #' 
 #' @return A summary of the object. The first line shows the numbers of
 #' populations, patches, individuals, and time steps. If \code{full = TRUE}, 
 #' then this is followed by a standard data frame summary of the hfv dataset.
+#' If \code{err_check = TRUE}, then a subset of the original data frame input
+#' as \code{object} is exported with only rows showing stage assignment issues.
+#' 
+#' @section Notes:
+#' Stage assignment issue identified by option \code{err_check} fall under two
+#' categories. First, all rows showing \code{NoMatch} as the identified stage
+#' for \code{stage1}, \code{stage2}, or \code{stage3} are identified. Second,
+#' all rows showing \code{stage1 = "NotAlive"} and \code{alive1 = 1},
+#' \code{stage2 = "NotAlive"} and \code{alive2 = 1}, or
+#' \code{stage3 = "NotAlive"} and \code{alive3 = 1} are identified.
 #' 
 #' @examples
 #' data(cypdata)
@@ -1192,7 +1005,10 @@ diff_lM <- function(mpm1, mpm2) {
 #' 
 #' @export
 summary_hfv <- function(object, popid = "popid", patchid = "patchid",
-  individ = "individ", year2id = "year2", full = TRUE, ...) {
+  individ = "individ", year2id = "year2", full = TRUE, err_check = TRUE, ...) {
+  
+  identified_problems <- NULL
+  need_return <- FALSE
   
   demodata <- object
   
@@ -1239,9 +1055,40 @@ summary_hfv <- function(object, popid = "popid", patchid = "patchid",
   writeLines(paste0(totalpatches, grammar_patches, totalindivs, grammar_indivs,
       totalyears, grammar_years))
   
+  if (err_check) {
+    stage1_NoMatches <- which(demodata[, "stage1"] == "NoMatch")
+    stage2_NoMatches <- which(demodata[, "stage2"] == "NoMatch")
+    stage3_NoMatches <- which(demodata[, "stage3"] == "NoMatch")
+    
+    stage1_NotAlive <- which(demodata[, "stage1"] == "NotAlive")
+    stage2_NotAlive <- which(demodata[, "stage2"] == "NotAlive")
+    stage3_NotAlive <- which(demodata[, "stage3"] == "NotAlive")
+    
+    alive1 <- which(demodata[, "alive1"] == 1)
+    alive2 <- which(demodata[, "alive2"] == 1)
+    alive3 <- which(demodata[, "alive3"] == 1)
+    
+    s1_NotA_al <- intersect(stage1_NotAlive, alive1)
+    s2_NotA_al <- intersect(stage2_NotAlive, alive2)
+    s3_NotA_al <- intersect(stage3_NotAlive, alive3)
+    
+    problem_rows <- sort(unique(c(stage1_NoMatches, stage2_NoMatches,
+      stage3_NoMatches, s1_NotA_al, s2_NotA_al, s3_NotA_al)))
+    
+    if (length(problem_rows) > 0) {
+      need_return <- TRUE
+      writeLines(paste0("Problems in stage assignment identified in rows:\n"))
+      print(problem_rows)
+      
+      identified_problems <- demodata[problem_rows,]
+    }
+  }
+  
   if (full) {
     dethonthetoilet <- summary.data.frame(demodata)
     print(dethonthetoilet, digits = 3)
   }
+  
+  if (err_check & need_return) return(identified_problems)
 }
 

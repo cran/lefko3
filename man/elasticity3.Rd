@@ -7,8 +7,9 @@
 elasticity3(mats, ...)
 }
 \arguments{
-\item{mats}{A lefkoMat object, or population projection matrix, for which
-the stable stage distribution is desired.}
+\item{mats}{A lefkoMat object, a population projection matrix, or a list of
+population projection matrices for which the stable stage distribution is
+desired.}
 
 \item{...}{Other parameters.}
 }
@@ -102,7 +103,7 @@ cypsupp2r <- supplemental(stage3 = c("SD", "P1", "P2", "P3", "SL", "D",
   eststage2 = c(NA, NA, NA, NA, NA, "XSm", "XSm", "XSm", NA, NA),
   givenrate = c(0.10, 0.20, 0.20, 0.20, 0.25, NA, NA, NA, NA, NA),
   multiplier = c(NA, NA, NA, NA, NA, NA, NA, NA, 0.5, 0.5),
-  type =c(1, 1, 1, 1, 1, 1, 1, 1, 3, 3),
+  type = c(1, 1, 1, 1, 1, 1, 1, 1, 3, 3),
   stageframe = cypframe_raw, historical = FALSE)
 
 cypmatrix2r <- rlefko2(data = cypraw_v1, stageframe = cypframe_raw, 
@@ -118,5 +119,9 @@ elasticity3(cypmatrix2r)
 
 \code{\link{elasticity3.matrix}()}
 
+\code{\link{elasticity3.dgCMatrix}()}
+
 \code{\link{elasticity3.list}()}
+
+\code{\link{summary.lefkoElas}()}
 }

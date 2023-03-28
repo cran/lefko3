@@ -25,6 +25,7 @@ modelsearch(
   patch = NA,
   year = "year2",
   density = NA,
+  test.density = FALSE,
   sizedist = "gaussian",
   sizebdist = NA,
   sizecdist = NA,
@@ -50,12 +51,16 @@ modelsearch(
   fectime = 2,
   censor = NA,
   age = NA,
+  test.age = FALSE,
   indcova = NA,
   indcovb = NA,
   indcovc = NA,
   random.indcova = FALSE,
   random.indcovb = FALSE,
   random.indcovc = FALSE,
+  test.indcova = FALSE,
+  test.indcovb = FALSE,
+  test.indcovc = FALSE,
   test.group = FALSE,
   show.model.tables = TRUE,
   global.only = FALSE,
@@ -83,7 +88,8 @@ default is \code{"mixed"}, which uses the mixed model approach utilized in
 packages \code{lme4} and \code{glmmTMB}. Other options include \code{"glm"},
 which uses generalized linear modeling assuming that all factors are fixed.}
 
-\item{suite}{This describes the global model for each vital rate estimation,
+\item{suite}{Either a single string value or a vector of 14 strings for each
+vital rate model. Describes the global model for each vital rate estimation,
 and has the following possible values: \code{full}, includes main effects and
 all two-way interactions of size and reproductive status; \code{main},
 includes main effects only of size and reproductive status; \code{size},
@@ -93,7 +99,13 @@ status in historical model); \code{age}, all vital rates estimated with age
 and y-intercepts only; \code{cons}, all vital rates estimated only as
 y-intercepts. If \code{approach = "glm"} and \code{year.as.random = FALSE},
 then year is also included as a fixed effect, and, in the case of
-\code{full}, included in two-way interactions. Defaults to \code{size}.}
+\code{full}, included in two-way interactions. Order of models in the
+string vector if more than 1 value is used is: 1) survival, 2) observation,
+3) primary size, 4) secondary size, 5) tertiary size, 6) reproductive status,
+7) fecundity, 8) juvenile survival, 9) juvenile observation, 10) juvenile
+primary size, 11) juvenile secondary size, 12) juvenile tertiary size, 13)
+juvenile reproductive status, and 14) juvenile maturity status. Defaults to
+\code{size}.}
 
 \item{bestfit}{A variable indicating the model selection criterion for the
 choice of best-fit model. The default is \code{AICc&k}, which chooses the 
@@ -163,6 +175,15 @@ occasion \emph{t}. Defaults to \code{year2}.}
 \item{density}{A text value indicating the name of the variable coding for
 spatial density, should the user wish to test spatial density as a fixed
 factor affecting vital rates. Defaults to \code{NA}.}
+
+\item{test.density}{Either a logical value indicating whether to include
+\code{density} as a fixed categorical variable in linear models, or a logical
+vector of such values for 14 models, in order: 1) survival, 2) observation,
+3) primary size, 4) secondary size, 5) tertiary size, 6) reproductive
+status, 7) fecundity, 8) juvenile survival, 9) juvenile observation,
+10) juvenile primary size, 11) juvenile secondary size, 12) juvenile
+tertiary size, 13) juvenile reproductive status, and 14) juvenile maturity
+status. Defaults to \code{FALSE}.}
 
 \item{sizedist}{The probability distribution used to model primary size.
 Options include \code{"gaussian"} for the Normal distribution (default),
@@ -286,6 +307,15 @@ and lastly followed by occasion \emph{t}-1. Defaults to \code{NA}.}
 is not included in linear models. Should only be used if building Leslie or
 age x stage matrices.}
 
+\item{test.age}{Either a logical value indicating whether to include
+\code{age} as a fixed categorical variable in linear models, or a logical
+vector of such values for 14 models, in order: 1) survival, 2) observation,
+3) primary size, 4) secondary size, 5) tertiary size, 6) reproductive
+status, 7) fecundity, 8) juvenile survival, 9) juvenile observation,
+10) juvenile primary size, 11) juvenile secondary size, 12) juvenile
+tertiary size, 13) juvenile reproductive status, and 14) juvenile maturity
+status. Defaults to \code{FALSE}.}
+
 \item{indcova}{Vector designating the names in occasions \emph{t}+1,
 \emph{t}, and \emph{t}-1 of an individual covariate. Defaults to \code{NA}.}
 
@@ -309,9 +339,41 @@ factor. Defaults to \code{FALSE}.}
 should be treated as a random categorical factor, rather than as a fixed
 factor. Defaults to \code{FALSE}.}
 
-\item{test.group}{A logical value indicating whether to include the
+\item{test.indcova}{Either a logical value indicating whether to include the
+\code{indcova} variable as a fixed categorical variable in linear models, or
+a logical vector of such values for 14 models, in order: 1) survival,
+2) observation, 3) primary size, 4) secondary size, 5) tertiary size,
+6) reproductive status, 7) fecundity, 8) juvenile survival, 9) juvenile
+observation, 10) juvenile primary size, 11) juvenile secondary size,
+12) juvenile tertiary size, 13) juvenile reproductive status, and
+14) juvenile maturity status. Defaults to \code{FALSE}.}
+
+\item{test.indcovb}{Either a logical value indicating whether to include the
+\code{indcovb} variable as a fixed categorical variable in linear models, or
+a logical vector of such values for 14 models, in order: 1) survival,
+2) observation, 3) primary size, 4) secondary size, 5) tertiary size,
+6) reproductive status, 7) fecundity, 8) juvenile survival, 9) juvenile
+observation, 10) juvenile primary size, 11) juvenile secondary size,
+12) juvenile tertiary size, 13) juvenile reproductive status, and
+14) juvenile maturity status. Defaults to \code{FALSE}.}
+
+\item{test.indcovc}{Either a logical value indicating whether to include the
+\code{indcovc} variable as a fixed categorical variable in linear models, or
+a logical vector of such values for 14 models, in order: 1) survival,
+2) observation, 3) primary size, 4) secondary size, 5) tertiary size,
+6) reproductive status, 7) fecundity, 8) juvenile survival, 9) juvenile
+observation, 10) juvenile primary size, 11) juvenile secondary size,
+12) juvenile tertiary size, 13) juvenile reproductive status, and
+14) juvenile maturity status. Defaults to \code{FALSE}.}
+
+\item{test.group}{Either a logical value indicating whether to include the
 \code{group} variable from the input \code{stageframe} as a fixed categorical
-variable in linear models. Defaults to \code{FALSE}.}
+variable in linear models, or a logical vector of such values for 14 models,
+in order: 1) survival, 2) observation, 3) primary size, 4) secondary size,
+5) tertiary size, 6) reproductive status, 7) fecundity, 8) juvenile survival,
+9) juvenile observation, 10) juvenile primary size, 11) juvenile secondary
+size, 12) juvenile tertiary size, 13) juvenile reproductive status, and
+14) juvenile maturity status. Defaults to \code{FALSE}.}
 
 \item{show.model.tables}{If set to TRUE, then includes full modeling tables
 in the output. Defaults to \code{TRUE}.}
@@ -320,7 +382,7 @@ in the output. Defaults to \code{TRUE}.}
 evaluated. Defaults to \code{FALSE}.}
 
 \item{accuracy}{A logical value indicating whether to test accuracy of
-models. See \code{Notes} section for details on hoew accuracy is assessed.
+models. See \code{Notes} section for details on how accuracy is assessed.
 Defaults to \code{TRUE}.}
 
 \item{quiet}{May be a logical value, or any one of the strings \code{"yes"},
@@ -430,6 +492,19 @@ in other functions within this package.
 }
 \section{Notes}{
 
+When \code{modelsearch()} is called, it first trims the dataset down to just
+the variables that will be used, and just data for complete cases in those
+variables. It then builds global models for all vital rates and runs them. If
+a global model fails, then the function proceeds by dropping any two-way
+interactions and trying again. If this fails, then the function will continue
+to attempt dropping terms, first patch, then year, then individual
+covariates, then combinatons of the above, and finally individual identity.
+If these attempts fail and the approach used is \code{mixed}, then the
+function will try running a glm version of the original failed model, and use
+that as a global model if it runs properly. Finally, if all attempts fail,
+then the function returns a \code{1} to allow model building assuming a
+constant rate or probability.
+
 Setting \code{suite = "cons"} prevents the inclusion of size and reproductive
 status as fixed, independent factors in modeling. However, it does not
 prevent any other terms from being included. Density, age, individual
@@ -452,15 +527,6 @@ functions for further information. Any response term that is invariable in
 the dataset will lead to a best-fit model for that response represented by a
 single constant value.
 
-When \code{modelsearch()} is called, it first builds global models for all
-vital rates and runs them. If a global model fails, then the function
-proceeds by dropping any two-way interactions and trying again. If this
-fails, then function will continue to drop key terms (typically random terms
-or individual covariates) until something rune. The last attempt if running a
-mixed set of models is to try a glm version of the original failed model, and
-use that as a global model if it runs properly. Finally, if all attempts
-fail, then the function returns a \code{1}.
-
 Exhaustive model building and selection proceeds via the
 \code{\link[MuMIn]{dredge}()} function in package \code{MuMIn}. This function
 is verbose, so that any errors and warnings developed during model building,
@@ -471,11 +537,11 @@ is used for model dredging (see \link[MuMIn]{dredge}()), and errors and
 warnings during dredging can be interpreted using the documentation for that
 package. Errors occurring during dredging lead to the adoption of the global
 model as the best-fit, and the user should view all logged errors and
-warnings to determine the best way to proceed. The \code{quiet = TRUE} option
-can be used to silence dredge warnings, but users should note that automated
-model selection can be viewed as a black box, and so care should be taken to
-ensure that the models run make biological sense, and that model quality is
-prioritized.
+warnings to determine the best way to proceed. The \code{quiet = TRUE} and
+\code{quiet = "partial"} options can be used to silence dredge warnings, but
+users should note that automated model selection can be viewed as a black
+box, and so care should be taken to ensure that the models run make
+biological sense, and that model quality is prioritized.
 
 Exhaustive model selection through dredging works best with larger datasets
 and fewer tested parameters. Setting \code{suite = "full"} may initiate a
@@ -483,7 +549,13 @@ dredge that takes a dramatically long time, particularly if the model is
 historical, individual covariates are used, or a zero-inflated distribution
 is assumed. In such cases, the number of models built and tested will run at
 least in the millions. Small datasets will also increase the error associated
-with these tests, leading to adoption of simpler models overall.
+with these tests, leading to adoption of simpler models overall. Note also
+that zero-inflated models are processed as two models, and so include twice
+the assumed number of parameters. If \code{suite = "full"}, then this
+function will switch to a main effects global model for the zero-inflated
+parameter models if the total number of parameters to test rises above the
+limits imposed by the \code{\link[MuMIn]{dredge}()} function in package
+\code{MuMIn}.
 
 Accuracy of vital rate models is calculated differently depending on vital
 rate and assumed distribution. For all vital rates assuming a binomial
@@ -492,7 +564,9 @@ and juvenile version of these, accuracy is calculated as the percent of
 predicted responses equal to actual responses. In all other models, accuracy
 is actually assessed as a simple R-squared in which the observed response
 values per data subset are compared to the predicted response values
-according to each best-fit model.
+according to each best-fit model. Note that some situations in which factor
+variables are used may result in failure to assess accuracy. In these cases,
+function \code{modelsearch()} simply yields \code{NA} values.
 
 Care must be taken to build models that test the impacts of state in occasion
 \emph{t}-1 for historical models, and that do not test these impacts for
@@ -529,11 +603,18 @@ Users building vital rate models for Leslie matrices must set
 than the default, because only survival and fecundity should be estimated in
 these cases. Also, the \code{suite} setting can be set to either \code{age}
 or \code{cons}, as the results will be exactly the same.
+
+Users wishing to test age, density, group, or individual covariates, must
+include \code{test.age = TRUE}, \code{test.density = TRUE},
+\code{test.group = TRUE}, or \code{test.indcova = TRUE} (or
+\code{test.indcovb = TRUE} or \code{test.indcovc = TRUE}, whichever is most
+appropriate), respectively, in addition to stipulating the name of the
+variable within the dataset. The default for these options is always
+\code{FALSE}.
 }
 
 \examples{
 \donttest{
-# Lathyrus example
 data(lathyrus)
 
 sizevector <- c(0, 4.6, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 1, 2, 3, 4, 5, 6, 7, 8,
@@ -589,8 +670,6 @@ lathsupp3 <- supplemental(stage3 = c("Sd", "Sd", "Sdl", "Sdl", "mat", "Sd", "Sdl
 lathmat3ln <- flefko3(year = "all", patch = "all", stageframe = lathframeln, 
   modelsuite = lathmodelsln3, data = lathvertln, supplement = lathsupp3, 
   reduce = FALSE)
-
-summary(lathmat3ln)
 }
 
 }

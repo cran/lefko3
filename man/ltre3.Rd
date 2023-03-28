@@ -4,77 +4,134 @@
 \alias{ltre3}
 \title{Conduct a Life Table Response Experiment}
 \usage{
-ltre3(mats, refmats, ...)
+ltre3(
+  mats,
+  refmats = NA,
+  ref = NA,
+  stochastic = FALSE,
+  steps = 10000,
+  burnin = 3000,
+  time_weights = NA,
+  force_sparse = "auto",
+  rseed = NA,
+  append_mats = FALSE,
+  sna_ltre = FALSE,
+  ...
+)
 }
 \arguments{
-\item{mats}{A lefkoMat object, population projection matrix, or list of
-population projection matrices.}
+\item{mats}{An object of class \code{lefkoMat}.}
 
 \item{refmats}{A reference lefkoMat object, or matrix, for use as the
-control. If missing, then is set to the same object as \code{mats}.}
+control. Default is \code{NA}, which sets to the same object as \code{mats}.}
+
+\item{ref}{A numeric value indicating which matrix or matrices in
+\code{refmats} to use as the control. The numbers used must correspond to the
+number of the matrices in the \code{labels} element of the associated
+\code{lefkoMat} object. The default setting, \code{NA}, uses all entries in
+\code{refmats}.}
+
+\item{stochastic}{A logical value determining whether to conduct a
+deterministic (\code{FALSE}) or stochastic (\code{TRUE}) elasticity analysis.
+Defaults to \code{FALSE}.}
+
+\item{steps}{The number of occasions to project forward in stochastic
+simulation. Defaults to \code{10000}.}
+
+\item{burnin}{The number of initial steps to ignore in stochastic projection
+when calculating stochastic elasticities. Must be smaller than \code{steps}.
+Defaults to \code{3000}.}
+
+\item{time_weights}{Numeric vector denoting the probabilistic weightings of
+all matrices. Defaults to equal weighting among matrices.}
+
+\item{force_sparse}{A string indicating whether to use sparse matrix encoding
+(\code{"yes"}) or dense matrix encoding (\code{"no"}). Defaults to
+\code{"auto"}. Can also be set to a logical value of \code{TRUE} or
+\code{FALSE}.}
+
+\item{rseed}{Optional numeric value corresponding to the random seed for
+stochastic simulation.}
+
+\item{append_mats}{A logical value denoting whether to include the original
+\code{A}, \code{U}, and \code{F} matrices in the returned \code{lefkoLTRE}
+object. Defaults to \code{FALSE}.}
+
+\item{sna_ltre}{A logical value indicating whether to treat stochastic LTRE
+via the sna-LTRE approach from Davison et al. (2019) (\code{TRUE}), or the
+stochastic LTRE approximation from Davison et al. (2010) (\code{FALSE}).
+Defaults to \code{FALSE}.}
 
 \item{...}{Other parameters.}
 }
 \value{
-The value returned depends on the class of the \code{mats} argument.
+This function returns an object of class \code{lefkoLTRE}. This
+includes a list of LTRE matrices as object \code{cont_mean} if a
+deterministic LTRE is called for, or a list of mean-value LTRE matrices as
+object \code{cont_mean} and a list of SD-value LTRE matrices as object
+\code{cont_sd} if a stochastic LTRE is called for. If a small-noise
+approximation LTRE (SNA-LTRE) is performed, then the output includes six
+objects: \code{cont_mean}, which provides the contributions of shifts in mean
+matrix elements; \code{cont_elas}, which provides the contributions of shifts
+in the elasticities of matrix elements; \code{cont_cv}, which provides the
+contributions of temporal variation in matrix elements; \code{cont_corr},
+which provides the contributions of temporal correlations in matrix elements;
+\code{r_values_m}, which provides a vector of log deterministic lambda values
+for treatment populations; and \code{r_values_ref}, which provides the log
+deterministic lambda of the mean reference matrix.This is followed by the
+stageframe as object \code{ahstages}, the order of historical stages as
+object \code{hstages}, the age-by-stage order as object \code{agestages}, the
+order of matrices as object \code{labels}, and, if requested, the original A,
+U, and F matrices.
 }
 \description{
-\code{ltre3()} is a generic function that returns life table response
-experiment (LTRE) or stochastic LTRE matrices for the input projection
-matrices.
+\code{ltre3()} returns a set of matrices of one-way LTRE (life table response
+experiment), stochastic LTRE (sLTRE) matrices, or small noise approximation
+LTRE (sna-LTRE) contributions.
 }
 \section{Notes}{
 
 Deterministic LTRE is one-way, fixed, and based on the sensitivities of the
 matrix midway between each input matrix and the reference matrix, per Caswell
 (2001, Matrix Population Models, Sinauer Associates, MA, USA). Stochastic
-LTRE is per Davison et al. (2010, doi: 10.1111/j.1365-2745.2009.01611.x).
+LTRE is performed via two methods. The stochastic LTRE approximation is
+simulated per Davison et al. (2010) Journal of Ecology 98:255-267
+(doi: 10.1111/j.1365-2745.2009.01611.x). The small noise approximation
+(sna-LTRE) is analyzed per Davison et al. (2019) Ecological Modelling 408:
+108760 (doi: 10.1016/j.ecolmodel.2019.108760).
+
+All stochastic and small noise approximation LTREs conducted without
+reference matrices are conducted as spatial tests of the population dynamics
+among patches.
+
+Default behavior for stochastic LTRE uses the full population provided in
+\code{mats} as the reference if no \code{refmats} and \code{ref} is provided.
+If no \code{refmats} is provided but \code{ref} is, then the matrices noted
+in \code{ref} are used as the reference matrix set. Year and patch order is
+utilized from object \code{mats}, but not from object \code{refmats}, in
+which each matrix is assumed to represent a different year from one
+population. This function cannot currently handle multiple populations within
+the same \code{mats} object (although such analysis is possible if these
+populations are designated as patches instead).
+
+If \code{force_sparse = "auto"}, the default, then sparse matrix encoding
+will be used if the size of the input matrices is at least 50 columns by 50
+rows for deterministic and stochastic LTREs and 10 columns by 10 rows for
+small noise approximation LTREs, in all cases as long as 50\% of the elements
+in the first matrix are non-zero.
+
+Note that stochastic LTREs do not test for the impact of temporal change in
+vital rates. An MPM with a single population, a single patch, and only annual
+matrices will produce contributions of 0 to stochastic \eqn{\lambda}.
+
+Speed can sometimes be increased by shifting from automatic sparse matrix
+determination to forced dense or sparse matrix projection. This will most
+likely occur when matrices have between 10 and 300 rows and columns.
+Defaults work best when matrices are very small and dense, or very large and
+sparse.
 }
 
 \examples{
-# Lathyrus example
-data(lathyrus)
-
-sizevector <- c(0, 100, 13, 127, 3730, 3800, 0)
-stagevector <- c("Sd", "Sdl", "VSm", "Sm", "VLa", "Flo", "Dorm")
-repvector <- c(0, 0, 0, 0, 0, 1, 0)
-obsvector <- c(0, 1, 1, 1, 1, 1, 0)
-matvector <- c(0, 0, 1, 1, 1, 1, 1)
-immvector <- c(1, 1, 0, 0, 0, 0, 0)
-propvector <- c(1, 0, 0, 0, 0, 0, 0)
-indataset <- c(0, 1, 1, 1, 1, 1, 1)
-binvec <- c(0, 100, 11, 103, 3500, 3800, 0.5)
-
-lathframe <- sf_create(sizes = sizevector, stagenames = stagevector,
-  repstatus = repvector, obsstatus = obsvector, matstatus = matvector,
-  immstatus = immvector, indataset = indataset, binhalfwidth = binvec,
-  propstatus = propvector)
-
-lathvert <- verticalize3(lathyrus, noyears = 4, firstyear = 1988,
-  patchidcol = "SUBPLOT", individcol = "GENET", blocksize = 9,
-  juvcol = "Seedling1988", sizeacol = "Volume88", repstracol = "FCODE88",
-  fecacol = "Intactseed88", deadacol = "Dead1988",
-  nonobsacol = "Dormant1988", stageassign = lathframe, stagesize = "sizea",
-  censorcol = "Missing1988", censorkeep = NA, censor = TRUE)
-
-lathsupp3 <- supplemental(stage3 = c("Sd", "Sd", "Sdl", "Sdl", "Sd", "Sdl", "mat"),
-  stage2 = c("Sd", "Sd", "Sd", "Sd", "rep", "rep", "Sdl"),
-  stage1 = c("Sd", "rep", "Sd", "rep", "npr", "npr", "Sd"),
-  eststage3 = c(NA, NA, NA, NA, NA, NA, "mat"),
-  eststage2 = c(NA, NA, NA, NA, NA, NA, "Sdl"),
-  eststage1 = c(NA, NA, NA, NA, NA, NA, "NotAlive"),
-  givenrate = c(0.345, 0.345, 0.054, 0.054, NA, NA, NA),
-  multiplier = c(NA, NA, NA, NA, 0.345, 0.054, NA),
-  type = c(1, 1, 1, 1, 3, 3, 1), type_t12 = c(1, 2, 1, 2, 1, 1, 1),
-  stageframe = lathframe, historical = TRUE)
-
-ehrlen3 <- rlefko3(data = lathvert, stageframe = lathframe, year = "all", 
-  stages = c("stage3", "stage2", "stage1"), supplement = lathsupp3,
-  yearcol = "year2", indivcol = "individ")
-
-ltre3(ehrlen3)
-
-# Cypripedium example
 data(cypdata)
 
 sizevector <- c(0, 0, 0, 0, 0, 0, 1, 2.5, 4.5, 8, 17.5)
@@ -116,11 +173,9 @@ cypmatrix2r <- rlefko2(data = cypraw_v1, stageframe = cypframe_raw,
   size = c("size3added", "size2added"), supplement = cypsupp2r,
   yearcol = "year2", patchcol = "patchid", indivcol = "individ")
 
-ltre3(cypmatrix2r)
+ltre3(cypmatrix2r, sna_ltre = TRUE)
 
 }
 \seealso{
-\code{\link{ltre3.lefkoMat}()}
-
 \code{\link{summary.lefkoLTRE}()}
 }

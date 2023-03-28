@@ -2,7 +2,7 @@
 % Please edit documentation in R/RcppExports.R
 \name{density_input}
 \alias{density_input}
-\title{Create a Data Frame of Density Dependence Relationships in Matrix Elements}
+\title{Set Density Dependence Relationships in Matrix Elements}
 \usage{
 density_input(
   mpm,
@@ -114,9 +114,10 @@ Function \code{density_input()} provides all necessary data to incorporate
 density dependence into a \code{lefkoMat} object, a list of matrices, or a
 single matrix. Four forms of density dependence are allowed, including the
 Ricker function, the Beverton-Holt function, the Usher function, and the
-logistic function. In each case, density must have an effect with at least a
-one time-step delay (see Notes). The resulting data frame provides a guide
-for other \code{lefko3} functions to modify matrix elements by density.
+logistic function. In each case, density must have an effect with a delay of
+at least one time-step (see Notes). The resulting data frame provides a
+guide for other \code{lefko3} functions to modify matrix elements by
+density.
 }
 \section{Notes}{
 
@@ -153,7 +154,6 @@ modified.
 
 \examples{
 \donttest{
-# Lathyrus example
 data(lathyrus)
 
 sizevector <- c(0, 100, 13, 127, 3730, 3800, 0)

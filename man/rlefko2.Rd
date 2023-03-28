@@ -8,27 +8,32 @@ rlefko2(
   data,
   stageframe,
   year = "all",
-  pop = NA,
-  patch = NA,
+  pop = NULL,
+  patch = NULL,
   censor = FALSE,
-  stages = NA,
+  stages = NULL,
   alive = c("alive3", "alive2"),
+  obsst = NULL,
   size = c("sizea3", "sizea2"),
-  sizeb = c(NA, NA),
-  sizec = c(NA, NA),
+  sizeb = NULL,
+  sizec = NULL,
   repst = c("repstatus3", "repstatus2"),
   matst = c("matstatus3", "matstatus2"),
   fec = c("feca3", "feca2"),
   supplement = NULL,
   repmatrix = NULL,
   overwrite = NULL,
-  yearcol = NA,
-  popcol = NA,
-  patchcol = NA,
-  indivcol = NA,
-  censorcol = NA,
+  yearcol = NULL,
+  popcol = NULL,
+  patchcol = NULL,
+  indivcol = NULL,
+  censorcol = NULL,
   censorkeep = 0,
-  reduce = FALSE
+  NRasRep = FALSE,
+  reduce = FALSE,
+  simple = FALSE,
+  err_check = FALSE,
+  sparse_output = FALSE
 )
 }
 \arguments{
@@ -70,17 +75,22 @@ noted in the associated \code{stageframe}.}
 as alive (\code{1}) or dead (\code{0}) in occasions \emph{t}+1 and \emph{t},
 respectively.}
 
+\item{obsst}{A vector of names of binomial variables corresponding to
+observation status in occasions \emph{t}+1, \emph{t}, and \emph{t}-1,
+respectively. Defaults to \code{NULL}, in which case observation status is
+not used.}
+
 \item{size}{A vector of names of variables coding the primary size variable
 in occasions \emph{t}+1 and \emph{t}, respectively. Defaults to
 \code{c("sizea3", "sizea2")}.}
 
 \item{sizeb}{A vector of names of variables coding the secondary size
 variable in occasions \emph{t}+1 and \emph{t}, respectively. Defaults to
-\code{c(NA, NA)}.}
+\code{NULL}, in which case this variable is not used.}
 
 \item{sizec}{A vector of names of variables coding the tertiary size
 variable in occasions \emph{t}+1 and \emph{t}, respectively. Defaults to
-\code{c(NA, NA)}.}
+\code{NULL}, in which case this variable is not used.}
 
 \item{repst}{A vector of names of variables coding reproductive status in
 occasions \emph{t}+1 and \emph{t}, respectively. Defaults to 
@@ -138,10 +148,26 @@ status. Only needed if \code{censor = TRUE}.}
 \item{censorkeep}{The value of the censor variable denoting data elements to
 keep. Defaults to \code{0}.}
 
-\item{reduce}{A logical value denoting whether to remove historical stages
+\item{NRasRep}{If \code{data} does not include stage assignments, then this
+option determines whether non-reproductive and reproductive individuals
+should be lumped into the same stages. Defaults to \code{FALSE}.}
+
+\item{reduce}{A logical value denoting whether to remove ahistorical stages
 associated with only zero transitions. These are removed only if the
 respective row and column sums in ALL matrices estimated equal 0. Defaults to
 \code{FALSE}.}
+
+\item{simple}{A logical value indicating whether to produce \code{A},
+\code{U}, and \code{F} matrices, or only the latter two. Defaults to
+\code{FALSE}, in which case all three are output.}
+
+\item{err_check}{A logical value indicating whether to append extra
+information used in matrix calculation within the output list. Defaults to
+\code{FALSE}.}
+
+\item{sparse_output}{A logical value indicating whether to output matrices
+in sparse format. Defaults to \code{FALSE}, in which case all matrices are
+output in standard matrix format.}
 }
 \value{
 If all inputs are properly formatted, then this function will return
@@ -150,11 +176,14 @@ projection model and all of its metadata. Its structure is a list with the
 following elements:
 
 \item{A}{A list of full projection matrices in order of sorted populations,
-patches, and occasions. All matrices output in the \code{matrix} class.}
+patches, and occasions. All matrices output in the \code{matrix} class, or in
+the \code{dgCMatrix} class from the \code{Matrix} package if sparse.}
 \item{U}{A list of survival transition matrices sorted as in \code{A}. All 
-matrices output in the \code{matrix} class.}
+matrices output in the \code{matrix} class, or in the \code{dgCMatrix} class
+from the \code{Matrix} package if sparse.}
 \item{F}{A list of fecundity matrices sorted as in \code{A}. All matrices 
-output in the \code{matrix} class.}
+output in the \code{matrix} class, or in the \code{dgCMatrix} class from the
+\code{Matrix} package if sparse.}
 \item{hstages}{A data frame matrix showing the pairing of ahistorical stages
 used to create historical stage pairs. Set to NA for ahistorical matrices.}
 \item{agestages}{A data frame showing age-stage pairs. In this function, it
@@ -164,10 +193,12 @@ ahistorical stages, in the form of a modified stageframe that includes
 status as an entry stage through reproduction.}
 \item{labels}{A data frame giving the population, patch, and year of each 
 matrix in order.}
-\item{matrixqc}{A short vector describing the number of non-zero elements
-in \code{U} and \code{F} matrices, and the number of annual matrices.}
 \item{dataqc}{A vector showing the numbers of individuals and rows in the
 vertical dataset used as input.}
+\item{matrixqc}{A short vector describing the number of non-zero elements in
+\code{U} and \code{F} matrices, and the number of annual matrices.}
+\item{modelqc}{This is the \code{qc} portion of the \code{modelsuite} input
+in function-based MPMs. Empty in this function.}
 }
 \description{
 Function \code{rlefko2()} returns raw ahistorical MPMs, including the
@@ -246,8 +277,6 @@ ehrlen2 <- rlefko2(data = lathvert, stageframe = lathframe, year = "all",
   stages = c("stage3", "stage2"), supplement = lathsupp2, yearcol = "year2",
   indivcol = "individ")
 
-summary(ehrlen2)
-
 # Cypripedium example
 data(cypdata)
 
@@ -291,10 +320,10 @@ cypmatrix2r <- rlefko2(data = cypraw_v1, stageframe = cypframe_raw,
   size = c("size3added", "size2added"), supplement = cypsupp2r,
   yearcol = "year2", patchcol = "patchid", indivcol = "individ")
 
-cypmatrix2r$A[[1]]
-
 }
 \seealso{
+\code{\link{mpm_create}()}
+
 \code{\link{flefko3}()}
 
 \code{\link{flefko2}()}

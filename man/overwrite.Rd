@@ -83,9 +83,12 @@ fecundity rate (2).}
 \code{overwrite()} returns a data frame describing which particular
 transitions within an ahistorical or historical projection matrix to
 overwrite with either given rates and probabilities, or other estimated
-transitions.
+transitions. This function is now deprecated in favor of function
+\code{\link{supplemental}()}.
 }
 \section{Notes}{
+
+This function is deprecated. Please use \code{\link{supplemental}()}.
 
 Entries in \code{stage3}, \code{stage2}, and \code{stage1} can include
 abbreviations for groups of stages. Use \code{rep} if all reproductive stages

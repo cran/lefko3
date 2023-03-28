@@ -217,7 +217,6 @@ anth_lefkoMat <- create_lM(mats_list, anthframe, hstages = NA, historical = FALS
   
 smaller_anth_lM <- subset_lM(anth_lefkoMat, patch = c(1, 2, 3), 
   year = c(1, 2))
-smaller_anth_lM
 
 }
 \seealso{

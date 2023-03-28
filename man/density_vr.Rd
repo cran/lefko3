@@ -2,7 +2,7 @@
 % Please edit documentation in R/popchar.R
 \name{density_vr}
 \alias{density_vr}
-\title{Create a Data Frame of Density Dependence Relationships in Vital Rates}
+\title{Set Density Dependence Relationships in Vital Rates}
 \usage{
 density_vr(
   density_yn = c(FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE,
@@ -105,7 +105,6 @@ modified.
 
 \examples{
 \donttest{
-# Lathyrus projection example with historical matrices
 data(lathyrus)
 
 sizevector <- c(0, 4.6, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 1, 2, 3, 4, 5, 6, 7, 8,
@@ -144,7 +143,7 @@ lathmodelsln3 <- modelsearch(lathvertln, historical = TRUE,
   vitalrates = c("surv", "obs", "size", "repst", "fec"), juvestimate = "Sdl",
   bestfit = "AICc&k", sizedist = "gaussian", fecdist = "poisson", 
   indiv = "individ", patch = "patchid", year = "year2", year.as.random = TRUE,
-  patch.as.random = TRUE, show.model.tables = TRUE, quiet = TRUE)
+  patch.as.random = TRUE, show.model.tables = TRUE, quiet = "partial")
 
 lathsupp3 <- supplemental(stage3 = c("Sd", "Sd", "Sdl", "Sdl", "mat", "Sd", "Sdl"), 
   stage2 = c("Sd", "Sd", "Sd", "Sd", "Sdl", "rep", "rep"),
@@ -176,7 +175,7 @@ e3d_vr <- density_vr(density_yn = dyn7, style = dst7, alpha = dal7,
 
 trial7_dvr <- f_projection3(format = 1, data = lathvertln,
   modelsuite = lathmodelsln3, stageframe = lathframeln, nreps = 2,
-  times = 1000, stochastic = TRUE, standardize = FALSE, growthonly = TRUE,
+  times = 100, stochastic = TRUE, standardize = FALSE, growthonly = TRUE,
   integeronly = FALSE, substoch = 0, sp_density = 0, start_frame = e3m_sv,
   density_vr = e3d_vr)
 summary(trial7_dvr)

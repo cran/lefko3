@@ -7,7 +7,9 @@
 repvalue3(mats, ...)
 }
 \arguments{
-\item{mats}{A lefkoMat object, or population projection matrix.}
+\item{mats}{A lefkoMat object, a population projection matrix, or a list of
+population projection matrices for which the reproductive value vector is
+desired.}
 
 \item{...}{Other parameters.}
 }
@@ -118,4 +120,8 @@ repvalue3(cypmatrix2r, stochastic = TRUE)
 \code{\link{repvalue3.lefkoMat}()}
 
 \code{\link{repvalue3.matrix}()}
+
+\code{\link{repvalue3.dgCMatrix}()}
+
+\code{\link{repvalue3.list}()}
 }

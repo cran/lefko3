@@ -2,11 +2,11 @@
 % Please edit documentation in R/datamanag.R
 \name{create_lM}
 \alias{create_lM}
-\title{Create lefkoMat Object from Given Input Matrices}
+\title{Create lefkoMat Object from Given Input Matrices or an MPM Database}
 \usage{
 create_lM(
   mats,
-  stageframe,
+  stageframe = NULL,
   hstages = NA,
   agestages = NA,
   historical = FALSE,
@@ -15,11 +15,14 @@ create_lM(
   entrystage = 1,
   poporder = 1,
   patchorder = 1,
-  yearorder = NA
+  yearorder = NA,
+  matrix_id = NULL,
+  add_FC = TRUE
 )
 }
 \arguments{
-\item{mats}{A list of A matrices.}
+\item{mats}{A list of A matrices, or, if importing from a matrix database
+such as COMPADRE or COMADRE, then the object holding the database.}
 
 \item{stageframe}{A stageframe describing all stages utilized.}
 
@@ -52,6 +55,15 @@ Defaults to \code{1}, which corresponds to the first stage in the stageframe.}
 \item{yearorder}{The order of monitoring occasions in the list supplied in
 object \code{mats}. Defaults to NA, which leads to each matrix within each
 population-patch combination being a different monitoring occasion.}
+
+\item{matrix_id}{The values of \code{MatrixID} from the used database
+corresponding to the matrices to import, if importing from a database. Not
+used if importing a list of matrices.}
+
+\item{add_FC}{A logical value indicating whether to sum the \code{matF} and
+\code{matC} matrices to produce the \code{F} matrix. If \code{FALSE}, then
+only uses the \code{matF} matrix. Only used if importing from the COMPADRE or
+COMADRE database. Defaults to \code{TRUE}.}
 }
 \value{
 A \code{lefkoMat} object incorporating the matrices input in object
@@ -64,9 +76,10 @@ function.
 }
 \description{
 Function \code{create_lM()} creates lefkoMat objects from supplied matrices
-and extra information.
+and extra information, or from a supplied MPM database such as COMPADRE or
+COMADRE.
 }
-\section{Notes}{
+\section{Notes for importing lists of matrices}{
 
 U and F decomposition assumes that elements holding fecundity values are
 to be interpreted solely as fecundity rates. Users wishing to split these
@@ -81,6 +94,28 @@ given in the equivalently named variable in the \code{stageframe}; and
 \code{age}, which of course gives the age associated with the stage at that
 time. The number of rows must be equal to the number of rows and columns of
 each entered matrix.
+}
+
+\section{Notes for importing from COMPADRE or COMADRE}{
+
+For this function to operate, users must have either the COMPADRE database
+or the COMADRE database loaded into the global environment. Note that the
+sample databases supplied within package \code{Rcompadre} will not work with
+this function.
+
+This function does not and cannot replace the wonderful tools offered to
+explore the COMPADRE and COMADRE packages. Please see package
+\code{Rcompadre} to use those tools. Note that function \code{import_Com()}
+has no relationship to the \code{Rcompadre} development team.
+
+Function \code{import_Com()} requires that the dimensions of all matrices
+imported into a single \code{lefkoMat} object be equal.
+
+The reproductive and maturity status of each stage is determined by patterns
+assessed within the \code{F} matrices. Users should check that these values
+make sense.
+
+Stage names may be edited manually afterward.
 }
 
 \examples{
@@ -137,134 +172,14 @@ XE5 <- matrix(c(0, 0, 2.85, 3.99,
 0, 0, 0, 0,
 0.416666667, 0.1, 0, 0.1), 4, 4, byrow = TRUE)
 
-# POPN F 2003-2004
-XF3 <- matrix(c(0, 0, 1.815, 7.058333333,
-0.075949367, 0, 0.05, 0.083333333,
-0.139240506, 0, 0, 0.25,
-0.075949367, 0, 0, 0.083333333), 4, 4, byrow = TRUE)
+mats_list <- list(XC3, XC4, XC5, XE3, XE4, XE5)
+yr_ord <- c(1, 2, 3, 1, 2, 3)
+pch_ord <- c(1, 1, 1, 2, 2, 2)
 
-XF4 <- matrix(c(0, 0, 1.233333333, 7.4,
-0.223880597, 0, 0.111111111, 0.142857143,
-0.134328358, 0.272727273, 0.166666667, 0.142857143,
-0.119402985, 0.363636364, 0.055555556, 0.142857143), 4, 4, byrow = TRUE)
-
-XF5 <- matrix(c(0, 0, 1.06, 3.372727273,
-0.073170732, 0.025, 0.033333333, 0,
-0.036585366, 0.15, 0.1, 0.136363636,
-0.06097561, 0.225, 0.166666667, 0.272727273), 4, 4, byrow = TRUE)
-
-# POPN G 2003-2004
-XG3 <- matrix(c(0, 0, 0.245454545, 2.1,
-0, 0, 0.045454545, 0,
-0.125, 0, 0.090909091, 0,
-0.125, 0, 0.090909091, 0.333333333), 4, 4, byrow = TRUE)
-
-XG4 <- matrix(c(0, 0, 1.1, 1.54,
-0.111111111, 0, 0, 0,
-0, 0, 0, 0,
-0.111111111, 0, 0, 0), 4, 4, byrow = TRUE)
-
-XG5 <- matrix(c(0, 0, 0, 1.5,
-0, 0, 0, 0,
-0.090909091, 0, 0, 0,
-0.545454545, 0.5, 0, 0.5), 4, 4, byrow = TRUE)
-
-# POPN L 2003-2004
-XL3 <- matrix(c(0, 0, 1.785365854, 1.856521739,
-0.128571429, 0, 0, 0.010869565,
-0.028571429, 0, 0, 0,
-0.014285714, 0, 0, 0.02173913), 4, 4, byrow = TRUE)
-
-XL4 <- matrix(c(0, 0, 14.25, 16.625,
-0.131443299, 0.057142857, 0, 0.25,
-0.144329897, 0, 0, 0,
-0.092783505, 0.2, 0, 0.25), 4, 4, byrow = TRUE)
-
-XL5 <- matrix(c(0, 0, 0.594642857, 1.765909091,
-0, 0, 0.017857143, 0,
-0.021052632, 0.018518519, 0.035714286, 0.045454545,
-0.021052632, 0.018518519, 0.035714286, 0.068181818), 4, 4, byrow = TRUE)
-
-# POPN O 2003-2004
-XO3 <- matrix(c(0, 0, 11.5, 2.775862069,
-0.6, 0.285714286, 0.333333333, 0.24137931,
-0.04, 0.142857143, 0, 0,
-0.16, 0.285714286, 0, 0.172413793), 4, 4, byrow = TRUE)
-
-XO4 <- matrix(c(0, 0, 3.78, 1.225,
-0.28358209, 0.171052632, 0, 0.166666667,
-0.084577114, 0.026315789, 0, 0.055555556,
-0.139303483, 0.447368421, 0, 0.305555556), 4, 4, byrow = TRUE)
-
-XO5 <- matrix(c(0, 0, 1.542857143, 1.035616438,
-0.126984127, 0.105263158, 0.047619048, 0.054794521,
-0.095238095, 0.157894737, 0.19047619, 0.082191781,
-0.111111111, 0.223684211, 0, 0.356164384), 4, 4, byrow = TRUE)
-
-# POPN Q 2003-2004
-XQ3 <- matrix(c(0, 0, 0.15, 0.175,
-0, 0, 0, 0,
-0, 0, 0, 0,
-1, 0, 0, 0), 4, 4, byrow = TRUE)
-
-XQ4 <- matrix(c(0, 0, 0, 0.25,
-0, 0, 0, 0,
-0, 0, 0, 0,
-1, 0.666666667, 0, 1), 4, 4, byrow = TRUE)
-
-XQ5 <- matrix(c(0, 0, 0, 1.428571429,
-0, 0, 0, 0.142857143,
-0.25, 0, 0, 0,
-0.25, 0, 0, 0.571428571), 4, 4, byrow = TRUE)
-
-# POPN R 2003-2004
-XR3 <- matrix(c(0, 0, 0.7, 0.6125,
-0.25, 0, 0, 0.125,
-0, 0, 0, 0,
-0.25, 0.166666667, 0, 0.25), 4, 4, byrow = TRUE)
-
-XR4 <- matrix(c(0, 0, 0, 0.6,
-0.285714286, 0, 0, 0,
-0.285714286, 0.333333333, 0, 0,
-0.285714286, 0.333333333, 0, 1), 4, 4, byrow = TRUE)
-
-XR5 <- matrix(c(0, 0, 0.7, 0.6125,
-0, 0, 0, 0,
-0, 0, 0, 0,
-0.333333333, 0, 0.333333333, 0.625), 4, 4, byrow = TRUE)
-
-# POPN S 2003-2004
-XS3 <- matrix(c(0, 0, 2.1, 0.816666667,
-0.166666667, 0, 0, 0,
-0, 0, 0, 0,
-0, 0, 0, 0.166666667), 4, 4, byrow = TRUE)
-
-XS4 <- matrix(c(0, 0, 0, 7,
-0.333333333, 0.5, 0, 0,
-0, 0, 0, 0,
-0.333333333, 0, 0, 1), 4, 4, byrow = TRUE)
-
-XS5 <- matrix(c(0, 0, 0, 1.4,
-0, 0, 0, 0,
-0, 0, 0, 0.2,
-0.111111111, 0.75, 0, 0.2), 4, 4, byrow = TRUE)
-
-mats_list <- list(XC3, XC4, XC5, XE3, XE4, XE5, XF3, XF4, XF5, XG3, XG4, XG5,
-  XL3, XL4, XL5, XO3, XO4, XO5, XQ3, XQ4, XQ5, XR3, XR4, XR5, XS3, XS4, XS5)
-
-yr_ord <- c(1, 2, 3, 1, 2, 3, 1, 2, 3, 1, 2, 3, 1, 2, 3, 1, 2, 3, 1, 2, 3, 1,
-  2, 3, 1, 2, 3)
-
-pch_ord <- c(1, 1, 1, 2, 2, 2, 3, 3, 3, 4, 4, 4, 5, 5, 5, 6, 6, 6, 7, 7, 7,
-  8, 8, 8, 9, 9, 9)
-
-anth_lefkoMat <- create_lM(mats_list, anthframe, hstages = NA, historical = FALSE,
-  poporder = 1, patchorder = pch_ord, yearorder = yr_ord)
-  
-anth_lefkoMat
+anth_lefkoMat <- create_lM(mats_list, anthframe, hstages = NA,
+  historical = FALSE, poporder = 1, patchorder = pch_ord, yearorder = yr_ord)
 
 # A theoretical example showcasing historical matrices
-
 sizevector <- c(1, 2, 3) # These sizes are not from the original paper
 stagevector <- c("Sdl", "Veg", "Flo")
 repvector <- c(0, 0, 1)
@@ -345,11 +260,9 @@ stageframe <- exframe
 pch_ord <- c("A", "A", "A", "B", "B", "B")
 yr_ord <- c(1, 2, 3, 1, 2, 3)
 
-hist_trial <- create_lM(histmats, exframe, historical = TRUE, UFdecomp = TRUE,
-  entrystage = 1, patchorder = pch_ord, yearorder = yr_ord)
+hist_trial <- create_lM(histmats, exframe, historical = TRUE,
+  UFdecomp = TRUE, entrystage = 1, patchorder = pch_ord, yearorder = yr_ord)
   
-hist_trial
-
 }
 \seealso{
 \code{\link{add_lM}()}

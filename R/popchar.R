@@ -3,7 +3,8 @@
 #' \code{overwrite()} returns a data frame describing which particular
 #' transitions within an ahistorical or historical projection matrix to
 #' overwrite with either given rates and probabilities, or other estimated
-#' transitions.
+#' transitions. This function is now deprecated in favor of function
+#' \code{\link{supplemental}()}.
 #' 
 #' @name overwrite
 #' 
@@ -61,6 +62,8 @@
 #' fecundity rate (2).}
 #' 
 #' @section Notes:
+#' This function is deprecated. Please use \code{\link{supplemental}()}.
+#' 
 #' Entries in \code{stage3}, \code{stage2}, and \code{stage1} can include
 #' abbreviations for groups of stages. Use \code{rep} if all reproductive stages
 #' are to be used, \code{nrep} if all mature but non-reproductive stages are to
@@ -164,351 +167,13 @@ overwrite <- function(stage3, stage2, stage1 = NA, eststage3 = NA,
   return(fullpack)
 }
 
-#' Create a Data Frame of Supplemental Data for MPM Development
-#' 
-#' Function \code{supplemental()} provides all necessary supplemental data for
-#' matrix estimation, particularly bringing together data on proxy rates, data
-#' to overwrite existing rates, identified reproductive transitions complete,
-#' and fecundity multipliers.
-#' 
-#' @name supplemental
-#' 
-#' @param stage3 The name of the stage in occasion \emph{t}+1 in the transition
-#' to be replaced. Abbreviations for groups of stages are also usable (see
-#' Notes).
-#' @param stage2 The name of the stage in occasion \emph{t} in the transition to
-#' be replaced. Abbreviations for groups of stages are also usable (see Notes).
-#' @param stage1 The name of the stage in occasion \emph{t}-1 in the transition
-#' to be replaced. Only needed if a historical matrix is to be produced.
-#' Abbreviations for groups of stages are also usable (see Notes).
-#' @param eststage3 The name of the stage to replace \code{stage3} in a proxy
-#' transition. Only needed if a transition will be replaced by another estimated
-#' transition.
-#' @param eststage2 The name of the stage to replace \code{stage2} in a proxy
-#' transition. Only needed if a transition will be replaced by another estimated
-#' transition.
-#' @param eststage1 The name of the stage to replace \code{stage1} in a proxy
-#' historical transition. Only needed if a transition will be replaced by
-#' another estimated transition, and the matrix to be estimated is historical.
-#' Stage \code{NotAlive} is also possible for raw hMPMs as a means of handling
-#' the prior stage for individuals entering the population in occasion \emph{t}.
-#' @param givenrate A fixed rate or probability to replace for the transition
-#' described by \code{stage3}, \code{stage2}, and \code{stage1}.
-#' @param multiplier A vector of numeric multipliers for fecundity or for proxy
-#' transitions. Defaults to \code{1}.
-#' @param type A vector denoting the kind of transition between occasions
-#' \emph{t} and \emph{t}+1 to be replaced. This should be entered as \code{1},
-#' \code{S}, or \code{s} for the replacement of a survival transition; \code{2},
-#' \code{F}, or \code{f} for the replacement of a fecundity transition; or
-#' \code{3}, \code{R}, or \code{r} for a fecundity multiplier. If empty or not
-#' provided, then defaults to \code{1} for survival transition.
-#' @param type_t12 An optional vector denoting the kind of transition between
-#' occasions \emph{t}-1 and \emph{t}. Only necessary if a historical MPM in
-#' deVries format is desired. This should be entered as \code{1}, \code{S}, or
-#' \code{s} for a survival transition; or \code{2}, \code{F}, or \code{f} for a
-#' fecundity transitions. Defaults to \code{1} for survival transition, with
-#' impacts only on the construction of deVries-format hMPMs.
-#' @param stageframe The stageframe being used to produce the MPMs in the study.
-#' @param historical A logical value indicating whether the MPMs intended will
-#' be historical or ahistorical. Defaults to TRUE.
-#'
-#' @return A data frame of class \code{lefkoSD}. This object can be used as
-#' input in \code{\link{flefko3}()}, \code{\link{flefko2}()}, 
-#' \code{\link{rlefko3}()}, \code{\link{rlefko2}()}, and 
-#' \code{\link{aflefko2}()}.
-#' 
-#' Variables in this object include the following:
-#' \item{stage3}{Stage at occasion \emph{t}+1 in the transition to be replaced.}
-#' \item{stage2}{Stage at occasion \emph{t} in the transition to be replaced.}
-#' \item{stage1}{Stage at occasion \emph{t}-1 in the transition to be replaced.}
-#' \item{eststage3}{Stage at occasion \emph{t}+1 in the transition to replace
-#' the transition designated by \code{stage3}, \code{stage2}, and 
-#' \code{stage1}.}
-#' \item{eststage2}{Stage at occasion \emph{t} in the transition to replace the
-#' transition designated by \code{stage3}, \code{stage2}, and \code{stage1}.}
-#' \item{eststage1}{Stage at occasion \emph{t}-1 in the transition to replace
-#' the transition designated by \code{stage3}, \code{stage2}, and 
-#' \code{stage1}.}
-#' \item{givenrate}{A constant to be used as the value of the transition.}
-#' \item{multiplier}{A multiplier for proxy transitions or for fecundity.}
-#' \item{convtype}{Designates whether the transition from occasion \emph{t} to
-#' occasion \emph{t}+1 is a survival transition probability (1), a fecundity
-#' rate (2), or a fecundity multiplier (3).}
-#' \item{convtype_t12}{Designates whether the transition from occasion
-#' \emph{t}-1 to occasion \emph{t} is a survival transition probability (1), a
-#' fecundity rate (2).}
-#' 
-#' @section Notes:
-#' Negative values are not allowed in \code{givenrate} and \code{multiplier}
-#' input.
-#' 
-#' Fecundity multiplier data supplied via the \code{supplemental()} function
-#' acts in the same way as non-zero entries supplied via a reproductive matrix,
-#' but gets priority in all matrix creations. Thus, in cases where fecundity
-#' multipliers are provided for the same function via the reproductive matrix
-#' and function \code{supplemental()}, the latter is used.
-#' 
-#' Entries in \code{stage3}, \code{stage2}, and \code{stage1} can include
-#' abbreviations for groups of stages. Use \code{rep} if all reproductive stages
-#' are to be used, \code{nrep} if all mature but non-reproductive stages are to
-#' be used, \code{mat} if all mature stages are to be used, \code{immat} if all
-#' immature stages are to be used, \code{prop} if all propagule stages are to be
-#' used, \code{npr} if all non-propagule stages are to be used, \code{obs} if
-#' all observable stages are to be used, \code{nobs} if all unobservable stages
-#' are to be used, and leave empty or use \code{all} if all stages in stageframe
-#' are to be used. Also use \code{groupX} to denote all stages in group X (e.g.
-#' \code{group1} will use all stages in the respective stageframe's group 1).
-#' 
-#' @examples
-#' # Lathyrus example
-#' data(lathyrus)
-#' 
-#' sizevector <- c(0, 100, 13, 127, 3730, 3800, 0)
-#' stagevector <- c("Sd", "Sdl", "VSm", "Sm", "VLa", "Flo", "Dorm")
-#' repvector <- c(0, 0, 0, 0, 0, 1, 0)
-#' obsvector <- c(0, 1, 1, 1, 1, 1, 0)
-#' matvector <- c(0, 0, 1, 1, 1, 1, 1)
-#' immvector <- c(1, 1, 0, 0, 0, 0, 0)
-#' propvector <- c(1, 0, 0, 0, 0, 0, 0)
-#' indataset <- c(0, 1, 1, 1, 1, 1, 1)
-#' binvec <- c(0, 100, 11, 103, 3500, 3800, 0.5)
-#' 
-#' lathframe <- sf_create(sizes = sizevector, stagenames = stagevector,
-#'   repstatus = repvector, obsstatus = obsvector, matstatus = matvector,
-#'   immstatus = immvector, indataset = indataset, binhalfwidth = binvec,
-#'   propstatus = propvector)
-#' 
-#' lathvert <- verticalize3(lathyrus, noyears = 4, firstyear = 1988,
-#'   patchidcol = "SUBPLOT", individcol = "GENET", blocksize = 9,
-#'   juvcol = "Seedling1988", sizeacol = "Volume88", repstracol = "FCODE88",
-#'   fecacol = "Intactseed88", deadacol = "Dead1988",
-#'   nonobsacol = "Dormant1988", stageassign = lathframe, stagesize = "sizea",
-#'   censorcol = "Missing1988", censorkeep = NA, censor = TRUE)
-#' 
-#' lathsupp3 <- supplemental(stage3 = c("Sd", "Sd", "Sdl", "Sdl", "Sd", "Sdl", "mat"),
-#'   stage2 = c("Sd", "Sd", "Sd", "Sd", "rep", "rep", "Sdl"),
-#'   stage1 = c("Sd", "rep", "Sd", "rep", "npr", "npr", "Sd"),
-#'   eststage3 = c(NA, NA, NA, NA, NA, NA, "mat"),
-#'   eststage2 = c(NA, NA, NA, NA, NA, NA, "Sdl"),
-#'   eststage1 = c(NA, NA, NA, NA, NA, NA, "NotAlive"),
-#'   givenrate = c(0.345, 0.345, 0.054, 0.054, NA, NA, NA),
-#'   multiplier = c(NA, NA, NA, NA, 0.345, 0.054, NA),
-#'   type = c(1, 1, 1, 1, 3, 3, 1), type_t12 = c(1, 2, 1, 2, 1, 1, 1),
-#'   stageframe = lathframe, historical = TRUE)
-#' 
-#' ehrlen3 <- rlefko3(data = lathvert, stageframe = lathframe, year = "all", 
-#'   stages = c("stage3", "stage2", "stage1"), supplement = lathsupp3,
-#'   yearcol = "year2", indivcol = "individ")
-#' 
-#' ehrlen3mean <- lmean(ehrlen3)
-#' ehrlen3mean$A[[1]]
-#' 
-#' # Cypripedium example
-#' data(cypdata)
-#' 
-#' sizevector <- c(0, 0, 0, 0, 0, 0, 1, 2.5, 4.5, 8, 17.5)
-#' stagevector <- c("SD", "P1", "P2", "P3", "SL", "D", "XSm", "Sm", "Md", "Lg",
-#'   "XLg")
-#' repvector <- c(0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1)
-#' obsvector <- c(0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1)
-#' matvector <- c(0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1)
-#' immvector <- c(0, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0)
-#' propvector <- c(1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)
-#' indataset <- c(0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1)
-#' binvec <- c(0, 0, 0, 0, 0, 0.5, 0.5, 1, 1, 2.5, 7)
-#' 
-#' cypframe_raw <- sf_create(sizes = sizevector, stagenames = stagevector,
-#'   repstatus = repvector, obsstatus = obsvector, matstatus = matvector,
-#'   propstatus = propvector, immstatus = immvector, indataset = indataset,
-#'   binhalfwidth = binvec)
-#' 
-#' cypraw_v1 <- verticalize3(data = cypdata, noyears = 6, firstyear = 2004,
-#'   patchidcol = "patch", individcol = "plantid", blocksize = 4,
-#'   sizeacol = "Inf2.04", sizebcol = "Inf.04", sizeccol = "Veg.04",
-#'   repstracol = "Inf.04", repstrbcol = "Inf2.04", fecacol = "Pod.04",
-#'   stageassign = cypframe_raw, stagesize = "sizeadded", NAas0 = TRUE,
-#'   NRasRep = TRUE)
-#' 
-#' cypsupp2r <- supplemental(stage3 = c("SD", "P1", "P2", "P3", "SL", "D", 
-#'     "XSm", "Sm", "SD", "P1"),
-#'   stage2 = c("SD", "SD", "P1", "P2", "P3", "SL", "SL", "SL", "rep",
-#'     "rep"),
-#'   eststage3 = c(NA, NA, NA, NA, NA, "D", "XSm", "Sm", NA, NA),
-#'   eststage2 = c(NA, NA, NA, NA, NA, "XSm", "XSm", "XSm", NA, NA),
-#'   givenrate = c(0.10, 0.20, 0.20, 0.20, 0.25, NA, NA, NA, NA, NA),
-#'   multiplier = c(NA, NA, NA, NA, NA, NA, NA, NA, 0.5, 0.5),
-#'   type =c(1, 1, 1, 1, 1, 1, 1, 1, 3, 3),
-#'   stageframe = cypframe_raw, historical = FALSE)
-#' 
-#' cypmatrix2r <- rlefko2(data = cypraw_v1, stageframe = cypframe_raw, 
-#'   year = "all", patch = "all", stages = c("stage3", "stage2", "stage1"),
-#'   size = c("size3added", "size2added"), supplement = cypsupp2r,
-#'   yearcol = "year2", patchcol = "patchid", indivcol = "individ")
-#'                        
-#' cyp2mean <- lmean(cypmatrix2r)
-#' cyp2mean
-#' 
-#' @export
-supplemental <- function(stage3, stage2, stage1 = NA, eststage3 = NA,
-  eststage2 = NA, eststage1 = NA, givenrate = NA, multiplier = 1, type = NA,
-  type_t12 = NA, stageframe, historical = TRUE) {
-  
-  if (all(!is(stageframe, "stageframe"))) {
-    stop("A regular stageframe, as output from the sf_create() function, is
-      required for function supplemental().", call. = FALSE)
-  }
-  
-  if (!is.element("stage", names(stageframe))) {
-    stop("Stageframe appears to be modified. Please make sure that a stage
-      column exists holding stage names.", call. = FALSE)
-  }
-  
-  if (length(stage3) != length(stage2)) {
-    stop("All transitions to overwrite require information at least for stage2
-      and stage3. These inputs must also be of equal length.", call. = FALSE)
-  }
-  
-  fulllength <- max(length(stage3), length(stage2), length(stage1),
-    length(eststage3), length(eststage2), length(eststage1), length(givenrate),
-    length(type))
-  
-  if (length(stage3) != fulllength) {
-    stop("Please provide all input vectors in the same order.", call. = FALSE)
-  }
-  
-  if (length(stage1) < fulllength) {
-    missinglength <- fulllength - length(stage1)
-    stage1 <- as.character(append(stage1, rep(NA, missinglength)))
-  }
-  if (length(eststage3) < fulllength) {
-    missinglength <- fulllength - length(eststage3)
-    eststage3 <- as.character(append(eststage3, rep(NA, missinglength)))
-  }
-  if (length(eststage2) < fulllength) {    
-    missinglength <- fulllength - length(eststage2)
-    eststage2 <- as.character(append(eststage2, rep(NA, missinglength)))
-  }
-  if (length(eststage1) < fulllength) {
-    missinglength <- fulllength - length(eststage1)
-    eststage1 <- as.character(append(eststage1, rep(NA, missinglength)))
-  }
-  if (length(givenrate) < fulllength) {
-    missinglength <- fulllength - length(givenrate)
-    givenrate <- as.numeric(append(givenrate, rep(NA, missinglength)))
-  }
-  if (length(multiplier) < fulllength) {
-    missinglength <- fulllength - length(multiplier)
-    multiplier <- as.numeric(append(multiplier, rep(1, missinglength)))
-  }
-  if (any(is.na(multiplier))) {
-    multNAs <- which(is.na(multiplier))
-    multiplier[multNAs] <- 1
-  }
-  if (length(type) < fulllength) {
-    missinglength <- fulllength - length(type)
-    type <- as.character(append(type, rep(NA, missinglength)))
-  }
-  if (length(type_t12) < fulllength) {
-    missinglength <- fulllength - length(type_t12)
-    type_t12 <- as.character(append(type_t12, rep(NA, missinglength)))
-  }
-  
-  ltype <- tolower(type)
-  typeall <- unique(ltype)
-  if (!all(is.element(typeall, c(NA, "1", "2", "3", "f", "r", "s")))) {
-    stop("Variable type must include only 1, 2, 3, s, r, and f. All other
-      entries are not allowed.", call. = FALSE)
-  }
-  ltype_t12 <- tolower(type_t12)
-  typeall_t12 <- unique(ltype_t12)
-  if (!all(is.element(typeall_t12, c(NA, "1", "2", "f", "s")))) {
-    stop("Variable type_t12 must include only 1, 2, s, and f. All other entries
-      are not allowed.", call. = FALSE)
-  }
-  
-  convtype <- rep(1, length(type))
-  convtype[which(ltype == "2")] <- 2
-  convtype[which(ltype == "3")] <- 3
-  convtype[which(ltype == "f")] <- 2
-  convtype[which(ltype == "r")] <- 3
-  
-  convtype_t12 <- rep(1, length(type_t12))
-  convtype_t12[which(ltype_t12 == "2")] <- 2
-  convtype_t12[which(ltype_t12 == "f")] <- 2
-
-  all.stages.sf <- stageframe$stage
-  
-  all.stages.inp <- unique(c(stage3, stage2, stage1, eststage3, eststage2, eststage1))
-  
-  mismatches <- !is.element(all.stages.inp, c(all.stages.sf, NA))
-  
-  if (length(which(mismatches)) > 0) {
-    extrastuff <- tolower(all.stages.inp[which(mismatches)])
-    
-    unique_groups <- unique(stageframe$group)
-    group_labels <- apply(as.matrix(c(1:length(unique_groups))), 1, function(X) {
-      return(paste0("group", X))
-    })
-    
-    wildcard_list <- c("all", "rep", "nrep", "mat", "immat", "prop", "npr",
-      "notalive", "obs", "nobs", group_labels)
-    unaccountedfor <- extrastuff[which(!is.element(extrastuff, wildcard_list))]
-    
-    if (!all(is.element(extrastuff, wildcard_list))) {
-      stop(paste("The following stage names input in supplemental() do not match
-        the stageframe:", paste(unaccountedfor, collapse = ' ')), call. = FALSE)
-    }
-  }
-  
-  if (is.element("notalive", tolower(c(stage1, stage2, stage3, eststage2, eststage3)))) {
-    stop("Stage NotAlive is only allowed in the input for eststage1.",
-      call. = FALSE)
-  }
-  
-  if (any(multiplier[which(!is.na(givenrate))] != 1)) {
-    warning("Multipliers assigned to given rates will be ignored in MPM creation.",
-      call. = FALSE)
-  }
-  
-  if (any(givenrate < 0, na.rm = TRUE)) {
-    stop("Given rates cannot be negative.", call. = FALSE)
-  }
-  
-  if (any(multiplier < 0, na.rm = TRUE)) {
-    stop("Multipliers cannot be negative.", call. = FALSE)
-  }
-  
-  output <- cbind.data.frame(stage3, stage2, stage1, eststage3, eststage2,
-    eststage1, givenrate, multiplier, convtype, convtype_t12,
-    stringsAsFactors = FALSE)
-  
-  class(output) <- append(class(output), "lefkoSD")
-  
-  #Final check
-  all12s <- which(convtype != 3)
-  all3s <- which(convtype == 3)
-  
-  if (length(all12s) > 0) {
-    givenests <- which(!is.na(eststage3))
-    givengivens <- which(!is.na(givenrate))
-    givenmults <- which(multiplier != 1)
-    
-    givens <- unique(union(givenests, union(givengivens, givenmults)))
-    if (length(givens) < length(all12s)) {
-      stop("Some given rates or proxy transitions do not appear to be given.",
-        call. = FALSE)
-    }
-  }
-  
-  return(output)
-}
-
 #' Test Overdispersion and Zero Inflation in Size and Fecundity Distributions
 #' 
 #' Function \code{sf_distrib} takes a historically formatted vertical data as
 #' input and tests whether size and fecundity data are dispersed according to a
 #' Poisson distribution (where mean = variance), and whether the number of 0s
-#' exceeds expectations.
+#' exceeds expectations. This function is now deprecated in favor of function
+#' \code{\link{hfv_qc}()}.
 #' 
 #' @name sf_distrib
 #' 
@@ -570,7 +235,6 @@ supplemental <- function(stage3, stage2, stage1 = NA, eststage3 = NA,
 #' in van der Broek (1995).
 #' 
 #' @examples
-#' # Lathyrux example
 #' data(lathyrus)
 #' 
 #' sizevector <- c(0, 4.6, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 1, 2, 3, 4, 5, 6, 7, 8,
@@ -604,42 +268,8 @@ supplemental <- function(stage3, stage2, stage1 = NA, eststage3 = NA,
 #' lathvertln$feca1 <- round(lathvertln$feca1)
 #' lathvertln$feca3 <- round(lathvertln$feca3)
 #' 
-#' # The following will only test fecundity, since size is Gaussian.
-#' # Zero-inflation will not be assessed in this example, since 0 values in
-#' # fecundity have been excluded in the life history model.
-#' 
 #' sf_distrib(lathvertln, sizea = c("sizea3", "sizea2"), fec = c("feca3", "feca2"),
 #'   repst = c("repstatus3", "repstatus2"), zifec = FALSE)
-#' 
-#' # Cypripedium example
-#' data(cypdata)
-#' 
-#' sizevector <- c(0, 0, 0, 0, 0, 0, 1, 2.5, 4.5, 8, 17.5)
-#' stagevector <- c("SD", "P1", "P2", "P3", "SL", "D", "XSm", "Sm", "Md", "Lg",
-#'   "XLg")
-#' repvector <- c(0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1)
-#' obsvector <- c(0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1)
-#' matvector <- c(0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1)
-#' immvector <- c(0, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0)
-#' propvector <- c(1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)
-#' indataset <- c(0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1)
-#' binvec <- c(0, 0, 0, 0, 0, 0.5, 0.5, 1, 1, 2.5, 7)
-#' 
-#' cypframe_raw <- sf_create(sizes = sizevector, stagenames = stagevector,
-#'   repstatus = repvector, obsstatus = obsvector, matstatus = matvector,
-#'   propstatus = propvector, immstatus = immvector, indataset = indataset,
-#'   binhalfwidth = binvec)
-#' 
-#' cypraw_v1 <- verticalize3(data = cypdata, noyears = 6, firstyear = 2004,
-#'   patchidcol = "patch", individcol = "plantid", blocksize = 4,
-#'   sizeacol = "Inf2.04", sizebcol = "Inf.04", sizeccol = "Veg.04",
-#'   repstracol = "Inf.04", repstrbcol = "Inf2.04", fecacol = "Pod.04",
-#'   stageassign = cypframe_raw, stagesize = "sizeadded", NAas0 = TRUE,
-#'   NRasRep = TRUE)
-#' 
-#' sf_distrib(cypraw_v1, sizea = c("size3added", "size2added"),
-#'   fec = c("feca3", "feca2"), repst = c("repstatus3", "repstatus2"),
-#'   zisizea = TRUE)
 #' 
 #' @export
 sf_distrib <- function(data, sizea = NA, sizeb = NA, sizec = NA, obs3 = NA,
@@ -893,7 +523,7 @@ sf_distrib <- function(data, sizea = NA, sizeb = NA, sizec = NA, obs3 = NA,
   }
 }
 
-#' Create a Data Frame of Density Dependence Relationships in Vital Rates
+#' Set Density Dependence Relationships in Vital Rates
 #' 
 #' Function \code{density_vr()} provides all necessary data to incorporate
 #' density dependence into the vital rate functions used to create matrices in
@@ -983,7 +613,6 @@ sf_distrib <- function(data, sizea = NA, sizeb = NA, sizec = NA, obs3 = NA,
 #' 
 #' @examples
 #' \donttest{
-#' # Lathyrus projection example with historical matrices
 #' data(lathyrus)
 #' 
 #' sizevector <- c(0, 4.6, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 1, 2, 3, 4, 5, 6, 7, 8,
@@ -1022,7 +651,7 @@ sf_distrib <- function(data, sizea = NA, sizeb = NA, sizec = NA, obs3 = NA,
 #'   vitalrates = c("surv", "obs", "size", "repst", "fec"), juvestimate = "Sdl",
 #'   bestfit = "AICc&k", sizedist = "gaussian", fecdist = "poisson", 
 #'   indiv = "individ", patch = "patchid", year = "year2", year.as.random = TRUE,
-#'   patch.as.random = TRUE, show.model.tables = TRUE, quiet = TRUE)
+#'   patch.as.random = TRUE, show.model.tables = TRUE, quiet = "partial")
 #' 
 #' lathsupp3 <- supplemental(stage3 = c("Sd", "Sd", "Sdl", "Sdl", "mat", "Sd", "Sdl"), 
 #'   stage2 = c("Sd", "Sd", "Sd", "Sd", "Sdl", "rep", "rep"),
@@ -1054,7 +683,7 @@ sf_distrib <- function(data, sizea = NA, sizeb = NA, sizec = NA, obs3 = NA,
 #' 
 #' trial7_dvr <- f_projection3(format = 1, data = lathvertln,
 #'   modelsuite = lathmodelsln3, stageframe = lathframeln, nreps = 2,
-#'   times = 1000, stochastic = TRUE, standardize = FALSE, growthonly = TRUE,
+#'   times = 100, stochastic = TRUE, standardize = FALSE, growthonly = TRUE,
 #'   integeronly = FALSE, substoch = 0, sp_density = 0, start_frame = e3m_sv,
 #'   density_vr = e3d_vr)
 #' summary(trial7_dvr)
@@ -1220,7 +849,6 @@ density_vr <- function(density_yn = c(FALSE, FALSE, FALSE, FALSE, FALSE, FALSE,
 #' @seealso \code{\link{projection3}()}
 #' 
 #' @examples
-#' # Lathyrus example
 #' data(lathyrus)
 #' 
 #' sizevector <- c(0, 100, 13, 127, 3730, 3800, 0)
@@ -1825,7 +1453,7 @@ start_input <- function(mpm, stage2, stage1 = NA, age2 = NA, value = 1) {
     } else {
       writeLines(paste0("    Variable ", term," is not significantly zero-inflated.\n"))
       
-      if (v0n0 == 0) {
+      if (v0n0 == 0 & v0exp >= 1.0) {
         writeLines(paste0("    Variable ", term,
             " does not include 0s, suggesting that a zero-truncated distribution may be warranted.\n"))
       }
@@ -1909,7 +1537,7 @@ start_input <- function(mpm, stage2, stage1 = NA, age2 = NA, value = 1) {
 #' where patches are defined as permanent subgroups within the study population.
 #' Defaults to \code{NA}.
 #' @param year A text value indicating the variable coding for observation
-#' occasion \emph{t}. Defaults to \code{year2}.
+#' occasion \emph{t}. Defaults to \code{"year2"}.
 #' @param density A text value indicating the name of the variable coding for
 #' spatial density, should the user wish to test spatial density as a fixed
 #' factor affecting vital rates. Defaults to \code{NA}.
@@ -1977,8 +1605,6 @@ start_input <- function(mpm, stage2, stage1 = NA, age2 = NA, value = 1) {
 #' created here.
 #' 
 #' @examples
-#' \donttest{
-#' # Lathyrus example
 #' data(lathyrus)
 #' 
 #' sizevector <- c(0, 4.6, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 1, 2, 3, 4, 5, 6, 7, 8,
@@ -2017,32 +1643,6 @@ start_input <- function(mpm, stage2, stage1 = NA, age2 = NA, value = 1) {
 #'   indiv = "individ", patch = "patchid", year = "year2",year.as.random = TRUE,
 #'   patch.as.random = TRUE)
 #' 
-#' lathmodelsln3 <- modelsearch(lathvertln, historical = TRUE, 
-#'   approach = "mixed", suite = "main", 
-#'   vitalrates = c("surv", "obs", "size", "repst", "fec"), juvestimate = "Sdl",
-#'   bestfit = "AICc&k", sizedist = "gaussian", fecdist = "poisson", 
-#'   indiv = "individ", patch = "patchid", year = "year2",year.as.random = TRUE,
-#'   patch.as.random = TRUE, show.model.tables = TRUE, quiet = TRUE)
-#' 
-#' # Here we use supplemental() to provide overwrite and reproductive info
-#' lathsupp3 <- supplemental(stage3 = c("Sd", "Sd", "Sdl", "Sdl", "mat", "Sd", "Sdl"), 
-#'   stage2 = c("Sd", "Sd", "Sd", "Sd", "Sdl", "rep", "rep"),
-#'   stage1 = c("Sd", "rep", "Sd", "rep", "Sd", "mat", "mat"),
-#'   eststage3 = c(NA, NA, NA, NA, "mat", NA, NA),
-#'   eststage2 = c(NA, NA, NA, NA, "Sdl", NA, NA),
-#'   eststage1 = c(NA, NA, NA, NA, "Sdl", NA, NA),
-#'   givenrate = c(0.345, 0.345, 0.054, 0.054, NA, NA, NA),
-#'   multiplier = c(NA, NA, NA, NA, NA, 0.345, 0.054),
-#'   type = c(1, 1, 1, 1, 1, 3, 3), type_t12 = c(1, 2, 1, 2, 1, 1, 1),
-#'   stageframe = lathframeln, historical = TRUE)
-#' 
-#' lathmat3ln <- flefko3(year = "all", patch = "all", stageframe = lathframeln, 
-#'   modelsuite = lathmodelsln3, data = lathvertln, supplement = lathsupp3, 
-#'   reduce = FALSE)
-#' 
-#' summary(lathmat3ln)
-#' }
-#' 
 #' @export
 hfv_qc <- function(data, stageframe = NULL, historical = TRUE, suite = "size",
   vitalrates = c("surv", "size", "fec"), surv = c("alive3", "alive2", "alive1"),
@@ -2061,7 +1661,6 @@ hfv_qc <- function(data, stageframe = NULL, historical = TRUE, suite = "size",
   sizeb.data <- sizec.data <- juvsizeb.data <- juvsizec.data <- NULL
   repst.data <- fec.data <- juvsurv.data <- juvobs.data <- NULL
   juvsize.data <- juvrepst.data <- usedfec <- NULL
-  sizebdist <- sizecdist <- NULL
   patchcol <- yearcol <- extra_factors <- 0
   
   sizeb_used <- sizec_used <- density_used <- indcova_used <- FALSE
@@ -2295,9 +1894,6 @@ hfv_qc <- function(data, stageframe = NULL, historical = TRUE, suite = "size",
       stop("Size variables must match data frame.", call. = FALSE)
     }
     if (all(!is.na(sizeb))) {
-      if (is.na(sizebdist)) {
-        stop("Need valid choice of distribution for secondary size.", call. = FALSE)
-      }
       if (length(sizeb) > 3 | length(sizeb) == 1) {
         stop("This function requires 2 (if ahistorical) or 3 (if historical)
           secondary size variables as input parameters.",
@@ -2317,9 +1913,6 @@ hfv_qc <- function(data, stageframe = NULL, historical = TRUE, suite = "size",
       sizeb_used <- 1
     }
     if (all(!is.na(sizec))) {
-      if (is.na(sizecdist)) {
-        stop("Need valid choice of distribution for tertiary size.", call. = FALSE)
-      }
       if (length(sizec) > 3 | length(sizec) == 1) {
         stop("This function requires 2 (if ahistorical) or 3 (if historical)
           tertiary size variables as input parameters.",

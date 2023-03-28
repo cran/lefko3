@@ -56,9 +56,11 @@ aflefko2(
   negfec = FALSE,
   ipm_method = "CDF",
   reduce = FALSE,
+  simple = FALSE,
   err_check = FALSE,
   exp_tol = 700,
-  theta_tol = 1e+08
+  theta_tol = 1e+08,
+  sparse_output = FALSE
 )
 }
 \arguments{
@@ -311,11 +313,13 @@ associated solely with \code{0} transitions. These are only removed in cases
 where the associated row and column sums in ALL matrices estimated equal 0. 
 Defaults to \code{FALSE}.}
 
-\item{err_check}{A logical value indicating whether to append matrices of
-vital rate probabilities associated with each matrix to the \code{lefkoMat}
-object generated. These matrices are developed internally and can be used for
-error checking (see element \code{out} in Value section below for details).
-Defaults to \code{FALSE}.}
+\item{simple}{A logical value indicating whether to produce \code{A},
+\code{U}, and \code{F} matrices, or only the latter two. Defaults to
+\code{FALSE}, in which case all three are output.}
+
+\item{err_check}{A logical value indicating whether to append extra
+information used in matrix calculation within the output list. Defaults to
+\code{FALSE}.}
 
 \item{exp_tol}{A numeric value used to indicate a maximum value to set
 exponents to in the core kernel to prevent numerical overflow. Defaults to
@@ -324,6 +328,10 @@ exponents to in the core kernel to prevent numerical overflow. Defaults to
 \item{theta_tol}{A numeric value used to indicate a maximum value to theta as
 used in the negative binomial probability density kernel. Defaults to
 \code{100000000}, but can be reset to other values during error checking.}
+
+\item{sparse_output}{A logical value indicating whether to output matrices
+in sparse format. Defaults to \code{FALSE}, in which case all matrices are
+output in standard matrix format.}
 }
 \value{
 If all inputs are properly formatted, then this function will return
@@ -332,11 +340,14 @@ projection model and all of its metadata. The structure has the following
 elements:
 
 \item{A}{A list of full projection matrices in order of sorted patches and
-occasions. All matrices output in R's \code{matrix} class.}
+occasions. All matrices output in R's \code{matrix} class, or in
+the \code{dgCMatrix} class from the \code{Matrix} package if sparse.}
 \item{U}{A list of survival transition matrices sorted as in \code{A}. All 
-matrices output in R's \code{matrix} class.}
+matrices output in R's \code{matrix} class, or in the \code{dgCMatrix} class
+from the \code{Matrix} package if sparse.}
 \item{F}{A list of fecundity matrices sorted as in \code{A}. All matrices 
-output in R's \code{matrix} class.}
+output in R's \code{matrix} class, or in the \code{dgCMatrix} class from the
+\code{Matrix} package if sparse.}
 \item{hstages}{A data frame matrix showing the pairing of ahistorical stages
 used to create historical stage pairs. Set to \code{NA} for age-by-stage
 MPMs.}
@@ -348,9 +359,11 @@ ahistorical stages, in the form of a modified stageframe that includes
 status as an entry stage through reproduction.}
 \item{labels}{A data frame giving the patch and year of each matrix in order.
 In \code{aflefko2()}, only one population may be analyzed at once.}
-\item{matrixqc}{A short vector describing the number of non-zero elements
-in \code{U} and \code{F} matrices, and the number of annual matrices.}
-\item{modelqc}{This is the \code{qc} portion of the modelsuite input.}
+\item{dataqc}{A vector showing the numbers of individuals and rows in the
+vertical dataset used as input.}
+\item{matrixqc}{A short vector describing the number of non-zero elements in
+\code{U} and \code{F} matrices, and the number of annual matrices.}
+\item{modelqc}{This is the \code{qc} portion of the \code{modelsuite} input.}
 \item{prob_out}{An optional element only added if \code{err_check = TRUE}.
 This is a list of vital rate probability matrices, with 7 columns in the
 order of survival, observation probability, reproduction probability, primary
@@ -473,16 +486,14 @@ immvector <- c(1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)
 propvector <- c(1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
   0)
 indataset <- c(0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1)
-minima <- c(0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1)
-maxima <- c(NA, 1, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA,
-  NA, NA, NA, NA, NA)
+minima <- c(1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2)
 binvec <- c(0, 4.6, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5,
   0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5)
 
 lathframeln <- sf_create(sizes = sizevector, stagenames = stagevector,
   repstatus = repvector, obsstatus = obsvector, matstatus = matvector,
   immstatus = immvector, indataset = indataset, binhalfwidth = binvec,
-  propstatus = propvector, minage = minima, maxage = maxima)
+  propstatus = propvector, minage = minima)
 
 lathvertln <- verticalize3(lathyrus, noyears = 4, firstyear = 1988,
   patchidcol = "SUBPLOT", individcol = "GENET", blocksize = 9,
@@ -505,20 +516,23 @@ lathmodelsln2 <- modelsearch(lathvertln, historical = FALSE,
   quiet = "partial")
 
 # Here we use supplemental() to provide overwrite and reproductive info
-lathsupp2 <- supplemental(stage3 = c("Sd", "Sdl", "Sd", "Sdl"), 
-  stage2 = c("Sd", "Sd", "rep", "rep"),
-  givenrate = c(0.345, 0.054, NA, NA),
-  multiplier = c(NA, NA, 0.345, 0.054),
-  type = c(1, 1, 3, 3), stageframe = lathframeln, historical = FALSE)
+lathsupp2 <- supplemental(stage3 = c("Sd", "Sdl", "mat", "Sd", "Sdl"), 
+  stage2 = c("Sd", "Sd", "Sdl", "rep", "rep"),
+  eststage3 = c(NA, NA, "mat", NA, NA),
+  eststage2 = c(NA, NA, "Dorm", NA, NA),
+  givenrate = c(0.345, 0.054, NA, NA, NA),
+  multiplier = c(NA, NA, 0.8, 0.345, 0.054), type = c(1, 1, 1, 3, 3),
+  stageframe = lathframeln, historical = FALSE, agebased = TRUE)
 
 lathmat2age <- aflefko2(year = "all", patch = "all", 
   stageframe = lathframeln, modelsuite = lathmodelsln2, data = lathvertln,
   supplement = lathsupp2, final_age = 3, continue = TRUE, reduce = FALSE)
 
-summary(lathmat2age)
 }
 }
 \seealso{
+\code{\link{mpm_create}()}
+
 \code{\link{flefko3}()}
 
 \code{\link{flefko2}()}

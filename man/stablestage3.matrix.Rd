@@ -4,14 +4,16 @@
 \alias{stablestage3.matrix}
 \title{Estimate Stable Stage Distribution of a Single Population Projection Matrix}
 \usage{
-\method{stablestage3}{matrix}(mats, sparse = "auto", ...)
+\method{stablestage3}{matrix}(mats, force_sparse = "auto", ...)
 }
 \arguments{
 \item{mats}{A population projection matrix of class \code{matrix}.}
 
-\item{sparse}{A text string indicating whether to use sparse matrix encoding
-(\code{"yes"}) or dense matrix encoding (\code{"no"}). Defaults to
-\code{"auto"}.}
+\item{force_sparse}{A text string indicating whether to use sparse matrix
+encoding (\code{"yes"}) when supplied with standard matrices. Defaults to
+\code{"auto"}, in which case sparse matrix encoding is used with square
+matrices with at least 50 rows and no more than 50\% of elements with values
+greater than zero.}
 
 \item{...}{Other parameters.}
 }
@@ -25,8 +27,16 @@ population projection matrix. This function can handle large and sparse
 matrices, and so can be used with large historical matrices, IPMs, 
 age x stage matrices, as well as smaller ahistorical matrices.
 }
+\section{Notes}{
+
+Speed can sometimes be increased by shifting from automatic sparse matrix
+determination to forced dense or sparse matrix projection. This will most
+likely occur when matrices have between 30 and 300 rows and columns.
+Defaults work best when matrices are very small and dense, or very large and
+sparse.
+}
+
 \examples{
-#Lathyrus example
 data(lathyrus)
 
 sizevector <- c(0, 100, 13, 127, 3730, 3800, 0)
@@ -69,54 +79,13 @@ ehrlen3 <- rlefko3(data = lathvert, stageframe = lathframe, year = "all",
 ehrlen3mean <- lmean(ehrlen3)
 stablestage3(ehrlen3mean$A[[1]])
 
-# Cypripedium stochastic example
-data(cypdata)
-
-sizevector <- c(0, 0, 0, 0, 0, 0, 1, 2.5, 4.5, 8, 17.5)
-stagevector <- c("SD", "P1", "P2", "P3", "SL", "D", "XSm", "Sm", "Md", "Lg",
-  "XLg")
-repvector <- c(0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1)
-obsvector <- c(0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1)
-matvector <- c(0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1)
-immvector <- c(0, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0)
-propvector <- c(1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)
-indataset <- c(0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1)
-binvec <- c(0, 0, 0, 0, 0, 0.5, 0.5, 1, 1, 2.5, 7)
-
-cypframe_raw <- sf_create(sizes = sizevector, stagenames = stagevector,
-  repstatus = repvector, obsstatus = obsvector, matstatus = matvector,
-  propstatus = propvector, immstatus = immvector, indataset = indataset,
-  binhalfwidth = binvec)
-
-cypraw_v1 <- verticalize3(data = cypdata, noyears = 6, firstyear = 2004,
-  patchidcol = "patch", individcol = "plantid", blocksize = 4,
-  sizeacol = "Inf2.04", sizebcol = "Inf.04", sizeccol = "Veg.04",
-  repstracol = "Inf.04", repstrbcol = "Inf2.04", fecacol = "Pod.04",
-  stageassign = cypframe_raw, stagesize = "sizeadded", NAas0 = TRUE,
-  NRasRep = TRUE)
-
-# Here we use supplemental() to provide overwrite and reproductive info
-cypsupp2r <- supplemental(stage3 = c("SD", "P1", "P2", "P3", "SL", "D", 
-    "XSm", "Sm", "SD", "P1"),
-  stage2 = c("SD", "SD", "P1", "P2", "P3", "SL", "SL", "SL", "rep",
-    "rep"),
-  eststage3 = c(NA, NA, NA, NA, NA, "D", "XSm", "Sm", NA, NA),
-  eststage2 = c(NA, NA, NA, NA, NA, "XSm", "XSm", "XSm", NA, NA),
-  givenrate = c(0.10, 0.20, 0.20, 0.20, 0.25, NA, NA, NA, NA, NA),
-  multiplier = c(NA, NA, NA, NA, NA, NA, NA, NA, 0.5, 0.5),
-  type =c(1, 1, 1, 1, 1, 1, 1, 1, 3, 3),
-  stageframe = cypframe_raw, historical = FALSE)
-
-cypmatrix2r <- rlefko2(data = cypraw_v1, stageframe = cypframe_raw, 
-  year = "all", patch = "all", stages = c("stage3", "stage2", "stage1"),
-  size = c("size3added", "size2added"), supplement = cypsupp2r,
-  yearcol = "year2", patchcol = "patchid", indivcol = "individ")
-
-stablestage3(cypmatrix2r$A[[1]])
-
 }
 \seealso{
 \code{\link{stablestage3}()}
 
 \code{\link{stablestage3.lefkoMat}()}
+
+\code{\link{stablestage3.list}()}
+
+\code{\link{stablestage3.dgCMatrix}()}
 }

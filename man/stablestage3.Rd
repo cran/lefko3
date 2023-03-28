@@ -7,8 +7,9 @@
 stablestage3(mats, ...)
 }
 \arguments{
-\item{mats}{A lefkoMat object, or population projection matrix, for which the
-stable stage distribution is desired.}
+\item{mats}{A lefkoMat object, a population projection matrix, or a list of
+population projection matrices for which the stable stage distribution is
+desired.}
 
 \item{...}{Other parameters.}
 }
@@ -117,5 +118,9 @@ stablestage3(cypmatrix2r, stochastic = TRUE)
 \seealso{
 \code{\link{stablestage3.lefkoMat}()}
 
+\code{\link{stablestage3.list}()}
+
 \code{\link{stablestage3.matrix}()}
+
+\code{\link{stablestage3.dgCMatrix}()}
 }
