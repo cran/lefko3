@@ -487,7 +487,14 @@ within this range are concatenations of the size centroid (designated
 with <code>sz</code>), and, given a limited string length, the
 reproductive status, maturity status, and observation status. The first
 three stages, which fall outside of the IPM classification, are left
-unaltered.
+unaltered. Note that we are using the midpoint approach to determining
+the size bins here, using the default bin halfwidths of 0.5 (since all
+size bins are using this default, we do not include a
+<code>binhalfwidth</code> vector option in the <code>sf_create()</code>
+input). However, we could have used the <code>sizemin</code> and
+<code>sizemax</code> options to more deliberately set the size bin
+minima and maxima instead, although that would have been a more tedious
+approach in a high dimensonal object like an IPM.
 </p>
 </div>
 <div id="step-2a.-dataset-standardization" class="section level4">

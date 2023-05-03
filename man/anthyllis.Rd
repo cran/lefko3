@@ -22,6 +22,7 @@ object is as below:
   of population and year in time \emph{t}.}
   \item{matrixqc}{A vector of integers used in the quality control section of
   \code{lefkoMat} summary statements.}
+  \item{dataqc}{Currently a vector with two \code{NA} values.}
 }
 }
 \source{

@@ -94,6 +94,11 @@ given in the equivalently named variable in the \code{stageframe}; and
 \code{age}, which of course gives the age associated with the stage at that
 time. The number of rows must be equal to the number of rows and columns of
 each entered matrix.
+
+Users may edit the \code{dataqc} object, setting the first \code{NA} to the
+number of individuals sampled, and the second \code{NA} to the number of
+rows in a vertical version of the demographic dataset. This is not required,
+however.
 }
 
 \section{Notes for importing from COMPADRE or COMADRE}{
@@ -116,6 +121,11 @@ assessed within the \code{F} matrices. Users should check that these values
 make sense.
 
 Stage names may be edited manually afterward.
+
+Users may edit the \code{dataqc} object, setting the first \code{NA} to the
+number of individuals sampled, and the second \code{NA} to the number of
+rows in a vertical version of the demographic dataset. This is not required,
+however.
 }
 
 \examples{

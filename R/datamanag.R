@@ -1727,6 +1727,8 @@ historicalize3 <- function(data, popidcol = 0, patchidcol = 0, individcol,
 #' metadata.}
 #' \item{matrixqc}{A short vector describing the number of non-zero elements in
 #' \code{U} and \code{F} matrices, and the number of annual matrices.}
+#' \item{dataqc}{When output from COMPADRE or COMADRE, set a a vector of two NA
+#' values.}
 #' 
 #' @keywords internal
 #' @noRd
@@ -1845,9 +1847,11 @@ historicalize3 <- function(data, popidcol = 0, patchidcol = 0, individcol,
     new_sf$matstatus <- mature_stages
     new_sf$comments <- stage_lists[[1]]$MatrixClassAuthor
     
+    dataqc <- c(NA, NA)
+    
     output <- list(A = A_mats, U = U_mats, F = F_mats, ahstages = new_sf,
       hstages = as.data.frame(NA), agestages = as.data.frame(NA),
-      labels = labels, matrixqc = matrix_qc)
+      labels = labels, matrixqc = matrix_qc, dataqc = dataqc)
     class(output) <- "lefkoMat"
   } else {
     message("Please load either the COMPADRE or COMADRE database.")
@@ -1891,9 +1895,9 @@ historicalize3 <- function(data, popidcol = 0, patchidcol = 0, individcol,
 #' \code{mats} as object \code{A}, their U and F decompositions in objects
 #' \code{U} and \code{F} (if requested), the provided stageframe as object
 #' \code{ahstages}, the order of historical stages as object \code{hstages} (if
-#' \code{historical = TRUE}), the order of matrices as object \code{labels}, and
+#' \code{historical = TRUE}), the order of matrices as object \code{labels},
 #' a short quality control section used by the \code{\link{summary.lefkoMat}()}
-#' function.
+#' function (\code{matrixqc}), and an empty \code{dataqc} object.
 #' 
 #' @keywords internal
 #' @noRd
@@ -2116,9 +2120,11 @@ historicalize3 <- function(data, popidcol = 0, patchidcol = 0, individcol,
     stageframe$entrystage[entrystage] <- 1
   }
   
+  dataqc <- c(NA, NA)
+  
   output <- list(A = mats, U = U, F = F, hstages = hstages, agestages = NA,
     ahstages = cbind.data.frame(stage_id = c(1:numstages), stageframe),
-    labels = labels, matrixqc = matrixqc)
+    labels = labels, matrixqc = matrixqc, dataqc = dataqc)
   class(output) <- "lefkoMat"
   
   return(output)
@@ -2187,6 +2193,11 @@ historicalize3 <- function(data, popidcol = 0, patchidcol = 0, individcol,
 #' time. The number of rows must be equal to the number of rows and columns of
 #' each entered matrix.
 #' 
+#' Users may edit the \code{dataqc} object, setting the first \code{NA} to the
+#' number of individuals sampled, and the second \code{NA} to the number of
+#' rows in a vertical version of the demographic dataset. This is not required,
+#' however.
+#' 
 #' @section Notes for importing from COMPADRE or COMADRE:
 #' For this function to operate, users must have either the COMPADRE database
 #' or the COMADRE database loaded into the global environment. Note that the
@@ -2206,6 +2217,11 @@ historicalize3 <- function(data, popidcol = 0, patchidcol = 0, individcol,
 #' make sense.
 #' 
 #' Stage names may be edited manually afterward.
+#' 
+#' Users may edit the \code{dataqc} object, setting the first \code{NA} to the
+#' number of individuals sampled, and the second \code{NA} to the number of
+#' rows in a vertical version of the demographic dataset. This is not required,
+#' however.
 #' 
 #' @seealso \code{\link{add_lM}()}
 #' @seealso \code{\link{delete_lM}()}

@@ -8,6 +8,49 @@ using namespace arma;
 
 namespace LefkoMats {
 
+  //' Create Element Index Meeting Condition for Sparse Matrix
+  //' 
+  //' This function takes a single sparse matrix (dgCMatrix) and creates a
+  //' vector of indices meeting the condition that elements must be greater
+  //' than a tolerance threshold.
+  //' 
+  //' @name spmat_index
+  //' 
+  //' @param M The sparse matrix of interest.
+  //' @param tol The tolerance threshold.
+  //' 
+  //' @return An arma::uvec vector giving the indices of elements greater than
+  //' the threshold tolerance.
+  //' 
+  //' @keywords internal
+  //' @noRd
+  inline arma::uvec spmat_index(arma::sp_mat& M, double tol) {
+    int mat_dim = M.n_cols;
+    arma::sp_mat::iterator it_start = M.begin();
+    arma::sp_mat::iterator it_end = M.end();
+    int n = std::distance(it_start, it_end);
+    
+    arma::uvec it_elems (n, fill::zeros);
+    
+    unsigned int found_count {0};
+    for (sp_mat::const_iterator it = it_start; it != it_end; ++it) {
+      if (*it > tol) {
+        unsigned int it_row = it.row();
+        unsigned int it_col = it.col();
+        it_elems(found_count) = (it_col * mat_dim) + it_row;
+        
+        found_count++;
+      }
+    }
+    
+    arma::uvec new_index (found_count, fill::zeros);
+    for (unsigned int i = 0; i < found_count; i++) {
+      new_index(i) = it_elems(i);
+    }
+    
+    return new_index;
+  }
+
   //' Create General Element Index for Any lefkoMat Matrix
   //' 
   //' This function creates a general element index by taking a list of matrices
@@ -17,24 +60,33 @@ namespace LefkoMats {
   //' @name general_index
   //' 
   //' @param mats A list of matrices.
+  //' @param tol A tolerance limit to use for assessing whether an element is
+  //' equal to zero. Defaults to \code{1e-30}.
+  //' @param use_tol A logical value indicating whether to use the tolerance
+  //' limit set in the \code{tol} option. Defaults to \code{FALSE}.
   //' 
   //' @return An arma::uvec object listing indices of non-zero values in order.
   //' This object is essentially a union of all non-zero indices across all
   //' matrices in the list.
   //' 
+  //' Note that if \code{use_tol = TRUE}, then only values greater than the
+  //' tolerance limit are indexed.
+  //' 
   //' @keywords internal
   //' @noRd
-  inline arma::uvec general_index (Rcpp::List mats) {
+  inline arma::uvec general_index (Rcpp::List mats, double tol = 1e-30,
+    bool use_tol = false) {
     int mat_length = mats.length();
-    
     arma::uvec torture_chamber;
+    if (!use_tol) tol = 0.0;
     
     for (int i = 0; i < mat_length; i++) {
       arma::uvec iron_maiden;
       if (is<S4>(mats(i))) {
-        iron_maiden = find(as<arma::sp_mat>(mats(i)));
+        sp_mat rel_mat = as<arma::sp_mat>(mats(i));
+        iron_maiden = LefkoMats::spmat_index(rel_mat, tol);
       } else {
-        iron_maiden = find(as<arma::mat>(mats(i)));
+        iron_maiden = find(as<arma::mat>(mats(i)) > tol);
       }
       
       if (i == 0) {
@@ -1502,21 +1554,15 @@ namespace LefkoMats {
       bool ests2_used {false};
       bool ests1_used {false};
       
-      int ests3supp_count {0};
-      int ests2supp_count {0};
-      int ests1supp_count {0};
-      
       for (int j = 0; j < static_cast<int>(all_possible_stage_terms.length()); j++) {
         if (stage3_supp(i) == all_possible_stage_terms(j)) s3supp_count++;
         if (stage2_supp(i) == all_possible_stage_terms(j)) s2supp_count++;
         
         if (!StringVector::is_na(eststage3_supp(i))) {
           ests3_used = true;
-          if (eststage3_supp(i) == all_possible_stage_terms(j)) ests3supp_count++;
         }
         if (!StringVector::is_na(eststage2_supp(i))) {
           ests2_used = true;
-          if (eststage2_supp(i) == all_possible_stage_terms(j)) ests2supp_count++;
         }
         
         if (historical) {
@@ -1524,7 +1570,6 @@ namespace LefkoMats {
           
           if (!StringVector::is_na(eststage1_supp(i))) {
             ests1_used = true;
-            if (eststage1_supp(i) == all_possible_stage_terms(j)) ests1supp_count++;
           }
         } 
       }

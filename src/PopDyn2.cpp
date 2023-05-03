@@ -98,23 +98,29 @@ DataFrame bambi3(const DataFrame& stages, const DataFrame& hstages) {
       if (hstage3in(i1) == (hstage2nin(i2))) {
         hsindexl(counter) = (i1 * numhstages) + i2;
         
-        int stage1 = hstage2nin(i2);
-        longnames1(counter) = stagenames(stage1);
-        size1(counter) = sizes(stage1);
-        repstatus1(counter) = repstatus(stage1);
-        entrystatus1(counter) = entrystage(stage1);
+        unsigned int stage1 = hstage2nin(i1);
+        arma::uvec ahst_rows_1 = find(astages == (stage1 + 1));
+        unsigned int ahst_row_1 = ahst_rows_1(0);
+        longnames1(counter) = stagenames(ahst_row_1);
+        size1(counter) = sizes(ahst_row_1);
+        repstatus1(counter) = repstatus(ahst_row_1);
+        entrystatus1(counter) = entrystage(ahst_row_1);
         
-        int stage2 = hstage2nin(i1);
-        longnames2(counter) = stagenames(stage2);
-        size2(counter) = sizes(stage2);
-        repstatus2(counter) = repstatus(stage2);
-        entrystatus2(counter) = entrystage(stage2);
+        unsigned int stage2 = hstage2nin(i2);
+        arma::uvec ahst_rows_2 = find(astages == (stage2 + 1));
+        unsigned int ahst_row_2 = ahst_rows_2(0);
+        longnames2(counter) = stagenames(ahst_row_2);
+        size2(counter) = sizes(ahst_row_2);
+        repstatus2(counter) = repstatus(ahst_row_2);
+        entrystatus2(counter) = entrystage(ahst_row_2);
         
-        int stage3 = hstage3in(i2);
-        longnames3(counter) = stagenames(stage3);
-        size3(counter) = sizes(stage3);
-        repstatus3(counter) = repstatus(stage3);
-        entrystatus3(counter) = entrystage(stage3);
+        unsigned int stage3 = hstage3in(i2);
+        arma::uvec ahst_rows_3 = find(astages == (stage3 + 1));
+        unsigned int ahst_row_3 = ahst_rows_3(0);
+        longnames3(counter) = stagenames(ahst_row_3);
+        size3(counter) = sizes(ahst_row_3);
+        repstatus3(counter) = repstatus(ahst_row_3);
+        entrystatus3(counter) = entrystage(ahst_row_3);
         
         if (entrystatus3(counter) == 1 && repstatus2(counter) == 1) {
           if (entrystatus2(counter) == 1 && repstatus1(counter) == 1) {
@@ -337,17 +343,21 @@ DataFrame bambi2(const DataFrame& stages) {
     for (int i2 = 0; i2 < numstages; i2++) {
       ahsindexl(counter) = (i1 * numstages) + i2;
       
-      int stage2 =  astages(i1);
-      longstages2(counter) = stagenames(stage2);
-      size2(counter) = sizes(stage2);
-      repstatus2(counter) = repstatus(stage2);
-      entrystatus2(counter) = entrystage(stage2);
+      int stage2 = astages(i1);
+      arma::uvec ahst_rows_2 = find(astages == stage2);
+      int ahst_row_2 = ahst_rows_2(0);
+      longstages2(counter) = stagenames(ahst_row_2);
+      size2(counter) = sizes(ahst_row_2);
+      repstatus2(counter) = repstatus(ahst_row_2);
+      entrystatus2(counter) = entrystage(ahst_row_2);
       
       int stage3 = astages(i2);
-      longstages3(counter) = stagenames(stage3);
-      size3(counter) = sizes(stage3);
-      repstatus3(counter) = repstatus(stage3);
-      entrystatus3(counter) = entrystage(stage3);
+      arma::uvec ahst_rows_3 = find(astages == stage3);
+      int ahst_row_3 = ahst_rows_3(0);
+      longstages3(counter) = stagenames(ahst_row_3);
+      size3(counter) = sizes(ahst_row_3);
+      repstatus3(counter) = repstatus(ahst_row_3);
+      entrystatus3(counter) = entrystage(ahst_row_3);
       
       if (entrystatus3(counter) == 1 && repstatus2(counter) == 1) {
         transition_type(counter) = 4; // Fecundity
@@ -561,15 +571,6 @@ Rcpp::List demolition4 (List cmats) {
 //' a supplied ahistorical elasticity matrix. Also includes sums of only the
 //' positive elements and only the negative elements, in all cases.
 //' 
-//' @section Notes:
-//' If the original matrices are provided, then this function was made to split
-//' co-occurring survival-fecundity elasticities according to the ratio of the
-//' fecundity portion of the element to the survival portion of that element.
-//' However, this transition splitting capability developed using the original
-//' matrices does not currently work properly, and so it is better to use this
-//' function without objects \code{amat_} and \code{fmat_}, forcing co-occurring
-//' survival-fecundity transitions to be treated as fecundity only.
-//' 
 //' @keywords internal
 //' @noRd
 // [[Rcpp::export(.demolition3)]]
@@ -603,47 +604,42 @@ List demolition3(const arma::mat& e_amat, const DataFrame& bambesque,
     amat = amat1;
     fmat = fmat1;
     
-    arma::uvec fec_trans = find(categories == 4);
-    if (fec_trans.n_elem > 0) {
-      for (int i = 0; i < static_cast<int>(fec_trans.n_elem); i ++) {
-        fmat(eindices(fec_trans(i))) = 1;
+    arma::uvec fec_trans4 = find(categories == 4);
+    if (fec_trans4.n_elem > 0) {
+      for (int i = 0; i < static_cast<int>(fec_trans4.n_elem); i ++) {
+        fmat(eindices(fec_trans4(i))) = 1;
       }
     }
-    fec_trans = find(categories == 20);
-    if (fec_trans.n_elem > 0) {
-      for (int i = 0; i < static_cast<int>(fec_trans.n_elem); i ++) {
-        fmat(eindices(fec_trans(i))) = 1;
+    
+    arma::uvec fec_trans20 = find(categories == 20);
+    if (fec_trans20.n_elem > 0) {
+      for (int i = 0; i < static_cast<int>(fec_trans20.n_elem); i ++) {
+        fmat(eindices(fec_trans20(i))) = 1;
       }
     }
-    fec_trans = find(categories == 21);
-    if (fec_trans.n_elem > 0) {
-      for (int i = 0; i < static_cast<int>(fec_trans.n_elem); i ++) {
-        fmat(eindices(fec_trans(i))) = 1;
+    
+    arma::uvec fec_trans21 = find(categories == 21);
+    if (fec_trans21.n_elem > 0) {
+      for (int i = 0; i < static_cast<int>(fec_trans21.n_elem); i ++) {
+        fmat(eindices(fec_trans21(i))) = 1;
       }
     }
-    fec_trans = find(categories == 22);
-    if (fec_trans.n_elem > 0) {
-      for (int i = 0; i < static_cast<int>(fec_trans.n_elem); i ++) {
-        fmat(eindices(fec_trans(i))) = 1;
+    
+    arma::uvec fec_trans22 = find(categories == 22);
+    if (fec_trans22.n_elem > 0) {
+      for (int i = 0; i < static_cast<int>(fec_trans22.n_elem); i ++) {
+        fmat(eindices(fec_trans22(i))) = 1;
       }
     }
-    fec_trans = find(categories == 26);
-    if (fec_trans.n_elem > 0) {
-      for (int i = 0; i < static_cast<int>(fec_trans.n_elem); i ++) {
-        fmat(eindices(fec_trans(i))) = 1;
+    
+    arma::uvec fec_trans26 = find(categories == 26);
+    if (fec_trans26.n_elem > 0) {
+      for (int i = 0; i < static_cast<int>(fec_trans26.n_elem); i ++) {
+        fmat(eindices(fec_trans26(i))) = 1;
       }
     }
   }
   
-  // Splits fecundity transitions if they include survival portions
-  arma::mat corr_mat = amat;
-  arma::uvec z_indices = find(corr_mat == 0.0);
-  int z_indicesnem = static_cast<int>(z_indices.n_elem);
-  for (int i = 0; i < z_indicesnem; i++) {
-    corr_mat(z_indices(i)) = 1.0;
-  }
-  
-  arma::mat fec_fraction = fmat / corr_mat;
   DataFrame histout;
   DataFrame ahistout;
   
@@ -702,674 +698,15 @@ List demolition3(const arma::mat& e_amat, const DataFrame& bambesque,
         for (int j = 0; j < currentguysnem; j++) {
           int this_guy = eindices(currentguys(j));
           
-          if (fec_fraction(this_guy) == 1.0) {
-            hc_ahistsums(3) += (e_amat(this_guy));
-            histsums(i) += (e_amat(this_guy));
-            
-            if (e_amat(this_guy) > 0) {
-              hc_ahistpos(3) += (e_amat(this_guy));
-              histpos(i) += (e_amat(this_guy));
-            } else if (e_amat(this_guy) < 0) {
-              hc_ahistneg(3) += (e_amat(this_guy));
-              histneg(i) += (e_amat(this_guy));
-            }
-            
-          } else {
-            hc_ahistsums(3) += (e_amat(this_guy) * fec_fraction(this_guy));
-            histsums(i) += (e_amat(this_guy) * fec_fraction(this_guy));
-            
-            if (e_amat(this_guy) > 0) {
-              hc_ahistpos(3) += (e_amat(this_guy) * (fec_fraction(this_guy)));
-              histpos(i) += (e_amat(this_guy) * (fec_fraction(this_guy)));
-            } else if (e_amat(this_guy) < 0) {
-              hc_ahistneg(3) += (e_amat(this_guy) * (fec_fraction(this_guy)));
-              histneg(i) += (e_amat(this_guy) * (fec_fraction(this_guy)));
-            }
-            
-            arma::uvec counter = find(eindices == this_guy);
-            if (entrystatus2(counter(0)) == 1 && repstatus1(counter(0)) == 1) {
-              if (size3(counter(0)) == size2(counter(0)) &&
-                repstatus3(counter(0)) == repstatus2(counter(0)) &&
-                  entrystatus3(counter(0)) == entrystatus2(counter(0))) {
-                hc_ahistsums(0) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                histsums(12) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                
-                if (e_amat(this_guy) > 0) {
-                  hc_ahistpos(0) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                  histpos(12) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                } else if (e_amat(this_guy) < 0) {
-                  hc_ahistneg(0) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                  histneg(12) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                }
-                
-              } else if (size3(counter(0)) > size2(counter(0))) {
-                hc_ahistsums(1) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                histsums(13) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                
-                if (e_amat(this_guy) > 0) {
-                  hc_ahistpos(1) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                  histpos(13) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                } else if (e_amat(this_guy) < 0) {
-                  hc_ahistneg(1) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                  histneg(13) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                }
-                
-              } else if (size3(counter(0)) < size2(counter(0))) {
-                hc_ahistsums(2) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                histsums(14) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                
-                if (e_amat(this_guy) > 0) {
-                  hc_ahistpos(2) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                  histpos(14) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                } else if (e_amat(this_guy) < 0) {
-                  hc_ahistneg(2) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                  histneg(14) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                }
-                
-              } else if (repstatus3(counter(0)) > repstatus2(counter(0))) {
-                hc_ahistsums(1) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                histsums(13) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                
-                if (e_amat(this_guy) > 0) {
-                  hc_ahistpos(1) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                  histpos(13) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                } else if (e_amat(this_guy) < 0) {
-                  hc_ahistneg(1) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                  histneg(13) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                }
-                
-              } else if (repstatus3(counter(0)) < repstatus2(counter(0))) {
-                hc_ahistsums(2) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                histsums(14) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                
-                if (e_amat(this_guy) > 0) {
-                  hc_ahistpos(2) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                  histpos(14) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                } else if (e_amat(this_guy) < 0) {
-                  hc_ahistneg(2) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                  histneg(14) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                }
-                
-              } else if (entrystatus3(counter(0)) < entrystatus2(counter(0))) {
-                hc_ahistsums(1) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                histsums(13) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                
-                if (e_amat(this_guy) > 0) {
-                  hc_ahistpos(1) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                  histpos(13) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                } else if (e_amat(this_guy) < 0) {
-                  hc_ahistneg(1) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                  histneg(13) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                }
-                
-              } else if (entrystatus3(counter(0)) > entrystatus2(counter(0))) {
-                hc_ahistsums(2) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                histsums(14) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                
-                if (e_amat(this_guy) > 0) {
-                  hc_ahistpos(2) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                  histpos(14) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                } else if (e_amat(this_guy) < 0) {
-                  hc_ahistneg(2) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                  histneg(14) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                }
-              }
-              
-            } else if (size3(counter(0)) == size2(counter(0)) &&
-              size2(counter(0)) == size1(counter(0))) {
-              if (repstatus3(counter(0)) > repstatus2(counter(0))) {
-                if (repstatus2(counter(0)) > repstatus1(counter(0))) {
-                  hc_ahistsums(1) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                  histsums(2) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                
-                  if (e_amat(this_guy) > 0) {
-                    hc_ahistpos(1) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                    histpos(2) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                  } else if (e_amat(this_guy) < 0) {
-                    hc_ahistneg(1) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                    histneg(2) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                  }
-                  
-                } else if (repstatus2(counter(0)) < repstatus1(counter(0))) {
-                  hc_ahistsums(1) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                  histsums(8) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                
-                  if (e_amat(this_guy) > 0) {
-                    hc_ahistpos(1) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                    histpos(8) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                  } else if (e_amat(this_guy) < 0) {
-                    hc_ahistneg(1) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                    histneg(8) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                  }
-                  
-                } else if (entrystatus2(counter(0)) < entrystatus1(counter(0))) {
-                  hc_ahistsums(1) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                  histsums(2) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                
-                  if (e_amat(this_guy) > 0) {
-                    hc_ahistpos(1) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                    histpos(2) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                  } else if (e_amat(this_guy) < 0) {
-                    hc_ahistneg(1) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                    histneg(2) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                  }
-                  
-                } else if (entrystatus2(counter(0)) > entrystatus1(counter(0))) {
-                  hc_ahistsums(1) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                  histsums(8) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                
-                  if (e_amat(this_guy) > 0) {
-                    hc_ahistpos(1) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                    histpos(8) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                  } else if (e_amat(this_guy) < 0) {
-                    hc_ahistneg(1) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                    histneg(8) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                  }
-                  
-                } else {
-                  hc_ahistsums(1) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                  histsums(1) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                
-                  if (e_amat(this_guy) > 0) {
-                    hc_ahistpos(1) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                    histpos(1) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                  } else if (e_amat(this_guy) < 0) {
-                    hc_ahistneg(1) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                    histneg(1) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                  }
-                }
-                
-              } else if (repstatus3(counter(0)) < repstatus2(counter(0))) {
-                if (repstatus2(counter(0)) > repstatus1(counter(0))) {
-                  hc_ahistsums(2) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                  histsums(7) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                
-                  if (e_amat(this_guy) > 0) {
-                    hc_ahistpos(2) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                    histpos(7) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                  } else if (e_amat(this_guy) < 0) {
-                    hc_ahistneg(2) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                    histneg(7) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                  }
-                  
-                } else if (repstatus2(counter(0)) < repstatus1(counter(0))) {
-                  hc_ahistsums(2) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                  histsums(5) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                
-                  if (e_amat(this_guy) > 0) {
-                    hc_ahistpos(2) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                    histpos(5) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                  } else if (e_amat(this_guy) < 0) {
-                    hc_ahistneg(2) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                    histneg(5) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                  }
-                  
-                } else if (entrystatus2(counter(0)) < entrystatus1(counter(0))) {
-                  hc_ahistsums(2) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                  histsums(7) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                
-                  if (e_amat(this_guy) > 0) {
-                    hc_ahistpos(2) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                    histpos(7) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                  } else if (e_amat(this_guy) < 0) {
-                    hc_ahistneg(2) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                    histneg(7) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                  }
-                  
-                } else if (entrystatus2(counter(0)) > entrystatus1(counter(0))) {
-                  hc_ahistsums(2) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                  histsums(5) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                
-                  if (e_amat(this_guy) > 0) {
-                    hc_ahistpos(2) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                    histpos(5) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                  } else if (e_amat(this_guy) < 0) {
-                    hc_ahistneg(2) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                    histneg(5) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                  }
-                  
-                } else {
-                  hc_ahistsums(2) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                  histsums(4) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                
-                  if (e_amat(this_guy) > 0) {
-                    hc_ahistpos(2) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                    histpos(4) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                  } else if (e_amat(this_guy) < 0) {
-                    hc_ahistneg(2) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                    histneg(4) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                  }
-                }
-                
-              } else if (entrystatus3(counter(0)) < entrystatus2(counter(0))) {
-                if (repstatus2(counter(0)) > repstatus1(counter(0))) {
-                  hc_ahistsums(1) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                  histsums(2) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                
-                  if (e_amat(this_guy) > 0) {
-                    hc_ahistpos(1) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                    histpos(2) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                  } else if (e_amat(this_guy) < 0) {
-                    hc_ahistneg(1) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                    histneg(2) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                  }
-                  
-                } else if (repstatus2(counter(0)) < repstatus1(counter(0))) {
-                  hc_ahistsums(1) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                  histsums(8) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                
-                  if (e_amat(this_guy) > 0) {
-                    hc_ahistpos(1) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                    histpos(8) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                  } else if (e_amat(this_guy) < 0) {
-                    hc_ahistneg(1) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                    histneg(8) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                  }
-                  
-                } else if (entrystatus2(counter(0)) < entrystatus1(counter(0))) {
-                  hc_ahistsums(1) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                  histsums(2) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                
-                  if (e_amat(this_guy) > 0) {
-                    hc_ahistpos(1) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                    histpos(2) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                  } else if (e_amat(this_guy) < 0) {
-                    hc_ahistneg(1) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                    histneg(2) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                  }
-                  
-                } else if (entrystatus2(counter(0)) > entrystatus1(counter(0))) {
-                  hc_ahistsums(1) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                  histsums(8) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                
-                  if (e_amat(this_guy) > 0) {
-                    hc_ahistpos(1) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                    histpos(8) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                  } else if (e_amat(this_guy) < 0) {
-                    hc_ahistneg(1) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                    histneg(8) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                  }
-                  
-                } else {
-                  hc_ahistsums(1) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                  histsums(1) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                
-                  if (e_amat(this_guy) > 0) {
-                    hc_ahistpos(1) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                    histpos(1) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                  } else if (e_amat(this_guy) < 0) {
-                    hc_ahistneg(1) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                    histneg(1) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                  }
-                }
-              } else if (entrystatus3(counter(0)) > entrystatus2(counter(0))) {
-                if (repstatus2(counter(0)) > repstatus1(counter(0))) {
-                  hc_ahistsums(2) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                  histsums(7) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                
-                  if (e_amat(this_guy) > 0) {
-                    hc_ahistpos(2) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                    histpos(7) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                  } else if (e_amat(this_guy) < 0) {
-                    hc_ahistneg(2) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                    histneg(7) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                  }
-                  
-                } else if (repstatus2(counter(0)) < repstatus1(counter(0))) {
-                  hc_ahistsums(2) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                  histsums(5) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                
-                  if (e_amat(this_guy) > 0) {
-                    hc_ahistpos(2) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                    histpos(5) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                  } else if (e_amat(this_guy) < 0) {
-                    hc_ahistneg(2) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                    histneg(5) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                  }
-                  
-                } else if (entrystatus2(counter(0)) < entrystatus1(counter(0))) {
-                  hc_ahistsums(2) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                  histsums(7) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                
-                  if (e_amat(this_guy) > 0) {
-                    hc_ahistpos(2) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                    histpos(7) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                  } else if (e_amat(this_guy) < 0) {
-                    hc_ahistneg(2) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                    histneg(7) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                  }
-                  
-                } else if (entrystatus2(counter(0)) > entrystatus1(counter(0))) {
-                  hc_ahistsums(2) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                  histsums(5) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                
-                  if (e_amat(this_guy) > 0) {
-                    hc_ahistpos(2) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                    histpos(5) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                  } else if (e_amat(this_guy) < 0) {
-                    hc_ahistneg(2) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                    histneg(5) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                  }
-                  
-                } else {
-                  hc_ahistsums(2) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                  histsums(4) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                
-                  if (e_amat(this_guy) > 0) {
-                    hc_ahistpos(2) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                    histpos(4) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                  } else if (e_amat(this_guy) < 0) {
-                    hc_ahistneg(2) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                    histneg(4) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                  }
-                }
-                
-              } else {
-                hc_ahistsums(0) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                histsums(0) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                
-                if (e_amat(this_guy) > 0) {
-                  hc_ahistpos(0) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                  histpos(0) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                } else if (e_amat(this_guy) < 0) {
-                  hc_ahistneg(0) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                  histneg(0) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                }
-              }
-              
-            } else if (size3(counter(0)) > size2(counter(0)) &&
-                size2(counter(0)) == size1(counter(0))) {
-              if (repstatus2(counter(0)) > repstatus1(counter(0))) {
-                hc_ahistsums(1) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                histsums(2) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                
-                if (e_amat(this_guy) > 0) {
-                  hc_ahistpos(1) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                  histpos(2) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                } else if (e_amat(this_guy) < 0) {
-                  hc_ahistneg(1) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                  histneg(2) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                }
-                
-              } else if (repstatus2(counter(0)) < repstatus1(counter(0))) {
-                hc_ahistsums(1) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                histsums(8) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                
-                if (e_amat(this_guy) > 0) {
-                  hc_ahistpos(1) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                  histpos(8) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                } else if (e_amat(this_guy) < 0) {
-                  hc_ahistneg(1) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                  histneg(8) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                }
-                
-              } else if (entrystatus2(counter(0)) < entrystatus1(counter(0))) {
-                hc_ahistsums(1) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                histsums(2) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                
-                if (e_amat(this_guy) > 0) {
-                  hc_ahistpos(1) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                  histpos(2) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                } else if (e_amat(this_guy) < 0) {
-                  hc_ahistneg(1) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                  histneg(2) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                }
-                
-              } else if (entrystatus2(counter(0)) > entrystatus1(counter(0))) {
-                hc_ahistsums(1) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                histsums(8) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                
-                if (e_amat(this_guy) > 0) {
-                  hc_ahistpos(1) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                  histpos(8) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                } else if (e_amat(this_guy) < 0) {
-                  hc_ahistneg(1) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                  histneg(8) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                }
-                
-              } else {
-                hc_ahistsums(1) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                histsums(1) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                
-                if (e_amat(this_guy) > 0) {
-                  hc_ahistpos(1) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                  histpos(1) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                } else if (e_amat(this_guy) < 0) {
-                  hc_ahistneg(1) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                  histneg(1) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                }
-              }
-              
-            } else if (size3(counter(0)) > size2(counter(0)) &&
-              size2(counter(0)) > size1(counter(0))) {
-              hc_ahistsums(1) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-              histsums(2) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-              
-              if (e_amat(this_guy) > 0) {
-                hc_ahistpos(1) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                histpos(2) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-              } else if (e_amat(this_guy) < 0) {
-                hc_ahistneg(1) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                histneg(2) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-              }
-              
-            } else if (size3(counter(0)) == size2(counter(0)) && size2(counter(0)) > size1(counter(0))) {
-              if (repstatus3(counter(0)) > repstatus2(counter(0))) {
-                hc_ahistsums(1) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                histsums(2) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                
-                if (e_amat(this_guy) > 0) {
-                  hc_ahistpos(1) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                  histpos(2) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                } else if (e_amat(this_guy) < 0) {
-                  hc_ahistneg(1) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                  histneg(2) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                }
-                
-              } else if (repstatus3(counter(0)) < repstatus2(counter(0))) {
-                hc_ahistsums(2) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                histsums(7) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                
-                if (e_amat(this_guy) > 0) {
-                  hc_ahistpos(2) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                  histpos(7) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                } else if (e_amat(this_guy) < 0) {
-                  hc_ahistneg(2) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                  histneg(7) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                }
-                
-              } else if (entrystatus3(counter(0)) < entrystatus2(counter(0))) {
-                hc_ahistsums(1) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                histsums(2) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                
-                if (e_amat(this_guy) > 0) {
-                  hc_ahistpos(1) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                  histpos(2) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                } else if (e_amat(this_guy) < 0) {
-                  hc_ahistneg(1) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                  histneg(2) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                }
-                
-              } else if (entrystatus3(counter(0)) > entrystatus2(counter(0))) {
-                hc_ahistsums(2) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                histsums(7) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                
-                if (e_amat(this_guy) > 0) {
-                  hc_ahistpos(2) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                  histpos(7) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                } else if (e_amat(this_guy) < 0) {
-                  hc_ahistneg(2) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                  histneg(7) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                }
-                
-              } else {
-                hc_ahistsums(0) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                histsums(0) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                
-                if (e_amat(this_guy) > 0) {
-                  hc_ahistpos(0) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                  histpos(0) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                } else if (e_amat(this_guy) < 0) {
-                  hc_ahistneg(0) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                  histneg(0) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                }
-              }
-              
-            } else if (size3(counter(0)) < size2(counter(0)) &&
-              size2(counter(0)) == size1(counter(0))) {
-              if (repstatus2(counter(0)) > repstatus1(counter(0))) {
-                hc_ahistsums(2) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                histsums(7) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                
-                if (e_amat(this_guy) > 0) {
-                  hc_ahistpos(2) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                  histpos(7) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                } else if (e_amat(this_guy) < 0) {
-                  hc_ahistneg(2) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                  histneg(7) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                }
-                
-              } else if (repstatus2(counter(0)) < repstatus1(counter(0))) {
-                hc_ahistsums(2) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                histsums(5) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                
-                if (e_amat(this_guy) > 0) {
-                  hc_ahistpos(2) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                  histpos(5) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                } else if (e_amat(this_guy) < 0) {
-                  hc_ahistneg(2) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                  histneg(5) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                }
-                
-              } else if (entrystatus2(counter(0)) < entrystatus1(counter(0))) {
-                hc_ahistsums(2) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                histsums(7) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                
-                if (e_amat(this_guy) > 0) {
-                  hc_ahistpos(2) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                  histpos(7) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                } else if (e_amat(this_guy) < 0) {
-                  hc_ahistneg(2) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                  histneg(7) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                }
-                
-              } else if (entrystatus2(counter(0)) > entrystatus1(counter(0))) {
-                hc_ahistsums(2) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                histsums(5) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                
-                if (e_amat(this_guy) > 0) {
-                  hc_ahistpos(2) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                  histpos(5) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                } else if (e_amat(this_guy) < 0) {
-                  hc_ahistneg(2) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                  histneg(5) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                }
-                
-              } else {
-                hc_ahistsums(2) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                histsums(4) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                
-                if (e_amat(this_guy) > 0) {
-                  hc_ahistpos(2) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                  histpos(4) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                } else if (e_amat(this_guy) < 0) {
-                  hc_ahistneg(2) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                  histneg(4) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                }
-              }
-              
-            } else if (size3(counter(0)) < size2(counter(0)) &&
-              size2(counter(0)) < size1(counter(0))) {
-              hc_ahistsums(2) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-              histsums(5) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-              
-              if (e_amat(this_guy) > 0) {
-                hc_ahistpos(2) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                histpos(5) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-              } else if (e_amat(this_guy) < 0) {
-                hc_ahistneg(2) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                histneg(5) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-              }
-              
-            } else if (size3(counter(0)) == size2(counter(0)) &&
-              size2(counter(0)) < size1(counter(0))) {
-              if (repstatus3(counter(0)) > repstatus2(counter(0))) {
-                hc_ahistsums(1) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                histsums(8) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                
-                if (e_amat(this_guy) > 0) {
-                  hc_ahistpos(1) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                  histpos(8) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                } else if (e_amat(this_guy) < 0) {
-                  hc_ahistneg(1) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                  histneg(8) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                }
-                
-              } else if (repstatus3(counter(0)) < repstatus2(counter(0))) {
-                hc_ahistsums(2) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                histsums(5) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                
-                if (e_amat(this_guy) > 0) {
-                  hc_ahistpos(2) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                  histpos(5) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                } else if (e_amat(this_guy) < 0) {
-                  hc_ahistneg(2) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                  histneg(5) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                }
-                
-              } else if (entrystatus3(counter(0)) < entrystatus2(counter(0))) {
-                hc_ahistsums(1) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                histsums(8) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                
-                if (e_amat(this_guy) > 0) {
-                  hc_ahistpos(1) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                  histpos(8) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                } else if (e_amat(this_guy) < 0) {
-                  hc_ahistneg(1) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                  histneg(8) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                }
-                
-              } else if (entrystatus3(counter(0)) > entrystatus2(counter(0))) {
-                hc_ahistsums(2) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                histsums(5) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                
-                if (e_amat(this_guy) > 0) {
-                  hc_ahistpos(2) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                  histpos(5) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                } else if (e_amat(this_guy) < 0) {
-                  hc_ahistneg(2) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                  histneg(5) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                }
-                
-              } else {
-                hc_ahistsums(0) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                histsums(6) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                
-                if (e_amat(this_guy) > 0) {
-                  hc_ahistpos(0) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                  histpos(86) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                } else if (e_amat(this_guy) < 0) {
-                  hc_ahistneg(0) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                  histneg(6) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                }
-              }
-              
-            } else if (size3(counter(0)) < size2(counter(0)) &&
-              size2(counter(0)) > size1(counter(0))) {
-              hc_ahistsums(2) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-              histsums(7) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-              
-              if (e_amat(this_guy) > 0) {
-                hc_ahistpos(2) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                histpos(7) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-              } else if (e_amat(this_guy) < 0) {
-                hc_ahistneg(2) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                histneg(7) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-              }
-            } else if (size3(counter(0)) > size2(counter(0)) && size2(counter(0)) < size1(counter(0))) {
-              hc_ahistsums(2) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-              histsums(7) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-            }
+          hc_ahistsums(3) += (e_amat(this_guy));
+          histsums(i) += (e_amat(this_guy));
+          
+          if (e_amat(this_guy) > 0) {
+            hc_ahistpos(3) += (e_amat(this_guy));
+            histpos(i) += (e_amat(this_guy));
+          } else if (e_amat(this_guy) < 0) {
+            hc_ahistneg(3) += (e_amat(this_guy));
+            histneg(i) += (e_amat(this_guy));
           }
         }
       } else if (histcatnums(i) == 14 || histcatnums(i) == 15 ||
@@ -1506,15 +843,6 @@ List demolition3(const arma::mat& e_amat, const DataFrame& bambesque,
 //' a supplied ahistorical elasticity matrix. Also includes sums of only the
 //' positive elements and only the negative elements, in all cases.
 //' 
-//' @section Notes:
-//' If the original matrices are provided, then this function was made to split
-//' co-occurring survival-fecundity elasticities according to the ratio of the
-//' fecundity portion of the element to the survival portion of that element.
-//' However, this transition splitting capability developed using the original
-//' matrices does not currently work properly, and so it is better to use this
-//' function without objects \code{amat_} and \code{fmat_}, forcing co-occurring
-//' survival-fecundity transitions to be treated as fecundity only.
-//' 
 //' @keywords internal
 //' @noRd
 // [[Rcpp::export(.demolition3sp)]]
@@ -1549,47 +877,36 @@ List demolition3sp(const arma::sp_mat& e_amat, const DataFrame& bambesque,
     arma::sp_mat fmat1(e_amatrows, e_amatrows);
     fmat = fmat1;
     
-    arma::uvec fec_trans = find(categories == 4);
-    if (fec_trans.n_elem > 0) {
-      for (int i = 0; i < static_cast<int>(fec_trans.n_elem); i ++) {
-        fmat(eindices(fec_trans(i))) = 1;
+    arma::uvec fec_trans4 = find(categories == 4);
+    if (fec_trans4.n_elem > 0) {
+      for (int i = 0; i < static_cast<int>(fec_trans4.n_elem); i ++) {
+        fmat(eindices(fec_trans4(i))) = 1;
       }
     }
-    fec_trans = find(categories == 20);
-    if (fec_trans.n_elem > 0) {
-      for (int i = 0; i < static_cast<int>(fec_trans.n_elem); i ++) {
-        fmat(eindices(fec_trans(i))) = 1;
+    arma::uvec fec_trans20 = find(categories == 20);
+    if (fec_trans20.n_elem > 0) {
+      for (int i = 0; i < static_cast<int>(fec_trans20.n_elem); i ++) {
+        fmat(eindices(fec_trans20(i))) = 1;
       }
     }
-    fec_trans = find(categories == 21);
-    if (fec_trans.n_elem > 0) {
-      for (int i = 0; i < static_cast<int>(fec_trans.n_elem); i ++) {
-        fmat(eindices(fec_trans(i))) = 1;
+    arma::uvec fec_trans21 = find(categories == 21);
+    if (fec_trans21.n_elem > 0) {
+      for (int i = 0; i < static_cast<int>(fec_trans21.n_elem); i ++) {
+        fmat(eindices(fec_trans21(i))) = 1;
       }
     }
-    fec_trans = find(categories == 22);
-    if (fec_trans.n_elem > 0) {
-      for (int i = 0; i < static_cast<int>(fec_trans.n_elem); i ++) {
-        fmat(eindices(fec_trans(i))) = 1;
+    arma::uvec fec_trans22 = find(categories == 22);
+    if (fec_trans22.n_elem > 0) {
+      for (int i = 0; i < static_cast<int>(fec_trans22.n_elem); i ++) {
+        fmat(eindices(fec_trans22(i))) = 1;
       }
     }
-    fec_trans = find(categories == 26);
-    if (fec_trans.n_elem > 0) {
-      for (int i = 0; i < static_cast<int>(fec_trans.n_elem); i ++) {
-        fmat(eindices(fec_trans(i))) = 1;
+    arma::uvec fec_trans26 = find(categories == 26);
+    if (fec_trans26.n_elem > 0) {
+      for (int i = 0; i < static_cast<int>(fec_trans26.n_elem); i ++) {
+        fmat(eindices(fec_trans26(i))) = 1;
       }
     }
-  }
-  
-  // Splits fecundity transitions if they include survival portions
-  arma::sp_mat fec_fraction(e_amatrows, e_amatrows);
-  arma::sp_mat corr_mat = amat;
-  
-  arma::uvec z_indices = find(corr_mat);
-  int z_indicesnem = static_cast<int>(z_indices.n_elem);
-  
-  for (int i = 0; i < z_indicesnem; i++) {
-    fec_fraction(i) = fmat(i) / amat(i);
   }
   
   DataFrame histout;
@@ -1650,674 +967,15 @@ List demolition3sp(const arma::sp_mat& e_amat, const DataFrame& bambesque,
         for (int j = 0; j < currentguysnem; j++) {
           int this_guy = eindices(currentguys(j));
           
-          if (fec_fraction(this_guy) == 1.0) {
-            hc_ahistsums(3) += (e_amat(this_guy));
-            histsums(i) += (e_amat(this_guy));
-            
-            if (e_amat(this_guy) > 0) {
-              hc_ahistpos(3) += (e_amat(this_guy));
-              histpos(i) += (e_amat(this_guy));
-            } else if (e_amat(this_guy) < 0) {
-              hc_ahistneg(3) += (e_amat(this_guy));
-              histneg(i) += (e_amat(this_guy));
-            }
-            
-          } else if (fec_fraction(this_guy) > 0.0) {
-            hc_ahistsums(3) += (e_amat(this_guy) * fec_fraction(this_guy));
-            histsums(i) += (e_amat(this_guy) * fec_fraction(this_guy));
-            
-            if (e_amat(this_guy) > 0) {
-              hc_ahistpos(3) += (e_amat(this_guy) * (fec_fraction(this_guy)));
-              histpos(i) += (e_amat(this_guy) * (fec_fraction(this_guy)));
-            } else if (e_amat(this_guy) < 0) {
-              hc_ahistneg(3) += (e_amat(this_guy) * (fec_fraction(this_guy)));
-              histneg(i) += (e_amat(this_guy) * (fec_fraction(this_guy)));
-            }
-            
-            arma::uvec counter = find(eindices == this_guy);
-            if (entrystatus2(counter(0)) == 1 && repstatus1(counter(0)) == 1) {
-              if (size3(counter(0)) == size2(counter(0)) &&
-                repstatus3(counter(0)) == repstatus2(counter(0)) &&
-                  entrystatus3(counter(0)) == entrystatus2(counter(0))) {
-                hc_ahistsums(0) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                histsums(12) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                
-                if (e_amat(this_guy) > 0) {
-                  hc_ahistpos(0) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                  histpos(12) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                } else if (e_amat(this_guy) < 0) {
-                  hc_ahistneg(0) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                  histneg(12) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                }
-                
-              } else if (size3(counter(0)) > size2(counter(0))) {
-                hc_ahistsums(1) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                histsums(13) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                
-                if (e_amat(this_guy) > 0) {
-                  hc_ahistpos(1) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                  histpos(13) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                } else if (e_amat(this_guy) < 0) {
-                  hc_ahistneg(1) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                  histneg(13) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                }
-                
-              } else if (size3(counter(0)) < size2(counter(0))) {
-                hc_ahistsums(2) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                histsums(14) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                
-                if (e_amat(this_guy) > 0) {
-                  hc_ahistpos(2) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                  histpos(14) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                } else if (e_amat(this_guy) < 0) {
-                  hc_ahistneg(2) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                  histneg(14) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                }
-                
-              } else if (repstatus3(counter(0)) > repstatus2(counter(0))) {
-                hc_ahistsums(1) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                histsums(13) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                
-                if (e_amat(this_guy) > 0) {
-                  hc_ahistpos(1) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                  histpos(13) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                } else if (e_amat(this_guy) < 0) {
-                  hc_ahistneg(1) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                  histneg(13) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                }
-                
-              } else if (repstatus3(counter(0)) < repstatus2(counter(0))) {
-                hc_ahistsums(2) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                histsums(14) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                
-                if (e_amat(this_guy) > 0) {
-                  hc_ahistpos(2) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                  histpos(14) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                } else if (e_amat(this_guy) < 0) {
-                  hc_ahistneg(2) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                  histneg(14) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                }
-                
-              } else if (entrystatus3(counter(0)) < entrystatus2(counter(0))) {
-                hc_ahistsums(1) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                histsums(13) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                
-                if (e_amat(this_guy) > 0) {
-                  hc_ahistpos(1) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                  histpos(13) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                } else if (e_amat(this_guy) < 0) {
-                  hc_ahistneg(1) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                  histneg(13) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                }
-                
-              } else if (entrystatus3(counter(0)) > entrystatus2(counter(0))) {
-                hc_ahistsums(2) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                histsums(14) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                
-                if (e_amat(this_guy) > 0) {
-                  hc_ahistpos(2) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                  histpos(14) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                } else if (e_amat(this_guy) < 0) {
-                  hc_ahistneg(2) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                  histneg(14) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                }
-              }
-              
-            } else if (size3(counter(0)) == size2(counter(0)) &&
-              size2(counter(0)) == size1(counter(0))) {
-              if (repstatus3(counter(0)) > repstatus2(counter(0))) {
-                if (repstatus2(counter(0)) > repstatus1(counter(0))) {
-                  hc_ahistsums(1) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                  histsums(2) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                
-                  if (e_amat(this_guy) > 0) {
-                    hc_ahistpos(1) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                    histpos(2) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                  } else if (e_amat(this_guy) < 0) {
-                    hc_ahistneg(1) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                    histneg(2) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                  }
-                  
-                } else if (repstatus2(counter(0)) < repstatus1(counter(0))) {
-                  hc_ahistsums(1) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                  histsums(8) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                
-                  if (e_amat(this_guy) > 0) {
-                    hc_ahistpos(1) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                    histpos(8) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                  } else if (e_amat(this_guy) < 0) {
-                    hc_ahistneg(1) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                    histneg(8) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                  }
-                  
-                } else if (entrystatus2(counter(0)) < entrystatus1(counter(0))) {
-                  hc_ahistsums(1) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                  histsums(2) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                
-                  if (e_amat(this_guy) > 0) {
-                    hc_ahistpos(1) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                    histpos(2) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                  } else if (e_amat(this_guy) < 0) {
-                    hc_ahistneg(1) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                    histneg(2) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                  }
-                  
-                } else if (entrystatus2(counter(0)) > entrystatus1(counter(0))) {
-                  hc_ahistsums(1) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                  histsums(8) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                
-                  if (e_amat(this_guy) > 0) {
-                    hc_ahistpos(1) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                    histpos(8) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                  } else if (e_amat(this_guy) < 0) {
-                    hc_ahistneg(1) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                    histneg(8) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                  }
-                  
-                } else {
-                  hc_ahistsums(1) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                  histsums(1) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                
-                  if (e_amat(this_guy) > 0) {
-                    hc_ahistpos(1) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                    histpos(1) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                  } else if (e_amat(this_guy) < 0) {
-                    hc_ahistneg(1) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                    histneg(1) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                  }
-                }
-                
-              } else if (repstatus3(counter(0)) < repstatus2(counter(0))) {
-                if (repstatus2(counter(0)) > repstatus1(counter(0))) {
-                  hc_ahistsums(2) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                  histsums(7) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                
-                  if (e_amat(this_guy) > 0) {
-                    hc_ahistpos(2) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                    histpos(7) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                  } else if (e_amat(this_guy) < 0) {
-                    hc_ahistneg(2) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                    histneg(7) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                  }
-                  
-                } else if (repstatus2(counter(0)) < repstatus1(counter(0))) {
-                  hc_ahistsums(2) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                  histsums(5) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                
-                  if (e_amat(this_guy) > 0) {
-                    hc_ahistpos(2) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                    histpos(5) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                  } else if (e_amat(this_guy) < 0) {
-                    hc_ahistneg(2) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                    histneg(5) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                  }
-                  
-                } else if (entrystatus2(counter(0)) < entrystatus1(counter(0))) {
-                  hc_ahistsums(2) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                  histsums(7) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                
-                  if (e_amat(this_guy) > 0) {
-                    hc_ahistpos(2) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                    histpos(7) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                  } else if (e_amat(this_guy) < 0) {
-                    hc_ahistneg(2) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                    histneg(7) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                  }
-                  
-                } else if (entrystatus2(counter(0)) > entrystatus1(counter(0))) {
-                  hc_ahistsums(2) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                  histsums(5) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                
-                  if (e_amat(this_guy) > 0) {
-                    hc_ahistpos(2) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                    histpos(5) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                  } else if (e_amat(this_guy) < 0) {
-                    hc_ahistneg(2) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                    histneg(5) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                  }
-                  
-                } else {
-                  hc_ahistsums(2) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                  histsums(4) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                
-                  if (e_amat(this_guy) > 0) {
-                    hc_ahistpos(2) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                    histpos(4) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                  } else if (e_amat(this_guy) < 0) {
-                    hc_ahistneg(2) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                    histneg(4) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                  }
-                }
-                
-              } else if (entrystatus3(counter(0)) < entrystatus2(counter(0))) {
-                if (repstatus2(counter(0)) > repstatus1(counter(0))) {
-                  hc_ahistsums(1) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                  histsums(2) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                
-                  if (e_amat(this_guy) > 0) {
-                    hc_ahistpos(1) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                    histpos(2) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                  } else if (e_amat(this_guy) < 0) {
-                    hc_ahistneg(1) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                    histneg(2) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                  }
-                  
-                } else if (repstatus2(counter(0)) < repstatus1(counter(0))) {
-                  hc_ahistsums(1) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                  histsums(8) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                
-                  if (e_amat(this_guy) > 0) {
-                    hc_ahistpos(1) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                    histpos(8) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                  } else if (e_amat(this_guy) < 0) {
-                    hc_ahistneg(1) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                    histneg(8) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                  }
-                  
-                } else if (entrystatus2(counter(0)) < entrystatus1(counter(0))) {
-                  hc_ahistsums(1) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                  histsums(2) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                
-                  if (e_amat(this_guy) > 0) {
-                    hc_ahistpos(1) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                    histpos(2) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                  } else if (e_amat(this_guy) < 0) {
-                    hc_ahistneg(1) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                    histneg(2) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                  }
-                  
-                } else if (entrystatus2(counter(0)) > entrystatus1(counter(0))) {
-                  hc_ahistsums(1) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                  histsums(8) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                
-                  if (e_amat(this_guy) > 0) {
-                    hc_ahistpos(1) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                    histpos(8) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                  } else if (e_amat(this_guy) < 0) {
-                    hc_ahistneg(1) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                    histneg(8) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                  }
-                  
-                } else {
-                  hc_ahistsums(1) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                  histsums(1) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                
-                  if (e_amat(this_guy) > 0) {
-                    hc_ahistpos(1) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                    histpos(1) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                  } else if (e_amat(this_guy) < 0) {
-                    hc_ahistneg(1) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                    histneg(1) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                  }
-                }
-              } else if (entrystatus3(counter(0)) > entrystatus2(counter(0))) {
-                if (repstatus2(counter(0)) > repstatus1(counter(0))) {
-                  hc_ahistsums(2) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                  histsums(7) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                
-                  if (e_amat(this_guy) > 0) {
-                    hc_ahistpos(2) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                    histpos(7) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                  } else if (e_amat(this_guy) < 0) {
-                    hc_ahistneg(2) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                    histneg(7) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                  }
-                  
-                } else if (repstatus2(counter(0)) < repstatus1(counter(0))) {
-                  hc_ahistsums(2) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                  histsums(5) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                
-                  if (e_amat(this_guy) > 0) {
-                    hc_ahistpos(2) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                    histpos(5) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                  } else if (e_amat(this_guy) < 0) {
-                    hc_ahistneg(2) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                    histneg(5) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                  }
-                  
-                } else if (entrystatus2(counter(0)) < entrystatus1(counter(0))) {
-                  hc_ahistsums(2) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                  histsums(7) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                
-                  if (e_amat(this_guy) > 0) {
-                    hc_ahistpos(2) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                    histpos(7) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                  } else if (e_amat(this_guy) < 0) {
-                    hc_ahistneg(2) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                    histneg(7) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                  }
-                  
-                } else if (entrystatus2(counter(0)) > entrystatus1(counter(0))) {
-                  hc_ahistsums(2) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                  histsums(5) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                
-                  if (e_amat(this_guy) > 0) {
-                    hc_ahistpos(2) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                    histpos(5) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                  } else if (e_amat(this_guy) < 0) {
-                    hc_ahistneg(2) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                    histneg(5) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                  }
-                  
-                } else {
-                  hc_ahistsums(2) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                  histsums(4) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                
-                  if (e_amat(this_guy) > 0) {
-                    hc_ahistpos(2) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                    histpos(4) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                  } else if (e_amat(this_guy) < 0) {
-                    hc_ahistneg(2) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                    histneg(4) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                  }
-                }
-                
-              } else {
-                hc_ahistsums(0) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                histsums(0) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                
-                if (e_amat(this_guy) > 0) {
-                  hc_ahistpos(0) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                  histpos(0) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                } else if (e_amat(this_guy) < 0) {
-                  hc_ahistneg(0) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                  histneg(0) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                }
-              }
-              
-            } else if (size3(counter(0)) > size2(counter(0)) &&
-                size2(counter(0)) == size1(counter(0))) {
-              if (repstatus2(counter(0)) > repstatus1(counter(0))) {
-                hc_ahistsums(1) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                histsums(2) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                
-                if (e_amat(this_guy) > 0) {
-                  hc_ahistpos(1) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                  histpos(2) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                } else if (e_amat(this_guy) < 0) {
-                  hc_ahistneg(1) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                  histneg(2) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                }
-                
-              } else if (repstatus2(counter(0)) < repstatus1(counter(0))) {
-                hc_ahistsums(1) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                histsums(8) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                
-                if (e_amat(this_guy) > 0) {
-                  hc_ahistpos(1) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                  histpos(8) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                } else if (e_amat(this_guy) < 0) {
-                  hc_ahistneg(1) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                  histneg(8) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                }
-                
-              } else if (entrystatus2(counter(0)) < entrystatus1(counter(0))) {
-                hc_ahistsums(1) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                histsums(2) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                
-                if (e_amat(this_guy) > 0) {
-                  hc_ahistpos(1) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                  histpos(2) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                } else if (e_amat(this_guy) < 0) {
-                  hc_ahistneg(1) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                  histneg(2) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                }
-                
-              } else if (entrystatus2(counter(0)) > entrystatus1(counter(0))) {
-                hc_ahistsums(1) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                histsums(8) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                
-                if (e_amat(this_guy) > 0) {
-                  hc_ahistpos(1) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                  histpos(8) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                } else if (e_amat(this_guy) < 0) {
-                  hc_ahistneg(1) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                  histneg(8) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                }
-                
-              } else {
-                hc_ahistsums(1) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                histsums(1) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                
-                if (e_amat(this_guy) > 0) {
-                  hc_ahistpos(1) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                  histpos(1) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                } else if (e_amat(this_guy) < 0) {
-                  hc_ahistneg(1) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                  histneg(1) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                }
-              }
-              
-            } else if (size3(counter(0)) > size2(counter(0)) &&
-              size2(counter(0)) > size1(counter(0))) {
-              hc_ahistsums(1) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-              histsums(2) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-              
-              if (e_amat(this_guy) > 0) {
-                hc_ahistpos(1) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                histpos(2) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-              } else if (e_amat(this_guy) < 0) {
-                hc_ahistneg(1) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                histneg(2) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-              }
-              
-            } else if (size3(counter(0)) == size2(counter(0)) && size2(counter(0)) > size1(counter(0))) {
-              if (repstatus3(counter(0)) > repstatus2(counter(0))) {
-                hc_ahistsums(1) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                histsums(2) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                
-                if (e_amat(this_guy) > 0) {
-                  hc_ahistpos(1) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                  histpos(2) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                } else if (e_amat(this_guy) < 0) {
-                  hc_ahistneg(1) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                  histneg(2) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                }
-                
-              } else if (repstatus3(counter(0)) < repstatus2(counter(0))) {
-                hc_ahistsums(2) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                histsums(7) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                
-                if (e_amat(this_guy) > 0) {
-                  hc_ahistpos(2) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                  histpos(7) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                } else if (e_amat(this_guy) < 0) {
-                  hc_ahistneg(2) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                  histneg(7) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                }
-                
-              } else if (entrystatus3(counter(0)) < entrystatus2(counter(0))) {
-                hc_ahistsums(1) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                histsums(2) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                
-                if (e_amat(this_guy) > 0) {
-                  hc_ahistpos(1) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                  histpos(2) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                } else if (e_amat(this_guy) < 0) {
-                  hc_ahistneg(1) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                  histneg(2) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                }
-                
-              } else if (entrystatus3(counter(0)) > entrystatus2(counter(0))) {
-                hc_ahistsums(2) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                histsums(7) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                
-                if (e_amat(this_guy) > 0) {
-                  hc_ahistpos(2) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                  histpos(7) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                } else if (e_amat(this_guy) < 0) {
-                  hc_ahistneg(2) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                  histneg(7) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                }
-                
-              } else {
-                hc_ahistsums(0) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                histsums(0) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                
-                if (e_amat(this_guy) > 0) {
-                  hc_ahistpos(0) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                  histpos(0) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                } else if (e_amat(this_guy) < 0) {
-                  hc_ahistneg(0) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                  histneg(0) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                }
-              }
-              
-            } else if (size3(counter(0)) < size2(counter(0)) &&
-              size2(counter(0)) == size1(counter(0))) {
-              if (repstatus2(counter(0)) > repstatus1(counter(0))) {
-                hc_ahistsums(2) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                histsums(7) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                
-                if (e_amat(this_guy) > 0) {
-                  hc_ahistpos(2) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                  histpos(7) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                } else if (e_amat(this_guy) < 0) {
-                  hc_ahistneg(2) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                  histneg(7) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                }
-                
-              } else if (repstatus2(counter(0)) < repstatus1(counter(0))) {
-                hc_ahistsums(2) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                histsums(5) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                
-                if (e_amat(this_guy) > 0) {
-                  hc_ahistpos(2) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                  histpos(5) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                } else if (e_amat(this_guy) < 0) {
-                  hc_ahistneg(2) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                  histneg(5) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                }
-                
-              } else if (entrystatus2(counter(0)) < entrystatus1(counter(0))) {
-                hc_ahistsums(2) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                histsums(7) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                
-                if (e_amat(this_guy) > 0) {
-                  hc_ahistpos(2) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                  histpos(7) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                } else if (e_amat(this_guy) < 0) {
-                  hc_ahistneg(2) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                  histneg(7) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                }
-                
-              } else if (entrystatus2(counter(0)) > entrystatus1(counter(0))) {
-                hc_ahistsums(2) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                histsums(5) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                
-                if (e_amat(this_guy) > 0) {
-                  hc_ahistpos(2) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                  histpos(5) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                } else if (e_amat(this_guy) < 0) {
-                  hc_ahistneg(2) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                  histneg(5) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                }
-                
-              } else {
-                hc_ahistsums(2) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                histsums(4) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                
-                if (e_amat(this_guy) > 0) {
-                  hc_ahistpos(2) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                  histpos(4) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                } else if (e_amat(this_guy) < 0) {
-                  hc_ahistneg(2) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                  histneg(4) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                }
-              }
-              
-            } else if (size3(counter(0)) < size2(counter(0)) &&
-              size2(counter(0)) < size1(counter(0))) {
-              hc_ahistsums(2) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-              histsums(5) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-              
-              if (e_amat(this_guy) > 0) {
-                hc_ahistpos(2) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                histpos(5) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-              } else if (e_amat(this_guy) < 0) {
-                hc_ahistneg(2) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                histneg(5) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-              }
-              
-            } else if (size3(counter(0)) == size2(counter(0)) &&
-              size2(counter(0)) < size1(counter(0))) {
-              if (repstatus3(counter(0)) > repstatus2(counter(0))) {
-                hc_ahistsums(1) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                histsums(8) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                
-                if (e_amat(this_guy) > 0) {
-                  hc_ahistpos(1) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                  histpos(8) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                } else if (e_amat(this_guy) < 0) {
-                  hc_ahistneg(1) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                  histneg(8) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                }
-                
-              } else if (repstatus3(counter(0)) < repstatus2(counter(0))) {
-                hc_ahistsums(2) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                histsums(5) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                
-                if (e_amat(this_guy) > 0) {
-                  hc_ahistpos(2) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                  histpos(5) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                } else if (e_amat(this_guy) < 0) {
-                  hc_ahistneg(2) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                  histneg(5) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                }
-                
-              } else if (entrystatus3(counter(0)) < entrystatus2(counter(0))) {
-                hc_ahistsums(1) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                histsums(8) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                
-                if (e_amat(this_guy) > 0) {
-                  hc_ahistpos(1) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                  histpos(8) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                } else if (e_amat(this_guy) < 0) {
-                  hc_ahistneg(1) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                  histneg(8) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                }
-                
-              } else if (entrystatus3(counter(0)) > entrystatus2(counter(0))) {
-                hc_ahistsums(2) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                histsums(5) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                
-                if (e_amat(this_guy) > 0) {
-                  hc_ahistpos(2) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                  histpos(5) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                } else if (e_amat(this_guy) < 0) {
-                  hc_ahistneg(2) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                  histneg(5) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                }
-                
-              } else {
-                hc_ahistsums(0) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                histsums(6) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                
-                if (e_amat(this_guy) > 0) {
-                  hc_ahistpos(0) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                  histpos(86) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                } else if (e_amat(this_guy) < 0) {
-                  hc_ahistneg(0) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                  histneg(6) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                }
-              }
-              
-            } else if (size3(counter(0)) < size2(counter(0)) &&
-              size2(counter(0)) > size1(counter(0))) {
-              hc_ahistsums(2) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-              histsums(7) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-              
-              if (e_amat(this_guy) > 0) {
-                hc_ahistpos(2) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                histpos(7) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-              } else if (e_amat(this_guy) < 0) {
-                hc_ahistneg(2) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-                histneg(7) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-              }
-            } else if (size3(counter(0)) > size2(counter(0)) && size2(counter(0)) < size1(counter(0))) {
-              hc_ahistsums(2) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-              histsums(7) += (e_amat(this_guy) * (1 - fec_fraction(this_guy)));
-            }
+          hc_ahistsums(3) += (e_amat(this_guy));
+          histsums(i) += (e_amat(this_guy));
+          
+          if (e_amat(this_guy) > 0) {
+            hc_ahistpos(3) += (e_amat(this_guy));
+            histpos(i) += (e_amat(this_guy));
+          } else if (e_amat(this_guy) < 0) {
+            hc_ahistneg(3) += (e_amat(this_guy));
+            histneg(i) += (e_amat(this_guy));
           }
         }
       } else if (histcatnums(i) == 14 || histcatnums(i) == 15 ||

@@ -1,8 +1,8 @@
 Package: lefko3
 Type: Package
 Title: Historical and Ahistorical Population Projection Matrix Analysis
-Version: 6.0.0
-Date: 2023-03-27
+Version: 6.0.5
+Date: 2023-05-03
 Authors@R: c(person(given = "Richard P.", family = "Shefferson",
              email = "cdorm@g.ecc.u-tokyo.ac.jp", role = c("aut", "cre"),
              comment=c(ORCID="0000-0002-5234-3131")),
@@ -27,11 +27,11 @@ RoxygenNote: 7.2.3
 Suggests: knitr, popbio, rmarkdown, Rcompadre
 VignetteBuilder: knitr
 NeedsCompilation: yes
-Packaged: 2023-03-27 21:30:27 UTC; richshefferson
+Packaged: 2023-05-03 02:24:40 UTC; richshefferson
 Author: Richard P. Shefferson [aut, cre]
     (<https://orcid.org/0000-0002-5234-3131>),
   Johan Ehrlen [aut] (<https://orcid.org/0000-0001-8539-8967>)
 Maintainer: Richard P. Shefferson <cdorm@g.ecc.u-tokyo.ac.jp>
 Depends: R (>= 3.5.0)
 Repository: CRAN
-Date/Publication: 2023-03-28 01:10:02 UTC
+Date/Publication: 2023-05-03 06:40:02 UTC

@@ -17,6 +17,12 @@ sf_create(
   minage = NULL,
   maxage = NULL,
   indataset = NULL,
+  sizemin = NULL,
+  sizebmin = NULL,
+  sizecmin = NULL,
+  sizemax = NULL,
+  sizebmax = NULL,
+  sizecmax = NULL,
   binhalfwidth = NULL,
   binhalfwidthb = NULL,
   binhalfwidthc = NULL,
@@ -32,11 +38,11 @@ sf_create(
 }
 \arguments{
 \item{sizes}{A numeric vector of the typical or representative size of each
-life history stage. If making function-based MPMs, then this should be a
-vector composed of the midpoints of each size bin. If denoting the boundary
-of an automated size classification group, then should denote the absolute
-minimum size of that group, or the absolute size of that group (see
-\code{Notes}).}
+life history stage. If making function-based MPMs, then this may be a
+vector composed of the midpoints of each size bin, or simply of sizes
+characteristic of the size bins. If denoting the boundary of an automated
+size classification group, then should denote the absolute minimum size of
+that group, or the absolute size of that group (see \code{Notes}).}
 
 \item{stagenames}{A vector of stage names, in the same order as elements in
 sizes. Can also be set to \code{ipm} for automated size classification (see
@@ -85,18 +91,43 @@ non-overlapping combinations of size and status variables. Stages that do
 not actually exist within the dataset should be marked as \code{0} in this
 vector.}
 
+\item{sizemin}{A vector giving the absolute minimum values corresponding to
+each size in the \code{sizes} vector. Requires associated values for
+\code{sizemax} if used. Only required if not using \code{binhalfwidth}.}
+
+\item{sizebmin}{A vector giving the absolute minimum values corresponding to
+each size in the \code{sizesb} vector. Requires associated values for
+\code{sizebmax} if used. Only required if not using \code{binhalfwidthb}.}
+
+\item{sizecmin}{A vector giving the absolute minimum values corresponding to
+each size in the \code{sizesc} vector. Requires associated values for
+\code{sizecmax} if used. Only required if not using \code{binhalfwidthc}.}
+
+\item{sizemax}{A vector giving the absolute maximum values corresponding to
+each size in the \code{sizes} vector. Requires associated values for
+\code{sizemin} if used. Only required if not using \code{binhalfwidth}.}
+
+\item{sizebmax}{A vector giving the absolute maximum values corresponding to
+each size in the \code{sizesb} vector. Requires associated values for
+\code{sizebmin} if used. Only required if not using \code{binhalfwidthb}.}
+
+\item{sizecmax}{A vector giving the absolute maximum values corresponding to
+each size in the \code{sizesc} vector. Requires associated values for
+\code{sizecmin} if used. Only required if not using \code{binhalfwidthc}.}
+
 \item{binhalfwidth}{A numeric vector giving the half-width of size bins.
-Required to classify individuals appropriately within size classes.
-Defaults to \code{0.5} for all sizes.}
+Required if \code{sizemin} and \code{sizemax} are not used. Defaults to
+\code{0.5} for all sizes.}
 
 \item{binhalfwidthb}{A numeric vector giving the half-width of size bins
-used for the optional second size metric. Required to classify individuals
-appropriately with two or three size classes. Defaults to \code{0.5} for all
-sizes.}
+used for the optional second size metric. Required if \code{sizebmin} and
+\code{sizebmax} are not used but two or three size classes are used.
+Defaults to \code{0.5} for all sizes.}
 
 \item{binhalfwidthc}{A numeric vector giving the half-width of size bins
-used for the optional third size metric. Required to classify individuals
-appropriately with three size classes. Defaults to \code{0.5} for all sizes.}
+used for the optional third size metric. Required if \code{sizecmin} and
+\code{sizecmax} are not used but three size classes are used. Defaults to
+\code{0.5} for all sizes.}
 
 \item{group}{An integer vector providing information on each respective
 stage's size classification group. If used, then function-based MPM creation
@@ -249,9 +280,9 @@ linear model slope coefficients requires careful attention to the
 stageframe. Although no hfv data frame needs to be entered in this instance,
 stages for which vital rates are to be estimated via linear models
 parameterized with coefficients provided via function
-\code{\link{vrm_import}()} should be marked as occurring within the dataset,
-while stages for which the provided coefficients should not be used should
-be marked as not occurring within the dataset.
+\code{\link{vrm_import}()} should be marked as occurring within the dataset.
+Stages for which the provided coefficients should not be used should be
+marked as not occurring within the dataset.
 }
 
 \examples{

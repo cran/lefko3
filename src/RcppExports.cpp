@@ -748,8 +748,8 @@ BEGIN_RCPP
 END_RCPP
 }
 // sltre3matrix
-Rcpp::List sltre3matrix(const List& Amats, const DataFrame& labels, Rcpp::IntegerVector refnum, Nullable<Rcpp::List> refmats_, Nullable<arma::vec> tweights_, int steps, int burnin, bool sparse);
-RcppExport SEXP _lefko3_sltre3matrix(SEXP AmatsSEXP, SEXP labelsSEXP, SEXP refnumSEXP, SEXP refmats_SEXP, SEXP tweights_SEXP, SEXP stepsSEXP, SEXP burninSEXP, SEXP sparseSEXP) {
+Rcpp::List sltre3matrix(const List& Amats, const DataFrame& labels, Rcpp::IntegerVector refnum, Nullable<Rcpp::List> refmats_, Nullable<arma::vec> tweights_, int steps, int burnin, bool sparse, double tol_used);
+RcppExport SEXP _lefko3_sltre3matrix(SEXP AmatsSEXP, SEXP labelsSEXP, SEXP refnumSEXP, SEXP refmats_SEXP, SEXP tweights_SEXP, SEXP stepsSEXP, SEXP burninSEXP, SEXP sparseSEXP, SEXP tol_usedSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -761,13 +761,14 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< int >::type steps(stepsSEXP);
     Rcpp::traits::input_parameter< int >::type burnin(burninSEXP);
     Rcpp::traits::input_parameter< bool >::type sparse(sparseSEXP);
-    rcpp_result_gen = Rcpp::wrap(sltre3matrix(Amats, labels, refnum, refmats_, tweights_, steps, burnin, sparse));
+    Rcpp::traits::input_parameter< double >::type tol_used(tol_usedSEXP);
+    rcpp_result_gen = Rcpp::wrap(sltre3matrix(Amats, labels, refnum, refmats_, tweights_, steps, burnin, sparse, tol_used));
     return rcpp_result_gen;
 END_RCPP
 }
 // snaltre3matrix
-Rcpp::List snaltre3matrix(const List& Amats, const DataFrame& labels, Rcpp::IntegerVector refnum, Nullable<Rcpp::List> refmats_, Nullable<arma::vec> tweights_, bool sparse);
-RcppExport SEXP _lefko3_snaltre3matrix(SEXP AmatsSEXP, SEXP labelsSEXP, SEXP refnumSEXP, SEXP refmats_SEXP, SEXP tweights_SEXP, SEXP sparseSEXP) {
+Rcpp::List snaltre3matrix(const List& Amats, const DataFrame& labels, Rcpp::IntegerVector refnum, Nullable<Rcpp::List> refmats_, Nullable<arma::vec> tweights_, bool sparse, double tol_used);
+RcppExport SEXP _lefko3_snaltre3matrix(SEXP AmatsSEXP, SEXP labelsSEXP, SEXP refnumSEXP, SEXP refmats_SEXP, SEXP tweights_SEXP, SEXP sparseSEXP, SEXP tol_usedSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -777,7 +778,8 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< Nullable<Rcpp::List> >::type refmats_(refmats_SEXP);
     Rcpp::traits::input_parameter< Nullable<arma::vec> >::type tweights_(tweights_SEXP);
     Rcpp::traits::input_parameter< bool >::type sparse(sparseSEXP);
-    rcpp_result_gen = Rcpp::wrap(snaltre3matrix(Amats, labels, refnum, refmats_, tweights_, sparse));
+    Rcpp::traits::input_parameter< double >::type tol_used(tol_usedSEXP);
+    rcpp_result_gen = Rcpp::wrap(snaltre3matrix(Amats, labels, refnum, refmats_, tweights_, sparse, tol_used));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -848,8 +850,8 @@ BEGIN_RCPP
 END_RCPP
 }
 // sf_create
-Rcpp::List sf_create(NumericVector sizes, Nullable<StringVector> stagenames, Nullable<NumericVector> sizesb, Nullable<NumericVector> sizesc, Nullable<IntegerVector> repstatus, Nullable<IntegerVector> obsstatus, Nullable<IntegerVector> propstatus, Nullable<IntegerVector> matstatus, Nullable<IntegerVector> immstatus, Nullable<NumericVector> minage, Nullable<NumericVector> maxage, Nullable<IntegerVector> indataset, Nullable<NumericVector> binhalfwidth, Nullable<NumericVector> binhalfwidthb, Nullable<NumericVector> binhalfwidthc, Nullable<IntegerVector> group, Nullable<StringVector> comments, int roundsize, int roundsizeb, int roundsizec, int ipmbins, int ipmbinsb, int ipmbinsc);
-RcppExport SEXP _lefko3_sf_create(SEXP sizesSEXP, SEXP stagenamesSEXP, SEXP sizesbSEXP, SEXP sizescSEXP, SEXP repstatusSEXP, SEXP obsstatusSEXP, SEXP propstatusSEXP, SEXP matstatusSEXP, SEXP immstatusSEXP, SEXP minageSEXP, SEXP maxageSEXP, SEXP indatasetSEXP, SEXP binhalfwidthSEXP, SEXP binhalfwidthbSEXP, SEXP binhalfwidthcSEXP, SEXP groupSEXP, SEXP commentsSEXP, SEXP roundsizeSEXP, SEXP roundsizebSEXP, SEXP roundsizecSEXP, SEXP ipmbinsSEXP, SEXP ipmbinsbSEXP, SEXP ipmbinscSEXP) {
+Rcpp::List sf_create(NumericVector sizes, Nullable<StringVector> stagenames, Nullable<NumericVector> sizesb, Nullable<NumericVector> sizesc, Nullable<IntegerVector> repstatus, Nullable<IntegerVector> obsstatus, Nullable<IntegerVector> propstatus, Nullable<IntegerVector> matstatus, Nullable<IntegerVector> immstatus, Nullable<NumericVector> minage, Nullable<NumericVector> maxage, Nullable<IntegerVector> indataset, Nullable<NumericVector> sizemin, Nullable<NumericVector> sizebmin, Nullable<NumericVector> sizecmin, Nullable<NumericVector> sizemax, Nullable<NumericVector> sizebmax, Nullable<NumericVector> sizecmax, Nullable<NumericVector> binhalfwidth, Nullable<NumericVector> binhalfwidthb, Nullable<NumericVector> binhalfwidthc, Nullable<IntegerVector> group, Nullable<StringVector> comments, int roundsize, int roundsizeb, int roundsizec, int ipmbins, int ipmbinsb, int ipmbinsc);
+RcppExport SEXP _lefko3_sf_create(SEXP sizesSEXP, SEXP stagenamesSEXP, SEXP sizesbSEXP, SEXP sizescSEXP, SEXP repstatusSEXP, SEXP obsstatusSEXP, SEXP propstatusSEXP, SEXP matstatusSEXP, SEXP immstatusSEXP, SEXP minageSEXP, SEXP maxageSEXP, SEXP indatasetSEXP, SEXP sizeminSEXP, SEXP sizebminSEXP, SEXP sizecminSEXP, SEXP sizemaxSEXP, SEXP sizebmaxSEXP, SEXP sizecmaxSEXP, SEXP binhalfwidthSEXP, SEXP binhalfwidthbSEXP, SEXP binhalfwidthcSEXP, SEXP groupSEXP, SEXP commentsSEXP, SEXP roundsizeSEXP, SEXP roundsizebSEXP, SEXP roundsizecSEXP, SEXP ipmbinsSEXP, SEXP ipmbinsbSEXP, SEXP ipmbinscSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -865,6 +867,12 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< Nullable<NumericVector> >::type minage(minageSEXP);
     Rcpp::traits::input_parameter< Nullable<NumericVector> >::type maxage(maxageSEXP);
     Rcpp::traits::input_parameter< Nullable<IntegerVector> >::type indataset(indatasetSEXP);
+    Rcpp::traits::input_parameter< Nullable<NumericVector> >::type sizemin(sizeminSEXP);
+    Rcpp::traits::input_parameter< Nullable<NumericVector> >::type sizebmin(sizebminSEXP);
+    Rcpp::traits::input_parameter< Nullable<NumericVector> >::type sizecmin(sizecminSEXP);
+    Rcpp::traits::input_parameter< Nullable<NumericVector> >::type sizemax(sizemaxSEXP);
+    Rcpp::traits::input_parameter< Nullable<NumericVector> >::type sizebmax(sizebmaxSEXP);
+    Rcpp::traits::input_parameter< Nullable<NumericVector> >::type sizecmax(sizecmaxSEXP);
     Rcpp::traits::input_parameter< Nullable<NumericVector> >::type binhalfwidth(binhalfwidthSEXP);
     Rcpp::traits::input_parameter< Nullable<NumericVector> >::type binhalfwidthb(binhalfwidthbSEXP);
     Rcpp::traits::input_parameter< Nullable<NumericVector> >::type binhalfwidthc(binhalfwidthcSEXP);
@@ -876,7 +884,7 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< int >::type ipmbins(ipmbinsSEXP);
     Rcpp::traits::input_parameter< int >::type ipmbinsb(ipmbinsbSEXP);
     Rcpp::traits::input_parameter< int >::type ipmbinsc(ipmbinscSEXP);
-    rcpp_result_gen = Rcpp::wrap(sf_create(sizes, stagenames, sizesb, sizesc, repstatus, obsstatus, propstatus, matstatus, immstatus, minage, maxage, indataset, binhalfwidth, binhalfwidthb, binhalfwidthc, group, comments, roundsize, roundsizeb, roundsizec, ipmbins, ipmbinsb, ipmbinsc));
+    rcpp_result_gen = Rcpp::wrap(sf_create(sizes, stagenames, sizesb, sizesc, repstatus, obsstatus, propstatus, matstatus, immstatus, minage, maxage, indataset, sizemin, sizebmin, sizecmin, sizemax, sizebmax, sizecmax, binhalfwidth, binhalfwidthb, binhalfwidthc, group, comments, roundsize, roundsizeb, roundsizec, ipmbins, ipmbinsb, ipmbinsc));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -1087,11 +1095,11 @@ static const R_CallMethodDef CallEntries[] = {
     {"_lefko3_slambda3", (DL_FUNC) &_lefko3_slambda3, 5},
     {"_lefko3_stoch_senselas", (DL_FUNC) &_lefko3_stoch_senselas, 6},
     {"_lefko3_ltre3matrix", (DL_FUNC) &_lefko3_ltre3matrix, 5},
-    {"_lefko3_sltre3matrix", (DL_FUNC) &_lefko3_sltre3matrix, 8},
-    {"_lefko3_snaltre3matrix", (DL_FUNC) &_lefko3_snaltre3matrix, 6},
+    {"_lefko3_sltre3matrix", (DL_FUNC) &_lefko3_sltre3matrix, 9},
+    {"_lefko3_snaltre3matrix", (DL_FUNC) &_lefko3_snaltre3matrix, 7},
     {"_lefko3_stovokor", (DL_FUNC) &_lefko3_stovokor, 45},
     {"_lefko3_create_pm", (DL_FUNC) &_lefko3_create_pm, 1},
-    {"_lefko3_sf_create", (DL_FUNC) &_lefko3_sf_create, 23},
+    {"_lefko3_sf_create", (DL_FUNC) &_lefko3_sf_create, 29},
     {"_lefko3_actualstage3", (DL_FUNC) &_lefko3_actualstage3, 10},
     {"_lefko3_density_input", (DL_FUNC) &_lefko3_density_input, 11},
     {"_lefko3_supplemental", (DL_FUNC) &_lefko3_supplemental, 16},

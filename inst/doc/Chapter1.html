@@ -1741,6 +1741,21 @@ the IPMs in discretized form. Please see <strong>lefko3: a gentle
 introduction</strong> for more information, or see the function example.
 </p>
 </div>
+<div id="step-4b.-edit-matrices" class="section level3">
+<h3>Step 4b. Edit matrices</h3>
+<p style="text-indent: 20px">
+Once the MPM is created, users may wish to make modifications to some or
+all of the matrices. While the <code>supplemental()</code> function was
+used to fix certain transition values and transition multipliers across
+all matrices within the MPM creation function, the
+<code>edit_lM()</code> function can be used to make similar sorts of
+changes and updates to individual matrices or groups of matrices. The
+methodology is similar to that used in function
+<code>supplemental()</code> (see <strong>Step 2b: Provide supplemental
+information for matrix estimation</strong>), but with a few extra
+options thrown in for greater ability to customize matrices themselves.
+</p>
+</div>
 <div id="step-5.-mpm-analyses" class="section level3">
 <h3>Step 5. MPM analyses</h3>
 <p style="text-indent: 20px">
@@ -2223,17 +2238,17 @@ and standard deviation, respectively, of the element at row <span class="math in
 <code>ltre3()</code> handles all of these calculations.</p>
 <p style="text-indent: 20px">
 <span class="citation">Davison et al. (2013)</span> presented an
-analytical solution to the sLTRE refered to as the small-noise
-approximation LTRE, or ‘SNA-LTRE’. Package <code>lefko3</code> also
-implements this form. Here, the difference in the stochastic growth rate
-<span class="math inline">\(\text{log}\lambda_S\)</span> between the
-treatment group and the reference group is decomposed into contributions
-from differences in mean elements, in element elasticities, in element
-coefficients of variation, and in element correlations. This analysis
-will likely appeal most to those seeking to conduct stochastic LTREs,
-and we urge users to read <span class="citation">Davison et al.
-(2013)</span> and the LTRE chapter in <em>lefko3: a gentle
-introduction</em> for a better understanding of this analysis.
+analytical solution to the sLTRE refered to as the <strong>small-noise
+approximation LTRE</strong>, or ‘SNA-LTRE’. Package <code>lefko3</code>
+also implements this form. Here, the difference in the stochastic growth
+rate <span class="math inline">\(\text{log}\lambda_S\)</span> between
+the treatment group and the reference group is decomposed into
+contributions from differences in mean elements, in element
+elasticities, in element coefficients of variation, and in element
+correlations. This analysis will likely appeal most to those seeking to
+conduct stochastic LTREs, and we urge users to read <span class="citation">Davison et al. (2013)</span> and the LTRE chapter in
+<em>lefko3: a gentle introduction</em> for a better understanding of
+this analysis.
 </p>
 </div>
 <div id="further-analyses" class="section level4">

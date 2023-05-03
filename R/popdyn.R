@@ -3231,6 +3231,10 @@ elasticity3.list <- function(mats, stochastic = FALSE, steps = 10000,
 #' via the sna-LTRE approach from Davison et al. (2019) (\code{TRUE}), or the
 #' stochastic LTRE approximation from Davison et al. (2010) (\code{FALSE}).
 #' Defaults to \code{FALSE}.
+#' @param tol A numeric value indicating a lower positive limit to matrix
+#' element values when applied to stochatic and small noise approximation LTRE
+#' estimation protocols. Matrix element values lower than this will be treated
+#' as \code{0.0} values. Defaults to \code{1e-30}.
 #' @param ... Other parameters.
 #' 
 #' @return This function returns an object of class \code{lefkoLTRE}. This
@@ -3341,7 +3345,7 @@ elasticity3.list <- function(mats, stochastic = FALSE, steps = 10000,
 #' @export
 ltre3 <- function(mats, refmats = NA, ref = NA, stochastic = FALSE,
   steps = 10000, burnin = 3000, time_weights = NA, force_sparse = "auto",
-  rseed = NA, append_mats = FALSE, sna_ltre = FALSE, ...) {
+  rseed = NA, append_mats = FALSE, sna_ltre = FALSE, tol = 1e-30, ...) {
   
   sparsemethod <- 0
   sparse_input <- FALSE
@@ -3468,40 +3472,43 @@ ltre3 <- function(mats, refmats = NA, ref = NA, stochastic = FALSE,
       if (all(is.na(refmats))) {
         if (all(is.na(time_weights))) {
           baldrick <- .sltre3matrix(mats$A, labels = mats$labels, refnum = ref,
-            steps = steps, burnin = burnin, sparse = sparsemethod)
+            steps = steps, burnin = burnin, sparse = sparsemethod,
+            tol_used = tol)
         } else {
           baldrick <- .sltre3matrix(mats$A, labels = mats$labels, refnum = ref,
             tweights_ = time_weights, steps = steps, burnin = burnin,
-            sparse = sparsemethod)
+            sparse = sparsemethod, tol_used = tol)
         }
       } else {
         if (all(is.na(time_weights))) {
           baldrick <- .sltre3matrix(mats$A, labels = mats$labels, refnum = ref,
             refmats_ = refmats, steps = steps, burnin = burnin,
-            sparse = sparsemethod)
+            sparse = sparsemethod, tol_used = tol)
         } else {
           baldrick <- .sltre3matrix(mats$A, labels = mats$labels, refnum = ref,
             refmats_ = refmats, tweights_ = time_weights, steps = steps,
-            burnin = burnin, sparse = sparsemethod)
+            burnin = burnin, sparse = sparsemethod, tol_used = tol)
         }
       }
     } else {
       if (all(is.na(refmats))) {
         if (all(is.na(time_weights))) {
           baldrick <- .snaltre3matrix(mats$A, labels = mats$labels,
-            refnum = ref, sparse = sparsemethod)
+            refnum = ref, sparse = sparsemethod, tol_used = tol)
         } else {
           baldrick <- .snaltre3matrix(mats$A, labels = mats$labels,
-            refnum = ref, tweights_ = time_weights, sparse = sparsemethod)
+            refnum = ref, tweights_ = time_weights, sparse = sparsemethod,
+            tol_used = tol)
         }
       } else {
         if (all(is.na(time_weights))) {
           baldrick <- .snaltre3matrix(mats$A, labels = mats$labels,
-            refnum = ref, refmats_ = refmats, sparse = sparsemethod)
+            refnum = ref, refmats_ = refmats, sparse = sparsemethod,
+            tol_used = tol)
         } else {
           baldrick <- .snaltre3matrix(mats$A, labels = mats$labels,
             refnum = ref, refmats_ = refmats, tweights_ = time_weights,
-            sparse = sparsemethod)
+            sparse = sparsemethod, tol_used = tol)
         }
       }
     }
@@ -3698,7 +3705,7 @@ summary.lefkoElas <- function(object, ...) {
 #' all 16 historical transition types, followed by summed positive and negative
 #' contributions, and \code{ahist_mean} and \code{ahist_sd} are the equivalent
 #' ahistorical versions. The output for the SNA-LTRE also includes the
-#' logs of the deterministic lambda estimted through function \code{ltre3()}.
+#' logs of the deterministic lambda estimated through function \code{ltre3()}.
 #' 
 #' @examples
 #' data(lathyrus)
@@ -3786,37 +3793,35 @@ summary.lefkoLTRE <- function(object, ...) {
     historical <- FALSE
   }
   
-  #if (ltretype != 3) {
-    if (!historical) {
-      if (!all(is.null(object$agestages))) {
-        if (!all(is.na(object$agestages))) {
-          if (is.element("stage_id", names(object$agestages))) {
-            new_ahstages_list <- apply(as.matrix(c(1:length(object$agestages$stage_id))), 
-              1, function(X) {
-                return(object$ahstages[which(object$ahstages$stage_id == object$agestages$stage_id[X]),])
-              })
-            new_ahstages <- do.call("rbind.data.frame", new_ahstages_list)
-            indices <- .bambi2(new_ahstages)
-          } else {
-            indices <- .bambi2(object$ahstages)
-          }
+  if (!historical) {
+    if (!all(is.null(object$agestages))) {
+      if (!all(is.na(object$agestages))) {
+        if (is.element("stage_id", names(object$agestages))) {
+          new_ahstages_list <- apply(as.matrix(c(1:length(object$agestages$stage_id))), 
+            1, function(X) {
+              return(object$ahstages[which(object$ahstages$stage_id == object$agestages$stage_id[X]),])
+            })
+          new_ahstages <- do.call("rbind.data.frame", new_ahstages_list)
+          indices <- .bambi2(new_ahstages)
         } else {
           indices <- .bambi2(object$ahstages)
         }
       } else {
-        if (all(is.null(object$ahstages))) {
-          mat_size <- dim(object$ah_elasmats[[1]])[1]
-          new_sf <- sf_skeleton(mat_size, standard = FALSE)
-          
-          indices <- .bambi2(new_sf)
-        } else {
-          indices <- .bambi2(object$ahstages)
-        }
+        indices <- .bambi2(object$ahstages)
       }
     } else {
-      indices <- .bambi3(object$ahstages, object$hstages)
+      if (all(is.null(object$ahstages))) {
+        mat_size <- dim(object$ah_elasmats[[1]])[1]
+        new_sf <- sf_skeleton(mat_size, standard = FALSE)
+        
+        indices <- .bambi2(new_sf)
+      } else {
+        indices <- .bambi2(object$ahstages)
+      }
     }
-  #}
+  } else {
+    indices <- .bambi3(object$ahstages, object$hstages)
+  }
   
   used_iterations <- length(object$cont_mean)
   
@@ -3830,59 +3835,57 @@ summary.lefkoLTRE <- function(object, ...) {
     } else {
       trialguy1 <- .demolition3sp(object$cont_mean[[i]], indices)
     }
-      
-    #if (ltretype != 3) {
-      if (ltretype == 2) {
-        if (!sparse_input) {
-          trialguy2 <- .demolition3(object$cont_sd[[i]], indices)
-        } else {
-          trialguy2 <- .demolition3sp(object$cont_sd[[i]], indices)
-        }
-      }
-      
-      if (i == 1) {
-        hist1 <- trialguy1$hist
-        ahist1 <- trialguy1$ahist
-        if (historical) names(hist1)[2] <- "matrix1"
-        if (historical) names(hist1)[3] <- "matrix1_pos"
-        if (historical) names(hist1)[4] <- "matrix1_neg"
-        names(ahist1)[2] <- "matrix1"
-        names(ahist1)[3] <- "matrix1_pos"
-        names(ahist1)[4] <- "matrix1_neg"
-        
-        if (ltretype == 2) {
-          hist2 <- trialguy2$hist
-          ahist2 <- trialguy2$ahist
-          if (historical) names(hist2)[2] <- "matrix1"
-          if (historical) names(hist2)[3] <- "matrix1_pos"
-          if (historical) names(hist2)[4] <- "matrix1_neg"
-          names(ahist2)[2] <- "matrix1"
-          names(ahist2)[3] <- "matrix1_pos"
-          names(ahist2)[4] <- "matrix1_neg"
-        }
-        
+    
+    if (ltretype == 2) {
+      if (!sparse_input) {
+        trialguy2 <- .demolition3(object$cont_sd[[i]], indices)
       } else {
-        if (historical) hist1 <- cbind.data.frame(hist1, trialguy1$hist[,c(2:4)])
-        ahist1 <- cbind.data.frame(ahist1, trialguy1$ahist[,c(2:4)])
-        if (historical) names(hist1)[(((i-1)*3)+2)] <- paste0("matrix", i)
-        if (historical) names(hist1)[(((i-1)*3)+3)] <- paste0("matrix", i, "_pos")
-        if (historical) names(hist1)[(((i-1)*3)+4)] <- paste0("matrix", i, "_neg")
-        names(ahist1)[(((i-1)*3)+2)] <- paste0("matrix", i)
-        names(ahist1)[(((i-1)*3)+3)] <- paste0("matrix", i, "_pos")
-        names(ahist1)[(((i-1)*3)+4)] <- paste0("matrix", i, "_neg")
-        
-        if (ltretype == 2) {
-          if (historical) hist2 <- cbind.data.frame(hist2, trialguy2$hist[,c(2:4)])
-          ahist2 <- cbind.data.frame(ahist2, trialguy2$ahist[,c(2:4)])
-          if (historical) names(hist2)[(((i-1)*3)+2)] <- paste0("matrix", i)
-          if (historical) names(hist2)[(((i-1)*3)+3)] <- paste0("matrix", i, "_pos")
-          if (historical) names(hist2)[(((i-1)*3)+4)] <- paste0("matrix", i, "_neg")
-          names(ahist2)[(((i-1)*3)+2)] <- paste0("matrix", i)
-          names(ahist2)[(((i-1)*3)+3)] <- paste0("matrix", i, "_pos")
-          names(ahist2)[(((i-1)*3)+4)] <- paste0("matrix", i, "_neg")
-        }
+        trialguy2 <- .demolition3sp(object$cont_sd[[i]], indices)
       }
-    #}
+    }
+    
+    if (i == 1) {
+      hist1 <- trialguy1$hist
+      ahist1 <- trialguy1$ahist
+      if (historical) names(hist1)[2] <- "matrix1"
+      if (historical) names(hist1)[3] <- "matrix1_pos"
+      if (historical) names(hist1)[4] <- "matrix1_neg"
+      names(ahist1)[2] <- "matrix1"
+      names(ahist1)[3] <- "matrix1_pos"
+      names(ahist1)[4] <- "matrix1_neg"
+      
+      if (ltretype == 2) {
+        hist2 <- trialguy2$hist
+        ahist2 <- trialguy2$ahist
+        if (historical) names(hist2)[2] <- "matrix1"
+        if (historical) names(hist2)[3] <- "matrix1_pos"
+        if (historical) names(hist2)[4] <- "matrix1_neg"
+        names(ahist2)[2] <- "matrix1"
+        names(ahist2)[3] <- "matrix1_pos"
+        names(ahist2)[4] <- "matrix1_neg"
+      }
+      
+    } else {
+      if (historical) hist1 <- cbind.data.frame(hist1, trialguy1$hist[,c(2:4)])
+      ahist1 <- cbind.data.frame(ahist1, trialguy1$ahist[,c(2:4)])
+      if (historical) names(hist1)[(((i-1)*3)+2)] <- paste0("matrix", i)
+      if (historical) names(hist1)[(((i-1)*3)+3)] <- paste0("matrix", i, "_pos")
+      if (historical) names(hist1)[(((i-1)*3)+4)] <- paste0("matrix", i, "_neg")
+      names(ahist1)[(((i-1)*3)+2)] <- paste0("matrix", i)
+      names(ahist1)[(((i-1)*3)+3)] <- paste0("matrix", i, "_pos")
+      names(ahist1)[(((i-1)*3)+4)] <- paste0("matrix", i, "_neg")
+      
+      if (ltretype == 2) {
+        if (historical) hist2 <- cbind.data.frame(hist2, trialguy2$hist[,c(2:4)])
+        ahist2 <- cbind.data.frame(ahist2, trialguy2$ahist[,c(2:4)])
+        if (historical) names(hist2)[(((i-1)*3)+2)] <- paste0("matrix", i)
+        if (historical) names(hist2)[(((i-1)*3)+3)] <- paste0("matrix", i, "_pos")
+        if (historical) names(hist2)[(((i-1)*3)+4)] <- paste0("matrix", i, "_neg")
+        names(ahist2)[(((i-1)*3)+2)] <- paste0("matrix", i)
+        names(ahist2)[(((i-1)*3)+3)] <- paste0("matrix", i, "_pos")
+        names(ahist2)[(((i-1)*3)+4)] <- paste0("matrix", i, "_neg")
+      }
+    }
   }
   
   output <- if (ltretype == 1) {

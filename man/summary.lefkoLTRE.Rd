@@ -28,7 +28,7 @@ mean vital rates and variability in vital rates, respectively, according to
 all 16 historical transition types, followed by summed positive and negative
 contributions, and \code{ahist_mean} and \code{ahist_sd} are the equivalent
 ahistorical versions. The output for the SNA-LTRE also includes the
-logs of the deterministic lambda estimted through function \code{ltre3()}.
+logs of the deterministic lambda estimated through function \code{ltre3()}.
 }
 \description{
 Function \code{summary.lefkoLTRE()} summarizes \code{lefkoLTRE} objects.

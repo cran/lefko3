@@ -1,4 +1,60 @@
-# lefko3 6.0.0 (2022-03-27)
+# lefko3 6.0.5 (2023-05-03)
+
+## USER VISIBLE CHANGES
+
+* Function ltre3() now uses tolerance limits to determine non-zero elements
+  and contributions in sLTRE and SNA-LTRE analyses.
+* Stochastic LTREs are now more easily interruptible.
+
+## BUG FIXES
+
+* Functions summary.lefkoLTRE() and summary.lefkoElas() now properly sort
+  contributions from fecundity transitions.
+
+# lefko3 6.0.4 (2023-04-11)
+
+## USER VISIBLE CHANGES
+
+* Function ltre3() can now handle SNA-LTRE of large historical MPMs.
+
+# lefko3 6.0.3 (2023-04-07)
+
+## NEW FEATURES
+
+* Function sf_create() now allows flexible assignment of representative stage
+  sizes and associated minimum and maximum bin boundaries.
+
+## USER VISIBLE CHANGES
+
+* Function rlefko2() now produces an interpretable error message if an
+  incorrectly developed stageframe is applied.
+* Warnings added about use of large input matrices for SNA-LTRE analysis.
+
+## BUG FIXES
+
+* Fixed proxy transition issue in function edit_lM().
+
+# lefko3 6.0.2 (2023-03-31)
+
+## USER VISIBLE CHANGES
+
+* Patch variable in labels object of dataset anthyllis has been corrected to
+  match population names in the source paper.
+
+# lefko3 6.0.1 (2023-03-30)
+
+## NEW FEATURES
+
+* Function create_lM() now includes an empty dataqc element in lefkoMat output.
+
+## USER VISIBLE CHANGES
+
+* Function edit_lM() no longer requires a dataqc element in input lefkoMat
+  objects.
+* Function summary.lefkoMat() correctly interprets lefkoMat objects missing a
+  dataqc element.
+
+# lefko3 6.0.0 (2023-03-27)
 
 ## NEW FEATURES
 

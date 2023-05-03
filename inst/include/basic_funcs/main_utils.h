@@ -579,11 +579,9 @@ namespace LefkoUtils {
         StringVector full_var = as<StringVector>(var_);
         String var_s_ = String(full_var(0));
         
-        int matches {0};
         for (int i = 0; i < no_vars; i++) {
           if (stringcompare_hard(var_s_, String(var_names(i)))) {
             chosen_var_i = i;
-            matches++;
           }
         }
       } else if (is<IntegerVector>(var_) || is<NumericVector>(var_)) {
@@ -832,11 +830,9 @@ namespace LefkoUtils {
         StringVector full_var = as<StringVector>(var_);
         String var_s_ = String(full_var(0));
         
-        int matches {0};
         for (int i = 0; i < no_vars; i++) {
           if (stringcompare_hard(var_s_, String(var_names(i)))) {
             chosen_var_i = i;
-            matches++;
           }
         }
       } else if (is<IntegerVector>(var_) || is<NumericVector>(var_)) {

@@ -3011,8 +3011,10 @@ summary.lefkoMat <- function(object, colsums = TRUE, ...) {
       writeLines(paste0("\nThe dataset contains a total of ", dqca, " unique individuals and ", dqcb, " unique transitions."))
     } else if (!is.na(dqca)) {
       writeLines(paste0("\nThe dataset contains a total of ", dqca, " unique individuals. Number of unique transitions not known."))
-    } else {
+    } else if (!is.na(dqcb)) {
       writeLines(paste0("\nThe dataset contains a total of ", dqcb, " unique transitions. Number of unique individuals not known."))
+    } else {
+      writeLines("\nThis lefkoMat object appears to have been imported. Number of unique individuals and transitions not known.")
     }
   }
   

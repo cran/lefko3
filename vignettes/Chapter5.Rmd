@@ -36,7 +36,7 @@ data(cypdata)
   
 #### Step 1. Life history model development 
   
-  <p style="text-indent: 20px">We will first describe the life history characterizing the population, matching it to our dataset with a *stageframe* for our *Cypripedium candidum* dataset. Since this analysis will be function-based and all sizes have reasonable representation, we will include all observed size classes here. Size is count-based, and refers to all numbers of stems that occurred, representing the life history diagram shown previously.</p>
+  <p style="text-indent: 20px">We will first describe the life history characterizing the population, matching it to our dataset with a *stageframe* for our *Cypripedium candidum* dataset. Since this analysis will be function-based and all sizes have reasonable representation, we will include all observed size classes here. Size is count-based, and refers to all numbers of stems that occurred, representing the life history diagram shown previously. Note that we are using the midpoint approach to determining the size bins here, using the default bin halfwidths of 0.5 (since all size bins are using this default, we do not include a `binhalfwidth` vector option in the `sf_create()` input). However, we could have used the `sizemin` and `sizemax` options to more deliberately set the size bin minima and maxima instead.</p>
 
 ```r
 sizevector <- c(0, 0, 0, 0, 0, seq(from = 0, t = 24), seq(from = 1, to = 24))
@@ -484,13 +484,13 @@ lambda3(tmeans2r)
 #> 1   1     1 0.9603461
 lambda3(tmeans3r)
 #>   pop patch    lambda
-#> 1   1  <NA> 0.9628262
+#> 1   1  <NA> 0.9629342
 cypann2s
 #>   pop patch           a         var         sd           se
-#> 1   1     1 -0.04043204 0.002352738 0.04850503 0.0004850503
+#> 1   1     1 -0.04043205 0.002352739 0.04850504 0.0004850504
 cypann3s
 #>   pop patch           a         var         sd           se
-#> 1   1  <NA> -0.03783459 0.001590644 0.03988288 0.0003988288
+#> 1   1  <NA> -0.03771166 0.001646792 0.04058069 0.0004058069
 ```
   
   <p style="text-indent: 20px">These $\lambda$ values are similar to one another, as are estimates of $a = \text{log} \lambda _{S}$. Let's take a look at a plot of annual deterministic growth rates (stochastic growth rate is calculated as a single value across time, and so is not included). We find that annual $\lambda$ estimates differ only slightly between ahistorical and historical analyses.</p>
@@ -567,7 +567,7 @@ tm2sens_s <- sensitivity3(cypmatrix2, stochastic = TRUE)
 
 # The highest deterministic sensitivity value:
 max(tm2sens$ah_sensmats[[1]][which(tmeans2r$A[[1]] > 0)])
-#> [1] 0.2002352
+#> [1] 0.2002353
 # This value is associated with element:
 which(tm2sens$ah_sensmats[[1]] == 
   max(tm2sens$ah_sensmats[[1]][which(tmeans2r$A[[1]] > 0)]))
@@ -593,14 +593,14 @@ tm3sens_s <- sensitivity3(cypmatrix3, stochastic = TRUE, steps = 500)
 
 # The highest deterministic sensitivity value:
 max(as.matrix(tm3sens$h_sensmats[[1]])[which(as.matrix(tmeans3r$A[[1]]) > 0)])
-#> [1] 0.04486939
+#> [1] 0.04427405
 # This value is associated with element:
 which(as.matrix(tm3sens$h_sensmats[[1]]) == 
   max(as.matrix(tm3sens$h_sensmats[[1]])[which(as.matrix(tmeans3r$A[[1]]) > 0)]))
-#> [1] 962643
+#> [1] 962644
 # The highest stochastic sensitivity value:
 max(as.matrix(tm3sens_s$h_sensmats[[1]])[which(as.matrix(tmeans3r$A[[1]]) > 0)])
-#> [1] 0.02771403
+#> [1] 0.02567237
 # This value is associated with element:
 which(as.matrix(tm3sens_s$h_sensmats[[1]]) == 
   max(as.matrix(tm3sens_s$h_sensmats[[1]])[which(as.matrix(tmeans3r$A[[1]]) > 0)]))
@@ -608,21 +608,21 @@ which(as.matrix(tm3sens_s$h_sensmats[[1]]) ==
 
 # The highest deterministic sensitivity value (historically-corrected):
 max(as.matrix(tm3sens$ah_sensmats[[1]])[which(as.matrix(tmeans2r$A[[1]]) > 0)])
-#> [1] 0.1729593
+#> [1] 0.1744897
 # This value is associated with element:
 which(as.matrix(tm3sens$ah_sensmats[[1]]) ==
   max(as.matrix(tm3sens$ah_sensmats[[1]])[which(as.matrix(tmeans2r$A[[1]]) > 0)]))
-#> [1] 363
+#> [1] 364
 # The highest stochastic sensitivity value (historically-corrected):
 max(as.matrix(tm3sens_s$ah_sensmats[[1]])[which(as.matrix(tmeans2r$A[[1]]) > 0)])
-#> [1] 0.1361241
+#> [1] 0.1357679
 # This value is associated with element:
 which(as.matrix(tm3sens_s$ah_sensmats[[1]]) ==
   max(as.matrix(tm3sens_s$ah_sensmats[[1]])[which(as.matrix(tmeans2r$A[[1]]) > 0)]))
 #> [1] 1657
 ```
   
-  <p style="text-indent: 20px">Deterministic sensitivity analysis supported the transition from 1-sprouted non-flowering adult in occasions *t*-1 and *t* to the 9-sprouted flowering adult in occasion *t*+1 as the transition that $\lambda$ is most sensitive to (we can see this by dividing 962,643 by the number of stage pairs, which is 2916 - rounding up the answer gives us the matrix column [331], and the remainder from this division problem gives us the row [363]; the row and column numbers can then be checked against the `hstages` portion of the historical `lefkoMat` object used as input). The stochastic sensitivity analysis gives a slightly different result, supporting the transition from 1-sprouted non-flowering adult in occasions *t*-1 and *t* to 7-sprouted flowering adult in occasion *t*+1. The highest historically-corrected deterministic sensitivity value is associated with the transition from 1-sprouted non-flowering to 9-sprouted flowering (element 363), while the highest historically-corrected stochastic sensitivity value is associated with the transition from 1-sprouted flowering adult to 7-sprouted flowering adult stage (element 1657).</p>
+  <p style="text-indent: 20px">Deterministic sensitivity analysis supported transitions from small non-flowering stages to larger flowering stages, such as 1-sprouted non-flowering adult in occasions *t*-1 and *t* to 10-sprouted flowering adult in occasion *t*+1, as the transitions that $\lambda$ is most sensitive to (as, an example, we can see this by dividing 962,644 by the number of stage pairs, which is 2916 - rounding up the answer gives us the matrix column [331], and the remainder from this division problem gives us the row [364]; the row and column numbers can then be checked against the `hstages` portion of the historical `lefkoMat` object used as input). The stochastic sensitivity analysis gives a slightly different result, supporting the transition from 1-sprouted non-flowering adult in occasions *t*-1 and *t* to 7-sprouted flowering adult in occasion *t*+1. The highest historically-corrected deterministic sensitivity value is associated with the transition from 1-sprouted non-flowering to 10-sprouted flowering (element 364), while the highest historically-corrected stochastic sensitivity value is associated with the transition from 1-sprouted flowering adult to 7-sprouted flowering adult stage (element 1657).</p>
   
   <p style="text-indent: 20px">Let's now assess the elasticity of $\lambda$ to matrix elements, comparing the ahistorical to the historically-corrected case in both deterministic and stochastic analyses.</p>
 

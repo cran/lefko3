@@ -433,7 +433,11 @@ usable as size classes defining each stage. However, since we are not
 analyzing size itself, they do not need any further basis in reality.
 Other characteristics must be exact and realistic to make sure that the
 analyses work properly, including all other stage descriptions such as
-reproductive status, propagule status, and observation status.
+reproductive status, propagule status, and observation status. Note that
+we are using the midpoint approach to determining the size bins here,
+using the default bin halfwidths of 0.5. However, we could have used the
+<code>sizemin</code> and <code>sizemax</code> options to more
+deliberately set the size bin minima and maxima instead.
 </p>
 <div class="sourceCode" id="cb1"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>sizevector <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="dv">1</span>, <span class="dv">1</span>, <span class="dv">2</span>, <span class="dv">3</span>) <span class="co"># These sizes are not from the original paper</span></span>
 <span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>stagevector <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">&quot;Sdl&quot;</span>, <span class="st">&quot;Veg&quot;</span>, <span class="st">&quot;SmFlo&quot;</span>, <span class="st">&quot;LFlo&quot;</span>)</span>
@@ -691,10 +695,9 @@ using a deterministic LTRE, we will utilize the mean matrix set instead.
 </p>
 <div class="sourceCode" id="cb7"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>trialltre_det <span class="ot">&lt;-</span> <span class="fu">ltre3</span>(anth_lmean, <span class="at">stochastic =</span> <span class="cn">FALSE</span>, <span class="at">steps =</span> <span class="dv">10000</span>,</span>
 <span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">time_weights =</span> <span class="cn">NA</span>, <span class="at">sparse =</span> <span class="st">&quot;auto&quot;</span>)</span>
-<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; Warning: Matrices input as mats will also be used in reference matrix</span></span>
-<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; calculation.</span></span>
-<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; Using all refmats matrices in reference matrix calculation.</span></span>
-<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a><span class="co">#trialltre_det</span></span></code></pre></div>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; Warning: Matrices input as mats will also be used in reference matrix calculation.</span></span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; Using all refmats matrices in reference matrix calculation.</span></span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a><span class="co">#trialltre_det</span></span></code></pre></div>
 <p style="text-indent: 20px">
 The resulting <code>lefkoLTRE</code> object gives the LTRE contributions
 for each matrix relative to the arithmetic grand mean matrix. While the
@@ -707,10 +710,9 @@ original annual matrices. Here, conduct a sLTRE.
 </p>
 <div class="sourceCode" id="cb8"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>trialltre_sto <span class="ot">&lt;-</span> <span class="fu">ltre3</span>(anth_lefkoMat, <span class="at">stochastic =</span> <span class="cn">TRUE</span>, <span class="at">steps =</span> <span class="dv">10000</span>,</span>
 <span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">time_weights =</span> <span class="cn">NA</span>, <span class="at">sparse =</span> <span class="st">&quot;auto&quot;</span>)</span>
-<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; Warning: Matrices input as mats will also be used in reference matrix</span></span>
-<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; calculation.</span></span>
-<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; Using all refmats matrices in reference matrix calculation.</span></span>
-<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a><span class="co">#trialltre_sto</span></span></code></pre></div>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; Warning: Matrices input as mats will also be used in reference matrix calculation.</span></span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; Using all refmats matrices in reference matrix calculation.</span></span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a><span class="co">#trialltre_sto</span></span></code></pre></div>
 <p style="text-indent: 20px">
 The sLTRE produces output that is a bit different from the deterministic
 LTRE output. In the output, we see two lists of matrices prior to the

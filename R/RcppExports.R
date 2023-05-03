@@ -2234,7 +2234,7 @@ NULL
 #' }
 #' 
 #' @export f_projection3
-f_projection3 <- function(format, prebreeding = TRUE, start_age = NA_integer_, last_age = NA_integer_, fecage_min = NA_integer_, fecage_max = NA_integer_, cont = TRUE, stochastic = FALSE, standardize = FALSE, growthonly = TRUE, repvalue = FALSE, integeronly = FALSE, substoch = 0L, ipm_cdf = TRUE, nreps = 1L, times = 10000L, repmod = 1.0, exp_tol = 700.0, theta_tol = 100000000.0, random_inda = FALSE, random_indb = FALSE, random_indc = FALSE, err_check = FALSE, quiet = FALSE, data = NULL, stageframe = NULL, supplement = NULL, repmatrix = NULL, overwrite = NULL, modelsuite = NULL, paramnames = NULL, year = NULL, patch = NULL, sp_density = NULL, ind_terms = NULL, dev_terms = NULL, surv_model = NULL, obs_model = NULL, size_model = NULL, sizeb_model = NULL, sizec_model = NULL, repst_model = NULL, fec_model = NULL, jsurv_model = NULL, jobs_model = NULL, jsize_model = NULL, jsizeb_model = NULL, jsizec_model = NULL, jrepst_model = NULL, jmatst_model = NULL, start_vec = NULL, start_frame = NULL, tweights = NULL, density = NULL, density_vr = NULL, sparse = NULL) {
+f_projection3 <- function(format, prebreeding = TRUE, start_age = NA_integer_, last_age = NA_integer_, fecage_min = NA_integer_, fecage_max = NA_integer_, cont = TRUE, stochastic = FALSE, standardize = FALSE, growthonly = TRUE, repvalue = FALSE, integeronly = FALSE, substoch = 0L, ipm_cdf = TRUE, nreps = 1L, times = 10000L, repmod = 1.0, exp_tol = 700.0, theta_tol = 1e8, random_inda = FALSE, random_indb = FALSE, random_indc = FALSE, err_check = FALSE, quiet = FALSE, data = NULL, stageframe = NULL, supplement = NULL, repmatrix = NULL, overwrite = NULL, modelsuite = NULL, paramnames = NULL, year = NULL, patch = NULL, sp_density = NULL, ind_terms = NULL, dev_terms = NULL, surv_model = NULL, obs_model = NULL, size_model = NULL, sizeb_model = NULL, sizec_model = NULL, repst_model = NULL, fec_model = NULL, jsurv_model = NULL, jobs_model = NULL, jsize_model = NULL, jsizeb_model = NULL, jsizec_model = NULL, jrepst_model = NULL, jmatst_model = NULL, start_vec = NULL, start_frame = NULL, tweights = NULL, density = NULL, density_vr = NULL, sparse = NULL) {
     .Call('_lefko3_f_projection3', PACKAGE = 'lefko3', format, prebreeding, start_age, last_age, fecage_min, fecage_max, cont, stochastic, standardize, growthonly, repvalue, integeronly, substoch, ipm_cdf, nreps, times, repmod, exp_tol, theta_tol, random_inda, random_indb, random_indc, err_check, quiet, data, stageframe, supplement, repmatrix, overwrite, modelsuite, paramnames, year, patch, sp_density, ind_terms, dev_terms, surv_model, obs_model, size_model, sizeb_model, sizec_model, repst_model, fec_model, jsurv_model, jobs_model, jsize_model, jsizeb_model, jsizec_model, jrepst_model, jmatst_model, start_vec, start_frame, tweights, density, density_vr, sparse)
 }
 
@@ -2627,7 +2627,7 @@ f_projection3 <- function(format, prebreeding = TRUE, start_age = NA_integer_, l
 #' }
 #' 
 #' @export mpm_create
-mpm_create <- function(historical = FALSE, stage = TRUE, age = FALSE, devries = FALSE, reduce = FALSE, simple = FALSE, err_check = FALSE, data = NULL, year = NULL, pop = NULL, patch = NULL, stageframe = NULL, supplement = NULL, overwrite = NULL, repmatrix = NULL, alive = NULL, obsst = NULL, size = NULL, sizeb = NULL, sizec = NULL, repst = NULL, matst = NULL, fec = NULL, stages = NULL, yearcol = NULL, popcol = NULL, patchcol = NULL, indivcol = NULL, agecol = NULL, censorcol = NULL, modelsuite = NULL, paramnames = NULL, inda = NULL, indb = NULL, indc = NULL, dev_terms = NULL, density = NA_real_, CDF = TRUE, random_inda = FALSE, random_indb = FALSE, random_indc = FALSE, negfec = FALSE, exp_tol = 700L, theta_tol = 100000000L, censor = FALSE, censorkeep = NULL, start_age = NA_integer_, last_age = NA_integer_, fecage_min = NA_integer_, fecage_max = NA_integer_, fectime = 2L, fecmod = 1.0, cont = TRUE, prebreeding = TRUE, stage_NRasRep = FALSE, sparse_output = FALSE) {
+mpm_create <- function(historical = FALSE, stage = TRUE, age = FALSE, devries = FALSE, reduce = FALSE, simple = FALSE, err_check = FALSE, data = NULL, year = NULL, pop = NULL, patch = NULL, stageframe = NULL, supplement = NULL, overwrite = NULL, repmatrix = NULL, alive = NULL, obsst = NULL, size = NULL, sizeb = NULL, sizec = NULL, repst = NULL, matst = NULL, fec = NULL, stages = NULL, yearcol = NULL, popcol = NULL, patchcol = NULL, indivcol = NULL, agecol = NULL, censorcol = NULL, modelsuite = NULL, paramnames = NULL, inda = NULL, indb = NULL, indc = NULL, dev_terms = NULL, density = NA_real_, CDF = TRUE, random_inda = FALSE, random_indb = FALSE, random_indc = FALSE, negfec = FALSE, exp_tol = 700L, theta_tol = 1e8L, censor = FALSE, censorkeep = NULL, start_age = NA_integer_, last_age = NA_integer_, fecage_min = NA_integer_, fecage_max = NA_integer_, fectime = 2L, fecmod = 1.0, cont = TRUE, prebreeding = TRUE, stage_NRasRep = FALSE, sparse_output = FALSE) {
     .Call('_lefko3_mpm_create', PACKAGE = 'lefko3', historical, stage, age, devries, reduce, simple, err_check, data, year, pop, patch, stageframe, supplement, overwrite, repmatrix, alive, obsst, size, sizeb, sizec, repst, matst, fec, stages, yearcol, popcol, patchcol, indivcol, agecol, censorcol, modelsuite, paramnames, inda, indb, indc, dev_terms, density, CDF, random_inda, random_indb, random_indc, negfec, exp_tol, theta_tol, censor, censorkeep, start_age, last_age, fecage_min, fecage_max, fectime, fecmod, cont, prebreeding, stage_NRasRep, sparse_output)
 }
 
@@ -3453,7 +3453,7 @@ slambda3 <- function(mpm, times = 10000L, historical = FALSE, tweights = NULL, f
 #' \code{ltre3matrix()} returns the one-way fixed deterministic LTRE matrix of
 #' a dense or sparse set of input matrices.
 #' 
-#' @name ltre3matrix
+#' @name .ltre3matrix
 #' 
 #' @param Amats A list of population projection matrices (not an entire
 #' \code{lefkoMat} object.
@@ -3498,6 +3498,9 @@ slambda3 <- function(mpm, times = 10000L, historical = FALSE, tweights = NULL, f
 #' without calculating population metrics. Defaults to \code{3000}.
 #' @param sparse A logical value indicating whether to use sparse or dense
 #' format in matrix calculations.
+#' @param tol_used A double precision numeric value indicating a lower positive
+#' limit to matrix element values used in calculations. Matrix elements lower
+#' than this value will be treated as \code{0.0} values.
 #' 
 #' @return This function returns a list of two lists of matrices. The first,
 #' \code{cont_mean}, holds the sLTRE contributions of shifts in mean elements.
@@ -3510,8 +3513,8 @@ slambda3 <- function(mpm, times = 10000L, historical = FALSE, tweights = NULL, f
 #' 
 #' @keywords internal
 #' @noRd
-.sltre3matrix <- function(Amats, labels, refnum, refmats_ = NULL, tweights_ = NULL, steps = 10000L, burnin = 3000L, sparse = FALSE) {
-    .Call('_lefko3_sltre3matrix', PACKAGE = 'lefko3', Amats, labels, refnum, refmats_, tweights_, steps, burnin, sparse)
+.sltre3matrix <- function(Amats, labels, refnum, refmats_ = NULL, tweights_ = NULL, steps = 10000L, burnin = 3000L, sparse = FALSE, tol_used = 1e-30) {
+    .Call('_lefko3_sltre3matrix', PACKAGE = 'lefko3', Amats, labels, refnum, refmats_, tweights_, steps, burnin, sparse, tol_used)
 }
 
 #' Estimate SNA-LTRE of Any Population Matrix
@@ -3531,6 +3534,9 @@ slambda3 <- function(mpm, times = 10000L, historical = FALSE, tweights = NULL, f
 #' annual matrices. Defaults to equal weighting among occasions.
 #' @param sparse A logical value indicating whether to use sparse or dense
 #' format in matrix calculations.
+#' @param tol_used A double precision numeric value indicating a lower positive
+#' limit to matrix element values used in calculations. Matrix elements lower
+#' than this value will be treated as \code{0.0} values.
 #' 
 #' @return This function returns a list of four lists of matrices. The first,
 #' \code{cont_mean}, holds the sLTRE contributions of shifts in mean elements.
@@ -3546,8 +3552,8 @@ slambda3 <- function(mpm, times = 10000L, historical = FALSE, tweights = NULL, f
 #' 
 #' @keywords internal
 #' @noRd
-.snaltre3matrix <- function(Amats, labels, refnum, refmats_ = NULL, tweights_ = NULL, sparse = FALSE) {
-    .Call('_lefko3_snaltre3matrix', PACKAGE = 'lefko3', Amats, labels, refnum, refmats_, tweights_, sparse)
+.snaltre3matrix <- function(Amats, labels, refnum, refmats_ = NULL, tweights_ = NULL, sparse = FALSE, tol_used = 1e-30) {
+    .Call('_lefko3_snaltre3matrix', PACKAGE = 'lefko3', Amats, labels, refnum, refmats_, tweights_, sparse, tol_used)
 }
 
 #' Main Formula Creation for Function \code{modelsearch()}
@@ -3839,11 +3845,11 @@ NULL
 #' @name sf_create
 #' 
 #' @param sizes A numeric vector of the typical or representative size of each
-#' life history stage. If making function-based MPMs, then this should be a
-#' vector composed of the midpoints of each size bin. If denoting the boundary
-#' of an automated size classification group, then should denote the absolute
-#' minimum size of that group, or the absolute size of that group (see
-#' \code{Notes}).
+#' life history stage. If making function-based MPMs, then this may be a
+#' vector composed of the midpoints of each size bin, or simply of sizes
+#' characteristic of the size bins. If denoting the boundary of an automated
+#' size classification group, then should denote the absolute minimum size of
+#' that group, or the absolute size of that group (see \code{Notes}).
 #' @param stagenames A vector of stage names, in the same order as elements in
 #' sizes. Can also be set to \code{ipm} for automated size classification (see
 #' \code{Notes} section).
@@ -3880,16 +3886,35 @@ NULL
 #' non-overlapping combinations of size and status variables. Stages that do
 #' not actually exist within the dataset should be marked as \code{0} in this
 #' vector.
+#' @param sizemin A vector giving the absolute minimum values corresponding to
+#' each size in the \code{sizes} vector. Requires associated values for
+#' \code{sizemax} if used. Only required if not using \code{binhalfwidth}.
+#' @param sizebmin A vector giving the absolute minimum values corresponding to
+#' each size in the \code{sizesb} vector. Requires associated values for
+#' \code{sizebmax} if used. Only required if not using \code{binhalfwidthb}.
+#' @param sizecmin A vector giving the absolute minimum values corresponding to
+#' each size in the \code{sizesc} vector. Requires associated values for
+#' \code{sizecmax} if used. Only required if not using \code{binhalfwidthc}.
+#' @param sizemax A vector giving the absolute maximum values corresponding to
+#' each size in the \code{sizes} vector. Requires associated values for
+#' \code{sizemin} if used. Only required if not using \code{binhalfwidth}.
+#' @param sizebmax A vector giving the absolute maximum values corresponding to
+#' each size in the \code{sizesb} vector. Requires associated values for
+#' \code{sizebmin} if used. Only required if not using \code{binhalfwidthb}.
+#' @param sizecmax A vector giving the absolute maximum values corresponding to
+#' each size in the \code{sizesc} vector. Requires associated values for
+#' \code{sizecmin} if used. Only required if not using \code{binhalfwidthc}.
 #' @param binhalfwidth A numeric vector giving the half-width of size bins.
-#' Required to classify individuals appropriately within size classes.
-#' Defaults to \code{0.5} for all sizes.
+#' Required if \code{sizemin} and \code{sizemax} are not used. Defaults to
+#' \code{0.5} for all sizes.
 #' @param binhalfwidthb A numeric vector giving the half-width of size bins
-#' used for the optional second size metric. Required to classify individuals
-#' appropriately with two or three size classes. Defaults to \code{0.5} for all
-#' sizes.
+#' used for the optional second size metric. Required if \code{sizebmin} and
+#' \code{sizebmax} are not used but two or three size classes are used.
+#' Defaults to \code{0.5} for all sizes.
 #' @param binhalfwidthc A numeric vector giving the half-width of size bins
-#' used for the optional third size metric. Required to classify individuals
-#' appropriately with three size classes. Defaults to \code{0.5} for all sizes.
+#' used for the optional third size metric. Required if \code{sizecmin} and
+#' \code{sizecmax} are not used but three size classes are used. Defaults to
+#' \code{0.5} for all sizes.
 #' @param group An integer vector providing information on each respective
 #' stage's size classification group. If used, then function-based MPM creation
 #' functions \code{\link{flefko2}()}, \code{\link{flefko3}()}, and
@@ -4024,9 +4049,9 @@ NULL
 #' stageframe. Although no hfv data frame needs to be entered in this instance,
 #' stages for which vital rates are to be estimated via linear models
 #' parameterized with coefficients provided via function
-#' \code{\link{vrm_import}()} should be marked as occurring within the dataset,
-#' while stages for which the provided coefficients should not be used should
-#' be marked as not occurring within the dataset.
+#' \code{\link{vrm_import}()} should be marked as occurring within the dataset.
+#' Stages for which the provided coefficients should not be used should be
+#' marked as not occurring within the dataset.
 #' 
 #' @examples
 #' # Lathyrus example
@@ -4067,8 +4092,8 @@ NULL
 #'   binhalfwidth = binvec)
 #' 
 #' @export sf_create
-sf_create <- function(sizes, stagenames = NULL, sizesb = NULL, sizesc = NULL, repstatus = NULL, obsstatus = NULL, propstatus = NULL, matstatus = NULL, immstatus = NULL, minage = NULL, maxage = NULL, indataset = NULL, binhalfwidth = NULL, binhalfwidthb = NULL, binhalfwidthc = NULL, group = NULL, comments = NULL, roundsize = 5L, roundsizeb = 5L, roundsizec = 5L, ipmbins = 100L, ipmbinsb = NA_integer_, ipmbinsc = NA_integer_) {
-    .Call('_lefko3_sf_create', PACKAGE = 'lefko3', sizes, stagenames, sizesb, sizesc, repstatus, obsstatus, propstatus, matstatus, immstatus, minage, maxage, indataset, binhalfwidth, binhalfwidthb, binhalfwidthc, group, comments, roundsize, roundsizeb, roundsizec, ipmbins, ipmbinsb, ipmbinsc)
+sf_create <- function(sizes, stagenames = NULL, sizesb = NULL, sizesc = NULL, repstatus = NULL, obsstatus = NULL, propstatus = NULL, matstatus = NULL, immstatus = NULL, minage = NULL, maxage = NULL, indataset = NULL, sizemin = NULL, sizebmin = NULL, sizecmin = NULL, sizemax = NULL, sizebmax = NULL, sizecmax = NULL, binhalfwidth = NULL, binhalfwidthb = NULL, binhalfwidthc = NULL, group = NULL, comments = NULL, roundsize = 5L, roundsizeb = 5L, roundsizec = 5L, ipmbins = 100L, ipmbinsb = NA_integer_, ipmbinsc = NA_integer_) {
+    .Call('_lefko3_sf_create', PACKAGE = 'lefko3', sizes, stagenames, sizesb, sizesc, repstatus, obsstatus, propstatus, matstatus, immstatus, minage, maxage, indataset, sizemin, sizebmin, sizecmin, sizemax, sizebmax, sizecmax, binhalfwidth, binhalfwidthb, binhalfwidthc, group, comments, roundsize, roundsizeb, roundsizec, ipmbins, ipmbinsb, ipmbinsc)
 }
 
 #' Calculate Actual Stage, Age, Stage-Pair, or Age-Stage Distributions
@@ -4816,15 +4841,6 @@ edit_lM <- function(mpm, pop = NULL, patch = NULL, year2 = NULL, stage3 = NULL, 
 #' a supplied ahistorical elasticity matrix. Also includes sums of only the
 #' positive elements and only the negative elements, in all cases.
 #' 
-#' @section Notes:
-#' If the original matrices are provided, then this function was made to split
-#' co-occurring survival-fecundity elasticities according to the ratio of the
-#' fecundity portion of the element to the survival portion of that element.
-#' However, this transition splitting capability developed using the original
-#' matrices does not currently work properly, and so it is better to use this
-#' function without objects \code{amat_} and \code{fmat_}, forcing co-occurring
-#' survival-fecundity transitions to be treated as fecundity only.
-#' 
 #' @keywords internal
 #' @noRd
 .demolition3 <- function(e_amat, bambesque, amat_ = NULL, fmat_ = NULL) {
@@ -4860,15 +4876,6 @@ edit_lM <- function(mpm, pop = NULL, patch = NULL, year2 = NULL, stage3 = NULL, 
 #' ahistorical summary of the historical matrix or the summed elasticities of
 #' a supplied ahistorical elasticity matrix. Also includes sums of only the
 #' positive elements and only the negative elements, in all cases.
-#' 
-#' @section Notes:
-#' If the original matrices are provided, then this function was made to split
-#' co-occurring survival-fecundity elasticities according to the ratio of the
-#' fecundity portion of the element to the survival portion of that element.
-#' However, this transition splitting capability developed using the original
-#' matrices does not currently work properly, and so it is better to use this
-#' function without objects \code{amat_} and \code{fmat_}, forcing co-occurring
-#' survival-fecundity transitions to be treated as fecundity only.
 #' 
 #' @keywords internal
 #' @noRd

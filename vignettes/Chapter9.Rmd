@@ -28,7 +28,7 @@ Figure 9.1. Life history model of *Anthyllis vulneraria*. Solid arrows indicate 
   
 #### Step 1. Life history model development 
   
-  <p style="text-indent: 20px">We will first describe the life history characterizing the dataset with a `stageframe`. Since we do not have the original demographic dataset that produced the published matrices, we do not need to know the exact sizes of plants and so will use proxy values. These proxy values need to be unique and non-negative, and they need non-overlapping bins usable as size classes defining each stage. However, since we are not analyzing size itself, they do not need any further basis in reality. Other characteristics must be exact and realistic to make sure that the analyses work properly, including all other stage descriptions such as reproductive status, propagule status, and observation status.</p>
+  <p style="text-indent: 20px">We will first describe the life history characterizing the dataset with a `stageframe`. Since we do not have the original demographic dataset that produced the published matrices, we do not need to know the exact sizes of plants and so will use proxy values. These proxy values need to be unique and non-negative, and they need non-overlapping bins usable as size classes defining each stage. However, since we are not analyzing size itself, they do not need any further basis in reality. Other characteristics must be exact and realistic to make sure that the analyses work properly, including all other stage descriptions such as reproductive status, propagule status, and observation status. Note that we are using the midpoint approach to determining the size bins here, using the default bin halfwidths of 0.5. However, we could have used the `sizemin` and `sizemax` options to more deliberately set the size bin minima and maxima instead.</p>
 
 ```r
 sizevector <- c(1, 1, 2, 3) # These sizes are not from the original paper
@@ -246,8 +246,7 @@ legend("topleft", c("det annual", "det mean", "stochastic"), lty = c(2, 1, 1),
 ```r
 trialltre_det <- ltre3(anth_lmean, stochastic = FALSE, steps = 10000,
   time_weights = NA, sparse = "auto")
-#> Warning: Matrices input as mats will also be used in reference matrix
-#> calculation.
+#> Warning: Matrices input as mats will also be used in reference matrix calculation.
 #> Using all refmats matrices in reference matrix calculation.
 #trialltre_det
 ```
@@ -257,8 +256,7 @@ trialltre_det <- ltre3(anth_lmean, stochastic = FALSE, steps = 10000,
 ```r
 trialltre_sto <- ltre3(anth_lefkoMat, stochastic = TRUE, steps = 10000,
   time_weights = NA, sparse = "auto")
-#> Warning: Matrices input as mats will also be used in reference matrix
-#> calculation.
+#> Warning: Matrices input as mats will also be used in reference matrix calculation.
 #> Using all refmats matrices in reference matrix calculation.
 #trialltre_sto
 ```

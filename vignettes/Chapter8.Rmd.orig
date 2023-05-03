@@ -63,7 +63,7 @@ plot(density(c(lathyrus$lnVol88, lathyrus$lnVol89, lathyrus$lnVol90,
   
   <p style="text-indent: 20px">The raw volume distribution is highly skewed. This might cause difficulty if we used raw size untransformed and with a Gaussian distribution. A Gamma distribution might be justified. However, we will use the log volume here, which looks 'better' than the raw volume distribution in the sense that it is closer to some semblance of a Gaussian distribution, mostly through an increased level of symmetry. We will assume that log volume is Gaussian-distributed and that the mean bears no relationship to the variance.</p>
   
-  <p style="text-indent: 20px">We will now develop a stageframe that incorporates the log volume of size. We will build this with vectors of the values describing each stage, always in the same order.</p>
+  <p style="text-indent: 20px">We will now develop a stageframe that incorporates the log volume of size. We will build this with vectors of the values describing each stage, always in the same order. Note that we are using the midpoint approach to determining the size bins here, using the default bin halfwidths of 0.5 (since all size bins are using this default, we do not include a `binhalfwidth` vector option in the `sf_create()` input). However, we could have used the `sizemin` and `sizemax` options to more deliberately set the size bin minima and maxima instead.</p>
 ```{r Ch8.3}
 sizevector <- c(0, 4.6, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 1, 2, 3, 4, 5, 6, 7, 8, 9)
 stagevector <- c("Sd", "Sdl", "Dorm", "Sz1nr", "Sz2nr", "Sz3nr", "Sz4nr",
@@ -353,7 +353,7 @@ legend("topleft", c("deterministic", "stochastic"), col = c("black", "orangered"
   pch = 15, bty = "n")
 ```
   
-  <p style="text-indent: 20px">We see in the analysis above that in the deterministic and stochastic case, the population growth rate is generally most elastic to changes associated with flowering and non-flowering mid-sized adults, and to some extent with vegetatively dormant adults, in the highest ages. Stochastic analysis suggests that the most important stages are the largest flowering stages, also in the highest ages. Juvenile stages and dormant seeds have little influence.</p>
+  <p style="text-indent: 20px">We see in the analysis above that in the deterministic case, the population growth rate is most elastic to changes in flowering and non-flowering mid-sized older adults. In the stochastic case, the population growth rate is most elastic to changes in the oldest and largest flowering adults. So, the differences are quite notable, and we would infer that environmental stochasticity makes a big impact here.</p>
   
   <p style="text-indent: 20px">Our estimated elasticities can also be summarized by transition type. Let's take a look at a plot, using the `summary.lefkoElas()` function to help us assess these transition types.</p>
 ```{r Ch8.20, fig.cap = "Figure 8.8. Elasticities by transition type"}
@@ -420,7 +420,7 @@ legend("topleft", c("deterministic", "stochastic mean", "stochastic SD"),
   col = c("black", "grey", "red"), pch = 15, bty = "n")
 ```
   
-  <p style="text-indent: 20px">The output above shows that mid-sized non-flowering and flowering adults and seedlings exert strong influences on both $\lambda$ and $\text{log} \lambda$.</p>
+  <p style="text-indent: 20px">The output above shows that mid-sized non-flowering and flowering adults and seedlings exert strong influences on both $\lambda$ and $\text{log} \lambda$. This appears to be primarily through changes to the mean transition values, with only a small contribution due to changes in the variability of transition values in the stochastic case.</p>
   
   <p style="text-indent: 20px">Finally, we will assess what transition types exert the greatest impact on population growth rate.</p>
 ```{r Ch8.24, fig.cap = "Figure 8.10. LTRE contributions by transition type"}
@@ -446,7 +446,7 @@ legend("topleft", c("deterministic", "stochastic mean", "stochastic SD"),
   col = c("black", "grey", "red"), pch = 15, bty = "n")
 ```
   
-  <p style="text-indent: 20px">The overall greatest impact on the population growth rate appears to come from growth and shrinkage transitions, with shrinkage transitions having strongly negative influences in general.</p>
+  <p style="text-indent: 20px">The overall greatest impact on the population growth rate appears to come from growth and shrinkage transitions, with growth transitions having strongly negative influences in general.</p>
   
   <p style="text-indent: 20px">LTREs and sLTREs are powerful tools, and more complex versions of both analyses exist. Particularly view our other online resources for the SNA-LTRE, and please consult @caswell_matrix_2001 and @davison_contributions_2013 for more information. Users wishing to conduct these analyses should see our free e-manual called ***lefko3: a gentle introduction*** and other vignettes on <a href = "http://www.sheffersonlab.com/projects.html">the projects page</a> of the Shefferson lab website.</p>
 

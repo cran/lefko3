@@ -16,6 +16,7 @@ ltre3(
   rseed = NA,
   append_mats = FALSE,
   sna_ltre = FALSE,
+  tol = 1e-30,
   ...
 )
 }
@@ -61,6 +62,11 @@ object. Defaults to \code{FALSE}.}
 via the sna-LTRE approach from Davison et al. (2019) (\code{TRUE}), or the
 stochastic LTRE approximation from Davison et al. (2010) (\code{FALSE}).
 Defaults to \code{FALSE}.}
+
+\item{tol}{A numeric value indicating a lower positive limit to matrix
+element values when applied to stochatic and small noise approximation LTRE
+estimation protocols. Matrix element values lower than this will be treated
+as \code{0.0} values. Defaults to \code{1e-30}.}
 
 \item{...}{Other parameters.}
 }

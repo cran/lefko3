@@ -61,7 +61,7 @@ lathframeipm <- sf_create(sizes = sizevector, stagenames = stagevector,
 #lathframeipm
 ```
   
-  <p style="text-indent: 20px">This stageframe has `r dim(lathframeipm)[1]` stages. The IPM portion technically starts with the fourth stage and keeps going through the 103rd stage. Stage names within this range are concatenations of the size centroid (designated with `sz`), and, given a limited string length, the reproductive status, maturity status, and observation status. The first three stages, which fall outside of the IPM classification, are left unaltered.</p>
+  <p style="text-indent: 20px">This stageframe has `r dim(lathframeipm)[1]` stages. The IPM portion technically starts with the fourth stage and keeps going through the 103rd stage. Stage names within this range are concatenations of the size centroid (designated with `sz`), and, given a limited string length, the reproductive status, maturity status, and observation status. The first three stages, which fall outside of the IPM classification, are left unaltered. Note that we are using the midpoint approach to determining the size bins here, using the default bin halfwidths of 0.5 (since all size bins are using this default, we do not include a `binhalfwidth` vector option in the `sf_create()` input). However, we could have used the `sizemin` and `sizemax` options to more deliberately set the size bin minima and maxima instead, although that would have been a more tedious approach in a high dimensonal object like an IPM.</p>
   
 #### Step 2a. Dataset standardization  
   

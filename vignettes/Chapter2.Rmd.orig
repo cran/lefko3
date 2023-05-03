@@ -45,7 +45,11 @@ dim(lathyrus)
   
   <p style="text-indent: 20px">We will now create a **stageframe**, which is a data frame that describes all stages in the life history of the organism, in a way usable by the functions in this package and using stage names and descriptions that completely match those used in the dataset. It links the dataset to the *life cycle graph* used to model the organism's life history. It should include complete descriptions of all stages that occur in the dataset, with each stage defined uniquely. Since this object can be used for automated classification, all sizes, reproductive states, and other characteristics defining each stage in the dataset need to be accounted for explicitly. The final description of each stage occurring in the dataset must not completely overlap with any other stage also found in the dataset, although partial overlap is allowed and expected.</p>
   
-  <p style="text-indent: 20px">Here, we create a stageframe named `lathframe` based on the classification used in @ehrlen_dynamics_2000. We build this by creating vectors of the characteristics describing each stage, with each element always in the same order within the vector. Of particular note are the vectors input as `sizes` and `binhalfwidth` in the `sf_create()` function. The values in the former vector correspond to the midpoint values of each size class bin, while values in the latter vector correspond to one-half of the width of the bin. If size values are not to be binned, then narrow half bin-widths can be used (the default is 0.5, and all entries must be positive). For example, in this dataset, vegetatively dormant individuals necessarily have a size of zero, and so we can set the `halfbinwidth` for this stage to 0.5 provided that the resulting size bin does not overlap with any other size bin matching the other characteristics of vegetative dormancy. Here we use a single size variable, but up to three size variables may be used. Vector `stagenames` must include unique names only. Vectors `repstatus`, `obsstatus`, `matstatus`, `immstatus`, `propstatus`, and `indataset` are binomial vectors referring to status as a reproductive stage, status as an observed stage, status as a mature stage, status as an immature stage, status as a propagule stage, and status as a stage occurring within the user-supplied dataset, respectively. The combination of these characteristics must be completely unique for each stage. The final vector, called `comments`, holds strings of stage descriptions.</p>
+  <p style="text-indent: 20px">Here, we create a stageframe named `lathframe` based on the classification used in @ehrlen_dynamics_2000. We build this by creating vectors of the characteristics describing each stage, with each element always in the same order within the vector, using the `sf_create()` function. The most important settings have to do with the size bins for the stages. Two methods are currently allowed: 1) a vector of representative sizes in the option called `sizes` along with the associated minimum and maximum sizes for each stage in the options called `sizemin` and `sizemax`, or 2) a vector of stage size bin midpoints in the `sizes` option along with the half-width of each size bin in the `binhalfwidth` option. Note that the representative sizes, whether midpoint or otherwise, are not actually used in any calculations - the size bin minima and maxima are the most important data used in calculations. Here, we will use approach 2), focused on the use of size bin half-widths.</p>
+  
+  <p style="text-indent: 20px">If size values are not to be binned, then narrow half bin-widths can be used (the default is 0.5, and all entries must be positive). For example, in this dataset, vegetatively dormant individuals necessarily have a size of zero, and so we can set the `halfbinwidth` for this stage to 0.5 provided that the resulting size bin does not overlap with any other size bin matching the other characteristics of vegetative dormancy. We can also set this manually with the `sizemin` and `sizemax` options, if we prefer.</p>
+  
+  <p style="text-indent: 20px">Here we use a single size variable, but up to three size variables may be used. Vector `stagenames` must include unique names only. Vectors `repstatus`, `obsstatus`, `matstatus`, `immstatus`, `propstatus`, and `indataset` are binomial vectors referring to status as a reproductive stage, status as an observed stage, status as a mature stage, status as an immature stage, status as a propagule stage, and status as a stage occurring within the user-supplied dataset, respectively. The combination of these characteristics must be completely unique for each stage. The final vector, called `comments`, holds strings of stage descriptions.</p>
 ```{r Ch2.1}
 sizevector <- c(0, 100, 13, 127, 3730, 3800, 0)
 stagevector <- c("Sd", "Sdl", "Tm", "Sm", "La", "Flo", "Dorm")
@@ -257,22 +261,24 @@ image3(ehrlen3mean, used = 1)
   
   <p style="text-indent: 20px">Package `lefko3` includes functions to conduct some analyses of population dynamics. We will start by estimating the asymptotic population growth rate ($\lambda$) and the stochastic population growth rate ($a = \text{log} \lambda _{S}$) from the ahistorical MPMs, including both the annual MPM and the mean. For the stochastic case, we will set the seed for R's random number generation to make our output reproducible. Note that each $\lambda$ estimate includes a data frame describing the matrices in order (given as the `labels` object within the output list). Here is the set of ahistorical annual $\lambda$ estimates, followed by $\lambda$ for the mean matrix, and the stochastic population growth rate ($a = \text{log} \lambda _{S}$).</p>
 ```{r Ch2.19}
-# Deterministic ahistorical:
+# Deterministic ahistorical
 lambda3(ehrlen2)
-# Deterministic mean ahistorical:
+# Deterministic mean ahistorical
 lambda3(ehrlen2mean)
-# Stochastic ahistorical:
-set.seed(42); slambda3(ehrlen2)
+# Stochastic ahistorical
+set.seed(42)
+slambda3(ehrlen2)
 ```
   
   <p style="text-indent: 20px">We will now look at the same numbers for the historical analyses. There are several differences in the output in addition to the lower growth rate estimates. First, because there are four years of data, there are three ahistorical transitions possible for estimation: year 1 to 2, year 2 to 3, and year 3 to 4. However, in the historical case, only two are possible: from years 1 and 2 to 3 (technically, from years 1 [*t*-1] and 2 [*t*] to years 2 [*t*] and 3 [*t*+1]), and from years 2 and 3 to 4. Second, historical matrices cover more of the individual heterogeneity in a population by splitting ahistorical transitions by stage in occasion *t*-1. This heterogeneity may reflect many sources, for example the impacts of trade-offs operating across years [@shefferson_longitudinal_2010]. One particularly common trade-off is the cost of growth: an individual that grows a great deal in one time step due to great environmental conditions in that year might pay a large cost of survival, growth, or reproduction in the next if those environmental conditions deteriorate [@shefferson_life_2014; @shefferson_drivers_2018].</p>
 ```{r Ch2.20}
-# Deterministic historical:
+# Deterministic historical
 lambda3(ehrlen3)
-# Deterministic mean historical:
+# Deterministic mean historical
 lambda3(ehrlen3mean)
-# Stochastic historical:
-set.seed(42); slambda3(ehrlen3)
+# Stochastic historical
+set.seed(42)
+slambda3(ehrlen3)
 ```
   
   <p style="text-indent: 20px">We can also examine the stable stage distributions, as follows for the ahistorical case.</p>
