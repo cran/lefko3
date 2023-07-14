@@ -1063,6 +1063,69 @@ lmean <- function(mats, matsout = NULL, force_sparse = FALSE) {
     .Call('_lefko3_lmean', PACKAGE = 'lefko3', mats, matsout, force_sparse)
 }
 
+#' Add a New Stage to an Existing LefkoMat Object
+#' 
+#' Function \code{add_stage()} adds a new stage to an existing \code{lefkoMat}
+#' object. In addition to altering the \code{ahstages} object within the MPM,
+#' it alters the \code{hstages} and \code{agestages} objects and adds the
+#' appropriate number of new rows and columns depending on the kind of MPM
+#' input.
+#' 
+#' @name add_stage
+#' 
+#' @param mpm The \code{lefkoMat} object to add a stage to.
+#' @param add_before The index of the stage to insert a new stage before. This
+#' index should be derived from the \code{ahstages} of the input \code{mpm}.
+#' Cannot be set if \code{add_after} is to be used.
+#' @param add_after The index of the stage to insert a new stage after. This
+#' index should be derived from the \code{ahstages} of the input \code{mpm}.
+#' Cannot be set if \code{add_before} is to be used.
+#' @param stage_name The name of the new stage to add. Defaults to
+#' \code{new_stage}. 
+#' 
+#' @return A new copy of the original MPM edited to include new rows and
+#' columns in the associated matrices, and with \code{ahstages},
+#' \code{agestages}, and \code{hstages} objects edited to include the new
+#' stage.
+#' 
+#' @seealso \code{\link{edit_lM}()}
+#' 
+#' @examples
+#' data(cypdata)
+#' 
+#' cyp_lesl_data <- verticalize3(data = cypdata, noyears = 6, firstyear = 2004, 
+#'   patchidcol = "patch", individcol = "plantid", blocksize = 4, 
+#'   sizeacol = "Inf2.04", sizebcol = "Inf.04", sizeccol = "Veg.04", 
+#'   repstracol = "Inf.04", repstrbcol = "Inf2.04", fecacol = "Pod.04", 
+#'   stagesize = "sizeadded", NAas0 = TRUE, age_offset = 2)
+#' 
+#' cyp_lesl_vital <- modelsearch(cyp_lesl_data, historical = FALSE,
+#'   approach = "mixed", suite = "cons", bestfit = "AICc&k", age = "obsage",
+#'   vitalrates = c("surv", "fec"), fecdist = "poisson", indiv = "individ",
+#'   year = "year2", year.as.random = TRUE, patch.as.random = TRUE,
+#'   show.model.tables = TRUE, fec.zero = TRUE, global.only = TRUE,
+#'   test.age = TRUE, quiet = "partial")
+#' 
+#' germination <- 0.08
+#' protocorm_to_seedling <- 0.10
+#' seeding_to_adult <- 0.20
+#' seeds_per_fruit <- 8000
+#' 
+#' cyp_lesl_supp <- supplemental(historical = FALSE, stagebased = FALSE,
+#'   agebased = TRUE, age2 = c(1, 2), type = c(1, 1),
+#'   givenrate = c(protocorm_to_seedling, seeding_to_adult))
+#' 
+#' cyp_lesl_fb_mpm <- fleslie(data = cyp_lesl_data,
+#'   modelsuite = cyp_lesl_vital, last_age = 7, fecage_min = 3,
+#'   fecmod = (germination * seeds_per_fruit), supplement = cyp_lesl_supp)
+#' 
+#' altered1 <- add_stage(cyp_lesl_fb_mpm, add_before = 1, stage_name = "DS")
+#' 
+#' @export add_stage
+add_stage <- function(mpm, add_before = 0L, add_after = 0L, stage_name = NULL) {
+    .Call('_lefko3_add_stage', PACKAGE = 'lefko3', mpm, add_before, add_after, stage_name)
+}
+
 #' Create Stageframe for Population Matrix Projection Analysis
 #' 
 #' Function \code{sf_leslie()} returns a data frame describing each age in a
@@ -1111,6 +1174,9 @@ lmean <- function(mats, matsout = NULL, force_sparse = FALSE) {
 #' immature.}
 #' \item{matstatus}{A binomial variable showing whether each age occurs in
 #' maturity.}
+#' \item{entrystage}{A binomial variable showing whether each age is an entry
+#' stage. In Leslie MPMs, only the first stage is set to \code{1}, while all
+#' others are set to \code{0}.}
 #' \item{indataset}{A binomial variable describing whether each age occurs in
 #' the input dataset.}
 #' \item{binhalfwidth_raw}{The half-width of the size bin, as input.}
@@ -3826,7 +3892,7 @@ create_pm <- function(name_terms = FALSE) {
 #' @param agebystage A logical value denoting whether MPM is age-by-stage.
 #' Defaults to \code{FALSE}.
 #' 
-#' @return A corrected density input deta frame, usable in density-dependent
+#' @return A corrected density input data frame, usable in density-dependent
 #' MPM creation.
 #' 
 #' @keywords internal
@@ -4385,7 +4451,7 @@ actualstage3 <- function(data, check_stage = TRUE, check_age = FALSE, historical
 #' }
 #' 
 #' @export density_input
-density_input <- function(mpm, stage3, stage2, stage1 = NULL, age2 = NULL, style = NULL, time_delay = NULL, alpha = NULL, beta = NULL, type = NULL, type_t12 = NULL) {
+density_input <- function(mpm, stage3 = NULL, stage2 = NULL, stage1 = NULL, age2 = NULL, style = NULL, time_delay = NULL, alpha = NULL, beta = NULL, type = NULL, type_t12 = NULL) {
     .Call('_lefko3_density_input', PACKAGE = 'lefko3', mpm, stage3, stage2, stage1, age2, style, time_delay, alpha, beta, type, type_t12)
 }
 
@@ -4677,7 +4743,7 @@ supplemental <- function(historical = TRUE, stagebased = TRUE, agebased = FALSE,
 #' fecundity transitions. Defaults to \code{1} for survival transition, with
 #' impacts only on the construction of deVries-format hMPMs.
 #' 
-#' @return A edited copy of the original MPM is returned, also as a
+#' @return An edited copy of the original MPM is returned, also as a
 #' \code{lefkoMat} object.
 #' 
 #' @section Notes:

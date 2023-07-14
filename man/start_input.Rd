@@ -4,7 +4,7 @@
 \alias{start_input}
 \title{Create a Starting Vector for Population Projection}
 \usage{
-start_input(mpm, stage2, stage1 = NA, age2 = NA, value = 1)
+start_input(mpm, stage2 = NA, stage1 = NA, age2 = NA, value = 1)
 }
 \arguments{
 \item{mpm}{The lefkoMat object to be used in projection analysis.}
@@ -12,7 +12,8 @@ start_input(mpm, stage2, stage1 = NA, age2 = NA, value = 1)
 \item{stage2}{A vector showing the name or number of a stage in occasion
 \emph{t} that should be set to a positive number of individuals in the start
 vector. Abbreviations for groups of stages are also usable (see Notes).
-This input is required and has no default input.}
+This input is required for all stage-based and age-by-stage MPMs. Defaults to
+\code{NA}.}
 
 \item{stage1}{A vector showing the name or number of a stage in occasion
 \emph{t}-1 that should be set to a positive number of individuals in the
@@ -22,8 +23,8 @@ stage-pairs in times \emph{t} and \emph{t}-1 together. Only required for
 historical MPMs, and will result in errors if otherwise used.}
 
 \item{age2}{A vector showing the age of each respective stage in occasion
-\emph{t} that should be set to a positie number of individuals in the start
-vector. Only used for age-by-stage MPMs. Defaults to NA.}
+\emph{t} that should be set to a positive number of individuals in the start
+vector. Only used for Leslie and age-by-stage MPMs. Defaults to \code{NA}.}
 
 \item{value}{A vector showing the values, in order, of the number of
 individuals set for the stage or stage-pair in question. Defaults to 1.}

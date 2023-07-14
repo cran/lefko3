@@ -1,3 +1,34 @@
+# lefko3 6.1.0 (2023-07-08)
+
+## NEW FEATURES
+
+* Function add_stage() has been created to add stages to existing lefkoMat
+  objects.
+
+## USER VISIBLE CHANGES
+
+* Options repmod and fecmod were standardized to fecmod in MPM creation
+  functions.
+* Function hfv_qc() now only displays test results for vital rate models listed
+  in the vitalrates argument.
+* Functions rleslie() and fleslie() now include an entrystage column in the
+  automatically generated stageframes included as ahstages object.
+
+## BUG FIXES
+
+* Function hfv_qc() can now handle Gaussian checks on variables with more than
+  5000 data points.
+* Function historicalize3() now correctly calculates first seen time, last seen
+  time, observed age, and alive status in time t+1.
+* Function supplemental() no longer yields an error for age-based MPM
+  supplements with estage2 option set to all NAs.
+* Function start_input() no longer yields errors for age-based MPMs.
+* Function density_input() no longer yields errors for age-based MPMs.
+* Historical matrix creation functions no longer call warnings that multiple
+  rows in supplement tables show the same transition even when they do not.
+* Function lambda3() no longer calls an error when an eigenvalue of 0 is
+  detected.
+
 # lefko3 6.0.5 (2023-05-03)
 
 ## USER VISIBLE CHANGES

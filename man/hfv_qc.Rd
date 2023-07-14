@@ -214,6 +214,11 @@ This function is meant to handle input as would be supplied to function
 from a call to function \code{modelsearch()}, and paste directly within this
 function. The exact subsets used in the \code{modelsearch()} run will also be
 created here.
+
+Tests of Gaussian normality are conducted as Shapiro-Wilk tests via base R's
+\code{shapiro.test()} function. If datasets with more than 5000 rows are
+supplied, function \code{hfv_qc()} will sample 5000 rows from the dataset and
+conduct the Shapiro-Wilk test on the data sample.
 }
 
 \examples{

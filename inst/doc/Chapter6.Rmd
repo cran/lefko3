@@ -138,14 +138,6 @@ hfv_qc(data = lathvertipm, vitalrates = c("surv", "obs", "size", "fec"),
 #>   Variable sizea3 is fully positive, lacking even 0s.
 #> 
 #> 
-#> Reproductive status:
-#> 
-#>   Data subset has 54 variables and 1916 transitions.
-#> 
-#>   Variable repstatus3 has 0 missing values.
-#>   Variable repstatus3 is a binomial variable.
-#> 
-#> 
 #> Fecundity:
 #> 
 #>   Data subset has 54 variables and 2246 transitions.
@@ -200,14 +192,6 @@ hfv_qc(data = lathvertipm, vitalrates = c("surv", "obs", "size", "fec"),
 #>   Variable sizea3 differs significantly from a Gaussian distribution.
 #> 
 #>   Variable sizea3 is fully positive, lacking even 0s.
-#> 
-#> 
-#> Juvenile reproductive status:
-#> 
-#>   Data subset has 54 variables and 193 transitions.
-#> 
-#>   Variable repstatus3 has 0 missing values.
-#>   Variable repstatus3 is a binomial variable.
 #> 
 #> 
 #> Juvenile maturity status:
@@ -351,7 +335,6 @@ lathmodels2ipm <- modelsearch(lathvertipm, historical = FALSE,
 lathmat3ipm <- flefko3(stageframe = lathframeipm, modelsuite = lathmodels3ipm,
   supplement = lathsupp3, data = lathvertipm, reduce = FALSE,
   sparse_output = TRUE)
-#> Warning: Supplement table contains multiple entries for the same transition(s).
 #summary(lathmat3ipm)
 ```
   

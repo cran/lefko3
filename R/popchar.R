@@ -806,7 +806,8 @@ density_vr <- function(density_yn = c(FALSE, FALSE, FALSE, FALSE, FALSE, FALSE,
 #' @param stage2 A vector showing the name or number of a stage in occasion
 #' \emph{t} that should be set to a positive number of individuals in the start
 #' vector. Abbreviations for groups of stages are also usable (see Notes).
-#' This input is required and has no default input.
+#' This input is required for all stage-based and age-by-stage MPMs. Defaults to
+#' \code{NA}.
 #' @param stage1 A vector showing the name or number of a stage in occasion
 #' \emph{t}-1 that should be set to a positive number of individuals in the
 #' start vector. Abbreviations for groups of stages are also usable (see Notes).
@@ -814,8 +815,8 @@ density_vr <- function(density_yn = c(FALSE, FALSE, FALSE, FALSE, FALSE, FALSE,
 #' stage-pairs in times \emph{t} and \emph{t}-1 together. Only required for
 #' historical MPMs, and will result in errors if otherwise used.
 #' @param age2 A vector showing the age of each respective stage in occasion
-#' \emph{t} that should be set to a positie number of individuals in the start
-#' vector. Only used for age-by-stage MPMs. Defaults to NA.
+#' \emph{t} that should be set to a positive number of individuals in the start
+#' vector. Only used for Leslie and age-by-stage MPMs. Defaults to \code{NA}.
 #' @param value A vector showing the values, in order, of the number of
 #' individuals set for the stage or stage-pair in question. Defaults to 1.
 #' 
@@ -896,12 +897,19 @@ density_vr <- function(density_yn = c(FALSE, FALSE, FALSE, FALSE, FALSE, FALSE,
 #'   start_frame = e3m_sv)
 #' 
 #' @export
-start_input <- function(mpm, stage2, stage1 = NA, age2 = NA, value = 1) {
+start_input <- function(mpm, stage2 = NA, stage1 = NA, age2 = NA, value = 1) {
   
   mpmrows <- stage2_id <- stage1_id <- start_vec <- full_length <- NULL
   
   if (all(!is(mpm, "lefkoMat"))) {
     stop("A regular lefkoMat object is required as input.", call. = FALSE)
+  }
+  
+  if (all(is.na(stage2)) & all(is.na(age2))) {
+    stop("Options stage2 and age2 cannot both be set to NA.", call. = FALSE)
+  }
+  if (all(is.null(stage2)) & all(is.null(age2))) {
+    stop("Options stage2 and age2 cannot both be empty.", call. = FALSE)
   }
   
   if (!is.element("stage", names(mpm$ahstages))) {
@@ -934,6 +942,10 @@ start_input <- function(mpm, stage2, stage1 = NA, age2 = NA, value = 1) {
     value <- rep(value, full_length)
   }
   
+  if (length(stage2) == 1 & full_length > 1) {
+    stage2 <- rep(stage2, full_length)
+  }
+  
   if (length(stage1) == 1 & full_length > 1) {
     stage1 <- rep(stage1, full_length)
   }
@@ -942,13 +954,11 @@ start_input <- function(mpm, stage2, stage1 = NA, age2 = NA, value = 1) {
     age2 <- rep(age2, full_length)
   }
   
-  if (length(stage2) != full_length) {
-    stop("Option stage2 is required for all stages or stage-pairs to set to
-      non-zero values.", call. = FALSE)
+  if ((all(is.na(stage2)) | all(is.null(stage2))) & (all(is.na(age2)) | all(is.null(age2)))) {
+    stop("Either stage2 or age2 must be provided.", call. = FALSE)
   }
   
   if (all(is.character(stage2))) {
-    
     unknown_stage2 <- which(!is.element(tolower(stage2), c(tolower(mpm$ahstages$stage),
         c("all", "rep", "nrep", "mat", "immat", "prop", "npr", "obs", "nobs"))))
     if (length(unknown_stage2) > 0) {
@@ -1026,8 +1036,8 @@ start_input <- function(mpm, stage2, stage1 = NA, age2 = NA, value = 1) {
         }
       }
     })
-    
     shrubbery <- do.call(rbind.data.frame, reassessed)
+    
   } else if (all(is.numeric(stage2)) & !any(is.na(stage2))) {
     stage2_id <- stage2
     
@@ -1041,6 +1051,20 @@ start_input <- function(mpm, stage2, stage1 = NA, age2 = NA, value = 1) {
     
     shrubbery <- cbind.data.frame(stage2 = stage2, stage1 = stage1, age2 = age2,
       value = value, stringsAsFactors = FALSE)
+    
+  } else if (all(is.numeric(age2)) & !any(is.na(age2))) {
+    if (!(all(is.na(stage2)))) {
+      stop("Leslie MPMs should not be entered with the stage2 option set to
+        values other than NA.", call. = FALSE)
+    }
+    
+    stage2 <- apply(as.matrix(age2), 1, function(X) {
+      cross_ref <- which(mpm$ahstages$stage_id == X)
+      return(mpm$ahstages$stage[cross_ref])
+    })
+    shrubbery <- cbind.data.frame(stage2 = stage2, stage1 = stage1, age2 = age2,
+      value = value, stringsAsFactors = FALSE)
+    
   } else {
     stop("Input stage2 codes do not conform to accepted inputs.", call. = FALSE)
   }
@@ -1345,6 +1369,8 @@ start_input <- function(mpm, stage2, stage1 = NA, age2 = NA, value = 1) {
 #' @keywords internal
 #' @noRd
 .sf_dist_check <- function(data, term, term2) {
+  gaus.check <- NULL
+  
   term_col <- which(names(data) == term)
   if (length(term_col) == 0) stop("Unrecognized term in dataset.", call. = FALSE)
   
@@ -1369,7 +1395,16 @@ start_input <- function(mpm, stage2, stage1 = NA, age2 = NA, value = 1) {
         signif(mean(correct_var, na.rm = TRUE), digits = 4), " and the variance is ",
         signif(var(correct_var, na.rm = TRUE), digits = 4), "."))
     
-    gaus.check <- stats::shapiro.test(correct_var)
+    if (length(correct_var) > 2 & length(correct_var) < 5001) {
+      gaus.check <- stats::shapiro.test(correct_var)
+    } else if (length(correct_var) > 2) {
+      used_sample <- sample(correct_var, 5000)
+      gaus.check <- stats::shapiro.test(used_sample)
+    } else {
+      stop("Variable to test Gaussian assumptions for appears to be too short.",
+        call. = FALSE)
+    }
+    
     writeLines(paste0("  The value of the Shapiro-Wilk test of normality is ",
         signif(gaus.check$statistic, digits = 4), " with P = ",
         signif(gaus.check$p.value, digits = 4), "."))
@@ -1603,6 +1638,11 @@ start_input <- function(mpm, stage2, stage1 = NA, age2 = NA, value = 1) {
 #' from a call to function \code{modelsearch()}, and paste directly within this
 #' function. The exact subsets used in the \code{modelsearch()} run will also be
 #' created here.
+#' 
+#' Tests of Gaussian normality are conducted as Shapiro-Wilk tests via base R's
+#' \code{shapiro.test()} function. If datasets with more than 5000 rows are
+#' supplied, function \code{hfv_qc()} will sample 5000 rows from the dataset and
+#' conduct the Shapiro-Wilk test on the data sample.
 #' 
 #' @examples
 #' data(lathyrus)
@@ -2530,14 +2570,14 @@ hfv_qc <- function(data, stageframe = NULL, historical = TRUE, suite = "size",
   }
   
   # The major variable tests
-  if (is.data.frame(surv.data)) {
+  if (is.data.frame(surv.data) & is.element("surv", vitalrates)) {
     writeLines("Survival:\n")
     writeLines(paste0("  Data subset has ", dim(surv.data)[2], " variables and ",
       dim(surv.data)[1], " transitions.\n"))
     
     .intbin_check(surv.data, surv[1])
   }
-  if (is.data.frame(obs.data)) {
+  if (is.data.frame(obs.data) & is.element("obs", vitalrates)) {
     writeLines("\nObservation status:\n")
     writeLines(paste0("  Data subset has ", dim(obs.data)[2], " variables and ",
       dim(obs.data)[1], " transitions.\n"))
@@ -2545,21 +2585,21 @@ hfv_qc <- function(data, stageframe = NULL, historical = TRUE, suite = "size",
     .intbin_check(obs.data, obs[1])
   }
   
-  if (is.data.frame(size.data)) {
+  if (is.data.frame(size.data) & is.element("size", vitalrates)) {
     writeLines("\nPrimary size:\n")
     writeLines(paste0("  Data subset has ", dim(size.data)[2], " variables and ",
       dim(size.data)[1], " transitions.\n"))
     
     .sf_dist_check(size.data, size[1], size[2])
   }
-  if (is.data.frame(sizeb.data)) {
+  if (is.data.frame(sizeb.data) & is.element("siz", vitalrates)) {
     writeLines("\nSecondary size:\n")
     writeLines(paste0("  Data subset has ", dim(sizeb.data)[2], " variables and ",
       dim(sizeb.data)[1], " transitions.\n"))
     
     .sf_dist_check(sizeb.data, sizeb[1], sizeb[2])
   }
-  if (is.data.frame(sizec.data)) {
+  if (is.data.frame(sizec.data) & is.element("siz", vitalrates)) {
     writeLines("\nTertiary size:\n")
     writeLines(paste0("  Data subset has ", dim(sizec.data)[2], " variables and ",
       dim(sizec.data)[1], " transitions.\n"))
@@ -2567,7 +2607,7 @@ hfv_qc <- function(data, stageframe = NULL, historical = TRUE, suite = "size",
     .sf_dist_check(sizec.data, sizec[1], sizec[2])
   }
   
-  if (is.data.frame(repst.data)) {
+  if (is.data.frame(repst.data) & is.element("repst", vitalrates)) {
     writeLines("\nReproductive status:\n")
     writeLines(paste0("  Data subset has ", dim(repst.data)[2], " variables and ",
       dim(repst.data)[1], " transitions.\n"))
@@ -2575,7 +2615,7 @@ hfv_qc <- function(data, stageframe = NULL, historical = TRUE, suite = "size",
     .intbin_check(repst.data, repst[1])
   }
   
-  if (is.data.frame(fec.data)) {
+  if (is.data.frame(fec.data) & is.element("fec", vitalrates)) {
     writeLines("\nFecundity:\n")
     writeLines(paste0("  Data subset has ", dim(fec.data)[2], " variables and ",
       dim(fec.data)[1], " transitions.\n"))
@@ -2588,14 +2628,14 @@ hfv_qc <- function(data, stageframe = NULL, historical = TRUE, suite = "size",
     .sf_dist_check(fec.data, names(fec.data)[usedfec], term2)
   }
   
-  if (is.data.frame(juvsurv.data)) {
+  if (is.data.frame(juvsurv.data) & is.element("surv", vitalrates)) {
     writeLines("\nJuvenile survival:\n")
     writeLines(paste0("  Data subset has ", dim(juvsurv.data)[2], " variables and ",
       dim(juvsurv.data)[1], " transitions.\n"))
     
     .intbin_check(juvsurv.data, surv[1])
   }
-  if (is.data.frame(juvobs.data)) {
+  if (is.data.frame(juvobs.data) & is.element("obs", vitalrates)) {
     writeLines("\nJuvenile observation status:\n")
     writeLines(paste0("  Data subset has ", dim(juvobs.data)[2], " variables and ",
       dim(juvobs.data)[1], " transitions.\n"))
@@ -2603,21 +2643,21 @@ hfv_qc <- function(data, stageframe = NULL, historical = TRUE, suite = "size",
     .intbin_check(juvobs.data, obs[1])
   }
   
-  if (is.data.frame(juvsize.data)) {
+  if (is.data.frame(juvsize.data) & is.element("size", vitalrates)) {
     writeLines("\nJuvenile primary size:\n")
     writeLines(paste0("  Data subset has ", dim(juvsize.data)[2], " variables and ",
       dim(juvsize.data)[1], " transitions.\n"))
     
     .sf_dist_check(juvsize.data, size[1], size[2])
   }
-  if (is.data.frame(juvsizeb.data)) {
+  if (is.data.frame(juvsizeb.data)& is.element("siz", vitalrates)) {
     writeLines("\nJuvenile secondary size:\n")
     writeLines(paste0("  Data subset has ", dim(juvsizeb.data)[2], " variables and ",
       dim(juvsizeb.data)[1], " transitions.\n"))
     
     .sf_dist_check(juvsizeb.data, sizeb[1], sizeb[2])
   }
-  if (is.data.frame(juvsizec.data)) {
+  if (is.data.frame(juvsizec.data) & is.element("siz", vitalrates)) {
     writeLines("\nJuvenile tertiary size:\n")
     writeLines(paste0("  Data subset has ", dim(juvsizec.data)[2], " variables and ",
       dim(juvsizec.data)[1], " transitions.\n"))
@@ -2625,7 +2665,7 @@ hfv_qc <- function(data, stageframe = NULL, historical = TRUE, suite = "size",
     .sf_dist_check(juvsizec.data, sizec[1], sizec[2])
   }
   
-  if (is.data.frame(juvrepst.data)) {
+  if (is.data.frame(juvrepst.data) & is.element("repst", vitalrates)) {
     writeLines("\nJuvenile reproductive status:\n")
     writeLines(paste0("  Data subset has ", dim(juvrepst.data)[2], " variables and ",
       dim(juvrepst.data)[1], " transitions.\n"))

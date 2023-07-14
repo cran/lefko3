@@ -1362,3 +1362,871 @@ Rcpp::List lmean(RObject mats, Nullable<String> matsout = R_NilValue,
   return gd_output;
 }
 
+//' Add a New Stage to an Existing LefkoMat Object
+//' 
+//' Function \code{add_stage()} adds a new stage to an existing \code{lefkoMat}
+//' object. In addition to altering the \code{ahstages} object within the MPM,
+//' it alters the \code{hstages} and \code{agestages} objects and adds the
+//' appropriate number of new rows and columns depending on the kind of MPM
+//' input.
+//' 
+//' @name add_stage
+//' 
+//' @param mpm The \code{lefkoMat} object to add a stage to.
+//' @param add_before The index of the stage to insert a new stage before. This
+//' index should be derived from the \code{ahstages} of the input \code{mpm}.
+//' Cannot be set if \code{add_after} is to be used.
+//' @param add_after The index of the stage to insert a new stage after. This
+//' index should be derived from the \code{ahstages} of the input \code{mpm}.
+//' Cannot be set if \code{add_before} is to be used.
+//' @param stage_name The name of the new stage to add. Defaults to
+//' \code{new_stage}. 
+//' 
+//' @return A new copy of the original MPM edited to include new rows and
+//' columns in the associated matrices, and with \code{ahstages},
+//' \code{agestages}, and \code{hstages} objects edited to include the new
+//' stage.
+//' 
+//' @seealso \code{\link{edit_lM}()}
+//' 
+//' @examples
+//' data(cypdata)
+//' 
+//' cyp_lesl_data <- verticalize3(data = cypdata, noyears = 6, firstyear = 2004, 
+//'   patchidcol = "patch", individcol = "plantid", blocksize = 4, 
+//'   sizeacol = "Inf2.04", sizebcol = "Inf.04", sizeccol = "Veg.04", 
+//'   repstracol = "Inf.04", repstrbcol = "Inf2.04", fecacol = "Pod.04", 
+//'   stagesize = "sizeadded", NAas0 = TRUE, age_offset = 2)
+//' 
+//' cyp_lesl_vital <- modelsearch(cyp_lesl_data, historical = FALSE,
+//'   approach = "mixed", suite = "cons", bestfit = "AICc&k", age = "obsage",
+//'   vitalrates = c("surv", "fec"), fecdist = "poisson", indiv = "individ",
+//'   year = "year2", year.as.random = TRUE, patch.as.random = TRUE,
+//'   show.model.tables = TRUE, fec.zero = TRUE, global.only = TRUE,
+//'   test.age = TRUE, quiet = "partial")
+//' 
+//' germination <- 0.08
+//' protocorm_to_seedling <- 0.10
+//' seeding_to_adult <- 0.20
+//' seeds_per_fruit <- 8000
+//' 
+//' cyp_lesl_supp <- supplemental(historical = FALSE, stagebased = FALSE,
+//'   agebased = TRUE, age2 = c(1, 2), type = c(1, 1),
+//'   givenrate = c(protocorm_to_seedling, seeding_to_adult))
+//' 
+//' cyp_lesl_fb_mpm <- fleslie(data = cyp_lesl_data,
+//'   modelsuite = cyp_lesl_vital, last_age = 7, fecage_min = 3,
+//'   fecmod = (germination * seeds_per_fruit), supplement = cyp_lesl_supp)
+//' 
+//' altered1 <- add_stage(cyp_lesl_fb_mpm, add_before = 1, stage_name = "DS")
+//' 
+//' @export add_stage
+// [[Rcpp::export(add_stage)]]
+Rcpp::List add_stage (const RObject mpm, int add_before = 0,
+  int add_after = 0, Nullable<CharacterVector> stage_name  = R_NilValue) {
+  
+  if (add_before > 0 && add_after > 0) {
+    throw Rcpp::exception("Please set either add_before or add_after, but not both.",
+      false);
+  }
+  
+  String stage_name_to_add;
+  if (stage_name.isNotNull()) {
+    CharacterVector stage_name_input = as<CharacterVector>(stage_name);
+    
+    if (stage_name_input.length() > 1) {
+      throw Rcpp::exception("Please enter only one new stage name.", false);
+    } else if (stage_name_input.length() == 0) {
+      stage_name_to_add = "new_stage";
+    } else {
+      stage_name_to_add = stage_name_input(0);
+    }
+  } else {
+    stage_name_to_add = "new_stage";
+  }
+  
+  List mpm_list;
+  
+  if (is<List>(mpm)) mpm_list = mpm;
+  StringVector mpm_class = mpm_list.attr("class");
+  
+  String mpm_error = "Please enter a lefkoMat object as input.";
+  bool mpm_yes {false};
+  
+  if (!mpm_list.containsElementNamed("ahstages")) {
+    throw Rcpp::exception(mpm_error.get_cstring(), false);
+  }
+  if (!mpm_list.containsElementNamed("hstages")) {
+    throw Rcpp::exception(mpm_error.get_cstring(), false);
+  }
+  if (!mpm_list.containsElementNamed("agestages")) {
+    throw Rcpp::exception(mpm_error.get_cstring(), false);
+  }
+  if (!mpm_list.containsElementNamed("labels")) {
+    throw Rcpp::exception(mpm_error.get_cstring(), false);
+  }
+  for (int i = 0; i < static_cast<int>(mpm_class.length()); i++) {
+    if (mpm_class(i) == "lefkoMat") mpm_yes = true;
+  }
+  if (!mpm_yes) throw Rcpp::exception(mpm_error.get_cstring(), false);
+  
+  Rcpp::DataFrame ahstages = as<DataFrame>(mpm_list["ahstages"]);
+  Rcpp::DataFrame hstages = as<DataFrame>(mpm_list["hstages"]);
+  Rcpp::DataFrame agestages = as<DataFrame>(mpm_list["agestages"]);
+  Rcpp::DataFrame labels = as<DataFrame>(mpm_list["labels"]);
+  
+  int wtf = LefkoUtils::whichbrew(ahstages, hstages, agestages);
+  // wtf possible results: \code{0}: historical MPM, \code{1}:
+  // ahistorical MPM, \code{2}: age-by-stage MPM, and \code{3}: age-based MPM
+  
+  StringVector stagevec = as<StringVector>(ahstages["stage"]);
+  int num_stages = stagevec.length();
+  
+  for (int i = 0; i < num_stages; i++) {
+    if (LefkoUtils::stringcompare_hard(stage_name_to_add, as<std::string>(stagevec(i)))) {
+      throw Rcpp::exception("Entered stage_name cannot be the same as an existing stage.",
+        false);
+    }
+  }
+  
+  if (add_before > num_stages) {
+    throw Rcpp::exception("Fewer stages exist than suggested by number input in option add_before.",
+      false);
+  } else if (add_after > (num_stages + 1)) {
+    throw Rcpp::exception("Fewer stages exist than suggested by number input in option add_after.",
+      false);
+  }
+  
+  // New stageframe
+  IntegerVector stageidvec = as<IntegerVector>(ahstages["stage_id"]);
+  NumericVector origsizevec = as<NumericVector>(ahstages["original_size"]);
+  NumericVector origsizebvec = as<NumericVector>(ahstages["original_size_b"]);
+  NumericVector origsizecvec = as<NumericVector>(ahstages["original_size_c"]);
+  NumericVector minagevec = as<NumericVector>(ahstages["min_age"]);
+  NumericVector maxagevec = as<NumericVector>(ahstages["max_age"]);
+  IntegerVector repvec = as<IntegerVector>(ahstages["repstatus"]);
+  IntegerVector obsvec = as<IntegerVector>(ahstages["obsstatus"]);
+  IntegerVector propvec = as<IntegerVector>(ahstages["propstatus"]);
+  IntegerVector immvec = as<IntegerVector>(ahstages["immstatus"]);
+  IntegerVector matvec = as<IntegerVector>(ahstages["matstatus"]);
+  IntegerVector repentryvec = as<IntegerVector>(ahstages["entrystage"]);
+  IntegerVector indvec = as<IntegerVector>(ahstages["indataset"]);
+  NumericVector binvec = as<NumericVector>(ahstages["binhalfwidth_raw"]);
+  NumericVector binbvec = as<NumericVector>(ahstages["binhalfwidthb_raw"]);
+  NumericVector bincvec = as<NumericVector>(ahstages["binhalfwidthc_raw"]);
+  NumericVector sizeminvec = as<NumericVector>(ahstages["sizebin_min"]);
+  NumericVector sizemaxvec = as<NumericVector>(ahstages["sizebin_max"]);
+  NumericVector sizectrvec = as<NumericVector>(ahstages["sizebin_center"]);
+  NumericVector sizewidthvec = as<NumericVector>(ahstages["sizebin_width"]);
+  NumericVector sizebminvec = as<NumericVector>(ahstages["sizebinb_min"]);
+  NumericVector sizebmaxvec = as<NumericVector>(ahstages["sizebinb_max"]);
+  NumericVector sizebctrvec = as<NumericVector>(ahstages["sizebinb_center"]);
+  NumericVector sizebwidthvec = as<NumericVector>(ahstages["sizebinb_width"]);
+  NumericVector sizecminvec = as<NumericVector>(ahstages["sizebinc_min"]);
+  NumericVector sizecmaxvec = as<NumericVector>(ahstages["sizebinc_max"]);
+  NumericVector sizecctrvec = as<NumericVector>(ahstages["sizebinc_center"]);
+  NumericVector sizecwidthvec = as<NumericVector>(ahstages["sizebinc_width"]);
+  IntegerVector groupvec = as<IntegerVector>(ahstages["group"]);
+  StringVector commentsvec = as<StringVector>(ahstages["comments"]);
+  IntegerVector alivevec = as<IntegerVector>(ahstages["alive"]);
+  IntegerVector almostbornvec = as<IntegerVector>(ahstages["almostborn"]);
+  
+  IntegerVector new_stageidvec (num_stages + 1);
+  int ns_counter {0};
+  int ns_place {0};
+  for (int i = 0; i < (num_stages + 1); i++) {
+    if (i == add_before - 1 || i == add_after) {
+      new_stageidvec(i) = num_stages + 1;
+      ns_place = i;
+    } else {
+      new_stageidvec(i) = stageidvec(ns_counter);
+      ns_counter++;
+    }
+  }
+  
+  StringVector new_stagevec(num_stages + 1);
+  NumericVector new_origsizevec(num_stages + 1);
+  NumericVector new_origsizebvec(num_stages + 1);
+  NumericVector new_origsizecvec(num_stages + 1);
+  NumericVector new_minagevec(num_stages + 1);
+  NumericVector new_maxagevec(num_stages + 1);
+  IntegerVector new_repvec(num_stages + 1);
+  IntegerVector new_obsvec(num_stages + 1);
+  IntegerVector new_propvec(num_stages + 1);
+  IntegerVector new_immvec(num_stages + 1);
+  IntegerVector new_matvec(num_stages + 1);
+  IntegerVector new_repentryvec(num_stages + 1);
+  IntegerVector new_indvec(num_stages + 1);
+  NumericVector new_binvec(num_stages + 1);
+  NumericVector new_binbvec(num_stages + 1);
+  NumericVector new_bincvec(num_stages + 1);
+  NumericVector new_sizeminvec(num_stages + 1);
+  NumericVector new_sizemaxvec(num_stages + 1);
+  NumericVector new_sizectrvec(num_stages + 1);
+  NumericVector new_sizewidthvec(num_stages + 1);
+  NumericVector new_sizebminvec(num_stages + 1);
+  NumericVector new_sizebmaxvec(num_stages + 1);
+  NumericVector new_sizebctrvec(num_stages + 1);
+  NumericVector new_sizebwidthvec(num_stages + 1);
+  NumericVector new_sizecminvec(num_stages + 1);
+  NumericVector new_sizecmaxvec(num_stages + 1);
+  NumericVector new_sizecctrvec(num_stages + 1);
+  NumericVector new_sizecwidthvec(num_stages + 1);
+  IntegerVector new_groupvec(num_stages + 1);
+  StringVector new_commentsvec(num_stages + 1);
+  IntegerVector new_alivevec(num_stages + 1);
+  IntegerVector new_almostbornvec(num_stages + 1);
+  
+  int place_correction {0};
+  for (int i = 0; i < (num_stages + 1); i++) {
+    if ((i == (add_before - 1) && add_before > 0) || (i == add_after && add_after > 0)) {
+      new_stagevec(i) = stage_name_to_add;
+      new_origsizevec(i) = 0.0;
+      new_origsizebvec(i) = 0.0;
+      new_origsizecvec(i) = 0.0;
+      new_minagevec(i) = 0;
+      new_maxagevec(i) = 0;
+      new_obsvec(i) = 1;
+      new_propvec(i) = 0;
+      
+      if (add_before == 1) {
+        new_immvec(i) = 1;
+        new_matvec(i) = 0;
+        new_repvec(i) = 0;
+        new_repentryvec(i) = 1;
+      } else {
+        new_immvec(i) = 0;
+        new_matvec(i) = 1;
+        new_repvec(i) = 1;
+        new_repentryvec(i) = 0;
+      }
+      
+      new_indvec(i) = 0;
+      new_binvec(i) = 1.0;
+      new_binbvec(i) = 1.0;
+      new_bincvec(i) = 1.0;
+      new_sizeminvec(i) = 0.5;
+      new_sizemaxvec(i) = 1.5;
+      new_sizectrvec(i) = 1.0;
+      new_sizewidthvec(i) = 0.5;
+      new_sizebminvec(i) = 0.5;
+      new_sizebmaxvec(i) = 1.5;
+      new_sizebctrvec(i) = 1.0;
+      new_sizebwidthvec(i) = 0.5;
+      new_sizecminvec(i) = 0.5;
+      new_sizecmaxvec(i) = 1.5;
+      new_sizecctrvec(i) = 1.0;
+      new_sizecwidthvec(i) = 0.5;
+      new_groupvec(i) = 0;
+      new_commentsvec(i) = "new stage";
+      new_alivevec(i) = 1.0;
+      new_almostbornvec(i) = 0.0;
+      
+      place_correction++;
+    } else {
+      new_stagevec(i) = stagevec(i - place_correction);
+      new_origsizevec(i) = origsizevec(i - place_correction);
+      new_origsizebvec(i) = origsizebvec(i - place_correction);
+      new_origsizecvec(i) = origsizecvec(i - place_correction);
+      new_minagevec(i) = minagevec(i - place_correction);
+      new_maxagevec(i) = maxagevec(i - place_correction);
+      new_repvec(i) = repvec(i - place_correction);
+      new_obsvec(i) = obsvec(i - place_correction);
+      new_propvec(i) = propvec(i - place_correction);
+      new_immvec(i) = immvec(i - place_correction);
+      new_matvec(i) = matvec(i - place_correction);
+      new_repentryvec(i) = repentryvec(i - place_correction);
+      new_indvec(i) = indvec(i - place_correction);
+      new_binvec(i) = binvec(i - place_correction);
+      new_binbvec(i) = binbvec(i - place_correction);
+      new_bincvec(i) = bincvec(i - place_correction);
+      new_sizeminvec(i) = sizeminvec(i - place_correction);
+      new_sizemaxvec(i) = sizemaxvec(i - place_correction);
+      new_sizectrvec(i) = sizectrvec(i - place_correction);
+      new_sizewidthvec(i) = sizewidthvec(i - place_correction);
+      new_sizebminvec(i) = sizebminvec(i - place_correction);
+      new_sizebmaxvec(i) = sizebmaxvec(i - place_correction);
+      new_sizebctrvec(i) = sizebctrvec(i - place_correction);
+      new_sizebwidthvec(i) = sizebwidthvec(i - place_correction);
+      new_sizecminvec(i) = sizecminvec(i - place_correction);
+      new_sizecmaxvec(i) = sizecmaxvec(i - place_correction);
+      new_sizecctrvec(i) = sizecctrvec(i - place_correction);
+      new_sizecwidthvec(i) = sizecwidthvec(i - place_correction);
+      new_groupvec(i) = groupvec(i - place_correction);
+      new_commentsvec(i) = commentsvec(i - place_correction);
+      new_alivevec(i) = alivevec(i - place_correction);
+      new_almostbornvec(i) = almostbornvec(i - place_correction);
+    }
+  }
+  
+  Rcpp::List new_stageframe(33);
+  
+  new_stageframe(0) = new_stageidvec;
+  new_stageframe(1) = new_stagevec;
+  new_stageframe(2) = new_origsizevec;
+  new_stageframe(3) = new_origsizebvec;
+  new_stageframe(4) = new_origsizecvec;
+  new_stageframe(5) = new_minagevec;
+  new_stageframe(6) = new_maxagevec;
+  new_stageframe(7) = new_repvec;
+  new_stageframe(8) = new_obsvec;
+  new_stageframe(9) = new_propvec;
+  new_stageframe(10) = new_immvec;
+  new_stageframe(11) = new_matvec;
+  new_stageframe(12) = new_repentryvec;
+  new_stageframe(13) = new_indvec;
+  new_stageframe(14) = new_binvec;
+  new_stageframe(15) = new_sizeminvec;
+  new_stageframe(16) = new_sizemaxvec;
+  new_stageframe(17) = new_sizectrvec;
+  new_stageframe(18) = new_sizewidthvec;
+  new_stageframe(19) = new_binbvec;
+  new_stageframe(20) = new_sizebminvec;
+  new_stageframe(21) = new_sizebmaxvec;
+  new_stageframe(22) = new_sizebctrvec;
+  new_stageframe(23) = new_sizebwidthvec;
+  new_stageframe(24) = new_bincvec;
+  new_stageframe(25) = new_sizecminvec;
+  new_stageframe(26) = new_sizecmaxvec;
+  new_stageframe(27) = new_sizecctrvec;
+  new_stageframe(28) = new_sizecwidthvec;
+  new_stageframe(29) = new_groupvec;
+  new_stageframe(30) = new_commentsvec;
+  new_stageframe(31) = new_alivevec;
+  new_stageframe(32) = new_almostbornvec;
+  
+  CharacterVector namevec = {"stage_id", "stage", "original_size",
+    "original_size_b", "original_size_c", "min_age", "max_age", "repstatus",
+    "obsstatus", "propstatus", "immstatus", "matstatus", "entrystage",
+    "indataset", "binhalfwidth_raw", "sizebin_min", "sizebin_max",
+    "sizebin_center", "sizebin_width", "binhalfwidthb_raw", "sizebinb_min",
+    "sizebinb_max", "sizebinb_center", "sizebinb_width", "binhalfwidthc_raw",
+    "sizebinc_min", "sizebinc_max", "sizebinc_center", "sizebinc_width",
+    "group", "comments", "alive", "almostborn"};
+  CharacterVector new_classes = {"data.frame", "stageframe"};
+  new_stageframe.attr("names") = namevec;
+  new_stageframe.attr("row.names") = Rcpp::IntegerVector::create(NA_INTEGER,
+      (num_stages + 1));
+  new_stageframe.attr("class") = new_classes;
+  
+  DataFrame new_hstages;
+  DataFrame new_agestages;
+  
+  // Vector of insertion rows/columns
+  arma::uvec rows_cols_to_add_vec;
+  unsigned int num_rows_to_add {0};
+  unsigned int num_stages_base {0};
+  
+  if (wtf == 1 || wtf == 3) {
+    unsigned int new_col_row {0};
+    if (add_before > 0) {
+      new_col_row = add_before - 1;
+    } else if (add_after > 0) {
+      new_col_row = add_after;
+    }
+    
+    arma::uvec new_cols_rows(1, fill::zeros);
+    new_cols_rows(0) = new_col_row;
+    rows_cols_to_add_vec = new_cols_rows;
+    num_rows_to_add = 1;
+    num_stages_base = num_stages;
+    
+    DataFrame old_hstages = as<DataFrame>(mpm_list["hstages"]);
+    DataFrame old_agestages = as<DataFrame>(mpm_list["agestages"]);
+    new_hstages = old_hstages;
+    new_agestages = old_agestages;
+    
+  } else if (wtf == 0) {
+    Rcpp::DataFrame hstages = as<DataFrame>(mpm_list["hstages"]);
+    arma::ivec sid2 = as<arma::ivec>(hstages["stage_id_2"]);
+    arma::ivec sid1 = as<arma::ivec>(hstages["stage_id_1"]);
+    StringVector h_stage2 = as<StringVector>(hstages["stage_2"]);
+    StringVector h_stage1 = as<StringVector>(hstages["stage_1"]);
+    
+    arma::uvec first_stretch; // For stage at time t
+    arma::uvec second_stretch(num_stages + 1, fill::zeros); // For stage at time t-1
+    
+    unsigned int first_new_col_row {0};
+    if (add_before > 0) {
+      arma::uvec found_at_t2 = find(sid2 == add_before);
+      first_stretch = found_at_t2;
+      
+      first_new_col_row = add_before - 1;
+      
+    } else if (add_after > 0) {
+      arma::uvec found_at_t2 = find(sid2 == add_after);
+      first_stretch = found_at_t2 + 1;
+      
+      first_new_col_row = add_after;
+    }
+    
+    for (int i = 0; i < (num_stages + 1); i++) {
+      second_stretch(i) = first_new_col_row * (num_stages + 1) + 1 + i;
+    }
+    
+    
+    int num_first_stretch = first_stretch.n_elem;
+    int num_second_stretch = second_stretch.n_elem;
+    num_rows_to_add = num_first_stretch + num_second_stretch;
+    
+    int hstages_dim = sid2.n_elem;
+    num_stages_base = hstages_dim;
+    
+    DataFrame old_agestages = as<DataFrame>(mpm_list["agestages"]);
+    new_agestages = old_agestages;
+    
+    int new_vec_length = num_rows_to_add + num_stages_base;
+    
+    IntegerVector new_sid2 (new_vec_length);
+    IntegerVector new_sid1 (new_vec_length);
+    StringVector new_h_stage2 (new_vec_length);
+    StringVector new_h_stage1 (new_vec_length);
+    
+    int vec_length_counter = num_stages_base - 1;
+    int addition_adj = num_rows_to_add;
+    bool ratcheted {false};
+    
+    arma::uvec rctav1 (num_first_stretch);
+    int rctav1_adj {1};
+    for (int i = new_vec_length - 1; i >= 0; i--) {
+      int check_index = i - addition_adj + 1;
+      arma::uvec found_elems_first = find(first_stretch == check_index);
+      arma::uvec found_elems_second = find(second_stretch == check_index);
+      
+      arma::uvec found_greater_second = find(second_stretch > i);
+      int i_corr = 0;
+      if (found_greater_second.n_elem > 0) i_corr = second_stretch.n_elem;
+      
+      if ((i - i_corr) > -1) {
+        if (vec_length_counter >= 0 || (add_before == 1 && vec_length_counter >= -1)) {
+          if (found_elems_first.n_elem > 0 && !ratcheted) {
+            new_sid2(i - i_corr) = num_stages + 1;
+            new_h_stage2(i - i_corr) = stage_name_to_add;
+            
+            if (!(add_before == 1)) {
+              new_sid1(i - i_corr) = sid1(vec_length_counter);
+              new_h_stage1(i - i_corr) = h_stage1(vec_length_counter);
+            } else {
+              new_sid1(i - i_corr) = sid1(vec_length_counter + 1);
+              new_h_stage1(i - i_corr) = h_stage1(vec_length_counter + 1);
+            }
+            ratcheted = true;
+            addition_adj--;
+            
+            rctav1(num_first_stretch - rctav1_adj) = i - i_corr;
+            rctav1_adj++;
+            
+          } else if (vec_length_counter >= 0) {
+            new_sid2(i - i_corr) = sid2(vec_length_counter);
+            new_sid1(i - i_corr) = sid1(vec_length_counter);
+            new_h_stage2(i - i_corr) = h_stage2(vec_length_counter);
+            new_h_stage1(i - i_corr) = h_stage1(vec_length_counter);
+            
+            vec_length_counter--;
+            ratcheted = false;
+          }
+        }
+      }
+    }
+    
+    arma::uvec rctav2 (num_second_stretch);
+    for (int i = 0; i < num_second_stretch; i++) {
+      new_sid2(second_stretch(i) - 1) = new_stageidvec(i);
+      new_h_stage2(second_stretch(i) - 1) = new_stagevec(i);
+      new_sid1(second_stretch(i) - 1) = num_stages + 1;
+      new_h_stage1(second_stretch(i) - 1) = new_stagevec(ns_place);
+      rctav2(i) = second_stretch(i) - 1;
+    }
+    
+    // Create first_stretch and second_stretch, find unique elements, & sort
+    arma::uvec all_stretch = arma::join_cols(rctav1, rctav2);
+    arma::uvec all_sorted = arma::sort(all_stretch);
+    rows_cols_to_add_vec = all_sorted;
+    
+    List new_hstages_pre (4);
+    new_hstages_pre(0) = new_sid2;
+    new_hstages_pre(1) = new_sid1;
+    new_hstages_pre(2) = new_h_stage2;
+    new_hstages_pre(3) = new_h_stage1;
+    
+    CharacterVector hstage_namevec = {"stage_id_2", "stage_id_1", "stage_2",
+      "stage_1"};
+    CharacterVector hstage_classes = {"data.frame"};
+    new_hstages_pre.attr("names") = hstage_namevec;
+    new_hstages_pre.attr("row.names") = Rcpp::IntegerVector::create(NA_INTEGER,
+      new_vec_length);
+    new_hstages_pre.attr("class") = hstage_classes;
+    new_hstages = new_hstages_pre;
+    
+  } else if (wtf == 2) {
+    Rcpp::DataFrame agestages = as<DataFrame>(mpm_list["agestages"]);
+    arma::ivec sid = as<arma::ivec>(agestages["stage_id"]);
+    StringVector age_stage = as<StringVector>(agestages["stage"]);
+    IntegerVector age_age = as<IntegerVector>(agestages["age"]);
+    
+    arma::uvec first_stretch; // For stage at time t
+    
+    if (add_before > 0) {
+      arma::uvec found_at_t2 = find(sid == add_before);
+      first_stretch = found_at_t2; // Might need to add -1
+      
+    } else if (add_after > 0) {
+      arma::uvec found_at_t2 = find(sid == add_after);
+      first_stretch = found_at_t2 + 1; // Might need to remove +1
+    }
+    
+    rows_cols_to_add_vec = first_stretch;
+    num_rows_to_add = first_stretch.n_elem;
+    
+    int agestages_dim = sid.n_elem;
+    num_stages_base = agestages_dim;
+    
+    DataFrame old_hstages = as<DataFrame>(mpm_list["hstages"]);
+    new_hstages = old_hstages;
+    
+    int new_vec_length = num_rows_to_add + num_stages_base;
+    
+    IntegerVector new_sid (new_vec_length);
+    StringVector new_age_stage (new_vec_length);
+    IntegerVector new_age_age (new_vec_length);
+    
+    int vec_length_counter = num_stages_base - 1;
+    int addition_adj = num_rows_to_add;
+    bool ratcheted {false};
+    
+    for (int i = new_vec_length - 1; i >= 0; i--) {
+      int check_index = i - addition_adj + 1;
+      arma::uvec found_elems = find(rows_cols_to_add_vec == check_index);
+      
+      if (found_elems.n_elem > 0 && !ratcheted) {
+        new_sid(i) = num_stages + 1;
+        new_age_stage(i) = stage_name_to_add;
+        
+        if (!(add_before == 1)) {
+          new_age_age(i) = age_age(vec_length_counter - 1);
+        } else {
+          new_age_age(i) = 0;
+        }
+        ratcheted = true;
+        addition_adj--;
+        
+      } else {
+        new_sid(i) = sid(vec_length_counter);
+        new_age_stage(i) = age_stage(vec_length_counter);
+        new_age_age(i) = age_age(vec_length_counter);
+        
+        vec_length_counter--;
+        ratcheted = false;
+      }
+    }
+    
+    List new_agestages_pre (3);
+    new_agestages_pre(0) = new_sid;
+    new_agestages_pre(1) = new_age_stage;
+    new_agestages_pre(2) = new_age_age;
+    
+    CharacterVector agestage_namevec = {"stage_id", "stage", "age"};
+    CharacterVector agestage_classes = {"data.frame"};
+    new_agestages_pre.attr("names") = agestage_namevec;
+    new_agestages_pre.attr("row.names") = Rcpp::IntegerVector::create(NA_INTEGER,
+      new_vec_length);
+    new_agestages_pre.attr("class") = agestage_classes;
+    new_agestages = new_agestages_pre;
+  }
+  
+  // Core matrix editing
+  List A_mats;
+  List U_mats;
+  List F_mats;
+  
+  bool A_used {false};
+  bool U_used {false};
+  bool F_used {false};
+  
+  bool mat_sparse {false};
+  int mat_num {0};
+  
+  if (mpm_list.containsElementNamed("A")) {
+    if (is<List>(mpm_list["A"])) {
+      List new_A_mats = as<List>(mpm_list["A"]);
+      A_mats = clone(new_A_mats);
+      A_used = true;
+      mat_num = static_cast<int>(A_mats.length());
+      
+      if (is<S4>(A_mats(0))) mat_sparse = true;
+    }
+    if (is<List>(mpm_list["U"])) {
+      List new_U_mats = as<List>(mpm_list["U"]);
+      U_mats = clone(new_U_mats);
+      U_used = true;
+      mat_num = static_cast<int>(U_mats.length());
+      
+      if (is<S4>(U_mats(0))) mat_sparse = true;
+    }
+    if (is<List>(mpm_list["F"])) {
+      List new_F_mats = as<List>(mpm_list["F"]);
+      F_mats = clone(new_F_mats);
+      F_used = true;
+      mat_num = static_cast<int>(F_mats.length());
+      
+      if (is<S4>(F_mats(0))) mat_sparse = true;
+    }
+  }
+  
+  if (!A_used && !U_used && !F_used) {
+    throw Rcpp::exception("The input object does not appear to hold matrices.", false);
+  }
+  
+  if (U_used && F_used) {
+    for (int i = 0; i < mat_num; i++) {
+      if (!mat_sparse) {
+        arma::mat current_U = as<arma::mat>(U_mats(i));
+        arma::mat current_F = as<arma::mat>(F_mats(i));
+        
+        unsigned int old_size = current_U.n_cols;
+        unsigned int total_size = num_stages_base + num_rows_to_add;
+        int found_new_row {0};
+        
+        arma::mat new_U (total_size, total_size);
+        arma::mat new_F (total_size, total_size);
+        
+        for (int j = 0; j < total_size; j++) {
+          arma::uvec current_row_found = find(rows_cols_to_add_vec == j);
+          
+          if (current_row_found.n_elem == 0) {
+            int found_new_col {0};
+            for (int k = 0; k < total_size; k++) {
+              arma::uvec current_col_found = find(rows_cols_to_add_vec == k);
+              
+              if (current_col_found.n_elem == 0) {
+                if ((j - found_new_row) < old_size && (k - found_new_col) < old_size) {
+                  new_U (j, k) = current_U(j - found_new_row, k - found_new_col);
+                  new_F (j, k) = current_F(j - found_new_row, k - found_new_col);
+                }
+              } else {
+                found_new_col++;
+              }
+            }
+          } else {
+            found_new_row++;
+          }
+        }
+        
+        arma::mat new_A = new_U + new_F;
+        A_mats(i) = new_A;
+        U_mats(i) = new_U;
+        F_mats(i) = new_F;
+        
+      } else {
+        arma::sp_mat current_U = as<arma::sp_mat>(U_mats(i));
+        arma::sp_mat current_F = as<arma::sp_mat>(F_mats(i));
+        
+        unsigned int old_size = current_U.n_cols;
+        unsigned int total_size = num_stages_base + num_rows_to_add;
+        int found_new_row {0};
+        
+        arma::sp_mat new_U (total_size, total_size);
+        arma::sp_mat new_F (total_size, total_size);
+        
+        for (int j = 0; j < total_size; j++) {
+          arma::uvec current_row_found = find(rows_cols_to_add_vec == j);
+          
+          if (current_row_found.n_elem == 0) {
+            int found_new_col {0};
+            for (int k = 0; k < total_size; k++) {
+              arma::uvec current_col_found = find(rows_cols_to_add_vec == k);
+              
+              if (current_col_found.n_elem == 0) {
+                if ((j - found_new_row) < old_size && (k - found_new_col) < old_size) {
+                  new_U (j, k) = current_U(j - found_new_row, k - found_new_col);
+                  new_F (j, k) = current_F(j - found_new_row, k - found_new_col);
+                }
+              } else {
+                found_new_col++;
+              }
+            }
+          } else {
+            found_new_row++;
+          }
+        }
+        
+        arma::sp_mat new_A = new_U + new_F;
+        A_mats(i) = new_A;
+        U_mats(i) = new_U;
+        F_mats(i) = new_F;
+      }
+    }
+  } else {
+    for (int i = 0; i < mat_num; i++) {
+      if (!mat_sparse) {
+        arma::mat current_A = as<arma::mat>(A_mats(i));
+        
+        unsigned int old_size = current_A.n_cols;
+        unsigned int total_size = num_stages_base + num_rows_to_add;
+        int found_new_row {0};
+        
+        arma::mat new_A (total_size, total_size);
+        
+        for (int j = 0; j < total_size; j++) {
+          arma::uvec current_row_found = find(rows_cols_to_add_vec == j);
+          
+          if (current_row_found.n_elem == 0) {
+            int found_new_col {0};
+            for (int k = 0; k < total_size; k++) {
+              arma::uvec current_col_found = find(rows_cols_to_add_vec == k);
+              
+              if (current_col_found.n_elem == 0) {
+                if ((j - found_new_row) < old_size && (k - found_new_col) < old_size) {
+                  new_A (j, k) = current_A(j - found_new_row, k - found_new_col);
+                }
+              } else {
+                found_new_col++;
+              }
+            }
+          } else {
+            found_new_row++;
+          }
+        }
+        
+        A_mats(i) = new_A;
+        
+      } else {
+        arma::sp_mat current_A = as<arma::sp_mat>(A_mats(i));
+        
+        unsigned int old_size = current_A.n_cols;
+        unsigned int total_size = num_stages_base + num_rows_to_add;
+        int found_new_row {0};
+        
+        arma::sp_mat new_A (total_size, total_size);
+        
+        for (int j = 0; j < total_size; j++) {
+          arma::uvec current_row_found = find(rows_cols_to_add_vec == j);
+          
+          if (current_row_found.n_elem == 0) {
+            int found_new_col {0};
+            for (int k = 0; k < total_size; k++) {
+              arma::uvec current_col_found = find(rows_cols_to_add_vec == k);
+              
+              if (current_col_found.n_elem == 0) {
+                if ((j - found_new_row) < old_size && (k - found_new_col) < old_size) {
+                  new_A (j, k) = current_A(j - found_new_row, k - found_new_col);
+                }
+              } else {
+                found_new_col++;
+              }
+            }
+          } else {
+            found_new_row++;
+          }
+        }
+        
+        A_mats(i) = new_A;
+      }
+    }
+  }
+  
+  // MPM final processing
+  bool found_modelqc = mpm_list.containsElementNamed("modelqc");
+  bool found_dataqc = mpm_list.containsElementNamed("dataqc");
+  
+  List true_output;
+  if (!found_modelqc && !found_dataqc) {
+    DataFrame new_labels = as<DataFrame>(mpm_list["labels"]);
+    IntegerVector new_matrixqc = as<IntegerVector>(mpm_list["matrixqc"]);
+    
+    List new_mpm (8);
+    new_mpm(0) = A_mats;
+    new_mpm(1) = U_mats;
+    new_mpm(2) = F_mats;
+    new_mpm(3) = new_stageframe;
+    new_mpm(4) = new_agestages;
+    new_mpm(5) = new_hstages;
+    new_mpm(6) = new_labels;
+    new_mpm(7) = new_matrixqc;
+    
+    CharacterVector new_mpm_namevec = {"A", "U", "F", "ahstages", "agestages",
+      "hstages", "labels", "matrixqc"};
+    CharacterVector new_mpm_classes = {"lefkoMat"};
+    new_mpm.attr("names") = new_mpm_namevec;
+    new_mpm.attr("class") = new_mpm_classes;
+    
+    true_output = new_mpm;
+    
+  } else if (!found_modelqc) {
+    DataFrame new_labels = as<DataFrame>(mpm_list["labels"]);
+    IntegerVector new_matrixqc = as<IntegerVector>(mpm_list["matrixqc"]);
+    IntegerVector new_dataqc = as<IntegerVector>(mpm_list["dataqc"]);
+    
+    List new_mpm (9);
+    new_mpm(0) = A_mats;
+    new_mpm(1) = U_mats;
+    new_mpm(2) = F_mats;
+    new_mpm(3) = new_stageframe;
+    new_mpm(4) = new_agestages;
+    new_mpm(5) = new_hstages;
+    new_mpm(6) = new_labels;
+    new_mpm(7) = new_matrixqc;
+    new_mpm(8) = new_dataqc;
+    
+    CharacterVector new_mpm_namevec = {"A", "U", "F", "ahstages", "agestages",
+      "hstages", "labels", "matrixqc", "dataqc"};
+    CharacterVector new_mpm_classes = {"lefkoMat"};
+    new_mpm.attr("names") = new_mpm_namevec;
+    new_mpm.attr("class") = new_mpm_classes;
+    
+    true_output = new_mpm;
+    
+  } else if (!found_dataqc) {
+    DataFrame new_labels = as<DataFrame>(mpm_list["labels"]);
+    IntegerVector new_matrixqc = as<IntegerVector>(mpm_list["matrixqc"]);
+    DataFrame new_modelqc = as<DataFrame>(mpm_list["modelqc"]);
+    
+    List new_mpm (9);
+    new_mpm(0) = A_mats;
+    new_mpm(1) = U_mats;
+    new_mpm(2) = F_mats;
+    new_mpm(3) = new_stageframe;
+    new_mpm(4) = new_agestages;
+    new_mpm(5) = new_hstages;
+    new_mpm(6) = new_labels;
+    new_mpm(7) = new_matrixqc;
+    new_mpm(8) = new_modelqc;
+    
+    CharacterVector new_mpm_namevec = {"A", "U", "F", "ahstages", "agestages",
+      "hstages", "labels", "matrixqc", "modelqc"};
+    CharacterVector new_mpm_classes = {"lefkoMat"};
+    new_mpm.attr("names") = new_mpm_namevec;
+    new_mpm.attr("class") = new_mpm_classes;
+    
+    true_output = new_mpm;
+    
+  } else {
+    DataFrame new_labels = as<DataFrame>(mpm_list["labels"]);
+    IntegerVector new_matrixqc = as<IntegerVector>(mpm_list["matrixqc"]);
+    DataFrame new_modelqc = as<DataFrame>(mpm_list["modelqc"]);
+    IntegerVector new_dataqc = as<IntegerVector>(mpm_list["dataqc"]);
+    
+    List new_mpm (10);
+    new_mpm(0) = A_mats;
+    new_mpm(1) = U_mats;
+    new_mpm(2) = F_mats;
+    new_mpm(3) = new_stageframe;
+    new_mpm(4) = new_agestages;
+    new_mpm(5) = new_hstages;
+    new_mpm(6) = new_labels;
+    new_mpm(7) = new_matrixqc;
+    new_mpm(8) = new_modelqc;
+    new_mpm(9) = new_dataqc;
+    
+    CharacterVector new_mpm_namevec = {"A", "U", "F", "ahstages", "agestages",
+      "hstages", "labels", "matrixqc", "modelqc", "dataqc"};
+    CharacterVector new_mpm_classes = {"lefkoMat"};
+    new_mpm.attr("names") = new_mpm_namevec;
+    new_mpm.attr("class") = new_mpm_classes;
+    
+    true_output = new_mpm;
+  }
+  
+  return true_output;;
+}
+

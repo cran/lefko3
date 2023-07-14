@@ -1504,7 +1504,8 @@ namespace LefkoUtils {
         StringVector var_hold_str = as<StringVector>(x[j]);
         
         for (int k = i + 1; k < df_rows_no; k++) {
-          if (j == 0) {          if (StringVector::is_na(var_hold_str(i))) {
+          if (j == 0) {
+            if (StringVector::is_na(var_hold_str(i))) {
               if (StringVector::is_na(var_hold_str(k))) {
                 old_check(k) = true;
               } else {
@@ -1552,6 +1553,7 @@ namespace LefkoUtils {
           old_check.zeros();
           if (oni_length > 0) {
             old_check.elem(old_new_intersect) = ones<uvec>(oni_length);
+            old_ones = find(old_check);
           } else {
             final_check = false;
             break_j = true;

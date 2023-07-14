@@ -6,8 +6,8 @@
 \usage{
 density_input(
   mpm,
-  stage3,
-  stage2,
+  stage3 = NULL,
+  stage2 = NULL,
   stage1 = NULL,
   age2 = NULL,
   style = NULL,

@@ -92,7 +92,7 @@ fecundity transitions. Defaults to \code{1} for survival transition, with
 impacts only on the construction of deVries-format hMPMs.}
 }
 \value{
-A edited copy of the original MPM is returned, also as a
+An edited copy of the original MPM is returned, also as a
 \code{lefkoMat} object.
 }
 \description{

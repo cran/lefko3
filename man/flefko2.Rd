@@ -46,7 +46,7 @@ flefko2(
   jrepst_dev = 0,
   jmatst_dev = 0,
   density = NA,
-  repmod = 1,
+  fecmod = 1,
   random.inda = FALSE,
   random.indb = FALSE,
   random.indc = FALSE,
@@ -273,7 +273,7 @@ linear model for juvenile maturity probability. Defaults to \code{0}.}
 matrices. Only needed if density is an explanatory term used in one or more
 vital rate models. Defaults to \code{NA}.}
 
-\item{repmod}{A scalar multiplier of fecundity. Defaults to \code{1}.}
+\item{fecmod}{A scalar multiplier of fecundity. Defaults to \code{1.0}.}
 
 \item{random.inda}{A logical value denoting whether to treat individual
 covariate \code{a} as a random, categorical variable. Otherwise is treated as

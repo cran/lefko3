@@ -344,7 +344,7 @@ Here, $n _{2, 0}$ refers to the number of newborn (age = 0) individuals in time 
   
 ### Age-by-stage MPMs   
   
-  <p style="text-indent: 20px">Package `lefko3` can also handle the estimation and analysis of age-by-stage MPMs. These matrices incorporate both stages (whether size-classified or not), as well as the ages in which they occur. For example, in a three stage life history with a single newborn stage and two adult stages, only one of which is reproductive (as in equations 1, 4, 8, and 9), and in which age impacts survival and fecundity only for the first 4 years, beyond which survival and fecundity transitions remain the same, we have the following ahistorical age-by-stage matrix.</p>
+  <p style="text-indent: 20px">Package `lefko3` can also handle the estimation and analysis of age-by-stage MPMs. These matrices incorporate both stages (whether size-classified or not), as well as the ages in which they occur. The standard approach uses a block matrix to repeat relevant stages by each age. For example, in a three stage life history with a single newborn stage and two adult stages, only one of which is reproductive (as in equations 1, 4, 8, and 9), and in which age impacts survival and fecundity only for the first 4 years, beyond which survival and fecundity transitions remain the same, we have the following ahistorical age-by-stage matrix.</p>
   
 \begin{equation}
 \tag{11}
@@ -380,6 +380,8 @@ n _{1,4C}
 \end{equation}
   
   <p style="text-indent: 20px">The above matrix is ahistorical. Package `lefko3` does not currently support historical age-by-stage matrices, although they are certainly possible.</p>
+  
+  <p style="text-indent: 20px">Package `lefko3` also supports the construction of age-hybrid MPMs, which are simple age-by-stage MPMs in which a single non-age-classified stage is added to what is otherwise a Leslie MPM. Situations in which such an approach is useful include an age-classified plant model with a dormant seed stage, among others.</p>
   
 ## WORKFLOW   
   

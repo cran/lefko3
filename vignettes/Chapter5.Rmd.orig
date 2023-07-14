@@ -444,7 +444,7 @@ which(as.matrix(tm3sens_s$ah_sensmats[[1]]) ==
   max(as.matrix(tm3sens_s$ah_sensmats[[1]])[which(as.matrix(tmeans2r$A[[1]]) > 0)]))
 ```
   
-  <p style="text-indent: 20px">Deterministic sensitivity analysis supported transitions from small non-flowering stages to larger flowering stages, such as 1-sprouted non-flowering adult in occasions *t*-1 and *t* to 10-sprouted flowering adult in occasion *t*+1, as the transitions that $\lambda$ is most sensitive to (as, an example, we can see this by dividing 962,644 by the number of stage pairs, which is 2916 - rounding up the answer gives us the matrix column [331], and the remainder from this division problem gives us the row [364]; the row and column numbers can then be checked against the `hstages` portion of the historical `lefkoMat` object used as input). The stochastic sensitivity analysis gives a slightly different result, supporting the transition from 1-sprouted non-flowering adult in occasions *t*-1 and *t* to 7-sprouted flowering adult in occasion *t*+1. The highest historically-corrected deterministic sensitivity value is associated with the transition from 1-sprouted non-flowering to 10-sprouted flowering (element 364), while the highest historically-corrected stochastic sensitivity value is associated with the transition from 1-sprouted flowering adult to 7-sprouted flowering adult stage (element 1657).</p>
+  <p style="text-indent: 20px">Deterministic sensitivity analysis supported transitions from small non-flowering stages to larger flowering stages. The historically corrected results repeat the results of the ahistorical analysis in this case, though that is not guaranteed in other cases.</p>
   
   <p style="text-indent: 20px">Let's now assess the elasticity of $\lambda$ to matrix elements, comparing the ahistorical to the historically-corrected case in both deterministic and stochastic analyses.</p>
 ```{r Ch5.23}
@@ -546,7 +546,7 @@ alttrial <- f_projection3(format = 3, data = vertdata, supplement = cypsupp2alt,
 ```
   
   <p style="text-indent: 20px">Let's compare these two projections with plots.</p>
-```{r Ch5.28, fig.cap = "Figure 5.10. Projections of Cypripedium population against boosted fecundity"}
+```{r Ch5.28, fig.cap = "Figure 5.10. Projected *Cypripedium* population dynamics against boosted fecundity"}
 par(mfrow = c(1,2))
 plot(basetrial, ylim = c(0, 100))
 plot(alttrial, ylim = c(0, 100))

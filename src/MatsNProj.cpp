@@ -628,6 +628,9 @@ Rcpp::List sf_reassess(const DataFrame& stageframe,
 //' immature.}
 //' \item{matstatus}{A binomial variable showing whether each age occurs in
 //' maturity.}
+//' \item{entrystage}{A binomial variable showing whether each age is an entry
+//' stage. In Leslie MPMs, only the first stage is set to \code{1}, while all
+//' others are set to \code{0}.}
 //' \item{indataset}{A binomial variable describing whether each age occurs in
 //' the input dataset.}
 //' \item{binhalfwidth_raw}{The half-width of the size bin, as input.}
@@ -674,15 +677,15 @@ Rcpp::List sf_leslie (int min_age, int max_age, int min_fecage, int max_fecage,
       false);
   }
   
-  Rcpp::List output_longlist(32);
+  Rcpp::List output_longlist(33);
   Rcpp::CharacterVector varnames {"stage_id", "stage", "original_size",
     "original_size_b", "original_size_c", "min_age", "max_age", "repstatus",
-    "obsstatus", "propstatus", "immstatus", "matstatus", "indataset",
-    "binhalfwidth_raw", "sizebin_min", "sizebin_max", "sizebin_center",
-    "sizebin_width", "binhalfwidthb_raw", "sizebinb_min", "sizebinb_max",
-    "sizebinb_center", "sizebinb_width", "binhalfwidthc_raw", "sizebinc_min",
-    "sizebinc_max", "sizebinc_center", "sizebinc_width", "group", "comments",
-    "alive", "almost_born"};
+    "obsstatus", "propstatus", "immstatus", "matstatus", "entrystage",
+    "indataset", "binhalfwidth_raw", "sizebin_min", "sizebin_max",
+    "sizebin_center", "sizebin_width", "binhalfwidthb_raw", "sizebinb_min",
+    "sizebinb_max", "sizebinb_center", "sizebinb_width", "binhalfwidthc_raw",
+    "sizebinc_min", "sizebinc_max", "sizebinc_center", "sizebinc_width",
+    "group", "comments", "alive", "almostborn"};
   
   int matsize {total_ages};
   
@@ -696,6 +699,7 @@ Rcpp::List sf_leslie (int min_age, int max_age, int min_fecage, int max_fecage,
   IntegerVector propstatus_true (matsize, 0);
   IntegerVector matstatus_true (matsize, 0);
   IntegerVector immstatus_true (matsize, 1);
+  IntegerVector entrystage_true (matsize, 0);
   IntegerVector indataset_true (matsize, 1);
   NumericVector minage_true (matsize, 0.0);
   NumericVector maxage_true (matsize, 0.0);
@@ -718,6 +722,8 @@ Rcpp::List sf_leslie (int min_age, int max_age, int min_fecage, int max_fecage,
   StringVector comments_true (matsize, "No description");
   IntegerVector alive_true (matsize, 1);
   IntegerVector almost_born (matsize, 0);
+  
+  entrystage_true(0) = 1;
   
   for (int i = 0; i < total_ages; i++) {
     stage_id(i) = i + 1;
@@ -752,31 +758,32 @@ Rcpp::List sf_leslie (int min_age, int max_age, int min_fecage, int max_fecage,
   output_longlist(9) = propstatus_true;
   output_longlist(10) = immstatus_true;
   output_longlist(11) = matstatus_true;
+  output_longlist(12) = entrystage_true;
   
-  output_longlist(12) = indataset_true;
+  output_longlist(13) = indataset_true;
   
-  output_longlist(13) = binhalfwidth_true;
-  output_longlist(14) = sizebin_min;
-  output_longlist(15) = sizebin_max;
-  output_longlist(16) = sizebin_center;
-  output_longlist(17) = sizebin_width;
+  output_longlist(14) = binhalfwidth_true;
+  output_longlist(15) = sizebin_min;
+  output_longlist(16) = sizebin_max;
+  output_longlist(17) = sizebin_center;
+  output_longlist(18) = sizebin_width;
   
-  output_longlist(18) = binhalfwidthb_true;
-  output_longlist(19) = sizebinb_min;
-  output_longlist(20) = sizebinb_max;
-  output_longlist(21) = sizebinb_center;
-  output_longlist(22) = sizebinb_width;
+  output_longlist(19) = binhalfwidthb_true;
+  output_longlist(20) = sizebinb_min;
+  output_longlist(21) = sizebinb_max;
+  output_longlist(22) = sizebinb_center;
+  output_longlist(23) = sizebinb_width;
   
-  output_longlist(23) = binhalfwidthc_true;
-  output_longlist(24) = sizebinc_min;
-  output_longlist(25) = sizebinc_max;
-  output_longlist(26) = sizebinc_center;
-  output_longlist(27) = sizebinc_width;
+  output_longlist(24) = binhalfwidthc_true;
+  output_longlist(25) = sizebinc_min;
+  output_longlist(26) = sizebinc_max;
+  output_longlist(27) = sizebinc_center;
+  output_longlist(28) = sizebinc_width;
   
-  output_longlist(28) = group_true;
-  output_longlist(29) = comments_true;
-  output_longlist(30) = alive_true;
-  output_longlist(31) = almost_born;
+  output_longlist(29) = group_true;
+  output_longlist(30) = comments_true;
+  output_longlist(31) = alive_true;
+  output_longlist(32) = almost_born;
   
   output_longlist.attr("names") = varnames;
   output_longlist.attr("row.names") = Rcpp::IntegerVector::create(NA_INTEGER, matsize);

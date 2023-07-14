@@ -181,7 +181,7 @@
 #' @param density A numeric value indicating density value to use to propagate
 #' matrices. Only needed if density is an explanatory term used in one or more
 #' vital rate models. Defaults to \code{NA}.
-#' @param repmod A scalar multiplier of fecundity. Defaults to \code{1}.
+#' @param fecmod A scalar multiplier of fecundity. Defaults to \code{1.0}.
 #' @param random.inda A logical value denoting whether to treat individual
 #' covariate \code{a} as a random, categorical variable. Otherwise is treated as
 #' a fixed, numeric variable. Defaults to \code{FALSE}.
@@ -501,7 +501,7 @@ flefko3 <- function(year = "all", patch = "all", stageframe, supplement = NULL,
   paramnames = NULL, inda = NULL, indb = NULL, indc = NULL, surv_dev = 0,
   obs_dev = 0, size_dev = 0, sizeb_dev = 0, sizec_dev = 0, repst_dev = 0,
   fec_dev = 0, jsurv_dev = 0, jobs_dev = 0, jsize_dev = 0, jsizeb_dev = 0,
-  jsizec_dev = 0, jrepst_dev = 0, jmatst_dev = 0, density = NA, repmod = 1,
+  jsizec_dev = 0, jrepst_dev = 0, jmatst_dev = 0, density = NA, fecmod = 1.0,
   random.inda = FALSE, random.indb = FALSE, random.indc = FALSE,
   negfec = FALSE, format = "ehrlen", ipm_method = "CDF", reduce = FALSE,
   simple = FALSE, err_check = FALSE, exp_tol = 700, theta_tol = 100000000,
@@ -541,7 +541,7 @@ flefko3 <- function(year = "all", patch = "all", stageframe, supplement = NULL,
     patch = patch, stageframe = stageframe, supplement = supplement,
     overwrite = overwrite, repmatrix = repmatrix, modelsuite = modelsuite,
     paramnames = paramnames, inda = inda, indb = indb, indc = indc,
-    dev_terms = devterms, density = density, fecmod = repmod, CDF = cdf,
+    dev_terms = devterms, density = density, fecmod = fecmod, CDF = cdf,
     random_inda = random.inda, random_indb = random.indb,
     random_indc = random.indc, negfec = negfec, exp_tol = exp_tol,
     theta_tol = theta_tol, simple = simple, err_check = err_check,
@@ -731,7 +731,7 @@ flefko3 <- function(year = "all", patch = "all", stageframe, supplement = NULL,
 #' @param density A numeric value indicating density value to use to propagate
 #' matrices. Only needed if density is an explanatory term used in one or more
 #' vital rate models. Defaults to \code{NA}.
-#' @param repmod A scalar multiplier of fecundity. Defaults to \code{1}.
+#' @param fecmod A scalar multiplier of fecundity. Defaults to \code{1.0}.
 #' @param random.inda A logical value denoting whether to treat individual
 #' covariate \code{a} as a random, categorical variable. Otherwise is treated as
 #' a fixed, numeric variable. Defaults to \code{FALSE}.
@@ -1036,7 +1036,7 @@ flefko2 <- function(year = "all", patch = "all", stageframe, supplement = NULL,
   paramnames = NULL, inda = NULL, indb = NULL, indc = NULL, surv_dev = 0,
   obs_dev = 0, size_dev = 0, sizeb_dev = 0, sizec_dev = 0, repst_dev = 0,
   fec_dev = 0, jsurv_dev = 0, jobs_dev = 0, jsize_dev = 0, jsizeb_dev = 0,
-  jsizec_dev = 0, jrepst_dev = 0, jmatst_dev = 0, density = NA, repmod = 1,
+  jsizec_dev = 0, jrepst_dev = 0, jmatst_dev = 0, density = NA, fecmod = 1.0,
   random.inda = FALSE, random.indb = FALSE, random.indc = FALSE, negfec = FALSE,
   ipm_method = "CDF", reduce = FALSE, simple = FALSE, err_check = FALSE,
   exp_tol = 700, theta_tol = 100000000, sparse_output = FALSE) {
@@ -1070,7 +1070,7 @@ flefko2 <- function(year = "all", patch = "all", stageframe, supplement = NULL,
     stageframe = stageframe, supplement = supplement, overwrite = overwrite,
     repmatrix = repmatrix, modelsuite = modelsuite, paramnames = paramnames,
     inda = inda, indb = indb, indc = indc, dev_terms = devterms,
-    density = density, fecmod = repmod, CDF = cdf, random_inda = random.inda,
+    density = density, fecmod = fecmod, CDF = cdf, random_inda = random.inda,
     random_indb = random.indb, random_indc = random.indc, negfec = negfec,
     exp_tol = exp_tol, theta_tol = theta_tol, simple = simple,
     err_check = err_check, sparse_output = sparse_output)
@@ -1260,7 +1260,7 @@ flefko2 <- function(year = "all", patch = "all", stageframe, supplement = NULL,
 #' @param density A numeric value indicating density value to use to propagate
 #' matrices. Only needed if density is an explanatory term used in one or more
 #' vital rate models. Defaults to \code{NA}.
-#' @param repmod A scalar multiplier of fecundity. Defaults to \code{1}.
+#' @param fecmod A scalar multiplier of fecundity. Defaults to \code{1.0}.
 #' @param random.inda A logical value denoting whether to treat individual
 #' covariate \code{a} as a random, categorical variable. Otherwise is treated as
 #' a fixed, numeric variable. Defaults to \code{FALSE}.
@@ -1507,7 +1507,7 @@ aflefko2 <- function(year = "all", patch = "all", stageframe, supplement = NULL,
   paramnames = NULL, inda = NULL, indb = NULL, indc = NULL, surv_dev = 0,
   obs_dev = 0, size_dev = 0, sizeb_dev = 0, sizec_dev = 0, repst_dev = 0,
   fec_dev = 0, jsurv_dev = 0, jobs_dev = 0, jsize_dev = 0, jsizeb_dev = 0,
-  jsizec_dev = 0, jrepst_dev = 0, jmatst_dev = 0, density = NA, repmod = 1,
+  jsizec_dev = 0, jrepst_dev = 0, jmatst_dev = 0, density = NA, fecmod = 1.0,
   random.inda = FALSE, random.indb = FALSE, random.indc = FALSE, final_age = NA,
   continue = TRUE, prebreeding = TRUE, negfec = FALSE, ipm_method = "CDF",
   reduce = FALSE, simple = FALSE, err_check = FALSE, exp_tol = 700,
@@ -1542,7 +1542,7 @@ aflefko2 <- function(year = "all", patch = "all", stageframe, supplement = NULL,
     stageframe = stageframe, supplement = supplement, overwrite = overwrite,
     repmatrix = repmatrix, modelsuite = modelsuite, paramnames = paramnames,
     inda = inda, indb = indb, indc = indc, dev_terms = devterms,
-    density = density, fecmod = repmod, CDF = cdf, random_inda = random.inda,
+    density = density, fecmod = fecmod, CDF = cdf, random_inda = random.inda,
     random_indb = random.indb, random_indc = random.indc, negfec = negfec,
     exp_tol = exp_tol, theta_tol = theta_tol, last_age = final_age,
     cont = continue, prebreeding = prebreeding, simple = simple,
@@ -1639,7 +1639,7 @@ aflefko2 <- function(year = "all", patch = "all", stageframe, supplement = NULL,
 #' @param density A numeric value indicating density value to use to propagate
 #' matrices. Only needed if density is an explanatory term used in linear
 #' models. Defaults to \code{NA}.
-#' @param repmod A scalar multiplier of fecundity. Defaults to \code{1}.
+#' @param fecmod A scalar multiplier of fecundity. Defaults to \code{1.0}.
 #' @param random.inda A logical value denoting whether to treat individual
 #' covariate \code{a} as a random, categorical variable. Otherwise is treated as
 #' a fixed, numeric variable. Defaults to \code{FALSE}.
@@ -1771,7 +1771,7 @@ fleslie <- function(year = "all", patch = NULL, prebreeding = TRUE,
   data = NULL, modelsuite = NULL, surv_model = NULL, fec_model = NULL,
   paramnames = NULL, supplement = NULL, start_age = NA, last_age = NA,
   fecage_min = NA, fecage_max = NA, continue = TRUE, inda = NULL, indb = NULL,
-  indc = NULL, surv_dev = 0, fec_dev = 0, density = NA, repmod = 1,
+  indc = NULL, surv_dev = 0, fec_dev = 0, density = NA, fecmod = 1.0,
   random.inda = FALSE, random.indb = FALSE, random.indc = FALSE, negfec = FALSE,
   reduce = FALSE, simple = FALSE, err_check = FALSE, exp_tol = 700,
   theta_tol = 100000000, sparse_output = FALSE) {
@@ -1793,7 +1793,7 @@ fleslie <- function(year = "all", patch = NULL, prebreeding = TRUE,
     devries = FALSE, reduce = reduce, data = data, year = year, patch = patch,
     modelsuite = modelsuite, paramnames = paramnames, supplement = supplement,
     inda = inda, indb = indb, indc = indc, dev_terms = devterms,
-    density = density, fecmod = repmod, random_inda = random.inda,
+    density = density, fecmod = fecmod, random_inda = random.inda,
     random_indb = random.indb, random_indc = random.indc, negfec = negfec,
     exp_tol = exp_tol, theta_tol = theta_tol, start_age = start_age,
     last_age = last_age, fecage_min = fecage_min, fecage_max = fecage_max,

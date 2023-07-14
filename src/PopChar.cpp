@@ -3464,13 +3464,13 @@ List actualstage3(RObject data, bool check_stage = true, bool check_age = false,
 //' @param agebystage A logical value denoting whether MPM is age-by-stage.
 //' Defaults to \code{FALSE}.
 //' 
-//' @return A corrected density input deta frame, usable in density-dependent
+//' @return A corrected density input data frame, usable in density-dependent
 //' MPM creation.
 //' 
 //' @keywords internal
 //' @noRd
 Rcpp::DataFrame density_reassess(DataFrame stageframe, DataFrame dens_inp,
-  Nullable<DataFrame> agestages, bool historical = false,
+  Nullable<DataFrame> agestages = R_NilValue, bool historical = false,
   bool agebystage = false) {
   
   StringVector stagevec = as<StringVector>(stageframe["stage"]);
@@ -5440,14 +5440,18 @@ Rcpp::DataFrame density_reassess(DataFrame stageframe, DataFrame dens_inp,
 //' 
 //' @export density_input
 // [[Rcpp::export(density_input)]]
-DataFrame density_input(List mpm, RObject stage3, RObject stage2,
-  Nullable<RObject> stage1 = R_NilValue, Nullable<RObject> age2 = R_NilValue,
-  Nullable<RObject> style = R_NilValue, Nullable<RObject> time_delay = R_NilValue,
-  Nullable<RObject> alpha = R_NilValue, Nullable<RObject> beta = R_NilValue,
-  Nullable<RObject> type = R_NilValue, Nullable<RObject> type_t12 = R_NilValue) {
+DataFrame density_input(List mpm, Nullable<RObject> stage3 = R_NilValue,
+  Nullable<RObject> stage2 = R_NilValue, Nullable<RObject> stage1 = R_NilValue,
+  Nullable<RObject> age2 = R_NilValue, Nullable<RObject> style = R_NilValue,
+  Nullable<RObject> time_delay = R_NilValue, Nullable<RObject> alpha = R_NilValue,
+  Nullable<RObject> beta = R_NilValue, Nullable<RObject> type = R_NilValue,
+  Nullable<RObject> type_t12 = R_NilValue) {
   
   bool historical = false;
   bool agebystage = false;
+  bool ageonly = false;
+  bool stage3used = false;
+  bool stage2used = false;
   
   // Check quality of mpm input
   StringVector mpm_class_vec;
@@ -5504,56 +5508,71 @@ DataFrame density_input(List mpm, RObject stage3, RObject stage2,
   StringVector stage2_names;
   StringVector stage1_names;
   
-  if (is<StringVector>(stage3)) {
-    StringVector stage3_names_ = as<StringVector>(stage3);
-    stage3_names = stage3_names_;
-    
-  } else if (is<IntegerVector>(stage3)) {
-    arma::ivec stage3_ids = as<arma::ivec>(stage3);
-    int stage3_entries = static_cast<int>(stage3_ids.n_elem);
-    
-    arma::uvec bad_lows = find(stage3_ids < 1);
-    arma::uvec bad_highs = find(stage3_ids > no_stages);
-    
-    if (bad_lows.n_elem > 0 || bad_highs.n_elem > 0) {
-      throw Rcpp::exception("Stageframe contains invalid entries in stage_id column.", false);
+  if (stage3.isNotNull()) {
+    if (is<StringVector>(stage3)) {
+      StringVector stage3_names_ = as<StringVector>(stage3);
+      stage3_names = stage3_names_;
+      
+    } else if (is<IntegerVector>(stage3)) {
+      arma::ivec stage3_ids = as<arma::ivec>(stage3);
+      int stage3_entries = static_cast<int>(stage3_ids.n_elem);
+      
+      arma::uvec bad_lows = find(stage3_ids < 1);
+      arma::uvec bad_highs = find(stage3_ids > no_stages);
+      
+      if (bad_lows.n_elem > 0 || bad_highs.n_elem > 0) {
+        throw Rcpp::exception("Stageframe contains invalid entries in stage_id column.", false);
+      }
+      
+      StringVector new_stage3 (stage3_entries);
+      for (int i = 0; i < stage3_entries; i++) {
+        new_stage3(i) = stage_sf(stage3_ids(i) - 1);
+      }
+      
+      stage3_names = new_stage3;
+      
+    } else {
+      throw Rcpp::exception("Option stage3 is not a recognized input type.", false);
     }
-    
-    StringVector new_stage3 (stage3_entries);
-    for (int i = 0; i < stage3_entries; i++) {
-      new_stage3(i) = stage_sf(stage3_ids(i) - 1);
-    }
-    
-    stage3_names = new_stage3;
+    stage3used = true;
     
   } else {
-    throw Rcpp::exception("Option stage3 is not a recognized input type.", false);
+    if (!age2.isNotNull()) {
+      throw Rcpp::exception("This function requires inputs for stage2 and 3 in stage-based MPMs, and inputs for age2 for age-based MPMs. Age-stage MPMs require all three of these.", false);
+    }
   }
   
-  if (is<StringVector>(stage2)) {
-    StringVector stage2_names_ = as<StringVector>(stage2);
-    stage2_names = stage2_names_;
-    
-  } else if (is<IntegerVector>(stage2)) {
-    arma::ivec stage2_ids = as<arma::ivec>(stage2);
-    int stage2_entries = static_cast<int>(stage2_ids.n_elem);
-    
-    arma::uvec bad_lows = find(stage2_ids < 1);
-    arma::uvec bad_highs = find(stage2_ids > no_stages);
-    
-    if (bad_lows.n_elem > 0 || bad_highs.n_elem > 0) {
-      throw Rcpp::exception("Stageframe contains invalid entries in stage_id column.", false);
+  if (stage3.isNotNull()) {
+    if (is<StringVector>(stage2)) {
+      StringVector stage2_names_ = as<StringVector>(stage2);
+      stage2_names = stage2_names_;
+      
+    } else if (is<IntegerVector>(stage2)) {
+      arma::ivec stage2_ids = as<arma::ivec>(stage2);
+      int stage2_entries = static_cast<int>(stage2_ids.n_elem);
+      
+      arma::uvec bad_lows = find(stage2_ids < 1);
+      arma::uvec bad_highs = find(stage2_ids > no_stages);
+      
+      if (bad_lows.n_elem > 0 || bad_highs.n_elem > 0) {
+        throw Rcpp::exception("Stageframe contains invalid entries in stage_id column.", false);
+      }
+      
+      StringVector new_stage2 (stage2_entries);
+      for (int i = 0; i < stage2_entries; i++) {
+        new_stage2(i) = stage_sf(stage2_ids(i) - 1);
+      }
+      
+      stage2_names = new_stage2;
+      
+    } else {
+      throw Rcpp::exception("Option stage2 is not a recognized input type.", false);
     }
-    
-    StringVector new_stage2 (stage2_entries);
-    for (int i = 0; i < stage2_entries; i++) {
-      new_stage2(i) = stage_sf(stage2_ids(i) - 1);
-    }
-    
-    stage2_names = new_stage2;
-    
+    stage2used = true;
   } else {
-    throw Rcpp::exception("Option stage2 is not a recognized input type.", false);
+    if (!age2.isNotNull()) {
+      throw Rcpp::exception("This function requires inputs for stage2 and 3 in stage-based MPMs, and inputs for age2 for age-based MPMs. Age-stage MPMs require all three of these.", false);
+    }
   }
   
   if (stage1.isNotNull()) {
@@ -5616,11 +5635,23 @@ DataFrame density_input(List mpm, RObject stage3, RObject stage2,
   IntegerVector type_t12_vec;
   
   if (age2.isNotNull()) {
-    if (!agebystage) {
-      throw Rcpp::exception("Do not use the age2 option unless the MPM is age-by-stage.", false);
+    if (!stage2used && !stage3used) ageonly = true;
+    
+    if (!agebystage && !ageonly) {
+      throw Rcpp::exception("Do not use the age2 option unless the MPM is either purely age-based or age-by-stage.", false);
     }
     
     if (is<IntegerVector>(age2)) {
+      IntegerVector age2_vec_ = as<IntegerVector>(age2);
+      age2_vec = age2_vec_;
+      
+      arma::ivec age2_arma = as<arma::ivec>(age2_vec_);
+      arma::uvec bad_lows = find(age2_arma < 0);
+      
+      if (bad_lows.n_elem > 0) {
+        throw Rcpp::exception("Negative ages are not allowed.", false);
+      }
+    } else if (is<NumericVector>(age2)) {
       IntegerVector age2_vec_ = as<IntegerVector>(age2);
       age2_vec = age2_vec_;
       
@@ -5636,6 +5667,31 @@ DataFrame density_input(List mpm, RObject stage3, RObject stage2,
   } else {
     IntegerVector age2_vec_ = {NA_INTEGER};
     age2_vec = age2_vec_;
+  }
+  
+  if (ageonly) {
+    DataFrame mpm_ahstages = as<DataFrame>(mpm["ahstages"]);
+    IntegerVector age_order = as<IntegerVector>(mpm_ahstages["stage_id"]);
+    CharacterVector age_names = as<CharacterVector>(mpm_ahstages["stage"]);
+    
+    IntegerVector common_ages = intersect(age2_vec, age_order);
+    if (common_ages.length() != age2_vec.length()){
+      throw Rcpp::exception("All ages used in option age2 must be listed explicitly as ages in the ahstages element of the input mpm.", false);
+    }
+    
+    CharacterVector age2_names (static_cast<int>(age2_vec.length()));
+    CharacterVector age3_names (static_cast<int>(age2_vec.length()));
+    for (int i = 0; i < static_cast<int>(age2_vec.length()); i++) {
+      age2_names(i) = age_names(age2_vec(i) - 1);
+      
+      if (i < (static_cast<int>(age2_vec.length())) - 1) {
+        age3_names(i) = age_names(age2_vec(i) - 1);
+      } else {
+        age3_names(i) = age_names(age2_vec(i));
+      }
+    }
+    stage3_names = age3_names;
+    stage2_names = age2_names;
   }
   
   if (style.isNotNull()) {
@@ -5712,7 +5768,6 @@ DataFrame density_input(List mpm, RObject stage3, RObject stage2,
       if (min(style_vec_) == 0) {
         throw Rcpp::exception("Some density dependence styles were not recognized.", false);
       }
-      
       style_vec = style_vec_;
       
     } else {
@@ -5775,7 +5830,6 @@ DataFrame density_input(List mpm, RObject stage3, RObject stage2,
     } else {
       throw Rcpp::exception("Only floating point decimals are allowed in option beta.", false);
     }
-    
   } else {
     NumericVector beta_vec_ = {1};
     beta_vec = beta_vec_;
@@ -5813,7 +5867,6 @@ DataFrame density_input(List mpm, RObject stage3, RObject stage2,
         }
       }
       type_vec = type_vec_;
-      
     } else if (is<NumericVector>(type)) {
       IntegerVector type_vec_ = as<IntegerVector>(type);
       type_vec = type_vec_;
@@ -5829,7 +5882,6 @@ DataFrame density_input(List mpm, RObject stage3, RObject stage2,
     } else {
       throw Rcpp::exception("Only integers are allowed in option type.", false);
     }
-    
   } else {
     IntegerVector type_vec_ = {1};
     type_vec = type_vec_;
@@ -5858,7 +5910,6 @@ DataFrame density_input(List mpm, RObject stage3, RObject stage2,
       if (bad_lows.n_elem > 0 || bad_highs.n_elem > 0) {
         throw Rcpp::exception("Historical transition types may only be type 1 or 2.", false);
       }
-      
     } else if (is<StringVector>(type_t12)) {
       StringVector type_t12_stringvec = as<StringVector>(type_t12);
       int type_t12_elems = type_t12_stringvec.length();
@@ -5883,12 +5934,10 @@ DataFrame density_input(List mpm, RObject stage3, RObject stage2,
     } else {
       throw Rcpp::exception("Only integers are allowed in option type_t12.", false);
     }
-    
   } else {
     IntegerVector type_t12_vec_ = {1};
     type_t12_vec = type_t12_vec_;
   }
-  
   
   StringVector new_stage3_names;
   StringVector new_stage2_names;
@@ -5917,7 +5966,6 @@ DataFrame density_input(List mpm, RObject stage3, RObject stage2,
     } else {
       throw Rcpp::exception("Vector stage3 is not the correct length.", false);
     }
-    
   } else {
     new_stage3_names = stage3_names;
   }
@@ -5930,7 +5978,6 @@ DataFrame density_input(List mpm, RObject stage3, RObject stage2,
     } else {
       throw Rcpp::exception("Vector stage2 is not the correct length.", false);
     }
-    
   } else {
     new_stage2_names = stage2_names;
   }
@@ -5943,7 +5990,6 @@ DataFrame density_input(List mpm, RObject stage3, RObject stage2,
     } else {
       throw Rcpp::exception("Vector stage1 is not the correct length.", false);
     }
-    
   } else {
     new_stage1_names = stage1_names;
   }
@@ -5956,7 +6002,6 @@ DataFrame density_input(List mpm, RObject stage3, RObject stage2,
     } else {
       throw Rcpp::exception("Vector age2 is not the correct length.", false);
     }
-    
   } else {
     new_age2_vec = age2_vec;
   }
@@ -5969,7 +6014,6 @@ DataFrame density_input(List mpm, RObject stage3, RObject stage2,
     } else {
       throw Rcpp::exception("Vector style is not the correct length.", false);
     }
-    
   } else {
     new_style_vec = style_vec;
   }
@@ -5982,7 +6026,6 @@ DataFrame density_input(List mpm, RObject stage3, RObject stage2,
     } else {
       throw Rcpp::exception("Vector time_delay is not the correct length.", false);
     }
-    
   } else {
     new_time_delay_vec = time_delay_vec;
   }
@@ -5995,7 +6038,6 @@ DataFrame density_input(List mpm, RObject stage3, RObject stage2,
     } else {
       throw Rcpp::exception("Vector type is not the correct length.", false);
     }
-    
   } else {
     new_type_vec = type_vec;
   }
@@ -6008,7 +6050,6 @@ DataFrame density_input(List mpm, RObject stage3, RObject stage2,
     } else {
       throw Rcpp::exception("Vector type_t12 is not the correct length.", false);
     }
-    
   } else {
     new_type_t12_vec = type_t12_vec;
   }
@@ -6021,7 +6062,6 @@ DataFrame density_input(List mpm, RObject stage3, RObject stage2,
     } else {
       throw Rcpp::exception("Vector alpha is not the correct length.", false);
     }
-    
   } else {
     new_alpha_vec = alpha_vec;
   }
@@ -6034,7 +6074,6 @@ DataFrame density_input(List mpm, RObject stage3, RObject stage2,
     } else {
       throw Rcpp::exception("Vector beta is not the correct length.", false);
     }
-    
   } else {
     new_beta_vec = beta_vec;
   }
@@ -6051,7 +6090,7 @@ DataFrame density_input(List mpm, RObject stage3, RObject stage2,
   
   StringVector needed_classes {"data.frame", "lefkoDens"};
   output.attr("class") = needed_classes;
-
+  
   StringVector stage3_final = as<StringVector>(output["stage3"]);
   StringVector stage2_final = as<StringVector>(output["stage2"]);
   StringVector stage1_final = as<StringVector>(output["stage1"]);
@@ -6713,6 +6752,13 @@ Rcpp::List supplemental (bool historical = true, bool stagebased = true,
       if (neg_tester.n_elem > 0) {
         Rf_warningcall(R_NilValue, "Some estage2 values entered are negative.");
       }
+    } else if (is<LogicalVector>(estage2)) {
+      LogicalVector estage2_temp = as<LogicalVector>(estage2);
+      estage2_length = static_cast<int>(estage2_temp.length());
+      
+      IntegerVector estage2_new (estage2_length, NA_INTEGER);
+      estage2_ = estage2_new;
+      
     } else {
       throw Rcpp::exception("Please enter age information (estage2) in integer format.",
         false);
@@ -7065,7 +7111,7 @@ Rcpp::List supplemental (bool historical = true, bool stagebased = true,
 //' fecundity transitions. Defaults to \code{1} for survival transition, with
 //' impacts only on the construction of deVries-format hMPMs.
 //' 
-//' @return A edited copy of the original MPM is returned, also as a
+//' @return An edited copy of the original MPM is returned, also as a
 //' \code{lefkoMat} object.
 //' 
 //' @section Notes:

@@ -1627,15 +1627,15 @@ historicalize3 <- function(data, popidcol = 0, patchidcol = 0, individcol,
   } else {
     stassign <- FALSE
     
-    stageassign <- as.data.frame(matrix(c(NA, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-          0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, NA), ncol = 29),
-      stringsAsFactors = FALSE)
-    names(stageassign) <- c("stage", "size", "size_b", "size_c", "min_age", "max_age",
-      "repstatus", "obsstatus", "propstatus", "immstatus", "matstatus", "indataset",
-      "binhalfwidth_raw", "sizebin_min", "sizebin_max", "sizebin_center", "sizebin_width",
-      "binhalfwidthb_raw", "sizebinb_min", "sizebinb_max", "sizebinb_center", "sizebinb_width",
-      "binhalfwidthc_raw", "sizebinc_min", "sizebinc_max", "sizebinc_center", "sizebinc_width",
-      "group", "comments")
+    stageassign <- sf_skeleton(1)
+    stageassign$stage[1] <- NA
+    stageassign$size[1] <- 0
+    stageassign$obsstatus[1] <- 0
+    stageassign$indataset[1] <- 0
+    stageassign$binhalfwidth_raw[1] <- 0
+    stageassign$sizebin_center[1] <- 0
+    stageassign$sizebin_width[1] <- 0
+    stageassign$comments[1] <- NA
     
     stagesizecol <- 0
   }
@@ -1652,12 +1652,12 @@ historicalize3 <- function(data, popidcol = 0, patchidcol = 0, individcol,
   
   if (censor) {
     if (!is.element(censorkeep, data[,censorcol])) {
-      stop("Please enter a valid value for censorkeep. This value should occur in the censor variable within the dataset.", 
-        call. = FALSE)
+      stop("Please enter a valid value for censorkeep. This value should occur
+        in the censor variable within the dataset.", call. = FALSE)
     }
   }
   
-  if (is.na(censorkeep)  & censor) {
+  if (is.na(censorkeep) & censor) {
     censbool <- TRUE
     censorkeep <- 0
   } else {

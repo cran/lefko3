@@ -3067,7 +3067,8 @@ Rcpp::List jpf(const DataFrame& data, const DataFrame& stageframe, int popidcol,
   
   Rcpp::IntegerVector yearall2x = sort_unique(year2x);
   int firstyear = min(yearall2x);
-  const int noyears = static_cast<int>(yearall2x.size()); // Total no observation periods
+  
+  const int noyears = static_cast<int>(yearall2x.size()); // Total obs periods, minus last period in year3
   
   int ndflength = noyears * noindivs; // Initial length of final hfv dataset
   int currentyear {0};
@@ -3520,8 +3521,7 @@ Rcpp::List jpf(const DataFrame& data, const DataFrame& stageframe, int popidcol,
   Rcpp::NumericVector fecb2 (ndflength, 0.0);
   Rcpp::NumericVector fecadded2 (ndflength, 0.0);
   
-  arma::ivec year2 (ndflength);
-  year2.zeros();
+  arma::ivec year2 (ndflength, fill::zeros);
   
   Rcpp::NumericVector indcova2 (ndflength, 0.0);
   Rcpp::NumericVector indcovb2 (ndflength, 0.0);
@@ -3600,10 +3600,8 @@ Rcpp::List jpf(const DataFrame& data, const DataFrame& stageframe, int popidcol,
   censor1.fill(crazycensor);
   
   // Variables to check whether censor has been checked and set at each step
-  arma::uvec indivnum (ndflength);
-  arma::uvec censor2check (ndflength);
-  indivnum.zeros();
-  censor2check.zeros();
+  arma::uvec indivnum (ndflength, fill::zeros);
+  arma::uvec censor2check (ndflength, fill::zeros);
   
   // Derived variables requiring extra looping or other control parameters
   arma::ivec firstseen (ndflength);
@@ -3647,6 +3645,7 @@ Rcpp::List jpf(const DataFrame& data, const DataFrame& stageframe, int popidcol,
   arma::uvec cs3;
   arma::uvec cs4;
   int choicestage {0};
+  int fsyear_check {0};
   
   // Main loop creating new dataset rows
   // Establishes state in time t for all cases in which individual is observed
@@ -3814,14 +3813,20 @@ Rcpp::List jpf(const DataFrame& data, const DataFrame& stageframe, int popidcol,
     }
     
     livcheck2 = sizeadded2[ndfindex] + repstradded2[ndfindex] + obsstatus2[ndfindex];
+    fsyear_check = currentyear + firstyear;
     
-    if (livcheck2 > 0 && firstseenx[currentindiv] == -1) {
-      firstseenx[currentindiv] = currentyear + firstyear;
-      lastseenx[currentindiv] = currentyear + firstyear;
-      alive2[ndfindex] = 1.0;
-    } else if (livcheck2 > 0) {
-      lastseenx[currentindiv] = currentyear + firstyear;
-      alive2[ndfindex] = 1.0;
+    if (livcheck2 > 0) {
+      if (firstseenx[currentindiv] == -1) {
+        firstseenx[currentindiv] = fsyear_check;
+        lastseenx[currentindiv] = fsyear_check;
+        alive2[ndfindex] = 1.0;
+      } else if (firstseenx[currentindiv] > fsyear_check) {
+        firstseenx[currentindiv] = fsyear_check;
+        alive2[ndfindex] = 1.0;
+      } else if (lastseenx[currentindiv] < fsyear_check) {
+        lastseenx[currentindiv] = fsyear_check;
+        alive2[ndfindex] = 1.0;
+      }
     }
     
     if (alive2[ndfindex] == 1.0 && matstat2[ndfindex] == 1) {
@@ -3972,17 +3977,21 @@ Rcpp::List jpf(const DataFrame& data, const DataFrame& stageframe, int popidcol,
       }
       
       livcheck3 = sizeadded3[ndfindex] + repstradded3[ndfindex] + obsstatus3[ndfindex];
+      fsyear_check = currentyear + firstyear + 1;
       
-      if (firstseenx[currentindiv] == -1 && livcheck3 > 0) {
-        firstseenx[currentindiv] = currentyear + firstyear + 1;
-        lastseenx[currentindiv] = currentyear + firstyear + 1;
-        alive3[ndfindex] = 1.0;
-        if (juv3col == -1 && repstradded2[ndfindex] > 0) {
-          matstat3[ndfindex] = 1;
+      if (livcheck3 > 0) {
+        if (firstseenx[currentindiv] == -1) {
+          firstseenx[currentindiv] = fsyear_check;
+          lastseenx[currentindiv] = fsyear_check;
+          alive3[ndfindex] = 1.0;
+        } else if (firstseenx[currentindiv] > fsyear_check && alive2[ndfindex] < 1.0) {
+          firstseenx[currentindiv] = fsyear_check;
+          alive3[ndfindex] = 1.0;
+        } else if (lastseenx[currentindiv] < fsyear_check) {
+          lastseenx[currentindiv] = fsyear_check;
+          alive3[ndfindex] = 1.0;
         }
-      } else if (livcheck3 > 0) {
-        lastseenx[currentindiv] = currentyear + firstyear + 1;
-        alive3[ndfindex] = 1.0;
+        
         if (juv3col == -1 && repstradded2[ndfindex] > 0) {
           matstat3[ndfindex] = 1;
         }
@@ -4627,9 +4636,6 @@ Rcpp::List jpf(const DataFrame& data, const DataFrame& stageframe, int popidcol,
     bool indcova1_used {false}, indcova2_used {false}, indcova3_used {false};
     bool indcovb1_used {false}, indcovb2_used {false}, indcovb3_used {false};
     bool indcovc1_used {false}, indcovc2_used {false}, indcovc3_used {false};
-    bool obsstatus1_used {false}, obsstatus2_used {false}, obsstatus3_used {false};
-    bool repstatus1_used {false}, repstatus2_used {false}, repstatus3_used {false};
-    bool fecstatus1_used {false}, fecstatus2_used {false}, fecstatus3_used {false};
     bool juvgiven1_used {false}, juvgiven2_used {false}, juvgiven3_used {false};
     
     NumericVector xpos1_u = unique(xpos1);
@@ -4808,27 +4814,6 @@ Rcpp::List jpf(const DataFrame& data, const DataFrame& stageframe, int popidcol,
     IntegerVector indcovc3_int_u = unique(indcovc3_int);
     if (indcovc3_u.length() > 1 || indcovc3_int_u.length() > 1) indcovc3_used = true;
     
-    IntegerVector obsstatus1_u = unique(obsstatus1);
-    if (obsstatus1_u.length() > 1) obsstatus1_used = true;
-    IntegerVector obsstatus2_u = unique(obsstatus2);
-    if (obsstatus2_u.length() > 1) obsstatus2_used = true;
-    IntegerVector obsstatus3_u = unique(obsstatus3);
-    if (obsstatus3_u.length() > 1) obsstatus3_used = true;
-    
-    IntegerVector repstatus1_u = unique(repstatus1);
-    if (repstatus1_u.length() > 1) repstatus1_used = true;
-    IntegerVector repstatus2_u = unique(repstatus2);
-    if (repstatus2_u.length() > 1) repstatus2_used = true;
-    IntegerVector repstatus3_u = unique(repstatus3);
-    if (repstatus3_u.length() > 1) repstatus3_used = true;
-    
-    IntegerVector fecstatus1_u = unique(fecstatus1);
-    if (fecstatus1_u.length() > 1) fecstatus1_used = true;
-    IntegerVector fecstatus2_u = unique(fecstatus2);
-    if (fecstatus2_u.length() > 1) fecstatus2_used = true;
-    IntegerVector fecstatus3_u = unique(fecstatus3);
-    if (fecstatus3_u.length() > 1) fecstatus3_used = true;
-    
     NumericVector juvgiven1_u = unique(juvgiven1);
     if (juvgiven1_u.length() > 1) juvgiven1_used = true;
     NumericVector juvgiven2_u = unique(juvgiven2);
@@ -4847,11 +4832,10 @@ Rcpp::List jpf(const DataFrame& data, const DataFrame& stageframe, int popidcol,
       fec1added_used + fec2added_used + fec3added_used + indcova1_used +
       indcova2_used + indcova3_used + indcovb1_used + indcovb2_used +
       indcovb3_used + indcovc1_used + indcovc2_used + indcovc3_used +
-      obsstatus1_used + obsstatus2_used + obsstatus3_used + repstatus1_used +
-      repstatus2_used + repstatus3_used + fecstatus1_used + fecstatus2_used +
-      fecstatus3_used + juvgiven1_used + juvgiven2_used + juvgiven3_used;
+      juvgiven1_used + juvgiven2_used + juvgiven3_used;
     
-    int list_length = 21 + total_added;
+    int list_length = 30 + total_added;
+    
     List reduced (list_length);
     Rcpp::CharacterVector varnames (list_length);
     

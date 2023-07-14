@@ -390,11 +390,9 @@ lathmodelsln2p <- modelsearch(lathvertln, historical = FALSE,
 lathmat2age <- aflefko2(year = "all", stageframe = lathframeln,
   modelsuite = lathmodelsln2, data = lathvertln, supplement = lathsupp2,
   final_age = 3, continue = TRUE, reduce = FALSE)
-#> Warning: Supplement table contains multiple entries for the same transition(s).
 lathmat2agep <- aflefko2(year = "all", patch = "all", stageframe = lathframeln,
   modelsuite = lathmodelsln2p, data = lathvertln, supplement = lathsupp2,
   final_age = 3, continue = TRUE, reduce = FALSE)
-#> Warning: Supplement table contains multiple entries for the same transition(s).
 
 #summary(lathmat2age)
 #summary(lathmat2agep)

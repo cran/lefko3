@@ -334,6 +334,20 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// add_stage
+Rcpp::List add_stage(const RObject mpm, int add_before, int add_after, Nullable<CharacterVector> stage_name);
+RcppExport SEXP _lefko3_add_stage(SEXP mpmSEXP, SEXP add_beforeSEXP, SEXP add_afterSEXP, SEXP stage_nameSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const RObject >::type mpm(mpmSEXP);
+    Rcpp::traits::input_parameter< int >::type add_before(add_beforeSEXP);
+    Rcpp::traits::input_parameter< int >::type add_after(add_afterSEXP);
+    Rcpp::traits::input_parameter< Nullable<CharacterVector> >::type stage_name(stage_nameSEXP);
+    rcpp_result_gen = Rcpp::wrap(add_stage(mpm, add_before, add_after, stage_name));
+    return rcpp_result_gen;
+END_RCPP
+}
 // sf_reassess
 Rcpp::List sf_reassess(const DataFrame& stageframe, Nullable<DataFrame> supplement, Nullable<DataFrame> overwrite, Nullable<NumericMatrix> repmatrix, bool agemat, bool historical, int format);
 RcppExport SEXP _lefko3_sf_reassess(SEXP stageframeSEXP, SEXP supplementSEXP, SEXP overwriteSEXP, SEXP repmatrixSEXP, SEXP agematSEXP, SEXP historicalSEXP, SEXP formatSEXP) {
@@ -909,14 +923,14 @@ BEGIN_RCPP
 END_RCPP
 }
 // density_input
-DataFrame density_input(List mpm, RObject stage3, RObject stage2, Nullable<RObject> stage1, Nullable<RObject> age2, Nullable<RObject> style, Nullable<RObject> time_delay, Nullable<RObject> alpha, Nullable<RObject> beta, Nullable<RObject> type, Nullable<RObject> type_t12);
+DataFrame density_input(List mpm, Nullable<RObject> stage3, Nullable<RObject> stage2, Nullable<RObject> stage1, Nullable<RObject> age2, Nullable<RObject> style, Nullable<RObject> time_delay, Nullable<RObject> alpha, Nullable<RObject> beta, Nullable<RObject> type, Nullable<RObject> type_t12);
 RcppExport SEXP _lefko3_density_input(SEXP mpmSEXP, SEXP stage3SEXP, SEXP stage2SEXP, SEXP stage1SEXP, SEXP age2SEXP, SEXP styleSEXP, SEXP time_delaySEXP, SEXP alphaSEXP, SEXP betaSEXP, SEXP typeSEXP, SEXP type_t12SEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< List >::type mpm(mpmSEXP);
-    Rcpp::traits::input_parameter< RObject >::type stage3(stage3SEXP);
-    Rcpp::traits::input_parameter< RObject >::type stage2(stage2SEXP);
+    Rcpp::traits::input_parameter< Nullable<RObject> >::type stage3(stage3SEXP);
+    Rcpp::traits::input_parameter< Nullable<RObject> >::type stage2(stage2SEXP);
     Rcpp::traits::input_parameter< Nullable<RObject> >::type stage1(stage1SEXP);
     Rcpp::traits::input_parameter< Nullable<RObject> >::type age2(age2SEXP);
     Rcpp::traits::input_parameter< Nullable<RObject> >::type style(styleSEXP);
@@ -1073,6 +1087,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_lefko3_sf_skeleton", (DL_FUNC) &_lefko3_sf_skeleton, 2},
     {"_lefko3_hist_null", (DL_FUNC) &_lefko3_hist_null, 3},
     {"_lefko3_lmean", (DL_FUNC) &_lefko3_lmean, 3},
+    {"_lefko3_add_stage", (DL_FUNC) &_lefko3_add_stage, 4},
     {"_lefko3_sf_reassess", (DL_FUNC) &_lefko3_sf_reassess, 7},
     {"_lefko3_f_projection3", (DL_FUNC) &_lefko3_f_projection3, 56},
     {"_lefko3_mpm_create", (DL_FUNC) &_lefko3_mpm_create, 56},
