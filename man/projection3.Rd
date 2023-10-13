@@ -149,8 +149,8 @@ replicates if set.
 \section{Notes}{
 
 Projections are run both at the patch level and at the population level.
-Population level estimates will be noted at the end of the
-data frame with 0 entries for patch designation.
+Population level estimates will be noted at the end of the data frame with
+\code{0} entries for patch designation.
 
 Weightings given in \code{tweights} do not need to sum to 1. Final
 weightings used will be based on the proportion per element of the sum of

@@ -69,6 +69,12 @@ Acts as a convenient wrapper for the \code{plot.default()} function.
 
 Output plots are currently limited to time series and state space plots of
 population size.
+
+The default settings will preferentially plot any projections marked as
+\code{0} in the \code{patch} portion of the \code{labels} element of the
+input MPM. This can produce confusing results if a mean MPM resulting from
+the \code{lmean()} function is used as input and the \code{add_mean} setting
+is set to the default, which is \code{TRUE}.
 }
 
 \examples{

@@ -33,6 +33,7 @@
 #' @details lefko3 also includes example datasets complete with sample code.
 #' 
 #' @docType package
+#' @aliases lefko3-package
 #' @author Richard P. Shefferson <cdorm@g.ecc.u-tokyo.ac.jp>
 #' @author Johan Ehrlén
 #' @references Shefferson, R.P., J. Ehrlen, and S. Kurokawa. 2021. 
@@ -53,5 +54,5 @@
 #' @importFrom stats as.formula median pchisq poisson var logLik complete.cases
 #' @importFrom VGAM posnegbinomial pospoisson vglm predictvglm
 #' @useDynLib lefko3
-#' @name lefko3
+#' @name lefko3-package
 NULL

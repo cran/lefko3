@@ -20,14 +20,14 @@ add_lM(
 \item{lM}{The lefkoMat object to add matrices to.}
 
 \item{Amats}{Either a single \code{A} matrix, or a list of \code{A} matrices.
-Not necessary if \code{Umats} and {Fmats} are both provided.}
+Not necessary if \code{Umats} and \code{Fmats} are both provided.}
 
 \item{Umats}{Either a single \code{U} matrix, or a list of \code{U} matrices.
-Not necessary if \code{Amats} and {Fmats} are both provided, or if
+Not necessary if \code{Amats} and \code{Fmats} are both provided, or if
 \code{UFdecomp = TRUE} and \code{entrystage} is provided.}
 
 \item{Fmats}{Either a single \code{F} matrix, or a list of \code{U} matrices.
-Not necessary if \code{Amats} and {Umats} are both provided, or if
+Not necessary if \code{Amats} and \code{Umats} are both provided, or if
 \code{UFdecomp = TRUE} and \code{entrystage} is provided.}
 
 \item{UFdecomp}{A logical value indicating whether U and F matrices should be

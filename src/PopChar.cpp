@@ -3498,6 +3498,7 @@ Rcpp::DataFrame density_reassess(DataFrame stageframe, DataFrame dens_inp,
     group_text(i) += std::to_string(all_groups(i));
   }
   
+  // Input variables in current density input frame
   StringVector stage3_di = dens_inp["stage3"];
   StringVector stage2_di = dens_inp["stage2"];
   StringVector stage1_di = dens_inp["stage1"];
@@ -3508,7 +3509,7 @@ Rcpp::DataFrame density_reassess(DataFrame stageframe, DataFrame dens_inp,
   NumericVector beta_di = dens_inp["beta"];
   IntegerVector type_di = dens_inp["type"];
   IntegerVector type_t12_di = dens_inp["type_t12"];
-  int di_rows = stage3_di.length();
+  int di_rows = stage3_di.length(); // Size of density input frame
   
   StringVector unique_stages = unique(stagevec);
   StringVector extra_terms = {"rep", "nrep", "immat", "mat", "prop", "npr", "all", "obs", "nobs"};
@@ -3537,7 +3538,8 @@ Rcpp::DataFrame density_reassess(DataFrame stageframe, DataFrame dens_inp,
   if (agestages.isNotNull()) {
     if (is<NumericVector>(agestages)) {
       if (agebystage) {
-        Rf_warningcall(R_NilValue, "Function density_input() requires an agestages object if input MPM is age-by-stage.");
+        Rf_warningcall(R_NilValue,
+          "Function density_input() requires an agestages object if input MPM is age-by-stage.");
         agebystage = false;
       }
       
@@ -4268,8 +4270,17 @@ Rcpp::DataFrame density_reassess(DataFrame stageframe, DataFrame dens_inp,
         }
       }
     }
-    if (s3_calls(i) == 0) s3_calls(i) = 1;
     
+    // Correct for unnecessary rows
+    int cv3_len {0};
+    
+    RObject check_stageid3_calls_i = as<RObject>(stageid3_calls(i));
+    if (!check_stageid3_calls_i.isNULL()) {
+      IntegerVector check_vec_3 = as<IntegerVector>(check_stageid3_calls_i);
+      cv3_len = static_cast<int>(check_vec_3.length());
+    }
+    if (s3_calls(i) == 0 && cv3_len > 0) s3_calls(i) = 1;
+
     // Time t
     if (stringcompare_hard(s2used, "prop")) {
       if (agebystage) {
@@ -5542,7 +5553,7 @@ DataFrame density_input(List mpm, Nullable<RObject> stage3 = R_NilValue,
     }
   }
   
-  if (stage3.isNotNull()) {
+  if (stage2.isNotNull()) {
     if (is<StringVector>(stage2)) {
       StringVector stage2_names_ = as<StringVector>(stage2);
       stage2_names = stage2_names_;

@@ -31,7 +31,8 @@ annual matrices. Defaults to equal weighting among occasions.}
 (\code{"yes"}) or dense matrix encoding (\code{"no"}). Defaults to
 \code{"auto"}, in which case sparse matrix encoding is used with square
 matrices with at least 50 rows and no more than 50\% of elements with values
-greater than zero.}
+greater than zero. Note that sparse matrix is used regardless if the input
+MPM is in sparse mtrix format.}
 
 \item{append_mats}{A logical value indicating whether to include the original
 A, U, and F matrices in the output \code{lefkoSens} object.}

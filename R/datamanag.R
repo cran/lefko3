@@ -2405,12 +2405,12 @@ create_lM <- function(mats, stageframe = NULL, hstages = NA, agestages = NA,
 #' 
 #' @param lM The lefkoMat object to add matrices to.
 #' @param Amats Either a single \code{A} matrix, or a list of \code{A} matrices.
-#' Not necessary if \code{Umats} and {Fmats} are both provided.
+#' Not necessary if \code{Umats} and \code{Fmats} are both provided.
 #' @param Umats Either a single \code{U} matrix, or a list of \code{U} matrices.
-#' Not necessary if \code{Amats} and {Fmats} are both provided, or if
+#' Not necessary if \code{Amats} and \code{Fmats} are both provided, or if
 #' \code{UFdecomp = TRUE} and \code{entrystage} is provided.
 #' @param Fmats Either a single \code{F} matrix, or a list of \code{U} matrices.
-#' Not necessary if \code{Amats} and {Umats} are both provided, or if
+#' Not necessary if \code{Amats} and \code{Umats} are both provided, or if
 #' \code{UFdecomp = TRUE} and \code{entrystage} is provided.
 #' @param UFdecomp A logical value indicating whether U and F matrices should be
 #' inferred from A matrices and the given \code{entrystage}. Defaults to TRUE.

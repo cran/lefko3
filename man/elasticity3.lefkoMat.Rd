@@ -9,7 +9,7 @@
   stochastic = FALSE,
   steps = 10000,
   time_weights = NA,
-  force_sparse = "auto",
+  sparse = "auto",
   append_mats = FALSE,
   ...
 )
@@ -27,11 +27,12 @@ simulation. Defaults to 10,000.}
 \item{time_weights}{Numeric vector denoting the probabilistic weightings of
 annual matrices. Defaults to equal weighting among occasions.}
 
-\item{force_sparse}{A text string indicating whether to use sparse matrix
-encoding (\code{"yes"}) or not (\code{"no"}) with standard matrix input.
-Defaults to \code{"auto"}, in which case sparse matrix encoding is used with
-square matrices with at least 50 rows and no more than 50\% of elements with
-values greater than zero.}
+\item{sparse}{A text string indicating whether to use sparse matrix encoding
+(\code{"yes"}) or not (\code{"no"}) with standard matrix input. Defaults to
+\code{"auto"}, in which case sparse matrix encoding is used with square
+matrices with at least 50 rows and no more than 50\% of elements with values
+greater than zero. Note that sparse matrix is used regardless if the input
+MPM is in sparse matrix format.}
 
 \item{append_mats}{A logical value indicating whether to include the original
 A, U, and F matrices in the output \code{lefkoElas} object.}

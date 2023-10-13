@@ -7931,12 +7931,12 @@ namespace LefkoUtils {
           }
           
           if (proxy_col >= (noages - 1) && cont) {
-            proxy_row = target_col;
+            proxy_row = proxy_col; // Was target_col
           } else {
-            proxy_row = target_col + 1;
+            proxy_row = proxy_col + 1;
           }
           
-         if (!sparse) {
+          if (!sparse) {
             survtransmat(target_row, target_col) = survtransmat(proxy_row, proxy_col);
           } else {
             survtransmat_sp(target_row, target_col) = survtransmat_sp(proxy_row, proxy_col);
