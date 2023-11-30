@@ -98,7 +98,8 @@ Rcpp::NumericVector ricker3(double start_value, double alpha, double beta,
     int sepN_length = sepN.length();
     if (sepN_length != (time_steps - 1)) {
       time_steps = sepN_length - 1;
-      Rf_warningcall(R_NilValue, "Resetting time_steps to length of separate_N - 1.");
+      Rf_warningcall(R_NilValue,
+        "Resetting time_steps to length of separate_N - 1.");
     }
   }
   
@@ -248,7 +249,8 @@ Rcpp::NumericVector beverton3(double start_value, double alpha, double beta,
     int sepN_length = sepN.length();
     if (sepN_length != (time_steps - 1)) {
       time_steps = sepN_length - 1;
-      Rf_warningcall(R_NilValue, "Resetting time_steps to length of separate_N - 1.");
+      Rf_warningcall(R_NilValue,
+        "Resetting time_steps to length of separate_N - 1.");
     }
   }
   
@@ -390,7 +392,8 @@ Rcpp::NumericVector usher3(double start_value, double alpha, double beta,
     int sepN_length = sepN.length();
     if (sepN_length != (time_steps - 1)) {
       time_steps = sepN_length - 1;
-      Rf_warningcall(R_NilValue, "Resetting time_steps to length of separate_N - 1.");
+      Rf_warningcall(R_NilValue,
+        "Resetting time_steps to length of separate_N - 1.");
     }
   }
   
@@ -541,7 +544,8 @@ Rcpp::NumericVector logistic3(double start_value, double alpha,
     int sepN_length = sepN.length();
     if (sepN_length != (time_steps - 1)) {
       time_steps = sepN_length - 1;
-      Rf_warningcall(R_NilValue, "Resetting time_steps to length of separate_N - 1.");
+      Rf_warningcall(R_NilValue,
+        "Resetting time_steps to length of separate_N - 1.");
     }
   }
   

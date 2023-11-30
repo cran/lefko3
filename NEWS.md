@@ -1,3 +1,30 @@
+# lefko3 6.1.3 (2023-11-30)
+
+## NEW FEATURES
+
+* Function markov_run() created to allow 1st order Markovian temporally
+  stochastic simulations.
+  
+* Function create_lM() can now handle both regular and sparse matrices.
+
+## USER VISIBLE CHANGES
+
+* Some warning and error messages have been simplified.
+
+## BUG FIXES
+
+* Function projection3() no longer crashes when using a fixed vector of year
+  inputs with lefkoMat objects holding patch-level MPMs.
+
+# lefko3 6.1.2 (2023-11-07)
+
+## BUG FIXES
+
+* All MPMs can now be estimated without supplemental tables.
+
+* Functions add_lM(), delete_lM(), and subset_lM() no longer fail with sparse
+  matrices.
+
 # lefko3 6.1.1 (2023-10-13)
 
 ## NEW FEATURES

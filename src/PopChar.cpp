@@ -446,7 +446,7 @@ Rcpp::List sf_create (NumericVector sizes,
     }
     
     if (used_sizes != 3) {
-      throw Rcpp::exception("Vector sizesc should only be set if vector sizesb is also set.",
+      throw Rcpp::exception("Only use vector sizesc if vector sizesb is also used.",
         false);
     }
   }
@@ -545,7 +545,8 @@ Rcpp::List sf_create (NumericVector sizes,
     }
     
     if (max(matstatus_true) > 1 || min(matstatus_true) < 0) {
-      throw Rcpp::exception("Vector matstatus should be composed only of 0s and 1s.", false);
+      throw Rcpp::exception("Vector matstatus should be composed only of 0s and 1s.",
+        false);
     }
   }
   if (immstatus.isNotNull()) {
@@ -736,11 +737,11 @@ Rcpp::List sf_create (NumericVector sizes,
   }
   if (binhalfwidthb.isNotNull()) {
     if (used_sizes == 1) {
-      String eat_my_shorts = "Vector binhalfwidthb should only be used if multiple ";
-      String eat_my_shorts1 = "size variables are being used for classification.";
-      eat_my_shorts += eat_my_shorts1;
+      String ems = "Vector binhalfwidthb should only be used if multiple ";
+      String ems1 = "size variables are being used for classification.";
+      ems += ems1;
       
-      throw Rcpp::exception(eat_my_shorts.get_cstring(), false);
+      throw Rcpp::exception(ems.get_cstring(), false);
     }
     
     Rcpp::NumericVector binhalfwidthb_thru(binhalfwidthb);
@@ -756,7 +757,8 @@ Rcpp::List sf_create (NumericVector sizes,
           false);
       }
     } else {
-      Rf_warningcall(R_NilValue, "Sizeb half-binwidths are not used if sizebmin and sizebmax are input.");
+      Rf_warningcall(R_NilValue,
+        "Sizeb half-binwidths are not used if sizebmin and sizebmax are input.");
     }
   } else if (used_sizes > 1 && !sizeb_manual) {
     for (int i = 0; i < binhalfwidthb_true.length(); i++) {
@@ -765,11 +767,11 @@ Rcpp::List sf_create (NumericVector sizes,
   }
   if (binhalfwidthc.isNotNull()) {
     if (used_sizes < 3) {
-      String eat_my_shorts = "Vector binhalfwidthc should only be used if three ";
-      String eat_my_shorts1 = "size variables are being used for classification.";
-      eat_my_shorts += eat_my_shorts1;
+      String ems = "Vector binhalfwidthc should only be used if three ";
+      String ems1 = "size variables are being used for classification.";
+      ems += ems1;
       
-      throw Rcpp::exception(eat_my_shorts.get_cstring(), false);
+      throw Rcpp::exception(ems.get_cstring(), false);
     }
     
     Rcpp::NumericVector binhalfwidthc_thru(binhalfwidthc);
@@ -785,7 +787,8 @@ Rcpp::List sf_create (NumericVector sizes,
           false);
       }
     } else {
-      Rf_warningcall(R_NilValue, "Sizec half-binwidths are not used if sizecmin and sizecmax are input.");
+      Rf_warningcall(R_NilValue,
+        "Sizec half-binwidths are not used if sizecmin and sizecmax are input.");
     }
   } else if (used_sizes > 2 && !sizec_manual) {
     for (int i = 0; i < binhalfwidthc_true.length(); i++) {
@@ -828,15 +831,11 @@ Rcpp::List sf_create (NumericVector sizes,
   
   
   if (ipmbins < 2) {
-    throw Rcpp::exception("Please enter a valid integer greater than 1 for ipmbins option.",
-      false);
+    throw Rcpp::exception("Option ipmbins takes only positive integers.", false);
     
   } else if (ipmbins > 100) {
-    String eat_my_shorts = "High ipmbin numbers may lead to dramatic decreases in ";
-    String eat_my_shorts1 = "statistical power and overparameterized matrices.\n";
-    eat_my_shorts += eat_my_shorts1;
-    
-    Rf_warningcall(R_NilValue, eat_my_shorts.get_cstring());
+    Rf_warningcall(R_NilValue,
+      "High ipmbin numbers may yield overparameterized matrices.\n");
   }
   
   // Now the automated size classification processing
@@ -862,21 +861,21 @@ Rcpp::List sf_create (NumericVector sizes,
   // Automated size classification with sizea
   if (ipm_a > 0) {
     if (IntegerVector::is_na(ipmbins)) {
-      String eat_my_shorts = "The number of bins for automated size classification of ";
-      String eat_my_shorts1 = "the primary size variable has not been set.";
-      eat_my_shorts += eat_my_shorts1;
+      String ems = "Number of bins for auto size classification of ";
+      String ems1 = "the primary size variable has not been set.";
+      ems += ems1;
       
-      throw Rcpp::exception(eat_my_shorts.get_cstring(), false);
+      throw Rcpp::exception(ems.get_cstring(), false);
     }
     
     if (ipm_a % 2 != 0) {
-      String eat_my_shorts = "The ipm designation must specify both the start size and the ";
-      String eat_my_shorts1 = "end size, requiring an even number of calls. Calls for automated ";
-      String eat_my_shorts2 = "size classification must be matched and not overlap.";
-      eat_my_shorts += eat_my_shorts1;
-      eat_my_shorts += eat_my_shorts2;
+      String ems = "The ipm designation must specify both the start size and the ";
+      String ems1 = "end size, requiring an even number of calls. Calls for auto ";
+      String ems2 = "size classification must be matched and not overlapping.";
+      ems += ems1;
+      ems += ems2;
       
-      throw Rcpp::exception(eat_my_shorts.get_cstring(), false);
+      throw Rcpp::exception(ems.get_cstring(), false);
     }
     
     arma::uvec check_elems = find(ipm_calls_a); // This vector points out which rows have ipm designations
@@ -905,21 +904,21 @@ Rcpp::List sf_create (NumericVector sizes,
       
       if (go_ahead == 1) {
         if (match_count > 1) {
-          String eat_my_shorts = "Stages marked ipm must have equal characteristics in pairs ";
-          String eat_my_shorts1 = "only, corresponding to size minimum and maximum. More than 2 ";
-          String eat_my_shorts2 = "stages with the same characteristics marked ipm cannot be handled.";
-          eat_my_shorts += eat_my_shorts1;
-          eat_my_shorts += eat_my_shorts2;
+          String ems = "Stages marked ipm must have equal characteristics in pairs ";
+          String ems1 = "only, corresponding to size minima and maxima. More than 2 ";
+          String ems2 = "stages with the same characteristics cannot be marked ipm.";
+          ems += ems1;
+          ems += ems2;
           
-          throw Rcpp::exception(eat_my_shorts.get_cstring(), false);
+          throw Rcpp::exception(ems.get_cstring(), false);
         } else if (match_count == 0) {
-          String eat_my_shorts = "Stages marked ipm must have equal characteristics in pairs ";
-          String eat_my_shorts1 = "only, corresponding to size minimum and maximum. Single stages ";
-          String eat_my_shorts2 = "with unique characteristics marked ipm cannot be handled.";
-          eat_my_shorts += eat_my_shorts1;
-          eat_my_shorts += eat_my_shorts2;
+          String ems = "Stages marked ipm must have equal characteristics in pairs ";
+          String ems1 = "only, corresponding to size minimum and maximum. Single stages ";
+          String ems2 = "with unique characteristics cannot be marked ipm.";
+          ems += ems1;
+          ems += ems2;
           
-          throw Rcpp::exception(eat_my_shorts.get_cstring(), false);
+          throw Rcpp::exception(ems.get_cstring(), false);
         }
         
         // Now we work out the minimum and maximum sizes
@@ -933,7 +932,8 @@ Rcpp::List sf_create (NumericVector sizes,
           minsize = sizes(check_elems(i));
           maxsize = sizes(check_elems(main_index_1));
         } else {
-          throw Rcpp::exception("Size values used in IPM classification must differ.", false);
+          throw Rcpp::exception("Size values used in IPM classification must differ.",
+            false);
         }
         
         // Keep track of the entries to delete from the original vectors
@@ -1025,21 +1025,21 @@ Rcpp::List sf_create (NumericVector sizes,
   // IPM classification with sizeb
   if (ipm_b > 0) {
     if (IntegerVector::is_na(ipmbinsb)) {
-      String eat_my_shorts = "The number of bins for automated size classification ";
-      String eat_my_shorts1 = "of the secondary size variable has not been set.";
-      eat_my_shorts += eat_my_shorts1;
+      String ems = "Number of bins for auto size classification ";
+      String ems1 = "of the secondary size variable has not been set.";
+      ems += ems1;
       
-      throw Rcpp::exception(eat_my_shorts.get_cstring(), false);
+      throw Rcpp::exception(ems.get_cstring(), false);
     }
     
     if (ipm_b % 2 != 0) {
-      String eat_my_shorts = "The ipm designation must specify both the start size and the end ";
-      String eat_my_shorts1 = "size, requiring an even number of calls. Calls for automated ";
-      String eat_my_shorts2 = "size classification must be matched and not overlap.";
-      eat_my_shorts += eat_my_shorts1;
-      eat_my_shorts += eat_my_shorts2;
+      String ems = "The ipm designation must specify both the start size and the end ";
+      String ems1 = "size, requiring an even number of calls. Calls for auto ";
+      String ems2 = "size classification must be matched and not overlap.";
+      ems += ems1;
+      ems += ems2;
       
-      throw Rcpp::exception(eat_my_shorts.get_cstring(), false);
+      throw Rcpp::exception(ems.get_cstring(), false);
     }
     
     arma::uvec check_elems = find(ipm_calls_b); // This vector points out which rows have ipm designations
@@ -1069,21 +1069,21 @@ Rcpp::List sf_create (NumericVector sizes,
       if (go_ahead == 1) {
         
         if (match_count > 1) {
-          String eat_my_shorts = "Stages marked ipm must have equal characteristics in pairs ";
-          String eat_my_shorts1 = "only, corresponding to size minimum and maximum. More than 2 ";
-          String eat_my_shorts2 = "stages with the same characteristics marked ipm cannot be handled.";
-          eat_my_shorts += eat_my_shorts1;
-          eat_my_shorts += eat_my_shorts2;
+          String ems = "Stages marked ipm must have equal characteristics in pairs ";
+          String ems1 = "only, corresponding to size minimum and maximum. More than 2 ";
+          String ems2 = "stages with the same characteristics cannot be marked ipm.";
+          ems += ems1;
+          ems += ems2;
           
-          throw Rcpp::exception(eat_my_shorts.get_cstring(), false);
+          throw Rcpp::exception(ems.get_cstring(), false);
         } else if (match_count == 0) {
-          String eat_my_shorts = "Stages marked ipm must have equal characteristics in pairs ";
-          String eat_my_shorts1 = "only, corresponding to size minimum and maximum. Single stages ";
-          String eat_my_shorts2 = "with unique characteristics marked ipm cannot be handled.";
-          eat_my_shorts += eat_my_shorts1;
-          eat_my_shorts += eat_my_shorts2;
+          String ems = "Stages marked ipm must have equal characteristics in pairs ";
+          String ems1 = "only, corresponding to size minimum and maximum. Single stages ";
+          String ems2 = "with unique characteristics cannot be marked ipm.";
+          ems += ems1;
+          ems += ems2;
           
-          throw Rcpp::exception(eat_my_shorts.get_cstring(), false);
+          throw Rcpp::exception(ems.get_cstring(), false);
         }
         
         // Now we work out the minimum and maximum sizes
@@ -1097,7 +1097,8 @@ Rcpp::List sf_create (NumericVector sizes,
           minsize = sizesb_true(check_elems(i));
           maxsize = sizesb_true(check_elems(main_index_1));
         } else {
-          throw Rcpp::exception("Size values used in IPM classification must differ.", false);
+          throw Rcpp::exception("Size values used in IPM classification must differ.",
+            false);
         }
         
         // Keep track of the entries to delete from the original vectors
@@ -1189,21 +1190,21 @@ Rcpp::List sf_create (NumericVector sizes,
   // IPM classification with sizec
   if (ipm_c > 0) {
     if (IntegerVector::is_na(ipmbinsc)) {
-      String eat_my_shorts = "The number of bins for automated size classification ";
-      String eat_my_shorts1 = "of the tertiary size variable has not been set.";
-      eat_my_shorts += eat_my_shorts1;
+      String ems = "Number of bins for auto size classification ";
+      String ems1 = "of the tertiary size variable has not been set.";
+      ems += ems1;
       
-      throw Rcpp::exception(eat_my_shorts.get_cstring(), false);
+      throw Rcpp::exception(ems.get_cstring(), false);
     }
     
     if (ipm_c % 2 != 0) {
-      String eat_my_shorts = "The ipm designation must specify both the start size and the end ";
-      String eat_my_shorts1 = "size, requiring an even number of calls. Calls for automated ";
-      String eat_my_shorts2 = "size classification must be matched and not overlap.";
-      eat_my_shorts += eat_my_shorts1;
-      eat_my_shorts += eat_my_shorts2;
+      String ems = "The ipm designation must specify both the start size and the end ";
+      String ems1 = "size, requiring an even number of calls. Calls for auto ";
+      String ems2 = "size classification must be matched and not overlapping.";
+      ems += ems1;
+      ems += ems2;
       
-      throw Rcpp::exception(eat_my_shorts.get_cstring(), false);
+      throw Rcpp::exception(ems.get_cstring(), false);
     }
     
     arma::uvec check_elems = find(ipm_calls_c); // This vector points out which rows have ipm designations
@@ -1233,21 +1234,21 @@ Rcpp::List sf_create (NumericVector sizes,
       if (go_ahead == 1) {
         
         if (match_count > 1) {
-          String eat_my_shorts = "Stages marked ipm must have equal characteristics in pairs ";
-          String eat_my_shorts1 = "only, corresponding to size minimum and maximum. More than 2 ";
-          String eat_my_shorts2 = "stages with the same characteristics marked ipm cannot be handled.";
-          eat_my_shorts += eat_my_shorts1;
-          eat_my_shorts += eat_my_shorts2;
+          String ems = "Stages marked ipm must have equal characteristics in pairs ";
+          String ems1 = "only, corresponding to size minimum and maximum. More than 2 ";
+          String ems2 = "stages with the same characteristics cannot be marked ipm.";
+          ems += ems1;
+          ems += ems2;
           
-          throw Rcpp::exception(eat_my_shorts.get_cstring(), false);
+          throw Rcpp::exception(ems.get_cstring(), false);
         } else if (match_count == 0) {
-          String eat_my_shorts = "Stages marked ipm must have equal characteristics in pairs ";
-          String eat_my_shorts1 = "only, corresponding to size minimum and maximum. Single stages ";
-          String eat_my_shorts2 = "with unique characteristics marked ipm cannot be handled.";
-          eat_my_shorts += eat_my_shorts1;
-          eat_my_shorts += eat_my_shorts2;
+          String ems = "Stages marked ipm must have equal characteristics in pairs ";
+          String ems1 = "only, corresponding to size minimum and maximum. Single stages ";
+          String ems2 = "with unique characteristics cannot be marked ipm.";
+          ems += ems1;
+          ems += ems2;
           
-          throw Rcpp::exception(eat_my_shorts.get_cstring(), false);
+          throw Rcpp::exception(ems.get_cstring(), false);
         }
         
         // Now we work out the minimum and maximum sizes
@@ -1261,7 +1262,8 @@ Rcpp::List sf_create (NumericVector sizes,
           minsize = sizesc_true(check_elems(i));
           maxsize = sizesc_true(check_elems(main_index_1));
         } else {
-          throw Rcpp::exception("Size values used in IPM classification must differ.", false);
+          throw Rcpp::exception("Size values used in IPM classification must differ.",
+            false);
         }
         
         // Keep track of the entries to delete from the original vectors
@@ -1353,29 +1355,29 @@ Rcpp::List sf_create (NumericVector sizes,
   // Automated size classification with sizea & sizeb together
   if (ipm_ab > 0) {
     if (IntegerVector::is_na(ipmbins)) {
-      String eat_my_shorts = "The number of bins for automated size classification ";
-      String eat_my_shorts1 = "of the primary size variable has not been set.";
-      eat_my_shorts += eat_my_shorts1;
+      String ems = "Number of bins for auto size classification ";
+      String ems1 = "of the primary size variable has not been set.";
+      ems += ems1;
       
-      throw Rcpp::exception(eat_my_shorts.get_cstring(), false);
+      throw Rcpp::exception(ems.get_cstring(), false);
     }
     
     if (IntegerVector::is_na(ipmbinsb)) {
-      String eat_my_shorts = "The number of bins for automated size classification ";
-      String eat_my_shorts1 = "of the secondary size variable has not been set.";
-      eat_my_shorts += eat_my_shorts1;
+      String ems = "Number of bins for auto size classification ";
+      String ems1 = "of the secondary size variable has not been set.";
+      ems += ems1;
       
-      throw Rcpp::exception(eat_my_shorts.get_cstring(), false);
+      throw Rcpp::exception(ems.get_cstring(), false);
     }
     
     if (ipm_ab % 2 != 0) {
-      String eat_my_shorts = "The ipm designation must specify both the start size and the end ";
-      String eat_my_shorts1 = "size, requiring an even number of calls. Calls for automated ";
-      String eat_my_shorts2 = "size classification must be matched and not overlap.";
-      eat_my_shorts += eat_my_shorts1;
-      eat_my_shorts += eat_my_shorts2;
+      String ems = "The ipm designation must specify both the start size and the end ";
+      String ems1 = "size, requiring an even number of calls. Calls for auto ";
+      String ems2 = "size classification must be matched and not overlapping.";
+      ems += ems1;
+      ems += ems2;
       
-      throw Rcpp::exception(eat_my_shorts.get_cstring(), false);
+      throw Rcpp::exception(ems.get_cstring(), false);
     }
     
     arma::uvec check_elems = find(ipm_calls_ab); // This vector points out which rows have ipm designations
@@ -1405,21 +1407,21 @@ Rcpp::List sf_create (NumericVector sizes,
       if (go_ahead == 1) {
         
         if (match_count > 1) {
-          String eat_my_shorts = "Stages marked ipm must have equal characteristics in pairs ";
-          String eat_my_shorts1 = "only, corresponding to size minimum and maximum. More than 2 ";
-          String eat_my_shorts2 = "stages with the same characteristics marked ipm cannot be handled.";
-          eat_my_shorts += eat_my_shorts1;
-          eat_my_shorts += eat_my_shorts2;
+          String ems = "Stages marked ipm must have equal characteristics in pairs ";
+          String ems1 = "only, corresponding to size minimum and maximum. More than 2 ";
+          String ems2 = "stages with the same characteristics cannot be marked ipm.";
+          ems += ems1;
+          ems += ems2;
           
-          throw Rcpp::exception(eat_my_shorts.get_cstring(), false);
+          throw Rcpp::exception(ems.get_cstring(), false);
         } else if (match_count == 0) {
-          String eat_my_shorts = "Stages marked ipm must have equal characteristics in pairs ";
-          String eat_my_shorts1 = "only, corresponding to size minimum and maximum. Single stages ";
-          String eat_my_shorts2 = "with unique characteristics marked ipm cannot be handled.";
-          eat_my_shorts += eat_my_shorts1;
-          eat_my_shorts += eat_my_shorts2;
+          String ems = "Stages marked ipm must have equal characteristics in pairs ";
+          String ems1 = "only, corresponding to size minimum and maximum. Single stages ";
+          String ems2 = "with unique characteristics cannot be marked ipm.";
+          ems += ems1;
+          ems += ems2;
           
-          throw Rcpp::exception(eat_my_shorts.get_cstring(), false);
+          throw Rcpp::exception(ems.get_cstring(), false);
         }
         
         // Now we work out the minimum and maximum sizes
@@ -1435,7 +1437,8 @@ Rcpp::List sf_create (NumericVector sizes,
           minsize_a = sizes(check_elems(i));
           maxsize_a = sizes(check_elems(main_index_1));
         } else {
-          throw Rcpp::exception("Size values used in IPM classification must differ.", false);
+          throw Rcpp::exception("Size values used in IPM classification must differ.",
+            false);
         }
         if (sizesb_true(check_elems(i)) > sizesb_true(check_elems(main_index_1))) {
           maxsize_b = sizesb_true(check_elems(i));
@@ -1444,7 +1447,8 @@ Rcpp::List sf_create (NumericVector sizes,
           minsize_b = sizesb_true(check_elems(i));
           maxsize_b = sizesb_true(check_elems(main_index_1));
         } else {
-          throw Rcpp::exception("Size values used in IPM classification must differ.", false);
+          throw Rcpp::exception("Size values used in IPM classification must differ.",
+            false);
         }
         
         // Keep track of the entries to delete from the original vectors
@@ -1544,29 +1548,29 @@ Rcpp::List sf_create (NumericVector sizes,
   // Automated size classification with sizea & sizec together
   if (ipm_ac > 0) {
     if (IntegerVector::is_na(ipmbins)) {
-      String eat_my_shorts = "The number of bins for automated size classification ";
-      String eat_my_shorts1 = "of the primary size variable has not been set.";
-      eat_my_shorts += eat_my_shorts1;
+      String ems = "Number of bins for automated size classification ";
+      String ems1 = "of the primary size variable has not been set.";
+      ems += ems1;
       
-      throw Rcpp::exception(eat_my_shorts.get_cstring(), false);
+      throw Rcpp::exception(ems.get_cstring(), false);
     }
     
     if (IntegerVector::is_na(ipmbinsc)) {
-      String eat_my_shorts = "The number of bins for automated size classification ";
-      String eat_my_shorts1 = "of the tertiary size variable has not been set.";
-      eat_my_shorts += eat_my_shorts1;
+      String ems = "Number of bins for automated size classification ";
+      String ems1 = "of the tertiary size variable has not been set.";
+      ems += ems1;
       
-      throw Rcpp::exception(eat_my_shorts.get_cstring(), false);
+      throw Rcpp::exception(ems.get_cstring(), false);
     }
     
     if (ipm_ac % 2 != 0) {
-      String eat_my_shorts = "The ipm designation must specify both the start size and the end ";
-      String eat_my_shorts1 = "size, requiring an even number of calls. Calls for automated ";
-      String eat_my_shorts2 = "size classification must be matched and not overlap.";
-      eat_my_shorts += eat_my_shorts1;
-      eat_my_shorts += eat_my_shorts2;
+      String ems = "The ipm designation must specify both the start size and the end ";
+      String ems1 = "size, requiring an even number of calls. Calls for auto ";
+      String ems2 = "size classification must be matched and not overlapping.";
+      ems += ems1;
+      ems += ems2;
       
-      throw Rcpp::exception(eat_my_shorts.get_cstring(), false);
+      throw Rcpp::exception(ems.get_cstring(), false);
     }
     
     arma::uvec check_elems = find(ipm_calls_ac); // This vector points out which rows have ipm designations
@@ -1595,21 +1599,21 @@ Rcpp::List sf_create (NumericVector sizes,
       
       if (go_ahead == 1) {
         if (match_count > 1) {
-          String eat_my_shorts = "Stages marked ipm must have equal characteristics in pairs ";
-          String eat_my_shorts1 = "only, corresponding to size minimum and maximum. More than 2 ";
-          String eat_my_shorts2 = "stages with the same characteristics marked ipm cannot be handled.";
-          eat_my_shorts += eat_my_shorts1;
-          eat_my_shorts += eat_my_shorts2;
+          String ems = "Stages marked ipm must have equal characteristics in pairs ";
+          String ems1 = "only, corresponding to size minimum and maximum. More than 2 ";
+          String ems2 = "stages with the same characteristics cannot be marked ipm.";
+          ems += ems1;
+          ems += ems2;
           
-          throw Rcpp::exception(eat_my_shorts.get_cstring(), false);
+          throw Rcpp::exception(ems.get_cstring(), false);
         } else if (match_count == 0) {
-          String eat_my_shorts = "Stages marked ipm must have equal characteristics in pairs ";
-          String eat_my_shorts1 = "only, corresponding to size minimum and maximum. Single stages ";
-          String eat_my_shorts2 = "with unique characteristics marked ipm cannot be handled.";
-          eat_my_shorts += eat_my_shorts1;
-          eat_my_shorts += eat_my_shorts2;
+          String ems = "Stages marked ipm must have equal characteristics in pairs ";
+          String ems1 = "only, corresponding to size minimum and maximum. Single stages ";
+          String ems2 = "with unique characteristics cannot be marked ipm.";
+          ems += ems1;
+          ems += ems2;
           
-          throw Rcpp::exception(eat_my_shorts.get_cstring(), false);
+          throw Rcpp::exception(ems.get_cstring(), false);
         }
         
         // Now we work out the minimum and maximum sizes
@@ -1625,7 +1629,8 @@ Rcpp::List sf_create (NumericVector sizes,
           minsize_a = sizes(check_elems(i));
           maxsize_a = sizes(check_elems(main_index_1));
         } else {
-          throw Rcpp::exception("Size values used in IPM classification must differ.", false);
+          throw Rcpp::exception("Size values used in IPM classification must differ.",
+            false);
         }
         if (sizesc_true(check_elems(i)) > sizesc_true(check_elems(main_index_1))) {
           maxsize_c = sizesc_true(check_elems(i));
@@ -1634,7 +1639,8 @@ Rcpp::List sf_create (NumericVector sizes,
           minsize_c = sizesc_true(check_elems(i));
           maxsize_c = sizesc_true(check_elems(main_index_1));
         } else {
-          throw Rcpp::exception("Size values used in IPM classification must differ.", false);
+          throw Rcpp::exception("Size values used in IPM classification must differ.",
+            false);
         }
         
         // Keep track of the entries to delete from the original vectors
@@ -1734,29 +1740,29 @@ Rcpp::List sf_create (NumericVector sizes,
   // Automated size classification with sizeb & sizec together
   if (ipm_bc > 0) {
     if (IntegerVector::is_na(ipmbinsb)) {
-      String eat_my_shorts = "The number of bins for automated size classification ";
-      String eat_my_shorts1 = "of the primary size variable has not been set.";
-      eat_my_shorts += eat_my_shorts1;
+      String ems = "Number of bins for automated size classification ";
+      String ems1 = "of the primary size variable has not been set.";
+      ems += ems1;
       
-      throw Rcpp::exception(eat_my_shorts.get_cstring(), false);
+      throw Rcpp::exception(ems.get_cstring(), false);
     }
     
     if (IntegerVector::is_na(ipmbinsc)) {
-      String eat_my_shorts = "The number of bins for automated size classification ";
-      String eat_my_shorts1 = "of the primary size variable has not been set.";
-      eat_my_shorts += eat_my_shorts1;
+      String ems = "Number of bins for automated size classification ";
+      String ems1 = "of the primary size variable has not been set.";
+      ems += ems1;
       
-      throw Rcpp::exception(eat_my_shorts.get_cstring(), false);
+      throw Rcpp::exception(ems.get_cstring(), false);
     }
     
     if (ipm_bc % 2 != 0) {
-      String eat_my_shorts = "The ipm designation must specify both the start size and the end ";
-      String eat_my_shorts1 = "size, requiring an even number of calls. Calls for automated ";
-      String eat_my_shorts2 = "size classification must be matched and not overlap.";
-      eat_my_shorts += eat_my_shorts1;
-      eat_my_shorts += eat_my_shorts2;
+      String ems = "The ipm designation must specify both the start size and the end ";
+      String ems1 = "size, requiring an even number of calls. Calls for automated ";
+      String ems2 = "size classification must be matched and not overlapping.";
+      ems += ems1;
+      ems += ems2;
       
-      throw Rcpp::exception(eat_my_shorts.get_cstring(), false);
+      throw Rcpp::exception(ems.get_cstring(), false);
     }
     
     arma::uvec check_elems = find(ipm_calls_bc); // This vector points out which rows have ipm designations
@@ -1785,21 +1791,21 @@ Rcpp::List sf_create (NumericVector sizes,
       
       if (go_ahead == 1) {
         if (match_count > 1) {
-          String eat_my_shorts = "Stages marked ipm must have equal characteristics in pairs ";
-          String eat_my_shorts1 = "only, corresponding to size minimum and maximum. More than 2 ";
-          String eat_my_shorts2 = "stages with the same characteristics marked ipm cannot be handled.";
-          eat_my_shorts += eat_my_shorts1;
-          eat_my_shorts += eat_my_shorts2;
+          String ems = "Stages marked ipm must have equal characteristics in pairs ";
+          String ems1 = "only, corresponding to size minimum and maximum. More than 2 ";
+          String ems2 = "stages with the same characteristics cannot be marked ipm.";
+          ems += ems1;
+          ems += ems2;
           
-          throw Rcpp::exception(eat_my_shorts.get_cstring(), false);
+          throw Rcpp::exception(ems.get_cstring(), false);
         } else if (match_count == 0) {
-          String eat_my_shorts = "Stages marked ipm must have equal characteristics in pairs ";
-          String eat_my_shorts1 = "only, corresponding to size minimum and maximum. Single stages ";
-          String eat_my_shorts2 = "with unique characteristics marked ipm cannot be handled.";
-          eat_my_shorts += eat_my_shorts1;
-          eat_my_shorts += eat_my_shorts2;
+          String ems = "Stages marked ipm must have equal characteristics in pairs ";
+          String ems1 = "only, corresponding to size minimum and maximum. Single stages ";
+          String ems2 = "with unique characteristics cannot be marked ipm.";
+          ems += ems1;
+          ems += ems2;
           
-          throw Rcpp::exception(eat_my_shorts.get_cstring(), false);
+          throw Rcpp::exception(ems.get_cstring(), false);
         }
         
         // Now we work out the minimum and maximum sizes
@@ -1815,7 +1821,8 @@ Rcpp::List sf_create (NumericVector sizes,
           minsize_b = sizesb_true(check_elems(i));
           maxsize_b = sizesb_true(check_elems(main_index_1));
         } else {
-          throw Rcpp::exception("Size values used in IPM classification must differ.", false);
+          throw Rcpp::exception("Size values used in IPM classification must differ.",
+            false);
         }
         if (sizesc_true(check_elems(i)) > sizesc_true(check_elems(main_index_1))) {
           maxsize_c = sizesc_true(check_elems(i));
@@ -1824,7 +1831,8 @@ Rcpp::List sf_create (NumericVector sizes,
           minsize_c = sizesc_true(check_elems(i));
           maxsize_c = sizesc_true(check_elems(main_index_1));
         } else {
-          throw Rcpp::exception("Size values used in IPM classification must differ.", false);
+          throw Rcpp::exception("Size values used in IPM classification must differ.",
+            false);
         }
         
         // Keep track of the entries to delete from the original vectors
@@ -1924,37 +1932,37 @@ Rcpp::List sf_create (NumericVector sizes,
   // Automated size classification with sizea, sizeb, & sizec together
   if (ipm_abc > 0) {
     if (IntegerVector::is_na(ipmbins)) {
-      String eat_my_shorts = "The number of bins for automated size classification ";
-      String eat_my_shorts1 = "of the primary size variable has not been set.";
-      eat_my_shorts += eat_my_shorts1;
+      String ems = "Number of bins for automated size classification ";
+      String ems1 = "of the primary size variable has not been set.";
+      ems += ems1;
       
-      throw Rcpp::exception(eat_my_shorts.get_cstring(), false);
+      throw Rcpp::exception(ems.get_cstring(), false);
     }
     
     if (IntegerVector::is_na(ipmbinsb)) {
-      String eat_my_shorts = "The number of bins for automated size classification ";
-      String eat_my_shorts1 = "of the secondary size variable has not been set.";
-      eat_my_shorts += eat_my_shorts1;
+      String ems = "Number of bins for automated size classification ";
+      String ems1 = "of the secondary size variable has not been set.";
+      ems += ems1;
       
-      throw Rcpp::exception(eat_my_shorts.get_cstring(), false);
+      throw Rcpp::exception(ems.get_cstring(), false);
     }
     
     if (IntegerVector::is_na(ipmbinsc)) {
-      String eat_my_shorts = "The number of bins for automated size classification ";
-      String eat_my_shorts1 = "of the tertiary size variable has not been set.";
-      eat_my_shorts += eat_my_shorts1;
+      String ems = "Number of bins for automated size classification ";
+      String ems1 = "of the tertiary size variable has not been set.";
+      ems += ems1;
       
-      throw Rcpp::exception(eat_my_shorts.get_cstring(), false);
+      throw Rcpp::exception(ems.get_cstring(), false);
     }
     
     if (ipm_abc % 2 != 0) {
-      String eat_my_shorts = "The ipm designation must specify both the start size and the end ";
-      String eat_my_shorts1 = "size, requiring an even number of calls. Calls for automated ";
-      String eat_my_shorts2 = "size classification must be matched and not overlap.";
-      eat_my_shorts += eat_my_shorts1;
-      eat_my_shorts += eat_my_shorts2;
+      String ems = "The ipm designation must specify both the start size and the end ";
+      String ems1 = "size, requiring an even number of calls. Calls for automated ";
+      String ems2 = "size classification must be matched and not overlapping.";
+      ems += ems1;
+      ems += ems2;
       
-      throw Rcpp::exception(eat_my_shorts.get_cstring(), false);
+      throw Rcpp::exception(ems.get_cstring(), false);
     }
     
     arma::uvec check_elems = find(ipm_calls_abc); // This vector points out which rows have ipm designations
@@ -1983,21 +1991,21 @@ Rcpp::List sf_create (NumericVector sizes,
       
       if (go_ahead == 1) {
         if (match_count > 1) {
-          String eat_my_shorts = "Stages marked ipm must have equal characteristics in pairs ";
-          String eat_my_shorts1 = "only, corresponding to size minimum and maximum. More than 2 ";
-          String eat_my_shorts2 = "stages with the same characteristics marked ipm cannot be handled.";
-          eat_my_shorts += eat_my_shorts1;
-          eat_my_shorts += eat_my_shorts2;
+          String ems = "Stages marked ipm must have equal characteristics in pairs ";
+          String ems1 = "only, corresponding to size minimum and maximum. More than 2 ";
+          String ems2 = "stages with the same characteristics cannot be marked ipm.";
+          ems += ems1;
+          ems += ems2;
           
-          throw Rcpp::exception(eat_my_shorts.get_cstring(), false);
+          throw Rcpp::exception(ems.get_cstring(), false);
         } else if (match_count == 0) {
-          String eat_my_shorts = "Stages marked ipm must have equal characteristics in pairs ";
-          String eat_my_shorts1 = "only, corresponding to size minimum and maximum. Single stages ";
-          String eat_my_shorts2 = "with unique characteristics marked ipm cannot be handled.";
-          eat_my_shorts += eat_my_shorts1;
-          eat_my_shorts += eat_my_shorts2;
+          String ems = "Stages marked ipm must have equal characteristics in pairs ";
+          String ems1 = "only, corresponding to size minimum and maximum. Single stages ";
+          String ems2 = "with unique characteristics cannot be marked ipm.";
+          ems += ems1;
+          ems += ems2;
           
-          throw Rcpp::exception(eat_my_shorts.get_cstring(), false);
+          throw Rcpp::exception(ems.get_cstring(), false);
         }
         
         // Now we work out the minimum and maximum sizes
@@ -2015,7 +2023,8 @@ Rcpp::List sf_create (NumericVector sizes,
           minsize_a = sizes(check_elems(i));
           maxsize_a = sizes(check_elems(main_index_1));
         } else {
-          throw Rcpp::exception("Size values used in IPM classification must differ.", false);
+          throw Rcpp::exception("Size values used in IPM classification must differ.",
+            false);
         }
         if (sizesb_true(check_elems(i)) > sizesb_true(check_elems(main_index_1))) {
           maxsize_b = sizesb_true(check_elems(i));
@@ -2024,7 +2033,8 @@ Rcpp::List sf_create (NumericVector sizes,
           minsize_b = sizesb_true(check_elems(i));
           maxsize_b = sizesb_true(check_elems(main_index_1));
         } else {
-          throw Rcpp::exception("Size values used in IPM classification must differ.", false);
+          throw Rcpp::exception("Size values used in IPM classification must differ.",
+            false);
         }
         if (sizesc_true(check_elems(i)) > sizesc_true(check_elems(main_index_1))) {
           maxsize_c = sizesc_true(check_elems(i));
@@ -2033,7 +2043,8 @@ Rcpp::List sf_create (NumericVector sizes,
           minsize_c = sizesc_true(check_elems(i));
           maxsize_c = sizesc_true(check_elems(main_index_1));
         } else {
-          throw Rcpp::exception("Size values used in IPM classification must differ.", false);
+          throw Rcpp::exception("Size values used in IPM classification must differ.",
+            false);
         }
         
         // Keep track of the entries to delete from the original vectors
@@ -2483,7 +2494,8 @@ List actualstage3(RObject data, bool check_stage = true, bool check_age = false,
   bool years_supplied = false;
   
   if (!check_age && !check_stage) {
-    throw Rcpp::exception("Options check_age and check_stage cannot both be FALSE.", false);
+    throw Rcpp::exception("Options check_age and check_stage cannot both be FALSE.",
+      false);
   }
   
   if (year2.isNotNull()) {
@@ -2537,7 +2549,7 @@ List actualstage3(RObject data, bool check_stage = true, bool check_age = false,
       remove_stage_num_yn = true;
       
     } else {
-      throw Rcpp::exception("Object remove_stage must be either a string of variable names or a vector of column number from object data.", 
+      throw Rcpp::exception("Object remove_stage must be either a string of variable names or a vector of column numbers from object data.", 
         false);
     }
     
@@ -2560,7 +2572,8 @@ List actualstage3(RObject data, bool check_stage = true, bool check_age = false,
       t1_allow_num_yn = true;
       
     } else {
-      throw Rcpp::exception("Object t1_allow must be either a string of variable names or a vector of column number from object data.", false);
+      throw Rcpp::exception("Object t1_allow must be either a string of variable names or a vector of column numbers from object data.",
+        false);
     }
   } else t1_allow_ = {"NotAlive"};
   
@@ -2610,23 +2623,28 @@ List actualstage3(RObject data, bool check_stage = true, bool check_age = false,
   
   if (historical) {
     if (check_age) {
-      throw Rcpp::exception("Package lefko3 does not currently support historical age-by-stage analyses.", false);
+      throw Rcpp::exception("Package lefko3 does not currently support historical age-by-stage analyses.",
+        false);
     }
     
     if (indices_length < 3) {
-      throw Rcpp::exception("Object indices must contain stage index variables for times t+1, t, and t-1 if historical = TRUE.", false);
+      throw Rcpp::exception("Object indices must contain stage index variables for times t+1, t, and t-1 if historical = TRUE.",
+        false);
     }
     
     if (stagecol_length < 3) {
-      throw Rcpp::exception("Object stagecol must contain stage classifications for times t+1, t, and t-1 if historical = TRUE.", false);
+      throw Rcpp::exception("Object stagecol must contain stage classifications for times t+1, t, and t-1 if historical = TRUE.",
+        false);
     }
   } else {
     if (indices_length < 2) {
-      throw Rcpp::exception("Object indices must contain stage index variables for times t+1 and t if historical = FALSE.", false);
+      throw Rcpp::exception("Object indices must contain stage index variables for times t+1 and t if historical = FALSE.",
+        false);
     }
     
     if (stagecol_length < 2) {
-      throw Rcpp::exception("Object stagecol must contain stage classifications for times t+1 and t if historical = FALSE.", false);
+      throw Rcpp::exception("Object stagecol must contain stage classifications for times t+1 and t if historical = FALSE.",
+        false);
     }
   }
   
@@ -2687,7 +2705,8 @@ List actualstage3(RObject data, bool check_stage = true, bool check_age = false,
   // Check if variable column numbers actually fit within data frame provided
   if (year2_num_yn) {
     if (year2_num_ < 0 || year2_num_ >= data_vars_num) {
-      throw Rcpp::exception("Variable year2 not defined within data frame as input.", false);
+      throw Rcpp::exception("Variable year2 is not defined within data frame as input.",
+        false);
       
     } else {
       years_supplied = true;
@@ -2696,7 +2715,8 @@ List actualstage3(RObject data, bool check_stage = true, bool check_age = false,
   
   if (agecol_num_yn) {
     if (agecol_num_ < 0 || agecol_num_ >= data_vars_num) {
-      throw Rcpp::exception("Variable agecol not defined within data frame as input.", false);
+      throw Rcpp::exception("Variable agecol is not defined within data frame as input.",
+        false);
       
     } else {
       ages_supplied = true;
@@ -2756,7 +2776,8 @@ List actualstage3(RObject data, bool check_stage = true, bool check_age = false,
       data_agecol = data_[agecol_];
       
       if (data_agecol.length() != data_rows) {
-        throw Rcpp::exception("Object agecol does not contain a valid variable for age at time t.", false);
+        throw Rcpp::exception("Object agecol does not contain a valid variable for age at time t.",
+          false);
       }
     } else {
       throw Rcpp::exception("Object agecol must be provided if check_age = TRUE.", false);
@@ -2776,14 +2797,16 @@ List actualstage3(RObject data, bool check_stage = true, bool check_age = false,
       data_stage3 = as<CharacterVector>(data_[stage3_]);
       
       if (data_stage3.length() != data_rows) {
-        throw Rcpp::exception("Object stagecol does not contain a valid variable for stage at time t+1.", false);
+        throw Rcpp::exception("Object stagecol does not contain a valid variable for stage at time t+1.",
+          false);
       }
     }
     if (stages2_supplied) {
       data_stage2 = as<CharacterVector>(data_[stage2_]);
       
       if (data_stage2.length() != data_rows) {
-        throw Rcpp::exception("Object stagecol does not contain a valid variable for stage at time t.", false);
+        throw Rcpp::exception("Object stagecol does not contain a valid variable for stage at time t.",
+          false);
       }
     }
     
@@ -2791,22 +2814,26 @@ List actualstage3(RObject data, bool check_stage = true, bool check_age = false,
       data_stage3index = as<arma::ivec>(data_[stage3index_]);
       
       if (static_cast<int>(data_stage3index.n_elem) != data_rows) {
-        throw Rcpp::exception("Object indices does not contain a valid variable for stage at time t+1.", false);
+        throw Rcpp::exception("Object indices does not contain a valid variable for stage at time t+1.",
+          false);
       }
     }
     if (indices2_supplied) {
       data_stage2index = as<arma::ivec>(data_[stage2index_]);
       
       if (static_cast<int>(data_stage2index.n_elem) != data_rows) {
-        throw Rcpp::exception("Object indices does not contain a valid variable for stage at time t.", false);
+        throw Rcpp::exception("Object indices does not contain a valid variable for stage at time t.",
+          false);
       }
     }
     
     if (!stages3_supplied && !indices3_supplied) {
-      throw Rcpp::exception("Objects indices and/or stagecol must be provided if check_stage = TRUE.", false);
+      throw Rcpp::exception("Objects indices and/or stagecol must be provided if check_stage = TRUE.",
+        false);
     }
     if (!stages2_supplied && !indices2_supplied) {
-      throw Rcpp::exception("Objects indices and/or stagecol must be provided if check_stage = TRUE.", false);
+      throw Rcpp::exception("Objects indices and/or stagecol must be provided if check_stage = TRUE.",
+        false);
     }
     
     if (historical) {
@@ -2814,19 +2841,22 @@ List actualstage3(RObject data, bool check_stage = true, bool check_age = false,
         data_stage1 = data_[stage1_];
         
         if (data_stage1.length() != data_rows) {
-          throw Rcpp::exception("Object stagecol does not contain a valid variable for stage at time t-1.", false);
+          throw Rcpp::exception("Object stagecol does not contain a valid variable for stage at time t-1.",
+            false);
         }
       }
       if (indices3_supplied) {
         data_stage1index = as<arma::ivec>(data_[stage1index_]);
         
         if (static_cast<int>(data_stage1index.n_elem) != data_rows) {
-          throw Rcpp::exception("Object indices does not contain a valid variable for stage at time t-1.", false);
+          throw Rcpp::exception("Object indices does not contain a valid variable for stage at time t-1.",
+            false);
         }
       }
       
       if (!stages1_supplied && !indices1_supplied) {
-        throw Rcpp::exception("Objects indices and/or stagecol must be provided if check_stage = TRUE.", false);
+        throw Rcpp::exception("Objects indices and/or stagecol must be provided if check_stage = TRUE.",
+          false);
       }
     }
   }
@@ -2984,7 +3014,7 @@ List actualstage3(RObject data, bool check_stage = true, bool check_age = false,
       
       if (!remove_stage_num_yn) {
         Rf_warningcall(R_NilValue,
-          "Stage(s) provided in option remove_stage could not be found and so will be ignored.");
+          "Stages in option remove_stage could not be found and will be ignored.");
       }
       
       IntegerVector unique_rsn = sort_unique(remove_stage_num_);
@@ -2992,7 +3022,8 @@ List actualstage3(RObject data, bool check_stage = true, bool check_age = false,
       
       if (unique_rsn.length() < remove_stage_num_.length() || 
           unique_rsn_t1a.length() < remove_stage_num_t1a.length()) {
-        Rf_warningcall(R_NilValue, "Some stages supplied in either option remove_stage or option t1_allow are duplicates and will be ignored.");
+        Rf_warningcall(R_NilValue,
+          "Some stages in option remove_stage or t1_allow are duplicates and will be ignored.");
         
         remove_stage_num_ = clone(unique_rsn);
         unique_rsn_t1a = clone(unique_rsn_t1a);
@@ -6125,7 +6156,8 @@ DataFrame density_input(List mpm, Nullable<RObject> stage3 = R_NilValue,
   
   StringVector unique_elems = unique(check_elems);
   if (unique_elems.length() != final_rows) {
-    Rf_warningcall(R_NilValue, "Some transitions appear to be listed multiple times. This may cause errors in analysis.");
+    Rf_warningcall(R_NilValue,
+      "Some transitions are listed multiple times. This may cause errors.");
   }
   
   return output;
@@ -6477,11 +6509,11 @@ Rcpp::List supplemental (bool historical = true, bool stagebased = true,
           }
         }
         if (!found_stage) {
-          String eat_my_shorts = "Some entered stage names (stage3) do not ";
-          String eat_my_shorts1 = "match expectation.";
-          eat_my_shorts += eat_my_shorts1;
+          String ems = "Some entered stage names (stage3) do not ";
+          String ems1 = "match expectation.";
+          ems += ems1;
           
-          throw Rcpp::exception(eat_my_shorts.get_cstring(), false);
+          throw Rcpp::exception(ems.get_cstring(), false);
         }
       }
       
@@ -6513,15 +6545,16 @@ Rcpp::List supplemental (bool historical = true, bool stagebased = true,
             if (stage2_(i) == all_groups(j)) found_stage = true;
           }
           if (stage2_(i) == "NotAlive") {
-            throw Rcpp::exception("Stage \"NotAlive\" is only allowed as input in eststage1.", false);
+            throw Rcpp::exception("Stage \"NotAlive\" can only be used in eststage1.",
+              false);
           }
         }
         if (!found_stage) {
-          String eat_my_shorts = "Some entered stage names (stage2) do not ";
-          String eat_my_shorts1 = "match expectation.";
-          eat_my_shorts += eat_my_shorts1;
+          String ems = "Some entered stage names (stage2) do not ";
+          String ems1 = "match expectation.";
+          ems += ems1;
           
-          throw Rcpp::exception(eat_my_shorts.get_cstring(), false);
+          throw Rcpp::exception(ems.get_cstring(), false);
         }
       }
       
@@ -6557,11 +6590,11 @@ Rcpp::List supplemental (bool historical = true, bool stagebased = true,
           }
         }
         if (!found_stage) {
-          String eat_my_shorts = "Some entered stage names (stage1) do not ";
-          String eat_my_shorts1 = "match expectation.";
-          eat_my_shorts += eat_my_shorts1;
+          String ems = "Some entered stage names (stage1) do not ";
+          String ems1 = "match expectation.";
+          ems += ems1;
           
-          throw Rcpp::exception(eat_my_shorts.get_cstring(), false);
+          throw Rcpp::exception(ems.get_cstring(), false);
         }
       }
       
@@ -6598,7 +6631,7 @@ Rcpp::List supplemental (bool historical = true, bool stagebased = true,
       arma::ivec a2_arma = as<arma::ivec>(age2_);
       arma::uvec neg_tester = find(a2_arma < 0 && a2_arma > -2147483648);
       if (neg_tester.n_elem > 0) {
-        Rf_warningcall(R_NilValue, "Some age2 values entered are negative.");
+        Rf_warningcall(R_NilValue, "Some entered age2 values are negative.");
       }
     } else if (is<LogicalVector>(age2)) { 
       IntegerVector age2_temp (stage2_length, NA_INTEGER);
@@ -6638,11 +6671,11 @@ Rcpp::List supplemental (bool historical = true, bool stagebased = true,
         } else found_stage = true;
         
         if (!found_stage) {
-          String eat_my_shorts = "Some entered stage names (eststage3) do not ";
-          String eat_my_shorts1 = "match expectation.";
-          eat_my_shorts += eat_my_shorts1;
+          String ems = "Some entered stage names (eststage3) do not ";
+          String ems1 = "match expectation.";
+          ems += ems1;
           
-          throw Rcpp::exception(eat_my_shorts.get_cstring(), false);
+          throw Rcpp::exception(ems.get_cstring(), false);
         }
       }
       
@@ -6685,11 +6718,11 @@ Rcpp::List supplemental (bool historical = true, bool stagebased = true,
         } else found_stage = true;
         
         if (!found_stage) {
-          String eat_my_shorts = "Some entered stage names (eststage2) do not ";
-          String eat_my_shorts1 = "match expectation.";
-          eat_my_shorts += eat_my_shorts1;
+          String ems = "Some entered stage names (eststage2) do not ";
+          String ems1 = "match expectation.";
+          ems += ems1;
           
-          throw Rcpp::exception(eat_my_shorts.get_cstring(), false);
+          throw Rcpp::exception(ems.get_cstring(), false);
         }
       }
       
@@ -6730,11 +6763,11 @@ Rcpp::List supplemental (bool historical = true, bool stagebased = true,
         } else found_stage = true;
         
         if (!found_stage) {
-          String eat_my_shorts = "Some entered stage names (eststage1) do not ";
-          String eat_my_shorts1 = "match expectation.";
-          eat_my_shorts += eat_my_shorts1;
+          String ems = "Some entered stage names (eststage1) do not ";
+          String ems1 = "match expectation.";
+          ems += ems1;
           
-          throw Rcpp::exception(eat_my_shorts.get_cstring(), false);
+          throw Rcpp::exception(ems.get_cstring(), false);
         }
       }
       
@@ -6761,7 +6794,7 @@ Rcpp::List supplemental (bool historical = true, bool stagebased = true,
       arma::ivec ea2_arma = as<arma::ivec>(estage2_);
       arma::uvec neg_tester = find(ea2_arma < 0 && ea2_arma > -2147483648);
       if (neg_tester.n_elem > 0) {
-        Rf_warningcall(R_NilValue, "Some estage2 values entered are negative.");
+        Rf_warningcall(R_NilValue, "Some entered estage2 values are negative.");
       }
     } else if (is<LogicalVector>(estage2)) {
       LogicalVector estage2_temp = as<LogicalVector>(estage2);
@@ -6793,7 +6826,7 @@ Rcpp::List supplemental (bool historical = true, bool stagebased = true,
       arma::vec gvr_arma = as<arma::vec>(givenrate_);
       arma::uvec neg_tester = find(gvr_arma < 0.0);
       if (neg_tester.n_elem > 0) {
-        Rf_warningcall(R_NilValue, "Some given rate values entered are negative.");
+        Rf_warningcall(R_NilValue, "Some entered given rate values are negative.");
       }
     } else if (is<LogicalVector>(givenrate)) {
       if (age2_length != 0) {
@@ -6825,7 +6858,7 @@ Rcpp::List supplemental (bool historical = true, bool stagebased = true,
       arma::vec mpl_arma = as<arma::vec>(multiplier_);
       arma::uvec neg_tester = find(mpl_arma < 0.0);
       if (neg_tester.n_elem > 0) {
-        Rf_warningcall(R_NilValue, "Some multiplier values entered are negative.");
+        Rf_warningcall(R_NilValue, "Some entered multiplier values are negative.");
       }
     } else if (is<LogicalVector>(multiplier)) {
       if (age2_length != 0) {
@@ -6858,11 +6891,11 @@ Rcpp::List supplemental (bool historical = true, bool stagebased = true,
       int check_type_min = min(type_);
       int check_type_max = max(type_);
       if (check_type_min < 1 || check_type_max > 3) {
-        String eat_my_shorts = "Please enter transition type information (type)";
-        String eat_my_shorts1 = " using only integers 1, 2, and 3.";
-        eat_my_shorts += eat_my_shorts1;
+        String ems = "Please enter transition type information (type)";
+        String ems1 = " using only integers 1, 2, and 3.";
+        ems += ems1;
         
-        throw Rcpp::exception(eat_my_shorts.get_cstring(), false);
+        throw Rcpp::exception(ems.get_cstring(), false);
       }
     } else if (is<StringVector>(type)) {
       StringVector type_sv = as<StringVector>(type);
@@ -6900,11 +6933,11 @@ Rcpp::List supplemental (bool historical = true, bool stagebased = true,
       int check_type_min = min(type_t12_);
       int check_type_max = max(type_t12_);
       if (check_type_min < 1 || check_type_max > 3) {
-        String eat_my_shorts = "Please enter transition type information (type_t12)";
-        String eat_my_shorts1 = " using only integers 1, 2, and 3.";
-        eat_my_shorts += eat_my_shorts1;
+        String ems = "Please enter transition type information (type_t12)";
+        String ems1 = " using only integers 1, 2, and 3.";
+        ems += ems1;
         
-        throw Rcpp::exception(eat_my_shorts.get_cstring(), false);
+        throw Rcpp::exception(ems.get_cstring(), false);
       }
     } else if (is<StringVector>(type_t12)) {
       StringVector type_t12_sv = as<StringVector>(type_t12);
@@ -6920,11 +6953,11 @@ Rcpp::List supplemental (bool historical = true, bool stagebased = true,
         } else if (stringcompare_simple(as<std::string>(type_t12_sv(i)), "r", true)) {
           type_t12_temp(i) = 3;
         } else {
-          String eat_my_shorts = "Please enter historical transition type information ";
-          String eat_my_shorts1 = "(type_t12) using only integers 1, 2, and 3.";
-          eat_my_shorts += eat_my_shorts1;
+          String ems = "Please enter historical transition type information ";
+          String ems1 = "(type_t12) using only integers 1, 2, and 3.";
+          ems += ems1;
           
-          throw Rcpp::exception(eat_my_shorts.get_cstring(), false);
+          throw Rcpp::exception(ems.get_cstring(), false);
         }
         type_t12_ = type_t12_temp;
       }
@@ -7272,11 +7305,8 @@ Rcpp::List edit_lM (const RObject mpm, Nullable<RObject> pop = R_NilValue,
           }
         }
         if (!found_stage) {
-          String eat_my_shorts = "Some entered stage names (stage3) do not ";
-          String eat_my_shorts1 = "match expectation.";
-          eat_my_shorts += eat_my_shorts1;
-          
-          throw Rcpp::exception(eat_my_shorts.get_cstring(), false);
+          throw Rcpp::exception("Some stage names (stage3) do not match expectation.",
+            false);
         }
       }
       
@@ -7312,11 +7342,8 @@ Rcpp::List edit_lM (const RObject mpm, Nullable<RObject> pop = R_NilValue,
           }
         }
         if (!found_stage) {
-          String eat_my_shorts = "Some entered stage names (stage2) do not ";
-          String eat_my_shorts1 = "match expectation.";
-          eat_my_shorts += eat_my_shorts1;
-          
-          throw Rcpp::exception(eat_my_shorts.get_cstring(), false);
+          throw Rcpp::exception("Some stage names (stage2) do not match expectation.",
+            false);
         }
       }
       
@@ -7352,11 +7379,7 @@ Rcpp::List edit_lM (const RObject mpm, Nullable<RObject> pop = R_NilValue,
           }
         }
         if (!found_stage) {
-          String eat_my_shorts = "Some entered stage names (stage1) do not ";
-          String eat_my_shorts1 = "match expectation.";
-          eat_my_shorts += eat_my_shorts1;
-          
-          throw Rcpp::exception(eat_my_shorts.get_cstring(), false);
+          throw Rcpp::exception("Some stage names (stage1) do not match expectation.", false);
         }
       }
       
@@ -7393,7 +7416,7 @@ Rcpp::List edit_lM (const RObject mpm, Nullable<RObject> pop = R_NilValue,
       arma::ivec a2_arma = as<arma::ivec>(age2_);
       arma::uvec neg_tester = find(a2_arma < 0);
       if (neg_tester.n_elem > 0) {
-        Rf_warningcall(R_NilValue, "Some age2 values entered are negative.");
+        Rf_warningcall(R_NilValue, "Some entered age2 values are negative.");
       }
     } else {
       throw Rcpp::exception("Please enter age information (age2) in integer format.",
@@ -7465,16 +7488,14 @@ Rcpp::List edit_lM (const RObject mpm, Nullable<RObject> pop = R_NilValue,
             if (eststage3_(i) == all_groups(j)) found_stage = true;
           }
           if (eststage3_(i) == "NotAlive") {
-            throw Rcpp::exception("Stage \"NotAlive\" is only allowed as input in eststage1.", false);
+            throw Rcpp::exception("Stage \"NotAlive\" is only allowed as input in eststage1.",
+              false);
           }
         } else found_stage = true;
         
         if (!found_stage) {
-          String eat_my_shorts = "Some entered stage names (eststage3) do not ";
-          String eat_my_shorts1 = "match expectation.";
-          eat_my_shorts += eat_my_shorts1;
-          
-          throw Rcpp::exception(eat_my_shorts.get_cstring(), false);
+          throw Rcpp::exception("Some stage names (eststage3) do not match expectation.",
+            false);
         }
       }
       
@@ -7512,16 +7533,13 @@ Rcpp::List edit_lM (const RObject mpm, Nullable<RObject> pop = R_NilValue,
             if (eststage2_(i) == all_groups(j)) found_stage = true;
           }
           if (eststage2_(i) == "NotAlive") {
-            throw Rcpp::exception("Stage \"NotAlive\" is only allowed as input in eststage1.", false);
+            throw Rcpp::exception("Stage \"NotAlive\" is only allowed as input in eststage1.",
+              false);
           }
         } else found_stage = true;
         
         if (!found_stage) {
-          String eat_my_shorts = "Some entered stage names (eststage2) do not ";
-          String eat_my_shorts1 = "match expectation.";
-          eat_my_shorts += eat_my_shorts1;
-          
-          throw Rcpp::exception(eat_my_shorts.get_cstring(), false);
+          throw Rcpp::exception("Some stage names (eststage2) do not match expectation.", false);
         }
       }
       
@@ -7562,11 +7580,8 @@ Rcpp::List edit_lM (const RObject mpm, Nullable<RObject> pop = R_NilValue,
         } else found_stage = true;
         
         if (!found_stage) {
-          String eat_my_shorts = "Some entered stage names (eststage1) do not ";
-          String eat_my_shorts1 = "match expectation.";
-          eat_my_shorts += eat_my_shorts1;
-          
-          throw Rcpp::exception(eat_my_shorts.get_cstring(), false);
+          throw Rcpp::exception("Some stage names (eststage1) do not match expectation.",
+            false);
         }
       }
       
@@ -7593,7 +7608,7 @@ Rcpp::List edit_lM (const RObject mpm, Nullable<RObject> pop = R_NilValue,
       arma::ivec ea2_arma = as<arma::ivec>(estage2_);
       arma::uvec neg_tester = find(ea2_arma < 0);
       if (neg_tester.n_elem > 0) {
-        Rf_warningcall(R_NilValue, "Some estage2 values entered are negative.");
+        Rf_warningcall(R_NilValue, "Some entered estage2 values are negative.");
       }
     } else {
       throw Rcpp::exception("Please enter age information (estage2) in integer format.",
@@ -7618,7 +7633,7 @@ Rcpp::List edit_lM (const RObject mpm, Nullable<RObject> pop = R_NilValue,
       arma::vec gvr_arma = as<arma::vec>(givenrate_);
       arma::uvec neg_tester = find(gvr_arma < 0.0);
       if (neg_tester.n_elem > 0) {
-        Rf_warningcall(R_NilValue, "Some given rate values entered are negative.");
+        Rf_warningcall(R_NilValue, "Some entered given rate values are negative.");
       }
     } else if (is<LogicalVector>(givenrate)) {
       if (age2_length != 0) {
@@ -7650,7 +7665,7 @@ Rcpp::List edit_lM (const RObject mpm, Nullable<RObject> pop = R_NilValue,
       arma::vec mpl_arma = as<arma::vec>(multiplier_);
       arma::uvec neg_tester = find(mpl_arma < 0.0);
       if (neg_tester.n_elem > 0) {
-        Rf_warningcall(R_NilValue, "Some multiplier values entered are negative.");
+        Rf_warningcall(R_NilValue, "Some entered multiplier values are negative.");
       }
     } else if (is<LogicalVector>(multiplier)) {
       if (age2_length != 0) {
@@ -7682,11 +7697,8 @@ Rcpp::List edit_lM (const RObject mpm, Nullable<RObject> pop = R_NilValue,
       int check_type_min = min(type_);
       int check_type_max = max(type_);
       if (check_type_min < 1 || check_type_max > 3) {
-        String eat_my_shorts = "Please enter transition type information (type)";
-        String eat_my_shorts1 = " using only integers 1, 2, and 3.";
-        eat_my_shorts += eat_my_shorts1;
-        
-        throw Rcpp::exception(eat_my_shorts.get_cstring(), false);
+        throw Rcpp::exception("Enter transition type (type) using only integers 1, 2, and 3.",
+          false);
       }
     } else if (is<StringVector>(type)) {
       StringVector type_sv = as<StringVector>(type);
@@ -7724,11 +7736,8 @@ Rcpp::List edit_lM (const RObject mpm, Nullable<RObject> pop = R_NilValue,
       int check_type_min = min(type_t12_);
       int check_type_max = max(type_t12_);
       if (check_type_min < 1 || check_type_max > 3) {
-        String eat_my_shorts = "Please enter transition type information (type_t12)";
-        String eat_my_shorts1 = " using only integers 1, 2, and 3.";
-        eat_my_shorts += eat_my_shorts1;
-        
-        throw Rcpp::exception(eat_my_shorts.get_cstring(), false);
+        throw Rcpp::exception("Enter transition type (type_t12) using only integers 1, 2, and 3.",
+          false);
       }
     } else if (is<StringVector>(type_t12)) {
       StringVector type_t12_sv = as<StringVector>(type_t12);
@@ -7744,16 +7753,13 @@ Rcpp::List edit_lM (const RObject mpm, Nullable<RObject> pop = R_NilValue,
         } else if (stringcompare_simple(as<std::string>(type_t12_sv(i)), "r", true)) {
           type_t12_temp(i) = 3;
         } else {
-          String eat_my_shorts = "Please enter historical transition type information ";
-          String eat_my_shorts1 = "(type_t12) using only integers 1, 2, and 3.";
-          eat_my_shorts += eat_my_shorts1;
-          
-          throw Rcpp::exception(eat_my_shorts.get_cstring(), false);
+          throw Rcpp::exception("Enter historical transition type (type_t12) using only integers 1, 2, and 3.",
+            false);
         }
         type_t12_ = type_t12_temp;
       }
     } else {
-      throw Rcpp::exception("Please enter transition type information (type_t12) in integer format.",
+      throw Rcpp::exception("Enter transition type (type_t12) in integer format.",
         false);
     }
   }
@@ -8026,7 +8032,7 @@ Rcpp::List edit_lM (const RObject mpm, Nullable<RObject> pop = R_NilValue,
           new_est_col_index(i) = static_cast<int>(hst_found_eststage21(0));
           new_est_row_index(i) = static_cast<int>(hst_found_eststage32(0));
         } else if (!StringVector::is_na(new_eststage3(i))) {
-          Rf_warningcall(R_NilValue, "Some eststage designations could not be found.", false);
+          Rf_warningcall(R_NilValue, "Some eststage designations could not be found.");
         }
       }
     }
@@ -8407,13 +8413,16 @@ Rcpp::List edit_lM (const RObject mpm, Nullable<RObject> pop = R_NilValue,
     arma::uvec year2_indices = find(chosen_year2s > -1);
     
     if (pop_indices.n_elem == 0) {
-      Rf_warningcall(R_NilValue, "Pop designations could not be found in input MPM.");
+      Rf_warningcall(R_NilValue,
+        "Pop designations could not be found in input MPM.");
     }
     if (patch_indices.n_elem == 0) {
-      Rf_warningcall(R_NilValue, "Patch designations could not be found in input MPM.");
+      Rf_warningcall(R_NilValue,
+        "Patch designations could not be found in input MPM.");
     }
     if (year2_indices.n_elem == 0) {
-      Rf_warningcall(R_NilValue, "Year2 designations could not be found in input MPM.");
+      Rf_warningcall(R_NilValue,
+        "Year2 designations could not be found in input MPM.");
     }
     
     arma::uvec pop_patch_intersect = intersect(pop_indices, patch_indices);

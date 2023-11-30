@@ -409,6 +409,10 @@ function-based MPM given inputs supplied by the user.
 If used, the reproduction matrix (field \code{repmatrix}) may be supplied as
 either historical or ahistorical. If provided as historical, then
 a historical MPM must be estimated.
+
+If neither a supplement nor a reproduction matrix are used, and the MPM
+to create is stage-based, then fecundity will be assumed to occur from all
+reproductive stages to all propagule and immature stages.
 }
 
 \section{Function-based MPM Notes}{

@@ -1890,6 +1890,9 @@ historicalize3 <- function(data, popidcol = 0, patchidcol = 0, individcol,
 #' @param yearorder The order of monitoring occasions in the list supplied in
 #' object \code{mats}. Defaults to NA, which leads to each matrix within each
 #' population-patch combination being a different monitoring occasion.
+#' @param sparse_output A logical value indicating whether to output matrices in
+#' sparse format. Defaults to \code{FALSE}, in which case all matrices are
+#' output in standard matrix format.
 #' 
 #' @return A \code{lefkoMat} object incorporating the matrices input in object
 #' \code{mats} as object \code{A}, their U and F decompositions in objects
@@ -1903,15 +1906,16 @@ historicalize3 <- function(data, popidcol = 0, patchidcol = 0, individcol,
 #' @noRd
 .import_mats <- function(mats, stageframe, hstages = NA, agestages = NA,
   historical = FALSE, agebystage = FALSE, UFdecomp = TRUE, entrystage = 1,
-  poporder = 1, patchorder = 1, yearorder = NA) {
+  poporder = 1, patchorder = 1, yearorder = NA, sparse_output = FALSE) {
   
   F_indices <- NULL
   
   if (!is.list(mats)) {
     stop("Object mats must be an object of class list.", call. = FALSE)
   }
-  if (!is.matrix(mats[[1]])) {
-    stop("Object mats must be a list composed of objects of class matrix.", call. = FALSE)
+  if (!(is.matrix(mats[[1]]) | is(mats[[1]], "dgCMatrix"))) {
+    stop("Object mats must be a list composed of objects of class matrix or dgCMatrix.",
+      call. = FALSE)
   }
   mat_length <- length(mats)
   
@@ -1926,10 +1930,10 @@ historicalize3 <- function(data, popidcol = 0, patchidcol = 0, individcol,
   numstages <- dim(stageframe)[1]
   
   dimtest <- unique(as.vector(apply(as.matrix(c(1:mat_length)), 1, function(X) {
-    dim(mats[[X]])
+    dim(as.matrix(mats[[X]]))
   })))
   if (length(dimtest) != 1) {
-    stop("Supplied matrices must be of equal size.",
+    stop("Supplied matrices must be square matrices of equal size.",
       call. = FALSE)
   }
   if (!historical & !agebystage) {
@@ -1977,7 +1981,10 @@ historicalize3 <- function(data, popidcol = 0, patchidcol = 0, individcol,
     true_patchorder <- rep(patchorder, mat_length)
   }
   if (all(is.na(yearorder))) {
-    poppatch_combos <- apply(as.matrix(c(1:mat_length)), 1, function(X) {paste(true_poporder[X], true_patchorder[X])})
+    poppatch_combos <- apply(as.matrix(c(1:mat_length)), 1, function(X) {
+      paste(true_poporder[X], true_patchorder[X])
+      }
+    )
     unique_poppatches <- unique(poppatch_combos)
     total_poppatches <- length(unique_poppatches)
     
@@ -2078,23 +2085,42 @@ historicalize3 <- function(data, popidcol = 0, patchidcol = 0, individcol,
       newmat <- X
       newmat[F_indices] <- 0
       
+      if (!sparse_output) {
+        newmat <- as.matrix(newmat)
+      } else {
+        newmat <- as(newmat, "dgCMatrix")
+      }
       return(newmat)
     })
     
-    nonFindices <- c(1:length(mats[[1]]))[!is.element(c(1:length(mats[[1]])), F_indices)]
+    total_mat_elems <- length(as.matrix(mats[[1]]))
+    nonFindices <- c(1:total_mat_elems)[!is.element(c(1:total_mat_elems), F_indices)]
     F <- lapply(mats, function(X) {
       newmat <- X
       newmat[nonFindices] <- 0
       
+      if (!sparse_output) {
+        newmat <- as.matrix(newmat)
+      } else {
+        newmat <- as(newmat, "dgCMatrix")
+      }
       return(newmat)
     })
     
+    for (i in c(1:mat_length)) {
+      if (!sparse_output) {
+        mats[[i]] <- as.matrix(mats[[i]])
+      } else {
+        mats[[i]] <- as(mats[[i]], "dgCMatrix")
+      }
+    }
+    
     Utrans <- sum(apply(as.matrix(c(1:mat_length)), 1, function(X) {
-      length(which(U[[X]] > 0))
+      length(which(as.matrix(U[[X]]) > 0))
     }))
     
     Ftrans <- sum(apply(as.matrix(c(1:mat_length)), 1, function(X) {
-      length(which(F[[X]] > 0))
+      length(which(as.matrix(F[[X]]) > 0))
     }))
     
     matrixqc[1] <- Utrans
@@ -2105,10 +2131,18 @@ historicalize3 <- function(data, popidcol = 0, patchidcol = 0, individcol,
     F <- NA
     
     Atrans <- sum(apply(as.matrix(c(1:mat_length)), 1, function(X) {
-      length(which(mats[[X]] > 0))
+      length(which(as.matrix(mats[[X]]) > 0))
     }))
     
     matrixqc[1] <- Atrans
+  }
+  
+  for (i in c(1:mat_length)) {
+    if (!sparse_output) {
+      mats[[i]] <- as.matrix(mats[[i]])
+    } else {
+      mats[[i]] <- as(mats[[i]], "dgCMatrix")
+    }
   }
   
   if (is.element("size", names(stageframe))) {
@@ -2137,7 +2171,7 @@ historicalize3 <- function(data, popidcol = 0, patchidcol = 0, individcol,
 #' COMADRE.
 #' 
 #' @name create_lM
-
+#' 
 #' @param mats A list of A matrices, or, if importing from a matrix database
 #' such as COMPADRE or COMADRE, then the object holding the database.
 #' @param stageframe A stageframe describing all stages utilized.
@@ -2169,6 +2203,10 @@ historicalize3 <- function(data, popidcol = 0, patchidcol = 0, individcol,
 #' \code{matC} matrices to produce the \code{F} matrix. If \code{FALSE}, then
 #' only uses the \code{matF} matrix. Only used if importing from the COMPADRE or
 #' COMADRE database. Defaults to \code{TRUE}.
+#' @param sparse_output A logical value indicating whether to output matrices in
+#' sparse format. Defaults to \code{FALSE}, in which case all matrices are
+#' output in standard matrix format. Does not apply to matrices imported from
+#' COMPADRE or COMADRE, which are always in standard format.
 #' 
 #' @return A \code{lefkoMat} object incorporating the matrices input in object
 #' \code{mats} as object \code{A}, their U and F decompositions in objects
@@ -2179,6 +2217,12 @@ historicalize3 <- function(data, popidcol = 0, patchidcol = 0, individcol,
 #' function.
 #' 
 #' @section Notes for importing lists of matrices:
+#' Lists may be composed of a mix of matrices in standard R format (i.e. created
+#' via the \code{matrix()} function), and in \code{dgCMatrix} sparse format
+#' (i.e. created via the \code{Matrix::Matrix()} function with
+#' \code{sparse = TRUE}.) All matrices will be forced to one or the other,
+#' depending on the value given for the \code{sparse_output} argument.
+#' 
 #' U and F decomposition assumes that elements holding fecundity values are
 #' to be interpreted solely as fecundity rates. Users wishing to split these
 #' elements between fecundity and survival should do so manually after running
@@ -2375,7 +2419,8 @@ historicalize3 <- function(data, popidcol = 0, patchidcol = 0, individcol,
 #' @export
 create_lM <- function(mats, stageframe = NULL, hstages = NA, agestages = NA,
   historical = FALSE, agebystage = FALSE, UFdecomp = TRUE, entrystage = 1,
-  poporder = 1, patchorder = 1, yearorder = NA, matrix_id = NULL, add_FC = TRUE) {
+  poporder = 1, patchorder = 1, yearorder = NA, matrix_id = NULL, add_FC = TRUE,
+  sparse_output = FALSE) {
   
   output <- NULL
   
@@ -2383,11 +2428,12 @@ create_lM <- function(mats, stageframe = NULL, hstages = NA, agestages = NA,
     output <- .import_Com(matrix_id = matrix_id, database = mats,
       add_FC = add_FC)
   } else if (is.list(mats)) {
-    if (is.matrix(mats[[1]])) {
+    if (is.matrix(mats[[1]]) | is(mats[[1]], "dgCMatrix")) {
       output <- .import_mats(mats = mats, stageframe = stageframe,
         hstages = hstages, agestages = agestages, historical = historical,
         agebystage = agebystage, UFdecomp = UFdecomp, entrystage = entrystage,
-        poporder = poporder, patchorder = patchorder, yearorder = yearorder)
+        poporder = poporder, patchorder = patchorder, yearorder = yearorder,
+        sparse_output = sparse_output)
     } else if ("metadata" %in% names(mats)) {
       output <- .import_Com(matrix_id = matrix_id, database = mats,
         add_FC = add_FC)
@@ -2762,10 +2808,10 @@ add_lM <- function(lM, Amats = NA, Umats = NA, Fmats = NA, UFdecomp = FALSE,
   lM$F <- append(lM$F, Fmats)
   
   surv_additions <- sum(unlist(lapply(Umats, function(X) {
-    length(which(X > 0))
+    length(which(as.matrix(X) > 0))
   })))
   fec_additions <- sum(unlist(lapply(Fmats, function(X) {
-    length(which(X > 0))
+    length(which(as.matrix(X) > 0))
   })))
   
   lM$matrixqc[1] <- lM$matrixqc[1] + surv_additions
@@ -2932,10 +2978,10 @@ delete_lM <- function(lM, mat_num = NA, pop = NA, patch = NA, year = NA) {
   lM$F <- lM$F[-mat_num]
   
   surv_portions <- sum(unlist(lapply(lM$U, function(X) {
-    length(which(X > 0))
+    length(which(as.matrix(X) > 0))
   })))
   fec_portions <- sum(unlist(lapply(lM$F, function(X) {
-    length(which(X > 0))
+    length(which(as.matrix(X) > 0))
   })))
   
   lM$matrixqc[1] <- surv_portions
@@ -3221,10 +3267,10 @@ subset_lM <- function(lM, mat_num = NA, pop = NA, patch = NA, year = NA) {
   lM$F <- lM$F[mat_num]
   
   surv_portions <- sum(unlist(lapply(lM$U, function(X) {
-    length(which(X > 0))
+    length(which(as.matrix(X) > 0))
   })))
   fec_portions <- sum(unlist(lapply(lM$F, function(X) {
-    length(which(X > 0))
+    length(which(as.matrix(X) > 0))
   })))
   
   lM$matrixqc[1] <- surv_portions

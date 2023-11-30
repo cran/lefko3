@@ -2028,13 +2028,8 @@ Rcpp::List pfj(const DataFrame& data, const DataFrame& stageframe,
               "Some stages occurring in the dataset do not match any characteristics in the input stageframe.");
           
         } else if (cs4.n_elem > 1) {
-          String eat_my_shorts = "Some stages in the input stageframe appear to have the same description. ";
-          String eat_my_shorts1 = "Please make sure that all stages included in the stageframe are defined ";
-          String eat_my_shorts2 = "with unique sets of characteristics.";
-          eat_my_shorts += eat_my_shorts1;
-          eat_my_shorts += eat_my_shorts2;
-          
-          if (!quiet) Rf_warningcall(R_NilValue, eat_my_shorts.get_cstring());
+          if (!quiet) Rf_warningcall(R_NilValue,
+            "Some stages in stageframe have same description. All stages should be unique.");
           
         } else {
           throw Rcpp::exception("Stage assignment error.", false);
@@ -4435,23 +4430,15 @@ Rcpp::List jpf(const DataFrame& data, const DataFrame& stageframe, int popidcol,
           stage2[i] = "NoMatch";
           
           if (!quiet) {
-            String eat_my_shorts = "Some stages occurring in the dataset do not match ";
-            String eat_my_shorts1 = "any characteristics in the input stageframe.";
-            eat_my_shorts += eat_my_shorts1;
-            
-            Rf_warningcall(R_NilValue, eat_my_shorts.get_cstring());
+            Rf_warningcall(R_NilValue,
+              "Some stages in the dataset do not match stage descriptions in the stageframe.");
           }
         } else if (alive2[i] != 1.0)  {
           stage2[i] = "NotAlive";
         } else if (cs4.n_elem > 1) {
           if (!quiet) {
-            String eat_my_shorts = "Some stages in the input stageframe appear to have the same description. ";
-            String eat_my_shorts1 = "Please make sure that all stages included in the stageframe are ";
-            String eat_my_shorts2 = "defined with unique sets of characteristics.";
-            eat_my_shorts += eat_my_shorts1;
-            eat_my_shorts += eat_my_shorts2;
-            
-            Rf_warningcall(R_NilValue, eat_my_shorts.get_cstring());
+            Rf_warningcall(R_NilValue,
+              "Some stages in stageframe have same description. All stages should be unique.");
           }
         } else {
           throw Rcpp::exception("Stage assignment error.", false);
@@ -4486,24 +4473,16 @@ Rcpp::List jpf(const DataFrame& data, const DataFrame& stageframe, int popidcol,
           stage1[i] = "NoMatch";
           
           if (!quiet) {
-            String eat_my_shorts = "Some stages occurring in the dataset do not match ";
-            String eat_my_shorts1 = "any characteristics in the input stageframe.";
-            eat_my_shorts += eat_my_shorts1;
-            
-            Rf_warningcall(R_NilValue, eat_my_shorts.get_cstring());
+            Rf_warningcall(R_NilValue,
+              "Some stages in the dataset do not match stage descriptions in the stageframe.");
           }
         } else if (alive1[i] != 1.0) {
           stage1[i] = "NotAlive";
           matstat1[i] = 0;
         } else if (cs4.n_elem > 1) {
           if (!quiet) {
-            String eat_my_shorts = "Some stages in the input stageframe appear to have the same description. ";
-            String eat_my_shorts1 = "Please make sure that all stages included in the stageframe are ";
-            String eat_my_shorts2 = "defined with unique sets of characteristics.";
-            eat_my_shorts += eat_my_shorts1;
-            eat_my_shorts += eat_my_shorts2;
-            
-            Rf_warningcall(R_NilValue, eat_my_shorts.get_cstring());
+            Rf_warningcall(R_NilValue,
+              "Some stages in stageframe have same description. All stages should be unique.");
           }
         } else {
           throw Rcpp::exception("Stage assignment error.", false);
@@ -4541,21 +4520,13 @@ Rcpp::List jpf(const DataFrame& data, const DataFrame& stageframe, int popidcol,
           stage3[i] = "NoMatch";
           
           if (!quiet) {
-            String eat_my_shorts = "Some stages occurring in the dataset do not match ";
-            String eat_my_shorts1 = "any characteristics in the input stageframe.";
-            eat_my_shorts += eat_my_shorts1;
-            
-            Rf_warningcall(R_NilValue, eat_my_shorts.get_cstring());
+            Rf_warningcall(R_NilValue,
+              "Some stages in the dataset do not match stage descriptions in the stageframe.");
           }
         } else if (cs4.n_elem > 1) {
           if (!quiet) {
-            String eat_my_shorts = "Some stages in the input stageframe appear to have the same description. ";
-            String eat_my_shorts1 = "Please make sure that all stages included in the stageframe are ";
-            String eat_my_shorts2 = "defined with unique sets of characteristics.";
-            eat_my_shorts += eat_my_shorts1;
-            eat_my_shorts += eat_my_shorts2;
-            
-            Rf_warningcall(R_NilValue, eat_my_shorts.get_cstring());
+            Rf_warningcall(R_NilValue,
+              "Some stages in stageframe have same description. All stages should be unique.");
           }
         } else {
           throw Rcpp::exception("Stage assignment error.", false);

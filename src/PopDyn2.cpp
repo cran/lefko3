@@ -1335,7 +1335,8 @@ RObject lambda3(RObject& mpm, Nullable<RObject> force_sparse = R_NilValue) {
             lambda_prog(i) = chosen_eigvals(pos_max_eigvals(0));
           } else {
             lambda_prog(i) = 0.0;
-            Rf_warningcall(R_NilValue, "A matrix with an eigenvalue of 0 has been detected.");
+            Rf_warningcall(R_NilValue,
+              "A matrix with an eigenvalue of 0 has been detected.");
           }
         } else {
           arma::sp_mat spAmat;
@@ -1366,7 +1367,8 @@ RObject lambda3(RObject& mpm, Nullable<RObject> force_sparse = R_NilValue) {
             lambda_prog(i) = chosen_eigvals(pos_max_eigvals(0));
           } else {
             lambda_prog(i) = 0.0;
-            Rf_warningcall(R_NilValue, "A matrix with an eigenvalue of 0 has been detected.");
+            Rf_warningcall(R_NilValue,
+              "A matrix with an eigenvalue of 0 has been detected.");
           }
         }
       }
@@ -1434,7 +1436,8 @@ RObject lambda3(RObject& mpm, Nullable<RObject> force_sparse = R_NilValue) {
             lambda_prog(i) = chosen_eigvals(pos_max_eigvals(0));
           } else {
             lambda_prog(i) = 0.0;
-            Rf_warningcall(R_NilValue, "A matrix with an eigenvalue of 0 has been detected.");
+            Rf_warningcall(R_NilValue,
+              "A matrix with an eigenvalue of 0 has been detected.");
           }
         } else {
           arma::sp_mat spAmat;
@@ -1465,7 +1468,8 @@ RObject lambda3(RObject& mpm, Nullable<RObject> force_sparse = R_NilValue) {
             lambda_prog(i) = chosen_eigvals(pos_max_eigvals(0));
           } else {
             lambda_prog(i) = 0.0;
-            Rf_warningcall(R_NilValue, "A matrix with an eigenvalue of 0 has been detected.");
+            Rf_warningcall(R_NilValue,
+              "A matrix with an eigenvalue of 0 has been detected.");
           }
         }
       }
@@ -1535,7 +1539,8 @@ RObject lambda3(RObject& mpm, Nullable<RObject> force_sparse = R_NilValue) {
         lambda_prog(0) = chosen_eigvals(pos_max_eigvals(0));
       } else {
         lambda_prog(0) = 0.0;
-        Rf_warningcall(R_NilValue, "A matrix with an eigenvalue of 0 has been detected.");
+        Rf_warningcall(R_NilValue,
+          "A matrix with an eigenvalue of 0 has been detected.");
       }
     } else {
       arma::sp_mat spAmat(mpm_);
@@ -1561,7 +1566,8 @@ RObject lambda3(RObject& mpm, Nullable<RObject> force_sparse = R_NilValue) {
         lambda_prog(0) = chosen_eigvals(pos_max_eigvals(0));
       } else {
         lambda_prog(0) = 0.0;
-        Rf_warningcall(R_NilValue, "A matrix with an eigenvalue of 0 has been detected.");
+        Rf_warningcall(R_NilValue,
+          "A matrix with an eigenvalue of 0 has been detected.");
       }
     }
     
@@ -1594,7 +1600,8 @@ RObject lambda3(RObject& mpm, Nullable<RObject> force_sparse = R_NilValue) {
       lambda_prog(0) = chosen_eigvals(pos_max_eigvals(0));
     } else {
       lambda_prog(0) = 0.0;
-      Rf_warningcall(R_NilValue, "A matrix with an eigenvalue of 0 has been detected.");
+      Rf_warningcall(R_NilValue,
+        "A matrix with an eigenvalue of 0 has been detected.");
     }
     
     output = lambda_prog;

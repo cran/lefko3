@@ -797,6 +797,20 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// markov_run
+Rcpp::IntegerVector markov_run(Rcpp::IntegerVector main_times, Rcpp::NumericMatrix mat, int times, Nullable<IntegerVector> start);
+RcppExport SEXP _lefko3_markov_run(SEXP main_timesSEXP, SEXP matSEXP, SEXP timesSEXP, SEXP startSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< Rcpp::IntegerVector >::type main_times(main_timesSEXP);
+    Rcpp::traits::input_parameter< Rcpp::NumericMatrix >::type mat(matSEXP);
+    Rcpp::traits::input_parameter< int >::type times(timesSEXP);
+    Rcpp::traits::input_parameter< Nullable<IntegerVector> >::type start(startSEXP);
+    rcpp_result_gen = Rcpp::wrap(markov_run(main_times, mat, times, start));
+    return rcpp_result_gen;
+END_RCPP
+}
 // stovokor
 List stovokor(const StringVector& surv, const StringVector& obs, const StringVector& size, const StringVector& sizeb, const StringVector& sizec, const StringVector& repst, const StringVector& fec, const StringVector& matstat, const StringVector& vitalrates, bool historical, StringVector& suite, const String& approach, const bool nojuvs, bool juvsize, const String& indiv, const String& patch, const String& year, const String& age, const String& densitycol, const StringVector& indcova, const StringVector& indcovb, const StringVector& indcovc, const bool sizebused, const bool sizecused, const LogicalVector& grouptest, const LogicalVector& ageused, const LogicalVector& densityused, const LogicalVector& indcovaused, const LogicalVector& indcovbused, const LogicalVector& indcovcused, const bool pasrand, const bool yasrand, const bool iaasrand, const bool ibasrand, const bool icasrand, const bool iaasfac, const bool ibasfac, const bool icasfac, const int fectime, const bool size_zero, const bool sizeb_zero, const bool sizec_zero, const bool jsize_zero, const bool jsizeb_zero, const bool jsizec_zero);
 RcppExport SEXP _lefko3_stovokor(SEXP survSEXP, SEXP obsSEXP, SEXP sizeSEXP, SEXP sizebSEXP, SEXP sizecSEXP, SEXP repstSEXP, SEXP fecSEXP, SEXP matstatSEXP, SEXP vitalratesSEXP, SEXP historicalSEXP, SEXP suiteSEXP, SEXP approachSEXP, SEXP nojuvsSEXP, SEXP juvsizeSEXP, SEXP indivSEXP, SEXP patchSEXP, SEXP yearSEXP, SEXP ageSEXP, SEXP densitycolSEXP, SEXP indcovaSEXP, SEXP indcovbSEXP, SEXP indcovcSEXP, SEXP sizebusedSEXP, SEXP sizecusedSEXP, SEXP grouptestSEXP, SEXP ageusedSEXP, SEXP densityusedSEXP, SEXP indcovausedSEXP, SEXP indcovbusedSEXP, SEXP indcovcusedSEXP, SEXP pasrandSEXP, SEXP yasrandSEXP, SEXP iaasrandSEXP, SEXP ibasrandSEXP, SEXP icasrandSEXP, SEXP iaasfacSEXP, SEXP ibasfacSEXP, SEXP icasfacSEXP, SEXP fectimeSEXP, SEXP size_zeroSEXP, SEXP sizeb_zeroSEXP, SEXP sizec_zeroSEXP, SEXP jsize_zeroSEXP, SEXP jsizeb_zeroSEXP, SEXP jsizec_zeroSEXP) {
@@ -1112,6 +1126,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_lefko3_ltre3matrix", (DL_FUNC) &_lefko3_ltre3matrix, 5},
     {"_lefko3_sltre3matrix", (DL_FUNC) &_lefko3_sltre3matrix, 9},
     {"_lefko3_snaltre3matrix", (DL_FUNC) &_lefko3_snaltre3matrix, 7},
+    {"_lefko3_markov_run", (DL_FUNC) &_lefko3_markov_run, 4},
     {"_lefko3_stovokor", (DL_FUNC) &_lefko3_stovokor, 45},
     {"_lefko3_create_pm", (DL_FUNC) &_lefko3_create_pm, 1},
     {"_lefko3_sf_create", (DL_FUNC) &_lefko3_sf_create, 29},

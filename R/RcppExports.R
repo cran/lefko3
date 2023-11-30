@@ -2596,6 +2596,10 @@ f_projection3 <- function(format, prebreeding = TRUE, start_age = NA_integer_, l
 #' either historical or ahistorical. If provided as historical, then
 #' a historical MPM must be estimated.
 #' 
+#' If neither a supplement nor a reproduction matrix are used, and the MPM
+#' to create is stage-based, then fecundity will be assumed to occur from all
+#' reproductive stages to all propagule and immature stages.
+#' 
 #' @section Function-based MPM Notes:
 #' Users may at times wish to estimate MPMs using a dataset incorporating
 #' multiple patches or subpopulations, but without discriminating between those
@@ -3620,6 +3624,113 @@ slambda3 <- function(mpm, times = 10000L, historical = FALSE, tweights = NULL, f
 #' @noRd
 .snaltre3matrix <- function(Amats, labels, refnum, refmats_ = NULL, tweights_ = NULL, sparse = FALSE, tol_used = 1e-30) {
     .Call('_lefko3_snaltre3matrix', PACKAGE = 'lefko3', Amats, labels, refnum, refmats_, tweights_, sparse, tol_used)
+}
+
+#' Creates Vector of Times Based on First-Order Markov Transition Matrix
+#' 
+#' Creates a vector of randomly sampled years / times to be used in projection.
+#' Random sampling requires a 1st order Markovian transition matrix, showing
+#' the probability of transitioning to each time from each time. Note that this
+#' function is not required if the probability of transitioning to a particular
+#' time does not vary with time.
+#' 
+#' @name markov_run
+#' 
+#' @param main_times An integer vector giving the years / times to use.
+#' @param mat A matrix giving the transition probabilities from each time to
+#' each time. Must have the same number of columns and rows as there are
+#' elements in vector \code{times}.
+#' @param times The number of times to project forward. Defaults to 10000.
+#' @param start The start time to use. Defaults to the first time in vector
+#' \code{main_times}.
+#' 
+#' @return An integer vector giving the order of times / years to use in
+#' projection. This can be used as input in the \code{year} option in
+#' functions \code{\link{projection3}()} and \code{\link{f_projection3}()}.
+#' 
+#' @seealso \code{\link{projection3}()}
+#' @seealso \code{\link{f_projection3}()}
+#' 
+#' @examples
+#' # Cypripedium example
+#' data(cypdata)
+#'  
+#' sizevector <- c(0, 0, 0, 0, 0, 0, 1, 2.5, 4.5, 8, 17.5)
+#' stagevector <- c("SD", "P1", "P2", "P3", "SL", "D", "XSm", "Sm", "Md", "Lg",
+#'   "XLg")
+#' repvector <- c(0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1)
+#' obsvector <- c(0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1)
+#' matvector <- c(0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1)
+#' immvector <- c(0, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0)
+#' propvector <- c(1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)
+#' indataset <- c(0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1)
+#' binvec <- c(0, 0, 0, 0, 0, 0.5, 0.5, 1, 1, 2.5, 7)
+#' 
+#' cypframe_raw <- sf_create(sizes = sizevector, stagenames = stagevector,
+#'   repstatus = repvector, obsstatus = obsvector, matstatus = matvector, 
+#'   propstatus = propvector, immstatus = immvector, indataset = indataset,
+#'   binhalfwidth = binvec)
+#' 
+#' cypraw_v1 <- verticalize3(data = cypdata, noyears = 6, firstyear = 2004,
+#'   patchidcol = "patch", individcol = "plantid", blocksize = 4, 
+#'   sizeacol = "Inf2.04", sizebcol = "Inf.04", sizeccol = "Veg.04", 
+#'   repstracol = "Inf.04", repstrbcol = "Inf2.04", fecacol = "Pod.04",
+#'   stageassign = cypframe_raw, stagesize = "sizeadded", NAas0 = TRUE, 
+#'   NRasRep = TRUE)
+#' 
+#' cypsupp3r <- supplemental(stage3 = c("SD", "SD", "P1", "P1", "P2", "P3", "SL",
+#'     "D", "XSm", "Sm", "D", "XSm", "Sm", "mat", "mat", "mat", "SD", "P1"),
+#'   stage2 = c("SD", "SD", "SD", "SD", "P1", "P2", "P3", "SL", "SL", "SL", "SL",
+#'     "SL", "SL", "D", "XSm", "Sm", "rep", "rep"),
+#'   stage1 = c("SD", "rep", "SD", "rep", "SD", "P1", "P2", "P3", "P3", "P3",
+#'     "SL", "SL", "SL", "SL", "SL", "SL", "mat", "mat"),
+#'   eststage3 = c(NA, NA, NA, NA, NA, NA, NA, "D", "XSm", "Sm", "D", "XSm", "Sm",
+#'     "mat", "mat", "mat", NA, NA),
+#'   eststage2 = c(NA, NA, NA, NA, NA, NA, NA, "XSm", "XSm", "XSm", "XSm", "XSm",
+#'     "XSm", "D", "XSm", "Sm", NA, NA),
+#'   eststage1 = c(NA, NA, NA, NA, NA, NA, NA, "XSm", "XSm", "XSm", "XSm", "XSm",
+#'     "XSm", "XSm", "XSm", "XSm", NA, NA),
+#'   givenrate = c(0.1, 0.1, 0.2, 0.2, 0.2, 0.2, 0.25, NA, NA, NA, NA, NA, NA,
+#'     NA, NA, NA, NA, NA),
+#'   multiplier = c(NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA,
+#'     NA, 0.5, 0.5),
+#'   type = c(1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 3, 3),
+#'   type_t12 = c(1, 2, 1, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1),
+#'   stageframe = cypframe_raw, historical = TRUE)
+#' 
+#' cypmatrix3r <- rlefko3(data = cypraw_v1, stageframe = cypframe_raw, 
+#'   year = "all", stages = c("stage3", "stage2", "stage1"),
+#'   size = c("size3added", "size2added", "size1added"), 
+#'   supplement = cypsupp3r, yearcol = "year2", indivcol = "individ")
+#' 
+#' used_years <-c(2005, 2006, 2007, 2008)
+#' 
+#' yr_tx_vec <- c(0.4, 0.2, 0.2, 0.2, 0.2, 0.4, 0.2, 0.2, 0.2, 0.2, 0.4, 0.2,
+#'   0.2, 0.2, 0.2, 0.4)
+#' yr_tx_mat <- matrix(yr_tx_vec, 4, 4)
+#' 
+#' set.seed(1)
+#' cyp_markov_vec_1 <- markov_run(main_times = used_years, mat = yr_tx_mat,
+#'   times = 100)
+#' 
+#' set.seed(2)
+#' cyp_markov_vec_2 <- markov_run(main_times = used_years, mat = yr_tx_mat,
+#'   times = 100)
+#' 
+#' set.seed(3)
+#' cyp_markov_vec_3 <- markov_run(main_times = used_years, mat = yr_tx_mat,
+#'   times = 100)
+#' 
+#' cypstoch_1 <- projection3(cypmatrix3r, nreps = 1, times = 100,
+#'   year = cyp_markov_vec_1)
+#' cypstoch_2 <- projection3(cypmatrix3r, nreps = 1, times = 100,
+#'   year = cyp_markov_vec_2)
+#' cypstoch_3 <- projection3(cypmatrix3r, nreps = 1, times = 100,
+#'   year = cyp_markov_vec_3)
+#' 
+#' @export markov_run
+markov_run <- function(main_times, mat, times = 10000L, start = NULL) {
+    .Call('_lefko3_markov_run', PACKAGE = 'lefko3', main_times, mat, times, start)
 }
 
 #' Main Formula Creation for Function \code{modelsearch()}

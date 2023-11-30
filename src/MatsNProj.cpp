@@ -89,9 +89,11 @@ Rcpp::List sf_reassess(const DataFrame& stageframe,
   StringVector stage3_supp;
   StringVector stage2_supp;
   StringVector stage1_supp;
+  NumericVector age2_supp;
   StringVector eststage3_supp;
   StringVector eststage2_supp;
   StringVector eststage1_supp;
+  NumericVector estage2_supp;
   NumericVector givenrate_supp;
   NumericVector multiplier_supp;
   IntegerVector convtype_supp;
@@ -159,11 +161,8 @@ Rcpp::List sf_reassess(const DataFrame& stageframe,
       
       if (rev_checksum == 0) {
         repentryvec(0) = 1;
-        String eat_my_shorts = "No information on reproductive entry stages provided. Assuming ";
-        String eat_my_shorts1 = "the first stage is the entry stage into the life cycle.\n";
-        eat_my_shorts += eat_my_shorts1;
-        
-        Rf_warningcall(R_NilValue, eat_my_shorts.get_cstring());
+        Rf_warningcall(R_NilValue,
+          "No info on reproductive entry stages provided. Assuming 1st stage is entry stage.");
       }
       
       arma::mat token_mat(stageframe_length, stageframe_length, fill::zeros);
@@ -276,22 +275,26 @@ Rcpp::List sf_reassess(const DataFrame& stageframe,
       repmatrix_true = token_mat;
     }
   } else {
+    int count_of_offspring_stages {0};
+    
     for (int i = 0; i < stageframe_length; i++) {
       if (propvec(i) > 0) {
         repentryvec(i) = 1;
+        count_of_offspring_stages++;
       } else if (immvec(i) > 0) {
         repentryvec(i) = 1;
+        count_of_offspring_stages++;
       }
     }
     
     int rev_checksum = sum(repentryvec);
     if(rev_checksum == 0) {
       repentryvec(0) = 1;
-      String eat_my_shorts = "No information on reproductive entry stages provided. Assuming ";
-      String eat_my_shorts1 = "the first stage is the entry stage into the life cycle.\n";
-      eat_my_shorts += eat_my_shorts1;
-      
-      Rf_warningcall(R_NilValue, eat_my_shorts.get_cstring());
+      Rf_warningcall(R_NilValue,
+        "No info on reproductive entry stages provided. Assuming 1st stage is entry stage.");
+    } else {
+      Rf_warningcall(R_NilValue,
+        "No supplement provided. Assuming fecundity yields all propagule and immature stages.");
     }
     
     arma::mat token_mat(stageframe_length, stageframe_length, fill::zeros);
@@ -307,6 +310,74 @@ Rcpp::List sf_reassess(const DataFrame& stageframe,
       }
     }
     repmatrix_true = token_mat;
+    
+    // Build new supplement for this case
+    StringVector novel_stage3 (count_of_offspring_stages);
+    StringVector novel_stage2 (count_of_offspring_stages);
+    StringVector novel_stage1 (count_of_offspring_stages);
+    IntegerVector novel_convtype_t12 (count_of_offspring_stages);
+    NumericVector novel_age2 (count_of_offspring_stages);
+    StringVector novel_eststage3 (count_of_offspring_stages);
+    StringVector novel_eststage2 (count_of_offspring_stages);
+    StringVector novel_eststage1 (count_of_offspring_stages);
+    NumericVector novel_estage2 (count_of_offspring_stages);
+    NumericVector novel_givenrate (count_of_offspring_stages);
+    NumericVector novel_multiplier (count_of_offspring_stages);
+    IntegerVector novel_convtype (count_of_offspring_stages);
+    
+    int place_counter {0};
+    
+    for (int i = 0; i < stageframe_length; i++) { 
+      if (repentryvec(i) == 1) {
+        novel_stage3(place_counter) = String(stagevec(i));
+        novel_stage2(place_counter) = "rep";
+        
+        if (historical) {
+          novel_stage1(place_counter) = "all";
+          novel_convtype_t12(place_counter) = 1;
+        } else {
+          novel_stage1(place_counter) = NA_STRING;
+          novel_convtype_t12(place_counter) = NA_INTEGER;
+        }
+        
+        novel_age2(place_counter) = NA_REAL;
+      
+        novel_eststage3(place_counter) = NA_STRING;
+        novel_eststage2(place_counter) = NA_STRING;
+        novel_eststage1(place_counter) = NA_STRING;
+        novel_estage2(place_counter) = NA_REAL;
+        
+        novel_givenrate(place_counter) = NA_REAL;
+        novel_multiplier(place_counter) = 1.0;
+        novel_convtype(place_counter) = 3;
+        
+        place_counter++;
+      }
+    }
+    
+    Rcpp::DataFrame supplement_thru = DataFrame::create(_["stage3"] = novel_stage3,
+      _["stage2"] = novel_stage2, _["stage1"] = novel_stage1, _["age2"] = novel_age2,
+      _["eststage3"] =  novel_eststage3, _["eststage2"] =  novel_eststage2,
+      _["eststage1"] = novel_eststage1, _["estage2"] = novel_estage2,
+      _["givenrate"] = novel_givenrate, _["multiplier"] = novel_multiplier,
+      _["convtype"] = novel_convtype, _["convtype_t12"] = novel_convtype_t12);
+    
+    supplement_true = supplement_thru;
+    
+    stage3_supp = novel_stage3;
+    stage2_supp = novel_stage2;
+    stage1_supp = novel_stage1;
+    age2_supp = novel_age2;
+    eststage3_supp = novel_eststage3;
+    eststage2_supp = novel_eststage2;
+    eststage1_supp = novel_eststage1;
+    estage2_supp = novel_estage2;
+    givenrate_supp = novel_givenrate;
+    multiplier_supp = novel_multiplier;
+    convtype_supp = novel_convtype;
+    convtype_t12_supp = novel_convtype_t12;
+    
+    supp_provided = true;
   }
   
   // Reorder stageframe
@@ -570,7 +641,7 @@ Rcpp::List sf_reassess(const DataFrame& stageframe,
   
   if (supp_provided) {
     DataFrame newsupplement = LefkoMats::supp_reassess(newstageframe, historical,
-      supplement, overwrite);
+      supplement_true, overwrite);
     
     return Rcpp::List::create(_["stageframe"] = newstageframe,
       _["repmatrix"] = repmat2, _["ovtable"] = newsupplement);
@@ -2842,7 +2913,8 @@ List specialpatrolgroup(const DataFrame& sge9l, const arma::ivec& sge3index21,
     int data_subset_rows = static_cast<int>(data_current_index.n_elem);
     if (data_subset_rows < 10 && !small_subset) {
       small_subset = true;
-      Rf_warningcall(R_NilValue, "Extremely small data subsets used to populate matrices.");
+      Rf_warningcall(R_NilValue,
+        "Extremely small data subsets used to populate matrices.");
     }
     if (data_subset_rows == 0) continue;
     
@@ -6567,22 +6639,16 @@ Rcpp::List f_projection3(int format, bool prebreeding = true, int start_age = NA
   }
   if (format < 4 && (!IntegerVector::is_na(start_age) || !IntegerVector::is_na(last_age))) {
     if (!quiet) {
-      String eat_my_shorts = "Start and final ages cannot be used with matrix formats 1-3. ";
-      String eat_my_shorts1 = "Resetting these parameters....\n";
-      eat_my_shorts += eat_my_shorts1;
-      
-      Rf_warningcall(R_NilValue, eat_my_shorts.get_cstring());
+      Rf_warningcall(R_NilValue,
+        "Start and final ages cannot be used with matrix formats 1-3. Resetting these parameters.");
     }
     start_age = 0;  
     last_age = 0;
   }
   if (growthonly && repvalue) {
     if (!quiet) {
-      String eat_my_shorts = "Option repvalue cannot be set to TRUE if growthonly is set ";
-      String eat_my_shorts1 = "to TRUE. Resetting repvalue to FALSE.\n";
-      eat_my_shorts += eat_my_shorts1;
-      
-      Rf_warningcall(R_NilValue, eat_my_shorts.get_cstring());
+      Rf_warningcall(R_NilValue,
+        "Option repvalue cannot be TRUE if growthonly is TRUE. Resetting repvalue to FALSE.");
     }
     repvalue = false;
   }
@@ -8091,11 +8157,11 @@ Rcpp::List f_projection3(int format, bool prebreeding = true, int start_age = NA
     
     if (start_age > age_limit || last_age > age_limit) {
       if (!quiet) Rf_warningcall(R_NilValue,
-        "Entered start_age or last_age is beyond what is found in the dataset.\n");
+        "Entered start_age or last_age is beyond what is found in the dataset.");
     }
     if (fecage_min > age_limit || fecage_max > age_limit) {
       if (!quiet) Rf_warningcall(R_NilValue,
-        "Entered fecage_min or fecage_max is beyond what is found in the dataset.\n");
+        "Entered fecage_min or fecage_max is beyond what is found in the dataset.");
     }
     
     if (last_age < (start_age + 1)) {
@@ -8257,18 +8323,15 @@ Rcpp::List f_projection3(int format, bool prebreeding = true, int start_age = NA
     NumericVector year_int = clone(mainyears);
     years_topull = year_int;
     if (!quiet) Rf_warningcall(R_NilValue,
-      "Option year not set, so will cycle through existing years.\n");
+      "Option year not set, so will cycle through existing years.");
   }
   
   NumericVector twinput;
   if (tweights.isNotNull()) {
     twinput = as<NumericVector>(tweights);
     if (twinput.length() != num_years) {
-      String eat_my_shorts = "Time weight vector must be the same length as the number ";
-      String eat_my_shorts1 = "of occasions represented in the dataset.";
-      eat_my_shorts += eat_my_shorts1;
-      
-      throw Rcpp::exception(eat_my_shorts.get_cstring(), false);
+      throw Rcpp::exception("Time weight vector must be same length as number of occasions in dataset.",
+        false);
     }
   } else {
     NumericVector tw_temp(num_years);
@@ -8305,7 +8368,8 @@ Rcpp::List f_projection3(int format, bool prebreeding = true, int start_age = NA
     CharacterVector patch_one (1);
     patch_one(0) = mainpatches(0);
     patches_topull = patch_one;
-    if (!quiet) Rf_warningcall(R_NilValue, "Option patch not set, so will set to first patch/population.\n");
+    if (!quiet) Rf_warningcall(R_NilValue,
+      "Option patch not set, so will set to first patch/population.");
   }
   
   // Handle spatial density vector
@@ -8414,11 +8478,8 @@ Rcpp::List f_projection3(int format, bool prebreeding = true, int start_age = NA
     if (is<NumericVector>(inda_whatever)) {
       if (random_inda) {
         if (!quiet) {
-          String eat_my_shorts = "Indcov a appears to be numeric. Will assume that random_inda = FALSE. ";
-          String eat_my_shorts1 = "To alter this behavior, please convert indcov a into a character vector.\n";
-          eat_my_shorts += eat_my_shorts1;
-              
-          Rf_warningcall(R_NilValue, eat_my_shorts.get_cstring());
+          Rf_warningcall(R_NilValue,
+            "Indcov a appears to be numeric. Will assume random_inda = FALSE.");
         }
         random_inda = false;
       }
@@ -8434,11 +8495,8 @@ Rcpp::List f_projection3(int format, bool prebreeding = true, int start_age = NA
     } else if (is<CharacterVector>(inda_whatever)) {
       if (!random_inda) {
         if (!quiet) {
-          String eat_my_shorts = "Indcov a appears to be categorical. Will assume that random_inda = TRUE. ";
-          String eat_my_shorts1 = "To alter this behavior, please convert indcov a into a numeric vector.\n";
-          eat_my_shorts += eat_my_shorts1;
-              
-          Rf_warningcall(R_NilValue, eat_my_shorts.get_cstring());
+          Rf_warningcall(R_NilValue,
+            "Indcov a appears to be categorical. Will assume random_inda = TRUE.");
         }
         random_inda = true;
       }
@@ -8450,7 +8508,7 @@ Rcpp::List f_projection3(int format, bool prebreeding = true, int start_age = NA
       for (int i = 0; i < inda_inputlength; i++) {
         for (int j = 0; j < maininda_length; j++) {
           if (!stringcompare_hard(as<std::string>(inda_another_int(i)), as<std::string>(inda_names_ch(j)))) {
-            throw Rcpp::exception("Some input ind cov a values do not match categories documented in the dataset.",
+            throw Rcpp::exception("Some input ind cov a values do not match categories in dataset.",
               false);
           }
         }
@@ -8466,11 +8524,8 @@ Rcpp::List f_projection3(int format, bool prebreeding = true, int start_age = NA
     if (is<NumericVector>(indb_whatever)) {
       if (random_indb) {
         if (!quiet) {
-          String eat_my_shorts = "Indcov b appears to be numeric. Will assume that random_indb = FALSE. ";
-          String eat_my_shorts1 = "To alter this behavior, please convert indcov b into a character vector.\n";
-          eat_my_shorts += eat_my_shorts1;
-              
-          Rf_warningcall(R_NilValue, eat_my_shorts.get_cstring());
+          Rf_warningcall(R_NilValue,
+            "Indcov b appears to be numeric. Will assume random_indb = FALSE.");
         }
         random_indb = false;
       }
@@ -8486,11 +8541,8 @@ Rcpp::List f_projection3(int format, bool prebreeding = true, int start_age = NA
     } else if (is<CharacterVector>(indb_whatever)) {
       if (!random_indb) {
         if (!quiet) {
-          String eat_my_shorts = "Indcov b appears to be categorical. Will assume that random_indb = TRUE. ";
-          String eat_my_shorts1 = "To alter this behavior, please convert indcov b into a numeric vector.\n";
-          eat_my_shorts += eat_my_shorts1;
-              
-          Rf_warningcall(R_NilValue, eat_my_shorts.get_cstring());
+          Rf_warningcall(R_NilValue,
+            "Indcov b appears to be categorical. Will assume random_indb = TRUE.");
         }
         random_indb = true;
       }
@@ -8502,7 +8554,7 @@ Rcpp::List f_projection3(int format, bool prebreeding = true, int start_age = NA
       for (int i = 0; i < indb_inputlength; i++) {
         for (int j = 0; j < mainindb_length; j++) {
           if (!stringcompare_hard(as<std::string>(indb_another_int(i)), as<std::string>(indb_names_ch(j)))) {
-            throw Rcpp::exception("Some input ind cov b values do not match categories documented in the dataset.",
+            throw Rcpp::exception("Some input ind cov b values do not match categories in dataset.",
               false);
           }
         }
@@ -8518,11 +8570,8 @@ Rcpp::List f_projection3(int format, bool prebreeding = true, int start_age = NA
     if (is<NumericVector>(indc_whatever)) {
       if (random_indc) {
         if (!quiet) {
-          String eat_my_shorts = "Indcov c appears to be numeric. Will assume that random_indc = FALSE. ";
-          String eat_my_shorts1 = "To alter this behavior, please convert indcov c into a character vector.\n";
-          eat_my_shorts += eat_my_shorts1;
-              
-          Rf_warningcall(R_NilValue, eat_my_shorts.get_cstring());
+          Rf_warningcall(R_NilValue,
+            "Indcov c appears to be numeric. Will assume random_indc = FALSE.");
         }
         random_indc = false;
       }
@@ -8538,11 +8587,8 @@ Rcpp::List f_projection3(int format, bool prebreeding = true, int start_age = NA
     } else if (is<CharacterVector>(indc_whatever)) {
       if (!random_indc) {
         if (!quiet) {
-          String eat_my_shorts = "Indcov c appears to be categorical. Will assume that random_indc = TRUE. ";
-          String eat_my_shorts1 = "To alter this behavior, please convert indcov c into a numeric vector.\n";
-          eat_my_shorts += eat_my_shorts1;
-              
-          Rf_warningcall(R_NilValue, eat_my_shorts.get_cstring());
+          Rf_warningcall(R_NilValue,
+            "Indcov c appears to be categorical. Will assume random_indc = TRUE.");
         }
         random_indc = true;
       }
@@ -8554,7 +8600,7 @@ Rcpp::List f_projection3(int format, bool prebreeding = true, int start_age = NA
       for (int i = 0; i < indc_inputlength; i++) {
         for (int j = 0; j < mainindc_length; j++) {
           if (!stringcompare_hard(as<std::string>(indc_another_int(i)), as<std::string>(indc_names_ch(j)))) {
-            throw Rcpp::exception("Some input ind cov c values do not match categories documented in the dataset.",
+            throw Rcpp::exception("Some input ind cov c values do not match categories in dataset.",
               false);
           }
         }
@@ -8578,18 +8624,12 @@ Rcpp::List f_projection3(int format, bool prebreeding = true, int start_age = NA
   
   if (!quiet) {
     if (greaterthan_warning) {
-      String eat_my_shorts = "More values of individual covariates have been supplied than required, ";
-      String eat_my_shorts1 = "so some will be cut.\n";
-      eat_my_shorts += eat_my_shorts1;
-          
-      Rf_warningcall(R_NilValue, eat_my_shorts.get_cstring());
+      Rf_warningcall(R_NilValue,
+        "Too many values of individual covariates have been supplied. Some will be cut.");
     }
     if (lessthan_warning) {
-      String eat_my_shorts = "Fewer values of individual covariates have been supplied than required, ";
-      String eat_my_shorts1 = "so some will be cycled.\n";
-      eat_my_shorts += eat_my_shorts1;
-          
-      Rf_warningcall(R_NilValue, eat_my_shorts.get_cstring());
+      Rf_warningcall(R_NilValue,
+        "Too few values of individual covariates have been supplied. Some will be cycled.");
     }
   }
   
@@ -8817,18 +8857,12 @@ Rcpp::List f_projection3(int format, bool prebreeding = true, int start_age = NA
   
   if (!quiet) {
     if (greaterthan_warning_dev) {
-      String eat_my_shorts = "More values of intercept deviations have been supplied than required, ";
-      String eat_my_shorts1 = "so some will be cut.\n";
-      eat_my_shorts += eat_my_shorts1;
-          
-      Rf_warningcall(R_NilValue, eat_my_shorts.get_cstring());
+      Rf_warningcall(R_NilValue,
+        "Too many intercept deviations have been supplied. Some will be cut.");
     }
     if (lessthan_warning_dev) {
-      String eat_my_shorts = "Fewer values of intercept deviations have been supplied than required, ";
-      String eat_my_shorts1 = "so some will be cycled.\n";
-      eat_my_shorts += eat_my_shorts1;
-          
-      Rf_warningcall(R_NilValue, eat_my_shorts.get_cstring());
+      Rf_warningcall(R_NilValue,
+        "Too few intercept deviations have been supplied. Some will be cycled.");
     }
   }
   
@@ -9141,19 +9175,13 @@ Rcpp::List f_projection3(int format, bool prebreeding = true, int start_age = NA
         
         if (dvr_style_(i) == 1) {
           if (dvr_beta_(i) > exp_tol) {
-            String eat_my_shorts = "Values of beta used in the Ricker function should be set to limits ";
-            String eat_my_shorts1 = "within positive and negative exp_tol values. Resetting...\n";
-            eat_my_shorts += eat_my_shorts1;
-            
-            Rf_warningcall(R_NilValue, eat_my_shorts.get_cstring());
+            Rf_warningcall(R_NilValue,
+              "Ricker beta outside limits. Resetting to exp_tol.");
             
             dvr_beta_(i) = exp_tol;
           } else if (dvr_beta_(i) < (-1.0 * exp_tol)) {
-            String eat_my_shorts = "Values of beta used in the Ricker function should be set to limits ";
-            String eat_my_shorts1 = "within positive and negative exp_tol values. Resetting...\n";
-            eat_my_shorts += eat_my_shorts1;
-            
-            Rf_warningcall(R_NilValue, eat_my_shorts.get_cstring());
+            Rf_warningcall(R_NilValue,
+              "Ricker beta outside limits. Resetting to negative exp_tol.");
             
             dvr_beta_(i) = -1 * exp_tol;
           }
@@ -9161,17 +9189,11 @@ Rcpp::List f_projection3(int format, bool prebreeding = true, int start_age = NA
           double summed_stuff = dvr_alpha_(i) + dvr_beta_(i);
           
           if (summed_stuff > exp_tol) {
-            String eat_my_shorts = "Values of alpha and beta used in the Usher function may be ";
-            String eat_my_shorts1 = "too high. Results may be unpredictable.\n";
-            eat_my_shorts += eat_my_shorts1;
-            
-            Rf_warningcall(R_NilValue, eat_my_shorts.get_cstring());
+            Rf_warningcall(R_NilValue,
+              "Alpha and beta used in Usher function may be too high. Results may be unpredictable.");
           } else if (summed_stuff < (-1.0 * exp_tol)) {
-            String eat_my_shorts = "Values of alpha and beta used in the Usher function may be ";
-            String eat_my_shorts1 = "too high. Results may be unpredictable.\n";
-            eat_my_shorts += eat_my_shorts1;
-            
-            Rf_warningcall(R_NilValue, eat_my_shorts.get_cstring());
+            Rf_warningcall(R_NilValue,
+              "Alpha and beta used in Usher function may be too low. Results may be unpredictable.");
           }
         }
       }
@@ -9485,19 +9507,13 @@ Rcpp::List f_projection3(int format, bool prebreeding = true, int start_age = NA
       
       if (dyn_style(i) == 1) {
         if (dyn_beta(i) > exp_tol) {
-          String eat_my_shorts = "Values of beta used in the Ricker function should be set to limits ";
-          String eat_my_shorts1 = "within positive and negative exp_tol values. Resetting...\n";
-          eat_my_shorts += eat_my_shorts1;
-          
-          Rf_warningcall(R_NilValue, eat_my_shorts.get_cstring());
+          Rf_warningcall(R_NilValue,
+            "Ricker beta outside limits. Resetting to exp_tol.");
           
           dyn_beta(i) = exp_tol;
         } else if (dyn_beta(i) < (-1.0 * exp_tol)) {
-          String eat_my_shorts = "Values of beta used in the Ricker function should be set to limits ";
-          String eat_my_shorts1 = "within positive and negative exp_tol values. Resetting...\n";
-          eat_my_shorts += eat_my_shorts1;
-          
-          Rf_warningcall(R_NilValue, eat_my_shorts.get_cstring());
+          Rf_warningcall(R_NilValue,
+            "Ricker beta outside limits. Resetting to negative exp_tol.");
           
           dyn_beta(i) = -1 * exp_tol;
         }
@@ -9505,17 +9521,11 @@ Rcpp::List f_projection3(int format, bool prebreeding = true, int start_age = NA
         double summed_stuff = dyn_alpha(i) + dyn_beta(i);
         
         if (summed_stuff > exp_tol) {
-          String eat_my_shorts = "Values of alpha and beta used in the Usher function ";
-          String eat_my_shorts1 = "may be too high. Results may be unpredictable.\n";
-          eat_my_shorts += eat_my_shorts1;
-          
-          Rf_warningcall(R_NilValue, eat_my_shorts.get_cstring());
+            Rf_warningcall(R_NilValue,
+              "Alpha and beta used in Usher function may be too high. Results may be unpredictable.");
         } else if (summed_stuff < (-1.0 * exp_tol)) {
-          String eat_my_shorts = "Values of alpha and beta used in the Usher function ";
-          String eat_my_shorts1 = "may be too high. Results may be unpredictable.\n";
-          eat_my_shorts += eat_my_shorts1;
-          
-          Rf_warningcall(R_NilValue, eat_my_shorts.get_cstring());
+            Rf_warningcall(R_NilValue,
+              "Alpha and beta used in Usher function may be too high. Results may be unpredictable.");
         }
       }
     }
@@ -9523,13 +9533,8 @@ Rcpp::List f_projection3(int format, bool prebreeding = true, int start_age = NA
   }
   
   if (dens_vr && dens_elems) {
-    String eat_my_shorts = "Density dependence should usually be operationalized via either ";
-    String eat_my_shorts1 = "vital rate model parameterization or matrix element operationalization. ";
-    String eat_my_shorts2 = "However, inputs have been provided for both methods.\n";
-    eat_my_shorts += eat_my_shorts1;
-    eat_my_shorts += eat_my_shorts2;
-    
-    Rf_warningcall(R_NilValue, eat_my_shorts.get_cstring());
+    Rf_warningcall(R_NilValue,
+      "Density dependence should be set via either vital rate model or matrix element parameterization, not both.");
   }
   
   // Main projection loop
@@ -9694,11 +9699,11 @@ Rcpp::List f_projection3(int format, bool prebreeding = true, int start_age = NA
             if (dyn_type(j) == 1 && Umat(dyn_index321(j)) > 1.0 && !warn_trigger_1) {
               warn_trigger_1 = true;
               if (!quiet) Rf_warningcall(R_NilValue,
-                "Some probabilities with value > 1.0 produced during density adjustment.\n");
+                "Some probabilities with value > 1.0 produced during density adjustment.");
             } else if ((Umat(dyn_index321(j)) < 0.0 || Fmat(dyn_index321(j)) < 0.0) && !warn_trigger_neg) {
               warn_trigger_neg = true;
               if (!quiet) Rf_warningcall(R_NilValue,
-                "Some matrix elements with value < 0.0 produced during density adjustment.\n");
+                "Some matrix elements with value < 0.0 produced during density adjustment.");
             }
           }
         }
@@ -9903,12 +9908,12 @@ Rcpp::List f_projection3(int format, bool prebreeding = true, int start_age = NA
             if (dyn_type(j) == 1 && Umat_sp(dyn_index321(j)) > 1.0 && !warn_trigger_1) {
               warn_trigger_1 = true;
               if (!quiet) Rf_warningcall(R_NilValue,
-                "Some probabilities with value > 1.0 produced during density adjustment.\n");
+                "Some probabilities with value > 1.0 produced during density adjustment.");
             } else if ((Umat_sp(dyn_index321(j)) < 0.0 || Fmat_sp(dyn_index321(j)) < 0.0) &&
               !warn_trigger_neg) {
               warn_trigger_neg = true;
               if (!quiet) Rf_warningcall(R_NilValue,
-                "Some matrix elements with value < 0.0 produced during density adjustment.\n");
+                "Some matrix elements with value < 0.0 produced during density adjustment.");
             }
           }
         }
@@ -10376,6 +10381,10 @@ Rcpp::List f_projection3(int format, bool prebreeding = true, int start_age = NA
 //' If used, the reproduction matrix (field \code{repmatrix}) may be supplied as
 //' either historical or ahistorical. If provided as historical, then
 //' a historical MPM must be estimated.
+//' 
+//' If neither a supplement nor a reproduction matrix are used, and the MPM
+//' to create is stage-based, then fecundity will be assumed to occur from all
+//' reproductive stages to all propagule and immature stages.
 //' 
 //' @section Function-based MPM Notes:
 //' Users may at times wish to estimate MPMs using a dataset incorporating
@@ -11076,7 +11085,8 @@ Rcpp::List mpm_create(bool historical = false, bool stage = true, bool age = fal
     }
     
     if (prebreeding && start_age == 0) {
-      Rf_warningcall(R_NilValue, "Switching to post-breeding model to account for start_age = 0.");
+      Rf_warningcall(R_NilValue,
+        "Switching to post-breeding model to account for start_age = 0.");
       prebreeding = false;
     }
     
@@ -11226,7 +11236,8 @@ Rcpp::List mpm_create(bool historical = false, bool stage = true, bool age = fal
           _["3"] = as<IntegerVector>(melchett_ovtable_[3]));
         
         if (LefkoUtils::df_duplicates(mov_short)) {
-          Rf_warningcall(R_NilValue, "Supplement table contains multiple entries for the same transition(s).");
+          Rf_warningcall(R_NilValue,
+            "Supplement contains multiple entries for the same transitions.");
         }
       }
     } else {
@@ -11295,7 +11306,8 @@ Rcpp::List mpm_create(bool historical = false, bool stage = true, bool age = fal
         _["2"] = as<StringVector>(melchett_ovtable_[2]));
       
       if (LefkoUtils::df_duplicates(mov_short)) {
-        Rf_warningcall(R_NilValue, "Supplement table contains multiple entries for the same transition(s).");
+        Rf_warningcall(R_NilValue,
+          "Supplement contains multiple entries for the same transitions.");
       }
     } else {
       if (age) {
@@ -16846,12 +16858,12 @@ arma::mat proj3dens(const arma::vec& start_vec, const List& core_list,
             if (dyn_type(j) == 1 && theprophecy(dyn_index321(j)) > 1.0 && !warn_trigger_1) {
               warn_trigger_1 = true;
               Rf_warningcall(R_NilValue,
-                "Some probabilities with value > 1.0 produced during density adjustment.\n");
+                "Some probabilities with value > 1.0 produced during density adjustment.");
               
             } else if (theprophecy(dyn_index321(j)) < 0.0 && !warn_trigger_neg) {
               warn_trigger_neg = true;
               Rf_warningcall(R_NilValue,
-                "Some matrix elements with value < 0.0 produced during density adjustment.\n");
+                "Some matrix elements with value < 0.0 produced during density adjustment.");
             }
           }
         }
@@ -16968,12 +16980,12 @@ arma::mat proj3dens(const arma::vec& start_vec, const List& core_list,
             if (dyn_type(j) == 1 && sparse_prophecy(dyn_index321(j)) > 1.0 && !warn_trigger_1) {
               warn_trigger_1 = true;
               Rf_warningcall(R_NilValue,
-                "Some probabilities with value > 1.0 produced during density adjustment.\n");
+                "Some probabilities with value > 1.0 produced during density adjustment.");
                 
             } else if (sparse_prophecy(dyn_index321(j)) < 0.0 && !warn_trigger_neg) {
               warn_trigger_neg = true;
               Rf_warningcall(R_NilValue,
-                "Some matrix elements with value < 0.0 produced during density adjustment.\n");
+                "Some matrix elements with value < 0.0 produced during density adjustment.");
             }
           }
         }
@@ -17536,35 +17548,25 @@ Rcpp::List projection3(const List& mpm, int nreps = 1, int times = 10000,
         
         if (dyn_style(i) == 1) {
           if (dyn_beta(i) > exp_tol) {
-            String eat_my_shorts = "Values of beta used in the Ricker function may be ";
-            String eat_my_shorts1 = "too high. Results may be unpredictable.\n";
-            eat_my_shorts += eat_my_shorts1;
-            
-            Rf_warningcall(R_NilValue, eat_my_shorts.get_cstring());
+            Rf_warningcall(R_NilValue,
+              "Beta used in Ricker function may be too high. Results may be unpredictable.");
             
           } else if (dyn_beta(i) < (-1.0 * exp_tol)) {
-            String eat_my_shorts = "Values of beta used in the Ricker function may be ";
-            String eat_my_shorts1 = "too high. Results may be unpredictable.\n";
-            eat_my_shorts += eat_my_shorts1;
+            Rf_warningcall(R_NilValue,
+              "Beta used in Ricker function may be too high. Results may be unpredictable.");
             
-            Rf_warningcall(R_NilValue, eat_my_shorts.get_cstring());
           }
           
         } else if (dyn_style(i) == 3) {
           double summed_stuff = dyn_alpha(i) + dyn_beta(i);
           
           if (summed_stuff > exp_tol) {
-            String eat_my_shorts = "Values of alpha and beta used in the Usher function ";
-            String eat_my_shorts1 = "may be too high. Results may be unpredictable.\n";
-            eat_my_shorts += eat_my_shorts1;
+            Rf_warningcall(R_NilValue,
+              "Alpha and beta used in Usher function may be too high. Results may be unpredictable.");
             
-            Rf_warningcall(R_NilValue, eat_my_shorts.get_cstring());
           } else if (summed_stuff < (-1.0 * exp_tol)) {
-            String eat_my_shorts = "Values of alpha and beta used in the Usher function ";
-            String eat_my_shorts1 = "may be too high. Results may be unpredictable.\n";
-            eat_my_shorts += eat_my_shorts1;
-            
-            Rf_warningcall(R_NilValue, eat_my_shorts.get_cstring());
+            Rf_warningcall(R_NilValue,
+              "Alpha and beta used in Usher function may be too high. Results may be unpredictable.");
           }
         }
       }
@@ -17579,13 +17581,8 @@ Rcpp::List projection3(const List& mpm, int nreps = 1, int times = 10000,
       for (int i = 0; i < label_elements.length(); i++) {
         if (stringcompare_hard(as<std::string>(label_elements(i)), "patch")) {
           if (!quiet) {
-            String eat_my_shorts = "This function takes annual matrices as input. This ";
-            String eat_my_shorts1 = "lefkoMat object appears to be a set of mean matrices, ";
-            String eat_my_shorts2 = "and may lack annual matrices. Will project only the mean.\n";
-            eat_my_shorts += eat_my_shorts1;
-            eat_my_shorts += eat_my_shorts2;
-            
-            Rf_warningcall(R_NilValue, eat_my_shorts.get_cstring());
+            Rf_warningcall(R_NilValue,
+              "This lefkoMat object appears to be a set of mean matrices. Will project only the mean.");
           }
         }
       }
@@ -17816,8 +17813,8 @@ Rcpp::List projection3(const List& mpm, int nreps = 1, int times = 10000,
       arma::uvec pre_prophecy (theclairvoyant, fill::zeros);
       if (year_override) {
         for (int j = 0; j < theclairvoyant; j++) {
-          IntegerVector tnb_year_indices_IV = match(as<StringVector>(years_forward(j)),
-            yearorder) - 1;
+          IntegerVector tnb_year_indices_IV = (match(as<StringVector>(years_forward(j)),
+            yearorder) - 1) + (i * yl);
           arma::uvec tnb_year_indices = as<arma::uvec>(tnb_year_indices_IV);
           arma::uvec year_patch_intersect = intersect(thenumbersofthebeast,
             tnb_year_indices);
@@ -18904,13 +18901,8 @@ Rcpp::List stoch_senselas(const List& mpm, int times = 10000,
     DataFrame agestages = as<DataFrame>(mpm["agestages"]);
     
     if (labels.length() < 3) {
-      String eat_my_shorts = "This function takes annual matrices as input. ";
-      String eat_my_shorts1 = "This lefkoMat object appears to be a set of mean ";
-      String eat_my_shorts2 = "matrices, and may lack annual matrices.\n";
-      eat_my_shorts += eat_my_shorts1;
-      eat_my_shorts += eat_my_shorts2;
-      
-      Rf_warningcall(R_NilValue, eat_my_shorts.get_cstring());
+      Rf_warningcall(R_NilValue,
+        "This lefkoMat object appears to be a set of mean matrices. Will project only the mean.");
     }
     
     // Assess ahistorical versions of historical sensitivities / elasticities
@@ -21513,5 +21505,193 @@ Rcpp::List snaltre3matrix(const List& Amats, const DataFrame& labels,
   output_now.attr("class") = output_class;
   
   return output_now;
+}
+
+//' Creates Vector of Times Based on First-Order Markov Transition Matrix
+//' 
+//' Creates a vector of randomly sampled years / times to be used in projection.
+//' Random sampling requires a 1st order Markovian transition matrix, showing
+//' the probability of transitioning to each time from each time. Note that this
+//' function is not required if the probability of transitioning to a particular
+//' time does not vary with time.
+//' 
+//' @name markov_run
+//' 
+//' @param main_times An integer vector giving the years / times to use.
+//' @param mat A matrix giving the transition probabilities from each time to
+//' each time. Must have the same number of columns and rows as there are
+//' elements in vector \code{times}.
+//' @param times The number of times to project forward. Defaults to 10000.
+//' @param start The start time to use. Defaults to the first time in vector
+//' \code{main_times}.
+//' 
+//' @return An integer vector giving the order of times / years to use in
+//' projection. This can be used as input in the \code{year} option in
+//' functions \code{\link{projection3}()} and \code{\link{f_projection3}()}.
+//' 
+//' @seealso \code{\link{projection3}()}
+//' @seealso \code{\link{f_projection3}()}
+//' 
+//' @examples
+//' # Cypripedium example
+//' data(cypdata)
+//'  
+//' sizevector <- c(0, 0, 0, 0, 0, 0, 1, 2.5, 4.5, 8, 17.5)
+//' stagevector <- c("SD", "P1", "P2", "P3", "SL", "D", "XSm", "Sm", "Md", "Lg",
+//'   "XLg")
+//' repvector <- c(0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1)
+//' obsvector <- c(0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1)
+//' matvector <- c(0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1)
+//' immvector <- c(0, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0)
+//' propvector <- c(1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)
+//' indataset <- c(0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1)
+//' binvec <- c(0, 0, 0, 0, 0, 0.5, 0.5, 1, 1, 2.5, 7)
+//' 
+//' cypframe_raw <- sf_create(sizes = sizevector, stagenames = stagevector,
+//'   repstatus = repvector, obsstatus = obsvector, matstatus = matvector, 
+//'   propstatus = propvector, immstatus = immvector, indataset = indataset,
+//'   binhalfwidth = binvec)
+//' 
+//' cypraw_v1 <- verticalize3(data = cypdata, noyears = 6, firstyear = 2004,
+//'   patchidcol = "patch", individcol = "plantid", blocksize = 4, 
+//'   sizeacol = "Inf2.04", sizebcol = "Inf.04", sizeccol = "Veg.04", 
+//'   repstracol = "Inf.04", repstrbcol = "Inf2.04", fecacol = "Pod.04",
+//'   stageassign = cypframe_raw, stagesize = "sizeadded", NAas0 = TRUE, 
+//'   NRasRep = TRUE)
+//' 
+//' cypsupp3r <- supplemental(stage3 = c("SD", "SD", "P1", "P1", "P2", "P3", "SL",
+//'     "D", "XSm", "Sm", "D", "XSm", "Sm", "mat", "mat", "mat", "SD", "P1"),
+//'   stage2 = c("SD", "SD", "SD", "SD", "P1", "P2", "P3", "SL", "SL", "SL", "SL",
+//'     "SL", "SL", "D", "XSm", "Sm", "rep", "rep"),
+//'   stage1 = c("SD", "rep", "SD", "rep", "SD", "P1", "P2", "P3", "P3", "P3",
+//'     "SL", "SL", "SL", "SL", "SL", "SL", "mat", "mat"),
+//'   eststage3 = c(NA, NA, NA, NA, NA, NA, NA, "D", "XSm", "Sm", "D", "XSm", "Sm",
+//'     "mat", "mat", "mat", NA, NA),
+//'   eststage2 = c(NA, NA, NA, NA, NA, NA, NA, "XSm", "XSm", "XSm", "XSm", "XSm",
+//'     "XSm", "D", "XSm", "Sm", NA, NA),
+//'   eststage1 = c(NA, NA, NA, NA, NA, NA, NA, "XSm", "XSm", "XSm", "XSm", "XSm",
+//'     "XSm", "XSm", "XSm", "XSm", NA, NA),
+//'   givenrate = c(0.1, 0.1, 0.2, 0.2, 0.2, 0.2, 0.25, NA, NA, NA, NA, NA, NA,
+//'     NA, NA, NA, NA, NA),
+//'   multiplier = c(NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA,
+//'     NA, 0.5, 0.5),
+//'   type = c(1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 3, 3),
+//'   type_t12 = c(1, 2, 1, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1),
+//'   stageframe = cypframe_raw, historical = TRUE)
+//' 
+//' cypmatrix3r <- rlefko3(data = cypraw_v1, stageframe = cypframe_raw, 
+//'   year = "all", stages = c("stage3", "stage2", "stage1"),
+//'   size = c("size3added", "size2added", "size1added"), 
+//'   supplement = cypsupp3r, yearcol = "year2", indivcol = "individ")
+//' 
+//' used_years <-c(2005, 2006, 2007, 2008)
+//' 
+//' yr_tx_vec <- c(0.4, 0.2, 0.2, 0.2, 0.2, 0.4, 0.2, 0.2, 0.2, 0.2, 0.4, 0.2,
+//'   0.2, 0.2, 0.2, 0.4)
+//' yr_tx_mat <- matrix(yr_tx_vec, 4, 4)
+//' 
+//' set.seed(1)
+//' cyp_markov_vec_1 <- markov_run(main_times = used_years, mat = yr_tx_mat,
+//'   times = 100)
+//' 
+//' set.seed(2)
+//' cyp_markov_vec_2 <- markov_run(main_times = used_years, mat = yr_tx_mat,
+//'   times = 100)
+//' 
+//' set.seed(3)
+//' cyp_markov_vec_3 <- markov_run(main_times = used_years, mat = yr_tx_mat,
+//'   times = 100)
+//' 
+//' cypstoch_1 <- projection3(cypmatrix3r, nreps = 1, times = 100,
+//'   year = cyp_markov_vec_1)
+//' cypstoch_2 <- projection3(cypmatrix3r, nreps = 1, times = 100,
+//'   year = cyp_markov_vec_2)
+//' cypstoch_3 <- projection3(cypmatrix3r, nreps = 1, times = 100,
+//'   year = cyp_markov_vec_3)
+//' 
+//' @export markov_run
+// [[Rcpp::export(markov_run)]]
+Rcpp::IntegerVector markov_run(Rcpp::IntegerVector main_times,
+  Rcpp::NumericMatrix mat, int times = 10000,
+  Nullable<IntegerVector> start = R_NilValue) {
+  
+  int start_time {0};
+  bool start_time_found {false};
+  int start_position {0};
+  
+  int mat_rows = mat.nrow();
+  int mat_cols = mat.ncol();
+  int main_times_length = main_times.length();
+  
+  if (mat_rows != mat_cols) throw Rcpp::exception("Input matrix must be square.", false);
+  if (mat_rows != main_times_length) {
+    throw Rcpp::exception("Input matrix must have the same dimensions as the length of vector main_times.", 
+      false);
+  }
+  
+  if (start.isNotNull()) {
+    IntegerVector start_entered(start);
+    
+    if (start_entered.length() != 1) {
+      throw Rcpp::exception("Enter a single integer value for option start.", false);
+    }
+    
+    for (int i = 0; i < main_times_length; i++) {
+      if (main_times(i) == start_entered(0)) {
+        start_time_found = true;
+        start_position = i;
+        start_time = main_times(i);
+      }
+    }
+    
+    if (!start_time_found && start_entered(0) == 0) {
+      start_time_found = true;
+      start_position = 0;
+      start_time = main_times(0);
+    }
+  } else {
+    start_time_found = true;
+    start_position = 0;
+    start_time = main_times(0);
+  }
+  
+  if (!start_time_found) {
+    throw Rcpp::exception("Vector main_times does not include start_time value provided.",
+      false);
+  }
+  
+  // Matrix standardization
+  NumericVector mat_colsums (mat_rows);
+  for (int i = 0; i < mat_cols; i++) {
+    for (int j = 0; j < mat_rows; j++) {
+      if (j == 0) mat_colsums(i) = 0.0;
+      mat_colsums(i) += mat(j, i);
+    }
+  }
+  
+  for (int i = 0; i < mat_cols; i++) {
+    for (int j = 0; j < mat_rows; j++) {
+      mat(j, i) = mat(j, i) / mat_colsums(i);
+    }
+  }
+  
+  // Creation of output vector
+  IntegerVector out_vector (times);
+  IntegerVector time_pulled_vec;
+  int time_pulled;
+  IntegerVector choices = Rcpp::seq(0, (main_times_length - 1));
+  
+  out_vector(0) = start_time;
+  for (int i = 1; i < times; i++) {
+    NumericVector mat_col_used = mat(_, start_position);
+    arma::vec arma_mat_col_used = arma::mat(mat_col_used);
+    time_pulled_vec = Rcpp::RcppArmadillo::sample(choices, 1, true, mat_col_used);
+    time_pulled = time_pulled_vec(0);
+    
+    out_vector(i) = main_times(time_pulled);
+    start_position = time_pulled;
+  }
+  
+  return (out_vector);
 }
 

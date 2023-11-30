@@ -17,7 +17,8 @@ create_lM(
   patchorder = 1,
   yearorder = NA,
   matrix_id = NULL,
-  add_FC = TRUE
+  add_FC = TRUE,
+  sparse_output = FALSE
 )
 }
 \arguments{
@@ -64,6 +65,11 @@ used if importing a list of matrices.}
 \code{matC} matrices to produce the \code{F} matrix. If \code{FALSE}, then
 only uses the \code{matF} matrix. Only used if importing from the COMPADRE or
 COMADRE database. Defaults to \code{TRUE}.}
+
+\item{sparse_output}{A logical value indicating whether to output matrices in
+sparse format. Defaults to \code{FALSE}, in which case all matrices are
+output in standard matrix format. Does not apply to matrices imported from
+COMPADRE or COMADRE, which are always in standard format.}
 }
 \value{
 A \code{lefkoMat} object incorporating the matrices input in object
@@ -80,6 +86,12 @@ and extra information, or from a supplied MPM database such as COMPADRE or
 COMADRE.
 }
 \section{Notes for importing lists of matrices}{
+
+Lists may be composed of a mix of matrices in standard R format (i.e. created
+via the \code{matrix()} function), and in \code{dgCMatrix} sparse format
+(i.e. created via the \code{Matrix::Matrix()} function with
+\code{sparse = TRUE}.) All matrices will be forced to one or the other,
+depending on the value given for the \code{sparse_output} argument.
 
 U and F decomposition assumes that elements holding fecundity values are
 to be interpreted solely as fecundity rates. Users wishing to split these
