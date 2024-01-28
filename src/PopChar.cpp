@@ -2457,8 +2457,8 @@ List actualstage3(RObject data, bool check_stage = true, bool check_age = false,
   StringVector remove_stage_;
   StringVector t1_allow_;
   
-  int year2_num_;
-  int agecol_num_;
+  int year2_num_ {0};
+  int agecol_num_ {0};
   IntegerVector remove_stage_num_;
   IntegerVector remove_stage_num_t1a;
   IntegerVector t1_allow_num_;
@@ -2477,12 +2477,12 @@ List actualstage3(RObject data, bool check_stage = true, bool check_age = false,
   bool indices_num_yn = false;
   bool stagecol_num_yn = false;
   
-  int stage3index_;
-  int stage2index_;
-  int stage1index_;
-  int stage3_;
-  int stage2_;
-  int stage1_;
+  int stage3index_ {0};
+  int stage2index_ {0};
+  int stage1index_ {0};
+  int stage3_ {0};
+  int stage2_ {0};
+  int stage1_ {0};
   
   bool stages3_supplied = false;
   bool stages2_supplied = false;
@@ -3560,7 +3560,7 @@ Rcpp::DataFrame density_reassess(DataFrame stageframe, DataFrame dens_inp,
   }
   
   DataFrame agestages_;
-  arma::ivec agestages_stageid;
+  arma::uvec agestages_stageid;
   StringVector agestages_stage;
   arma::ivec agestages_age;
   int agestages_rows = 0;
@@ -3582,7 +3582,7 @@ Rcpp::DataFrame density_reassess(DataFrame stageframe, DataFrame dens_inp,
         
       } else {
         agestages_stage = as<StringVector>(agestages_["stage"]);
-        agestages_stageid = as<arma::ivec>(agestages_["stage_id"]);
+        agestages_stageid = as<arma::uvec>(agestages_["stage_id"]);
         agestages_age = as<arma::ivec>(agestages_["age"]);
         agestages_rows = agestages_stage.length();
         age_min = agestages_age.min();
@@ -8172,13 +8172,13 @@ Rcpp::List edit_lM (const RObject mpm, Nullable<RObject> pop = R_NilValue,
       for (int j = 0; j < agestages_length; j++) {
         if (agst_stage(j) == new_stage3(i)) found_stage3 = agst_stage_id(j);
         if (agst_stage(j) == new_stage2(i)) found_stage2 = agst_stage_id(j);
-        if (agst_age(j) == new_age2(i)) found_age2 = agst_age(j);
+        if (static_cast<int>(agst_age(j)) == static_cast<int>(new_age2(i))) found_age2 = agst_age(j);
         
         if (!IntegerVector::is_na(new_estage2(i))) {
           new_use_est(i) = 1;
           if (agst_stage(j) == new_eststage3(i)) found_eststage3 = agst_stage_id(j);
           if (agst_stage(j) == new_eststage2(i)) found_eststage2 = agst_stage_id(j);
-          if (agst_age(j) == new_estage2(i)) found_estage2 = agst_age(j);
+          if (static_cast<int>(agst_age(j)) == static_cast<int>(new_estage2(i))) found_estage2 = agst_age(j);
         }
       }
       

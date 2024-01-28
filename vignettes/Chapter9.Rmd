@@ -197,6 +197,7 @@ anth_lefkoMat <- create_lM(mats_list, anthframe, hstages = NA,
   yearorder = c(2003, 2004, 2005, 2003, 2004, 2005, 2003, 2004, 2005, 2003,
     2004, 2005, 2003, 2004, 2005, 2003, 2004, 2005, 2003, 2004, 2005, 2003,
     2004, 2005, 2003, 2004, 2005))
+#> Warning: No supplement provided. Assuming fecundity yields all propagule and immature stages.
 #anth_lefkoMat
 ```
   
@@ -244,8 +245,7 @@ legend("topleft", c("det annual", "det mean", "stochastic"), lty = c(2, 1, 1),
   <p style="text-indent: 20px">Let's conduct a life table response experiment (LTRE) next. This will be a deterministic LTRE, meaning that we will assess the impacts of differences in matrix elements between the core matrices input via the `lefkoMat` object `anth_lefkoMat` and the overall arithmetic grand mean matrix on differences in the deterministic growth rate, $\lambda$. We could use a different reference matrix if we wished, but the default is to use the arithmetic grand mean. Here, because we cannot analyze temporal shifts using a deterministic LTRE, we will utilize the mean matrix set instead.</p>
 
 ```r
-trialltre_det <- ltre3(anth_lmean, stochastic = FALSE, steps = 10000,
-  time_weights = NA, sparse = "auto")
+trialltre_det <- ltre3(anth_lmean, sparse = "auto")
 #> Warning: Matrices input as mats will also be used in reference matrix calculation.
 #> Using all refmats matrices in reference matrix calculation.
 #trialltre_det
@@ -254,8 +254,8 @@ trialltre_det <- ltre3(anth_lmean, stochastic = FALSE, steps = 10000,
   <p style="text-indent: 20px">The resulting `lefkoLTRE` object gives the LTRE contributions for each matrix relative to the arithmetic grand mean matrix. While the differences in LTRE contributions across space are of interest, we cannot infer differences across time this way because matrices are not related additively across time. To assess the contributions across space while accounting for temporal shifts, we should conduct a stochastic LTRE (sLTRE) or small-noise approximation LTRE (SNA-LTRE) on the original annual matrices. Here, conduct a sLTRE.</p>
 
 ```r
-trialltre_sto <- ltre3(anth_lefkoMat, stochastic = TRUE, steps = 10000,
-  time_weights = NA, sparse = "auto")
+trialltre_sto <- ltre3(anth_lefkoMat, stochastic = TRUE, times = 10000,
+  tweights = NA, sparse = "auto", seed = 42)
 #> Warning: Matrices input as mats will also be used in reference matrix calculation.
 #> Using all refmats matrices in reference matrix calculation.
 #trialltre_sto
@@ -281,26 +281,26 @@ which(trialltre_det$cont_mean[[1]] == min(trialltre_det$cont_mean[[1]]))
 
 # Highest stochastic mean LTRE contribution:
 max(trialltre_sto$cont_mean[[1]])
-#> [1] 0.0179472
+#> [1] 0.01788772
 # Highest stochastic mean LTRE contribution is associated with element:
 which(trialltre_sto$cont_mean[[1]] == max(trialltre_sto$cont_mean[[1]]))
 #> [1] 3
 # Lowest stochastic mean LTRE contribution:
 min(trialltre_sto$cont_mean[[1]])
-#> [1] -0.3709379
+#> [1] -0.3700463
 # Lowest stochastic mean LTRE contribution is associated with element:
 which(trialltre_sto$cont_mean[[1]] == min(trialltre_sto$cont_mean[[1]]))
 #> [1] 13
 
 # Highest stochastic SD LTRE contribution:
 max(trialltre_sto$cont_sd[[1]])
-#> [1] 0.009858186
+#> [1] 0.00952507
 # Highest stochastic SD LTRE contribution is associated with element:
 which(trialltre_sto$cont_sd[[1]] == max(trialltre_sto$cont_sd[[1]]))
 #> [1] 13
 # Lowest stochastic SD LTRE contribution:
 min(trialltre_sto$cont_sd[[1]])
-#> [1] -0.01256449
+#> [1] -0.01135741
 # Lowest stochastic SD LTRE contribution is associated with element:
 which(trialltre_sto$cont_sd[[1]] == min(trialltre_sto$cont_sd[[1]]))
 #> [1] 16
@@ -313,16 +313,16 @@ sum(trialltre_det$cont_mean[[1]][which(trialltre_det$cont_mean[[1]] < 0)])
 #> [1] -0.4079573
 # Total positive stochastic mean LTRE contributions:
 sum(trialltre_sto$cont_mean[[1]][which(trialltre_sto$cont_mean[[1]] > 0)])
-#> [1] 0.04472458
+#> [1] 0.04459663
 # Total negative stochastic mean LTRE contributions:
 sum(trialltre_sto$cont_mean[[1]][which(trialltre_sto$cont_mean[[1]] < 0)])
-#> [1] -0.5097578
+#> [1] -0.5085542
 # Total positive stochastic SD LTRE contributions:
 sum(trialltre_sto$cont_sd[[1]][which(trialltre_sto$cont_sd[[1]] > 0)])
-#> [1] 0.01060831
+#> [1] 0.01026457
 # Total negative stochastic SD LTRE contributions:
 sum(trialltre_sto$cont_sd[[1]][which(trialltre_sto$cont_sd[[1]] < 0)])
-#> [1] -0.02347767
+#> [1] -0.02232758
 ```
   
 The output for the deterministic LTRE shows that element 13, which is the fecundity transition from large flowering adult to seedling (column 4, row 1), has the strongest influence. This contribution is negative, so it reduces $\lambda$. The most positive contribution to $\lambda$ is from element 3, which is the growth transition from seedling to small flowering adult (column 1, row 3). We also see the sLTRE produced the same results in contributions of shifts in the mean as the deterministic LTRE. Variability in elements also contributes to shifts in $\text{log} \lambda$, though less so than shifts in mean elements. The strongest positive contribution is from variation in the fecundity transition from large flowering adult to seedling (element 13, column 4, row 1), while the most negative contribution is from stasis as a large flowering adult (element 16, row and column 4). A comparison of summed LTRE elements shows that negative contributions of mean elements were most influential in the stochastic case, while variability of elements had little overall influence.

@@ -4,16 +4,16 @@
 \alias{elasticity3.matrix}
 \title{Estimate Elasticity of Population Growth Rate of a Single Matrix}
 \usage{
-\method{elasticity3}{matrix}(mats, force_sparse = "auto", ...)
+\method{elasticity3}{matrix}(mats, sparse = "auto", ...)
 }
 \arguments{
 \item{mats}{An object of class \code{matrix}.}
 
-\item{force_sparse}{A text string indicating whether to use sparse matrix
-encoding (\code{"yes"}) or not (\code{"no"}) with standard matrix input.
-Defaults to \code{"auto"}, in which case sparse matrix encoding is used with
-square matrices with at least 50 rows and no more than 50\% of elements with
-values greater than zero.}
+\item{sparse}{A text string indicating whether to use sparse matrix encoding
+(\code{"yes"}) or dense matrix encoding (\code{"no"}). Defaults to
+\code{"auto"}, in which case sparse matrix encoding is used with square
+matrices with at least 50 rows and no more than 50\% of elements with values
+greater than zero.}
 
 \item{...}{Other parameters.}
 }
@@ -35,6 +35,9 @@ determination to forced dense or sparse matrix projection. This will most
 likely occur when matrices have between 30 and 300 rows and columns.
 Defaults work best when matrices are very small and dense, or very large and
 sparse.
+
+The \code{force_sparse} argument is now deprecated. Please use \code{sparse}
+instead.
 }
 
 \examples{

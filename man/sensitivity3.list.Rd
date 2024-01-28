@@ -7,9 +7,10 @@
 \method{sensitivity3}{list}(
   mats,
   stochastic = FALSE,
-  steps = 10000,
-  time_weights = NA,
+  times = 10000,
+  tweights = NA,
   historical = FALSE,
+  seed = NA,
   sparse = "auto",
   append_mats = FALSE,
   ...
@@ -22,14 +23,21 @@
 deterministic (FALSE) or stochastic (TRUE) sensitivity analysis. Defaults to
 FALSE.}
 
-\item{steps}{The number of occasions to project forward in stochastic
+\item{times}{The number of occasions to project forward in stochastic
 simulation. Defaults to 10,000.}
 
-\item{time_weights}{Numeric vector denoting the probabilistic weightings of
-annual matrices. Defaults to equal weighting among occasions.}
+\item{tweights}{An optional numeric vector or matrix denoting the
+probabilities of choosing each matrix in a stochastic projection. If a matrix
+is input, then a first-order Markovian environment is assumed, in which the
+probability of choosing a specific annual matrix depends on which annual
+matrix is currently chosen. If a vector is input, then the choice of annual
+matrix is assumed to be independent of the current matrix. Defaults to equal
+weighting among matrices.}
 
 \item{historical}{A logical value indicating whether matrices are historical.
 Defaults to \code{FALSE}.}
+
+\item{seed}{A number to use as a random number seed in stochastic projection.}
 
 \item{sparse}{A text string indicating whether to use sparse matrix encoding
 (\code{"yes"}) or dense matrix encoding (\code{"no"}). Defaults to
@@ -82,6 +90,9 @@ determination to forced dense or sparse matrix projection. This will most
 likely occur when matrices have between 30 and 300 rows and columns.
 Defaults work best when matrices are very small and dense, or very large and
 sparse.
+
+The \code{time_weights} and \code{steps} arguments are now deprecated.
+Instead, please use the \code{tweights} and \code{times} arguments.
 }
 
 \examples{

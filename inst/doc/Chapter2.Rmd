@@ -471,6 +471,7 @@ legend("topleft", c("det ahistorical", "det historical", "sto ahistorical",
 
 ```r
 ehrlen2sens <- sensitivity3(ehrlen2mean)
+#> Running deterministic analysis...
 print(ehrlen2sens$ah_sensmats[[1]], digits = 3)
 #>        [,1]    [,2]   [,3]   [,4]    [,5]    [,6]    [,7]
 #> [1,] 0.0182 0.00284 0.0142 0.0116 0.00479 0.00347 0.00705
@@ -503,6 +504,7 @@ which(ehrlen2sens$ah_sensmats[[1]] ==
 
 ```r
 ehrlen3sens <- sensitivity3(ehrlen3mean)
+#> Running deterministic analysis...
 #ehrlen3sens
 ```
   
@@ -534,7 +536,9 @@ which(ehrlen3sens$ah_sensmats[[1]] ==
 
 ```r
 ehrlen2sens_s <- sensitivity3(ehrlen2, stochastic = TRUE)
+#> Running stochastic analysis...
 ehrlen3sens_s <- sensitivity3(ehrlen3, stochastic = TRUE)
+#> Running stochastic analysis...
 ```
   
   <p style="text-indent: 20px">A complementary approach to sensitivity analysis is elasticity analysis. Elasticities are easier to interpret because projection matrix elements valued at 0 produce elasticity values also equal to 0, thus eliminating biologically impossible transitions from consideration. Elasticity values are also scaled to sum to 1.0, making elasticities of survival transitions easier to compare to those of fecundity. However, they are also interpreted differently, because while sensitivity analysis shows the impact of a tiny but *absolute* change to a matrix element on $\lambda$, elasticity analysis shows the impact of a tiny but *proportional* change to a matrix element on $\lambda$. In fact, both sensitivities and elasticities are essentially local slopes, and so are not unit free. It is therefore not unusual for sensitivity and elasticity analysis to yield different inferences.</p>
@@ -543,6 +547,7 @@ ehrlen3sens_s <- sensitivity3(ehrlen3, stochastic = TRUE)
 
 ```r
 ehrlen2elas <- elasticity3(ehrlen2mean)
+#> Running deterministic analysis...
 print(ehrlen2elas$ah_elasmats, digits = 3)
 #> [[1]]
 #>         [,1]    [,2]     [,3]   [,4]    [,5]    [,6]   [,7]
@@ -575,6 +580,7 @@ print(colSums(ehrlen2elas$ah_elasmats[[1]]), digits = 3)
 
 ```r
 ehrlen3elas <- elasticity3(ehrlen3mean)
+#> Running deterministic analysis...
 
 # The highest deterministic elasticity value:
 max(ehrlen3elas$h_elasmats[[1]])
@@ -605,7 +611,9 @@ print(ehrlen3elas$ah_elasmats, digits = 3)
 
 ```r
 ehrlen2elas_s <- elasticity3(ehrlen2, stochastic = TRUE)
+#> Running stochastic analysis...
 ehrlen3elas_s <- elasticity3(ehrlen3, stochastic = TRUE)
+#> Running stochastic analysis...
 elas_put_together <- cbind.data.frame(colSums(ehrlen2elas$ah_elasmats[[1]]), 
   colSums(ehrlen3elas$ah_elasmats[[1]]), colSums(ehrlen2elas_s$ah_elasmats[[1]]),
   colSums(ehrlen3elas_s$ah_elasmats[[1]]))

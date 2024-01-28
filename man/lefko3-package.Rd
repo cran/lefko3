@@ -2,6 +2,7 @@
 % Please edit documentation in R/lefko3-package.R
 \docType{package}
 \name{lefko3-package}
+\alias{lefko3}
 \alias{lefko3-package}
 \title{Historical and Ahistorical Population Projection Matrix Analysis}
 \description{
@@ -42,6 +43,13 @@ lefko3 also includes example datasets complete with sample code.
 Shefferson, R.P., J. Ehrlen, and S. Kurokawa. 2021. 
 \emph{lefko3}: analyzing individual history through size-classified matrix 
 population models. \emph{Methods in Ecology and Evolution} 12(2): 378-382.
+}
+\seealso{
+Useful links:
+\itemize{
+  \item \url{http://www.sheffersonlab.com/projects.html}
+}
+
 }
 \author{
 Richard P. Shefferson <cdorm@g.ecc.u-tokyo.ac.jp>

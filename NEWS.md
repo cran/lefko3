@@ -1,3 +1,48 @@
+# lefko3 6.2.0 (2024-01-27)
+
+## NEW FEATURES
+
+* Functions projection3(), f_projection3(), slambda3(), stablestage3(),
+  repvalue3(), sensitivity3(), elasticity3(), and ltre3() can now perform
+  first-order Markovian temporally stochastic simulations.
+  
+* Functions stablestage3() and repvalue3() can now handle stochastic
+  projections.
+  
+* Functions sensitivity3() and elasticity3() can now be forced to return output
+  in either standard or sparse matrix format for single matrix inputs.
+
+* Function append_lP() created to append projections to each other.
+
+* Function matrix_interp() created to aid in summarizing results from analyses
+  of huge matrices.
+  
+* Function lambda3() now estimates population growth rate and its logarithm in
+  lefkoProj objects.
+
+## USER VISIBLE CHANGES
+
+* Some arguments have been standardized across population dynamics functions.
+
+* Zero-inflated Poisson and negative binomial GLMs have been disabled in
+  function modelsearch() pending issues in package pscl.
+  
+* Vignettes updated to deal with breaking changes.
+
+## BUG FIXES
+
+* Function f_projection3() no longer fails when non-stochastic projections are
+  conducted with multiple times.
+  
+* Function f_projection3() no longer fails when the number of times requested is
+  lower than the number of recognized times in the dataset.
+  
+* Functions stablestage3() and repvalue3() no longer fail when a tweights
+  vector or matrix is entered.
+  
+* Functions sensitivity3() and elasticity3() no longer fail under some
+  conditions involving sparse matrices.
+
 # lefko3 6.1.3 (2023-11-30)
 
 ## NEW FEATURES

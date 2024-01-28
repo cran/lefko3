@@ -364,7 +364,7 @@ cypmodels3 <- modelsearch(vertdata, historical = TRUE, approach = "mixed",
 #summary(cypmodels3)
 ```
   
-  <p style="text-indent: 20px">As `modelsearch` works, it produces text describing its current processes and any issues encountered. It is quite likely that many warning messages will appear, and these may be of use in understanding the dataset and how well it conforms to analytical assumptions. We have silenced most of this with the `quiet = "partial"` option, although some red text still indicates mileposts reached by the function and a few warnings that have slipped through from the core estimation functions. The warnings are not to be terribly concerned about. However, we encourage users to allow the function to run unsilenced in case of severe modeling problems (`quiet = FALSE`). Please read the documentation for functions `lm()` (`stats` package), `glm()` (`stats` package), `glm.nb()` (`MASS` package), `lmer()` (`lme4` package), `glmer()` (`lme4` package), `glmmTMB()` (`glmmTMB` package), `zeroinfl()` (`pscl` package), `vglm()` (`VGAM` package), and `dredge()` (`MuMIn` package) for further information on the sources of warnings.</p>
+  <p style="text-indent: 20px">As `modelsearch` searches, it produces text describing its current processes and any issues encountered. It is quite likely that many warning messages will appear, and these may be of use in understanding the dataset and how well it conforms to analytical assumptions. We have silenced most of this with the `quiet = "partial"` option, although some red text still indicates mileposts reached by the function and a few warnings that have slipped through from the core estimation functions. The warnings are not to be terribly concerned about. However, we encourage users to allow the function to run unsilenced in case of severe modeling problems (`quiet = FALSE`). Please read the documentation for functions `lm()` (`stats` package), `glm()` (`stats` package), `glm.nb()` (`MASS` package), `lmer()` (`lme4` package), `glmer()` (`lme4` package), `glmmTMB()` (`glmmTMB` package), `zeroinfl()` (`pscl` package), `vglm()` (`VGAM` package), and `dredge()` (`MuMIn` package) for further information on the sources of warnings.</p>
   
   <p style="text-indent: 20px">In the output, we see historical terms determining primary size, suggesting that we cannot ignore history. As such, the models created above are actually only usable for the construction of historical models. We can also see that although the accuracy of our some vital rate models is very high, while it was only fair for others. For comparison, we may wish to estimate ahistorical models. In that case, we also need linear models in which the global models tested do not include state at occasion *t*-1, as below.</p>
 
@@ -480,16 +480,16 @@ cypann3s <- slambda3(cypmatrix3)
 
 lambda3(tmeans2r)
 #>   pop patch    lambda
-#> 1   1     1 0.9603461
+#> 1   1     1 0.9603458
 lambda3(tmeans3r)
 #>   pop patch    lambda
-#> 1   1  <NA> 0.9605928
+#> 1   1  <NA> 0.9605924
 cypann2s
 #>   pop patch           a         var         sd           se
-#> 1   1     1 -0.04043205 0.002352739 0.04850504 0.0004850504
+#> 1   1     1 -0.04043239 0.002352741 0.04850506 0.0004850506
 cypann3s
-#>   pop patch          a         var         sd           se
-#> 1   1  <NA> -0.0401626 0.002337849 0.04835131 0.0004835131
+#>   pop patch           a         var         sd           se
+#> 1   1  <NA> -0.04016294 0.002337852 0.04835134 0.0004835134
 ```
   
   <p style="text-indent: 20px">These $\lambda$ values are similar to one another, as are estimates of $a = \text{log} \lambda _{S}$. Let's take a look at a plot of annual deterministic growth rates (stochastic growth rate is calculated as a single value across time, and so is not included). We find that annual $\lambda$ estimates differ only slightly between ahistorical and historical analyses.</p>
@@ -561,12 +561,13 @@ We see roughly equivalent patterns here. All analyses show the smallest reproduc
 
 ```r
 tm2sens <- sensitivity3(tmeans2r)
-set.seed(42)
-tm2sens_s <- sensitivity3(cypmatrix2, stochastic = TRUE)
+#> Running deterministic analysis...
+tm2sens_s <- sensitivity3(cypmatrix2, stochastic = TRUE, seed = 42)
+#> Running stochastic analysis...
 
 # The highest deterministic sensitivity value:
 max(tm2sens$ah_sensmats[[1]][which(tmeans2r$A[[1]] > 0)])
-#> [1] 0.2002353
+#> [1] 0.2002354
 # This value is associated with element:
 which(tm2sens$ah_sensmats[[1]] == 
   max(tm2sens$ah_sensmats[[1]][which(tmeans2r$A[[1]] > 0)]))
@@ -574,7 +575,7 @@ which(tm2sens$ah_sensmats[[1]] ==
 
 # The highest stochastic sensitivity value:
 max(tm2sens_s$ah_sensmats[[1]][which(tmeans2r$A[[1]] > 0)])
-#> [1] 0.1771649
+#> [1] 0.1771651
 # This value is associated with element:
 which(tm2sens_s$ah_sensmats[[1]] == 
   max(tm2sens_s$ah_sensmats[[1]][which(tmeans2r$A[[1]] > 0)]))
@@ -587,35 +588,36 @@ which(tm2sens_s$ah_sensmats[[1]] ==
 
 ```r
 tm3sens <- sensitivity3(tmeans3r)
-set.seed(42)
-tm3sens_s <- sensitivity3(cypmatrix3, stochastic = TRUE, steps = 500)
+#> Running deterministic analysis...
+tm3sens_s <- sensitivity3(cypmatrix3, stochastic = TRUE, times = 500, seed = 42)
+#> Running stochastic analysis...
 
 # The highest deterministic sensitivity value:
 max(as.matrix(tm3sens$h_sensmats[[1]])[which(as.matrix(tmeans3r$A[[1]]) > 0)])
-#> [1] 0.05042798
+#> [1] 0.05042799
 # This value is associated with element:
 which(as.matrix(tm3sens$h_sensmats[[1]]) == 
   max(as.matrix(tm3sens$h_sensmats[[1]])[which(as.matrix(tmeans3r$A[[1]]) > 0)]))
-#> [1] 962658 962712 962982 963306 963522 963630 963792
+#> [1] 962658 963198 963630
 # The highest stochastic sensitivity value:
 max(as.matrix(tm3sens_s$h_sensmats[[1]])[which(as.matrix(tmeans3r$A[[1]]) > 0)])
-#> [1] 0.03981064
+#> [1] 0.03981066
 # This value is associated with element:
 which(as.matrix(tm3sens_s$h_sensmats[[1]]) == 
   max(as.matrix(tm3sens_s$h_sensmats[[1]])[which(as.matrix(tmeans3r$A[[1]]) > 0)]))
-#>  [1] 962604 962658 962712 962766 962820 962874 962928 962982 963036 963090 963144 963198 963252 963306 963360
-#> [16] 963414 963468 963522 963576 963630 963684 963738 963792 963846 963900
+#>  [1] 962604 962658 962712 962766 962820 962874 962928 962982 963036 963090 963144 963198 963252 963306 963360 963414 963468 963522 963576
+#> [20] 963630 963684 963738 963792 963846 963900
 
 # The highest deterministic sensitivity value (historically-corrected):
 max(as.matrix(tm3sens$ah_sensmats[[1]])[which(as.matrix(tmeans2r$A[[1]]) > 0)])
-#> [1] 0.1999134
+#> [1] 0.1999135
 # This value is associated with element:
 which(as.matrix(tm3sens$ah_sensmats[[1]]) ==
   max(as.matrix(tm3sens$ah_sensmats[[1]])[which(as.matrix(tmeans2r$A[[1]]) > 0)]))
 #> [1] 378
 # The highest stochastic sensitivity value (historically-corrected):
 max(as.matrix(tm3sens_s$ah_sensmats[[1]])[which(as.matrix(tmeans2r$A[[1]]) > 0)])
-#> [1] 0.1725525
+#> [1] 0.1725527
 # This value is associated with element:
 which(as.matrix(tm3sens_s$ah_sensmats[[1]]) ==
   max(as.matrix(tm3sens_s$ah_sensmats[[1]])[which(as.matrix(tmeans2r$A[[1]]) > 0)]))
@@ -628,11 +630,13 @@ which(as.matrix(tm3sens_s$ah_sensmats[[1]]) ==
 
 ```r
 tm2elas <- elasticity3(tmeans2r)
+#> Running deterministic analysis...
 tm3elas <- elasticity3(tmeans3r)
-set.seed(42)
-tm2elas_s <- elasticity3(cypmatrix2, stochastic = TRUE)
-set.seed(42)
-tm3elas_s <- elasticity3(cypmatrix3, stochastic = TRUE, steps = 500)
+#> Running deterministic analysis...
+tm2elas_s <- elasticity3(cypmatrix2, stochastic = TRUE, seed = 42)
+#> Running stochastic analysis...
+tm3elas_s <- elasticity3(cypmatrix3, stochastic = TRUE, times = 500, seed = 42)
+#> Running stochastic analysis...
 
 # The largest ahistorical deterministic elasticity is associated with element:
 which(tm2elas$ah_elasmats[[1]] == max(tm2elas$ah_elasmats[[1]]))
@@ -657,7 +661,7 @@ which(as.matrix(tm3elas_s$h_elasmats[[1]]) ==
 #> [1] 962611
 ```
   
-  <p style="text-indent: 20px">Ahistorical and historical, deterministic and stochastic analyses suggest that population growth rate is most elastic in response to stasis as 1-sprouted non-flowering adult (element 331). Indeed, element 962,611 in the historical case is actually stasis in this stage across times *t*-1, *t*, and *t*+1 (column: `round(962611/2916) = 331`; row: `962611 %% 2916 = 331`). This is a remarkably consistent result, reinforcing the importance of this stage as seen in sensitivity analyses.</p>
+  <p style="text-indent: 20px">Ahistorical and historical, deterministic and stochastic analyses suggest that population growth rate is most elastic in response to stasis as 1-sprouted non-flowering adult (element 331). Indeed, element 962,611 in the historical case is actually stasis in this stage across times *t*-1, *t*, and *t*+1 (column: `round(962611 / 2916) = 331`; row: `962611 %% 2916 = 331`). This is a remarkably consistent result, reinforcing the importance of this stage as seen in sensitivity analyses.</p>
   
   <p style="text-indent: 20px">Now let's compare the elasticity of population growth rate in relation to the core life history stages, via a barplot comparison.</p>
 

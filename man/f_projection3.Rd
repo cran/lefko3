@@ -343,8 +343,13 @@ or stage-pairs that should be set to non-zero values in the starting vector,
 and what those values should be. Can only be used with \code{lefkoMat}
 objects.}
 
-\item{tweights}{An optional numeric vector denoting the probabilistic
-weightings of year terms. Defaults to equal weighting among occasions.}
+\item{tweights}{An optional numeric vector or matrix denoting the
+probabilities of choosing each matrix in a stochastic projection. If a
+matrix is input, then a first-order Markovian environment is assumed, in
+which the probability of choosing a specific annual matrix depends on which
+annual matrix is currently chosen. If a vector is input, then the choice of
+annual matrix is assumed to be independent of the current matrix. Defaults
+to equal weighting among matrices.}
 
 \item{density}{An optional data frame describing the matrix elements that
 will be subject to density dependence, and the exact kind of density
@@ -380,7 +385,7 @@ structure is the same as in \code{\link{projection3}()}.}
 occasion in each replicate in each pop-patch or population. The list
 structure is the same as in \code{\link{projection3}()}.}
 \item{pop_size}{A list of matrices showing the total population size in each
-occasion per replicate (row within data frame) per pop-patch or population
+occasion per replicate (row within matrix) per pop-patch or population
 (list element). Only a single pop-patch or population is allowed in
 \code{f_projection3()}.}
 \item{labels}{A data frame showing the order of populations and patches in
@@ -463,6 +468,11 @@ determination to forced dense or sparse matrix projection. This will most
 likely occur when matrices have between 30 and 300 rows and columns.
 Defaults work best when matrices are very small and dense, or very large and
 sparse.
+
+Some issues may arise in first-order Markovian stochastic projections if
+the \code{year} argument is used. Use the matrix input in the
+\code{tweights} argument to eliminate any years from consideration that are
+not needed.
 }
 
 \examples{
@@ -540,6 +550,12 @@ summary(trial7a)
 
 }
 \seealso{
+\code{\link{start_input}()}
+
+\code{\link{density_input}()}
+
+\code{\link{density_vr}()}
+
 \code{\link{projection3}()}
 
 \code{\link{flefko3}()}
@@ -549,4 +565,10 @@ summary(trial7a)
 \code{\link{aflefko2}()}
 
 \code{\link{fleslie}()}
+
+\code{\link{append_lP}()}
+
+\code{\link{summary.lefkoProj}()}
+
+\code{\link{plot.lefkoProj}()}
 }

@@ -91,8 +91,13 @@ or stage-pairs that should be set to non-zero values in the starting vector,
 and what those values should be. Can only be used with \code{lefkoMat}
 objects.}
 
-\item{tweights}{An optional numeric vector denoting the probabilistic
-weightings of annual matrices. Defaults to equal weighting among occasions.}
+\item{tweights}{An optional numeric vector or matrix denoting the
+probabilities of choosing each matrix in a stochastic projection. If a
+matrix is input, then a first-order Markovian environment is assumed, in
+which the probability of choosing a specific annual matrix depends on which
+annual matrix is currently chosen. If a vector is input, then the choice of
+annual matrix is assumed to be independent of the current matrix. Defaults
+to equal weighting among matrices.}
 
 \item{density}{An optional data frame describing the matrix elements that
 will be subject to density dependence, and the exact kind of density
@@ -122,8 +127,8 @@ is the same as in \code{projection}.}
 \item{rep_value}{A list of lists of the actual reproductive value in each
 occasion in each replicate in each pop-patch or population. The list order
 is the same as in \code{projection}.}
-\item{pop_size}{A list of data frames showing the total population size in
-each occasion per replicate (row within data frame) per pop-patch or
+\item{pop_size}{A list of matrices showing the total population size in
+each occasion per replicate (row within matrix) per pop-patch or
 population (list element).}
 \item{labels}{A data frame showing the order of populations and patches in
 item \code{projection}.}
@@ -319,4 +324,10 @@ cypstoch <- projection3(cypmatrix3r, nreps = 5, stochastic = TRUE)
 \code{\link{density_input}()}
 
 \code{\link{f_projection3}()}
+
+\code{\link{append_lP}()}
+
+\code{\link{summary.lefkoProj}()}
+
+\code{\link{plot.lefkoProj}()}
 }

@@ -9,11 +9,11 @@ ltre3(
   refmats = NA,
   ref = NA,
   stochastic = FALSE,
-  steps = 10000,
+  times = 10000,
   burnin = 3000,
-  time_weights = NA,
-  force_sparse = "auto",
-  rseed = NA,
+  tweights = NA,
+  sparse = "auto",
+  seed = NA,
   append_mats = FALSE,
   sna_ltre = FALSE,
   tol = 1e-30,
@@ -36,22 +36,29 @@ number of the matrices in the \code{labels} element of the associated
 deterministic (\code{FALSE}) or stochastic (\code{TRUE}) elasticity analysis.
 Defaults to \code{FALSE}.}
 
-\item{steps}{The number of occasions to project forward in stochastic
+\item{times}{The number of occasions to project forward in stochastic
 simulation. Defaults to \code{10000}.}
 
 \item{burnin}{The number of initial steps to ignore in stochastic projection
 when calculating stochastic elasticities. Must be smaller than \code{steps}.
 Defaults to \code{3000}.}
 
-\item{time_weights}{Numeric vector denoting the probabilistic weightings of
-all matrices. Defaults to equal weighting among matrices.}
+\item{tweights}{An optional numeric vector or matrix denoting the
+probabilities of choosing each matrix in a stochastic projection. If a matrix
+is input, then a first-order Markovian environment is assumed, in which the
+probability of choosing a specific annual matrix depends on which annual
+matrix is currently chosen. If a vector is input, then the choice of annual
+matrix is assumed to be independent of the current matrix. Defaults to equal
+weighting among matrices. Note that SNA-LTRE analysis cannot take matrix
+input.}
 
-\item{force_sparse}{A string indicating whether to use sparse matrix encoding
+\item{sparse}{A text string indicating whether to use sparse matrix encoding
 (\code{"yes"}) or dense matrix encoding (\code{"no"}). Defaults to
-\code{"auto"}. Can also be set to a logical value of \code{TRUE} or
-\code{FALSE}.}
+\code{"auto"}, in which case sparse matrix encoding is used with square
+matrices with at least 50 rows and no more than 50\% of elements with values
+greater than zero.}
 
-\item{rseed}{Optional numeric value corresponding to the random seed for
+\item{seed}{Optional numeric value corresponding to the random seed for
 stochastic simulation.}
 
 \item{append_mats}{A logical value denoting whether to include the original
@@ -107,7 +114,7 @@ simulated per Davison et al. (2010) Journal of Ecology 98:255-267
 108760 (doi: 10.1016/j.ecolmodel.2019.108760).
 
 All stochastic and small noise approximation LTREs conducted without
-reference matrices are conducted as spatial tests of the population dynamics
+reference matrices are performed as spatial tests of the population dynamics
 among patches.
 
 Default behavior for stochastic LTRE uses the full population provided in
@@ -120,14 +127,14 @@ population. This function cannot currently handle multiple populations within
 the same \code{mats} object (although such analysis is possible if these
 populations are designated as patches instead).
 
-If \code{force_sparse = "auto"}, the default, then sparse matrix encoding
+If \code{sparse = "auto"}, the default, then sparse matrix encoding
 will be used if the size of the input matrices is at least 50 columns by 50
 rows for deterministic and stochastic LTREs and 10 columns by 10 rows for
 small noise approximation LTREs, in all cases as long as 50\% of the elements
 in the first matrix are non-zero.
 
-Note that stochastic LTREs do not test for the impact of temporal change in
-vital rates. An MPM with a single population, a single patch, and only annual
+Stochastic LTREs do not test for the impact of temporal change in vital
+rates. An MPM with a single population, a single patch, and only annual
 matrices will produce contributions of 0 to stochastic \eqn{\lambda}.
 
 Speed can sometimes be increased by shifting from automatic sparse matrix
@@ -135,6 +142,14 @@ determination to forced dense or sparse matrix projection. This will most
 likely occur when matrices have between 10 and 300 rows and columns.
 Defaults work best when matrices are very small and dense, or very large and
 sparse.
+
+SNA-LTRE analysis cannot test the impact of first-order Markovian
+environments. However, different random weightings of annual matrices are
+allowed if given in vector format.
+
+The \code{time_weights}, \code{steps}, \code{force_sparse}, and \code{rseed}
+arguments are now deprecated. Instead, please use the \code{tweights},
+\code{times}, \code{sparse}, and \code{seed} arguments.
 }
 
 \examples{

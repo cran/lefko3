@@ -2112,8 +2112,13 @@ NULL
 #' or stage-pairs that should be set to non-zero values in the starting vector,
 #' and what those values should be. Can only be used with \code{lefkoMat}
 #' objects.
-#' @param tweights An optional numeric vector denoting the probabilistic
-#' weightings of year terms. Defaults to equal weighting among occasions.
+#' @param tweights An optional numeric vector or matrix denoting the
+#' probabilities of choosing each matrix in a stochastic projection. If a
+#' matrix is input, then a first-order Markovian environment is assumed, in
+#' which the probability of choosing a specific annual matrix depends on which
+#' annual matrix is currently chosen. If a vector is input, then the choice of
+#' annual matrix is assumed to be independent of the current matrix. Defaults
+#' to equal weighting among matrices.
 #' @param density An optional data frame describing the matrix elements that
 #' will be subject to density dependence, and the exact kind of density
 #' dependence that they will be subject to. The data frame used should be an
@@ -2145,7 +2150,7 @@ NULL
 #' occasion in each replicate in each pop-patch or population. The list
 #' structure is the same as in \code{\link{projection3}()}.}
 #' \item{pop_size}{A list of matrices showing the total population size in each
-#' occasion per replicate (row within data frame) per pop-patch or population
+#' occasion per replicate (row within matrix) per pop-patch or population
 #' (list element). Only a single pop-patch or population is allowed in
 #' \code{f_projection3()}.}
 #' \item{labels}{A data frame showing the order of populations and patches in
@@ -2220,11 +2225,22 @@ NULL
 #' Defaults work best when matrices are very small and dense, or very large and
 #' sparse.
 #' 
+#' Some issues may arise in first-order Markovian stochastic projections if
+#' the \code{year} argument is used. Use the matrix input in the
+#' \code{tweights} argument to eliminate any years from consideration that are
+#' not needed.
+#' 
+#' @seealso \code{\link{start_input}()}
+#' @seealso \code{\link{density_input}()}
+#' @seealso \code{\link{density_vr}()}
 #' @seealso \code{\link{projection3}()}
 #' @seealso \code{\link{flefko3}()}
 #' @seealso \code{\link{flefko2}()}
 #' @seealso \code{\link{aflefko2}()}
 #' @seealso \code{\link{fleslie}()}
+#' @seealso \code{\link{append_lP}()}
+#' @seealso \code{\link{summary.lefkoProj}()}
+#' @seealso \code{\link{plot.lefkoProj}()}
 #' 
 #' @examples
 #' \donttest{
@@ -3146,8 +3162,13 @@ mpm_create <- function(historical = FALSE, stage = TRUE, age = FALSE, devries = 
 #' or stage-pairs that should be set to non-zero values in the starting vector,
 #' and what those values should be. Can only be used with \code{lefkoMat}
 #' objects.
-#' @param tweights An optional numeric vector denoting the probabilistic
-#' weightings of annual matrices. Defaults to equal weighting among occasions.
+#' @param tweights An optional numeric vector or matrix denoting the
+#' probabilities of choosing each matrix in a stochastic projection. If a
+#' matrix is input, then a first-order Markovian environment is assumed, in
+#' which the probability of choosing a specific annual matrix depends on which
+#' annual matrix is currently chosen. If a vector is input, then the choice of
+#' annual matrix is assumed to be independent of the current matrix. Defaults
+#' to equal weighting among matrices.
 #' @param density An optional data frame describing the matrix elements that
 #' will be subject to density dependence, and the exact kind of density
 #' dependence that they will be subject to. The data frame used should be an
@@ -3174,8 +3195,8 @@ mpm_create <- function(historical = FALSE, stage = TRUE, age = FALSE, devries = 
 #' \item{rep_value}{A list of lists of the actual reproductive value in each
 #' occasion in each replicate in each pop-patch or population. The list order
 #' is the same as in \code{projection}.}
-#' \item{pop_size}{A list of data frames showing the total population size in
-#' each occasion per replicate (row within data frame) per pop-patch or
+#' \item{pop_size}{A list of matrices showing the total population size in
+#' each occasion per replicate (row within matrix) per pop-patch or
 #' population (list element).}
 #' \item{labels}{A data frame showing the order of populations and patches in
 #' item \code{projection}.}
@@ -3260,6 +3281,9 @@ mpm_create <- function(historical = FALSE, stage = TRUE, age = FALSE, devries = 
 #' @seealso \code{\link{start_input}()}
 #' @seealso \code{\link{density_input}()}
 #' @seealso \code{\link{f_projection3}()}
+#' @seealso \code{\link{append_lP}()}
+#' @seealso \code{\link{summary.lefkoProj}()}
+#' @seealso \code{\link{plot.lefkoProj}()}
 #' 
 #' @examples
 #' # Lathyrus example
@@ -3376,8 +3400,13 @@ projection3 <- function(mpm, nreps = 1L, times = 10000L, historical = FALSE, sto
 #' is a list of matrices, rather than a \code{lefkoMat} object. Defaults to
 #' \code{FALSE} for the former case, and overridden by information supplied in
 #' the \code{lefkoMat} object for the latter case.
-#' @param tweights Numeric vector denoting the probabilistic weightings of
-#' annual matrices. Defaults to equal weighting among occasions.
+#' @param tweights An optional numeric vector or matrix denoting the
+#' probabilities of choosing each matrix in a stochastic projection. If a
+#' matrix is input, then a first-order Markovian environment is assumed, in
+#' which the probability of choosing a specific annual matrix depends on which
+#' annual matrix is currently chosen. If a vector is input, then the choice of
+#' annual matrix is assumed to be independent of the current matrix. Defaults
+#' to equal weighting among matrices.
 #' @param force_sparse A text string indicating whether to force sparse matrix 
 #' encoding (\code{"yes"}) or not (\code{"no"}) if the MPM is composed of
 #' simple matrices. Defaults to \code{"auto"}, in which case sparse matrix
@@ -3482,7 +3511,7 @@ slambda3 <- function(mpm, times = 10000L, historical = FALSE, tweights = NULL, f
 #' @name .stoch_senselas
 #' 
 #' @param mpm A matrix projection model of class \code{lefkoMat}, or a list of
-#' full matrix projection matrices.
+#' projection matrices.
 #' @param times Number of occasions to iterate. Defaults to 10,000.
 #' @param historical An optional logical value only used if object \code{mpm}
 #' is a list of matrices, rather than a \code{lefkoMat} object. Defaults to
@@ -3492,8 +3521,15 @@ slambda3 <- function(mpm, times = 10000L, historical = FALSE, tweights = NULL, f
 #' (\code{1}) or elasticity matrices (\code{2}). Defaults to \code{1}.
 #' @param sparse An integer denoting whether to run the projection in sparse
 #' (\code{1}) format or standard (\code{0}) format.
-#' @param tweights Numeric vector denoting the probabilistic weightings of
-#' annual matrices. Defaults to equal weighting among occasions.
+#' @param lefkoProj A logical value indicating whether the input MPM is a
+#' \code{lefkoProj} object. Defaults to \code{TRUE}.
+#' @param tweights An optional numeric vector or matrix denoting the
+#' probabilities of choosing each matrix in a stochastic projection. If a
+#' matrix is input, then a first-order Markovian environment is assumed, in
+#' which the probability of choosing a specific annual matrix depends on which
+#' annual matrix is currently chosen. If a vector is input, then the choice of
+#' annual matrix is assumed to be independent of the current matrix. Defaults
+#' to equal weighting among matrices.
 #' 
 #' @return A list of one or two cubes (3d array) where each slice corresponds
 #' to a sensitivity or elasticity matrix for a specific pop-patch, followed by
@@ -3506,7 +3542,9 @@ slambda3 <- function(mpm, times = 10000L, historical = FALSE, tweights = NULL, f
 #' @section Notes:
 #' Weightings given in \code{tweights} do not need to sum to 1. Final
 #' weightings used will be based on the proportion per element of the sum of
-#' elements in the user-supplied vector.
+#' elements in the user-supplied vector. Alternatively, a matrix may be
+#' supplied, in which case it is assumed that the environment is first-order
+#' Markovian.
 #' 
 #' This function currently requires all patches to have the same occasions, if
 #' a \code{lefkoMat} object is used as input. Asymmetry in the number of
@@ -3514,8 +3552,8 @@ slambda3 <- function(mpm, times = 10000L, historical = FALSE, tweights = NULL, f
 #'
 #' @keywords internal
 #' @noRd
-.stoch_senselas <- function(mpm, times = 10000L, historical = FALSE, style = 1L, sparse = 0L, tweights = NULL) {
-    .Call('_lefko3_stoch_senselas', PACKAGE = 'lefko3', mpm, times, historical, style, sparse, tweights)
+.stoch_senselas <- function(mpm, times = 10000L, historical = FALSE, style = 1L, sparse = 0L, lefkoProj = TRUE, tweights = NULL) {
+    .Call('_lefko3_stoch_senselas', PACKAGE = 'lefko3', mpm, times, historical, style, sparse, lefkoProj, tweights)
 }
 
 #' Estimate LTRE of Any Population Matrix
@@ -3558,8 +3596,8 @@ slambda3 <- function(mpm, times = 10000L, historical = FALSE, tweights = NULL, f
 #' @param refnum An integer vector giving the numbers of the matrices to use as
 #' reference from \code{refmats}.
 #' @param refmats_ A list of reference population projection matrices.
-#' @param tweights_ Numeric vector denoting the probabilistic weightings of
-#' annual matrices. Defaults to equal weighting among occasions.
+#' @param tweights_ Numeric vector or matrix denoting the probabilistic
+#' weightings of annual matrices. Defaults to equal weighting among occasions.
 #' @param steps The number of occasions to project the stochastic simulation
 #' forward, if performing an sLTRE. Defaults to \code{10000}. Note that the
 #' total number of occasions projected equals this number plus the number given
@@ -5060,17 +5098,19 @@ edit_lM <- function(mpm, pop = NULL, patch = NULL, year2 = NULL, stage3 = NULL, 
     .Call('_lefko3_demolition3sp', PACKAGE = 'lefko3', e_amat, bambesque, amat_, fmat_)
 }
 
-#' Estimate Deterministic Population Growth Rate As Dominant Eigenvalue
+#' Estimate Actual or Deterministic Population Growth Rate
 #' 
 #' Function \code{lambda3()} is a generic function that returns the dominant
 #' eigenvalue of a matrix, set of dominant eigenvalues of a set of matrices,
-#' or set of dominant eigenvalues for a \code{lefkoMat} object. It can handle
+#' set of dominant eigenvalues for a \code{lefkoMat} object, or actual
+#' \eqn{\lambda} in each year in a \code{lefkoProj} object. It can handle
 #' large and sparse matrices supplied as \code{lefkoMat} objects or as
 #' individual matrices, and can be used with large historical matrices, IPMs, 
-#' age x stage matrices, as well as smaller ahistorical matrices.
+#' age x stage matrices, as well as smaller ahistorical matrices, and general
+#' projetions.
 #' 
-#' @param mpm A lefkoMat object, a list of projection matrices, or a single
-#' projection matrix.
+#' @param mpm A \code{lefkoMat} object, a list of projection matrices, a
+#' \code{lefkoProj} object, or a single projection matrix.
 #' @param force_sparse A logical value or string detailing whether to force
 #' sparse matrix encoding for simple matrix input. Defaults to \code{"auto"},
 #' which only forces sparse matrix coding if simple matrices are input that are
@@ -5078,9 +5118,9 @@ edit_lM <- function(mpm, pop = NULL, patch = NULL, year2 = NULL, stage3 = NULL, 
 #' and have more than 20 rows. Can also be set to \code{"yes"}, \code{"no"},
 #' \code{TRUE}, or \code{FALSE}. Note that sparse matrix coding is always used
 #' for \code{lefkoMat} objects with matrices in sparse format (class
-#' \code{dgCMatrix}).
+#' \code{dgCMatrix}). Ignored with \code{lefkoProj} objects.
 #' 
-#' @return The value returned depends on the class of the \code{mats} argument.
+#' @return The value returned depends on the class of the \code{mpm} argument.
 #' If a \code{lefkoMat} object is provided, then this function will return the
 #' \code{labels} data frame with a new column named \code{lambda} showing the
 #' dominant eigenvalues for each matrix. If a list of matrices is provided,
@@ -5088,6 +5128,13 @@ edit_lM <- function(mpm, pop = NULL, patch = NULL, year2 = NULL, stage3 = NULL, 
 #' eigenvalues provided in order of matrix. If a single matrix is provided,
 #' then this function will return the dominant eigenvalue of that matrix. Only
 #' the largest real parts of the eigenvalues are returned.
+#' 
+#' If a \code{lefkoProj} object is provided, then the output consists of a list
+#' with three elements. The second and third elements are lists of matrices
+#' with each lower-level list elements corresponding to \code{labels} rows,
+#' and matrices within these lists showing the actual \eqn{\lambda} and
+#' \code{log} \eqn{\lambda} for each consecutive year or time index (columns)
+#' within each replicate (row).
 #' 
 #' @seealso \code{\link{slambda3}()}
 #' 
@@ -5183,5 +5230,208 @@ edit_lM <- function(mpm, pop = NULL, patch = NULL, year2 = NULL, stage3 = NULL, 
 #' @export lambda3
 lambda3 <- function(mpm, force_sparse = NULL) {
     .Call('_lefko3_lambda3', PACKAGE = 'lefko3', mpm, force_sparse)
+}
+
+#' Arranges Matrix Elements in Order of Magnitude for Interpretation
+#' 
+#' Function \code{matrix_interp} summarizes matrices from \code{lefkoMat},
+#' \code{lefkoSens}, \code{lefkoElas}, and \code{lefkoLTRE} objects in terms
+#' of the magnitudes of their elements.
+#' 
+#' @name matrix_interp
+#' 
+#' @param object A list object in one of \code{lefko3}'s output formats. These
+#' may include \code{lefkoMat}, \code{lefkoSens}, \code{lefkoElas}, and
+#' \code{lefkoLTRE} objects.
+#' @param mat_chosen The number of the matrix to assess, within the appropriate
+#' matrix list. See \code{Notes} for further details.
+#' @param part An integer noting whether to provide assessments of which of the
+#' main types of matrices to analyze. In a standard \code{lefkoMat} object, the
+#' integers \code{1}, \code{2}, and \code{3} correspond to the \code{A},
+#' \code{U}, and \code{F} lists, respectively. In \code{lefkoSens} and
+#' \code{lefkoElas} objects, the integers \code{1} and \code{2} correspond to
+#' the ahistorical matrix sets and the historical matrix sets, respectively.
+#' In deterministic and stochastic \code{lefkoLTRE} objects, the integers
+#' \code{1} and \code{2} correspond to the \code{cont_mean} and \code{cont_sd}
+#' lists, respectively.
+#' @param type An integer corresponding to the type of order summary, including
+#' most to least positive (\code{1}), most to least negative (\code{2}), and
+#' greatest to lowest absolute magnitude (\code{3}). Defaults to type \code{3}.
+#' 
+#' @return A data frame arranging all elements in the matrix chosen from
+#' greatest and smallest. This can be a data frame of only positive elements,
+#' of only negative elements, or all elements in order of absolute magnitude.
+#' 
+#' @section Notes:
+#' This will be the number of the matrix within the list that it is held in.
+#' For example, if the function is applied to the \code{cont_sd} portion of
+#' a stochastic LTRE, and there are four LTRE matrices within that list element
+#' corresponding to three patch LTRE matrices and one overall population-level
+#' LTRE matrix, then setting this value to \code{4} would focus the function on
+#' the overall population-level LTRE matrix associated with contributions of
+#' the standard deviations of elements.
+#' 
+#' Huge sparse matrices may take more time to process than small, dense
+#' matrices.
+#' 
+#' @examples
+#' data(cypdata)
+#' 
+#' sizevector <- c(0, 0, 0, 0, 0, 0, 1, 2.5, 4.5, 8, 17.5)
+#' stagevector <- c("SD", "P1", "P2", "P3", "SL", "D", "XSm", "Sm", "Md", "Lg",
+#'   "XLg")
+#' repvector <- c(0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1)
+#' obsvector <- c(0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1)
+#' matvector <- c(0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1)
+#' immvector <- c(0, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0)
+#' propvector <- c(1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)
+#' indataset <- c(0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1)
+#' binvec <- c(0, 0, 0, 0, 0, 0.5, 0.5, 1, 1, 2.5, 7)
+#' 
+#' cypframe_raw <- sf_create(sizes = sizevector, stagenames = stagevector,
+#'   repstatus = repvector, obsstatus = obsvector, matstatus = matvector,
+#'   propstatus = propvector, immstatus = immvector, indataset = indataset,
+#'   binhalfwidth = binvec)
+#' 
+#' cypraw_v1 <- verticalize3(data = cypdata, noyears = 6, firstyear = 2004,
+#'   patchidcol = "patch", individcol = "plantid", blocksize = 4,
+#'   sizeacol = "Inf2.04", sizebcol = "Inf.04", sizeccol = "Veg.04",
+#'   repstracol = "Inf.04", repstrbcol = "Inf2.04", fecacol = "Pod.04",
+#'   stageassign = cypframe_raw, stagesize = "sizeadded", NAas0 = TRUE,
+#'   NRasRep = TRUE)
+#' 
+#' cypsupp2r <- supplemental(stage3 = c("SD", "P1", "P2", "P3", "SL", "D", 
+#'     "XSm", "Sm", "SD", "P1"),
+#'   stage2 = c("SD", "SD", "P1", "P2", "P3", "SL", "SL", "SL", "rep",
+#'     "rep"),
+#'   eststage3 = c(NA, NA, NA, NA, NA, "D", "XSm", "Sm", NA, NA),
+#'   eststage2 = c(NA, NA, NA, NA, NA, "XSm", "XSm", "XSm", NA, NA),
+#'   givenrate = c(0.10, 0.20, 0.20, 0.20, 0.25, NA, NA, NA, NA, NA),
+#'   multiplier = c(NA, NA, NA, NA, NA, NA, NA, NA, 0.5, 0.5),
+#'   type =c(1, 1, 1, 1, 1, 1, 1, 1, 3, 3),
+#'   stageframe = cypframe_raw, historical = FALSE)
+#' 
+#' cypmatrix2r <- rlefko2(data = cypraw_v1, stageframe = cypframe_raw, 
+#'   year = "all", patch = "all", stages = c("stage3", "stage2", "stage1"),
+#'   size = c("size3added", "size2added"), supplement = cypsupp2r,
+#'   yearcol = "year2", patchcol = "patchid", indivcol = "individ")
+#' 
+#' aaa <- ltre3(cypmatrix2r, stochastic = TRUE)
+#' 
+#' matrix_interp(aaa, mat_chosen = 1, part = 2, type = 3)
+#' 
+#' @export matrix_interp
+matrix_interp <- function(object, mat_chosen = 1L, part = 1L, type = 3L) {
+    .Call('_lefko3_matrix_interp', PACKAGE = 'lefko3', object, mat_chosen, part, type)
+}
+
+#' Append Projections Into New lefkoProj Object
+#' 
+#' Function \code{append_lP()} combines two population projections. It takes
+#' two \code{lefkoProj} objects and appends them into a new \code{lefkoPrpoj}
+#' object.
+#' 
+#' @name append_lP
+#' 
+#' @param proj1 A \code{lefkoProj} object.
+#' @param proj2 A second \code{lefkoProj} object, based on the same stageframe
+#' as \code{proj1}.
+#' 
+#' @return A list of class \code{lefkoProj}, which always includes the first
+#' three elements of the following, and also includes the remaining elements
+#' below when a \code{lefkoMat} object is used as input:
+#' \item{projection}{A list of lists of matrices showing the total number of
+#' individuals per stage per occasion. The first list corresponds to each
+#' pop-patch followed by each population (this top-level list is a single
+#' element in \code{f_projection3()}). The inner list corresponds to
+#' replicates within each pop-patch or population.}
+#' \item{stage_dist}{A list of lists of the actual stage distribution in each
+#' occasion in each replicate in each pop-patch or population.}
+#' \item{rep_value}{A list of lists of the actual reproductive value in each
+#' occasion in each replicate in each pop-patch or population.}
+#' \item{pop_size}{A list of matrices showing the total population size in each
+#' occasion per replicate (row within data frame) per pop-patch or population
+#' (list element). \code{NA} values will result if projections with different
+#' numbers of time steps are appended.}
+#' \item{labels}{A data frame showing the order of populations and patches in
+#' item \code{projection}.}
+#' \item{ahstages}{The original stageframe used in the study.}
+#' \item{hstages}{A data frame showing the order of historical stage pairs.}
+#' \item{agestages}{A data frame showing the order of age-stage pairs.}
+#' \item{labels}{A short data frame indicating the population (always \code{1}),
+#' and patch (either the numeric index of the single chosen patch, or \code{1}
+#' in all other cases). Any pop-patches having the same designation across the
+#' two input projections will be appended together.}
+#' \item{control}{A data frame showing the number of replicates and time steps
+#' corresponding to each set of projections, where each set corresponds to a
+#' pop-patch within the labels object of each input projection.}
+#' \item{density}{The data frame input under the density option. Only provided
+#' if input by the user for at least one of the two projections. Output as a
+#' nested list corresponding to each pop-patch - replicate.}
+#' \item{density_vr}{The data frame input under the density_vr option. Only
+#' provided if input by the user for at least one of the two projections.
+#' Output as a nested list corresponding to each pop-patch - replicate.}
+#' 
+#' @section Notes:
+#' \code{lefkoProj} objects resulting from previous appends can also be
+#' appended.
+#' 
+#' @seealso \code{\link{projection3}()}
+#' 
+#' @examples
+#' data(cypdata)
+#' 
+#' sizevector <- c(0, 0, 0, 0, 0, 0, 1, 2.5, 4.5, 8, 17.5)
+#' stagevector <- c("SD", "P1", "P2", "P3", "SL", "D", "XSm", "Sm", "Md", "Lg",
+#'   "XLg")
+#' repvector <- c(0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1)
+#' obsvector <- c(0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1)
+#' matvector <- c(0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1)
+#' immvector <- c(0, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0)
+#' propvector <- c(1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)
+#' indataset <- c(0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1)
+#' binvec <- c(0, 0, 0, 0, 0, 0.5, 0.5, 1, 1, 2.5, 7)
+#' 
+#' cypframe_raw <- sf_create(sizes = sizevector, stagenames = stagevector,
+#'   repstatus = repvector, obsstatus = obsvector, matstatus = matvector, 
+#'   propstatus = propvector, immstatus = immvector, indataset = indataset,
+#'   binhalfwidth = binvec)
+#' 
+#' cypraw_v1 <- verticalize3(data = cypdata, noyears = 6, firstyear = 2004,
+#'   patchidcol = "patch", individcol = "plantid", blocksize = 4, 
+#'   sizeacol = "Inf2.04", sizebcol = "Inf.04", sizeccol = "Veg.04", 
+#'   repstracol = "Inf.04", repstrbcol = "Inf2.04", fecacol = "Pod.04",
+#'   stageassign = cypframe_raw, stagesize = "sizeadded", NAas0 = TRUE, 
+#'   NRasRep = TRUE)
+#' 
+#' cypsupp2r <- supplemental(stage3 = c("SD", "P1", "P2", "P3", "SL", "D",
+#'     "XSm", "Sm", "SD", "P1"),
+#'   stage2 = c("SD", "SD", "P1", "P2", "P3", "SL", "SL", "SL", "rep", "rep"),
+#'   eststage3 = c(NA, NA, NA, NA, NA, "D", "XSm", "Sm", NA, NA),
+#'   eststage2 = c(NA, NA, NA, NA, NA, "XSm", "XSm", "XSm", NA, NA),
+#'   givenrate = c(0.1, 0.2, 0.2, 0.2, 0.25, NA, NA, NA, NA, NA),
+#'   multiplier = c(NA, NA, NA, NA, NA, NA, NA, NA, 0.5, 0.5),
+#'   type = c(1, 1, 1, 1, 1, 1, 1, 1, 3, 3), stageframe = cypframe_raw,
+#'   historical = FALSE)
+#' 
+#' cypmatrix2r_AB <- rlefko2(data = cypraw_v1, stageframe = cypframe_raw, 
+#'   year = "all", patch = c("A", "B"), stages = c("stage3", "stage2"),
+#'   size = c("size3added", "size2added"), supplement = cypsupp2r,
+#'   yearcol = "year2",  patchcol = "patchid", indivcol = "individ")
+#' 
+#' cypmatrix2r_AC <- rlefko2(data = cypraw_v1, stageframe = cypframe_raw, 
+#'   year = "all", patch = c("A", "C"), stages = c("stage3", "stage2"),
+#'   size = c("size3added", "size2added"), supplement = cypsupp2r,
+#'   yearcol = "year2",  patchcol = "patchid", indivcol = "individ")
+#' 
+#' cypproj1 <- projection3(cypmatrix2r_AB, nreps = 5, times = 15,
+#'   stochastic = TRUE)
+#' cypproj2 <- projection3(cypmatrix2r_AC, nreps = 10, times = 20,
+#'   stochastic = TRUE)
+#' cypproj3 <- append_lP(cypproj1, cypproj2)
+#' 
+#' @export append_lP
+append_lP <- function(proj1 = NULL, proj2 = NULL) {
+    .Call('_lefko3_append_lM', PACKAGE = 'lefko3', proj1, proj2)
 }
 

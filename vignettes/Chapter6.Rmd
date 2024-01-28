@@ -454,12 +454,14 @@ par(lty = lty.o)
 
 ```r
 lath2ipmelas <- elasticity3(lath2ipmmean)
+#> Running deterministic analysis...
 lath3ipmelas <- elasticity3(lath3ipmmean)
+#> Running deterministic analysis...
 
-set.seed(42)
-lath2ipmelas_s <- elasticity3(lathmat2ipm, stochastic = TRUE)
-set.seed(42)
-lath3ipmelas_s <- elasticity3(lathmat3ipm, stochastic = TRUE, steps = 200)
+lath2ipmelas_s <- elasticity3(lathmat2ipm, stochastic = TRUE, seed = 42)
+#> Running stochastic analysis...
+lath3ipmelas_s <- elasticity3(lathmat3ipm, stochastic = TRUE, times = 200, seed = 42)
+#> Running stochastic analysis...
 
 elas_put_together <- cbind.data.frame(colSums(lath2ipmelas$ah_elasmats[[1]]), 
   Matrix::colSums(lath3ipmelas$ah_elasmats[[1]]),

@@ -236,15 +236,14 @@ legend("topleft", c("det annual", "det mean", "stochastic"), lty = c(2, 1, 1),
   
   <p style="text-indent: 20px">Let's conduct a life table response experiment (LTRE) next. This will be a deterministic LTRE, meaning that we will assess the impacts of differences in matrix elements between the core matrices input via the `lefkoMat` object `anth_lefkoMat` and the overall arithmetic grand mean matrix on differences in the deterministic growth rate, $\lambda$. We could use a different reference matrix if we wished, but the default is to use the arithmetic grand mean. Here, because we cannot analyze temporal shifts using a deterministic LTRE, we will utilize the mean matrix set instead.</p>
 ```{r Ch9.7}
-trialltre_det <- ltre3(anth_lmean, stochastic = FALSE, steps = 10000,
-  time_weights = NA, sparse = "auto")
+trialltre_det <- ltre3(anth_lmean, sparse = "auto")
 #trialltre_det
 ```
   
   <p style="text-indent: 20px">The resulting `lefkoLTRE` object gives the LTRE contributions for each matrix relative to the arithmetic grand mean matrix. While the differences in LTRE contributions across space are of interest, we cannot infer differences across time this way because matrices are not related additively across time. To assess the contributions across space while accounting for temporal shifts, we should conduct a stochastic LTRE (sLTRE) or small-noise approximation LTRE (SNA-LTRE) on the original annual matrices. Here, conduct a sLTRE.</p>
 ```{r Ch9.8}
-trialltre_sto <- ltre3(anth_lefkoMat, stochastic = TRUE, steps = 10000,
-  time_weights = NA, sparse = "auto")
+trialltre_sto <- ltre3(anth_lefkoMat, stochastic = TRUE, times = 10000,
+  tweights = NA, sparse = "auto", seed = 42)
 #trialltre_sto
 ```
   

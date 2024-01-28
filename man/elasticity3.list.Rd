@@ -7,10 +7,11 @@
 \method{elasticity3}{list}(
   mats,
   stochastic = FALSE,
-  steps = 10000,
-  time_weights = NA,
+  times = 10000,
+  tweights = NA,
   historical = FALSE,
-  force_sparse = "auto",
+  seed = NA,
+  sparse = "auto",
   append_mats = FALSE,
   ...
 )
@@ -22,20 +23,27 @@
 deterministic (FALSE) or stochastic (TRUE) elasticity analysis. Defaults to
 FALSE.}
 
-\item{steps}{The number of occasions to project forward in stochastic
+\item{times}{The number of occasions to project forward in stochastic
 simulation. Defaults to 10,000.}
 
-\item{time_weights}{Numeric vector denoting the probabilistic weightings of
-annual matrices. Defaults to equal weighting among occasions.}
+\item{tweights}{An optional numeric vector or matrix denoting the
+probabilities of choosing each matrix in a stochastic projection. If a matrix
+is input, then a first-order Markovian environment is assumed, in which the
+probability of choosing a specific annual matrix depends on which annual
+matrix is currently chosen. If a vector is input, then the choice of annual
+matrix is assumed to be independent of the current matrix. Defaults to equal
+weighting among matrices.}
 
 \item{historical}{A logical value denoting whether the input matrices are
 historical. Defaults to FALSE.}
 
-\item{force_sparse}{A text string indicating whether to use sparse matrix
-encoding (\code{"yes"}) or not (\code{"no"}) with standard matrix input.
-Defaults to \code{"auto"}, in which case sparse matrix encoding is used with
-square matrices with at least 50 rows and no more than 50\% of elements with
-values greater than zero.}
+\item{seed}{A number to use as a random number seed in stochastic projection.}
+
+\item{sparse}{A text string indicating whether to use sparse matrix encoding
+(\code{"yes"}) or dense matrix encoding (\code{"no"}). Defaults to
+\code{"auto"}, in which case sparse matrix encoding is used with square
+matrices with at least 50 rows and no more than 50\% of elements with values
+greater than zero.}
 
 \item{append_mats}{A logical value indicating whether to include the original
 matrices input as object \code{mats} in the output \code{lefkoElas} object.}
@@ -71,6 +79,10 @@ determination to forced dense or sparse matrix projection. This will most
 likely occur when matrices have between 30 and 300 rows and columns.
 Defaults work best when matrices are very small and dense, or very large and
 sparse.
+
+The \code{time_weights}, \code{steps}, and \code{force_sparse} arguments are
+now deprecated. Instead, please use the \code{tweights}, \code{times}, and
+\code{sparse} arguments.
 }
 
 \examples{

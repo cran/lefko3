@@ -1985,17 +1985,17 @@ Rcpp::List add_stage (const RObject mpm, int add_before = 0,
         
         unsigned int old_size = current_U.n_cols;
         unsigned int total_size = num_stages_base + num_rows_to_add;
-        int found_new_row {0};
+        unsigned int found_new_row {0};
         
         arma::mat new_U (total_size, total_size);
         arma::mat new_F (total_size, total_size);
         
-        for (int j = 0; j < total_size; j++) {
+        for (unsigned int j = 0; j < total_size; j++) {
           arma::uvec current_row_found = find(rows_cols_to_add_vec == j);
           
           if (current_row_found.n_elem == 0) {
-            int found_new_col {0};
-            for (int k = 0; k < total_size; k++) {
+            unsigned int found_new_col {0};
+            for (unsigned int k = 0; k < total_size; k++) {
               arma::uvec current_col_found = find(rows_cols_to_add_vec == k);
               
               if (current_col_found.n_elem == 0) {
@@ -2023,17 +2023,17 @@ Rcpp::List add_stage (const RObject mpm, int add_before = 0,
         
         unsigned int old_size = current_U.n_cols;
         unsigned int total_size = num_stages_base + num_rows_to_add;
-        int found_new_row {0};
+        unsigned int found_new_row {0};
         
         arma::sp_mat new_U (total_size, total_size);
         arma::sp_mat new_F (total_size, total_size);
         
-        for (int j = 0; j < total_size; j++) {
+        for (unsigned int j = 0; j < total_size; j++) {
           arma::uvec current_row_found = find(rows_cols_to_add_vec == j);
           
           if (current_row_found.n_elem == 0) {
-            int found_new_col {0};
-            for (int k = 0; k < total_size; k++) {
+            unsigned int found_new_col {0};
+            for (unsigned int k = 0; k < total_size; k++) {
               arma::uvec current_col_found = find(rows_cols_to_add_vec == k);
               
               if (current_col_found.n_elem == 0) {
@@ -2063,16 +2063,16 @@ Rcpp::List add_stage (const RObject mpm, int add_before = 0,
         
         unsigned int old_size = current_A.n_cols;
         unsigned int total_size = num_stages_base + num_rows_to_add;
-        int found_new_row {0};
+        unsigned int found_new_row {0};
         
         arma::mat new_A (total_size, total_size);
         
-        for (int j = 0; j < total_size; j++) {
+        for (unsigned int j = 0; j < total_size; j++) {
           arma::uvec current_row_found = find(rows_cols_to_add_vec == j);
           
           if (current_row_found.n_elem == 0) {
-            int found_new_col {0};
-            for (int k = 0; k < total_size; k++) {
+            unsigned int found_new_col {0};
+            for (unsigned int k = 0; k < total_size; k++) {
               arma::uvec current_col_found = find(rows_cols_to_add_vec == k);
               
               if (current_col_found.n_elem == 0) {
@@ -2095,16 +2095,16 @@ Rcpp::List add_stage (const RObject mpm, int add_before = 0,
         
         unsigned int old_size = current_A.n_cols;
         unsigned int total_size = num_stages_base + num_rows_to_add;
-        int found_new_row {0};
+        unsigned int found_new_row {0};
         
         arma::sp_mat new_A (total_size, total_size);
         
-        for (int j = 0; j < total_size; j++) {
+        for (unsigned int j = 0; j < total_size; j++) {
           arma::uvec current_row_found = find(rows_cols_to_add_vec == j);
           
           if (current_row_found.n_elem == 0) {
-            int found_new_col {0};
-            for (int k = 0; k < total_size; k++) {
+            unsigned int found_new_col {0};
+            for (unsigned int k = 0; k < total_size; k++) {
               arma::uvec current_col_found = find(rows_cols_to_add_vec == k);
               
               if (current_col_found.n_elem == 0) {

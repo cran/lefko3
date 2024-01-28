@@ -4,11 +4,36 @@
 \alias{repvalue3.list}
 \title{Estimate Reproductive Value Vector for a List of Projection Matrices}
 \usage{
-\method{repvalue3}{list}(mats, force_sparse = "auto", ...)
+\method{repvalue3}{list}(
+  mats,
+  stochastic = FALSE,
+  times = 10000,
+  tweights = NA,
+  seed = NA,
+  force_sparse = "auto",
+  ...
+)
 }
 \arguments{
 \item{mats}{A list of population projection matrices, all in either class
 \code{matrix} or class \code{dgCMatrix}.}
+
+\item{stochastic}{A logical value indicating whether to use deterministic
+(\code{FALSE}) or stochastic (\code{TRUE}) analysis. Defaults to
+\code{FALSE}.}
+
+\item{times}{An integer variable indicating number of occasions to project if
+using stochastic analysis. Defaults to 10000.}
+
+\item{tweights}{An optional numeric vector or matrix denoting the
+probabilities of choosing each matrix in a stochastic projection. If a matrix
+is input, then a first-order Markovian environment is assumed, in which the
+probability of choosing a specific annual matrix depends on which annual
+matrix is currently chosen. If a vector is input, then the choice of annual
+matrix is assumed to be independent of the current matrix. Defaults to equal
+weighting among matrices.}
+
+\item{seed}{A number to use as a random number seed in stochastic projection.}
 
 \item{force_sparse}{A text string indicating whether to use sparse matrix
 encoding (\code{"yes"}) when supplied with standard matrices. Defaults to

@@ -996,19 +996,35 @@ modelsearch <- function(data, stageframe = NULL, historical = TRUE,
           distributions. Please install it.", call. = FALSE)
         }
       } else if (size.zero | sizeb.zero | sizec.zero) {
-        if (!requireNamespace("pscl", quietly = TRUE)) {
-        stop("Package pscl needed to develop non-Gaussian size GLMs with zero-inflated
-          distributions. Please install it.", call. = FALSE)
-        }
+        
+        # /////
+        
+        stop("Zero-inflated GLMs are currently disabled. Please use zero-inflated mixed models for the time being.", call. = FALSE)
+        
+        
+        
+        #if (!requireNamespace("pscl", quietly = TRUE)) {
+        #stop("Package pscl needed to develop non-Gaussian size GLMs with zero-inflated
+        #  distributions. Please install it.", call. = FALSE)
+        #}
       }
     }
     if (any(fecdist != "gaussian", na.rm = TRUE)) {
       if (fec.trunc & !requireNamespace("VGAM", quietly = TRUE)) {
         stop("Package VGAM needed to develop non-Gaussian fecundity GLMs with zero-truncated
           distributions. Please install it.", call. = FALSE)}
-      if (fec.zero & !requireNamespace("pscl", quietly = TRUE)) {
-        stop("Package pscl needed to develop non-Gaussian fecundity GLMs with zero-inflated
-          distributions. Please install it.", call. = FALSE)}
+      
+      
+      
+      
+      # /////
+      if (fec.zero) {
+        stop("Zero-inflated GLMs are currently disabled. Please use zero-inflated mixed models for the time being.", call. = FALSE)
+      }
+      
+      #if (fec.zero & !requireNamespace("pscl", quietly = TRUE)) {
+      #  stop("Package pscl needed to develop non-Gaussian fecundity GLMs with zero-inflated
+      #    distributions. Please install it.", call. = FALSE)}
     }
   }
   
@@ -3500,14 +3516,14 @@ modelsearch <- function(data, stageframe = NULL, historical = TRUE,
             global_model <- try(stats::glm(formula = stats::as.formula(usedformula),
                 data = subdata, family = "poisson"), silent = quiet)
           } else if (dist == "poisson" & zero) {
-            global_model <- try(pscl::zeroinfl(formula = stats::as.formula(usedformula),
-                data = subdata, dist = "poisson"), silent = quiet)
+            #global_model <- try(pscl::zeroinfl(formula = stats::as.formula(usedformula),
+            #    data = subdata, dist = "poisson"), silent = quiet)
           } else if (dist == "negbin" & !zero) {
             global_model <- try(MASS::glm.nb(formula = stats::as.formula(usedformula),
                 data = subdata), silent = quiet)
           } else if (dist == "negbin" & zero) {
-            global_model <- try(pscl::zeroinfl(formula = stats::as.formula(usedformula), 
-                data = subdata, dist = "negbin"), silent = quiet)
+            #global_model <- try(pscl::zeroinfl(formula = stats::as.formula(usedformula), 
+            #    data = subdata, dist = "negbin"), silent = quiet)
           }
         } else if (truncz) {
           usedformula <- gsub(" + 1", "", usedformula, fixed = TRUE)
@@ -3587,16 +3603,16 @@ modelsearch <- function(data, stageframe = NULL, historical = TRUE,
                 stats::as.formula(usedformula), data = subdata, family = "poisson"),
                 silent = quiet)))
           } else if (dist == "poisson" & zero) {
-            global_model <- suppressWarnings(suppressMessages(try(pscl::zeroinfl(formula = 
-                stats::as.formula(usedformula), data = subdata, dist = "poisson"),
-                silent = quiet)))
+            #global_model <- suppressWarnings(suppressMessages(try(pscl::zeroinfl(formula = 
+            #    stats::as.formula(usedformula), data = subdata, dist = "poisson"),
+            #    silent = quiet)))
           } else if (dist == "negbin" & !zero) {
             global_model <- suppressWarnings(suppressMessages(try(MASS::glm.nb(formula = 
                 stats::as.formula(usedformula), data = subdata), silent = quiet)))
           } else if (dist == "negbin" & zero) {
-            global_model <- suppressWarnings(suppressMessages(try(pscl::zeroinfl(formula = 
-                stats::as.formula(usedformula), data = subdata, dist = "negbin"),
-                silent = quiet)))
+            #global_model <- suppressWarnings(suppressMessages(try(pscl::zeroinfl(formula = 
+            #    stats::as.formula(usedformula), data = subdata, dist = "negbin"),
+            #    silent = quiet)))
           }
         } else if (truncz) {
           usedformula <- gsub(" + 1", "", usedformula, fixed = TRUE)

@@ -52,16 +52,22 @@ Particularly, it breaks down the data frames provided in the
 }
 \section{Notes}{
 
-The \code{inf_alive} option assesses whether replicates have reached a value
-of \code{NaN}. If \code{inf_alive = TRUE} and a value of \code{NaN} is found,
-then the replicate is considered extant if the preceding value is above the
-extinction threshold. If the setting is \code{inf_alive = FALSE}, then a
-value of \code{NaN} is considered evidence of extinction.
+The \code{inf_alive} and \code{ext_time} options both assess whether
+replicates have reached a value of \code{NaN} or \code{Inf}. If
+\code{inf_alive = TRUE} or \code{ext_time = TRUE} and one of these values is
+found, then the replicate is counted in the \code{milepost_sums} object if
+the last numeric value in the replicate is above the \code{threshold} value,
+and is counted as extant and not extinct if the last numeric value in the
+replicate is above the extinction threshold of a single individual.
 
 Extinction time is calculated on the basis of whether the replicate ever
 falls below a single individual. A replicate with a positive population size
 below 0.0 that manages to rise above 1.0 individual is still considered to
 have gone extinct the first time it crossed below 1.0.
+
+If the input \code{lefkoProj} object is a mixture of two or more other
+\code{lefkoProj} objects, then mileposts will be given relative to the
+maximum number of time steps noted.
 }
 
 \examples{

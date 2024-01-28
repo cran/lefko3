@@ -6,6 +6,24 @@
 using namespace Rcpp;
 using namespace arma;
 
+
+// Function index:
+// 1. arma::uvec spmat_index  Create Element Index Meeting Condition for Sparse Matrix
+// 2. arma::uvec general_index  Create General Element Index for Any lefkoMat Matrix
+// 3. Rcpp::List decomp3  Full Eigen Analysis of a Single Dense Matrix
+// 4. Rcpp::List decomp3sp  Full Eigen Analysis of a Single Sparse Matrix
+// 5. Rcpp::List decomp3sp_inp  Full Eigen Analysis of a Single Sparse Matrix, with Sparse Input
+// 6. arma::mat ovreplace  Re-index Projection Matrix On Basis of Overwrite Table
+// 7. Rcpp::DataFrame sf_core  Creates Base Skeleton Stageframe
+// 8. DataFrame paramnames_skeleton  Base Skeleton Data Frame for Paramnames Objects
+// 9. Rcpp::List turbogeodiesel  Estimates Mean LefkoMat Object for Historical MPM
+// 10. Rcpp::List geodiesel  Estimates Mean LefkoMat Object for Ahistorical MPM
+// 11. int supp_decision1  Create Skeleton Plan of Expanded Supplemental Table
+// 12. String supp_decision2  Decide on Stage for Each Entry in Supplemental Table
+// 13. Rcpp::DataFrame supp_reassess  Expand Supplemental Table Given User Input
+// 14. Rcpp::DataFrame age_expanded  Expand Supplemental Table by Age Inputs
+
+
 namespace LefkoMats {
 
   //' Create Element Index Meeting Condition for Sparse Matrix
@@ -24,7 +42,7 @@ namespace LefkoMats {
   //' 
   //' @keywords internal
   //' @noRd
-  inline arma::uvec spmat_index(arma::sp_mat& M, double tol) {
+  inline arma::uvec spmat_index (arma::sp_mat& M, double tol) {
     int mat_dim = M.n_cols;
     arma::sp_mat::iterator it_start = M.begin();
     arma::sp_mat::iterator it_end = M.end();
@@ -115,7 +133,7 @@ namespace LefkoMats {
   //' 
   //' @keywords internal
   //' @noRd
-  inline Rcpp::List decomp3(arma::mat Amat) {
+  inline Rcpp::List decomp3 (arma::mat Amat) {
     arma::cx_vec Aeigval;
     arma::cx_mat Aeigvecl;
     arma::cx_mat Aeigvecr;
@@ -144,7 +162,7 @@ namespace LefkoMats {
   //' 
   //' @keywords internal
   //' @noRd
-  inline Rcpp::List decomp3sp(arma::mat Amat) {
+  inline Rcpp::List decomp3sp (arma::mat Amat) {
     arma::sp_mat spAmat(Amat);
     arma::sp_mat t_spAmat = spAmat.t();
     arma::cx_vec Aeigval;
@@ -182,7 +200,7 @@ namespace LefkoMats {
   //' 
   //' @keywords internal
   //' @noRd
-  inline Rcpp::List decomp3sp_inp(arma::sp_mat spAmat) {
+  inline Rcpp::List decomp3sp_inp (arma::sp_mat spAmat) {
     arma::sp_mat t_spAmat = spAmat.t();
     arma::cx_vec Aeigval;
     arma::cx_vec Aeigvall;
@@ -229,7 +247,7 @@ namespace LefkoMats {
   //' 
   //' @keywords internal
   //' @noRd
-  inline arma::mat ovreplace(arma::vec allst321, arma::vec idx321old,
+  inline arma::mat ovreplace (arma::vec allst321, arma::vec idx321old,
     arma::vec idx321new, arma::vec convtype, arma::vec eststag3, 
     arma::vec gvnrate, arma::vec multipl) {
     
@@ -284,7 +302,7 @@ namespace LefkoMats {
   //' 
   //' @keywords internal
   //' @noRd
-  inline Rcpp::DataFrame sf_core(int num_stages, bool reassessed = false,
+  inline Rcpp::DataFrame sf_core (int num_stages, bool reassessed = false,
     bool small = false) {
     
     if (num_stages < 1) {
@@ -478,7 +496,7 @@ namespace LefkoMats {
   //' 
   //' @keywords internal
   //' @noRd
-  inline DataFrame paramnames_skeleton(bool name_terms = false) {
+  inline DataFrame paramnames_skeleton (bool name_terms = false) {
     
     CharacterVector parameter_names = {"time t", "individual", "patch",
       "alive in time t+1", "observed in time t+1", "sizea in time t+1",
@@ -540,7 +558,7 @@ namespace LefkoMats {
   //' 
   //' @keywords internal
   //' @noRd
-  inline Rcpp::List turbogeodiesel(DataFrame& loy, List Umats, List Fmats,
+  inline Rcpp::List turbogeodiesel (DataFrame& loy, List Umats, List Fmats,
     DataFrame hstages, DataFrame agestages, DataFrame stages, bool patchmats,
     bool popmats, bool mat_input, int sparse_switch) {
     
@@ -887,7 +905,7 @@ namespace LefkoMats {
   //' 
   //' @keywords internal
   //' @noRd
-  inline Rcpp::List geodiesel(DataFrame& loy, List Umats, List Fmats,
+  inline Rcpp::List geodiesel (DataFrame& loy, List Umats, List Fmats,
     DataFrame agestages, DataFrame stages, bool patchmats, bool popmats,
     bool mat_input, int sparse_switch) {
     

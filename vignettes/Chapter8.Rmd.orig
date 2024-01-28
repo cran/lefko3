@@ -298,8 +298,7 @@ legend("topleft", c("deterministic", "stochastic"), col = c("black", "red"),
   <p style="text-indent: 20px">We will next assess to which matrix elements $\lambda$ and $\lambda_S$ are most sensitive to changes in via deterministic and stochastic sensitivity analysis.</p>
 ```{r Ch8.17}
 lathmat2msens <- sensitivity3(lathmat2mean)
-set.seed(42)
-lathmat2msens_s <- sensitivity3(lathmat2age, stochastic = TRUE)
+lathmat2msens_s <- sensitivity3(lathmat2age, stochastic = TRUE, seed = 42)
 
 # The highest deterministic sensitivity value:
 max(lathmat2msens$ah_sensmats[[1]][which(lathmat2mean$A[[1]] > 0)])
@@ -319,8 +318,7 @@ which(as.matrix(lathmat2msens_s$ah_sensmats[[1]]) ==
   <p style="text-indent: 20px">Let's now assess the elasticity of $\lambda$ or $\lambda_S$ to matrix elements.</p>
 ```{r Ch8.18}
 lathmat2melas <- elasticity3(lathmat2mean)
-set.seed(42)
-lathmat2melas_s <- elasticity3(lathmat2age, stochastic = TRUE)
+lathmat2melas_s <- elasticity3(lathmat2age, stochastic = TRUE, seed = 42)
 
 # The highest deterministic elasticity value:
 max(lathmat2melas$ah_elasmats[[1]][which(lathmat2mean$A[[1]] > 0)])
@@ -371,7 +369,7 @@ legend("topright", c("deterministic", "stochastic"), col = c("black", "orangered
   pch = 15, bty = "n")
 ```
   
-  <p style="text-indent: 20px">We see in the plot above that deterministic and stochastic analyses agree strongly about the importance and influence of transition types to population growth rate. Specifically, the population growth rate is most strongly elastic in response to changes in growth transitions, and almost completely inelastic to changes in fecundity. Shrinkage is almost as influential as growth, and stasis is almost as important in stochastic analysis.</p>
+  <p style="text-indent: 20px">We see in the plot above that deterministic and stochastic analyses generally agree about the importance and influence of transition types to population growth rate. Specifically, the population growth rate is most strongly elastic in response to changes in growth transitions, and almost completely inelastic to changes in fecundity. Shrinkage is almost as influential as growth, and stasis is almost as important in stochastic analysis.</p>
   
   <p style="text-indent: 20px">In addition to sensitivity and elasticity analyses, we can use package `lefko3` to assess the actual impacts of demographic shifts or differences on the population growth rate. Two tools for this purpose are the life table response experiment (LTRE), and its stochastic versions the stochastic life table response experiment (sLTRE) and the small noise approximation LTRE (SNA-LTRE). All three are available via the `ltre3()` function. Below, we perform a standard deterministic LTRE to assess the impact of space on the population growth rate. This is done via a comparison of patch-level demography to the grand mean matrix, which is the default comparison if no reference matrices are provided. Remove the hashtag from the second line to see the full structure of the resulting object. Particularly, you will notice that the first element, `ltre_det`, is a list of six matrices. These matrices show the actual impact of the difference in elements between the respective patch-level matrix and the reference matrix (here, the grand population mean matrix) on the population growth rate $\lambda$. After this, we see similar structure to the input `lefkoMat` object, including the stageframe and order of matrices.</p>
 ```{r Ch8.21}
@@ -381,7 +379,7 @@ lathmat2m_ltre <- ltre3(lathmat2pmean)
   
   <p style="text-indent: 20px">The sLTRE produces output that is a bit different. Here, we see two lists of matrices prior to the MPM metadata. The first, `ltre_mean`, is a list of matrices showing the impact of differences in mean elements between the patch-level temporal mean matrices and the reference temporal mean matrix. The second, `ltre_sd`, is a list of matrices showing the impact of differences in the temporal standard deviation of each element between the patch-level and reference matrix sets. In other words, while a standard LTRE shows the impact of changes in matrix elements on $\lambda$, the sLTRE shows the impacts of changes in the mean and the variability of matrix elements on $\text{log} \lambda$.</p>
 ```{r Ch8.22}
-lathmat2m_sltre <- ltre3(lathmat2agep, stochastic = TRUE, rseed = 42)
+lathmat2m_sltre <- ltre3(lathmat2agep, stochastic = TRUE, seed = 42)
 #lathmat2m_sltre
 ```
   
@@ -446,7 +444,7 @@ legend("topleft", c("deterministic", "stochastic mean", "stochastic SD"),
   col = c("black", "grey", "red"), pch = 15, bty = "n")
 ```
   
-  <p style="text-indent: 20px">The overall greatest impact on the population growth rate appears to come from growth and shrinkage transitions, with growth transitions having strongly negative influences in general.</p>
+  <p style="text-indent: 20px">The overall greatest impact on the population growth rate appears to come from growth and shrinkage transitions, with growth transitions having strongly negative influences and shrinkage transitions having strongly positive influences, in general.</p>
   
   <p style="text-indent: 20px">LTREs and sLTREs are powerful tools, and more complex versions of both analyses exist. Particularly view our other online resources for the SNA-LTRE, and please consult @caswell_matrix_2001 and @davison_contributions_2013 for more information. Users wishing to conduct these analyses should see our free e-manual called ***lefko3: a gentle introduction*** and other vignettes on <a href = "http://www.sheffersonlab.com/projects.html">the projects page</a> of the Shefferson lab website.</p>
 

@@ -46,9 +46,8 @@
 #' @importFrom lme4 fixef glmer lmer ranef VarCorr
 #' @importFrom MASS glm.nb
 #' @importFrom Matrix colSums
-#' @importFrom methods is
+#' @importFrom methods as is
 #' @importFrom MuMIn dredge
-#' @importFrom pscl zeroinfl
 #' @importFrom Rcpp evalCpp
 #' @importFrom stats getCall glm lm na.action na.fail na.omit rnorm sd setNames xtabs
 #' @importFrom stats as.formula median pchisq poisson var logLik complete.cases

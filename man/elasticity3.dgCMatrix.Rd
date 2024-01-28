@@ -4,10 +4,16 @@
 \alias{elasticity3.dgCMatrix}
 \title{Estimate Elasticity of Population Growth Rate of a Single Sparse Matrix}
 \usage{
-\method{elasticity3}{dgCMatrix}(mats, ...)
+\method{elasticity3}{dgCMatrix}(mats, sparse = "auto", ...)
 }
 \arguments{
 \item{mats}{An object of class \code{dgCMatrix}.}
+
+\item{sparse}{A text string indicating whether to use sparse matrix encoding
+(\code{"yes"}) or dense matrix encoding (\code{"no"}). Defaults to
+\code{"auto"}, in which case sparse matrix encoding is used with square
+matrices with at least 50 rows and no more than 50\% of elements with values
+greater than zero.}
 
 \item{...}{Other parameters.}
 }
