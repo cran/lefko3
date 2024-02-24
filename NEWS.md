@@ -1,3 +1,46 @@
+# lefko3 6.2.1 (2024-02-24)
+
+## USER VISIBLE CHANGES
+
+* Function matrix_interp() now also handles standard matrix and sparse matrix 
+  (dgCMatrix format) inputs.
+
+* Zero-inflated Poisson and negative binomial GLMs have been enabled again.
+
+* Function overwrite() is now deprecated and links to function supplemental().
+
+* Examples for functions involving function-based MPMs have been altered to
+  showcase generalized linear models developed with base R.
+
+* Function create_pm() now uses the same model parameter naming conventions as
+  verticalize3() and historicalize3().
+
+* Matrix creation and projection examples now use basic linear models rather
+  than function modelsearch().
+  
+* Function modelsearch() now preferentially removes the most highly categorized
+  random covariate when a global model fails, if using mixed modeling.
+  
+* Function hfv_qc() now also shows the numbers of categories in variables that
+  can be used as random factors as a part of the output.
+  
+## BUG FIXES
+
+* Zero-inflation estimation corrected to properly account for the mixture model
+  in Poisson and negative binomial versions.
+
+* Function summary.lefkoProj() no longer fails when summarizing appended
+  projections with differing numbers of time steps.
+
+* Function modelsearch() no longer improperly subsets data in Leslie MPM
+  searches.
+  
+* Function modelsearch() now correctly removes independent terms to simplify
+  model structure if global model development fails.
+  
+* Fixed structural bugs preventing matrix_interp() from working with functions
+  sensitivity3() and elasticity3().
+
 # lefko3 6.2.0 (2024-01-27)
 
 ## NEW FEATURES

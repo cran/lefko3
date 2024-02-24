@@ -3711,7 +3711,7 @@ Rcpp::DataFrame density_reassess(DataFrame stageframe, DataFrame dens_inp,
         for (int j = 0; j < static_cast<int>(prop_stages.n_elem); j++) {
           for (int k = 0; k < agestages_rows; k++) {
             if (type_di(i) == 1) {
-              if (static_cast<int>(prop_stages(j)) == agestages_stageid(k) - 1) {
+              if (static_cast<int>(prop_stages(j)) == static_cast<int>(agestages_stageid(k) - 1)) {
                 if (IntegerVector::is_na(age2_di(i))) {
                   found_stages++;
                 } else if (agestages_age(k) == (age2_di(i) + 1)) {
@@ -3719,7 +3719,7 @@ Rcpp::DataFrame density_reassess(DataFrame stageframe, DataFrame dens_inp,
                 }
               }
             } else {
-              if (static_cast<int>(prop_stages(j)) == agestages_stageid(k) - 1) {
+              if (static_cast<int>(prop_stages(j)) == static_cast<int>(agestages_stageid(k) - 1)) {
                 if (agestages_age(k) == age_min) found_stages++;
               }
             }
@@ -3734,7 +3734,7 @@ Rcpp::DataFrame density_reassess(DataFrame stageframe, DataFrame dens_inp,
         for (int j = 0; j < static_cast<int>(prop_stages.n_elem); j++) {
           for (int k = 0; k < agestages_rows; k++) {
             if (type_di(i) == 1) {
-              if (static_cast<int>(prop_stages(j)) == agestages_stageid(k) - 1) {
+              if (static_cast<int>(prop_stages(j)) == static_cast<int>(agestages_stageid(k) - 1)) {
                 if (IntegerVector::is_na(age2_di(i))) {
                   age3_vec(a3_counter) = agestages_age(k);
                   stageid3_vec(a3_counter) = agestages_stageid(k);
@@ -3746,7 +3746,7 @@ Rcpp::DataFrame density_reassess(DataFrame stageframe, DataFrame dens_inp,
                 }
               }
             } else {
-              if (static_cast<int>(prop_stages(j)) == agestages_stageid(k) - 1) {
+              if (static_cast<int>(prop_stages(j)) == static_cast<int>(agestages_stageid(k) - 1)) {
                 if (agestages_age(k) == age_min) {
                   age3_vec(a3_counter) = agestages_age(k);
                   stageid3_vec(a3_counter) = agestages_stageid(k);
@@ -3770,7 +3770,7 @@ Rcpp::DataFrame density_reassess(DataFrame stageframe, DataFrame dens_inp,
         for (int j = 0; j < static_cast<int>(prop0_stages.n_elem); j++) {
           for (int k = 0; k < agestages_rows; k++) {
             if (type_di(i) == 1) {
-              if (static_cast<int>(prop0_stages(j)) == agestages_stageid(k) - 1) {
+              if (static_cast<int>(prop0_stages(j)) == static_cast<int>(agestages_stageid(k) - 1)) {
                 if (IntegerVector::is_na(age2_di(i))) {
                   found_stages++;
                 } else if (agestages_age(k) == (age2_di(i) + 1)) {
@@ -3778,7 +3778,7 @@ Rcpp::DataFrame density_reassess(DataFrame stageframe, DataFrame dens_inp,
                 }
               }
             } else {
-              if (static_cast<int>(prop0_stages(j)) == agestages_stageid(k) - 1) {
+              if (static_cast<int>(prop0_stages(j)) == static_cast<int>(agestages_stageid(k) - 1)) {
                 if (agestages_age(k) == age_min) found_stages++;
               }
             }
@@ -3793,7 +3793,7 @@ Rcpp::DataFrame density_reassess(DataFrame stageframe, DataFrame dens_inp,
         for (int j = 0; j < static_cast<int>(prop0_stages.n_elem); j++) {
           for (int k = 0; k < agestages_rows; k++) {
             if (type_di(i) == 1) {
-              if (static_cast<int>(prop0_stages(j)) == agestages_stageid(k) - 1) {
+              if (static_cast<int>(prop0_stages(j)) == static_cast<int>(agestages_stageid(k) - 1)) {
                 if (IntegerVector::is_na(age2_di(i))) {
                   age3_vec(a3_counter) = agestages_age(k);
                   stageid3_vec(a3_counter) = agestages_stageid(k);
@@ -3805,7 +3805,7 @@ Rcpp::DataFrame density_reassess(DataFrame stageframe, DataFrame dens_inp,
                 }
               }
             } else {
-              if (static_cast<int>(prop0_stages(j)) == agestages_stageid(k) - 1) {
+              if (static_cast<int>(prop0_stages(j)) == static_cast<int>(agestages_stageid(k) - 1)) {
                 if (agestages_age(k) == age_min) {
                   age3_vec(a3_counter) = agestages_age(k);
                   stageid3_vec(a3_counter) = agestages_stageid(k);
@@ -3829,7 +3829,7 @@ Rcpp::DataFrame density_reassess(DataFrame stageframe, DataFrame dens_inp,
         for (int j = 0; j < static_cast<int>(imm_stages.n_elem); j++) {
           for (int k = 0; k < agestages_rows; k++) {
             if (type_di(i) == 1) {
-              if (static_cast<int>(imm_stages(j)) == agestages_stageid(k) - 1) {
+              if (static_cast<int>(imm_stages(j)) == static_cast<int>(agestages_stageid(k) - 1)) {
                 if (IntegerVector::is_na(age2_di(i))) {
                   found_stages++;
                 } else if (agestages_age(k) == (age2_di(i) + 1)) {
@@ -3837,7 +3837,7 @@ Rcpp::DataFrame density_reassess(DataFrame stageframe, DataFrame dens_inp,
                 }
               }
             } else {
-              if (static_cast<int>(imm_stages(j)) == agestages_stageid(k) - 1) {
+              if (static_cast<int>(imm_stages(j)) == static_cast<int>(agestages_stageid(k) - 1)) {
                 if (agestages_age(k) == age_min) found_stages++;
               }
             }
@@ -3852,7 +3852,7 @@ Rcpp::DataFrame density_reassess(DataFrame stageframe, DataFrame dens_inp,
         for (int j = 0; j < static_cast<int>(imm_stages.n_elem); j++) {
           for (int k = 0; k < agestages_rows; k++) {
             if (type_di(i) == 1) {
-              if (static_cast<int>(imm_stages(j)) == agestages_stageid(k) - 1) {
+              if (static_cast<int>(imm_stages(j)) == static_cast<int>(agestages_stageid(k) - 1)) {
                 if (IntegerVector::is_na(age2_di(i))) {
                   age3_vec(a3_counter) = agestages_age(k);
                   stageid3_vec(a3_counter) = agestages_stageid(k);
@@ -3864,7 +3864,7 @@ Rcpp::DataFrame density_reassess(DataFrame stageframe, DataFrame dens_inp,
                 }
               }
             } else {
-              if (static_cast<int>(imm_stages(j)) == agestages_stageid(k) - 1) {
+              if (static_cast<int>(imm_stages(j)) == static_cast<int>(agestages_stageid(k) - 1)) {
                 if (agestages_age(k) == age_min) {
                   age3_vec(a3_counter) = agestages_age(k);
                   stageid3_vec(a3_counter) = agestages_stageid(k);
@@ -3888,7 +3888,7 @@ Rcpp::DataFrame density_reassess(DataFrame stageframe, DataFrame dens_inp,
         for (int j = 0; j < static_cast<int>(mat_stages.n_elem); j++) {
           for (int k = 0; k < agestages_rows; k++) {
             if (type_di(i) == 1) {
-              if (static_cast<int>(mat_stages(j)) == agestages_stageid(k) - 1) {
+              if (static_cast<int>(mat_stages(j)) == static_cast<int>(agestages_stageid(k) - 1)) {
                 if (IntegerVector::is_na(age2_di(i))) {
                   found_stages++;
                 } else if (agestages_age(k) == (age2_di(i) + 1)) {
@@ -3896,7 +3896,7 @@ Rcpp::DataFrame density_reassess(DataFrame stageframe, DataFrame dens_inp,
                 }
               }
             } else {
-              if (static_cast<int>(mat_stages(j)) == agestages_stageid(k) - 1) {
+              if (static_cast<int>(mat_stages(j)) == static_cast<int>(agestages_stageid(k) - 1)) {
                 if (agestages_age(k) == age_min) found_stages++;
               }
             }

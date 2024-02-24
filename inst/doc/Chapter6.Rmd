@@ -114,6 +114,9 @@ hfv_qc(data = lathvertipm, vitalrates = c("surv", "obs", "size", "fec"),
 #>   Variable alive3 has 0 missing values.
 #>   Variable alive3 is a binomial variable.
 #> 
+#>   Numbers of categories in data subset in possible random variables:
+#>   indiv id: 931
+#>   year2: 3
 #> 
 #> Observation status:
 #> 
@@ -122,6 +125,9 @@ hfv_qc(data = lathvertipm, vitalrates = c("surv", "obs", "size", "fec"),
 #>   Variable obsstatus3 has 0 missing values.
 #>   Variable obsstatus3 is a binomial variable.
 #> 
+#>   Numbers of categories in data subset in possible random variables:
+#>   indiv id: 858
+#>   year2: 3
 #> 
 #> Primary size:
 #> 
@@ -137,6 +143,9 @@ hfv_qc(data = lathvertipm, vitalrates = c("surv", "obs", "size", "fec"),
 #> 
 #>   Variable sizea3 is fully positive, lacking even 0s.
 #> 
+#>   Numbers of categories in data subset in possible random variables:
+#>   indiv id: 845
+#>   year2: 3
 #> 
 #> Fecundity:
 #> 
@@ -162,6 +171,9 @@ hfv_qc(data = lathvertipm, vitalrates = c("surv", "obs", "size", "fec"),
 #>     The probability of this deviation in 0s from expectation by chance is 0
 #>     Variable feca2 is significantly zero-inflated.
 #> 
+#>   Numbers of categories in data subset in possible random variables:
+#>   indiv id: 931
+#>   year2: 3
 #> 
 #> Juvenile survival:
 #> 
@@ -170,6 +182,9 @@ hfv_qc(data = lathvertipm, vitalrates = c("surv", "obs", "size", "fec"),
 #>   Variable alive3 has 0 missing values.
 #>   Variable alive3 is a binomial variable.
 #> 
+#>   Numbers of categories in data subset in possible random variables:
+#>   indiv id: 281
+#>   year2: 3
 #> 
 #> Juvenile observation status:
 #> 
@@ -178,6 +193,9 @@ hfv_qc(data = lathvertipm, vitalrates = c("surv", "obs", "size", "fec"),
 #>   Variable obsstatus3 has 0 missing values.
 #>   Variable obsstatus3 is a binomial variable.
 #> 
+#>   Numbers of categories in data subset in possible random variables:
+#>   indiv id: 210
+#>   year2: 3
 #> 
 #> Juvenile primary size:
 #> 
@@ -193,6 +211,9 @@ hfv_qc(data = lathvertipm, vitalrates = c("surv", "obs", "size", "fec"),
 #> 
 #>   Variable sizea3 is fully positive, lacking even 0s.
 #> 
+#>   Numbers of categories in data subset in possible random variables:
+#>   indiv id: 193
+#>   year2: 3
 #> 
 #> Juvenile maturity status:
 #> 
@@ -200,9 +221,13 @@ hfv_qc(data = lathvertipm, vitalrates = c("surv", "obs", "size", "fec"),
 #> 
 #>   Variable matstatus3 has 0 missing values.
 #>   Variable matstatus3 is a binomial variable.
+#> 
+#>   Numbers of categories in data subset in possible random variables:
+#>   indiv id: 210
+#>   year2: 3
 ```
   
-  <p style="text-indent: 20px">All of the probability variables look like binomials, so we have no problem there. Size and juvenile size appear to be continuous variables that differ significantly from the assumptions of the Gaussian distribution. However, we will still use a Gaussian distribution in this case, for instructional purposes. Fecundity is a count variable with significant overdispersion and significantly more zeros than expected, so we will use a zero-inflated negative binomial distribution.</p>
+  <p style="text-indent: 20px">All of the probability variables look like binomials, so we have no problem there. Size and juvenile size appear to be continuous variables that differ significantly from the assumptions of the Gaussian distribution. However, we will still use a Gaussian distribution in this case, for instructional purposes. Fecundity is a count variable with significant overdispersion and significantly more zeros than expected, so we will use a zero-inflated negative binomial distribution. Note that there might be some problems in modeling in the juvenile cases, where we see that individual identity has as many levels as data points.</p>
   
 #### Step 2b: Develop supplemental information for matrix estimation  
   
@@ -255,8 +280,6 @@ lathmodels3ipm <- modelsearch(lathvertipm, historical = TRUE, approach = "mixed"
 #> 
 #> Global model of primary size developed. Proceeding with model dredge...
 #> 
-#> Reproduction probability will be treated as constant.
-#> 
 #> Developing global model of fecundity...
 #> 
 #> Global model of fecundity developed. Proceeding with model dredge...
@@ -264,7 +287,7 @@ lathmodels3ipm <- modelsearch(lathvertipm, historical = TRUE, approach = "mixed"
 #> Developing global model of juvenile survival probability...
 #> 
 #> Global model of juvenile survival probability developed. Proceeding with model dredge...
-#> Warning: Juvenile maturity status in time t+1 appears to be constant, and so will be set to constant.
+#> Warning: Juvenile maturity status in time t+1 appears to be constant (1). Setting to constant.
 #> 
 #> Developing global model of juvenile observation probability...
 #> 
@@ -272,14 +295,13 @@ lathmodels3ipm <- modelsearch(lathvertipm, historical = TRUE, approach = "mixed"
 #> 
 #> Developing global model of juvenile primary size...
 #> 
-#> Could not properly estimate a global model for juvenile size.
-#> Warning: Juvenile reproductive status in time t+1 appears to be constant, and so will be set to constant.
+#> Global model of juvenile primary size developed. Proceeding with model dredge...
 #> 
 #> Finished selecting best-fit models.
 #summary(lathmodels3ipm)
 ```
   
-  <p style="text-indent: 20px">We see here, as before, that status in occasion *t*-1 exerts an influence on some vital rates, particularly survival to occasion *t*+1, size in occasion *t*+1, and fecundity. So, the historical IPM is the correct choice here. Accuracy is also quite high for adult survival and juvenile and adult observation, but quite poor for primary size and fecundity.</p>
+  <p style="text-indent: 20px">We see here, as before, that status in occasion *t*-1 exerts an influence on some vital rates, particularly survival to occasion *t*+1, size in occasion *t*+1, and the conditional portion of fecundity. So, the historical IPM is the correct choice here. Accuracy is also quite high for adult survival and juvenile and adult observation, but quite poor for primary size and fecundity.</p>
   
   <p style="text-indent: 20px">We will also create an ahistorical IPM for comparison. For that purpose, we will create the ahistorical linear model set.</p>
 
@@ -303,8 +325,6 @@ lathmodels2ipm <- modelsearch(lathvertipm, historical = FALSE,
 #> 
 #> Global model of primary size developed. Proceeding with model dredge...
 #> 
-#> Reproduction probability will be treated as constant.
-#> 
 #> Developing global model of fecundity...
 #> 
 #> Global model of fecundity developed. Proceeding with model dredge...
@@ -312,7 +332,7 @@ lathmodels2ipm <- modelsearch(lathvertipm, historical = FALSE,
 #> Developing global model of juvenile survival probability...
 #> 
 #> Global model of juvenile survival probability developed. Proceeding with model dredge...
-#> Warning: Juvenile maturity status in time t+1 appears to be constant, and so will be set to constant.
+#> Warning: Juvenile maturity status in time t+1 appears to be constant (1). Setting to constant.
 #> 
 #> Developing global model of juvenile observation probability...
 #> 
@@ -320,8 +340,7 @@ lathmodels2ipm <- modelsearch(lathvertipm, historical = FALSE,
 #> 
 #> Developing global model of juvenile primary size...
 #> 
-#> Could not properly estimate a global model for juvenile size.
-#> Warning: Juvenile reproductive status in time t+1 appears to be constant, and so will be set to constant.
+#> Global model of juvenile primary size developed. Proceeding with model dredge...
 #> 
 #> Finished selecting best-fit models.
 #summary(lathmodels2ipm)
@@ -338,7 +357,7 @@ lathmat3ipm <- flefko3(stageframe = lathframeipm, modelsuite = lathmodels3ipm,
 #summary(lathmat3ipm)
 ```
   
-  <p style="text-indent: 20px">These are giant matrices. With 10,609 rows and columns, there are a total of 112,550,881 elements per matrix. But they are also amazingly sparse - with about 960,205 elements estimated per matrix, only 0.9% of elements per matrix are non-zero. The survival probability sums all look good, so we appear to have no problems with overly large given and proxy survival transitions provided through our supplemental tables. Let's now build the ahistorical IPMs.</p>
+  <p style="text-indent: 20px">These are giant matrices. With 10,609 rows and columns, there are a total of 112,550,881 elements per matrix. But they are also amazingly sparse - with about 960,209 elements estimated per matrix, only 0.9% of elements per matrix are non-zero. The survival probability sums all look good, so we appear to have no problems with overly large given and proxy survival transitions provided through our supplemental tables. Let's now build the ahistorical IPMs.</p>
 
 ```r
 lathmat2ipm <- flefko2(stageframe = lathframeipm, modelsuite = lathmodels2ipm,
@@ -408,17 +427,17 @@ lambda3(lath2ipmmean)
 #>   pop patch    lambda
 #> 1   1  <NA> 0.8858591
 lambda3(lath3ipmmean)
-#>   pop patch   lambda
-#> 1   1  <NA> 0.902619
+#>   pop patch    lambda
+#> 1   1  <NA> 0.9529011
 
 set.seed(42)
 slambda3(lathmat2ipm)
-#>   pop patch          a         var         sd           se
-#> 1   1  <NA> -0.1252965 0.006844859 0.08273366 0.0008273366
+#>   pop patch          a        var        sd          se
+#> 1   1  <NA> -0.1252668 0.05120793 0.2262917 0.002262917
 set.seed(42)
 slambda3(lathmat3ipm, times = 1000)
-#>   pop patch          a       var         sd          se
-#> 1   1  <NA> -0.1077984 0.0083111 0.09116523 0.002882898
+#>   pop patch           a       var        sd          se
+#> 1   1  <NA> -0.05142914 0.0427915 0.2068611 0.006541521
 ```
   
   <p style="text-indent: 20px">The historical growth rate is larger than the ahistorical in both deterministic and stochastic analyses, although all four numbers suggest a declining population. Now let's compare the stable stage distribution from both the ahistorical and historical mean MPMs.</p>
@@ -460,7 +479,8 @@ lath3ipmelas <- elasticity3(lath3ipmmean)
 
 lath2ipmelas_s <- elasticity3(lathmat2ipm, stochastic = TRUE, seed = 42)
 #> Running stochastic analysis...
-lath3ipmelas_s <- elasticity3(lathmat3ipm, stochastic = TRUE, times = 200, seed = 42)
+lath3ipmelas_s <- elasticity3(lathmat3ipm, stochastic = TRUE, times = 200,
+  sparse = TRUE, seed = 42)
 #> Running stochastic analysis...
 
 elas_put_together <- cbind.data.frame(colSums(lath2ipmelas$ah_elasmats[[1]]), 

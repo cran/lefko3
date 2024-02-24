@@ -123,6 +123,9 @@ hfv_qc(data = vertdata, vitalrates = c("surv", "obs", "size", "repst", "fec"),
 #>   Variable alive3 has 0 missing values.
 #>   Variable alive3 is a binomial variable.
 #> 
+#>   Numbers of categories in data subset in possible random variables:
+#>   indiv id: 74
+#>   year2: 5
 #> 
 #> Observation status:
 #> 
@@ -131,6 +134,9 @@ hfv_qc(data = vertdata, vitalrates = c("surv", "obs", "size", "repst", "fec"),
 #>   Variable obsstatus3 has 0 missing values.
 #>   Variable obsstatus3 is a binomial variable.
 #> 
+#>   Numbers of categories in data subset in possible random variables:
+#>   indiv id: 70
+#>   year2: 5
 #> 
 #> Primary size:
 #> 
@@ -158,6 +164,9 @@ hfv_qc(data = vertdata, vitalrates = c("surv", "obs", "size", "repst", "fec"),
 #> 
 #>     Variable size3added does not include 0s, suggesting that a zero-truncated distribution may be warranted.
 #> 
+#>   Numbers of categories in data subset in possible random variables:
+#>   indiv id: 70
+#>   year2: 5
 #> 
 #> Reproductive status:
 #> 
@@ -166,6 +175,9 @@ hfv_qc(data = vertdata, vitalrates = c("surv", "obs", "size", "repst", "fec"),
 #>   Variable repstatus3 has 0 missing values.
 #>   Variable repstatus3 is a binomial variable.
 #> 
+#>   Numbers of categories in data subset in possible random variables:
+#>   indiv id: 70
+#>   year2: 5
 #> 
 #> Fecundity:
 #> 
@@ -190,6 +202,10 @@ hfv_qc(data = vertdata, vitalrates = c("surv", "obs", "size", "repst", "fec"),
 #>     The expected number of 0s in feca2 under the null hypothesis is 53.65
 #>     The probability of this deviation in 0s from expectation by chance is 5.904e-06
 #>     Variable feca2 is significantly zero-inflated.
+#> 
+#>   Numbers of categories in data subset in possible random variables:
+#>   indiv id: 51
+#>   year2: 5
 ```
   
   <p style="text-indent: 20px">The results of these tests show us that size is overdispersed and zero-truncated (the zero truncation is due to the fact that we observed instances of size equal to zero within the vegetative dormancy stage). We will use the zero-truncated negative binomial distribution for this vital rate. Our tests of fecundity show no significant overdispersion, but the number of zeros exceeds expectation, suggesting that we use a zero-inflated Poisson distribution. All other vital rates appear to match expectation for the binomial distribution.</p>
@@ -330,14 +346,14 @@ cypsupp2 <- supplemental(stage3 = c("SD", "P1", "P2", "P3", "SL", "SL", "D",
   
   <p style="text-indent: 20px">Next, we need to set the proper statistical distribution for size and fecundity. Size was measured as the number of stems and so is a count variable. Likewise, fecundity is actually estimated as the number of fruits produced per plant, and so is also a count variable. We have already performed tests for overdispersion and zero-inflation, and we are also aware that size in observed stages cannot equal 0, requiring zero truncation in that parameter. So we will set size to the zero-truncated negative binomial distribution, and fecundity to the zero-inflated Poisson distribution.</p>
   
-  <p style="text-indent: 20px">Now we need the proper model parameterizations for each vital rate, using the `suite` option. The default, `suite = "main"`, under the mixed model setting (`approach = "mixed"`) starts with the estimation of global models that include size and reproductive status in occasions *t* and *t*-1 as fixed factors, with individual identity and time in occasion *t* (year *t*) set as random categorical terms. Other terms can be specified, including individual covariates, spatial density, and age. Setting `suite = "full"` will yield global models that also include all two-way interactions. The default under the GLM setting (`approach = "glm"`) makes time in occasion *t* a fixed term and drops individual identity from consideration. The global model under `suite = "full"` then includes all fixed factors noted before, plus all two-way interactions between fixed factors (`"full"` is the only setting with interaction terms). If the population is not stratified by reproductive status, then `suite = "size"` will eliminate reproductive status terms and use all others in the global model. If size is not important, then `suite = "rep"` will eliminate size but keep reproductive status and all other terms. Finally, `suite = "cons"` will result in a global model in which neither reproductive status nor size are considered, although optional terms such as age or spatial density may be still be incorporated. We will set `suite = "full"`. </p>
+  <p style="text-indent: 20px">Now we need the proper model parameterizations for each vital rate, using the `suite` option. The default, `suite = "main"`, under the mixed model setting (`approach = "mixed"`) starts with the estimation of global models that include size and reproductive status in occasions *t* and *t*-1 as fixed factors, with individual identity and time in occasion *t* (year *t*) set as random categorical terms. Other terms can be specified, including individual covariates, spatial density, and age. Setting `suite = "full"` will yield global models that also include all two-way interactions. The default under the GLM setting (`approach = "glm"`) makes time in occasion *t* a fixed term and drops individual identity from consideration. The global model under `suite = "full"` then includes all fixed factors noted before, plus all two-way interactions between fixed factors (`"full"` is the only setting with interaction terms). If the population is not stratified by reproductive status, then `suite = "size"` will eliminate reproductive status terms and use all others in the global model. If size is not important, then `suite = "rep"` will eliminate size but keep reproductive status and all other terms. Finally, `suite = "cons"` will result in a global model in which neither reproductive status nor size are considered, although optional terms such as age or spatial density may be still be incorporated. We will set `suite = "main"` to keep the time used by the function manageable, though in a real analysis we would probably set `suite = "full"`. </p>
   
   <p style="text-indent: 20px">Finally, we need to determine the proper strategy for the determination of the best-fit model. Model building proceeds through the `dredge` function in package `MuMIn` [@barton_mumin_2014], and each model has an associated AICc value. The default setting in `lefko3` (`bestfit = "AICc&k"`) will compare all models within 2.0 AICc units of the model with $\Delta AICc = 0$, and choose the one with the lowest degrees of freedom. This approach is generally better than the alternative, which simply uses the model with $\Delta AICc = 0$ (`bestfit = "AICc"`), as all models within 2.0 AICc units of that model are equally parsimonious and so fewer degrees of freedom result from fewer parameters estimated [@burnham_model_2002].</p>
 
 ```r
 cypmodels3 <- modelsearch(vertdata, historical = TRUE, approach = "mixed", 
   vitalrates = c("surv", "obs", "size", "repst", "fec"), sizedist = "negbin", 
-  size.trunc = TRUE, fecdist = "poisson", fec.zero = TRUE, suite = "full", 
+  size.trunc = TRUE, fecdist = "poisson", fec.zero = TRUE, suite = "main", 
   size = c("size3added", "size2added", "size1added"), quiet = "partial")
 #> 
 #> Developing global model of survival probability...
@@ -371,7 +387,7 @@ cypmodels3 <- modelsearch(vertdata, historical = TRUE, approach = "mixed",
 ```r
 cypmodels2 <- modelsearch(vertdata, historical = FALSE, approach = "mixed", 
   vitalrates = c("surv", "obs", "size", "repst", "fec"), sizedist = "negbin", 
-  size.trunc = TRUE, fecdist = "poisson", fec.zero = TRUE, suite = "full", 
+  size.trunc = TRUE, fecdist = "poisson", fec.zero = TRUE, suite = "main", 
   size = c("size3added", "size2added"), quiet = "partial")
 #> 
 #> Developing global model of survival probability...
@@ -479,17 +495,17 @@ set.seed(42)
 cypann3s <- slambda3(cypmatrix3)
 
 lambda3(tmeans2r)
-#>   pop patch    lambda
-#> 1   1     1 0.9603458
+#>   pop patch   lambda
+#> 1   1     1 0.960323
 lambda3(tmeans3r)
 #>   pop patch    lambda
-#> 1   1  <NA> 0.9605924
+#> 1   1  <NA> 0.9605906
 cypann2s
-#>   pop patch           a         var         sd           se
-#> 1   1     1 -0.04043239 0.002352741 0.04850506 0.0004850506
+#>   pop patch           a        var       sd         se
+#> 1   1     1 -0.04046599 0.01775049 0.133231 0.00133231
 cypann3s
-#>   pop patch           a         var         sd           se
-#> 1   1  <NA> -0.04016294 0.002337852 0.04835134 0.0004835134
+#>   pop patch           a        var       sd         se
+#> 1   1  <NA> -0.04017344 0.02014187 0.141922 0.00141922
 ```
   
   <p style="text-indent: 20px">These $\lambda$ values are similar to one another, as are estimates of $a = \text{log} \lambda _{S}$. Let's take a look at a plot of annual deterministic growth rates (stochastic growth rate is calculated as a single value across time, and so is not included). We find that annual $\lambda$ estimates differ only slightly between ahistorical and historical analyses.</p>
@@ -567,7 +583,7 @@ tm2sens_s <- sensitivity3(cypmatrix2, stochastic = TRUE, seed = 42)
 
 # The highest deterministic sensitivity value:
 max(tm2sens$ah_sensmats[[1]][which(tmeans2r$A[[1]] > 0)])
-#> [1] 0.2002354
+#> [1] 0.2005774
 # This value is associated with element:
 which(tm2sens$ah_sensmats[[1]] == 
   max(tm2sens$ah_sensmats[[1]][which(tmeans2r$A[[1]] > 0)]))
@@ -575,7 +591,7 @@ which(tm2sens$ah_sensmats[[1]] ==
 
 # The highest stochastic sensitivity value:
 max(tm2sens_s$ah_sensmats[[1]][which(tmeans2r$A[[1]] > 0)])
-#> [1] 0.1771651
+#> [1] 0.1774624
 # This value is associated with element:
 which(tm2sens_s$ah_sensmats[[1]] == 
   max(tm2sens_s$ah_sensmats[[1]][which(tmeans2r$A[[1]] > 0)]))
@@ -594,14 +610,14 @@ tm3sens_s <- sensitivity3(cypmatrix3, stochastic = TRUE, times = 500, seed = 42)
 
 # The highest deterministic sensitivity value:
 max(as.matrix(tm3sens$h_sensmats[[1]])[which(as.matrix(tmeans3r$A[[1]]) > 0)])
-#> [1] 0.05042799
+#> [1] 0.05043774
 # This value is associated with element:
 which(as.matrix(tm3sens$h_sensmats[[1]]) == 
   max(as.matrix(tm3sens$h_sensmats[[1]])[which(as.matrix(tmeans3r$A[[1]]) > 0)]))
-#> [1] 962658 963198 963630
+#> [1] 962658 963522 963792
 # The highest stochastic sensitivity value:
 max(as.matrix(tm3sens_s$h_sensmats[[1]])[which(as.matrix(tmeans3r$A[[1]]) > 0)])
-#> [1] 0.03981066
+#> [1] 0.04000224
 # This value is associated with element:
 which(as.matrix(tm3sens_s$h_sensmats[[1]]) == 
   max(as.matrix(tm3sens_s$h_sensmats[[1]])[which(as.matrix(tmeans3r$A[[1]]) > 0)]))
@@ -610,14 +626,14 @@ which(as.matrix(tm3sens_s$h_sensmats[[1]]) ==
 
 # The highest deterministic sensitivity value (historically-corrected):
 max(as.matrix(tm3sens$ah_sensmats[[1]])[which(as.matrix(tmeans2r$A[[1]]) > 0)])
-#> [1] 0.1999135
+#> [1] 0.1999519
 # This value is associated with element:
 which(as.matrix(tm3sens$ah_sensmats[[1]]) ==
   max(as.matrix(tm3sens$ah_sensmats[[1]])[which(as.matrix(tmeans2r$A[[1]]) > 0)]))
 #> [1] 378
 # The highest stochastic sensitivity value (historically-corrected):
 max(as.matrix(tm3sens_s$ah_sensmats[[1]])[which(as.matrix(tmeans2r$A[[1]]) > 0)])
-#> [1] 0.1725527
+#> [1] 0.1733977
 # This value is associated with element:
 which(as.matrix(tm3sens_s$ah_sensmats[[1]]) ==
   max(as.matrix(tm3sens_s$ah_sensmats[[1]])[which(as.matrix(tmeans2r$A[[1]]) > 0)]))

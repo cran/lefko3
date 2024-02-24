@@ -2226,21 +2226,21 @@ sensitivity3.lefkoMat <- function(mats, stochastic = FALSE, times = 10000,
     
     hlabels <- mats$hstages
     ahlabels <- mats$ahstages
+    agelabels <- mats$agestages
     new_labels <- mats$labels
     
     if (all(is.na(mats$hstages))) {
       
-      ahlabels <- mats$ahstages
-      
       output <- list(h_sensmats = NULL, ah_sensmats = baldrick, hstages = NULL, 
-        ahstages = ahlabels, labels = new_labels)
+        ahstages = ahlabels, agestages = agelabels, labels = new_labels)
       
     } else {
       he_list <- lapply(baldrick, function(X) {X$h_smat})
       ahe_list <- lapply(baldrick, function(X) {X$ah_smat})
       
       output <- list(h_sensmats = he_list, ah_sensmats = ahe_list,
-        hstages = hlabels, ahstages = ahlabels, labels = new_labels)
+        hstages = hlabels, ahstages = ahlabels, agestages = agelabels,
+        labels = new_labels)
     }
   } else {
     # Stochastic sensitivity analysis
@@ -3114,7 +3114,7 @@ elasticity3.lefkoMat <- function(mats, stochastic = FALSE, times = 10000,
   }
   
   if (!is.element("agestages", names(mats))) {
-    mats$agestages <- NULL
+    mats$agestages <- NA
   }
   
   if (!stochastic) {
@@ -3152,14 +3152,14 @@ elasticity3.lefkoMat <- function(mats, stochastic = FALSE, times = 10000,
     
     hlabels <- mats$hstages
     ahlabels <- mats$ahstages
+    agelabels <- mats$agestages
     new_labels <- mats$labels
     
     if (all(is.na(mats$hstages))) {
       
-      ahlabels <- mats$ahstages #Originally only the first two columns
-      
       output <- list(h_elasmats = NULL, ah_elasmats = baldrick, hstages = NULL,
-        agestages = mats$agestages, ahstages = ahlabels, labels = new_labels)
+        agestages = mats$agestages, ahstages = ahlabels, agestages = agelabels,
+        labels = new_labels)
     } else {
       
       he_list <- lapply(baldrick, function(X) {X$h_emat})
@@ -4622,7 +4622,7 @@ summary.lefkoLTRE <- function(object, ...) {
 summary.lefkoProj <- function(object, threshold = 1, inf_alive = TRUE,
   milepost = c(0, 0.25, 0.50, 0.75, 1.00), ext_time = FALSE, ...) {
   
-  num_reps_vec <- NULL
+  num_reps_vec <- num_times_vec <- NULL
   appended <- FALSE
   max_times <- max_reps <- 1L
   ave_times <- ave_reps <- 1.0
@@ -4654,11 +4654,16 @@ summary.lefkoProj <- function(object, threshold = 1, inf_alive = TRUE,
     num_reps_vec <- apply(as.matrix(c(1:(dim(object$labels)[1]))), 1, function(X) {
       found_reps <- sum(object$control[which(object$control[,1] == X), 2], na.rm = TRUE)
     })
+    
+    num_times_vec <- apply(as.matrix(c(1:(dim(object$labels)[1]))), 1, function(X) {
+      found_times <- max(object$control[which(object$control[,1] == X), 3], na.rm = TRUE)
+    })
   } else {
     max_reps <- object$control[1]
     max_times <- ave_times <- object$control[2]
     
     num_reps_vec <- rep(max_reps, poppatches)
+    num_times_vec <- rep(max_times, poppatches)
   }
   
   if (any(milepost < 0)) {
@@ -4669,16 +4674,10 @@ summary.lefkoProj <- function(object, threshold = 1, inf_alive = TRUE,
       number of projected occasions.", call. = FALSE)
   }
   
-  if (all(milepost >= 0) & all(milepost <= 1)) {
-    milepost <- floor(milepost * max_times) + 1
-  } else if (any(milepost == 0)) {
-    milepost <- milepost + 1
-  }
-  
   if (inf_alive | ext_time) {
     for (i in c(1:poppatches)) {
-      for (j in c(1:max_reps)) {
-        for (k in c(1:(max_times + 1))) {
+      for (j in c(1:num_reps_vec[i])) {
+        for (k in c(1:(num_times_vec[i] + 1))) {
           if ((is.nan(object$pop_size[[i]][j, k]) | is.infinite(object$pop_size[[i]][j, k])) & k > 1) {
             object$pop_size[[i]][j, k] <- object$pop_size[[i]][j, (k - 1)]   #. max_found
           }
@@ -4716,28 +4715,38 @@ summary.lefkoProj <- function(object, threshold = 1, inf_alive = TRUE,
     the_numbers <- NA
   }
   
-  if (max_reps > 1) {
-    
-    milepost_sums <- apply(as.matrix(c(1:poppatches)), 1, function (X) {
-      
-      phew <- apply(as.matrix(object$pop_size[[X]][,milepost]), 2, function(Y) {
-        above_vector <- which(as.vector(Y) >= threshold)
-        
-        return(length(above_vector))
-      })
-      return(phew)
-    })
-  } else {
-    milepost_sums <- apply(as.matrix(c(1:poppatches)), 1, function (X) {
-      
-      phew <- apply(as.matrix(object$pop_size[[X]][,milepost]), 1, function(Y) {
-        above_vector <- which(as.vector(Y) >= threshold)
-        
-        return(length(above_vector))
-      })
-      return(phew)
-    })
+  for (i in c(1:poppatches)) {
+    if (any(milepost > num_times_vec[i])) {
+      stop("Entered milepost values are outside the allowable range.", call. = FALSE)
+    }
   }
+  
+  milepost_sums <- apply(as.matrix(c(1:poppatches)), 1, function (X) {
+    
+    used_milepost <- milepost
+    
+    if (all(milepost >= 0) & all(milepost <= 1)) {
+      used_milepost <- floor(used_milepost * num_times_vec[X]) + 1
+    } else if (any(milepost == 0)) {
+      used_milepost <- used_milepost + 1
+    }
+    
+    if (num_reps_vec[X] > 1) {
+      phew <- apply(as.matrix(object$pop_size[[X]][,used_milepost]), 2, function(Y) {
+        above_vector <- which(as.vector(Y) >= threshold)
+        
+        return(length(above_vector))
+      })
+      return(phew)
+    } else {
+      phew <- apply(as.matrix(object$pop_size[[X]][,used_milepost]), 1, function(Y) {
+        above_vector <- which(as.vector(Y) >= threshold)
+        
+        return(length(above_vector))
+      })
+      return(phew)
+    }
+  })
   
   if (is.matrix(milepost_sums)) {
     rownames(milepost_sums) <- milepost
@@ -4753,7 +4762,6 @@ summary.lefkoProj <- function(object, threshold = 1, inf_alive = TRUE,
   writeLines(paste0("\nThe input lefkoProj object covers ", poppatches,
     " population-patches."), con = stdout())
   if (appended) {
-    writeLines("It is an appended projection, including an average and maximum")
     writeLines(paste0("It is an appended projection, including an average and maximum of ",
       format(ave_times, digits = 5), " and ", max_times, " steps per "))
     writeLines(paste0("replicate, and an average and maximum of ",

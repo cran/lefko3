@@ -65,6 +65,7 @@ modelsearch(
   show.model.tables = TRUE,
   global.only = FALSE,
   accuracy = TRUE,
+  data_out = FALSE,
   quiet = FALSE
 )
 }
@@ -385,6 +386,10 @@ evaluated. Defaults to \code{FALSE}.}
 models. See \code{Notes} section for details on how accuracy is assessed.
 Defaults to \code{TRUE}.}
 
+\item{data_out}{A logical value indicating whether to append all subsetted
+datasets used in model building and selection to the output. Defaults to
+\code{FALSE}.}
+
 \item{quiet}{May be a logical value, or any one of the strings \code{"yes"},
 \code{"no"}, or \code{"partial"}. If set to \code{TRUE} or \code{"yes"}, then
 model building and selection will proceed with most warnings and diagnostic
@@ -482,6 +487,8 @@ of individuals used to model that vital rate, 3) number of individual
 transitions used to model that vital rate, 4) parameter distribution used to
 model the vital rats, and 5) accuracy of model, given as detailed in Notes
 section.}
+\item{subdata}{An optional list of data frames, each of which is the data
+frame used to develop each model in the \code{lefkoMod} object, in order.}
 }
 \description{
 Function \code{modelsearch()} runs exhaustive model building and selection
@@ -493,16 +500,20 @@ in other functions within this package.
 \section{Notes}{
 
 When \code{modelsearch()} is called, it first trims the dataset down to just
-the variables that will be used, and just data for complete cases in those
-variables. It then builds global models for all vital rates and runs them. If
-a global model fails, then the function proceeds by dropping any two-way
-interactions and trying again. If this fails, then the function will continue
-to attempt dropping terms, first patch, then year, then individual
-covariates, then combinatons of the above, and finally individual identity.
-If these attempts fail and the approach used is \code{mixed}, then the
-function will try running a glm version of the original failed model, and use
-that as a global model if it runs properly. Finally, if all attempts fail,
-then the function returns a \code{1} to allow model building assuming a
+the variables that will be used (including all response terms and independent
+variables). It then subsets the data to only complete cases for those
+variables. Next, it builds global models for all vital rates, and runs them.
+If a global model fails, then the function proceeds by dropping terms. If
+\code{approach = "mixed"}, then it will determine which random factor term
+contains the most categories in the respective subset, and drop that term.
+If this fails, or if \code{approach = "glm"}, then it will drop any two-way
+interactions and run the model. If this fails, then the function will attempt
+to drop further terms, first patch alone, then year alone, then individual
+covariates by themselves, then combinations of these four, and finally
+individual identity. If all of these attempts fail and the approach used is
+\code{mixed}, then the function will try running a glm version of the
+original failed model. Finally, if all attempts fail, then the function
+displays a warning and returns \code{1} to allow model building assuming a
 constant rate or probability.
 
 Setting \code{suite = "cons"} prevents the inclusion of size and reproductive

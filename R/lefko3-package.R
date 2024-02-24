@@ -32,22 +32,23 @@
 #' 
 #' @details lefko3 also includes example datasets complete with sample code.
 #' 
-#' @docType package
 #' @aliases lefko3-package
+"_PACKAGE"
 #' @author Richard P. Shefferson <cdorm@g.ecc.u-tokyo.ac.jp>
 #' @author Johan Ehrlén
 #' @references Shefferson, R.P., J. Ehrlen, and S. Kurokawa. 2021. 
 #' \emph{lefko3}: analyzing individual history through size-classified matrix 
 #' population models. \emph{Methods in Ecology and Evolution} 12(2): 378-382.
 #' @import Rcpp
-#' @importFrom glmmTMB fixef glmmTMB nbinom2 ranef truncated_nbinom2 truncated_poisson
+#' @importFrom glmmTMB glmmTMB nbinom2 truncated_nbinom2 truncated_poisson
 #' @importFrom graphics lines
 #' @importFrom grDevices palette xy.coords
-#' @importFrom lme4 fixef glmer lmer ranef VarCorr
+#' @importFrom lme4 glmer lmer
 #' @importFrom MASS glm.nb
 #' @importFrom Matrix colSums
 #' @importFrom methods as is
 #' @importFrom MuMIn dredge
+#' @importFrom pscl zeroinfl
 #' @importFrom Rcpp evalCpp
 #' @importFrom stats getCall glm lm na.action na.fail na.omit rnorm sd setNames xtabs
 #' @importFrom stats as.formula median pchisq poisson var logLik complete.cases

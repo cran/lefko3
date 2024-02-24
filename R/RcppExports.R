@@ -1099,12 +1099,13 @@ lmean <- function(mats, matsout = NULL, force_sparse = FALSE) {
 #'   repstracol = "Inf.04", repstrbcol = "Inf2.04", fecacol = "Pod.04", 
 #'   stagesize = "sizeadded", NAas0 = TRUE, age_offset = 2)
 #' 
-#' cyp_lesl_vital <- modelsearch(cyp_lesl_data, historical = FALSE,
-#'   approach = "mixed", suite = "cons", bestfit = "AICc&k", age = "obsage",
-#'   vitalrates = c("surv", "fec"), fecdist = "poisson", indiv = "individ",
-#'   year = "year2", year.as.random = TRUE, patch.as.random = TRUE,
-#'   show.model.tables = TRUE, fec.zero = TRUE, global.only = TRUE,
-#'   test.age = TRUE, quiet = "partial")
+#' cyp_survival <- glm(alive3 ~ obsage + as.factor(year2), data = cyp_lesl_data,
+#'   family = "binomial")
+#' cyp_fecundity <- glm(feca2 ~ 1 + obsage + as.factor(year2),
+#'   data = cyp_lesl_data, family = "poisson")
+#' 
+#' mod_params <- create_pm(name_terms = TRUE)
+#' mod_params$modelparams[22] <- "obsage"
 #' 
 #' germination <- 0.08
 #' protocorm_to_seedling <- 0.10
@@ -1115,9 +1116,10 @@ lmean <- function(mats, matsout = NULL, force_sparse = FALSE) {
 #'   agebased = TRUE, age2 = c(1, 2), type = c(1, 1),
 #'   givenrate = c(protocorm_to_seedling, seeding_to_adult))
 #' 
-#' cyp_lesl_fb_mpm <- fleslie(data = cyp_lesl_data,
-#'   modelsuite = cyp_lesl_vital, last_age = 7, fecage_min = 3,
-#'   fecmod = (germination * seeds_per_fruit), supplement = cyp_lesl_supp)
+#' cyp_lesl_fb_mpm <- fleslie(data = cyp_lesl_data, surv_model = cyp_survival,
+#'   fec_model = cyp_fecundity, paramnames = mod_params, last_age = 7,
+#'   fecage_min = 3, fecmod = (germination * seeds_per_fruit),
+#'   supplement = cyp_lesl_supp)
 #' 
 #' altered1 <- add_stage(cyp_lesl_fb_mpm, add_before = 1, stage_name = "DS")
 #' 
@@ -2277,12 +2279,49 @@ NULL
 #' lathvertln$feca1 <- round(lathvertln$feca1)
 #' lathvertln$feca3 <- round(lathvertln$feca3)
 #' 
-#' lathmodelsln3 <- modelsearch(lathvertln, historical = TRUE, 
-#'   approach = "mixed", suite = "main", 
-#'   vitalrates = c("surv", "obs", "size", "repst", "fec"), juvestimate = "Sdl",
-#'   bestfit = "AICc&k", sizedist = "gaussian", fecdist = "poisson", 
-#'   indiv = "individ", patch = "patchid", year = "year2", year.as.random = TRUE,
-#'   patch.as.random = TRUE, show.model.tables = TRUE, quiet = "partial")
+#' lathvertln_adults <- subset(lathvertln, stage2index > 2)
+#' surv_model <- glm(alive3 ~ sizea2 + sizea1 + as.factor(patchid) +
+#'   as.factor(year2), data = lathvertln_adults, family = "binomial")
+#' 
+#' obs_data <- subset(lathvertln_adults, alive3 == 1)
+#' obs_model <- glm(obsstatus3 ~ as.factor(patchid), data = obs_data,
+#'   family = "binomial")
+#' 
+#' size_data <- subset(obs_data, obsstatus3 == 1)
+#' siz_model <- lm(sizea3 ~ sizea2 + sizea1 + repstatus1 + as.factor(patchid) +
+#'   as.factor(year2), data = size_data)
+#' 
+#' reps_model <- glm(repstatus3 ~ sizea2 + sizea1 + as.factor(patchid) +
+#'   as.factor(year2), data = size_data, family = "binomial")
+#' 
+#' fec_data <- subset(lathvertln_adults, repstatus2 == 1)
+#' fec_model <- glm(feca2 ~ sizea2 + sizea1 + repstatus1 + as.factor(patchid),
+#'   data = fec_data, family = "poisson")
+#' 
+#' lathvertln_juvs <- subset(lathvertln, stage2index < 3)
+#' jsurv_model <- glm(alive3 ~ as.factor(patchid), data = lathvertln_juvs,
+#'   family = "binomial")
+#' 
+#' jobs_data <- subset(lathvertln_juvs, alive3 == 1)
+#' jobs_model <- glm(obsstatus3 ~ 1, family = "binomial", data = jobs_data)
+#' 
+#' jsize_data <- subset(jobs_data, obsstatus3 == 1)
+#' jsiz_model <- lm(sizea3 ~ as.factor(year2), data = jsize_data)
+#' 
+#' jrepst_model <- 0
+#' jmatst_model <- 1
+#' 
+#' mod_params <- create_pm(name_terms = TRUE)
+#' mod_params$modelparams[3] <- "patchid"
+#' mod_params$modelparams[4] <- "alive3"
+#' mod_params$modelparams[5] <- "obsstatus3"
+#' mod_params$modelparams[6] <- "sizea3"
+#' mod_params$modelparams[9] <- "repstatus3"
+#' mod_params$modelparams[11] <- "feca2"
+#' mod_params$modelparams[12] <- "sizea2"
+#' mod_params$modelparams[13] <- "sizea1"
+#' mod_params$modelparams[18] <- "repstatus2"
+#' mod_params$modelparams[19] <- "repstatus1"
 #' 
 #' lathsupp3 <- supplemental(stage3 = c("Sd", "Sd", "Sdl", "Sdl", "mat", "Sd", "Sdl"), 
 #'   stage2 = c("Sd", "Sd", "Sd", "Sd", "Sdl", "rep", "rep"),
@@ -2297,22 +2336,33 @@ NULL
 #' 
 #' # While we do not use MPMs to initialize f_projections3(), we do use MPMs to
 #' # initialize functions start_input() and density_input().
-#' lathmat3ln <- flefko3(year = "all", patch = "all", stageframe = lathframeln, 
-#'   modelsuite = lathmodelsln3, data = lathvertln, supplement = lathsupp3, 
-#'   reduce = FALSE)
+#' lathmat3ln <- flefko3(year = "all", patch = "all", data = lathvertln,
+#'   stageframe = lathframeln, supplement = lathsupp3, paramnames = mod_params,
+#'   surv_model = surv_model, obs_model = obs_model, size_model = siz_model,
+#'   repst_model = reps_model, fec_model = fec_model, jsurv_model = jsurv_model,
+#'   jobs_model = jobs_model, jsize_model = jsiz_model,
+#'   jrepst_model = jrepst_model, jmatst_model = jmatst_model, reduce = FALSE)
 #' 
 #' e3m_sv <- start_input(lathmat3ln, stage2 = "Sd", stage1 = "Sd", value = 1000)
 #' 
-#' e3d <- density_input(lathmat3ln, stage3 = c("Sd", "Sdl"),
-#'   stage2 = c("rep", "rep"), stage1 = c("all", "all"), style = 1,
-#'   time_delay = 1, alpha = 1, beta = 0, type = c(2, 2), type_t12 = c(1, 1))
+#' dyn7 <- c(TRUE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE,
+#'   FALSE, FALSE, FALSE, FALSE, FALSE)
+#' dst7 <- c(1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)
+#' dal7 <- c(0.5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)
+#' dbe7 <- c(1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)
 #' 
-#' trial7a <- f_projection3(format = 1, data = lathvertln,
-#'   modelsuite = lathmodelsln3, stageframe = lathframeln, nreps = 2,
+#' e3d_vr <- density_vr(density_yn = dyn7, style = dst7, alpha = dal7,
+#'   beta = dbe7)
+#' 
+#' trial7_dvr_1 <- f_projection3(format = 1, data = lathvertln, supplement = lathsupp3,
+#'   paramnames = mod_params, stageframe = lathframeln, nreps = 2,
+#'   surv_model = surv_model, obs_model = obs_model, size_model = siz_model,
+#'   repst_model = reps_model, fec_model = fec_model, jsurv_model = jsurv_model,
+#'   jobs_model = jobs_model, jsize_model = jsiz_model,
+#'   jrepst_model = jrepst_model, jmatst_model = jmatst_model,
 #'   times = 100, stochastic = TRUE, standardize = FALSE, growthonly = TRUE,
 #'   integeronly = FALSE, substoch = 0, sp_density = 0, start_frame = e3m_sv,
-#'   density = e3d)
-#' summary(trial7a)
+#'   density_vr = e3d_vr)
 #' }
 #' 
 #' @export f_projection3
@@ -2655,7 +2705,6 @@ f_projection3 <- function(format, prebreeding = TRUE, start_age = NA_integer_, l
 #' 
 #' @examples
 #' \donttest{
-#' # Lathyrus historical function-based MPM example
 #' data(lathyrus)
 #' 
 #' sizevector <- c(0, 4.6, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 1, 2, 3, 4, 5, 6, 7, 8,
@@ -2689,12 +2738,56 @@ f_projection3 <- function(format, prebreeding = TRUE, start_age = NA_integer_, l
 #' lathvertln$feca1 <- round(lathvertln$feca1)
 #' lathvertln$feca3 <- round(lathvertln$feca3)
 #' 
-#' lathmodelsln3 <- modelsearch(lathvertln, historical = TRUE, 
-#'   approach = "mixed", suite = "main", 
-#'   vitalrates = c("surv", "obs", "size", "repst", "fec"), juvestimate = "Sdl",
-#'   bestfit = "AICc&k", sizedist = "gaussian", fecdist = "poisson", 
-#'   indiv = "individ", patch = "patchid", year = "year2", year.as.random = TRUE,
-#'   patch.as.random = TRUE, show.model.tables = TRUE, quiet = "partial")
+#' lathvertln_adults <- subset(lathvertln, stage2index > 2)
+#' surv_model <- glm(alive3 ~ sizea2 + sizea1 + as.factor(patchid) +
+#'   as.factor(year2), data = lathvertln_adults, family = "binomial")
+#' 
+#' obs_data <- subset(lathvertln_adults, alive3 == 1)
+#' obs_model <- glm(obsstatus3 ~ as.factor(patchid), data = obs_data,
+#'   family = "binomial")
+#' 
+#' size_data <- subset(obs_data, obsstatus3 == 1)
+#' siz_model <- lm(sizea3 ~ sizea2 + sizea1 + repstatus1 + as.factor(patchid) +
+#'   as.factor(year2), data = size_data)
+#' 
+#' reps_model <- glm(repstatus3 ~ sizea2 + sizea1 + as.factor(patchid) +
+#'   as.factor(year2), data = size_data, family = "binomial")
+#' 
+#' fec_data <- subset(lathvertln_adults, repstatus2 == 1)
+#' fec_model <- glm(feca2 ~ sizea2 + sizea1 + repstatus1 + as.factor(patchid),
+#'   data = fec_data, family = "poisson")
+#' 
+#' lathvertln_juvs <- subset(lathvertln, stage2index < 3)
+#' jsurv_model <- glm(alive3 ~ as.factor(patchid), data = lathvertln_juvs,
+#'   family = "binomial")
+#' 
+#' jobs_data <- subset(lathvertln_juvs, alive3 == 1)
+#' jobs_model <- glm(obsstatus3 ~ 1, family = "binomial", data = jobs_data)
+#' 
+#' jsize_data <- subset(jobs_data, obsstatus3 == 1)
+#' jsiz_model <- lm(sizea3 ~ as.factor(year2), data = jsize_data)
+#' 
+#' jrepst_model <- 0
+#' jmatst_model <- 1
+#' 
+#' mod_params <- create_pm(name_terms = TRUE)
+#' mod_params$modelparams[3] <- "patchid"
+#' mod_params$modelparams[4] <- "alive3"
+#' mod_params$modelparams[5] <- "obsstatus3"
+#' mod_params$modelparams[6] <- "sizea3"
+#' mod_params$modelparams[9] <- "repstatus3"
+#' mod_params$modelparams[11] <- "feca2"
+#' mod_params$modelparams[12] <- "sizea2"
+#' mod_params$modelparams[13] <- "sizea1"
+#' mod_params$modelparams[18] <- "repstatus2"
+#' mod_params$modelparams[19] <- "repstatus1"
+#' 
+#' used_models <- list(survival_model = surv_model, observation_model = obs_model,
+#'   size_model = siz_model, sizeb_model = 1, sizec_model = 1,
+#'   repstatus_model = reps_model, fecundity_model = fec_model,
+#'   juv_survival_model = jsurv_model, juv_observation_model = jobs_model,
+#'   juv_size_model = jsiz_model, juv_sizeb_model = 1, juv_sizec_model = 1,
+#'   juv_reproduction_model = 0, juv_maturity_model = 1, paramnames = mod_params)
 #' 
 #' lathsupp3 <- supplemental(stage3 = c("Sd", "Sd", "Sdl", "Sdl", "mat", "Sd", "Sdl"), 
 #'   stage2 = c("Sd", "Sd", "Sd", "Sd", "Sdl", "rep", "rep"),
@@ -2707,9 +2800,11 @@ f_projection3 <- function(format, prebreeding = TRUE, start_age = NA_integer_, l
 #'   type = c(1, 1, 1, 1, 1, 3, 3), type_t12 = c(1, 2, 1, 2, 1, 1, 1),
 #'   stageframe = lathframeln, historical = TRUE)
 #' 
+#' # While we do not use MPMs to initialize f_projections3(), we do use MPMs to
+#' # initialize functions start_input() and density_input().
 #' lathmat3ln <- mpm_create(historical = TRUE, year = "all", patch = "all",
-#'   stageframe = lathframeln, modelsuite = lathmodelsln3, data = lathvertln,
-#'   supplement = lathsupp3)
+#'   data = lathvertln, stageframe = lathframeln, supplement = lathsupp3,
+#'   modelsuite = used_models, reduce = FALSE)
 #' }
 #' 
 #' @export mpm_create
@@ -5236,13 +5331,15 @@ lambda3 <- function(mpm, force_sparse = NULL) {
 #' 
 #' Function \code{matrix_interp} summarizes matrices from \code{lefkoMat},
 #' \code{lefkoSens}, \code{lefkoElas}, and \code{lefkoLTRE} objects in terms
-#' of the magnitudes of their elements.
+#' of the magnitudes of their elements. It can also create ordered summaries of
+#' standard matrices and sparse matrices.
 #' 
 #' @name matrix_interp
 #' 
-#' @param object A list object in one of \code{lefko3}'s output formats. These
-#' may include \code{lefkoMat}, \code{lefkoSens}, \code{lefkoElas}, and
-#' \code{lefkoLTRE} objects.
+#' @param object A list object in one of \code{lefko3}'s output formats, or a
+#' standard matrix or sparse matrix in \code{dgCMatrix} format. Standard
+#' \code{lefko3} output formats include \code{lefkoMat}, \code{lefkoSens},
+#' \code{lefkoElas}, and \code{lefkoLTRE} objects.
 #' @param mat_chosen The number of the matrix to assess, within the appropriate
 #' matrix list. See \code{Notes} for further details.
 #' @param part An integer noting whether to provide assessments of which of the
@@ -5263,13 +5360,15 @@ lambda3 <- function(mpm, force_sparse = NULL) {
 #' of only negative elements, or all elements in order of absolute magnitude.
 #' 
 #' @section Notes:
-#' This will be the number of the matrix within the list that it is held in.
-#' For example, if the function is applied to the \code{cont_sd} portion of
-#' a stochastic LTRE, and there are four LTRE matrices within that list element
-#' corresponding to three patch LTRE matrices and one overall population-level
-#' LTRE matrix, then setting this value to \code{4} would focus the function on
-#' the overall population-level LTRE matrix associated with contributions of
-#' the standard deviations of elements.
+#' Argument \code{mat_chosen} refers to the number of the matrix within the
+#' list that it is held in. For example, if the function is applied to the
+#' \code{cont_sd} portion of a stochastic LTRE, and there are four LTRE
+#' matrices within that list element corresponding to three patch LTRE matrices
+#' and one overall population-level LTRE matrix, then setting this value to
+#' \code{4} would focus the function on the overall population-level LTRE
+#' matrix associated with contributions of the standard deviations of elements.
+#' This argument should be left blank if a standard matrix or sparse matrix is
+#' input.
 #' 
 #' Huge sparse matrices may take more time to process than small, dense
 #' matrices.

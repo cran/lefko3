@@ -42,12 +42,13 @@ cyp_lesl_data <- verticalize3(data = cypdata, noyears = 6, firstyear = 2004,
   repstracol = "Inf.04", repstrbcol = "Inf2.04", fecacol = "Pod.04", 
   stagesize = "sizeadded", NAas0 = TRUE, age_offset = 2)
 
-cyp_lesl_vital <- modelsearch(cyp_lesl_data, historical = FALSE,
-  approach = "mixed", suite = "cons", bestfit = "AICc&k", age = "obsage",
-  vitalrates = c("surv", "fec"), fecdist = "poisson", indiv = "individ",
-  year = "year2", year.as.random = TRUE, patch.as.random = TRUE,
-  show.model.tables = TRUE, fec.zero = TRUE, global.only = TRUE,
-  test.age = TRUE, quiet = "partial")
+cyp_survival <- glm(alive3 ~ obsage + as.factor(year2), data = cyp_lesl_data,
+  family = "binomial")
+cyp_fecundity <- glm(feca2 ~ 1 + obsage + as.factor(year2),
+  data = cyp_lesl_data, family = "poisson")
+
+mod_params <- create_pm(name_terms = TRUE)
+mod_params$modelparams[22] <- "obsage"
 
 germination <- 0.08
 protocorm_to_seedling <- 0.10
@@ -58,9 +59,10 @@ cyp_lesl_supp <- supplemental(historical = FALSE, stagebased = FALSE,
   agebased = TRUE, age2 = c(1, 2), type = c(1, 1),
   givenrate = c(protocorm_to_seedling, seeding_to_adult))
 
-cyp_lesl_fb_mpm <- fleslie(data = cyp_lesl_data,
-  modelsuite = cyp_lesl_vital, last_age = 7, fecage_min = 3,
-  fecmod = (germination * seeds_per_fruit), supplement = cyp_lesl_supp)
+cyp_lesl_fb_mpm <- fleslie(data = cyp_lesl_data, surv_model = cyp_survival,
+  fec_model = cyp_fecundity, paramnames = mod_params, last_age = 7,
+  fecage_min = 3, fecmod = (germination * seeds_per_fruit),
+  supplement = cyp_lesl_supp)
 
 altered1 <- add_stage(cyp_lesl_fb_mpm, add_before = 1, stage_name = "DS")
 

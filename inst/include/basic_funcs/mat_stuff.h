@@ -522,7 +522,14 @@ namespace LefkoMats {
       "none", "none", "none", "none", "none", "none", "none", "none", "none",
       "none", "none", "none", "none", "none", "none", "none", "none"};
     
-    if (name_terms) modelparams = mainparams;
+    CharacterVector modelparams_alt = {"year2", "individ", "patchid", "alive3",
+      "obsstatus3", "sizea3", "sizeb3", "sizec3", "repstatus3", "feca3",
+      "feca2", "sizea2", "sizea1", "sizeb2", "sizeb1", "sizec2", "sizec1",
+      "repstatus2", "repstatus1", "matstatus3", "matstatus2", "obsage",
+      "density", "indcova2", "indcova1", "indcovb2", "indcovb1", "indcovc2",
+      "indcovc1", "group2", "group1"};
+    
+    if (name_terms) modelparams = modelparams_alt;
     
     DataFrame output = DataFrame::create(_["parameter_names"] = parameter_names,
       _["mainparams"] = mainparams, _["modelparams"] = modelparams);

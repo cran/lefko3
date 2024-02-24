@@ -5295,6 +5295,7 @@ namespace LefkoUtils {
     
     double preout {0.0};
     double all_out {0.0};
+    double all_out_zi {0.0};
     
     int placeholder = vitalrate - 1;
     int placeholder_zi = placeholder + 12;
@@ -5309,154 +5310,164 @@ namespace LefkoUtils {
       placeholder_zi = placeholder + 11;
     }
     
+    // For all / conditional models
     double mainsum = rimeotam(maincoefs, status_terms(0), status_terms(1),
       status_terms(2), status_terms(3), status_terms(4), status_terms(5),
       status_terms(6), status_terms(7), status_terms(8), status_terms(9),
       status_terms(10), status_terms(11), status_terms(12), status_terms(13),
-      status_terms(14), status_terms(15), zi);
+      status_terms(14), status_terms(15), false);
     
     bool zi_processing = false;
     
     if (vitaltype == 1) {
       if (vitalrate == 3 || vitalrate == 10) {
-        if (zi && status_terms(16) == 0.0) zi_processing = true;
+        if (zi) zi_processing = true;
       } else if (vitalrate == 4 || vitalrate == 11) {
-        if (zi && status_terms(17) == 0.0) zi_processing = true;
+        if (zi) zi_processing = true;
       } else if (vitalrate == 5 || vitalrate == 12) {
-        if (zi && status_terms(18) == 0.0) zi_processing = true;
+        if (zi) zi_processing = true;
       } 
     } else if (vitaltype == 2) {
-      if (zi && status_terms(16) == 0 && status_terms(17) == 0 &&
-        status_terms(18) == 0 && vitaldist < 2) zi_processing = true;  
+      if (zi && vitaldist < 2) zi_processing = true;  
     }
     
-    if (!zi_processing) {
-      // Random covariate processing
-      double chosen_randcova2 {0.0};
-      if (chosen_r2inda != "none") {
-        for (int indcount = 0; indcount < randindex(0, placeholder); indcount++) {
-          if (chosen_r2inda == modelind_rownames(indcount)) {
-            chosen_randcova2 = modelind(indcount);
-          }
+    // Creates covariate numerics for all models
+    // Random covariate processing
+    double chosen_randcova2 {0.0};
+    if (chosen_r2inda != "none") {
+      for (int indcount = 0; indcount < randindex(0, placeholder); indcount++) {
+        if (chosen_r2inda == modelind_rownames(indcount)) {
+          chosen_randcova2 = modelind(indcount);
         }
       }
-      double chosen_randcova1 {0.0};
-      if (chosen_r1inda != "none") {
-        int delectable_sum = randindex(0, placeholder);
-        for (int indcount = 0; indcount < randindex(1, placeholder); indcount++) {
-          if (chosen_r1inda == modelind_rownames(indcount + delectable_sum)) {
-            chosen_randcova1 = modelind(indcount + delectable_sum);
-          }
+    }
+    double chosen_randcova1 {0.0};
+    if (chosen_r1inda != "none") {
+      int delectable_sum = randindex(0, placeholder);
+      for (int indcount = 0; indcount < randindex(1, placeholder); indcount++) {
+        if (chosen_r1inda == modelind_rownames(indcount + delectable_sum)) {
+          chosen_randcova1 = modelind(indcount + delectable_sum);
         }
       }
-      double chosen_randcovb2 {0.0};
-      if (chosen_r2indb != "none") {
-        int delectable_sum = randindex(0, placeholder) + randindex(1, placeholder);
-        for (int indcount = 0; indcount < randindex(2, placeholder); indcount++) {
-          if (chosen_r2indb == modelind_rownames(indcount + delectable_sum)) {
-            chosen_randcovb2 = modelind(indcount + delectable_sum);
-          }
+    }
+    double chosen_randcovb2 {0.0};
+    if (chosen_r2indb != "none") {
+      int delectable_sum = randindex(0, placeholder) + randindex(1, placeholder);
+      for (int indcount = 0; indcount < randindex(2, placeholder); indcount++) {
+        if (chosen_r2indb == modelind_rownames(indcount + delectable_sum)) {
+          chosen_randcovb2 = modelind(indcount + delectable_sum);
         }
       }
-      double chosen_randcovb1 {0.0};
-      if (chosen_r1indb != "none") {
-        int delectable_sum = randindex(0, placeholder) + randindex(1, placeholder) +
-          randindex(2, placeholder);
-        for (int indcount = 0; indcount < randindex(3, placeholder); indcount++) {
-          if (chosen_r1indb == modelind_rownames(indcount + delectable_sum)) {
-            chosen_randcovb1 = modelind(indcount + delectable_sum);
-          }
+    }
+    double chosen_randcovb1 {0.0};
+    if (chosen_r1indb != "none") {
+      int delectable_sum = randindex(0, placeholder) + randindex(1, placeholder) +
+        randindex(2, placeholder);
+      for (int indcount = 0; indcount < randindex(3, placeholder); indcount++) {
+        if (chosen_r1indb == modelind_rownames(indcount + delectable_sum)) {
+          chosen_randcovb1 = modelind(indcount + delectable_sum);
         }
       }
-      double chosen_randcovc2 {0.0};
-      if (chosen_r2indc != "none") {
-        int delectable_sum = randindex(0, placeholder) + randindex(1, placeholder) +
-          randindex(2, placeholder) + randindex(3, placeholder);
-        for (int indcount = 0; indcount < randindex(4, placeholder); indcount++) {
-          if (chosen_r2indc == modelind_rownames(indcount + delectable_sum)) {
-            chosen_randcovc2 = modelind(indcount + delectable_sum);
-          }
+    }
+    double chosen_randcovc2 {0.0};
+    if (chosen_r2indc != "none") {
+      int delectable_sum = randindex(0, placeholder) + randindex(1, placeholder) +
+        randindex(2, placeholder) + randindex(3, placeholder);
+      for (int indcount = 0; indcount < randindex(4, placeholder); indcount++) {
+        if (chosen_r2indc == modelind_rownames(indcount + delectable_sum)) {
+          chosen_randcovc2 = modelind(indcount + delectable_sum);
         }
       }
-      double chosen_randcovc1 {0.0};
-      if (chosen_r1indc != "none") {
-        int delectable_sum = randindex(0, placeholder) + randindex(1, placeholder) +
-          randindex(2, placeholder) + randindex(3, placeholder) + randindex(4, placeholder);
-        for (int indcount = 0; indcount < randindex(5, placeholder); indcount++) {
-          if (chosen_r1indc == modelind_rownames(indcount + delectable_sum)) {
-            chosen_randcovc1 = modelind(indcount + delectable_sum);
-          }
+    }
+    double chosen_randcovc1 {0.0};
+    if (chosen_r1indc != "none") {
+      int delectable_sum = randindex(0, placeholder) + randindex(1, placeholder) +
+        randindex(2, placeholder) + randindex(3, placeholder) + randindex(4, placeholder);
+      for (int indcount = 0; indcount < randindex(5, placeholder); indcount++) {
+        if (chosen_r1indc == modelind_rownames(indcount + delectable_sum)) {
+          chosen_randcovc1 = modelind(indcount + delectable_sum);
         }
       }
+    }
+    
+    // Fixed factor covariate processing (all / conditional)
+    double chosen_fixcova2 {0.0};
+    if (chosen_f2inda_cat != "none") {
+      for (int indcount = 0; indcount < randindex(0, placeholder); indcount++) {
+        if (chosen_f2inda_cat == modelind_rownames(indcount)) {
+          chosen_fixcova2 = modelind(indcount);
+        }
+      }
+    }
+    double chosen_fixcova1 {0.0};
+    if (chosen_f1inda_cat != "none") {
+      int delectable_sum = randindex(0, placeholder);
+      for (int indcount = 0; indcount < randindex(1, placeholder); indcount++) {
+        if (chosen_f1inda_cat == modelind_rownames(indcount + delectable_sum)) {
+          chosen_fixcova1 = modelind(indcount + delectable_sum);
+        }
+      }
+    }
+    double chosen_fixcovb2 {0.0};
+    if (chosen_f2indb_cat != "none") {
+      int delectable_sum = randindex(0, placeholder) + randindex(1, placeholder);
+      for (int indcount = 0; indcount < randindex(2, placeholder); indcount++) {
+        if (chosen_f2indb_cat == modelind_rownames(indcount + delectable_sum)) {
+          chosen_fixcovb2 = modelind(indcount + delectable_sum);
+        }
+      }
+    }
+    double chosen_fixcovb1 {0.0};
+    if (chosen_f1indb_cat != "none") {
+      int delectable_sum = randindex(0, placeholder) + randindex(1, placeholder) +
+        randindex(2, placeholder);
+      for (int indcount = 0; indcount < randindex(3, placeholder); indcount++) {
+        if (chosen_f1indb_cat == modelind_rownames(indcount + delectable_sum)) {
+          chosen_fixcovb1 = modelind(indcount + delectable_sum);
+        }
+      }
+    }
+    double chosen_fixcovc2 {0.0};
+    if (chosen_f2indc_cat != "none") {
+      int delectable_sum = randindex(0, placeholder) + randindex(1, placeholder) +
+        randindex(2, placeholder) + randindex(3, placeholder);
+      for (int indcount = 0; indcount < randindex(4, placeholder); indcount++) {
+        if (chosen_f2indc_cat == modelind_rownames(indcount + delectable_sum)) {
+          chosen_fixcovc2 = modelind(indcount + delectable_sum);
+        }
+      }
+    }
+    double chosen_fixcovc1 {0.0};
+    if (chosen_f1indc_cat != "none") {
+      int delectable_sum = randindex(0, placeholder) + randindex(1, placeholder) +
+        randindex(2, placeholder) + randindex(3, placeholder) + randindex(4, placeholder);
+      for (int indcount = 0; indcount < randindex(5, placeholder); indcount++) {
+        if (chosen_f1indc_cat == modelind_rownames(indcount + delectable_sum)) {
+          chosen_fixcovc1 = modelind(indcount + delectable_sum);
+        }
+      }
+    }
+    
+    preout = (mainsum + chosen_randcova2 + chosen_randcova1 +
+      chosen_randcovb2 + chosen_randcovb1 + chosen_randcovc2 +
+      chosen_randcovc1 + chosen_fixcova2 + chosen_fixcova1 + chosen_fixcovb2 +
+      chosen_fixcovb1 + chosen_fixcovc2 + chosen_fixcovc1 +
+      modelgroups2(grp2o_i) + modelgroups1(grp1_i) + 
+      vitalpatch(patchnumber, placeholder) +
+      vitalyear(yearnumber, placeholder) + dev_terms(placeholder));
       
-      // Fixed factor covariate processing
-      double chosen_fixcova2 {0.0};
-      if (chosen_f2inda_cat != "none") {
-        for (int indcount = 0; indcount < randindex(0, placeholder); indcount++) {
-          if (chosen_f2inda_cat == modelind_rownames(indcount)) {
-            chosen_fixcova2 = modelind(indcount);
-          }
-        }
-      }
-      double chosen_fixcova1 {0.0};
-      if (chosen_f1inda_cat != "none") {
-        int delectable_sum = randindex(0, placeholder);
-        for (int indcount = 0; indcount < randindex(1, placeholder); indcount++) {
-          if (chosen_f1inda_cat == modelind_rownames(indcount + delectable_sum)) {
-            chosen_fixcova1 = modelind(indcount + delectable_sum);
-          }
-        }
-      }
-      double chosen_fixcovb2 {0.0};
-      if (chosen_f2indb_cat != "none") {
-        int delectable_sum = randindex(0, placeholder) + randindex(1, placeholder);
-        for (int indcount = 0; indcount < randindex(2, placeholder); indcount++) {
-          if (chosen_f2indb_cat == modelind_rownames(indcount + delectable_sum)) {
-            chosen_fixcovb2 = modelind(indcount + delectable_sum);
-          }
-        }
-      }
-      double chosen_fixcovb1 {0.0};
-      if (chosen_f1indb_cat != "none") {
-        int delectable_sum = randindex(0, placeholder) + randindex(1, placeholder) +
-          randindex(2, placeholder);
-        for (int indcount = 0; indcount < randindex(3, placeholder); indcount++) {
-          if (chosen_f1indb_cat == modelind_rownames(indcount + delectable_sum)) {
-            chosen_fixcovb1 = modelind(indcount + delectable_sum);
-          }
-        }
-      }
-      double chosen_fixcovc2 {0.0};
-      if (chosen_f2indc_cat != "none") {
-        int delectable_sum = randindex(0, placeholder) + randindex(1, placeholder) +
-          randindex(2, placeholder) + randindex(3, placeholder);
-        for (int indcount = 0; indcount < randindex(4, placeholder); indcount++) {
-          if (chosen_f2indc_cat == modelind_rownames(indcount + delectable_sum)) {
-            chosen_fixcovc2 = modelind(indcount + delectable_sum);
-          }
-        }
-      }
-      double chosen_fixcovc1 {0.0};
-      if (chosen_f1indc_cat != "none") {
-        int delectable_sum = randindex(0, placeholder) + randindex(1, placeholder) +
-          randindex(2, placeholder) + randindex(3, placeholder) + randindex(4, placeholder);
-        for (int indcount = 0; indcount < randindex(5, placeholder); indcount++) {
-          if (chosen_f1indc_cat == modelind_rownames(indcount + delectable_sum)) {
-            chosen_fixcovc1 = modelind(indcount + delectable_sum);
-          }
-        }
-      }
-      
-      preout = (mainsum + chosen_randcova2 + chosen_randcova1 +
-        chosen_randcovb2 + chosen_randcovb1 + chosen_randcovc2 +
-        chosen_randcovc1 + chosen_fixcova2 + chosen_fixcova1 + chosen_fixcovb2 +
-        chosen_fixcovb1 + chosen_fixcovc2 + chosen_fixcovc1 +
-        modelgroups2(grp2o_i) + modelgroups1(grp1_i) + 
-        vitalpatch(patchnumber, placeholder) +
-        vitalyear(yearnumber, placeholder) + dev_terms(placeholder));
+    if (preout > exp_tol && vitaldist < 2) preout = exp_tol;
+    
+    
+    double preout_zi {0.0};
+    
+    if (zi_processing) {
+      double mainsum_zi = rimeotam(maincoefs, status_terms(0), status_terms(1),
+        status_terms(2), status_terms(3), status_terms(4), status_terms(5),
+        status_terms(6), status_terms(7), status_terms(8), status_terms(9),
+        status_terms(10), status_terms(11), status_terms(12), status_terms(13),
+        status_terms(14), status_terms(15), true);
         
-      if (preout > exp_tol && vitaldist < 2) preout = exp_tol;
-    } else {
       // Only for size and fec
       double chosen_randcova2zi {0.0};
       if (chosen_r2inda != "none") {
@@ -5571,7 +5582,7 @@ namespace LefkoUtils {
         }
       }
       
-      preout = (mainsum + chosen_randcova2zi + chosen_randcova1zi +
+      preout_zi = (mainsum_zi + chosen_randcova2zi + chosen_randcova1zi +
         chosen_randcovb2zi + chosen_randcovb1zi + chosen_randcovc2zi +
         chosen_randcovc1zi + chosen_fixcova2zi + chosen_fixcova1zi +
         chosen_fixcovb2zi + chosen_fixcovb1zi + chosen_fixcovc2zi +
@@ -5581,6 +5592,7 @@ namespace LefkoUtils {
     }
     
     if (vitaltype == 0) {
+      // Binomial vital rates only
       if (preout > exp_tol) preout = exp_tol;
         
       double pre_exp = exp(preout);
@@ -5588,7 +5600,9 @@ namespace LefkoUtils {
       
       // Rcout << "Binomial: preout: " << preout << " pre_exp: " << pre_exp <<
       //   " all_out: " << all_out << "\n";
+      
     } else if (vitaltype == 1) {
+      // Size vital rates
       
       double Used_size3 = status_terms(16);
       double Used_binwidth3 = status_terms(19);
@@ -5611,193 +5625,218 @@ namespace LefkoUtils {
       }
       
       if (zi_processing) {
+        // Development of estimate of pi (probability of 0 in binomial zi model)
+        if (preout_zi > exp_tol) preout_zi = exp_tol;
+        
+        double pre_exp_zi = exp(preout_zi);
+        all_out_zi = pre_exp_zi / (1.0 + pre_exp_zi);
+        
+        // Rcout << "ZI Binomial: preout_zi: " << preout_zi << " pre_exp_zi: " << pre_exp_zi <<
+        //   " all_out_zi: " << all_out_zi << "\n";
+      }
+      
+      if (vitaldist == 0) {
+        // Poisson distribution
+        
         if (preout > exp_tol) preout = exp_tol;
+        double lambda = exp(preout);
         
-        double pre_exp = exp(preout);
-        all_out = pre_exp / (1.0 + pre_exp);
+        double upper_boundary = (Used_size3 + (Used_binwidth3 / 2));
+        double upper_boundary_int = floor(upper_boundary);
         
-        // Rcout << "ZI Binomial: preout: " << preout << " pre_exp: " << pre_exp <<
-        //   " all_out: " << all_out << "\n";
+        double lower_boundary = (Used_size3 - (Used_binwidth3 / 2));
+        double lower_boundary_int = floor(lower_boundary);
         
-      } else {
-        if (vitaldist == 0) {
-          // Poisson distribution
+        if (ipm_cdf) {
+          if (lower_boundary_int < 0.0) lower_boundary_int = 0.0;
           
-          if (preout > exp_tol) preout = exp_tol;
-          double lambda = exp(preout);
-          
-          double upper_boundary = (Used_size3 + (Used_binwidth3 / 2));
-          double upper_boundary_int = floor(upper_boundary);
-          
-          double lower_boundary = (Used_size3 - (Used_binwidth3 / 2));
-          double lower_boundary_int = floor(lower_boundary);
-          
-          if (ipm_cdf) {
-            if (lower_boundary_int < 0.0) lower_boundary_int = 0.0;
-            
-            double sizefac {1.0};
-            if (upper_boundary_int > 0.0) {
-              sizefac = upper_boundary_int * tgamma(upper_boundary_int);
-            }
-            double main_out = boost::math::tgamma((upper_boundary_int + 1), lambda) / sizefac;
-            
-            if (upper_boundary_int > lower_boundary_int) {
-              double sizefac_low {1.0};
-              if (lower_boundary_int > 0.0) {
-                sizefac_low = lower_boundary_int * tgamma(lower_boundary_int);
-              }
-              all_out = main_out - boost::math::tgamma((lower_boundary_int + 1), lambda) / sizefac_low;
-            } else {
-              all_out = main_out;
-            }
-            if (all_out < 0.0) all_out = 0.0; // Eliminates issues in some versions of Linux
-            
-            if (modeltrunc == 1) {
-              double den_corr = (1.0 - (exp(-1 * lambda)));
-              if (den_corr == 0.0 || NumericVector::is_na(den_corr)) {
-                den_corr = 1 / (exp_tol * exp_tol);
-              }
-              all_out = all_out / den_corr;
-            }
-            // Rcout << "Poisson cdf: upper_boundary_int: " << upper_boundary_int << 
-            //   " lower_boundary_int: " << lower_boundary_int << " lambda: " << lambda << 
-            //   " all_out: " << all_out << "\n";
-            
-          } else {
-            int y = static_cast<int>(upper_boundary_int);
-            int y0 = static_cast<int>(lower_boundary_int);
-            if (y0 < -1) y0 = -1;
-            
-            double current_prob {0.0};
-            
-            for (int summed_size = (y0 + 1); summed_size <= y; summed_size++) {
-              double sizefac {1.0};
-              if (Used_size3 > 0.0) {
-                sizefac = Used_size3 * tgamma(Used_size3);
-              }
-              
-              double den_corr {1.0};
-              if (modeltrunc == 1) den_corr = (1.0 - (exp(-1 * lambda)));
-              if (den_corr == 0.0 || NumericVector::is_na(den_corr)) {
-                den_corr = 1.0 / (exp_tol * exp_tol);
-              }
-              
-              current_prob += ((pow(lambda, Used_size3) * exp(-1.0 * lambda)) / sizefac) / den_corr;
-            }
-            all_out = current_prob;
-            
-            // Rcout << "Poisson mid: upper_boundary_int: " << upper_boundary_int <<
-            //   " lower_boundary_int: " << lower_boundary_int << " lambda: " << lambda << 
-            //   " current_prob: " << current_prob << "\n";
+          double sizefac {1.0};
+          if (upper_boundary_int > 0.0) {
+            sizefac = upper_boundary_int * tgamma(upper_boundary_int);
           }
+          double main_out = boost::math::tgamma((upper_boundary_int + 1), lambda) / sizefac;
           
-        } else if (vitaldist == 1) {
-          // Negative binomial
+          if (upper_boundary_int > lower_boundary_int) {
+            double sizefac_low {1.0};
+            if (lower_boundary_int > 0.0) {
+              sizefac_low = lower_boundary_int * tgamma(lower_boundary_int);
+            }
+            all_out = main_out - boost::math::tgamma((lower_boundary_int + 1), lambda) / sizefac_low;
+          } else {
+            all_out = main_out;
+          }
+          if (all_out < 0.0) all_out = 0.0; // Eliminates issues in some versions of Linux
           
-          double mu = exp(preout);
+          if (modeltrunc == 1) {
+            double den_corr = (1.0 - (exp(-1 * lambda)));
+            if (den_corr == 0.0 || NumericVector::is_na(den_corr)) {
+              den_corr = 1 / (exp_tol * exp_tol);
+            }
+            all_out = all_out / den_corr;
+          }
+          // Rcout << "Poisson cdf: upper_boundary_int: " << upper_boundary_int << 
+          //   " lower_boundary_int: " << lower_boundary_int << " lambda: " << lambda << 
+          //   " all_out: " << all_out << "\n";
           
-          double theta = modelproxy["sigma"];
-          if (NumericVector::is_na(theta)) theta = 1.0;
-          if (theta > theta_tol) theta = theta_tol;
-          double alpha = 1.0 / theta;
-          
-          double upper_boundary = (Used_size3 + (Used_binwidth3 / 2));
-          double upper_boundary_int = floor(upper_boundary);
+        } else {
           int y = static_cast<int>(upper_boundary_int);
-          
-          double lower_boundary = (Used_size3 - (Used_binwidth3 / 2));
-          double lower_boundary_int = floor(lower_boundary);
           int y0 = static_cast<int>(lower_boundary_int);
           if (y0 < -1) y0 = -1;
-          
-          double log_amu = log(alpha) + log(mu);
-          double log_mid = -1.0 * theta * log(1.0 + (alpha * mu));
-          double den_corr {1.0};
-          if (modeltrunc == 1) den_corr = 1.0 - exp(log_mid);
-          if (den_corr == 0.0 || NumericVector::is_na(den_corr)) {
-            den_corr = 1 / (exp_tol * exp_tol);
-          }
           
           double current_prob {0.0};
           
           for (int summed_size = (y0 + 1); summed_size <= y; summed_size++) {
-            double log_leftie = 0.0;
-            for (int j = 0; j < summed_size; j++) {
-              log_leftie = log(static_cast<double>(j) + theta) - log(static_cast<double>(j) + 1.0) + log_leftie;
+            double sizefac {1.0};
+            if (Used_size3 > 0.0) {
+              sizefac = Used_size3 * tgamma(Used_size3);
             }
-            double log_rightie = static_cast<double>(summed_size) * (log_amu - log(1.0 + (alpha * mu)));
             
-            double raw_prob = log_leftie + log_mid + log_rightie;
+            double den_corr {1.0};
+            if (modeltrunc == 1) den_corr = (1.0 - (exp(-1 * lambda)));
+            if (den_corr == 0.0 || NumericVector::is_na(den_corr)) {
+              den_corr = 1.0 / (exp_tol * exp_tol);
+            }
             
-            current_prob += exp(raw_prob) / den_corr;
+            current_prob += ((pow(lambda, Used_size3) * exp(-1.0 * lambda)) / sizefac) / den_corr;
           }
           all_out = current_prob;
-          if (all_out < 0.0) all_out = 0.0; // Eliminates issues in some versions of Linux
           
-          // Rcout << "Negbin: y: " << y << " y0: " << y0 << " alpha: " << alpha <<
-          //   " mu: " << mu << " current_prob: " << current_prob << "\n";
+          // Rcout << "Poisson mid: upper_boundary_int: " << upper_boundary_int <<
+          //   " lower_boundary_int: " << lower_boundary_int << " lambda: " << lambda << 
+          //   " current_prob: " << current_prob << "\n";
+        }
+        
+        if (zi_processing) {
+          double current_pi = all_out_zi;
+          double current_chi = all_out;
           
-        } else if (vitaldist == 2) {
-          // Gaussian size distribution, assuming midpoint
-          
-          if (ipm_cdf) {
-            double lower_size = Used_size3 - (0.5 * Used_binwidth3);
-            double upper_size = Used_size3 + (0.5 * Used_binwidth3);
-            
-            double lower_prob = normcdf(lower_size, preout, sigma);
-            double upper_prob = normcdf(upper_size, preout, sigma);
-            
-            all_out = upper_prob - lower_prob;
-            
-            // Rcout << "Gaussian cdf: upper_size: " << upper_size << " lower_size: " <<
-            //   lower_size << " Used_size3: " << Used_size3 << " Used_binwidth3: " <<
-            //   Used_binwidth3 << " preout: " << preout << " sigma: " <<
-            //   sigma << " upper_prob: " << upper_prob << " lower_prob: " <<
-            //   lower_prob << " all_out: " << all_out << "\n";
+          if (Used_size3 == 0) {
+            all_out = current_pi + ((1.0 - current_pi) * current_chi);
           } else {
-            double sigma2 = sigma * sigma;
-            
-            all_out = (exp(-1 * (pow((Used_size3 - preout), 2) / (2.0 * sigma2))) / 
-              ((pow((2 * M_PI), 0.5)) * sigma));
-            all_out = all_out * Used_binwidth3; // This is the midpoint integration
-            
-            // Rcout << "Gaussian mid: Used_size3: " << Used_size3 << " Used_binwidth3: " <<
-            //   Used_binwidth3 << " sigma: " << sigma << " preout: " <<
-            //   preout << " all_out: " << all_out << "\n";
-          }
-        } else if (vitaldist == 3) {
-          // Gamma size distribution, assuming midpoint
-          
-          double E_y = 1 / preout;
-          double sigma2 = sigma * sigma;
-          double alpha = 1.0 / sigma2;
-          double beta = (alpha / E_y);
-          
-          if (ipm_cdf) {
-            double lower_size = Used_size3 - (0.5 * Used_binwidth3);
-            double upper_size = Used_size3 + (0.5 * Used_binwidth3);
-            
-            double lower_prob = boost::math::gamma_p(alpha, (beta * lower_size));
-            double upper_prob = boost::math::gamma_p(alpha, (beta * upper_size));
-            
-            all_out = upper_prob - lower_prob;
-            
-            // Rcout << "Gamma cdf: upper_size: " << upper_size << " lower_size: " <<
-            //   lower_size << " alpha: " << alpha << " beta: " << beta << " upper_prob: " <<
-            //   upper_prob << " lower_prob: " << lower_prob << " all_out: " << all_out << "\n";
-          } else {
-            
-            all_out = pow(beta, alpha) * (1.0 / tgamma(alpha)) * 
-              pow(Used_size3, (alpha - 1.0)) * exp(-1.0 * beta * Used_size3);
-            all_out = all_out * Used_binwidth3; // This is the midpoint integration
-            
-            // Rcout << "Gamma mid: Used_size3: " << Used_size3 << " Used_binwidth3: " <<
-            //   Used_binwidth3 << " alpha: " << alpha << " beta: " << beta <<
-            //   " all_out: " << all_out << "\n";
+            all_out = (1.0 - current_pi) * current_chi;
           }
         }
+        
+      } else if (vitaldist == 1) {
+        // Negative binomial
+        
+        double mu = exp(preout);
+        
+        double theta = modelproxy["sigma"];
+        if (NumericVector::is_na(theta)) theta = 1.0;
+        if (theta > theta_tol) theta = theta_tol;
+        double alpha = 1.0 / theta;
+        
+        double upper_boundary = (Used_size3 + (Used_binwidth3 / 2));
+        double upper_boundary_int = floor(upper_boundary);
+        int y = static_cast<int>(upper_boundary_int);
+        
+        double lower_boundary = (Used_size3 - (Used_binwidth3 / 2));
+        double lower_boundary_int = floor(lower_boundary);
+        int y0 = static_cast<int>(lower_boundary_int);
+        if (y0 < -1) y0 = -1;
+        
+        double log_amu = log(alpha) + log(mu);
+        double log_mid = -1.0 * theta * log(1.0 + (alpha * mu));
+        double den_corr {1.0};
+        if (modeltrunc == 1) den_corr = 1.0 - exp(log_mid);
+        if (den_corr == 0.0 || NumericVector::is_na(den_corr)) {
+          den_corr = 1 / (exp_tol * exp_tol);
+        }
+        
+        double current_prob {0.0};
+        
+        for (int summed_size = (y0 + 1); summed_size <= y; summed_size++) {
+          double log_leftie = 0.0;
+          for (int j = 0; j < summed_size; j++) {
+            log_leftie = log(static_cast<double>(j) + theta) - log(static_cast<double>(j) + 1.0) + log_leftie;
+          }
+          double log_rightie = static_cast<double>(summed_size) * (log_amu - log(1.0 + (alpha * mu)));
+          
+          double raw_prob = log_leftie + log_mid + log_rightie;
+          
+          current_prob += exp(raw_prob) / den_corr;
+        }
+        all_out = current_prob;
+        
+        if (zi_processing) {
+          double current_pi = all_out_zi;
+          double current_chi = all_out;
+          
+          if (Used_size3 == 0) {
+            all_out = current_pi + ((1.0 - current_pi) * current_chi);
+          } else {
+            all_out = (1.0 - current_pi) * current_chi;
+          }
+        }
+        
+        if (all_out < 0.0) all_out = 0.0; // Eliminates issues in some versions of Linux
+        
+        // Rcout << "Negbin: y: " << y << " y0: " << y0 << " alpha: " << alpha <<
+        //   " mu: " << mu << " current_prob: " << current_prob << "\n";
+        
+      } else if (vitaldist == 2) {
+        // Gaussian size distribution, assuming midpoint
+        
+        if (ipm_cdf) {
+          double lower_size = Used_size3 - (0.5 * Used_binwidth3);
+          double upper_size = Used_size3 + (0.5 * Used_binwidth3);
+          
+          double lower_prob = normcdf(lower_size, preout, sigma);
+          double upper_prob = normcdf(upper_size, preout, sigma);
+          
+          all_out = upper_prob - lower_prob;
+          
+          // Rcout << "Gaussian cdf: upper_size: " << upper_size << " lower_size: " <<
+          //   lower_size << " Used_size3: " << Used_size3 << " Used_binwidth3: " <<
+          //   Used_binwidth3 << " preout: " << preout << " sigma: " <<
+          //   sigma << " upper_prob: " << upper_prob << " lower_prob: " <<
+          //   lower_prob << " all_out: " << all_out << "\n";
+        } else {
+          double sigma2 = sigma * sigma;
+          
+          all_out = (exp(-1 * (pow((Used_size3 - preout), 2) / (2.0 * sigma2))) / 
+            ((pow((2 * M_PI), 0.5)) * sigma));
+          all_out = all_out * Used_binwidth3; // This is the midpoint integration
+          
+          // Rcout << "Gaussian mid: Used_size3: " << Used_size3 << " Used_binwidth3: " <<
+          //   Used_binwidth3 << " sigma: " << sigma << " preout: " <<
+          //   preout << " all_out: " << all_out << "\n";
+        }
+      } else if (vitaldist == 3) {
+        // Gamma size distribution, assuming midpoint
+        
+        double E_y = 1 / preout;
+        double sigma2 = sigma * sigma;
+        double alpha = 1.0 / sigma2;
+        double beta = (alpha / E_y);
+        
+        if (ipm_cdf) {
+          double lower_size = Used_size3 - (0.5 * Used_binwidth3);
+          double upper_size = Used_size3 + (0.5 * Used_binwidth3);
+          
+          double lower_prob = boost::math::gamma_p(alpha, (beta * lower_size));
+          double upper_prob = boost::math::gamma_p(alpha, (beta * upper_size));
+          
+          all_out = upper_prob - lower_prob;
+          
+          // Rcout << "Gamma cdf: upper_size: " << upper_size << " lower_size: " <<
+          //   lower_size << " alpha: " << alpha << " beta: " << beta << " upper_prob: " <<
+          //   upper_prob << " lower_prob: " << lower_prob << " all_out: " << all_out << "\n";
+        } else {
+          
+          all_out = pow(beta, alpha) * (1.0 / tgamma(alpha)) * 
+            pow(Used_size3, (alpha - 1.0)) * exp(-1.0 * beta * Used_size3);
+          all_out = all_out * Used_binwidth3; // This is the midpoint integration
+          
+          // Rcout << "Gamma mid: Used_size3: " << Used_size3 << " Used_binwidth3: " <<
+          //   Used_binwidth3 << " alpha: " << alpha << " beta: " << beta <<
+          //   " all_out: " << all_out << "\n";
+        }
       }
+      
     } else if (vitaltype == 2) {
+      // Fecundity
       if (matrixformat != 2 || stage2n_i != static_cast<double>(nostages+1)) {
         if (vitaldist == 0 || vitaldist == 1) {
           // Poisson and negative binomial fecundity
@@ -5805,7 +5844,7 @@ namespace LefkoUtils {
           
           if (zi_processing) {
             
-            all_out = (exp(preout) / (1.0 + exp(preout))) * fecmod * repentry_i;
+            all_out = (1.0 - (exp(preout_zi) / (1.0 + exp(preout_zi)))) * (exp(preout) * fecmod * repentry_i);
             
           } else {
             
@@ -5831,10 +5870,10 @@ namespace LefkoUtils {
           if (preout > exp_tol) preout = exp_tol;
               
           if (zi_processing) {
-            all_out = (exp(preout) / (1.0 + exp(preout))) * fecmod * repentry_i;
+            all_out = (1.0 - (exp(preout_zi) / (1.0 + exp(preout_zi)))) * (exp(preout) * fecmod * repentry_i);
             
           } else {
-              all_out = exp(preout) * fecmod * repentry_i;
+            all_out = exp(preout) * fecmod * repentry_i;
           }
         } else if (vitaldist == 2) {
           // Gaussian fecundity

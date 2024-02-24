@@ -249,7 +249,7 @@ legend("bottomleft", c("patch det mean", "pop det mean", "pop sto"), lty = c(1, 
   col = c("black", "orangered", "darkred"), lwd = 2, bty = "n")
 ```
   
-  <p style="text-indent: 20px">Deterministic and stochastic analyses suggest that the population and all patches are declining, with all years and patches associated with $\lambda < 1$ and $a = \text{log} \lambda _{S} < 0$. Qualitatively, they agree with the $\lambda$ and $a = \text{log} \lambda _{S}$ estimates from our other *Lathyrus* vignettes.</p>
+  <p style="text-indent: 20px">Deterministic and stochastic analyses suggest that the population and all patches are slightly declining, with years and patches generally associated with $\lambda < 1$ and $a = \text{log} \lambda _{S} < 0$. Qualitatively, they agree with the $\lambda$ and $a = \text{log} \lambda _{S}$ estimates from our other *Lathyrus* vignettes.</p>
   
   <p style="text-indent: 20px">Now let's look at the stable stage distribution, using the population matrices rather than the patch matrices. The output for the ahistorical MPM is a data frame with matrix of origin, stage name, and stable stage proportion in each row. Because the default output for the `stablestage3()` function will give us the stable distribution of age-stages, we will collapse the output across age to produce a true stable stage distribution.</p>
 ```{r Ch8.15, fig.cap = "Figure 8.5. Stable and long-run stage distribution"}

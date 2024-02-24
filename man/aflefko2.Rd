@@ -471,7 +471,6 @@ the logical random switch for the individual covariate to be used to
 }
 
 \examples{
-\donttest{
 data(lathyrus)
 
 sizevector <- c(0, 4.6, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 1, 2, 3, 4, 5, 6, 7, 8,
@@ -507,15 +506,38 @@ lathvertln$feca2 <- round(lathvertln$feca2)
 lathvertln$feca1 <- round(lathvertln$feca1)
 lathvertln$feca3 <- round(lathvertln$feca3)
 
-lathmodelsln2 <- modelsearch(lathvertln, historical = FALSE,
-  approach = "mixed", suite = "main",
-  vitalrates = c("surv", "obs", "size", "repst", "fec"), juvestimate = "Sdl",
-  bestfit = "AICc&k", sizedist = "gaussian", fecdist = "poisson",
-  indiv = "individ", patch = "patchid", year = "year2", age = "obsage",
-  year.as.random = TRUE, patch.as.random = TRUE, show.model.tables = TRUE,
-  quiet = "partial")
+lathvertln_adults <- subset(lathvertln, stage2index > 2)
+surv_model <- glm(alive3 ~ obsage + sizea2 + as.factor(patchid) +
+  as.factor(year2), data = lathvertln_adults, family = "binomial")
 
-# Here we use supplemental() to provide overwrite and reproductive info
+obs_data <- subset(lathvertln_adults, alive3 == 1)
+obs_model <- glm(obsstatus3 ~ obsage + as.factor(patchid) +
+  as.factor(year2), data = obs_data, family = "binomial")
+
+size_data <- subset(obs_data, obsstatus3 == 1)
+siz_model <- lm(sizea3 ~ sizea2 + repstatus2 + obsage + as.factor(patchid) +
+  as.factor(year2), data = size_data)
+
+reps_model <- glm(repstatus3 ~ sizea2 + as.factor(patchid) + as.factor(year2),
+  data = size_data, family = "binomial")
+
+fec_data <- subset(lathvertln_adults, repstatus2 == 1)
+fec_model <- glm(feca2 ~ sizea2 + obsage + as.factor(patchid) +
+  as.factor(year2), data = fec_data, family = "poisson")
+
+lathvertln_juvs <- subset(lathvertln, stage2index < 3)
+jsurv_model <- glm(alive3 ~ as.factor(patchid), data = lathvertln_juvs,
+  family = "binomial")
+
+jobs_data <- subset(lathvertln_juvs, alive3 == 1)
+jobs_model <- glm(obsstatus3 ~ 1, family = "binomial", data = jobs_data)
+
+jsize_data <- subset(jobs_data, obsstatus3 == 1)
+jsiz_model <- lm(sizea3 ~ as.factor(year2), data = jsize_data)
+
+jrepst_model <- 0
+jmatst_model <- 1
+
 lathsupp2 <- supplemental(stage3 = c("Sd", "Sdl", "mat", "Sd", "Sdl"), 
   stage2 = c("Sd", "Sd", "Sdl", "rep", "rep"),
   eststage3 = c(NA, NA, "mat", NA, NA),
@@ -524,11 +546,24 @@ lathsupp2 <- supplemental(stage3 = c("Sd", "Sdl", "mat", "Sd", "Sdl"),
   multiplier = c(NA, NA, 0.8, 0.345, 0.054), type = c(1, 1, 1, 3, 3),
   stageframe = lathframeln, historical = FALSE, agebased = TRUE)
 
-lathmat2age <- aflefko2(year = "all", patch = "all", 
-  stageframe = lathframeln, modelsuite = lathmodelsln2, data = lathvertln,
-  supplement = lathsupp2, final_age = 3, continue = TRUE, reduce = FALSE)
+mod_params <- create_pm(name_terms = TRUE)
+mod_params$modelparams[3] <- "patchid"
+mod_params$modelparams[5] <- "obsstatus3"
+mod_params$modelparams[6] <- "sizea3"
+mod_params$modelparams[9] <- "repstatus3"
+mod_params$modelparams[11] <- "feca2"
+mod_params$modelparams[12] <- "sizea2"
+mod_params$modelparams[18] <- "repstatus2"
+mod_params$modelparams[22] <- "obsage"
 
-}
+lathmat2age2 <- aflefko2(year = "all", patch = "all", data = lathvertln,
+  stageframe = lathframeln, supplement = lathsupp2, final_age = 3,
+  surv_model = surv_model, obs_model = obs_model, size_model = siz_model,
+  repst_model = reps_model, fec_model = fec_model, jsurv_model = jsurv_model,
+  jobs_model = jobs_model, jsize_model = jsiz_model,
+  jrepst_model = jrepst_model, jmatst_model = jmatst_model,
+  paramnames = mod_params, continue = TRUE, reduce = FALSE)
+
 }
 \seealso{
 \code{\link{mpm_create}()}

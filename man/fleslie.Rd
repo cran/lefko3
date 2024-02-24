@@ -252,14 +252,13 @@ the logical random switch for the individual covariate to be used to
 }
 
 \examples{
-\donttest{
 data(lathyrus)
 
 lathvert_base <- verticalize3(lathyrus, noyears = 4, firstyear = 1988,
   patchidcol = "SUBPLOT", individcol = "GENET", blocksize = 9,
   sizeacol = "Volume88", repstracol = "FCODE88", fecacol = "Intactseed88",
   deadacol = "Dead1988", censorcol = "Missing1988", censorkeep = NA,
-  censor = TRUE, NRasRep = TRUE, NOasObs = TRUE)
+  censor = TRUE, NAas0 = TRUE, NRasRep = TRUE, NOasObs = TRUE)
 
 lathvert_base$feca3 <- round(lathvert_base$feca3)
 lathvert_base$feca2 <- round(lathvert_base$feca2)
@@ -267,14 +266,18 @@ lathvert_base$feca1 <- round(lathvert_base$feca1)
 
 lathvert_age <- subset(lathvert_base, firstseen > 1988)
 
-lathmodels2_age <- modelsearch(lathvert_age, historical = FALSE,
-  approach = "mixed", suite = "cons", bestfit = "AICc&k", age = "obsage",
-  vitalrates = c("surv", "fec"), fecdist = "poisson", indiv = "individ",
-  year = "year2", show.model.tables = TRUE, quiet = "partial")
+lath_survival <- glm(alive3 ~ obsage + as.factor(year2), data = lathvert_age,
+  family = "binomial")
+lath_fecundity <- glm(feca2 ~ obsage + as.factor(year2), data = lathvert_age,
+  family = "poisson")
+
+mod_params <- create_pm(name_terms = TRUE)
+mod_params$modelparams[22] <- "obsage"
 
 lathmat2fleslie <- fleslie(year = "all", data = lathvert_age,
-  modelsuite = lathmodels2_age, fecage_min = 1)
-}
+  surv_model = lath_survival, fec_model = lath_fecundity,
+  paramnames = mod_params, fecage_min = 1)
+  
 }
 \seealso{
 \code{\link{mpm_create}()}

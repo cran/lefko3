@@ -407,8 +407,8 @@
 #' Vegetative dormancy and the evolution of mycoheterotrophy in sister
 #' \emph{Pyrola} species. \emph{Journal of Ecology}.
 #' 
-#' @examples 
-#' \donttest{
+#' @examples
+#' 
 #' data(pyrola)
 #' 
 #' pyrola$species <- as.factor(pyrola$species)
@@ -439,14 +439,30 @@
 #'   repstrbcol = "frt.tot.2015", fecacol = "flo.tot.2015",
 #'   fecbcol = "frt.tot.2015", NAas0 = TRUE, stagesize = "sizea",
 #'   stageassign = jp_frame)
-#'   
-#' jp_models_ah <- modelsearch(data = jhfv, stageframe = jp_frame,
-#'   suite = "full", vitalrates = c("surv", "obs", "size", "repst", "fec"),
-#'   fec = c("fec3added", "fec2added"), sizedist = "poisson",
-#'   fecdist = "negbin", fec.trunc = TRUE, historical = FALSE,
-#'   quiet = "partial")
-#' jp_germ <- 0.90
 #' 
+#' surv_model <- glm(alive3 ~ sizea2 + as.factor(year2), data = jhfv, family = "binomial")
+#' 
+#' obs_data <- subset(jhfv, alive3 == 1)
+#' obs_model <- glm(obsstatus3 ~ as.factor(year2), data = obs_data, family = "binomial")
+#' 
+#' size_data <- subset(obs_data, obsstatus3 == 1)
+#' size_model <- glm(sizea3 ~ sizea2, data = size_data, family = "poisson")
+#' 
+#' reps_model <- glm(repstatus3 ~ sizea2, data = size_data, family = "binomial")
+#' 
+#' fec_data <- subset(jhfv, repstatus2 == 1)
+#' fec_model <- MASS::glm.nb(fec2added ~ 1, data = fec_data)
+#' 
+#' mod_params <- create_pm(name_terms = TRUE)
+#' mod_params$modelparams[4] <- "alive3"
+#' mod_params$modelparams[5] <- "obsstatus3"
+#' mod_params$modelparams[6] <- "sizea3"
+#' mod_params$modelparams[9] <- "repstatus3"
+#' mod_params$modelparams[11] <- "fec2added"
+#' mod_params$modelparams[12] <- "sizea2"
+#' mod_params$modelparams[18] <- "repstatus2"
+#' 
+#' jp_germ <- 0.90
 #' jp_supp2 <- supplemental(stage3 = c("Sdl", "Dorm", "V0nr", "V1nr", "P1", "Sdl"), 
 #'   stage2 = c("P1", "Sdl", "Sdl", "Sdl", "rep", "rep"),
 #'   eststage3 = c(NA, NA, NA, NA, NA, NA),
@@ -455,12 +471,12 @@
 #'   multiplier = c(NA, NA, NA, NA, jp_germ * 0.5, jp_germ * 0.5),
 #'   type = c(1, 1, 1, 1, 3, 3), stageframe = jp_frame, historical = FALSE)
 #' 
-#' jp_ahmpm <- flefko2(year = "all", stageframe = jp_frame,
-#'   supplement = jp_supp2, modelsuite = jp_models_ah, data = jhfv,
-#'   err_check = TRUE)
+#' jp_ahmpm <- flefko2(year = "all", stageframe = jp_frame, supplement = jp_supp2,
+#'   paramnames = mod_params, surv_model = surv_model, obs_model = obs_model,
+#'   size_model = size_model, repst_model = reps_model, fec_model = fec_model,
+#'   data = jhfv, err_check = TRUE)
 #' 
 #' lambda3(jp_ahmpm)
-#' }
 "pyrola"
 
 #' Matrix Set of \emph{Anthyllis vulneraria} Populations in Belgium

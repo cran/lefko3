@@ -104,6 +104,8 @@
 overwrite <- function(stage3, stage2, stage1 = NA, eststage3 = NA, 
   eststage2 = NA, eststage1 = NA, givenrate = NA, type = NA, type_t12 = NA) {
   
+  message("This function is deprecated. Please use supplemental() instead")
+  
   if (length(stage3) != length(stage2)) {
     stop("All transitions to overwrite require information at least for stage2
       and stage3. These inputs must also be of equal length.", call. = FALSE)
@@ -646,12 +648,49 @@ sf_distrib <- function(data, sizea = NA, sizeb = NA, sizec = NA, obs3 = NA,
 #' lathvertln$feca1 <- round(lathvertln$feca1)
 #' lathvertln$feca3 <- round(lathvertln$feca3)
 #' 
-#' lathmodelsln3 <- modelsearch(lathvertln, historical = TRUE, 
-#'   approach = "mixed", suite = "main", 
-#'   vitalrates = c("surv", "obs", "size", "repst", "fec"), juvestimate = "Sdl",
-#'   bestfit = "AICc&k", sizedist = "gaussian", fecdist = "poisson", 
-#'   indiv = "individ", patch = "patchid", year = "year2", year.as.random = TRUE,
-#'   patch.as.random = TRUE, show.model.tables = TRUE, quiet = "partial")
+#' lathvertln_adults <- subset(lathvertln, stage2index > 2)
+#' surv_model <- glm(alive3 ~ sizea2 + sizea1 + as.factor(patchid) +
+#'   as.factor(year2), data = lathvertln_adults, family = "binomial")
+#' 
+#' obs_data <- subset(lathvertln_adults, alive3 == 1)
+#' obs_model <- glm(obsstatus3 ~ as.factor(patchid), data = obs_data,
+#'   family = "binomial")
+#' 
+#' size_data <- subset(obs_data, obsstatus3 == 1)
+#' siz_model <- lm(sizea3 ~ sizea2 + sizea1 + repstatus1 + as.factor(patchid) +
+#'   as.factor(year2), data = size_data)
+#' 
+#' reps_model <- glm(repstatus3 ~ sizea2 + sizea1 + as.factor(patchid) +
+#'   as.factor(year2), data = size_data, family = "binomial")
+#' 
+#' fec_data <- subset(lathvertln_adults, repstatus2 == 1)
+#' fec_model <- glm(feca2 ~ sizea2 + sizea1 + repstatus1 + as.factor(patchid),
+#'   data = fec_data, family = "poisson")
+#' 
+#' lathvertln_juvs <- subset(lathvertln, stage2index < 3)
+#' jsurv_model <- glm(alive3 ~ as.factor(patchid), data = lathvertln_juvs,
+#'   family = "binomial")
+#' 
+#' jobs_data <- subset(lathvertln_juvs, alive3 == 1)
+#' jobs_model <- glm(obsstatus3 ~ 1, family = "binomial", data = jobs_data)
+#' 
+#' jsize_data <- subset(jobs_data, obsstatus3 == 1)
+#' jsiz_model <- lm(sizea3 ~ as.factor(year2), data = jsize_data)
+#' 
+#' jrepst_model <- 0
+#' jmatst_model <- 1
+#' 
+#' mod_params <- create_pm(name_terms = TRUE)
+#' mod_params$modelparams[3] <- "patchid"
+#' mod_params$modelparams[4] <- "alive3"
+#' mod_params$modelparams[5] <- "obsstatus3"
+#' mod_params$modelparams[6] <- "sizea3"
+#' mod_params$modelparams[9] <- "repstatus3"
+#' mod_params$modelparams[11] <- "feca2"
+#' mod_params$modelparams[12] <- "sizea2"
+#' mod_params$modelparams[13] <- "sizea1"
+#' mod_params$modelparams[18] <- "repstatus2"
+#' mod_params$modelparams[19] <- "repstatus1"
 #' 
 #' lathsupp3 <- supplemental(stage3 = c("Sd", "Sd", "Sdl", "Sdl", "mat", "Sd", "Sdl"), 
 #'   stage2 = c("Sd", "Sd", "Sd", "Sd", "Sdl", "rep", "rep"),
@@ -666,9 +705,12 @@ sf_distrib <- function(data, sizea = NA, sizeb = NA, sizec = NA, obs3 = NA,
 #' 
 #' # While we do not use MPMs to initialize f_projections3(), we do use MPMs to
 #' # initialize functions start_input() and density_input().
-#' lathmat3ln <- flefko3(year = "all", patch = "all", stageframe = lathframeln, 
-#'   modelsuite = lathmodelsln3, data = lathvertln, supplement = lathsupp3, 
-#'   reduce = FALSE)
+#' lathmat3ln <- flefko3(year = "all", patch = "all", data = lathvertln,
+#'   stageframe = lathframeln, supplement = lathsupp3, paramnames = mod_params,
+#'   surv_model = surv_model, obs_model = obs_model, size_model = siz_model,
+#'   repst_model = reps_model, fec_model = fec_model, jsurv_model = jsurv_model,
+#'   jobs_model = jobs_model, jsize_model = jsiz_model,
+#'   jrepst_model = jrepst_model, jmatst_model = jmatst_model, reduce = FALSE)
 #' 
 #' e3m_sv <- start_input(lathmat3ln, stage2 = "Sd", stage1 = "Sd", value = 1000)
 #' 
@@ -681,12 +723,15 @@ sf_distrib <- function(data, sizea = NA, sizeb = NA, sizec = NA, obs3 = NA,
 #' e3d_vr <- density_vr(density_yn = dyn7, style = dst7, alpha = dal7,
 #'   beta = dbe7)
 #' 
-#' trial7_dvr <- f_projection3(format = 1, data = lathvertln,
-#'   modelsuite = lathmodelsln3, stageframe = lathframeln, nreps = 2,
+#' trial7_dvr_1 <- f_projection3(format = 1, data = lathvertln, supplement = lathsupp3,
+#'   paramnames = mod_params, stageframe = lathframeln, nreps = 2,
+#'   surv_model = surv_model, obs_model = obs_model, size_model = siz_model,
+#'   repst_model = reps_model, fec_model = fec_model, jsurv_model = jsurv_model,
+#'   jobs_model = jobs_model, jsize_model = jsiz_model,
+#'   jrepst_model = jrepst_model, jmatst_model = jmatst_model,
 #'   times = 100, stochastic = TRUE, standardize = FALSE, growthonly = TRUE,
 #'   integeronly = FALSE, substoch = 0, sp_density = 0, start_frame = e3m_sv,
 #'   density_vr = e3d_vr)
-#' summary(trial7_dvr)
 #' }
 #' 
 #' @export
@@ -1706,6 +1751,7 @@ hfv_qc <- function(data, stageframe = NULL, historical = TRUE, suite = "size",
   sizeb_used <- sizec_used <- density_used <- indcova_used <- FALSE
   indcovb_used <- indcovc_used <- FALSE
   
+  ran_vars <- c("none", "none", "none", "none", "none", "none") # Names of random vars: indiv, year, patch, inda, indb, indc
   total_vars <- length(names(data))
   
   #Input testing, input standardization, and exception handling
@@ -2074,6 +2120,7 @@ hfv_qc <- function(data, stageframe = NULL, historical = TRUE, suite = "size",
         indcova[3] <- "none"
       }
     }
+    ran_vars[4] = names(data)[indcova2col]
   } else {indcova <- c("none", "none", "none")}
   
   if (indcova_used & !random.indcova) {
@@ -2123,6 +2170,7 @@ hfv_qc <- function(data, stageframe = NULL, historical = TRUE, suite = "size",
         indcovb[3] <- "none"
       }
     }
+    ran_vars[5] = names(data)[indcovb2col]
   } else {indcovb <- c("none", "none", "none")}
   
   if (indcovb_used & !random.indcovb) {
@@ -2172,6 +2220,7 @@ hfv_qc <- function(data, stageframe = NULL, historical = TRUE, suite = "size",
         indcovc[3] <- "none"
       }
     }
+    ran_vars[6] = names(data)[indcovc2col]
   } else {indcovc <- c("none", "none", "none")}
   
   if (indcovc_used & !random.indcovc) {
@@ -2200,6 +2249,7 @@ hfv_qc <- function(data, stageframe = NULL, historical = TRUE, suite = "size",
     } else {
       stop("Unable to interpret indiv variable.", call. = FALSE)
     }
+    ran_vars[1] = names(data)[indivcol]
   } else {indiv <- "none"}
   
   if (!is.na(patch)) {
@@ -2218,6 +2268,7 @@ hfv_qc <- function(data, stageframe = NULL, historical = TRUE, suite = "size",
     } else {
       stop("Unable to interpret patch variable.", call. = FALSE)
     }
+    ran_vars[3] = names(data)[patchcol]
   } else {patch <- "none"}
   
   if (patchcol > 0 & !patch.as.random) {
@@ -2240,6 +2291,7 @@ hfv_qc <- function(data, stageframe = NULL, historical = TRUE, suite = "size",
     } else {
       stop("Unable to interpret year variable.", call. = FALSE)
     }
+    ran_vars[2] = names(data)[yearcol]
   } else {year <- "none"}
   
   if (yearcol > 0 & !year.as.random) {
@@ -2569,6 +2621,9 @@ hfv_qc <- function(data, stageframe = NULL, historical = TRUE, suite = "size",
     }
   }
   
+  ran_vars_names <- c("indiv id: ", "year2: ", "patch: ", "indcova: ", "indcovb: ", "indcovc: ")
+  chosen_ran_vars <- which(ran_vars != "none")
+  
   # The major variable tests
   if (is.data.frame(surv.data) & is.element("surv", vitalrates)) {
     writeLines("Survival:\n")
@@ -2576,6 +2631,15 @@ hfv_qc <- function(data, stageframe = NULL, historical = TRUE, suite = "size",
       dim(surv.data)[1], " transitions.\n"))
     
     .intbin_check(surv.data, surv[1])
+    
+    if(length(chosen_ran_vars) > 0) {
+      writeLines("  Numbers of categories in data subset in possible random variables:")
+      
+      for(i in c(1:length(chosen_ran_vars))) {
+        found_uns <- length(unique(surv.data[,ran_vars[chosen_ran_vars[i]]]))
+        writeLines(paste0("  ", ran_vars_names[chosen_ran_vars[i]], found_uns))
+      }
+    }
   }
   if (is.data.frame(obs.data) & is.element("obs", vitalrates)) {
     writeLines("\nObservation status:\n")
@@ -2583,6 +2647,15 @@ hfv_qc <- function(data, stageframe = NULL, historical = TRUE, suite = "size",
       dim(obs.data)[1], " transitions.\n"))
     
     .intbin_check(obs.data, obs[1])
+    
+    if(length(chosen_ran_vars) > 0) {
+      writeLines("  Numbers of categories in data subset in possible random variables:")
+      
+      for(i in c(1:length(chosen_ran_vars))) {
+        found_uns <- length(unique(obs.data[,ran_vars[chosen_ran_vars[i]]]))
+        writeLines(paste0("  ", ran_vars_names[chosen_ran_vars[i]], found_uns))
+      }
+    }
   }
   
   if (is.data.frame(size.data) & is.element("size", vitalrates)) {
@@ -2591,6 +2664,15 @@ hfv_qc <- function(data, stageframe = NULL, historical = TRUE, suite = "size",
       dim(size.data)[1], " transitions.\n"))
     
     .sf_dist_check(size.data, size[1], size[2])
+    
+    if(length(chosen_ran_vars) > 0) {
+      writeLines("  Numbers of categories in data subset in possible random variables:")
+      
+      for(i in c(1:length(chosen_ran_vars))) {
+        found_uns <- length(unique(size.data[,ran_vars[chosen_ran_vars[i]]]))
+        writeLines(paste0("  ", ran_vars_names[chosen_ran_vars[i]], found_uns))
+      }
+    }
   }
   if (is.data.frame(sizeb.data) & is.element("siz", vitalrates)) {
     writeLines("\nSecondary size:\n")
@@ -2598,6 +2680,15 @@ hfv_qc <- function(data, stageframe = NULL, historical = TRUE, suite = "size",
       dim(sizeb.data)[1], " transitions.\n"))
     
     .sf_dist_check(sizeb.data, sizeb[1], sizeb[2])
+    
+    if(length(chosen_ran_vars) > 0) {
+      writeLines("  Numbers of categories in data subset in possible random variables:")
+      
+      for(i in c(1:length(chosen_ran_vars))) {
+        found_uns <- length(unique(sizeb.data[,ran_vars[chosen_ran_vars[i]]]))
+        writeLines(paste0("  ", ran_vars_names[chosen_ran_vars[i]], found_uns))
+      }
+    }
   }
   if (is.data.frame(sizec.data) & is.element("siz", vitalrates)) {
     writeLines("\nTertiary size:\n")
@@ -2605,6 +2696,15 @@ hfv_qc <- function(data, stageframe = NULL, historical = TRUE, suite = "size",
       dim(sizec.data)[1], " transitions.\n"))
     
     .sf_dist_check(sizec.data, sizec[1], sizec[2])
+    
+    if(length(chosen_ran_vars) > 0) {
+      writeLines("  Numbers of categories in data subset in possible random variables:")
+      
+      for(i in c(1:length(chosen_ran_vars))) {
+        found_uns <- length(unique(sizec.data[,ran_vars[chosen_ran_vars[i]]]))
+        writeLines(paste0("  ", ran_vars_names[chosen_ran_vars[i]], found_uns))
+      }
+    }
   }
   
   if (is.data.frame(repst.data) & is.element("repst", vitalrates)) {
@@ -2613,6 +2713,15 @@ hfv_qc <- function(data, stageframe = NULL, historical = TRUE, suite = "size",
       dim(repst.data)[1], " transitions.\n"))
     
     .intbin_check(repst.data, repst[1])
+    
+    if(length(chosen_ran_vars) > 0) {
+      writeLines("  Numbers of categories in data subset in possible random variables:")
+      
+      for(i in c(1:length(chosen_ran_vars))) {
+        found_uns <- length(unique(repst.data[,ran_vars[chosen_ran_vars[i]]]))
+        writeLines(paste0("  ", ran_vars_names[chosen_ran_vars[i]], found_uns))
+      }
+    }
   }
   
   if (is.data.frame(fec.data) & is.element("fec", vitalrates)) {
@@ -2626,6 +2735,15 @@ hfv_qc <- function(data, stageframe = NULL, historical = TRUE, suite = "size",
       term2 <- size[1]
     }
     .sf_dist_check(fec.data, names(fec.data)[usedfec], term2)
+    
+    if(length(chosen_ran_vars) > 0) {
+      writeLines("  Numbers of categories in data subset in possible random variables:")
+      
+      for(i in c(1:length(chosen_ran_vars))) {
+        found_uns <- length(unique(fec.data[,ran_vars[chosen_ran_vars[i]]]))
+        writeLines(paste0("  ", ran_vars_names[chosen_ran_vars[i]], found_uns))
+      }
+    }
   }
   
   if (is.data.frame(juvsurv.data) & is.element("surv", vitalrates)) {
@@ -2634,6 +2752,15 @@ hfv_qc <- function(data, stageframe = NULL, historical = TRUE, suite = "size",
       dim(juvsurv.data)[1], " transitions.\n"))
     
     .intbin_check(juvsurv.data, surv[1])
+    
+    if(length(chosen_ran_vars) > 0) {
+      writeLines("  Numbers of categories in data subset in possible random variables:")
+      
+      for(i in c(1:length(chosen_ran_vars))) {
+        found_uns <- length(unique(juvsurv.data[,ran_vars[chosen_ran_vars[i]]]))
+        writeLines(paste0("  ", ran_vars_names[chosen_ran_vars[i]], found_uns))
+      }
+    }
   }
   if (is.data.frame(juvobs.data) & is.element("obs", vitalrates)) {
     writeLines("\nJuvenile observation status:\n")
@@ -2641,6 +2768,15 @@ hfv_qc <- function(data, stageframe = NULL, historical = TRUE, suite = "size",
       dim(juvobs.data)[1], " transitions.\n"))
     
     .intbin_check(juvobs.data, obs[1])
+    
+    if(length(chosen_ran_vars) > 0) {
+      writeLines("  Numbers of categories in data subset in possible random variables:")
+      
+      for(i in c(1:length(chosen_ran_vars))) {
+        found_uns <- length(unique(juvobs.data[,ran_vars[chosen_ran_vars[i]]]))
+        writeLines(paste0("  ", ran_vars_names[chosen_ran_vars[i]], found_uns))
+      }
+    }
   }
   
   if (is.data.frame(juvsize.data) & is.element("size", vitalrates)) {
@@ -2649,6 +2785,15 @@ hfv_qc <- function(data, stageframe = NULL, historical = TRUE, suite = "size",
       dim(juvsize.data)[1], " transitions.\n"))
     
     .sf_dist_check(juvsize.data, size[1], size[2])
+    
+    if(length(chosen_ran_vars) > 0) {
+      writeLines("  Numbers of categories in data subset in possible random variables:")
+      
+      for(i in c(1:length(chosen_ran_vars))) {
+        found_uns <- length(unique(juvsize.data[,ran_vars[chosen_ran_vars[i]]]))
+        writeLines(paste0("  ", ran_vars_names[chosen_ran_vars[i]], found_uns))
+      }
+    }
   }
   if (is.data.frame(juvsizeb.data)& is.element("siz", vitalrates)) {
     writeLines("\nJuvenile secondary size:\n")
@@ -2656,6 +2801,15 @@ hfv_qc <- function(data, stageframe = NULL, historical = TRUE, suite = "size",
       dim(juvsizeb.data)[1], " transitions.\n"))
     
     .sf_dist_check(juvsizeb.data, sizeb[1], sizeb[2])
+    
+    if(length(chosen_ran_vars) > 0) {
+      writeLines("  Numbers of categories in data subset in possible random variables:")
+      
+      for(i in c(1:length(chosen_ran_vars))) {
+        found_uns <- length(unique(juvsizeb.data[,ran_vars[chosen_ran_vars[i]]]))
+        writeLines(paste0("  ", ran_vars_names[chosen_ran_vars[i]], found_uns))
+      }
+    }
   }
   if (is.data.frame(juvsizec.data) & is.element("siz", vitalrates)) {
     writeLines("\nJuvenile tertiary size:\n")
@@ -2663,6 +2817,15 @@ hfv_qc <- function(data, stageframe = NULL, historical = TRUE, suite = "size",
       dim(juvsizec.data)[1], " transitions.\n"))
     
     .sf_dist_check(juvsizec.data, sizec[1], sizec[2])
+    
+    if(length(chosen_ran_vars) > 0) {
+      writeLines("  Numbers of categories in data subset in possible random variables:")
+      
+      for(i in c(1:length(chosen_ran_vars))) {
+        found_uns <- length(unique(juvsizec.data[,ran_vars[chosen_ran_vars[i]]]))
+        writeLines(paste0("  ", ran_vars_names[chosen_ran_vars[i]], found_uns))
+      }
+    }
   }
   
   if (is.data.frame(juvrepst.data) & is.element("repst", vitalrates)) {
@@ -2671,6 +2834,15 @@ hfv_qc <- function(data, stageframe = NULL, historical = TRUE, suite = "size",
       dim(juvrepst.data)[1], " transitions.\n"))
     
     .intbin_check(juvrepst.data, repst[1])
+    
+    if(length(chosen_ran_vars) > 0) {
+      writeLines("  Numbers of categories in data subset in possible random variables:")
+      
+      for(i in c(1:length(chosen_ran_vars))) {
+        found_uns <- length(unique(juvrepst.data[,ran_vars[chosen_ran_vars[i]]]))
+        writeLines(paste0("  ", ran_vars_names[chosen_ran_vars[i]], found_uns))
+      }
+    }
   }
   if (is.data.frame(juvobs.data)) {
     writeLines("\nJuvenile maturity status:\n")
@@ -2678,6 +2850,15 @@ hfv_qc <- function(data, stageframe = NULL, historical = TRUE, suite = "size",
       dim(juvobs.data)[1], " transitions.\n"))
     
     .intbin_check(juvobs.data, matstat[1])
+    
+    if(length(chosen_ran_vars) > 0) {
+      writeLines("  Numbers of categories in data subset in possible random variables:")
+      
+      for(i in c(1:length(chosen_ran_vars))) {
+        found_uns <- length(unique(juvobs.data[,ran_vars[chosen_ran_vars[i]]]))
+        writeLines(paste0("  ", ran_vars_names[chosen_ran_vars[i]], found_uns))
+      }
+    }
   }
 }
 

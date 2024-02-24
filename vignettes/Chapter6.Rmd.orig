@@ -103,7 +103,7 @@ hfv_qc(data = lathvertipm, vitalrates = c("surv", "obs", "size", "fec"),
   juvestimate = "Sdl", indiv = "individ", year = "year2", age = "obsage")
 ```
   
-  <p style="text-indent: 20px">All of the probability variables look like binomials, so we have no problem there. Size and juvenile size appear to be continuous variables that differ significantly from the assumptions of the Gaussian distribution. However, we will still use a Gaussian distribution in this case, for instructional purposes. Fecundity is a count variable with significant overdispersion and significantly more zeros than expected, so we will use a zero-inflated negative binomial distribution.</p>
+  <p style="text-indent: 20px">All of the probability variables look like binomials, so we have no problem there. Size and juvenile size appear to be continuous variables that differ significantly from the assumptions of the Gaussian distribution. However, we will still use a Gaussian distribution in this case, for instructional purposes. Fecundity is a count variable with significant overdispersion and significantly more zeros than expected, so we will use a zero-inflated negative binomial distribution. Note that there might be some problems in modeling in the juvenile cases, where we see that individual identity has as many levels as data points.</p>
   
 #### Step 2b: Develop supplemental information for matrix estimation  
   
@@ -144,7 +144,7 @@ lathmodels3ipm <- modelsearch(lathvertipm, historical = TRUE, approach = "mixed"
 #summary(lathmodels3ipm)
 ```
   
-  <p style="text-indent: 20px">We see here, as before, that status in occasion *t*-1 exerts an influence on some vital rates, particularly survival to occasion *t*+1, size in occasion *t*+1, and fecundity. So, the historical IPM is the correct choice here. Accuracy is also quite high for adult survival and juvenile and adult observation, but quite poor for primary size and fecundity.</p>
+  <p style="text-indent: 20px">We see here, as before, that status in occasion *t*-1 exerts an influence on some vital rates, particularly survival to occasion *t*+1, size in occasion *t*+1, and the conditional portion of fecundity. So, the historical IPM is the correct choice here. Accuracy is also quite high for adult survival and juvenile and adult observation, but quite poor for primary size and fecundity.</p>
   
   <p style="text-indent: 20px">We will also create an ahistorical IPM for comparison. For that purpose, we will create the ahistorical linear model set.</p>
 ```{r Ch6.9}
@@ -167,7 +167,7 @@ lathmat3ipm <- flefko3(stageframe = lathframeipm, modelsuite = lathmodels3ipm,
 #summary(lathmat3ipm)
 ```
   
-  <p style="text-indent: 20px">These are giant matrices. With 10,609 rows and columns, there are a total of 112,550,881 elements per matrix. But they are also amazingly sparse - with about 960,205 elements estimated per matrix, only 0.9% of elements per matrix are non-zero. The survival probability sums all look good, so we appear to have no problems with overly large given and proxy survival transitions provided through our supplemental tables. Let's now build the ahistorical IPMs.</p>
+  <p style="text-indent: 20px">These are giant matrices. With 10,609 rows and columns, there are a total of 112,550,881 elements per matrix. But they are also amazingly sparse - with about 960,209 elements estimated per matrix, only 0.9% of elements per matrix are non-zero. The survival probability sums all look good, so we appear to have no problems with overly large given and proxy survival transitions provided through our supplemental tables. Let's now build the ahistorical IPMs.</p>
 ```{r Ch6.11}
 lathmat2ipm <- flefko2(stageframe = lathframeipm, modelsuite = lathmodels2ipm,
   supplement = lathsupp2, data = lathvertipm, reduce = FALSE)
@@ -256,7 +256,8 @@ lath2ipmelas <- elasticity3(lath2ipmmean)
 lath3ipmelas <- elasticity3(lath3ipmmean)
 
 lath2ipmelas_s <- elasticity3(lathmat2ipm, stochastic = TRUE, seed = 42)
-lath3ipmelas_s <- elasticity3(lathmat3ipm, stochastic = TRUE, times = 200, seed = 42)
+lath3ipmelas_s <- elasticity3(lathmat3ipm, stochastic = TRUE, times = 200,
+  sparse = TRUE, seed = 42)
 
 elas_put_together <- cbind.data.frame(colSums(lath2ipmelas$ah_elasmats[[1]]), 
   Matrix::colSums(lath3ipmelas$ah_elasmats[[1]]),

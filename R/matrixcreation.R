@@ -382,13 +382,6 @@
 #' lathvertln$feca1 <- round(lathvertln$feca1)
 #' lathvertln$feca3 <- round(lathvertln$feca3)
 #' 
-#' lathmodelsln3 <- modelsearch(lathvertln, historical = TRUE, 
-#'   approach = "mixed", suite = "main", 
-#'   vitalrates = c("surv", "obs", "size", "repst", "fec"), juvestimate = "Sdl",
-#'   bestfit = "AICc&k", sizedist = "gaussian", fecdist = "poisson", 
-#'   indiv = "individ", patch = "patchid", year = "year2", year.as.random = TRUE,
-#'   patch.as.random = TRUE, show.model.tables = TRUE, quiet = "partial")
-#' 
 #' lathsupp3 <- supplemental(stage3 = c("Sd", "Sd", "Sdl", "Sdl", "mat", "Sd", "Sdl"), 
 #'   stage2 = c("Sd", "Sd", "Sd", "Sd", "Sdl", "rep", "rep"),
 #'   stage1 = c("Sd", "rep", "Sd", "rep", "Sd", "mat", "mat"),
@@ -400,12 +393,61 @@
 #'   type = c(1, 1, 1, 1, 1, 3, 3), type_t12 = c(1, 2, 1, 2, 1, 1, 1),
 #'   stageframe = lathframeln, historical = TRUE)
 #' 
-#' lathmat3ln <- flefko3(year = "all", patch = "all", stageframe = lathframeln, 
-#'   modelsuite = lathmodelsln3, data = lathvertln, supplement = lathsupp3, 
-#'   reduce = FALSE)
+#' lathvertln_adults <- subset(lathvertln, stage2index > 2)
+#' surv_model <- glm(alive3 ~ sizea2 + sizea1 + as.factor(patchid) +
+#'   as.factor(year2), data = lathvertln_adults, family = "binomial")
 #' 
-#' #Cypripedium example using three size metrics for classification
+#' obs_data <- subset(lathvertln_adults, alive3 == 1)
+#' obs_model <- glm(obsstatus3 ~ as.factor(patchid), data = obs_data,
+#'   family = "binomial")
+#' 
+#' size_data <- subset(obs_data, obsstatus3 == 1)
+#' siz_model <- lm(sizea3 ~ sizea2 + sizea1 + repstatus1 + as.factor(patchid) +
+#'   as.factor(year2), data = size_data)
+#' 
+#' reps_model <- glm(repstatus3 ~ sizea2 + sizea1 + as.factor(patchid) +
+#'   as.factor(year2), data = size_data, family = "binomial")
+#' 
+#' fec_data <- subset(lathvertln_adults, repstatus2 == 1)
+#' fec_model <- glm(feca2 ~ sizea2 + sizea1 + repstatus1 + as.factor(patchid),
+#'   data = fec_data, family = "poisson")
+#' 
+#' lathvertln_juvs <- subset(lathvertln, stage2index < 3)
+#' jsurv_model <- glm(alive3 ~ as.factor(patchid), data = lathvertln_juvs,
+#'   family = "binomial")
+#' 
+#' jobs_data <- subset(lathvertln_juvs, alive3 == 1)
+#' jobs_model <- glm(obsstatus3 ~ 1, family = "binomial", data = jobs_data)
+#' 
+#' jsize_data <- subset(jobs_data, obsstatus3 == 1)
+#' jsiz_model <- lm(sizea3 ~ as.factor(year2), data = jsize_data)
+#' 
+#' jrepst_model <- 0
+#' jmatst_model <- 1
+#' 
+#' mod_params <- create_pm(name_terms = TRUE)
+#' mod_params$modelparams[3] <- "patchid"
+#' mod_params$modelparams[4] <- "alive3"
+#' mod_params$modelparams[5] <- "obsstatus3"
+#' mod_params$modelparams[6] <- "sizea3"
+#' mod_params$modelparams[9] <- "repstatus3"
+#' mod_params$modelparams[11] <- "feca2"
+#' mod_params$modelparams[12] <- "sizea2"
+#' mod_params$modelparams[13] <- "sizea1"
+#' mod_params$modelparams[18] <- "repstatus2"
+#' mod_params$modelparams[19] <- "repstatus1"
+#' 
+#' lathmat3ln <- flefko3(year = "all", patch = "all", data = lathvertln,
+#'   stageframe = lathframeln, supplement = lathsupp3, paramnames = mod_params,
+#'   surv_model = surv_model, obs_model = obs_model, size_model = siz_model,
+#'   repst_model = reps_model, fec_model = fec_model, jsurv_model = jsurv_model,
+#'   jobs_model = jobs_model, jsize_model = jsiz_model,
+#'   jrepst_model = jrepst_model, jmatst_model = jmatst_model, reduce = FALSE)
+#' 
+#' 
+#' # Cypripedium example using three size metrics for classification
 #' data(cypdata)
+#' 
 #' sizevector_f <- c(0, 0, 0, 0, 0, 0, seq(1, 12, by = 1), seq(0, 9, by = 1),
 #'   seq(0, 8, by = 1), seq(0, 7, by = 1), seq(0, 6, by = 1), seq(0, 5, by = 1),
 #'   seq(0, 4, by = 1), seq(0, 3, by = 1), 0, 1, 2, 0, 1, 0, 
@@ -452,13 +494,6 @@
 #'   censorkeep = 1, censorRepeat = FALSE, stageassign = vertframe_f,
 #'   stagesize = "sizeabc", NAas0 = TRUE, censor = FALSE)
 #' 
-#' vertmodels3f <- modelsearch(vert_data_f, historical = TRUE, suite = "main",
-#'   sizeb = c("sizeb3", "sizeb2", "sizeb1"), sizec = c("sizec3", "sizec2", "sizec1"),
-#'   approach = "glm", vitalrates = c("surv", "obs", "size", "repst", "fec"),
-#'   sizedist = "negbin", sizebdist = "poisson", sizecdist = "poisson",
-#'   fecdist = "poisson", patch.as.random = TRUE, year.as.random = TRUE,
-#'   quiet = "partial")
-#' 
 #' vertsupp3f <- supplemental(stage3 = c("DS", "P1", "DS", "P1", "P2", "P2", "P3",
 #'     "Sdl", "Sdl", "Sdl", "Dorm", "V1 I0 D0", "V2 I0 D0", "V3 I0 D0", "Dorm",
 #'     "V1 I0 D0", "V2 I0 D0", "V3 I0 D0", "mat", "mat", "mat", "mat", "DS", "P1"),
@@ -487,8 +522,44 @@
 #'     1, 1, 1),
 #'   stageframe = vertframe_f, historical = TRUE)
 #' 
-#' vert_mats_f3 <- flefko3(stageframe = vertframe_f, supplement = vertsupp3f, 
-#'   data = vert_data_f, modelsuite = vertmodels3f)
+#' surv_model <- glm(alive3 ~ sizea2 + sizeb2, data = vert_data_f,
+#'   family = "binomial")
+#' 
+#' obs_data <- subset(vert_data_f, alive3 == 1)
+#' obs_model <- glm(obsstatus3 ~ sizeb2 + sizec1 + as.factor(year2),
+#'   data = obs_data, family = "binomial")
+#' 
+#' size_data <- subset(obs_data, obsstatus3 == 1)
+#' siz_model <- MASS::glm.nb(sizea3 ~ sizea2 + sizea1 + sizeb1, data = size_data)
+#' sizb_model <- glm(sizeb3 ~ sizea2 + sizeb2 + sizec1 + repstatus2 + repstatus1 +
+#'   as.factor(year2), data = size_data, family = "poisson")
+#' sizc_model <- glm(sizec3 ~ sizea1 + repstatus2, data = size_data,
+#'   family = "poisson")
+#' 
+#' reps_model <- glm(repstatus3 ~ sizea2 + sizeb2 + repstatus2 + as.factor(year2),
+#'   data = size_data, family = "binomial")
+#' 
+#' fec_data <- subset(vert_data_f, repstatus2 == 1)
+#' fec_model <- glm(feca2 ~ sizeb2 + as.factor(year2), data = fec_data,
+#'   family = "poisson")
+#' 
+#' mod_params <- create_pm(name_terms = TRUE)
+#' mod_params$modelparams[3] <- "patchid"
+#' mod_params$modelparams[4] <- "alive3"
+#' mod_params$modelparams[5] <- "obsstatus3"
+#' mod_params$modelparams[6] <- "sizea3"
+#' mod_params$modelparams[9] <- "repstatus3"
+#' mod_params$modelparams[11] <- "feca2"
+#' mod_params$modelparams[12] <- "sizea2"
+#' mod_params$modelparams[13] <- "sizea1"
+#' mod_params$modelparams[18] <- "repstatus2"
+#' mod_params$modelparams[19] <- "repstatus1"
+#' 
+#' vert_mats_f3 <- flefko3(stageframe = vertframe_f, supplement = vertsupp3f,
+#'   data = vert_data_f, surv_model = surv_model, obs_model = obs_model,
+#'   size_model = siz_model, sizeb_model = sizb_model, sizec_model = sizc_model,
+#'   repst_model = reps_model, fec_model = fec_model, paramnames = mod_params,
+#'   sparse_output = TRUE)
 #' }
 #' 
 #' @export
@@ -899,7 +970,6 @@ flefko3 <- function(year = "all", patch = "all", stageframe, supplement = NULL,
 #' @seealso \code{\link{rleslie}()}
 #' 
 #' @examples
-#' \donttest{
 #' # Lathyrus example
 #' data(lathyrus)
 #' 
@@ -935,27 +1005,64 @@ flefko3 <- function(year = "all", patch = "all", stageframe, supplement = NULL,
 #' lathvertln$feca1 <- round(lathvertln$feca1)
 #' lathvertln$feca3 <- round(lathvertln$feca3)
 #' 
-#' lathmodelsln2 <- modelsearch(lathvertln, historical = FALSE, 
-#'   approach = "mixed", suite = "main",
-#'   vitalrates = c("surv", "obs", "size", "repst", "fec"), juvestimate = "Sdl",
-#'   bestfit = "AICc&k", sizedist = "gaussian", fecdist = "poisson",
-#'   indiv = "individ", patch = "patchid", year = "year2",
-#'   year.as.random = TRUE, patch.as.random = TRUE, show.model.tables = TRUE,
-#'   quiet = "partial")
+#' lathvertln_adults <- subset(lathvertln, stage2index > 2)
+#' surv_model <- glm(alive3 ~ sizea2 + as.factor(patchid),
+#'   data = lathvertln_adults, family = "binomial")
 #' 
-#' # Here we use supplemental to provide overwrite and reproductive info
+#' obs_data <- subset(lathvertln_adults, alive3 == 1)
+#' obs_model <- glm(obsstatus3 ~ as.factor(patchid), data = obs_data,
+#'   family = "binomial")
+#' 
+#' size_data <- subset(obs_data, obsstatus3 == 1)
+#' siz_model <- lm(sizea3 ~ sizea2 + repstatus2 + as.factor(patchid) + 
+#'   as.factor(year2), data = size_data)
+#' 
+#' reps_model <- glm(repstatus3 ~ sizea2 + as.factor(patchid) + as.factor(year2),
+#'   data = size_data, family = "binomial")
+#' 
+#' fec_data <- subset(lathvertln_adults, repstatus2 == 1)
+#' fec_model <- glm(feca2 ~ sizea2 + as.factor(patchid) + as.factor(year2),
+#'   data = fec_data, family = "poisson")
+#' 
+#' lathvertln_juvs <- subset(lathvertln, stage2index < 3)
+#' jsurv_model <- glm(alive3 ~ as.factor(patchid), data = lathvertln_juvs,
+#'   family = "binomial")
+#' 
+#' jobs_data <- subset(lathvertln_juvs, alive3 == 1)
+#' jobs_model <- glm(obsstatus3 ~ 1, family = "binomial", data = jobs_data)
+#' 
+#' jsize_data <- subset(jobs_data, obsstatus3 == 1)
+#' jsiz_model <- lm(sizea3 ~ as.factor(year2), data = jsize_data)
+#' 
+#' jrepst_model <- 0
+#' jmatst_model <- 1
+#' 
+#' mod_params <- create_pm(name_terms = TRUE)
+#' mod_params$modelparams[3] <- "patchid"
+#' mod_params$modelparams[5] <- "obsstatus3"
+#' mod_params$modelparams[6] <- "sizea3"
+#' mod_params$modelparams[9] <- "repstatus3"
+#' mod_params$modelparams[11] <- "feca2"
+#' mod_params$modelparams[12] <- "sizea2"
+#' mod_params$modelparams[18] <- "repstatus2"
+#' 
 #' lathsupp2 <- supplemental(stage3 = c("Sd", "Sdl", "Sd", "Sdl"), 
 #'   stage2 = c("Sd", "Sd", "rep", "rep"),
 #'   givenrate = c(0.345, 0.054, NA, NA),
 #'   multiplier = c(NA, NA, 0.345, 0.054),
 #'   type = c(1, 1, 3, 3), stageframe = lathframeln, historical = FALSE)
 #' 
-#' lathmat2ln <- flefko2(year = "all", patch = "all", stageframe = lathframeln, 
-#'   modelsuite = lathmodelsln2, data = lathvertln, supplement = lathsupp2,
-#'   reduce = FALSE)
+#' lathmat2ln <- flefko2(year = "all", patch = "all", data = lathvertln,
+#'   stageframe = lathframeln, supplement = lathsupp2, paramnames = mod_params,
+#'   surv_model = surv_model, obs_model = obs_model, size_model = siz_model,
+#'   repst_model = reps_model, fec_model = fec_model, jsurv_model = jsurv_model,
+#'   jobs_model = jobs_model, jsize_model = jsiz_model,
+#'   jrepst_model = jrepst_model, jmatst_model = jmatst_model, reduce = FALSE)
 #' 
-#' #Cypripedium example using three size metrics for classification
+#' 
+#' # Cypripedium example using three size metrics for classification
 #' data(cypdata)
+#' 
 #' sizevector_f <- c(0, 0, 0, 0, 0, 0, seq(1, 12, by = 1), seq(0, 9, by = 1),
 #'   seq(0, 8, by = 1), seq(0, 7, by = 1), seq(0, 6, by = 1), seq(0, 5, by = 1),
 #'   seq(0, 4, by = 1), seq(0, 3, by = 1), 0, 1, 2, 0, 1, 0, 
@@ -1002,12 +1109,36 @@ flefko3 <- function(year = "all", patch = "all", stageframe, supplement = NULL,
 #'   censorkeep = 1, censorRepeat = FALSE, stageassign = vertframe_f,
 #'   stagesize = "sizeabc", NAas0 = TRUE, censor = FALSE)
 #' 
-#' vertmodels2f <- modelsearch(vert_data_f, historical = FALSE, suite = "main", 
-#'   sizeb = c("sizeb3", "sizeb2", "sizeb1"), sizec = c("sizec3", "sizec2", "sizec1"),
-#'   approach = "glm", vitalrates = c("surv", "obs", "size", "repst", "fec"),
-#'   sizedist = "negbin", sizebdist = "poisson", sizecdist = "poisson",
-#'   fecdist = "poisson", patch.as.random = TRUE, year.as.random = TRUE,
-#'   quiet = "partial")
+#' surv_model <- glm(alive3 ~ sizea2 + sizeb2, data = vert_data_f,
+#'   family = "binomial")
+#' 
+#' obs_data <- subset(vert_data_f, alive3 == 1)
+#' obs_model <- glm(obsstatus3 ~ sizeb2 + as.factor(year2), data = obs_data,
+#'   family = "binomial")
+#' 
+#' size_data <- subset(obs_data, obsstatus3 == 1)
+#' siz_model <- MASS::glm.nb(sizea3 ~ sizea2 + sizeb2 + as.factor(year2),
+#'   data = size_data)
+#' sizb_model <- glm(sizeb3 ~ sizea2 + sizeb2 + repstatus2 + as.factor(year2),
+#'   data = size_data, family = "poisson")
+#' sizc_model <- glm(sizec3 ~ repstatus2, data = size_data, family = "poisson")
+#' 
+#' reps_model <- glm(repstatus3 ~ sizea2 + sizeb2 + repstatus2 + as.factor(year2),
+#'   data = size_data, family = "binomial")
+#' 
+#' fec_data <- subset(vert_data_f, repstatus2 == 1)
+#' fec_model <- glm(feca2 ~ sizeb2 + as.factor(year2), data = fec_data,
+#'   family = "poisson")
+#' 
+#' mod_params <- create_pm(name_terms = TRUE)
+#' mod_params$modelparams[3] <- "patchid"
+#' mod_params$modelparams[4] <- "alive3"
+#' mod_params$modelparams[5] <- "obsstatus3"
+#' mod_params$modelparams[6] <- "sizea3"
+#' mod_params$modelparams[9] <- "repstatus3"
+#' mod_params$modelparams[11] <- "feca2"
+#' mod_params$modelparams[12] <- "sizea2"
+#' mod_params$modelparams[18] <- "repstatus2"
 #' 
 #' vertsupp2f <- supplemental(stage3 = c("DS", "P1", "P2", "P3", "Sdl", "Sdl",
 #'     "Dorm", "V1 I0 D0", "V2 I0 D0", "V3 I0 D0", "DS", "P1"),
@@ -1018,13 +1149,15 @@ flefko3 <- function(year = "all", patch = "all", stageframe, supplement = NULL,
 #'   eststage2 = c(NA, NA, NA, NA, NA, NA, "V1 I0 D0", "V1 I0 D0", "V1 I0 D0",
 #'     "V1 I0 D0", NA, NA), 
 #'   givenrate = c(0.10, 0.20, 0.20, 0.20, 0.25, 0.40, NA, NA, NA, NA, NA, NA),
-#'   multiplier = c(NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, 0.5 * 5000, 0.5 * 5000),
+#'   multiplier = c(NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, 0.5 * 5000,
+#'     0.5 * 5000),
 #'   type =c(1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 3, 3), stageframe = vertframe_f,
 #'   historical = FALSE)
 #' 
-#' vert_mats_f2 <- flefko2(stageframe = vertframe_f, supplement = vertsupp2f, 
-#'   data = vert_data_f, modelsuite = vertmodels2f)
-#' }
+#' vert_mats_f2 <- flefko2(stageframe = vertframe_f, supplement = vertsupp2f,
+#'   data = vert_data_f, surv_model = surv_model, obs_model = obs_model,
+#'   size_model = siz_model, sizeb_model = sizb_model, sizec_model = sizc_model,
+#'   repst_model = reps_model, fec_model = fec_model, paramnames = mod_params)
 #' 
 #' @export
 flefko2 <- function(year = "all", patch = "all", stageframe, supplement = NULL,
@@ -1439,7 +1572,6 @@ flefko2 <- function(year = "all", patch = "all", stageframe, supplement = NULL,
 #' @seealso \code{\link{rleslie}()}
 #' 
 #' @examples
-#' \donttest{
 #' data(lathyrus)
 #' 
 #' sizevector <- c(0, 4.6, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 1, 2, 3, 4, 5, 6, 7, 8,
@@ -1475,15 +1607,38 @@ flefko2 <- function(year = "all", patch = "all", stageframe, supplement = NULL,
 #' lathvertln$feca1 <- round(lathvertln$feca1)
 #' lathvertln$feca3 <- round(lathvertln$feca3)
 #' 
-#' lathmodelsln2 <- modelsearch(lathvertln, historical = FALSE,
-#'   approach = "mixed", suite = "main",
-#'   vitalrates = c("surv", "obs", "size", "repst", "fec"), juvestimate = "Sdl",
-#'   bestfit = "AICc&k", sizedist = "gaussian", fecdist = "poisson",
-#'   indiv = "individ", patch = "patchid", year = "year2", age = "obsage",
-#'   year.as.random = TRUE, patch.as.random = TRUE, show.model.tables = TRUE,
-#'   quiet = "partial")
+#' lathvertln_adults <- subset(lathvertln, stage2index > 2)
+#' surv_model <- glm(alive3 ~ obsage + sizea2 + as.factor(patchid) +
+#'   as.factor(year2), data = lathvertln_adults, family = "binomial")
 #' 
-#' # Here we use supplemental() to provide overwrite and reproductive info
+#' obs_data <- subset(lathvertln_adults, alive3 == 1)
+#' obs_model <- glm(obsstatus3 ~ obsage + as.factor(patchid) +
+#'   as.factor(year2), data = obs_data, family = "binomial")
+#' 
+#' size_data <- subset(obs_data, obsstatus3 == 1)
+#' siz_model <- lm(sizea3 ~ sizea2 + repstatus2 + obsage + as.factor(patchid) +
+#'   as.factor(year2), data = size_data)
+#' 
+#' reps_model <- glm(repstatus3 ~ sizea2 + as.factor(patchid) + as.factor(year2),
+#'   data = size_data, family = "binomial")
+#' 
+#' fec_data <- subset(lathvertln_adults, repstatus2 == 1)
+#' fec_model <- glm(feca2 ~ sizea2 + obsage + as.factor(patchid) +
+#'   as.factor(year2), data = fec_data, family = "poisson")
+#' 
+#' lathvertln_juvs <- subset(lathvertln, stage2index < 3)
+#' jsurv_model <- glm(alive3 ~ as.factor(patchid), data = lathvertln_juvs,
+#'   family = "binomial")
+#' 
+#' jobs_data <- subset(lathvertln_juvs, alive3 == 1)
+#' jobs_model <- glm(obsstatus3 ~ 1, family = "binomial", data = jobs_data)
+#' 
+#' jsize_data <- subset(jobs_data, obsstatus3 == 1)
+#' jsiz_model <- lm(sizea3 ~ as.factor(year2), data = jsize_data)
+#' 
+#' jrepst_model <- 0
+#' jmatst_model <- 1
+#' 
 #' lathsupp2 <- supplemental(stage3 = c("Sd", "Sdl", "mat", "Sd", "Sdl"), 
 #'   stage2 = c("Sd", "Sd", "Sdl", "rep", "rep"),
 #'   eststage3 = c(NA, NA, "mat", NA, NA),
@@ -1492,11 +1647,24 @@ flefko2 <- function(year = "all", patch = "all", stageframe, supplement = NULL,
 #'   multiplier = c(NA, NA, 0.8, 0.345, 0.054), type = c(1, 1, 1, 3, 3),
 #'   stageframe = lathframeln, historical = FALSE, agebased = TRUE)
 #' 
-#' lathmat2age <- aflefko2(year = "all", patch = "all", 
-#'   stageframe = lathframeln, modelsuite = lathmodelsln2, data = lathvertln,
-#'   supplement = lathsupp2, final_age = 3, continue = TRUE, reduce = FALSE)
+#' mod_params <- create_pm(name_terms = TRUE)
+#' mod_params$modelparams[3] <- "patchid"
+#' mod_params$modelparams[5] <- "obsstatus3"
+#' mod_params$modelparams[6] <- "sizea3"
+#' mod_params$modelparams[9] <- "repstatus3"
+#' mod_params$modelparams[11] <- "feca2"
+#' mod_params$modelparams[12] <- "sizea2"
+#' mod_params$modelparams[18] <- "repstatus2"
+#' mod_params$modelparams[22] <- "obsage"
 #' 
-#' }
+#' lathmat2age2 <- aflefko2(year = "all", patch = "all", data = lathvertln,
+#'   stageframe = lathframeln, supplement = lathsupp2, final_age = 3,
+#'   surv_model = surv_model, obs_model = obs_model, size_model = siz_model,
+#'   repst_model = reps_model, fec_model = fec_model, jsurv_model = jsurv_model,
+#'   jobs_model = jobs_model, jsize_model = jsiz_model,
+#'   jrepst_model = jrepst_model, jmatst_model = jmatst_model,
+#'   paramnames = mod_params, continue = TRUE, reduce = FALSE)
+#' 
 #' @export
 aflefko2 <- function(year = "all", patch = "all", stageframe, supplement = NULL,
   repmatrix = NULL, overwrite = NULL, data = NULL, modelsuite = NULL,
@@ -1743,14 +1911,13 @@ aflefko2 <- function(year = "all", patch = "all", stageframe, supplement = NULL,
 #' @seealso \code{\link{rleslie}()}
 #' 
 #' @examples
-#' \donttest{
 #' data(lathyrus)
 #' 
 #' lathvert_base <- verticalize3(lathyrus, noyears = 4, firstyear = 1988,
 #'   patchidcol = "SUBPLOT", individcol = "GENET", blocksize = 9,
 #'   sizeacol = "Volume88", repstracol = "FCODE88", fecacol = "Intactseed88",
 #'   deadacol = "Dead1988", censorcol = "Missing1988", censorkeep = NA,
-#'   censor = TRUE, NRasRep = TRUE, NOasObs = TRUE)
+#'   censor = TRUE, NAas0 = TRUE, NRasRep = TRUE, NOasObs = TRUE)
 #' 
 #' lathvert_base$feca3 <- round(lathvert_base$feca3)
 #' lathvert_base$feca2 <- round(lathvert_base$feca2)
@@ -1758,14 +1925,18 @@ aflefko2 <- function(year = "all", patch = "all", stageframe, supplement = NULL,
 #' 
 #' lathvert_age <- subset(lathvert_base, firstseen > 1988)
 #' 
-#' lathmodels2_age <- modelsearch(lathvert_age, historical = FALSE,
-#'   approach = "mixed", suite = "cons", bestfit = "AICc&k", age = "obsage",
-#'   vitalrates = c("surv", "fec"), fecdist = "poisson", indiv = "individ",
-#'   year = "year2", show.model.tables = TRUE, quiet = "partial")
+#' lath_survival <- glm(alive3 ~ obsage + as.factor(year2), data = lathvert_age,
+#'   family = "binomial")
+#' lath_fecundity <- glm(feca2 ~ obsage + as.factor(year2), data = lathvert_age,
+#'   family = "poisson")
+#' 
+#' mod_params <- create_pm(name_terms = TRUE)
+#' mod_params$modelparams[22] <- "obsage"
 #' 
 #' lathmat2fleslie <- fleslie(year = "all", data = lathvert_age,
-#'   modelsuite = lathmodels2_age, fecage_min = 1)
-#' }
+#'   surv_model = lath_survival, fec_model = lath_fecundity,
+#'   paramnames = mod_params, fecage_min = 1)
+#'   
 #' @export
 fleslie <- function(year = "all", patch = NULL, prebreeding = TRUE,
   data = NULL, modelsuite = NULL, surv_model = NULL, fec_model = NULL,

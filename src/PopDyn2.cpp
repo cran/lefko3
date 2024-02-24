@@ -1763,13 +1763,15 @@ RObject lambda3(RObject& mpm, Nullable<RObject> force_sparse = R_NilValue) {
 //' 
 //' Function \code{matrix_interp} summarizes matrices from \code{lefkoMat},
 //' \code{lefkoSens}, \code{lefkoElas}, and \code{lefkoLTRE} objects in terms
-//' of the magnitudes of their elements.
+//' of the magnitudes of their elements. It can also create ordered summaries of
+//' standard matrices and sparse matrices.
 //' 
 //' @name matrix_interp
 //' 
-//' @param object A list object in one of \code{lefko3}'s output formats. These
-//' may include \code{lefkoMat}, \code{lefkoSens}, \code{lefkoElas}, and
-//' \code{lefkoLTRE} objects.
+//' @param object A list object in one of \code{lefko3}'s output formats, or a
+//' standard matrix or sparse matrix in \code{dgCMatrix} format. Standard
+//' \code{lefko3} output formats include \code{lefkoMat}, \code{lefkoSens},
+//' \code{lefkoElas}, and \code{lefkoLTRE} objects.
 //' @param mat_chosen The number of the matrix to assess, within the appropriate
 //' matrix list. See \code{Notes} for further details.
 //' @param part An integer noting whether to provide assessments of which of the
@@ -1790,13 +1792,15 @@ RObject lambda3(RObject& mpm, Nullable<RObject> force_sparse = R_NilValue) {
 //' of only negative elements, or all elements in order of absolute magnitude.
 //' 
 //' @section Notes:
-//' This will be the number of the matrix within the list that it is held in.
-//' For example, if the function is applied to the \code{cont_sd} portion of
-//' a stochastic LTRE, and there are four LTRE matrices within that list element
-//' corresponding to three patch LTRE matrices and one overall population-level
-//' LTRE matrix, then setting this value to \code{4} would focus the function on
-//' the overall population-level LTRE matrix associated with contributions of
-//' the standard deviations of elements.
+//' Argument \code{mat_chosen} refers to the number of the matrix within the
+//' list that it is held in. For example, if the function is applied to the
+//' \code{cont_sd} portion of a stochastic LTRE, and there are four LTRE
+//' matrices within that list element corresponding to three patch LTRE matrices
+//' and one overall population-level LTRE matrix, then setting this value to
+//' \code{4} would focus the function on the overall population-level LTRE
+//' matrix associated with contributions of the standard deviations of elements.
+//' This argument should be left blank if a standard matrix or sparse matrix is
+//' input.
 //' 
 //' Huge sparse matrices may take more time to process than small, dense
 //' matrices.
@@ -1849,130 +1853,196 @@ RObject lambda3(RObject& mpm, Nullable<RObject> force_sparse = R_NilValue) {
 //' 
 //' @export matrix_interp
 // [[Rcpp::export(matrix_interp)]]
-Rcpp::DataFrame matrix_interp (Rcpp::List object, int mat_chosen = 1,
+Rcpp::DataFrame matrix_interp (RObject object, int mat_chosen = 1,
   int part = 1, int type = 3) {
-  
-  CharacterVector object_class = object.attr("class");
-  int class_num = object_class.length();
-  
-  Rcpp::DataFrame stageframe = as<DataFrame>(object["ahstages"]); 
-  Rcpp::DataFrame hstages = as<DataFrame>(object["hstages"]);
-  Rcpp::DataFrame agestages = as<DataFrame>(object["agestages"]);
   
   Rcpp::NumericMatrix mat;
   arma::sp_mat smat;
-  
+  Rcpp::List object_list;
   bool sparse_mat {false};
+  bool list_only {false};
+  int list_type {0}; // 1 = lefkoMat, 2 = lefkoSens, 3 = lefkoElas, 4 = lefkoLTRE, 0 = other
   
-  for (int i = 0; i < class_num; i++) {
-    if (stringcompare_hard(as<std::string>(object_class(i)), "lefkoLTRE")) {
-      if (part == 1) {
-        Rcpp::List mat_list = object["cont_mean"];
+  CharacterVector object_class;
+  int class_num {0};
+  
+  Rcpp::DataFrame stageframe; 
+  Rcpp::DataFrame hstages;
+  Rcpp::DataFrame agestages;
+  
+  if (Rf_isMatrix(object)) {
+    mat = as<NumericMatrix>(object);
+    
+    object_class = {"matrix", "array"};
+    class_num = object_class.length();
+    
+  } else if (object.isS4()) {
+    sparse_mat = true;
+    
+    S4 test_S4 = as<S4>(object);
+    CharacterVector test_S4_class = test_S4.attr("class");
+    bool found_dgc {false};
+    for (int i_c = 0; i_c < static_cast<int>(test_S4_class.length()); i_c++) {
+      if (stringcompare_hard(as<std::string>(test_S4_class(i_c)), "dgCMatrix")) found_dgc = true;
+    }
+    if (!found_dgc) throw Rcpp::exception("Object entered is of unknown class.", false);
+    
+    smat = as<arma::sp_mat>(object);
+    
+    object_class = {"dgCMatrix"};
+    class_num = object_class.length();
+    
+  } else if (is<List>(object)) {
+    list_only = true;
+    
+    object_list = as<List>(object);
+    
+    if (!object_list.hasAttribute("class")) {
+      throw Rcpp::exception("Entered list object not recognized.", false);
+    }
+    
+    object_class = object_list.attr("class");
+    class_num = object_class.length();
+    
+    for (int i = 0; i < class_num; i++) {
+      if (stringcompare_hard(as<std::string>(object_class(i)), "lefkoLTRE")) {
+        stageframe = as<DataFrame>(object_list["ahstages"]); 
+        hstages = as<DataFrame>(object_list["hstages"]);
+        agestages = as<DataFrame>(object_list["agestages"]);
         
-        RObject the_chosen_one = as<RObject>(mat_list[(mat_chosen - 1)]);
+        list_type = 4;
         
-        if (is<S4>(the_chosen_one)) {
-          smat = as<arma::sp_mat>(the_chosen_one);
-          sparse_mat = true;
-        } else {
-          mat = as<NumericMatrix>(mat_list[mat_chosen - 1]);
+        if (part == 1) {
+          Rcpp::List mat_list = object_list["cont_mean"];
+          
+          RObject the_chosen_one = as<RObject>(mat_list[(mat_chosen - 1)]);
+          
+          if (is<S4>(the_chosen_one)) {
+            smat = as<arma::sp_mat>(the_chosen_one);
+            sparse_mat = true;
+          } else {
+            mat = as<NumericMatrix>(mat_list[mat_chosen - 1]);
+          }
+        } else if (part == 2) {
+          Rcpp::List mat_list = object_list["cont_sd"];
+          
+          RObject the_chosen_one = as<RObject>(mat_list[(mat_chosen - 1)]);
+          
+          if (is<S4>(the_chosen_one)) {
+            smat = as<arma::sp_mat>(the_chosen_one);
+            sparse_mat = true;
+          } else {
+            mat = as<NumericMatrix>(mat_list[mat_chosen - 1]);
+          }
         }
-      } else if (part == 2) {
-        Rcpp::List mat_list = object["cont_sd"];
+      } else if (stringcompare_hard(as<std::string>(object_class(i)), "lefkoElas")) {
+        stageframe = as<DataFrame>(object_list["ahstages"]); 
+        hstages = as<DataFrame>(object_list["hstages"]);
+        agestages = as<DataFrame>(object_list["agestages"]);
         
-        RObject the_chosen_one = as<RObject>(mat_list[(mat_chosen - 1)]);
+        list_type = 3;
         
-        if (is<S4>(the_chosen_one)) {
-          smat = as<arma::sp_mat>(the_chosen_one);
-          sparse_mat = true;
-        } else {
-          mat = as<NumericMatrix>(mat_list[mat_chosen - 1]);
+        if (part == 1) {
+          Rcpp::List mat_list = object_list["ah_elasmats"];
+          
+          RObject the_chosen_one = as<RObject>(mat_list[(mat_chosen - 1)]);
+          
+          if (is<S4>(the_chosen_one)) {
+            smat = as<arma::sp_mat>(the_chosen_one);
+            sparse_mat = true;
+          } else {
+            mat = as<NumericMatrix>(mat_list[mat_chosen - 1]);
+          }
+        } else if (part == 2) {
+          Rcpp::List mat_list = object_list["h_elasmats"];
+          
+          RObject the_chosen_one = as<RObject>(mat_list[(mat_chosen - 1)]);
+          
+          if (is<S4>(the_chosen_one)) {
+            smat = as<arma::sp_mat>(the_chosen_one);
+            sparse_mat = true;
+          } else {
+            mat = as<NumericMatrix>(mat_list[mat_chosen - 1]);
+          }
         }
-      }
-    } else if (stringcompare_hard(as<std::string>(object_class(i)), "lefkoElas")) {
-      if (part == 1) {
-        Rcpp::List mat_list = object["ah_elasmats"];
+      } else if (stringcompare_hard(as<std::string>(object_class(i)), "lefkoSens")) {
+        stageframe = as<DataFrame>(object_list["ahstages"]); 
+        hstages = as<DataFrame>(object_list["hstages"]);
+        agestages = as<DataFrame>(object_list["agestages"]);
         
-        RObject the_chosen_one = as<RObject>(mat_list[(mat_chosen - 1)]);
+        list_type = 2;
         
-        if (is<S4>(the_chosen_one)) {
-          smat = as<arma::sp_mat>(the_chosen_one);
-          sparse_mat = true;
-        } else {
-          mat = as<NumericMatrix>(mat_list[mat_chosen - 1]);
+        if (part == 1) {
+          Rcpp::List mat_list = object_list["ah_sensmats"];
+          
+          RObject the_chosen_one = as<RObject>(mat_list[(mat_chosen - 1)]);
+          
+          if (is<S4>(the_chosen_one)) {
+            smat = as<arma::sp_mat>(the_chosen_one);
+            sparse_mat = true;
+          } else {
+            mat = as<NumericMatrix>(mat_list[mat_chosen - 1]);
+          }
+        } else if (part == 2) {
+          Rcpp::List mat_list = object_list["h_sensmats"];
+          
+          RObject the_chosen_one = as<RObject>(mat_list[(mat_chosen - 1)]);
+          
+          if (is<S4>(the_chosen_one)) {
+            smat = as<arma::sp_mat>(the_chosen_one);
+            sparse_mat = true;
+          } else {
+            mat = as<NumericMatrix>(mat_list[mat_chosen - 1]);
+          }
         }
-      } else if (part == 2) {
-        Rcpp::List mat_list = object["h_elasmats"];
+      } else if (stringcompare_hard(as<std::string>(object_class(i)), "lefkoMat")) {
+        stageframe = as<DataFrame>(object_list["ahstages"]); 
+        hstages = as<DataFrame>(object_list["hstages"]);
+        agestages = as<DataFrame>(object_list["agestages"]);
         
-        RObject the_chosen_one = as<RObject>(mat_list[(mat_chosen - 1)]);
+        list_type = 1;
         
-        if (is<S4>(the_chosen_one)) {
-          smat = as<arma::sp_mat>(the_chosen_one);
-          sparse_mat = true;
-        } else {
-          mat = as<NumericMatrix>(mat_list[mat_chosen - 1]);
+        if (part == 1) {
+          Rcpp::List mat_list = object_list["A"];
+          
+          RObject the_chosen_one = as<RObject>(mat_list[mat_chosen - 1]);
+          
+          if (is<S4>(the_chosen_one)) {
+            smat = as<arma::sp_mat>(the_chosen_one);
+            sparse_mat = true;
+          } else {
+            mat = as<NumericMatrix>(mat_list[mat_chosen - 1]);
+          }
+        } else if (part == 2) {
+          Rcpp::List mat_list = object_list["U"];
+          
+          RObject the_chosen_one = as<RObject>(mat_list[(mat_chosen - 1)]);
+          
+          if (is<S4>(the_chosen_one)) {
+            smat = as<arma::sp_mat>(the_chosen_one);
+            sparse_mat = true;
+          } else {
+            mat = as<NumericMatrix>(mat_list[mat_chosen - 1]);
+          }
+        } else if (part == 3) {
+          Rcpp::List mat_list = object_list["F"];
+          
+          RObject the_chosen_one = as<RObject>(mat_list[(mat_chosen - 1)]);
+          
+          if (is<S4>(the_chosen_one)) {
+            smat = as<arma::sp_mat>(the_chosen_one);
+            sparse_mat = true;
+          } else {
+            mat = as<NumericMatrix>(mat_list[mat_chosen - 1]);
+          }
         }
-      }
-    } else if (stringcompare_hard(as<std::string>(object_class(i)), "lefkoSens")) {
-      if (part == 1) {
-        Rcpp::List mat_list = object["ah_sensmats"];
-        
-        RObject the_chosen_one = as<RObject>(mat_list[(mat_chosen - 1)]);
-        
-        if (is<S4>(the_chosen_one)) {
-          smat = as<arma::sp_mat>(the_chosen_one);
-          sparse_mat = true;
-        } else {
-          mat = as<NumericMatrix>(mat_list[mat_chosen - 1]);
-        }
-      } else if (part == 2) {
-        Rcpp::List mat_list = object["h_sensmats"];
-        
-        RObject the_chosen_one = as<RObject>(mat_list[(mat_chosen - 1)]);
-        
-        if (is<S4>(the_chosen_one)) {
-          smat = as<arma::sp_mat>(the_chosen_one);
-          sparse_mat = true;
-        } else {
-          mat = as<NumericMatrix>(mat_list[mat_chosen - 1]);
-        }
-      }
-    } else {
-      if (part == 1) {
-        Rcpp::List mat_list = object["A"];
-        
-        RObject the_chosen_one = as<RObject>(mat_list[mat_chosen - 1]);
-        
-        if (is<S4>(the_chosen_one)) {
-          smat = as<arma::sp_mat>(the_chosen_one);
-          sparse_mat = true;
-        } else {
-          mat = as<NumericMatrix>(mat_list[mat_chosen - 1]);
-        }
-      } else if (part == 2) {
-        Rcpp::List mat_list = object["U"];
-        
-        RObject the_chosen_one = as<RObject>(mat_list[(mat_chosen - 1)]);
-        
-        if (is<S4>(the_chosen_one)) {
-          smat = as<arma::sp_mat>(the_chosen_one);
-          sparse_mat = true;
-        } else {
-          mat = as<NumericMatrix>(mat_list[mat_chosen - 1]);
-        }
-      } else if (part == 3) {
-        Rcpp::List mat_list = object["F"];
-        
-        RObject the_chosen_one = as<RObject>(mat_list[(mat_chosen - 1)]);
-        
-        if (is<S4>(the_chosen_one)) {
-          smat = as<arma::sp_mat>(the_chosen_one);
-          sparse_mat = true;
-        } else {
-          mat = as<NumericMatrix>(mat_list[mat_chosen - 1]);
-        }
+      } else {
+        throw Rcpp::exception("Argument object is not of a usable class.", false);
       }
     }
+    
+  } else {
+    throw Rcpp::exception("Argument object is not of a usable class.", false);
   }
   
   int mat_rows {0};
@@ -2055,50 +2125,60 @@ Rcpp::DataFrame matrix_interp (Rcpp::List object, int mat_chosen = 1,
   }
   
   // Appropriate col & vec indices
-  int hstages_cols = hstages.length();
-  int agestages_cols = agestages.length();
+  int hstages_cols {0};
+  int agestages_cols {0};
   
   Rcpp::StringVector main_stage_vector;
   
-  if (agestages_cols > 1) {
-    StringVector all_stages = agestages["stage"];
-    StringVector all_ages = agestages["age"];
-    int all_age_stages_num = all_stages.length();
+  if (list_only) {
+    hstages_cols = hstages.length();
+    agestages_cols = agestages.length();
     
-    StringVector new_age_stages (all_age_stages_num);
-    
-    for (int i = 0; i < all_age_stages_num; i++) {
-      String new_jack = all_stages(i);
-      new_jack += "  age ";
-      new_jack += all_ages(i);
+    if (agestages_cols > 1) {
+      StringVector all_stages = agestages["stage"];
+      StringVector all_ages = agestages["age"];
+      int all_age_stages_num = all_stages.length();
       
-      new_age_stages(i) = new_jack;
-    }
-    
-    main_stage_vector = new_age_stages;
-  } else if (hstages_cols > 1) {
-    StringVector all_stage1 = hstages["stage_1"];
-    StringVector all_stage2 = hstages["stage_2"];
-    int all_stage_pairs_num = all_stage1.length();
-    
-    StringVector new_paired_stages (all_stage_pairs_num);
-    
-    for (int i = 0; i < all_stage_pairs_num; i++) {
-      String new_jack = "st2: ";
-      new_jack += all_stage2(i);
-      new_jack += "  st1: ";
-      new_jack += all_stage1(i);
+      StringVector new_age_stages (all_age_stages_num);
       
-      new_paired_stages(i) = new_jack;
+      for (int i = 0; i < all_age_stages_num; i++) {
+        String new_jack = all_stages(i);
+        new_jack += "  age ";
+        new_jack += all_ages(i);
+        
+        new_age_stages(i) = new_jack;
+      }
+      
+      main_stage_vector = new_age_stages;
+    } else if (hstages_cols > 1) {
+      if (list_type == 1 || (list_type != 1 && part == 2)) {
+        StringVector all_stage1 = hstages["stage_1"];
+        StringVector all_stage2 = hstages["stage_2"];
+        int all_stage_pairs_num = all_stage1.length();
+        
+        StringVector new_paired_stages (all_stage_pairs_num);
+        
+        for (int i = 0; i < all_stage_pairs_num; i++) {
+          String new_jack = "st2: ";
+          new_jack += all_stage2(i);
+          new_jack += "  st1: ";
+          new_jack += all_stage1(i);
+          
+          new_paired_stages(i) = new_jack;
+        }
+        
+        main_stage_vector = new_paired_stages;
+      } else {
+        StringVector all_stages = stageframe["stage"];
+        
+        main_stage_vector = all_stages;
+      }
+    } else {
+      StringVector all_stages = stageframe["stage"];
+      
+      main_stage_vector = all_stages;
     }
-    
-    main_stage_vector = new_paired_stages;
-  } else {
-    StringVector all_stages = stageframe["stage"];
-    
-    main_stage_vector = all_stages;
   }
-  
   
   // Creation of major vectors
   Rcpp::StringVector found_from_stage (used_elem_nums);
@@ -2125,11 +2205,15 @@ Rcpp::DataFrame matrix_interp (Rcpp::List object, int mat_chosen = 1,
               found_elems_current_values(0) = current_value;
               found_elems_test_values(0) = test_value;
               
-              found_from_stage(0) = main_stage_vector(j_col);
-              found_to_stage(0) = main_stage_vector(i_row);
+              if (list_only) {
+                found_from_stage(0) = main_stage_vector(j_col);
+                found_to_stage(0) = main_stage_vector(i_row);
+              }
+              
               found_elems_cols(0) = j_col + 1;
               found_elems_rows(0) = i_row + 1;
               found_elems_indices(0) = (j_col * mat_rows) + i_row + 1;
+              
             } else {
               bool found_slot {false};
               int new_slot {0};
@@ -2152,17 +2236,24 @@ Rcpp::DataFrame matrix_interp (Rcpp::List object, int mat_chosen = 1,
                   found_elems_test_values(k+1) = found_elems_test_values(k);
                   found_elems_current_values(k+1) = found_elems_current_values(k);
                   
-                  found_from_stage(k+1) = found_from_stage(k);
-                  found_to_stage(k+1) = found_to_stage(k);
+                  if (list_only) {
+                    found_from_stage(k+1) = found_from_stage(k);
+                    found_to_stage(k+1) = found_to_stage(k);
+                  }
+                  
                   found_elems_cols(k+1) = found_elems_cols(k);
                   found_elems_rows(k+1) = found_elems_rows(k);
                   found_elems_indices(k+1) = found_elems_indices(k);
                 }
+                
                 found_elems_test_values(new_slot) = test_value;
                 found_elems_current_values(new_slot) = current_value;
                 
-                found_from_stage(new_slot) = main_stage_vector(j_col);
-                found_to_stage(new_slot) = main_stage_vector(i_row);
+                if (list_only) {
+                  found_from_stage(new_slot) = main_stage_vector(j_col);
+                  found_to_stage(new_slot) = main_stage_vector(i_row);
+                }
+                
                 found_elems_cols(new_slot) = j_col + 1;
                 found_elems_rows(new_slot) = i_row + 1;
                 found_elems_indices(new_slot) = (j_col * mat_rows) + i_row + 1;
@@ -2192,11 +2283,15 @@ Rcpp::DataFrame matrix_interp (Rcpp::List object, int mat_chosen = 1,
             int current_row = smat_loc_mat(0, point_track);
             int current_col = smat_loc_mat(1, point_track);
             
-            found_from_stage(0) = main_stage_vector(current_col);
-            found_to_stage(0) = main_stage_vector(current_row );
+            if (list_only) {
+              found_from_stage(0) = main_stage_vector(current_col);
+              found_to_stage(0) = main_stage_vector(current_row );
+            }
+            
             found_elems_cols(0) = current_col + 1;
             found_elems_rows(0) = current_row + 1;
             found_elems_indices(0) = (current_col * mat_rows) + current_row + 1;
+            
           } else {
             bool found_slot {false};
             int new_slot {0};
@@ -2219,8 +2314,11 @@ Rcpp::DataFrame matrix_interp (Rcpp::List object, int mat_chosen = 1,
                 found_elems_test_values(k+1) = found_elems_test_values(k);
                 found_elems_current_values(k+1) = found_elems_current_values(k);
                 
-                found_from_stage(k+1) = found_from_stage(k);
-                found_to_stage(k+1) = found_to_stage(k);
+                if (list_only) {
+                  found_from_stage(k+1) = found_from_stage(k);
+                  found_to_stage(k+1) = found_to_stage(k);
+                }
+                
                 found_elems_cols(k+1) = found_elems_cols(k);
                 found_elems_rows(k+1) = found_elems_rows(k);
                 found_elems_indices(k+1) = found_elems_indices(k);
@@ -2231,9 +2329,12 @@ Rcpp::DataFrame matrix_interp (Rcpp::List object, int mat_chosen = 1,
               
               int current_row = smat_loc_mat(0, point_track);
               int current_col = smat_loc_mat(1, point_track);
-            
-              found_from_stage(new_slot) = main_stage_vector(current_col);
-              found_to_stage(new_slot) = main_stage_vector(current_row);
+              
+              if (list_only) {
+                found_from_stage(new_slot) = main_stage_vector(current_col);
+                found_to_stage(new_slot) = main_stage_vector(current_row);
+              }
+              
               found_elems_cols(new_slot) = current_col + 1;
               found_elems_rows(new_slot) = current_row + 1;
               found_elems_indices(new_slot) = (current_col * mat_rows) + current_row + 1;
@@ -2245,10 +2346,18 @@ Rcpp::DataFrame matrix_interp (Rcpp::List object, int mat_chosen = 1,
     }
   }
   
-  Rcpp::DataFrame out_table = DataFrame::create(_["index"] = found_elems_indices,
-    _["from_stage"] = found_from_stage, _["to_stage"] = found_to_stage,
-    _["column"] = found_elems_cols, _["row"] = found_elems_rows,
-    _["value"] = found_elems_current_values);
+  Rcpp::DataFrame out_table;
+  
+  if (list_only) {
+    out_table = DataFrame::create(_["index"] = found_elems_indices,
+      _["from_stage"] = found_from_stage, _["to_stage"] = found_to_stage,
+      _["column"] = found_elems_cols, _["row"] = found_elems_rows,
+      _["value"] = found_elems_current_values);
+  } else {
+    out_table = DataFrame::create(_["index"] = found_elems_indices,
+      _["column"] = found_elems_cols, _["row"] = found_elems_rows,
+      _["value"] = found_elems_current_values);
+  }
   
   return(out_table);
 }

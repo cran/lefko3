@@ -1085,12 +1085,12 @@ BEGIN_RCPP
 END_RCPP
 }
 // matrix_interp
-Rcpp::DataFrame matrix_interp(Rcpp::List object, int mat_chosen, int part, int type);
+Rcpp::DataFrame matrix_interp(RObject object, int mat_chosen, int part, int type);
 RcppExport SEXP _lefko3_matrix_interp(SEXP objectSEXP, SEXP mat_chosenSEXP, SEXP partSEXP, SEXP typeSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< Rcpp::List >::type object(objectSEXP);
+    Rcpp::traits::input_parameter< RObject >::type object(objectSEXP);
     Rcpp::traits::input_parameter< int >::type mat_chosen(mat_chosenSEXP);
     Rcpp::traits::input_parameter< int >::type part(partSEXP);
     Rcpp::traits::input_parameter< int >::type type(typeSEXP);
