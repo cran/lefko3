@@ -15,7 +15,7 @@ sf_skeleton(stages, standard = TRUE)
 (\code{FALSE}).}
 }
 \value{
-A dat frame of class \code{stageframe}.
+A data frame of class \code{stageframe}.
 }
 \description{
 Function \code{sf_skeleton()} creates a skeleton \code{stageframe} object.

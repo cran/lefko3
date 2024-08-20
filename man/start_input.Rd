@@ -30,7 +30,7 @@ vector. Only used for Leslie and age-by-stage MPMs. Defaults to \code{NA}.}
 individuals set for the stage or stage-pair in question. Defaults to 1.}
 }
 \value{
-A list of class \code{lefkoStart}, with 4 objects, which can be used
+A list of class \code{lefkoSV}, with four objects, which can be used
 as input in function \code{\link{projection3}()}. The last three include the
 \code{ahstages}, \code{hstages}, and \code{agestages} objects from the
 \code{lefkoMat} object supplied in \code{mpm}. The first element in the list

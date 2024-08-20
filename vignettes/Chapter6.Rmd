@@ -21,7 +21,7 @@ vignette: >
   
   <p style="text-indent: 20px">The dataset that we have provided is organized in horizontal format, meaning that each row holds all of the data for a single, unique individual, and columns correspond to individual condition in particular monitoring occasions (which we refer to as *years* here, since there was one main census in each year). The original spreadsheet file used to keep the dataset has a repeating pattern to these columns, with each year having a similarly arranged group of variables. Let's load the dataset.</p>
 
-```r
+``` r
 data(lathyrus)
 dim(lathyrus)
 #> [1] 1119   38
@@ -40,7 +40,7 @@ Figure 6.1. Life history model of *Lathyrus vernus*. Not all adult classes are s
   
   <p style="text-indent: 20px">In the stageframe code below, we show that we want an IPM by choosing two stages that serve as the size limits for IPM size classification. These two size classes should have exactly the same characteristics in the stageframe **other than size**. By choosing these two size limits, we can skip adding and describing the many size classes that will fall between these limits - function `sf_create()` will create all of these for us. We mark these limits in the vector that we load into the `stagenames` option using the string `ipm`. Package `lefko3` will then create and name all IPM size classes according to its own conventions. The default number of size classes is 100 bins, which can be changed using the `ipmbins` option.</p>
 
-```r
+``` r
 sizevector <- c(0, 100, 0, 1, 7100)
 stagevector <- c("Sd", "Sdl", "Dorm", "ipm", "ipm")
 repvector <- c(0, 0, 0, 1, 1)
@@ -66,7 +66,7 @@ lathframeipm <- sf_create(sizes = sizevector, stagenames = stagevector,
   
   <p style="text-indent: 20px">Note that prior to standardizing the dataset, we will create a new variable to code individual identity, since different plants in different subpopulations use the same identifiers. To see a more detailed summary of the standardized dataset, please remove `full = FALSE` from the `summary_hfv()` call.</p>
 
-```r
+``` r
 lathyrus$indiv_id <- paste(lathyrus$SUBPLOT, lathyrus$GENET)
 
 lathvertipm <- verticalize3(lathyrus, noyears = 4, firstyear = 1988, 
@@ -83,7 +83,7 @@ summary_hfv(lathvertipm, full = FALSE)
   
   <p style="text-indent: 20px">Before we move on to the next steps in analysis, let's take a closer look at fecundity. In this dataset, fecundity is mostly a count of intact seeds, and only differs in six cases where the seed output was estimated based on other models. To see this, try the following code, which focuses on fecundity in time *t*.</p>
 
-```r
+``` r
 # Length of fecundity variable in t:
 length(lathvertipm$feca2)
 #> [1] 2527
@@ -94,7 +94,7 @@ length(which(lathvertipm$feca2 != round(lathvertipm$feca2)))
   
   <p style="text-indent: 20px">We see that we have quite a bit of fecundity data, and that it is overwhelmingly but not exclusively integer. So, we can either treat fecundity as a continuous variable, or round the values and treat fecundity as a count variable. We will choose the latter approach in this analysis.</p>
 
-```r
+``` r
 lathvertipm$feca3 <- round(lathvertipm$feca3)
 lathvertipm$feca2 <- round(lathvertipm$feca2)
 lathvertipm$feca1 <- round(lathvertipm$feca1)
@@ -104,7 +104,7 @@ lathvertipm$feca1 <- round(lathvertipm$feca1)
   
   <p style="text-indent: 20px">Let's formally test our assumptions. We will use the `hfv_qc()` function, which will allow us to assess the quality of the data from the viewpoint of the linear models to be built later. We will use most of the input from the `modelsearch()` call that we will conduct later.</p>
 
-```r
+``` r
 hfv_qc(data = lathvertipm, vitalrates = c("surv", "obs", "size", "fec"),
   juvestimate = "Sdl", indiv = "individ", year = "year2", age = "obsage")
 #> Survival:
@@ -233,7 +233,7 @@ hfv_qc(data = lathvertipm, vitalrates = c("surv", "obs", "size", "fec"),
   
   <p style="text-indent: 20px">Now we will create **supplement tables**, which provide extra data for matrix estimation that is not included in the main demographic dataset. Specifically, we will provide the seed dormancy probability and germination rate, which are given as transitions from the dormant seed stage to another year of seed dormancy or to the germinated seedling stage, respectively. We assume that the germination rate is the same regardless of whether seed was produced in the previous year or has been in the seedbank for longer. We will incorporate these terms both as fixed constants for specific transitions within the resulting matrices, and as multipliers for fecundity, since ultimately fecundity will be estimated as the production of seed multiplied by the seed germination rate or the seed dormancy rate. The fecundity multipliers will also serve to tell R which transitions are the fecundity transitions. Because some individuals stay in the seedling stage for only 1 year, and the seed stage itself cannot be observed and so does not exist in the dataset, we will also set a proxy set of transitions assuming that transitions from seed in occasion *t*-1 to seedling in occasion *t* to all mature stages in occasion *t*+1 are equal to the equivalent transitions from seedling in both occasions *t*-1 and *t*. We will start with the ahistorical case, and then move on to the historical case, where we also need to input the corresponding stages in occasion *t*-1 and transition types from occasion *t*-1 to *t* for each transition.</p>
 
-```r
+``` r
 lathsupp2 <- supplemental(stage3 = c("Sd", "Sdl", "Sd", "Sdl"), 
   stage2 = c("Sd", "Sd", "rep", "rep"),
   givenrate = c(0.345, 0.054, NA, NA),
@@ -261,7 +261,7 @@ lathsupp3 <- supplemental(stage3 = c("Sd", "Sd", "Sdl", "Sdl", "npr", "Sd", "Sdl
   
   <p style="text-indent: 20px">First, we will create the historical models to assess whether history is a significant influence on vital rates.</p>
 
-```r
+``` r
 lathmodels3ipm <- modelsearch(lathvertipm, historical = TRUE, approach = "mixed", 
   suite = "main", vitalrates = c("surv", "obs", "size", "fec"), 
   juvestimate = "Sdl", bestfit = "AICc&k", sizedist = "gaussian", 
@@ -295,17 +295,20 @@ lathmodels3ipm <- modelsearch(lathvertipm, historical = TRUE, approach = "mixed"
 #> 
 #> Developing global model of juvenile primary size...
 #> 
+#> 
+#> Developing global model of juvenile primary size...
+#> 
 #> Global model of juvenile primary size developed. Proceeding with model dredge...
 #> 
 #> Finished selecting best-fit models.
 #summary(lathmodels3ipm)
 ```
   
-  <p style="text-indent: 20px">We see here, as before, that status in occasion *t*-1 exerts an influence on some vital rates, particularly survival to occasion *t*+1, size in occasion *t*+1, and the conditional portion of fecundity. So, the historical IPM is the correct choice here. Accuracy is also quite high for adult survival and juvenile and adult observation, but quite poor for primary size and fecundity.</p>
+  <p style="text-indent: 20px">We see here, as before, that status in occasion *t*-1 exerts an influence on some vital rates, particularly survival to occasion *t*+1, size in occasion *t*+1, reproductive status in occasion *t*+1, and the conditional portion of fecundity. So, the historical IPM is the correct choice here. Accuracy is also quite high for adult survival and juvenile and adult observation, but quite poor for primary size and fecundity.</p>
   
   <p style="text-indent: 20px">We will also create an ahistorical IPM for comparison. For that purpose, we will create the ahistorical linear model set.</p>
 
-```r
+``` r
 lathmodels2ipm <- modelsearch(lathvertipm, historical = FALSE, 
   approach = "mixed", suite = "main", 
   vitalrates = c("surv", "obs", "size", "fec"), juvestimate = "Sdl", 
@@ -340,6 +343,9 @@ lathmodels2ipm <- modelsearch(lathvertipm, historical = FALSE,
 #> 
 #> Developing global model of juvenile primary size...
 #> 
+#> 
+#> Developing global model of juvenile primary size...
+#> 
 #> Global model of juvenile primary size developed. Proceeding with model dredge...
 #> 
 #> Finished selecting best-fit models.
@@ -350,16 +356,16 @@ lathmodels2ipm <- modelsearch(lathvertipm, historical = FALSE,
   
   <p style="text-indent: 20px">We will now create the historical suite of matrices covering the years of study. These matrices will be extremely large, but they are sparse and we will build them in sparse format, so they should not take too much memory.</p>
 
-```r
+``` r
 lathmat3ipm <- flefko3(stageframe = lathframeipm, modelsuite = lathmodels3ipm,
   supplement = lathsupp3, data = lathvertipm, reduce = FALSE,
   sparse_output = TRUE)
 #summary(lathmat3ipm)
 ```
   
-  <p style="text-indent: 20px">These are giant matrices. With 10,609 rows and columns, there are a total of 112,550,881 elements per matrix. But they are also amazingly sparse - with about 960,209 elements estimated per matrix, only 0.9% of elements per matrix are non-zero. The survival probability sums all look good, so we appear to have no problems with overly large given and proxy survival transitions provided through our supplemental tables. Let's now build the ahistorical IPMs.</p>
+  <p style="text-indent: 20px">These are giant matrices. With 10,609 rows and columns, there are a total of 112,550,881 elements per matrix. But they are also amazingly sparse - with approximately 960,209 elements estimated per matrix, only 0.9% of elements per matrix are non-zero. The survival probability sums all look good, so we appear to have no problems with overly large given and proxy survival transitions provided through our supplemental tables. Let's now build the ahistorical IPMs.</p>
 
-```r
+``` r
 lathmat2ipm <- flefko2(stageframe = lathframeipm, modelsuite = lathmodels2ipm,
   supplement = lathsupp2, data = lathvertipm, reduce = FALSE)
 #summary(lathmat2ipm)
@@ -369,7 +375,7 @@ lathmat2ipm <- flefko2(stageframe = lathframeipm, modelsuite = lathmodels2ipm,
   
   <p style="text-indent: 20px">Let's do a further comparison - let's view a matrix plot of each kind of MPM, ahistorical and then historical. First, the ahistorical plot.</p>
 
-```r
+``` r
 image3(lathmat2ipm, used = 1)
 #> [[1]]
 ```
@@ -378,7 +384,7 @@ image3(lathmat2ipm, used = 1)
   
   <p style="text-indent: 20px">Now the historical plot.</p>
 
-```r
+``` r
 image3(lathmat3ipm, used = 1)
 #> [[1]]
 ```
@@ -389,7 +395,7 @@ image3(lathmat3ipm, used = 1)
   
   <p style="text-indent: 20px">Now let's estimate the mean IPM matrices. We will estimate one mean matrix each, because we did not separate patches in the data reorganization and vital rate modeling. As a check, let's also look over the summaries.</p>
 
-```r
+``` r
 lath2ipmmean <- lmean(lathmat2ipm)
 lath3ipmmean <- lmean(lathmat3ipm)
 #summary(lath2ipmmean)
@@ -398,7 +404,7 @@ lath3ipmmean <- lmean(lathmat3ipm)
   
   <p style="text-indent: 20px">All looks fine! Let's also take a look at a portion of one of the conditional historical matrices, particularly the matrix conditional on vegetative dormancy in occasion *t*-1. This matrix can be compared to the ahistorical mean to assess the impacts of history on the matrix elements themselves. Please remember to remove the hashtag.</p>
 
-```r
+``` r
 l3mcond <- cond_hmpm(lath3ipmmean)
 #l3mcond$Mcond[[1]]$Dorm
 ```
@@ -407,7 +413,7 @@ l3mcond <- cond_hmpm(lath3ipmmean)
   
   <p style="text-indent: 20px">Now let's estimate and plot the deterministic population growth rate, $\lambda$, for each year. We find that the ahistorical and historical estimates of $\lambda$ are roughly in line with each other.</p>
 
-```r
+``` r
 ipm2lambda <- lambda3(lathmat2ipm)
 ipm3lambda <- lambda3(lathmat3ipm)
 
@@ -422,27 +428,27 @@ legend("bottomleft", c("ahistorical", "historical"), lty = c(1, 2),
   
   <p style="text-indent: 20px">Let's now look at $\lambda$ for the mean matrices and compare with the stochastic growth rate, $a = \text{log} \lambda _{S}$. We will set the number of simulations low in the historical case in order to keep the amount of memory used and computation time low, because the size of the historical matrices will use up plenty of both (the default is 10,000). We will also set the seed for the random number generator to make our results reproducible.</p>
 
-```r
+``` r
 lambda3(lath2ipmmean)
 #>   pop patch    lambda
 #> 1   1  <NA> 0.8858591
 lambda3(lath3ipmmean)
 #>   pop patch    lambda
-#> 1   1  <NA> 0.9529011
+#> 1   1  <NA> 0.9529018
 
 set.seed(42)
 slambda3(lathmat2ipm)
 #>   pop patch          a        var        sd          se
-#> 1   1  <NA> -0.1252668 0.05120793 0.2262917 0.002262917
+#> 1   1  <NA> -0.1252668 0.05120795 0.2262917 0.002262917
 set.seed(42)
 slambda3(lathmat3ipm, times = 1000)
 #>   pop patch           a       var        sd          se
-#> 1   1  <NA> -0.05142914 0.0427915 0.2068611 0.006541521
+#> 1   1  <NA> -0.05142839 0.0427915 0.2068611 0.006541521
 ```
   
   <p style="text-indent: 20px">The historical growth rate is larger than the ahistorical in both deterministic and stochastic analyses, although all four numbers suggest a declining population. Now let's compare the stable stage distribution from both the ahistorical and historical mean MPMs.</p>
 
-```r
+``` r
 ipm2ss <- stablestage3(lath2ipmmean)
 ipm3ss <- stablestage3(lath3ipmmean)
 ipm2ss_s <- stablestage3(lathmat2ipm, stochastic = TRUE, seed = 42)
@@ -463,7 +469,7 @@ legend("topright", c("det ahist", "det hist", "sto ahist", "sto hist"),
 
 ![Figure 6.5. Ahistorical vs. historically-corrected stable stage distribution](Ch6.18-1.png)
 
-```r
+``` r
 par(lty = lty.o)
 ```
   
@@ -471,7 +477,7 @@ par(lty = lty.o)
   
   <p style="text-indent: 20px">We will now move on to elasticity analysis. We will reduce the number of occasion steps simulated in the stochastic historical analysis to reduce the amount of computer processing time (this might take several hours even with the number of steps reduced).</p>
 
-```r
+``` r
 lath2ipmelas <- elasticity3(lath2ipmmean)
 #> Running deterministic analysis...
 lath3ipmelas <- elasticity3(lath3ipmmean)
@@ -500,7 +506,7 @@ legend("topright", c("det ahist", "det hist", "sto ahist", "sto hist"),
 
 ![Figure 6.6. Ahistorical vs. historically-corrected elasticity of lambda to stage](Ch6.19-1.png)
 
-```r
+``` r
 par(lty = lty.o)
 ```
   

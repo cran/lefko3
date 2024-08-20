@@ -50,7 +50,7 @@ overflow: visible;
 </style>
 <style type="text/css" data-origin="pandoc">
 pre > code.sourceCode { white-space: pre; position: relative; }
-pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span { line-height: 1.25; }
 pre > code.sourceCode > span:empty { height: 1.2em; }
 .sourceCode { overflow: visible; }
 code.sourceCode > span { color: inherit; text-decoration: inherit; }
@@ -149,6 +149,7 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; }
 div.csl-bib-body { }
 div.csl-entry {
 clear: both;
+margin-bottom: 0em;
 }
 .hanging div.csl-entry {
 margin-left:2em;
@@ -860,7 +861,7 @@ output while the function runs.
 <span id="cb7-26"><a href="#cb7-26" tabindex="-1"></a><span class="co">#&gt; Developing global model of juvenile survival probability...</span></span>
 <span id="cb7-27"><a href="#cb7-27" tabindex="-1"></a><span class="co">#&gt; </span></span>
 <span id="cb7-28"><a href="#cb7-28" tabindex="-1"></a><span class="co">#&gt; Global model of juvenile survival probability developed. Proceeding with model dredge...</span></span>
-<span id="cb7-29"><a href="#cb7-29" tabindex="-1"></a><span class="co">#&gt; Warning: Juvenile maturity status in time t+1 appears to be constant, and so will be set to constant.</span></span>
+<span id="cb7-29"><a href="#cb7-29" tabindex="-1"></a><span class="co">#&gt; Warning: Juvenile maturity status in time t+1 appears to be constant (1). Setting to constant.</span></span>
 <span id="cb7-30"><a href="#cb7-30" tabindex="-1"></a><span class="co">#&gt; </span></span>
 <span id="cb7-31"><a href="#cb7-31" tabindex="-1"></a><span class="co">#&gt; Developing global model of juvenile observation probability...</span></span>
 <span id="cb7-32"><a href="#cb7-32" tabindex="-1"></a><span class="co">#&gt; </span></span>
@@ -868,11 +869,14 @@ output while the function runs.
 <span id="cb7-34"><a href="#cb7-34" tabindex="-1"></a><span class="co">#&gt; </span></span>
 <span id="cb7-35"><a href="#cb7-35" tabindex="-1"></a><span class="co">#&gt; Developing global model of juvenile primary size...</span></span>
 <span id="cb7-36"><a href="#cb7-36" tabindex="-1"></a><span class="co">#&gt; </span></span>
-<span id="cb7-37"><a href="#cb7-37" tabindex="-1"></a><span class="co">#&gt; Could not properly estimate a global model for juvenile size.</span></span>
-<span id="cb7-38"><a href="#cb7-38" tabindex="-1"></a><span class="co">#&gt; Warning: Juvenile reproductive status in time t+1 appears to be constant, and so will be set to constant.</span></span>
+<span id="cb7-37"><a href="#cb7-37" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb7-38"><a href="#cb7-38" tabindex="-1"></a><span class="co">#&gt; Developing global model of juvenile primary size...</span></span>
 <span id="cb7-39"><a href="#cb7-39" tabindex="-1"></a><span class="co">#&gt; </span></span>
-<span id="cb7-40"><a href="#cb7-40" tabindex="-1"></a><span class="co">#&gt; Finished selecting best-fit models.</span></span>
-<span id="cb7-41"><a href="#cb7-41" tabindex="-1"></a><span class="co">#summary(histtest)</span></span></code></pre></div>
+<span id="cb7-40"><a href="#cb7-40" tabindex="-1"></a><span class="co">#&gt; Global model of juvenile primary size developed. Proceeding with model dredge...</span></span>
+<span id="cb7-41"><a href="#cb7-41" tabindex="-1"></a><span class="co">#&gt; Warning: Juvenile reproductive status in time t+1 appears to be constant, and so will be set to constant.</span></span>
+<span id="cb7-42"><a href="#cb7-42" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb7-43"><a href="#cb7-43" tabindex="-1"></a><span class="co">#&gt; Finished selecting best-fit models.</span></span>
+<span id="cb7-44"><a href="#cb7-44" tabindex="-1"></a><span class="co">#summary(histtest)</span></span></code></pre></div>
 <p style="text-indent: 20px">
 The summary generated is quite long, and likely resulted in a series of
 warnings from the model-building functions utilized. For our purposes,
@@ -1673,7 +1677,7 @@ the Promotion of Science.
 </div>
 <div id="literature-cited" class="section level2">
 <h2>Literature cited</h2>
-<div id="refs" class="references csl-bib-body hanging-indent">
+<div id="refs" class="references csl-bib-body hanging-indent" entry-spacing="0">
 <div id="ref-brownie_capture-recapture_1993" class="csl-entry">
 Brownie, C., James E. Hines, James D. Nichols, Kenneth H. Pollock, and
 Jay B. Hestbeck. 1993. <span>“Capture-Recapture Studies for Multiple

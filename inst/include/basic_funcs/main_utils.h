@@ -23,41 +23,43 @@ using namespace arma;
 // 10. IntegerVector int_sort  Sort Integer Elements
 // 11. IntegerMatrix refsort_num  Index a Numeric Vector According to a Reference Vector
 // 12. IntegerVector refsort_str  Index a String Vector According to a Reference Vector
-// 13. arma::sp_mat spmat_log  Calculate Logarithms of Non-Zero Elements of Sparse Matrix
-// 14. Rcpp::IntegerVector shrink  Resize an IntegerVector
-// 15. IntegerVector index_l3  Find Indices of a Matching String in a StringVector
-// 16. List df_subset  Subset Data Frame
-// 17. List df_remove  Remove Rows With Specific Index Values From Data Frame
-// 18. List df_shedrows  Shrink Data Frame According to Index Vector
-// 19. List exp_grd  Repeat First Vector for Each Element of Second Vector
-// 20. bool df_duplicates  Search for Duplicate Data Frame Values
-// 21. List numeric_extractor  Extract Key Components From Simple Numerical Model
-// 22. List glm_extractor  Extract Key Components of lm/glm/negbin Objects
-// 23. List vglm_extractor  Extract Key Components of vglm Objects
-// 24. List zeroinfl_extractor  Extract Key Components of zeroinfl Objects
-// 25. List lme4_extractor  Extract Key Components of merMod Objects
-// 26. List glmmTMB_extractor  Extract Key Components of glmmTMB Objects
-// 27. List S3_extractor  Extract Core Components From S3 Vital Rate Models
-// 28. List S4_extractor  Extract Core Components From S4 Vital Rate Models
-// 29. List vrm_extractor  Extract Core Components of vrm_input Models
-// 30. NumericMatrix revelations  Create Matrices of Year and Patch Terms in Models
-// 31. double rimeotam  Create a Summation of Most Terms Needed in Vital Rate Calculation
-// 32. arma::ivec foi_counter  Count Elements in Each Random Individual Covariate Portion of Model
-// 33. NumericVector flightoficarus  Create Vector of Random Individual Covariate Terms
-// 34. StringVector bootson  Create Concatenated Vector of Random Individual Covariate Term Names
-// 35. NumericVector zero_flightoficarus  Create Vector of Random Individual Covariate Terms for Zero-Inflated Models
-// 36. StringVector zero_bootson  Create Concatenated Vector of Random Individual Covariate Term Names from a Zero-Inflated Model
-// 36. arma::imat foi_index  Create Index of Element Numbers for Random Individual Covariate Terms
-// 37. NumericMatrix revelations_leslie  Create Matrices of Year and Patch Terms in Models in Leslie Models
-// 38. arma::imat foi_index_leslie  Create Index of Element Numbers for Random Individual Covariate Terms in Leslie Models
-// 39. List modelextract  Extract Coefficients from Linear Vital Rate Models
-// 40. double preouterator  Estimate Value for Vital Rate Based on Inputs
-// 41. List jerzeibalowski  Estimate All Elements of Function-based Population Projection Matrix
-// 42. List motherbalowski  Estimate All Elements of Function-based Leslie Population Projection Matrix
-// 43. DataFrame loy_inator  Converts Labels Element to LOY Data Frame
-// 44. void matrix_reducer  Reduces Matrices In A Function-based lefkoMat Object
-// 45. int whichbrew  Assess if MPM is ahistorical, historical, age-by-stage, or Leslie
-// 46. bool df_compare  Check If Two Data Frames Are Equal
+// 13. IntegerMatrix refsort_str_m  Index a String Matrix According to a Reference Vector
+// 14. arma::sp_mat spmat_log  Calculate Logarithms of Non-Zero Elements of Sparse Matrix
+// 15. Rcpp::IntegerVector shrink  Resize an IntegerVector
+// 16. IntegerVector index_l3  Find Indices of a Matching String in a StringVector
+// 17. List df_subset  Subset Data Frame
+// 18. List df_remove  Remove Rows With Specific Index Values From Data Frame
+// 19. List df_shedrows  Shrink Data Frame According to Index Vector
+// 20. List exp_grd  Repeat First Vector for Each Element of Second Vector
+// 21. bool df_duplicates  Search for Duplicate Data Frame Values
+// 22. List numeric_extractor  Extract Key Components From Simple Numerical Model
+// 23. List glm_extractor  Extract Key Components of lm/glm/negbin Objects
+// 24. List vglm_extractor  Extract Key Components of vglm Objects
+// 25. List zeroinfl_extractor  Extract Key Components of zeroinfl Objects
+// 26. List lme4_extractor  Extract Key Components of merMod Objects
+// 27. List glmmTMB_extractor  Extract Key Components of glmmTMB Objects
+// 28. List S3_extractor  Extract Core Components From S3 Vital Rate Models
+// 29. List S4_extractor  Extract Core Components From S4 Vital Rate Models
+// 30. List vrm_extractor  Extract Core Components of vrm_input Models
+// 31. NumericMatrix revelations  Create Matrices of Year and Patch Terms in Models
+// 32. double rimeotam  Create a Summation of Most Terms Needed in Vital Rate Calculation
+// 33. arma::ivec foi_counter  Count Elements in Each Random Individual Covariate Portion of Model
+// 34. NumericVector flightoficarus  Create Vector of Random Individual Covariate Terms
+// 35. StringVector bootson  Create Concatenated Vector of Random Individual Covariate Term Names
+// 36. NumericVector zero_flightoficarus  Create Vector of Random Individual Covariate Terms for Zero-Inflated Models
+// 37. StringVector zero_bootson  Create Concatenated Vector of Random Individual Covariate Term Names from a Zero-Inflated Model
+// 38. arma::imat foi_index  Create Index of Element Numbers for Random Individual Covariate Terms
+// 39. NumericMatrix revelations_leslie  Create Matrices of Year and Patch Terms in Models in Leslie Models
+// 40. arma::imat foi_index_leslie  Create Index of Element Numbers for Random Individual Covariate Terms in Leslie Models
+// 41. List modelextract  Extract Coefficients from Linear Vital Rate Models
+// 42. double preouterator  Estimate Value for Vital Rate Based on Inputs
+// 43. List jerzeibalowski  Estimate All Elements of Function-based Population Projection Matrix
+// 44. List motherbalowski  Estimate All Elements of Function-based Leslie Population Projection Matrix
+// 45. DataFrame loy_inator  Converts Labels Element to LOY Data Frame
+// 46. void matrix_reducer  Reduces Matrices In A Function-based lefkoMat Object
+// 47. int whichbrew  Assess if MPM is ahistorical, historical, age-by-stage, or Leslie
+// 48. bool df_compare  Check If Two Data Frames Are Equal
+// 49. void pop_error  Standardized Error Messages
 
 
 
@@ -409,10 +411,10 @@ namespace LefkoUtils {
      return y;
   }
   
-  //' Index a Numeric Vector According to a Reference Vector
+  //' Index a Numeric Matrix According to a Reference Vector
   //' 
   //' Function \code{refsort_num()} takes a numeric matrix and replaces it with an
-  //' integer vector showing the position of each element in the input vector
+  //' integer matrix showing the position of each element in the input matrix
   //' within the reference vector.
   //' 
   //' @name refsort_num
@@ -420,7 +422,7 @@ namespace LefkoUtils {
   //' @param vec The matrix to index
   //' @param ref The vector to use as a reference
   //' 
-  //' @return An integer vector with integers referring to elements in vector
+  //' @return An integer matrix with integers referring to elements in vector
   //' \code{ref}.
   //' 
   //' @keywords internal
@@ -473,6 +475,38 @@ namespace LefkoUtils {
     return output;
   }
   
+  //' Index a String Matrix According to a Reference Vector
+  //' 
+  //' Function \code{refsort_str_m()} takes a string matrix and replaces it with
+  //' an integer matrix showing the position of each element in the input matrix
+  //' within the reference vector.
+  //' 
+  //' @name refsort_str_m
+  //' 
+  //' @param vec The vector to index
+  //' @param ref The vector to use as a reference
+  //' 
+  //' @return An integer matrix with integers referring to elements in vector
+  //' \code{ref}.
+  //' 
+  //' @keywords internal
+  //' @noRd
+  inline IntegerMatrix refsort_str_m(const CharacterMatrix& vec,
+    const CharacterVector& ref) {
+    int vec_length = vec.length();
+    int ref_length = ref.length();
+    
+    Rcpp::IntegerMatrix output(vec.nrow(), vec.ncol());
+    
+    for (int i = 0; i < vec_length; i++) {
+      for (int j = 0; j < ref_length; j++) {
+        if (stringcompare_hard(as<std::string>(vec[i]), as<std::string>(ref[j]))) output[i] = j + 1;
+      }
+    }
+    
+    return output;
+  }
+
   //' Calculate Logarithms of Non-Zero Elements of Sparse Matrix
   //' 
   //' Function \code{spmat_log} finds the non-zero elements in a sparse matrix,
@@ -554,6 +588,7 @@ namespace LefkoUtils {
   //' StringVector matching a specific text.
   //' 
   //' @name index_l3
+  //' 
   //' @param mainvec The StringVector to search through.
   //' @param target The string to find within \code{mainvec}.
   //' 
@@ -2667,6 +2702,10 @@ namespace LefkoUtils {
       resp_family = "negbin";
       dist = 1;
       theta = sigma_theta;
+    } else if (stringcompare_simple(distrib, "nbinom2", false)) {
+      resp_family = "negbin";
+      dist = 1;
+      theta = sigma_theta;
     } else if (stringcompare_simple(distrib, "gamma", false)) {
       resp_family = "gamma";
       dist = 3;
@@ -3008,6 +3047,12 @@ namespace LefkoUtils {
   //' @param indb_2 Value of numeric individual covariate b in time \emph{t}.
   //' @param indc_1 Value of numeric individual covariate c in time \emph{t}-1.
   //' @param indc_2 Value of numeric individual covariate c in time \emph{t}.
+  //' @param anna_1 Value of numeric annual covariate a in time \emph{t}-1.
+  //' @param anna_2 Value of numeric annual covariate a in time \emph{t}.
+  //' @param annb_1 Value of numeric annual covariate b in time \emph{t}-1.
+  //' @param annb_2 Value of numeric annual covariate b in time \emph{t}.
+  //' @param annc_1 Value of numeric annual covariate c in time \emph{t}-1.
+  //' @param annc_2 Value of numeric annual covariate c in time \emph{t}.
   //' @param used_dens Density value used.
   //' @param zi A logical value indicating whether model coefficients refer to the
   //' zero inflation portion of a model.
@@ -3017,17 +3062,23 @@ namespace LefkoUtils {
   //' 
   //' @keywords internal
   //' @noRd
-  inline double rimeotam(NumericVector maincoefs, double fl1_i, double fl2n_i, double sz1_i,
-    double sz2o_i, double szb1_i, double szb2o_i, double szc1_i, double szc2o_i,
-    double aage2_i, double inda_1, double inda_2, double indb_1, double indb_2,
-    double indc_1, double indc_2, double used_dens, bool zi) {
+  inline double rimeotam(NumericVector maincoefs, const double fl1_i,
+    const double fl2n_i, const double sz1_i, const double sz2o_i,
+    const double szb1_i, const double szb2o_i, const double szc1_i,
+    const double szc2o_i, const double aage2_i, const double inda_1,
+    const double inda_2, const double indb_1, const double indb_2,
+    const double indc_1, const double indc_2, const double anna_1,
+    const double anna_2, const double annb_1, const double annb_2,
+    const double annc_1, const double annc_2, const double used_dens, bool zi) {
     
     int add1 {0};
     int add2 {0};
+    int add3 {0};
     
     if (zi) {
       add1 = 46;
       add2 = 100;
+      add3 = 10;
     }
     
     double parti = maincoefs(0 + add1) + (maincoefs(1 + add1) * fl1_i) + (maincoefs(2 + add1) * fl2n_i) +
@@ -3054,9 +3105,8 @@ namespace LefkoUtils {
       
     double partii = (maincoefs(100 + add2) * szb2o_i) + (maincoefs(101 + add2) * szb1_i) + 
       (maincoefs(102 + add2) * szc2o_i) + (maincoefs(103 + add2) * szc1_i) + 
-      (maincoefs(104 + add2) * used_dens) + (maincoefs(105 + add2) * szb1_i * szb2o_i);
-      
-    double partiii = (maincoefs(106 + add2) * szc1_i * szc2o_i) + (maincoefs(107 + add2) * sz1_i * szb1_i) + 
+      (maincoefs(104 + add2) * used_dens) + (maincoefs(105 + add2) * szb1_i * szb2o_i) + 
+      (maincoefs(106 + add2) * szc1_i * szc2o_i) + (maincoefs(107 + add2) * sz1_i * szb1_i) + 
       (maincoefs(108 + add2) * sz1_i * szc1_i) + (maincoefs(109 + add2) * szb1_i * szc1_i) + 
       (maincoefs(110 + add2) * sz2o_i * szb2o_i) + (maincoefs(111 + add2) * sz2o_i * szc2o_i) + 
       (maincoefs(112 + add2) * szb2o_i * szc2o_i) + (maincoefs(113 + add2) * sz1_i * szb2o_i) + 
@@ -3067,39 +3117,102 @@ namespace LefkoUtils {
       (maincoefs(122 + add2) * sz1_i * used_dens) + (maincoefs(123 + add2) * szb1_i * used_dens) + 
       (maincoefs(124 + add2) * szc1_i * used_dens) + (maincoefs(125 + add2) * fl2n_i * used_dens) + 
       (maincoefs(126 + add2) * fl1_i * used_dens) + (maincoefs(127 + add2) * szb2o_i * fl2n_i) + 
-      (maincoefs(128 + add2) * szc2o_i * fl2n_i) + 0 + (maincoefs(130 + add2) * szb1_i * fl1_i) + 
-      (maincoefs(131 + add2) * szb2o_i * fl1_i) + (maincoefs(132 + add2) * szb1_i * fl2n_i) + 
-      (maincoefs(133 + add2) * szc1_i * fl1_i) + (maincoefs(134 + add2) * szc2o_i * fl1_i) + 
-      (maincoefs(135 + add2) * szc1_i * fl2n_i) + (maincoefs(136 + add2) * szb2o_i * aage2_i) + 
-      (maincoefs(137 + add2) * szc2o_i * aage2_i) + (maincoefs(138 + add2) * used_dens * aage2_i) + 
-      (maincoefs(139 + add2) * szb1_i * aage2_i) + (maincoefs(140 + add2) * szc1_i * aage2_i);
-      
-    double partiv = (maincoefs(141 + add2) * inda_2 * szb2o_i) + (maincoefs(142 + add2) * inda_2 * szc2o_i) + 
-      (maincoefs(143 + add2) * inda_2 * used_dens) + (maincoefs(144 + add2) * inda_1 * szb1_i) + 
-      (maincoefs(145 + add2) * inda_1 * szc1_i) + (maincoefs(146 + add2) * inda_1 * szb2o_i) + 
-      (maincoefs(147 + add2) * inda_1 * szc2o_i) + (maincoefs(148 + add2) * inda_2 * szb1_i) + 
-      (maincoefs(149 + add2) * inda_2 * szc1_i) + (maincoefs(150 + add2) * inda_1 * used_dens);
-      
-    double partv = (maincoefs(151 + add2) * indb_2 * szb2o_i) + (maincoefs(152 + add2) * indb_2 * szc2o_i) + 
+      (maincoefs(128 + add2) * szc2o_i * fl2n_i) + (maincoefs(129 + add2) * inda_2 * aage2_i) + 
+      (maincoefs(130 + add2) * szb1_i * fl1_i) + (maincoefs(131 + add2) * szb2o_i * fl1_i) + 
+      (maincoefs(132 + add2) * szb1_i * fl2n_i) + (maincoefs(133 + add2) * szc1_i * fl1_i) + 
+      (maincoefs(134 + add2) * szc2o_i * fl1_i) + (maincoefs(135 + add2) * szc1_i * fl2n_i) + 
+      (maincoefs(136 + add2) * szb2o_i * aage2_i) + (maincoefs(137 + add2) * szc2o_i * aage2_i) + 
+      (maincoefs(138 + add2) * used_dens * aage2_i) + (maincoefs(139 + add2) * szb1_i * aage2_i) + 
+      (maincoefs(140 + add2) * szc1_i * aage2_i) + (maincoefs(141 + add2) * inda_2 * szb2o_i) + 
+      (maincoefs(142 + add2) * inda_2 * szc2o_i) + (maincoefs(143 + add2) * inda_2 * used_dens) + 
+      (maincoefs(144 + add2) * inda_1 * szb1_i) + (maincoefs(145 + add2) * inda_1 * szc1_i) + 
+      (maincoefs(146 + add2) * inda_1 * szb2o_i) + (maincoefs(147 + add2) * inda_1 * szc2o_i) + 
+      (maincoefs(148 + add2) * inda_2 * szb1_i) + (maincoefs(149 + add2) * inda_2 * szc1_i);
+    
+    double partiii = (maincoefs(150 + add2) * inda_1 * used_dens) +
+      (maincoefs(151 + add2) * indb_2 * szb2o_i) + (maincoefs(152 + add2) * indb_2 * szc2o_i) + 
       (maincoefs(153 + add2) * indb_2 * used_dens) + (maincoefs(154 + add2) * indb_1 * szb1_i) + 
       (maincoefs(155 + add2) * indb_1 * szc1_i) + (maincoefs(156 + add2) * indb_1 * szb2o_i) + 
       (maincoefs(157 + add2) * indb_1 * szc2o_i) + (maincoefs(158 + add2) * indb_2 * szb1_i) + 
-      (maincoefs(159 + add2) * indb_2 * szc1_i) + (maincoefs(160 + add2) * indb_1 * used_dens);
-      
-    double partvi = (maincoefs(161 + add2) * indc_2 * szb2o_i) + (maincoefs(162 + add2) * indc_2 * szc2o_i) + 
+      (maincoefs(159 + add2) * indb_2 * szc1_i) + (maincoefs(160 + add2) * indb_1 * used_dens) + 
+      (maincoefs(161 + add2) * indc_2 * szb2o_i) + (maincoefs(162 + add2) * indc_2 * szc2o_i) + 
       (maincoefs(163 + add2) * indc_2 * used_dens) + (maincoefs(164 + add2) * indc_1 * szb1_i) + 
       (maincoefs(165 + add2) * indc_1 * szc1_i) + (maincoefs(166 + add2) * indc_1 * szb2o_i) + 
       (maincoefs(167 + add2) * indc_1 * szc2o_i) + (maincoefs(168 + add2) * indc_2 * szb1_i) + 
-      (maincoefs(169 + add2) * indc_2 * szc1_i) + (maincoefs(170 + add2) * indc_1 * used_dens);
-      
-    double partvii = (maincoefs(171 + add2) * inda_2 * sz1_i) + (maincoefs(172 + add2) * indb_2 * sz1_i) + 
+      (maincoefs(169 + add2) * indc_2 * szc1_i) + (maincoefs(170 + add2) * indc_1 * used_dens) + 
+      (maincoefs(171 + add2) * inda_2 * sz1_i) + (maincoefs(172 + add2) * indb_2 * sz1_i) + 
       (maincoefs(173 + add2) * indc_2 * sz1_i) + (maincoefs(174 + add2) * inda_1 * sz2o_i) + 
       (maincoefs(175 + add2) * indb_1 * sz2o_i) + (maincoefs(176 + add2) * indc_1 * sz2o_i) + 
       (maincoefs(177 + add2) * inda_2 * fl1_i) + (maincoefs(178 + add2) * indb_2 * fl1_i) + 
       (maincoefs(179 + add2) * indc_2 * fl1_i) + (maincoefs(180 + add2) * inda_1 * fl2n_i) + 
-      (maincoefs(181 + add2) * indb_1 * fl2n_i) + (maincoefs(182 + add2) * indc_1 * fl2n_i);
+      (maincoefs(181 + add2) * indb_1 * fl2n_i) + (maincoefs(182 + add2) * indc_1 * fl2n_i) + 
+      (maincoefs(183 + add2) * indc_1 * aage2_i) + (maincoefs(184 + add2) * inda_2 * inda_1) + 
+      (maincoefs(185 + add2) * indb_2 * indb_1) + (maincoefs(186 + add2) * indc_2 * indc_1) + 
+      (maincoefs(187 + add2) * sz2o_i * anna_2) + (maincoefs(188 + add2) * sz2o_i * anna_1) + 
+      (maincoefs(189 + add2) * sz2o_i * annb_2) + (maincoefs(190 + add2) * sz2o_i * annb_1) + 
+      (maincoefs(191 + add2) * sz2o_i * annc_2) + (maincoefs(192 + add2) * sz2o_i * annc_1) + 
+      (maincoefs(193 + add2) * sz1_i * anna_2) + (maincoefs(194 + add2) * sz1_i * anna_1) + 
+      (maincoefs(195 + add2) * sz1_i * annb_2) + (maincoefs(196 + add2) * sz1_i * annb_1) + 
+      (maincoefs(197 + add2) * sz1_i * annc_2) + (maincoefs(198 + add2) * sz1_i * annc_1) + 
+      (maincoefs(199 + add2) * szb2o_i * anna_2);
     
-    double albatross = parti + partii + partiii + partiv + partv + partvi + partvii;
+    double partiv = (maincoefs(300 + add2) * szb2o_i * anna_1) + 
+      (maincoefs(301 + add2) * szb2o_i * annb_2) + (maincoefs(302 + add2) * szb2o_i * annb_1) + 
+      (maincoefs(303 + add2) * szb2o_i * annc_2) + (maincoefs(304 + add2) * szb2o_i * annc_1) + 
+      (maincoefs(305 + add2) * szb1_i * anna_2) + (maincoefs(306 + add2) * szb1_i * anna_1) + 
+      (maincoefs(307 + add2) * szb1_i * annb_2) + (maincoefs(308 + add2) * szb1_i * annb_1) + 
+      (maincoefs(309 + add2) * szb1_i * annc_2) + (maincoefs(310 + add2) * szb1_i * annc_1) + 
+      (maincoefs(311 + add2) * szc2o_i * anna_2) + (maincoefs(312 + add2) * szc2o_i * anna_1) + 
+      (maincoefs(313 + add2) * szc2o_i * annb_2) + (maincoefs(314 + add2) * szc2o_i * annb_1) + 
+      (maincoefs(315 + add2) * szc2o_i * annc_2) + (maincoefs(316 + add2) * szc2o_i * annc_1) + 
+      (maincoefs(317 + add2) * szc1_i * anna_2) + (maincoefs(318 + add2) * szc1_i * anna_1) + 
+      (maincoefs(319 + add2) * szc1_i * annb_2) + (maincoefs(320 + add2) * szc1_i * annb_1) + 
+      (maincoefs(321 + add2) * szc1_i * annc_2) + (maincoefs(322 + add2) * szc1_i * annc_1) + 
+      (maincoefs(323 + add2) * fl2n_i * anna_2) + (maincoefs(324 + add2) * fl2n_i * anna_1) + 
+      (maincoefs(325 + add2) * fl2n_i * annb_2) + (maincoefs(326 + add2) * fl2n_i * annb_1) + 
+      (maincoefs(327 + add2) * fl2n_i * annc_2) + (maincoefs(328 + add2) * fl2n_i * annc_1) + 
+      (maincoefs(329 + add2) * fl1_i * anna_2) + (maincoefs(330 + add2) * fl1_i * anna_1) + 
+      (maincoefs(331 + add2) * fl1_i * annb_2) + (maincoefs(332 + add2) * fl1_i * annb_1) + 
+      (maincoefs(333 + add2) * fl1_i * annc_2) + (maincoefs(334 + add2) * fl1_i * annc_1) + 
+      (maincoefs(335 + add2) * aage2_i * anna_2) + (maincoefs(336 + add2) * aage2_i * anna_1) + 
+      (maincoefs(337 + add2) * aage2_i * annb_2) + (maincoefs(338 + add2) * aage2_i * annb_1) + 
+      (maincoefs(339 + add2) * aage2_i * annc_2) + (maincoefs(340 + add2) * aage2_i * annc_1) + 
+      (maincoefs(341 + add2) * used_dens * anna_2) + (maincoefs(342 + add2) * used_dens * anna_1) + 
+      (maincoefs(343 + add2) * used_dens * annb_2) + (maincoefs(344 + add2) * used_dens * annb_1) + 
+      (maincoefs(345 + add2) * used_dens * annc_2) + (maincoefs(346 + add2) * used_dens * annc_1) + 
+      (maincoefs(347 + add2) * inda_2 * anna_2) + (maincoefs(348 + add2) * inda_2 * anna_1) + 
+      (maincoefs(349 + add2) * inda_2 * annb_2) + (maincoefs(350 + add2) * inda_2 * annb_1) + 
+      (maincoefs(351 + add2) * inda_2 * annc_2) + (maincoefs(352 + add2) * inda_2 * annc_1);
+    
+    double partv = (maincoefs(353 + add2) * inda_1 * anna_2) + (maincoefs(354 + add2) * inda_1 * anna_1) + 
+      (maincoefs(355 + add2) * inda_1 * annb_2) + (maincoefs(356 + add2) * inda_1 * annb_1) + 
+      (maincoefs(357 + add2) * inda_1 * annc_2) + (maincoefs(358 + add2) * inda_1 * annc_1) + 
+      (maincoefs(359 + add2) * indb_2 * anna_2) + (maincoefs(360 + add2) * indb_2 * anna_1) + 
+      (maincoefs(361 + add2) * indb_2 * annb_2) + (maincoefs(362 + add2) * indb_2 * annb_1) + 
+      (maincoefs(363 + add2) * indb_2 * annc_2) + (maincoefs(364 + add2) * indb_2 * annc_1) + 
+      (maincoefs(365 + add2) * indb_1 * anna_2) + (maincoefs(366 + add2) * indb_1 * anna_1) + 
+      (maincoefs(367 + add2) * indb_1 * annb_2) + (maincoefs(368 + add2) * indb_1 * annb_1) + 
+      (maincoefs(369 + add2) * indb_1 * annc_2) + (maincoefs(370 + add2) * indb_1 * annc_1) + 
+      (maincoefs(371 + add2) * indc_2 * anna_2) + (maincoefs(372 + add2) * indc_2 * anna_1) + 
+      (maincoefs(373 + add2) * indc_2 * annb_2) + (maincoefs(374 + add2) * indc_2 * annb_1) + 
+      (maincoefs(375 + add2) * indc_2 * annc_2) + (maincoefs(376 + add2) * indc_2 * annc_1) + 
+      (maincoefs(377 + add2) * indc_1 * anna_2) + (maincoefs(378 + add2) * indc_1 * anna_1) + 
+      (maincoefs(379 + add2) * indc_1 * annb_2) + (maincoefs(380 + add2) * indc_1 * annb_1) + 
+      (maincoefs(381 + add2) * indc_1 * annc_2) + (maincoefs(382 + add2) * indc_1 * annc_1) + 
+      (maincoefs(383 + add2) * anna_2) + (maincoefs(384 + add2) * anna_2* anna_1) + 
+      (maincoefs(385 + add2) * anna_2 * annb_2) + (maincoefs(386 + add2) * anna_2 * annb_1) + 
+      (maincoefs(387 + add2) * anna_2 * annc_2) + (maincoefs(388 + add2) * anna_2 * annc_1) + 
+      (maincoefs(389 + add2) * anna_1) + (maincoefs(390 + add2) * anna_1 * annb_2) + 
+      (maincoefs(391 + add2) * anna_1 * annb_1) + (maincoefs(392 + add2) * anna_1 * annc_2) + 
+      (maincoefs(393 + add2) * anna_1 * annc_1) + (maincoefs(394 + add2) * annb_2) + 
+      (maincoefs(395 + add2) * annb_2 * annb_1) + (maincoefs(396 + add2) * annb_2 * annc_2) + 
+      (maincoefs(397 + add2) * annb_2 * annc_1) + (maincoefs(398 + add2) * annb_1) +
+      (maincoefs(399 + add2) * annb_1 * annc_2);
+    
+    double partvi = (maincoefs(500 + add3) * annb_1 * annc_1) + (maincoefs(501 + add3) * annc_2) + 
+      (maincoefs(502 + add3) * annc_2 * annc_1) + (maincoefs(503 + add3) * annc_1);
+    
+    double albatross = parti + partii + partiii + partiv + partv + partvi;
     
     return albatross;
   }
@@ -3776,6 +3889,12 @@ namespace LefkoUtils {
     std::string indcovc1var = as<std::string>(modelparam_names(28));
     std::string group2var = as<std::string>(modelparam_names(29));
     std::string group1var = as<std::string>(modelparam_names(30));
+    std::string annucova2var = as<std::string>(modelparam_names(31));
+    std::string annucova1var = as<std::string>(modelparam_names(32));
+    std::string annucovb2var = as<std::string>(modelparam_names(33));
+    std::string annucovb1var = as<std::string>(modelparam_names(34));
+    std::string annucovc2var = as<std::string>(modelparam_names(35));
+    std::string annucovc1var = as<std::string>(modelparam_names(36));
     
     int no_fixed_zi_slopes = fixed_zi_slopes.length();
     
@@ -3913,7 +4032,7 @@ namespace LefkoUtils {
       }
     }
     
-    NumericVector coef_vec(283);
+    NumericVector coef_vec(514);
     
     for (int i = 0; i < no_fixed_vars; i++) {
       for (int j = 0; j < no_years; j++) {
@@ -4147,6 +4266,30 @@ namespace LefkoUtils {
       if (stringcompare_x(as<std::string>(fixed_vars(i)), indcovb1var, indcovc2var)) {
         coef_vec(45) = fixed_slopes(i);
       }
+      if (stringcompare_x(as<std::string>(fixed_vars(i)), indcova1var, agevar)) {
+        coef_vec(92) = fixed_slopes(i);
+      }
+      if (stringcompare_x(as<std::string>(fixed_vars(i)), indcovb2var, agevar)) {
+        coef_vec(93) = fixed_slopes(i);
+      }
+      if (stringcompare_x(as<std::string>(fixed_vars(i)), indcovb1var, agevar)) {
+        coef_vec(93) = fixed_slopes(i);
+      }
+      if (stringcompare_x(as<std::string>(fixed_vars(i)), indcovc2var, agevar)) {
+        coef_vec(95) = fixed_slopes(i);
+      }
+      if (stringcompare_x(as<std::string>(fixed_vars(i)), indcovc1var, agevar)) {
+        coef_vec(183) = fixed_slopes(i);
+      }
+      if (stringcompare_x(as<std::string>(fixed_vars(i)), indcova2var, indcova1var)) {
+        coef_vec(184) = fixed_slopes(i);
+      }
+      if (stringcompare_x(as<std::string>(fixed_vars(i)), indcovb2var, indcovb1var)) {
+        coef_vec(185) = fixed_slopes(i);
+      }
+      if (stringcompare_x(as<std::string>(fixed_vars(i)), indcovc2var, indcovc1var)) {
+        coef_vec(186) = fixed_slopes(i);
+      }
       
       // New coefficients
       if (stringcompare_hard(as<std::string>(fixed_vars(i)), sizeb2var)) {
@@ -4236,7 +4379,9 @@ namespace LefkoUtils {
       if (stringcompare_x(as<std::string>(fixed_vars(i)), sizec2var, repst2var)) {
         coef_vec(128) = fixed_slopes(i);
       }
-      // 129 = 0
+      if (stringcompare_x(as<std::string>(fixed_vars(i)), indcova2var, agevar)) {
+        coef_vec(129) = fixed_slopes(i);
+      }
       if (stringcompare_x(as<std::string>(fixed_vars(i)), sizeb1var, repst1var)) {
         coef_vec(130) = fixed_slopes(i);
       }
@@ -4395,6 +4540,357 @@ namespace LefkoUtils {
       }
       if (stringcompare_x(as<std::string>(fixed_vars(i)), indcovc1var, repst2var)) {
         coef_vec(182) = fixed_slopes(i);
+      }
+      if (stringcompare_x(as<std::string>(fixed_vars(i)), annucova2var, size2var)) {
+        coef_vec(187) = fixed_slopes(i);
+      }
+      if (stringcompare_x(as<std::string>(fixed_vars(i)), annucova1var, size2var)) {
+        coef_vec(188) = fixed_slopes(i);
+      }
+      if (stringcompare_x(as<std::string>(fixed_vars(i)), annucovb2var, size2var)) {
+        coef_vec(189) = fixed_slopes(i);
+      }
+      if (stringcompare_x(as<std::string>(fixed_vars(i)), annucovb1var, size2var)) {
+        coef_vec(190) = fixed_slopes(i);
+      }
+      if (stringcompare_x(as<std::string>(fixed_vars(i)), annucovc2var, size2var)) {
+        coef_vec(191) = fixed_slopes(i);
+      }
+      if (stringcompare_x(as<std::string>(fixed_vars(i)), annucovc1var, size2var)) {
+        coef_vec(192) = fixed_slopes(i);
+      }
+      if (stringcompare_x(as<std::string>(fixed_vars(i)), annucova2var, size1var)) {
+        coef_vec(193) = fixed_slopes(i);
+      }
+      if (stringcompare_x(as<std::string>(fixed_vars(i)), annucova1var, size1var)) {
+        coef_vec(194) = fixed_slopes(i);
+      }
+      if (stringcompare_x(as<std::string>(fixed_vars(i)), annucovb2var, size1var)) {
+        coef_vec(195) = fixed_slopes(i);
+      }
+      if (stringcompare_x(as<std::string>(fixed_vars(i)), annucovb1var, size1var)) {
+        coef_vec(196) = fixed_slopes(i);
+      }
+      if (stringcompare_x(as<std::string>(fixed_vars(i)), annucovc2var, size1var)) {
+        coef_vec(197) = fixed_slopes(i);
+      }
+      if (stringcompare_x(as<std::string>(fixed_vars(i)), annucovc1var, size1var)) {
+        coef_vec(198) = fixed_slopes(i);
+      }
+      if (stringcompare_x(as<std::string>(fixed_vars(i)), annucova2var, sizeb2var)) {
+        coef_vec(199) = fixed_slopes(i);
+      }
+      if (stringcompare_x(as<std::string>(fixed_vars(i)), annucova1var, sizeb2var)) {
+        coef_vec(300) = fixed_slopes(i);
+      }
+      if (stringcompare_x(as<std::string>(fixed_vars(i)), annucovb2var, sizeb2var)) {
+        coef_vec(301) = fixed_slopes(i);
+      }
+      if (stringcompare_x(as<std::string>(fixed_vars(i)), annucovb1var, sizeb2var)) {
+        coef_vec(302) = fixed_slopes(i);
+      }
+      if (stringcompare_x(as<std::string>(fixed_vars(i)), annucovc2var, sizeb2var)) {
+        coef_vec(303) = fixed_slopes(i);
+      }
+      if (stringcompare_x(as<std::string>(fixed_vars(i)), annucovc1var, sizeb2var)) {
+        coef_vec(304) = fixed_slopes(i);
+      }
+      if (stringcompare_x(as<std::string>(fixed_vars(i)), annucova2var, sizeb1var)) {
+        coef_vec(305) = fixed_slopes(i);
+      }
+      if (stringcompare_x(as<std::string>(fixed_vars(i)), annucova1var, sizeb1var)) {
+        coef_vec(306) = fixed_slopes(i);
+      }
+      if (stringcompare_x(as<std::string>(fixed_vars(i)), annucovb2var, sizeb1var)) {
+        coef_vec(307) = fixed_slopes(i);
+      }
+      if (stringcompare_x(as<std::string>(fixed_vars(i)), annucovb1var, sizeb1var)) {
+        coef_vec(308) = fixed_slopes(i);
+      }
+      if (stringcompare_x(as<std::string>(fixed_vars(i)), annucovc2var, sizeb1var)) {
+        coef_vec(309) = fixed_slopes(i);
+      }
+      if (stringcompare_x(as<std::string>(fixed_vars(i)), annucovc1var, sizeb1var)) {
+        coef_vec(310) = fixed_slopes(i);
+      }
+      if (stringcompare_x(as<std::string>(fixed_vars(i)), annucova2var, sizec2var)) {
+        coef_vec(311) = fixed_slopes(i);
+      }
+      if (stringcompare_x(as<std::string>(fixed_vars(i)), annucova1var, sizec2var)) {
+        coef_vec(312) = fixed_slopes(i);
+      }
+      if (stringcompare_x(as<std::string>(fixed_vars(i)), annucovb2var, sizec2var)) {
+        coef_vec(313) = fixed_slopes(i);
+      }
+      if (stringcompare_x(as<std::string>(fixed_vars(i)), annucovb1var, sizec2var)) {
+        coef_vec(314) = fixed_slopes(i);
+      }
+      if (stringcompare_x(as<std::string>(fixed_vars(i)), annucovc2var, sizec2var)) {
+        coef_vec(315) = fixed_slopes(i);
+      }
+      if (stringcompare_x(as<std::string>(fixed_vars(i)), annucovc1var, sizec2var)) {
+        coef_vec(316) = fixed_slopes(i);
+      }
+      if (stringcompare_x(as<std::string>(fixed_vars(i)), annucova2var, sizec1var)) {
+        coef_vec(317) = fixed_slopes(i);
+      }
+      if (stringcompare_x(as<std::string>(fixed_vars(i)), annucova1var, sizec1var)) {
+        coef_vec(318) = fixed_slopes(i);
+      }
+      if (stringcompare_x(as<std::string>(fixed_vars(i)), annucovb2var, sizec1var)) {
+        coef_vec(319) = fixed_slopes(i);
+      }
+      if (stringcompare_x(as<std::string>(fixed_vars(i)), annucovb1var, sizec1var)) {
+        coef_vec(320) = fixed_slopes(i);
+      }
+      if (stringcompare_x(as<std::string>(fixed_vars(i)), annucovc2var, sizec1var)) {
+        coef_vec(321) = fixed_slopes(i);
+      }
+      if (stringcompare_x(as<std::string>(fixed_vars(i)), annucovc1var, sizec1var)) {
+        coef_vec(322) = fixed_slopes(i);
+      }
+      if (stringcompare_x(as<std::string>(fixed_vars(i)), annucova2var, repst2var)) {
+        coef_vec(323) = fixed_slopes(i);
+      }
+      if (stringcompare_x(as<std::string>(fixed_vars(i)), annucova1var, repst2var)) {
+        coef_vec(324) = fixed_slopes(i);
+      }
+      if (stringcompare_x(as<std::string>(fixed_vars(i)), annucovb2var, repst2var)) {
+        coef_vec(325) = fixed_slopes(i);
+      }
+      if (stringcompare_x(as<std::string>(fixed_vars(i)), annucovb1var, repst2var)) {
+        coef_vec(326) = fixed_slopes(i);
+      }
+      if (stringcompare_x(as<std::string>(fixed_vars(i)), annucovc2var, repst2var)) {
+        coef_vec(327) = fixed_slopes(i);
+      }
+      if (stringcompare_x(as<std::string>(fixed_vars(i)), annucovc1var, repst2var)) {
+        coef_vec(328) = fixed_slopes(i);
+      }
+      if (stringcompare_x(as<std::string>(fixed_vars(i)), annucova2var, repst1var)) {
+        coef_vec(329) = fixed_slopes(i);
+      }
+      if (stringcompare_x(as<std::string>(fixed_vars(i)), annucova1var, repst1var)) {
+        coef_vec(330) = fixed_slopes(i);
+      }
+      if (stringcompare_x(as<std::string>(fixed_vars(i)), annucovb2var, repst1var)) {
+        coef_vec(331) = fixed_slopes(i);
+      }
+      if (stringcompare_x(as<std::string>(fixed_vars(i)), annucovb1var, repst1var)) {
+        coef_vec(332) = fixed_slopes(i);
+      }
+      if (stringcompare_x(as<std::string>(fixed_vars(i)), annucovc2var, repst1var)) {
+        coef_vec(333) = fixed_slopes(i);
+      }
+      if (stringcompare_x(as<std::string>(fixed_vars(i)), annucovc1var, repst1var)) {
+        coef_vec(334) = fixed_slopes(i);
+      }
+      if (stringcompare_x(as<std::string>(fixed_vars(i)), annucova2var, agevar)) {
+        coef_vec(335) = fixed_slopes(i);
+      }
+      if (stringcompare_x(as<std::string>(fixed_vars(i)), annucova1var, agevar)) {
+        coef_vec(336) = fixed_slopes(i);
+      }
+      if (stringcompare_x(as<std::string>(fixed_vars(i)), annucovb2var, agevar)) {
+        coef_vec(337) = fixed_slopes(i);
+      }
+      if (stringcompare_x(as<std::string>(fixed_vars(i)), annucovb1var, agevar)) {
+        coef_vec(338) = fixed_slopes(i);
+      }
+      if (stringcompare_x(as<std::string>(fixed_vars(i)), annucovc2var, agevar)) {
+        coef_vec(339) = fixed_slopes(i);
+      }
+      if (stringcompare_x(as<std::string>(fixed_vars(i)), annucovc1var, agevar)) {
+        coef_vec(340) = fixed_slopes(i);
+      }
+      if (stringcompare_x(as<std::string>(fixed_vars(i)), annucova2var, densityvar)) {
+        coef_vec(341) = fixed_slopes(i);
+      }
+      if (stringcompare_x(as<std::string>(fixed_vars(i)), annucova1var, densityvar)) {
+        coef_vec(342) = fixed_slopes(i);
+      }
+      if (stringcompare_x(as<std::string>(fixed_vars(i)), annucovb2var, densityvar)) {
+        coef_vec(343) = fixed_slopes(i);
+      }
+      if (stringcompare_x(as<std::string>(fixed_vars(i)), annucovb1var, densityvar)) {
+        coef_vec(344) = fixed_slopes(i);
+      }
+      if (stringcompare_x(as<std::string>(fixed_vars(i)), annucovc2var, densityvar)) {
+        coef_vec(345) = fixed_slopes(i);
+      }
+      if (stringcompare_x(as<std::string>(fixed_vars(i)), annucovc1var, densityvar)) {
+        coef_vec(346) = fixed_slopes(i);
+      }
+      if (stringcompare_x(as<std::string>(fixed_vars(i)), annucova2var, indcova2var)) {
+        coef_vec(347) = fixed_slopes(i);
+      }
+      if (stringcompare_x(as<std::string>(fixed_vars(i)), annucova1var, indcova2var)) {
+        coef_vec(348) = fixed_slopes(i);
+      }
+      if (stringcompare_x(as<std::string>(fixed_vars(i)), annucovb2var, indcova2var)) {
+        coef_vec(349) = fixed_slopes(i);
+      }
+      if (stringcompare_x(as<std::string>(fixed_vars(i)), annucovb1var, indcova2var)) {
+        coef_vec(350) = fixed_slopes(i);
+      }
+      if (stringcompare_x(as<std::string>(fixed_vars(i)), annucovc2var, indcova2var)) {
+        coef_vec(351) = fixed_slopes(i);
+      }
+      if (stringcompare_x(as<std::string>(fixed_vars(i)), annucovc1var, indcova2var)) {
+        coef_vec(352) = fixed_slopes(i);
+      }
+      if (stringcompare_x(as<std::string>(fixed_vars(i)), annucova2var, indcova1var)) {
+        coef_vec(353) = fixed_slopes(i);
+      }
+      if (stringcompare_x(as<std::string>(fixed_vars(i)), annucova1var, indcova1var)) {
+        coef_vec(354) = fixed_slopes(i);
+      }
+      if (stringcompare_x(as<std::string>(fixed_vars(i)), annucovb2var, indcova1var)) {
+        coef_vec(355) = fixed_slopes(i);
+      }
+      if (stringcompare_x(as<std::string>(fixed_vars(i)), annucovb1var, indcova1var)) {
+        coef_vec(356) = fixed_slopes(i);
+      }
+      if (stringcompare_x(as<std::string>(fixed_vars(i)), annucovc2var, indcova1var)) {
+        coef_vec(357) = fixed_slopes(i);
+      }
+      if (stringcompare_x(as<std::string>(fixed_vars(i)), annucovc1var, indcova1var)) {
+        coef_vec(358) = fixed_slopes(i);
+      }
+      if (stringcompare_x(as<std::string>(fixed_vars(i)), annucova2var, indcovb2var)) {
+        coef_vec(359) = fixed_slopes(i);
+      }
+      if (stringcompare_x(as<std::string>(fixed_vars(i)), annucova1var, indcovb2var)) {
+        coef_vec(360) = fixed_slopes(i);
+      }
+      if (stringcompare_x(as<std::string>(fixed_vars(i)), annucovb2var, indcovb2var)) {
+        coef_vec(361) = fixed_slopes(i);
+      }
+      if (stringcompare_x(as<std::string>(fixed_vars(i)), annucovb1var, indcovb2var)) {
+        coef_vec(362) = fixed_slopes(i);
+      }
+      if (stringcompare_x(as<std::string>(fixed_vars(i)), annucovc2var, indcovb2var)) {
+        coef_vec(363) = fixed_slopes(i);
+      }
+      if (stringcompare_x(as<std::string>(fixed_vars(i)), annucovc1var, indcovb2var)) {
+        coef_vec(364) = fixed_slopes(i);
+      }
+      if (stringcompare_x(as<std::string>(fixed_vars(i)), annucova2var, indcovb1var)) {
+        coef_vec(365) = fixed_slopes(i);
+      }
+      if (stringcompare_x(as<std::string>(fixed_vars(i)), annucova1var, indcovb1var)) {
+        coef_vec(366) = fixed_slopes(i);
+      }
+      if (stringcompare_x(as<std::string>(fixed_vars(i)), annucovb2var, indcovb1var)) {
+        coef_vec(367) = fixed_slopes(i);
+      }
+      if (stringcompare_x(as<std::string>(fixed_vars(i)), annucovb1var, indcovb1var)) {
+        coef_vec(368) = fixed_slopes(i);
+      }
+      if (stringcompare_x(as<std::string>(fixed_vars(i)), annucovc2var, indcovb1var)) {
+        coef_vec(369) = fixed_slopes(i);
+      }
+      if (stringcompare_x(as<std::string>(fixed_vars(i)), annucovc1var, indcovb1var)) {
+        coef_vec(370) = fixed_slopes(i);
+      }
+      if (stringcompare_x(as<std::string>(fixed_vars(i)), annucova2var, indcovc2var)) {
+        coef_vec(371) = fixed_slopes(i);
+      }
+      if (stringcompare_x(as<std::string>(fixed_vars(i)), annucova1var, indcovc2var)) {
+        coef_vec(372) = fixed_slopes(i);
+      }
+      if (stringcompare_x(as<std::string>(fixed_vars(i)), annucovb2var, indcovc2var)) {
+        coef_vec(373) = fixed_slopes(i);
+      }
+      if (stringcompare_x(as<std::string>(fixed_vars(i)), annucovb1var, indcovc2var)) {
+        coef_vec(374) = fixed_slopes(i);
+      }
+      if (stringcompare_x(as<std::string>(fixed_vars(i)), annucovc2var, indcovc2var)) {
+        coef_vec(375) = fixed_slopes(i);
+      }
+      if (stringcompare_x(as<std::string>(fixed_vars(i)), annucovc1var, indcovc2var)) {
+        coef_vec(376) = fixed_slopes(i);
+      }
+      if (stringcompare_x(as<std::string>(fixed_vars(i)), annucova2var, indcovc1var)) {
+        coef_vec(377) = fixed_slopes(i);
+      }
+      if (stringcompare_x(as<std::string>(fixed_vars(i)), annucova1var, indcovc1var)) {
+        coef_vec(378) = fixed_slopes(i);
+      }
+      if (stringcompare_x(as<std::string>(fixed_vars(i)), annucovb2var, indcovc1var)) {
+        coef_vec(379) = fixed_slopes(i);
+      }
+      if (stringcompare_x(as<std::string>(fixed_vars(i)), annucovb1var, indcovc1var)) {
+        coef_vec(380) = fixed_slopes(i);
+      }
+      if (stringcompare_x(as<std::string>(fixed_vars(i)), annucovc2var, indcovc1var)) {
+        coef_vec(381) = fixed_slopes(i);
+      }
+      if (stringcompare_x(as<std::string>(fixed_vars(i)), annucovc1var, indcovc1var)) {
+        coef_vec(382) = fixed_slopes(i);
+      }
+      if (stringcompare_hard(as<std::string>(fixed_vars(i)), annucova2var)) {
+        coef_vec(383) = fixed_slopes(i);
+      }
+      if (stringcompare_x(as<std::string>(fixed_vars(i)), annucova2var, annucova1var)) {
+        coef_vec(384) = fixed_slopes(i);
+      }
+      if (stringcompare_x(as<std::string>(fixed_vars(i)), annucova2var, annucovb2var)) {
+        coef_vec(385) = fixed_slopes(i);
+      }
+      if (stringcompare_x(as<std::string>(fixed_vars(i)), annucova2var, annucovb1var)) {
+        coef_vec(386) = fixed_slopes(i);
+      }
+      if (stringcompare_x(as<std::string>(fixed_vars(i)), annucova2var, annucovc2var)) {
+        coef_vec(387) = fixed_slopes(i);
+      }
+      if (stringcompare_x(as<std::string>(fixed_vars(i)), annucova2var, annucovc1var)) {
+        coef_vec(388) = fixed_slopes(i);
+      }
+      if (stringcompare_hard(as<std::string>(fixed_vars(i)), annucova1var)) {
+        coef_vec(389) = fixed_slopes(i);
+      }
+      if (stringcompare_x(as<std::string>(fixed_vars(i)), annucova1var, annucovb2var)) {
+        coef_vec(390) = fixed_slopes(i);
+      }
+      if (stringcompare_x(as<std::string>(fixed_vars(i)), annucova1var, annucovb1var)) {
+        coef_vec(391) = fixed_slopes(i);
+      }
+      if (stringcompare_x(as<std::string>(fixed_vars(i)), annucova1var, annucovc2var)) {
+        coef_vec(392) = fixed_slopes(i);
+      }
+      if (stringcompare_x(as<std::string>(fixed_vars(i)), annucova1var, annucovc1var)) {
+        coef_vec(393) = fixed_slopes(i);
+      }
+      if (stringcompare_hard(as<std::string>(fixed_vars(i)), annucovb2var)) {
+        coef_vec(394) = fixed_slopes(i);
+      }
+      if (stringcompare_x(as<std::string>(fixed_vars(i)), annucovb2var, annucovb1var)) {
+        coef_vec(395) = fixed_slopes(i);
+      }
+      if (stringcompare_x(as<std::string>(fixed_vars(i)), annucovb2var, annucovc2var)) {
+        coef_vec(396) = fixed_slopes(i);
+      }
+      if (stringcompare_x(as<std::string>(fixed_vars(i)), annucovb2var, annucovc1var)) {
+        coef_vec(397) = fixed_slopes(i);
+      }
+      if (stringcompare_hard(as<std::string>(fixed_vars(i)), annucovb1var)) {
+        coef_vec(398) = fixed_slopes(i);
+      }
+      if (stringcompare_x(as<std::string>(fixed_vars(i)), annucovb1var, annucovc2var)) {
+        coef_vec(399) = fixed_slopes(i);
+      }
+      if (stringcompare_x(as<std::string>(fixed_vars(i)), annucovb1var, annucovc1var)) {
+        coef_vec(500) = fixed_slopes(i);
+      }
+      if (stringcompare_hard(as<std::string>(fixed_vars(i)), annucovc2var)) {
+        coef_vec(501) = fixed_slopes(i);
+      }
+      if (stringcompare_x(as<std::string>(fixed_vars(i)), annucovc2var, annucovc1var)) {
+        coef_vec(502) = fixed_slopes(i);
+      }
+      if (stringcompare_hard(as<std::string>(fixed_vars(i)), annucovc1var)) {
+        coef_vec(503) = fixed_slopes(i);
       }
     }
     
@@ -4611,6 +5107,30 @@ namespace LefkoUtils {
         if (stringcompare_x(as<std::string>(fixed_zi_vars(i)), indcovb1var, indcovc2var)) {
           coef_vec(91) = fixed_zi_slopes(i);
         }
+        if (stringcompare_x(as<std::string>(fixed_zi_vars(i)), indcova1var, agevar)) {
+          coef_vec(96) = fixed_zi_slopes(i);
+        }
+        if (stringcompare_x(as<std::string>(fixed_zi_vars(i)), indcovb2var, agevar)) {
+          coef_vec(97) = fixed_zi_slopes(i);
+        }
+        if (stringcompare_x(as<std::string>(fixed_zi_vars(i)), indcovb1var, agevar)) {
+          coef_vec(98) = fixed_zi_slopes(i);
+        }
+        if (stringcompare_x(as<std::string>(fixed_zi_vars(i)), indcovc2var, agevar)) {
+          coef_vec(99) = fixed_zi_slopes(i);
+        }
+        if (stringcompare_x(as<std::string>(fixed_zi_vars(i)), indcovc1var, agevar)) {
+          coef_vec(283) = fixed_zi_slopes(i);
+        }
+        if (stringcompare_x(as<std::string>(fixed_zi_vars(i)), indcova2var, indcova1var)) {
+          coef_vec(284) = fixed_zi_slopes(i);
+        }
+        if (stringcompare_x(as<std::string>(fixed_zi_vars(i)), indcovb2var, indcovb1var)) {
+          coef_vec(285) = fixed_zi_slopes(i);
+        }
+        if (stringcompare_x(as<std::string>(fixed_zi_vars(i)), indcovc2var, indcovc1var)) {
+          coef_vec(286) = fixed_zi_slopes(i);
+        }
         
         // New coefficients
         if (stringcompare_hard(as<std::string>(fixed_zi_vars(i)), sizeb2var)) {
@@ -4700,7 +5220,9 @@ namespace LefkoUtils {
         if (stringcompare_x(as<std::string>(fixed_zi_vars(i)), sizec2var, repst2var)) {
           coef_vec(228) = fixed_zi_slopes(i);
         }
-        // 229 = 0
+        if (stringcompare_x(as<std::string>(fixed_zi_vars(i)), indcova2var, agevar)) {
+          coef_vec(229) = fixed_zi_slopes(i);
+        }
         if (stringcompare_x(as<std::string>(fixed_zi_vars(i)), sizeb1var, repst1var)) {
           coef_vec(230) = fixed_zi_slopes(i);
         }
@@ -4859,6 +5381,357 @@ namespace LefkoUtils {
         }
         if (stringcompare_x(as<std::string>(fixed_zi_vars(i)), indcovc1var, repst2var)) {
           coef_vec(282) = fixed_zi_slopes(i);
+        }
+        if (stringcompare_x(as<std::string>(fixed_zi_vars(i)), annucova2var, size2var)) {
+          coef_vec(287) = fixed_zi_slopes(i);
+        }
+        if (stringcompare_x(as<std::string>(fixed_zi_vars(i)), annucova1var, size2var)) {
+          coef_vec(288) = fixed_zi_slopes(i);
+        }
+        if (stringcompare_x(as<std::string>(fixed_zi_vars(i)), annucovb2var, size2var)) {
+          coef_vec(289) = fixed_zi_slopes(i);
+        }
+        if (stringcompare_x(as<std::string>(fixed_zi_vars(i)), annucovb1var, size2var)) {
+          coef_vec(290) = fixed_zi_slopes(i);
+        }
+        if (stringcompare_x(as<std::string>(fixed_zi_vars(i)), annucovc2var, size2var)) {
+          coef_vec(291) = fixed_zi_slopes(i);
+        }
+        if (stringcompare_x(as<std::string>(fixed_zi_vars(i)), annucovc1var, size2var)) {
+          coef_vec(292) = fixed_zi_slopes(i);
+        }
+        if (stringcompare_x(as<std::string>(fixed_zi_vars(i)), annucova2var, size1var)) {
+          coef_vec(293) = fixed_zi_slopes(i);
+        }
+        if (stringcompare_x(as<std::string>(fixed_zi_vars(i)), annucova1var, size1var)) {
+          coef_vec(294) = fixed_zi_slopes(i);
+        }
+        if (stringcompare_x(as<std::string>(fixed_zi_vars(i)), annucovb2var, size1var)) {
+          coef_vec(295) = fixed_zi_slopes(i);
+        }
+        if (stringcompare_x(as<std::string>(fixed_zi_vars(i)), annucovb1var, size1var)) {
+          coef_vec(296) = fixed_zi_slopes(i);
+        }
+        if (stringcompare_x(as<std::string>(fixed_zi_vars(i)), annucovc2var, size1var)) {
+          coef_vec(297) = fixed_zi_slopes(i);
+        }
+        if (stringcompare_x(as<std::string>(fixed_zi_vars(i)), annucovc1var, size1var)) {
+          coef_vec(298) = fixed_zi_slopes(i);
+        }
+        if (stringcompare_x(as<std::string>(fixed_zi_vars(i)), annucova2var, sizeb2var)) {
+          coef_vec(299) = fixed_zi_slopes(i);
+        }
+        if (stringcompare_x(as<std::string>(fixed_zi_vars(i)), annucova1var, sizeb2var)) {
+          coef_vec(400) = fixed_zi_slopes(i);
+        }
+        if (stringcompare_x(as<std::string>(fixed_zi_vars(i)), annucovb2var, sizeb2var)) {
+          coef_vec(401) = fixed_zi_slopes(i);
+        }
+        if (stringcompare_x(as<std::string>(fixed_zi_vars(i)), annucovb1var, sizeb2var)) {
+          coef_vec(402) = fixed_zi_slopes(i);
+        }
+        if (stringcompare_x(as<std::string>(fixed_zi_vars(i)), annucovc2var, sizeb2var)) {
+          coef_vec(403) = fixed_zi_slopes(i);
+        }
+        if (stringcompare_x(as<std::string>(fixed_zi_vars(i)), annucovc1var, sizeb2var)) {
+          coef_vec(404) = fixed_zi_slopes(i);
+        }
+        if (stringcompare_x(as<std::string>(fixed_zi_vars(i)), annucova2var, sizeb1var)) {
+          coef_vec(405) = fixed_zi_slopes(i);
+        }
+        if (stringcompare_x(as<std::string>(fixed_zi_vars(i)), annucova1var, sizeb1var)) {
+          coef_vec(406) = fixed_zi_slopes(i);
+        }
+        if (stringcompare_x(as<std::string>(fixed_zi_vars(i)), annucovb2var, sizeb1var)) {
+          coef_vec(407) = fixed_zi_slopes(i);
+        }
+        if (stringcompare_x(as<std::string>(fixed_zi_vars(i)), annucovb1var, sizeb1var)) {
+          coef_vec(408) = fixed_zi_slopes(i);
+        }
+        if (stringcompare_x(as<std::string>(fixed_zi_vars(i)), annucovc2var, sizeb1var)) {
+          coef_vec(409) = fixed_zi_slopes(i);
+        }
+        if (stringcompare_x(as<std::string>(fixed_zi_vars(i)), annucovc1var, sizeb1var)) {
+          coef_vec(410) = fixed_zi_slopes(i);
+        }
+        if (stringcompare_x(as<std::string>(fixed_zi_vars(i)), annucova2var, sizec2var)) {
+          coef_vec(411) = fixed_zi_slopes(i);
+        }
+        if (stringcompare_x(as<std::string>(fixed_zi_vars(i)), annucova1var, sizec2var)) {
+          coef_vec(412) = fixed_zi_slopes(i);
+        }
+        if (stringcompare_x(as<std::string>(fixed_zi_vars(i)), annucovb2var, sizec2var)) {
+          coef_vec(413) = fixed_zi_slopes(i);
+        }
+        if (stringcompare_x(as<std::string>(fixed_zi_vars(i)), annucovb1var, sizec2var)) {
+          coef_vec(414) = fixed_zi_slopes(i);
+        }
+        if (stringcompare_x(as<std::string>(fixed_zi_vars(i)), annucovc2var, sizec2var)) {
+          coef_vec(415) = fixed_zi_slopes(i);
+        }
+        if (stringcompare_x(as<std::string>(fixed_zi_vars(i)), annucovc1var, sizec2var)) {
+          coef_vec(416) = fixed_zi_slopes(i);
+        }
+        if (stringcompare_x(as<std::string>(fixed_zi_vars(i)), annucova2var, sizec1var)) {
+          coef_vec(417) = fixed_zi_slopes(i);
+        }
+        if (stringcompare_x(as<std::string>(fixed_zi_vars(i)), annucova1var, sizec1var)) {
+          coef_vec(418) = fixed_zi_slopes(i);
+        }
+        if (stringcompare_x(as<std::string>(fixed_zi_vars(i)), annucovb2var, sizec1var)) {
+          coef_vec(419) = fixed_zi_slopes(i);
+        }
+        if (stringcompare_x(as<std::string>(fixed_zi_vars(i)), annucovb1var, sizec1var)) {
+          coef_vec(420) = fixed_zi_slopes(i);
+        }
+        if (stringcompare_x(as<std::string>(fixed_zi_vars(i)), annucovc2var, sizec1var)) {
+          coef_vec(421) = fixed_zi_slopes(i);
+        }
+        if (stringcompare_x(as<std::string>(fixed_zi_vars(i)), annucovc1var, sizec1var)) {
+          coef_vec(422) = fixed_zi_slopes(i);
+        }
+        if (stringcompare_x(as<std::string>(fixed_zi_vars(i)), annucova2var, repst2var)) {
+          coef_vec(423) = fixed_zi_slopes(i);
+        }
+        if (stringcompare_x(as<std::string>(fixed_zi_vars(i)), annucova1var, repst2var)) {
+          coef_vec(424) = fixed_zi_slopes(i);
+        }
+        if (stringcompare_x(as<std::string>(fixed_zi_vars(i)), annucovb2var, repst2var)) {
+          coef_vec(425) = fixed_zi_slopes(i);
+        }
+        if (stringcompare_x(as<std::string>(fixed_zi_vars(i)), annucovb1var, repst2var)) {
+          coef_vec(426) = fixed_zi_slopes(i);
+        }
+        if (stringcompare_x(as<std::string>(fixed_zi_vars(i)), annucovc2var, repst2var)) {
+          coef_vec(427) = fixed_zi_slopes(i);
+        }
+        if (stringcompare_x(as<std::string>(fixed_zi_vars(i)), annucovc1var, repst2var)) {
+          coef_vec(428) = fixed_zi_slopes(i);
+        }
+        if (stringcompare_x(as<std::string>(fixed_zi_vars(i)), annucova2var, repst1var)) {
+          coef_vec(429) = fixed_zi_slopes(i);
+        }
+        if (stringcompare_x(as<std::string>(fixed_zi_vars(i)), annucova1var, repst1var)) {
+          coef_vec(430) = fixed_zi_slopes(i);
+        }
+        if (stringcompare_x(as<std::string>(fixed_zi_vars(i)), annucovb2var, repst1var)) {
+          coef_vec(431) = fixed_zi_slopes(i);
+        }
+        if (stringcompare_x(as<std::string>(fixed_zi_vars(i)), annucovb1var, repst1var)) {
+          coef_vec(432) = fixed_zi_slopes(i);
+        }
+        if (stringcompare_x(as<std::string>(fixed_zi_vars(i)), annucovc2var, repst1var)) {
+          coef_vec(433) = fixed_zi_slopes(i);
+        }
+        if (stringcompare_x(as<std::string>(fixed_zi_vars(i)), annucovc1var, repst1var)) {
+          coef_vec(434) = fixed_zi_slopes(i);
+        }
+        if (stringcompare_x(as<std::string>(fixed_zi_vars(i)), annucova2var, agevar)) {
+          coef_vec(435) = fixed_zi_slopes(i);
+        }
+        if (stringcompare_x(as<std::string>(fixed_zi_vars(i)), annucova1var, agevar)) {
+          coef_vec(436) = fixed_zi_slopes(i);
+        }
+        if (stringcompare_x(as<std::string>(fixed_zi_vars(i)), annucovb2var, agevar)) {
+          coef_vec(437) = fixed_zi_slopes(i);
+        }
+        if (stringcompare_x(as<std::string>(fixed_zi_vars(i)), annucovb1var, agevar)) {
+          coef_vec(438) = fixed_zi_slopes(i);
+        }
+        if (stringcompare_x(as<std::string>(fixed_zi_vars(i)), annucovc2var, agevar)) {
+          coef_vec(439) = fixed_zi_slopes(i);
+        }
+        if (stringcompare_x(as<std::string>(fixed_zi_vars(i)), annucovc1var, agevar)) {
+          coef_vec(440) = fixed_zi_slopes(i);
+        }
+        if (stringcompare_x(as<std::string>(fixed_zi_vars(i)), annucova2var, densityvar)) {
+          coef_vec(441) = fixed_zi_slopes(i);
+        }
+        if (stringcompare_x(as<std::string>(fixed_zi_vars(i)), annucova1var, densityvar)) {
+          coef_vec(442) = fixed_zi_slopes(i);
+        }
+        if (stringcompare_x(as<std::string>(fixed_zi_vars(i)), annucovb2var, densityvar)) {
+          coef_vec(443) = fixed_zi_slopes(i);
+        }
+        if (stringcompare_x(as<std::string>(fixed_zi_vars(i)), annucovb1var, densityvar)) {
+          coef_vec(444) = fixed_zi_slopes(i);
+        }
+        if (stringcompare_x(as<std::string>(fixed_zi_vars(i)), annucovc2var, densityvar)) {
+          coef_vec(445) = fixed_zi_slopes(i);
+        }
+        if (stringcompare_x(as<std::string>(fixed_zi_vars(i)), annucovc1var, densityvar)) {
+          coef_vec(446) = fixed_zi_slopes(i);
+        }
+        if (stringcompare_x(as<std::string>(fixed_zi_vars(i)), annucova2var, indcova2var)) {
+          coef_vec(447) = fixed_zi_slopes(i);
+        }
+        if (stringcompare_x(as<std::string>(fixed_zi_vars(i)), annucova1var, indcova2var)) {
+          coef_vec(448) = fixed_zi_slopes(i);
+        }
+        if (stringcompare_x(as<std::string>(fixed_zi_vars(i)), annucovb2var, indcova2var)) {
+          coef_vec(449) = fixed_zi_slopes(i);
+        }
+        if (stringcompare_x(as<std::string>(fixed_zi_vars(i)), annucovb1var, indcova2var)) {
+          coef_vec(450) = fixed_zi_slopes(i);
+        }
+        if (stringcompare_x(as<std::string>(fixed_zi_vars(i)), annucovc2var, indcova2var)) {
+          coef_vec(451) = fixed_zi_slopes(i);
+        }
+        if (stringcompare_x(as<std::string>(fixed_zi_vars(i)), annucovc1var, indcova2var)) {
+          coef_vec(452) = fixed_zi_slopes(i);
+        }
+        if (stringcompare_x(as<std::string>(fixed_zi_vars(i)), annucova2var, indcova1var)) {
+          coef_vec(453) = fixed_zi_slopes(i);
+        }
+        if (stringcompare_x(as<std::string>(fixed_zi_vars(i)), annucova1var, indcova1var)) {
+          coef_vec(454) = fixed_zi_slopes(i);
+        }
+        if (stringcompare_x(as<std::string>(fixed_zi_vars(i)), annucovb2var, indcova1var)) {
+          coef_vec(455) = fixed_zi_slopes(i);
+        }
+        if (stringcompare_x(as<std::string>(fixed_zi_vars(i)), annucovb1var, indcova1var)) {
+          coef_vec(456) = fixed_zi_slopes(i);
+        }
+        if (stringcompare_x(as<std::string>(fixed_zi_vars(i)), annucovc2var, indcova1var)) {
+          coef_vec(457) = fixed_zi_slopes(i);
+        }
+        if (stringcompare_x(as<std::string>(fixed_zi_vars(i)), annucovc1var, indcova1var)) {
+          coef_vec(458) = fixed_zi_slopes(i);
+        }
+        if (stringcompare_x(as<std::string>(fixed_zi_vars(i)), annucova2var, indcovb2var)) {
+          coef_vec(459) = fixed_zi_slopes(i);
+        }
+        if (stringcompare_x(as<std::string>(fixed_zi_vars(i)), annucova1var, indcovb2var)) {
+          coef_vec(460) = fixed_zi_slopes(i);
+        }
+        if (stringcompare_x(as<std::string>(fixed_zi_vars(i)), annucovb2var, indcovb2var)) {
+          coef_vec(461) = fixed_zi_slopes(i);
+        }
+        if (stringcompare_x(as<std::string>(fixed_zi_vars(i)), annucovb1var, indcovb2var)) {
+          coef_vec(462) = fixed_zi_slopes(i);
+        }
+        if (stringcompare_x(as<std::string>(fixed_zi_vars(i)), annucovc2var, indcovb2var)) {
+          coef_vec(463) = fixed_zi_slopes(i);
+        }
+        if (stringcompare_x(as<std::string>(fixed_zi_vars(i)), annucovc1var, indcovb2var)) {
+          coef_vec(464) = fixed_zi_slopes(i);
+        }
+        if (stringcompare_x(as<std::string>(fixed_zi_vars(i)), annucova2var, indcovb1var)) {
+          coef_vec(465) = fixed_zi_slopes(i);
+        }
+        if (stringcompare_x(as<std::string>(fixed_zi_vars(i)), annucova1var, indcovb1var)) {
+          coef_vec(466) = fixed_zi_slopes(i);
+        }
+        if (stringcompare_x(as<std::string>(fixed_zi_vars(i)), annucovb2var, indcovb1var)) {
+          coef_vec(467) = fixed_zi_slopes(i);
+        }
+        if (stringcompare_x(as<std::string>(fixed_zi_vars(i)), annucovb1var, indcovb1var)) {
+          coef_vec(468) = fixed_zi_slopes(i);
+        }
+        if (stringcompare_x(as<std::string>(fixed_zi_vars(i)), annucovc2var, indcovb1var)) {
+          coef_vec(469) = fixed_zi_slopes(i);
+        }
+        if (stringcompare_x(as<std::string>(fixed_zi_vars(i)), annucovc1var, indcovb1var)) {
+          coef_vec(470) = fixed_zi_slopes(i);
+        }
+        if (stringcompare_x(as<std::string>(fixed_zi_vars(i)), annucova2var, indcovc2var)) {
+          coef_vec(471) = fixed_zi_slopes(i);
+        }
+        if (stringcompare_x(as<std::string>(fixed_zi_vars(i)), annucova1var, indcovc2var)) {
+          coef_vec(472) = fixed_zi_slopes(i);
+        }
+        if (stringcompare_x(as<std::string>(fixed_zi_vars(i)), annucovb2var, indcovc2var)) {
+          coef_vec(473) = fixed_zi_slopes(i);
+        }
+        if (stringcompare_x(as<std::string>(fixed_zi_vars(i)), annucovb1var, indcovc2var)) {
+          coef_vec(474) = fixed_zi_slopes(i);
+        }
+        if (stringcompare_x(as<std::string>(fixed_zi_vars(i)), annucovc2var, indcovc2var)) {
+          coef_vec(475) = fixed_zi_slopes(i);
+        }
+        if (stringcompare_x(as<std::string>(fixed_zi_vars(i)), annucovc1var, indcovc2var)) {
+          coef_vec(476) = fixed_zi_slopes(i);
+        }
+        if (stringcompare_x(as<std::string>(fixed_zi_vars(i)), annucova2var, indcovc1var)) {
+          coef_vec(477) = fixed_zi_slopes(i);
+        }
+        if (stringcompare_x(as<std::string>(fixed_zi_vars(i)), annucova1var, indcovc1var)) {
+          coef_vec(478) = fixed_zi_slopes(i);
+        }
+        if (stringcompare_x(as<std::string>(fixed_zi_vars(i)), annucovb2var, indcovc1var)) {
+          coef_vec(479) = fixed_zi_slopes(i);
+        }
+        if (stringcompare_x(as<std::string>(fixed_zi_vars(i)), annucovb1var, indcovc1var)) {
+          coef_vec(480) = fixed_zi_slopes(i);
+        }
+        if (stringcompare_x(as<std::string>(fixed_zi_vars(i)), annucovc2var, indcovc1var)) {
+          coef_vec(481) = fixed_zi_slopes(i);
+        }
+        if (stringcompare_x(as<std::string>(fixed_zi_vars(i)), annucovc1var, indcovc1var)) {
+          coef_vec(482) = fixed_zi_slopes(i);
+        }
+        if (stringcompare_hard(as<std::string>(fixed_zi_vars(i)), annucova2var)) {
+          coef_vec(483) = fixed_zi_slopes(i);
+        }
+        if (stringcompare_x(as<std::string>(fixed_zi_vars(i)), annucova2var, annucova1var)) {
+          coef_vec(484) = fixed_zi_slopes(i);
+        }
+        if (stringcompare_x(as<std::string>(fixed_zi_vars(i)), annucova2var, annucovb2var)) {
+          coef_vec(485) = fixed_zi_slopes(i);
+        }
+        if (stringcompare_x(as<std::string>(fixed_zi_vars(i)), annucova2var, annucovb1var)) {
+          coef_vec(486) = fixed_zi_slopes(i);
+        }
+        if (stringcompare_x(as<std::string>(fixed_zi_vars(i)), annucova2var, annucovc2var)) {
+          coef_vec(487) = fixed_zi_slopes(i);
+        }
+        if (stringcompare_x(as<std::string>(fixed_zi_vars(i)), annucova2var, annucovc1var)) {
+          coef_vec(488) = fixed_zi_slopes(i);
+        }
+        if (stringcompare_hard(as<std::string>(fixed_zi_vars(i)), annucova1var)) {
+          coef_vec(489) = fixed_zi_slopes(i);
+        }
+        if (stringcompare_x(as<std::string>(fixed_zi_vars(i)), annucova1var, annucovb2var)) {
+          coef_vec(490) = fixed_zi_slopes(i);
+        }
+        if (stringcompare_x(as<std::string>(fixed_zi_vars(i)), annucova1var, annucovb1var)) {
+          coef_vec(491) = fixed_zi_slopes(i);
+        }
+        if (stringcompare_x(as<std::string>(fixed_zi_vars(i)), annucova1var, annucovc2var)) {
+          coef_vec(492) = fixed_zi_slopes(i);
+        }
+        if (stringcompare_x(as<std::string>(fixed_zi_vars(i)), annucova1var, annucovc1var)) {
+          coef_vec(493) = fixed_zi_slopes(i);
+        }
+        if (stringcompare_hard(as<std::string>(fixed_zi_vars(i)), annucovb2var)) {
+          coef_vec(494) = fixed_zi_slopes(i);
+        }
+        if (stringcompare_x(as<std::string>(fixed_zi_vars(i)), annucovb2var, annucovb1var)) {
+          coef_vec(495) = fixed_zi_slopes(i);
+        }
+        if (stringcompare_x(as<std::string>(fixed_zi_vars(i)), annucovb2var, annucovc2var)) {
+          coef_vec(496) = fixed_zi_slopes(i);
+        }
+        if (stringcompare_x(as<std::string>(fixed_zi_vars(i)), annucovb2var, annucovc1var)) {
+          coef_vec(497) = fixed_zi_slopes(i);
+        }
+        if (stringcompare_hard(as<std::string>(fixed_zi_vars(i)), annucovb1var)) {
+          coef_vec(498) = fixed_zi_slopes(i);
+        }
+        if (stringcompare_x(as<std::string>(fixed_zi_vars(i)), annucovb1var, annucovc2var)) {
+          coef_vec(499) = fixed_zi_slopes(i);
+        }
+        if (stringcompare_x(as<std::string>(fixed_zi_vars(i)), annucovb1var, annucovc1var)) {
+          coef_vec(510) = fixed_zi_slopes(i);
+        }
+        if (stringcompare_hard(as<std::string>(fixed_zi_vars(i)), annucovc2var)) {
+          coef_vec(511) = fixed_zi_slopes(i);
+        }
+        if (stringcompare_x(as<std::string>(fixed_zi_vars(i)), annucovc2var, annucovc1var)) {
+          coef_vec(512) = fixed_zi_slopes(i);
+        }
+        if (stringcompare_hard(as<std::string>(fixed_zi_vars(i)), annucovc1var)) {
+          coef_vec(513) = fixed_zi_slopes(i);
         }
       }
     }
@@ -5224,7 +6097,8 @@ namespace LefkoUtils {
   //' @param status_terms A NumericVector containing, in order: fl1_i, fl2n_i,
   //' sz1_i, sz2o_i, szb1_i, szb2o_i, szc1_i, szc2o_i, aage2_i, inda_1, inda_2,
   //' indb_1, indb_2, indc_1, indc_2, used_dens, sz3_i, szb3_i, szc3_i,
-  //' binwidth3_i, binbwidth3_i, and bincwidth3_i.
+  //' binwidth3_i, binbwidth3_i, bincwidth3_i, anna_2, anna_1, annb_2, annb_1,
+  //' annc_2, and annc_1.
   //' @param modelgroups2 A vector of group slope coefficients for time t.
   //' @param modelgroups1 A vector of group slope coefficients for time t-1.
   //' @param modelgroups2zi A vector of zero-inflation model group slope
@@ -5315,7 +6189,9 @@ namespace LefkoUtils {
       status_terms(2), status_terms(3), status_terms(4), status_terms(5),
       status_terms(6), status_terms(7), status_terms(8), status_terms(9),
       status_terms(10), status_terms(11), status_terms(12), status_terms(13),
-      status_terms(14), status_terms(15), false);
+      status_terms(14), status_terms(22), status_terms(23), status_terms(24),
+      status_terms(25), status_terms(26), status_terms(27), status_terms(15),
+      false);
     
     bool zi_processing = false;
     
@@ -5466,7 +6342,9 @@ namespace LefkoUtils {
         status_terms(2), status_terms(3), status_terms(4), status_terms(5),
         status_terms(6), status_terms(7), status_terms(8), status_terms(9),
         status_terms(10), status_terms(11), status_terms(12), status_terms(13),
-        status_terms(14), status_terms(15), true);
+        status_terms(14), status_terms(22), status_terms(23), status_terms(24),
+        status_terms(25), status_terms(26), status_terms(27), status_terms(15),
+        true);
         
       // Only for size and fec
       double chosen_randcova2zi {0.0};
@@ -5943,6 +6821,24 @@ namespace LefkoUtils {
   //' @param f1_indc A numeric vector of length equal to the number of years,
   //' holding values equal to the mean value of individual covariate \code{c} at
   //' each time \emph{t}-1 to be used in analysis.
+  //' @param f2_anna A numeric vector of length equal to the number of years,
+  //' holding values equal to the mean value of annual covariate \code{a} at
+  //' each time \emph{t} to be used in analysis.
+  //' @param f1_anna A numeric vector of length equal to the number of years,
+  //' holding values equal to the mean value of annual covariate \code{a} at
+  //' each time \emph{t}-1 to be used in analysis.
+  //' @param f2_annb A numeric vector of length equal to the number of years,
+  //' holding values equal to the mean value of annual covariate \code{b} at
+  //' each time \emph{t} to be used in analysis.
+  //' @param f1_annb A numeric vector of length equal to the number of years,
+  //' holding values equal to the mean value of annual covariate \code{b} at
+  //' each time \emph{t}-1 to be used in analysis.
+  //' @param f2_annc A numeric vector of length equal to the number of years,
+  //' holding values equal to the mean value of annual covariate \code{c} at
+  //' each time \emph{t} to be used in analysis.
+  //' @param f1_annc A numeric vector of length equal to the number of years,
+  //' holding values equal to the mean value of annual covariate \code{c} at
+  //' each time \emph{t}-1 to be used in analysis.
   //' @param f2_inda_cat A string vector of length equal to the number of years,
   //' holding categories of individual covariate \code{a} at each time \emph{t}
   //' to be used in analysis.
@@ -6026,11 +6922,13 @@ namespace LefkoUtils {
   //' conditional probabilities used to develop the \code{U} matrix. Defaults to
   //' \code{FALSE}.
   //' @param simplicity A logical value indicating whether to output all three
-  //' matrices (\code{FALSE}), and just matrices \code{U} and \code{F}
+  //' matrices (\code{FALSE}), or just matrices \code{U} and \code{F}
   //' (\code{TRUE}). Defaults to \code{FALSE}.
   //' @param sparse A logical value indicating whether to output matrices in
   //' standard Armadillo format or in sparse matrix format. Defaults to
   //' \code{FALSE}.
+  //' @param proj_only A logical value indicating whether to output all
+  //' matrices outined in \code{simplicity}, or just the \code{A} matrix.
   //' 
   //' @return A list with 2, 3, or 4 elements. If \code{simplicity} is set to
   //' \code{FALSE}, then the first 3 elements are matrices, including the main MPM
@@ -6067,7 +6965,9 @@ namespace LefkoUtils {
     const List& jsizebproxy, const List& jsizecproxy, const List& jrepstproxy,
     const List& jmatstproxy, NumericVector f2_inda, NumericVector f1_inda,
     NumericVector f2_indb, NumericVector f1_indb, NumericVector f2_indc,
-    NumericVector f1_indc, StringVector f2_inda_cat, StringVector f1_inda_cat,
+    NumericVector f1_indc, NumericVector f2_anna, NumericVector f1_anna,
+    NumericVector f2_annb, NumericVector f1_annb, NumericVector f2_annc,
+    NumericVector f1_annc, StringVector f2_inda_cat, StringVector f1_inda_cat,
     StringVector f2_indb_cat, StringVector f1_indb_cat, StringVector f2_indc_cat,
     StringVector f1_indc_cat, StringVector r2_inda, StringVector r1_inda,
     StringVector r2_indb, StringVector r1_indb, StringVector r2_indc,
@@ -6078,7 +6978,7 @@ namespace LefkoUtils {
     unsigned int firstage, unsigned int finalage, bool negfec, int yearnumber,
     int patchnumber, double exp_tol = 700.0, double theta_tol = 100000000.0,
     bool ipm_cdf = true, bool err_check = false, bool simplicity = false,
-    bool sparse = false) {
+    bool sparse = false, bool proj_only = false) {
     
     NumericMatrix out;
     
@@ -6437,7 +7337,7 @@ namespace LefkoUtils {
     int properindex {0};
     int proxyindex {0};
     
-    // Determination of choices of fixed and random individual covariates
+    // Determination of choices of fixed and random individual covariates, and annual covariates
     double inda1 = f1_inda(yearnumber);
     double indb1 = f1_indb(yearnumber);
     double indc1 = f1_indc(yearnumber);
@@ -6458,6 +7358,13 @@ namespace LefkoUtils {
     String chosen_r1indb = r1_indb(yearnumber);
     String chosen_r2indc = r2_indc(yearnumber);
     String chosen_r1indc = r1_indc(yearnumber);
+    
+    double anna1 = f1_anna(yearnumber);
+    double annb1 = f1_annb(yearnumber);
+    double annc1 = f1_annc(yearnumber);
+    double anna2 = f2_anna(yearnumber);
+    double annb2 = f2_annb(yearnumber);
+    double annc2 = f2_annc(yearnumber);
     
     // Density corrections under vital rate density dependence
     double vr1_dcorr {1.0};
@@ -6720,13 +7627,24 @@ namespace LefkoUtils {
       Rcpp::NumericVector statusterms = {fl1(i), fl2n(i), sz1(i), sz2o(i),
         szb1(i), szb2o(i), szc1(i), szc2o(i), actualage2(i), inda1, inda2, indb1,
         indb2, indc1, indc2, dens, sz3(i), szb3(i), szc3(i), binwidth3(i),
-        binbwidth3(i), bincwidth3(i)};
+        binbwidth3(i), bincwidth3(i), anna1, anna2, annb1, annb2, annc1, annc2};
       
       if (ovgivent(i) == -1 && indata(i) == 1 && stage2n(i) == stage2o(i)) {
         if ((mat2n(i) == 1 && mat3(i) == 1) || (mat2o(i) == 1 && mat3(i) == 1)) {
           
           // Adult survival transitions
           if (survdist < 5) {
+            
+            
+            
+            
+            
+            /////
+            
+            
+            
+            
+            
             out_vec(0) = preouterator(survproxy, survcoefs, rand_index, dev_terms,
               vital_year, vital_patch, chosen_r2inda, chosen_r1inda, chosen_r2indb,
               chosen_r1indb, chosen_r2indc, chosen_r1indc, chosen_f2inda_cat,
@@ -7208,45 +8126,75 @@ namespace LefkoUtils {
     }
     
     // Final output
-    List output(4);
+    List output_final;
     
-    if (!sparse) {
-      if (!simplicity) {
+    if (!proj_only) {
+      List output(4);
+      
+      if (!sparse) {
+        if (!simplicity) {
+          arma::mat amatrix = survtransmat + fectransmat;
+          output(0) = amatrix;
+        } else {
+          output(0) = R_NilValue;
+        }
+        
+        output(1) = survtransmat;
+        output(2) = fectransmat;
+        
+        if (err_check) {
+          output(3) = out;
+        } else {
+          output(3) = R_NilValue;
+        }
+      } else {
+        if (!simplicity) {
+          arma::sp_mat amatrix = survtransmat_sp + fectransmat_sp;
+          output(0) = amatrix;
+        } else {
+          output(0) = R_NilValue;
+        }
+        
+        output(1) = survtransmat_sp;
+        output(2) = fectransmat_sp;
+        
+        if (err_check) {
+          output(3) = out;
+        } else {
+          output(3) = R_NilValue;
+        }
+      }
+      output_final = output;
+      CharacterVector output_names = {"A", "U", "F", "out"};
+      output_final.attr("names") = output_names;
+    } else {
+      List output (2);
+      
+      if (!sparse) {
         arma::mat amatrix = survtransmat + fectransmat;
         output(0) = amatrix;
+        
+        if (err_check) {
+          output(1) = out;
+        } else {
+          output(1) = R_NilValue;
+        }
       } else {
-        output(0) = R_NilValue;
-      }
-      
-      output(1) = survtransmat;
-      output(2) = fectransmat;
-      
-      if (err_check) {
-        output(3) = out;
-      } else {
-        output(3) = R_NilValue;
-      }
-    } else {
-      if (!simplicity) {
         arma::sp_mat amatrix = survtransmat_sp + fectransmat_sp;
         output(0) = amatrix;
-      } else {
-        output(0) = R_NilValue;
+        
+        if (err_check) {
+          output(1) = out;
+        } else {
+          output(1) = R_NilValue;
+        }
       }
-      
-      output(1) = survtransmat_sp;
-      output(2) = fectransmat_sp;
-      
-      if (err_check) {
-        output(3) = out;
-      } else {
-        output(3) = R_NilValue;
-      }
+      output_final = output;
+      CharacterVector output_names = {"A", "out"};
+      output_final.attr("names") = output_names;
     }
-    CharacterVector output_names = {"A", "U", "F", "out"};
-    output.attr("names") = output_names;
     
-    return output;
+    return output_final;
   }
   
   //' Estimate All Elements of Function-based Leslie Population Projection Matrix
@@ -7279,6 +8227,24 @@ namespace LefkoUtils {
   //' each time \emph{t} to be used in analysis.
   //' @param f1_indc A numeric vector of length equal to the number of years,
   //' holding values equal to the mean value of individual covariate \code{c} at
+  //' each time \emph{t}-1 to be used in analysis.
+  //' @param f2_anna A numeric vector of length equal to the number of years,
+  //' holding values equal to the mean value of annual covariate \code{a} at
+  //' each time \emph{t} to be used in analysis.
+  //' @param f1_anna A numeric vector of length equal to the number of years,
+  //' holding values equal to the mean value of annual covariate \code{a} at
+  //' each time \emph{t}-1 to be used in analysis.
+  //' @param f2_annb A numeric vector of length equal to the number of years,
+  //' holding values equal to the mean value of annual covariate \code{b} at
+  //' each time \emph{t} to be used in analysis.
+  //' @param f1_annb A numeric vector of length equal to the number of years,
+  //' holding values equal to the mean value of annual covariate \code{b} at
+  //' each time \emph{t}-1 to be used in analysis.
+  //' @param f2_annc A numeric vector of length equal to the number of years,
+  //' holding values equal to the mean value of annual covariate \code{c} at
+  //' each time \emph{t} to be used in analysis.
+  //' @param f1_annc A numeric vector of length equal to the number of years,
+  //' holding values equal to the mean value of annual covariate \code{c} at
   //' each time \emph{t}-1 to be used in analysis.
   //' @param f2_inda_cat A string vector of length equal to the number of years,
   //' holding categories of individual covariate \code{a} at each time \emph{t}
@@ -7366,6 +8332,8 @@ namespace LefkoUtils {
     const DataFrame& ageframe, const List& survproxy, const List& fecproxy,
     NumericVector f2_inda, NumericVector f1_inda, NumericVector f2_indb,
     NumericVector f1_indb, NumericVector f2_indc, NumericVector f1_indc,
+    NumericVector f2_anna, NumericVector f1_anna, NumericVector f2_annb,
+    NumericVector f1_annb, NumericVector f2_annc, NumericVector f1_annc,
     StringVector f2_inda_cat, StringVector f1_inda_cat, StringVector f2_indb_cat,
     StringVector f1_indb_cat, StringVector f2_indc_cat, StringVector f1_indc_cat,
     StringVector r2_inda, StringVector r1_inda, StringVector r2_indb,
@@ -7462,7 +8430,7 @@ namespace LefkoUtils {
     StringVector fecind_rownames = bootson(fecproxy);
     StringVector fecind_rownames_zi = zero_bootson(fecproxy);
     
-    // Determination of choices of fixed and random individual covariates
+    // Determination of choices of fixed and random individual covariates, and annual covariates
     double inda1 = f1_inda(yearnumber);
     double indb1 = f1_indb(yearnumber);
     double indc1 = f1_indc(yearnumber);
@@ -7483,6 +8451,13 @@ namespace LefkoUtils {
     String chosen_r1indb = r1_indb(yearnumber);
     String chosen_r2indc = r2_indc(yearnumber);
     String chosen_r1indc = r1_indc(yearnumber);
+    
+    double anna1 = f1_anna(yearnumber);
+    double annb1 = f1_annb(yearnumber);
+    double annc1 = f1_annc(yearnumber);
+    double anna2 = f2_anna(yearnumber);
+    double annb2 = f2_annb(yearnumber);
+    double annc2 = f2_annc(yearnumber);
     
     // The output matrices
     arma::mat survtransmat;
@@ -7628,9 +8603,18 @@ namespace LefkoUtils {
           }
         }
         
+        
+        
+        
+        
+        /////
+        
+        
+        
+        
         double mainsum = rimeotam(survcoefs, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
           0.0, static_cast<double>(actualages(i)), inda1, inda2, indb1, indb2,
-          indc1, indc2, dens, false);
+          indc1, indc2, anna1, anna2, annb1, annb2, annc1, annc2, dens, false);
         
         preout = (mainsum + chosen_randcova2 + chosen_randcova1 +
           chosen_randcovb2 + chosen_randcovb1 + chosen_randcovc2 +
@@ -7907,7 +8891,8 @@ namespace LefkoUtils {
               
               double mainsum = rimeotam(feccoefs, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
                 0.0, 0.0, static_cast<double>(actualages(i)), inda1, inda2,
-                indb1, indb2, indc1, indc2, dens, true);
+                indb1, indb2, indc1, indc2, anna1, anna2, annb1, annb2, annc1,
+                annc2, dens, true);
               
               preoutx = (mainsum + chosen_randcova2zi + chosen_randcova1zi +
                 chosen_randcovb2zi + chosen_randcovb1zi + chosen_randcovc2zi +
@@ -7920,7 +8905,8 @@ namespace LefkoUtils {
               
               double mainsum = rimeotam(feccoefs, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
                 0.0, 0.0, static_cast<double>(actualages(i)), inda1, inda2,
-                indb1, indb2, indc1, indc2, dens, false);
+                indb1, indb2, indc1, indc2, anna1, anna2, annb1, annb2, annc1,
+                annc2, dens, false);
               
               preoutx = (mainsum + chosen_randcova2 + chosen_randcova1 +
                 chosen_randcovb2 + chosen_randcovb1 + chosen_randcovc2 +
@@ -8715,6 +9701,188 @@ namespace LefkoUtils {
     } else all_equal = false;
     
     return(all_equal);
+  }
+  
+  //' Standardized Error Messages
+  //' 
+  //' Function \code{pop_error()} produces standardized error messages.
+  //' 
+  //' @name pop_error
+  //' 
+  //' @param input1 First string input.
+  //' @param input2 Second string input.
+  //' @param input3 Third string input.
+  //' @param type Designates output message type.
+  //' 
+  //' @return Stops R and produces an error message.
+  //' 
+  //' @keywords internal
+  //' @noRd
+  inline void pop_error (String input1, String input2, String input3, int type = 1) {
+    String eat_my_shorts;
+    if (type == 1) {
+      eat_my_shorts = "Argument ";
+      eat_my_shorts += input1;
+      eat_my_shorts += " should be entered as a list of ";
+      eat_my_shorts += input2;
+      eat_my_shorts += ".";
+      
+    } else if (type == 2) {
+      eat_my_shorts = "Argument ";
+      eat_my_shorts += input1;
+      eat_my_shorts += " must be the same length as the number of ";
+      eat_my_shorts += input2;
+      eat_my_shorts += " entered in argument ";
+      eat_my_shorts += input3;
+      eat_my_shorts += ".";
+      
+    } else if (type == 3) {
+      eat_my_shorts = "Argument ";
+      eat_my_shorts += input1;
+      eat_my_shorts += " should be entered as a";
+      eat_my_shorts += input2;
+      eat_my_shorts += ".";
+      
+    } else if (type == 4) {
+      eat_my_shorts = "Matrix ";
+      eat_my_shorts += input1;
+      eat_my_shorts += " must be square.";
+      
+    } else if (type == 5) {
+      eat_my_shorts = "Matrix ";
+      eat_my_shorts += input1;
+      eat_my_shorts += " is not recognized.";
+      
+    } else if (type == 6) {
+      eat_my_shorts = "Argument ";
+      eat_my_shorts += input1;
+      eat_my_shorts += " must be a ";
+      eat_my_shorts += input2;
+      
+    } else if (type == 7) {
+      eat_my_shorts = "Argument ";
+      eat_my_shorts += input1;
+      eat_my_shorts += " must be set to a ";
+      eat_my_shorts += input2;
+      eat_my_shorts += " object, or ";
+      eat_my_shorts += input3;
+      eat_my_shorts += " must be supplied with ";
+      eat_my_shorts += input1;
+      eat_my_shorts += " not set.";
+      
+    } else if (type == 8) {
+      eat_my_shorts = "Values input for ";
+      eat_my_shorts += input1;
+      eat_my_shorts += " in ";
+      eat_my_shorts += input2;
+      eat_my_shorts += " must be real numbers within set tolerance limits.";
+      
+    } else if (type == 9) {
+      eat_my_shorts = "Variable names designating ";
+      eat_my_shorts += input1;
+      eat_my_shorts += " do not match variables in entered ";
+      eat_my_shorts += input2;
+      
+    } else if (type == 10) {
+      eat_my_shorts = "Argument ";
+      eat_my_shorts += input1;
+      eat_my_shorts += " must be entered as a string vector showing ";
+      eat_my_shorts += input2;
+      eat_my_shorts += " in times t+1 and t, ";
+      eat_my_shorts += "and time t-1 if a historical MPM is desired.";
+      
+    } else if (type == 11) {
+      eat_my_shorts = "Argument ";
+      eat_my_shorts += input1;
+      eat_my_shorts += " must be entered if using a";
+      eat_my_shorts += input2;
+      eat_my_shorts += " object.";
+      
+    } else if (type == 12) {
+      eat_my_shorts = "Argument ";
+      eat_my_shorts += input1;
+      eat_my_shorts += " must be a";
+      eat_my_shorts += input2;
+      eat_my_shorts += " created with function ";
+      eat_my_shorts += input3;
+      eat_my_shorts += "().";
+      
+    } else if (type == 13) { 
+      eat_my_shorts = input1;
+      eat_my_shorts += " is not recognized in arguments ";
+      eat_my_shorts += input2;
+      eat_my_shorts += " or ";
+      eat_my_shorts += input3;
+      
+    } else if (type == 14) { 
+      eat_my_shorts = "Argument ";
+      eat_my_shorts += input1;
+      eat_my_shorts += " must equal ";
+      eat_my_shorts += input2;
+      
+    } else if (type == 15) { 
+      eat_my_shorts = "Argument ";
+      eat_my_shorts += input1;
+      eat_my_shorts += " is required if ";
+      eat_my_shorts += input2;
+      eat_my_shorts += " is not provided.";
+      
+    } else if (type == 16) {
+      eat_my_shorts = "Variable(s) coding for ";
+      eat_my_shorts += input1;
+      eat_my_shorts += " not found in dataset.";
+      
+    } else if (type == 17) {
+      eat_my_shorts = "Some input ";
+      eat_my_shorts += input1;
+      eat_my_shorts += " values are not found in the ";
+      eat_my_shorts += input2;
+      eat_my_shorts += ".";
+      
+    } else if (type == 18) {
+      eat_my_shorts = "Vector ";
+      eat_my_shorts += input1;
+      eat_my_shorts += " does not include ";
+      eat_my_shorts += input2;
+      eat_my_shorts += " value(s) provided.";
+      
+    } else if (type == 19) {
+      eat_my_shorts = "Vector ";
+      eat_my_shorts += input1;
+      eat_my_shorts += " must be the same length as the number of ";
+      eat_my_shorts += input2;
+      eat_my_shorts += " in the ";
+      eat_my_shorts += input3;
+      eat_my_shorts += ".";
+      
+    } else if (type == 20) {
+      eat_my_shorts = "Matrix ";
+      eat_my_shorts += input1;
+      eat_my_shorts += " must be the same number of columns as the number of ";
+      eat_my_shorts += input2;
+      eat_my_shorts += " in the ";
+      eat_my_shorts += input3;
+      eat_my_shorts += ".";
+      
+    } else if (type == 21) {
+      eat_my_shorts = "Some ";
+      eat_my_shorts += input1;
+      eat_my_shorts += " are not in an accepted style.";
+      
+    } else if (type == 22) {
+      eat_my_shorts = "Argument ";
+      eat_my_shorts += input1;
+      eat_my_shorts += " must be a ";
+      eat_my_shorts += input2;
+      eat_my_shorts += " corresponding to the ";
+      eat_my_shorts += input3;
+      eat_my_shorts += ".";
+      
+    }
+    
+    throw Rcpp::exception(eat_my_shorts.get_cstring(), false);
+    
+    return;
   }
 
 

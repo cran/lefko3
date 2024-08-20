@@ -144,7 +144,7 @@ lathmodels3ipm <- modelsearch(lathvertipm, historical = TRUE, approach = "mixed"
 #summary(lathmodels3ipm)
 ```
   
-  <p style="text-indent: 20px">We see here, as before, that status in occasion *t*-1 exerts an influence on some vital rates, particularly survival to occasion *t*+1, size in occasion *t*+1, and the conditional portion of fecundity. So, the historical IPM is the correct choice here. Accuracy is also quite high for adult survival and juvenile and adult observation, but quite poor for primary size and fecundity.</p>
+  <p style="text-indent: 20px">We see here, as before, that status in occasion *t*-1 exerts an influence on some vital rates, particularly survival to occasion *t*+1, size in occasion *t*+1, reproductive status in occasion *t*+1, and the conditional portion of fecundity. So, the historical IPM is the correct choice here. Accuracy is also quite high for adult survival and juvenile and adult observation, but quite poor for primary size and fecundity.</p>
   
   <p style="text-indent: 20px">We will also create an ahistorical IPM for comparison. For that purpose, we will create the ahistorical linear model set.</p>
 ```{r Ch6.9}
@@ -167,7 +167,7 @@ lathmat3ipm <- flefko3(stageframe = lathframeipm, modelsuite = lathmodels3ipm,
 #summary(lathmat3ipm)
 ```
   
-  <p style="text-indent: 20px">These are giant matrices. With 10,609 rows and columns, there are a total of 112,550,881 elements per matrix. But they are also amazingly sparse - with about 960,209 elements estimated per matrix, only 0.9% of elements per matrix are non-zero. The survival probability sums all look good, so we appear to have no problems with overly large given and proxy survival transitions provided through our supplemental tables. Let's now build the ahistorical IPMs.</p>
+  <p style="text-indent: 20px">These are giant matrices. With 10,609 rows and columns, there are a total of 112,550,881 elements per matrix. But they are also amazingly sparse - with approximately 960,209 elements estimated per matrix, only 0.9% of elements per matrix are non-zero. The survival probability sums all look good, so we appear to have no problems with overly large given and proxy survival transitions provided through our supplemental tables. Let's now build the ahistorical IPMs.</p>
 ```{r Ch6.11}
 lathmat2ipm <- flefko2(stageframe = lathframeipm, modelsuite = lathmodels2ipm,
   supplement = lathsupp2, data = lathvertipm, reduce = FALSE)

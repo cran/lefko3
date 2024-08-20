@@ -29,7 +29,7 @@ Figure 5.1. Life history model of *Cypripedium candidum*. Survival and fecundity
   
   <p style="text-indent: 20px">Let's load the dataset, which is called `cypdata`. The horizontal dataset `cypdata` and the ahistorical vertical dataset `cypvert` are the same data but are structured differently. Both include only data for the adult stages, and so later we will need to set juvenile transitions to constants from the literature.</p>
 
-```r
+``` r
 data(cypdata)
 #summary(cypdata)
 ```
@@ -38,7 +38,7 @@ data(cypdata)
   
   <p style="text-indent: 20px">We will first describe the life history characterizing the population, matching it to our dataset with a *stageframe* for our *Cypripedium candidum* dataset. Since this analysis will be function-based and all sizes have reasonable representation, we will include all observed size classes here. Size is count-based, and refers to all numbers of stems that occurred, representing the life history diagram shown previously. Note that we are using the midpoint approach to determining the size bins here, using the default bin halfwidths of 0.5 (since all size bins are using this default, we do not include a `binhalfwidth` vector option in the `sf_create()` input). However, we could have used the `sizemin` and `sizemax` options to more deliberately set the size bin minima and maxima instead.</p>
 
-```r
+``` r
 sizevector <- c(0, 0, 0, 0, 0, seq(from = 0, t = 24), seq(from = 1, to = 24))
 stagevector <- c("SD", "P1", "P2", "P3", "SL", "D", "V1", "V2", "V3", "V4",
   "V5", "V6", "V7", "V8", "V9", "V10", "V11", "V12", "V13", "V14", "V15", "V16",
@@ -82,7 +82,7 @@ cypframe <- sf_create(sizes = sizevector, stagenames = stagevector,
   
   <p style="text-indent: 20px">Now we will standardize our vertical dataset into a historically-formatted vertical (*hfv*) data frame using the `verticalize3()` function. The resulting dataset will have each individual's observed life history broken up into states corresponding to three consecutive monitoring occasions (years) per row, with plant identity marked in each row.</p>
 
-```r
+``` r
 vertdata <- verticalize3(data = cypdata, noyears = 6, firstyear = 2004, 
   patchidcol = "patch", individcol = "plantid", blocksize = 4, 
   sizeacol = "Inf2.04", sizebcol = "Inf.04", sizeccol = "Veg.04", 
@@ -102,7 +102,7 @@ summary_hfv(vertdata, full = FALSE)
   
   <p style="text-indent: 20px">Size and fecundity are both count variables here, and we need to determine the appropriate distribution to use in both cases. Let's look at histograms of size and fecundity in occasion *t*.</p>
 
-```r
+``` r
 par(mfrow=c(1,2))
 hist(vertdata$size2added, main = "Size in time t", xlab = "No. of stems in time t")
 hist(subset(vertdata, repstatus2 == 1)$feca2, main = "Fecundity in time t", 
@@ -113,7 +113,7 @@ hist(subset(vertdata, repstatus2 == 1)$feca2, main = "Fecundity in time t",
   
   <p style="text-indent: 20px">Stem number has a very low mean, and the curve declines fairly smoothly. The Poisson or negative binomial distribution might work for size. Fecundity appears to have many zeros, suggesting that we might need a zero-inflated count distribution. Let's conduct a formal set of tests to determine the appropriate distributions for size and fecundity, using a function that checks for the appropriate distributions for all possible vital rate functions in our dataset.</p>
 
-```r
+``` r
 hfv_qc(data = vertdata, vitalrates = c("surv", "obs", "size", "repst", "fec"),
   suite = "full", size = c("size3added", "size2added", "size1added"))
 #> Survival:
@@ -214,7 +214,7 @@ hfv_qc(data = vertdata, vitalrates = c("surv", "obs", "size", "repst", "fec"),
   
   <p style="text-indent: 20px">We may also wish to see how to proceed if our original dataset is already in vertical, ahistorical format, or a format in which each row gives the state of an individual in a single monitoring occasion. This package also includes dataset `cypvert`, which is the same dataset as `cypdata` but set in ahistorical vertical format. Here, we use the `historicalize3()` function to deal with this dataset.</p>
 
-```r
+``` r
 data(cypvert)
 dim(cypdata)
 #> [1] 77 29
@@ -225,7 +225,7 @@ dim(cypvert)
   
   <p style="text-indent: 20px">This dataset has more rows and fewer columns, because we constructed the dataset by splitting the data for each individual across multiple rows. After three columns of identifying information (`plantid`, `patch`, and `censor`), a single column designates the time of occasion *t*, given as `year2`. This dataset then includes columns showing individual state in pairs of consecutive years corresponding to occasions *t* and *t*+1. State in occasion *t*-1 is not presented because this is an ahistorical dataset. This dataset includes the `plantid` variable, which is an individual identity term that allows us to associate rows with their individuals and so allows conversion. The `historicalize3()` function uses individual identity to reorganize datasets into historical vertical format.</p>
 
-```r
+``` r
 vertdata2 <- historicalize3(data = cypvert, patchidcol = "patch",
   individcol = "plantid", year2col = "year2", sizea2col = "Inf2.2", 
   sizea3col = "Inf2.3", sizeb2col = "Inf.2", sizeb3col = "Inf.3", 
@@ -255,7 +255,7 @@ summary_hfv(vertdata2, full = FALSE)
   
   <p style="text-indent: 20px">We will create two supplement tables, the first covering the historical analysis, and the second covering the ahistorical analysis. Each row refers to a specific transition, and in the historical case there are codes for 23 given transitions (12 for the ahistorical case). The first nine of the historical transitions are set to specific probabilities (six for the ahistorical), and the next 12 are transitions that will be set to other, estimated transitions acting as proxies (four for the ahistorical; these are the non-NA transitions in `eststage` set below). The final two terms are fecundity multipliers. Based on the literature, the proxies for entry into the adult classes are transitions from dormancy, as below. Where necessary, we also use `rep` and `mat` as shorthand to code for all reproductive stages and all mature stages, respectively.</p>
 
-```r
+``` r
 cypsupp3 <- supplemental(stage3 = c("SD", "SD", "P1", "P1", "P2", "P3", "SL",
     "SL", "SL", "D", "V1", "V2", "V3", "D", "V1", "V2", "V3", "mat", "mat",
     "mat", "mat", "SD", "P1"), 
@@ -350,7 +350,7 @@ cypsupp2 <- supplemental(stage3 = c("SD", "P1", "P2", "P3", "SL", "SL", "D",
   
   <p style="text-indent: 20px">Finally, we need to determine the proper strategy for the determination of the best-fit model. Model building proceeds through the `dredge` function in package `MuMIn` [@barton_mumin_2014], and each model has an associated AICc value. The default setting in `lefko3` (`bestfit = "AICc&k"`) will compare all models within 2.0 AICc units of the model with $\Delta AICc = 0$, and choose the one with the lowest degrees of freedom. This approach is generally better than the alternative, which simply uses the model with $\Delta AICc = 0$ (`bestfit = "AICc"`), as all models within 2.0 AICc units of that model are equally parsimonious and so fewer degrees of freedom result from fewer parameters estimated [@burnham_model_2002].</p>
 
-```r
+``` r
 cypmodels3 <- modelsearch(vertdata, historical = TRUE, approach = "mixed", 
   vitalrates = c("surv", "obs", "size", "repst", "fec"), sizedist = "negbin", 
   size.trunc = TRUE, fecdist = "poisson", fec.zero = TRUE, suite = "main", 
@@ -384,7 +384,7 @@ cypmodels3 <- modelsearch(vertdata, historical = TRUE, approach = "mixed",
   
   <p style="text-indent: 20px">In the output, we see historical terms determining primary size, suggesting that we cannot ignore history. As such, the models created above are actually only usable for the construction of historical models. We can also see that although the accuracy of our some vital rate models is very high, while it was only fair for others. For comparison, we may wish to estimate ahistorical models. In that case, we also need linear models in which the global models tested do not include state at occasion *t*-1, as below.</p>
 
-```r
+``` r
 cypmodels2 <- modelsearch(vertdata, historical = FALSE, approach = "mixed", 
   vitalrates = c("surv", "obs", "size", "repst", "fec"), sizedist = "negbin", 
   size.trunc = TRUE, fecdist = "poisson", fec.zero = TRUE, suite = "main", 
@@ -420,7 +420,7 @@ cypmodels2 <- modelsearch(vertdata, historical = FALSE, approach = "mixed",
   
   <p style="text-indent: 20px">Now we will create function-based MPMs. Let's first create a set of ahistorical matrices.</p>
 
-```r
+``` r
 cypmatrix2 <- flefko2(stageframe = cypframe, supplement = cypsupp2, 
   modelsuite = cypmodels2, data = vertdata, patch = NULL)
 #summary(cypmatrix2)
@@ -430,7 +430,7 @@ cypmatrix2 <- flefko2(stageframe = cypframe, supplement = cypsupp2,
   
   <p style="text-indent: 20px">The output of the `flefko2()` call includes several key elements. One of the most important is a data frame showing the order of matrices produced. Let's take a look at this object.</p>
 
-```r
+``` r
 #cypmatrix2$labels
 ```
   
@@ -438,7 +438,7 @@ cypmatrix2 <- flefko2(stageframe = cypframe, supplement = cypsupp2,
   
   <p style="text-indent: 20px">Next, we will create a set of historical Lefkovitch matrices. To make the resulting lefkoMat object reasonably small, we will use sparse matrices (`sparse_output = TRUE`).</p>
 
-```r
+``` r
 cypmatrix3 <- flefko3(stageframe = cypframe, supplement = cypsupp3, 
   modelsuite = cypmodels3, data = vertdata, sparse_output = TRUE)
 #summary(cypmatrix3)
@@ -448,7 +448,7 @@ cypmatrix3 <- flefko3(stageframe = cypframe, supplement = cypsupp3,
   
   <p style="text-indent: 20px">Now let's estimate the historical and ahistorical element-wise mean matrices.</p>
 
-```r
+``` r
 tmeans2r <- lmean(cypmatrix2)
 tmeans3r <- lmean(cypmatrix3)
 #summary(tmeans2r)
@@ -457,7 +457,7 @@ tmeans3r <- lmean(cypmatrix3)
   
   <p style="text-indent: 20px">It might help to do a more holistic comparison of the ahistorical vs. historical MPMs. Let's create matrix plots of the ahistorical and historical means using the `image3()` function. Let's first view the ahistorical matrix image.</p>
 
-```r
+``` r
 image3(tmeans2r, used = 1)
 #> [[1]]
 ```
@@ -466,7 +466,7 @@ image3(tmeans2r, used = 1)
   
   <p style="text-indent: 20px">This is a fairly large matrix, and rather dense though with obviously large clusters of zero elements particularly at the edges. Now let's see the historical matrix.</p>
 
-```r
+``` r
 image3(tmeans3r, used = 1)
 #> [[1]]
 ```
@@ -477,7 +477,7 @@ image3(tmeans3r, used = 1)
   
   <p style="text-indent: 20px">For further comparison, let's decompose the mean historical matrix into conditional historical matrices. We'll take a look at the matrix conditional on vegetative dormancy in occasion *t*-1.</p>
 
-```r
+``` r
 condm3r <- cond_hmpm(tmeans3r)
 #print(condm3r$Mcond[[1]]$D, digits = 3)
 ```
@@ -488,7 +488,7 @@ This conditional matrix takes the theoretically possible elements in which stage
   
   <p style="text-indent: 20px">Let's now conduct some projection analyses. First, we will estimate the deterministic and stochastic population growth rates for these means. The `set.seed()` function makes our stochastic results reproducible.</p>
 
-```r
+``` r
 set.seed(42)
 cypann2s <- slambda3(cypmatrix2)
 set.seed(42)
@@ -499,18 +499,18 @@ lambda3(tmeans2r)
 #> 1   1     1 0.960323
 lambda3(tmeans3r)
 #>   pop patch    lambda
-#> 1   1  <NA> 0.9605906
+#> 1   1  <NA> 0.9606588
 cypann2s
-#>   pop patch           a        var       sd         se
-#> 1   1     1 -0.04046599 0.01775049 0.133231 0.00133231
+#>   pop patch           a        var        sd          se
+#> 1   1     1 -0.04046594 0.01775055 0.1332312 0.001332312
 cypann3s
-#>   pop patch           a        var       sd         se
-#> 1   1  <NA> -0.04017344 0.02014187 0.141922 0.00141922
+#>   pop patch           a        var        sd          se
+#> 1   1  <NA> -0.04010358 0.02031438 0.1425285 0.001425285
 ```
   
   <p style="text-indent: 20px">These $\lambda$ values are similar to one another, as are estimates of $a = \text{log} \lambda _{S}$. Let's take a look at a plot of annual deterministic growth rates (stochastic growth rate is calculated as a single value across time, and so is not included). We find that annual $\lambda$ estimates differ only slightly between ahistorical and historical analyses.</p>
 
-```r
+``` r
 cypann3 <- lambda3(cypmatrix3)
 cypann2 <- lambda3(cypmatrix2)
 
@@ -525,7 +525,7 @@ legend("bottomright", c("ahistorical", "historical"), lty = c(1, 2),
   
   <p style="text-indent: 20px">Now let's take a look at the stable stage distributions. We will look at deterministic and stochastic versions of the ahistorical and historical MPMs.</p>
 
-```r
+``` r
 tm2ss <- stablestage3(tmeans2r)
 tm3ss <- stablestage3(tmeans3r)
 tm2ss_s <- stablestage3(cypmatrix2, stochastic = TRUE, seed = 42)
@@ -549,7 +549,7 @@ Overall, these are very similar patterns. Whether ahistorical or historical, det
   
   <p style="text-indent: 20px">Next let's look at the reproductive values associated with both ahistorical and historical approaches. We will standardize each reproductive value vector to sum to 1.0 to make them comparable in a single plot (normally we would not standardize across analyses like this, using the first or minimum reproductive value in each case for standardization instead).</p>
 
-```r
+``` r
 tm2rv <- repvalue3(tmeans2r)
 tm3rv <- repvalue3(tmeans3r)
 tm2rv_s <- repvalue3(cypmatrix2, stochastic = TRUE, seed = 42)
@@ -575,7 +575,7 @@ We see roughly equivalent patterns here. All analyses show the smallest reproduc
   
   <p style="text-indent: 20px">Let's now conduct a sensitivity analysis, again using both deterministic and stochastic approaches. First we will look at the ahistorical MPM.</p>
 
-```r
+``` r
 tm2sens <- sensitivity3(tmeans2r)
 #> Running deterministic analysis...
 tm2sens_s <- sensitivity3(cypmatrix2, stochastic = TRUE, seed = 42)
@@ -583,7 +583,7 @@ tm2sens_s <- sensitivity3(cypmatrix2, stochastic = TRUE, seed = 42)
 
 # The highest deterministic sensitivity value:
 max(tm2sens$ah_sensmats[[1]][which(tmeans2r$A[[1]] > 0)])
-#> [1] 0.2005774
+#> [1] 0.2005769
 # This value is associated with element:
 which(tm2sens$ah_sensmats[[1]] == 
   max(tm2sens$ah_sensmats[[1]][which(tmeans2r$A[[1]] > 0)]))
@@ -591,7 +591,7 @@ which(tm2sens$ah_sensmats[[1]] ==
 
 # The highest stochastic sensitivity value:
 max(tm2sens_s$ah_sensmats[[1]][which(tmeans2r$A[[1]] > 0)])
-#> [1] 0.1774624
+#> [1] 0.1774622
 # This value is associated with element:
 which(tm2sens_s$ah_sensmats[[1]] == 
   max(tm2sens_s$ah_sensmats[[1]][which(tmeans2r$A[[1]] > 0)]))
@@ -602,7 +602,7 @@ which(tm2sens_s$ah_sensmats[[1]] ==
 
   <p style="text-indent: 20px">Now let's compare with the historical case. We will compare both the full historical sensitivity matrices, and also look at the historically-corrected deterministic sensitivities. Note that we need to convert to standard matrix format to get the correct element numbers, since the input matrices are in sparse format. We will also use a small number of time steps for the historical sensitivity analysis to make the time required more manageable.</p>
 
-```r
+``` r
 tm3sens <- sensitivity3(tmeans3r)
 #> Running deterministic analysis...
 tm3sens_s <- sensitivity3(cypmatrix3, stochastic = TRUE, times = 500, seed = 42)
@@ -610,41 +610,40 @@ tm3sens_s <- sensitivity3(cypmatrix3, stochastic = TRUE, times = 500, seed = 42)
 
 # The highest deterministic sensitivity value:
 max(as.matrix(tm3sens$h_sensmats[[1]])[which(as.matrix(tmeans3r$A[[1]]) > 0)])
-#> [1] 0.05043774
+#> [1] 0.05127729
 # This value is associated with element:
 which(as.matrix(tm3sens$h_sensmats[[1]]) == 
   max(as.matrix(tm3sens$h_sensmats[[1]])[which(as.matrix(tmeans3r$A[[1]]) > 0)]))
-#> [1] 962658 963522 963792
+#> [1] 962658
 # The highest stochastic sensitivity value:
 max(as.matrix(tm3sens_s$h_sensmats[[1]])[which(as.matrix(tmeans3r$A[[1]]) > 0)])
-#> [1] 0.04000224
+#> [1] 0.04214692
 # This value is associated with element:
 which(as.matrix(tm3sens_s$h_sensmats[[1]]) == 
   max(as.matrix(tm3sens_s$h_sensmats[[1]])[which(as.matrix(tmeans3r$A[[1]]) > 0)]))
-#>  [1] 962604 962658 962712 962766 962820 962874 962928 962982 963036 963090 963144 963198 963252 963306 963360 963414 963468 963522 963576
-#> [20] 963630 963684 963738 963792 963846 963900
+#> [1] 962658
 
 # The highest deterministic sensitivity value (historically-corrected):
 max(as.matrix(tm3sens$ah_sensmats[[1]])[which(as.matrix(tmeans2r$A[[1]]) > 0)])
-#> [1] 0.1999519
+#> [1] 0.2003701
 # This value is associated with element:
 which(as.matrix(tm3sens$ah_sensmats[[1]]) ==
   max(as.matrix(tm3sens$ah_sensmats[[1]])[which(as.matrix(tmeans2r$A[[1]]) > 0)]))
 #> [1] 378
 # The highest stochastic sensitivity value (historically-corrected):
 max(as.matrix(tm3sens_s$ah_sensmats[[1]])[which(as.matrix(tmeans2r$A[[1]]) > 0)])
-#> [1] 0.1733977
+#> [1] 0.174127
 # This value is associated with element:
 which(as.matrix(tm3sens_s$ah_sensmats[[1]]) ==
   max(as.matrix(tm3sens_s$ah_sensmats[[1]])[which(as.matrix(tmeans2r$A[[1]]) > 0)]))
-#> [1] 1674
+#> [1] 378
 ```
   
   <p style="text-indent: 20px">Deterministic sensitivity analysis supported transitions from small non-flowering stages to larger flowering stages. The historically corrected results repeat the results of the ahistorical analysis in this case, though that is not guaranteed in other cases.</p>
   
   <p style="text-indent: 20px">Let's now assess the elasticity of $\lambda$ to matrix elements, comparing the ahistorical to the historically-corrected case in both deterministic and stochastic analyses.</p>
 
-```r
+``` r
 tm2elas <- elasticity3(tmeans2r)
 #> Running deterministic analysis...
 tm3elas <- elasticity3(tmeans3r)
@@ -681,7 +680,7 @@ which(as.matrix(tm3elas_s$h_elasmats[[1]]) ==
   
   <p style="text-indent: 20px">Now let's compare the elasticity of population growth rate in relation to the core life history stages, via a barplot comparison.</p>
 
-```r
+``` r
 elas_put_together <- cbind.data.frame(colSums(tm2elas$ah_elasmats[[1]]),
   Matrix::colSums(tm3elas$ah_elasmats[[1]]), colSums(tm2elas_s$ah_elasmats[[1]]),
   Matrix::colSums(tm3elas_s$ah_elasmats[[1]]))
@@ -701,7 +700,7 @@ Elasticity analyses in these plots look very similar. Population growth rates ar
   
   <p style="text-indent: 20px">Finally, let's take a look at how the importance of different kinds of transitions changes, by looking at elasticity sums. The plot will show that population growth rates are most elastic in response to changes in growth and shrinkage, with virtually no influence of fecundity.</p>
 
-```r
+``` r
 tm2elas_sums <- summary(tm2elas)
 tm3elas_sums <- summary(tm3elas)
 tm2elas_s_sums <- summary(tm2elas_s)
@@ -724,7 +723,7 @@ legend("topright", c("det ahist", "det hist", "sto ahist", "sto hist"),
   
   <p style="text-indent: 20px">To illustrate how we might use this function, let's run a conservation-focused analysis using the ahistorical vital rate models created above. We will ask what happens if we artificially pollinate these plants enough to double their fecundity. Let's first create a `lefkoDens` object, which holds the density dependence information. Let's also create an alternative supplement table with doubled fecundity.</p>
 
-```r
+``` r
 c2d <- density_input(cypmatrix2, stage3 = c("SD", "P1", "SD", "P1"),
   stage2 = c("SD", "SD", "rep", "rep"), style = 1,
   time_delay = 1, alpha = 1, beta = 0, type = c(1, 1, 2, 2))
@@ -745,7 +744,7 @@ cypsupp2alt <- supplemental(stage3 = c("SD", "P1", "P2", "P3", "SL", "SL", "D",
   
   <p style="text-indent: 20px">Now let's run two projections, the first using the original ahistorical information, and the second using the altered supplement table. We will run both as stochastic and density dependent, with ten replicates of each and 100 time steps.</p>
 
-```r
+``` r
 set.seed(42)
 basetrial <- f_projection3(format = 3, data = vertdata, supplement = cypsupp2,
   stageframe = cypframe, modelsuite = cypmodels2, nreps = 10, times = 100,
@@ -762,7 +761,7 @@ alttrial <- f_projection3(format = 3, data = vertdata, supplement = cypsupp2alt,
   
   <p style="text-indent: 20px">Let's compare these two projections with plots.</p>
 
-```r
+``` r
 par(mfrow = c(1,2))
 plot(basetrial, ylim = c(0, 100))
 plot(alttrial, ylim = c(0, 100))
@@ -770,7 +769,7 @@ plot(alttrial, ylim = c(0, 100))
 
 ![Figure 5.10. Projected *Cypripedium* population dynamics against boosted fecundity](Ch5.28-1.png)
   
-  <p style="text-indent: 20px">Each plot shows 10 lines, one for each replicate. Both projections show decline, but the population appears to reach a higher high size early on under the boosted fecundity scenario. So, while boosting fecundity does not prevent extinction, it does seem to boost the population and probably lowers the overall chances of extinction within a short time window.</p>
+  <p style="text-indent: 20px">Each plot shows 10 lines, one for each replicate. Both projections show decline, but the population appears to reach a higher high size early under the boosted fecundity scenario. So, while boosting fecundity does not prevent extinction, it does seem to boost the population and probably lowers the overall chances of extinction within a short time window.</p>
   
   <p style="text-indent: 20px">We have also created other literature to help users familiarize themselves with population analyses in general and using the package. Users should see our free e-manual called ***lefko3: a gentle introduction***, as well as other vignettes including long-format and video vignettes, on <a href = "http://www.sheffersonlab.com/projects.html">the projects page</a> of the Shefferson lab website.
   

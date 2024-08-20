@@ -22,6 +22,9 @@ fleslie(
   inda = NULL,
   indb = NULL,
   indc = NULL,
+  annua = NULL,
+  annub = NULL,
+  annuc = NULL,
   surv_dev = 0,
   fec_dev = 0,
   density = NA,
@@ -125,6 +128,21 @@ the dataset. Defaults to \code{NULL}.}
 \item{indc}{Can be a single value to use for individual covariate \code{c}
 in all matrices, or a vector of such values corresponding to each occasion in
 the dataset. Defaults to \code{NULL}.}
+
+\item{annua}{Can be a single value to use for annual covariate \code{a}
+in all matrices, a pair of values to use for times \emph{t} and \emph{t}-1 in
+historical matrices, or a vector of such values corresponding to each
+occasion in the dataset. Defaults to \code{NULL}.}
+
+\item{annub}{Can be a single value to use for annual covariate \code{b}
+in all matrices, a pair of values to use for times \emph{t} and \emph{t}-1 in
+historical matrices, or a vector of such values corresponding to each
+occasion in the dataset. Defaults to \code{NULL}.}
+
+\item{annuc}{Can be a single value to use for annual covariate \code{c}
+in all matrices, a pair of values to use for times \emph{t} and \emph{t}-1 in
+historical matrices, or a vector of such values corresponding to each
+occasion in the dataset. Defaults to \code{NULL}.}
 
 \item{surv_dev}{A numeric value to be added to the y-intercept in the linear
 model for survival probability. Defaults to \code{0}.}

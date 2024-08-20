@@ -11,6 +11,44 @@ using namespace arma;
 using namespace LefkoUtils;
 using namespace LefkoMats;
 
+
+
+// Index of functions
+// 
+// 1. sf_reassess() - Takes a stageframe as input, information supplied there and through the supplement, reproduction and overwrite tables to rearrange this into a format usable by the matrix creation functions
+// 2. sf_leslie() - Returns a data frame describing each age in a Leslie MPM in terms of ahistorical stage info
+// 3. specialpatrolgroup() - Calculates matrix transitions in raw historical matrices
+// 4. normalpatrolgroup() - Calculates matrix transitions in raw ahistorical martrices
+// 5. minorpatrolgroup() - Calculates matrix transitions in raw Leslie MPMs
+// 6. subvertedpatrolgroup() - Calculates matrix transitions in raw age-by-stage matrices
+// 7. raymccooney() - Takes various vital rate models and other parameters and coordinates them as input into the function-based matrix estimation functions
+// 8. mothermccooney() - Takes various vital rate models and other parameters and coordinates them as input into function fleslie()
+// 9. f_projection3() - Develops and projects function-based matrix models
+// 10. mpm_create() - Core workhorse function that creates all flavors of MPM in lefko3
+// 11. .ss3matrix() - Returns stable stage distribution for a dense or sparse matrix
+// 12. .ssmatrix_sp() - Returns stable stage distribution for a sparse matrix
+// 13. .rv3matrix() - Returns reproductive values in a dense or sparse matrix
+// 14. .rv3matrix_sp() - Returns reproductive values in a sparse matrix
+// 15. .sens3matrix() - Returns sensitivity of lambda to each element of sparse or dense matrix
+// 16. .sens3sp_matrix() - Returns sensitivity of lambda to each element in a sparse matrix, with output in sparse format
+// 17. .sens3matrix_spinp() - Returns sensitivity of lambda to each element in a sparse matrix, with output in dense matrix format
+// 18. .sens3hlefko() - Returns sensitivity of lambda to each historical stage-pair, and associated life stage
+// 19. .sens3hlefko_sp() - Returns sensitivity of lambda to each historical stage-pair, and associated life stage, with input in sparse format
+// 20. .elas3matrix() - Returns elasticity of lambda to each element in dense or sparse matrix
+// 21. .ekas3sp_matrix() - Returns elasticity of lambda to each element in sparse matrix, in sparse output
+// 22. .elas3hlefko() - Returns elasticity of lambda to each historical stage-pair, and each associated life stage
+// 23. .elas3sp_hlefko() - Returns elasticity of lambda to each historical stage-pair, and each associated life stage, with sparse input
+// 24. .proj3() - Cure functiuon running matrix projections used in other functions in lefko3
+// 25. .proj3sp() - Core function running sparse matrix projections used in other functions in lefko3
+// 26. .proj3dens() - Core function running density-dependent projections used in other functions in lefko3
+// 27. projection3() - Runs projection simulations with lefkoMat objects
+// 28. slambda3() - Estimates stochastic population growth rate in lefkoMat objects and other MPMs
+// 29. .stoch_senselas() - Estimates sensitivity and elasticity of matrix elements to a
+// 30. .ltre3matrix() - Returns one-way fixed deterministic LTRE matrix
+// 31. .sltre3matrix() - Returns one-way stochastic LTRE matrices
+// 32. .snaltre3matrix() - Returns one-way small noise approximation LTRE matrices
+// 33. markov_run() - Creates vector of randomly sampled times
+
 // Pop Char
 
 //' Standardize Stageframe For MPM Analysis
@@ -134,11 +172,7 @@ Rcpp::List sf_reassess(const DataFrame& stageframe,
     double repmat_sum {static_cast<double>(sum(rep_sums))};
     
     if (static_cast<int>(rep_sums.n_elem) != stageframe_length) {
-      String eat_my_shorts = "Object repmatrix must have the rows and columns equal ";
-      String eat_my_shorts1 = "to the number of rows in the stageframe.";
-      eat_my_shorts += eat_my_shorts1;
-      
-      throw Rcpp::exception(eat_my_shorts.get_cstring(), false);
+      pop_error("repmatrix", "", "", 4);
     }
     
     if (repmat_sum > 0) {
@@ -744,8 +778,7 @@ Rcpp::List sf_leslie (int min_age, int max_age, int min_fecage, int max_fecage,
   const int age_range {max_age - min_age};
   const int total_ages {age_range + 1};
   if (age_range < 1) {
-    throw Rcpp::exception("There must be at least two ages to create a Leslie MPM.",
-      false);
+    throw Rcpp::exception("Leslie MPMs require at least 2 ages.", false);
   }
   
   Rcpp::List output_longlist(33);
@@ -864,1884 +897,7 @@ Rcpp::List sf_leslie (int min_age, int max_age, int min_fecage, int max_fecage,
   return output_longlist;
 }
 
-
-// Model stuff
-
-//' Create hstages Index Object
-//' 
-//' Function \code{hst_maker()} creates \code{hstages} index data frames from
-//' \code{stageframe} inputs.
-//' 
-//' @name hst_maker
-//' 
-//' @param sframe The ahistorical stageframe used in MPM development.
-//' 
-//' @return A data frame with the following columns:
-//' \item{stage_id_2}{Integer index of stage in time \emph{t}+1.}
-//' \item{stage_id_1}{Integer index of stage in time \emph{t}.}
-//' \item{stage_2}{String name of stage in time \emph{t}+1.}
-//' \item{stage_1}{String name of stage in time \emph{t}.}
-//' 
-//' @keywords internal
-//' @noRd
-DataFrame hst_maker (const DataFrame& sframe) {
-  StringVector stage_name = as<StringVector>(sframe["stage"]);
-  int true_stages = stage_name.length();
-  
-  IntegerVector stage_id = seq(1, true_stages);
-  int h_stages = true_stages * true_stages;
-  
-  IntegerVector stage_id_2 (h_stages);
-  IntegerVector stage_id_1 (h_stages);
-  StringVector stage_2 (h_stages);
-  StringVector stage_1 (h_stages);
-  
-  for (int s1 = 0; s1 < true_stages; s1++) {
-    for (int s2 = 0; s2 < true_stages; s2++) {
-      int current_elem = (s1 * true_stages) + s2;
-      
-      stage_id_2[current_elem] = stage_id[s2];
-      stage_id_1[current_elem] = stage_id[s1];
-      stage_2[current_elem] = stage_name[s2];
-      stage_1[current_elem] = stage_name[s1];
-    }
-  }
-  
-  DataFrame output = DataFrame::create(_["stage_id_2"] = stage_id_2,
-    _["stage_id_1"] = stage_id_1, _["stage_2"] = stage_2,
-    _["stage_1"] = stage_1);
-  
-  return output;
-}
-
-//' Create agestages Index Object
-//' 
-//' Function \code{age_maker()} creates \code{agestages} index data frames from
-//' \code{stageframe} inputs.
-//' 
-//' @name age_maker
-//' 
-//' @param sframe The ahistorical stageframe used in MPM development.
-//' 
-//' @return A data frame with the following columns:
-//' \item{stage_id}{Integer index of stage.}
-//' \item{stage}{String name of stage.}
-//' \item{age}{The age of stage in current time.}
-//' 
-//' @keywords internal
-//' @noRd
-DataFrame age_maker (const DataFrame& sframe, int start_age, int last_age) {
-  StringVector stage_name = as<StringVector>(sframe["stage"]);
-  int true_stages = stage_name.length();
-  
-  IntegerVector stage_id = seq(1, true_stages);
-  IntegerVector all_ages = seq(start_age, last_age);
-  int num_ages = all_ages.length();
-  int age_stages = true_stages * num_ages;
-  
-  IntegerVector stage_id_new (age_stages);
-  StringVector stage_new (age_stages);
-  IntegerVector age_new (age_stages);
-  
-  for (int s1 = 0; s1 < num_ages; s1++) {
-    for (int s2 = 0; s2 < true_stages; s2++) {
-      int current_elem = (s1 * true_stages) + s2;
-      
-      stage_id_new[current_elem] = stage_id[s2];
-      stage_new[current_elem] = stage_name[s2];
-      age_new[current_elem] = all_ages[s1];
-    }
-  }
-  
-  DataFrame output = DataFrame::create(_["stage_id"] = stage_id_new,
-    _["stage"] = stage_new, _["age"] = age_new);
-  
-  return output;
-}
-
-
 // Matrix Estimation
-
-//' Create Element Index for Matrix Estimation
-//' 
-//' Function \code{theoldpizzle()} creates a data frame object used by 
-//' functions \code{specialpatrolgroup()}, \code{normalpatrolgroup()},
-//' \code{subvertedpatrolgroup()}, and \code{jerzeibalowski()} to estimate
-//' raw and function-based matrices.
-//' 
-//' @name theoldpizzle
-//'
-//' @param StageFrame The stageframe object identifying the life history model
-//' being operationalized.
-//' @param OverWrite The supplement or overwrite table used in analysis, as
-//' modified by \code{sf_reassess()}.
-//' @param repmatrix The reproductive matrix used in analysis.
-//' @param firstage The first age to be used in the analysis. Should typically
-//' be \code{0} for pre-breeding and \code{1} for post-breeding life history
-//' models. If not building age-by-stage MPMs, then should be set to \code{0}.
-//' @param finalage The final age to be used in analysis. If not building
-//' age-by-stage MPMs, then should be set to \code{0}.
-//' @param format Indicates whether historical matrices should be in (\code{1})
-//' Ehrlen or (\code{2}) deVries format.
-//' @param style The style of analysis, where \code{0} is historical, \code{1}
-//' is ahistorical, and \code{2} is age-by-stage.
-//' @param cont Denotes whether age-by-stage matrix continues past the final
-//' age.
-//' @param filter An integer denoting whether to filter the output data frame to
-//' eliminate unusable rows, and if so, how to do so. Possible values: \code{0}:
-//' no filtering, \code{1}: filter out rows with \code{index321 == -1}, and
-//' \code{2}: filter out rows with \code{aliveandequal == -1}.
-//' 
-//' @return The output is a large data frame describing every element to be
-//' estimated in matrices.
-//' 
-//' @keywords internal
-//' @noRd
-Rcpp::List theoldpizzle(const DataFrame& StageFrame, const DataFrame& OverWrite,
-  const arma::mat& repmatrix, int firstage, int finalage, int format, int style,
-  int cont, int filter) {
-  
-  StringVector ovstage3 = as<StringVector>(OverWrite["stage3"]);
-  StringVector ovstage2 = as<StringVector>(OverWrite["stage2"]);
-  StringVector ovstage1 = as<StringVector>(OverWrite["stage1"]);
-  StringVector oveststage3 = as<StringVector>(OverWrite["eststage3"]);
-  StringVector oveststage2 = as<StringVector>(OverWrite["eststage2"]);
-  StringVector oveststage1 = as<StringVector>(OverWrite["eststage1"]);
-  arma::vec ovgivenrate = as<arma::vec>(OverWrite["givenrate"]);
-  arma::vec ovmultiplier = as<arma::vec>(OverWrite["multiplier"]);
-  arma::vec ovconvtype = as<arma::vec>(OverWrite["convtype"]);
-  arma::vec ovconvt12 = as<arma::vec>(OverWrite["convtype_t12"]);
-  int ovrows = static_cast<int>(ovconvtype.n_elem);
-  
-  IntegerVector ovage2;
-  IntegerVector ovestage2;
-  if (OverWrite.containsElementNamed("age2")) {
-    ovage2 = as<IntegerVector>(OverWrite["age2"]);
-    ovestage2 = as<IntegerVector>(OverWrite["estage2"]);
-  }
-  
-  int totalages = (finalage - firstage) + 1;
-  
-  arma::vec ovindex3(ovrows); // Originally (ovrows * totalages)
-  arma::vec ovindex2(ovrows);
-  arma::vec ovindex1(ovrows);
-  arma::vec ovnew3(ovrows);
-  arma::vec ovnew2(ovrows);
-  arma::vec ovnew1(ovrows);
-  arma::vec ovindexold321(ovrows);
-  arma::vec ovindexnew321(ovrows);
-  arma::vec ovnewgivenrate(ovrows);
-  arma::vec ovnewmultiplier(ovrows);
-  arma::vec ovconvtypeage(ovrows);
-  ovindex3.fill(-1.0);
-  ovindex2.fill(-1.0);
-  ovindex1.fill(-1.0);
-  ovnew3.fill(-1.0);
-  ovnew2.fill(-1.0);
-  ovnew1.fill(-1.0);
-  ovindexold321.fill(-1.0);
-  ovindexnew321.fill(-1.0);
-  ovnewgivenrate.fill(-1.0);
-  ovnewmultiplier.zeros();
-  ovconvtypeage.fill(-1.0);
-  
-  arma::ivec newstageid = as<arma::ivec>(StageFrame["stage_id"]);
-  StringVector origstageid = as<StringVector>(StageFrame["stage"]);
-  arma::vec binsizectr = as<arma::vec>(StageFrame["sizebin_center"]);
-  arma::vec repstatus = as<arma::vec>(StageFrame["repstatus"]);
-  arma::vec obsstatus = as<arma::vec>(StageFrame["obsstatus"]);
-  arma::vec immstatus = as<arma::vec>(StageFrame["immstatus"]);
-  arma::vec matstatus = as<arma::vec>(StageFrame["matstatus"]);
-  arma::vec indata = as<arma::vec>(StageFrame["indataset"]);
-  arma::vec binsizewidth = as<arma::vec>(StageFrame["sizebin_width"]);
-  arma::vec alive = as<arma::vec>(StageFrame["alive"]);
-  arma::vec minage = as<arma::vec>(StageFrame["min_age"]);
-  arma::vec maxage = as<arma::vec>(StageFrame["max_age"]);
-  arma::vec group = as<arma::vec>(StageFrame["group"]);
-  arma::vec almostborn = as<arma::vec>(StageFrame["almostborn"]);
-  
-  arma::vec binsizebctr = as<arma::vec>(StageFrame["sizebinb_center"]);
-  arma::vec binsizecctr = as<arma::vec>(StageFrame["sizebinc_center"]);
-  arma::vec binsizebwidth = as<arma::vec>(StageFrame["sizebinb_width"]);
-  arma::vec binsizecwidth = as<arma::vec>(StageFrame["sizebinc_width"]);
-  
-  // Determine length of matrix map data frame
-  int nostages = static_cast<int>(newstageid.n_elem);
-  int nostages_nodead = nostages - 1;
-  int nostages_nounborn = nostages;
-  int nostages_nodead_nounborn = nostages_nodead;
-  int prior_stage = -1;
-  arma::vec ovrepentry_prior(nostages, fill::zeros);
-  IntegerVector stageorder = seq(1, nostages);
-  int totallength {0};
-  
-  if (style == 2) {
-    totallength = (nostages * nostages * totalages * totalages);
-  } else if (style == 1) {
-    totallength = (nostages * nostages_nodead);
-  } else {
-    if (format == 2) {
-      nostages_nodead_nounborn = nostages - 2;
-      prior_stage = nostages_nodead_nounborn;
-      nostages_nounborn = nostages - 1;
-      totallength = (2 * nostages_nodead_nounborn * nostages_nounborn * nostages_nounborn);
-    } else {
-      totallength = (nostages * (nostages_nodead * nostages_nodead));
-    }
-  }
-  
-  // Set up repmatrix
-  int reprows = repmatrix.n_rows;
-  int repmattype = 0;
-  
-  if (reprows == (nostages - 1) || reprows == (nostages - 2)) {
-    repmattype = 1; // repmatrix is ahistorical
-  } else if (reprows == ((nostages - 1) * (nostages - 1)) || 
-      reprows == ((nostages - 2) * (nostages - 2))) {
-    repmattype = 2; // repmatrix is historical
-  }
-  
-  // Set up vectors that will be put together into matrix map data frame
-  arma::ivec stage3(totallength, fill::zeros);
-  arma::ivec stage2n(totallength, fill::zeros);
-  arma::ivec stage2o(totallength, fill::zeros);
-  arma::ivec stage1(totallength, fill::zeros);
-  
-  arma::ivec stageorder3(totallength, fill::zeros);
-  arma::ivec stageorder2n(totallength, fill::zeros);
-  arma::ivec stageorder2o(totallength, fill::zeros);
-  arma::ivec stageorder1(totallength, fill::zeros);
-  
-  arma::vec size3(totallength, fill::zeros);
-  arma::vec size2n(totallength, fill::zeros);
-  arma::vec size2o(totallength, fill::zeros);
-  arma::vec size1(totallength, fill::zeros);
-  
-  arma::vec sizeb3(totallength, fill::zeros);
-  arma::vec sizeb2n(totallength, fill::zeros);
-  arma::vec sizeb2o(totallength, fill::zeros);
-  arma::vec sizeb1(totallength, fill::zeros);
-  
-  arma::vec sizec3(totallength, fill::zeros);
-  arma::vec sizec2n(totallength, fill::zeros);
-  arma::vec sizec2o(totallength, fill::zeros);
-  arma::vec sizec1(totallength, fill::zeros);
-  
-  arma::vec obs3(totallength, fill::zeros);
-  arma::vec obs2n(totallength, fill::zeros);
-  arma::vec obs2o(totallength, fill::zeros);
-  arma::vec obs1(totallength, fill::zeros);
-  
-  arma::vec rep3(totallength, fill::zeros);
-  arma::vec rep2n(totallength, fill::zeros);
-  arma::vec rep2o(totallength, fill::zeros);
-  arma::vec rep1(totallength, fill::zeros);
-  
-  arma::vec mat3(totallength, fill::zeros);
-  arma::vec mat2n(totallength, fill::zeros);
-  arma::vec mat2o(totallength, fill::zeros);
-  arma::vec mat1(totallength, fill::zeros);
-  
-  arma::vec imm3(totallength, fill::zeros);
-  arma::vec imm2n(totallength, fill::zeros);
-  arma::vec imm2o(totallength, fill::zeros);
-  arma::vec imm1(totallength, fill::zeros);
-  
-  arma::vec repentry3(totallength, fill::zeros);
-  arma::vec repentry2o(totallength, fill::zeros);
-  arma::vec almostborn1(totallength, fill::zeros);
-  
-  arma::vec binwidth(totallength, fill::zeros);
-  arma::vec binbwidth(totallength, fill::zeros);
-  arma::vec bincwidth(totallength, fill::zeros);
-  
-  arma::vec indata3(totallength, fill::zeros);
-  arma::vec indata2n(totallength, fill::zeros);
-  arma::vec indata2o(totallength, fill::zeros);
-  arma::vec indata1(totallength, fill::zeros);
-  
-  arma::vec minage3(totallength, fill::zeros);
-  arma::vec minage2(totallength, fill::zeros);
-  arma::vec maxage3(totallength, fill::zeros);
-  arma::vec maxage2(totallength, fill::zeros);
-  
-  arma::vec grp3(totallength, fill::zeros);
-  arma::vec grp2n(totallength, fill::zeros);
-  arma::vec grp2o(totallength, fill::zeros);
-  arma::vec grp1(totallength, fill::zeros);
-  
-  arma::vec actualage(totallength, fill::zeros);
-  arma::vec index321(totallength); // No death transitions
-  arma::vec index321d (totallength); // Death transitions included
-  arma::vec index21(totallength);
-  arma::vec indatalong(totallength, fill::zeros);
-  arma::vec aliveequal(totallength);
-  arma::vec included(totallength, fill::zeros);
-  index321.fill(-1.0);
-  index321d.fill(-1.0);
-  index21.fill(-1.0);
-  aliveequal.fill(-1.0);
-  
-  arma::mat asadditions(totallength, 5, fill::zeros);
-  
-  arma::vec ovgivent(totallength);
-  arma::vec ovestt(totallength);
-  arma::vec ovgivenf(totallength);
-  arma::vec ovestf(totallength);
-  arma::vec ovrepentry(totallength, fill::zeros);
-  arma::vec ovsurvmult(totallength, fill::ones);
-  arma::vec ovfecmult(totallength, fill::ones);
-  ovgivent.fill(-1.0);
-  ovestt.fill(-1.0);
-  ovgivenf.fill(-1.0);
-  ovestf.fill(-1.0);
-  
-  int repm_elem {-1};
-  double deadandnasty {0};
-  long long int currentindex {0};
-  
-  // Change stage names to stage numbers per input stageframe for styles 0 and 1
-  if (style < 2) {
-    if (ovrows > 0) {
-      if (ovrows > 1 || ovconvtype(0) != -1.0) {
-      for (int i = 0; i < ovrows; i++) { // Loop across overwrite rows
-        for (int j = 0; j < nostages; j++) { // Loop across stageframe rows
-          if (ovstage3(i) == origstageid(j)) {
-            ovindex3(i) = newstageid(j);
-          }
-          
-          if (ovstage2(i) == origstageid(j)) {
-            ovindex2(i) = newstageid(j);
-          }
-          
-          if (ovstage1(i) == origstageid(j)) {
-            ovindex1(i) = newstageid(j);
-          }
-          
-          if (oveststage3(i) == origstageid(j)) {
-            ovnew3(i) = newstageid(j);
-          }
-          
-          if (oveststage2(i) == origstageid(j)) {
-            ovnew2(i) = newstageid(j);
-          }
-          
-          if (oveststage1(i) == origstageid(j)) {
-            ovnew1(i) = newstageid(j);
-          }
-        } // j for loop
-      } // i for loop
-    } // ovrows if statement
-    }
-  } // style if statement
-  
-  // Main data frame creation loops
-  if (style == 0 && format == 2) { // Historical MPM deVries format
-    if (ovrows > 0) {
-      if (ovrows > 1 || ovconvtype(0) != -1.0) {
-      for (int i = 0; i < ovrows; i++) {  // Loop across overwrite rows
-        if (ovconvtype(i) > 1.0) { // Catches all changes to fecundity and reproductive multipliers
-          ovindexold321(i) = (ovindex3(i) - 1) + (prior_stage * nostages) + 
-            ((ovindex2(i) - 1) * nostages * nostages) + 
-            ((ovindex1(i) - 1) * nostages * nostages * nostages);
-            
-          ovindexnew321(i) = (ovnew3(i) - 1) + (prior_stage * nostages) + 
-            ((ovnew2(i) - 1) * nostages * nostages) + 
-            ((ovnew1(i) - 1) * nostages * nostages * nostages);
-        } else if (ovconvt12(i) == 2.0) { // Catches all survival terms with historical reproduction events
-          ovindexold321(i) = (ovindex3(i) - 1) + ((ovindex2(i) - 1) * nostages) + 
-            ((ovindex2(i) - 1) * nostages * nostages) + 
-            (prior_stage * nostages * nostages * nostages);
-            
-          ovindexnew321(i) = (ovnew3(i) - 1) + ((ovnew2(i) - 1) * nostages) + 
-            ((ovnew2(i) - 1) * nostages * nostages) + 
-            (prior_stage * nostages * nostages * nostages);
-        } else { // Full survival transitions
-          ovindexold321(i) = (ovindex3(i) - 1) + ((ovindex2(i) - 1) * nostages) + 
-            ((ovindex2(i) - 1) * nostages * nostages) + 
-            ((ovindex1(i) - 1) * nostages * nostages * nostages);
-            
-          ovindexnew321(i) = (ovnew3(i) - 1) + ((ovnew2(i) - 1) * nostages) + 
-            ((ovnew2(i) - 1) * nostages * nostages) + 
-            ((ovnew1(i) - 1) * nostages * nostages * nostages);
-        }
-        if (ovindexold321(i) < 0.0) ovindexold321(i) = -1.0;
-        if (ovindexnew321(i) < 0.0) ovindexnew321(i) = -1.0;
-        
-        if (!NumericVector::is_na(ovgivenrate(i))) {
-          ovnewgivenrate(i) = ovgivenrate(i);
-        }
-        if (NumericVector::is_na(ovmultiplier(i))) {
-          ovmultiplier(i) = 1;
-        }
-        ovnewmultiplier(i) = ovmultiplier(i);
-        
-        if (ovconvtype(i) == 3.0) {
-          for (int j = 0; j < nostages; j++) {
-            if (origstageid(j) == ovstage3(i)) ovrepentry_prior(j) = 1.0;
-          }
-        }
-      } // i for loop
-    } // ovrows if statement
-    }
-    
-    arma::uvec marked_for_repentry (nostages, fill::zeros); // Only in deVries format
-    
-    for (int time1 = 0; time1 < nostages_nodead; time1++) {
-      for (int time2o = 0; time2o < nostages_nodead_nounborn; time2o++) {
-        for (int time2n = 0; time2n < nostages; time2n++) {
-          for (int time3 = 0; time3 < nostages; time3++) {
-            
-            if (time3 != prior_stage) {
-              if (time2n == time2o || time2n == prior_stage){
-                
-                included(currentindex) = 1.0;
-                
-                stageorder3(currentindex) = stageorder(time3);
-                stageorder2n(currentindex) = stageorder(time2n);
-                stageorder2o(currentindex) = stageorder(time2o);
-                stageorder1(currentindex) = stageorder(time1);
-                
-                stage3(currentindex) = newstageid(time3);
-                stage2n(currentindex) = newstageid(time2n);
-                stage2o(currentindex) = newstageid(time2o);
-                stage1(currentindex) = newstageid(time1);
-                
-                size3(currentindex) = binsizectr(time3);
-                size2n(currentindex) = binsizectr(time2n);
-                size2o(currentindex) = binsizectr(time2o);
-                size1(currentindex) = binsizectr(time1);
-                
-                sizeb3(currentindex) = binsizebctr(time3);
-                sizeb2n(currentindex) = binsizebctr(time2n);
-                sizeb2o(currentindex) = binsizebctr(time2o);
-                sizeb1(currentindex) = binsizebctr(time1);
-                
-                if (NumericVector::is_na(sizeb3(currentindex))) sizeb3(currentindex) = 0.0;
-                if (NumericVector::is_na(sizeb2n(currentindex))) sizeb2n(currentindex) = 0.0;
-                if (NumericVector::is_na(sizeb2o(currentindex))) sizeb2o(currentindex) = 0.0;
-                if (NumericVector::is_na(sizeb1(currentindex))) sizeb1(currentindex) = 0.0;
-                
-                sizec3(currentindex) = binsizecctr(time3);
-                sizec2n(currentindex) = binsizecctr(time2n);
-                sizec2o(currentindex) = binsizecctr(time2o);
-                sizec1(currentindex) = binsizecctr(time1);
-                
-                if (NumericVector::is_na(sizec3(currentindex))) sizec3(currentindex) = 0.0;
-                if (NumericVector::is_na(sizec2n(currentindex))) sizec2n(currentindex) = 0.0;
-                if (NumericVector::is_na(sizec2o(currentindex))) sizec2o(currentindex) = 0.0;
-                if (NumericVector::is_na(sizec1(currentindex))) sizec1(currentindex) = 0.0;
-                
-                obs3(currentindex) = obsstatus(time3);
-                obs2n(currentindex) = obsstatus(time2n);
-                obs2o(currentindex) = obsstatus(time2o);
-                obs1(currentindex) = obsstatus(time1);
-                
-                rep3(currentindex) = repstatus(time3);
-                rep2n(currentindex) = repstatus(time2n);
-                rep2o(currentindex) = repstatus(time2o);
-                rep1(currentindex) = repstatus(time1);
-                
-                mat3(currentindex) = matstatus(time3);
-                mat2n(currentindex) = matstatus(time2n);
-                mat2o(currentindex) = matstatus(time2o);
-                mat1(currentindex) = matstatus(time1);
-                
-                imm3(currentindex) = immstatus(time3);
-                imm2n(currentindex) = immstatus(time2n);
-                imm2o(currentindex) = immstatus(time2o);
-                imm1(currentindex) = immstatus(time1);
-                
-                // Fill in repentry info from repmatrix
-                if (time2n == prior_stage && time3 < prior_stage && time2o < prior_stage) {
-                  if (repmattype == 1) { 
-                    repm_elem = (time3 + (time2o * nostages_nodead_nounborn));
-                  } else if (repmattype == 2) {
-                    repm_elem = time3 + (time2o * nostages_nodead_nounborn) + 
-                      (time2o * nostages_nodead_nounborn * nostages_nodead_nounborn) +
-                      (time1 * nostages_nodead_nounborn * nostages_nodead_nounborn * nostages_nodead_nounborn);
-                  } else repm_elem = -1;
-                  
-                  if (repmatrix(repm_elem) > 0.0) {
-                    repentry3(currentindex) = repmatrix(repm_elem);
-                    if (repentry3(currentindex) == 0.0 && ovrepentry_prior(time3) != 0.0) {
-                      repentry3(currentindex) = 1.0;
-                      marked_for_repentry(stage3(currentindex)) = 1;
-                    } 
-                  }
-                } else repentry3(currentindex) = 0.0;
-                
-                almostborn1(currentindex) = almostborn(time1);
-                
-                indata3(currentindex) = indata(time3);
-                indata2n(currentindex) = indata(time2n);
-                indata2o(currentindex) = indata(time2o);
-                indata1(currentindex) = indata(time1);
-                
-                binwidth(currentindex) = binsizewidth(time3);
-                binbwidth(currentindex) = binsizebwidth(time3);
-                bincwidth(currentindex) = binsizecwidth(time3);
-                
-                if (NumericVector::is_na(binbwidth(currentindex))) binbwidth(currentindex) = 0.0;
-                if (NumericVector::is_na(bincwidth(currentindex))) bincwidth(currentindex) = 0.0;
-                
-                minage3(currentindex) = minage(time3);
-                minage2(currentindex) = minage(time2o);
-                maxage3(currentindex) = maxage(time3);
-                maxage2(currentindex) = maxage(time2o);
-                actualage(currentindex) = 0.0;
-                
-                grp3(currentindex) = group(time3);
-                grp2n(currentindex) = group(time2n);
-                grp2o(currentindex) = group(time2o);
-                grp1(currentindex) = group(time1);
-                
-                if (stage3(currentindex) == nostages || stage2n(currentindex) == nostages) {
-                  deadandnasty = 1.0;
-                } else if (stage2o(currentindex) == nostages || stage1(currentindex) == nostages) {
-                  deadandnasty = 1.0;
-                } else {
-                  deadandnasty = 0.0;
-                }
-                
-                // Required for proper fecundity estimation in rlefko3
-                index321d(currentindex) = (stage3(currentindex) - 1) + 
-                  ((stage2n(currentindex) - 1) * nostages) + 
-                  ((stage2o(currentindex) - 1) * nostages * nostages) + 
-                  ((stage1(currentindex) - 1) * nostages * nostages * nostages);
-                
-                if (deadandnasty == 0.0) {
-                  // Next index variable gives element in the final matrix
-                  aliveequal(currentindex) = (stageorder3(currentindex) - 1) + 
-                    ((stageorder2n(currentindex) - 1) * nostages_nodead_nounborn) + 
-                    ((stageorder2o(currentindex) - 1) * nostages_nodead * nostages_nodead_nounborn) + 
-                    ((stageorder1(currentindex) - 1) * nostages_nodead_nounborn * 
-                      nostages_nodead * nostages_nodead_nounborn);
-                  
-                  // Next two index variables used by ovreplace
-                  index321(currentindex) = (stage3(currentindex) - 1) + 
-                    ((stage2n(currentindex) - 1) * nostages) + 
-                    ((stage2o(currentindex) - 1) * nostages * nostages) + 
-                    ((stage1(currentindex) - 1) * nostages * nostages * nostages);
-                    
-                  index21(currentindex) = (stage2o(currentindex) - 1) + 
-                    ((stage1(currentindex) - 1) * nostages);
-                }
-                
-                indatalong(currentindex) = indata3(currentindex) * indata2n(currentindex) * 
-                  indata2o(currentindex) * indata1(currentindex);
-                
-                currentindex += 1;
-              } // if (time2n == tim2o || time2n == prior_stage) statement
-            } // if (time3n != dead_stage) statement
-          } // time3 loop
-        } // time2n loop
-      } // time2o loop
-    } // time1 loop 
-    
-    // Edit data frame to make sure that almostborn situations in time 1
-    // lead to estimated elements only if a repentry stage occurs in time 2
-    arma::uvec marked_only = find(marked_for_repentry);
-    if (marked_only.n_elem > 0) {
-      for (int i = 0; i < static_cast<int>(marked_only.n_elem); i++) {
-        arma::uvec total_indices_to_change = find(stage2o == marked_only(i));
-        
-        if (total_indices_to_change.n_elem > 0) {
-          for (int j = 0; j < static_cast<int>(total_indices_to_change.n_elem); j++) {
-            repentry2o(total_indices_to_change(j)) = 1;
-          }
-        }
-      }
-    }
-    
-    arma::uvec alm_only = find(almostborn1);
-    if (alm_only.n_elem > 0) {
-      for (int i = 0; i < static_cast<int>(alm_only.n_elem); i++) {
-        if (repentry2o(alm_only(i)) < 1.0) {
-          index321(alm_only(i)) = -1.0;
-        }
-      }
-    }
-    
-    if (ovrows > 0) {
-      if (ovrows > 1 || ovconvtype(0) != -1.0) {
-      asadditions = LefkoMats::ovreplace(index321, ovindexold321, ovindexnew321,
-        ovconvtype, ovnew3, ovnewgivenrate, ovnewmultiplier);
-      
-      ovgivent = asadditions.col(0);
-      ovestt = asadditions.col(1);
-      ovgivenf = asadditions.col(2);
-      ovestf = asadditions.col(3);
-      
-      ovrepentry = asadditions.col(4);
-      ovsurvmult = asadditions.col(5);
-      ovfecmult = asadditions.col(6);
-      
-      arma::uvec workedupindex = find(ovrepentry > 0.0);
-      int changedreps = static_cast<int>(workedupindex.n_elem);
-      
-      if (changedreps > 0) {
-        for (int i = 0; i < changedreps; i++) {
-          repentry3(workedupindex(i)) = ovrepentry(workedupindex(i));
-        }
-      }
-    } // ovreplace if statement
-    }
-  } else if (style == 0 && format == 1) { // Historical MPM Ehrlen format
-    if (ovrows > 0) {
-      if (ovrows > 1 || ovconvtype(0) != -1.0) {
-        for (int i = 0; i < ovrows; i++) { // Loop across overwrite rows
-        
-        ovindexold321(i) = (ovindex3(i) - 1) + ((ovindex2(i) - 1) * nostages_nodead_nounborn) + 
-          ((ovindex2(i) - 1) * nostages_nodead_nounborn * nostages_nodead_nounborn) + 
-          ((ovindex1(i) - 1) * nostages_nodead_nounborn * nostages_nodead_nounborn * 
-            nostages_nodead_nounborn);
-          
-        ovindexnew321(i) = (ovnew3(i) - 1) + ((ovnew2(i) - 1) * nostages_nodead) + 
-          ((ovnew2(i) - 1) * nostages_nodead_nounborn * nostages_nodead_nounborn) + 
-          ((ovnew1(i) - 1) * nostages_nodead_nounborn * nostages_nodead_nounborn * 
-            nostages_nodead_nounborn);
-        
-        if (ovindexold321(i) < 0) ovindexold321(i) = -1.0;
-        if (ovindexnew321(i) < 0) ovindexnew321(i) = -1.0;
-        
-        if (!NumericVector::is_na(ovgivenrate(i))) {
-          ovnewgivenrate(i) = ovgivenrate(i);
-        }
-        if (NumericVector::is_na(ovmultiplier(i))) {
-          ovmultiplier(i) = 1.0;
-        }
-        ovnewmultiplier(i) = ovmultiplier(i);
-      } // i for loop
-    } // ovrows if statement
-    }
-    
-    for (int time1 = 0; time1 < nostages_nodead; time1++) {
-      for (int time2o = 0; time2o < nostages_nodead; time2o++) {
-        for (int time3 = 0; time3 < nostages; time3++) {
-          
-          included(currentindex) = 1.0;
-          
-          stageorder3(currentindex) = stageorder(time3);
-          stageorder2n(currentindex) = stageorder(time2o);
-          stageorder2o(currentindex) = stageorder(time2o);
-          stageorder1(currentindex) = stageorder(time1);
-                
-          stage3(currentindex) = newstageid(time3);
-          stage2n(currentindex) = newstageid(time2o);
-          stage2o(currentindex) = newstageid(time2o);
-          stage1(currentindex) = newstageid(time1);
-          
-          size3(currentindex) = binsizectr(time3);
-          size2n(currentindex) = binsizectr(time2o);
-          size2o(currentindex) = binsizectr(time2o);
-          size1(currentindex) = binsizectr(time1);
-          
-          sizeb3(currentindex) = binsizebctr(time3);
-          sizeb2n(currentindex) = binsizebctr(time2o);
-          sizeb2o(currentindex) = binsizebctr(time2o);
-          sizeb1(currentindex) = binsizebctr(time1);
-          
-          if (NumericVector::is_na(sizeb3(currentindex))) sizeb3(currentindex) = 0.0;
-          if (NumericVector::is_na(sizeb2n(currentindex))) sizeb2n(currentindex) = 0.0;
-          if (NumericVector::is_na(sizeb2o(currentindex))) sizeb2o(currentindex) = 0.0;
-          if (NumericVector::is_na(sizeb1(currentindex))) sizeb1(currentindex) = 0.0;
-                
-          sizec3(currentindex) = binsizecctr(time3);
-          sizec2n(currentindex) = binsizecctr(time2o);
-          sizec2o(currentindex) = binsizecctr(time2o);
-          sizec1(currentindex) = binsizecctr(time1);
-          
-          if (NumericVector::is_na(sizec3(currentindex))) sizec3(currentindex) = 0.0;
-          if (NumericVector::is_na(sizec2n(currentindex))) sizec2n(currentindex) = 0.0;
-          if (NumericVector::is_na(sizec2o(currentindex))) sizec2o(currentindex) = 0.0;
-          if (NumericVector::is_na(sizec1(currentindex))) sizec1(currentindex) = 0.0;
-          
-          obs3(currentindex) = obsstatus(time3);
-          obs2n(currentindex) = obsstatus(time2o);
-          obs2o(currentindex) = obsstatus(time2o);
-          obs1(currentindex) = obsstatus(time1);
-          
-          rep3(currentindex) = repstatus(time3);
-          rep2n(currentindex) = repstatus(time2o);
-          rep2o(currentindex) = repstatus(time2o);
-          rep1(currentindex) = repstatus(time1);
-          
-          mat3(currentindex) = matstatus(time3);
-          mat2n(currentindex) = matstatus(time2o);
-          mat2o(currentindex) = matstatus(time2o);
-          mat1(currentindex) = matstatus(time1);
-          
-          imm3(currentindex) = immstatus(time3);
-          imm2n(currentindex) = immstatus(time2o);
-          imm2o(currentindex) = immstatus(time2o);
-          imm1(currentindex) = immstatus(time1);
-          
-          // Determine repentry3 on basis of input repmatrix
-          if (time3 < nostages_nodead_nounborn) {
-            if (repmattype == 1) {
-              repm_elem = time3 + (time2o * nostages_nodead_nounborn);
-            } else if (repmattype == 2) {
-              repm_elem = time3 + (time2o * nostages_nodead_nounborn) + 
-                (time2o * nostages_nodead_nounborn * nostages_nodead_nounborn) +
-                (time1 * nostages_nodead_nounborn * nostages_nodead_nounborn * 
-                  nostages_nodead_nounborn);
-            } else {
-              repm_elem = -1;
-            }
-          }
-          
-          if(repm_elem > -1) {
-            if (repmatrix(repm_elem) > 0.0) {
-              repentry3(currentindex) = repmatrix(repm_elem);
-            }
-          }
-          
-          if (time3 < nostages_nodead_nounborn) {
-            if (repmattype == 1) { // Ahistorical repmatrix
-              repentry3(currentindex) = repmatrix((time3 + (nostages_nodead_nounborn * time2o)));
-            } else if (repmattype == 2) {  // Historical repmatrix
-              repentry3(currentindex) = repmatrix((time3 + (nostages_nodead_nounborn * time2o)) + 
-                ((nostages_nodead_nounborn * nostages_nodead_nounborn * time2o)) +
-                (nostages_nodead_nounborn * nostages_nodead_nounborn * 
-                  nostages_nodead_nounborn * time1));
-            }
-          } else {
-            repentry3(currentindex) = 0.0;
-          }
-          
-          indata3(currentindex) = indata(time3);
-          indata2n(currentindex) = indata(time2o);
-          indata2o(currentindex) = indata(time2o);
-          indata1(currentindex) = indata(time1);
-          
-          binwidth(currentindex) = binsizewidth(time3);
-          binbwidth(currentindex) = binsizebwidth(time3);
-          bincwidth(currentindex) = binsizecwidth(time3);
-          
-          if (NumericVector::is_na(binbwidth(currentindex))) binbwidth(currentindex) = 0.0;
-          if (NumericVector::is_na(bincwidth(currentindex))) bincwidth(currentindex) = 0.0;
-          
-          minage3(currentindex) = minage(time3);
-          minage2(currentindex) = minage(time2o);
-          maxage3(currentindex) = maxage(time3);
-          maxage2(currentindex) = maxage(time2o);
-          actualage(currentindex) = 0.0;
-          
-          grp3(currentindex) = group(time3);
-          grp2n(currentindex) = group(time2o);
-          grp2o(currentindex) = group(time2o);
-          grp1(currentindex) = group(time1);
-          
-          if (stage3(currentindex) == nostages || stage2n(currentindex) == nostages) {
-            deadandnasty = 1.0;
-          } else if (stage2o(currentindex) == nostages || stage1(currentindex) == nostages) {
-            deadandnasty = 1.0;
-          } else {
-            deadandnasty = 0.0;
-          }
-          
-          // Required for proper fecundity estimation in rlefko3
-          index321d(currentindex) = (stage3(currentindex) - 1) + 
-            ((stage2n(currentindex) - 1) * nostages_nodead_nounborn) + 
-            ((stage2n(currentindex) - 1) * nostages_nodead_nounborn * nostages_nodead_nounborn) + 
-            ((stage1(currentindex) - 1) * nostages_nodead_nounborn * nostages_nodead_nounborn * 
-              nostages_nodead_nounborn);
-          
-          if (deadandnasty == 0.0) {
-            aliveequal(currentindex) = (stageorder3(currentindex) - 1) + ((stageorder2n(currentindex) - 1) * 
-                (nostages - 1)) + ((stageorder2o(currentindex) - 1) * (nostages - 1) * (nostages - 1)) + 
-              ((stageorder1(currentindex) - 1) * (nostages - 1) * (nostages - 1) * (nostages - 1));
-            
-            index321(currentindex) = (stage3(currentindex) - 1) + 
-              ((stage2n(currentindex) - 1) * nostages_nodead_nounborn) + 
-              ((stage2n(currentindex) - 1) * nostages_nodead_nounborn * nostages_nodead_nounborn) + 
-              ((stage1(currentindex) - 1) * nostages_nodead_nounborn * nostages_nodead_nounborn * 
-                nostages_nodead_nounborn);
-            index21(currentindex) = (stage2n(currentindex) - 1) + ((stage1(currentindex) - 1) * nostages);
-          }
-          
-          indatalong(currentindex) = indata3(currentindex) * indata2n(currentindex) * 
-            indata2o(currentindex) * indata1(currentindex);
-          
-          currentindex += 1;
-        } // time3 loop
-      } // time2o loop
-    } // time1 loop 
-    
-    if (ovrows > 0) {
-      if (ovrows > 1 || ovconvtype(0) != -1.0) {
-      asadditions = LefkoMats::ovreplace(index321, ovindexold321, ovindexnew321, ovconvtype, 
-        ovnew3, ovnewgivenrate, ovnewmultiplier);
-      
-      ovgivent = asadditions.col(0);
-      ovestt = asadditions.col(1);
-      ovgivenf = asadditions.col(2);
-      ovestf = asadditions.col(3);
-      ovsurvmult = asadditions.col(5);
-      ovfecmult = asadditions.col(6);
-      
-      ovrepentry = asadditions.col(4);
-      
-      arma::uvec workedupindex = find(ovrepentry > 0.0);
-      int changedreps = static_cast<int>(workedupindex.n_elem);
-      
-      if (changedreps > 0) {
-        for (int i = 0; i < changedreps; i++) {
-          repentry3(workedupindex(i)) = ovrepentry(workedupindex(i));
-        }
-      }
-    } // ovreplace if statement
-    }
-  } else if (style == 1) { // Ahistorical case
-    if (ovrows > 0) {
-      if (ovrows > 1 || ovconvtype(0) != -1.0) {
-      for (int i = 0; i < ovrows; i++) { // Loop across overwrite rows
-      
-        ovindexold321(i) = (ovindex3(i) - 1) + ((ovindex2(i) - 1) * nostages);
-        ovindexnew321(i) = (ovnew3(i) - 1) + ((ovnew2(i) - 1) * nostages);
-        
-        if (ovindexold321(i) < 0) ovindexold321(i) = -1.0;
-        if (ovindexnew321(i) < 0) ovindexnew321(i) = -1.0;
-        
-        if (!NumericVector::is_na(ovgivenrate(i))) {
-          ovnewgivenrate(i) = ovgivenrate(i);
-        }
-        if (NumericVector::is_na(ovmultiplier(i))) {
-          ovmultiplier(i) = 1;
-        }
-        ovnewmultiplier(i) = ovmultiplier(i);
-      } // i for loop
-    } // ovrows if statement
-    }
-    
-    for (int time2n = 0; time2n < nostages_nodead; time2n++) {
-      for (int time3 = 0; time3 < nostages; time3++) {
-        
-        stageorder3(currentindex) = stageorder(time3);
-        stageorder2n(currentindex) = stageorder(time2n);
-        stageorder2o(currentindex) = stageorder(time2n);
-        stageorder1(currentindex) = 0;
-                
-        stage3(currentindex) = newstageid(time3);
-        stage2n(currentindex) = newstageid(time2n);
-        stage2o(currentindex) = newstageid(time2n);
-        stage1(currentindex) = 0;
-        
-        size3(currentindex) = binsizectr(time3);
-        size2n(currentindex) = binsizectr(time2n);
-        size2o(currentindex) = binsizectr(time2n);
-        size1(currentindex) = 0.0;
-        
-        sizeb3(currentindex) = binsizebctr(time3);
-        sizeb2n(currentindex) = binsizebctr(time2n);
-        sizeb2o(currentindex) = binsizebctr(time2n);
-        sizeb1(currentindex) = 0.0;
-        
-        if (NumericVector::is_na(sizeb3(currentindex))) sizeb3(currentindex) = 0.0;
-        if (NumericVector::is_na(sizeb2n(currentindex))) sizeb2n(currentindex) = 0.0;
-        if (NumericVector::is_na(sizeb2o(currentindex))) sizeb2o(currentindex) = 0.0;
-        
-        sizec3(currentindex) = binsizecctr(time3);
-        sizec2n(currentindex) = binsizecctr(time2n);
-        sizec2o(currentindex) = binsizecctr(time2n);
-        sizec1(currentindex) = 0.0;
-        
-        if (NumericVector::is_na(sizec3(currentindex))) sizec3(currentindex) = 0.0;
-        if (NumericVector::is_na(sizec2n(currentindex))) sizec2n(currentindex) = 0.0;
-        if (NumericVector::is_na(sizec2o(currentindex))) sizec2o(currentindex) = 0.0;
-        
-        obs3(currentindex) = obsstatus(time3);
-        obs2n(currentindex) = obsstatus(time2n);
-        obs2o(currentindex) = obsstatus(time2n);
-        obs1(currentindex) = 0.0;
-        
-        rep3(currentindex) = repstatus(time3);
-        rep2n(currentindex) = repstatus(time2n);
-        rep2o(currentindex) = repstatus(time2n);
-        rep1(currentindex) = 0.0;
-        
-        mat3(currentindex) = matstatus(time3);
-        mat2n(currentindex) = matstatus(time2n);
-        mat2o(currentindex) = matstatus(time2n);
-        mat1(currentindex) = 0.0;
-        
-        imm3(currentindex) = immstatus(time3);
-        imm2n(currentindex) = immstatus(time2n);
-        imm2o(currentindex) = immstatus(time2n);
-        imm1(currentindex) = 0.0;
-        
-        if (time3 < nostages_nodead) {
-          repentry3(currentindex) = repmatrix((time3 + (nostages_nodead * time2n)));
-        } else {
-          repentry3(currentindex) = 0.0;
-        }
-        
-        indata3(currentindex) = indata(time3);
-        indata2n(currentindex) = indata(time2n);
-        indata2o(currentindex) = indata(time2n);
-        indata1(currentindex) = 1.0;
-        
-        binwidth(currentindex) = binsizewidth(time3);
-        binbwidth(currentindex) = binsizebwidth(time3);
-        bincwidth(currentindex) = binsizecwidth(time3);
-        
-        if (NumericVector::is_na(binbwidth(currentindex))) binbwidth(currentindex) = 0.0;
-        if (NumericVector::is_na(bincwidth(currentindex))) bincwidth(currentindex) = 0.0;
-        
-        minage3(currentindex) = minage(time3);
-        minage2(currentindex) = minage(time2n);
-        maxage3(currentindex) = maxage(time3);
-        maxage2(currentindex) = maxage(time2n);
-        actualage(currentindex) = 0.0;
-        
-        grp3(currentindex) = group(time3);
-        grp2n(currentindex) = group(time2n);
-        grp2o(currentindex) = group(time2n);
-        grp1(currentindex) = 0.0;
-        
-        if (stage3(currentindex) == nostages || stage2n(currentindex) == nostages) {
-          deadandnasty = 1.0;
-        } else {
-          deadandnasty = 0.0;
-        }
-        
-        if (deadandnasty == 0.0) {
-          aliveequal(currentindex) = (stageorder3(currentindex) - 1) + 
-            ((stageorder2n(currentindex) - 1) * nostages_nodead);
-          
-          index321(currentindex) = (stage3(currentindex) - 1) + 
-            ((stage2n(currentindex) - 1) * nostages);
-          index21(currentindex) = (stage2n(currentindex) - 1);
-        }
-        
-        indatalong(currentindex) = indata3(currentindex) * indata2n(currentindex) * 
-          indata2o(currentindex);
-          
-        currentindex += 1;
-        
-      } // time3 loop
-    } // time2n loop
-    
-    if (ovrows > 0) {
-      if (ovrows > 1 || ovconvtype(0) != -1.0) {
-      asadditions = LefkoMats::ovreplace(index321, ovindexold321, ovindexnew321,
-        ovconvtype, ovnew3, ovnewgivenrate, ovnewmultiplier);
-      
-      ovgivent = asadditions.col(0);
-      ovestt = asadditions.col(1);
-      ovgivenf = asadditions.col(2);
-      ovestf = asadditions.col(3);
-      ovsurvmult = asadditions.col(5);
-      ovfecmult = asadditions.col(6);
-      
-      ovrepentry = asadditions.col(4);
-      
-      arma::uvec workedupindex = find(ovrepentry > 0.0);
-      int changedreps = static_cast<int>(workedupindex.n_elem);
-      
-      if (changedreps > 0) {
-        for (int i = 0; i < changedreps; i++) {
-          repentry3(workedupindex(i)) = ovrepentry(workedupindex(i));
-        }
-      }
-    } // ovreplace if statement
-    }
-  } else if (style == 2) { // Age-by-stage case
-    int age3 {firstage};
-    
-    for (int time3 = 0; time3 < nostages; time3++) {
-      if (NumericVector::is_na(maxage(time3))) {
-        maxage(time3) = finalage + cont;
-      }
-    }
-    
-    // Sets up overwrite tables
-    if (ovrows > 0) {
-      if (ovrows > 1 || ovconvtype(0) != -1.0) {
-      // First set of loops establishes a number of indices
-      
-      for (int i = 0; i < ovrows; i++) { // Loop across overwrite rows
-        int age2 = ovage2(i);
-        
-        for (int j = 0; j < nostages; j++) { // Loop across stageframe rows
-          ovconvtypeage(i) = ovconvtype(i);
-            
-          if (age2 < totalages) {
-            if (ovconvtype(i) == 1.0) {
-              age3 = age2 + 1;
-            } else {
-              age3 = firstage;
-            }
-            
-            if (ovstage3(i) == origstageid(j)) {
-              ovindex3(i) = j; // newstageid(j) - 1.0
-            }
-            
-            if (ovstage2(i) == origstageid(j)) {
-              ovindex2(i) = j; // newstageid(j) - 1.0
-            }
-            
-            if (oveststage3(i) == origstageid(j)) {
-              ovnew3(i) = j; // newstageid(j) - 1.0
-            }
-            
-            if (oveststage2(i) == origstageid(j)) {
-              ovnew2(i) = j; // newstageid(j) - 1.0
-            }
-            
-            if (ovindex3(i) != -1.0 && ovindex2(i) != -1.0) {
-              ovindexold321(i) = ovindex3(i) + ((age3 - firstage) * nostages) +
-                (ovindex2(i) * nostages * totalages) + 
-                ((age2 - firstage) * nostages * nostages * totalages);
-            }
-            
-            if (ovnew3(i) != -1.0 && ovnew2(i) != -1.0) {
-              if (!IntegerVector::is_na(ovestage2(i)) && ovestage2(i) != -1) {
-                int newage2 = ovestage2(i);
-                int newage3 = newage2 + 1;
-                
-                ovindexnew321(i) = ovnew3(i) + ((newage3 - firstage) * nostages) +
-                  (ovnew2(i) * nostages * totalages) +
-                  ((newage2 - firstage) * nostages * nostages * totalages);
-              } else {
-                ovindexnew321(i) = ovnew3(i) + ((age3 - firstage) * nostages) +
-                  (ovnew2(i) * nostages * totalages) +
-                  ((age2 - firstage) * nostages * nostages * totalages);
-              }
-            }
-            
-            if (!NumericVector::is_na(ovgivenrate(i))) {
-              ovnewgivenrate(i) = ovgivenrate(i);
-            }
-            if (NumericVector::is_na(ovmultiplier(i))) ovmultiplier(i) = 1.0;
-            
-            ovnewmultiplier(i) = ovmultiplier(i);
-          } else {
-            if (ovconvtype(i) == 1.0) {
-              age3 = age2;
-            } else {
-              age3 = firstage;
-            }
-            
-            if (ovstage3(i) == origstageid(j)) {
-              ovindex3(i) = j; // newstageid(j) - 1.0
-            }
-            
-            if (ovstage2(i) == origstageid(j)) {
-              ovindex2(i) = j; // newstageid(j) - 1.0
-            }
-            
-            if (oveststage3(i) == origstageid(j)) {
-              ovnew3(i) = j; // newstageid(j) - 1.0
-            }
-            
-            if (oveststage2(i) == origstageid(j)) {
-              ovnew2(i) = j; // newstageid(j) - 1.0
-            }
-            
-            if (ovindex3(i) != -1.0 && ovindex2(i) != -1.0) {
-              ovindexold321(i) = ovindex3(i) + ((age3 - firstage) * nostages) +
-                (ovindex2(i) * nostages * totalages) +
-                ((age2 - firstage) * nostages * nostages * totalages);
-            }
-            
-            if (ovnew3(i) != -1.0 && ovnew2(i) != -1.0) {
-              if (!IntegerVector::is_na(ovestage2(i)) && ovestage2(i) != -1) {
-                int newage2 = ovestage2(i);
-                int newage3 = newage2 + 1;
-                
-                ovindexnew321(i) = ovnew3(i) + ((newage3 - firstage) * nostages) +
-                  (ovnew2(i) * nostages * totalages) +
-                  ((newage2 - firstage) * nostages * nostages * totalages);
-              } else {
-                ovindexnew321(i) = ovnew3(i) + ((age3 - firstage) * nostages) +
-                  (ovnew2(i) * nostages * totalages) +
-                  ((age2 - firstage) * nostages * nostages * totalages);
-              }
-            }
-            if (!NumericVector::is_na(ovgivenrate(i))) {
-              ovnewgivenrate(i) = ovgivenrate(i);
-            }
-            if (NumericVector::is_na(ovmultiplier(i))) ovmultiplier(i) = 1.0;
-            
-            ovnewmultiplier(i) = ovmultiplier(i);
-          }
-        } // j for loop
-        
-      if (ovindexold321(i) < 0) ovindexold321(i) = -1.0;
-      if (ovindexnew321(i) < 0) ovindexnew321(i) = -1.0;
-        
-      } // i for loop
-    } // ovrows if statement
-    }
-    for (int age2 = firstage; age2 <= finalage; age2++) {
-      if (age2 < finalage) { // First loop takes care of age transitions
-        for (int time2n = 0; time2n < nostages; time2n++) {
-          for (int time3 = 0; time3 < nostages; time3++) {
-            
-            // First survival
-            age3 = age2 + 1;
-            currentindex = time3 + ((age3 - firstage) * nostages) + 
-              (time2n * nostages * totalages) +
-              ((age2 - firstage) * nostages * nostages * totalages);
-            
-            stage3(currentindex) = newstageid(time3);
-            stage2n(currentindex) = newstageid(time2n);
-            stage2o(currentindex) = newstageid(time2n);
-            stage1(currentindex) = 0;
-            
-            size3(currentindex) = binsizectr(time3);
-            size2n(currentindex) = binsizectr(time2n);
-            size2o(currentindex) = binsizectr(time2n);
-            size1(currentindex) = 0.0;
-            
-            sizeb3(currentindex) = binsizebctr(time3);
-            sizeb2n(currentindex) = binsizebctr(time2n);
-            sizeb2o(currentindex) = binsizebctr(time2n);
-            sizeb1(currentindex) = 0.0;
-            
-            if (NumericVector::is_na(sizeb3(currentindex))) sizeb3(currentindex) = 0.0;
-            if (NumericVector::is_na(sizeb2n(currentindex))) sizeb2n(currentindex) = 0.0;
-            if (NumericVector::is_na(sizeb2o(currentindex))) sizeb2o(currentindex) = 0.0;
-            
-            sizec3(currentindex) = binsizecctr(time3);
-            sizec2n(currentindex) = binsizecctr(time2n);
-            sizec2o(currentindex) = binsizecctr(time2n);
-            sizec1(currentindex) = 0.0;
-            
-            if (NumericVector::is_na(sizec3(currentindex))) sizec3(currentindex) = 0.0;
-            if (NumericVector::is_na(sizec2n(currentindex))) sizec2n(currentindex) = 0.0;
-            if (NumericVector::is_na(sizec2o(currentindex))) sizec2o(currentindex) = 0.0;
-            
-            obs3(currentindex) = obsstatus(time3);
-            obs2n(currentindex) = obsstatus(time2n);
-            obs2o(currentindex) = obsstatus(time2n);
-            obs1(currentindex) = 0.0;
-            
-            rep3(currentindex) = repstatus(time3);
-            rep2n(currentindex) = repstatus(time2n);
-            rep2o(currentindex) = repstatus(time2n);
-            rep1(currentindex) = 0.0;
-            
-            mat3(currentindex) = matstatus(time3);
-            mat2n(currentindex) = matstatus(time2n);
-            mat2o(currentindex) = matstatus(time2n);
-            mat1(currentindex) = 0.0;
-            
-            imm3(currentindex) = immstatus(time3);
-            imm2n(currentindex) = immstatus(time2n);
-            imm2o(currentindex) = immstatus(time2n);
-            imm1(currentindex) = 0.0;
-            
-            repentry3(currentindex) = 0.0;
-            
-            indata3(currentindex) = indata(time3);
-            indata2n(currentindex) = indata(time2n);
-            indata2o(currentindex) = indata(time2n);
-            indata1(currentindex) = 0.0;
-            
-            binwidth(currentindex) = binsizewidth(time3);
-            binbwidth(currentindex) = binsizebwidth(time3);
-            bincwidth(currentindex) = binsizecwidth(time3);
-            
-            if (NumericVector::is_na(binbwidth(currentindex))) binbwidth(currentindex) = 0.0;
-            if (NumericVector::is_na(bincwidth(currentindex))) bincwidth(currentindex) = 0.0;
-            
-            minage3(currentindex) = minage(time3);
-            minage2(currentindex) = minage(time2n);
-            maxage3(currentindex) = maxage(time3);
-            maxage2(currentindex) = maxage(time2n);
-            actualage(currentindex) = age2;
-            
-            grp3(currentindex) = group(time3);
-            grp2n(currentindex) = group(time2n);
-            grp2o(currentindex) = group(time2n);
-            grp1(currentindex) = 0.0;
-            
-            // Indexer order: (1st # age blocks) + (1st # stage cols) +
-            // (1st # age rows) + stage in time 3
-            index321(currentindex) = currentindex;
-            index21(currentindex) = time2n + ((age2 - firstage) * nostages);
-            indatalong(currentindex) = 1.0;
-            
-            // Identify elements with non-zero entries by element number in final matrix
-            if (alive(time2n) == 1.0 && alive(time3) == 1.0) {
-              if (age2 >= minage2(currentindex) && age2 < maxage3(currentindex)) { 
-                
-                // Survival transitions
-                aliveequal(currentindex) =
-                  ((age2 - firstage) * (nostages - 1) * (nostages - 1) * totalages) + 
-                  (time2n * (nostages - 1) * totalages) +
-                  ((age3 - firstage) * (nostages - 1)) + time3;
-              }
-            }
-            
-            if (time3 < nostages_nodead && time2n < nostages_nodead) {
-              
-              if (repmatrix((time3 + (nostages_nodead * time2n))) > 0.0) {
-                
-                // Now fecundity
-                age3 = firstage;
-                currentindex = time3 + ((age3 - firstage) * nostages) + 
-                  (time2n * nostages * totalages) +
-                  ((age2 - firstage) * nostages * nostages * totalages);
-                
-                stage3(currentindex) = newstageid(time3);
-                stage2n(currentindex) = newstageid(time2n);
-                stage2o(currentindex) = newstageid(time2n);
-                stage1(currentindex) = 0.0;
-                
-                size3(currentindex) = binsizectr(time3);
-                size2n(currentindex) = binsizectr(time2n);
-                size2o(currentindex) = binsizectr(time2n);
-                size1(currentindex) = 0.0;
-                
-                sizeb3(currentindex) = binsizebctr(time3);
-                sizeb2n(currentindex) = binsizebctr(time2n);
-                sizeb2o(currentindex) = binsizebctr(time2n);
-                sizeb1(currentindex) = 0.0;
-                
-                if (NumericVector::is_na(sizeb3(currentindex))) sizeb3(currentindex) = 0.0;
-                if (NumericVector::is_na(sizeb2n(currentindex))) sizeb2n(currentindex) = 0.0;
-                if (NumericVector::is_na(sizeb2o(currentindex))) sizeb2o(currentindex) = 0.0;
-                
-                sizec3(currentindex) = binsizecctr(time3);
-                sizec2n(currentindex) = binsizecctr(time2n);
-                sizec2o(currentindex) = binsizecctr(time2n);
-                sizec1(currentindex) = 0.0;
-                
-                if (NumericVector::is_na(sizec3(currentindex))) sizec3(currentindex) = 0.0;
-                if (NumericVector::is_na(sizec2n(currentindex))) sizec2n(currentindex) = 0.0;
-                if (NumericVector::is_na(sizec2o(currentindex))) sizec2o(currentindex) = 0.0;
-                
-                obs3(currentindex) = obsstatus(time3);
-                obs2n(currentindex) = obsstatus(time2n);
-                obs2o(currentindex) = obsstatus(time2n);
-                obs1(currentindex) = 0.0;
-                
-                rep3(currentindex) = repstatus(time3);
-                rep2n(currentindex) = repstatus(time2n);
-                rep2o(currentindex) = repstatus(time2n);
-                rep1(currentindex) = 0.0;
-                
-                mat3(currentindex) = matstatus(time3);
-                mat2n(currentindex) = matstatus(time2n);
-                mat2o(currentindex) = matstatus(time2n);
-                mat1(currentindex) = 0.0;
-                
-                imm3(currentindex) = immstatus(time3);
-                imm2n(currentindex) = immstatus(time2n);
-                imm2o(currentindex) = immstatus(time2n);
-                imm1(currentindex) = 0.0;
-                
-                if (rep2n(currentindex) > 0.0 && time3 < nostages_nodead && time2n < nostages_nodead) {
-                  repentry3(currentindex) = repmatrix((time3 + (nostages_nodead * time2n)));
-                } else repentry3(currentindex) = 0.0;
-                
-                indata3(currentindex) = indata(time3);
-                indata2n(currentindex) = indata(time2n);
-                indata2o(currentindex) = indata(time2n);
-                indata1(currentindex) = 0.0;
-                
-                binwidth(currentindex) = binsizewidth(time3);
-                binbwidth(currentindex) = binsizebwidth(time3);
-                bincwidth(currentindex) = binsizecwidth(time3);
-                
-                if (NumericVector::is_na(binbwidth(currentindex))) binbwidth(currentindex) = 0.0;
-                if (NumericVector::is_na(bincwidth(currentindex))) bincwidth(currentindex) = 0.0;
-                
-                minage3(currentindex) = minage(time3);
-                minage2(currentindex) = minage(time2n);
-                maxage3(currentindex) = maxage(time3);
-                maxage2(currentindex) = maxage(time2n);
-                actualage(currentindex) = age2;
-                
-                grp3(currentindex) = group(time3);
-                grp2n(currentindex) = group(time2n);
-                grp2o(currentindex) = group(time2n);
-                grp1(currentindex) = 0.0;
-                
-                // The next indexer includes the following order: (1st # of age blocks) + 
-                // (1st # of stage cols) + (1st # of age rows) + stage in time 3
-                index321(currentindex) = currentindex;
-                index21(currentindex) = time2n + ((age2 - firstage) * nostages);
-                indatalong(currentindex) = 1.0;
-                
-                // This section identifies elements with non-zero entries by their
-                // element number in the final matrix
-                if (alive(time2n) == 1.0 && alive(time3) == 1.0) {
-                  if (age2 >= minage2(currentindex) && age2 <= maxage2(currentindex)) { 
-                    
-                    // Fecundity transitions
-                    aliveequal(currentindex) = 
-                      ((age2 - firstage) * (nostages - 1) * (nostages - 1) * totalages) + 
-                      (time2n * (nostages - 1) * totalages) +
-                      ((age3 - firstage) * (nostages - 1)) + time3;
-                  }
-                } // if statement leading to aliveequal assignment
-              } // if statement yielding fecundity estimation
-            } // if statement checking time3 and time2n
-          } // time3 loop
-        } // time2n loop
-      } else if (cont == 1) { // Self-loop on final age, if organism can live past final age
-        for (int time2n = 0; time2n < nostages; time2n++) {
-          for (int time3 = 0; time3 < nostages; time3++) {
-            
-            // First survival
-            age3 = age2;
-            currentindex = time3 + ((age3 - firstage) * nostages) + 
-              (time2n * nostages * totalages) +
-              ((age2 - firstage) * nostages * nostages * totalages);
-            
-            stage3(currentindex) = newstageid(time3);
-            stage2n(currentindex) = newstageid(time2n);
-            stage2o(currentindex) = newstageid(time2n);
-            stage1(currentindex) = 0.0;
-            
-            size3(currentindex) = binsizectr(time3);
-            size2n(currentindex) = binsizectr(time2n);
-            size2o(currentindex) = binsizectr(time2n);
-            size1(currentindex) = 0.0;
-            
-            sizeb3(currentindex) = binsizebctr(time3);
-            sizeb2n(currentindex) = binsizebctr(time2n);
-            sizeb2o(currentindex) = binsizebctr(time2n);
-            sizeb1(currentindex) = 0.0;
-            
-            if (NumericVector::is_na(sizeb3(currentindex))) sizeb3(currentindex) = 0.0;
-            if (NumericVector::is_na(sizeb2n(currentindex))) sizeb2n(currentindex) = 0.0;
-            if (NumericVector::is_na(sizeb2o(currentindex))) sizeb2o(currentindex) = 0.0;
-            
-            sizec3(currentindex) = binsizecctr(time3);
-            sizec2n(currentindex) = binsizecctr(time2n);
-            sizec2o(currentindex) = binsizecctr(time2n);
-            sizec1(currentindex) = 0.0;
-            
-            if (NumericVector::is_na(sizec3(currentindex))) sizec3(currentindex) = 0.0;
-            if (NumericVector::is_na(sizec2n(currentindex))) sizec2n(currentindex) = 0.0;
-            if (NumericVector::is_na(sizec2o(currentindex))) sizec2o(currentindex) = 0.0;
-                
-            obs3(currentindex) = obsstatus(time3);
-            obs2n(currentindex) = obsstatus(time2n);
-            obs2o(currentindex) = obsstatus(time2n);
-            obs1(currentindex) = 0.0;
-            
-            rep3(currentindex) = repstatus(time3);
-            rep2n(currentindex) = repstatus(time2n);
-            rep2o(currentindex) = repstatus(time2n);
-            rep1(currentindex) = 0.0;
-            
-            mat3(currentindex) = matstatus(time3);
-            mat2n(currentindex) = matstatus(time2n);
-            mat2o(currentindex) = matstatus(time2n);
-            mat1(currentindex) = 0.0;
-            
-            imm3(currentindex) = immstatus(time3);
-            imm2n(currentindex) = immstatus(time2n);
-            imm2o(currentindex) = immstatus(time2n);
-            imm1(currentindex) = 0.0;
-            
-            repentry3(currentindex) = 0.0;
-            
-            indata3(currentindex) = indata(time3);
-            indata2n(currentindex) = indata(time2n);
-            indata2o(currentindex) = indata(time2n);
-            indata1(currentindex) = 0.0;
-            
-            binwidth(currentindex) = binsizewidth(time3);
-            binbwidth(currentindex) = binsizebwidth(time3);
-            bincwidth(currentindex) = binsizecwidth(time3);
-            
-            if (NumericVector::is_na(binbwidth(currentindex))) binbwidth(currentindex) = 0.0;
-            if (NumericVector::is_na(bincwidth(currentindex))) bincwidth(currentindex) = 0.0;
-                
-            minage3(currentindex) = minage(time3);
-            minage2(currentindex) = minage(time2n);
-            maxage3(currentindex) = maxage(time3);
-            maxage2(currentindex) = maxage(time2n);
-            actualage(currentindex) = age2;
-            
-            grp3(currentindex) = group(time3);
-            grp2n(currentindex) = group(time2n);
-            grp2o(currentindex) = group(time2n);
-            grp1(currentindex) = 0.0;
-            
-            // Indexer order: (1st # age blocks) + (1st # stage cols) +
-            // (1st # age rows) + stage in time 3
-            index321(currentindex) = currentindex;
-            index21(currentindex) = time2n + ((age2 - firstage) * nostages);
-            indatalong(currentindex) = 1;
-            
-            // Identify elements with non-zero entries by element number in final matrix
-            if (alive(time2n) == 1.0 && alive(time3) == 1.0) {
-              if (age2 >= minage2(currentindex) && age2 < maxage3(currentindex)) { 
-
-                // Survival transitions
-                aliveequal(currentindex) = 
-                  ((age2 - firstage) * (nostages - 1) * (nostages - 1) * totalages) + 
-                  (time2n * (nostages - 1) * totalages) +
-                  ((age3 - firstage) * (nostages - 1)) + time3;
-              }
-            }
-            
-            if (time3 < nostages_nodead && time2n < nostages_nodead) {
-              if (repmatrix((time3 + (nostages_nodead * time2n))) > 0.0) {
-                
-                // Now fecundity
-                age3 = firstage;
-                currentindex = time3 + ((age3 - firstage) * nostages) + 
-                  (time2n * nostages * totalages) +
-                  ((age2 - firstage) * nostages * nostages * totalages);
-                
-                stage3(currentindex) = newstageid(time3);
-                stage2n(currentindex) = newstageid(time2n);
-                stage2o(currentindex) = newstageid(time2n);
-                stage1(currentindex) = 0.0;
-                
-                size3(currentindex) = binsizectr(time3);
-                size2n(currentindex) = binsizectr(time2n);
-                size2o(currentindex) = binsizectr(time2n);
-                size1(currentindex) = 0.0;
-                
-                sizeb3(currentindex) = binsizebctr(time3);
-                sizeb2n(currentindex) = binsizebctr(time2n);
-                sizeb2o(currentindex) = binsizebctr(time2n);
-                sizeb1(currentindex) = 0.0;
-                
-                if (NumericVector::is_na(sizeb3(currentindex))) sizeb3(currentindex) = 0.0;
-                if (NumericVector::is_na(sizeb2n(currentindex))) sizeb2n(currentindex) = 0.0;
-                if (NumericVector::is_na(sizeb2o(currentindex))) sizeb2o(currentindex) = 0.0;
-                
-                sizec3(currentindex) = binsizecctr(time3);
-                sizec2n(currentindex) = binsizecctr(time2n);
-                sizec2o(currentindex) = binsizecctr(time2n);
-                sizec1(currentindex) = 0.0;
-                
-                if (NumericVector::is_na(sizec3(currentindex))) sizec3(currentindex) = 0.0;
-                if (NumericVector::is_na(sizec2n(currentindex))) sizec2n(currentindex) = 0.0;
-                if (NumericVector::is_na(sizec2o(currentindex))) sizec2o(currentindex) = 0.0;
-                
-                obs3(currentindex) = obsstatus(time3);
-                obs2n(currentindex) = obsstatus(time2n);
-                obs2o(currentindex) = obsstatus(time2n);
-                obs1(currentindex) = 0.0;
-                
-                rep3(currentindex) = repstatus(time3);
-                rep2n(currentindex) = repstatus(time2n);
-                rep2o(currentindex) = repstatus(time2n);
-                rep1(currentindex) = 0.0;
-                
-                mat3(currentindex) = matstatus(time3);
-                mat2n(currentindex) = matstatus(time2n);
-                mat2o(currentindex) = matstatus(time2n);
-                mat1(currentindex) = 0.0;
-                
-                imm3(currentindex) = immstatus(time3);
-                imm2n(currentindex) = immstatus(time2n);
-                imm2o(currentindex) = immstatus(time2n);
-                imm1(currentindex) = 0.0;
-                
-                if (rep2n(currentindex) == 1) {
-                  repentry3(currentindex) = repmatrix((time3 + (nostages_nodead * time2n)));
-                } else repentry3(currentindex) = 0.0;
-                
-                indata3(currentindex) = indata(time3);
-                indata2n(currentindex) = indata(time2n);
-                indata2o(currentindex) = indata(time2n);
-                indata1(currentindex) = 0.0;
-                
-                binwidth(currentindex) = binsizewidth(time3);
-                binbwidth(currentindex) = binsizebwidth(time3);
-                bincwidth(currentindex) = binsizecwidth(time3);
-                
-                if (NumericVector::is_na(binbwidth(currentindex))) binbwidth(currentindex) = 0.0;
-                if (NumericVector::is_na(bincwidth(currentindex))) bincwidth(currentindex) = 0.0;
-                
-                minage3(currentindex) = minage(time3);
-                minage2(currentindex) = minage(time2n);
-                maxage3(currentindex) = maxage(time3);
-                maxage2(currentindex) = maxage(time2n);
-                actualage(currentindex) = age2;
-                grp3(currentindex) = group(time3);
-                grp2n(currentindex) = group(time2n);
-                grp2o(currentindex) = group(time2n);
-                grp1(currentindex) = 0.0;
-                
-                // Indexer order: (1st # age blocks) + (1st # stage cols) + 
-                // (1st # age rows) + stage in time 3
-                index321(currentindex) = currentindex;
-                index21(currentindex) = time2n + ((age2 - firstage) * nostages);
-                indatalong(currentindex) = 1.0;
-                
-                // Identify elements with non-zero entries by element number in final matrix
-                if (alive(time2n) == 1.0 && alive(time3) == 1.0) {
-                  if (age2 >= minage2(currentindex) && age2 <= maxage2(currentindex)) { 
-                    
-                    // Fecundity transitions
-                    aliveequal(currentindex) =
-                      ((age2 - firstage) * (nostages - 1) * (nostages - 1) * totalages) + 
-                      (time2n * (nostages - 1) * totalages) +
-                      ((age3 - firstage) * (nostages - 1)) + time3;
-                  }
-                } // if statement leading to aliveequal assignment
-              } // if statement yielding fecundity estimation
-            } // if statement checking time3 and time2n
-          } // time3 loop
-        } // time2n loop
-      }// if-else statement
-    } // age2 loop
-    
-    if (ovrows > 0) {
-      if (ovrows > 1 || ovconvtype(0) != -1.0) {
-      
-      asadditions = LefkoMats::ovreplace(index321, ovindexold321, ovindexnew321,
-        ovconvtypeage, ovnew3, ovnewgivenrate, ovnewmultiplier);
-      
-      ovgivent = asadditions.col(0);
-      ovestt = asadditions.col(1);
-      ovgivenf = asadditions.col(2);
-      ovestf = asadditions.col(3);
-      ovsurvmult = asadditions.col(5);
-      ovfecmult = asadditions.col(6);
-      
-      ovrepentry = asadditions.col(4);
-      
-      arma::uvec workedupindex = find(ovrepentry > 0.0);
-      int changedreps = static_cast<int>(workedupindex.n_elem);
-      
-      if (changedreps > 0) {
-        for (int i = 0; i < changedreps; i++) {
-          repentry3(workedupindex(i)) = ovrepentry(workedupindex(i));
-        }
-      }
-    } // ovreplace if statement
-    }
-  } // Age-by-stage loop (style = 2)
-  
-  // Output formatting
-  Rcpp::List output_longlist(60);
-  int stage3_length = 0;
-  
-  arma::uvec used_indices;
-  
-  if (filter == 1) {
-    used_indices = find(index321 != -1.0);
-  } else if (filter == 2) {
-    used_indices = find(aliveequal != -1.0);
-  }
-  
-  if (filter > 0) {
-    int new_length = static_cast<int>(used_indices.n_elem);
-    stage3_length = new_length;
-    
-    IntegerVector stage3_new(new_length);
-    IntegerVector stage2n_new(new_length);
-    IntegerVector stage2o_new(new_length);
-    IntegerVector stage1_new(new_length);
-    
-    NumericVector size3_new(new_length);
-    NumericVector size2n_new(new_length);
-    NumericVector size2o_new(new_length);
-    NumericVector size1_new(new_length);
-    
-    NumericVector sizeb3_new(new_length);
-    NumericVector sizeb2n_new(new_length);
-    NumericVector sizeb2o_new(new_length);
-    NumericVector sizeb1_new(new_length);
-    
-    NumericVector sizec3_new(new_length);
-    NumericVector sizec2n_new(new_length);
-    NumericVector sizec2o_new(new_length);
-    NumericVector sizec1_new(new_length);
-    
-    NumericVector obs3_new(new_length);
-    NumericVector obs2n_new(new_length);
-    NumericVector obs2o_new(new_length);
-    NumericVector obs1_new(new_length);
-    
-    NumericVector rep3_new(new_length);
-    NumericVector rep2n_new(new_length);
-    NumericVector rep2o_new(new_length);
-    NumericVector rep1_new(new_length);
-    
-    NumericVector mat3_new(new_length);
-    NumericVector mat2n_new(new_length);
-    NumericVector mat2o_new(new_length);
-    NumericVector mat1_new(new_length);
-    
-    NumericVector imm3_new(new_length);
-    NumericVector imm2n_new(new_length);
-    NumericVector imm2o_new(new_length);
-    NumericVector imm1_new(new_length);
-    
-    NumericVector repentry3_new(new_length);
-    NumericVector indata3_new(new_length);
-    NumericVector indata2n_new(new_length);
-    NumericVector indata2o_new(new_length);
-  
-    NumericVector indata1_new(new_length);
-    NumericVector binwidth_new(new_length);
-    NumericVector binbwidth_new(new_length);
-    NumericVector bincwidth_new(new_length);
-    
-    NumericVector minage3_new(new_length);
-    NumericVector minage2_new(new_length);
-    NumericVector maxage3_new(new_length);
-    NumericVector maxage2_new(new_length);
-    NumericVector actualage_new(new_length);
-    
-    NumericVector grp3_new(new_length);
-    NumericVector grp2n_new(new_length);
-    NumericVector grp2o_new(new_length);
-    NumericVector grp1_new(new_length);
-    
-    NumericVector indatalong_new(new_length);
-    NumericVector ovgivent_new(new_length);
-    NumericVector ovestt_new(new_length);
-    NumericVector ovgivenf_new(new_length);
-  
-    NumericVector ovestf_new(new_length);
-    NumericVector ovsurvmult_new(new_length);
-    NumericVector ovfecmult_new(new_length);
-    
-    NumericVector aliveequal_new(new_length);
-    NumericVector index321_new(new_length);
-    NumericVector index321d_new(new_length);
-    NumericVector index21_new(new_length);
-    
-    for (int i = 0; i < new_length; i++) {
-      stage3_new(i) = stage3(used_indices(i));
-      stage2n_new(i) = stage2n(used_indices(i));
-      stage2o_new(i) = stage2o(used_indices(i));
-      stage1_new(i) = stage1(used_indices(i));
-      
-      size3_new(i) = size3(used_indices(i));
-      size2n_new(i) = size2n(used_indices(i));
-      size2o_new(i) = size2o(used_indices(i));
-      size1_new(i) = size1(used_indices(i));
-      
-      sizeb3_new(i) = sizeb3(used_indices(i));
-      sizeb2n_new(i) = sizeb2n(used_indices(i));
-      sizeb2o_new(i) = sizeb2o(used_indices(i));
-      sizeb1_new(i) = sizeb1(used_indices(i));
-      
-      sizec3_new(i) = sizec3(used_indices(i));
-      sizec2n_new(i) = sizec2n(used_indices(i));
-      sizec2o_new(i) = sizec2o(used_indices(i));
-      sizec1_new(i) = sizec1(used_indices(i));
-      
-      obs3_new(i) = obs3(used_indices(i));
-      obs2n_new(i) = obs2n(used_indices(i));
-      obs2o_new(i) = obs2o(used_indices(i));
-      obs1_new(i) = obs1(used_indices(i));
-      
-      rep3_new(i) = rep3(used_indices(i));
-      rep2n_new(i) = rep2n(used_indices(i));
-      rep2o_new(i) = rep2o(used_indices(i));
-      rep1_new(i) = rep1(used_indices(i));
-      
-      mat3_new(i) = mat3(used_indices(i));
-      mat2n_new(i) = mat2n(used_indices(i));
-      mat2o_new(i) = mat2o(used_indices(i));
-      mat1_new(i) = mat1(used_indices(i));
-      
-      imm3_new(i) = imm3(used_indices(i));
-      imm2n_new(i) = imm2n(used_indices(i));
-      imm2o_new(i) = imm2o(used_indices(i));
-      imm1_new(i) = imm1(used_indices(i));
-      
-      repentry3_new(i) = repentry3(used_indices(i));
-      indata3_new(i) = indata3(used_indices(i));
-      indata2n_new(i) = indata2n(used_indices(i));
-      indata2o_new(i) = indata2o(used_indices(i));
-    
-      indata1_new(i) = indata1(used_indices(i));
-      binwidth_new(i) = binwidth(used_indices(i));
-      binbwidth_new(i) = binbwidth(used_indices(i));
-      bincwidth_new(i) = bincwidth(used_indices(i));
-      
-      minage3_new(i) = minage3(used_indices(i));
-      minage2_new(i) = minage2(used_indices(i));
-      maxage3_new(i) = maxage3(used_indices(i));
-      maxage2_new(i) = maxage2(used_indices(i));
-      actualage_new(i) = actualage(used_indices(i));
-      
-      grp3_new(i) = grp3(used_indices(i));
-      grp2n_new(i) = grp2n(used_indices(i));
-      grp2o_new(i) = grp2o(used_indices(i));
-      grp1_new(i) = grp1(used_indices(i));
-      
-      indatalong_new(i) = indatalong(used_indices(i));
-      ovgivent_new(i) = ovgivent(used_indices(i));
-      ovestt_new(i) = ovestt(used_indices(i));
-      ovgivenf_new(i) = ovgivenf(used_indices(i));
-    
-      ovestf_new(i) = ovestf(used_indices(i));
-      ovsurvmult_new(i) = ovsurvmult(used_indices(i));
-      ovfecmult_new(i) = ovfecmult(used_indices(i));
-      
-      aliveequal_new(i) = aliveequal(used_indices(i));
-      index321_new(i) = index321(used_indices(i));
-      index321d_new(i) = index321d(used_indices(i));
-      index21_new(i) = index21(used_indices(i));
-    }
-    
-    output_longlist(0) = stage3_new;
-    output_longlist(1) = stage2n_new;
-    output_longlist(2) = stage2o_new;
-    output_longlist(3) = stage1_new;
-    output_longlist(4) = size3_new;
-    output_longlist(5) = size2n_new;
-    output_longlist(6) = size2o_new;
-    output_longlist(7) = size1_new;
-    output_longlist(8) = sizeb3_new;
-    output_longlist(9) = sizeb2n_new;
-    
-    output_longlist(10) = sizeb2o_new;
-    output_longlist(11) = sizeb1_new;
-    output_longlist(12) = sizec3_new;
-    output_longlist(13) = sizec2n_new;
-    output_longlist(14) = sizec2o_new;
-    output_longlist(15) = sizec1_new;
-    output_longlist(16) = obs3_new;
-    output_longlist(17) = obs2n_new;
-    output_longlist(18) = obs2o_new;
-    output_longlist(19) = obs1_new;
-    
-    output_longlist(20) = rep3_new;
-    output_longlist(21) = rep2n_new;
-    output_longlist(22) = rep2o_new;
-    output_longlist(23) = rep1_new;
-    output_longlist(24) = mat3_new;
-    output_longlist(25) = mat2n_new;
-    output_longlist(26) = mat2o_new;
-    output_longlist(27) = mat1_new;
-    output_longlist(28) = imm3_new;
-    output_longlist(29) = imm2n_new;
-    
-    output_longlist(30) = imm2o_new;
-    output_longlist(31) = imm1_new;
-    output_longlist(32) = repentry3_new;
-    output_longlist(33) = indata3_new;
-    output_longlist(34) = indata2n_new;
-    output_longlist(35) = indata2o_new;
-    output_longlist(36) = indata1_new;
-    output_longlist(37) = binwidth_new;
-    output_longlist(38) = binbwidth_new;
-    output_longlist(39) = bincwidth_new;
-    
-    output_longlist(40) = minage3_new;
-    output_longlist(41) = minage2_new;
-    output_longlist(42) = maxage3_new;
-    output_longlist(43) = maxage2_new;
-    output_longlist(44) = actualage_new;
-    
-    output_longlist(45) = grp3_new;
-    output_longlist(46) = grp2n_new;
-    output_longlist(47) = grp2o_new;
-    output_longlist(48) = grp1_new;
-    
-    output_longlist(49) = indatalong_new;
-    output_longlist(50) = ovgivent_new;
-    output_longlist(51) = ovestt_new;
-    output_longlist(52) = ovgivenf_new;
-    output_longlist(53) = ovestf_new;
-    output_longlist(54) = ovsurvmult_new;
-    output_longlist(55) = ovfecmult_new;
-    
-    output_longlist(56) = aliveequal_new;
-    output_longlist(57) = index321_new;
-    output_longlist(58) = index321d_new;
-    output_longlist(59) = index21_new;
-    
-  } else {
-    stage3_length = static_cast<int>(stage3.n_elem);
-    
-    output_longlist(0) = Rcpp::IntegerVector(stage3.begin(), stage3.end());
-    output_longlist(1) = Rcpp::IntegerVector(stage2n.begin(), stage2n.end());
-    output_longlist(2) = Rcpp::IntegerVector(stage2o.begin(), stage2o.end());
-    output_longlist(3) = Rcpp::IntegerVector(stage1.begin(), stage1.end());
-    output_longlist(4) = Rcpp::NumericVector(size3.begin(), size3.end());
-    output_longlist(5) = Rcpp::NumericVector(size2n.begin(), size2n.end());
-    output_longlist(6) = Rcpp::NumericVector(size2o.begin(), size2o.end());
-    output_longlist(7) = Rcpp::NumericVector(size1.begin(), size1.end());
-    output_longlist(8) = Rcpp::NumericVector(sizeb3.begin(), sizeb3.end());
-    output_longlist(9) = Rcpp::NumericVector(sizeb2n.begin(), sizeb2n.end());
-    
-    output_longlist(10) = Rcpp::NumericVector(sizeb2o.begin(), sizeb2o.end());
-    output_longlist(11) = Rcpp::NumericVector(sizeb1.begin(), sizeb1.end());
-    output_longlist(12) = Rcpp::NumericVector(sizec3.begin(), sizec3.end());
-    output_longlist(13) = Rcpp::NumericVector(sizec2n.begin(), sizec2n.end());
-    output_longlist(14) = Rcpp::NumericVector(sizec2o.begin(), sizec2o.end());
-    output_longlist(15) = Rcpp::NumericVector(sizec1.begin(), sizec1.end());
-    output_longlist(16) = Rcpp::NumericVector(obs3.begin(), obs3.end());
-    output_longlist(17) = Rcpp::NumericVector(obs2n.begin(), obs2n.end());
-    output_longlist(18) = Rcpp::NumericVector(obs2o.begin(), obs2o.end());
-    output_longlist(19) = Rcpp::NumericVector(obs1.begin(), obs1.end());
-    
-    output_longlist(20) = Rcpp::NumericVector(rep3.begin(), rep3.end());
-    output_longlist(21) = Rcpp::NumericVector(rep2n.begin(), rep2n.end());
-    output_longlist(22) = Rcpp::NumericVector(rep2o.begin(), rep2o.end());
-    output_longlist(23) = Rcpp::NumericVector(rep1.begin(), rep1.end());
-    output_longlist(24) = Rcpp::NumericVector(mat3.begin(), mat3.end());
-    output_longlist(25) = Rcpp::NumericVector(mat2n.begin(), mat2n.end());
-    output_longlist(26) = Rcpp::NumericVector(mat2o.begin(), mat2o.end());
-    output_longlist(27) = Rcpp::NumericVector(mat1.begin(), mat1.end());
-    output_longlist(28) = Rcpp::NumericVector(imm3.begin(), imm3.end());
-    output_longlist(29) = Rcpp::NumericVector(imm2n.begin(), imm2n.end());
-    
-    output_longlist(30) = Rcpp::NumericVector(imm2o.begin(), imm2o.end());
-    output_longlist(31) = Rcpp::NumericVector(imm1.begin(), imm1.end());
-    output_longlist(32) = Rcpp::NumericVector(repentry3.begin(), repentry3.end());
-    output_longlist(33) = Rcpp::NumericVector(indata3.begin(), indata3.end());
-    output_longlist(34) = Rcpp::NumericVector(indata2n.begin(), indata2n.end());
-    output_longlist(35) = Rcpp::NumericVector(indata2o.begin(), indata2o.end());
-    output_longlist(36) = Rcpp::NumericVector(indata1.begin(), indata1.end());
-    output_longlist(37) = Rcpp::NumericVector(binwidth.begin(), binwidth.end());
-    output_longlist(38) = Rcpp::NumericVector(binbwidth.begin(), binbwidth.end());
-    output_longlist(39) = Rcpp::NumericVector(bincwidth.begin(), bincwidth.end());
-    
-    output_longlist(40) = Rcpp::NumericVector(minage3.begin(), minage3.end());
-    output_longlist(41) = Rcpp::NumericVector(minage2.begin(), minage2.end());
-    output_longlist(42) = Rcpp::NumericVector(maxage3.begin(), maxage3.end());
-    output_longlist(43) = Rcpp::NumericVector(maxage2.begin(), maxage2.end());
-    output_longlist(44) = Rcpp::NumericVector(actualage.begin(), actualage.end());
-    
-    output_longlist(45) = Rcpp::NumericVector(grp3.begin(), grp3.end());
-    output_longlist(46) = Rcpp::NumericVector(grp2n.begin(), grp2n.end());
-    output_longlist(47) = Rcpp::NumericVector(grp2o.begin(), grp2o.end());
-    output_longlist(48) = Rcpp::NumericVector(grp1.begin(), grp1.end());
-    
-    output_longlist(49) = Rcpp::NumericVector(indatalong.begin(), indatalong.end());
-    output_longlist(50) = Rcpp::NumericVector(ovgivent.begin(), ovgivent.end());
-    output_longlist(51) = Rcpp::NumericVector(ovestt.begin(), ovestt.end());
-    output_longlist(52) = Rcpp::NumericVector(ovgivenf.begin(), ovgivenf.end());
-    output_longlist(53) = Rcpp::NumericVector(ovestf.begin(), ovestf.end());
-    output_longlist(54) = Rcpp::NumericVector(ovsurvmult.begin(), ovsurvmult.end());
-    output_longlist(55) = Rcpp::NumericVector(ovfecmult.begin(), ovfecmult.end());
-    
-    output_longlist(56) = Rcpp::NumericVector(aliveequal.begin(), aliveequal.end());
-    output_longlist(57) = Rcpp::NumericVector(index321.begin(), index321.end());
-    output_longlist(58) = Rcpp::NumericVector(index321d.begin(), index321d.end());
-    output_longlist(59) = Rcpp::NumericVector(index21.begin(), index21.end());
-  }
-  
-  CharacterVector namevec = {"stage3", "stage2n", "stage2o", "stage1", "size3",
-    "size2n", "size2o", "size1", "sizeb3", "sizeb2n", "sizeb2o", "sizeb1", 
-    "sizec3", "sizec2n", "sizec2o", "sizec1", "obs3", "obs2n", "obs2o", "obs1",
-    "rep3", "rep2n", "rep2o", "rep1", "mat3", "mat2n", "mat2o", "mat1", "imm3",
-    "imm2n", "imm2o", "imm1", "repentry3", "indata3", "indata2n", "indata2o",
-    "indata1", "binwidth", "binbwidth", "bincwidth", "minage3", "minage2",
-    "maxage3", "maxage2", "actualage", "group3", "group2n", "group2o", "group1",
-    "indata", "ovgiven_t", "ovest_t", "ovgiven_f", "ovest_f", "ovsurvmult",
-    "ovfecmult", "aliveandequal", "index321", "index321d", "index21"};
-  output_longlist.attr("names") = namevec;
-  output_longlist.attr("row.names") = Rcpp::IntegerVector::create(NA_INTEGER, stage3_length);
-  output_longlist.attr("class") = "data.frame";
-  
-  return output_longlist;
-}
 
 //' Estimate All Elements of Raw Historical Matrix
 //' 
@@ -3380,8 +1536,7 @@ List normalpatrolgroup(const DataFrame& sge3, const arma::ivec& sge2stage2,
       
       // Sum all individuals with particular transition
       if (dataindex2i(j) >= no2stages) {
-        throw Rcpp::exception("Current stageframe does not account for all trait combinations in the data.",
-          false);
+        throw Rcpp::exception("Current stageframe does not hold all trait combinations in dataset.", false);
       }
       stage2fec((dataindex2i(j)), 0) = stage2fec((dataindex2i(j)), 0) + 1.0; 
       if (dataalive3i(j) > 0) {
@@ -4299,6 +2454,24 @@ List subvertedpatrolgroup(const DataFrame& sge3, const arma::ivec& sge2index21,
 //' @param f1_indc_num A numeric vector of length equal to the number of years,
 //' holding values equal to the mean value of individual covariate \code{c} at
 //' each time \emph{t}-1 to be used in analysis.
+//' @param f2_annua_num A numeric vector of length equal to the number of years,
+//' holding values equal to the mean value of annual covariate \code{a} at
+//' each time \emph{t} to be used in analysis.
+//' @param f1_annua_num A numeric vector of length equal to the number of years,
+//' holding values equal to the mean value of annual covariate \code{a} at
+//' each time \emph{t}-1 to be used in analysis.
+//' @param f2_annub_num A numeric vector of length equal to the number of years,
+//' holding values equal to the mean value of annual covariate \code{b} at
+//' each time \emph{t} to be used in analysis.
+//' @param f1_annub_num A numeric vector of length equal to the number of years,
+//' holding values equal to the mean value of annual covariate \code{b} at
+//' each time \emph{t}-1 to be used in analysis.
+//' @param f2_annuc_num A numeric vector of length equal to the number of years,
+//' holding values equal to the mean value of annual covariate \code{c} at
+//' each time \emph{t} to be used in analysis.
+//' @param f1_annuc_num A numeric vector of length equal to the number of years,
+//' holding values equal to the mean value of annual covariate \code{c} at
+//' each time \emph{t}-1 to be used in analysis.
 //' @param f2_inda_cat A string vector of length equal to the number of years,
 //' holding categories of individual covariate \code{a} at each time \emph{t} to
 //' be used in analysis.
@@ -4396,8 +2569,12 @@ List raymccooney(const DataFrame& listofyears, const List& modelsuite,
   RObject maingroups, RObject mainindcova, RObject mainindcovb,
   RObject mainindcovc, const DataFrame& StageFrame, const DataFrame& OverWrite,
   const arma::mat& repmatrix, NumericVector f2_inda_num,
-  NumericVector f1_inda_num, NumericVector f2_indb_num, NumericVector f1_indb_num,
-  NumericVector f2_indc_num, NumericVector f1_indc_num, StringVector f2_inda_cat,
+  NumericVector f1_inda_num, NumericVector f2_indb_num,
+  NumericVector f1_indb_num, NumericVector f2_indc_num,
+  NumericVector f1_indc_num, NumericVector f2_annua_num,
+  NumericVector f1_annua_num, NumericVector f2_annub_num,
+  NumericVector f1_annub_num, NumericVector f2_annuc_num,
+  NumericVector f1_annuc_num, StringVector f2_inda_cat,
   StringVector f1_inda_cat, StringVector f2_indb_cat, StringVector f1_indb_cat,
   StringVector f2_indc_cat, StringVector f1_indc_cat, StringVector r2_inda,
   StringVector r1_inda, StringVector r2_indb, StringVector r1_indb,
@@ -4425,12 +2602,8 @@ List raymccooney(const DataFrame& listofyears, const List& modelsuite,
       matrixformat = 1;
     } else if (format == 2) {
       matrixformat = 2;
-    } else {
-      throw Rcpp::exception("Matrix format is not recognized.", false);
-    }
-  } else {
-    throw Rcpp::exception("Matrix style is not recognized.", false);
-  }
+    } else pop_error("format", "", "", 5);
+  } else pop_error("style", "", "", 5);
   
   Rcpp::DataFrame allstages = theoldpizzle(StageFrame, OverWrite, repmatrix,
     firstage, finalage, format, style, cont, filter);
@@ -4483,7 +2656,7 @@ List raymccooney(const DataFrame& listofyears, const List& modelsuite,
     CharacterVector effects_names = clone(main_effect_1);
     
     CharacterVector main_effect_2;
-    if (main_effect_1.length() > 20) {
+    if (main_effect_1.length() > 23) {
       main_effect_2 = as<CharacterVector>(vrm_frame["main_effect_2"]);
       
       for (int i = 0; i < main_effect_1.length(); i++) {
@@ -4494,9 +2667,9 @@ List raymccooney(const DataFrame& listofyears, const List& modelsuite,
       }
     }
     
-    NumericVector year_names = as<NumericVector>(year_frame["years"]);
+    CharacterVector year_names = as<CharacterVector>(year_frame["years"]);
     CharacterVector patch_names = as<CharacterVector>(patch_frame["patches"]);
-    NumericVector group_names = as<NumericVector>(group2_frame["groups"]);
+    CharacterVector group_names = as<CharacterVector>(group2_frame["groups"]);
     
     bool zi_yn = false;
     int vrm_length = vrm_frame.length();
@@ -4819,6 +2992,136 @@ List raymccooney(const DataFrame& listofyears, const List& modelsuite,
     NumericVector jsizec_indcova1_zi;
     NumericVector jsizec_indcovb1_zi;
     NumericVector jsizec_indcovc1_zi;
+    
+    NumericVector surv_annucova2;
+    NumericVector surv_annucovb2;
+    NumericVector surv_annucovc2;
+    NumericVector obs_annucova2;
+    NumericVector obs_annucovb2;
+    NumericVector obs_annucovc2;
+    NumericVector sizea_annucova2;
+    NumericVector sizea_annucovb2;
+    NumericVector sizea_annucovc2;
+    NumericVector sizeb_annucova2;
+    NumericVector sizeb_annucovb2;
+    NumericVector sizeb_annucovc2;
+    NumericVector sizec_annucova2;
+    NumericVector sizec_annucovb2;
+    NumericVector sizec_annucovc2;
+    NumericVector repst_annucova2;
+    NumericVector repst_annucovb2;
+    NumericVector repst_annucovc2;
+    NumericVector fec_annucova2;
+    NumericVector fec_annucovb2;
+    NumericVector fec_annucovc2;
+    NumericVector jsurv_annucova2;
+    NumericVector jsurv_annucovb2;
+    NumericVector jsurv_annucovc2;
+    NumericVector jobs_annucova2;
+    NumericVector jobs_annucovb2;
+    NumericVector jobs_annucovc2;
+    NumericVector jsizea_annucova2;
+    NumericVector jsizea_annucovb2;
+    NumericVector jsizea_annucovc2;
+    NumericVector jsizeb_annucova2;
+    NumericVector jsizeb_annucovb2;
+    NumericVector jsizeb_annucovc2;
+    NumericVector jsizec_annucova2;
+    NumericVector jsizec_annucovb2;
+    NumericVector jsizec_annucovc2;
+    NumericVector jrepst_annucova2;
+    NumericVector jrepst_annucovb2;
+    NumericVector jrepst_annucovc2;
+    NumericVector jmatst_annucova2;
+    NumericVector jmatst_annucovb2;
+    NumericVector jmatst_annucovc2;
+    
+    NumericVector sizea_annucova2_zi;
+    NumericVector sizea_annucovb2_zi;
+    NumericVector sizea_annucovc2_zi;
+    NumericVector sizeb_annucova2_zi;
+    NumericVector sizeb_annucovb2_zi;
+    NumericVector sizeb_annucovc2_zi;
+    NumericVector sizec_annucova2_zi;
+    NumericVector sizec_annucovb2_zi;
+    NumericVector sizec_annucovc2_zi;
+    NumericVector fec_annucova2_zi;
+    NumericVector fec_annucovb2_zi;
+    NumericVector fec_annucovc2_zi;
+    NumericVector jsizea_annucova2_zi;
+    NumericVector jsizea_annucovb2_zi;
+    NumericVector jsizea_annucovc2_zi;
+    NumericVector jsizeb_annucova2_zi;
+    NumericVector jsizeb_annucovb2_zi;
+    NumericVector jsizeb_annucovc2_zi;
+    NumericVector jsizec_annucova2_zi;
+    NumericVector jsizec_annucovb2_zi;
+    NumericVector jsizec_annucovc2_zi;
+    
+    NumericVector surv_annucova1;
+    NumericVector surv_annucovb1;
+    NumericVector surv_annucovc1;
+    NumericVector obs_annucova1;
+    NumericVector obs_annucovb1;
+    NumericVector obs_annucovc1;
+    NumericVector sizea_annucova1;
+    NumericVector sizea_annucovb1;
+    NumericVector sizea_annucovc1;
+    NumericVector sizeb_annucova1;
+    NumericVector sizeb_annucovb1;
+    NumericVector sizeb_annucovc1;
+    NumericVector sizec_annucova1;
+    NumericVector sizec_annucovb1;
+    NumericVector sizec_annucovc1;
+    NumericVector repst_annucova1;
+    NumericVector repst_annucovb1;
+    NumericVector repst_annucovc1;
+    NumericVector fec_annucova1;
+    NumericVector fec_annucovb1;
+    NumericVector fec_annucovc1;
+    NumericVector jsurv_annucova1;
+    NumericVector jsurv_annucovb1;
+    NumericVector jsurv_annucovc1;
+    NumericVector jobs_annucova1;
+    NumericVector jobs_annucovb1;
+    NumericVector jobs_annucovc1;
+    NumericVector jsizea_annucova1;
+    NumericVector jsizea_annucovb1;
+    NumericVector jsizea_annucovc1;
+    NumericVector jsizeb_annucova1;
+    NumericVector jsizeb_annucovb1;
+    NumericVector jsizeb_annucovc1;
+    NumericVector jsizec_annucova1;
+    NumericVector jsizec_annucovb1;
+    NumericVector jsizec_annucovc1;
+    NumericVector jrepst_annucova1;
+    NumericVector jrepst_annucovb1;
+    NumericVector jrepst_annucovc1;
+    NumericVector jmatst_annucova1;
+    NumericVector jmatst_annucovb1;
+    NumericVector jmatst_annucovc1;
+    
+    NumericVector sizea_annucova1_zi;
+    NumericVector sizea_annucovb1_zi;
+    NumericVector sizea_annucovc1_zi;
+    NumericVector sizeb_annucova1_zi;
+    NumericVector sizeb_annucovb1_zi;
+    NumericVector sizeb_annucovc1_zi;
+    NumericVector sizec_annucova1_zi;
+    NumericVector sizec_annucovb1_zi;
+    NumericVector sizec_annucovc1_zi;
+    NumericVector fec_annucova1_zi;
+    NumericVector fec_annucovb1_zi;
+    NumericVector fec_annucovc1_zi;
+    NumericVector jsizea_annucova1_zi;
+    NumericVector jsizea_annucovb1_zi;
+    NumericVector jsizea_annucovc1_zi;
+    NumericVector jsizeb_annucova1_zi;
+    NumericVector jsizeb_annucovb1_zi;
+    NumericVector jsizeb_annucovc1_zi;
+    NumericVector jsizec_annucova1_zi;
+    NumericVector jsizec_annucovb1_zi;
+    NumericVector jsizec_annucovc1_zi;
     
     int modelsuite_length = modelsuite.length();
     CharacterVector modelsuite_names = modelsuite.attr("names");
@@ -5657,14 +3960,16 @@ List raymccooney(const DataFrame& listofyears, const List& modelsuite,
     
     List madsexmadrigal_oneyear = jerzeibalowski(allstages, StageFrame,
       matrixformat, surv_proxy, obs_proxy, size_proxy, sizeb_proxy, sizec_proxy,
-      repst_proxy, fec_proxy, jsurv_proxy, jobs_proxy, jsize_proxy, jsizeb_proxy,
-      jsizec_proxy, jrepst_proxy, jmatst_proxy, f2_inda_num, f1_inda_num, f2_indb_num,
-      f1_indb_num, f2_indc_num, f1_indc_num, f2_inda_cat, f1_inda_cat, f2_indb_cat,
-      f1_indb_cat, f2_indc_cat, f1_indc_cat, r2_inda, r1_inda, r2_indb, r1_indb,
+      repst_proxy, fec_proxy, jsurv_proxy, jobs_proxy, jsize_proxy,
+      jsizeb_proxy, jsizec_proxy, jrepst_proxy, jmatst_proxy, f2_inda_num,
+      f1_inda_num, f2_indb_num, f1_indb_num, f2_indc_num, f1_indc_num,
+      f2_annua_num, f1_annua_num, f2_annub_num, f1_annub_num, f2_annuc_num,
+      f1_annuc_num, f2_inda_cat, f1_inda_cat, f2_indb_cat, f1_indb_cat,
+      f2_indc_cat, f1_indc_cat, r2_inda, r1_inda, r2_indb, r1_indb,
       r2_indc, r1_indc, dev_terms, false, dvr_yn, dvr_style, dvr_alpha, dvr_beta,
       dvr_dens, dens, fecmod, maxsize, maxsizeb, maxsizec, firstage, finalage,
       negfec, yearnumber, patchnumber, exp_tol, theta_tol, cdf, err_check,
-      simplicity, sparse);
+      simplicity, sparse, false);
     
     if (!simplicity) A_mats(i) = madsexmadrigal_oneyear["A"];
     F_mats(i) = madsexmadrigal_oneyear["F"];
@@ -5733,6 +4038,21 @@ List raymccooney(const DataFrame& listofyears, const List& modelsuite,
 //' each time \emph{t} to be used in analysis.
 //' @param f1_indc_num A numeric vector of length equal to the number of years,
 //' holding values equal to the mean value of individual covariate \code{c} at
+//' each time \emph{t}-1 to be used in analysis.
+//' @param f1_annua_num A numeric vector of length equal to the number of years,
+//' holding values equal to the mean value of annual covariate \code{a} at
+//' each time \emph{t}-1 to be used in analysis.
+//' @param f2_annub_num A numeric vector of length equal to the number of years,
+//' holding values equal to the mean value of annual covariate \code{b} at
+//' each time \emph{t} to be used in analysis.
+//' @param f1_annub_num A numeric vector of length equal to the number of years,
+//' holding values equal to the mean value of annual covariate \code{b} at
+//' each time \emph{t}-1 to be used in analysis.
+//' @param f2_annuc_num A numeric vector of length equal to the number of years,
+//' holding values equal to the mean value of annual covariate \code{c} at
+//' each time \emph{t} to be used in analysis.
+//' @param f1_annuc_num A numeric vector of length equal to the number of years,
+//' holding values equal to the mean value of annual covariate \code{c} at
 //' each time \emph{t}-1 to be used in analysis.
 //' @param f2_inda_cat A string vector of length equal to the number of years,
 //' holding categories of individual covariate \code{a} at each time \emph{t} to
@@ -5811,15 +4131,19 @@ List mothermccooney(const DataFrame& listofyears, const List& modelsuite,
   const IntegerVector& actualages, const CharacterVector& mainyears,
   const CharacterVector& mainpatches, RObject maingroups, RObject mainindcova,
   RObject mainindcovb, RObject mainindcovc, const DataFrame& ageframe,
-  const DataFrame& supplement,
-  NumericVector f2_inda_num, NumericVector f1_inda_num, NumericVector f2_indb_num,
-  NumericVector f1_indb_num, NumericVector f2_indc_num, NumericVector f1_indc_num,
-  StringVector f2_inda_cat, StringVector f1_inda_cat, StringVector f2_indb_cat,
+  const DataFrame& supplement, NumericVector f2_inda_num,
+  NumericVector f1_inda_num, NumericVector f2_indb_num,
+  NumericVector f1_indb_num, NumericVector f2_indc_num,
+  NumericVector f1_indc_num, NumericVector f2_annua_num,
+  NumericVector f1_annua_num, NumericVector f2_annub_num,
+  NumericVector f1_annub_num, NumericVector f2_annuc_num,
+  NumericVector f1_annuc_num, StringVector f2_inda_cat,
+  StringVector f1_inda_cat, StringVector f2_indb_cat,
   StringVector f1_indb_cat, StringVector f2_indc_cat, StringVector f1_indc_cat,
   StringVector r2_inda, StringVector r1_inda, StringVector r2_indb,
   StringVector r1_indb, StringVector r2_indc, StringVector r1_indc,
-  const NumericVector& dev_terms, double dens, double fecmod, int finalage, int cont,
-  bool negfec = false, bool nodata = false, double exp_tol = 700.0,
+  const NumericVector& dev_terms, double dens, double fecmod, int finalage,
+  int cont, bool negfec = false, bool nodata = false, double exp_tol = 700.0,
   double theta_tol = 1e8, bool err_check = false,
   bool simplicity = false, bool sparse = false) {
   
@@ -5853,7 +4177,7 @@ List mothermccooney(const DataFrame& listofyears, const List& modelsuite,
     CharacterVector effects_names = clone(main_effect_1);
     
     CharacterVector main_effect_2;
-    if (main_effect_1.length() > 20) {
+    if (main_effect_1.length() > 23) {
       main_effect_2 = as<CharacterVector>(vrm_frame["main_effect_2"]);
       
       for (int i = 0; i < main_effect_1.length(); i++) {
@@ -5864,9 +4188,9 @@ List mothermccooney(const DataFrame& listofyears, const List& modelsuite,
       }
     }
     
-    NumericVector year_names = as<NumericVector>(year_frame["years"]);
+    CharacterVector year_names = as<CharacterVector>(year_frame["years"]);
     CharacterVector patch_names = as<CharacterVector>(patch_frame["patches"]);
-    NumericVector group_names = as<NumericVector>(group2_frame["groups"]);
+    CharacterVector group_names = as<CharacterVector>(group2_frame["groups"]);
     
     bool zi_yn = false;
     
@@ -5915,6 +4239,7 @@ List mothermccooney(const DataFrame& listofyears, const List& modelsuite,
     NumericVector surv_indcova2;
     NumericVector surv_indcovb2;
     NumericVector surv_indcovc2;
+    
     NumericVector fec_indcova2;
     NumericVector fec_indcovb2;
     NumericVector fec_indcovc2;
@@ -5926,6 +4251,7 @@ List mothermccooney(const DataFrame& listofyears, const List& modelsuite,
     NumericVector surv_indcova1;
     NumericVector surv_indcovb1;
     NumericVector surv_indcovc1;
+    
     NumericVector fec_indcova1;
     NumericVector fec_indcovb1;
     NumericVector fec_indcovc1;
@@ -5933,6 +4259,30 @@ List mothermccooney(const DataFrame& listofyears, const List& modelsuite,
     NumericVector fec_indcova1_zi;
     NumericVector fec_indcovb1_zi;
     NumericVector fec_indcovc1_zi;
+    
+    NumericVector surv_annucova2;
+    NumericVector surv_annucovb2;
+    NumericVector surv_annucovc2;
+    
+    NumericVector fec_annucova2;
+    NumericVector fec_annucovb2;
+    NumericVector fec_annucovc2;
+    
+    NumericVector fec_annucova2_zi;
+    NumericVector fec_annucovb2_zi;
+    NumericVector fec_annucovc2_zi;
+    
+    NumericVector surv_annucova1;
+    NumericVector surv_annucovb1;
+    NumericVector surv_annucovc1;
+    
+    NumericVector fec_annucova1;
+    NumericVector fec_annucovb1;
+    NumericVector fec_annucovc1;
+    
+    NumericVector fec_annucova1_zi;
+    NumericVector fec_annucovb1_zi;
+    NumericVector fec_annucovc1_zi;
     
     int modelsuite_length = modelsuite.length();
     CharacterVector modelsuite_names = modelsuite.attr("names");
@@ -6152,11 +4502,13 @@ List mothermccooney(const DataFrame& listofyears, const List& modelsuite,
     
     List madsexmadrigal_oneyear = motherbalowski(actualages, ageframe,
       surv_proxy, fec_proxy, f2_inda_num, f1_inda_num, f2_indb_num, f1_indb_num,
-      f2_indc_num, f1_indc_num, f2_inda_cat, f1_inda_cat, f2_indb_cat, f1_indb_cat,
-      f2_indc_cat, f1_indc_cat, r2_inda, r1_inda, r2_indb, r1_indb, r2_indc,
-      r1_indc, surv_dev, fec_dev, dens, fecmod, finalage, negfec, yearnumber,
-      patchnumber, false, dvr_yn, dvr_style, dvr_alpha, dvr_beta, dvr_dens,
-      exp_tol, theta_tol, simplicity, sparse, supplement);
+      f2_indc_num, f1_indc_num, f2_annua_num, f1_annua_num, f2_annub_num,
+      f1_annub_num, f2_annuc_num, f1_annuc_num, f2_inda_cat, f1_inda_cat,
+      f2_indb_cat, f1_indb_cat, f2_indc_cat, f1_indc_cat, r2_inda, r1_inda,
+      r2_indb, r1_indb, r2_indc, r1_indc, surv_dev, fec_dev, dens, fecmod,
+      finalage, negfec, yearnumber, patchnumber, false, dvr_yn, dvr_style,
+      dvr_alpha, dvr_beta, dvr_dens, exp_tol, theta_tol, simplicity, sparse,
+      supplement);
     
     if (!simplicity) A_mats(i) = madsexmadrigal_oneyear["A"];
     F_mats(i) = madsexmadrigal_oneyear["F"];
@@ -6324,6 +4676,10 @@ List mothermccooney(const DataFrame& listofyears, const List& modelsuite,
 //' giving the values of individual covariates a, b, and c, respectively, for
 //' each projected time. Unused terms must be set to \code{0} (use of \code{NA}
 //' will produce errors.)
+//' @param ann_terms An optional data frame with 3 columns and \code{times} rows
+//' giving the values of annual covariates a, b, and c, respectively, for each
+//' projected time. Unused terms must be set to \code{0} (use of \code{NA} will
+//' produce errors.)
 //' @param dev_terms An optional data frame with 14 columns and \code{times}
 //' rows showing the values of the deviation terms to be added to each linear
 //' vital rate. The column order should be: 1: survival, 2: observation, 3:
@@ -6677,32 +5033,25 @@ Rcpp::List f_projection3(int format, bool prebreeding = true, int start_age = NA
   Nullable<List> modelsuite = R_NilValue, Nullable<DataFrame> paramnames = R_NilValue,
   Nullable<NumericVector> year = R_NilValue, Nullable<CharacterVector> patch = R_NilValue,
   Nullable<NumericVector> sp_density = R_NilValue, Nullable<RObject> ind_terms = R_NilValue,
-  Nullable<RObject> dev_terms = R_NilValue, Nullable<RObject> surv_model = R_NilValue,
-  Nullable<RObject> obs_model = R_NilValue, Nullable<RObject> size_model = R_NilValue,
-  Nullable<RObject> sizeb_model = R_NilValue, Nullable<RObject> sizec_model = R_NilValue,
-  Nullable<RObject> repst_model = R_NilValue, Nullable<RObject> fec_model = R_NilValue,
-  Nullable<RObject> jsurv_model = R_NilValue, Nullable<RObject> jobs_model = R_NilValue,
-  Nullable<RObject> jsize_model = R_NilValue, Nullable<RObject> jsizeb_model = R_NilValue,
-  Nullable<RObject> jsizec_model = R_NilValue, Nullable<RObject> jrepst_model = R_NilValue,
-  Nullable<RObject> jmatst_model = R_NilValue, Nullable<NumericVector> start_vec = R_NilValue,
-  Nullable<RObject> start_frame = R_NilValue, Nullable<RObject> tweights = R_NilValue,
-  Nullable<RObject> density = R_NilValue, Nullable<RObject> density_vr = R_NilValue,
-  Nullable<RObject> sparse = R_NilValue) {
+  Nullable<RObject> ann_terms = R_NilValue, Nullable<RObject> dev_terms = R_NilValue,
+  Nullable<RObject> surv_model = R_NilValue, Nullable<RObject> obs_model = R_NilValue,
+  Nullable<RObject> size_model = R_NilValue, Nullable<RObject> sizeb_model = R_NilValue,
+  Nullable<RObject> sizec_model = R_NilValue, Nullable<RObject> repst_model = R_NilValue,
+  Nullable<RObject> fec_model = R_NilValue, Nullable<RObject> jsurv_model = R_NilValue,
+  Nullable<RObject> jobs_model = R_NilValue, Nullable<RObject> jsize_model = R_NilValue,
+  Nullable<RObject> jsizeb_model = R_NilValue, Nullable<RObject> jsizec_model = R_NilValue,
+  Nullable<RObject> jrepst_model = R_NilValue, Nullable<RObject> jmatst_model = R_NilValue,
+  Nullable<NumericVector> start_vec = R_NilValue, Nullable<RObject> start_frame = R_NilValue,
+  Nullable<RObject> tweights = R_NilValue, Nullable<RObject> density = R_NilValue,
+  Nullable<RObject> density_vr = R_NilValue, Nullable<RObject> sparse = R_NilValue) {
   
   bool assume_markov {false};
   
-  if (format < 1 || format > 5) {
-    throw Rcpp::exception("Matrix format is not recognized.", false);
-  }
-  if (substoch <0 || substoch > 2) {
-    throw Rcpp::exception("Option substoch must equal 0, 1, or 2.", false);
-  }
-  if (nreps < 1) {
-    throw Rcpp::exception("Option nreps must equal a positive integer.", false);
-  }
-  if (times < 1) {
-    throw Rcpp::exception("Option times must equal a positive integer.", false);
-  }
+  if (format < 1 || format > 5) pop_error("format", "", "", 5);
+  if (substoch <0 || substoch > 2) pop_error("substoch", "0, 1, or 2.", "", 14);
+  
+  if (nreps < 1) pop_error("nreps", "positive integer", "", 6);
+  if (times < 1) pop_error("times", "positive integer", "", 6);
   if (format < 4 && (!IntegerVector::is_na(start_age) || !IntegerVector::is_na(last_age))) {
     if (!quiet) {
       Rf_warningcall(R_NilValue,
@@ -6761,9 +5110,7 @@ Rcpp::List f_projection3(int format, bool prebreeding = true, int start_age = NA
       } else if (no_check > 0) { 
         sparse_auto = false;
         sparse_switch = 0;
-      } else {
-        throw Rcpp::exception("Value entered for argument sparse not understood.", false);
-      }
+      } else throw Rcpp::exception("Argument sparse is not valid.", false);
     }
   }
   
@@ -6838,7 +5185,7 @@ Rcpp::List f_projection3(int format, bool prebreeding = true, int start_age = NA
       CharacterVector effects_names = clone(main_effect_1);
       
       CharacterVector main_effect_2;
-      if (main_effect_1.length() > 20) {
+      if (main_effect_1.length() > 23) {
         main_effect_2 = as<CharacterVector>(vrm_frame["main_effect_2"]);
         
         for (int i = 0; i < main_effect_1.length(); i++) {
@@ -6849,9 +5196,9 @@ Rcpp::List f_projection3(int format, bool prebreeding = true, int start_age = NA
         }
       }
       
-      NumericVector year_names = as<NumericVector>(year_frame["years"]);
+      CharacterVector year_names = as<CharacterVector>(year_frame["years"]);
       CharacterVector patch_names = as<CharacterVector>(patch_frame["patches"]);
-      NumericVector group_names = as<NumericVector>(group2_frame["groups"]);
+      CharacterVector group_names = as<CharacterVector>(group2_frame["groups"]);
       
       bool zi_yn = false;
       
@@ -7929,12 +6276,17 @@ Rcpp::List f_projection3(int format, bool prebreeding = true, int start_age = NA
         "individual covariate a in time t", "individual covariate a in time t-1",
         "individual covariate b in time t", "individual covariate b in time t-1",
         "individual covariate c in time t", "individual covariate c in time t-1",
-        "stage group in time t", "stage group in time t-1"};
+        "stage group in time t", "stage group in time t-1",
+        "annual covariate a in time t", "annual covariate a in time t-1",
+        "annual covariate b in time t", "annual covariate b in time t-1",
+        "annual covariate c in time t", "annual covariate c in time t-1"};
       CharacterVector mainparams = {"year2", "individ", "patch", "surv3",
         "obs3", "size3", "sizeb3", "sizec3", "repst3", "fec3", "fec2", "size2",
         "size1", "sizeb2", "sizeb1", "sizec2", "sizec1", "repst2", "repst1",
         "matst3", "matst2", "age", "density", "indcova2", "indcova1",
-        "indcovb2", "indcovb1", "indcovc2", "indcovc1", "group2", "group1"};
+        "indcovb2", "indcovb1", "indcovc2", "indcovc1", "group2", "group1",
+        "annucova2", "annucova1", "annucovb2", "annucovb1", "annucovc2",
+        "annucovc1"};
       CharacterVector modelparams = clone(mainparams);
       
       DataFrame pm_names = DataFrame::create(_["parameter_names"] = parameter_names,
@@ -7942,13 +6294,7 @@ Rcpp::List f_projection3(int format, bool prebreeding = true, int start_age = NA
       
       pmnames = pm_names;
       pmn_provided = true;
-    } else {
-      String eat_my_shorts = "Option modelsuite must be set to a lefkoMod or vrm_input object, ";
-      String eat_my_shorts1 = "or individual models must be supplied with modelsuite not set.";
-      eat_my_shorts += eat_my_shorts1;
-      
-      throw Rcpp::exception(eat_my_shorts.get_cstring(), false);
-    }
+    } else pop_error("modelsuite", "lefkoMod or vrm_input", "vital rate models", 7);
   } else {
     if (surv_model.isNotNull()) {
       RObject sum_intermediate = RObject(surv_model);
@@ -8058,14 +6404,8 @@ Rcpp::List f_projection3(int format, bool prebreeding = true, int start_age = NA
     }
   }
   
-  if (modelcheck == 0 && !nodata) {
-    throw Rcpp::exception("This function requires a lefkoMod object or vital rate models.",
-      false);
-  }
-  if (!pmn_provided) {
-    throw Rcpp::exception("paramnames is required if lefkoMod object is not supplied.",
-      false);
-  }
+  if (modelcheck == 0 && !nodata) pop_error("modelsuite", "lefkoMod or vrm_input", "vital rate models", 7);
+  if (!pmn_provided) pop_error("paramnames", "lefkoMod object", "", 15);
   
   // Stageframe
   DataFrame sframe;
@@ -8082,8 +6422,7 @@ Rcpp::List f_projection3(int format, bool prebreeding = true, int start_age = NA
     maingroups = as<RObject>(maingroups_sorted);
     
   } else if (format < 5) {
-    throw Rcpp::exception("A stageframe is required for all MPM formats except Leslie MPMs.",
-      false);
+    throw Rcpp::exception("A stageframe is required for all MPM formats except Leslie MPMs.", false);
   } else {
     sframe = R_NilValue;
     
@@ -8113,7 +6452,7 @@ Rcpp::List f_projection3(int format, bool prebreeding = true, int start_age = NA
   std::string group1var = as<std::string>(modelparam_names(30));
   
   IntegerVector mainyears_int;
-  NumericVector mainyears;
+  CharacterVector mainyears;
   CharacterVector mainpatches;
   DataFrame true_data;
   
@@ -8142,14 +6481,10 @@ Rcpp::List f_projection3(int format, bool prebreeding = true, int start_age = NA
         used_indccol = i;
       }
     }
-    if (used_yearcol < 0 || used_yearcol > (no_vars - 1)) {
-      throw Rcpp::exception("Correct variable in dataset for time t not found.", 
-        false);
-    }
-    IntegerVector all_years = as<IntegerVector>(true_data[used_yearcol]);
-    IntegerVector all_years_x = unique(all_years);
-    mainyears_int = int_sort(all_years_x);
-    mainyears = as<NumericVector>(mainyears_int);
+    if (used_yearcol < 0 || used_yearcol > (no_vars - 1)) pop_error("time t", "", "", 16);
+    CharacterVector all_years = as<CharacterVector>(true_data[used_yearcol]);
+    mainyears = sort_unique(all_years);
+    mainyears_int = seq_along(mainyears);
     
     if (used_patchcol > -1) {
       CharacterVector all_patches = as<CharacterVector>(true_data[used_patchcol]);
@@ -8161,14 +6496,14 @@ Rcpp::List f_projection3(int format, bool prebreeding = true, int start_age = NA
     }
   
   } else if (!data.isNotNull() && !nodata) {
-    throw Rcpp::exception("Please supply the original hfv dataset if using a lefkoMod object.",
-      false);
+    pop_error("data", " lefkoMod", "", 11);
       
   } else {
     DataFrame year_frame = as<DataFrame>(msuite["year_frame"]);
-    IntegerVector year_names = as<IntegerVector>(year_frame["years"]);
-    mainyears_int = year_names;
-    mainyears = as<NumericVector>(mainyears_int);
+    
+    CharacterVector year_names = as<CharacterVector>(year_frame["years"]);
+    mainyears = year_names;
+    mainyears_int = seq_along(mainyears);
     
     DataFrame patch_frame = as<DataFrame>(msuite["patch_frame"]);
     CharacterVector all_patches = as<CharacterVector>(patch_frame["patches"]);
@@ -8197,16 +6532,12 @@ Rcpp::List f_projection3(int format, bool prebreeding = true, int start_age = NA
         
       }
     } else {
-      if (IntegerVector::is_na(last_age)) {
-        throw Rcpp::exception("Option last_age must be entered if using a vrm_input object.",
-          false);
-      }
+      if (IntegerVector::is_na(last_age)) pop_error("last_age", " vrm_input", "", 11);
       
       if (last_age <= start_age) {
-        throw Rcpp::exception("Option last_age must be greater than start_age.",
-          false);
+        throw Rcpp::exception("Argument last_age must be greater than start_age.", false);
       }
-      mainages = seq(last_age, start_age);
+      mainages = seq(start_age, last_age);
     }
     
     age_limit = max(mainages) + 1;
@@ -8231,12 +6562,10 @@ Rcpp::List f_projection3(int format, bool prebreeding = true, int start_age = NA
     }
     
     if (last_age < (start_age + 1)) {
-      throw Rcpp::exception("Please set last_age to be greater than start_age.",
-        false);
+      throw Rcpp::exception("Argument last_age must be greater than start_age.", false);
     }
     if (fecage_max < fecage_min) {
-      throw Rcpp::exception("Please set fecage_max to be greater than or equal to fecage_min.",
-        false);
+      throw Rcpp::exception("Argument fecage_max must be greater than or equal to fecage_min.", false);
     }
   }
   
@@ -8365,29 +6694,25 @@ Rcpp::List f_projection3(int format, bool prebreeding = true, int start_age = NA
   
   // Check years and patches entries
   List all_years_topull(nreps);
-  NumericVector years_topull;
-  NumericMatrix years_projected (times, nreps);
+  CharacterVector years_topull;
+  CharacterMatrix years_projected (times, nreps);
   
-  int num_years = mainyears.length();
+  int num_years = static_cast<int>(mainyears.length());
   if (year.isNotNull()) {
-    NumericVector year_int (year);
+    CharacterVector year_char (year);
     
-    NumericVector years_unmatched = setdiff(year_int, mainyears);
-    if (years_unmatched.length() > 0) {
-      throw Rcpp::exception("Some input year values do not match years documented in dataset.",
-        false);
+    CharacterVector years_unmatched = setdiff(year_char, mainyears);
+    if (static_cast<int>(years_unmatched.length()) > 0) {
+      throw Rcpp::exception("Some input year values do not match dataset.", false);
     }
     if (stochastic) {
-      String eat_my_shorts = "If option year is set, then projection cannot be stochastic. ";
-      String eat_my_shorts1 = "Please set time weights via the tweights option.";
-      eat_my_shorts += eat_my_shorts1;
-      
+      String eat_my_shorts = "Projection cannot be stochastic if argument year is set.";
       throw Rcpp::exception(eat_my_shorts.get_cstring(), false);
     }
-    years_topull = year_int;
+    years_topull = year_char;
   } else if (!stochastic) {
-    NumericVector year_int = clone(mainyears);
-    years_topull = year_int;
+    CharacterVector year_char = clone(mainyears);
+    years_topull = year_char;
     if (!quiet) Rf_warningcall(R_NilValue,
       "Option year not set, so will cycle through existing years.");
   }
@@ -8401,35 +6726,21 @@ Rcpp::List f_projection3(int format, bool prebreeding = true, int start_age = NA
       assume_markov = true;
       
       if (static_cast<int>(twinput_markov.n_cols) != num_years) {
-        String eat_my_shorts = "Time weight matrix must have the same number of columns as the number ";
-        String eat_my_shorts1 = "of occasions in the dataset.";
-        eat_my_shorts += eat_my_shorts1;
-        
-        throw Rcpp::exception(eat_my_shorts.get_cstring(), false);
+        pop_error("tweights", "occasions", "dataset", 20);
       }
       if (twinput_markov.n_cols != twinput_markov.n_rows) {
-        String eat_my_shorts = "Time weight matrix must be square.";
-        
-        throw Rcpp::exception(eat_my_shorts.get_cstring(), false);
+        pop_error("tweights", "", "", 4);
       }
       
     } else if (is<NumericVector>(tweights)) {
       twinput = as<arma::vec>(tweights);
       
-      if (static_cast<int>(twinput.n_elem) != num_years) {
-        String eat_my_shorts = "Time weight vector must be the same length as the number ";
-        String eat_my_shorts1 = "of occasions in the dataset.";
-        eat_my_shorts += eat_my_shorts1;
-        
-        throw Rcpp::exception(eat_my_shorts.get_cstring(), false);
-      }
+      if (static_cast<int>(twinput.n_elem) != num_years) pop_error("tweights", "occasions", "dataset", 19);
       
-    } else {
-      throw Rcpp::exception("Object input in argument tweights is not a valid numeric vector or matrix.", false);
-    }
+    } else pop_error("tweights", "numeric vector or matrix.", "", 6);
     
     if (!stochastic) {
-      throw Rcpp::exception("Option tweights can only be used when stochastic = TRUE.",
+      throw Rcpp::exception("Argument tweights can only be used when stochastic = TRUE.",
         false);
     }
   } else {
@@ -8441,24 +6752,27 @@ Rcpp::List f_projection3(int format, bool prebreeding = true, int start_age = NA
     if (stochastic && !assume_markov) {
       years_topull = Rcpp::RcppArmadillo::sample(mainyears, times * nreps, true, twinput);
     } else if (stochastic && assume_markov) {
-      NumericVector ytp (times * nreps);
+      CharacterVector ytp (times * nreps);
       
       twinput = twinput_markov.col(0);
       for (int yr_counter = 0; yr_counter < (times * nreps); yr_counter++) {
         twinput = twinput / sum(twinput);
-        NumericVector ytp_piecemeal = Rcpp::RcppArmadillo::sample(mainyears, 1,
+        CharacterVector ytp_piecemeal = Rcpp::RcppArmadillo::sample(mainyears, 1,
           true, twinput);
         ytp(yr_counter) = ytp_piecemeal(0);
-      
-        arma::uvec mnyrs_preassigned = find(as<arma::uvec>(mainyears) == ytp_piecemeal(0));
-        twinput = twinput_markov.col(static_cast<int>(mnyrs_preassigned(0)));
+        
+        int mnyrs_preassigned {0};
+        for (int i = 0; i < num_years; i++) {
+          if (ytp_piecemeal(0) == mainyears(i)) mnyrs_preassigned = i;
+        }
+        twinput = twinput_markov.col(mnyrs_preassigned);
       }
       years_topull = ytp;
     }
   } else {
-    NumericVector true_years_topull (times * nreps);
+    CharacterVector true_years_topull (times * nreps);
     int current_year_counter = 0;
-    int years_topull_length = years_topull.length();
+    int years_topull_length = static_cast<int>(years_topull.length());
     for (int i = 0; i < (times * nreps); i++) {
       true_years_topull(i) = years_topull(current_year_counter);
       current_year_counter++;
@@ -8475,10 +6789,7 @@ Rcpp::List f_projection3(int format, bool prebreeding = true, int start_age = NA
     CharacterVector patch_int (patch);
     
     CharacterVector patches_unmatched = setdiff(patch_int, mainpatches);
-    if (patches_unmatched.length() > 0) {
-      String eat_my_shorts = "Some input patch values do not match patches documented in the dataset.";
-      throw Rcpp::exception(eat_my_shorts.get_cstring(), false);
-    }
+    if (patches_unmatched.length() > 0) pop_error("patch", "dataset", "", 17);
     patches_topull = patch_int;
     int crazy_patch {-1};
     if (patch_int.length() == 1) {
@@ -8493,8 +6804,7 @@ Rcpp::List f_projection3(int format, bool prebreeding = true, int start_age = NA
     CharacterVector patch_one (1);
     patch_one(0) = mainpatches(0);
     patches_topull = patch_one;
-    if (!quiet) Rf_warningcall(R_NilValue,
-      "Option patch not set, so will set to first patch/population.");
+    if (!quiet) Rf_warningcall(R_NilValue, "Option patch not set, so will set to first patch/population.");
   }
   
   // Handle spatial density vector
@@ -8542,9 +6852,7 @@ Rcpp::List f_projection3(int format, bool prebreeding = true, int start_age = NA
     if (is<DataFrame>(it_ROint)) {
       DataFrame it_intermediate = DataFrame(it_ROint);
       int it_size = static_cast<int>(it_intermediate.size());
-      if (it_size != 3) {
-        throw Rcpp::exception("Data frame ind_terms should have 3 columns and times rows.", false);
-      }
+      if (it_size != 3) pop_error("ind_terms", "data frame or matrix with 3 columns and times rows.", "", 6);
       
       inda_whatever = as<RObject>(it_intermediate[0]);
       indb_whatever = as<RObject>(it_intermediate[1]);
@@ -8555,9 +6863,7 @@ Rcpp::List f_projection3(int format, bool prebreeding = true, int start_age = NA
       int it_rows = it_intermediate.nrow();
       int it_cols = it_intermediate.ncol();
       
-      if (it_rows != 3 && it_cols != 3) {
-        throw Rcpp::exception("Numeric matrix ind_terms should have 3 columns and times rows.", false);
-      }
+      if (it_rows != 3 && it_cols != 3) pop_error("ind_terms", "data frame or matrix with 3 columns and times rows.", "", 6);
       
       if (it_cols == 3) {
         NumericVector chuck1 = it_intermediate(_, 0);
@@ -8579,9 +6885,7 @@ Rcpp::List f_projection3(int format, bool prebreeding = true, int start_age = NA
       int it_rows = it_intermediate.nrow();
       int it_cols = it_intermediate.ncol();
       
-      if (it_rows != 3 && it_cols != 3) {
-        throw Rcpp::exception("String matrix ind_terms should have 3 columns and times rows.", false);
-      }
+      if (it_rows != 3 && it_cols != 3) pop_error("ind_terms", "data frame or matrix with 3 columns and times rows.", "", 6);
       
       if (it_cols == 3) {
         CharacterVector chuck1 = it_intermediate(_, 0);
@@ -8633,8 +6937,7 @@ Rcpp::List f_projection3(int format, bool prebreeding = true, int start_age = NA
       for (int i = 0; i < inda_inputlength; i++) {
         for (int j = 0; j < maininda_length; j++) {
           if (!stringcompare_hard(as<std::string>(inda_another_int(i)), as<std::string>(inda_names_ch(j)))) {
-            throw Rcpp::exception("Some input ind cov a values do not match categories in dataset.",
-              false);
+            pop_error("indcov a", "dataset", "", 17);
           }
         }
       }
@@ -8679,8 +6982,7 @@ Rcpp::List f_projection3(int format, bool prebreeding = true, int start_age = NA
       for (int i = 0; i < indb_inputlength; i++) {
         for (int j = 0; j < mainindb_length; j++) {
           if (!stringcompare_hard(as<std::string>(indb_another_int(i)), as<std::string>(indb_names_ch(j)))) {
-            throw Rcpp::exception("Some input ind cov b values do not match categories in dataset.",
-              false);
+            pop_error("indcov b", "dataset", "", 17);
           }
         }
       }
@@ -8725,8 +7027,7 @@ Rcpp::List f_projection3(int format, bool prebreeding = true, int start_age = NA
       for (int i = 0; i < indc_inputlength; i++) {
         for (int j = 0; j < mainindc_length; j++) {
           if (!stringcompare_hard(as<std::string>(indc_another_int(i)), as<std::string>(indc_names_ch(j)))) {
-            throw Rcpp::exception("Some input ind cov c values do not match categories in dataset.",
-              false);
+            pop_error("indcov c", "dataset", "", 17);
           }
         }
       }
@@ -8755,6 +7056,111 @@ Rcpp::List f_projection3(int format, bool prebreeding = true, int start_age = NA
     if (lessthan_warning) {
       Rf_warningcall(R_NilValue,
         "Too few values of individual covariates have been supplied. Some will be cycled.");
+    }
+  }
+  
+  // Ann_terms data frame
+  NumericVector f2_anna_values(num_years);
+  NumericVector f2_annb_values(num_years);
+  NumericVector f2_annc_values(num_years);
+  NumericVector f1_anna_values(num_years);
+  NumericVector f1_annb_values(num_years);
+  NumericVector f1_annc_values(num_years);
+  
+  NumericVector f_anna_topull;
+  NumericVector f_annb_topull;
+  NumericVector f_annc_topull;
+  
+  lessthan_warning = false;
+  greaterthan_warning = false;
+  
+  if (ann_terms.isNotNull()) {
+    DataFrame at_ROint = RObject(ann_terms);
+    
+    RObject anna_whatever;
+    RObject annb_whatever;
+    RObject annc_whatever;
+    
+    if (is<DataFrame>(at_ROint)) {
+      DataFrame at_intermediate = DataFrame(at_ROint);
+      int at_size = static_cast<int>(at_intermediate.size());
+      if (at_size != 3) pop_error("ann_terms", "data frame or matrix with 3 columns and times rows.", "", 6);
+      
+      anna_whatever = as<RObject>(at_intermediate[0]);
+      annb_whatever = as<RObject>(at_intermediate[1]);
+      annc_whatever = as<RObject>(at_intermediate[2]);
+      
+    } else if (is<NumericMatrix>(at_ROint)) {
+      NumericMatrix at_intermediate = NumericMatrix(at_ROint);
+      int at_rows = at_intermediate.nrow();
+      int at_cols = at_intermediate.ncol();
+      
+      if (at_rows != 3 && at_cols != 3) pop_error("ann_terms", "data frame or matrix with 3 columns and times rows.", "", 6);
+      
+      if (at_cols == 3) {
+        NumericVector chuck1 = at_intermediate(_, 0);
+        NumericVector chuck2 = at_intermediate(_, 1);
+        NumericVector chuck3 = at_intermediate(_, 2);
+        anna_whatever = as<RObject>(chuck1);
+        annb_whatever = as<RObject>(chuck2);
+        annc_whatever = as<RObject>(chuck3);
+      } else if (at_rows == 3) {
+        NumericVector chuck1 = at_intermediate(0, _);
+        NumericVector chuck2 = at_intermediate(1, _);
+        NumericVector chuck3 = at_intermediate(2, _);
+        anna_whatever = as<RObject>(chuck1);
+        annb_whatever = as<RObject>(chuck2);
+        annc_whatever = as<RObject>(chuck3);
+      }
+    }
+    
+    if (is<NumericVector>(anna_whatever)) {
+      NumericVector anna_another_int = as<NumericVector>(anna_whatever);
+      
+      int check_len = anna_another_int.length();
+      if (check_len > times) greaterthan_warning = true;
+      if (check_len < times) lessthan_warning = true;
+      
+      f_anna_topull = anna_another_int;
+      
+    }
+    
+    if (is<NumericVector>(annb_whatever)) {
+      NumericVector annb_another_int = as<NumericVector>(annb_whatever);
+      
+      int check_len = annb_another_int.length();
+      if (check_len > times) greaterthan_warning = true;
+      if (check_len < times) lessthan_warning = true;
+      
+      f_annb_topull = annb_another_int;
+      
+    }
+    
+    if (is<NumericVector>(annc_whatever)) {
+      NumericVector annc_another_int = as<NumericVector>(annc_whatever);
+      
+      int check_len = annc_another_int.length();
+      if (check_len > times) greaterthan_warning = true;
+      if (check_len < times) lessthan_warning = true;
+      
+      f_annc_topull = annc_another_int;
+      
+    }
+    
+  } else {
+    f_anna_topull = clone(model0);
+    f_annb_topull = clone(model0);
+    f_annc_topull = clone(model0);
+  }
+  
+  if (!quiet) {
+    if (greaterthan_warning) {
+      Rf_warningcall(R_NilValue,
+        "Too many values of annual covariates have been supplied. Some will be cut.");
+    }
+    if (lessthan_warning) {
+      Rf_warningcall(R_NilValue,
+        "Too few values of annual covariates have been supplied. Some will be cycled.");
     }
   }
   
@@ -8801,9 +7207,7 @@ Rcpp::List f_projection3(int format, bool prebreeding = true, int start_age = NA
       int dt_rows = dt_mat.nrow();
       int dt_cols = dt_mat.ncol();
       
-      if (dt_rows != 14 && dt_cols != 14) {
-        throw Rcpp::exception("Deviation term matrix must have 14 columns.", false);
-      }
+      if (dt_rows != 14 && dt_cols != 14) pop_error("dev_terms", "data frame or matrix with 14 columns.", "", 6);
       
       if (dt_rows == 14) {
         surv_dev_extracted = dt_mat(0, _);
@@ -8852,10 +7256,7 @@ Rcpp::List f_projection3(int format, bool prebreeding = true, int start_age = NA
       DataFrame dt_frame = as<DataFrame>(dt_intermediate);
       int dt_vars = static_cast<int>(dt_frame.size());
       
-      if (dt_vars != 14) {
-        throw Rcpp::exception("Deviation term data frame must have 14 numeric columns.",
-          false);
-      }
+      if (dt_vars != 14) pop_error("dev_terms", "data frame or matrix with 14 columns.", "", 6);
       
       RObject surv_dev_a = as<RObject>(dt_frame[0]);
       RObject obs_dev_a = as<RObject>(dt_frame[1]);
@@ -8876,92 +7277,48 @@ Rcpp::List f_projection3(int format, bool prebreeding = true, int start_age = NA
         surv_dev_extracted = as<NumericVector>(surv_dev_a);
         veclimits = surv_dev_extracted.length();
         
-      } else {
-        throw Rcpp::exception("Some dev_terms columns appear not to be numeric.",
-          false);
-      }
+      } else throw Rcpp::exception("Some dev_terms columns are not numeric.", false);
       if (is<NumericVector>(obs_dev_a)) {
         obs_dev_extracted = as<NumericVector>(obs_dev_a);
-      } else {
-        throw Rcpp::exception("Some dev_terms columns appear not to be numeric.",
-          false);
-      }
+      } else throw Rcpp::exception("Some dev_terms columns are not numeric.", false);
       if (is<NumericVector>(size_dev_a)) {
         size_dev_extracted = as<NumericVector>(size_dev_a);
-      } else {
-        throw Rcpp::exception("Some dev_terms columns appear not to be numeric.");
-      }
+      } else throw Rcpp::exception("Some dev_terms columns are not numeric.", false);
       if (is<NumericVector>(sizeb_dev_a)) {
         sizeb_dev_extracted = as<NumericVector>(sizeb_dev_a);
-      } else {
-        throw Rcpp::exception("Some dev_terms columns appear not to be numeric.",
-          false);
-      }
+      } else throw Rcpp::exception("Some dev_terms columns are not numeric.", false);
       if (is<NumericVector>(sizec_dev_a)) {
         sizec_dev_extracted = as<NumericVector>(sizec_dev_a);
-      } else {
-        throw Rcpp::exception("Some dev_terms columns appear not to be numeric.",
-          false);
-      }
+      } else throw Rcpp::exception("Some dev_terms columns are not numeric.", false);
       if (is<NumericVector>(repst_dev_a)) {
         repst_dev_extracted = as<NumericVector>(repst_dev_a);
-      } else {
-        throw Rcpp::exception("Some dev_terms columns appear not to be numeric.",
-          false);
-      }
+      } else throw Rcpp::exception("Some dev_terms columns are not numeric.", false);
       if (is<NumericVector>(fec_dev_a)) {
         fec_dev_extracted = as<NumericVector>(fec_dev_a);
-      } else {
-        throw Rcpp::exception("Some dev_terms columns appear not to be numeric.",
-          false);
-      }
+      } else throw Rcpp::exception("Some dev_terms columns are not numeric.", false);
       if (is<NumericVector>(jsurv_dev_a)) {
         jsurv_dev_extracted = as<NumericVector>(jsurv_dev_a);
-      } else {
-        throw Rcpp::exception("Some dev_terms columns appear not to be numeric.",
-          false);
-      }
+      } else throw Rcpp::exception("Some dev_terms columns are not numeric.", false);
       if (is<NumericVector>(jobs_dev_a)) {
         jobs_dev_extracted = as<NumericVector>(jobs_dev_a);
-      } else {
-        throw Rcpp::exception("Some dev_terms columns appear not to be numeric.",
-          false);
-      }
+      } else throw Rcpp::exception("Some dev_terms columns are not numeric.", false);
       if (is<NumericVector>(jsize_dev_a)) {
         jsize_dev_extracted = as<NumericVector>(jsize_dev_a);
-      } else {
-        throw Rcpp::exception("Some dev_terms columns appear not to be numeric.",
-          false);
-      }
+      } else throw Rcpp::exception("Some dev_terms columns are not numeric.", false);
       if (is<NumericVector>(jsizeb_dev_a)) {
         jsizeb_dev_extracted = as<NumericVector>(jsizeb_dev_a);
-      } else {
-        throw Rcpp::exception("Some dev_terms columns appear not to be numeric.",
-          false);
-      }
+      } else throw Rcpp::exception("Some dev_terms columns are not numeric.", false);
       if (is<NumericVector>(jsizec_dev_a)) {
         jsizec_dev_extracted = as<NumericVector>(jsizec_dev_a);
-      } else {
-        throw Rcpp::exception("Some dev_terms columns appear not to be numeric.",
-          false);
-      }
+      } else throw Rcpp::exception("Some dev_terms columns are not numeric.", false);
       if (is<NumericVector>(jrepst_dev_a)) {
         jrepst_dev_extracted = as<NumericVector>(jrepst_dev_a);
-      } else {
-        throw Rcpp::exception("Some dev_terms columns appear not to be numeric.",
-          false);
-      }
+      } else throw Rcpp::exception("Some dev_terms columns are not numeric.", false);
       if (is<NumericVector>(jmatst_dev_a)) {
         jmatst_dev_extracted = as<NumericVector>(jmatst_dev_a);
-      } else {
-        throw Rcpp::exception("Some dev_terms columns appear not to be numeric.",
-          false);
-      }
+      } else throw Rcpp::exception("Some dev_terms columns are not numeric.", false);
       
-    } else {
-      throw Rcpp::exception("Argument dev_terms must be a data frame of 14 numeric variables.",
-        false);
-    }
+    } else pop_error("dev_terms", "data frame with 14 numeric variables.", "", 6);
   } else {
     veclimits = 1;
     surv_dev_extracted = clone(model0);
@@ -9001,17 +7358,26 @@ Rcpp::List f_projection3(int format, bool prebreeding = true, int start_age = NA
   int rinda_counter {0};
   int rindb_counter {0};
   int rindc_counter {0};
+  
+  int fanna_counter {0};
+  int fannb_counter {0};
+  int fannc_counter {0};
+  
   int dev_counter {0};
   
-  int year_limit = years_topull.length() / nreps;
-  int patch_limit = patches_topull.length();
-  int spdensity_limit = spdensity_topull.length();
-  int finda_limit = f_inda_topull.length();
-  int findb_limit = f_indb_topull.length();
-  int findc_limit = f_indc_topull.length();
-  int rinda_limit = r_inda_topull.length();
-  int rindb_limit = r_indb_topull.length();
-  int rindc_limit = r_indc_topull.length();
+  int year_limit = static_cast<int>(years_topull.length()) / nreps;
+  int patch_limit = static_cast<int>(patches_topull.length());
+  int spdensity_limit = static_cast<int>(spdensity_topull.length());
+  int finda_limit = static_cast<int>(f_inda_topull.length());
+  int findb_limit = static_cast<int>(f_indb_topull.length());
+  int findc_limit = static_cast<int>(f_indc_topull.length());
+  int rinda_limit = static_cast<int>(r_inda_topull.length());
+  int rindb_limit = static_cast<int>(r_indb_topull.length());
+  int rindc_limit = static_cast<int>(r_indc_topull.length());
+  
+  int fanna_limit = static_cast<int>(f_anna_topull.length());
+  int fannb_limit = static_cast<int>(f_annb_topull.length());
+  int fannc_limit = static_cast<int>(f_annc_topull.length());
   
   for (int i = 0; i < num_years; i++) {
     if (finda_counter >= finda_limit) finda_counter = 0;
@@ -9021,12 +7387,20 @@ Rcpp::List f_projection3(int format, bool prebreeding = true, int start_age = NA
     if (findc_counter >= findc_limit) findc_counter = 0;
     if (rindc_counter >= rindc_limit) rindc_counter = 0;
     
+    if (fanna_counter >= fanna_limit) fanna_counter = 0;
+    if (fannb_counter >= fannb_limit) fannb_counter = 0;
+    if (fannc_counter >= fannc_limit) fannc_counter = 0;
+    
     f2_inda_values(i) = f_inda_topull(finda_counter);
     r2_inda_values(i) = r_inda_topull(rinda_counter);
     f2_indb_values(i) = f_indb_topull(findb_counter);
     r2_indb_values(i) = r_indb_topull(rindb_counter);
     f2_indc_values(i) = f_indc_topull(findc_counter);
     r2_indc_values(i) = r_indc_topull(rindc_counter);
+    
+    f2_anna_values(i) = f_anna_topull(fanna_counter);
+    f2_annb_values(i) = f_annb_topull(fanna_counter);
+    f2_annc_values(i) = f_annc_topull(fanna_counter);
     
     if (i > 0) {
       f1_inda_values(i) = f2_inda_values(i-1);
@@ -9035,6 +7409,10 @@ Rcpp::List f_projection3(int format, bool prebreeding = true, int start_age = NA
       r1_indb_values(i) = r2_indb_values(i-1);
       f1_indc_values(i) = f2_indc_values(i-1);
       r1_indc_values(i) = r2_indc_values(i-1);
+      
+      f1_anna_values(i) = f2_anna_values(i-1);
+      f1_annb_values(i) = f2_annb_values(i-1);
+      f1_annc_values(i) = f2_annc_values(i-1);
       
     } else {
       r1_inda_values(i) = modelnone(0);
@@ -9048,6 +7426,10 @@ Rcpp::List f_projection3(int format, bool prebreeding = true, int start_age = NA
     rindb_counter++;
     findc_counter++;
     rindc_counter++;
+    
+    fanna_counter++;
+    fannb_counter++;
+    fannc_counter++;
   }
   
   for (int i = 0; i < times; i++) {
@@ -9175,15 +7557,15 @@ Rcpp::List f_projection3(int format, bool prebreeding = true, int start_age = NA
   double maxsizec {0.0};
   
   if (format < 5) {
-    NumericVector size3 = allstages["size3"];
-    NumericVector size2n = allstages["size2n"];
-    NumericVector size2o = allstages["size2o"];
-    NumericVector sizeb3 = allstages["sizeb3"];
-    NumericVector sizeb2n = allstages["sizeb2n"];
-    NumericVector sizeb2o = allstages["sizeb2o"];
-    NumericVector sizec3 = allstages["sizec3"];
-    NumericVector sizec2n = allstages["sizec2n"];
-    NumericVector sizec2o = allstages["sizec2o"];
+    NumericVector size3 = as<NumericVector>(allstages["size3"]);
+    NumericVector size2n = as<NumericVector>(allstages["size2n"]);
+    NumericVector size2o = as<NumericVector>(allstages["size2o"]);
+    NumericVector sizeb3 = as<NumericVector>(allstages["sizeb3"]);
+    NumericVector sizeb2n = as<NumericVector>(allstages["sizeb2n"]);
+    NumericVector sizeb2o = as<NumericVector>(allstages["sizeb2o"]);
+    NumericVector sizec3 = as<NumericVector>(allstages["sizec3"]);
+    NumericVector sizec2n = as<NumericVector>(allstages["sizec2n"]);
+    NumericVector sizec2o = as<NumericVector>(allstages["sizec2o"]);
     
     NumericVector maxveca = {max(size3), max(size2n), max(size2o)};
     NumericVector maxvecb = {max(sizeb3), max(sizeb2n), max(sizeb2o)};
@@ -9195,7 +7577,7 @@ Rcpp::List f_projection3(int format, bool prebreeding = true, int start_age = NA
   }
   
   // modelextract proxy lists
-  CharacterVector my_char = as<CharacterVector>(mainyears);
+  CharacterVector my_char = mainyears;
   List surv_proxy = modelextract(surmodl, pmnames, my_char, mainpatches,
     maingroups, inda_names, indb_names, indc_names, nodata);
   List obs_proxy = modelextract(obsmodl, pmnames, my_char, mainpatches,
@@ -9254,10 +7636,7 @@ Rcpp::List f_projection3(int format, bool prebreeding = true, int start_age = NA
   bool dens_vr = false;
   
   if (density_vr.isNotNull()) {
-    if (!is<DataFrame>(density_vr)) {
-      throw Rcpp::exception("Option density_vr must be a data frame created with function density_vr().",
-        false);
-    }
+    if (!is<DataFrame>(density_vr)) pop_error("density_vr", " data frame", "density_vr", 12);
     Rcpp::DataFrame dens_vr_thru(density_vr);
     dvr_frame = dens_vr_thru;
     
@@ -9266,8 +7645,7 @@ Rcpp::List f_projection3(int format, bool prebreeding = true, int start_age = NA
     
     if (dvr_vars != 6 || dvr_rows != 14) {
       String eat_my_shorts = "Data frame input for option density_vr does not match the ";
-      String eat_my_shorts1 = "dimensions of output from function density_vr().";
-      eat_my_shorts += eat_my_shorts1;
+      eat_my_shorts += "dimensions of output from function density_vr().";
       
       throw Rcpp::exception(eat_my_shorts.get_cstring(), false);
     }
@@ -9280,38 +7658,18 @@ Rcpp::List f_projection3(int format, bool prebreeding = true, int start_age = NA
     
     for (int i = 0; i < dvr_style_.length(); i++) {
       if (dvr_yn_(i) == true) {
-        if (dvr_style_(i) < 1 || dvr_style_(i) > 4) {
-          String eat_my_shorts = "Some density inputs are stated as yielding density ";
-          String eat_my_shorts1 = "dependence but not in an accepted style.";
-          eat_my_shorts += eat_my_shorts1;
-          
-          throw Rcpp::exception(eat_my_shorts.get_cstring(), false);
-        }
+        if (dvr_style_(i) < 1 || dvr_style_(i) > 4) pop_error("density inputs", "", "", 21);
         
-        if (NumericVector::is_na(dvr_alpha_(i))) {
-          String eat_my_shorts = "Values input for beta in density dependence relationships ";
-          String eat_my_shorts1 = "must be set to real values within tolerance limits.";
-          eat_my_shorts += eat_my_shorts1;
-          
-          throw Rcpp::exception(eat_my_shorts.get_cstring(), false);
-        }
-        if (NumericVector::is_na(dvr_beta_(i))) {
-          String eat_my_shorts = "Values input for beta in density dependence relationships ";
-          String eat_my_shorts1 = "must be set to real values within tolerance limits.";
-          eat_my_shorts += eat_my_shorts1;
-          
-          throw Rcpp::exception(eat_my_shorts.get_cstring(), false);
-        }
+        if (NumericVector::is_na(dvr_alpha_(i))) pop_error("beta", "density dependence", "", 8);
+        if (NumericVector::is_na(dvr_beta_(i))) pop_error("beta", "density dependence", "", 8);
         
         if (dvr_style_(i) == 1) {
           if (dvr_beta_(i) > exp_tol) {
-            Rf_warningcall(R_NilValue,
-              "Ricker beta outside limits. Resetting to exp_tol.");
+            Rf_warningcall(R_NilValue, "Ricker beta outside limits. Resetting to exp_tol.");
             
             dvr_beta_(i) = exp_tol;
           } else if (dvr_beta_(i) < (-1.0 * exp_tol)) {
-            Rf_warningcall(R_NilValue,
-              "Ricker beta outside limits. Resetting to negative exp_tol.");
+            Rf_warningcall(R_NilValue, "Ricker beta outside limits. Resetting to negative exp_tol.");
             
             dvr_beta_(i) = -1 * exp_tol;
           }
@@ -9319,11 +7677,9 @@ Rcpp::List f_projection3(int format, bool prebreeding = true, int start_age = NA
           double summed_stuff = dvr_alpha_(i) + dvr_beta_(i);
           
           if (summed_stuff > exp_tol) {
-            Rf_warningcall(R_NilValue,
-              "Alpha and beta used in Usher function may be too high. Results may be unpredictable.");
+            Rf_warningcall(R_NilValue, "Alpha and beta used in Usher function may be too high.");
           } else if (summed_stuff < (-1.0 * exp_tol)) {
-            Rf_warningcall(R_NilValue,
-              "Alpha and beta used in Usher function may be too low. Results may be unpredictable.");
+            Rf_warningcall(R_NilValue, "Alpha and beta used in Usher function may be too low.");
           }
         }
       }
@@ -9348,14 +7704,15 @@ Rcpp::List f_projection3(int format, bool prebreeding = true, int start_age = NA
       repst_proxy, fec_proxy, jsurv_proxy, jobs_proxy, jsize_proxy, jsizeb_proxy,
       jsizec_proxy, jrepst_proxy, jmatst_proxy, f2_inda_values, f1_inda_values,
       f2_indb_values, f1_indb_values, f2_indc_values, f1_indc_values,
-      r2_inda_values, r1_inda_values, r2_indb_values, r1_indb_values,
-      r2_indc_values, r1_indc_values, r2_inda_values, r1_inda_values,
+      f2_anna_values, f1_anna_values, f2_annb_values, f1_annb_values,
+      f2_annc_values, f1_annc_values, r2_inda_values, r1_inda_values,
       r2_indb_values, r1_indb_values, r2_indc_values, r1_indc_values,
-      used_devs, dens_vr, dvr_yn, dvr_style,
+      r2_inda_values, r1_inda_values, r2_indb_values, r1_indb_values,
+      r2_indc_values, r1_indc_values, used_devs, dens_vr, dvr_yn, dvr_style,
       dvr_alpha, dvr_beta, st_dvr_dens, spdensity_projected(0),
       repmod, maxsize, maxsizeb, maxsizec, start_age, last_age, false,
       yearnumber, patchnumber, exp_tol, theta_tol, ipm_cdf, err_check,
-      true, sparse_switch);
+      true, sparse_switch, false);
     
   } else {
     NumericVector st_dvr_dens = {1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0,
@@ -9363,13 +7720,15 @@ Rcpp::List f_projection3(int format, bool prebreeding = true, int start_age = NA
     
     madsexmadrigal_oneyear = motherbalowski(actualages, new_stageframe,
       surv_proxy, fec_proxy, f2_inda_values, f1_inda_values, f2_indb_values,
-      f1_indb_values, f2_indc_values, f1_indc_values, r2_inda_values,
+      f1_indb_values, f2_indc_values, f1_indc_values, f2_anna_values,
+      f1_anna_values, f2_annb_values, f1_annb_values, f2_annc_values,
+      f1_annc_values, r2_inda_values, r1_inda_values, r2_indb_values,
+      r1_indb_values, r2_indc_values, r1_indc_values, r2_inda_values,
       r1_inda_values, r2_indb_values, r1_indb_values, r2_indc_values,
-      r1_indc_values, r2_inda_values, r1_inda_values, r2_indb_values,
-      r1_indb_values, r2_indc_values, r1_indc_values, sur_dev_values(0),
-      fec_dev_values(0), spdensity_projected(0), repmod, last_age, false,
-      yearnumber, patchnumber, dens_vr, dvr_yn, dvr_style, dvr_alpha, dvr_beta,
-      st_dvr_dens, exp_tol, theta_tol, true, sparse_switch, new_ovtable);
+      r1_indc_values, sur_dev_values(0), fec_dev_values(0),
+      spdensity_projected(0), repmod, last_age, false, yearnumber, patchnumber,
+      dens_vr, dvr_yn, dvr_style, dvr_alpha, dvr_beta, st_dvr_dens, exp_tol,
+      theta_tol, true, sparse_switch, new_ovtable);
   }
   
   arma::sp_mat Umat_sp;
@@ -9429,9 +7788,7 @@ Rcpp::List f_projection3(int format, bool prebreeding = true, int start_age = NA
   // Start data frame and vector
   arma::vec startvec;
   if(start_frame.isNotNull()) {
-    if (!is<DataFrame>(start_frame)) {
-      throw Rcpp::exception("Option start_frame must be a data frame created with function start_input().");
-    }
+    if (!is<DataFrame>(start_frame)) pop_error("start_frame", " data frame", "start_input", 12);
     Rcpp::DataFrame start_thru(start_frame);
     startvec.set_size(meanmatrows);
     startvec.zeros();
@@ -9440,8 +7797,7 @@ Rcpp::List f_projection3(int format, bool prebreeding = true, int start_age = NA
     arma::vec start_values = as<arma::vec>(start_thru["value"]);
     
     if (static_cast<int>(start_elems.max()) > (meanmatrows - 1)) {
-      throw Rcpp::exception("Start vector input frame includes element indices too high for this MPM.",
-        false);
+      throw Rcpp::exception("Start vector input frame includes element indices too high for this MPM.", false);
     }
     for (int i = 0; i < static_cast<int>(start_elems.n_elem); i++) {
       startvec(start_elems(i)) = start_values(i);
@@ -9449,10 +7805,7 @@ Rcpp::List f_projection3(int format, bool prebreeding = true, int start_age = NA
     
   } else if (start_vec.isNotNull()) {
     startvec = as<arma::vec>(start_vec);
-    if (static_cast<int>(startvec.n_elem) != meanmatrows) {
-      throw Rcpp::exception("Start vector must be the same length as the number of rows in each matrix.",
-        false);
-    }
+    if (static_cast<int>(startvec.n_elem) != meanmatrows) pop_error("start_vec", "rows", "MPM matrices", 19);
     
   } else {
     startvec.set_size(meanmatrows);
@@ -9481,10 +7834,7 @@ Rcpp::List f_projection3(int format, bool prebreeding = true, int start_age = NA
   int n_dyn_elems {0};
   
   if (density.isNotNull()) {
-    if (!is<DataFrame>(density)) {
-      throw Rcpp::exception("Option density must be a data frame created with function density_input().",
-        false);
-    }
+    if (!is<DataFrame>(density)) pop_error("density", " data frame", "density_input", 12);
     Rcpp::DataFrame dens_thru(density);
     dens_input = dens_thru;
     
@@ -9500,21 +7850,14 @@ Rcpp::List f_projection3(int format, bool prebreeding = true, int start_age = NA
       StringVector stage1 = as<StringVector>(hstages["stage_1"]);
       int hst_size = stage3.length();
       
-      arma::uvec hst_3(hst_size);
-      arma::uvec hst_2r(hst_size);
-      arma::uvec hst_2c(hst_size);
-      arma::uvec hst_1(hst_size);
-      hst_3.zeros();
-      hst_2r.zeros();
-      hst_2c.zeros();
-      hst_1.zeros();
+      arma::uvec hst_3(hst_size, fill::zeros);
+      arma::uvec hst_2r(hst_size, fill::zeros);
+      arma::uvec hst_2c(hst_size, fill::zeros);
+      arma::uvec hst_1(hst_size, fill::zeros);
       
-      arma::uvec di_stage32_id(di_size);
-      arma::uvec di_stage21_id(di_size);
-      arma::uvec di_index(di_size);
-      di_stage32_id.zeros();
-      di_stage21_id.zeros();
-      di_index.zeros();
+      arma::uvec di_stage32_id(di_size, fill::zeros);
+      arma::uvec di_stage21_id(di_size, fill::zeros);
+      arma::uvec di_index(di_size, fill::zeros);
       
       for (int i = 0; i < di_size; i++) {
         for (int j = 0; j < hst_size; j++) {
@@ -9571,21 +7914,19 @@ Rcpp::List f_projection3(int format, bool prebreeding = true, int start_age = NA
         _["index21"] = di_stage21_id, _["index321"] = di_index);
       
     } else { // Ahistorical and age-based matrices
+      ///// Need an age-by-stage version handling multiple age inputs
+      
+      
       StringVector stage3 = as<StringVector>(ahstages["stage"]);
       StringVector stage2 = as<StringVector>(ahstages["stage"]);
       int ahst_size = stage3.length();
       
-      arma::uvec ahst_3(ahst_size);
-      arma::uvec ahst_2(ahst_size);
-      ahst_3.zeros();
-      ahst_2.zeros();
+      arma::uvec ahst_3(ahst_size, fill::zeros);
+      arma::uvec ahst_2(ahst_size, fill::zeros);
       
-      arma::uvec di_stage32_id(di_size);
-      arma::uvec di_stage21_id(di_size);
-      arma::uvec di_index(di_size);
-      di_stage32_id.zeros();
-      di_stage21_id.zeros();
-      di_index.zeros();
+      arma::uvec di_stage32_id(di_size, fill::zeros);
+      arma::uvec di_stage21_id(di_size, fill::zeros);
+      arma::uvec di_index(di_size, fill::zeros);
       
       for (int i = 0; i < di_size; i++) {
         for (int j = 0; j < ahst_size; j++) {
@@ -9627,23 +7968,15 @@ Rcpp::List f_projection3(int format, bool prebreeding = true, int start_age = NA
     n_dyn_elems = static_cast<int>(dyn_index321.n_elem);
     
     for (int i = 0; i < static_cast<int>(dyn_style.n_elem); i++) {
-      if (dyn_style(i) < 1 || dyn_style(i) > 4) {
-        String eat_my_shorts = "Some density inputs are stated as yielding density dependence ";
-        String eat_my_shorts1 = "but not in an accepted style.";
-        eat_my_shorts += eat_my_shorts1;
-        
-        throw Rcpp::exception(eat_my_shorts.get_cstring(), false);
-      }
+      if (dyn_style(i) < 1 || dyn_style(i) > 4) pop_error("density inputs", "", "", 21);
       
       if (dyn_style(i) == 1) {
         if (dyn_beta(i) > exp_tol) {
-          Rf_warningcall(R_NilValue,
-            "Ricker beta outside limits. Resetting to exp_tol.");
+          Rf_warningcall(R_NilValue, "Ricker beta outside limits. Resetting to exp_tol.");
           
           dyn_beta(i) = exp_tol;
         } else if (dyn_beta(i) < (-1.0 * exp_tol)) {
-          Rf_warningcall(R_NilValue,
-            "Ricker beta outside limits. Resetting to negative exp_tol.");
+          Rf_warningcall(R_NilValue, "Ricker beta outside limits. Resetting to negative exp_tol.");
           
           dyn_beta(i) = -1 * exp_tol;
         }
@@ -9651,11 +7984,9 @@ Rcpp::List f_projection3(int format, bool prebreeding = true, int start_age = NA
         double summed_stuff = dyn_alpha(i) + dyn_beta(i);
         
         if (summed_stuff > exp_tol) {
-            Rf_warningcall(R_NilValue,
-              "Alpha and beta used in Usher function may be too high. Results may be unpredictable.");
+            Rf_warningcall(R_NilValue, "Alpha and beta used in Usher function may be too high.");
         } else if (summed_stuff < (-1.0 * exp_tol)) {
-            Rf_warningcall(R_NilValue,
-              "Alpha and beta used in Usher function may be too high. Results may be unpredictable.");
+            Rf_warningcall(R_NilValue, "Alpha and beta used in Usher function may be too high.");
         }
       }
     }
@@ -9677,7 +8008,7 @@ Rcpp::List f_projection3(int format, bool prebreeding = true, int start_age = NA
   List U_mats(times);
   List out_mats(times);
   
-  IntegerMatrix years_int = refsort_num(years_projected, mainyears);
+  IntegerMatrix years_int = refsort_str_m(years_projected, mainyears);
   IntegerVector patches_int = refsort_str(patches_projected, mainpatches);
   
   arma::vec theseventhson = startvec;
@@ -9709,7 +8040,7 @@ Rcpp::List f_projection3(int format, bool prebreeding = true, int start_age = NA
       arma::rowvec theseventhgrandson = startvec.as_row();
       
       for (int i = 0; i < times; i++) {
-        if (i % 25 == 0) Rcpp::checkUserInterrupt();
+        if (i % 10 == 0) Rcpp::checkUserInterrupt();
         
         yearnumber = years_int(i, rep) - 1;
         patchnumber = patches_int(i) - 1;
@@ -9733,23 +8064,27 @@ Rcpp::List f_projection3(int format, bool prebreeding = true, int start_age = NA
             repst_proxy, fec_proxy, jsurv_proxy, jobs_proxy, jsize_proxy, jsizeb_proxy,
             jsizec_proxy, jrepst_proxy, jmatst_proxy, f2_inda_values, f1_inda_values,
             f2_indb_values, f1_indb_values, f2_indc_values, f1_indc_values,
-            r2_inda_values, r1_inda_values, r2_indb_values, r1_indb_values,
-            r2_indc_values, r1_indc_values, r2_inda_values, r1_inda_values,
+            f2_anna_values, f1_anna_values, f2_annb_values, f1_annb_values,
+            f2_annc_values, f1_annc_values, r2_inda_values, r1_inda_values,
             r2_indb_values, r1_indb_values, r2_indc_values, r1_indc_values,
-            used_devs, dens_vr, dvr_yn, dvr_style, dvr_alpha, dvr_beta,
-            usable_densities, spdensity_projected(i), repmod, maxsize, maxsizeb,
-            maxsizec, start_age, last_age, false, yearnumber, patchnumber, exp_tol,
-            theta_tol, ipm_cdf, err_check, true, sparse_switch);
+            r2_inda_values, r1_inda_values, r2_indb_values, r1_indb_values,
+            r2_indc_values, r1_indc_values, used_devs, dens_vr, dvr_yn,
+            dvr_style, dvr_alpha, dvr_beta, usable_densities,
+            spdensity_projected(i), repmod, maxsize, maxsizeb, maxsizec,
+            start_age, last_age, false, yearnumber, patchnumber, exp_tol,
+            theta_tol, ipm_cdf, err_check, true, sparse_switch, false);
           
         } else {
           madsexmadrigal_oneyear = motherbalowski(actualages, new_stageframe,
             surv_proxy, fec_proxy, f2_inda_values, f1_inda_values, f2_indb_values,
-            f1_indb_values, f2_indc_values, f1_indc_values, r2_inda_values,
+            f1_indb_values, f2_indc_values, f1_indc_values, f2_anna_values,
+            f1_anna_values, f2_annb_values, f1_annb_values, f2_annc_values,
+            f1_annc_values, r2_inda_values, r1_inda_values, r2_indb_values,
+            r1_indb_values, r2_indc_values, r1_indc_values, r2_inda_values,
             r1_inda_values, r2_indb_values, r1_indb_values, r2_indc_values,
-            r1_indc_values, r2_inda_values, r1_inda_values, r2_indb_values,
-            r1_indb_values, r2_indc_values, r1_indc_values, sur_dev_values(i),
-            fec_dev_values(i), spdensity_projected(i), repmod, last_age, false,
-            yearnumber, patchnumber, dens_vr, dvr_yn, dvr_style, dvr_alpha, dvr_beta,
+            r1_indc_values, sur_dev_values(i), fec_dev_values(i),
+            spdensity_projected(i), repmod, last_age, false, yearnumber,
+            patchnumber, dens_vr, dvr_yn, dvr_style, dvr_alpha, dvr_beta,
             usable_densities, exp_tol, theta_tol, true, sparse_switch, new_ovtable);
         }
         
@@ -9861,11 +8196,14 @@ Rcpp::List f_projection3(int format, bool prebreeding = true, int start_age = NA
           wpopproj.col(i+1) = popproj.col(i+1) / Rvecmat(i+1);
           
           if (repvalue && !dens_vr) { // Currently does not handle density dependent reproductive value
-            NumericVector second_devs = {sur_dev_values(times - (i+1)), obs_dev_values(times - (i+1)),
-              siz_dev_values(times - (i+1)), sib_dev_values(times - (i+1)), sic_dev_values(times - (i+1)),
-              rep_dev_values(times - (i+1)), fec_dev_values(times - (i+1)), jsur_dev_values(times - (i+1)),
-              jobs_dev_values(times - (i+1)), jsiz_dev_values(times - (i+1)), jsib_dev_values(times - (i+1)),
-              jsic_dev_values(times - (i+1)), jrep_dev_values(times - (i+1)), jmat_dev_values(times - (i+1))};
+            NumericVector second_devs = {sur_dev_values(times - (i+1)),
+              obs_dev_values(times - (i+1)), siz_dev_values(times - (i+1)),
+              sib_dev_values(times - (i+1)), sic_dev_values(times - (i+1)),
+              rep_dev_values(times - (i+1)), fec_dev_values(times - (i+1)),
+              jsur_dev_values(times - (i+1)), jobs_dev_values(times - (i+1)),
+              jsiz_dev_values(times - (i+1)), jsib_dev_values(times - (i+1)),
+              jsic_dev_values(times - (i+1)), jrep_dev_values(times - (i+1)),
+              jmat_dev_values(times - (i+1))};
             
             if (format < 5) {
               madsexmadrigal_forward = jerzeibalowski(allstages, new_stageframe,
@@ -9873,22 +8211,25 @@ Rcpp::List f_projection3(int format, bool prebreeding = true, int start_age = NA
                 repst_proxy, fec_proxy, jsurv_proxy, jobs_proxy, jsize_proxy, jsizeb_proxy,
                 jsizec_proxy, jrepst_proxy, jmatst_proxy, f2_inda_values, f1_inda_values,
                 f2_indb_values, f1_indb_values, f2_indc_values, f1_indc_values,
-                r2_inda_values, r1_inda_values, r2_indb_values, r1_indb_values,
-                r2_indc_values, r1_indc_values, r2_inda_values, r1_inda_values,
+                f2_anna_values, f1_anna_values, f2_annb_values, f1_annb_values,
+                f2_annc_values, f1_annc_values, r2_inda_values, r1_inda_values,
                 r2_indb_values, r1_indb_values, r2_indc_values, r1_indc_values,
-                used_devs, false, dvr_yn, dvr_style, dvr_alpha, dvr_beta,
-                usable_densities, spdensity_projected(times - (i+1)), repmod,
-                maxsize, maxsizeb, maxsizec, start_age, last_age, false, yearnumber,
-                patchnumber, exp_tol, theta_tol, ipm_cdf, err_check, true, sparse_switch);
+                r2_inda_values, r1_inda_values, r2_indb_values, r1_indb_values,
+                r2_indc_values, r1_indc_values, used_devs, false, dvr_yn, dvr_style,
+                dvr_alpha, dvr_beta, usable_densities, spdensity_projected(times - (i+1)),
+                repmod, maxsize, maxsizeb, maxsizec, start_age, last_age, false,
+                yearnumber, patchnumber, exp_tol, theta_tol, ipm_cdf, err_check,
+                true, sparse_switch, false);
               
             } else {
               madsexmadrigal_forward = motherbalowski(actualages, new_stageframe,
                 surv_proxy, fec_proxy, f2_inda_values, f1_inda_values, f2_indb_values,
-                f1_indb_values, f2_indc_values, f1_indc_values, r2_inda_values,
+                f1_indb_values, f2_indc_values, f1_indc_values, f2_anna_values,
+                f1_anna_values, f2_annb_values, f1_annb_values, f2_annc_values,
+                f1_annc_values, r2_inda_values, r1_inda_values, r2_indb_values,
+                r1_indb_values, r2_indc_values, r1_indc_values, r2_inda_values,
                 r1_inda_values, r2_indb_values, r1_indb_values, r2_indc_values,
-                r1_indc_values, r2_inda_values, r1_inda_values, r2_indb_values,
-                r1_indb_values, r2_indc_values, r1_indc_values,
-                sur_dev_values(times - (i+1)), fec_dev_values(times - (i+1)),
+                r1_indc_values, sur_dev_values(times - (i+1)), fec_dev_values(times - (i+1)),
                 spdensity_projected(times - (i+1)), repmod, last_age, false, yearnumber,
                 patchnumber, false, dvr_yn, dvr_style, dvr_alpha, dvr_beta,
                 usable_densities, exp_tol, theta_tol, true, sparse_switch, new_ovtable);
@@ -9935,9 +8276,10 @@ Rcpp::List f_projection3(int format, bool prebreeding = true, int start_age = NA
         yearnumber = years_int(i, rep) - 1;
         patchnumber = patches_int(i) - 1;
         
-        used_devs = {sur_dev_values(i), obs_dev_values(i), siz_dev_values(i), sib_dev_values(i),
-          sic_dev_values(i), rep_dev_values(i), fec_dev_values(i), jsur_dev_values(i),
-          jobs_dev_values(i), jsiz_dev_values(i), jsib_dev_values(i), jsic_dev_values(i),
+        used_devs = {sur_dev_values(i), obs_dev_values(i), siz_dev_values(i),
+          sib_dev_values(i), sic_dev_values(i), rep_dev_values(i),
+          fec_dev_values(i), jsur_dev_values(i), jobs_dev_values(i),
+          jsiz_dev_values(i), jsib_dev_values(i), jsic_dev_values(i),
           jrep_dev_values(i), jmat_dev_values(i)};
         
         if (dens_vr) {
@@ -9953,18 +8295,20 @@ Rcpp::List f_projection3(int format, bool prebreeding = true, int start_age = NA
           repst_proxy, fec_proxy, jsurv_proxy, jobs_proxy, jsize_proxy, jsizeb_proxy,
           jsizec_proxy, jrepst_proxy, jmatst_proxy, f2_inda_values, f1_inda_values,
           f2_indb_values, f1_indb_values, f2_indc_values, f1_indc_values,
-          r2_inda_values, r1_inda_values, r2_indb_values, r1_indb_values,
-          r2_indc_values, r1_indc_values, r2_inda_values, r1_inda_values,
+          f2_anna_values, f1_anna_values, f2_annb_values, f1_annb_values,
+          f2_annc_values, f1_annc_values, r2_inda_values, r1_inda_values,
           r2_indb_values, r1_indb_values, r2_indc_values, r1_indc_values,
-          used_devs, dens_vr, dvr_yn, dvr_style, dvr_alpha, dvr_beta,
-          usable_densities, spdensity_projected(i), repmod, maxsize, maxsizeb,
-          maxsizec, start_age, last_age, false, yearnumber, patchnumber, exp_tol,
-          theta_tol, ipm_cdf, err_check, true, sparse_switch);
+          r2_inda_values, r1_inda_values, r2_indb_values, r1_indb_values,
+          r2_indc_values, r1_indc_values, used_devs, dens_vr, dvr_yn, dvr_style,
+          dvr_alpha, dvr_beta, usable_densities, spdensity_projected(i), repmod,
+          maxsize, maxsizeb, maxsizec, start_age, last_age, false, yearnumber,
+          patchnumber, exp_tol, theta_tol, ipm_cdf, err_check, true,
+          sparse_switch, false);
         
         Umat_sp = as<arma::sp_mat>(madsexmadrigal_oneyear["U"]);
         Fmat_sp = as<arma::sp_mat>(madsexmadrigal_oneyear["F"]);
         
-        for (int j = 0; j < n_dyn_elems; j++) { // Density dependence
+       for (int j = 0; j < n_dyn_elems; j++) { // Density dependence
           time_delay = dyn_delay(j);
           if (time_delay > 0) time_delay = time_delay - 1;
           
@@ -10071,24 +8415,29 @@ Rcpp::List f_projection3(int format, bool prebreeding = true, int start_age = NA
           wpopproj.col(i+1) = popproj.col(i+1) / Rvecmat(i+1);
           
           if (repvalue && !dens_vr) { // Currently does not handle density dependent reproductive values
-            NumericVector second_devs = {sur_dev_values(times - (i+1)), obs_dev_values(times - (i+1)),
-              siz_dev_values(times - (i+1)), sib_dev_values(times - (i+1)), sic_dev_values(times - (i+1)),
-              rep_dev_values(times - (i+1)), fec_dev_values(times - (i+1)), jsur_dev_values(times - (i+1)),
-              jobs_dev_values(times - (i+1)), jsiz_dev_values(times - (i+1)), jsib_dev_values(times - (i+1)),
-              jsic_dev_values(times - (i+1)), jrep_dev_values(times - (i+1)), jmat_dev_values(times - (i+1))};
+            NumericVector second_devs = {sur_dev_values(times - (i+1)),
+              obs_dev_values(times - (i+1)), siz_dev_values(times - (i+1)),
+              sib_dev_values(times - (i+1)), sic_dev_values(times - (i+1)),
+              rep_dev_values(times - (i+1)), fec_dev_values(times - (i+1)),
+              jsur_dev_values(times - (i+1)), jobs_dev_values(times - (i+1)),
+              jsiz_dev_values(times - (i+1)), jsib_dev_values(times - (i+1)),
+              jsic_dev_values(times - (i+1)), jrep_dev_values(times - (i+1)),
+              jmat_dev_values(times - (i+1))};
             
             madsexmadrigal_forward = jerzeibalowski(allstages, new_stageframe,
               format, surv_proxy, obs_proxy, size_proxy, sizeb_proxy, sizec_proxy,
               repst_proxy, fec_proxy, jsurv_proxy, jobs_proxy, jsize_proxy, jsizeb_proxy,
               jsizec_proxy, jrepst_proxy, jmatst_proxy, f2_inda_values, f1_inda_values,
               f2_indb_values, f1_indb_values, f2_indc_values, f1_indc_values,
-              r2_inda_values, r1_inda_values, r2_indb_values, r1_indb_values,
-              r2_indc_values, r1_indc_values, r2_inda_values, r1_inda_values,
+              f2_anna_values, f1_anna_values, f2_annb_values, f1_annb_values,
+              f2_annc_values, f1_annc_values, r2_inda_values, r1_inda_values,
               r2_indb_values, r1_indb_values, r2_indc_values, r1_indc_values,
-              used_devs, false, dvr_yn, dvr_style, dvr_alpha, dvr_beta,
-              usable_densities, spdensity_projected(times - (i+1)), repmod,
-              maxsize, maxsizeb, maxsizec, start_age, last_age, false, yearnumber,
-              patchnumber, exp_tol, theta_tol, ipm_cdf, err_check, true, true);
+              r2_inda_values, r1_inda_values, r2_indb_values, r1_indb_values,
+              r2_indc_values, r1_indc_values, used_devs, false, dvr_yn, dvr_style,
+              dvr_alpha, dvr_beta, usable_densities, spdensity_projected(times - (i+1)),
+              repmod, maxsize, maxsizeb, maxsizec, start_age, last_age, false,
+              yearnumber, patchnumber, exp_tol, theta_tol, ipm_cdf, err_check,
+              true, true, false);
               
             arma::sp_mat second_U = as<arma::sp_mat>(madsexmadrigal_forward["U"]);
             arma::sp_mat second_F = as<arma::sp_mat>(madsexmadrigal_forward["F"]);
@@ -10388,6 +8737,21 @@ Rcpp::List f_projection3(int format, bool prebreeding = true, int start_age = NA
 //' in historical matrices, or a vector of such values corresponding to each
 //' occasion in the dataset. Defaults to \code{NULL}. Only used in
 //' function-based MPMs.
+//' @param annua Can be a single value to use for annual covariate \code{a}
+//' in all matrices, a pair of values to use for times \emph{t} and \emph{t}-1
+//' in historical matrices, or a vector of such values corresponding to each
+//' occasion in the dataset. Defaults to \code{NULL}. Only used in
+//' function-based MPMs.
+//' @param annub Can be a single value to use for annual covariate \code{b}
+//' in all matrices, a pair of values to use for times \emph{t} and \emph{t}-1
+//' in historical matrices, or a vector of such values corresponding to each
+//' occasion in the dataset. Defaults to \code{NULL}. Only used in
+//' function-based MPMs.
+//' @param annuc Can be a single value to use for annual covariate \code{c}
+//' in all matrices, a pair of values to use for times \emph{t} and \emph{t}-1
+//' in historical matrices, or a vector of such values corresponding to each
+//' occasion in the dataset. Defaults to \code{NULL}. Only used in
+//' function-based MPMs.
 //' @param dev_terms A numeric vector of 2 elements in the case of a Leslie MPM,
 //' and of 14 elements in all other cases. Consists of scalar additions to the
 //' y-intercepts of vital rate linear models used to estimate vital rates in
@@ -10676,10 +9040,11 @@ Rcpp::List mpm_create(bool historical = false, bool stage = true, bool age = fal
   
   Nullable<RObject> modelsuite = R_NilValue, Nullable<RObject> paramnames = R_NilValue,
   Nullable<RObject> inda = R_NilValue, Nullable<RObject> indb = R_NilValue,
-  Nullable<RObject> indc = R_NilValue, Nullable<RObject> dev_terms = R_NilValue,
-  double density = NA_REAL, bool CDF = true, bool random_inda = false,
-  bool random_indb = false, bool random_indc = false, bool negfec = false,
-  int exp_tol = 700, int theta_tol = 1e8,
+  Nullable<RObject> indc = R_NilValue, Nullable<RObject> annua = R_NilValue,
+  Nullable<RObject> annub = R_NilValue, Nullable<RObject> annuc = R_NilValue,
+  Nullable<RObject> dev_terms = R_NilValue, double density = NA_REAL,
+  bool CDF = true, bool random_inda = false, bool random_indb = false,
+  bool random_indc = false, bool negfec = false, int exp_tol = 700, int theta_tol = 1e8,
   
   bool censor = false, Nullable<RObject> censorkeep = R_NilValue, int start_age = NA_INTEGER,
   int last_age = NA_INTEGER, int fecage_min = NA_INTEGER, int fecage_max = NA_INTEGER,
@@ -10710,8 +9075,7 @@ Rcpp::List mpm_create(bool historical = false, bool stage = true, bool age = fal
         }
       }
       if (matches == 0) {
-        throw Rcpp::exception("This function cannot proceed without a valid data frame in hfv format.",
-          false);
+        throw Rcpp::exception("This function requires a data frame in hfv format.", false);
       }
       
       data_vars = as<StringVector>(data_.attr("names"));
@@ -10721,8 +9085,7 @@ Rcpp::List mpm_create(bool historical = false, bool stage = true, bool age = fal
       nodata = false;
       
     } else {
-      throw Rcpp::exception("This function cannot proceed without a valid data frame in hfv format.",
-        false);
+      throw Rcpp::exception("This function requires a data frame in hfv format.", false);
     }
   }
   
@@ -10742,7 +9105,7 @@ Rcpp::List mpm_create(bool historical = false, bool stage = true, bool age = fal
           matches++;
         }
       }
-      if (matches == 0) throw Rcpp::exception("Unrecognized object entered as stageframe.", false);
+      if (matches == 0) throw Rcpp::exception("Argument stageframe is not valid.", false);
       
       StringVector sf_vars (as<StringVector>(stageframe_.attr("names")));
       
@@ -10757,17 +9120,11 @@ Rcpp::List mpm_create(bool historical = false, bool stage = true, bool age = fal
           }
         }
       }
-      if (matches != 7) {
-        throw Rcpp::exception("Unrecognized object entered as stageframe.", false);
-      }
+      if (matches != 7) throw Rcpp::exception("Argument stageframe is not valid.", false);
       
-    } else {
-      throw Rcpp::exception("Unrecognized object entered as stageframe.", false);
-    }
+    } else throw Rcpp::exception("Argument stageframe is not valid.", false);
   } else {
-    if (stage) {
-      throw Rcpp::exception("Valid stageframe is required for all stage-based MPMs.", false);
-    }
+    if (stage) throw Rcpp::exception("Valid stageframe is required for all stage-based MPMs.", false);
   }
   
   DataFrame supplement_;
@@ -10788,15 +9145,9 @@ Rcpp::List mpm_create(bool historical = false, bool stage = true, bool age = fal
           matches++;
         }
       }
-      if (matches == 0) {
-        throw Rcpp::exception("If using supplemental data, please use only a data frame of class lefkoSD.",
-          false);
-      }
+      if (matches == 0) pop_error("supplement", "lefkoSD object", "", 3);
       
-    } else {
-      throw Rcpp::exception("If using supplemental data, please use only a data frame of class lefkoSD.",
-        false);
-    }
+    } else pop_error("supplement", "lefkoSD object", "", 3);
   }
   
   DataFrame overwrite_;
@@ -10809,13 +9160,9 @@ Rcpp::List mpm_create(bool historical = false, bool stage = true, bool age = fal
       overwrite_used = true;
       
       int no_ovr_vars {static_cast<int>(overwrite_.length())};
-      if (no_ovr_vars != 9) {
-        throw Rcpp::exception("Unrecognized object entered as overwrite data frame.", false);
-      }
+      if (no_ovr_vars != 9) throw Rcpp::exception("Argument overwrite is not valid.", false);
       
-    } else {
-      throw Rcpp::exception("Unrecognized object entered as overwrite data frame.", false);
-    }
+    } else throw Rcpp::exception("Argument overwrite is not valid.", false);
   }
   
   NumericMatrix repmatrix_;
@@ -10829,14 +9176,10 @@ Rcpp::List mpm_create(bool historical = false, bool stage = true, bool age = fal
       int repm_cols {static_cast<int>(repmatrix_.ncol())};
       int repm_rows {static_cast<int>(repmatrix_.nrow())};
       
-      if (repm_cols != repm_rows) {
-        throw Rcpp::exception("Option repmatrix must be a square numeric matrix.", false);
-      }
+      if (repm_cols != repm_rows) pop_error("repmatrix", "", "", 4);
       repmatrix_used = true;
       
-    } else {
-      throw Rcpp::exception("Option repmatrix must be a square numeric matrix.", false);
-    }
+    } else pop_error("repmatrix", "", "", 4);
   }
   
   NumericVector dev_terms_;
@@ -10849,16 +9192,10 @@ Rcpp::List mpm_create(bool historical = false, bool stage = true, bool age = fal
       
       if (age && !stage) {
         if (dvi_length != 2) {
-          String eat_my_shorts = "Argument dev_terms must be a numeric vector of two ";
-          String eat_my_shorts1 = "elements if suppplied for a leslie MPM.";
-          eat_my_shorts += eat_my_shorts1;
-          
-          throw Rcpp::exception(eat_my_shorts.get_cstring(), false);
+          pop_error("dev_terms", "numeric vector of 2 elements if developing Leslie MPMs", "", 3);
         }
       } else {
-        if (dvi_length != 14) {
-          throw Rcpp::exception("Argument dev_terms must be a numeric vector of 14 elements.", false);
-        }
+        if (dvi_length != 14) pop_error("dev_terms", "numeric vector of 14 elements.", "", 6);
       }
       dev_terms_ = dvi;
     }
@@ -10945,9 +9282,7 @@ Rcpp::List mpm_create(bool historical = false, bool stage = true, bool age = fal
     if (is<List>(modelsuite_entered)) {
       modelsuite_ = as<List>(modelsuite_entered);
       
-    } else {
-      throw Rcpp::exception("Object modelsuite not recognized.", false);
-    }
+    } else throw Rcpp::exception("Argument modelsuite is not valid.", false);
     
     bool ms_has_class = modelsuite_.hasAttribute("class");
     StringVector modelsuite_class;
@@ -11004,7 +9339,8 @@ Rcpp::List mpm_create(bool historical = false, bool stage = true, bool age = fal
       CharacterVector modelparams = {"year2", "individ", "patch", "none", "none",
         "none", "none", "none", "none", "none", "none", "none", "none", "none",
         "none", "none", "none", "none", "none", "none", "none", "none", "none",
-        "none", "none", "none", "none", "none", "none", "none", "none"};
+        "none", "none", "none", "none", "none", "none", "none", "none", "none",
+        "none", "none", "none", "none", "none"};
       if (age) modelparams(21) = "age";
       
       DataFrame paramnames_created = DataFrame::create(_["parameter_names"] = parameter_names,
@@ -11153,8 +9489,7 @@ Rcpp::List mpm_create(bool historical = false, bool stage = true, bool age = fal
         }
         paramnames_provided = true;
       } else if (!paramnames_provided) {
-        throw Rcpp::exception("If modelsuite is a list of models, then argument paramnames must also be entered.",
-          false);
+        throw Rcpp::exception("Argument paramnames is required with list of vital rate models.", false);
       }
       
       NumericVector one_vec = {1};
@@ -11191,11 +9526,7 @@ Rcpp::List mpm_create(bool historical = false, bool stage = true, bool age = fal
       int age_no {static_cast<int>(age_.length())};
       
       if (age_no > 1) {
-        String eat_my_shorts = "Agecol term must be a single string value corresponding ";
-        String eat_my_shorts1 = "to the name of the variable coding for age at time t.";
-        eat_my_shorts += eat_my_shorts1;
-        
-        throw Rcpp::exception(eat_my_shorts.get_cstring(), false);
+        pop_error("agecol", "single string", "variable coding for age at time t", 22);
       }
       
       age_var = String(age_(0));
@@ -11207,9 +9538,7 @@ Rcpp::List mpm_create(bool historical = false, bool stage = true, bool age = fal
           matches++;
         }
       }
-      if (matches != age_no) {
-        throw Rcpp::exception("Age variable name does not match entered hfv data frame.", false);
-      }
+      if (matches != age_no) pop_error("age", "", "", 16);
       
     } else if (is<IntegerVector>(age_input) || is<NumericVector>(age_input)) {
       IntegerVector age_int_(age_input);
@@ -11223,8 +9552,7 @@ Rcpp::List mpm_create(bool historical = false, bool stage = true, bool age = fal
       age_var = data_vars(age_var_int);
       
     } else {
-      throw Rcpp::exception("Please enter a string with the name of the variable coding age at time t.",
-        false);
+      throw Rcpp::exception("Please enter the name of the variable coding age at time t.", false);
     }
   } else if (age && raw && !paramnames_provided) {
     String age_var_ {"obsage"};
@@ -11238,11 +9566,7 @@ Rcpp::List mpm_create(bool historical = false, bool stage = true, bool age = fal
       }
     }
     if (matches != 1) {
-      String eat_my_shorts = "Default agecol variable name is not correct. ";
-      String eat_my_shorts1 = "Please supply correct variable name.";
-      eat_my_shorts += eat_my_shorts1;
-      
-      throw Rcpp::exception(eat_my_shorts.get_cstring(), false);
+      throw Rcpp::exception("Default agecol variable name is not correct. Enter correct variable.", false);
     }
   }
   
@@ -11267,6 +9591,20 @@ Rcpp::List mpm_create(bool historical = false, bool stage = true, bool age = fal
     
     if (IntegerVector::is_na(last_age)) last_age = data_age_max + 1;
     if (IntegerVector::is_na(fecage_min)) fecage_min = data_age_min;
+    if (IntegerVector::is_na(fecage_max)) fecage_max = last_age;
+  } else if (age) {
+    if (IntegerVector::is_na(start_age)) {
+      if (prebreeding) {
+        start_age = 1;
+      } else {
+        start_age = 0;
+      }
+    }
+    
+    if (IntegerVector::is_na(last_age)) {
+      throw Rcpp::exception("Age-based matrices require a valid final age.", false);
+    }
+    if (IntegerVector::is_na(fecage_min)) fecage_min = start_age;
     if (IntegerVector::is_na(fecage_max)) fecage_max = last_age;
   }
   
@@ -11408,7 +9746,8 @@ Rcpp::List mpm_create(bool historical = false, bool stage = true, bool age = fal
         DataFrame mov_short = DataFrame::create(_["0"] = as<StringVector>(melchett_ovtable_[0]),
           _["1"] = as<StringVector>(melchett_ovtable_[1]),
           _["2"] = as<StringVector>(melchett_ovtable_[2]),
-          _["3"] = as<IntegerVector>(melchett_ovtable_[3]));
+          _["3"] = as<IntegerVector>(melchett_ovtable_[3]),
+          _["4"] = as<IntegerVector>(melchett_ovtable_[10]));
         
         if (LefkoUtils::df_duplicates(mov_short)) {
           Rf_warningcall(R_NilValue,
@@ -11470,24 +9809,20 @@ Rcpp::List mpm_create(bool historical = false, bool stage = true, bool age = fal
           melchett_ovtable_ = as<DataFrame>(melchett["ovtable"]);
           melchett_repmatrix_ = as<NumericMatrix>(melchett["repmatrix"]);
         }
-      } else {
-        throw Rcpp::exception("Age-by-stage MPMs cannot be historical.", false);
-      }
+      } else throw Rcpp::exception("Age-by-stage MPMs cannot be historical.", false);
       
       melchett_ovtable_length = static_cast<int>(melchett_ovtable_.nrows());
       
       DataFrame mov_short = DataFrame::create(_["0"] = as<StringVector>(melchett_ovtable_[0]),
         _["1"] = as<StringVector>(melchett_ovtable_[1]),
-        _["2"] = as<StringVector>(melchett_ovtable_[2]));
+        _["2"] = as<StringVector>(melchett_ovtable_[2]),
+        _["3"] = as<StringVector>(melchett_ovtable_[10]));
       
       if (LefkoUtils::df_duplicates(mov_short)) {
-        Rf_warningcall(R_NilValue,
-          "Supplement contains multiple entries for the same transitions.");
+        Rf_warningcall(R_NilValue, "Supplement contains multiple entries for same transitions.");
       }
     } else {
-      if (age) {
-        throw Rcpp::exception("Age-based MPMs cannot be historical.", false);
-      }
+      if (age) throw Rcpp::exception("Age-based MPMs cannot be historical.", false);
     }
   }
   
@@ -11515,13 +9850,7 @@ Rcpp::List mpm_create(bool historical = false, bool stage = true, bool age = fal
         int alive_no {static_cast<int>(alive_.length())};
         IntegerVector alive_int_ (alive_no);
         
-        if (alive_no < 2 || alive_no > 3) {
-          String eat_my_shorts = "Alive status must be entered as a string vector showing status ";
-          String eat_my_shorts1 = "in times t+1 and t, and time t-1 if a historical MPM is desired.";
-          eat_my_shorts += eat_my_shorts1;
-          
-          throw Rcpp::exception(eat_my_shorts.get_cstring(), false);
-        }
+        if (alive_no < 2 || alive_no > 3) pop_error("alive", "status", "", 10);
         
         int matches {0};
         for (int i = 0; i < alive_no; i++) {
@@ -11532,9 +9861,7 @@ Rcpp::List mpm_create(bool historical = false, bool stage = true, bool age = fal
             }
           }
         }
-        if (matches != alive_no) {
-          throw Rcpp::exception("Alive status variable names do not match entered hfv data frame.", false);
-        }
+        if (matches != alive_no) pop_error("alive status", "hfv data frame", "", 9);
         alive_int = alive_int_;
         
       } else if (is<IntegerVector>(alive_input) || is<NumericVector>(alive_input)) {
@@ -11553,15 +9880,7 @@ Rcpp::List mpm_create(bool historical = false, bool stage = true, bool age = fal
         alive_ = alive_string;
         alive_int = alive_int_;
         
-      } else {
-        String eat_my_shorts = "Please enter a string vector of valid variable names ";
-        String eat_my_shorts1 = "coding for alive status in times t+1 and t, and ";
-        String eat_my_shorts2 = "time t-1 if a historical MPM is desired.";
-        eat_my_shorts += eat_my_shorts1;
-        eat_my_shorts += eat_my_shorts2;
-        
-        throw Rcpp::exception(eat_my_shorts.get_cstring(), false);
-      }
+      } else pop_error("alive status", "hfv data frame", "", 9);
     } else if (raw) {
       int alive_no {3};
       if (historical) {
@@ -11580,8 +9899,7 @@ Rcpp::List mpm_create(bool historical = false, bool stage = true, bool age = fal
         }
       }
       if (matches != alive_no) {
-        throw Rcpp::exception("Default alive status variable names do not match entered hfv data frame.",
-          false);
+        throw Rcpp::exception("Default alive status variable names do not match data.", false);
       }
     }
     
@@ -11605,13 +9923,7 @@ Rcpp::List mpm_create(bool historical = false, bool stage = true, bool age = fal
         int obsst_no {static_cast<int>(obsst_.length())};
         IntegerVector obsst_int_ (obsst_no);
         
-        if (obsst_no < 2 || obsst_no > 3) {
-          String eat_my_shorts = "Observation status must be entered as a string vector showing status ";
-          String eat_my_shorts1 = "in times t+1 and t, and time t-1 if a historical MPM is desired.";
-          eat_my_shorts += eat_my_shorts1;
-          
-          throw Rcpp::exception(eat_my_shorts.get_cstring(), false);
-        }
+        if (obsst_no < 2 || obsst_no > 3) pop_error("obsst", "observation status", "", 10);
         
         int matches {0};
         for (int i = 0; i < obsst_no; i++) {
@@ -11622,10 +9934,7 @@ Rcpp::List mpm_create(bool historical = false, bool stage = true, bool age = fal
             }
           }
         }
-        if (matches != obsst_no) {
-          throw Rcpp::exception("Observation status variable names do not match entered hfv data frame.",
-            false);
-        }
+        if (matches != obsst_no) pop_error("observation status", "", "", 16);
         obsst_int = obsst_int_;
         
       } else if (is<IntegerVector>(obsst_input) || is<NumericVector>(obsst_input)) {
@@ -11644,15 +9953,7 @@ Rcpp::List mpm_create(bool historical = false, bool stage = true, bool age = fal
         obsst_ = obsst_string;
         obsst_int = obsst_int_;
         
-      } else {
-        String eat_my_shorts = "Please enter a string vector of valid variable names ";
-        String eat_my_shorts1 = "coding for observation status in times t+1 and t, and ";
-        String eat_my_shorts2 = "time t-1 if a historical MPM is desired.";
-        eat_my_shorts += eat_my_shorts1;
-        eat_my_shorts += eat_my_shorts2;
-        
-        throw Rcpp::exception(eat_my_shorts.get_cstring(), false);
-      }
+      } else pop_error("obsst", "observation status", "", 10);
       
     } else if (raw && stage) {
       arma::uvec mso;
@@ -11692,8 +9993,7 @@ Rcpp::List mpm_create(bool historical = false, bool stage = true, bool age = fal
           }
         }
         if (matches != obsst_no) {
-          throw Rcpp::exception("Default observation status variable names do not match entered hfv data frame.",
-            false);
+          throw Rcpp::exception("Default observation status variable names do not match data.", false);
         }
       }
     }
@@ -11706,13 +10006,7 @@ Rcpp::List mpm_create(bool historical = false, bool stage = true, bool age = fal
         int size_no {static_cast<int>(size_.length())};
         IntegerVector size_int_ (size_no);
         
-        if (size_no < 2 || size_no > 3) {
-          String eat_my_shorts = "Primary size must be entered as a string vector showing status ";
-          String eat_my_shorts1 = "in times t+1 and t, and time t-1 if a historical MPM is desired.";
-          eat_my_shorts += eat_my_shorts1;
-          
-          throw Rcpp::exception(eat_my_shorts.get_cstring(), false);
-        }
+        if (size_no < 2 || size_no > 3) pop_error("size", "primary size", "", 10);
         
         int matches {0};
         for (int i = 0; i < size_no; i++) {
@@ -11723,9 +10017,7 @@ Rcpp::List mpm_create(bool historical = false, bool stage = true, bool age = fal
             }
           }
         }
-        if (matches != size_no) {
-          throw Rcpp::exception("Size variable names do not match entered hfv data frame.", false);
-        }
+        if (matches != size_no) pop_error("size", "", "", 16);
         size_int = size_int_;
         
       } else if (is<IntegerVector>(size_input) || is<NumericVector>(size_input)) {
@@ -11744,15 +10036,7 @@ Rcpp::List mpm_create(bool historical = false, bool stage = true, bool age = fal
         size_ = size_string;
         size_int = size_int_;
         
-      } else {
-        String eat_my_shorts = "Please enter a string vector of valid variable names ";
-        String eat_my_shorts1 = "coding for primary size in times t+1 and t, and ";
-        String eat_my_shorts2 = "time t-1 if a historical MPM is desired.";
-        eat_my_shorts += eat_my_shorts1;
-        eat_my_shorts += eat_my_shorts2;
-        
-        throw Rcpp::exception(eat_my_shorts.get_cstring(), false);
-      }
+      } else pop_error("size", "primary size", "", 10);
     } else if (raw && stage) {
       int size_no {3};
       if (historical) {
@@ -11771,8 +10055,7 @@ Rcpp::List mpm_create(bool historical = false, bool stage = true, bool age = fal
         }
       }
       if (matches != size_no) {
-        throw Rcpp::exception("Default primary size variable names do not match entered hfv data frame.",
-          false);
+        throw Rcpp::exception("Default primary size variable names do not match data.", false);
       }
     }
     
@@ -11785,13 +10068,7 @@ Rcpp::List mpm_create(bool historical = false, bool stage = true, bool age = fal
         int sizeb_no {static_cast<int>(sizeb_.length())};
         IntegerVector sizeb_int_ (sizeb_no);
         
-        if (sizeb_no < 2 || sizeb_no > 3) {
-          String eat_my_shorts = "Secondary size must be entered as a string vector showing status ";
-          String eat_my_shorts1 = "in times t+1 and t, and time t-1 if a historical MPM is desired.";
-          eat_my_shorts += eat_my_shorts1;
-          
-          throw Rcpp::exception(eat_my_shorts.get_cstring(), false);
-        }
+        if (sizeb_no < 2 || sizeb_no > 3) pop_error("sizeb", "secondary size", "", 10);
         
         int matches {0};
         for (int i = 0; i < sizeb_no; i++) {
@@ -11802,10 +10079,7 @@ Rcpp::List mpm_create(bool historical = false, bool stage = true, bool age = fal
             }
           }
         }
-        if (matches != sizeb_no) {
-          throw Rcpp::exception("sizeb status variable names do not match entered hfv data frame.",
-            false);
-        }
+        if (matches != sizeb_no) pop_error("sizeb", "", "", 16);
         sizeb_int = sizeb_int_;
         
       } else if (is<IntegerVector>(sizeb_input) || is<NumericVector>(sizeb_input)) {
@@ -11824,15 +10098,7 @@ Rcpp::List mpm_create(bool historical = false, bool stage = true, bool age = fal
         sizeb_ = sizeb_string;
         sizeb_int = sizeb_int_;
         
-      } else {
-        String eat_my_shorts = "Please enter a string vector of valid variable names ";
-        String eat_my_shorts1 = "coding for secondary size in times t+1 and t, and ";
-        String eat_my_shorts2 = "time t-1 if a historical MPM is desired.";
-        eat_my_shorts += eat_my_shorts1;
-        eat_my_shorts += eat_my_shorts2;
-        
-        throw Rcpp::exception(eat_my_shorts.get_cstring(), false);
-      }
+      } else pop_error("sizeb", "secondary size", "", 10);
     } else if (raw && stage) {
       arma::vec mssb;
       
@@ -11875,8 +10141,7 @@ Rcpp::List mpm_create(bool historical = false, bool stage = true, bool age = fal
           }
         }
         if (matches != size_no) {
-          throw Rcpp::exception("Default secondary size variable names do not match entered hfv data frame.",
-            false);
+          throw Rcpp::exception("Default secondary size variable names do not match data.", false);
         }
       } else {
         if (historical) {
@@ -11896,13 +10161,7 @@ Rcpp::List mpm_create(bool historical = false, bool stage = true, bool age = fal
         int sizec_no {static_cast<int>(sizec_.length())};
         IntegerVector sizec_int_ (sizec_no);
         
-        if (sizec_no < 2 || sizec_no > 3) {
-          String eat_my_shorts = "Tertiary size must be entered as a string vector showing status ";
-          String eat_my_shorts1 = "in times t+1 and t, and time t-1 if a historical MPM is desired.";
-          eat_my_shorts += eat_my_shorts1;
-          
-          throw Rcpp::exception(eat_my_shorts.get_cstring(), false);
-        }
+        if (sizec_no < 2 || sizec_no > 3) pop_error("sizec", "tertiary size", "", 10);
         
         int matches {0};
         for (int i = 0; i < sizec_no; i++) {
@@ -11913,10 +10172,7 @@ Rcpp::List mpm_create(bool historical = false, bool stage = true, bool age = fal
             }
           }
         }
-        if (matches != sizec_no) {
-          throw Rcpp::exception("Tertiary size variable names do not match entered hfv data frame.",
-            false);
-        }
+        if (matches != sizec_no) pop_error("sizec", "", "", 16);
         sizec_int = sizec_int_;
         
       } else if (is<IntegerVector>(sizec_input) || is<NumericVector>(sizec_input)) {
@@ -11935,15 +10191,7 @@ Rcpp::List mpm_create(bool historical = false, bool stage = true, bool age = fal
         sizec_ = sizec_string;
         sizec_int = sizec_int_;
         
-      } else {
-        String eat_my_shorts = "Please enter a string vector of valid variable names ";
-        String eat_my_shorts1 = "coding for tertiary size in times t+1 and t, and ";
-        String eat_my_shorts2 = "time t-1 if a historical MPM is desired.";
-        eat_my_shorts += eat_my_shorts1;
-        eat_my_shorts += eat_my_shorts2;
-        
-        throw Rcpp::exception(eat_my_shorts.get_cstring(), false);
-      }
+      } else pop_error("sizec", "tertiary size", "", 10);
     } else if (raw && stage) {
       arma::vec mssc;
       
@@ -11982,7 +10230,7 @@ Rcpp::List mpm_create(bool historical = false, bool stage = true, bool age = fal
           }
         }
         if (matches != size_no) {
-          throw Rcpp::exception("Default tertiary size variable names do not match entered hfv data frame.", false);
+          throw Rcpp::exception("Default tertiary size variable names do not match data.", false);
         }
       } else {
         if (historical) {
@@ -12002,13 +10250,7 @@ Rcpp::List mpm_create(bool historical = false, bool stage = true, bool age = fal
         int repst_no {static_cast<int>(repst_.length())};
         IntegerVector repst_int_ (repst_no);
         
-        if (repst_no < 2 || repst_no > 3) {
-          String eat_my_shorts = "Reproductive status must be entered as a string vector showing status ";
-          String eat_my_shorts1 = "in times t+1 and t, and time t-1 if a historical MPM is desired.";
-          eat_my_shorts += eat_my_shorts1;
-          
-          throw Rcpp::exception(eat_my_shorts.get_cstring(), false);
-        }
+        if (repst_no < 2 || repst_no > 3) pop_error("repst", "reproductive status", "", 10);
         
         int matches {0};
         for (int i = 0; i < repst_no; i++) {
@@ -12019,10 +10261,7 @@ Rcpp::List mpm_create(bool historical = false, bool stage = true, bool age = fal
             }
           }
         }
-        if (matches != repst_no) {
-          throw Rcpp::exception("Reproductive status variable names do not match entered hfv data frame.",
-            false);
-        }
+        if (matches != repst_no) pop_error("reproductive status", "", "", 16);
         repst_int = repst_int_;
         
       } else if (is<IntegerVector>(repst_input) || is<NumericVector>(repst_input)) {
@@ -12041,15 +10280,7 @@ Rcpp::List mpm_create(bool historical = false, bool stage = true, bool age = fal
         repst_ = repst_string;
         repst_int = repst_int_;
         
-      } else {
-        String eat_my_shorts = "Please enter a string vector of valid variable names coding ";
-        String eat_my_shorts1 = "for reproductive status in times t+1 and t, and time t-1 ";
-        String eat_my_shorts2 = "if a historical MPM is desired.";
-        eat_my_shorts += eat_my_shorts1;
-        eat_my_shorts += eat_my_shorts2;
-        
-        throw Rcpp::exception(eat_my_shorts.get_cstring(), false);
-      }
+      } else pop_error("repst", "reproductive status", "", 10);
     } else if (raw) {
       arma::uvec msr;
       
@@ -12088,8 +10319,7 @@ Rcpp::List mpm_create(bool historical = false, bool stage = true, bool age = fal
           }
         }
         if (matches != repst_no) {
-          throw Rcpp::exception("Default reproductive status variable names do not match entered hfv data frame.",
-            false);
+          throw Rcpp::exception("Default reproductive status variable names do not match data.", false);
         }
       }
     }
@@ -12103,13 +10333,7 @@ Rcpp::List mpm_create(bool historical = false, bool stage = true, bool age = fal
         int matst_no {static_cast<int>(matst_.length())};
         IntegerVector matst_int_ (matst_no);
         
-        if (matst_no < 2 || matst_no > 3) {
-          String eat_my_shorts = "Maturity status must be entered as a string vector showing status ";
-          String eat_my_shorts1 = "in times t+1 and t, and time t-1 if a historical MPM is desired.";
-          eat_my_shorts += eat_my_shorts1;
-          
-          throw Rcpp::exception(eat_my_shorts.get_cstring(), false);
-        }
+        if (matst_no < 2 || matst_no > 3) pop_error("matst", "maturity status", "", 10);
         
         int matches {0};
         for (int i = 0; i < matst_no; i++) {
@@ -12120,10 +10344,7 @@ Rcpp::List mpm_create(bool historical = false, bool stage = true, bool age = fal
             }
           }
         }
-        if (matches != matst_no) {
-          throw Rcpp::exception("Maturity status variable names do not match entered hfv data frame.",
-            false);
-        }
+        if (matches != matst_no) pop_error("maturity status", "", "", 16);
         matst_int = matst_int_;
         
       } else if (is<IntegerVector>(matst_input) || is<NumericVector>(matst_input)) {
@@ -12142,15 +10363,7 @@ Rcpp::List mpm_create(bool historical = false, bool stage = true, bool age = fal
         matst_ = matst_string;
         matst_int = matst_int_;
         
-      } else {
-        String eat_my_shorts = "Please enter a string vector of valid variable names coding ";
-        String eat_my_shorts1 = "for maturity status in times t+1 and t, and time t-1 ";
-        String eat_my_shorts2 = "if a historical MPM is desired.";
-        eat_my_shorts += eat_my_shorts1;
-        eat_my_shorts += eat_my_shorts2;
-        
-        throw Rcpp::exception(eat_my_shorts.get_cstring(), false);
-      }
+      } else pop_error("matst", "maturity status", "", 10);
     } else if (raw && stage) {
       arma::uvec msm;
       
@@ -12189,8 +10402,7 @@ Rcpp::List mpm_create(bool historical = false, bool stage = true, bool age = fal
           }
         }
         if (matches != matst_no) {
-          throw Rcpp::exception("Default maturity status variable names do not match entered hfv data frame.",
-            false);
+          throw Rcpp::exception("Default maturity status variable names do not match data.", false);
         }
       }
     }
@@ -12203,13 +10415,7 @@ Rcpp::List mpm_create(bool historical = false, bool stage = true, bool age = fal
         int fec_no {static_cast<int>(fec_.length())};
         IntegerVector fec_int_ (fec_no);
         
-        if (fec_no < 2 || fec_no > 3) {
-          String eat_my_shorts = "Fecundity must be entered as a string vector showing status ";
-          String eat_my_shorts1 = "in times t+1 and t, and time t-1 if a historical MPM is desired.";
-          eat_my_shorts += eat_my_shorts1;
-          
-          throw Rcpp::exception(eat_my_shorts.get_cstring(), false);
-        }
+        if (fec_no < 2 || fec_no > 3) pop_error("fec", "fecundity", "", 10);
         
         int matches {0};
         for (int i = 0; i < fec_no; i++) {
@@ -12220,10 +10426,7 @@ Rcpp::List mpm_create(bool historical = false, bool stage = true, bool age = fal
             }
           }
         }
-        if (matches != fec_no) {
-          throw Rcpp::exception("Fecundity variable names do not match entered hfv data frame.",
-            false);
-        }
+        if (matches != fec_no) pop_error("fecundity", "", "", 16);
         fec_int = fec_int_;
         
       } else if (is<IntegerVector>(fec_input) || is<NumericVector>(fec_input)) {
@@ -12242,13 +10445,7 @@ Rcpp::List mpm_create(bool historical = false, bool stage = true, bool age = fal
         fec_ = fec_string;
         fec_int = fec_int_;
         
-      } else {
-        String eat_my_shorts = "Please enter a string vector of valid variable names coding for ";
-        String eat_my_shorts1 = "fecundity in times t+1 and t, and time t-1 if a historical MPM is desired.";
-        eat_my_shorts += eat_my_shorts1;
-        
-        throw Rcpp::exception(eat_my_shorts.get_cstring(), false);
-      }
+      } else pop_error("fec", "fecundity", "", 10);
     } else if (raw) {
       int fec_no {3};
       if (historical) {
@@ -12271,7 +10468,7 @@ Rcpp::List mpm_create(bool historical = false, bool stage = true, bool age = fal
       fec_int = fec_int_;
       
       if (matches != fec_no) {
-        throw Rcpp::exception("Default fecundity variable names do not match entered hfv data frame.", false);
+        throw Rcpp::exception("Default fecundity variable names do not match data.", false);
       }
     }
     
@@ -12284,11 +10481,7 @@ Rcpp::List mpm_create(bool historical = false, bool stage = true, bool age = fal
         int year_no {static_cast<int>(year_.length())};
         
         if (year_no > 1) {
-          String eat_my_shorts = "year term must be a single string value corresponding ";
-          String eat_my_shorts1 = "to the name of the variable coding for time t.";
-          eat_my_shorts += eat_my_shorts1;
-          
-          throw Rcpp::exception(eat_my_shorts.get_cstring(), false);
+          pop_error("year", "single string", "variable coding for time t.", 22);
         }
         
         year_var = String(year_(0));
@@ -12300,9 +10493,7 @@ Rcpp::List mpm_create(bool historical = false, bool stage = true, bool age = fal
             matches++;
           }
         }
-        if (matches != year_no) {
-          throw Rcpp::exception("Year variable name does not match entered hfv data frame.", false);
-        }
+        if (matches != year_no) pop_error("time t", "", "", 16);
         
       } else if (is<IntegerVector>(year_input) || is<NumericVector>(year_input)) {
         IntegerVector year_int_(year_input);
@@ -12316,7 +10507,7 @@ Rcpp::List mpm_create(bool historical = false, bool stage = true, bool age = fal
         year_var = data_vars(year_var_int);
         
       } else {
-        throw Rcpp::exception("Please enter a string showing the name of the variable coding for time in time t.",
+        throw Rcpp::exception("Please enter string with name of variable coding for time t.",
           false);
       }
       StringVector data_year = as<StringVector>(data_[year_var_int]);
@@ -12335,7 +10526,7 @@ Rcpp::List mpm_create(bool historical = false, bool stage = true, bool age = fal
         }
       }
       if (matches != 1) {
-        throw Rcpp::exception("Could not locate variable coding for time in time t.", false);
+        throw Rcpp::exception("Could not locate variable coding for time t.", false);
       }
       
       StringVector data_year = as<StringVector>(data_[year_var_int]);
@@ -12347,7 +10538,7 @@ Rcpp::List mpm_create(bool historical = false, bool stage = true, bool age = fal
       RObject pop_input (popcol);
       
       if (!raw) {
-        throw Rcpp::exception("Function-based MPMs cannot handle population terms. Please remove option popcol.", false);
+        throw Rcpp::exception("Function-based MPMs cannot handle population terms.", false);
       }
       
       if (is<StringVector>(pop_input)) {
@@ -12355,11 +10546,7 @@ Rcpp::List mpm_create(bool historical = false, bool stage = true, bool age = fal
         int pop_no {static_cast<int>(pop_.length())};
         
         if (pop_no > 1) {
-          String eat_my_shorts = "popcol term must be a single string value corresponding ";
-          String eat_my_shorts1 = "to the name of the variable coding for population identity.";
-          eat_my_shorts += eat_my_shorts1;
-          
-          throw Rcpp::exception(eat_my_shorts.get_cstring(), false);
+          pop_error("popcol", "single string", "variable coding for population identity.", 22);
         }
         
         pop_var = String(pop_(0));
@@ -12371,10 +10558,7 @@ Rcpp::List mpm_create(bool historical = false, bool stage = true, bool age = fal
             matches++;
           }
         }
-        if (matches != pop_no) {
-          throw Rcpp::exception("Population variable name does not match entered hfv data frame.",
-            false);
-        }
+        if (matches != pop_no) pop_error("population", "", "", 16);
         pop_var_type = "s";
         
       } else if (is<NumericVector>(pop_input)) {
@@ -12409,8 +10593,7 @@ Rcpp::List mpm_create(bool historical = false, bool stage = true, bool age = fal
         }
         
       } else {
-        throw Rcpp::exception("Please enter a string showing the name of the variable coding for population identity.",
-          false);
+        throw Rcpp::exception("Please enter string with name of variable coding for population.", false);
       }
       
       StringVector data_pops = as<StringVector>(data_[pop_var_int]);
@@ -12426,11 +10609,7 @@ Rcpp::List mpm_create(bool historical = false, bool stage = true, bool age = fal
         int patch_no {static_cast<int>(patch_.length())};
         
         if (patch_no > 1) {
-          String eat_my_shorts = "patchcol term must be a single string value corresponding ";
-          String eat_my_shorts1 = "to the name of the variable coding for patch identity.";
-          eat_my_shorts += eat_my_shorts1;
-          
-          throw Rcpp::exception(eat_my_shorts.get_cstring(), false);
+          pop_error("patchcol", "single string", "variable coding for patch identity.", 22);
         }
         
         patch_var = String(patch_(0));
@@ -12442,9 +10621,7 @@ Rcpp::List mpm_create(bool historical = false, bool stage = true, bool age = fal
             matches++;
           }
         }
-        if (matches != patch_no) {
-          throw Rcpp::exception("Patch variable name does not match entered hfv data frame.", false);
-        }
+        if (matches != patch_no) pop_error("patch", "", "", 16);
           patch_var_type = "s";
         
       } else if (is<NumericVector>(patch_input)) {
@@ -12479,8 +10656,7 @@ Rcpp::List mpm_create(bool historical = false, bool stage = true, bool age = fal
         }
         
       } else {
-        throw Rcpp::exception("Please enter a string showing the name of the variable coding for patch identity.",
-          false);
+        throw Rcpp::exception("Please enter string with name of variable coding for patch .", false);
       }
       
       StringVector data_patch = as<StringVector>(data_[patch_var_int]);
@@ -12499,11 +10675,7 @@ Rcpp::List mpm_create(bool historical = false, bool stage = true, bool age = fal
         int indiv_no {static_cast<int>(indiv_.length())};
         
         if (indiv_no > 1) {
-          String eat_my_shorts = "indivcol term must be a single string value corresponding ";
-          String eat_my_shorts1 = "to the name of the variable coding for individual identity.";
-          eat_my_shorts += eat_my_shorts1;
-          
-          throw Rcpp::exception(eat_my_shorts.get_cstring(), false);
+          pop_error("indivcol", "single string", "variable coding for individual identity.", 22);
         }
         
         indiv_var = String(indiv_(0));
@@ -12515,10 +10687,7 @@ Rcpp::List mpm_create(bool historical = false, bool stage = true, bool age = fal
             matches++;
           }
         }
-        if (matches != indiv_no) {
-          throw Rcpp::exception("Individual identity variable name does not match entered hfv data frame.",
-            false);
-        }
+        if (matches != indiv_no) pop_error("individual identity", "", "", 16);
         
       } else if (is<IntegerVector>(indiv_input) || is<NumericVector>(indiv_input)) {
         IntegerVector indiv_int_(indiv_input);
@@ -12532,8 +10701,7 @@ Rcpp::List mpm_create(bool historical = false, bool stage = true, bool age = fal
         indiv_var = data_vars(indiv_var_int);
         
       } else {
-        throw Rcpp::exception("Please enter a string showing the name of the variable coding for individual identity.",
-          false);
+        throw Rcpp::exception("Please enter string with name of variable coding for individual.", false);
       }
     }
     
@@ -12545,7 +10713,7 @@ Rcpp::List mpm_create(bool historical = false, bool stage = true, bool age = fal
         int censorcol_no {static_cast<int>(censorcol_.length())};
         
         if (censorcol_no > 1) {
-          throw Rcpp::exception("Option censorcol status must correspond to a single variable.", false);
+          throw Rcpp::exception("Argument censorcol status must correspond to a single variable.", false);
         }
         
         String censorcol_0 (censorcol_(0));
@@ -12581,10 +10749,10 @@ Rcpp::List mpm_create(bool historical = false, bool stage = true, bool age = fal
         censor_var = data_vars(censorcol_int);
         
       } else {
-        throw Rcpp::exception("Please enter the variable name coding for censorcol.", false);
+        throw Rcpp::exception("Please enter name of variable coding for censorcol.", false);
       }
     } else if (censor) {
-      throw Rcpp::exception("Please enter the variable name coding for censorcol.", false);
+      throw Rcpp::exception("Please enter name of variable coding for censorcol.", false);
     }
     
     if (censorkeep.isNotNull() && censor) {
@@ -12615,7 +10783,7 @@ Rcpp::List mpm_create(bool historical = false, bool stage = true, bool age = fal
         if (LogicalVector::is_na(cs_keep_l(0))) censorkeep_is_NA = true;
         
       } else {
-        throw Rcpp::exception("Option censorkeep is not a recognized input type.", false);
+        throw Rcpp::exception("Argument censorkeep is not a recognized input type.", false);
       }
       
       StringVector data_censor (as<StringVector>(data_[censorcol_int]));
@@ -12716,7 +10884,7 @@ Rcpp::List mpm_create(bool historical = false, bool stage = true, bool age = fal
     StringVector year_input(year);
     
     if (year_var_int == -1) {
-      throw Rcpp::exception("Please input the variable coding for year in time t.", false);
+      throw Rcpp::exception("Please input name of variable coding for time t.", false);
     }
     
     if (stringcompare_simple(String(year_input(0)), "all", false)) {
@@ -12748,7 +10916,7 @@ Rcpp::List mpm_create(bool historical = false, bool stage = true, bool age = fal
     }
   } else {
     if (year_var_int == -1) {
-      throw Rcpp::exception("Please input the variable coding for year in time t.", false);
+      throw Rcpp::exception("Please input name of variable coding for time t.", false);
     }
     
     if (raw) {
@@ -12784,7 +10952,7 @@ Rcpp::List mpm_create(bool historical = false, bool stage = true, bool age = fal
         }
       }
       if (matches != 1) {
-        throw Rcpp::exception("Please input the variable coding for population identity.", false);
+        throw Rcpp::exception("Please input name of variable coding for population.", false);
       }
       
       StringVector data_pop = as<StringVector>(data_[pop_var_int]);
@@ -12830,7 +10998,7 @@ Rcpp::List mpm_create(bool historical = false, bool stage = true, bool age = fal
         }
       }
       if (matches != 1) {
-        throw Rcpp::exception("Please input the variable coding for patch identity.", false);
+        throw Rcpp::exception("Please input name of variable coding for patch.", false);
       }
       
       StringVector data_patch = as<StringVector>(data_[patch_var_int]);
@@ -12974,15 +11142,7 @@ Rcpp::List mpm_create(bool historical = false, bool stage = true, bool age = fal
       int stages_no {static_cast<int>(stages_.length())};
       IntegerVector stages_int_ (stages_no);
       
-      if (stages_no < 2 || stages_no > 3) {
-        String eat_my_shorts = "Option stages must be entered as a string vector showing ";
-        String eat_my_shorts1 = "status in times t+1 and t, and time t-1 if a historical ";
-        String eat_my_shorts2 = "MPM is desired.";
-        eat_my_shorts += eat_my_shorts1;
-        eat_my_shorts += eat_my_shorts2;
-        
-        throw Rcpp::exception(eat_my_shorts.get_cstring(), false);
-      }
+      if (stages_no < 2 || stages_no > 3) pop_error("stages", "stage identity", "", 10);
       
       int matches {0};
       for (int i = 0; i < stages_no; i++) {
@@ -12994,7 +11154,7 @@ Rcpp::List mpm_create(bool historical = false, bool stage = true, bool age = fal
         }
       }
       if (matches != stages_no) {
-        throw Rcpp::exception("Names in option stages do not match entered hfv data frame.", false);
+        throw Rcpp::exception("Names in argument stages do not match data.", false);
       }
       stages_int = stages_int_;
       
@@ -13014,15 +11174,7 @@ Rcpp::List mpm_create(bool historical = false, bool stage = true, bool age = fal
       stages_ = stages_string;
       stages_int = stages_int_;
       
-    } else {
-      String eat_my_shorts = "Please enter a string vector of valid variable names ";
-      String eat_my_shorts1 = "coding for option stages in times t+1 and t, and time ";
-      String eat_my_shorts2 = "t-1 if a historical MPM is desired.";
-      eat_my_shorts += eat_my_shorts1;
-      eat_my_shorts += eat_my_shorts2;
-      
-      throw Rcpp::exception(eat_my_shorts.get_cstring(), false);
-    }
+    } else pop_error("stages", "stage identity", "", 10);
     new_stage3 = as<StringVector>(data_[stages_int(0)]);
     new_stage2 = as<StringVector>(data_[stages_int(1)]);
     if (historical) new_stage1 = as<StringVector>(data_[stages_int(2)]);
@@ -13506,8 +11658,7 @@ Rcpp::List mpm_create(bool historical = false, bool stage = true, bool age = fal
         if (inda_cat_length != 1 && inda_cat_length != 2) {
           if (inda_cat_length != no_mainyears) {
             String eat_my_shorts = "Individual covariate vector a must be empty, or include ";
-            String eat_my_shorts1 = "1, 2, or as many elements as occasions in the dataset.";
-            eat_my_shorts += eat_my_shorts1;
+            eat_my_shorts += "1, 2, or as many elements as occasions in the dataset.";
             
             throw Rcpp::exception(eat_my_shorts.get_cstring(), false);
           }
@@ -13537,13 +11688,7 @@ Rcpp::List mpm_create(bool historical = false, bool stage = true, bool age = fal
             }
           }
           
-          if (indacol == -1) {
-            String eat_my_shorts = "Individual covariate a not recognized in the ";
-            String eat_my_shorts1 = "paramnames object or modelsuite.";
-            eat_my_shorts += eat_my_shorts1;
-            
-            throw Rcpp::exception(eat_my_shorts.get_cstring(), false);
-          }
+          if (indacol == -1) pop_error("Individual covariate a", "paramnames", "modelsuite", 13);
           
           RObject test_inda(data_[indacol]);
           if (is<IntegerVector>(test_inda)) {
@@ -13592,9 +11737,7 @@ Rcpp::List mpm_create(bool historical = false, bool stage = true, bool age = fal
           for (int j = 0; j < inda_names_length; j++) {
             if (stringcompare_hard(String(inda_cat(i)), String(inda_names(j)))) inda_matches++;
           }
-          if (inda_matches == 0) {
-            throw Rcpp::exception("Some values entered for inda do not match the data.", false);
-          }
+          if (inda_matches == 0) pop_error("inda", "dataset", "", 17);
         }
         
         if (inda_cat_length == 1) {
@@ -13686,13 +11829,7 @@ Rcpp::List mpm_create(bool historical = false, bool stage = true, bool age = fal
             }
           }
           
-          if (indacol == -1) {
-            String eat_my_shorts = "Individual covariate a not recognized in the ";
-            String eat_my_shorts1 = "paramnames object or modelsuite.";
-            eat_my_shorts += eat_my_shorts1;
-            
-            throw Rcpp::exception(eat_my_shorts.get_cstring(), false);
-          }
+          if (indacol == -1) pop_error("Individual covariate a", "paramnames", "modelsuite", 13);
           
           RObject test_inda(data_[indacol]);
           if (is<IntegerVector>(test_inda)) {
@@ -13841,13 +11978,7 @@ Rcpp::List mpm_create(bool historical = false, bool stage = true, bool age = fal
           }
         }
         
-        if (indacol == -1) {
-          String eat_my_shorts = "Individual covariate a not recognized in the ";
-          String eat_my_shorts1 = "paramnames object or modelsuite.";
-          eat_my_shorts += eat_my_shorts1;
-          
-          throw Rcpp::exception(eat_my_shorts.get_cstring(), false);
-        }
+        if (indacol == -1) pop_error("Individual covariate a", "paramnames", "modelsuite", 13);
         
         RObject test_inda(data_[indacol]);
         if (is<IntegerVector>(test_inda)) {
@@ -13865,8 +11996,7 @@ Rcpp::List mpm_create(bool historical = false, bool stage = true, bool age = fal
         }
       } else {
         if (!modelsuite_vrm || !modelsuite_provided) {
-          throw Rcpp::exception("Individual covariate modeling requires a valid modelsuite.",
-            false);
+          throw Rcpp::exception("Individual covariate modeling requires a valid modelsuite.", false);
         }
         
         StringVector ms_names = modelsuite_.attr("names");
@@ -13897,8 +12027,7 @@ Rcpp::List mpm_create(bool historical = false, bool stage = true, bool age = fal
         for (int j = 0; j < inda_names_length; j++) {
           if (stringcompare_hard(String(inda_cat(i)), String(inda_names(j)))) inda_matches++;
         }
-        if (inda_matches == 0) throw Rcpp::exception("Some values entered for inda do not match the data.",
-          false);
+        if (inda_matches == 0) pop_error("inda", "dataset", "", 17);
       }
       
       if (inda_cat_length == 1) {
@@ -14036,13 +12165,7 @@ Rcpp::List mpm_create(bool historical = false, bool stage = true, bool age = fal
             }
           }
           
-          if (indbcol == -1) {
-            String eat_my_shorts = "Individual covariate b not recognized in the ";
-            String eat_my_shorts1 = "paramnames object or modelsuite.";
-            eat_my_shorts += eat_my_shorts1;
-            
-            throw Rcpp::exception(eat_my_shorts.get_cstring(), false);
-          }
+          if (indbcol == -1) pop_error("Individual covariate b", "paramnames", "modelsuite", 13);
           
           RObject test_indb(data_[indbcol]);
           if (is<IntegerVector>(test_indb)) {
@@ -14092,10 +12215,7 @@ Rcpp::List mpm_create(bool historical = false, bool stage = true, bool age = fal
           for (int j = 0; j < indb_names_length; j++) {
             if (stringcompare_hard(String(indb_cat(i)), String(indb_names(j)))) indb_matches++;
           }
-          if (indb_matches == 0) {
-            throw Rcpp::exception("Some values entered for indb do not match the data.",
-              false);
-          }
+          if (indb_matches == 0) pop_error("indb", "dataset", "", 17);
         }
         
         if (indb_cat_length == 1) {
@@ -14184,13 +12304,7 @@ Rcpp::List mpm_create(bool historical = false, bool stage = true, bool age = fal
             }
           }
           
-          if (indbcol == -1) {
-            String eat_my_shorts = "Individual covariate b not recognized in the ";
-            String eat_my_shorts1 = "paramnames object or modelsuite.";
-            eat_my_shorts += eat_my_shorts1;
-            
-            throw Rcpp::exception(eat_my_shorts.get_cstring(), false);
-          }
+          if (indbcol == -1) pop_error("Individual covariate b", "paramnames", "modelsuite", 13);
           
           RObject test_indb(data_[indbcol]);
           if (is<IntegerVector>(test_indb)) {
@@ -14339,13 +12453,7 @@ Rcpp::List mpm_create(bool historical = false, bool stage = true, bool age = fal
           }
         }
         
-        if (indbcol == -1) {
-          String eat_my_shorts = "Individual covariate b not recognized in the ";
-          String eat_my_shorts1 = "paramnames object or modelsuite.";
-          eat_my_shorts += eat_my_shorts1;
-          
-          throw Rcpp::exception(eat_my_shorts.get_cstring(), false);
-        }
+        if (indbcol == -1) pop_error("Individual covariate b", "paramnames", "modelsuite", 13);
         
         RObject test_indb(data_[indbcol]);
         if (is<IntegerVector>(test_indb)) {
@@ -14396,10 +12504,7 @@ Rcpp::List mpm_create(bool historical = false, bool stage = true, bool age = fal
         for (int j = 0; j < indb_names_length; j++) {
           if (stringcompare_hard(String(indb_cat(i)), String(indb_names(j)))) indb_matches++;
         }
-        if (indb_matches == 0) {
-          throw Rcpp::exception("Some values entered for indb do not match the data.",
-            false);
-        }
+        if (indb_matches == 0) pop_error("indb", "dataset", "", 17);
       }
       
       if (indb_cat_length == 1) {
@@ -14537,13 +12642,7 @@ Rcpp::List mpm_create(bool historical = false, bool stage = true, bool age = fal
             }
           }
           
-          if (indccol == -1) {
-            String eat_my_shorts = "Individual covariate c not recognized in the ";
-            String eat_my_shorts1 = "paramnames object or modelsuite.";
-            eat_my_shorts += eat_my_shorts1;
-            
-            throw Rcpp::exception(eat_my_shorts.get_cstring(), false);
-          }
+          if (indccol == -1) pop_error("Individual covariate c", "paramnames", "modelsuite", 13);
           
           RObject test_indc(data_[indccol]);
           if (is<IntegerVector>(test_indc)) {
@@ -14593,9 +12692,7 @@ Rcpp::List mpm_create(bool historical = false, bool stage = true, bool age = fal
           for (int j = 0; j < indc_names_length; j++) {
             if (stringcompare_hard(String(indc_cat(i)), String(indc_names(j)))) indc_matches++;
           }
-          if (indc_matches == 0) {
-            throw Rcpp::exception("Some values entered for indc do not match the data.", false);
-          }
+          if (indc_matches == 0) pop_error("indc", "dataset", "", 17);
         }
         
         if (indc_cat_length == 1) {
@@ -14685,13 +12782,7 @@ Rcpp::List mpm_create(bool historical = false, bool stage = true, bool age = fal
             }
           }
           
-          if (indccol == -1) {
-            String eat_my_shorts = "Individual covariate c not recognized in the ";
-            String eat_my_shorts1 = "paramnames object or modelsuite.";
-            eat_my_shorts += eat_my_shorts1;
-            
-            throw Rcpp::exception(eat_my_shorts.get_cstring(), false);
-          }
+          if (indccol == -1) pop_error("Individual covariate c", "paramnames", "modelsuite", 13);
           
           RObject test_indc(data_[indccol]);
           if (is<IntegerVector>(test_indc)) {
@@ -14840,13 +12931,7 @@ Rcpp::List mpm_create(bool historical = false, bool stage = true, bool age = fal
           }
         }
         
-        if (indccol == -1) {
-          String eat_my_shorts = "Individual covariate c not recognized in the ";
-          String eat_my_shorts1 = "paramnames object or modelsuite.";
-          eat_my_shorts += eat_my_shorts1;
-          
-          throw Rcpp::exception(eat_my_shorts.get_cstring(), false);
-        }
+        if (indccol == -1) pop_error("Individual covariate c", "paramnames", "modelsuite", 13);
         
         RObject test_indc(data_[indccol]);
         if (is<IntegerVector>(test_indc)) {
@@ -14896,10 +12981,7 @@ Rcpp::List mpm_create(bool historical = false, bool stage = true, bool age = fal
         for (int j = 0; j < indc_names_length; j++) {
           if (stringcompare_hard(String(indc_cat(i)), String(indc_names(j)))) indc_matches++;
         }
-        if (indc_matches == 0) {
-          throw Rcpp::exception("Some values entered for indc do not match the data.",
-            false);
-        }
+        if (indc_matches == 0) pop_error("indc", "dataset", "", 17);
       }
       
       if (indc_cat_length == 1) {
@@ -14972,6 +13054,217 @@ Rcpp::List mpm_create(bool historical = false, bool stage = true, bool age = fal
     r2_indc = sub_r2;
     f1_indc_cat = clone(sub_r1);
     f2_indc_cat = clone(sub_r2);
+  }
+  
+  // Annual covariate vectors for function-based MPMs
+  // Annual covariate a
+  NumericVector f1_annua_num; // Numeric values entered as input
+  NumericVector f2_annua_num;
+  
+  if (annua.isNotNull() && !raw) {
+    RObject annua_input = as<RObject>(annua);
+    
+    NumericVector annua_num;
+    
+    int no_mainyears = mainyears_.length();
+    
+    if (!paramnames_provided) {
+      throw Rcpp::exception("Use of annual covariates requires a valid paramnames object", false);
+    }
+    
+    // Fixed covariate
+    if (is<StringVector>(annua_input)) {
+      String eat_my_shorts = "Annual covariate vector a must be empty, or include ";
+      eat_my_shorts += "1, 2, or as many numbers as occasions in the dataset.";
+      
+      throw Rcpp::exception(eat_my_shorts.get_cstring(), false);
+      
+    } else if (is<IntegerVector>(annua_input) || is<NumericVector>(annua_input)) {
+      // Handles possibility of factor variables
+      annua_num = as<NumericVector>(annua_input);
+      int annua_num_length = static_cast<int>(annua_num.length());
+      
+      if (annua_num_length != 1 && annua_num_length != 2) {
+        if (annua_num_length != no_mainyears) {
+          String eat_my_shorts = "Annual covariate vector a must be empty, or include ";
+          String eat_my_shorts1 = "1, 2, or as many numbers as occasions in the dataset.";
+          eat_my_shorts += eat_my_shorts1;
+          
+          throw Rcpp::exception(eat_my_shorts.get_cstring(), false);
+        }
+      }
+      
+      StringVector mainparams = as<StringVector>(paramnames_["mainparams"]);
+      StringVector modelparams = as<StringVector>(paramnames_["modelparams"]);
+      
+      if (annua_num_length == 1) {
+        f1_annua_num = rep(annua_num(0), no_mainyears); 
+        f2_annua_num = rep(annua_num(0), no_mainyears);
+        
+      } else if (annua_num_length == 2 && no_years != 2) {
+        f1_annua_num = rep(annua_num(0), no_mainyears);
+        f2_annua_num = rep(annua_num(1), no_mainyears);
+        
+      } else {
+        NumericVector sub_f1(annua_num_length);
+        sub_f1(0) = 0;
+        
+        for (int i = 0; i < (annua_num_length - 1); i++) {
+          sub_f1(i + 1) = annua_num(i);
+        }
+        f1_annua_num = sub_f1;
+        
+        f2_annua_num = annua_num;
+      }
+      
+    } else {
+      throw Rcpp::exception("Format of annucova not recognized.", false);
+    }
+  } else {
+    int no_mainyears = mainyears_.length();
+    
+    f1_annua_num = rep(0, no_mainyears);
+    f2_annua_num = rep(0, no_mainyears);
+  }
+  
+  // Annual covariate b
+  NumericVector f1_annub_num; // Numeric values entered as input
+  NumericVector f2_annub_num;
+  
+  if (annub.isNotNull() && !raw) {
+    RObject annub_input = as<RObject>(annub);
+    
+    NumericVector annub_num;
+    
+    int no_mainyears = mainyears_.length();
+    
+    if (!paramnames_provided) {
+      throw Rcpp::exception("Use of annual covariates requires a valid paramnames object", false);
+    }
+    
+    // Fixed covariate
+    if (is<StringVector>(annub_input)) {
+      String eat_my_shorts = "Annual covariate vector b must be empty, or include ";
+      eat_my_shorts += "1, 2, or as many numbers as occasions in the dataset.";
+      
+      throw Rcpp::exception(eat_my_shorts.get_cstring(), false);
+      
+    } else if (is<IntegerVector>(annub_input) || is<NumericVector>(annub_input)) {
+      // Handles possibility of factor variables
+      annub_num = as<NumericVector>(annub_input);
+      int annub_num_length = static_cast<int>(annub_num.length());
+      
+      if (annub_num_length != 1 && annub_num_length != 2) {
+        if (annub_num_length != no_mainyears) {
+          String eat_my_shorts = "Annual covariate vector b must be empty, or include ";
+          String eat_my_shorts1 = "1, 2, or as many numbers as occasions in the dataset.";
+          eat_my_shorts += eat_my_shorts1;
+          
+          throw Rcpp::exception(eat_my_shorts.get_cstring(), false);
+        }
+      }
+      
+      StringVector mainparams = as<StringVector>(paramnames_["mainparams"]);
+      StringVector modelparams = as<StringVector>(paramnames_["modelparams"]);
+      
+      if (annub_num_length == 1) {
+        f1_annub_num = rep(annub_num(0), no_mainyears); 
+        f2_annub_num = rep(annub_num(0), no_mainyears);
+        
+      } else if (annub_num_length == 2 && no_years != 2) {
+        f1_annub_num = rep(annub_num(0), no_mainyears);
+        f2_annub_num = rep(annub_num(1), no_mainyears);
+        
+      } else {
+        NumericVector sub_f1(annub_num_length);
+        sub_f1(0) = 0;
+        
+        for (int i = 0; i < (annub_num_length - 1); i++) {
+          sub_f1(i + 1) = annub_num(i);
+        }
+        f1_annub_num = sub_f1;
+        
+        f2_annub_num = annub_num;
+      }
+      
+    } else {
+      throw Rcpp::exception("Format of annucovb not recognized.", false);
+    }
+  } else {
+    int no_mainyears = mainyears_.length();
+    
+    f1_annub_num = rep(0, no_mainyears);
+    f2_annub_num = rep(0, no_mainyears);
+  }
+  
+  // Annual covariate c
+  NumericVector f1_annuc_num; // Numeric values entered as input
+  NumericVector f2_annuc_num;
+  
+  if (annuc.isNotNull() && !raw) {
+    RObject annuc_input = as<RObject>(annuc);
+    
+    NumericVector annuc_num;
+    
+    int no_mainyears = mainyears_.length();
+    
+    if (!paramnames_provided) {
+      throw Rcpp::exception("Use of annual covariates requires a valid paramnames object", false);
+    }
+    
+    // Fixed covariate
+    if (is<StringVector>(annuc_input)) {
+      String eat_my_shorts = "Annual covariate vector c must be empty, or include ";
+      eat_my_shorts += "1, 2, or as many numbers as occasions in the dataset.";
+      
+      throw Rcpp::exception(eat_my_shorts.get_cstring(), false);
+      
+    } else if (is<IntegerVector>(annuc_input) || is<NumericVector>(annuc_input)) {
+      // Handles possibility of factor variables
+      annuc_num = as<NumericVector>(annuc_input);
+      int annuc_num_length = static_cast<int>(annuc_num.length());
+      
+      if (annuc_num_length != 1 && annuc_num_length != 2) {
+        if (annuc_num_length != no_mainyears) {
+          String eat_my_shorts = "Annual covariate vector c must be empty, or include ";
+          String eat_my_shorts1 = "1, 2, or as many numbers as occasions in the dataset.";
+          eat_my_shorts += eat_my_shorts1;
+          
+          throw Rcpp::exception(eat_my_shorts.get_cstring(), false);
+        }
+      }
+      
+      StringVector mainparams = as<StringVector>(paramnames_["mainparams"]);
+      StringVector modelparams = as<StringVector>(paramnames_["modelparams"]);
+      
+      if (annuc_num_length == 1) {
+        f1_annuc_num = rep(annuc_num(0), no_mainyears); 
+        f2_annuc_num = rep(annuc_num(0), no_mainyears);
+        
+      } else if (annuc_num_length == 2 && no_years != 2) {
+        f1_annuc_num = rep(annuc_num(0), no_mainyears);
+        f2_annuc_num = rep(annuc_num(1), no_mainyears);
+        
+      } else {
+        NumericVector sub_f1(annuc_num_length);
+        sub_f1(0) = 0;
+        
+        for (int i = 0; i < (annuc_num_length - 1); i++) {
+          sub_f1(i + 1) = annuc_num(i);
+        }
+        f1_annuc_num = sub_f1;
+        
+        f2_annuc_num = annuc_num;
+      }
+      
+    } else {
+      throw Rcpp::exception("Format of annucovc not recognized.", false);
+    }
+  } else {
+    int no_mainyears = mainyears_.length();
+    
+    f1_annuc_num = rep(0, no_mainyears);
+    f2_annuc_num = rep(0, no_mainyears);
   }
   
   // Stageexpansions, data frame prep, MPM estimation
@@ -15551,6 +13844,7 @@ Rcpp::List mpm_create(bool historical = false, bool stage = true, bool age = fal
     }
   } else {
     // Function-based MPMs
+    
     if (!historical) {
       if (stage && !age) {
         // Stage-only ahistorical function-based
@@ -15564,7 +13858,8 @@ Rcpp::List mpm_create(bool historical = false, bool stage = true, bool age = fal
           as<RObject>(inda_names), as<RObject>(indb_names), as<RObject>(indc_names),
           melchett_stageframe_, melchett_ovtable_, as<arma::mat>(melchett_repmatrix_),
           f2_inda_num, f1_inda_num, f2_indb_num, f1_indb_num, f2_indc_num,
-          f1_indc_num, f2_inda_cat, f1_inda_cat, f2_indb_cat, f1_indb_cat,
+          f1_indc_num, f2_annua_num, f1_annua_num, f2_annub_num, f1_annub_num,
+          f2_annuc_num, f1_annuc_num, f2_inda_cat, f1_inda_cat, f2_indb_cat, f1_indb_cat,
           f2_indc_cat, f1_indc_cat, r2_inda, r1_inda, r2_indb, r1_indb, r2_indc,
           r1_indc, dev_terms_, density, fecmod, 0, 0, 1, 1, 0, 1, negfec, nodata,
           exp_tol, theta_tol, CDF, err_check, simple, sparse_output);
@@ -15590,6 +13885,7 @@ Rcpp::List mpm_create(bool historical = false, bool stage = true, bool age = fal
           removal_row, false, true, false, false, true, as<RObject>(removal_var));
         
         IntegerVector agevec = seq(start_age, last_age);
+        
         int totalages = static_cast<int>(agevec.length());
         
         IntegerVector mel_sid = rep(as<IntegerVector>(melchett_stageframe_["stage_id"]), totalages);
@@ -15618,7 +13914,8 @@ Rcpp::List mpm_create(bool historical = false, bool stage = true, bool age = fal
           as<RObject>(inda_names), as<RObject>(indb_names), as<RObject>(indc_names),
           melchett_stageframe_, melchett_ovtable_, as<arma::mat>(melchett_repmatrix_),
           f2_inda_num, f1_inda_num, f2_indb_num, f1_indb_num, f2_indc_num,
-          f1_indc_num, f2_inda_cat, f1_inda_cat, f2_indb_cat, f1_indb_cat,
+          f1_indc_num, f2_annua_num, f1_annua_num, f2_annub_num, f1_annub_num,
+          f2_annuc_num, f1_annuc_num, f2_inda_cat, f1_inda_cat, f2_indb_cat, f1_indb_cat,
           f2_indc_cat, f1_indc_cat, r2_inda, r1_inda, r2_indb, r1_indb, r2_indc,
           r1_indc, dev_terms_, density, fecmod, start_age, last_age, 1, 2, cont,
           2, negfec, nodata, exp_tol, theta_tol, CDF, err_check, simple,
@@ -15650,7 +13947,8 @@ Rcpp::List mpm_create(bool historical = false, bool stage = true, bool age = fal
           as<RObject>(inda_names), as<RObject>(indb_names),
           as<RObject>(indc_names), melchett_stageframe_, melchett_ovtable_,
           f2_inda_num, f1_inda_num, f2_indb_num, f1_indb_num, f2_indc_num,
-          f1_indc_num, f2_inda_cat, f1_inda_cat, f2_indb_cat, f1_indb_cat,
+          f1_indc_num, f2_annua_num, f1_annua_num, f2_annub_num, f1_annub_num,
+          f2_annuc_num, f1_annuc_num, f2_inda_cat, f1_inda_cat, f2_indb_cat, f1_indb_cat,
           f2_indc_cat, f1_indc_cat, r2_inda, r1_inda, r2_indb, r1_indb, r2_indc,
           r1_indc, dev_terms_, density, fecmod, last_age, cont, negfec, nodata,
           exp_tol, theta_tol, err_check, simple, sparse_output);
@@ -15702,7 +14000,8 @@ Rcpp::List mpm_create(bool historical = false, bool stage = true, bool age = fal
           as<RObject>(inda_names), as<RObject>(indb_names), as<RObject>(indc_names),
           melchett_stageframe_, melchett_ovtable_, as<arma::mat>(melchett_repmatrix_),
           f2_inda_num, f1_inda_num, f2_indb_num, f1_indb_num, f2_indc_num,
-          f1_indc_num, f2_inda_cat, f1_inda_cat, f2_indb_cat, f1_indb_cat,
+          f1_indc_num, f2_annua_num, f1_annua_num, f2_annub_num, f1_annub_num,
+          f2_annuc_num, f1_annuc_num, f2_inda_cat, f1_inda_cat, f2_indb_cat, f1_indb_cat,
           f2_indc_cat, f1_indc_cat, r2_inda, r1_inda, r2_indb, r1_indb, r2_indc,
           r1_indc, dev_terms_, density, fecmod, 0, 0, format_int, 0, 0, 1, negfec,
           nodata, exp_tol, theta_tol, CDF, err_check, simple, sparse_output);
@@ -16032,7 +14331,8 @@ arma::sp_mat sens3sp_matrix(const arma::sp_mat& Aspmat, const arma::sp_mat& refm
 //' 
 //' \code{sens3matrix_spinp()} returns the sensitivity of lambda with respect
 //' to each element in a sparse matrix. This is accomplished via the
-//' \code{eigs_gen()} function in the C++ Armadillo library.
+//' \code{eigs_gen()} function in the C++ Armadillo library. Output is in
+//' standard matrix format.
 //' 
 //' @name .sens3matrix_spinp
 //' 
@@ -16198,7 +14498,8 @@ List sens3hlefko(const arma::mat& Amat, const DataFrame& ahstages,
 //' \code{sens3hlefko()} returns the sensitivity of lambda with respect
 //' to each historical stage-pair in the matrix, and the associated
 //' sensitivity for each life history stage. This is accomplished via the 
-//' \code{eigs_gen}() function in the C++ Armadillo library.
+//' \code{eigs_gen}() function in the C++ Armadillo library. Input is in sparse
+//' matrix format.
 //' 
 //' @name .sens3hlefko_sp
 //' 
@@ -17504,15 +15805,9 @@ Rcpp::List projection3(const List& mpm, int nreps = 1, int times = 10000,
   bool matrix_input {true};
   bool assume_markov {false};
   
-  if (theclairvoyant < 1) {
-    throw Rcpp::exception("Option times must be a positive integer.", false);
-  }
-  if (nreps < 1) {
-    throw Rcpp::exception("Option nreps must be a positive integer.", false);
-  }
-  if (substoch < 0 || substoch > 2) {
-    throw Rcpp::exception("Option substoch must be set to 0, 1, or 2.", false);
-  }
+  if (theclairvoyant < 1) pop_error("times", "positive integer", "", 3);
+  if (nreps < 1) pop_error("nreps", "positive integer", "", 3);
+  if (substoch < 0 || substoch > 2) pop_error("substoch", "0, 1, or 2", "", 14);
   
   if (quiet) sub_warnings = false;
   
@@ -17560,10 +15855,7 @@ Rcpp::List projection3(const List& mpm, int nreps = 1, int times = 10000,
       } else if (no_check > 0) { 
         sparse_auto = false;
         sparse_switch = 0;
-      } else {
-        throw Rcpp::exception("Value entered for argument sparse not understood.",
-          false);
-      }
+      } else throw Rcpp::exception("Value entered for argument sparse not understood.", false);
     }
   }
   
@@ -17723,13 +16015,7 @@ Rcpp::List projection3(const List& mpm, int nreps = 1, int times = 10000,
       arma::vec dyn_beta = as<arma::vec>(dens_input["beta"]);
       
       for (int i = 0; i < static_cast<int>(dyn_style.n_elem); i++) {
-        if (dyn_style(i) < 1 || dyn_style(i) > 4) {
-          String eat_my_shorts = "Some density inputs are stated as yielding density ";
-          String eat_my_shorts1 = "dependence but not in an accepted style.";
-          eat_my_shorts += eat_my_shorts1;
-          
-          throw Rcpp::exception(eat_my_shorts.get_cstring(), false);
-        }
+        if (dyn_style(i) < 1 || dyn_style(i) > 4) pop_error("density inputs", "", "", 21);
         
         if (dyn_style(i) == 1) {
           if (dyn_beta(i) > exp_tol) {
@@ -17804,7 +16090,7 @@ Rcpp::List projection3(const List& mpm, int nreps = 1, int times = 10000,
     StringVector years_forward;
     if (year.isNotNull()) {
       if (stochastic) {
-        throw Rcpp::exception("Options year cannot be used when stochastic = TRUE.",
+        throw Rcpp::exception("Argument year cannot be used when stochastic = TRUE.",
           false);
       }
       
@@ -17816,11 +16102,7 @@ Rcpp::List projection3(const List& mpm, int nreps = 1, int times = 10000,
           if (years_[i] == uniqueyears[j]) member_sum++;
         }
         if (member_sum == 0) {
-          String eat_my_shorts = "Option year includes time indices that ";
-          String eat_my_shorts1 = "do not exist in the input lefkoMat object.";
-          eat_my_shorts += eat_my_shorts1;
-          
-          throw Rcpp::exception(eat_my_shorts.get_cstring(), false);
+          pop_error("year", "input lefkoMat object", "", 17);
         }
         member_sum = 0;
       }
@@ -17848,36 +16130,23 @@ Rcpp::List projection3(const List& mpm, int nreps = 1, int times = 10000,
         assume_markov = true;
         
         if (static_cast<int>(twinput_markov.n_cols) != yl) {
-          String eat_my_shorts = "Time weight matrix must have the same number of columns as the number ";
-          String eat_my_shorts1 = "of occasions represented in the lefkoMat object used as input.";
-          eat_my_shorts += eat_my_shorts1;
-          
-          throw Rcpp::exception(eat_my_shorts.get_cstring(), false);
+          pop_error("tweights", "occasions", "lefkoMat object used as input", 20);
         }
         if (twinput_markov.n_cols != twinput_markov.n_rows) {
-          String eat_my_shorts = "Time weight matrix must be square.";
-          
-          throw Rcpp::exception(eat_my_shorts.get_cstring(), false);
+          throw Rcpp::exception("Time weight matrix must be square.", false);
         }
         
       } else if (is<NumericVector>(tweights)) {
         twinput = as<arma::vec>(tweights);
         
         if (static_cast<int>(twinput.n_elem) != yl) {
-          String eat_my_shorts = "Time weight vector must be the same length as the number ";
-          String eat_my_shorts1 = "of occasions represented in the lefkoMat object used as input.";
-          eat_my_shorts += eat_my_shorts1;
-          
-          throw Rcpp::exception(eat_my_shorts.get_cstring(), false);
+          pop_error("tweights", "occasions", "lefkoMat object used as input", 19);
         }
         
-      } else {
-        throw Rcpp::exception("Object input in argument tweights is not a valid numeric vector or matrix.",
-          false);
-      }
+      } else pop_error("tweights", "non-negative numeric vector or matrix.", "", 6);
       
       if (!stochastic) {
-        throw Rcpp::exception("Option tweights can only be used when stochastic = TRUE.",
+        throw Rcpp::exception("Argument tweights can only be used when stochastic = TRUE.",
           false);
       }
     } else {
@@ -18006,8 +16275,7 @@ Rcpp::List projection3(const List& mpm, int nreps = 1, int times = 10000,
     } else if (start_vec.isNotNull()) {
       startvec = as<arma::vec>(start_vec);
       if (static_cast<int>(startvec.n_elem) != meanmatrows) {
-        throw Rcpp::exception("Start vector must be the same length as the number of rows in each matrix.",
-          false);
+        pop_error("start_vec", "rows", "MPM matrices", 19);
       }
       
     } else {
@@ -18355,10 +16623,7 @@ Rcpp::List projection3(const List& mpm, int nreps = 1, int times = 10000,
       matrows = firstmat.n_rows;
       matcols = firstmat.n_cols;
       
-    } else {
-      throw Rcpp::exception("Object mpm does not appear to include matrices.",
-        false);
-    }
+    } else throw Rcpp::exception("Object mpm does not appear to include matrices.", false);
     
     used_matsize = matrows;
     
@@ -18367,10 +16632,7 @@ Rcpp::List projection3(const List& mpm, int nreps = 1, int times = 10000,
       uniqueyears(i) = i;
     }
     
-    if (matrows != matcols) {
-      throw Rcpp::exception("Supplied matrices must be square. Please check matrix dimensions.",
-        false);
-    }
+    if (matrows != matcols) throw Rcpp::exception("Supplied matrices must be square.", false);
     
     arma::vec twinput;
     arma::mat twinput_markov;
@@ -18380,36 +16642,23 @@ Rcpp::List projection3(const List& mpm, int nreps = 1, int times = 10000,
         assume_markov = true;
         
         if (static_cast<int>(twinput_markov.n_cols) != yl) {
-          String eat_my_shorts = "Time weight matrix must have the same number of columns as the number ";
-          String eat_my_shorts1 = "of occasions represented in the lefkoMat object used as input.";
-          eat_my_shorts += eat_my_shorts1;
-          
-          throw Rcpp::exception(eat_my_shorts.get_cstring(), false);
+          pop_error("tweights", "occasions", "lefkoMat object used as input", 20);
         }
         if (twinput_markov.n_cols != twinput_markov.n_rows) {
-          String eat_my_shorts = "Time weight matrix must be square.";
-          
-          throw Rcpp::exception(eat_my_shorts.get_cstring(), false);
+          throw Rcpp::exception("Time weight matrix must be square.", false);
         }
         
       } else if (is<NumericVector>(tweights)) {
         twinput = as<arma::vec>(tweights);
         
         if (static_cast<int>(twinput.n_elem) != yl) {
-          String eat_my_shorts = "Time weight vector must be the same length as the number ";
-          String eat_my_shorts1 = "of occasions represented in the lefkoMat object used as input.";
-          eat_my_shorts += eat_my_shorts1;
-          
-          throw Rcpp::exception(eat_my_shorts.get_cstring(), false);
+          pop_error("tweights", "occasions", "lefkoMat object used as input", 19);
         }
         
-      } else {
-        throw Rcpp::exception("Object input in argument tweights is not a valid numeric vector or matrix.", false);
-      }
+      } else pop_error("tweights", "non-negative numeric vector or matrix.", "", 6);
       
       if (!stochastic) {
-        throw Rcpp::exception("Option tweights can only be used when stochastic = TRUE.",
-          false);
+        throw Rcpp::exception("Argument tweights can only be used when stochastic = TRUE.", false);
       }
     } else {
       twinput.resize(yl);
@@ -18419,11 +16668,7 @@ Rcpp::List projection3(const List& mpm, int nreps = 1, int times = 10000,
     if (start_vec.isNotNull()) {
       startvec = as<arma::vec>(start_vec);
       if (static_cast<int>(startvec.n_elem) != matrows) {
-        String eat_my_shorts = "Start vector must be the same length as the ";
-        String eat_my_shorts1 = "number of rows in each matrix.";
-        eat_my_shorts += eat_my_shorts1;
-        
-        throw Rcpp::exception(eat_my_shorts.get_cstring(), false);
+        pop_error("start_vec", "rows", "MPM matrices", 19);
       }
       
     } else {
@@ -18434,7 +16679,7 @@ Rcpp::List projection3(const List& mpm, int nreps = 1, int times = 10000,
     IntegerVector years_forward;
     if (year.isNotNull()) {
       if (stochastic) {
-        throw Rcpp::exception("Options year cannot be used when stochastic = TRUE.",
+        throw Rcpp::exception("Argument year cannot be used when stochastic = TRUE.",
           false);
       }
       
@@ -18446,13 +16691,7 @@ Rcpp::List projection3(const List& mpm, int nreps = 1, int times = 10000,
         for (int j = 0; j < yl; j++) {
           if (years_[i] == static_cast<int>(uniqueyears[j])) member_sum++;
         }
-        if (member_sum == 0) {
-          String eat_my_shorts = "Option year includes time indices that do ";
-          String eat_my_shorts1 = "not exist in the input lefkoMat object.";
-          eat_my_shorts += eat_my_shorts1;
-          
-          throw Rcpp::exception(eat_my_shorts.get_cstring(), false);
-        }
+        if (member_sum == 0) pop_error("year", "lefkoMat object", "", 17);
         member_sum = 0;
       }
       
@@ -18664,9 +16903,7 @@ DataFrame slambda3(const List& mpm, int times = 10000, bool historical = false,
   
   theclairvoyant = times;
   
-  if (theclairvoyant < 1) {
-    throw Rcpp::exception("Option must equal a positive integer.", false);
-  }
+  if (theclairvoyant < 1) pop_error("times", "positive integer.", "", 6);
   
   if (force_sparse.isNotNull()) {
     if (is<LogicalVector>(force_sparse)) {
@@ -18707,10 +16944,7 @@ DataFrame slambda3(const List& mpm, int times = 10000, bool historical = false,
       } else if (no_check > 0) { 
         sparse_auto = false;
         sparse_switch = 0;
-      } else {
-        throw Rcpp::exception("Value entered for argument sparse not understood.",
-          false);
-      }
+      } else throw Rcpp::exception("Argument sparse is not valid.", false);
     }
   }
   
@@ -18748,13 +16982,7 @@ DataFrame slambda3(const List& mpm, int times = 10000, bool historical = false,
     }
     
     if (labels.length() < 3) {
-      String eat_my_shorts = "Function 'slambda3' requires annual matrices. ";
-      String eat_my_shorts1 = "This lefkoMat object appears to be a set of mean ";
-      String eat_my_shorts2 = "matrices, and lacks annual matrices.";
-      eat_my_shorts += eat_my_shorts1;
-      eat_my_shorts += eat_my_shorts2;
-      
-      throw Rcpp::exception(eat_my_shorts.get_cstring(), false);
+      throw Rcpp::exception("This function requires annual matrices, and cannot take mean matrices.", false);
     }
     
     StringVector poporder = as<StringVector>(labels["pop"]);
@@ -18783,33 +17011,20 @@ DataFrame slambda3(const List& mpm, int times = 10000, bool historical = false,
         assume_markov = true;
         
         if (static_cast<int>(twinput_markov.n_cols) != yl) {
-          String eat_my_shorts = "Time weight matrix must have the same number of columns as the number ";
-          String eat_my_shorts1 = "of occasions represented in the lefkoMat object used as input.";
-          eat_my_shorts += eat_my_shorts1;
-          
-          throw Rcpp::exception(eat_my_shorts.get_cstring(), false);
+          pop_error("tweights", "occasions", "lefkoMat object used as input", 20);
         }
         if (twinput_markov.n_cols != twinput_markov.n_rows) {
-          String eat_my_shorts = "Time weight matrix must be square.";
-          
-          throw Rcpp::exception(eat_my_shorts.get_cstring(), false);
+          throw Rcpp::exception("Time weight matrix must be square.", false);
         }
         
       } else if (is<NumericVector>(tweights)) {
         twinput = as<arma::vec>(tweights);
         
         if (static_cast<int>(twinput.n_elem) != yl) {
-          String eat_my_shorts = "Time weight vector must be the same length as the number ";
-          String eat_my_shorts1 = "of occasions represented in the lefkoMat object used as input.";
-          eat_my_shorts += eat_my_shorts1;
-          
-          throw Rcpp::exception(eat_my_shorts.get_cstring(), false);
+          pop_error("tweights", "occasions", "lefkoMat object used as input", 19);
         }
         
-      } else {
-        throw Rcpp::exception("Object input in argument tweights is not a valid numeric vector or matrix.",
-          false);
-      }
+      } else pop_error("tweights", "non-negative numeric vector or matrix.", "", 6);
       
     } else {
       twinput.resize(yl);
@@ -19084,10 +17299,7 @@ DataFrame slambda3(const List& mpm, int times = 10000, bool historical = false,
       uniqueyears(i) = i;
     }
     
-    if (matrows != matcols) {
-      throw Rcpp::exception("Supplied matrices must be square. Please check matrix dimensions.",
-        false);
-    }
+    if (matrows != matcols) throw Rcpp::exception("Supplied matrices must be square.", false);
     
     arma::vec twinput;
     arma::mat twinput_markov;
@@ -19097,33 +17309,20 @@ DataFrame slambda3(const List& mpm, int times = 10000, bool historical = false,
         assume_markov = true;
         
         if (static_cast<int>(twinput_markov.n_cols) != yl) {
-          String eat_my_shorts = "Time weight matrix must have the same number of columns as the number ";
-          String eat_my_shorts1 = "of occasions represented in the lefkoMat object used as input.";
-          eat_my_shorts += eat_my_shorts1;
-          
-          throw Rcpp::exception(eat_my_shorts.get_cstring(), false);
+          pop_error("tweights", "occasions", "lefkoMat object used as input", 20);
         }
         if (twinput_markov.n_cols != twinput_markov.n_rows) {
-          String eat_my_shorts = "Time weight matrix must be square.";
-          
-          throw Rcpp::exception(eat_my_shorts.get_cstring(), false);
+          throw Rcpp::exception("Time weight matrix must be square.", false);
         }
         
       } else if (is<NumericVector>(tweights)) {
         twinput = as<arma::vec>(tweights);
         
         if (static_cast<int>(twinput.n_elem) != yl) {
-          String eat_my_shorts = "Time weight vector must be the same length as the number ";
-          String eat_my_shorts1 = "of occasions represented in the lefkoMat object used as input.";
-          eat_my_shorts += eat_my_shorts1;
-          
-          throw Rcpp::exception(eat_my_shorts.get_cstring(), false);
+          pop_error("tweights", "occasions", "lefkoMat object used as input", 19);
         }
         
-      } else {
-        throw Rcpp::exception("Object input in argument tweights is not a valid numeric vector or matrix.",
-          false);
-      }
+      } else pop_error("tweights", "non-negative numeric vector or matrix.", "", 6);
       
     } else {
       twinput.resize(yl);
@@ -19273,9 +17472,7 @@ Rcpp::List stoch_senselas(const List& mpm, int times = 10000,
   Nullable<RObject> tweights = R_NilValue) {
   
   int theclairvoyant = times;
-  if (theclairvoyant < 1) {
-    throw Rcpp::exception("Option times must be a positive integer.", false);
-  }
+  if (theclairvoyant < 1) pop_error("times", "positive integer", "", 3);
   
   bool lMat_matrix_class_input {false};
   bool lMat_sparse_class_input {false};
@@ -19363,33 +17560,20 @@ Rcpp::List stoch_senselas(const List& mpm, int times = 10000,
         assume_markov = true;
         
         if (static_cast<int>(twinput_markov.n_cols) != yl) {
-          String eat_my_shorts = "Time weight matrix must have the same number of columns as the number ";
-          String eat_my_shorts1 = "of occasions represented in the lefkoMat object used as input.";
-          eat_my_shorts += eat_my_shorts1;
-          
-          throw Rcpp::exception(eat_my_shorts.get_cstring(), false);
+          pop_error("tweights", "occasions", "lefkoMat object used as input", 20);
         }
         if (twinput_markov.n_cols != twinput_markov.n_rows) {
-          String eat_my_shorts = "Time weight matrix must be square.";
-          
-          throw Rcpp::exception(eat_my_shorts.get_cstring(), false);
+          throw Rcpp::exception("Time weight matrix must be square.", false);
         }
         
       } else if (is<NumericVector>(tweights)) {
         twinput = as<arma::vec>(tweights);
         
         if (static_cast<int>(twinput.n_elem) != yl) {
-          String eat_my_shorts = "Time weight vector must be the same length as the number ";
-          String eat_my_shorts1 = "of occasions represented in the lefkoMat object used as input.";
-          eat_my_shorts += eat_my_shorts1;
-          
-          throw Rcpp::exception(eat_my_shorts.get_cstring(), false);
+          pop_error("tweights", "occasions", "lefkoMat object used as input", 19);
         }
         
-      } else {
-        throw Rcpp::exception("Object input in argument tweights is not a valid numeric vector or matrix.",
-          false);
-      }
+      } else pop_error("tweights", "non-negative numeric vector or matrix.", "", 6);
     } else {
       twinput.resize(yl);
       twinput.ones();
@@ -20042,10 +18226,7 @@ Rcpp::List stoch_senselas(const List& mpm, int times = 10000,
     IntegerVector uniqueyears = seq(0, (yl - 1));
     arma::uvec uniqueyears_arma = as<arma::uvec>(uniqueyears);
     
-    if (matrows != matcols) {
-      throw Rcpp::exception("Input matrices must be square. Please check matrix dimensions.",
-        false);
-    }
+    if (matrows != matcols) throw Rcpp::exception("Input matrices must be square.", false);
     
     arma::vec twinput;
     arma::mat twinput_markov;
@@ -20055,33 +18236,20 @@ Rcpp::List stoch_senselas(const List& mpm, int times = 10000,
         assume_markov = true;
         
         if (static_cast<int>(twinput_markov.n_cols) != yl) {
-          String eat_my_shorts = "Time weight matrix must have the same number of columns as the number ";
-          String eat_my_shorts1 = "of occasions represented in the lefkoMat object used as input.";
-          eat_my_shorts += eat_my_shorts1;
-          
-          throw Rcpp::exception(eat_my_shorts.get_cstring(), false);
+          pop_error("tweights", "occasions", "lefkoMat object used as input", 20);
         }
         if (twinput_markov.n_cols != twinput_markov.n_rows) {
-          String eat_my_shorts = "Time weight matrix must be square.";
-          
-          throw Rcpp::exception(eat_my_shorts.get_cstring(), false);
+          throw Rcpp::exception("Time weight matrix must be square.", false);
         }
         
       } else if (is<NumericVector>(tweights)) {
         twinput = as<arma::vec>(tweights);
         
         if (static_cast<int>(twinput.n_elem) != yl) {
-          String eat_my_shorts = "Time weight vector must be the same length as the number ";
-          String eat_my_shorts1 = "of occasions represented in the lefkoMat object used as input.";
-          eat_my_shorts += eat_my_shorts1;
-          
-          throw Rcpp::exception(eat_my_shorts.get_cstring(), false);
+          pop_error("tweights", "occasions", "lefkoMat object used as input", 19);
         }
         
-      } else {
-        throw Rcpp::exception("Object input in argument tweights is not a valid numeric vector or matrix.",
-          false);
-      }
+      } else pop_error("tweights", "non-negative numeric vector or matrix.", "", 6);
     } else {
       twinput.resize(yl);
       twinput.ones();
@@ -20274,11 +18442,7 @@ Rcpp::List ltre3matrix(const List& Amats, Rcpp::IntegerVector refnum,
   for (int i = 0; i < refmatnum; i++) {
     refnum(i) = refnum(i) - 1;
     if (refnum(i) < 0) {
-      String eat_my_shorts = "Please use R indexing for reference matrices. ";
-      String eat_my_shorts1 = "The lowest number possible is 1.";
-      eat_my_shorts += eat_my_shorts1;
-      
-      throw Rcpp::exception(eat_my_shorts.get_cstring(), false);
+      throw Rcpp::exception("Use R indexing for reference matrices (min: 1).", false);
     }
   }
   
@@ -20462,11 +18626,7 @@ Rcpp::List sltre3matrix(const List& Amats, const DataFrame& labels,
   for (int i = 0; i < refmatnum; i++) {
     refnum(i) = refnum(i) - 1;
     if (refnum(i) < 0) {
-      String eat_my_shorts = "Please use R indexing for reference matrices. ";
-      String eat_my_shorts1 = "The lowest number possible is 1.";
-      eat_my_shorts += eat_my_shorts1;
-      
-      throw Rcpp::exception(eat_my_shorts.get_cstring(), false);
+      throw Rcpp::exception("Use R indexing for reference matrices (min: 1).", false);
     }
   }
   
@@ -20859,33 +19019,20 @@ Rcpp::List sltre3matrix(const List& Amats, const DataFrame& labels,
       assume_markov = true;
       
       if (static_cast<int>(twinput_markov.n_cols) != numyears) {
-        String eat_my_shorts = "Time weight matrix must have the same number of columns as the number ";
-        String eat_my_shorts1 = "of occasions represented in the lefkoMat object used as input.";
-        eat_my_shorts += eat_my_shorts1;
-        
-        throw Rcpp::exception(eat_my_shorts.get_cstring(), false);
+        pop_error("tweights", "occasions", "lefkoMat object used as input", 20);
       }
       if (twinput_markov.n_cols != twinput_markov.n_rows) {
-        String eat_my_shorts = "Time weight matrix must be square.";
-        
-        throw Rcpp::exception(eat_my_shorts.get_cstring(), false);
+        throw Rcpp::exception("Time weight matrix must be square.", false);
       }
       
     } else if (is<NumericVector>(tweights_)) {
       twinput = as<arma::vec>(tweights_);
       
       if (static_cast<int>(twinput.n_elem) != numyears) {
-        String eat_my_shorts = "Time weight vector must be the same length as the number ";
-        String eat_my_shorts1 = "of occasions represented in the lefkoMat object used as input.";
-        eat_my_shorts += eat_my_shorts1;
-        
-        throw Rcpp::exception(eat_my_shorts.get_cstring(), false);
+        pop_error("tweights", "occasions", "lefkoMat object used as input", 19);
       }
       
-    } else {
-      throw Rcpp::exception("Argument tweights must be a valid numeric vector or matrix.",
-        false);
-    }
+    } else pop_error("tweights", "non-negative numeric vector or matrix.", "", 6);
   } else {
     twinput.resize(numyears);
     twinput.ones();
@@ -21097,11 +19244,7 @@ Rcpp::List snaltre3matrix(const List& Amats, const DataFrame& labels,
   for (int i = 0; i < refmatnum; i++) {
     refnum(i) = refnum(i) - 1;
     if (refnum(i) < 0) {
-      String eat_my_shorts = "Please use R indexing for reference matrices. ";
-      String eat_my_shorts1 = "The lowest number possible is 1.";
-      eat_my_shorts += eat_my_shorts1;
-      
-      throw Rcpp::exception(eat_my_shorts.get_cstring(), false);
+      throw Rcpp::exception("Use R indexing for reference matrices (min: 1).", false);
     }
   }
   
@@ -21160,11 +19303,7 @@ Rcpp::List snaltre3matrix(const List& Amats, const DataFrame& labels,
     tweights = as<arma::vec>(tweights_);
     
     if (static_cast<int>(tweights.n_elem) != numyears) {
-      String eat_my_shorts = "Time weight vector must be the same length as the number ";
-      String eat_my_shorts1 = "of occasions in the reference matrix set.";
-      eat_my_shorts += eat_my_shorts1;
-      
-      throw Rcpp::exception(eat_my_shorts.get_cstring(), false);
+      pop_error("tweights", "occasions", "reference matrix set", 19);
     }
     
     double tw_multiplier = 1.0;
@@ -21182,9 +19321,7 @@ Rcpp::List snaltre3matrix(const List& Amats, const DataFrame& labels,
     tweights = tweights / tw_sum;
     
     arma::uvec unseemly_neg = find(tweights < 0.0);
-    if (unseemly_neg.n_elem > 0) {
-      throw Rcpp::exception("Argument tweights cannot include negative values.", false);
-    }
+    if (unseemly_neg.n_elem > 0) pop_error("tweights", "non-negative numeric vector or matrix.", "", 6);
     
     arma::uvec nonzero_tweights_index = find(tweights);
     arma::vec nonzero_tweights = tweights.elem(nonzero_tweights_index);
@@ -22224,16 +20361,14 @@ Rcpp::IntegerVector markov_run(Rcpp::IntegerVector main_times,
   
   if (mat_rows != mat_cols) throw Rcpp::exception("Input matrix must be square.", false);
   if (mat_rows != main_times_length) {
-    throw Rcpp::exception("Input matrix must have the same dimensions as the length of vector main_times.", 
+    throw Rcpp::exception("Input matrix must have same dimensions as length of vector main_times.", 
       false);
   }
   
   if (start.isNotNull()) {
     IntegerVector start_entered(start);
     
-    if (start_entered.length() != 1) {
-      throw Rcpp::exception("Enter a single integer value for option start.", false);
-    }
+    if (start_entered.length() != 1) pop_error("start", "single integer.", "", 6);
     
     for (int i = 0; i < main_times_length; i++) {
       if (main_times(i) == start_entered(0)) {
@@ -22254,10 +20389,7 @@ Rcpp::IntegerVector markov_run(Rcpp::IntegerVector main_times,
     start_time = main_times(0);
   }
   
-  if (!start_time_found) {
-    throw Rcpp::exception("Vector main_times does not include start_time value provided.",
-      false);
-  }
+  if (!start_time_found) pop_error("main_times", "start_time", "", 18);
   
   // Matrix standardization
   NumericVector mat_colsums (mat_rows);

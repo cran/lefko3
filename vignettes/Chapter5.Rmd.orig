@@ -548,7 +548,7 @@ plot(basetrial, ylim = c(0, 100))
 plot(alttrial, ylim = c(0, 100))
 ```
   
-  <p style="text-indent: 20px">Each plot shows 10 lines, one for each replicate. Both projections show decline, but the population appears to reach a higher high size early on under the boosted fecundity scenario. So, while boosting fecundity does not prevent extinction, it does seem to boost the population and probably lowers the overall chances of extinction within a short time window.</p>
+  <p style="text-indent: 20px">Each plot shows 10 lines, one for each replicate. Both projections show decline, but the population appears to reach a higher high size early under the boosted fecundity scenario. So, while boosting fecundity does not prevent extinction, it does seem to boost the population and probably lowers the overall chances of extinction within a short time window.</p>
   
   <p style="text-indent: 20px">We have also created other literature to help users familiarize themselves with population analyses in general and using the package. Users should see our free e-manual called ***lefko3: a gentle introduction***, as well as other vignettes including long-format and video vignettes, on <a href = "http://www.sheffersonlab.com/projects.html">the projects page</a> of the Shefferson lab website.
   

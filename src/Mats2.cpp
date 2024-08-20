@@ -19,7 +19,7 @@ using namespace LefkoMats;
 //' \code{stageframe} object as created by function \code{mpm_create()}
 //' (\code{FALSE}).
 //' 
-//' @return A dat frame of class \code{stageframe}.
+//' @return A data frame of class \code{stageframe}.
 //' 
 //' @export
 // [[Rcpp::export(sf_skeleton)]]

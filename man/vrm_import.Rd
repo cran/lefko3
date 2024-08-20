@@ -215,13 +215,13 @@ and vectors produced via this function, nor should they ever changes the
 names of core list elements in the \code{vrm_input} object. Doing so will
 result either in fatal errors or erroneous matrix calculations.
 
-Using the \code{vrm_input} approach to building function-based MPMs requires
-careful attention to the stageframe. Although no hfv data frame needs to be
-entered, stages for which vital rates are to be estimated via linear models
-parameterized with coefficients provided via function \code{vrm_import()}
-should be marked as occurring within the dataset, while stages for which
-the provided coefficients should not be used should be marked as not
-occurring within the dataset.
+Using the \code{vrm_import()} approach to building function-based MPMs
+requires attention to the stageframe. Although no \code{hfv_data} object
+needs to be input, stages for which vital rates are to be estimated via
+models parameterized with coefficients provided via function
+\code{vrm_import()} should be marked as occurring within the dataset, while
+stages for which the provided coefficients should not be used should be
+marked as not occurring within the dataset.
 
 Coefficients added to zero-inflation models can only be added to primary
 size, secondary size, tertiary size, fecundity, and the juvenile versions of

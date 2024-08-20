@@ -662,7 +662,7 @@ verticalize3 <- function(data, noyears, firstyear = 1, popidcol = 0,
   }
   
   # Here we will modify our approach to verticalization based on the input stageframe
-  if (!all(is.na(stageassign)) & stagecol == 0) {
+  if (!all(is.na(stageassign)) & all(stagecol == 0)) {
     
     stassign <- TRUE 
     

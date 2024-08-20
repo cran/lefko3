@@ -1,3 +1,57 @@
+# lefko3 6.3.1 (2024-08-20)
+
+## NEW FEATURES
+
+* Function hfv_qc() now checks the number of individuals with single transitions
+  in hfv datasets.
+
+## USER VISIBLE CHANGES
+
+* Eliminated warnings for multiple similar transitions in mpm_create()
+  when the transitions are of different types.
+
+## BUG FIXES
+
+* Corrected erroneous milepost messages in function modelsearch().
+
+# lefko3 6.3.0 (2024-08-05)
+
+## NEW FEATURES
+
+* Function miniMod() was developed to create minimum memory vital rate model
+  summaries in vrm_input format useable as substitutes for lefkoMod objects.
+
+* Function modelsearch() can now test three annual covariates in addition to the
+  three individual covariates.
+
+* All function-based matrix estimation and projection functions can now handle
+  values of three annual covariates.
+
+* Function modelsearch() now models fixed factor interactions separately from
+  size and reproductive status, allowing greater flexibility to choose global
+  models.
+
+## USER VISIBLE CHANGES
+
+* Some help entries have been corrected and updated.
+
+* Error messages standardized throughout much of the package.
+
+* Function modelsearch() now outputs linear models with function calls that
+  point to correctly named data subsets, all of which can be exported with the
+  data_out argument.
+
+## BUG FIXES
+
+* Function matrix_interp() no longer gives a fatal error when run on a
+  historical lefkoLTRE object with part != 2.
+
+* Matrix creation and projection functions using vrm_input objects no longer
+  produce Gaussian output when provided with negative binomial inputs.
+
+* Function verticalize3() no longer produces errors when reproductive status,
+  fecundity status, or observation status variables are not provided.
+
 # lefko3 6.2.1 (2024-02-24)
 
 ## USER VISIBLE CHANGES

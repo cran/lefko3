@@ -30,7 +30,7 @@ Figure 9.1. Life history model of *Anthyllis vulneraria*. Solid arrows indicate 
   
   <p style="text-indent: 20px">We will first describe the life history characterizing the dataset with a `stageframe`. Since we do not have the original demographic dataset that produced the published matrices, we do not need to know the exact sizes of plants and so will use proxy values. These proxy values need to be unique and non-negative, and they need non-overlapping bins usable as size classes defining each stage. However, since we are not analyzing size itself, they do not need any further basis in reality. Other characteristics must be exact and realistic to make sure that the analyses work properly, including all other stage descriptions such as reproductive status, propagule status, and observation status. Note that we are using the midpoint approach to determining the size bins here, using the default bin halfwidths of 0.5. However, we could have used the `sizemin` and `sizemax` options to more deliberately set the size bin minima and maxima instead.</p>
 
-```r
+``` r
 sizevector <- c(1, 1, 2, 3) # These sizes are not from the original paper
 stagevector <- c("Sdl", "Veg", "SmFlo", "LFlo")
 repvector <- c(0, 0, 1, 1)
@@ -54,7 +54,7 @@ anthframe <- sf_create(sizes = sizevector, stagenames = stagevector,
   
   <p style="text-indent: 20px">Next we will enter the data for this vignette. Our data is in the form of matrices published in @davison_demographic_2010. We will enter these matrices as standard R `matrix` class objects. All matrices are square with 4 columns, and we fill them by row. As an example, let's load the first matrix.</p>
 
-```r
+``` r
 XC3 <- matrix(c(0, 0, 1.74, 1.74,     # POPN C 2003-2004
   0.208333333, 0, 0, 0.057142857,
   0.041666667, 0.076923077, 0, 0,
@@ -69,7 +69,7 @@ XC3
   
   <p style="text-indent: 20px">These are `A` matrices, meaning that they include all survival-transitions and fecundity for the population as a whole. The corresponding `U` and `F` matrices were not provided in that paper, although it is most likely that the elements valued at `1.74` in the top-right corner are fecundity elements while the rest of the matrix is composed only of survival transitions. The order of rows and columns corresponds to the order of stages in the stageframe `anthframe`. Let's now input the remaining matrices.</p>
 
-```r
+``` r
 XC4 <- matrix(c(0, 0, 0.3, 0.6,     # POPN C 2004-2005
   0.32183908, 0.142857143, 0, 0,
   0.16091954, 0.285714286, 0, 0,
@@ -186,7 +186,7 @@ XS5 <- matrix(c(0, 0, 0, 1.4,     # POPN S 2005-2006
   
   <p style="text-indent: 20px">We will incorporate all of these matrices into a `lefkoMat` object. To do so, we will first organize the matrices in the proper order within a list. Then, we will create the `lefkoMat` object to hold these matrices by calling function `create_lM()` with the list object we created. We will also include metadata describing the order of populations (here treated as patches), and the order of monitoring occasions.</p>
 
-```r
+``` r
 mats_list <- list(XC3, XC4, XC5, XE3, XE4, XE5, XF3, XF4, XF5, XG3, XG4, XG5,
   XL3, XL4, XL5, XO3, XO4, XO5, XQ3, XQ4, XQ5, XR3, XR4, XR5, XS3, XS4, XS5)
 
@@ -203,7 +203,7 @@ anth_lefkoMat <- create_lM(mats_list, anthframe, hstages = NA,
   
   <p style="text-indent: 20px">The resulting object has all of the elements of a standard `lefkoMat` object except for those elements related to quality control in the demographic dataset and linear modeling. The option `UFdecomp` was left at its default (`UFdecomp = TRUE`), so `create_lM()` used the stageframe to infer where fecundity values should be located and created `U` and `F` matrices accordingly. The default option for `historical` is set to `FALSE`, yielding an `NA` in place of the `hstages` element, which would typically list the order of historical stage pairs.</p>
 
-```r
+``` r
 #summary(anth_lefkoMat)
 ```
   
@@ -213,7 +213,7 @@ anth_lefkoMat <- create_lM(mats_list, anthframe, hstages = NA,
   
   <p style="text-indent: 20px">Let's develop arithmetic mean matrices and assess the deterministic and stochastic population growth rates, $\lambda$ and $a$.</p>
 
-```r
+``` r
 anth_lmean <- lmean(anth_lefkoMat)
 
 lambda2 <- lambda3(anth_lefkoMat)
@@ -244,7 +244,7 @@ legend("topleft", c("det annual", "det mean", "stochastic"), lty = c(2, 1, 1),
   
   <p style="text-indent: 20px">Let's conduct a life table response experiment (LTRE) next. This will be a deterministic LTRE, meaning that we will assess the impacts of differences in matrix elements between the core matrices input via the `lefkoMat` object `anth_lefkoMat` and the overall arithmetic grand mean matrix on differences in the deterministic growth rate, $\lambda$. We could use a different reference matrix if we wished, but the default is to use the arithmetic grand mean. Here, because we cannot analyze temporal shifts using a deterministic LTRE, we will utilize the mean matrix set instead.</p>
 
-```r
+``` r
 trialltre_det <- ltre3(anth_lmean, sparse = "auto")
 #> Warning: Matrices input as mats will also be used in reference matrix calculation.
 #> Using all refmats matrices in reference matrix calculation.
@@ -253,7 +253,7 @@ trialltre_det <- ltre3(anth_lmean, sparse = "auto")
   
   <p style="text-indent: 20px">The resulting `lefkoLTRE` object gives the LTRE contributions for each matrix relative to the arithmetic grand mean matrix. While the differences in LTRE contributions across space are of interest, we cannot infer differences across time this way because matrices are not related additively across time. To assess the contributions across space while accounting for temporal shifts, we should conduct a stochastic LTRE (sLTRE) or small-noise approximation LTRE (SNA-LTRE) on the original annual matrices. Here, conduct a sLTRE.</p>
 
-```r
+``` r
 trialltre_sto <- ltre3(anth_lefkoMat, stochastic = TRUE, times = 10000,
   tweights = NA, sparse = "auto", seed = 42)
 #> Warning: Matrices input as mats will also be used in reference matrix calculation.
@@ -265,7 +265,7 @@ trialltre_sto <- ltre3(anth_lefkoMat, stochastic = TRUE, times = 10000,
   
   <p style="text-indent: 20px">The output objects are large and can take a great deal of effort to look over and understand. Therefore, we will show three approaches to assessing these objects, using an approach similar to that used to assess elasticities. These methods can be used to assess patterns in all 9 populations, but for brevity we will focus only on the first population here. First, we will identify the elements most strongly impacting the population growth rate in each case.</p>
 
-```r
+``` r
 # Highest (i.e most positive) deterministic LTRE contribution:
 max(trialltre_det$cont_mean[[1]])
 #> [1] 0.02099388
@@ -329,7 +329,7 @@ The output for the deterministic LTRE shows that element 13, which is the fecund
   
   <p style="text-indent: 20px">Second, we will identify which stages exerted the strongest impact on the population growth rate.</p>
 
-```r
+``` r
 ltre_pos <- trialltre_det$cont_mean[[1]]
 ltre_neg <- trialltre_det$cont_mean[[1]]
 ltre_pos[which(ltre_pos < 0)] <- 0
@@ -366,7 +366,7 @@ The plot shows that large flowering adults exerted the strongest influence on bo
   
   <p style="text-indent: 20px">Finally, we will assess what transition types exert the greatest impact on population growth rate.</p>
 
-```r
+``` r
 det_ltre_summary <- summary(trialltre_det)
 sto_ltre_summary <- summary(trialltre_sto)
 

@@ -10,6 +10,7 @@ modelsearch(
   historical = TRUE,
   approach = "mixed",
   suite = "size",
+  interactions = FALSE,
   bestfit = "AICc&k",
   vitalrates = c("surv", "size", "fec"),
   surv = c("alive3", "alive2", "alive1"),
@@ -61,6 +62,12 @@ modelsearch(
   test.indcova = FALSE,
   test.indcovb = FALSE,
   test.indcovc = FALSE,
+  annucova = NA,
+  annucovb = NA,
+  annucovc = NA,
+  test.annucova = FALSE,
+  test.annucovb = FALSE,
+  test.annucovc = FALSE,
   test.group = FALSE,
   show.model.tables = TRUE,
   global.only = FALSE,
@@ -99,14 +106,18 @@ includes only size (also interactions between size in historical model);
 status in historical model); \code{age}, all vital rates estimated with age
 and y-intercepts only; \code{cons}, all vital rates estimated only as
 y-intercepts. If \code{approach = "glm"} and \code{year.as.random = FALSE},
-then year is also included as a fixed effect, and, in the case of
-\code{full}, included in two-way interactions. Order of models in the
-string vector if more than 1 value is used is: 1) survival, 2) observation,
-3) primary size, 4) secondary size, 5) tertiary size, 6) reproductive status,
-7) fecundity, 8) juvenile survival, 9) juvenile observation, 10) juvenile
-primary size, 11) juvenile secondary size, 12) juvenile tertiary size, 13)
-juvenile reproductive status, and 14) juvenile maturity status. Defaults to
-\code{size}.}
+then year is also included as a fixed effect, and, if
+\code{interactions = TRUE}, is included in two-way interactions. Order of
+models in the string vector if more than 1 value is used is: 1) survival,
+2) observation, 3) primary size, 4) secondary size, 5) tertiary size,
+6) reproductive status, 7) fecundity, 8) juvenile survival, 9) juvenile
+observation, 10) juvenile primary size, 11) juvenile secondary size, 12)
+juvenile tertiary size, 13) juvenile reproductive status, and 14) juvenile
+maturity status. Defaults to \code{size}.}
+
+\item{interactions}{A variable denoting whether to include two-way
+interactions between all fixed factors in the global model. Defaults to
+\code{FALSE}.}
 
 \item{bestfit}{A variable indicating the model selection criterion for the
 choice of best-fit model. The default is \code{AICc&k}, which chooses the 
@@ -367,6 +378,42 @@ observation, 10) juvenile primary size, 11) juvenile secondary size,
 12) juvenile tertiary size, 13) juvenile reproductive status, and
 14) juvenile maturity status. Defaults to \code{FALSE}.}
 
+\item{annucova}{A numeric vector of annual covariates to test within all
+vital rate models. If \code{historical = TRUE}, then the number of elements
+must be equal to the number of values of \code{year2} in the dataset plus
+one, and the vector should start with the value to be used in time \emph{t}-1
+in the first year of the dataset. In all other cases, the length of the
+vector must equal the number of values of \code{year2} in the dataset.
+Defaults to \code{NA}.}
+
+\item{annucovb}{A second numeric vector of annual covariates to test within
+all vital rate models. If \code{historical = TRUE}, then the number of
+elements must be equal to the number of values of \code{year2} in the dataset
+plus one, and the vector should start with the value to be used in time
+\emph{t}-1 in the first year of the dataset. In all other cases, the length
+of the vector must equal the number of values of \code{year2} in the dataset.
+Defaults to \code{NA}.}
+
+\item{annucovc}{A third numeric vector of annual covariates to test within
+all vital rate models. If \code{historical = TRUE}, then the number of
+elements must be equal to the number of values of \code{year2} in the dataset
+plus one, and the vector should start with the value to be used in time
+\emph{t}-1 in the first year of the dataset. In all other cases, the length
+of the vector must equal the number of values of \code{year2} in the dataset.
+Defaults to \code{NA}.}
+
+\item{test.annucova}{A logical value indicating whether to test the variable
+given as \code{annucova} as a fixed factor in analysis. Defaults to
+\code{FALSE}.}
+
+\item{test.annucovb}{A logical value indicating whether to test the variable
+given as \code{annucovb} as a fixed factor in analysis. Defaults to
+\code{FALSE}.}
+
+\item{test.annucovc}{A logical value indicating whether to test the variable
+given as \code{annucovc} as a fixed factor in analysis. Defaults to
+\code{FALSE}.}
+
 \item{test.group}{Either a logical value indicating whether to include the
 \code{group} variable from the input \code{stageframe} as a fixed categorical
 variable in linear models, or a logical vector of such values for 14 models,
@@ -516,6 +563,16 @@ original failed model. Finally, if all attempts fail, then the function
 displays a warning and returns \code{1} to allow model building assuming a
 constant rate or probability.
 
+Including annual covariates is easy via the arguments \code{annucova},
+\code{annucovb}, and \code{annucovc} together with \code{test.annucova},
+\code{test.annucovb}, and \code{test.annucovc}. Rather than incorporate
+a nnual covariates into the dataset, the values corresponding to each year
+may be concatenated into a numeric vector, and then used in one of these
+three arguments. Function \code{modelsearch()} will then append the value
+associated with each year into the dataset, and proceed with model building.
+Two-way interactions can be explored with other main effects fixed variables
+by setting \code{interactions = TRUE}.
+
 Setting \code{suite = "cons"} prevents the inclusion of size and reproductive
 status as fixed, independent factors in modeling. However, it does not
 prevent any other terms from being included. Density, age, individual
@@ -555,17 +612,18 @@ box, and so care should be taken to ensure that the models run make
 biological sense, and that model quality is prioritized.
 
 Exhaustive model selection through dredging works best with larger datasets
-and fewer tested parameters. Setting \code{suite = "full"} may initiate a
-dredge that takes a dramatically long time, particularly if the model is
-historical, individual covariates are used, or a zero-inflated distribution
-is assumed. In such cases, the number of models built and tested will run at
-least in the millions. Small datasets will also increase the error associated
-with these tests, leading to adoption of simpler models overall. Note also
-that zero-inflated models are processed as two models, and so include twice
-the assumed number of parameters. If \code{suite = "full"}, then this
-function will switch to a main effects global model for the zero-inflated
-parameter models if the total number of parameters to test rises above the
-limits imposed by the \code{\link[MuMIn]{dredge}()} function in package
+and fewer tested parameters. Setting \code{suite = "full"} and
+\code{interactions = TRUE} may initiate a dredge that takes a dramatically
+long time, particularly if the model is historical, individual or annual
+covariates are used, or a zero-inflated distribution is assumed. In such
+cases, the number of models built and tested will run at least in the
+millions. Small datasets will also increase the error associated with these
+tests, leading to adoption of simpler models overall. Note also that
+zero-inflated models are processed as two models, and so include twice the
+assumed number of parameters. If \code{suite = "full"}, then this function
+will switch to a main effects global model for the zero-inflated parameter
+models if the total number of parameters to test rises above the limits
+imposed by the \code{\link[MuMIn]{dredge}()} function in package
 \code{MuMIn}.
 
 Accuracy of vital rate models is calculated differently depending on vital
@@ -622,6 +680,11 @@ include \code{test.age = TRUE}, \code{test.density = TRUE},
 appropriate), respectively, in addition to stipulating the name of the
 variable within the dataset. The default for these options is always
 \code{FALSE}.
+
+\code{lefkoMod} objects can be quite large when datasets are large and models
+are complicated. To reduce the amount of memory taken up by models,
+\code{vrm_input} objects can be created to summarize all relevant aspects of
+the vital rate models using function \code{\link{miniMod}()}.
 }
 
 \examples{
@@ -663,7 +726,7 @@ lathmodelsln3 <- modelsearch(lathvertln, historical = TRUE,
   approach = "mixed", suite = "main", 
   vitalrates = c("surv", "obs", "size", "repst", "fec"), juvestimate = "Sdl",
   bestfit = "AICc&k", sizedist = "gaussian", fecdist = "poisson", 
-  indiv = "individ", patch = "patchid", year = "year2",year.as.random = TRUE,
+  indiv = "individ", patch = "patchid", year = "year2", year.as.random = TRUE,
   patch.as.random = TRUE, show.model.tables = TRUE, quiet = "partial")
 
 # Here we use supplemental() to provide overwrite and reproductive info

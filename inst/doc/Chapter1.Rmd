@@ -473,7 +473,7 @@ n _{1,4C}
   
   11. **Age** - Is an age or age x stage MPM the main goal? Currently only age MPMs and ahistorical age x stage MPMs are offered in `lefko3`.
   
-  12. **Individual covariates and environmental state variables** - Should individual or environmental covariates be tested as causal factors on vital rates? If so, then should they be included as fixed, quantitative terms or as random, categorical terms?
+  12. **Individual and annual covariates** - Should individual or annual covariates be tested as causal factors on vital rates? If so, then should they be included as fixed, quantitative terms or as random, categorical terms?
   
   13. **Stage groups** - If stage groups are noted in the stageframe, then should they also be used as fixed, independent categorical predictors in modeling?
   

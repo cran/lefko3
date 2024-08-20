@@ -2088,9 +2088,6 @@ Rcpp::List pfj(const DataFrame& data, const DataFrame& stageframe,
     bool indcova1_used {false}, indcova2_used {false}, indcova3_used {false};
     bool indcovb1_used {false}, indcovb2_used {false}, indcovb3_used {false};
     bool indcovc1_used {false}, indcovc2_used {false}, indcovc3_used {false};
-    bool obsstatus1_used {false}, obsstatus2_used {false}, obsstatus3_used {false};
-    bool repstatus1_used {false}, repstatus2_used {false}, repstatus3_used {false};
-    bool fecstatus1_used {false}, fecstatus2_used {false}, fecstatus3_used {false};
     bool juvgiven1_used {false}, juvgiven2_used {false}, juvgiven3_used {false};
     
     NumericVector xpos1_u = unique(xpos1);
@@ -2215,27 +2212,6 @@ Rcpp::List pfj(const DataFrame& data, const DataFrame& stageframe,
     IntegerVector indcovc3_int_u = unique(indcovc3_int);
     if (indcovc3_u.length() > 1 || indcovc3_int_u.length() > 1) indcovc3_used = true;
     
-    NumericVector obsstatus1_u = unique(spryn1);
-    if (obsstatus1_u.length() > 1) obsstatus1_used = true;
-    NumericVector obsstatus2_u = unique(spryn2);
-    if (obsstatus2_u.length() > 1) obsstatus2_used = true;
-    NumericVector obsstatus3_u = unique(spryn3);
-    if (obsstatus3_u.length() > 1) obsstatus3_used = true;
-    
-    NumericVector repstatus1_u = unique(repyn1);
-    if (repstatus1_u.length() > 1) repstatus1_used = true;
-    NumericVector repstatus2_u = unique(repyn2);
-    if (repstatus2_u.length() > 1) repstatus2_used = true;
-    NumericVector repstatus3_u = unique(repyn3);
-    if (repstatus3_u.length() > 1) repstatus3_used = true;
-    
-    NumericVector fecstatus1_u = unique(fecyn1);
-    if (fecstatus1_u.length() > 1) fecstatus1_used = true;
-    NumericVector fecstatus2_u = unique(fecyn2);
-    if (fecstatus2_u.length() > 1) fecstatus2_used = true;
-    NumericVector fecstatus3_u = unique(fecyn3);
-    if (fecstatus3_u.length() > 1) fecstatus3_used = true;
-    
     NumericVector juvgiven1_u = unique(juvgiven1);
     if (juvgiven1_u.length() > 1) juvgiven1_used = true;
     NumericVector juvgiven2_u = unique(juvgiven2);
@@ -2254,11 +2230,9 @@ Rcpp::List pfj(const DataFrame& data, const DataFrame& stageframe,
       fec1added_used + fec2added_used + fec3added_used + indcova1_used +
       indcova2_used + indcova3_used + indcovb1_used + indcovb2_used +
       indcovb3_used + indcovc1_used + indcovc2_used + indcovc3_used +
-      obsstatus1_used + obsstatus2_used + obsstatus3_used + repstatus1_used +
-      repstatus2_used + repstatus3_used + fecstatus1_used + fecstatus2_used +
-      fecstatus3_used + juvgiven1_used + juvgiven2_used + juvgiven3_used;
+      juvgiven1_used + juvgiven2_used + juvgiven3_used;
     
-    int list_length = 21 + total_added;
+    int list_length = 30 + total_added;
     List reduced (list_length);
     Rcpp::CharacterVector varnames (list_length);
     

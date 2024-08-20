@@ -217,7 +217,7 @@ using namespace LefkoUtils;
 //' between stage groups, use the \code{\link{supplemental}()} function.
 //' 
 //' If importing an IPM rather than building one with \code{lefko3}: Using the
-//' \code{vrm_input} approach to building function-based MPMs with provided
+//' \code{vrm_import} approach to building function-based MPMs with provided
 //' linear model slope coefficients requires careful attention to the
 //' stageframe. Although no hfv data frame needs to be entered in this instance,
 //' stages for which vital rates are to be estimated via linear models

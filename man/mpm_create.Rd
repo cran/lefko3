@@ -40,6 +40,9 @@ mpm_create(
   inda = NULL,
   indb = NULL,
   indc = NULL,
+  annua = NULL,
+  annub = NULL,
+  annuc = NULL,
   dev_terms = NULL,
   density = NA_real_,
   CDF = TRUE,
@@ -253,6 +256,24 @@ occasion in the dataset. Defaults to \code{NULL}. Only used in
 function-based MPMs.}
 
 \item{indc}{Can be a single value to use for individual covariate \code{c}
+in all matrices, a pair of values to use for times \emph{t} and \emph{t}-1
+in historical matrices, or a vector of such values corresponding to each
+occasion in the dataset. Defaults to \code{NULL}. Only used in
+function-based MPMs.}
+
+\item{annua}{Can be a single value to use for annual covariate \code{a}
+in all matrices, a pair of values to use for times \emph{t} and \emph{t}-1
+in historical matrices, or a vector of such values corresponding to each
+occasion in the dataset. Defaults to \code{NULL}. Only used in
+function-based MPMs.}
+
+\item{annub}{Can be a single value to use for annual covariate \code{b}
+in all matrices, a pair of values to use for times \emph{t} and \emph{t}-1
+in historical matrices, or a vector of such values corresponding to each
+occasion in the dataset. Defaults to \code{NULL}. Only used in
+function-based MPMs.}
+
+\item{annuc}{Can be a single value to use for annual covariate \code{c}
 in all matrices, a pair of values to use for times \emph{t} and \emph{t}-1
 in historical matrices, or a vector of such values corresponding to each
 occasion in the dataset. Defaults to \code{NULL}. Only used in

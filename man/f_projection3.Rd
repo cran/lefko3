@@ -40,6 +40,7 @@ f_projection3(
   patch = NULL,
   sp_density = NULL,
   ind_terms = NULL,
+  ann_terms = NULL,
   dev_terms = NULL,
   surv_model = NULL,
   obs_model = NULL,
@@ -238,6 +239,11 @@ such numeric values. Defaults to \code{NA}.}
 giving the values of individual covariates a, b, and c, respectively, for
 each projected time. Unused terms must be set to \code{0} (use of \code{NA}
 will produce errors.)}
+
+\item{ann_terms}{An optional data frame with 3 columns and \code{times} rows
+giving the values of annual covariates a, b, and c, respectively, for each
+projected time. Unused terms must be set to \code{0} (use of \code{NA} will
+produce errors.)}
 
 \item{dev_terms}{An optional data frame with 14 columns and \code{times}
 rows showing the values of the deviation terms to be added to each linear

@@ -150,6 +150,18 @@
 #' in all matrices, a pair of values to use for times \emph{t} and \emph{t}-1 in
 #' historical matrices, or a vector of such values corresponding to each
 #' occasion in the dataset. Defaults to \code{NULL}.
+#' @param annua Can be a single value to use for annual covariate \code{a}
+#' in all matrices, a pair of values to use for times \emph{t} and \emph{t}-1 in
+#' historical matrices, or a vector of such values corresponding to each
+#' occasion in the dataset. Defaults to \code{NULL}.
+#' @param annub Can be a single value to use for annual covariate \code{b}
+#' in all matrices, a pair of values to use for times \emph{t} and \emph{t}-1 in
+#' historical matrices, or a vector of such values corresponding to each
+#' occasion in the dataset. Defaults to \code{NULL}.
+#' @param annuc Can be a single value to use for annual covariate \code{c}
+#' in all matrices, a pair of values to use for times \emph{t} and \emph{t}-1 in
+#' historical matrices, or a vector of such values corresponding to each
+#' occasion in the dataset. Defaults to \code{NULL}.
 #' @param surv_dev A numeric value to be added to the y-intercept in the linear
 #' model for survival probability. Defaults to \code{0}.
 #' @param obs_dev A numeric value to be added to the y-intercept in the linear
@@ -569,14 +581,14 @@ flefko3 <- function(year = "all", patch = "all", stageframe, supplement = NULL,
   sizec_model = NULL, repst_model = NULL, fec_model = NULL, jsurv_model = NULL,
   jobs_model = NULL, jsize_model = NULL, jsizeb_model = NULL,
   jsizec_model = NULL, jrepst_model = NULL, jmatst_model = NULL,
-  paramnames = NULL, inda = NULL, indb = NULL, indc = NULL, surv_dev = 0,
-  obs_dev = 0, size_dev = 0, sizeb_dev = 0, sizec_dev = 0, repst_dev = 0,
-  fec_dev = 0, jsurv_dev = 0, jobs_dev = 0, jsize_dev = 0, jsizeb_dev = 0,
-  jsizec_dev = 0, jrepst_dev = 0, jmatst_dev = 0, density = NA, fecmod = 1.0,
-  random.inda = FALSE, random.indb = FALSE, random.indc = FALSE,
-  negfec = FALSE, format = "ehrlen", ipm_method = "CDF", reduce = FALSE,
-  simple = FALSE, err_check = FALSE, exp_tol = 700, theta_tol = 100000000,
-  sparse_output = FALSE) {
+  paramnames = NULL, inda = NULL, indb = NULL, indc = NULL, annua = NULL,
+  annub = NULL, annuc = NULL, surv_dev = 0, obs_dev = 0, size_dev = 0,
+  sizeb_dev = 0, sizec_dev = 0, repst_dev = 0, fec_dev = 0, jsurv_dev = 0,
+  jobs_dev = 0, jsize_dev = 0, jsizeb_dev = 0, jsizec_dev = 0, jrepst_dev = 0,
+  jmatst_dev = 0, density = NA, fecmod = 1.0, random.inda = FALSE,
+  random.indb = FALSE, random.indc = FALSE, negfec = FALSE, format = "ehrlen",
+  ipm_method = "CDF", reduce = FALSE, simple = FALSE, err_check = FALSE,
+  exp_tol = 700, theta_tol = 100000000, sparse_output = FALSE) {
   
   format_dev <- FALSE
   cdf <- TRUE
@@ -612,11 +624,11 @@ flefko3 <- function(year = "all", patch = "all", stageframe, supplement = NULL,
     patch = patch, stageframe = stageframe, supplement = supplement,
     overwrite = overwrite, repmatrix = repmatrix, modelsuite = modelsuite,
     paramnames = paramnames, inda = inda, indb = indb, indc = indc,
-    dev_terms = devterms, density = density, fecmod = fecmod, CDF = cdf,
-    random_inda = random.inda, random_indb = random.indb,
-    random_indc = random.indc, negfec = negfec, exp_tol = exp_tol,
-    theta_tol = theta_tol, simple = simple, err_check = err_check,
-    sparse_output = sparse_output)  
+    annua = annua, annub = annub, annuc = annuc, dev_terms = devterms,
+    density = density, fecmod = fecmod, CDF = cdf, random_inda = random.inda,
+    random_indb = random.indb, random_indc = random.indc, negfec = negfec,
+    exp_tol = exp_tol, theta_tol = theta_tol, simple = simple,
+    err_check = err_check, sparse_output = sparse_output)  
   
   return(output)
 }
@@ -768,6 +780,18 @@ flefko3 <- function(year = "all", patch = "all", stageframe, supplement = NULL,
 #' historical matrices, or a vector of such values corresponding to each
 #' occasion in the dataset. Defaults to \code{NULL}.
 #' @param indc Can be a single value to use for individual covariate \code{c}
+#' in all matrices, a pair of values to use for times \emph{t} and \emph{t}-1 in
+#' historical matrices, or a vector of such values corresponding to each
+#' occasion in the dataset. Defaults to \code{NULL}.
+#' @param annua Can be a single value to use for annual covariate \code{a}
+#' in all matrices, a pair of values to use for times \emph{t} and \emph{t}-1 in
+#' historical matrices, or a vector of such values corresponding to each
+#' occasion in the dataset. Defaults to \code{NULL}.
+#' @param annub Can be a single value to use for annual covariate \code{b}
+#' in all matrices, a pair of values to use for times \emph{t} and \emph{t}-1 in
+#' historical matrices, or a vector of such values corresponding to each
+#' occasion in the dataset. Defaults to \code{NULL}.
+#' @param annuc Can be a single value to use for annual covariate \code{c}
 #' in all matrices, a pair of values to use for times \emph{t} and \emph{t}-1 in
 #' historical matrices, or a vector of such values corresponding to each
 #' occasion in the dataset. Defaults to \code{NULL}.
@@ -1166,13 +1190,14 @@ flefko2 <- function(year = "all", patch = "all", stageframe, supplement = NULL,
   sizec_model = NULL, repst_model = NULL, fec_model = NULL, jsurv_model = NULL,
   jobs_model = NULL, jsize_model = NULL, jsizeb_model = NULL,
   jsizec_model = NULL, jrepst_model = NULL, jmatst_model = NULL,
-  paramnames = NULL, inda = NULL, indb = NULL, indc = NULL, surv_dev = 0,
-  obs_dev = 0, size_dev = 0, sizeb_dev = 0, sizec_dev = 0, repst_dev = 0,
-  fec_dev = 0, jsurv_dev = 0, jobs_dev = 0, jsize_dev = 0, jsizeb_dev = 0,
-  jsizec_dev = 0, jrepst_dev = 0, jmatst_dev = 0, density = NA, fecmod = 1.0,
-  random.inda = FALSE, random.indb = FALSE, random.indc = FALSE, negfec = FALSE,
-  ipm_method = "CDF", reduce = FALSE, simple = FALSE, err_check = FALSE,
-  exp_tol = 700, theta_tol = 100000000, sparse_output = FALSE) {
+  paramnames = NULL, inda = NULL, indb = NULL, indc = NULL, annua = NULL,
+  annub = NULL, annuc = NULL, surv_dev = 0, obs_dev = 0, size_dev = 0,
+  sizeb_dev = 0, sizec_dev = 0, repst_dev = 0, fec_dev = 0, jsurv_dev = 0,
+  jobs_dev = 0, jsize_dev = 0, jsizeb_dev = 0, jsizec_dev = 0, jrepst_dev = 0,
+  jmatst_dev = 0, density = NA, fecmod = 1.0, random.inda = FALSE,
+  random.indb = FALSE, random.indc = FALSE, negfec = FALSE, ipm_method = "CDF",
+  reduce = FALSE, simple = FALSE, err_check = FALSE, exp_tol = 700,
+  theta_tol = 100000000, sparse_output = FALSE) {
   
   cdf <- TRUE
   
@@ -1202,11 +1227,12 @@ flefko2 <- function(year = "all", patch = "all", stageframe, supplement = NULL,
     devries = FALSE, reduce = reduce, data = data, year = year, patch = patch,
     stageframe = stageframe, supplement = supplement, overwrite = overwrite,
     repmatrix = repmatrix, modelsuite = modelsuite, paramnames = paramnames,
-    inda = inda, indb = indb, indc = indc, dev_terms = devterms,
-    density = density, fecmod = fecmod, CDF = cdf, random_inda = random.inda,
-    random_indb = random.indb, random_indc = random.indc, negfec = negfec,
-    exp_tol = exp_tol, theta_tol = theta_tol, simple = simple,
-    err_check = err_check, sparse_output = sparse_output)
+    inda = inda, indb = indb, indc = indc, annua = annua, annub = annub,
+    annuc = annuc,dev_terms = devterms, density = density, fecmod = fecmod,
+    CDF = cdf, random_inda = random.inda, random_indb = random.indb,
+    random_indc = random.indc, negfec = negfec, exp_tol = exp_tol,
+    theta_tol = theta_tol, simple = simple, err_check = err_check,
+    sparse_output = sparse_output)
   
   return(output)
 }
@@ -1359,6 +1385,18 @@ flefko2 <- function(year = "all", patch = "all", stageframe, supplement = NULL,
 #' historical matrices, or a vector of such values corresponding to each
 #' occasion in the dataset. Defaults to \code{NULL}.
 #' @param indc Can be a single value to use for individual covariate \code{c}
+#' in all matrices, a pair of values to use for times \emph{t} and \emph{t}-1 in
+#' historical matrices, or a vector of such values corresponding to each
+#' occasion in the dataset. Defaults to \code{NULL}.
+#' @param annua Can be a single value to use for annual covariate \code{a}
+#' in all matrices, a pair of values to use for times \emph{t} and \emph{t}-1 in
+#' historical matrices, or a vector of such values corresponding to each
+#' occasion in the dataset. Defaults to \code{NULL}.
+#' @param annub Can be a single value to use for annual covariate \code{b}
+#' in all matrices, a pair of values to use for times \emph{t} and \emph{t}-1 in
+#' historical matrices, or a vector of such values corresponding to each
+#' occasion in the dataset. Defaults to \code{NULL}.
+#' @param annuc Can be a single value to use for annual covariate \code{c}
 #' in all matrices, a pair of values to use for times \emph{t} and \emph{t}-1 in
 #' historical matrices, or a vector of such values corresponding to each
 #' occasion in the dataset. Defaults to \code{NULL}.
@@ -1672,14 +1710,15 @@ aflefko2 <- function(year = "all", patch = "all", stageframe, supplement = NULL,
   sizec_model = NULL, repst_model = NULL, fec_model = NULL, jsurv_model = NULL,
   jobs_model = NULL, jsize_model = NULL, jsizeb_model = NULL,
   jsizec_model = NULL, jrepst_model = NULL, jmatst_model = NULL,
-  paramnames = NULL, inda = NULL, indb = NULL, indc = NULL, surv_dev = 0,
-  obs_dev = 0, size_dev = 0, sizeb_dev = 0, sizec_dev = 0, repst_dev = 0,
-  fec_dev = 0, jsurv_dev = 0, jobs_dev = 0, jsize_dev = 0, jsizeb_dev = 0,
-  jsizec_dev = 0, jrepst_dev = 0, jmatst_dev = 0, density = NA, fecmod = 1.0,
-  random.inda = FALSE, random.indb = FALSE, random.indc = FALSE, final_age = NA,
-  continue = TRUE, prebreeding = TRUE, negfec = FALSE, ipm_method = "CDF",
-  reduce = FALSE, simple = FALSE, err_check = FALSE, exp_tol = 700,
-  theta_tol = 100000000, sparse_output = FALSE) {
+  paramnames = NULL, inda = NULL, indb = NULL, indc = NULL, annua = NULL,
+  annub = NULL, annuc = NULL, surv_dev = 0, obs_dev = 0, size_dev = 0,
+  sizeb_dev = 0, sizec_dev = 0, repst_dev = 0, fec_dev = 0, jsurv_dev = 0,
+  jobs_dev = 0, jsize_dev = 0, jsizeb_dev = 0, jsizec_dev = 0, jrepst_dev = 0,
+  jmatst_dev = 0, density = NA, fecmod = 1.0, random.inda = FALSE,
+  random.indb = FALSE, random.indc = FALSE, final_age = NA, continue = TRUE,
+  prebreeding = TRUE, negfec = FALSE, ipm_method = "CDF", reduce = FALSE,
+  simple = FALSE, err_check = FALSE, exp_tol = 700, theta_tol = 100000000,
+  sparse_output = FALSE) {
   
   cdf <- TRUE
   
@@ -1709,12 +1748,13 @@ aflefko2 <- function(year = "all", patch = "all", stageframe, supplement = NULL,
     devries = FALSE, reduce = reduce, data = data, year = year, patch = patch,
     stageframe = stageframe, supplement = supplement, overwrite = overwrite,
     repmatrix = repmatrix, modelsuite = modelsuite, paramnames = paramnames,
-    inda = inda, indb = indb, indc = indc, dev_terms = devterms,
-    density = density, fecmod = fecmod, CDF = cdf, random_inda = random.inda,
-    random_indb = random.indb, random_indc = random.indc, negfec = negfec,
-    exp_tol = exp_tol, theta_tol = theta_tol, last_age = final_age,
-    cont = continue, prebreeding = prebreeding, simple = simple,
-    err_check = err_check, sparse_output = sparse_output)
+    inda = inda, indb = indb, indc = indc, annua = annua, annub = annub,
+    annuc = annuc, dev_terms = devterms, density = density, fecmod = fecmod,
+    CDF = cdf, random_inda = random.inda, random_indb = random.indb,
+    random_indc = random.indc, negfec = negfec, exp_tol = exp_tol,
+    theta_tol = theta_tol, last_age = final_age, cont = continue,
+    prebreeding = prebreeding, simple = simple, err_check = err_check,
+    sparse_output = sparse_output)
   
   return(output)
 }
@@ -1800,6 +1840,18 @@ aflefko2 <- function(year = "all", patch = "all", stageframe, supplement = NULL,
 #' @param indc Can be a single value to use for individual covariate \code{c}
 #' in all matrices, or a vector of such values corresponding to each occasion in
 #' the dataset. Defaults to \code{NULL}.
+#' @param annua Can be a single value to use for annual covariate \code{a}
+#' in all matrices, a pair of values to use for times \emph{t} and \emph{t}-1 in
+#' historical matrices, or a vector of such values corresponding to each
+#' occasion in the dataset. Defaults to \code{NULL}.
+#' @param annub Can be a single value to use for annual covariate \code{b}
+#' in all matrices, a pair of values to use for times \emph{t} and \emph{t}-1 in
+#' historical matrices, or a vector of such values corresponding to each
+#' occasion in the dataset. Defaults to \code{NULL}.
+#' @param annuc Can be a single value to use for annual covariate \code{c}
+#' in all matrices, a pair of values to use for times \emph{t} and \emph{t}-1 in
+#' historical matrices, or a vector of such values corresponding to each
+#' occasion in the dataset. Defaults to \code{NULL}.
 #' @param surv_dev A numeric value to be added to the y-intercept in the linear
 #' model for survival probability. Defaults to \code{0}.
 #' @param fec_dev A numeric value to be added to the y-intercept in the linear
@@ -1942,10 +1994,11 @@ fleslie <- function(year = "all", patch = NULL, prebreeding = TRUE,
   data = NULL, modelsuite = NULL, surv_model = NULL, fec_model = NULL,
   paramnames = NULL, supplement = NULL, start_age = NA, last_age = NA,
   fecage_min = NA, fecage_max = NA, continue = TRUE, inda = NULL, indb = NULL,
-  indc = NULL, surv_dev = 0, fec_dev = 0, density = NA, fecmod = 1.0,
-  random.inda = FALSE, random.indb = FALSE, random.indc = FALSE, negfec = FALSE,
-  reduce = FALSE, simple = FALSE, err_check = FALSE, exp_tol = 700,
-  theta_tol = 100000000, sparse_output = FALSE) {
+  indc = NULL, annua = NULL, annub = NULL, annuc = NULL, surv_dev = 0,
+  fec_dev = 0, density = NA, fecmod = 1.0, random.inda = FALSE,
+  random.indb = FALSE, random.indc = FALSE, negfec = FALSE, reduce = FALSE,
+  simple = FALSE, err_check = FALSE, exp_tol = 700, theta_tol = 100000000,
+  sparse_output = FALSE) {
   
   devterms <- c(surv_dev, fec_dev)
   
@@ -1963,13 +2016,14 @@ fleslie <- function(year = "all", patch = NULL, prebreeding = TRUE,
   output <- mpm_create(historical = FALSE, stage = FALSE, age = TRUE,
     devries = FALSE, reduce = reduce, data = data, year = year, patch = patch,
     modelsuite = modelsuite, paramnames = paramnames, supplement = supplement,
-    inda = inda, indb = indb, indc = indc, dev_terms = devterms,
-    density = density, fecmod = fecmod, random_inda = random.inda,
-    random_indb = random.indb, random_indc = random.indc, negfec = negfec,
-    exp_tol = exp_tol, theta_tol = theta_tol, start_age = start_age,
-    last_age = last_age, fecage_min = fecage_min, fecage_max = fecage_max,
-    cont = continue, prebreeding = prebreeding, simple = simple, 
-    err_check = err_check, sparse_output = sparse_output)
+    inda = inda, indb = indb, indc = indc, annua = annua, annub = annub,
+    annuc = annuc, dev_terms = devterms, density = density, fecmod = fecmod,
+    random_inda = random.inda, random_indb = random.indb,
+    random_indc = random.indc, negfec = negfec, exp_tol = exp_tol,
+    theta_tol = theta_tol, start_age = start_age, last_age = last_age,
+    fecage_min = fecage_min, fecage_max = fecage_max, cont = continue,
+    prebreeding = prebreeding, simple = simple, err_check = err_check,
+    sparse_output = sparse_output)
   
   return(output)
 }

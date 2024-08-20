@@ -2,7 +2,7 @@
 % Please edit documentation in R/popchar.R
 \name{hfv_qc}
 \alias{hfv_qc}
-\title{Check Quality and Distributions of hfv Datasets}
+\title{Assess Quality of hfv Datasets}
 \usage{
 hfv_qc(
   data,
