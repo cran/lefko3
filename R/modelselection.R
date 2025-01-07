@@ -3959,7 +3959,7 @@ modelsearch <- function(data, stageframe = NULL, historical = TRUE,
     if (!quiet.mil) {
       if (!finality) {
         if (!redev) {
-          message("\nDeveloping global model of fecudity...\n");
+          message("\nDeveloping global model of fecundity...\n");
         } else {
           message("\nRedeveloping global model of fecundity...\n");
         }

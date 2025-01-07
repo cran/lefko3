@@ -1697,6 +1697,11 @@ start_input <- function(mpm, stage2 = NA, stage1 = NA, age2 = NA, value = 1) {
 #' supplied, function \code{hfv_qc()} will sample 5000 rows from the dataset and
 #' conduct the Shapiro-Wilk test on the data sample.
 #' 
+#' Random factor variables are also tested for the presence of singleton
+#' categories, which are factor values that occur only once in the used data
+#' subset. Singleton categories may cause problems with estimation under mixed
+#' modeling.
+#' 
 #' @examples
 #' data(lathyrus)
 #' 
@@ -1738,17 +1743,17 @@ start_input <- function(mpm, stage2 = NA, stage1 = NA, age2 = NA, value = 1) {
 #' 
 #' @export
 hfv_qc <- function(data, stageframe = NULL, historical = TRUE, suite = "size",
-                   vitalrates = c("surv", "size", "fec"), surv = c("alive3", "alive2", "alive1"),
-                   obs = c("obsstatus3", "obsstatus2", "obsstatus1"),
-                   size = c("sizea3", "sizea2", "sizea1"), sizeb = c(NA, NA, NA), 
-                   sizec = c(NA, NA, NA), repst = c("repstatus3", "repstatus2", "repstatus1"),
-                   fec = c("feca3", "feca2", "feca1"), stage = c("stage3", "stage2", "stage1"),
-                   matstat = c("matstatus3", "matstatus2", "matstatus1"),
-                   indiv = "individ", patch = NA, year = "year2", density = NA,
-                   patch.as.random = TRUE, year.as.random = TRUE, juvestimate = NA,
-                   juvsize = FALSE, fectime = 2, censor = NA, age = NA, indcova = NA,
-                   indcovb = NA, indcovc = NA, random.indcova = FALSE, random.indcovb = FALSE,
-                   random.indcovc = FALSE, test.group = FALSE, ...) {
+  vitalrates = c("surv", "size", "fec"), surv = c("alive3", "alive2", "alive1"),
+  obs = c("obsstatus3", "obsstatus2", "obsstatus1"),
+  size = c("sizea3", "sizea2", "sizea1"), sizeb = c(NA, NA, NA), 
+  sizec = c(NA, NA, NA), repst = c("repstatus3", "repstatus2", "repstatus1"),
+  fec = c("feca3", "feca2", "feca1"), stage = c("stage3", "stage2", "stage1"),
+  matstat = c("matstatus3", "matstatus2", "matstatus1"),
+  indiv = "individ", patch = NA, year = "year2", density = NA,
+  patch.as.random = TRUE, year.as.random = TRUE, juvestimate = NA,
+  juvsize = FALSE, fectime = 2, censor = NA, age = NA, indcova = NA,
+  indcovb = NA, indcovc = NA, random.indcova = FALSE, random.indcovb = FALSE,
+  random.indcovc = FALSE, test.group = FALSE, ...) {
   
   censor1 <- censor2 <- censor3 <- surv.data <- obs.data <- size.data <- NULL
   sizeb.data <- sizec.data <- juvsizeb.data <- juvsizec.data <- NULL
@@ -1757,9 +1762,12 @@ hfv_qc <- function(data, stageframe = NULL, historical = TRUE, suite = "size",
   patchcol <- yearcol <- extra_factors <- 0
   
   sizeb_used <- sizec_used <- density_used <- indcova_used <- FALSE
-  indcovb_used <- indcovc_used <- indiv_used <- FALSE
+  indcovb_used <- indcovc_used <- indiv_used <- year_used <- patch_used <- FALSE
   
-  ran_vars <- c("none", "none", "none", "none", "none", "none") # Names of random vars: indiv, year, patch, inda, indb, indc
+  # Some vectors for random variables
+  # Names of random vars: indiv, year, patch, inda, indb, indc
+  ran_vars <- c("none", "none", "none", "none", "none", "none")
+  
   total_vars <- length(names(data))
   
   #Input testing, input standardization, and exception handling
@@ -1768,16 +1776,16 @@ hfv_qc <- function(data, stageframe = NULL, historical = TRUE, suite = "size",
       formatted vertical datasets, as provided by the verticalize() and
       historicalize() functions. Failure to format the input data properly and
       designate needed variables appropriately may result in nonsensical output.",
-            call. = FALSE)
+      call. = FALSE)
   }
   
   if (test.group) {
     if (is.null(stageframe)) {
       stop("Cannot test groups without inclusion of appropriate stageframe.",
-           call. = FALSE)
+        call. = FALSE)
     } else if (!is(stageframe, "stageframe")) {
       stop("Cannot test groups without inclusion of appropriate stageframe.",
-           call. = FALSE)
+        call. = FALSE)
     } else {
       all_groups <- unique(stageframe$group)
       
@@ -1832,7 +1840,7 @@ hfv_qc <- function(data, stageframe = NULL, historical = TRUE, suite = "size",
   
   if (!requireNamespace("MuMIn", quietly = TRUE)) {
     stop("Package MuMIn is required. Please install it.",
-         call. = FALSE)
+      call. = FALSE)
   }
   
   # Here we will use text matching to identify variables
@@ -1917,7 +1925,7 @@ hfv_qc <- function(data, stageframe = NULL, historical = TRUE, suite = "size",
       occasions t+1, t, and, if historical, t-1 (2 or 3 variables in the data frame).
       No more than 3 variables are allowed. If more than one are supplied, then they
       are assumed to be in order of occasion t+1, t, and t-1, respectively.",
-         call. = FALSE)
+      call. = FALSE)
   }
   if (length(indiv) > 1) {
     stop("Only one individual identity variable is allowed.", call. = FALSE)
@@ -1942,7 +1950,7 @@ hfv_qc <- function(data, stageframe = NULL, historical = TRUE, suite = "size",
     if (all(is.numeric(surv))) {
       if (any(surv < 1) | any(surv > total_vars)) {
         stop("Survival variables do not match data frame.",
-             call. = FALSE)
+          call. = FALSE)
       } else {
         surv <- names(data)[surv]
       }
@@ -1956,18 +1964,18 @@ hfv_qc <- function(data, stageframe = NULL, historical = TRUE, suite = "size",
     if (length(obs) > 3 | length(obs) == 1) {
       stop("This function requires 2 (if ahistorical) or 3 (if historical)
         observation variables as input parameters.",
-           call. = FALSE)}
+        call. = FALSE)}
     if (all(is.numeric(obs))) {
       if (any(obs < 1) | any(obs > total_vars)) {
         stop("Observation variables do not match data frame.",
-             call. = FALSE)
+          call. = FALSE)
       } else {
-        obs <- names(data)[obs]
+       obs <- names(data)[obs]
       }
     }
     if (any(!is.element(obs, names(data)))) {
       stop("Observation status variables must match data frame.",
-           call. = FALSE)
+        call. = FALSE)
     }
   }
   
@@ -1978,7 +1986,7 @@ hfv_qc <- function(data, stageframe = NULL, historical = TRUE, suite = "size",
     if (all(is.numeric(size))) {
       if (any(size < 1) | any(size > total_vars)) {
         stop("Size variables do not match data frame.",
-             call. = FALSE)
+          call. = FALSE)
       } else {
         size <- names(data)[size]
       }
@@ -1990,18 +1998,18 @@ hfv_qc <- function(data, stageframe = NULL, historical = TRUE, suite = "size",
       if (length(sizeb) > 3 | length(sizeb) == 1) {
         stop("This function requires 2 (if ahistorical) or 3 (if historical)
           secondary size variables as input parameters.",
-             call. = FALSE)}
+          call. = FALSE)}
       if (all(is.numeric(sizeb))) {
         if (any(sizeb < 1) | any(sizeb > total_vars)) {
           stop("Secondary size variables do not match data frame.",
-               call. = FALSE)
+            call. = FALSE)
         } else {
           sizeb <- names(data)[sizeb]
         }
       }
       if (any(!is.element(sizeb, names(data)))) {
         stop("Secondary size variables must match data frame.",
-             call. = FALSE)
+          call. = FALSE)
       }
       sizeb_used <- 1
     }
@@ -2009,18 +2017,18 @@ hfv_qc <- function(data, stageframe = NULL, historical = TRUE, suite = "size",
       if (length(sizec) > 3 | length(sizec) == 1) {
         stop("This function requires 2 (if ahistorical) or 3 (if historical)
           tertiary size variables as input parameters.",
-             call. = FALSE)}
+          call. = FALSE)}
       if (all(is.numeric(sizec))) {
         if (any(sizec < 1) | any(sizec > total_vars)) {
           stop("Tertiary size variables do not match data frame.",
-               call. = FALSE)
+            call. = FALSE)
         } else {
           sizec <- names(data)[sizec]
         }
       }
       if (any(!is.element(sizec, names(data)))) {
         stop("Tertiary size variables must match data frame.",
-             call. = FALSE)
+          call. = FALSE)
       }
       sizec_used <- 1
     }
@@ -2030,18 +2038,18 @@ hfv_qc <- function(data, stageframe = NULL, historical = TRUE, suite = "size",
     if (length(repst) > 3 | length(repst) == 1) {
       stop("This function requires 2 (if ahistorical) or 3 (if historical)
         reproductive status variables as input parameters.",
-           call. = FALSE)}
+        call. = FALSE)}
     if (all(is.numeric(repst))) {
       if (any(repst < 1) | any(repst > total_vars)) {
         stop("Reproductive status variables do not match data frame.",
-             call. = FALSE)
+          call. = FALSE)
       } else {
         repst <- names(data)[repst]
       }
     }
     if (any(!is.element(repst, names(data)))) {
       stop("Reproductive status variables must match data frame.",
-           call. = FALSE)
+        call. = FALSE)
     }
   }
   
@@ -2049,18 +2057,18 @@ hfv_qc <- function(data, stageframe = NULL, historical = TRUE, suite = "size",
     if (length(fec) > 3 | length(fec) == 1) {
       stop("This function requires 2 (if ahistorical) or 3 (if historical)
         fecundity variables as input parameters.",
-           call. = FALSE)}
+        call. = FALSE)}
     if (all(is.numeric(fec))) {
       if (any(fec < 1) | any(fec > total_vars)) {
         stop("Fecundity variables do not match data frame.",
-             call. = FALSE)
+          call. = FALSE)
       } else {
         fec <- names(data)[fec]
       }
     }
     if (any(!is.element(fec, names(data)))) {
       stop("Fecundity variables must match data frame.",
-           call. = FALSE)
+        call. = FALSE)
     }
   }
   
@@ -2088,7 +2096,7 @@ hfv_qc <- function(data, stageframe = NULL, historical = TRUE, suite = "size",
     if (length(indcova) > 3) {
       warning("Vector indcova holds the exact names of an individual covariate across
         times t+1, t, and t-1. Only the first three elements will be used.",
-              call. = FALSE)
+        call. = FALSE)
       indcova <- indcova[1:3]
       indcova_used <- TRUE
     } else if (length(indcova) == 1) {
@@ -2108,7 +2116,7 @@ hfv_qc <- function(data, stageframe = NULL, historical = TRUE, suite = "size",
       if (length(which(names(data) == indcova[2])) == 0 && indcova[2] != "none") {
         stop("Vector indcova must either equal either the exact names of an
           individual covariate across occasions t+1, t, and t-1, or be set to NA.",
-             call. = FALSE)
+          call. = FALSE)
       } else {
         indcova2col <- which(names(data) == indcova[2])
         indcova_used <- TRUE
@@ -2118,7 +2126,7 @@ hfv_qc <- function(data, stageframe = NULL, historical = TRUE, suite = "size",
         if (length(which(names(data) == indcova[3])) == 0 && indcova[3] != "none") {
           stop("Vector indcova must either equal either the exact names of an
             individual covariate across occasions t+1, t, and t-1, or be set to NA.",
-               call. = FALSE)
+            call. = FALSE)
         } else {
           indcova1col <- which(names(data) == indcova[3])
           indcova_used <- TRUE
@@ -2138,7 +2146,7 @@ hfv_qc <- function(data, stageframe = NULL, historical = TRUE, suite = "size",
     if (length(indcovb) > 3) {
       warning("Vector indcovb holds the exact names of an individual covariate
         across times t+1, t, and t-1. Only the first three elements will be used.",
-              call. = FALSE)
+        call. = FALSE)
       indcovb <- indcovb[1:3]
       indcovb_used <- TRUE
     } else if (length(indcovb) == 1) {
@@ -2158,7 +2166,7 @@ hfv_qc <- function(data, stageframe = NULL, historical = TRUE, suite = "size",
       if (length(which(names(data) == indcovb[2])) == 0 && indcovb[2] != "none") {
         stop("Vector indcovb must either equal either the exact names of an
           individual covariate across times t+1, t, and t-1, or be set to NA.",
-             call. = FALSE)
+          call. = FALSE)
       } else {
         indcovb2col <- which(names(data) == indcovb[2])
         indcovb_used <- TRUE
@@ -2168,7 +2176,7 @@ hfv_qc <- function(data, stageframe = NULL, historical = TRUE, suite = "size",
         if (length(which(names(data) == indcovb[3])) == 0 && indcovb[3] != "none") {
           stop("Vector indcovb must either equal either the exact names of an
             individual covariate across times t+1, t, and t-1, or be set to NA.",
-               call. = FALSE)
+            call. = FALSE)
         } else {
           indcovb1col <- which(names(data) == indcovb[3])
           indcovb_used <- TRUE
@@ -2188,7 +2196,7 @@ hfv_qc <- function(data, stageframe = NULL, historical = TRUE, suite = "size",
     if (length(indcovc) > 3) {
       warning("Vector indcovc holds the exact names of an individual covariate
         across times t+1, t, and t-1. Only the first three elements will be used.",
-              call. = FALSE)
+        call. = FALSE)
       indcovc <- indcovc[1:3]
       indcovc_used <- TRUE
     } else if (length(indcovc) == 1) {
@@ -2208,7 +2216,7 @@ hfv_qc <- function(data, stageframe = NULL, historical = TRUE, suite = "size",
       if (length(which(names(data) == indcovc[2])) == 0 && indcovc[2] != "none") {
         stop("Vector indcovc must either equal either the exact names of an
           individual covariate across times t+1, t, and t-1, or be set to NA.",
-             call. = FALSE)
+          call. = FALSE)
       } else {
         indcovc2col <- which(names(data) == indcovc[2])
         indcovc_used <- TRUE
@@ -2218,7 +2226,7 @@ hfv_qc <- function(data, stageframe = NULL, historical = TRUE, suite = "size",
         if (length(which(names(data) == indcovc[3])) == 0 && indcovc[3] != "none") {
           stop("Vector indcovc must either equal either the exact names of an
             individual covariate across times t+1, t, and t-1, or be set to NA.",
-               call. = FALSE)
+            call. = FALSE)
         } else {
           indcovc1col <- which(names(data) == indcovc[3])
           indcovc_used <- TRUE
@@ -2244,7 +2252,7 @@ hfv_qc <- function(data, stageframe = NULL, historical = TRUE, suite = "size",
       if (any(is.na(data[,indivcol])) ) {
         warning("NAs in individual ID variable may cause unexpected behavior in mixed
           model building. Please rename all individuals with unique names, avoiding NAs.",
-                call. = FALSE)
+          call. = FALSE)
       }
       indiv_used <- TRUE
       
@@ -2279,6 +2287,7 @@ hfv_qc <- function(data, stageframe = NULL, historical = TRUE, suite = "size",
       stop("Unable to interpret patch variable.", call. = FALSE)
     }
     ran_vars[3] = names(data)[patchcol]
+    patch_used <- TRUE
   } else {patch <- "none"}
   
   if (patchcol > 0 & !patch.as.random) {
@@ -2302,6 +2311,7 @@ hfv_qc <- function(data, stageframe = NULL, historical = TRUE, suite = "size",
       stop("Unable to interpret year variable.", call. = FALSE)
     }
     ran_vars[2] = names(data)[yearcol]
+    year_used <- TRUE
   } else {year <- "none"}
   
   if (yearcol > 0 & !year.as.random) {
@@ -2312,7 +2322,7 @@ hfv_qc <- function(data, stageframe = NULL, historical = TRUE, suite = "size",
     if (!is.numeric(density) & length(which(names(data) == density)) == 0) {
       stop("Variable density must either equal the exact name of the variable
         denoting spatial density in occasion t in the dataset, or be set to NA.",
-           call. = FALSE)
+        call. = FALSE)
     } else if (is.character(density)) {
       if (is.element(density, names(data))) {
         density_used <- TRUE
@@ -2351,18 +2361,18 @@ hfv_qc <- function(data, stageframe = NULL, historical = TRUE, suite = "size",
     if (length(matstat) > 3 | length(matstat) == 1) {
       stop("This function requires 2 (if ahistorical) or 3 (if historical) maturity status
         variables as input parameters if juvenile parameters are to be estimated.",
-           call. = FALSE)}
+        call. = FALSE)}
     if (all(is.numeric(matstat))) {
       if (any(matstat < 1) | any(matstat > total_vars)) {
         stop("Maturity status variables do not match data frame.",
-             call. = FALSE)
+          call. = FALSE)
       } else {
         matstat <- names(data)[matstat]
       }
     }
     if (any(!is.element(matstat, names(data)))) {
       stop("Maturity status variables must match data frame.",
-           call. = FALSE)
+        call. = FALSE)
     }
   }
   
@@ -2374,7 +2384,7 @@ hfv_qc <- function(data, stageframe = NULL, historical = TRUE, suite = "size",
     if (random.indcova | random.indcovb | random.indcovc) {
       warning("Random covariates can only be included in mixed models. Setting
         random.indcova, random.indcovb, and random.indcovc to FALSE.",
-              call. = FALSE)
+        call. = FALSE)
       random.indcova <- FALSE
       random.indcovb <- FALSE
       random.indcovc <- FALSE
@@ -2407,9 +2417,10 @@ hfv_qc <- function(data, stageframe = NULL, historical = TRUE, suite = "size",
     }
   }
   
-  juvsurv.sole <- juvobs.sole <- juvsize.sole <- juvsizeb.sole <- 0
-  juvsizec.sole <- juvrepst.sole <- surv.sole <- obs.sole <- size.sole <- 0
-  sizeb.sole <- sizec.sole <- repst.sole <- fec.sole <- 0
+  juvsurv.sole <- juvobs.sole <- juvsize.sole <- c(0, 0, 0, 0, 0, 0)
+  juvsizeb.sole <- juvsizec.sole <- juvrepst.sole <- c(0, 0, 0, 0, 0, 0)
+  surv.sole <- obs.sole <- size.sole <- sizeb.sole <- c(0, 0, 0, 0, 0, 0)
+  sizec.sole <- repst.sole <- fec.sole <- c(0, 0, 0, 0, 0, 0)
   
   if (!is.na(juvestimate)) {
     juvindivs <- which(data[,stage2col] == juvestimate)
@@ -2420,18 +2431,23 @@ hfv_qc <- function(data, stageframe = NULL, historical = TRUE, suite = "size",
     juvsurv.ind <- length(unique(juvsurv.data[, which(names(juvsurv.data) == indiv)]))
     juvsurv.trans <- dim(juvsurv.data)[1]
     
-    if (indiv_used) juvsurv.sole <- length(which(table(juvsurv.data[, which(names(juvsurv.data) == indiv)]) == 1))
+    if (indiv_used) juvsurv.sole[1] <- length(which(table(juvsurv.data[, which(names(juvsurv.data) == indiv)]) == 1))
+    if (year_used) juvsurv.sole[2] <- length(which(table(juvsurv.data[, which(names(juvsurv.data) == year)]) == 1))
+    if (patch_used) juvsurv.sole[3] <- length(which(table(juvsurv.data[, which(names(juvsurv.data) == patch)]) == 1))
+    if (indcova_used & random.indcova) juvsurv.sole[4] <- length(which(table(juvsurv.data[, which(names(juvsurv.data) == indcova[2])]) == 1))
+    if (indcovb_used & random.indcovb) juvsurv.sole[5] <- length(which(table(juvsurv.data[, which(names(juvsurv.data) == indcovb[2])]) == 1))
+    if (indcovc_used & random.indcovc) juvsurv.sole[6] <- length(which(table(juvsurv.data[, which(names(juvsurv.data) == indcovc[2])]) == 1))
     
     if (suite == "full" | suite == "main" | suite == "size") {
       if (any(is.na(juvsurv.data[, which(names(juvsurv.data) == size[2])]))) {
         warning("NAs in size variables may cause model selection to fail.",
-                call. = FALSE)
+          call. = FALSE)
       }
       
       if (historical == TRUE) {
         if (any(is.na(juvsurv.data[, which(names(juvsurv.data) == size[3])]))) {
           warning("NAs in size variables may cause model selection to fail.",
-                  call. = FALSE)
+            call. = FALSE)
         }
       }
     }
@@ -2439,13 +2455,13 @@ hfv_qc <- function(data, stageframe = NULL, historical = TRUE, suite = "size",
     if (suite == "full" | suite == "main" | suite == "rep") {
       if (any(is.na(juvsurv.data[, which(names(juvsurv.data) == repst[2])]))) {
         warning("NAs in reproductive status variables may cause model selection to fail.",
-                call. = FALSE)
+          call. = FALSE)
       }
       
       if (historical == TRUE) {
         if (any(is.na(juvsurv.data[, which(names(juvsurv.data) == repst[3])]))) {
           warning("NAs in reproductive status variables may cause model selection to fail.",
-                  call. = FALSE)
+            call. = FALSE)
         }
       }
     }
@@ -2460,7 +2476,12 @@ hfv_qc <- function(data, stageframe = NULL, historical = TRUE, suite = "size",
     juvobs.ind <- length(unique(juvobs.data[, which(names(juvobs.data) == indiv)]))
     juvobs.trans <- dim(juvobs.data)[1]
     
-    if (indiv_used) juvobs.sole <- length(which(table(juvobs.data[, which(names(juvobs.data) == indiv)]) == 1))
+    if (indiv_used) juvobs.sole[1] <- length(which(table(juvobs.data[, which(names(juvobs.data) == indiv)]) == 1))
+    if (year_used) juvobs.sole[2] <- length(which(table(juvobs.data[, which(names(juvobs.data) == year)]) == 1))
+    if (patch_used) juvobs.sole[3] <- length(which(table(juvobs.data[, which(names(juvobs.data) == patch)]) == 1))
+    if (indcova_used & random.indcova) juvobs.sole[4] <- length(which(table(juvobs.data[, which(names(juvobs.data) == indcova[2])]) == 1))
+    if (indcovb_used & random.indcovb) juvobs.sole[5] <- length(which(table(juvobs.data[, which(names(juvobs.data) == indcovb[2])]) == 1))
+    if (indcovc_used & random.indcovc) juvobs.sole[6] <- length(which(table(juvobs.data[, which(names(juvobs.data) == indcovc[2])]) == 1))
     
     if (models_to_estimate[2] == 1) {
       models_to_estimate[9] == 1
@@ -2493,20 +2514,35 @@ hfv_qc <- function(data, stageframe = NULL, historical = TRUE, suite = "size",
     juvsize.ind <- length(unique(juvsize.data[, which(names(juvsize.data) == indiv)]))
     juvsize.trans <- dim(juvsize.data)[1]
     
-    if (indiv_used) juvsize.sole <- length(which(table(juvsize.data[, which(names(juvsize.data) == indiv)]) == 1))
+    if (indiv_used) juvsize.sole[1] <- length(which(table(juvsize.data[, which(names(juvsize.data) == indiv)]) == 1))
+    if (year_used) juvsize.sole[2] <- length(which(table(juvsize.data[, which(names(juvsize.data) == year)]) == 1))
+    if (patch_used) juvsize.sole[3] <- length(which(table(juvsize.data[, which(names(juvsize.data) == patch)]) == 1))
+    if (indcova_used & random.indcova) juvsize.sole[4] <- length(which(table(juvsize.data[, which(names(juvsize.data) == indcova[2])]) == 1))
+    if (indcovb_used & random.indcovb) juvsize.sole[5] <- length(which(table(juvsize.data[, which(names(juvsize.data) == indcovb[2])]) == 1))
+    if (indcovc_used & random.indcovc) juvsize.sole[6] <- length(which(table(juvsize.data[, which(names(juvsize.data) == indcovc[2])]) == 1))
     
     if (sizeb_used) {
       juvsizeb.ind <- length(unique(juvsizeb.data[, which(names(juvsizeb.data) == indiv)]))
       juvsizeb.trans <- dim(juvsizeb.data)[1]
       
-      if (indiv_used) juvsizeb.sole <- length(which(table(juvsizeb.data[, which(names(juvsizeb.data) == indiv)]) == 1))
+      if (indiv_used) juvsizeb.sole[1] <- length(which(table(juvsizeb.data[, which(names(juvsizeb.data) == indiv)]) == 1))
+      if (year_used) juvsizeb.sole[2] <- length(which(table(juvsizeb.data[,   which(names(juvsizeb.data) == year)]) == 1))
+      if (patch_used) juvsizeb.sole[3] <- length(which(table(juvsizeb.data[,    which(names(juvsizeb.data) == patch)]) == 1))
+      if (indcova_used & random.indcova) juvsizeb.sole[4] <- length(which(table(juvsizeb.data[, which(names(juvsizeb.data) == indcova[2])]) == 1))
+      if (indcovb_used & random.indcovb) juvsizeb.sole[5] <- length(which(table(juvsizeb.data[, which(names(juvsizeb.data) == indcovb[2])]) == 1))
+      if (indcovc_used & random.indcovc) juvsizeb.sole[6] <- length(which(table(juvsizeb.data[, which(names(juvsizeb.data) == indcovc[2])]) == 1))
       
     }
     if (sizec_used) {
       juvsizec.ind <- length(unique(juvsizec.data[, which(names(juvsizec.data) == indiv)]))
       juvsizec.trans <- dim(juvsizec.data)[1]
       
-      if (indiv_used) juvsizec.sole <- length(which(table(juvsizec.data[, which(names(juvsizec.data) == indiv)]) == 1))
+      if (indiv_used) juvsizec.sole[1] <- length(which(table(juvsizec.data[, which(names(juvsizec.data) == indiv)]) == 1))
+      if (year_used) juvsizec.sole[2] <- length(which(table(juvsizec.data[, which(names(juvsizec.data) == year)]) == 1))
+      if (patch_used) juvsizec.sole[3] <- length(which(table(juvsizec.data[, which(names(juvsizec.data) == patch)]) == 1))
+      if (indcova_used & random.indcova) juvsizec.sole[4] <- length(which(table(juvsizec.data[, which(names(juvsizec.data) == indcova[2])]) == 1))
+      if (indcovb_used & random.indcovb) juvsizec.sole[5] <- length(which(table(juvsizec.data[, which(names(juvsizec.data) == indcovb[2])]) == 1))
+      if (indcovc_used & random.indcovc) juvsizec.sole[6] <- length(which(table(juvsizec.data[, which(names(juvsizec.data) == indcovc[2])]) == 1))
       
     }
     
@@ -2523,7 +2559,12 @@ hfv_qc <- function(data, stageframe = NULL, historical = TRUE, suite = "size",
   surv.ind <- length(unique(surv.data[, which(names(surv.data) == indiv)]))
   surv.trans <- dim(surv.data)[1]
   
-  if (indiv_used) surv.sole <- length(which(table(surv.data[, which(names(surv.data) == indiv)]) == 1))
+  if (indiv_used) surv.sole[1] <- length(which(table(surv.data[, which(names(surv.data) == indiv)]) == 1))
+  if (year_used) surv.sole[2] <- length(which(table(surv.data[, which(names(surv.data) == year)]) == 1))
+  if (patch_used) surv.sole[3] <- length(which(table(surv.data[, which(names(surv.data) == patch)]) == 1))
+  if (indcova_used & random.indcova) surv.sole[4] <- length(which(table(surv.data[, which(names(surv.data) == indcova[2])]) == 1))
+  if (indcovb_used & random.indcovb) surv.sole[5] <- length(which(table(surv.data[, which(names(surv.data) == indcovb[2])]) == 1))
+  if (indcovc_used & random.indcovc) surv.sole[6] <- length(which(table(surv.data[, which(names(surv.data) == indcovc[2])]) == 1))
   
   if(any(!suppressWarnings(!is.na(as.numeric(as.character(surv.data[, which(names(surv.data) == size[1])])))))) {
     warning("Modelsearch(), flefko3(), flefko2(), and aflefko2() are made to work
@@ -2533,36 +2574,36 @@ hfv_qc <- function(data, stageframe = NULL, historical = TRUE, suite = "size",
   if (suite == "full" | suite == "main" | suite == "size") {
     if (any(is.na(surv.data[, which(names(surv.data) == size[2])]))) {
       warning("NAs in size variables may cause model selection to fail.",
-              call. = FALSE)
+        call. = FALSE)
     }
     if (sizeb_used) {
       if (any(is.na(surv.data[, which(names(surv.data) == sizeb[2])]))) {
         warning("NAs in size variables may cause model selection to fail.",
-                call. = FALSE)
+          call. = FALSE)
       }
     }
     if (sizec_used) {
       if (any(is.na(surv.data[, which(names(surv.data) == sizec[2])]))) {
         warning("NAs in size variables may cause model selection to fail.",
-                call. = FALSE)
+          call. = FALSE)
       }
     }
     
     if (historical == TRUE) {
       if (any(is.na(surv.data[, which(names(surv.data) == size[3])]))) {
         warning("NAs in size variables may cause model selection to fail.",
-                call. = FALSE)
+          call. = FALSE)
       }
       if (sizeb_used) {
         if (any(is.na(surv.data[, which(names(surv.data) == sizeb[3])]))) {
           warning("NAs in size variables may cause model selection to fail.",
-                  call. = FALSE)
+            call. = FALSE)
         }
       }
       if (sizec_used) {
         if (any(is.na(surv.data[, which(names(surv.data) == sizec[3])]))) {
           warning("NAs in size variables may cause model selection to fail.",
-                  call. = FALSE)
+            call. = FALSE)
         }
       }
     }
@@ -2570,13 +2611,13 @@ hfv_qc <- function(data, stageframe = NULL, historical = TRUE, suite = "size",
   if (suite == "full" | suite == "main" | suite == "rep") {
     if (any(is.na(surv.data[, which(names(surv.data) == repst[2])]))) {
       warning("NAs in reproductive status variables may cause model selection to fail.",
-              call. = FALSE)
+        call. = FALSE)
     }
     
     if (historical == TRUE) {
       if (any(is.na(surv.data[, which(names(surv.data) == repst[3])]))) {
         warning("NAs in reproductive status variables may cause model selection to fail.",
-                call. = FALSE)
+          call. = FALSE)
       }
     }
   }
@@ -2585,7 +2626,12 @@ hfv_qc <- function(data, stageframe = NULL, historical = TRUE, suite = "size",
   obs.ind <- length(unique(obs.data[, which(names(obs.data) == indiv)]))
   obs.trans <- dim(obs.data)[1]
   
-  if (indiv_used) obs.sole <- length(which(table(obs.data[, which(names(obs.data) == indiv)]) == 1))
+  if (indiv_used) obs.sole[1] <- length(which(table(obs.data[, which(names(obs.data) == indiv)]) == 1))
+  if (year_used) obs.sole[2] <- length(which(table(obs.data[, which(names(obs.data) == year)]) == 1))
+  if (patch_used) obs.sole[3] <- length(which(table(obs.data[, which(names(obs.data) == patch)]) == 1))
+  if (indcova_used & random.indcova) obs.sole[4] <- length(which(table(obs.data[, which(names(obs.data) == indcova[2])]) == 1))
+  if (indcovb_used & random.indcovb) obs.sole[5] <- length(which(table(obs.data[, which(names(obs.data) == indcovb[2])]) == 1))
+  if (indcovc_used & random.indcovc) obs.sole[6] <- length(which(table(obs.data[, which(names(obs.data) == indcovc[2])]) == 1))
   
   if (models_to_estimate[2] == 1) {
     size.data <- subset(obs.data, obs.data[, which(names(obs.data) == obs[1])] == 1)
@@ -2615,26 +2661,46 @@ hfv_qc <- function(data, stageframe = NULL, historical = TRUE, suite = "size",
   size.ind <- length(unique(size.data[, which(names(size.data) == indiv)]))
   size.trans <- dim(size.data)[1]
   
-  if (indiv_used) size.sole <- length(which(table(size.data[, which(names(size.data) == indiv)]) == 1))
+  if (indiv_used) size.sole[1] <- length(which(table(size.data[, which(names(size.data) == indiv)]) == 1))
+  if (year_used) size.sole[2] <- length(which(table(size.data[, which(names(size.data) == year)]) == 1))
+  if (patch_used) size.sole[3] <- length(which(table(size.data[, which(names(size.data) == patch)]) == 1))
+  if (indcova_used & random.indcova) size.sole[4] <- length(which(table(size.data[, which(names(size.data) == indcova[2])]) == 1))
+  if (indcovb_used & random.indcovb) size.sole[5] <- length(which(table(size.data[, which(names(size.data) == indcovb[2])]) == 1))
+  if (indcovc_used & random.indcovc) size.sole[6] <- length(which(table(size.data[, which(names(size.data) == indcovc[2])]) == 1))
   
   if (sizeb_used) {
     sizeb.ind <- length(unique(sizeb.data[, which(names(sizeb.data) == indiv)]))
     sizeb.trans <- dim(sizeb.data)[1]
     
-    if (indiv_used) sizeb.sole <- length(which(table(sizeb.data[, which(names(sizeb.data) == indiv)]) == 1))
+    if (indiv_used) sizeb.sole[1] <- length(which(table(sizeb.data[, which(names(sizeb.data) == indiv)]) == 1))
+    if (year_used) sizeb.sole[2] <- length(which(table(sizeb.data[, which(names(sizeb.data) == year)]) == 1))
+    if (patch_used) sizeb.sole[3] <- length(which(table(sizeb.data[, which(names(sizeb.data) == patch)]) == 1))
+    if (indcova_used & random.indcova) sizeb.sole[4] <- length(which(table(sizeb.data[, which(names(sizeb.data) == indcova[2])]) == 1))
+    if (indcovb_used & random.indcovb) sizeb.sole[5] <- length(which(table(sizeb.data[, which(names(sizeb.data) == indcovb[2])]) == 1))
+    if (indcovc_used & random.indcovc) sizeb.sole[6] <- length(which(table(sizeb.data[, which(names(sizeb.data) == indcovc[2])]) == 1))
     
   }
   if (sizec_used) {
     sizec.ind <- length(unique(sizec.data[, which(names(sizec.data) == indiv)]))
     sizec.trans <- dim(sizec.data)[1]
     
-    if (indiv_used) sizec.sole <- length(which(table(sizec.data[, which(names(sizec.data) == indiv)]) == 1))
+    if (indiv_used) sizec.sole[1] <- length(which(table(sizec.data[, which(names(sizec.data) == indiv)]) == 1))
+    if (year_used) sizec.sole[2] <- length(which(table(sizec.data[, which(names(sizec.data) == year)]) == 1))
+    if (patch_used) sizec.sole[3] <- length(which(table(sizec.data[, which(names(sizec.data) == patch)]) == 1))
+    if (indcova_used & random.indcova) sizec.sole[4] <- length(which(table(sizec.data[, which(names(sizec.data) == indcova[2])]) == 1))
+    if (indcovb_used & random.indcovb) sizec.sole[5] <- length(which(table(sizec.data[, which(names(sizec.data) == indcovb[2])]) == 1))
+    if (indcovc_used & random.indcovc) sizec.sole[6] <- length(which(table(sizec.data[, which(names(sizec.data) == indcovc[2])]) == 1))
     
   }
   
   repst.data <- size.data
   
-  if (indiv_used) repst.sole <- length(which(table(repst.data[, which(names(repst.data) == indiv)]) == 1))
+  if (indiv_used) repst.sole[1] <- length(which(table(repst.data[, which(names(repst.data) == indiv)]) == 1))
+  if (year_used) repst.sole[2] <- length(which(table(repst.data[, which(names(repst.data) == year)]) == 1))
+  if (patch_used) repst.sole[3] <- length(which(table(repst.data[, which(names(repst.data) == patch)]) == 1))
+  if (indcova_used & random.indcova) repst.sole[4] <- length(which(table(repst.data[, which(names(repst.data) == indcova[2])]) == 1))
+  if (indcovb_used & random.indcovb) repst.sole[5] <- length(which(table(repst.data[, which(names(repst.data) == indcovb[2])]) == 1))
+  if (indcovc_used & random.indcovc) repst.sole[6] <- length(which(table(repst.data[, which(names(repst.data) == indcovc[2])]) == 1))
   
   if (models_to_estimate[6] == 1) {
     if (fectime == 2) {
@@ -2655,7 +2721,12 @@ hfv_qc <- function(data, stageframe = NULL, historical = TRUE, suite = "size",
   fec.ind <- length(unique(fec.data[, which(names(fec.data) == indiv)]))
   fec.trans <- dim(fec.data)[1]
   
-  if (indiv_used) fec.sole <- length(which(table(fec.data[, which(names(fec.data) == indiv)]) == 1))
+  if (indiv_used) fec.sole[1] <- length(which(table(fec.data[, which(names(fec.data) == indiv)]) == 1))
+  if (year_used) fec.sole[2] <- length(which(table(fec.data[, which(names(fec.data) == year)]) == 1))
+  if (patch_used) fec.sole[3] <- length(which(table(fec.data[, which(names(fec.data) == patch)]) == 1))
+  if (indcova_used & random.indcova) fec.sole[4] <- length(which(table(fec.data[, which(names(fec.data) == indcova[2])]) == 1))
+  if (indcovb_used & random.indcovb) fec.sole[5] <- length(which(table(fec.data[, which(names(fec.data) == indcovb[2])]) == 1))
+  if (indcovc_used & random.indcovc) fec.sole[6] <- length(which(table(fec.data[, which(names(fec.data) == indcovc[2])]) == 1))
   
   if (is.element("fec", vitalrates)) {
     if (fectime == 2) {
@@ -2672,7 +2743,7 @@ hfv_qc <- function(data, stageframe = NULL, historical = TRUE, suite = "size",
   if (is.data.frame(surv.data) & is.element("surv", vitalrates)) {
     writeLines("Survival:\n")
     writeLines(paste0("  Data subset has ", dim(surv.data)[2], " variables and ",
-                      dim(surv.data)[1], " transitions.\n"))
+      dim(surv.data)[1], " transitions.\n"))
     
     .intbin_check(surv.data, surv[1])
     
@@ -2681,18 +2752,15 @@ hfv_qc <- function(data, stageframe = NULL, historical = TRUE, suite = "size",
       
       for(i in c(1:length(chosen_ran_vars))) {
         found_uns <- length(unique(surv.data[,ran_vars[chosen_ran_vars[i]]]))
-        writeLines(paste0("  ", ran_vars_names[chosen_ran_vars[i]], found_uns))
+        writeLines(paste0("  ", ran_vars_names[chosen_ran_vars[i]], found_uns,
+            "   (singleton categories: ", surv.sole[i], ")"))
       }
-    }
-    
-    if (indiv_used) {
-      writeLines(paste0("\n  A total of ", surv.sole, " individuals have only single transitions.\n"))
     }
   }
   if (is.data.frame(obs.data) & is.element("obs", vitalrates)) {
     writeLines("\nObservation status:\n")
     writeLines(paste0("  Data subset has ", dim(obs.data)[2], " variables and ",
-                      dim(obs.data)[1], " transitions.\n"))
+      dim(obs.data)[1], " transitions.\n"))
     
     .intbin_check(obs.data, obs[1])
     
@@ -2701,19 +2769,16 @@ hfv_qc <- function(data, stageframe = NULL, historical = TRUE, suite = "size",
       
       for(i in c(1:length(chosen_ran_vars))) {
         found_uns <- length(unique(obs.data[,ran_vars[chosen_ran_vars[i]]]))
-        writeLines(paste0("  ", ran_vars_names[chosen_ran_vars[i]], found_uns))
+        writeLines(paste0("  ", ran_vars_names[chosen_ran_vars[i]], found_uns,
+            "   (singleton categories: ", obs.sole[i], ")"))
       }
-    }
-    
-    if (indiv_used) {
-      writeLines(paste0("\n  A total of ", obs.sole, " individuals have only single transitions.\n"))
     }
   }
   
   if (is.data.frame(size.data) & is.element("size", vitalrates)) {
     writeLines("\nPrimary size:\n")
     writeLines(paste0("  Data subset has ", dim(size.data)[2], " variables and ",
-                      dim(size.data)[1], " transitions.\n"))
+      dim(size.data)[1], " transitions.\n"))
     
     .sf_dist_check(size.data, size[1], size[2])
     
@@ -2722,18 +2787,15 @@ hfv_qc <- function(data, stageframe = NULL, historical = TRUE, suite = "size",
       
       for(i in c(1:length(chosen_ran_vars))) {
         found_uns <- length(unique(size.data[,ran_vars[chosen_ran_vars[i]]]))
-        writeLines(paste0("  ", ran_vars_names[chosen_ran_vars[i]], found_uns))
+        writeLines(paste0("  ", ran_vars_names[chosen_ran_vars[i]], found_uns,
+            "   (singleton categories: ", size.sole[i], ")"))
       }
-    }
-    
-    if (indiv_used) {
-      writeLines(paste0("\n  A total of ", size.sole, " individuals have only single transitions.\n"))
     }
   }
   if (is.data.frame(sizeb.data) & is.element("siz", vitalrates)) {
     writeLines("\nSecondary size:\n")
     writeLines(paste0("  Data subset has ", dim(sizeb.data)[2], " variables and ",
-                      dim(sizeb.data)[1], " transitions.\n"))
+      dim(sizeb.data)[1], " transitions.\n"))
     
     .sf_dist_check(sizeb.data, sizeb[1], sizeb[2])
     
@@ -2742,18 +2804,15 @@ hfv_qc <- function(data, stageframe = NULL, historical = TRUE, suite = "size",
       
       for(i in c(1:length(chosen_ran_vars))) {
         found_uns <- length(unique(sizeb.data[,ran_vars[chosen_ran_vars[i]]]))
-        writeLines(paste0("  ", ran_vars_names[chosen_ran_vars[i]], found_uns))
+        writeLines(paste0("  ", ran_vars_names[chosen_ran_vars[i]], found_uns,
+            "   (singleton categories: ", sizeb.sole[i], ")"))
       }
-    }
-    
-    if (indiv_used) {
-      writeLines(paste0("\n  A total of ", sizeb.sole, " individuals have only single transitions.\n"))
     }
   }
   if (is.data.frame(sizec.data) & is.element("siz", vitalrates)) {
     writeLines("\nTertiary size:\n")
     writeLines(paste0("  Data subset has ", dim(sizec.data)[2], " variables and ",
-                      dim(sizec.data)[1], " transitions.\n"))
+      dim(sizec.data)[1], " transitions.\n"))
     
     .sf_dist_check(sizec.data, sizec[1], sizec[2])
     
@@ -2762,19 +2821,16 @@ hfv_qc <- function(data, stageframe = NULL, historical = TRUE, suite = "size",
       
       for(i in c(1:length(chosen_ran_vars))) {
         found_uns <- length(unique(sizec.data[,ran_vars[chosen_ran_vars[i]]]))
-        writeLines(paste0("  ", ran_vars_names[chosen_ran_vars[i]], found_uns))
+        writeLines(paste0("  ", ran_vars_names[chosen_ran_vars[i]], found_uns,
+            "   (singleton categories: ", sizec.sole[i], ")"))
       }
-    }
-    
-    if (indiv_used) {
-      writeLines(paste0("\n  A total of ", sizec.sole, " individuals have only single transitions.\n"))
     }
   }
   
   if (is.data.frame(repst.data) & is.element("repst", vitalrates)) {
     writeLines("\nReproductive status:\n")
     writeLines(paste0("  Data subset has ", dim(repst.data)[2], " variables and ",
-                      dim(repst.data)[1], " transitions.\n"))
+      dim(repst.data)[1], " transitions.\n"))
     
     .intbin_check(repst.data, repst[1])
     
@@ -2783,19 +2839,16 @@ hfv_qc <- function(data, stageframe = NULL, historical = TRUE, suite = "size",
       
       for(i in c(1:length(chosen_ran_vars))) {
         found_uns <- length(unique(repst.data[,ran_vars[chosen_ran_vars[i]]]))
-        writeLines(paste0("  ", ran_vars_names[chosen_ran_vars[i]], found_uns))
+        writeLines(paste0("  ", ran_vars_names[chosen_ran_vars[i]], found_uns,
+            "   (singleton categories: ", repst.sole[i], ")"))
       }
-    }
-    
-    if (indiv_used) {
-      writeLines(paste0("\n  A total of ", repst.sole, " individuals have only single transitions.\n"))
     }
   }
   
   if (is.data.frame(fec.data) & is.element("fec", vitalrates)) {
     writeLines("\nFecundity:\n")
     writeLines(paste0("  Data subset has ", dim(fec.data)[2], " variables and ",
-                      dim(fec.data)[1], " transitions.\n"))
+      dim(fec.data)[1], " transitions.\n"))
     
     if (fectime == 2) {
       term2 <- size[2]
@@ -2809,19 +2862,16 @@ hfv_qc <- function(data, stageframe = NULL, historical = TRUE, suite = "size",
       
       for(i in c(1:length(chosen_ran_vars))) {
         found_uns <- length(unique(fec.data[,ran_vars[chosen_ran_vars[i]]]))
-        writeLines(paste0("  ", ran_vars_names[chosen_ran_vars[i]], found_uns))
+        writeLines(paste0("  ", ran_vars_names[chosen_ran_vars[i]], found_uns,
+            "   (singleton categories: ", fec.sole[i], ")"))
       }
-    }
-    
-    if (indiv_used) {
-      writeLines(paste0("\n  A total of ", fec.sole, " individuals have only single transitions.\n"))
     }
   }
   
   if (is.data.frame(juvsurv.data) & is.element("surv", vitalrates)) {
     writeLines("\nJuvenile survival:\n")
     writeLines(paste0("  Data subset has ", dim(juvsurv.data)[2], " variables and ",
-                      dim(juvsurv.data)[1], " transitions.\n"))
+      dim(juvsurv.data)[1], " transitions.\n"))
     
     .intbin_check(juvsurv.data, surv[1])
     
@@ -2830,18 +2880,15 @@ hfv_qc <- function(data, stageframe = NULL, historical = TRUE, suite = "size",
       
       for(i in c(1:length(chosen_ran_vars))) {
         found_uns <- length(unique(juvsurv.data[,ran_vars[chosen_ran_vars[i]]]))
-        writeLines(paste0("  ", ran_vars_names[chosen_ran_vars[i]], found_uns))
+        writeLines(paste0("  ", ran_vars_names[chosen_ran_vars[i]], found_uns,
+            "   (singleton categories: ", juvsurv.sole[i], ")"))
       }
-    }
-    
-    if (indiv_used) {
-      writeLines(paste0("\n  A total of ", juvsurv.sole, " individuals have only single transitions.\n"))
     }
   }
   if (is.data.frame(juvobs.data) & is.element("obs", vitalrates)) {
     writeLines("\nJuvenile observation status:\n")
     writeLines(paste0("  Data subset has ", dim(juvobs.data)[2], " variables and ",
-                      dim(juvobs.data)[1], " transitions.\n"))
+      dim(juvobs.data)[1], " transitions.\n"))
     
     .intbin_check(juvobs.data, obs[1])
     
@@ -2850,19 +2897,16 @@ hfv_qc <- function(data, stageframe = NULL, historical = TRUE, suite = "size",
       
       for(i in c(1:length(chosen_ran_vars))) {
         found_uns <- length(unique(juvobs.data[,ran_vars[chosen_ran_vars[i]]]))
-        writeLines(paste0("  ", ran_vars_names[chosen_ran_vars[i]], found_uns))
+        writeLines(paste0("  ", ran_vars_names[chosen_ran_vars[i]], found_uns,
+            "   (singleton categories: ", juvobs.sole[i], ")"))
       }
-    }
-    
-    if (indiv_used) {
-      writeLines(paste0("\n  A total of ", juvobs.sole, " individuals have only single transitions.\n"))
     }
   }
   
   if (is.data.frame(juvsize.data) & is.element("size", vitalrates)) {
     writeLines("\nJuvenile primary size:\n")
     writeLines(paste0("  Data subset has ", dim(juvsize.data)[2], " variables and ",
-                      dim(juvsize.data)[1], " transitions.\n"))
+      dim(juvsize.data)[1], " transitions.\n"))
     
     .sf_dist_check(juvsize.data, size[1], size[2])
     
@@ -2871,18 +2915,15 @@ hfv_qc <- function(data, stageframe = NULL, historical = TRUE, suite = "size",
       
       for(i in c(1:length(chosen_ran_vars))) {
         found_uns <- length(unique(juvsize.data[,ran_vars[chosen_ran_vars[i]]]))
-        writeLines(paste0("  ", ran_vars_names[chosen_ran_vars[i]], found_uns))
+        writeLines(paste0("  ", ran_vars_names[chosen_ran_vars[i]], found_uns,
+            "   (singleton categories: ", juvsize.sole[i], ")"))
       }
-    }
-    
-    if (indiv_used) {
-      writeLines(paste0("\n  A total of ", juvsize.sole, " individuals have only single transitions.\n"))
     }
   }
   if (is.data.frame(juvsizeb.data)& is.element("siz", vitalrates)) {
     writeLines("\nJuvenile secondary size:\n")
     writeLines(paste0("  Data subset has ", dim(juvsizeb.data)[2], " variables and ",
-                      dim(juvsizeb.data)[1], " transitions.\n"))
+      dim(juvsizeb.data)[1], " transitions.\n"))
     
     .sf_dist_check(juvsizeb.data, sizeb[1], sizeb[2])
     
@@ -2891,18 +2932,15 @@ hfv_qc <- function(data, stageframe = NULL, historical = TRUE, suite = "size",
       
       for(i in c(1:length(chosen_ran_vars))) {
         found_uns <- length(unique(juvsizeb.data[,ran_vars[chosen_ran_vars[i]]]))
-        writeLines(paste0("  ", ran_vars_names[chosen_ran_vars[i]], found_uns))
+        writeLines(paste0("  ", ran_vars_names[chosen_ran_vars[i]], found_uns,
+            "   (singleton categories: ", juvsizeb.sole[i], ")"))
       }
-    }
-    
-    if (indiv_used) {
-      writeLines(paste0("\n  A total of ", juvsizeb.sole, " individuals have only single transitions.\n"))
     }
   }
   if (is.data.frame(juvsizec.data) & is.element("siz", vitalrates)) {
     writeLines("\nJuvenile tertiary size:\n")
     writeLines(paste0("  Data subset has ", dim(juvsizec.data)[2], " variables and ",
-                      dim(juvsizec.data)[1], " transitions.\n"))
+      dim(juvsizec.data)[1], " transitions.\n"))
     
     .sf_dist_check(juvsizec.data, sizec[1], sizec[2])
     
@@ -2911,19 +2949,16 @@ hfv_qc <- function(data, stageframe = NULL, historical = TRUE, suite = "size",
       
       for(i in c(1:length(chosen_ran_vars))) {
         found_uns <- length(unique(juvsizec.data[,ran_vars[chosen_ran_vars[i]]]))
-        writeLines(paste0("  ", ran_vars_names[chosen_ran_vars[i]], found_uns))
+        writeLines(paste0("  ", ran_vars_names[chosen_ran_vars[i]], found_uns,
+            "   (singleton categories: ", juvsizec.sole[i], ")"))
       }
-    }
-    
-    if (indiv_used) {
-      writeLines(paste0("\n  A total of ", juvsizec.sole, " individuals have only single transitions.\n"))
     }
   }
   
   if (is.data.frame(juvrepst.data) & is.element("repst", vitalrates)) {
     writeLines("\nJuvenile reproductive status:\n")
     writeLines(paste0("  Data subset has ", dim(juvrepst.data)[2], " variables and ",
-                      dim(juvrepst.data)[1], " transitions.\n"))
+      dim(juvrepst.data)[1], " transitions.\n"))
     
     .intbin_check(juvrepst.data, repst[1])
     
@@ -2932,18 +2967,15 @@ hfv_qc <- function(data, stageframe = NULL, historical = TRUE, suite = "size",
       
       for(i in c(1:length(chosen_ran_vars))) {
         found_uns <- length(unique(juvrepst.data[,ran_vars[chosen_ran_vars[i]]]))
-        writeLines(paste0("  ", ran_vars_names[chosen_ran_vars[i]], found_uns))
+        writeLines(paste0("  ", ran_vars_names[chosen_ran_vars[i]], found_uns,
+            "   (singleton categories: ", juvrepst.sole[i], ")"))
       }
-    }
-    
-    if (indiv_used) {
-      writeLines(paste0("\n  A total of ", juvrepst.sole, " individuals have only single transitions.\n"))
     }
   }
   if (is.data.frame(juvobs.data)) {
     writeLines("\nJuvenile maturity status:\n")
     writeLines(paste0("  Data subset has ", dim(juvobs.data)[2], " variables and ",
-                      dim(juvobs.data)[1], " transitions.\n"))
+      dim(juvobs.data)[1], " transitions.\n"))
     
     .intbin_check(juvobs.data, matstat[1])
     
@@ -2952,12 +2984,9 @@ hfv_qc <- function(data, stageframe = NULL, historical = TRUE, suite = "size",
       
       for(i in c(1:length(chosen_ran_vars))) {
         found_uns <- length(unique(juvobs.data[,ran_vars[chosen_ran_vars[i]]]))
-        writeLines(paste0("  ", ran_vars_names[chosen_ran_vars[i]], found_uns))
+        writeLines(paste0("  ", ran_vars_names[chosen_ran_vars[i]], found_uns,
+            "   (singleton categories: ", juvobs.sole[i], ")"))
       }
-    }
-    
-    if (indiv_used) {
-      writeLines(paste0("\n  A total of ", juvobs.sole, " individuals have only single transitions.\n"))
     }
   }
 }

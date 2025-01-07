@@ -349,6 +349,15 @@ Rcpp::List sf_create (NumericVector sizes,
   bool size_manual {false};
   bool sizeb_manual {false};
   bool sizec_manual {false};
+  bool binhalfwidth_used {false};
+  bool binhalfwidthb_used {false};
+  bool binhalfwidthc_used {false};
+  bool sizemin_used {false};
+  bool sizebmin_used {false};
+  bool sizecmin_used {false};
+  bool sizemax_used {false};
+  bool sizebmax_used {false};
+  bool sizecmax_used {false};
   
   if (stagenames.isNotNull()) {
     Rcpp::StringVector stagenames_thru(stagenames);
@@ -367,23 +376,23 @@ Rcpp::List sf_create (NumericVector sizes,
         if (check_elem == "ipm" || check_elem == "ipma" || check_elem == "ipm_a" ||
           check_elem == "ipm1" || check_elem == "ipm_1") {
           ipm_calls_a(i) = 1;
-        } else if (check_elem == "ipmb" || check_elem == "ipm_b" || check_elem == "ipm2" ||
-          check_elem == "ipm_2") {
+        } else if (check_elem == "ipmb" || check_elem == "ipm_b" ||
+          check_elem == "ipm2" || check_elem == "ipm_2") {
           ipm_calls_b(i) = 1;
-        } else if (check_elem == "ipmc" || check_elem == "ipm_c" || check_elem == "ipm3" ||
-          check_elem == "ipm_3") {
+        } else if (check_elem == "ipmc" || check_elem == "ipm_c" ||
+          check_elem == "ipm3" || check_elem == "ipm_3") {
           ipm_calls_c(i) = 1;
-        } else if (check_elem == "ipmab" || check_elem == "ipm_ab" || check_elem == "ipm12" ||
-          check_elem == "ipm_12") {
+        } else if (check_elem == "ipmab" || check_elem == "ipm_ab" ||
+          check_elem == "ipm12" || check_elem == "ipm_12") {
           ipm_calls_ab(i) = 1;
-        } else if (check_elem == "ipmac" || check_elem == "ipm_ac" || check_elem == "ipm13" ||
-          check_elem == "ipm_13") {
+        } else if (check_elem == "ipmac" || check_elem == "ipm_ac" ||
+          check_elem == "ipm13" || check_elem == "ipm_13") {
           ipm_calls_ac(i) = 1;
-        } else if (check_elem == "ipmbc" || check_elem == "ipm_bc" || check_elem == "ipm23" ||
-          check_elem == "ipm_23") {
+        } else if (check_elem == "ipmbc" || check_elem == "ipm_bc" ||
+          check_elem == "ipm23" || check_elem == "ipm_23") {
           ipm_calls_bc(i) = 1;
-        } else if (check_elem == "ipmabc" || check_elem == "ipm_abc" || check_elem == "ipm123" ||
-          check_elem == "ipm_123") {
+        } else if (check_elem == "ipmabc" || check_elem == "ipm_abc" ||
+          check_elem == "ipm123" || check_elem == "ipm_123") {
           ipm_calls_abc(i) = 1;
         }
       }
@@ -405,7 +414,7 @@ Rcpp::List sf_create (NumericVector sizes,
         }
       }
     } else {
-      throw Rcpp::exception("Vector stagenames should be the same length as vector sizes.",
+      throw Rcpp::exception("Vector stagenames should be same length as vector sizes.",
         false);
     }
   } else {
@@ -427,7 +436,7 @@ Rcpp::List sf_create (NumericVector sizes,
       NumericVector try_size (matsize, sizesb_thru(0));
       sizesb_true = try_size;
     } else {
-      throw Rcpp::exception("Vector sizesb should be the same length as vector sizes.",
+      throw Rcpp::exception("Vector sizesb should be same length as vector sizes.",
         false);
     }
   }
@@ -441,7 +450,7 @@ Rcpp::List sf_create (NumericVector sizes,
       NumericVector try_size (matsize, sizesc_thru(0));
       sizesc_true = try_size;
     } else {
-      throw Rcpp::exception("Vector sizesc should be the same length as vector sizes.",
+      throw Rcpp::exception("Vector sizesc should be same length as vector sizes.",
         false);
     }
     
@@ -459,7 +468,7 @@ Rcpp::List sf_create (NumericVector sizes,
       NumericVector try_mna (matsize, minage_thru(0));
       minage_true = try_mna;
     } else {
-      throw Rcpp::exception("Vector minage should be the same length as vector sizes.",
+      throw Rcpp::exception("Vector minage should be same length as vector sizes.",
         false);
     }
   }
@@ -472,7 +481,7 @@ Rcpp::List sf_create (NumericVector sizes,
       NumericVector try_mxa (matsize, maxage_thru(0));
       maxage_true = try_mxa;
     } else {
-      throw Rcpp::exception("Vector maxage should be the same length as vector sizes.",
+      throw Rcpp::exception("Vector maxage should be same length as vector sizes.",
         false);
     }
   }
@@ -486,7 +495,7 @@ Rcpp::List sf_create (NumericVector sizes,
       IntegerVector try_rep (matsize, repstatus_thru(0));
       repstatus_true = try_rep;
     } else {
-      throw Rcpp::exception("Vector repstatus should be the same length as vector sizes.",
+      throw Rcpp::exception("Vector repstatus should be same length as vector sizes.",
         false);
     }
     
@@ -504,7 +513,7 @@ Rcpp::List sf_create (NumericVector sizes,
       IntegerVector try_obs (matsize, obsstatus_thru(0));
       obsstatus_true = try_obs;
     } else {
-      throw Rcpp::exception("Vector obsstatus should be the same length as vector sizes.",
+      throw Rcpp::exception("Vector obsstatus should be same length as vector sizes.",
         false);
     }
     
@@ -522,7 +531,7 @@ Rcpp::List sf_create (NumericVector sizes,
       IntegerVector try_prop (matsize, propstatus_thru(0));
       propstatus_true = try_prop;
     } else {
-      throw Rcpp::exception("Vector propstatus should be the same length as vector sizes.",
+      throw Rcpp::exception("Vector propstatus should be same length as vector sizes.",
         false);
     }
     
@@ -540,7 +549,7 @@ Rcpp::List sf_create (NumericVector sizes,
       IntegerVector try_mat (matsize, matstatus_thru(0));
       matstatus_true = try_mat;
     } else {
-      throw Rcpp::exception("Vector matstatus should be the same length as vector sizes.",
+      throw Rcpp::exception("Vector matstatus should be same length as vector sizes.",
         false);
     }
     
@@ -558,7 +567,7 @@ Rcpp::List sf_create (NumericVector sizes,
       IntegerVector try_imm (matsize, immstatus_thru(0));
       immstatus_true = try_imm;
     } else {
-      throw Rcpp::exception("Vector immstatus should be the same length as vector sizes.",
+      throw Rcpp::exception("Vector immstatus should be same length as vector sizes.",
         false);
     }
     
@@ -579,7 +588,7 @@ Rcpp::List sf_create (NumericVector sizes,
       IntegerVector try_ind (matsize, indataset_thru(0));
       indataset_true = try_ind;
     } else {
-      throw Rcpp::exception("Vector indataset should be the same length as vector sizes.",
+      throw Rcpp::exception("Vector indataset should be same length as vector sizes.",
         false);
     }
     
@@ -598,8 +607,11 @@ Rcpp::List sf_create (NumericVector sizes,
       NumericVector try_szmna (matsize, sizemin_thru(0));
       sizemin_true = try_szmna;
     } else {
-      throw Rcpp::exception("Vector sizemin should be the same length as vector sizes.",
-        false);
+        String ems = "Vector sizemin should be same ";
+        String ems1 = "length as vector sizes.";
+        ems += ems1;
+        
+        throw Rcpp::exception(ems.get_cstring(), false);
     }
     
     if (!sizemax.isNotNull()) {
@@ -607,6 +619,7 @@ Rcpp::List sf_create (NumericVector sizes,
         false);
     }
     
+    sizemin_used = true;
     size_manual = true;
   }
   if (sizemax.isNotNull()) {
@@ -618,8 +631,11 @@ Rcpp::List sf_create (NumericVector sizes,
       NumericVector try_szmxa (matsize, sizemax_thru(0));
       sizemax_true = try_szmxa;
     } else {
-      throw Rcpp::exception("Vector sizemax should be the same length as vector sizes.",
-        false);
+        String ems = "Vector sizemax should be same ";
+        String ems1 = "length as vector sizes.";
+        ems += ems1;
+        
+        throw Rcpp::exception(ems.get_cstring(), false);
     }
     
     if (!sizemin.isNotNull()) {
@@ -627,9 +643,11 @@ Rcpp::List sf_create (NumericVector sizes,
         false);
     }
     if (sizemax_true.length() != sizemin_true.length()) {
-      throw Rcpp::exception("Vectors sizemax and sizemin should be the same length.",
+      throw Rcpp::exception("Vectors sizemax and sizemin should be same length.",
         false);
     }
+    
+    sizemax_used = true;
   }
   
   if (sizebmin.isNotNull()) {
@@ -641,8 +659,11 @@ Rcpp::List sf_create (NumericVector sizes,
       NumericVector try_szmnb (matsize, sizebmin_thru(0));
       sizebmin_true = try_szmnb;
     } else {
-      throw Rcpp::exception("Vector sizebmin should be the same length as vector sizes.",
-        false);
+        String ems = "Vector sizebmin should be same ";
+        String ems1 = "length as vector sizes.";
+        ems += ems1;
+        
+        throw Rcpp::exception(ems.get_cstring(), false);
     }
     
     if (!sizebmax.isNotNull()) {
@@ -650,6 +671,7 @@ Rcpp::List sf_create (NumericVector sizes,
         false);
     }
     
+    sizebmin_used = true;
     sizeb_manual = true;
   }
   if (sizebmax.isNotNull()) {
@@ -661,8 +683,11 @@ Rcpp::List sf_create (NumericVector sizes,
       NumericVector try_szmxb (matsize, sizebmax_thru(0));
       sizebmax_true = try_szmxb;
     } else {
-      throw Rcpp::exception("Vector sizebmax should be the same length as vector sizes.",
-        false);
+        String ems = "Vector sizebmax should be same ";
+        String ems1 = "length as vector sizes.";
+        ems += ems1;
+        
+        throw Rcpp::exception(ems.get_cstring(), false);
     }
     
     if (!sizebmin.isNotNull()) {
@@ -670,9 +695,11 @@ Rcpp::List sf_create (NumericVector sizes,
         false);
     }
     if (sizebmax_true.length() != sizebmin_true.length()) {
-      throw Rcpp::exception("Vectors sizebmax and sizebmin should be the same length.",
+      throw Rcpp::exception("Vectors sizebmax and sizebmin should be same length.",
         false);
     }
+    
+    sizebmax_used = true;
   }
   
   if (sizecmin.isNotNull()) {
@@ -684,8 +711,11 @@ Rcpp::List sf_create (NumericVector sizes,
       NumericVector try_szmnc (matsize, sizecmin_thru(0));
       sizecmin_true = try_szmnc;
     } else {
-      throw Rcpp::exception("Vector sizecmin should be the same length as vector sizes.",
-        false);
+        String ems = "Vector sizecmin should be same ";
+        String ems1 = "length as vector sizes.";
+        ems += ems1;
+        
+        throw Rcpp::exception(ems.get_cstring(), false);
     }
     
     if (!sizecmax.isNotNull()) {
@@ -694,6 +724,7 @@ Rcpp::List sf_create (NumericVector sizes,
     }
     
     sizec_manual = true;
+    sizecmin_used = true;
   }
   if (sizecmax.isNotNull()) {
     Rcpp::NumericVector sizecmax_thru(sizecmax);
@@ -704,8 +735,11 @@ Rcpp::List sf_create (NumericVector sizes,
       NumericVector try_szmxc (matsize, sizecmax_thru(0));
       sizecmax_true = try_szmxc;
     } else {
-      throw Rcpp::exception("Vector sizecmax should be the same length as vector sizes.",
-        false);
+        String ems = "Vector sizecmax should be same ";
+        String ems1 = "length as vector sizes.";
+        ems += ems1;
+        
+        throw Rcpp::exception(ems.get_cstring(), false);
     }
     
     if (!sizecmin.isNotNull()) {
@@ -713,9 +747,11 @@ Rcpp::List sf_create (NumericVector sizes,
         false);
     }
     if (sizecmax_true.length() != sizecmin_true.length()) {
-      throw Rcpp::exception("Vectors sizecmax and sizecmin should be the same length.",
+      throw Rcpp::exception("Vectors sizecmax and sizecmin should be same length.",
         false);
     }
+    
+    sizecmax_used = true;
   }
   
   if (binhalfwidth.isNotNull()) {
@@ -728,12 +764,18 @@ Rcpp::List sf_create (NumericVector sizes,
         NumericVector try_hwa (matsize, binhalfwidth_thru(0));
         binhalfwidth_true = try_hwa;
       } else {
-        throw Rcpp::exception("Vector binhalfwidth should be the same length as vector sizes.",
-          false);
+        String ems = "Vector binhalfwidth should be same ";
+        String ems1 = "length as vector sizes.";
+        ems += ems1;
+        
+        throw Rcpp::exception(ems.get_cstring(), false);
       }
     } else {
-      Rf_warningcall(R_NilValue, "Size half-binwidths are not used if sizemin and sizemax are input.");
+      Rf_warningcall(R_NilValue,
+        "Size half-binwidths should not be used with sizemin and sizemax.\n");
     }
+    
+    binhalfwidth_used = true;
   }
   if (binhalfwidthb.isNotNull()) {
     if (used_sizes == 1) {
@@ -753,13 +795,18 @@ Rcpp::List sf_create (NumericVector sizes,
         NumericVector try_hwb (matsize, binhalfwidthb_thru(0));
         binhalfwidthb_true = try_hwb;
       } else {
-        throw Rcpp::exception("Vector binhalfwidthb should be the same length as vector sizes.",
-          false);
+        String ems = "Vector binhalfwidthb should be same ";
+        String ems1 = "length as vector sizes.";
+        ems += ems1;
+        
+        throw Rcpp::exception(ems.get_cstring(), false);
       }
     } else {
       Rf_warningcall(R_NilValue,
-        "Sizeb half-binwidths are not used if sizebmin and sizebmax are input.");
+        "Sizeb half-binwidths should not be used with sizebmin and sizebmax.\n");
     }
+    
+    binhalfwidthb_used = true;
   } else if (used_sizes > 1 && !sizeb_manual) {
     for (int i = 0; i < binhalfwidthb_true.length(); i++) {
       binhalfwidthb_true(i) = 0.5;
@@ -783,13 +830,18 @@ Rcpp::List sf_create (NumericVector sizes,
         NumericVector try_hwc (matsize, binhalfwidthc_thru(0));
         binhalfwidthc_true = try_hwc;
       } else {
-        throw Rcpp::exception("Vector binhalfwidthc should be the same length as vector sizes.",
-          false);
+        String ems = "Vector binhalfwidthc should be same ";
+        String ems1 = "length as vector sizes.";
+        ems += ems1;
+        
+        throw Rcpp::exception(ems.get_cstring(), false);
       }
     } else {
       Rf_warningcall(R_NilValue,
-        "Sizec half-binwidths are not used if sizecmin and sizecmax are input.");
+        "Sizec half-binwidths should not be used with sizecmin and sizecmax.\n");
     }
+    
+    binhalfwidthc_used = true;
   } else if (used_sizes > 2 && !sizec_manual) {
     for (int i = 0; i < binhalfwidthc_true.length(); i++) {
       binhalfwidthc_true(i) = 0.5;
@@ -810,7 +862,7 @@ Rcpp::List sf_create (NumericVector sizes,
     }
     
     if (min(group_true) < 0) {
-      throw Rcpp::exception("Please use only positive integers for group designations.",
+      throw Rcpp::exception("Please use positive integers for group designations.",
         false);
     }
   }
@@ -828,7 +880,6 @@ Rcpp::List sf_create (NumericVector sizes,
         false);
     }
   }
-  
   
   if (ipmbins < 2) {
     throw Rcpp::exception("Option ipmbins takes only positive integers.", false);
@@ -857,7 +908,7 @@ Rcpp::List sf_create (NumericVector sizes,
       propstatus_true(i) * 10000 + immstatus_true(i) * 1000 + matstatus_true(i) * 100 +
       indataset_true(i) * 10 + group_true(i);
   }
-
+  
   // Automated size classification with sizea
   if (ipm_a > 0) {
     if (IntegerVector::is_na(ipmbins)) {
@@ -878,10 +929,14 @@ Rcpp::List sf_create (NumericVector sizes,
       throw Rcpp::exception(ems.get_cstring(), false);
     }
     
-    arma::uvec check_elems = find(ipm_calls_a); // This vector points out which rows have ipm designations
+    arma::uvec check_elems = find(ipm_calls_a); // Shows rows with ipm designations
     
     arma::ivec called_pair_check = pair_check.elem(check_elems); // 
     int called_pair_check_length = static_cast<int>(called_pair_check.n_elem);
+    
+    if (sizemin_used || sizemax_used || binhalfwidth_used) {
+      Rf_warningcall(R_NilValue, "Values supplied in vectors sizemin, sizemax, and binhalfwidth will be overwritten for ipm bins.\n");
+    }
     
     for (int i = 0; i < called_pair_check_length; i++) {
       int trial_1 = called_pair_check(i);
@@ -913,8 +968,8 @@ Rcpp::List sf_create (NumericVector sizes,
           throw Rcpp::exception(ems.get_cstring(), false);
         } else if (match_count == 0) {
           String ems = "Stages marked ipm must have equal characteristics in pairs ";
-          String ems1 = "only, corresponding to size minimum and maximum. Single stages ";
-          String ems2 = "with unique characteristics cannot be marked ipm.";
+          String ems1 = "only, corresponding to size minimum and maximum. Single ";
+          String ems2 = "stages with unique characteristics cannot be marked ipm.";
           ems += ems1;
           ems += ems2;
           
@@ -977,10 +1032,23 @@ Rcpp::List sf_create (NumericVector sizes,
         IntegerVector newgroup (ipmbins, 0);
         StringVector newcomments (ipmbins, "");
         
+        NumericVector newsizemin (ipmbins, NA_REAL);
+        NumericVector newsizebmin (ipmbins, NA_REAL);
+        NumericVector newsizecmin (ipmbins, NA_REAL);
+        NumericVector newsizemax (ipmbins, NA_REAL);
+        NumericVector newsizebmax (ipmbins, NA_REAL);
+        NumericVector newsizecmax (ipmbins, NA_REAL);
+        
         for (int j = 0; j < ipmbins; j++) {
-          newsizes(j) = minsize + (j*standard_increment) + standard_midpoint;
+          newsizes(j) = minsize + (j * standard_increment) + standard_midpoint;
+          newsizemin(j) = minsize + (j * standard_increment);
+          newsizemax(j) = minsize + ((j + 1) * standard_increment);
           newsizesb(j) = sizesb_true(check_elems(i));
+          newsizebmin(j) = sizebmin_true(check_elems(i));
+          newsizebmax(j) = sizebmax_true(check_elems(i));
           newsizesc(j) = sizesc_true(check_elems(i));
+          newsizecmin(j) = sizecmin_true(check_elems(i));
+          newsizecmax(j) = sizecmax_true(check_elems(i));
           newminage(j) = minage_true(check_elems(i));
           newmaxage(j) = maxage_true(check_elems(i));
           newrepstatus(j) = repstatus_true(check_elems(i));
@@ -1002,8 +1070,14 @@ Rcpp::List sf_create (NumericVector sizes,
         }
         
         sizes = concat_dbl(sizes, newsizes);
+        sizemin_true = concat_dbl(sizemin_true, newsizemin);
+        sizemax_true = concat_dbl(sizemax_true, newsizemax);
         sizesb_true = concat_dbl(sizesb_true, newsizesb);
+        sizebmin_true = concat_dbl(sizebmin_true, newsizebmin);
+        sizebmax_true = concat_dbl(sizebmax_true, newsizebmax);
         sizesc_true = concat_dbl(sizesc_true, newsizesc);
+        sizecmin_true = concat_dbl(sizecmin_true, newsizecmin);
+        sizecmax_true = concat_dbl(sizecmax_true, newsizecmax);
         minage_true = concat_dbl(minage_true, newminage);
         maxage_true = concat_dbl(maxage_true, newmaxage);
         repstatus_true = concat_int(repstatus_true, newrepstatus);
@@ -1042,10 +1116,14 @@ Rcpp::List sf_create (NumericVector sizes,
       throw Rcpp::exception(ems.get_cstring(), false);
     }
     
-    arma::uvec check_elems = find(ipm_calls_b); // This vector points out which rows have ipm designations
+    arma::uvec check_elems = find(ipm_calls_b); // Shows rows with ipm designations
     
     arma::ivec called_pair_check = pair_check.elem(check_elems); // 
     int called_pair_check_length = static_cast<int>(called_pair_check.n_elem);
+    
+    if (sizebmin_used || sizebmax_used || binhalfwidthb_used) {
+      Rf_warningcall(R_NilValue, "Values supplied in vectors sizebmin, sizebmax, and binhalfwidthb will be overwritten for ipm bins.\n"); // Rf_warningcall(R_NilValue, emsb.get_cstring());
+    }
     
     for (int i = 0; i < called_pair_check_length; i++) {
       int trial_1 = called_pair_check(i);
@@ -1078,8 +1156,8 @@ Rcpp::List sf_create (NumericVector sizes,
           throw Rcpp::exception(ems.get_cstring(), false);
         } else if (match_count == 0) {
           String ems = "Stages marked ipm must have equal characteristics in pairs ";
-          String ems1 = "only, corresponding to size minimum and maximum. Single stages ";
-          String ems2 = "with unique characteristics cannot be marked ipm.";
+          String ems1 = "only, corresponding to size minimum and maximum. Single ";
+          String ems2 = "stages with unique characteristics cannot be marked ipm.";
           ems += ems1;
           ems += ems2;
           
@@ -1142,10 +1220,23 @@ Rcpp::List sf_create (NumericVector sizes,
         IntegerVector newgroup (ipmbinsb, 0);
         StringVector newcomments (ipmbinsb, "");
         
+        NumericVector newsizemin (ipmbins, NA_REAL);
+        NumericVector newsizebmin (ipmbins, NA_REAL);
+        NumericVector newsizecmin (ipmbins, NA_REAL);
+        NumericVector newsizemax (ipmbins, NA_REAL);
+        NumericVector newsizebmax (ipmbins, NA_REAL);
+        NumericVector newsizecmax (ipmbins, NA_REAL);
+        
         for (int j = 0; j < ipmbinsb; j++) {
           newsizesb(j) = minsize + (j*standard_increment) + standard_midpoint;
+          newsizebmin(j) = minsize + (j * standard_increment);
+          newsizebmax(j) = minsize + ((j + 1) * standard_increment);
           newsizes(j) = sizes(check_elems(i));
+          newsizemin(j) = sizemin_true(check_elems(i));
+          newsizemax(j) = sizemax_true(check_elems(i));
           newsizesc(j) = sizesc_true(check_elems(i));
+          newsizecmin(j) = sizecmin_true(check_elems(i));
+          newsizecmax(j) = sizecmax_true(check_elems(i));
           newminage(j) = minage_true(check_elems(i));
           newmaxage(j) = maxage_true(check_elems(i));
           newrepstatus(j) = repstatus_true(check_elems(i));
@@ -1167,8 +1258,14 @@ Rcpp::List sf_create (NumericVector sizes,
         }
         
         sizes = concat_dbl(sizes, newsizes);
+        sizemin_true = concat_dbl(sizemin_true, newsizemin);
+        sizemax_true = concat_dbl(sizemax_true, newsizemax);
         sizesb_true = concat_dbl(sizesb_true, newsizesb);
+        sizebmin_true = concat_dbl(sizebmin_true, newsizebmin);
+        sizebmax_true = concat_dbl(sizebmax_true, newsizebmax);
         sizesc_true = concat_dbl(sizesc_true, newsizesc);
+        sizecmin_true = concat_dbl(sizecmin_true, newsizecmin);
+        sizecmax_true = concat_dbl(sizecmax_true, newsizecmax);
         minage_true = concat_dbl(minage_true, newminage);
         maxage_true = concat_dbl(maxage_true, newmaxage);
         repstatus_true = concat_int(repstatus_true, newrepstatus);
@@ -1207,10 +1304,14 @@ Rcpp::List sf_create (NumericVector sizes,
       throw Rcpp::exception(ems.get_cstring(), false);
     }
     
-    arma::uvec check_elems = find(ipm_calls_c); // This vector points out which rows have ipm designations
+    arma::uvec check_elems = find(ipm_calls_c); // Shows rows with ipm designations
     
     arma::ivec called_pair_check = pair_check.elem(check_elems); // 
     int called_pair_check_length = static_cast<int>(called_pair_check.n_elem);
+    
+    if (sizecmin_used || sizecmax_used || binhalfwidthc_used) {
+      Rf_warningcall(R_NilValue, "Values supplied in vectors sizecmin, sizecmax, and binhalfwidthc will be overwritten for ipm bins.\n"); // .get_cstring()
+    }
     
     for (int i = 0; i < called_pair_check_length; i++) {
       int trial_1 = called_pair_check(i);
@@ -1307,10 +1408,23 @@ Rcpp::List sf_create (NumericVector sizes,
         IntegerVector newgroup (ipmbinsc, 0);
         StringVector newcomments (ipmbinsc, "");
         
+        NumericVector newsizemin (ipmbins, NA_REAL);
+        NumericVector newsizebmin (ipmbins, NA_REAL);
+        NumericVector newsizecmin (ipmbins, NA_REAL);
+        NumericVector newsizemax (ipmbins, NA_REAL);
+        NumericVector newsizebmax (ipmbins, NA_REAL);
+        NumericVector newsizecmax (ipmbins, NA_REAL);
+        
         for (int j = 0; j < ipmbinsc; j++) {
           newsizesc(j) = minsize + (j*standard_increment) + standard_midpoint;
+          newsizecmin(j) = minsize + (j * standard_increment);
+          newsizecmax(j) = minsize + ((j + 1) * standard_increment);
           newsizesb(j) = sizesb_true(check_elems(i));
+          newsizebmin(j) = sizebmin_true(check_elems(i));
+          newsizebmax(j) = sizebmax_true(check_elems(i));
           newsizes(j) = sizes(check_elems(i));
+          newsizemin(j) = sizemin_true(check_elems(i));
+          newsizemax(j) = sizemax_true(check_elems(i));
           newminage(j) = minage_true(check_elems(i));
           newmaxage(j) = maxage_true(check_elems(i));
           newrepstatus(j) = repstatus_true(check_elems(i));
@@ -1332,8 +1446,14 @@ Rcpp::List sf_create (NumericVector sizes,
         }
         
         sizes = concat_dbl(sizes, newsizes);
+        sizemin_true = concat_dbl(sizemin_true, newsizemin);
+        sizemax_true = concat_dbl(sizemax_true, newsizemax);
         sizesb_true = concat_dbl(sizesb_true, newsizesb);
+        sizebmin_true = concat_dbl(sizebmin_true, newsizebmin);
+        sizebmax_true = concat_dbl(sizebmax_true, newsizebmax);
         sizesc_true = concat_dbl(sizesc_true, newsizesc);
+        sizecmin_true = concat_dbl(sizecmin_true, newsizecmin);
+        sizecmax_true = concat_dbl(sizecmax_true, newsizecmax);
         minage_true = concat_dbl(minage_true, newminage);
         maxage_true = concat_dbl(maxage_true, newmaxage);
         repstatus_true = concat_int(repstatus_true, newrepstatus);
@@ -1496,11 +1616,28 @@ Rcpp::List sf_create (NumericVector sizes,
         IntegerVector newgroup ((ipmbins * ipmbinsb), 0);
         StringVector newcomments ((ipmbins * ipmbinsb), "");
         
+        NumericVector newsizemin (ipmbins, NA_REAL);
+        NumericVector newsizebmin (ipmbins, NA_REAL);
+        NumericVector newsizecmin (ipmbins, NA_REAL);
+        NumericVector newsizemax (ipmbins, NA_REAL);
+        NumericVector newsizebmax (ipmbins, NA_REAL);
+        NumericVector newsizecmax (ipmbins, NA_REAL);
+        
         for (int j = 0; j < ipmbins; j++) {
           for (int k = 0; k < ipmbinsb; k++) {
-            newsizes((j * ipmbinsb) + k) = minsize_a + (j*standard_increment_a) + standard_midpoint_a;
-            newsizesb((j * ipmbinsb) + k) = minsize_b + (k*standard_increment_b) + standard_midpoint_b;;
+            newsizes((j * ipmbinsb) + k) = minsize_a + (j*standard_increment_a) + 
+              standard_midpoint_a;
+            newsizemin((j * ipmbinsb) + k) = minsize_a + (j * standard_increment_a);
+            newsizemax((j * ipmbinsb) + k) = minsize_a + 
+              ((j + 1) * standard_increment_a);
+            newsizesb((j * ipmbinsb) + k) = minsize_b + (k*standard_increment_b) + 
+              standard_midpoint_b;;
+            newsizebmin((j * ipmbinsb) + k) = minsize_b + (j * standard_increment_b);
+            newsizebmax((j * ipmbinsb) + k) = minsize_b + 
+              ((j + 1) * standard_increment_b);
             newsizesc((j * ipmbinsb) + k) = sizesc_true(check_elems(i));
+            newsizecmin((j * ipmbinsb) + k) = sizecmin_true(check_elems(i));
+            newsizecmax((j * ipmbinsb) + k) = sizecmax_true(check_elems(i));
             newminage((j * ipmbinsb) + k) = minage_true(check_elems(i));
             newmaxage((j * ipmbinsb) + k) = maxage_true(check_elems(i));
             newrepstatus((j * ipmbinsb) + k) = repstatus_true(check_elems(i));
@@ -1525,8 +1662,14 @@ Rcpp::List sf_create (NumericVector sizes,
         }
         
         sizes = concat_dbl(sizes, newsizes);
+        sizemin_true = concat_dbl(sizemin_true, newsizemin);
+        sizemax_true = concat_dbl(sizemax_true, newsizemax);
         sizesb_true = concat_dbl(sizesb_true, newsizesb);
+        sizebmin_true = concat_dbl(sizebmin_true, newsizebmin);
+        sizebmax_true = concat_dbl(sizebmax_true, newsizebmax);
         sizesc_true = concat_dbl(sizesc_true, newsizesc);
+        sizecmin_true = concat_dbl(sizecmin_true, newsizecmin);
+        sizecmax_true = concat_dbl(sizecmax_true, newsizecmax);
         minage_true = concat_dbl(minage_true, newminage);
         maxage_true = concat_dbl(maxage_true, newmaxage);
         repstatus_true = concat_int(repstatus_true, newrepstatus);
@@ -1688,11 +1831,28 @@ Rcpp::List sf_create (NumericVector sizes,
         IntegerVector newgroup ((ipmbins * ipmbinsc), 0);
         StringVector newcomments ((ipmbins * ipmbinsc), "");
         
+        NumericVector newsizemin (ipmbins, NA_REAL);
+        NumericVector newsizebmin (ipmbins, NA_REAL);
+        NumericVector newsizecmin (ipmbins, NA_REAL);
+        NumericVector newsizemax (ipmbins, NA_REAL);
+        NumericVector newsizebmax (ipmbins, NA_REAL);
+        NumericVector newsizecmax (ipmbins, NA_REAL);
+        
         for (int j = 0; j < ipmbins; j++) {
           for (int k = 0; k < ipmbinsc; k++) {
-            newsizes((j * ipmbinsc) + k) = minsize_a + (j*standard_increment_a) + standard_midpoint_a;
-            newsizesc((j * ipmbinsc) + k) = minsize_c + (k*standard_increment_c) + standard_midpoint_c;;
+            newsizes((j * ipmbinsc) + k) = minsize_a + (j*standard_increment_a) + 
+              standard_midpoint_a;
+            newsizemin((j * ipmbinsc) + k) = minsize_a + (j * standard_increment_a);
+            newsizemax((j * ipmbinsc) + k) = minsize_a + 
+              ((j + 1) * standard_increment_a);
+            newsizesc((j * ipmbinsc) + k) = minsize_c + (k*standard_increment_c) + 
+              standard_midpoint_c;;
+            newsizecmin((j * ipmbinsc) + k) = minsize_c + (j * standard_increment_c);
+            newsizecmax((j * ipmbinsc) + k) = minsize_c + 
+              ((j + 1) * standard_increment_c);
             newsizesb((j * ipmbinsc) + k) = sizesb_true(check_elems(i));
+            newsizebmin((j * ipmbinsc) + k) = sizebmin_true(check_elems(i));
+            newsizebmax((j * ipmbinsc) + k) = sizebmax_true(check_elems(i));
             newminage((j * ipmbinsc) + k) = minage_true(check_elems(i));
             newmaxage((j * ipmbinsc) + k) = maxage_true(check_elems(i));
             newrepstatus((j * ipmbinsc) + k) = repstatus_true(check_elems(i));
@@ -1717,8 +1877,14 @@ Rcpp::List sf_create (NumericVector sizes,
         }
         
         sizes = concat_dbl(sizes, newsizes);
+        sizemin_true = concat_dbl(sizemin_true, newsizemin);
+        sizemax_true = concat_dbl(sizemax_true, newsizemax);
         sizesb_true = concat_dbl(sizesb_true, newsizesb);
+        sizebmin_true = concat_dbl(sizebmin_true, newsizebmin);
+        sizebmax_true = concat_dbl(sizebmax_true, newsizebmax);
         sizesc_true = concat_dbl(sizesc_true, newsizesc);
+        sizecmin_true = concat_dbl(sizecmin_true, newsizecmin);
+        sizecmax_true = concat_dbl(sizecmax_true, newsizecmax);
         minage_true = concat_dbl(minage_true, newminage);
         maxage_true = concat_dbl(maxage_true, newmaxage);
         repstatus_true = concat_int(repstatus_true, newrepstatus);
@@ -1880,11 +2046,28 @@ Rcpp::List sf_create (NumericVector sizes,
         IntegerVector newgroup ((ipmbinsb * ipmbinsc), 0);
         StringVector newcomments ((ipmbinsb * ipmbinsc), "");
         
+        NumericVector newsizemin (ipmbins, NA_REAL);
+        NumericVector newsizebmin (ipmbins, NA_REAL);
+        NumericVector newsizecmin (ipmbins, NA_REAL);
+        NumericVector newsizemax (ipmbins, NA_REAL);
+        NumericVector newsizebmax (ipmbins, NA_REAL);
+        NumericVector newsizecmax (ipmbins, NA_REAL);
+        
         for (int j = 0; j < ipmbinsb; j++) {
           for (int k = 0; k < ipmbinsc; k++) {
-            newsizesb((j * ipmbinsc) + k) = minsize_b + (j*standard_increment_b) + standard_midpoint_b;
-            newsizesc((j * ipmbinsc) + k) = minsize_c + (k*standard_increment_c) + standard_midpoint_c;;
+            newsizesb((j * ipmbinsc) + k) = minsize_b + (j*standard_increment_b) + 
+              standard_midpoint_b;
+            newsizebmin((j * ipmbinsc) + k) = minsize_b + (j * standard_increment_b);
+            newsizebmax((j * ipmbinsc) + k) = minsize_b + 
+              ((j + 1) * standard_increment_b);
+            newsizesc((j * ipmbinsc) + k) = minsize_c + (k*standard_increment_c) + 
+              standard_midpoint_c;;
+            newsizecmin((j * ipmbinsc) + k) = minsize_c + (j * standard_increment_c);
+            newsizecmax((j * ipmbinsc) + k) = minsize_c + 
+              ((j + 1) * standard_increment_c);
             newsizes((j * ipmbinsc) + k) = sizes(check_elems(i));
+            newsizemin((j * ipmbinsc) + k) = sizemin_true(check_elems(i));
+            newsizemax((j * ipmbinsc) + k) = sizemax_true(check_elems(i));
             newminage((j * ipmbinsc) + k) = minage_true(check_elems(i));
             newmaxage((j * ipmbinsc) + k) = maxage_true(check_elems(i));
             newrepstatus((j * ipmbinsc) + k) = repstatus_true(check_elems(i));
@@ -1909,8 +2092,14 @@ Rcpp::List sf_create (NumericVector sizes,
         }
         
         sizes = concat_dbl(sizes, newsizes);
+        sizemin_true = concat_dbl(sizemin_true, newsizemin);
+        sizemax_true = concat_dbl(sizemax_true, newsizemax);
         sizesb_true = concat_dbl(sizesb_true, newsizesb);
+        sizebmin_true = concat_dbl(sizebmin_true, newsizebmin);
+        sizebmax_true = concat_dbl(sizebmax_true, newsizebmax);
         sizesc_true = concat_dbl(sizesc_true, newsizesc);
+        sizecmin_true = concat_dbl(sizecmin_true, newsizecmin);
+        sizecmax_true = concat_dbl(sizecmax_true, newsizecmax);
         minage_true = concat_dbl(minage_true, newminage);
         maxage_true = concat_dbl(maxage_true, newmaxage);
         repstatus_true = concat_int(repstatus_true, newrepstatus);
@@ -2096,35 +2285,70 @@ Rcpp::List sf_create (NumericVector sizes,
         IntegerVector newgroup ((ipmbins * ipmbinsb * ipmbinsc), 0);
         StringVector newcomments ((ipmbins * ipmbinsb * ipmbinsc), "");
         
+        NumericVector newsizemin (ipmbins, NA_REAL);
+        NumericVector newsizebmin (ipmbins, NA_REAL);
+        NumericVector newsizecmin (ipmbins, NA_REAL);
+        NumericVector newsizemax (ipmbins, NA_REAL);
+        NumericVector newsizebmax (ipmbins, NA_REAL);
+        NumericVector newsizecmax (ipmbins, NA_REAL);
+        
         for (int j = 0; j < ipmbins; j++) {
           for (int k = 0; k < ipmbinsb; k++) {
             for (int l = 0; l < ipmbinsc; l++) {
               newsizes((j * ipmbinsc * ipmbinsb) + (k * ipmbinsc) + l) = minsize_a + 
                 (j*standard_increment_a) + standard_midpoint_a;
+              newsizemin((j * ipmbinsc * ipmbinsb) + (k * ipmbinsc) + l) = minsize_a + 
+                (j * standard_increment_a);
+              newsizemax((j * ipmbinsc * ipmbinsb) + (k * ipmbinsc) + l) = minsize_a + 
+                ((j + 1) * standard_increment_a);
               newsizesb((j * ipmbinsc * ipmbinsb) + (k * ipmbinsc) + l) = minsize_b + 
                 (k*standard_increment_b) + standard_midpoint_b;
+              newsizebmin((j * ipmbinsc * ipmbinsb) + (k * ipmbinsc) + l) = minsize_b + 
+                (j * standard_increment_b);
+              newsizebmax((j * ipmbinsc * ipmbinsb) + (k * ipmbinsc) + l) = minsize_b + 
+                ((j + 1) * standard_increment_b);
               newsizesc((j * ipmbinsc * ipmbinsb) + (k * ipmbinsc) + l) = minsize_c + 
                 (l*standard_increment_c) + standard_midpoint_c;
-              newminage((j * ipmbinsc * ipmbinsb) + (k * ipmbinsc) + l) = minage_true(check_elems(i));
-              newmaxage((j * ipmbinsc * ipmbinsb) + (k * ipmbinsc) + l) = maxage_true(check_elems(i));
-              newrepstatus((j * ipmbinsc * ipmbinsb) + (k * ipmbinsc) + l) = repstatus_true(check_elems(i));
-              newobsstatus((j * ipmbinsc * ipmbinsb) + (k * ipmbinsc) + l) = obsstatus_true(check_elems(i));
-              newpropstatus((j * ipmbinsc * ipmbinsb) + (k * ipmbinsc) + l) = propstatus_true(check_elems(i));
-              newmatstatus((j * ipmbinsc * ipmbinsb) + (k * ipmbinsc) + l) = matstatus_true(check_elems(i));
-              newimmstatus((j * ipmbinsc * ipmbinsb) + (k * ipmbinsc) + l) = immstatus_true(check_elems(i));
-              newindataset((j * ipmbinsc * ipmbinsb) + (k * ipmbinsc) + l) = indataset_true(check_elems(i));
-              newbinhalfwidth((j * ipmbinsc * ipmbinsb) + (k * ipmbinsc) + l) = standard_midpoint_a;
-              newbinhalfwidthb((j * ipmbinsc * ipmbinsb) + (k * ipmbinsc) + l) = standard_midpoint_b;
-              newbinhalfwidthc((j * ipmbinsc * ipmbinsb) + (k * ipmbinsc) + l) = standard_midpoint_c;
-              newgroup((j * ipmbinsc * ipmbinsb) + (k * ipmbinsc) + l) = group_true(check_elems(i));
-              newcomments((j * ipmbinsc * ipmbinsb) + (k * ipmbinsc) + l) = comments_true(check_elems(i));
+              newsizecmin((j * ipmbinsc * ipmbinsb) + (k * ipmbinsc) + l) = minsize_c + 
+                (j * standard_increment_c);
+              newsizecmax((j * ipmbinsc * ipmbinsb) + (k * ipmbinsc) + l) = minsize_c + 
+                ((j + 1) * standard_increment_c);
+              newminage((j * ipmbinsc * ipmbinsb) + (k * ipmbinsc) + l) = 
+                minage_true(check_elems(i));
+              newmaxage((j * ipmbinsc * ipmbinsb) + (k * ipmbinsc) + l) = 
+                maxage_true(check_elems(i));
+              newrepstatus((j * ipmbinsc * ipmbinsb) + (k * ipmbinsc) + l) = 
+                repstatus_true(check_elems(i));
+              newobsstatus((j * ipmbinsc * ipmbinsb) + (k * ipmbinsc) + l) = 
+                obsstatus_true(check_elems(i));
+              newpropstatus((j * ipmbinsc * ipmbinsb) + (k * ipmbinsc) + l) = 
+                propstatus_true(check_elems(i));
+              newmatstatus((j * ipmbinsc * ipmbinsb) + (k * ipmbinsc) + l) = 
+                matstatus_true(check_elems(i));
+              newimmstatus((j * ipmbinsc * ipmbinsb) + (k * ipmbinsc) + l) =
+                immstatus_true(check_elems(i));
+              newindataset((j * ipmbinsc * ipmbinsb) + (k * ipmbinsc) + l) = 
+                indataset_true(check_elems(i));
+              newbinhalfwidth((j * ipmbinsc * ipmbinsb) + (k * ipmbinsc) + l) = 
+                standard_midpoint_a;
+              newbinhalfwidthb((j * ipmbinsc * ipmbinsb) + (k * ipmbinsc) + l) = 
+                standard_midpoint_b;
+              newbinhalfwidthc((j * ipmbinsc * ipmbinsb) + (k * ipmbinsc) + l) = 
+                standard_midpoint_c;
+              newgroup((j * ipmbinsc * ipmbinsb) + (k * ipmbinsc) + l) = 
+                group_true(check_elems(i));
+              newcomments((j * ipmbinsc * ipmbinsb) + (k * ipmbinsc) + l) = 
+                comments_true(check_elems(i));
               
               std::string sizenums1 = std::to_string(newsizes((j * ipmbinsc * ipmbinsb) + (k * ipmbinsc) + l));
               std::string sizenums2 = std::to_string(newsizesb((j * ipmbinsc * ipmbinsb) + (k * ipmbinsc) + l));
               std::string sizenums3 = std::to_string(newsizesc((j * ipmbinsc * ipmbinsb) + (k * ipmbinsc) + l));
-              newstagenames((j * ipmbinsc * ipmbinsb) + (k * ipmbinsc) + l) = "sza_" + sizenums1.substr(0, 4);
-              newstagenames((j * ipmbinsc * ipmbinsb) + (k * ipmbinsc) + l) += "_szb_" + sizenums2.substr(0, 4);
-              newstagenames((j * ipmbinsc * ipmbinsb) + (k * ipmbinsc) + l) += "_szc_" + sizenums3.substr(0, 4);
+              newstagenames((j * ipmbinsc * ipmbinsb) + (k * ipmbinsc) + l) =
+                "sza_" + sizenums1.substr(0, 4);
+              newstagenames((j * ipmbinsc * ipmbinsb) + (k * ipmbinsc) + l) +=
+                "_szb_" + sizenums2.substr(0, 4);
+              newstagenames((j * ipmbinsc * ipmbinsb) + (k * ipmbinsc) + l) += 
+                "_szc_" + sizenums3.substr(0, 4);
               newstagenames((j * ipmbinsc * ipmbinsb) + (k * ipmbinsc) + l) += "_";
               newstagenames((j * ipmbinsc * ipmbinsb) + (k * ipmbinsc) + l) += 
                 std::to_string(newgroup((j * ipmbinsc * ipmbinsb) + (k * ipmbinsc) + l));
@@ -2133,8 +2357,14 @@ Rcpp::List sf_create (NumericVector sizes,
         }
         
         sizes = concat_dbl(sizes, newsizes);
+        sizemin_true = concat_dbl(sizemin_true, newsizemin);
+        sizemax_true = concat_dbl(sizemax_true, newsizemax);
         sizesb_true = concat_dbl(sizesb_true, newsizesb);
+        sizebmin_true = concat_dbl(sizebmin_true, newsizebmin);
+        sizebmax_true = concat_dbl(sizebmax_true, newsizebmax);
         sizesc_true = concat_dbl(sizesc_true, newsizesc);
+        sizecmin_true = concat_dbl(sizecmin_true, newsizecmin);
+        sizecmax_true = concat_dbl(sizecmax_true, newsizecmax);
         minage_true = concat_dbl(minage_true, newminage);
         maxage_true = concat_dbl(maxage_true, newmaxage);
         repstatus_true = concat_int(repstatus_true, newrepstatus);
@@ -2178,6 +2408,13 @@ Rcpp::List sf_create (NumericVector sizes,
       binhalfwidthb_true.erase(unique_delete(no_unique_delete - (i + 1)));
       binhalfwidthc_true.erase(unique_delete(no_unique_delete - (i + 1)));
       
+      sizemin_true.erase(unique_delete(no_unique_delete - (i + 1)));
+      sizebmin_true.erase(unique_delete(no_unique_delete - (i + 1)));
+      sizecmin_true.erase(unique_delete(no_unique_delete - (i + 1)));
+      sizemax_true.erase(unique_delete(no_unique_delete - (i + 1)));
+      sizebmax_true.erase(unique_delete(no_unique_delete - (i + 1)));
+      sizecmax_true.erase(unique_delete(no_unique_delete - (i + 1)));
+      
       group_true.erase(unique_delete(no_unique_delete - (i + 1)));
       
       comments_true.erase(unique_delete(no_unique_delete - (i + 1)));
@@ -2205,22 +2442,23 @@ Rcpp::List sf_create (NumericVector sizes,
   sizebinc_width = concat_dbl(sizebinc_width, zeros_to_append);
   
   for (int i = 0; i < matsize; i++) {
+  
     if (!size_manual) {
       sizebin_min(i) = sizes(i) - binhalfwidth_true(i);
       sizebin_max(i) = sizes(i) + binhalfwidth_true(i);
-      sizebin_center(i) = sizebin_min(i) + ((sizebin_max(i) - sizebin_min(i))/ 2);
+      sizebin_center(i) = sizebin_min(i) + ((sizebin_max(i) - sizebin_min(i)) / 2);
       sizebin_width(i) = sizebin_max(i) - sizebin_min(i);
     } else {
       if (sizemin_true(i) <= sizes(i)) {
         sizebin_min(i) = sizemin_true(i);
       } else {
-        throw Rcpp::exception("Some entered sizemin values are greater than their associated sizes.",
+        throw Rcpp::exception("Some sizemin values are larger than their sizes.",
           false);
       }
       if (sizemax_true(i) >= sizes(i)) {
         sizebin_max(i) = sizemax_true(i);
       } else {
-        throw Rcpp::exception("Some entered sizemax values are smaller than their associated sizes.",
+        throw Rcpp::exception("Some sizemax values are smaller than their sizes.",
           false);
       }
       sizebin_center(i) = sizebin_min(i) + ((sizebin_max(i) - sizebin_min(i))/ 2);
@@ -2237,13 +2475,13 @@ Rcpp::List sf_create (NumericVector sizes,
         if (sizebmin_true(i) <= sizesb_true(i)) {
           sizebinb_min(i) = sizebmin_true(i);
         } else {
-          throw Rcpp::exception("Some entered sizebmin values are greater than their associated sizes.",
+          throw Rcpp::exception("Some sizebmin values are larger than their sizes.",
             false);
         }
         if (sizebmax_true(i) >= sizesb_true(i)) {
           sizebinb_max(i) = sizebmax_true(i);
         } else {
-          throw Rcpp::exception("Some entered sizebmax values are smaller than their associated sizes.",
+          throw Rcpp::exception("Some sizebmax values are smaller than their sizes.",
             false);
         }
         sizebinb_center(i) = sizebinb_min(i) + ((sizebinb_max(i) - sizebinb_min(i))/ 2);
@@ -2260,13 +2498,13 @@ Rcpp::List sf_create (NumericVector sizes,
         if (sizecmin_true(i) <= sizesc_true(i)) {
           sizebinc_min(i) = sizecmin_true(i);
         } else {
-          throw Rcpp::exception("Some entered sizecmin values are greater than their associated sizes.",
+          throw Rcpp::exception("Some sizecmin values are larger than their sizes.",
             false);
         }
         if (sizecmax_true(i) >= sizesc_true(i)) {
           sizebinc_max(i) = sizecmax_true(i);
         } else {
-          throw Rcpp::exception("Some entered sizecmax values are smaller than their associated sizes.",
+          throw Rcpp::exception("Some sizecmax values are smaller than their sizes.",
             false);
         }
         sizebinc_center(i) = sizebinc_min(i) + ((sizebinc_max(i) - sizebinc_min(i))/ 2);
@@ -2274,6 +2512,7 @@ Rcpp::List sf_create (NumericVector sizes,
       }
     }
   }
+  
   sizebin_min = round(sizebin_min, roundsize);
   sizebin_max = round(sizebin_max, roundsize);
   sizebin_center = round(sizebin_center, roundsize);

@@ -1,3 +1,21 @@
+# lefko3 6.3.2 (2025-01-06)
+
+## NEW FEATURES
+
+* Function hfv_qc() now checks the number of singleton categories in all random
+  variables.
+
+## BUG FIXES
+
+* Fixed incompatibility of lefkoMod objects created prior to version 6.3.0 with
+  all matrix creation and projection functions in newer versions.
+
+* Fixed incompatibility between integer vector inputs supplied to individual
+  covariate arguments in function f_projection3().
+  
+* Fixed error causing incompatibility between ipm classification and certain
+  combinations of minsize, maxsize, and halfbinwidths in sf_create().
+
 # lefko3 6.3.1 (2024-08-20)
 
 ## NEW FEATURES

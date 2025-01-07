@@ -219,6 +219,11 @@ Tests of Gaussian normality are conducted as Shapiro-Wilk tests via base R's
 \code{shapiro.test()} function. If datasets with more than 5000 rows are
 supplied, function \code{hfv_qc()} will sample 5000 rows from the dataset and
 conduct the Shapiro-Wilk test on the data sample.
+
+Random factor variables are also tested for the presence of singleton
+categories, which are factor values that occur only once in the used data
+subset. Singleton categories may cause problems with estimation under mixed
+modeling.
 }
 
 \examples{

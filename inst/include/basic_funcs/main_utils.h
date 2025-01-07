@@ -3841,7 +3841,7 @@ namespace LefkoUtils {
     
     CharacterVector fixed_vars = core_components["fixed_vars"];
     NumericVector fixed_slopes = core_components["fixed_slopes"];
-    int no_fixed_vars = fixed_vars.length();
+    int no_fixed_vars = static_cast<int>(fixed_vars.length());
     
     Nullable<CharacterVector> fixed_zi_vars_ = core_components["fixed_zi_vars"];
     Nullable<NumericVector> fixed_zi_slopes_ = core_components["fixed_zi_slopes"];
@@ -3858,6 +3858,8 @@ namespace LefkoUtils {
     }
     
     CharacterVector modelparam_names = paramnames["modelparams"];
+    int pmnames_length = static_cast<int>(modelparam_names.length());
+    
     std::string year2var = as<std::string>(modelparam_names(0));
     std::string individvar = as<std::string>(modelparam_names(1));
     std::string patchvar = as<std::string>(modelparam_names(2));
@@ -3889,12 +3891,29 @@ namespace LefkoUtils {
     std::string indcovc1var = as<std::string>(modelparam_names(28));
     std::string group2var = as<std::string>(modelparam_names(29));
     std::string group1var = as<std::string>(modelparam_names(30));
-    std::string annucova2var = as<std::string>(modelparam_names(31));
-    std::string annucova1var = as<std::string>(modelparam_names(32));
-    std::string annucovb2var = as<std::string>(modelparam_names(33));
-    std::string annucovb1var = as<std::string>(modelparam_names(34));
-    std::string annucovc2var = as<std::string>(modelparam_names(35));
-    std::string annucovc1var = as<std::string>(modelparam_names(36));
+    
+    std::string annucova2var;
+    std::string annucova1var;
+    std::string annucovb2var;
+    std::string annucovb1var;
+    std::string annucovc2var;
+    std::string annucovc1var;
+    
+    if (pmnames_length > 31) {
+      annucova2var = as<std::string>(modelparam_names(31));
+      annucova1var = as<std::string>(modelparam_names(32));
+      annucovb2var = as<std::string>(modelparam_names(33));
+      annucovb1var = as<std::string>(modelparam_names(34));
+      annucovc2var = as<std::string>(modelparam_names(35));
+      annucovc1var = as<std::string>(modelparam_names(36));
+    } else {
+      annucova2var = "none";
+      annucova1var = "none";
+      annucovb2var = "none";
+      annucovb1var = "none";
+      annucovc2var = "none";
+      annucovc1var = "none";
+    }
     
     int no_fixed_zi_slopes = fixed_zi_slopes.length();
     
