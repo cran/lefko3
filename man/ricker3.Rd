@@ -2,7 +2,7 @@
 % Please edit documentation in R/RcppExports.R
 \name{ricker3}
 \alias{ricker3}
-\title{Two-parameter Ricker function}
+\title{Two-Parameter Ricker Function}
 \usage{
 ricker3(
   start_value,

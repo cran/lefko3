@@ -2,7 +2,7 @@
 % Please edit documentation in R/RcppExports.R
 \name{beverton3}
 \alias{beverton3}
-\title{Two-parameter Beverton-Holt function}
+\title{Two-Parameter Beverton-Holt Function}
 \usage{
 beverton3(
   start_value,

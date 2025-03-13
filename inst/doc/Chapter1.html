@@ -1287,15 +1287,19 @@ datasets. Some transitions are parameterized using information gathered
 from other studies, whether through direct input in the matrix or
 through the development of kernels contingent on external information.
 Other transitions might also be estimated via proxy transitions
-elsewhere in the matrix. In <code>lefko3</code>, this information can be
-provided in one of two ways. The preferred, and most recently developed,
-method is through the <strong>supplement table</strong>, which can be
+elsewhere in the matrix. At other times, users may wish to manipulate
+specific transitions either through addition or multiplication by
+specific amounts. In <code>lefko3</code>, this information can be
+provided through the <strong>supplement table</strong>, which can be
 developed using the <code>supplemental()</code> function. This function
 allows users to create a data frame detailing:
 </p>
 <ol style="list-style-type: decimal">
 <li>specific transitions to set as the main fecundity transitions;</li>
-<li>specific transitions to set as constants;</li>
+<li>specific transitions to set as constants, with values entered by the
+user;</li>
+<li>specific transitions to alter additively, with values entered by the
+user;</li>
 <li>specific transitions to estimate via proxy transitions;</li>
 <li>specific multipliers for fecundity in cases in which fecundity
 estimates resulting from linear modeling must be modified to
@@ -1306,21 +1310,21 @@ incorporated by proxy and must be set at a reduced or elevated level
 relative to the original, directly estimated transition.</li>
 </ol>
 <p style="text-indent: 20px">
-Examples might illustrate where this approach is useful. If I lack my
-own data on subterranean juvenile stages in a plant species, but I have
-estimates of survival for those stages form another study, then I might
-use those estimates as constants in the MPM. I can also set some
-transitions explicitly to 0 if I believe that there is a biological need
-for such an override. Further, if I lack demographic data on the
+Examples might illustrate where this approach is useful. If we lack data
+on subterranean juvenile stages in a plant species, but we have
+estimates of survival for those stages from other studies, then we might
+use those estimates as constants in the MPM. We can also set some
+transitions explicitly to 0 if we believe that there is a biological
+need for such an override. Further, if we lack demographic data on the
 development of germinated seeds to the seedling or earliest adult stage,
-but I have reason to believe that the survival probabilities should be
-similar to the survival within an observed stage of seedlings or small
-adults, then I can use the latter survival-transitions as proxies (or
-even decrease them via a multiplier). Finally, if fecundity is a
-function of seed production, survival to the next year, and germination
-probability, then germination probability might be estimated via a
-separate field germination study. I might wish to incorporate this
-germination probability both as a constant transition, and as a
+but have reason to believe that the survival probabilities should be
+similar to survival within an observed stage of seedlings or small
+adults, then we can use the latter survival-transitions as proxies and
+even decrease them via an offset or multiplier. Finally, if fecundity is
+a function of seed production, survival to the next year, and
+germination probability, then germination probability might be estimated
+via a separate field germination study. We might wish to incorporate
+this germination probability both as a constant transition, and as a
 multiplier on estimated fecundity. Supplement tables provide the means
 to include all of this information.
 </p>

@@ -4,7 +4,7 @@
 \alias{summary.lefkoMat}
 \title{Summary of Class "lefkoMat"}
 \usage{
-\method{summary}{lefkoMat}(object, colsums = TRUE, ...)
+\method{summary}{lefkoMat}(object, colsums = TRUE, check_cycle = TRUE, ...)
 }
 \arguments{
 \item{object}{An object of class \code{lefkoMat}.}
@@ -13,6 +13,9 @@
 for U matrices, allowing users to check stage survival probabilities.
 Defaults to TRUE.}
 
+\item{check_cycle}{A logical value indicating whether to test matrices for
+stage discontinuities in the life cycle. Defaults to \code{TRUE}.}
+
 \item{...}{Other parameters.}
 }
 \value{
@@ -20,7 +23,8 @@ A summary of the object, showing the number of each type of matrix,
 the number of annual matrices, the number of estimated (non-zero) elements
 across all matrices and per matrix, the number of unique transitions in the
 dataset, the number of individuals, and summaries of the column sums of the
-survival-transition matrices. This function will also yield warnings if any
+survival-transition matrices. Stage discontinuities are also checked with
+function \code{cycle_check}. This function will also yield warnings if any
 survival-transition matrices include elements outside of the interval [0,1],
 if any fecundity matrices contain negative elements, and if any matrices
 include NA values.

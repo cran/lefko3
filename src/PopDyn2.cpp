@@ -8,6 +8,18 @@ using namespace LefkoUtils;
 using namespace LefkoMats;
 
 
+// Index of Functions
+// 
+// 1. DataFrame .bambi3  Creates Size Index for Elasticity Summaries of hMPMs
+// 2. DataFrame .bambi2  Creates Size Index for Elasticity Summaries of ahMPMs
+// 3. List .demolition4  Sum Positive and Negative LTRE or Elasticity Contributions
+// 4. List .demolition3  Creates Summary Data for Elasticity Matrix Inputs
+// 5. List .demolition3sp  Creates Summary Data for Elasticity Matrix Inputs
+// 6. RObject lambda3  Estimate Actual or Deterministic Population Growth Rate
+// 7. DataFrame matrix_interp  Arranges Matrix Elements in Order of Magnitude for Interpretation
+// 8. List append_lP  Append Projections Into New lefkoProj Object
+
+
 //' Creates Size Index for Elasticity Summaries of hMPMs
 //' 
 //' Function \code{bambi3()} creates an index of estimable elements in
@@ -44,7 +56,7 @@ using namespace LefkoMats;
 //' @keywords internal
 //' @noRd
 // [[Rcpp::export(.bambi3)]]
-DataFrame bambi3(const DataFrame& stages, const DataFrame& hstages) {
+Rcpp::DataFrame bambi3(const DataFrame& stages, const DataFrame& hstages) {
   
   StringVector stagenames = as<StringVector>(stages["stage"]);
   arma::uvec astages = as<arma::uvec>(stages["stage_id"]);
@@ -303,7 +315,7 @@ DataFrame bambi3(const DataFrame& stages, const DataFrame& hstages) {
 //' @keywords internal
 //' @noRd
 // [[Rcpp::export(.bambi2)]]
-DataFrame bambi2(const DataFrame& stages) {
+Rcpp::DataFrame bambi2(const DataFrame& stages) {
   
   StringVector stagenames = as<StringVector>(stages["stage"]);
   arma::uvec astages = as<arma::uvec>(stages["stage_id"]);
@@ -574,7 +586,7 @@ Rcpp::List demolition4 (List cmats) {
 //' @keywords internal
 //' @noRd
 // [[Rcpp::export(.demolition3)]]
-List demolition3(const arma::mat& e_amat, const DataFrame& bambesque,
+Rcpp::List demolition3(const arma::mat& e_amat, const DataFrame& bambesque,
   Nullable<Rcpp::NumericMatrix> amat_ = R_NilValue,
   Nullable<Rcpp::NumericMatrix> fmat_ = R_NilValue) {
   
@@ -846,7 +858,7 @@ List demolition3(const arma::mat& e_amat, const DataFrame& bambesque,
 //' @keywords internal
 //' @noRd
 // [[Rcpp::export(.demolition3sp)]]
-List demolition3sp(const arma::sp_mat& e_amat, const DataFrame& bambesque,
+Rcpp::List demolition3sp(const arma::sp_mat& e_amat, const DataFrame& bambesque,
   Nullable<arma::sp_mat> amat_ = R_NilValue,
   Nullable<arma::sp_mat> fmat_ = R_NilValue) {
   
@@ -1230,7 +1242,7 @@ List demolition3sp(const arma::sp_mat& e_amat, const DataFrame& bambesque,
 //' 
 //' @export lambda3
 // [[Rcpp::export(lambda3)]]
-RObject lambda3(RObject& mpm, Nullable<RObject> force_sparse = R_NilValue) {
+Rcpp::RObject lambda3(RObject& mpm, Nullable<RObject> force_sparse = R_NilValue) {
   
   RObject output;
   
@@ -1752,8 +1764,10 @@ RObject lambda3(RObject& mpm, Nullable<RObject> force_sparse = R_NilValue) {
     output = lambda_prog;
     
   } else {
-    throw Rcpp::exception("Object mpm does not appear to be an appropriate MPM, list of matrices, lefkoProj object, or matrix.",
-      false);
+    String eat_my_shorts = "Object mpm does not appear to be an appropriate ";
+    eat_my_shorts += "MPM, list of matrices, lefkoProj object, or matrix.";
+    
+    throw Rcpp::exception(eat_my_shorts.get_cstring(), false);
   }
   
   return output;
@@ -2365,7 +2379,7 @@ Rcpp::DataFrame matrix_interp (RObject object, int mat_chosen = 1,
 //' Append Projections Into New lefkoProj Object
 //' 
 //' Function \code{append_lP()} combines two population projections. It takes
-//' two \code{lefkoProj} objects and appends them into a new \code{lefkoPrpoj}
+//' two \code{lefkoProj} objects and appends them into a new \code{lefkoProj}
 //' object.
 //' 
 //' @name append_lP
@@ -2469,7 +2483,7 @@ Rcpp::DataFrame matrix_interp (RObject object, int mat_chosen = 1,
 //' 
 //' @export append_lP
 // [[Rcpp::export(append_lP)]]
-Rcpp::List append_lM(Nullable<RObject> proj1 = R_NilValue,
+Rcpp::List append_lP(Nullable<RObject> proj1 = R_NilValue,
   Nullable<RObject> proj2 = R_NilValue) {
   
   Rcpp::List proj1_list;
@@ -2488,12 +2502,12 @@ Rcpp::List append_lM(Nullable<RObject> proj1 = R_NilValue,
         if (stringcompare_simple(String(proj1_class(i)), "lefkoProj")) lP_found = true;
       }
       
-      if (!lP_found) throw Rcpp::exception("A lefkoProj object is required for argument proj1.", false);
+      if (!lP_found) pop_error("proj1", "a lefkoProj object", "", 1);
     } else {
-      throw Rcpp::exception("A lefkoProj object is required for argument proj1.", false);
+      pop_error("proj1", "a lefkoProj object", "", 1);
     }
   } else {
-    throw Rcpp::exception("A lefkoProj object is required for argument proj1.", false);
+    pop_error("proj1", "a lefkoProj object", "", 1);
   }
   
   if (proj2.isNotNull()) {
@@ -2506,12 +2520,12 @@ Rcpp::List append_lM(Nullable<RObject> proj1 = R_NilValue,
         if (stringcompare_simple(String(proj2_class(i)), "lefkoProj")) lP_found = true;
       }
       
-      if (!lP_found) throw Rcpp::exception("A lefkoProj object is required for argument proj2.", false);
+      if (!lP_found) pop_error("proj2", "a lefkoProj object", "", 1);
     } else {
-      throw Rcpp::exception("A lefkoProj object is required for argument proj2.", false);
+      pop_error("proj2", "a lefkoProj object", "", 1);
     }
   } else {
-    throw Rcpp::exception("A lefkoProj object is required for argument proj2.", false);
+    pop_error("proj2", "a lefkoProj object", "", 1);
   }
   
   bool proj1_lP_check {false};

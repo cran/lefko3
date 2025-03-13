@@ -8,6 +8,16 @@ using namespace Rcpp;
 using namespace arma;
 using namespace LefkoUtils;
 
+
+// Index of functions
+// 
+// 1. List pfj - Create Vertical Structure for Horizontal Data Frame Input
+// 2. List jpf - Create Historical Vertical Structure for Ahistorical Vertical Data Frame
+// 3. NumericVector density3 - Estimate Radial Density in Cartesian Space
+
+
+
+
 //' Create Vertical Structure for Horizontal Data Frame Input
 //' 
 //' Function \code{pfj()} powers the R function \code{\link{verticalize3}()},

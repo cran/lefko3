@@ -2,7 +2,7 @@
 % Please edit documentation in R/RcppExports.R
 \name{logistic3}
 \alias{logistic3}
-\title{Two-parameter logistic function}
+\title{Two-Parameter logistic Function}
 \usage{
 logistic3(
   start_value,

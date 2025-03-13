@@ -292,7 +292,7 @@
     .Call('_lefko3_hoffmannofstuttgart', PACKAGE = 'lefko3', mainmat, indices, ahstages, stagenames)
 }
 
-#' Core Engine for cond_hmpm()
+#' Core Engine for cond_hmpm() with Sparse Matrices
 #' 
 #' Creates a list of conditional ahistorical matrices in the style noted in
 #' deVries and Caswell (2018).
@@ -540,7 +540,7 @@ cond_diff <- function(lDiff, ref = 1L, matchoice = NULL, err_check = NULL) {
     .Call('_lefko3_cond_diff', PACKAGE = 'lefko3', lDiff, ref, matchoice, err_check)
 }
 
-#' Two-parameter Ricker function
+#' Two-Parameter Ricker Function
 #' 
 #' Function \code{ricker3()} creates a vector of values produced by the two-
 #' parameter Ricker function as applied with a user-specified time lag. The
@@ -602,7 +602,7 @@ ricker3 <- function(start_value, alpha, beta, time_steps = 100L, time_lag = 1L, 
     .Call('_lefko3_ricker3', PACKAGE = 'lefko3', start_value, alpha, beta, time_steps, time_lag, pre0_subs, pre0_value, substoch, separate_N)
 }
 
-#' Two-parameter Beverton-Holt function
+#' Two-Parameter Beverton-Holt Function
 #' 
 #' Function \code{beverton3()} creates a vector of values produced by the two-
 #' parameter Beverton-Holt function as applied with a user-specified time lag.
@@ -665,7 +665,7 @@ beverton3 <- function(start_value, alpha, beta, time_steps = 100L, time_lag = 1L
     .Call('_lefko3_beverton3', PACKAGE = 'lefko3', start_value, alpha, beta, time_steps, time_lag, pre0_subs, pre0_value, substoch, separate_N)
 }
 
-#' Two-parameter Usher function
+#' Two-Parameter Usher Function
 #' 
 #' Function \code{usher3()} creates a vector of values produced by the two-
 #' parameter Usher function as applied with a user-specified time lag.
@@ -727,7 +727,7 @@ usher3 <- function(start_value, alpha, beta, time_steps = 100L, time_lag = 1L, p
     .Call('_lefko3_usher3', PACKAGE = 'lefko3', start_value, alpha, beta, time_steps, time_lag, pre0_subs, pre0_value, substoch, separate_N)
 }
 
-#' Two-parameter logistic function
+#' Two-Parameter logistic Function
 #' 
 #' Function \code{logistic3()} creates a vector of values produced by the
 #' logistic function as applied with a user-specified time lag. The logistic
@@ -878,6 +878,42 @@ NULL
 #' @keywords internal
 #' @noRd
 NULL
+
+#' Standardize Stageframe For MPM Analysis
+#' 
+#' Function \code{sf_reassess()} takes a stageframe as input, and uses
+#' information supplied there and through the supplement, reproduction and
+#' overwrite tables to rearrange this into a format usable by the matrix
+#' creation functions, \code{mpm_create()}, \code{flefko3()},
+#' \code{flefko2()}, \code{aflefko2()}, \code{rlefko3()}, and \code{rlefko2()}.
+#' This is performed through a call to \code{sf_reassess_internal()}.
+#' 
+#' @name .sf_reassess
+#' 
+#' @param stageframe The original stageframe.
+#' @param supplement The original supplemental data input (class
+#' \code{lefkoSD}). Can also equal NA.
+#' @param overwrite An overwrite table.
+#' @param repmatrix The original reproduction matrix. Can also equal \code{NA},
+#' \code{0}, or \code{NULL} (the last value by default).
+#' @param agemat A logical value indicating whether MPM is age-by-stage.
+#' @param historical A logical value indicating whether MPM is historical.
+#' @param format An integer indicating whether matrices will be in Ehrlen
+#' format (if set to 1), or deVries format (if set to 2). Setting to deVries
+#' format adds one extra stage to account for the prior status of newborns.
+#' 
+#' @return This function returns a list with a modified \code{stageframe}
+#' usable in MPM construction, an associated \code{repmatrix}, and a general
+#' \code{supplement} table that takes over for any input \code{supplement} or
+#' \code{overwrite} table. Note that if a \code{supplement} is provided and a
+#' \code{repmatrix} is not, or if \code{repmatrix} is set to 0, then it will be
+#' assumed that a \code{repmatrix} should not be used.
+#' 
+#' @keywords internal
+#' @noRd
+.sf_reassess <- function(stageframe, supplement = NULL, overwrite = NULL, repmatrix = NULL, agemat = FALSE, historical = FALSE, format = 1L) {
+    .Call('_lefko3_sf_reassess', PACKAGE = 'lefko3', stageframe, supplement, overwrite, repmatrix, agemat, historical, format)
+}
 
 #' Create Skeleton Stageframe
 #' 
@@ -1128,94 +1164,89 @@ add_stage <- function(mpm, add_before = 0L, add_after = 0L, stage_name = NULL) {
     .Call('_lefko3_add_stage', PACKAGE = 'lefko3', mpm, add_before, add_after, stage_name)
 }
 
-#' Create Stageframe for Population Matrix Projection Analysis
+#' Check Continuity of Life Cycle through Matrices in lefkoMat Objects
 #' 
-#' Function \code{sf_leslie()} returns a data frame describing each age in a
-#' Leslie MPM in terms of ahistorical stage information. This function is
-#' internal to \code{rleslie()} and \code{fleslie()}.
+#' Function \code{cycle_check()} tests whether stages, stage-pairs, or
+#' age-stages connect in matrices within \code{lefkoMat} objects.
 #' 
-#' @name sf_leslie
+#' @name cycle_check
 #' 
-#' @param min_age The first age to include in the matrix.
-#' @param max_age The maximum age to include in the matrix.
-#' @param min_fecage The first age in which reproduction is possible.
-#' @param max_fecage The final age in which reproduction is possible.
-#' @param cont A logical value indicating whether survival continues past the
-#' last described age.
+#' @param mpm An object of class lefkoMat, a matrix, or a list of matrices.
+#' @param quiet A logical variable indicating whether to suppress diagnostic
+#' messages. Defaults to \code{FALSE}.
 #' 
-#' @return A data frame of class \code{stageframe}, which includes information
-#' on the stage name, size, reproductive status, observation status, propagule 
-#' status, immaturity status, maturity status, presence within the core dataset, 
-#' stage group classification, raw bin half-width, and the minimum, 
-#' center, and maximum of each size bin, as well as its width. If minimum and
-#' maximum ages were specified, then these are also included. Also includes an 
-#' empty string variable that can be used to describe stages meaningfully.
+#' @return Returns a list with two elements, both of which are also lists.
+#' The first list, \code{no_in}, contains as many elements as matrices, with
+#' each element containing an integer vector showing the identification numbers
+#' of stages, stage-pairs, or age-stages, in each matrix that do not show any
+#' transitions leading to them. The second list, \code{no_out}, is structured
+#' similarly to the first, but shows stages, stage-pairs, or age-stages from
+#' which there are no transitions leading out.
 #' 
-#' Variables in this data frame include the following:
-#' \item{stage_id}{An unique integer representing each age, in order.}
-#' \item{stage}{The unique names of the ages to be analyzed.}
-#' \item{original_size}{The typical or representative size at which each stage
-#' occurs. Since ages are not characterized by size, this is generally
-#' \code{NA}.}
-#' \item{original_size_b}{Size at which each stage occurs in terms of a second
-#' size variable, if one exists. In Leslie MPMs, generally \code{NA}.}
-#' \item{original_size_c}{Size at which each stage occurs in terms of a third
-#' size variable, if one exists. In Leslie MPMs, generally \code{NA}.}
-#' \item{min_age}{The minimum age at which the stage may occur. In Leslie MPMs,
-#' defaults to the current age.}
-#' \item{max_age}{The maximum age at which the stage may occur. In Leslie MPMs,
-#' will generally equal the current age or \code{NA}, depending on whether
-#' individuals are allowed to remain at the maximum age.}
-#' \item{repstatus}{A binomial variable showing whether each age is
-#' reproductive.}
-#' \item{obsstatus}{A binomial variable showing whether each age is
-#' observable.}
-#' \item{propstatus}{A binomial variable showing whether each age is a
-#' propagule.}
-#' \item{immstatus}{A binomial variable showing whether each age can occur as
-#' immature.}
-#' \item{matstatus}{A binomial variable showing whether each age occurs in
-#' maturity.}
-#' \item{entrystage}{A binomial variable showing whether each age is an entry
-#' stage. In Leslie MPMs, only the first stage is set to \code{1}, while all
-#' others are set to \code{0}.}
-#' \item{indataset}{A binomial variable describing whether each age occurs in
-#' the input dataset.}
-#' \item{binhalfwidth_raw}{The half-width of the size bin, as input.}
-#' \item{sizebin_min}{The minimum primary size at which the age may occur.}
-#' \item{sizebin_max}{The maximum primary size at which the age may occur.}
-#' \item{sizebin_center}{The midpoint of the primary size bin at which the age
-#' may occur.}
-#' \item{sizebin_width}{The width of the primary size bin corresponding to the
-#' age.}
-#' \item{binhalfwidthb_raw}{The half-width of the size bin of a second size
-#' variable, as input.}
-#' \item{sizebinb_min}{The minimum secondary size at which the age may occur.}
-#' \item{sizebinb_max}{The maximum secondary size at which the age may occur.}
-#' \item{sizebinb_center}{The midpoint of the secondary size bin at which the
-#' age may occur.}
-#' \item{sizebinb_width}{The width of the secondary size bin corresponding to
-#' the age.}
-#' \item{binhalfwidthc_raw}{The half-width of the size bin of a third size
-#' variable, as input.}
-#' \item{sizebinc_min}{The minimum tertiary size at which the age may occur.}
-#' \item{sizebinc_max}{The maximum tertiary size at which the age may occur.}
-#' \item{sizebinc_center}{The midpoint of the tertiary size bin at which the
-#' age may occur.}
-#' \item{sizebinc_width}{The width of the tertiary size bin corresponding to
-#' the age.}
-#' \item{group}{An integer denoting the size classification group that the
-#' age falls within.}
-#' \item{comments}{A text field for stage descriptions.}
-#' \item{alive}{An integer vector denoting whether the age is alive. Defaults
-#' to \code{1} for all ages.}
-#' \item{almost_born}{An integer vector denoting whether the age corresponds to
-#' the prior stage of a newly produced individual in a historical model. In
-#' Leslie MPMs, defaults to \code{0}.}
+#' @section Notes:
+#' This function tests whether stages, stage-pairs, and age-stages are
+#' connected to others in matrices used for projection. Whether stages,
+#' stage-pairs, or age-stages are shown depends on whether the MPM is
+#' ahistorical / age-based, historical stage-based, or age-by-stage,
+#' respectively. Checks are performed by testing whether each column in a
+#' matrix includes non-zero transitions to other columns, and by testing
+#' whether any columns have no transitions to them from other columns. If any
+#' such columns are found, then function \code{cycle_check}
+#' will export an integer vector giving the column numbers with problems.
+#' These column numbers may then be checked against the \code{stage_id} column
+#' of the associated stageframe in the case of a ahistorical or age-based MPM,
+#' against the row number of the associated \code{hstages} data frame in the
+#' case of a historical MPM, or against the row number of the associated
+#' \code{agestages} data frame in the case of an age-by-stage MPM.
 #' 
-#' @keywords internal
-#' @noRd
-NULL
+#' @examples
+#' data(cypdata)
+#' 
+#' sizevector <- c(0, 0, 0, 0, 0, 0, 1, 2.5, 4.5, 8, 17.5)
+#' stagevector <- c("SD", "P1", "P2", "P3", "SL", "D", "XSm", "Sm", "Md", "Lg",
+#'   "XLg")
+#' repvector <- c(0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1)
+#' obsvector <- c(0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1)
+#' matvector <- c(0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1)
+#' immvector <- c(0, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0)
+#' propvector <- c(1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)
+#' indataset <- c(0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1)
+#' binvec <- c(0, 0, 0, 0, 0, 0.5, 0.5, 1, 1, 2.5, 7)
+#' 
+#' cypframe_raw <- sf_create(sizes = sizevector, stagenames = stagevector,
+#'   repstatus = repvector, obsstatus = obsvector, matstatus = matvector,
+#'   propstatus = propvector, immstatus = immvector, indataset = indataset,
+#'   binhalfwidth = binvec)
+#' 
+#' cypraw_v1 <- verticalize3(data = cypdata, noyears = 6, firstyear = 2004,
+#'   patchidcol = "patch", individcol = "plantid", blocksize = 4,
+#'   sizeacol = "Inf2.04", sizebcol = "Inf.04", sizeccol = "Veg.04",
+#'   repstracol = "Inf.04", repstrbcol = "Inf2.04", fecacol = "Pod.04",
+#'   stageassign = cypframe_raw, stagesize = "sizeadded", NAas0 = TRUE,
+#'   NRasRep = TRUE)
+#' 
+#' cypsupp2r <- supplemental(stage3 = c("SD", "P1", "P2", "P3", "SL", "D", 
+#'     "XSm", "Sm", "SD", "P1"),
+#'   stage2 = c("SD", "SD", "P1", "P2", "P3", "SL", "SL", "SL", "rep",
+#'     "rep"),
+#'   eststage3 = c(NA, NA, NA, NA, NA, "D", "XSm", "Sm", NA, NA),
+#'   eststage2 = c(NA, NA, NA, NA, NA, "XSm", "XSm", "XSm", NA, NA),
+#'   givenrate = c(0.10, 0.20, 0.20, 0.20, 0.25, NA, NA, NA, NA, NA),
+#'   multiplier = c(NA, NA, NA, NA, NA, NA, NA, NA, 0.5, 0.5),
+#'   type =c(1, 1, 1, 1, 1, 1, 1, 1, 3, 3),
+#'   stageframe = cypframe_raw, historical = FALSE)
+#' 
+#' cypmatrix2r <- rlefko2(data = cypraw_v1, stageframe = cypframe_raw, 
+#'   year = "all", patch = "all", stages = c("stage3", "stage2", "stage1"),
+#'   size = c("size3added", "size2added"), supplement = cypsupp2r,
+#'   yearcol = "year2", patchcol = "patchid", indivcol = "individ")
+#' 
+#' cycle_check(cypmatrix2r)
+#' 
+#' @export cycle_check
+cycle_check <- function(mpm, quiet = NULL) {
+    .Call('_lefko3_cycle_check', PACKAGE = 'lefko3', mpm, quiet)
+}
 
 #' Estimate All Elements of Raw Historical Matrix
 #' 
@@ -1799,41 +1830,6 @@ NULL
 #' @keywords internal
 #' @noRd
 NULL
-
-#' Standardize Stageframe For MPM Analysis
-#' 
-#' Function \code{sf_reassess()} takes a stageframe as input, and uses
-#' information supplied there and through the supplement, reproduction and
-#' overwrite tables to rearrange this into a format usable by the matrix
-#' creation functions, \code{mpm_create()}, \code{flefko3()},
-#' \code{flefko2()}, \code{aflefko2()}, \code{rlefko3()}, and \code{rlefko2()}.
-#' 
-#' @name .sf_reassess
-#' 
-#' @param stageframe The original stageframe.
-#' @param supplement The original supplemental data input (class
-#' \code{lefkoSD}). Can also equal NA.
-#' @param overwrite An overwrite table.
-#' @param repmatrix The original reproduction matrix. Can also equal \code{NA},
-#' \code{0}, or \code{NULL} (the last value by default).
-#' @param agemat A logical value indicating whether MPM is age-by-stage.
-#' @param historical A logical value indicating whether MPM is historical.
-#' @param format An integer indicating whether matrices will be in Ehrlen
-#' format (if set to 1), or deVries format (if set to 2). Setting to deVries
-#' format adds one extra stage to account for the prior status of newborns.
-#' 
-#' @return This function returns a list with a modified \code{stageframe}
-#' usable in MPM construction, an associated \code{repmatrix}, and a general
-#' \code{supplement} table that takes over for any input \code{supplement} or
-#' \code{overwrite} table. Note that if a \code{supplement} is provided and a
-#' \code{repmatrix} is not, or if \code{repmatrix} is set to 0, then it will be
-#' assumed that a \code{repmatrix} should not be used.
-#' 
-#' @keywords internal
-#' @noRd
-.sf_reassess <- function(stageframe, supplement = NULL, overwrite = NULL, repmatrix = NULL, agemat = FALSE, historical = FALSE, format = 1L) {
-    .Call('_lefko3_sf_reassess', PACKAGE = 'lefko3', stageframe, supplement, overwrite, repmatrix, agemat, historical, format)
-}
 
 #' Project Function-based Matrix Projection Model
 #' 
@@ -3846,7 +3842,7 @@ markov_run <- function(main_times, mat, times = 10000L, start = NULL) {
     .Call('_lefko3_markov_run', PACKAGE = 'lefko3', main_times, mat, times, start)
 }
 
-#' Main Formula Creation for Function \code{modelsearch()}
+#' Workhorse Formula Creator for Function modelsearch()
 #'
 #' Function \code{praxis()} is the workhorse function used by function
 #' \code{stovokor} to create individual vital rate model formulae, which are
@@ -3978,7 +3974,7 @@ NULL
 #' @noRd
 NULL
 
-#' Main Formula Creation for Function \code{modelsearch()}
+#' Main Formula Creation for Function modelsearch()
 #'
 #' Function \code{stovokor()} creates the list of formulae to be used as input
 #' in the global model calls used in function \code{\link{modelsearch}()}.
@@ -4810,11 +4806,11 @@ density_input <- function(mpm, stage3 = NULL, stage2 = NULL, stage1 = NULL, age2
 #' Create a Data Frame of Supplemental Data for MPM Development
 #' 
 #' Function \code{supplemental()} provides all necessary supplemental data for
-#' matrix estimation, particularly bringing together data on proxy rates, data
-#' to overwrite existing rates, identified reproductive transitions complete,
-#' and fecundity multipliers. The function should be used to incorporate data
-#' that affects all matrices to be created. To edit MPMs after creation, use
-#' \code{\link{edit_lM}()} instead.
+#' matrix estimation. It allows the establishment of proxy rates, the entry of
+#' data to overwrite or offset existing rates, the identification of complete
+#' reproductive transitions, and the entry of rate multipliers. The function
+#' should be used to incorporate data that affects all matrices to be created.
+#' To edit MPMs after creation, use \code{\link{edit_lM}()} instead.
 #' 
 #' @name supplemental
 #' 
@@ -4856,9 +4852,15 @@ density_input <- function(mpm, stage3 = NULL, stage2 = NULL, stage1 = NULL, age2
 #' transition. Only needed if a transition will be replaced by another
 #' estimated transition, and only in age-based and age-by-stage MPMs.
 #' @param givenrate A fixed rate or probability to replace for the transition
-#' described by \code{stage3}, \code{stage2}, and \code{stage1}.
-#' @param multiplier A vector of numeric multipliers for fecundity or for proxy
-#' transitions. Defaults to \code{1}.
+#' described by \code{stage3}, \code{stage2}, \code{stage1}, and/or
+#' \code{age2}.
+#' @param offset A fixed numeric value to add to the transition described by
+#' \code{stage3}, \code{stage2}, \code{stage1}, and/or \code{age2}.
+#' @param multiplier A vector of numeric multipliers for the transition
+#' described by \code{stage3}, \code{stage2}, \code{stage1}, and/or
+#' \code{age2}, or for the proxy transitions described by \code{eststage3},
+#' \code{eststage2}, \code{eststage1}, and/or \code{estage2}. Defaults to
+#' \code{1}.
 #' @param type A vector denoting the kind of transition between occasions
 #' \emph{t} and \emph{t}+1 to be replaced. This should be entered as \code{1},
 #' \code{S}, or \code{s} for the replacement of a survival transition;
@@ -4896,6 +4898,8 @@ density_input <- function(mpm, stage3 = NULL, stage2 = NULL, stage1 = NULL, age2
 #' \item{estage2}{Age at occasion \emph{t} in the transition to replace the
 #' transition designated by \code{age2}.}
 #' \item{givenrate}{A constant to be used as the value of the transition.}
+#' \item{offset}{A constant value to be added to the transition or proxy
+#' transition.}
 #' \item{multiplier}{A multiplier for proxy transitions or for fecundity.}
 #' \item{convtype}{Designates whether the transition from occasion \emph{t} to
 #' occasion \emph{t}+1 is a survival transition probability (1), a fecundity
@@ -4906,8 +4910,10 @@ density_input <- function(mpm, stage3 = NULL, stage2 = NULL, stage1 = NULL, age2
 #' 
 #' @section Notes:
 #' Negative values are not allowed in \code{givenrate} and \code{multiplier}
-#' input. Stage entries should not be used for purely age-based MPMs, and age
-#' entries should not be used for purely stage-based MPMs.
+#' input, but are allowed in \code{offset}, if values are to be subtracted from
+#' specific estimated transitions. Stage entries should not be used for purely
+#' age-based MPMs, and age entries should not be used for purely stage-based
+#' MPMs.
 #' 
 #' Fecundity multiplier data supplied via the \code{supplemental()} function
 #' acts in the same way as non-zero entries supplied via a reproductive matrix,
@@ -4941,6 +4947,13 @@ density_input <- function(mpm, stage3 = NULL, stage2 = NULL, stage1 = NULL, age2
 #' yield fecundity, then stage 2 to stage 3 can be set to
 #' \code{multiplier = 1.0} with \code{convtype = 3}, and the same transition
 #' for \code{age2 = c(1, 2)} can be set to \code{multiplier = c(0, 0)}.
+#' 
+#' Several operations may be included per transition. Operations on the same
+#' row of the resulting data frame are generally handled with given rate
+#' substitutions first, then with proxy transitions, then by additive offsets,
+#' and finally by multipliers. This order can be manipulated by ordering
+#' operations across rows, with higher numbered rows in the data frame being
+#' performed later.
 #' 
 #' @seealso \code{\link{edit_lM}()}
 #' 
@@ -5028,8 +5041,8 @@ density_input <- function(mpm, stage3 = NULL, stage2 = NULL, stage1 = NULL, age2
 #'   yearcol = "year2", patchcol = "patchid", indivcol = "individ")
 #' 
 #' @export supplemental
-supplemental <- function(historical = TRUE, stagebased = TRUE, agebased = FALSE, stageframe = NULL, stage3 = NULL, stage2 = NULL, stage1 = NULL, age2 = NULL, eststage3 = NULL, eststage2 = NULL, eststage1 = NULL, estage2 = NULL, givenrate = NULL, multiplier = NULL, type = NULL, type_t12 = NULL) {
-    .Call('_lefko3_supplemental', PACKAGE = 'lefko3', historical, stagebased, agebased, stageframe, stage3, stage2, stage1, age2, eststage3, eststage2, eststage1, estage2, givenrate, multiplier, type, type_t12)
+supplemental <- function(historical = TRUE, stagebased = TRUE, agebased = FALSE, stageframe = NULL, stage3 = NULL, stage2 = NULL, stage1 = NULL, age2 = NULL, eststage3 = NULL, eststage2 = NULL, eststage1 = NULL, estage2 = NULL, givenrate = NULL, offset = NULL, multiplier = NULL, type = NULL, type_t12 = NULL) {
+    .Call('_lefko3_supplemental', PACKAGE = 'lefko3', historical, stagebased, agebased, stageframe, stage3, stage2, stage1, age2, eststage3, eststage2, eststage1, estage2, givenrate, offset, multiplier, type, type_t12)
 }
 
 #' Edit an MPM based on Supplemental Data
@@ -5535,7 +5548,7 @@ matrix_interp <- function(object, mat_chosen = 1L, part = 1L, type = 3L) {
 #' Append Projections Into New lefkoProj Object
 #' 
 #' Function \code{append_lP()} combines two population projections. It takes
-#' two \code{lefkoProj} objects and appends them into a new \code{lefkoPrpoj}
+#' two \code{lefkoProj} objects and appends them into a new \code{lefkoProj}
 #' object.
 #' 
 #' @name append_lP
@@ -5639,6 +5652,6 @@ matrix_interp <- function(object, mat_chosen = 1L, part = 1L, type = 3L) {
 #' 
 #' @export append_lP
 append_lP <- function(proj1 = NULL, proj2 = NULL) {
-    .Call('_lefko3_append_lM', PACKAGE = 'lefko3', proj1, proj2)
+    .Call('_lefko3_append_lP', PACKAGE = 'lefko3', proj1, proj2)
 }
 

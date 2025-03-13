@@ -6,6 +6,16 @@ using namespace Rcpp;
 using namespace arma;
 using namespace LefkoUtils;
 
+
+// Index of functions
+// 1. List sf_create - Create Stageframe for Population Matrix Projection Analysis
+// 2. List actualstage3 - Calculate Actual Stage, Age, Stage-Pair, or Age-Stage Distributions
+// 3. DataFrame density_reassess - Check and Reorganize Density Input Table Into Usable Format
+// 4. DataFrame density_input - Set Density Dependence Relationships in Matrix Elements
+// 5. List supplemental - Create a Data Frame of Supplemental Data for MPM Development
+// 6. List edit_lM - Edit an MPM based on Supplemental Data
+
+
 //' Create Stageframe for Population Matrix Projection Analysis
 //' 
 //' Function \code{sf_create()} returns a data frame describing each ahistorical
@@ -6405,11 +6415,11 @@ DataFrame density_input(List mpm, Nullable<RObject> stage3 = R_NilValue,
 //' Create a Data Frame of Supplemental Data for MPM Development
 //' 
 //' Function \code{supplemental()} provides all necessary supplemental data for
-//' matrix estimation, particularly bringing together data on proxy rates, data
-//' to overwrite existing rates, identified reproductive transitions complete,
-//' and fecundity multipliers. The function should be used to incorporate data
-//' that affects all matrices to be created. To edit MPMs after creation, use
-//' \code{\link{edit_lM}()} instead.
+//' matrix estimation. It allows the establishment of proxy rates, the entry of
+//' data to overwrite or offset existing rates, the identification of complete
+//' reproductive transitions, and the entry of rate multipliers. The function
+//' should be used to incorporate data that affects all matrices to be created.
+//' To edit MPMs after creation, use \code{\link{edit_lM}()} instead.
 //' 
 //' @name supplemental
 //' 
@@ -6451,9 +6461,15 @@ DataFrame density_input(List mpm, Nullable<RObject> stage3 = R_NilValue,
 //' transition. Only needed if a transition will be replaced by another
 //' estimated transition, and only in age-based and age-by-stage MPMs.
 //' @param givenrate A fixed rate or probability to replace for the transition
-//' described by \code{stage3}, \code{stage2}, and \code{stage1}.
-//' @param multiplier A vector of numeric multipliers for fecundity or for proxy
-//' transitions. Defaults to \code{1}.
+//' described by \code{stage3}, \code{stage2}, \code{stage1}, and/or
+//' \code{age2}.
+//' @param offset A fixed numeric value to add to the transition described by
+//' \code{stage3}, \code{stage2}, \code{stage1}, and/or \code{age2}.
+//' @param multiplier A vector of numeric multipliers for the transition
+//' described by \code{stage3}, \code{stage2}, \code{stage1}, and/or
+//' \code{age2}, or for the proxy transitions described by \code{eststage3},
+//' \code{eststage2}, \code{eststage1}, and/or \code{estage2}. Defaults to
+//' \code{1}.
 //' @param type A vector denoting the kind of transition between occasions
 //' \emph{t} and \emph{t}+1 to be replaced. This should be entered as \code{1},
 //' \code{S}, or \code{s} for the replacement of a survival transition;
@@ -6491,6 +6507,8 @@ DataFrame density_input(List mpm, Nullable<RObject> stage3 = R_NilValue,
 //' \item{estage2}{Age at occasion \emph{t} in the transition to replace the
 //' transition designated by \code{age2}.}
 //' \item{givenrate}{A constant to be used as the value of the transition.}
+//' \item{offset}{A constant value to be added to the transition or proxy
+//' transition.}
 //' \item{multiplier}{A multiplier for proxy transitions or for fecundity.}
 //' \item{convtype}{Designates whether the transition from occasion \emph{t} to
 //' occasion \emph{t}+1 is a survival transition probability (1), a fecundity
@@ -6501,8 +6519,10 @@ DataFrame density_input(List mpm, Nullable<RObject> stage3 = R_NilValue,
 //' 
 //' @section Notes:
 //' Negative values are not allowed in \code{givenrate} and \code{multiplier}
-//' input. Stage entries should not be used for purely age-based MPMs, and age
-//' entries should not be used for purely stage-based MPMs.
+//' input, but are allowed in \code{offset}, if values are to be subtracted from
+//' specific estimated transitions. Stage entries should not be used for purely
+//' age-based MPMs, and age entries should not be used for purely stage-based
+//' MPMs.
 //' 
 //' Fecundity multiplier data supplied via the \code{supplemental()} function
 //' acts in the same way as non-zero entries supplied via a reproductive matrix,
@@ -6536,6 +6556,13 @@ DataFrame density_input(List mpm, Nullable<RObject> stage3 = R_NilValue,
 //' yield fecundity, then stage 2 to stage 3 can be set to
 //' \code{multiplier = 1.0} with \code{convtype = 3}, and the same transition
 //' for \code{age2 = c(1, 2)} can be set to \code{multiplier = c(0, 0)}.
+//' 
+//' Several operations may be included per transition. Operations on the same
+//' row of the resulting data frame are generally handled with given rate
+//' substitutions first, then with proxy transitions, then by additive offsets,
+//' and finally by multipliers. This order can be manipulated by ordering
+//' operations across rows, with higher numbered rows in the data frame being
+//' performed later.
 //' 
 //' @seealso \code{\link{edit_lM}()}
 //' 
@@ -6628,13 +6655,10 @@ Rcpp::List supplemental (bool historical = true, bool stagebased = true,
   bool agebased = false, Nullable<RObject> stageframe = R_NilValue,
   Nullable<RObject> stage3 = R_NilValue, Nullable<RObject> stage2 = R_NilValue,
   Nullable<RObject> stage1 = R_NilValue, Nullable<RObject> age2 = R_NilValue,
-  Nullable<RObject> eststage3 = R_NilValue,
-  Nullable<RObject> eststage2 = R_NilValue,
-  Nullable<RObject> eststage1 = R_NilValue,
-  Nullable<RObject> estage2 = R_NilValue,
-  Nullable<RObject> givenrate = R_NilValue,
-  Nullable<RObject> multiplier = R_NilValue,
-  Nullable<RObject> type = R_NilValue,
+  Nullable<RObject> eststage3 = R_NilValue, Nullable<RObject> eststage2 = R_NilValue,
+  Nullable<RObject> eststage1 = R_NilValue, Nullable<RObject> estage2 = R_NilValue,
+  Nullable<RObject> givenrate = R_NilValue, Nullable<RObject> offset = R_NilValue,
+  Nullable<RObject> multiplier = R_NilValue, Nullable<RObject> type = R_NilValue,
   Nullable<RObject> type_t12 = R_NilValue) {
   
   int wtf {-1};
@@ -6691,6 +6715,7 @@ Rcpp::List supplemental (bool historical = true, bool stagebased = true,
   StringVector eststage1_;
   IntegerVector estage2_;
   NumericVector givenrate_;
+  NumericVector offset_;
   NumericVector multiplier_;
   IntegerVector type_;
   IntegerVector type_t12_;
@@ -6703,6 +6728,9 @@ Rcpp::List supplemental (bool historical = true, bool stagebased = true,
   int eststage2_length {0};
   int eststage1_length {0};
   int estage2_length {0};
+  int givenrate_length {0};
+  int offset_length {0};
+  int multiplier_length {0};
   int type_length {0};
   int type_t12_length {0};
   
@@ -6757,7 +6785,7 @@ Rcpp::List supplemental (bool historical = true, bool stagebased = true,
       }
       
     } else {
-      throw Rcpp::exception("Please enter stage information (stage3) as text.", 
+      throw Rcpp::exception("Please enter argument stage3 as text.", 
         false);
     }
   } else if (wtf != 3) {
@@ -6798,7 +6826,7 @@ Rcpp::List supplemental (bool historical = true, bool stagebased = true,
       }
       
     } else {
-      throw Rcpp::exception("Please enter stage information (stage2) as text.",
+      throw Rcpp::exception("Please enter argument stage2 as text.",
         false);
     }
   } else if (wtf != 3) {
@@ -6848,7 +6876,7 @@ Rcpp::List supplemental (bool historical = true, bool stagebased = true,
       stage1_length = stage2_length;
       
     } else {
-      throw Rcpp::exception("Please enter stage information (stage1) as text.", 
+      throw Rcpp::exception("Please enter argument stage1 as text.", 
         false);
     }
   } else {
@@ -6877,7 +6905,7 @@ Rcpp::List supplemental (bool historical = true, bool stagebased = true,
       age2_ = age2_temp;
       age2_length = stage2_length;
     } else {
-      throw Rcpp::exception("Please enter age information (age2) in integer format.",
+      throw Rcpp::exception("Please enter argument age2 in integer format.",
         false);
     }
   } else {
@@ -6905,7 +6933,7 @@ Rcpp::List supplemental (bool historical = true, bool stagebased = true,
             if (eststage3_(i) == all_groups(j)) found_stage = true;
           }
           if (eststage3_(i) == "NotAlive") {
-            throw Rcpp::exception("Stage \"NotAlive\" is only allowed as input in eststage1.", false);
+            throw Rcpp::exception("Stage \"NotAlive\" is only allowed in argument eststage1.", false);
           }
         } else found_stage = true;
         
@@ -6924,8 +6952,7 @@ Rcpp::List supplemental (bool historical = true, bool stagebased = true,
       eststage3_length = stage3_length;
       
     } else {
-      throw Rcpp::exception("Please enter stage information (eststage3) as text.",
-        false);
+      throw Rcpp::exception("Please enter argument eststage3 as text.", false);
     }
   } else if (stage3_length != 0) {
     StringVector eststage3_temp (stage3_length, NA_STRING);
@@ -6952,7 +6979,7 @@ Rcpp::List supplemental (bool historical = true, bool stagebased = true,
             if (eststage2_(i) == all_groups(j)) found_stage = true;
           }
           if (eststage2_(i) == "NotAlive") {
-            throw Rcpp::exception("Stage \"NotAlive\" is only allowed as input in eststage1.", false);
+            throw Rcpp::exception("Stage \"NotAlive\" is only allowed in argument eststage1.", false);
           }
         } else found_stage = true;
         
@@ -6971,8 +6998,7 @@ Rcpp::List supplemental (bool historical = true, bool stagebased = true,
       eststage2_length = stage2_length;
       
     } else {
-      throw Rcpp::exception("Please enter stage information (eststage2) as text.",
-        false);
+      throw Rcpp::exception("Please enter argument eststage2 as text.", false);
     }
   } else if (stage2_length != 0) {
     StringVector eststage2_temp (stage2_length, NA_STRING);
@@ -7016,8 +7042,7 @@ Rcpp::List supplemental (bool historical = true, bool stagebased = true,
       eststage1_length = stage2_length;
       
     } else {
-      throw Rcpp::exception("Please enter stage information (eststage1) as text.",
-        false);
+      throw Rcpp::exception("Please enter argument eststage1 as text.", false);
     }
   } else if (stage2_length != 0) {
     StringVector eststage1_temp (stage2_length, NA_STRING);
@@ -7043,7 +7068,7 @@ Rcpp::List supplemental (bool historical = true, bool stagebased = true,
       estage2_ = estage2_new;
       
     } else {
-      throw Rcpp::exception("Please enter age information (estage2) in integer format.",
+      throw Rcpp::exception("Please enter argument estage2 in integer format.",
         false);
     }
   } else {
@@ -7062,10 +7087,15 @@ Rcpp::List supplemental (bool historical = true, bool stagebased = true,
     if (is<NumericVector>(givenrate)) {
       givenrate_ = as<NumericVector>(givenrate);
       
+      givenrate_length = static_cast<int>(givenrate_.length());
       arma::vec gvr_arma = as<arma::vec>(givenrate_);
       arma::uvec neg_tester = find(gvr_arma < 0.0);
       if (neg_tester.n_elem > 0) {
         Rf_warningcall(R_NilValue, "Some entered given rate values are negative.");
+      }
+      
+      if (givenrate_length != stage2_length && givenrate_length != age2_length) {
+        pop_error("givenrate", "vector stage2 or age2", "", 29);
       }
     } else if (is<LogicalVector>(givenrate)) {
       if (age2_length != 0) {
@@ -7077,7 +7107,7 @@ Rcpp::List supplemental (bool historical = true, bool stagebased = true,
       }
       
     } else {
-      throw Rcpp::exception("Please enter given rate information (givenrate) in numeric format.",
+      throw Rcpp::exception("Please enter argument given rate in numeric format.",
         false);
     }
   } else {
@@ -7090,14 +7120,61 @@ Rcpp::List supplemental (bool historical = true, bool stagebased = true,
     }
   }
   
+  if (offset.isNotNull()) {
+    if (is<NumericVector>(offset)) {
+      offset_ = as<NumericVector>(offset);
+      
+      offset_length = static_cast<int>(offset_.length());
+      unsigned int na_count {0};
+      for (int i = 0; i < offset_length; i++) { 
+        if (NumericVector::is_na(offset_(i))) {
+          offset_(i) = 0.;
+          na_count++;
+        }
+        if (na_count == 1) {
+          Rf_warningcall(R_NilValue, "NA values in argument offset will be treated as 0.");
+        }
+      }
+      
+      if (offset_length != stage2_length && offset_length != age2_length) {
+        pop_error("offset", "vector stage2 or age2", "", 29);
+      }
+    } else if (is<LogicalVector>(offset)) {
+      if (age2_length != 0) {
+        NumericVector offset_temp (age2_length, 0.);
+        offset_ = offset_temp;
+      } else if (stage2_length != 0) {
+        NumericVector offset_temp (stage2_length, 0.);
+        offset_ = offset_temp;
+      }
+      
+    } else {
+      throw Rcpp::exception("Please enter argument offset in numeric format.",
+        false);
+    }
+  } else {
+    if (age2_length != 0) {
+      NumericVector offset_temp (age2_length, 0.);
+      offset_ = offset_temp;
+    } else if (stage2_length != 0) {
+      NumericVector offset_temp (stage2_length, 0.);
+      offset_ = offset_temp;
+    }
+  }
+  
   if (multiplier.isNotNull()) {
     if (is<NumericVector>(multiplier)) {
       multiplier_ = as<NumericVector>(multiplier);
       
+      multiplier_length = static_cast<int>(multiplier_.length());
       arma::vec mpl_arma = as<arma::vec>(multiplier_);
       arma::uvec neg_tester = find(mpl_arma < 0.0);
       if (neg_tester.n_elem > 0) {
         Rf_warningcall(R_NilValue, "Some entered multiplier values are negative.");
+      }
+      
+      if (multiplier_length != stage2_length && multiplier_length != age2_length) {
+        pop_error("multiplier", "vector stage2 or age2", "", 29);
       }
     } else if (is<LogicalVector>(multiplier)) {
       if (age2_length != 0) {
@@ -7109,7 +7186,7 @@ Rcpp::List supplemental (bool historical = true, bool stagebased = true,
       }
       
     } else {
-      throw Rcpp::exception("Please enter multiplier information (multiplier) in numeric format.",
+      throw Rcpp::exception("Please enter argument multiplier in numeric format.",
         false);
     }
   } else {
@@ -7150,13 +7227,13 @@ Rcpp::List supplemental (bool historical = true, bool stagebased = true,
         } else if (stringcompare_simple(as<std::string>(type_sv(i)), "r", true)) {
           type_temp(i) = 3;
         } else {
-          throw Rcpp::exception("Please enter transition type information (type) using only integers 1, 2, and 3.",
+          throw Rcpp::exception("Please enter argument type using only integers 1, 2, and 3.",
             false);
         }
         type_ = type_temp;
       }
     } else {
-      throw Rcpp::exception("Please enter transition type information (type) in integer format.",
+      throw Rcpp::exception("Please enter argument type in integer format.",
         false);
     }
   } else {
@@ -7201,7 +7278,7 @@ Rcpp::List supplemental (bool historical = true, bool stagebased = true,
         type_t12_ = type_t12_temp;
       }
     } else {
-      throw Rcpp::exception("Please enter transition type information (type_t12) in integer format.",
+      throw Rcpp::exception("Please enter argument type_t12 in integer format.",
         false);
     }
   }
@@ -7305,7 +7382,7 @@ Rcpp::List supplemental (bool historical = true, bool stagebased = true,
     eststage1_length = stage2_length;
   }
   
-  List supplement (12);
+  List supplement (13);
   supplement(0) = stage3_;
   supplement(1) = stage2_;
   supplement(2) = stage1_;
@@ -7315,13 +7392,14 @@ Rcpp::List supplemental (bool historical = true, bool stagebased = true,
   supplement(6) = eststage1_;
   supplement(7) = estage2_;
   supplement(8) = givenrate_;
-  supplement(9) = multiplier_;
-  supplement(10) = type_;
-  supplement(11) = type_t12_;
+  supplement(9) = offset_;
+  supplement(10) = multiplier_;
+  supplement(11) = type_;
+  supplement(12) = type_t12_;
   
   StringVector supp_names = {"stage3", "stage2", "stage1", "age2", "eststage3",
-    "eststage2", "eststage1", "estage2", "givenrate", "multiplier", "convtype",
-    "convtype_t12"};
+    "eststage2", "eststage1", "estage2", "givenrate", "offset", "multiplier",
+    "convtype", "convtype_t12"};
   StringVector supp_class = {"data.frame", "lefkoSD"};
   
   supplement.attr("class") = supp_class;

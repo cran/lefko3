@@ -50,7 +50,7 @@ Output as a nested list corresponding to each pop-patch - replicate.}
 }
 \description{
 Function \code{append_lP()} combines two population projections. It takes
-two \code{lefkoProj} objects and appends them into a new \code{lefkoPrpoj}
+two \code{lefkoProj} objects and appends them into a new \code{lefkoProj}
 object.
 }
 \section{Notes}{

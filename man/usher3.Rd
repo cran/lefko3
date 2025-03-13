@@ -2,7 +2,7 @@
 % Please edit documentation in R/RcppExports.R
 \name{usher3}
 \alias{usher3}
-\title{Two-parameter Usher function}
+\title{Two-Parameter Usher Function}
 \usage{
 usher3(
   start_value,

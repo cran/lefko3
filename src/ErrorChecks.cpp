@@ -4,6 +4,13 @@
 using namespace Rcpp;
 using namespace arma;
 
+
+// Index of Functions
+// 1. List .hoffmannofstuttgart Core Engine for cond_hmpm()
+// 2. List .hoffmannofstuttgart_sp Core Engine for cond_hmpm() with Sparse Matrices
+// 3. List cond_hmpm Extract Conditional Ahistorical Matrices from Historical MPM
+// 4. List cond_diff Extract Conditional Ahistorical Difference Matrices
+
 //' Core Engine for cond_hmpm()
 //' 
 //' Creates a list of conditional ahistorical matrices in the style noted in
@@ -23,8 +30,8 @@ using namespace arma;
 //' @keywords internal
 //' @noRd
 // [[Rcpp::export(.hoffmannofstuttgart)]]
-List hoffmannofstuttgart(arma::mat& mainmat, DataFrame indices, int ahstages,
-  StringVector stagenames) {
+Rcpp::List hoffmannofstuttgart(arma::mat& mainmat, DataFrame indices,
+  int ahstages, StringVector stagenames) {
   arma::uvec stage1 = indices["stage1"];
   arma::uvec stage2 = indices["stage2"];
   arma::uvec stage3 = indices["stage3"];
@@ -57,7 +64,7 @@ List hoffmannofstuttgart(arma::mat& mainmat, DataFrame indices, int ahstages,
   return (condlist);
 }
 
-//' Core Engine for cond_hmpm()
+//' Core Engine for cond_hmpm() with Sparse Matrices
 //' 
 //' Creates a list of conditional ahistorical matrices in the style noted in
 //' deVries and Caswell (2018).
@@ -76,7 +83,7 @@ List hoffmannofstuttgart(arma::mat& mainmat, DataFrame indices, int ahstages,
 //' @keywords internal
 //' @noRd
 // [[Rcpp::export(.hoffmannofstuttgart_sp)]]
-List hoffmannofstuttgart_sp(arma::sp_mat& mainmat, DataFrame indices,
+Rcpp::List hoffmannofstuttgart_sp(arma::sp_mat& mainmat, DataFrame indices,
   int ahstages, StringVector stagenames) {
   arma::uvec stage1 = indices["stage1"];
   arma::uvec stage2 = indices["stage2"];

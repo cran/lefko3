@@ -1,3 +1,33 @@
+# lefko3 6.4.0 (2025-03-13)
+
+## NEW FEATURES
+
+* Function cycle_check() created to test for stage discontinuities in matrices.
+
+* Function-based matrix building procedures now test for NA values of model
+  coefficients, and display warnings if found.
+  
+* Function supplemental() now allows additive offsets to transition elements in
+  MPMs and projections.
+
+## USER VISIBLE CHANGES
+
+* Updated project URL.
+
+* Function summary.lefkoMat() now also checks for stage discontinuities.
+
+* Updated and standardized error messages.
+
+* Vignette 1 updated with offset info.
+
+## BUG FIXES
+
+* Fixed error in projection3() resulting in shuffled starting frames under
+  some conditions in which stageframes are shuffled from their original state.
+  
+* Fixed error in function f_projection3() coming from handling of tertiary
+  individual covariate.
+
 # lefko3 6.3.2 (2025-01-06)
 
 ## NEW FEATURES

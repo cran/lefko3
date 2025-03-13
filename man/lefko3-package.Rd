@@ -47,7 +47,7 @@ population models. \emph{Methods in Ecology and Evolution} 12(2): 378-382.
 \seealso{
 Useful links:
 \itemize{
-  \item \url{http://www.sheffersonlab.com/projects.html}
+  \item \url{http://revolutionarydemography.com/projects.html}
 }
 
 }

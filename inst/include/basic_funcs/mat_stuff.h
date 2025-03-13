@@ -10,21 +10,23 @@ using namespace arma;
 // Function index:
 // 1. arma::uvec spmat_index  Create Element Index Meeting Condition for Sparse Matrix
 // 2. arma::uvec general_index  Create General Element Index for Any lefkoMat Matrix
-// 3. Rcpp::List decomp3  Full Eigen Analysis of a Single Dense Matrix
-// 4. Rcpp::List decomp3sp  Full Eigen Analysis of a Single Sparse Matrix
-// 5. Rcpp::List decomp3sp_inp  Full Eigen Analysis of a Single Sparse Matrix, with Sparse Input
+// 3. List decomp3  Full Eigen Analysis of a Single Dense Matrix
+// 4. List decomp3sp  Full Eigen Analysis of a Single Sparse Matrix
+// 5. List decomp3sp_inp  Full Eigen Analysis of a Single Sparse Matrix, with Sparse Input
 // 6. arma::mat ovreplace  Re-index Projection Matrix On Basis of Overwrite Table
-// 7. Rcpp::DataFrame sf_core  Creates Base Skeleton Stageframe
+// 7. DataFrame sf_core  Creates Base Skeleton Stageframe
 // 8. DataFrame paramnames_skeleton  Base Skeleton Data Frame for Paramnames Objects
-// 9. Rcpp::List turbogeodiesel  Estimates Mean LefkoMat Object for Historical MPM
-// 10. Rcpp::List geodiesel  Estimates Mean LefkoMat Object for Ahistorical MPM
+// 9. List turbogeodiesel  Estimates Mean LefkoMat Object for Historical MPM
+// 10. List geodiesel  Estimates Mean LefkoMat Object for Ahistorical MPM
 // 11. int supp_decision1  Create Skeleton Plan of Expanded Supplemental Table
 // 12. String supp_decision2  Decide on Stage for Each Entry in Supplemental Table
-// 13. Rcpp::DataFrame supp_reassess  Expand Supplemental Table Given User Input
-// 14. Rcpp::DataFrame age_expanded  Expand Supplemental Table by Age Inputs
-// 15. Rcpp::DataFrame hst_maker  Creates hstages Data Frames
-// 16. Rcpp::DataFrame age_maker  Creates agestages Data Frames
-// 17. Rcpp::List theoldpizzle  Create Element Index for Matrix Estimation
+// 13. DataFrame supp_reassess  Expand Supplemental Table Given User Input
+// 14. DataFrame age_expanded  Expand Supplemental Table by Age Inputs
+// 15. DataFrame hst_maker  Creates hstages Data Frames
+// 16. DataFrame age_maker  Creates agestages Data Frames
+// 17. List theoldpizzle  Create Element Index for Matrix Estimation
+// 18. List sf_reassess_internal Standardize Stageframe For MPM Analysis
+// 19. List sf_leslie Create Stageframe for Population Matrix Projection Analysis
 
 
 namespace LefkoMats {
@@ -237,27 +239,32 @@ namespace LefkoMats {
   //' fecundity multiplier (3).
   //' @param eststag3 Vector of new stages in time \emph{t}+1.
   //' @param gvnrate Vector of replacement transition values.
+  //' @param offset Vector of additive offset values for transitions.
   //' @param multipl Vector of fecundity multipliers.
   //' 
-  //' @return A matrix. Column 1 is the given rate for a survival transitions,
-  //' Column 2 is the proxy transition to be used to estimate that transition.
-  //' Column 3 is the given rate for a fecundity transitions. Column 4 is the
-  //' proxy transition to be used to estimate that transition. Column 5 is a
-  //' vector of fecundity multipliers, in cases where no given rate or proxy is to
-  //' be used but fecundity is to be multiplied by some value. Column 6 is a
-  //' vector of survival transition multipliers. Column 7 is a vector of fecundity
-  //' transition multipliers.
+  //' @return A matrix with 9 columns. Column 1 is the given rate for a survival
+  //' transition. Column 2 is the proxy transition to be used to estimate that
+  //' transition. Column 3 is the given rate for a fecundity transition. Column
+  //' 4 is the proxy transition to be used to estimate that transition. Column 5
+  //' is a vector of fecundity multipliers, in cases where no given rate or
+  //' proxy is to be used but fecundity is to be multiplied by some value.
+  //' Column 6 is a vector of survival transition multipliers. Column 7 is a
+  //' vector of fecundity transition multipliers. Column 8 is a vector of
+  //' additive offsets to survival transitions. Column 9 is a vector of additive
+  //' offsets to fecundity transitions.
   //' 
   //' @keywords internal
   //' @noRd
   inline arma::mat ovreplace (arma::vec allst321, arma::vec idx321old,
     arma::vec idx321new, arma::vec convtype, arma::vec eststag3, 
-    arma::vec gvnrate, arma::vec multipl) {
+    arma::vec gvnrate, arma::vec offset, arma::vec multipl) {
     
     int n = static_cast<int>(idx321new.n_elem);
     
-    arma::mat replacements(allst321.n_elem, 7);
+    arma::mat replacements(allst321.n_elem, 9);
     replacements.fill(-1.0);
+    replacements.col(7).fill(0.);
+    replacements.col(8).fill(0.);
     
     for (int i = 0; i < n; i++) {
       arma::uvec correctplace = find(allst321 == idx321old(i));
@@ -265,17 +272,19 @@ namespace LefkoMats {
       int m = static_cast<int>(correctplace.n_elem); 
       
       for (int j = 0; j < m; j++) {
-        if (convtype(i) == 1.0) {
-          if (gvnrate(i) >= 0.0) {replacements(correctplace(j), 0) = gvnrate(i);}
+        if (convtype(i) == 1.) {
+          if (gvnrate(i) >= 0.) {replacements(correctplace(j), 0) = gvnrate(i);}
           if (eststag3(i) != -1 && idx321new(i) >= 0) {replacements(correctplace(j), 1) = idx321new(i);}
+          if (offset(i) != 0.) {replacements(correctplace(j), 7) = offset(i);}
         }
         
-        if (convtype(i) == 2.0) {
-          if (gvnrate(i) >= 0.0) {replacements(correctplace(j), 2) = gvnrate(i);}
+        if (convtype(i) == 2.) {
+          if (gvnrate(i) >= 0.) {replacements(correctplace(j), 2) = gvnrate(i);}
           if (eststag3(i) != -1 && idx321new(i) >= 0) {replacements(correctplace(j), 3) = idx321new(i);}
+          if (offset(i) != 0.) {replacements(correctplace(j), 8) = offset(i);}
         }
         
-        if (convtype(i) == 3.0) {
+        if (convtype(i) == 3.) {
           replacements(correctplace(j), 4) = multipl(i);
         } else if (convtype(i) == 1.0) {
           replacements(correctplace(j), 5) = multipl(i);
@@ -1472,6 +1481,7 @@ namespace LefkoMats {
     StringVector eststage1_supp;
     IntegerVector estage2_supp;
     NumericVector givenrate_supp;
+    NumericVector offset_supp;
     NumericVector multiplier_supp;
     IntegerVector convtype_supp;
     IntegerVector convtype_t12_supp;
@@ -1492,6 +1502,7 @@ namespace LefkoMats {
       eststage2_supp = as<StringVector>(supplement_true["eststage2"]);
       eststage1_supp = as<StringVector>(supplement_true["eststage1"]);
       givenrate_supp = as<NumericVector>(supplement_true["givenrate"]);
+      offset_supp = as<NumericVector>(supplement_true["offset"]);
       multiplier_supp = as<NumericVector>(supplement_true["multiplier"]);
       convtype_supp = as<IntegerVector>(supplement_true["convtype"]);
       convtype_t12_supp = as<IntegerVector>(supplement_true["convtype_t12"]);
@@ -1541,7 +1552,8 @@ namespace LefkoMats {
       convtype_t12_supp = as<IntegerVector>(supplement_true["convtype_t12"]);
       
       supp_rows = givenrate_supp.length();
-      multiplier_supp = Rcpp::NumericVector::create(1.0, supp_rows);
+      offset_supp = Rcpp::NumericVector::create(0., supp_rows);
+      multiplier_supp = Rcpp::NumericVector::create(1., supp_rows);
       
       IntegerVector age2_supp_ (stage2_supp.length(), NA_INTEGER);
       IntegerVector estage2_supp_ (eststage2_supp.length(), NA_INTEGER);
@@ -1806,9 +1818,10 @@ namespace LefkoMats {
     StringVector eststage1_newsupp (newsupp_rows);
     IntegerVector estage2_newsupp (newsupp_rows);
     NumericVector givenrate_newsupp (newsupp_rows);
+    NumericVector offset_newsupp (newsupp_rows);
+    NumericVector multiplier_newsupp (newsupp_rows);
     IntegerVector convtype_newsupp (newsupp_rows);
     IntegerVector convtype_t12_newsupp (newsupp_rows);
-    NumericVector multiplier_newsupp (newsupp_rows);
     
     StringVector pop_newsupp (newsupp_rows);
     StringVector patch_newsupp (newsupp_rows);
@@ -1851,6 +1864,7 @@ namespace LefkoMats {
                 group_ratchet3, group_baseline3, prevl3);
             
             givenrate_newsupp(basepoints(i) + overall_counter) = givenrate_supp(i);
+            offset_newsupp(basepoints(i) + overall_counter) = offset_supp(i);
             multiplier_newsupp(basepoints(i) + overall_counter) = multiplier_supp(i);
             convtype_newsupp(basepoints(i) + overall_counter) = convtype_supp(i);
             convtype_t12_newsupp(basepoints(i) + overall_counter) = convtype_t12_supp(i);
@@ -1903,7 +1917,7 @@ namespace LefkoMats {
       }
     }
     
-    Rcpp::List newsupplement(15);
+    Rcpp::List newsupplement(16);
     
     newsupplement(0) = stage3_newsupp;
     newsupplement(1) = stage2_newsupp;
@@ -1914,16 +1928,17 @@ namespace LefkoMats {
     newsupplement(6) = eststage1_newsupp;
     newsupplement(7) = estage2_newsupp;
     newsupplement(8) = givenrate_newsupp;
-    newsupplement(9) = multiplier_newsupp;
-    newsupplement(10) = convtype_newsupp;
-    newsupplement(11) = convtype_t12_newsupp;
-    newsupplement(12) = pop_newsupp;
-    newsupplement(13) = patch_newsupp;
-    newsupplement(14) = year2_newsupp;
+    newsupplement(9) = offset_newsupp;
+    newsupplement(10) = multiplier_newsupp;
+    newsupplement(11) = convtype_newsupp;
+    newsupplement(12) = convtype_t12_newsupp;
+    newsupplement(13) = pop_newsupp;
+    newsupplement(14) = patch_newsupp;
+    newsupplement(15) = year2_newsupp;
     
     CharacterVector su_namevec = {"stage3", "stage2", "stage1", "age2",
-      "eststage3", "eststage2", "eststage1", "estage2", "givenrate", "multiplier",
-      "convtype", "convtype_t12", "pop", "patch", "year2"};
+      "eststage3", "eststage2", "eststage1", "estage2", "givenrate", "offset",
+      "multiplier", "convtype", "convtype_t12", "pop", "patch", "year2"};
     CharacterVector su_newclasses = {"data.frame", "lefkoSD"};
     newsupplement.attr("names") = su_namevec;
     newsupplement.attr("row.names") = Rcpp::IntegerVector::create(NA_INTEGER, newsupp_rows);
@@ -1960,6 +1975,7 @@ namespace LefkoMats {
     StringVector supp_eststage1 = as<StringVector>(supplement["eststage1"]);
     IntegerVector supp_estage2 = as<IntegerVector>(supplement["estage2"]);
     NumericVector supp_givenrate = as<NumericVector>(supplement["givenrate"]);
+    NumericVector supp_offset = as<NumericVector>(supplement["offset"]);
     NumericVector supp_multiplier = as<NumericVector>(supplement["multiplier"]);
     IntegerVector supp_convtype = as<IntegerVector>(supplement["convtype"]);
     IntegerVector supp_convtype_t12 = as<IntegerVector>(supplement["convtype_t12"]);
@@ -2009,6 +2025,7 @@ namespace LefkoMats {
     StringVector new_supp_eststage1 (new_length);
     IntegerVector new_supp_estage2 (new_length);
     NumericVector new_supp_givenrate (new_length);
+    NumericVector new_supp_offset (new_length);
     NumericVector new_supp_multiplier (new_length);
     IntegerVector new_supp_convtype (new_length);
     IntegerVector new_supp_convtype_t12 (new_length);
@@ -2040,6 +2057,7 @@ namespace LefkoMats {
         }
         
         new_supp_givenrate(cookie_counter) = supp_givenrate(i);
+        new_supp_offset(cookie_counter) = supp_offset(i);
         new_supp_multiplier(cookie_counter) = supp_multiplier(i);
         new_supp_convtype(cookie_counter) = supp_convtype(i);
         new_supp_convtype_t12(cookie_counter) = supp_convtype_t12(i);
@@ -2057,7 +2075,8 @@ namespace LefkoMats {
       _["age2"] = new_supp_age2, _["eststage3"] = new_supp_eststage3,
       _["eststage2"] = new_supp_eststage2, _["eststage1"] = new_supp_eststage1,
       _["estage2"] = new_supp_estage2, _["givenrate"] = new_supp_givenrate,
-      _["multiplier"] = new_supp_multiplier, _["convtype"] = new_supp_convtype,
+      _["offset"] = new_supp_offset, _["multiplier"] = new_supp_multiplier,
+      _["convtype"] = new_supp_convtype,
       _["convtype_t12"] = new_supp_convtype_t12, _["pop"] = new_supp_pop,
       _["patch"] = new_supp_patch, _["year2"] = new_supp_year2);
     
@@ -2202,6 +2221,7 @@ namespace LefkoMats {
     StringVector oveststage2 = as<StringVector>(OverWrite["eststage2"]);
     StringVector oveststage1 = as<StringVector>(OverWrite["eststage1"]);
     arma::vec ovgivenrate = as<arma::vec>(OverWrite["givenrate"]);
+    arma::vec ovoffset = as<arma::vec>(OverWrite["offset"]);
     arma::vec ovmultiplier = as<arma::vec>(OverWrite["multiplier"]);
     arma::vec ovconvtype = as<arma::vec>(OverWrite["convtype"]);
     arma::vec ovconvt12 = as<arma::vec>(OverWrite["convtype_t12"]);
@@ -2216,17 +2236,18 @@ namespace LefkoMats {
     
     int totalages = (finalage - firstage) + 1;
     
-    arma::vec ovindex3(ovrows); // Originally (ovrows * totalages)
-    arma::vec ovindex2(ovrows);
-    arma::vec ovindex1(ovrows);
-    arma::vec ovnew3(ovrows);
-    arma::vec ovnew2(ovrows);
-    arma::vec ovnew1(ovrows);
-    arma::vec ovindexold321(ovrows);
-    arma::vec ovindexnew321(ovrows);
-    arma::vec ovnewgivenrate(ovrows);
-    arma::vec ovnewmultiplier(ovrows);
-    arma::vec ovconvtypeage(ovrows);
+    arma::vec ovindex3 (ovrows); // Originally (ovrows * totalages)
+    arma::vec ovindex2 (ovrows);
+    arma::vec ovindex1 (ovrows);
+    arma::vec ovnew3 (ovrows);
+    arma::vec ovnew2 (ovrows);
+    arma::vec ovnew1 (ovrows);
+    arma::vec ovindexold321 (ovrows);
+    arma::vec ovindexnew321 (ovrows);
+    arma::vec ovnewgivenrate (ovrows);
+    arma::vec ovnewoffset (ovrows, fill::zeros);
+    arma::vec ovnewmultiplier (ovrows, fill::zeros);
+    arma::vec ovconvtypeage (ovrows);
     ovindex3.fill(-1.0);
     ovindex2.fill(-1.0);
     ovindex1.fill(-1.0);
@@ -2236,7 +2257,6 @@ namespace LefkoMats {
     ovindexold321.fill(-1.0);
     ovindexnew321.fill(-1.0);
     ovnewgivenrate.fill(-1.0);
-    ovnewmultiplier.zeros();
     ovconvtypeage.fill(-1.0);
     
     arma::ivec newstageid = as<arma::ivec>(StageFrame["stage_id"]);
@@ -2296,95 +2316,97 @@ namespace LefkoMats {
     }
     
     // Set up vectors that will be put together into matrix map data frame
-    arma::ivec stage3(totallength, fill::zeros);
-    arma::ivec stage2n(totallength, fill::zeros);
-    arma::ivec stage2o(totallength, fill::zeros);
-    arma::ivec stage1(totallength, fill::zeros);
+    arma::ivec stage3 (totallength, fill::zeros);
+    arma::ivec stage2n (totallength, fill::zeros);
+    arma::ivec stage2o (totallength, fill::zeros);
+    arma::ivec stage1 (totallength, fill::zeros);
     
-    arma::ivec stageorder3(totallength, fill::zeros);
-    arma::ivec stageorder2n(totallength, fill::zeros);
-    arma::ivec stageorder2o(totallength, fill::zeros);
-    arma::ivec stageorder1(totallength, fill::zeros);
+    arma::ivec stageorder3 (totallength, fill::zeros);
+    arma::ivec stageorder2n (totallength, fill::zeros);
+    arma::ivec stageorder2o (totallength, fill::zeros);
+    arma::ivec stageorder1 (totallength, fill::zeros);
     
-    arma::vec size3(totallength, fill::zeros);
-    arma::vec size2n(totallength, fill::zeros);
-    arma::vec size2o(totallength, fill::zeros);
-    arma::vec size1(totallength, fill::zeros);
+    arma::vec size3 (totallength, fill::zeros);
+    arma::vec size2n (totallength, fill::zeros);
+    arma::vec size2o (totallength, fill::zeros);
+    arma::vec size1 (totallength, fill::zeros);
     
-    arma::vec sizeb3(totallength, fill::zeros);
-    arma::vec sizeb2n(totallength, fill::zeros);
-    arma::vec sizeb2o(totallength, fill::zeros);
-    arma::vec sizeb1(totallength, fill::zeros);
+    arma::vec sizeb3 (totallength, fill::zeros);
+    arma::vec sizeb2n (totallength, fill::zeros);
+    arma::vec sizeb2o (totallength, fill::zeros);
+    arma::vec sizeb1 (totallength, fill::zeros);
     
-    arma::vec sizec3(totallength, fill::zeros);
-    arma::vec sizec2n(totallength, fill::zeros);
-    arma::vec sizec2o(totallength, fill::zeros);
-    arma::vec sizec1(totallength, fill::zeros);
+    arma::vec sizec3 (totallength, fill::zeros);
+    arma::vec sizec2n (totallength, fill::zeros);
+    arma::vec sizec2o (totallength, fill::zeros);
+    arma::vec sizec1 (totallength, fill::zeros);
     
-    arma::vec obs3(totallength, fill::zeros);
-    arma::vec obs2n(totallength, fill::zeros);
-    arma::vec obs2o(totallength, fill::zeros);
-    arma::vec obs1(totallength, fill::zeros);
+    arma::vec obs3 (totallength, fill::zeros);
+    arma::vec obs2n (totallength, fill::zeros);
+    arma::vec obs2o (totallength, fill::zeros);
+    arma::vec obs1 (totallength, fill::zeros);
     
-    arma::vec rep3(totallength, fill::zeros);
-    arma::vec rep2n(totallength, fill::zeros);
-    arma::vec rep2o(totallength, fill::zeros);
-    arma::vec rep1(totallength, fill::zeros);
+    arma::vec rep3 (totallength, fill::zeros);
+    arma::vec rep2n (totallength, fill::zeros);
+    arma::vec rep2o (totallength, fill::zeros);
+    arma::vec rep1 (totallength, fill::zeros);
     
-    arma::vec mat3(totallength, fill::zeros);
-    arma::vec mat2n(totallength, fill::zeros);
-    arma::vec mat2o(totallength, fill::zeros);
-    arma::vec mat1(totallength, fill::zeros);
+    arma::vec mat3 (totallength, fill::zeros);
+    arma::vec mat2n (totallength, fill::zeros);
+    arma::vec mat2o (totallength, fill::zeros);
+    arma::vec mat1 (totallength, fill::zeros);
     
-    arma::vec imm3(totallength, fill::zeros);
-    arma::vec imm2n(totallength, fill::zeros);
-    arma::vec imm2o(totallength, fill::zeros);
-    arma::vec imm1(totallength, fill::zeros);
+    arma::vec imm3 (totallength, fill::zeros);
+    arma::vec imm2n (totallength, fill::zeros);
+    arma::vec imm2o (totallength, fill::zeros);
+    arma::vec imm1 (totallength, fill::zeros);
     
-    arma::vec repentry3(totallength, fill::zeros);
-    arma::vec repentry2o(totallength, fill::zeros);
-    arma::vec almostborn1(totallength, fill::zeros);
+    arma::vec repentry3 (totallength, fill::zeros);
+    arma::vec repentry2o (totallength, fill::zeros);
+    arma::vec almostborn1 (totallength, fill::zeros);
     
-    arma::vec binwidth(totallength, fill::zeros);
-    arma::vec binbwidth(totallength, fill::zeros);
-    arma::vec bincwidth(totallength, fill::zeros);
+    arma::vec binwidth (totallength, fill::zeros);
+    arma::vec binbwidth (totallength, fill::zeros);
+    arma::vec bincwidth (totallength, fill::zeros);
     
-    arma::vec indata3(totallength, fill::zeros);
-    arma::vec indata2n(totallength, fill::zeros);
-    arma::vec indata2o(totallength, fill::zeros);
-    arma::vec indata1(totallength, fill::zeros);
+    arma::vec indata3 (totallength, fill::zeros);
+    arma::vec indata2n (totallength, fill::zeros);
+    arma::vec indata2o (totallength, fill::zeros);
+    arma::vec indata1 (totallength, fill::zeros);
     
-    arma::vec minage3(totallength, fill::zeros);
-    arma::vec minage2(totallength, fill::zeros);
-    arma::vec maxage3(totallength, fill::zeros);
-    arma::vec maxage2(totallength, fill::zeros);
+    arma::vec minage3 (totallength, fill::zeros);
+    arma::vec minage2 (totallength, fill::zeros);
+    arma::vec maxage3 (totallength, fill::zeros);
+    arma::vec maxage2 (totallength, fill::zeros);
     
-    arma::vec grp3(totallength, fill::zeros);
-    arma::vec grp2n(totallength, fill::zeros);
-    arma::vec grp2o(totallength, fill::zeros);
-    arma::vec grp1(totallength, fill::zeros);
+    arma::vec grp3 (totallength, fill::zeros);
+    arma::vec grp2n (totallength, fill::zeros);
+    arma::vec grp2o (totallength, fill::zeros);
+    arma::vec grp1 (totallength, fill::zeros);
     
-    arma::vec actualage(totallength, fill::zeros);
-    arma::vec index321(totallength); // No death transitions
+    arma::vec actualage (totallength, fill::zeros);
+    arma::vec index321 (totallength); // No death transitions
     arma::vec index321d (totallength); // Death transitions included
-    arma::vec index21(totallength);
-    arma::vec indatalong(totallength, fill::zeros);
-    arma::vec aliveequal(totallength);
-    arma::vec included(totallength, fill::zeros);
+    arma::vec index21 (totallength);
+    arma::vec indatalong (totallength, fill::zeros);
+    arma::vec aliveequal (totallength);
+    arma::vec included (totallength, fill::zeros);
     index321.fill(-1.0);
     index321d.fill(-1.0);
     index21.fill(-1.0);
     aliveequal.fill(-1.0);
     
-    arma::mat asadditions(totallength, 5, fill::zeros);
+    arma::mat asadditions (totallength, 5, fill::zeros);
     
-    arma::vec ovgivent(totallength);
-    arma::vec ovestt(totallength);
-    arma::vec ovgivenf(totallength);
-    arma::vec ovestf(totallength);
-    arma::vec ovrepentry(totallength, fill::zeros);
-    arma::vec ovsurvmult(totallength, fill::ones);
-    arma::vec ovfecmult(totallength, fill::ones);
+    arma::vec ovgivent (totallength);
+    arma::vec ovgivenf (totallength);
+    arma::vec ovestt (totallength);
+    arma::vec ovestf (totallength);
+    arma::vec ovoffsett (totallength, fill::zeros);
+    arma::vec ovoffsetf (totallength, fill::zeros);
+    arma::vec ovrepentry (totallength, fill::zeros);
+    arma::vec ovsurvmult (totallength, fill::ones);
+    arma::vec ovfecmult (totallength, fill::ones);
     ovgivent.fill(-1.0);
     ovestt.fill(-1.0);
     ovgivenf.fill(-1.0);
@@ -2433,50 +2455,53 @@ namespace LefkoMats {
     if (style == 0 && format == 2) { // Historical MPM deVries format
       if (ovrows > 0) {
         if (ovrows > 1 || ovconvtype(0) != -1.0) {
-        for (int i = 0; i < ovrows; i++) {  // Loop across overwrite rows
-          if (ovconvtype(i) > 1.0) { // Catches all changes to fecundity and reproductive multipliers
-            ovindexold321(i) = (ovindex3(i) - 1) + (prior_stage * nostages) + 
-              ((ovindex2(i) - 1) * nostages * nostages) + 
-              ((ovindex1(i) - 1) * nostages * nostages * nostages);
-              
-            ovindexnew321(i) = (ovnew3(i) - 1) + (prior_stage * nostages) + 
-              ((ovnew2(i) - 1) * nostages * nostages) + 
-              ((ovnew1(i) - 1) * nostages * nostages * nostages);
-          } else if (ovconvt12(i) == 2.0) { // Catches all survival terms with historical reproduction events
-            ovindexold321(i) = (ovindex3(i) - 1) + ((ovindex2(i) - 1) * nostages) + 
-              ((ovindex2(i) - 1) * nostages * nostages) + 
-              (prior_stage * nostages * nostages * nostages);
-              
-            ovindexnew321(i) = (ovnew3(i) - 1) + ((ovnew2(i) - 1) * nostages) + 
-              ((ovnew2(i) - 1) * nostages * nostages) + 
-              (prior_stage * nostages * nostages * nostages);
-          } else { // Full survival transitions
-            ovindexold321(i) = (ovindex3(i) - 1) + ((ovindex2(i) - 1) * nostages) + 
-              ((ovindex2(i) - 1) * nostages * nostages) + 
-              ((ovindex1(i) - 1) * nostages * nostages * nostages);
-              
-            ovindexnew321(i) = (ovnew3(i) - 1) + ((ovnew2(i) - 1) * nostages) + 
-              ((ovnew2(i) - 1) * nostages * nostages) + 
-              ((ovnew1(i) - 1) * nostages * nostages * nostages);
-          }
-          if (ovindexold321(i) < 0.0) ovindexold321(i) = -1.0;
-          if (ovindexnew321(i) < 0.0) ovindexnew321(i) = -1.0;
-          
-          if (!NumericVector::is_na(ovgivenrate(i))) {
-            ovnewgivenrate(i) = ovgivenrate(i);
-          }
-          if (NumericVector::is_na(ovmultiplier(i))) {
-            ovmultiplier(i) = 1;
-          }
-          ovnewmultiplier(i) = ovmultiplier(i);
-          
-          if (ovconvtype(i) == 3.0) {
-            for (int j = 0; j < nostages; j++) {
-              if (origstageid(j) == ovstage3(i)) ovrepentry_prior(j) = 1.0;
+          for (int i = 0; i < ovrows; i++) {  // Loop across overwrite rows
+            if (ovconvtype(i) > 1.0) { // Catches all changes to fecundity and reproductive multipliers
+              ovindexold321(i) = (ovindex3(i) - 1) + (prior_stage * nostages) + 
+                ((ovindex2(i) - 1) * nostages * nostages) + 
+                ((ovindex1(i) - 1) * nostages * nostages * nostages);
+                
+              ovindexnew321(i) = (ovnew3(i) - 1) + (prior_stage * nostages) + 
+                ((ovnew2(i) - 1) * nostages * nostages) + 
+                ((ovnew1(i) - 1) * nostages * nostages * nostages);
+            } else if (ovconvt12(i) == 2.0) { // Catches all survival terms with historical reproduction events
+              ovindexold321(i) = (ovindex3(i) - 1) + ((ovindex2(i) - 1) * nostages) + 
+                ((ovindex2(i) - 1) * nostages * nostages) + 
+                (prior_stage * nostages * nostages * nostages);
+                
+              ovindexnew321(i) = (ovnew3(i) - 1) + ((ovnew2(i) - 1) * nostages) + 
+                ((ovnew2(i) - 1) * nostages * nostages) + 
+                (prior_stage * nostages * nostages * nostages);
+            } else { // Full survival transitions
+              ovindexold321(i) = (ovindex3(i) - 1) + ((ovindex2(i) - 1) * nostages) + 
+                ((ovindex2(i) - 1) * nostages * nostages) + 
+                ((ovindex1(i) - 1) * nostages * nostages * nostages);
+                
+              ovindexnew321(i) = (ovnew3(i) - 1) + ((ovnew2(i) - 1) * nostages) + 
+                ((ovnew2(i) - 1) * nostages * nostages) + 
+                ((ovnew1(i) - 1) * nostages * nostages * nostages);
             }
-          }
-        } // i for loop
-      } // ovrows if statement
+            if (ovindexold321(i) < 0.0) ovindexold321(i) = -1.0;
+            if (ovindexnew321(i) < 0.0) ovindexnew321(i) = -1.0;
+            
+            if (!NumericVector::is_na(ovgivenrate(i))) {
+              ovnewgivenrate(i) = ovgivenrate(i);
+            }
+            if (!NumericVector::is_na(ovoffset(i))) {
+              if (ovoffset(i) != 0.) ovnewoffset(i) = ovoffset(i);
+            }
+            if (NumericVector::is_na(ovmultiplier(i))) {
+              ovmultiplier(i) = 1;
+            }
+            ovnewmultiplier(i) = ovmultiplier(i);
+            
+            if (ovconvtype(i) == 3.0) {
+              for (int j = 0; j < nostages; j++) {
+                if (origstageid(j) == ovstage3(i)) ovrepentry_prior(j) = 1.0;
+              }
+            }
+          } // i for loop
+        } // ovrows if statement
       }
       
       arma::uvec marked_for_repentry (nostages, fill::zeros); // Only in deVries format
@@ -2659,27 +2684,30 @@ namespace LefkoMats {
       
       if (ovrows > 0) {
         if (ovrows > 1 || ovconvtype(0) != -1.0) {
-        asadditions = LefkoMats::ovreplace(index321, ovindexold321, ovindexnew321,
-          ovconvtype, ovnew3, ovnewgivenrate, ovnewmultiplier);
-        
-        ovgivent = asadditions.col(0);
-        ovestt = asadditions.col(1);
-        ovgivenf = asadditions.col(2);
-        ovestf = asadditions.col(3);
-        
-        ovrepentry = asadditions.col(4);
-        ovsurvmult = asadditions.col(5);
-        ovfecmult = asadditions.col(6);
-        
-        arma::uvec workedupindex = find(ovrepentry > 0.0);
-        int changedreps = static_cast<int>(workedupindex.n_elem);
-        
-        if (changedreps > 0) {
-          for (int i = 0; i < changedreps; i++) {
-            repentry3(workedupindex(i)) = ovrepentry(workedupindex(i));
+          asadditions = LefkoMats::ovreplace(index321, ovindexold321,
+            ovindexnew321, ovconvtype, ovnew3, ovnewgivenrate, ovnewoffset,
+            ovnewmultiplier);
+          
+          ovgivent = asadditions.col(0);
+          ovestt = asadditions.col(1);
+          ovgivenf = asadditions.col(2);
+          ovestf = asadditions.col(3);
+          
+          ovrepentry = asadditions.col(4);
+          ovsurvmult = asadditions.col(5);
+          ovfecmult = asadditions.col(6);
+          ovoffsett = asadditions.col(7);
+          ovoffsetf = asadditions.col(8);
+          
+          arma::uvec workedupindex = find(ovrepentry > 0.0);
+          int changedreps = static_cast<int>(workedupindex.n_elem);
+          
+          if (changedreps > 0) {
+            for (int i = 0; i < changedreps; i++) {
+              repentry3(workedupindex(i)) = ovrepentry(workedupindex(i));
+            }
           }
-        }
-      } // ovreplace if statement
+        } // ovreplace if statement
       }
     } else if (style == 0 && format == 1) { // Historical MPM Ehrlen format
       if (ovrows > 0) {
@@ -2701,6 +2729,9 @@ namespace LefkoMats {
           
           if (!NumericVector::is_na(ovgivenrate(i))) {
             ovnewgivenrate(i) = ovgivenrate(i);
+          }
+          if (!NumericVector::is_na(ovoffset(i))) {
+            if (ovoffset(i) != 0.) ovnewoffset(i) = ovoffset(i);
           }
           if (NumericVector::is_na(ovmultiplier(i))) {
             ovmultiplier(i) = 1.0;
@@ -2865,27 +2896,29 @@ namespace LefkoMats {
       
       if (ovrows > 0) {
         if (ovrows > 1 || ovconvtype(0) != -1.0) {
-        asadditions = LefkoMats::ovreplace(index321, ovindexold321, ovindexnew321, ovconvtype, 
-          ovnew3, ovnewgivenrate, ovnewmultiplier);
-        
-        ovgivent = asadditions.col(0);
-        ovestt = asadditions.col(1);
-        ovgivenf = asadditions.col(2);
-        ovestf = asadditions.col(3);
-        ovsurvmult = asadditions.col(5);
-        ovfecmult = asadditions.col(6);
-        
-        ovrepentry = asadditions.col(4);
-        
-        arma::uvec workedupindex = find(ovrepentry > 0.0);
-        int changedreps = static_cast<int>(workedupindex.n_elem);
-        
-        if (changedreps > 0) {
-          for (int i = 0; i < changedreps; i++) {
-            repentry3(workedupindex(i)) = ovrepentry(workedupindex(i));
+          asadditions = LefkoMats::ovreplace(index321, ovindexold321,
+            ovindexnew321, ovconvtype, ovnew3, ovnewgivenrate, ovnewoffset,
+            ovnewmultiplier);
+          
+          ovgivent = asadditions.col(0);
+          ovestt = asadditions.col(1);
+          ovgivenf = asadditions.col(2);
+          ovestf = asadditions.col(3);
+          ovrepentry = asadditions.col(4);
+          ovsurvmult = asadditions.col(5);
+          ovfecmult = asadditions.col(6);
+          ovoffsett = asadditions.col(7);
+          ovoffsetf = asadditions.col(8);
+          
+          arma::uvec workedupindex = find(ovrepentry > 0.0);
+          int changedreps = static_cast<int>(workedupindex.n_elem);
+          
+          if (changedreps > 0) {
+            for (int i = 0; i < changedreps; i++) {
+              repentry3(workedupindex(i)) = ovrepentry(workedupindex(i));
+            }
           }
-        }
-      } // ovreplace if statement
+        } // ovreplace if statement
       }
     } else if (style == 1) { // Ahistorical case
       if (ovrows > 0) {
@@ -2900,6 +2933,9 @@ namespace LefkoMats {
           
           if (!NumericVector::is_na(ovgivenrate(i))) {
             ovnewgivenrate(i) = ovgivenrate(i);
+          }
+          if (!NumericVector::is_na(ovoffset(i))) {
+            if (ovoffset(i) != 0.) ovnewoffset(i) = ovoffset(i);
           }
           if (NumericVector::is_na(ovmultiplier(i))) {
             ovmultiplier(i) = 1;
@@ -3020,16 +3056,17 @@ namespace LefkoMats {
       if (ovrows > 0) {
         if (ovrows > 1 || ovconvtype(0) != -1.0) {
         asadditions = LefkoMats::ovreplace(index321, ovindexold321, ovindexnew321,
-          ovconvtype, ovnew3, ovnewgivenrate, ovnewmultiplier);
+          ovconvtype, ovnew3, ovnewgivenrate, ovnewoffset, ovnewmultiplier);
         
         ovgivent = asadditions.col(0);
         ovestt = asadditions.col(1);
         ovgivenf = asadditions.col(2);
         ovestf = asadditions.col(3);
+        ovrepentry = asadditions.col(4);
         ovsurvmult = asadditions.col(5);
         ovfecmult = asadditions.col(6);
-        
-        ovrepentry = asadditions.col(4);
+        ovoffsett = asadditions.col(7);
+        ovoffsetf = asadditions.col(8);
         
         arma::uvec workedupindex = find(ovrepentry > 0.0);
         int changedreps = static_cast<int>(workedupindex.n_elem);
@@ -3108,6 +3145,9 @@ namespace LefkoMats {
               if (!NumericVector::is_na(ovgivenrate(i))) {
                 ovnewgivenrate(i) = ovgivenrate(i);
               }
+              if (!NumericVector::is_na(ovoffset(i))) {
+                if (ovoffset(i) != 0.) ovnewoffset(i) = ovoffset(i);
+              }
               if (NumericVector::is_na(ovmultiplier(i))) ovmultiplier(i) = 1.0;
               
               ovnewmultiplier(i) = ovmultiplier(i);
@@ -3156,6 +3196,9 @@ namespace LefkoMats {
               }
               if (!NumericVector::is_na(ovgivenrate(i))) {
                 ovnewgivenrate(i) = ovgivenrate(i);
+              }
+              if (!NumericVector::is_na(ovoffset(i))) {
+                if (ovoffset(i) != 0.) ovnewoffset(i) = ovoffset(i);
               }
               if (NumericVector::is_na(ovmultiplier(i))) ovmultiplier(i) = 1.0;
               
@@ -3590,16 +3633,17 @@ namespace LefkoMats {
         if (ovrows > 1 || ovconvtype(0) != -1.0) {
         
         asadditions = LefkoMats::ovreplace(index321, ovindexold321, ovindexnew321,
-          ovconvtypeage, ovnew3, ovnewgivenrate, ovnewmultiplier);
+          ovconvtypeage, ovnew3, ovnewgivenrate, ovnewoffset, ovnewmultiplier);
         
         ovgivent = asadditions.col(0);
         ovestt = asadditions.col(1);
         ovgivenf = asadditions.col(2);
         ovestf = asadditions.col(3);
+        ovrepentry = asadditions.col(4);
         ovsurvmult = asadditions.col(5);
         ovfecmult = asadditions.col(6);
-        
-        ovrepentry = asadditions.col(4);
+        ovoffsett = asadditions.col(7);
+        ovoffsetf = asadditions.col(8);
         
         arma::uvec workedupindex = find(ovrepentry > 0.0);
         int changedreps = static_cast<int>(workedupindex.n_elem);
@@ -3614,7 +3658,7 @@ namespace LefkoMats {
     } // Age-by-stage loop (style = 2)
     
     // Output formatting
-    Rcpp::List output_longlist(60);
+    Rcpp::List output_longlist(62);
     int stage3_length = 0;
     
     arma::uvec used_indices;
@@ -3692,10 +3736,14 @@ namespace LefkoMats {
       
       NumericVector indatalong_new(new_length);
       NumericVector ovgivent_new(new_length);
-      NumericVector ovestt_new(new_length);
       NumericVector ovgivenf_new(new_length);
-    
+      
+      NumericVector ovoffsett_new(new_length);
+      NumericVector ovoffsetf_new(new_length);
+      
+      NumericVector ovestt_new(new_length);
       NumericVector ovestf_new(new_length);
+      
       NumericVector ovsurvmult_new(new_length);
       NumericVector ovfecmult_new(new_length);
       
@@ -3769,9 +3817,12 @@ namespace LefkoMats {
         indatalong_new(i) = indatalong(used_indices(i));
         ovgivent_new(i) = ovgivent(used_indices(i));
         ovestt_new(i) = ovestt(used_indices(i));
+        ovoffsett_new(i) = ovoffsett(used_indices(i));
+        
         ovgivenf_new(i) = ovgivenf(used_indices(i));
-      
         ovestf_new(i) = ovestf(used_indices(i));
+        ovoffsetf_new(i) = ovoffsetf(used_indices(i));
+        
         ovsurvmult_new(i) = ovsurvmult(used_indices(i));
         ovfecmult_new(i) = ovfecmult(used_indices(i));
         
@@ -3849,6 +3900,9 @@ namespace LefkoMats {
       output_longlist(58) = index321d_new;
       output_longlist(59) = index21_new;
       
+      output_longlist(60) = ovoffsett_new;
+      output_longlist(61) = ovoffsetf_new;
+      
     } else {
       stage3_length = static_cast<int>(stage3.n_elem);
       
@@ -3919,6 +3973,9 @@ namespace LefkoMats {
       output_longlist(57) = Rcpp::NumericVector(index321.begin(), index321.end());
       output_longlist(58) = Rcpp::NumericVector(index321d.begin(), index321d.end());
       output_longlist(59) = Rcpp::NumericVector(index21.begin(), index21.end());
+      
+      output_longlist(60) = Rcpp::NumericVector(ovoffsett.begin(), ovoffsett.end());
+      output_longlist(61) = Rcpp::NumericVector(ovoffsetf.begin(), ovoffsetf.end());
     }
     
     CharacterVector namevec = {"stage3", "stage2n", "stage2o", "stage1", "size3",
@@ -3929,7 +3986,8 @@ namespace LefkoMats {
       "indata1", "binwidth", "binbwidth", "bincwidth", "minage3", "minage2",
       "maxage3", "maxage2", "actualage", "group3", "group2n", "group2o", "group1",
       "indata", "ovgiven_t", "ovest_t", "ovgiven_f", "ovest_f", "ovsurvmult",
-      "ovfecmult", "aliveandequal", "index321", "index321d", "index21"};
+      "ovfecmult", "aliveandequal", "index321", "index321d", "index21",
+      "ovoffset_t", "ovoffset_f"};
     output_longlist.attr("names") = namevec;
     output_longlist.attr("row.names") = Rcpp::IntegerVector::create(NA_INTEGER, stage3_length);
     output_longlist.attr("class") = "data.frame";
@@ -3937,7 +3995,856 @@ namespace LefkoMats {
     return output_longlist;
   }
   
+  //' Standardize Stageframe For MPM Analysis
+  //' 
+  //' Function \code{sf_reassess()} takes a stageframe as input, and uses
+  //' information supplied there and through the supplement, reproduction and
+  //' overwrite tables to rearrange this into a format usable by the matrix
+  //' creation functions, \code{mpm_create()}, \code{flefko3()},
+  //' \code{flefko2()}, \code{aflefko2()}, \code{rlefko3()}, and \code{rlefko2()}.
+  //' 
+  //' @name sf_reassess_internal
+  //' 
+  //' @param stageframe The original stageframe.
+  //' @param supplement The original supplemental data input (class
+  //' \code{lefkoSD}). Can also equal NA.
+  //' @param overwrite An overwrite table.
+  //' @param repmatrix The original reproduction matrix. Can also equal \code{NA},
+  //' \code{0}, or \code{NULL} (the last value by default).
+  //' @param agemat A logical value indicating whether MPM is age-by-stage.
+  //' @param historical A logical value indicating whether MPM is historical.
+  //' @param format An integer indicating whether matrices will be in Ehrlen
+  //' format (if set to 1), or deVries format (if set to 2). Setting to deVries
+  //' format adds one extra stage to account for the prior status of newborns.
+  //' 
+  //' @return This function returns a list with a modified \code{stageframe}
+  //' usable in MPM construction, an associated \code{repmatrix}, and a general
+  //' \code{supplement} table that takes over for any input \code{supplement} or
+  //' \code{overwrite} table. Note that if a \code{supplement} is provided and a
+  //' \code{repmatrix} is not, or if \code{repmatrix} is set to 0, then it will be
+  //' assumed that a \code{repmatrix} should not be used.
+  //' 
+  //' @keywords internal
+  //' @noRd
+  inline Rcpp::List sf_reassess_internal(const DataFrame& stageframe,
+    Nullable<DataFrame> supplement = R_NilValue,
+    Nullable<DataFrame> overwrite = R_NilValue,
+    Nullable<NumericMatrix> repmatrix = R_NilValue,
+    bool agemat = false, bool historical = false, int format = 1) {
+    
+    bool supp_provided = false;
+    
+    Rcpp::DataFrame supplement_true;
+    arma::mat repmatrix_true;
+    
+    StringVector stagevec = as<StringVector>(stageframe["stage"]);
+    NumericVector origsizevec = as<NumericVector>(stageframe["size"]);
+    NumericVector origsizebvec = as<NumericVector>(stageframe["size_b"]);
+    NumericVector origsizecvec = as<NumericVector>(stageframe["size_c"]);
+    NumericVector minagevec = as<NumericVector>(stageframe["min_age"]);
+    NumericVector maxagevec = as<NumericVector>(stageframe["max_age"]);
+    arma::uvec repvec = as<arma::uvec>(stageframe["repstatus"]);
+    arma::uvec obsvec = as<arma::uvec>(stageframe["obsstatus"]);
+    arma::uvec propvec = as<arma::uvec>(stageframe["propstatus"]);
+    arma::uvec immvec = as<arma::uvec>(stageframe["immstatus"]);
+    arma::uvec matvec = as<arma::uvec>(stageframe["matstatus"]);
+    arma::uvec indvec = as<arma::uvec>(stageframe["indataset"]);
+    NumericVector binvec = as<NumericVector>(stageframe["binhalfwidth_raw"]);
+    NumericVector binbvec = as<NumericVector>(stageframe["binhalfwidthb_raw"]);
+    NumericVector bincvec = as<NumericVector>(stageframe["binhalfwidthc_raw"]);
+    NumericVector sizeminvec = as<NumericVector>(stageframe["sizebin_min"]);
+    NumericVector sizemaxvec = as<NumericVector>(stageframe["sizebin_max"]);
+    NumericVector sizectrvec = as<NumericVector>(stageframe["sizebin_center"]);
+    NumericVector sizewidthvec = as<NumericVector>(stageframe["sizebin_width"]);
+    NumericVector sizebminvec = as<NumericVector>(stageframe["sizebinb_min"]);
+    NumericVector sizebmaxvec = as<NumericVector>(stageframe["sizebinb_max"]);
+    NumericVector sizebctrvec = as<NumericVector>(stageframe["sizebinb_center"]);
+    NumericVector sizebwidthvec = as<NumericVector>(stageframe["sizebinb_width"]);
+    NumericVector sizecminvec = as<NumericVector>(stageframe["sizebinc_min"]);
+    NumericVector sizecmaxvec = as<NumericVector>(stageframe["sizebinc_max"]);
+    NumericVector sizecctrvec = as<NumericVector>(stageframe["sizebinc_center"]);
+    NumericVector sizecwidthvec = as<NumericVector>(stageframe["sizebinc_width"]);
+    arma::ivec groupvec = as<arma::ivec>(stageframe["group"]);
+    StringVector comvec = as<StringVector>(stageframe["comments"]);
+    
+    StringVector stage3_supp;
+    StringVector stage2_supp;
+    StringVector stage1_supp;
+    NumericVector age2_supp;
+    StringVector eststage3_supp;
+    StringVector eststage2_supp;
+    StringVector eststage1_supp;
+    NumericVector estage2_supp;
+    NumericVector givenrate_supp;
+    NumericVector offset_supp;
+    NumericVector multiplier_supp;
+    IntegerVector convtype_supp;
+    IntegerVector convtype_t12_supp;
+    
+    int stageframe_length {static_cast<int>(repvec.n_elem)};
+    arma::uvec repentryvec(stageframe_length, fill::zeros);
+    IntegerVector stage_id = seq(1, stageframe_length);
+    
+    // Identify all groups in stageframe
+    arma::ivec all_groups = unique(groupvec);
+    int no_groups {static_cast<int>(all_groups.n_elem)};
+    StringVector group_text(no_groups);
+    
+    for (int i = 0; i < no_groups; i++) {
+      group_text(i) = "group";
+      group_text(i) += std::to_string(all_groups(i));
+    }
+    
+    if (supplement.isNotNull()) {
+      supp_provided = true;
+      
+      Rcpp::DataFrame supplement_thru(supplement);
+      supplement_true = supplement_thru;
+      
+      stage3_supp = supplement_true["stage3"];
+      stage2_supp = supplement_true["stage2"];
+      multiplier_supp = supplement_true["multiplier"];
+      offset_supp = supplement_true["offset"];
+      convtype_supp = supplement_true["convtype"];
+    }
+    
+    if (repmatrix.isNotNull()) {
+      NumericMatrix repmatrix_thru(repmatrix);
+      repmatrix_true = as<arma::mat>(repmatrix_thru);
+      
+      arma::rowvec rep_sums = sum(repmatrix_true, 0);
+      arma::vec rep_rowsums = sum(repmatrix_true, 1);
+      double repmat_sum {static_cast<double>(sum(rep_sums))};
+      
+      if (static_cast<int>(rep_sums.n_elem) != stageframe_length) {
+        throw Rcpp::exception("Argument repmatrix must be a square matrix.");
+      }
+      
+      if (repmat_sum > 0) {
+        for (int i = 0; i < static_cast<int>(rep_sums.n_elem); i++) {
+          if (rep_sums(i) > 0) {
+            repvec(i) = 1;
+          } else {
+            repvec(i) = 0;
+          }
+          
+          if (rep_rowsums(i) > 0) {
+            repentryvec(i) = 1;
+          } else {
+            repentryvec(i) = 0;
+          }
+        }
+      } else {
+        repentryvec = propvec + immvec;
+        int rev_checksum {static_cast<int>(sum(repentryvec))};
+        
+        if (rev_checksum == 0) {
+          repentryvec(0) = 1;
+          Rf_warningcall(R_NilValue,
+            "Reproductive entry stages unknown. Assuming stage 1 is entry stage.");
+        }
+        
+        arma::mat token_mat(stageframe_length, stageframe_length, fill::zeros);
+          
+        arma::uvec repentry_calls = find(repentryvec);
+        arma::uvec rep_calls = find(repvec);
+        
+        if (repentry_calls.n_elem > 0 && rep_calls.n_elem > 0) {
+          for (int i = 0; i < static_cast<int>(repentry_calls.n_elem); i++) {
+            for (int j = 0; j < static_cast<int>(rep_calls.n_elem); j++) {
+              token_mat(repentry_calls(i), rep_calls(j)) = 1;
+            }
+          }
+        }
+        repmatrix_true = token_mat;
+      }
+    } else if (supp_provided) {
+      arma::ivec cv_supp_arma = as<arma::ivec>(convtype_supp);
+      arma::uvec mult_elems = find(cv_supp_arma == 3);
+      
+      int fec_mults {static_cast<int>(mult_elems.n_elem)};
+      for (int i = 0; i < fec_mults; i++) {
+        for (int j = 0; j < stageframe_length; j++) {
+          if (stage3_supp(mult_elems(i)) == stagevec(j)) {
+            repentryvec(j) = 1;
+          }
+        }
+        
+        if (stage3_supp(mult_elems(i)) == "prop") {
+          arma::uvec propvec_1elems = find(propvec);
+          
+          int propvec_no1s = static_cast<int>(propvec_1elems.n_elem);
+          for (int j = 0; j < propvec_no1s; j++) {
+            repentryvec(propvec_1elems(j)) = 1;
+          }
+        }
+        
+        if (stage3_supp(mult_elems(i)) == "immat") {
+          arma::uvec immvec_1elems = find(immvec);
+          
+          int immvec_no1s = static_cast<int>(immvec_1elems.n_elem);
+          for (int j = 0; j < immvec_no1s; j++) {
+            repentryvec(immvec_1elems(j)) = 1;
+          }
+        }
+        
+        for (int j = 0; j < no_groups; j++) {
+          if (stage3_supp(mult_elems(i)) == group_text(j)) {
+            arma::uvec group_elems = find(groupvec == all_groups(j));
+            
+            int group_noelems = static_cast<int>(group_elems.n_elem);
+            for (int k = 0; k < group_noelems; k++) {
+              repentryvec(group_elems(k)) = 1;
+            }
+          }
+        }
+      }
+      
+      if (agemat) {
+        arma::ivec needed_reprods(stageframe_length, fill::zeros);
+        arma::vec needed_mults(stageframe_length, fill::zeros);
+        
+        for (int i = 0; i < fec_mults; i++) {
+          for (int j = 0; j < stageframe_length; j++) {
+            if (stage2_supp(mult_elems(i)) == stagevec(j)) {
+              needed_reprods(j) = 1;
+              needed_mults(j) = 1.0; // multiplier_supp(mult_elems(i));
+            }
+            
+            if (stage2_supp(mult_elems(i)) == "rep") {
+              arma::uvec repvec_1elems = find(repvec);
+              
+              int repvec_no1s = static_cast<int>(repvec_1elems.n_elem);
+              for (int k = 0; k < repvec_no1s; k++) {
+                needed_reprods(repvec_1elems(k)) = 1;
+                needed_mults(repvec_1elems(k)) = 1.0; // multiplier_supp(mult_elems(i));
+              }
+            }
+            
+            for (int k = 0; k < no_groups; k++) {
+              if (stage2_supp(mult_elems(i)) == group_text(k)) {
+                arma::uvec group_elems = find(groupvec == all_groups(k));
+                
+                int group_noelems = static_cast<int>(group_elems.n_elem);
+                for (int l = 0; l < group_noelems; l++) {
+                  needed_reprods(group_elems(l)) = 1;
+                  needed_mults(group_elems(l)) = 1.0; // multiplier_supp(mult_elems(i));
+                }
+              }
+            }
+          }
+        }
+        
+        arma::mat token_mat(stageframe_length, stageframe_length, fill::zeros);
+        
+        arma::uvec repentry_calls = find(repentryvec);
+        arma::uvec neededrep_calls = find(needed_reprods);
+        
+        if (repentry_calls.n_elem > 0 && neededrep_calls.n_elem > 0) {
+          for (int i = 0; i < static_cast<int>(repentry_calls.n_elem); i++) {
+            for (int j = 0; j < static_cast<int>(neededrep_calls.n_elem); j++) {
+              token_mat(repentry_calls(i), neededrep_calls(j)) = needed_mults(neededrep_calls(j));
+            }
+          }
+        }
+        repmatrix_true = token_mat;
+        
+      } else {
+        arma::mat token_mat(stageframe_length, stageframe_length, fill::zeros);
+        repmatrix_true = token_mat;
+      }
+    } else {
+      int count_of_offspring_stages {0};
+      
+      for (int i = 0; i < stageframe_length; i++) {
+        if (propvec(i) > 0) {
+          repentryvec(i) = 1;
+          count_of_offspring_stages++;
+        } else if (immvec(i) > 0) {
+          repentryvec(i) = 1;
+          count_of_offspring_stages++;
+        }
+      }
+      
+      int rev_checksum = sum(repentryvec);
+      if(rev_checksum == 0) {
+        repentryvec(0) = 1;
+        Rf_warningcall(R_NilValue,
+          "Reproductive entry stages unknown. Assuming stage 1 is entry stage.");
+      } else {
+        Rf_warningcall(R_NilValue,
+          "No supplement provided. Assuming fecundity yields all propagule and immature stages.");
+      }
+      
+      arma::mat token_mat(stageframe_length, stageframe_length, fill::zeros);
+        
+      arma::uvec repentry_calls = find(repentryvec);
+      arma::uvec rep_calls = find(repvec);
+      
+      if (repentry_calls.n_elem > 0 && rep_calls.n_elem > 0) {
+        for (int i = 0; i < static_cast<int>(repentry_calls.n_elem); i++) {
+          for (int j = 0; j < static_cast<int>(rep_calls.n_elem); j++) {
+            token_mat(repentry_calls(i), rep_calls(j)) = 1;
+          }
+        }
+      }
+      repmatrix_true = token_mat;
+      
+      // Build new supplement for this case
+      StringVector novel_stage3 (count_of_offspring_stages);
+      StringVector novel_stage2 (count_of_offspring_stages);
+      StringVector novel_stage1 (count_of_offspring_stages);
+      IntegerVector novel_convtype_t12 (count_of_offspring_stages);
+      NumericVector novel_age2 (count_of_offspring_stages);
+      StringVector novel_eststage3 (count_of_offspring_stages);
+      StringVector novel_eststage2 (count_of_offspring_stages);
+      StringVector novel_eststage1 (count_of_offspring_stages);
+      NumericVector novel_estage2 (count_of_offspring_stages);
+      NumericVector novel_givenrate (count_of_offspring_stages);
+      NumericVector novel_offset (count_of_offspring_stages);
+      NumericVector novel_multiplier (count_of_offspring_stages);
+      IntegerVector novel_convtype (count_of_offspring_stages);
+      
+      int place_counter {0};
+      
+      for (int i = 0; i < stageframe_length; i++) { 
+        if (repentryvec(i) == 1) {
+          novel_stage3(place_counter) = String(stagevec(i));
+          novel_stage2(place_counter) = "rep";
+          
+          if (historical) {
+            novel_stage1(place_counter) = "all";
+            novel_convtype_t12(place_counter) = 1;
+          } else {
+            novel_stage1(place_counter) = NA_STRING;
+            novel_convtype_t12(place_counter) = NA_INTEGER;
+          }
+          
+          novel_age2(place_counter) = NA_REAL;
+        
+          novel_eststage3(place_counter) = NA_STRING;
+          novel_eststage2(place_counter) = NA_STRING;
+          novel_eststage1(place_counter) = NA_STRING;
+          novel_estage2(place_counter) = NA_REAL;
+          
+          novel_givenrate(place_counter) = NA_REAL;
+          novel_offset(place_counter) = 0.;
+          novel_multiplier(place_counter) = 1.;
+          novel_convtype(place_counter) = 3;
+          
+          place_counter++;
+        }
+      }
+      
+      Rcpp::DataFrame supplement_thru = DataFrame::create(_["stage3"] = novel_stage3,
+        _["stage2"] = novel_stage2, _["stage1"] = novel_stage1, _["age2"] = novel_age2,
+        _["eststage3"] =  novel_eststage3, _["eststage2"] =  novel_eststage2,
+        _["eststage1"] = novel_eststage1, _["estage2"] = novel_estage2,
+        _["givenrate"] = novel_givenrate, _["offset"] = novel_offset,
+        _["multiplier"] = novel_multiplier, _["convtype"] = novel_convtype,
+        _["convtype_t12"] = novel_convtype_t12);
+      
+      supplement_true = supplement_thru;
+      
+      stage3_supp = novel_stage3;
+      stage2_supp = novel_stage2;
+      stage1_supp = novel_stage1;
+      age2_supp = novel_age2;
+      eststage3_supp = novel_eststage3;
+      eststage2_supp = novel_eststage2;
+      eststage1_supp = novel_eststage1;
+      estage2_supp = novel_estage2;
+      givenrate_supp = novel_givenrate;
+      offset_supp = novel_offset;
+      multiplier_supp = novel_multiplier;
+      convtype_supp = novel_convtype;
+      convtype_t12_supp = novel_convtype_t12;
+      
+      supp_provided = true;
+    }
+    
+    // Reorder stageframe
+    arma::uvec prop_stages = find(propvec);
+    arma::uvec prop0_stages = find(propvec == 0);
+    arma::uvec imm_stages = find(immvec);
+    arma::uvec imm0_stages = find(immvec == 0);
+    arma::uvec p0_im_stages = intersect(prop0_stages, imm_stages);
+    
+    arma::uvec mat_stages = find(matvec);
+    arma::uvec mat_imm0_stages = intersect(mat_stages, imm0_stages);
+    arma::uvec rep_stages = find(repvec);
+    arma::uvec rep0_stages = find(repvec == 0);
+    arma::uvec rep0_mat_imm0_stages = intersect(mat_imm0_stages, rep0_stages);
+    arma::uvec mat_rep0_stages = intersect(mat_stages, rep0_stages);
+    arma::uvec neworder(stageframe_length, fill::zeros);
+    arma::uvec tracked_elems(stageframe_length, fill::ones);
+    
+    int no_prop_stages {static_cast<int>(prop_stages.n_elem)};
+    int no_p0_im_stages {static_cast<int>(p0_im_stages.n_elem)};
+    int no_r0_im_mt_stages {static_cast<int>(rep0_mat_imm0_stages.n_elem)};
+    
+    int counter {0};
+    for (int j = 0; j < no_prop_stages; j++) {
+      neworder(counter) = prop_stages(j);
+      tracked_elems(prop_stages(j)) = 0;
+      counter++;
+    }
+    for (int j = 0; j < no_p0_im_stages; j++) {
+      neworder(counter) = p0_im_stages(j);
+      tracked_elems(p0_im_stages(j)) = 0;
+      counter++;
+    }
+    for (int j = 0; j < no_r0_im_mt_stages; j++) {
+      neworder(counter) = rep0_mat_imm0_stages(j);
+      tracked_elems(rep0_mat_imm0_stages(j)) = 0;
+      counter++;
+    }
+    
+    arma::uvec remaining_elems = find(tracked_elems);
+    int no_remaining_elems = static_cast<int>(remaining_elems.n_elem);
+    for (int j = 0; j < no_remaining_elems; j++) {
+      neworder(counter) = remaining_elems(j);
+      counter++;
+    }
+    
+    StringVector newstagevec(stageframe_length + format);
+    IntegerVector newstageidvec(stageframe_length + format);
+    NumericVector neworigsizevec(stageframe_length + format);
+    NumericVector neworigsizebvec(stageframe_length + format);
+    NumericVector neworigsizecvec(stageframe_length + format);
+    NumericVector newminagevec(stageframe_length + format);
+    NumericVector newmaxagevec(stageframe_length + format);
+    arma::uvec newrepvec((stageframe_length + format), fill::zeros);
+    arma::uvec newobsvec((stageframe_length + format), fill::zeros);
+    arma::uvec newpropvec((stageframe_length + format), fill::zeros);
+    arma::uvec newimmvec((stageframe_length + format), fill::zeros);
+    arma::uvec newmatvec((stageframe_length + format), fill::zeros);
+    arma::uvec newrepentryvec((stageframe_length + format), fill::zeros);
+    arma::uvec newindvec((stageframe_length + format), fill::zeros);
+    NumericVector newbinvec((stageframe_length + format));
+    NumericVector newbinbvec((stageframe_length + format));
+    NumericVector newbincvec((stageframe_length + format));
+    NumericVector newsizeminvec((stageframe_length + format));
+    NumericVector newsizemaxvec((stageframe_length + format));
+    NumericVector newsizectrvec((stageframe_length + format));
+    NumericVector newsizewidthvec((stageframe_length + format));
+    NumericVector newsizebminvec((stageframe_length + format));
+    NumericVector newsizebmaxvec((stageframe_length + format));
+    NumericVector newsizebctrvec((stageframe_length + format));
+    NumericVector newsizebwidthvec((stageframe_length + format));
+    NumericVector newsizecminvec((stageframe_length + format));
+    NumericVector newsizecmaxvec((stageframe_length + format));
+    NumericVector newsizecctrvec((stageframe_length + format));
+    NumericVector newsizecwidthvec((stageframe_length + format));
+    arma::ivec newgroupvec((stageframe_length + format), fill::zeros);
+    StringVector newcomvec((stageframe_length + format));
+    arma::uvec newalive((stageframe_length + format), fill::zeros);
+    NumericVector newalmostbornvec((stageframe_length + format));
+    
+    arma::mat repmat1(stageframe_length, stageframe_length);
+    arma::mat repmat2(stageframe_length, stageframe_length);
+    
+    for (int i = 0; i < stageframe_length; i++) {
+      newstagevec(i) = stagevec(neworder(i));
+      newstageidvec(i) = stage_id(neworder(i));
+      neworigsizevec(i) = origsizevec(neworder(i));
+      neworigsizebvec(i) = origsizebvec(neworder(i));
+      neworigsizecvec(i) = origsizecvec(neworder(i));
+      newminagevec(i) = minagevec(neworder(i));
+      if (NumericVector::is_na(newminagevec(i))) newminagevec(i) = 0.0;
+      newmaxagevec(i) = maxagevec(neworder(i));
+      newrepvec(i) = repvec(neworder(i));
+      newobsvec(i) = obsvec(neworder(i));
+      newpropvec(i) = propvec(neworder(i));
+      newimmvec(i) = immvec(neworder(i));
+      newmatvec(i) = matvec(neworder(i));
+      newrepentryvec(i) = repentryvec(neworder(i));
+      newindvec(i) = indvec(neworder(i));
+      newbinvec(i) = binvec(neworder(i));
+      newbinbvec(i) = binbvec(neworder(i));
+      newbincvec(i) = bincvec(neworder(i));
+      newsizeminvec(i) = sizeminvec(neworder(i));
+      newsizemaxvec(i) = sizemaxvec(neworder(i));
+      newsizectrvec(i) = sizectrvec(neworder(i));
+      newsizewidthvec(i) = sizewidthvec(neworder(i));
+      newsizebminvec(i) = sizebminvec(neworder(i));
+      newsizebmaxvec(i) = sizebmaxvec(neworder(i));
+      newsizebctrvec(i) = sizebctrvec(neworder(i));
+      newsizebwidthvec(i) = sizebwidthvec(neworder(i));
+      newsizecminvec(i) = sizecminvec(neworder(i));
+      newsizecmaxvec(i) = sizecmaxvec(neworder(i));
+      newsizecctrvec(i) = sizecctrvec(neworder(i));
+      newsizecwidthvec(i) = sizecwidthvec(neworder(i));
+      newgroupvec(i) = groupvec(neworder(i));
+      newcomvec(i) = comvec(neworder(i));
+      newalive(i) = 1;
+      
+      repmat1.col(i) = repmatrix_true.col(neworder(i));
+    }
+    
+    for (int i = 0; i < stageframe_length; i++) {
+      repmat2.row(i) = repmat1.row(neworder(i));
+    }
+    
+    if (format == 2) {
+      newstagevec(stageframe_length) = "AlmostBorn";
+      newstageidvec(stageframe_length) = stageframe_length + 1;
+      neworigsizevec(stageframe_length) = 0.0;
+      neworigsizebvec(stageframe_length) = 0.0;
+      neworigsizecvec(stageframe_length) = 0.0;
+      newrepvec(stageframe_length) = 0;
+      newobsvec(stageframe_length) = 1;
+      newpropvec(stageframe_length) = 0;
+      newimmvec(stageframe_length) = 1;
+      newmatvec(stageframe_length) = 0;
+      newrepentryvec(stageframe_length) = 0;
+      newindvec(stageframe_length) = 1;
+      newbinvec(stageframe_length) = 0.0;
+      newbinbvec(stageframe_length) = 0.0;
+      newbincvec(stageframe_length) = 0.0;
+      newsizeminvec(stageframe_length) = 0.0;
+      newsizemaxvec(stageframe_length) = 0.0;
+      newsizectrvec(stageframe_length) = 0.0;
+      newsizewidthvec(stageframe_length) = 0.0;
+      newsizebminvec(stageframe_length) = 0.0;
+      newsizebmaxvec(stageframe_length) = 0.0;
+      newsizebctrvec(stageframe_length) = 0.0;
+      newsizebwidthvec(stageframe_length) = 0.0;
+      newsizecminvec(stageframe_length) = 0.0;
+      newsizecmaxvec(stageframe_length) = 0.0;
+      newsizecctrvec(stageframe_length) = 0.0;
+      newsizecwidthvec(stageframe_length) = 0.0;
+      newgroupvec(stageframe_length) = no_groups + 1;
+      newcomvec(stageframe_length) = "Almost born (t-1)";
+      newalive(stageframe_length) = 0;
+      newalmostbornvec(stageframe_length) = 1.0;
+      
+      if (agemat) {
+        newminagevec(stageframe_length) = 0.0;
+        newmaxagevec(stageframe_length) = 0.0;
+      } else {
+        newminagevec(stageframe_length) = NA_REAL;
+        newmaxagevec(stageframe_length) = NA_REAL;
+      }
+    }
+    
+    newstagevec(stageframe_length + (format - 1)) = "Dead";
+    newstageidvec(stageframe_length + (format - 1)) = stageframe_length + 1 + (format - 1);
+    neworigsizevec(stageframe_length + (format - 1)) = 0.0;
+    neworigsizebvec(stageframe_length + (format - 1)) = 0.0;
+    neworigsizecvec(stageframe_length + (format - 1)) = 0.0;
+    newrepvec(stageframe_length + (format - 1)) = 0;
+    newobsvec(stageframe_length + (format - 1)) = 1;
+    newpropvec(stageframe_length + (format - 1)) = 0;
+    newimmvec(stageframe_length + (format - 1)) = 0;
+    newmatvec(stageframe_length + (format - 1)) = 1;
+    newrepentryvec(stageframe_length + (format - 1)) = 0;
+    newindvec(stageframe_length + (format - 1)) = 1;
+    newbinvec(stageframe_length + (format - 1)) = 0.0;
+    newbinbvec(stageframe_length + (format - 1)) = 0.0;
+    newbincvec(stageframe_length + (format - 1)) = 0.0;
+    newsizeminvec(stageframe_length + (format - 1)) = 0.0;
+    newsizemaxvec(stageframe_length + (format - 1)) = 0.0;
+    newsizectrvec(stageframe_length + (format - 1)) = 0.0;
+    newsizewidthvec(stageframe_length + (format - 1)) = 0.0;
+    newsizebminvec(stageframe_length + (format - 1)) = 0.0;
+    newsizebmaxvec(stageframe_length + (format - 1)) = 0.0;
+    newsizebctrvec(stageframe_length + (format - 1)) = 0.0;
+    newsizebwidthvec(stageframe_length + (format - 1)) = 0.0;
+    newsizecminvec(stageframe_length + (format - 1)) = 0.0;
+    newsizecmaxvec(stageframe_length + (format - 1)) = 0.0;
+    newsizecctrvec(stageframe_length + (format - 1)) = 0.0;
+    newsizecwidthvec(stageframe_length + (format - 1)) = 0.0;
+    newgroupvec(stageframe_length + (format - 1)) = no_groups + 1;
+    newcomvec(stageframe_length + (format - 1)) = "Dead";
+    newalive(stageframe_length + (format - 1)) = 0;
+    
+    if (agemat) {
+      newminagevec(stageframe_length + (format - 1)) = 0.0;
+      newmaxagevec(stageframe_length + (format - 1)) = 0.0;
+    } else {
+      newminagevec(stageframe_length + (format - 1)) = NA_REAL;
+      newmaxagevec(stageframe_length + (format - 1)) = NA_REAL;
+    }
+    
+    StringVector newstagevec_check = unique(newstagevec);
+    if (newstagevec_check.length() < newstagevec.length()) {
+      throw Rcpp::exception("All stage names must be unique.", false);
+    }
+    
+    Rcpp::List newstageframe(33);
+    
+    newstageframe(0) = newstageidvec;
+    newstageframe(1) = newstagevec;
+    newstageframe(2) = neworigsizevec;
+    newstageframe(3) = neworigsizebvec;
+    newstageframe(4) = neworigsizecvec;
+    newstageframe(5) = newminagevec;
+    newstageframe(6) = newmaxagevec;
+    newstageframe(7) = Rcpp::IntegerVector(newrepvec.begin(), newrepvec.end());
+    newstageframe(8) = Rcpp::IntegerVector(newobsvec.begin(), newobsvec.end());
+    newstageframe(9) = Rcpp::IntegerVector(newpropvec.begin(), newpropvec.end());
+    newstageframe(10) = Rcpp::IntegerVector(newimmvec.begin(), newimmvec.end());
+    newstageframe(11) = Rcpp::IntegerVector(newmatvec.begin(), newmatvec.end());
+    newstageframe(12) = Rcpp::IntegerVector(newrepentryvec.begin(), newrepentryvec.end());
+    newstageframe(13) = Rcpp::IntegerVector(newindvec.begin(), newindvec.end());
+    newstageframe(14) = newbinvec;
+    newstageframe(15) = newsizeminvec;
+    newstageframe(16) = newsizemaxvec;
+    newstageframe(17) = newsizectrvec;
+    newstageframe(18) = newsizewidthvec;
+    newstageframe(19) = newbinbvec;
+    newstageframe(20) = newsizebminvec;
+    newstageframe(21) = newsizebmaxvec;
+    newstageframe(22) = newsizebctrvec;
+    newstageframe(23) = newsizebwidthvec;
+    newstageframe(24) = newbincvec;
+    newstageframe(25) = newsizecminvec;
+    newstageframe(26) = newsizecmaxvec;
+    newstageframe(27) = newsizecctrvec;
+    newstageframe(28) = newsizecwidthvec;
+    newstageframe(29) = Rcpp::IntegerVector(newgroupvec.begin(), newgroupvec.end());
+    newstageframe(30) = newcomvec;
+    newstageframe(31) = Rcpp::IntegerVector(newalive.begin(), newalive.end());
+    newstageframe(32) = newalmostbornvec; // For use in deVries-format hMPMs
+    
+    CharacterVector namevec = {"stage_id", "stage", "original_size",
+      "original_size_b", "original_size_c", "min_age", "max_age", "repstatus",
+      "obsstatus", "propstatus", "immstatus", "matstatus", "entrystage",
+      "indataset", "binhalfwidth_raw", "sizebin_min", "sizebin_max",
+      "sizebin_center", "sizebin_width", "binhalfwidthb_raw", "sizebinb_min",
+      "sizebinb_max", "sizebinb_center", "sizebinb_width", "binhalfwidthc_raw",
+      "sizebinc_min", "sizebinc_max", "sizebinc_center", "sizebinc_width",
+      "group", "comments", "alive", "almostborn"};
+    CharacterVector newclasses = {"data.frame", "stageframe"};
+    newstageframe.attr("names") = namevec;
+    newstageframe.attr("row.names") = Rcpp::IntegerVector::create(NA_INTEGER,
+        (stageframe_length + format));
+    newstageframe.attr("class") = newclasses;
+    
+    if (supp_provided) {
+      DataFrame newsupplement = supp_reassess(newstageframe, historical,
+        supplement_true, overwrite);
+      
+      return Rcpp::List::create(_["stageframe"] = newstageframe,
+        _["repmatrix"] = repmat2, _["ovtable"] = newsupplement);
+    } else {
+      return Rcpp::List::create(_["stageframe"] = newstageframe,
+        _["repmatrix"] = repmat2, _["ovtable"] = NULL);
+    }
+  }
   
+  //' Create Stageframe for Population Matrix Projection Analysis
+  //' 
+  //' Function \code{sf_leslie()} returns a data frame describing each age in a
+  //' Leslie MPM in terms of ahistorical stage information. This function is
+  //' internal to \code{rleslie()} and \code{fleslie()}.
+  //' 
+  //' @name sf_leslie
+  //' 
+  //' @param min_age The first age to include in the matrix.
+  //' @param max_age The maximum age to include in the matrix.
+  //' @param min_fecage The first age in which reproduction is possible.
+  //' @param max_fecage The final age in which reproduction is possible.
+  //' @param cont A logical value indicating whether survival continues past the
+  //' last described age.
+  //' 
+  //' @return A data frame of class \code{stageframe}, which includes information
+  //' on the stage name, size, reproductive status, observation status, propagule 
+  //' status, immaturity status, maturity status, presence within the core dataset, 
+  //' stage group classification, raw bin half-width, and the minimum, 
+  //' center, and maximum of each size bin, as well as its width. If minimum and
+  //' maximum ages were specified, then these are also included. Also includes an 
+  //' empty string variable that can be used to describe stages meaningfully.
+  //' 
+  //' Variables in this data frame include the following:
+  //' \item{stage_id}{An unique integer representing each age, in order.}
+  //' \item{stage}{The unique names of the ages to be analyzed.}
+  //' \item{original_size}{The typical or representative size at which each stage
+  //' occurs. Since ages are not characterized by size, this is generally
+  //' \code{NA}.}
+  //' \item{original_size_b}{Size at which each stage occurs in terms of a second
+  //' size variable, if one exists. In Leslie MPMs, generally \code{NA}.}
+  //' \item{original_size_c}{Size at which each stage occurs in terms of a third
+  //' size variable, if one exists. In Leslie MPMs, generally \code{NA}.}
+  //' \item{min_age}{The minimum age at which the stage may occur. In Leslie MPMs,
+  //' defaults to the current age.}
+  //' \item{max_age}{The maximum age at which the stage may occur. In Leslie MPMs,
+  //' will generally equal the current age or \code{NA}, depending on whether
+  //' individuals are allowed to remain at the maximum age.}
+  //' \item{repstatus}{A binomial variable showing whether each age is
+  //' reproductive.}
+  //' \item{obsstatus}{A binomial variable showing whether each age is
+  //' observable.}
+  //' \item{propstatus}{A binomial variable showing whether each age is a
+  //' propagule.}
+  //' \item{immstatus}{A binomial variable showing whether each age can occur as
+  //' immature.}
+  //' \item{matstatus}{A binomial variable showing whether each age occurs in
+  //' maturity.}
+  //' \item{entrystage}{A binomial variable showing whether each age is an entry
+  //' stage. In Leslie MPMs, only the first stage is set to \code{1}, while all
+  //' others are set to \code{0}.}
+  //' \item{indataset}{A binomial variable describing whether each age occurs in
+  //' the input dataset.}
+  //' \item{binhalfwidth_raw}{The half-width of the size bin, as input.}
+  //' \item{sizebin_min}{The minimum primary size at which the age may occur.}
+  //' \item{sizebin_max}{The maximum primary size at which the age may occur.}
+  //' \item{sizebin_center}{The midpoint of the primary size bin at which the age
+  //' may occur.}
+  //' \item{sizebin_width}{The width of the primary size bin corresponding to the
+  //' age.}
+  //' \item{binhalfwidthb_raw}{The half-width of the size bin of a second size
+  //' variable, as input.}
+  //' \item{sizebinb_min}{The minimum secondary size at which the age may occur.}
+  //' \item{sizebinb_max}{The maximum secondary size at which the age may occur.}
+  //' \item{sizebinb_center}{The midpoint of the secondary size bin at which the
+  //' age may occur.}
+  //' \item{sizebinb_width}{The width of the secondary size bin corresponding to
+  //' the age.}
+  //' \item{binhalfwidthc_raw}{The half-width of the size bin of a third size
+  //' variable, as input.}
+  //' \item{sizebinc_min}{The minimum tertiary size at which the age may occur.}
+  //' \item{sizebinc_max}{The maximum tertiary size at which the age may occur.}
+  //' \item{sizebinc_center}{The midpoint of the tertiary size bin at which the
+  //' age may occur.}
+  //' \item{sizebinc_width}{The width of the tertiary size bin corresponding to
+  //' the age.}
+  //' \item{group}{An integer denoting the size classification group that the
+  //' age falls within.}
+  //' \item{comments}{A text field for stage descriptions.}
+  //' \item{alive}{An integer vector denoting whether the age is alive. Defaults
+  //' to \code{1} for all ages.}
+  //' \item{almost_born}{An integer vector denoting whether the age corresponds to
+  //' the prior stage of a newly produced individual in a historical model. In
+  //' Leslie MPMs, defaults to \code{0}.}
+  //' 
+  //' @keywords internal
+  //' @noRd
+  inline Rcpp::List sf_leslie (int min_age, int max_age, int min_fecage,
+    int max_fecage, bool cont) {
+    
+    const int age_range {max_age - min_age};
+    const int total_ages {age_range + 1};
+    if (age_range < 1) {
+      throw Rcpp::exception("Leslie MPMs require at least 2 ages.", false);
+    }
+    
+    Rcpp::List output_longlist(33);
+    Rcpp::CharacterVector varnames {"stage_id", "stage", "original_size",
+      "original_size_b", "original_size_c", "min_age", "max_age", "repstatus",
+      "obsstatus", "propstatus", "immstatus", "matstatus", "entrystage",
+      "indataset", "binhalfwidth_raw", "sizebin_min", "sizebin_max",
+      "sizebin_center", "sizebin_width", "binhalfwidthb_raw", "sizebinb_min",
+      "sizebinb_max", "sizebinb_center", "sizebinb_width", "binhalfwidthc_raw",
+      "sizebinc_min", "sizebinc_max", "sizebinc_center", "sizebinc_width",
+      "group", "comments", "alive", "almostborn"};
+    
+    int matsize {total_ages};
+    
+    IntegerVector stage_id (matsize, 1);
+    StringVector agenames_true (matsize, NA_STRING);
+    NumericVector size_true (matsize, NA_REAL);
+    NumericVector sizesb_true (matsize, NA_REAL);
+    NumericVector sizesc_true (matsize, NA_REAL);
+    IntegerVector repstatus_true (matsize, 0);
+    IntegerVector obsstatus_true (matsize, 1);
+    IntegerVector propstatus_true (matsize, 0);
+    IntegerVector matstatus_true (matsize, 0);
+    IntegerVector immstatus_true (matsize, 1);
+    IntegerVector entrystage_true (matsize, 0);
+    IntegerVector indataset_true (matsize, 1);
+    NumericVector minage_true (matsize, 0.0);
+    NumericVector maxage_true (matsize, 0.0);
+    NumericVector binhalfwidth_true (matsize, NA_REAL);
+    NumericVector binhalfwidthb_true (matsize, NA_REAL);
+    NumericVector binhalfwidthc_true (matsize, NA_REAL);
+    NumericVector sizebin_min (matsize, NA_REAL);
+    NumericVector sizebin_max (matsize, NA_REAL);
+    NumericVector sizebin_center (matsize, NA_REAL);
+    NumericVector sizebin_width (matsize, NA_REAL);
+    NumericVector sizebinb_min (matsize, NA_REAL);
+    NumericVector sizebinb_max (matsize, NA_REAL);
+    NumericVector sizebinb_center (matsize, NA_REAL);
+    NumericVector sizebinb_width (matsize, NA_REAL);
+    NumericVector sizebinc_min (matsize, NA_REAL);
+    NumericVector sizebinc_max (matsize, NA_REAL);
+    NumericVector sizebinc_center (matsize, NA_REAL);
+    NumericVector sizebinc_width (matsize, NA_REAL);
+    IntegerVector group_true (matsize, 0);
+    StringVector comments_true (matsize, "No description");
+    IntegerVector alive_true (matsize, 1);
+    IntegerVector almost_born (matsize, 0);
+    
+    entrystage_true(0) = 1;
+    
+    for (int i = 0; i < total_ages; i++) {
+      stage_id(i) = i + 1;
+      Rcpp::String part1 {"Age"};
+      part1 += (static_cast<char>(i + min_age));
+      agenames_true(i) = part1;
+      
+      if ((i + min_age) >= min_fecage) {
+        repstatus_true(i) = 1;
+        matstatus_true(i) = 1;
+        immstatus_true(i) = 0;
+      }
+      
+      minage_true(i) = static_cast<double>(i + min_age);
+      if ((i + min_age < max_age) || !cont) {
+        maxage_true(i) = static_cast<double>(i + min_age);
+      } else {
+        maxage_true(i) = NA_REAL;
+      }
+    }
+    
+    output_longlist(0) = stage_id;
+    output_longlist(1) = agenames_true;
+    output_longlist(2) = size_true;
+    output_longlist(3) = sizesb_true;
+    output_longlist(4) = sizesc_true;
+    
+    output_longlist(5) = minage_true;
+    output_longlist(6) = maxage_true;
+    output_longlist(7) = repstatus_true;
+    output_longlist(8) = obsstatus_true;
+    output_longlist(9) = propstatus_true;
+    output_longlist(10) = immstatus_true;
+    output_longlist(11) = matstatus_true;
+    output_longlist(12) = entrystage_true;
+    
+    output_longlist(13) = indataset_true;
+    
+    output_longlist(14) = binhalfwidth_true;
+    output_longlist(15) = sizebin_min;
+    output_longlist(16) = sizebin_max;
+    output_longlist(17) = sizebin_center;
+    output_longlist(18) = sizebin_width;
+    
+    output_longlist(19) = binhalfwidthb_true;
+    output_longlist(20) = sizebinb_min;
+    output_longlist(21) = sizebinb_max;
+    output_longlist(22) = sizebinb_center;
+    output_longlist(23) = sizebinb_width;
+    
+    output_longlist(24) = binhalfwidthc_true;
+    output_longlist(25) = sizebinc_min;
+    output_longlist(26) = sizebinc_max;
+    output_longlist(27) = sizebinc_center;
+    output_longlist(28) = sizebinc_width;
+    
+    output_longlist(29) = group_true;
+    output_longlist(30) = comments_true;
+    output_longlist(31) = alive_true;
+    output_longlist(32) = almost_born;
+    
+    output_longlist.attr("names") = varnames;
+    output_longlist.attr("row.names") = Rcpp::IntegerVector::create(NA_INTEGER, matsize);
+    StringVector needed_classes {"data.frame", "stageframe"};
+    output_longlist.attr("class") = needed_classes;
+    
+    return output_longlist;
+  }
 
 }
 #endif

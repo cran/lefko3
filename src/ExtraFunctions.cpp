@@ -5,7 +5,17 @@
 using namespace Rcpp;
 using namespace arma;
 
-//' Two-parameter Ricker function
+
+// Index of Functions
+// 1. NumericVector ricker3  Two-Parameter Ricker Function
+// 2. NumericVector beverton3  Two-Parameter Beverton-Holt Function
+// 3. NumericVector usher3  Two-Parameter Usher Function
+// 4. NumericVector logistic3  Two-Parameter logistic Function
+// 5. int .integer_test  Function to Test Whether a Numeric Vector Is Composed Only of Integers
+// 6. int .binomial_test  Function to Test Whether an Integer Vector Is Entirely Binomial
+
+
+//' Two-Parameter Ricker Function
 //' 
 //' Function \code{ricker3()} creates a vector of values produced by the two-
 //' parameter Ricker function as applied with a user-specified time lag. The
@@ -152,7 +162,7 @@ Rcpp::NumericVector ricker3(double start_value, double alpha, double beta,
   return output;
 }
 
-//' Two-parameter Beverton-Holt function
+//' Two-Parameter Beverton-Holt Function
 //' 
 //' Function \code{beverton3()} creates a vector of values produced by the two-
 //' parameter Beverton-Holt function as applied with a user-specified time lag.
@@ -302,7 +312,7 @@ Rcpp::NumericVector beverton3(double start_value, double alpha, double beta,
   return output;
 }
 
-//' Two-parameter Usher function
+//' Two-Parameter Usher Function
 //' 
 //' Function \code{usher3()} creates a vector of values produced by the two-
 //' parameter Usher function as applied with a user-specified time lag.
@@ -445,7 +455,7 @@ Rcpp::NumericVector usher3(double start_value, double alpha, double beta,
   return output;
 }
 
-//' Two-parameter logistic function
+//' Two-Parameter logistic Function
 //' 
 //' Function \code{logistic3()} creates a vector of values produced by the
 //' logistic function as applied with a user-specified time lag. The logistic

@@ -18,6 +18,7 @@ supplemental(
   eststage1 = NULL,
   estage2 = NULL,
   givenrate = NULL,
+  offset = NULL,
   multiplier = NULL,
   type = NULL,
   type_t12 = NULL
@@ -74,10 +75,17 @@ transition. Only needed if a transition will be replaced by another
 estimated transition, and only in age-based and age-by-stage MPMs.}
 
 \item{givenrate}{A fixed rate or probability to replace for the transition
-described by \code{stage3}, \code{stage2}, and \code{stage1}.}
+described by \code{stage3}, \code{stage2}, \code{stage1}, and/or
+\code{age2}.}
 
-\item{multiplier}{A vector of numeric multipliers for fecundity or for proxy
-transitions. Defaults to \code{1}.}
+\item{offset}{A fixed numeric value to add to the transition described by
+\code{stage3}, \code{stage2}, \code{stage1}, and/or \code{age2}.}
+
+\item{multiplier}{A vector of numeric multipliers for the transition
+described by \code{stage3}, \code{stage2}, \code{stage1}, and/or
+\code{age2}, or for the proxy transitions described by \code{eststage3},
+\code{eststage2}, \code{eststage1}, and/or \code{estage2}. Defaults to
+\code{1}.}
 
 \item{type}{A vector denoting the kind of transition between occasions
 \emph{t} and \emph{t}+1 to be replaced. This should be entered as \code{1},
@@ -118,6 +126,8 @@ the transition designated by \code{stage3}, \code{stage2}, and
 \item{estage2}{Age at occasion \emph{t} in the transition to replace the
 transition designated by \code{age2}.}
 \item{givenrate}{A constant to be used as the value of the transition.}
+\item{offset}{A constant value to be added to the transition or proxy
+transition.}
 \item{multiplier}{A multiplier for proxy transitions or for fecundity.}
 \item{convtype}{Designates whether the transition from occasion \emph{t} to
 occasion \emph{t}+1 is a survival transition probability (1), a fecundity
@@ -128,17 +138,19 @@ fecundity rate (2).}
 }
 \description{
 Function \code{supplemental()} provides all necessary supplemental data for
-matrix estimation, particularly bringing together data on proxy rates, data
-to overwrite existing rates, identified reproductive transitions complete,
-and fecundity multipliers. The function should be used to incorporate data
-that affects all matrices to be created. To edit MPMs after creation, use
-\code{\link{edit_lM}()} instead.
+matrix estimation. It allows the establishment of proxy rates, the entry of
+data to overwrite or offset existing rates, the identification of complete
+reproductive transitions, and the entry of rate multipliers. The function
+should be used to incorporate data that affects all matrices to be created.
+To edit MPMs after creation, use \code{\link{edit_lM}()} instead.
 }
 \section{Notes}{
 
 Negative values are not allowed in \code{givenrate} and \code{multiplier}
-input. Stage entries should not be used for purely age-based MPMs, and age
-entries should not be used for purely stage-based MPMs.
+input, but are allowed in \code{offset}, if values are to be subtracted from
+specific estimated transitions. Stage entries should not be used for purely
+age-based MPMs, and age entries should not be used for purely stage-based
+MPMs.
 
 Fecundity multiplier data supplied via the \code{supplemental()} function
 acts in the same way as non-zero entries supplied via a reproductive matrix,
@@ -172,6 +184,13 @@ creation). For example, if all stage 2 to stage 3 transitions above age 2
 yield fecundity, then stage 2 to stage 3 can be set to
 \code{multiplier = 1.0} with \code{convtype = 3}, and the same transition
 for \code{age2 = c(1, 2)} can be set to \code{multiplier = c(0, 0)}.
+
+Several operations may be included per transition. Operations on the same
+row of the resulting data frame are generally handled with given rate
+substitutions first, then with proxy transitions, then by additive offsets,
+and finally by multipliers. This order can be manipulated by ordering
+operations across rows, with higher numbered rows in the data frame being
+performed later.
 }
 
 \examples{

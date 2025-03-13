@@ -7,7 +7,17 @@ using namespace arma;
 using namespace LefkoUtils;
 using namespace LefkoMats;
 
-//' Main Formula Creation for Function \code{modelsearch()}
+
+// Index of Functions
+// 
+// 1. List praxis  Workhorse Formula Creator for Function modelsearch()
+// 2. List .stovokor  Main Formula Creation for Function modelsearch()
+// 3. DataFrame create_pm  Creates a Skeleton Paramnames Object for Use in Function-based Modeling
+// 4. NumericVector vrmf_inator  Convert modelextract Coefficient Vector to vrm_frame Vector
+// 5. List miniMod  Minimize lefkoMod Object by Conversion to vrm_input Object
+
+
+//' Workhorse Formula Creator for Function modelsearch()
 //'
 //' Function \code{praxis()} is the workhorse function used by function
 //' \code{stovokor} to create individual vital rate model formulae, which are
@@ -116,7 +126,7 @@ using namespace LefkoMats;
 //'
 //' @keywords internal
 //' @noRd
-List praxis(const StringVector& surv, const StringVector& obs,
+Rcpp::List praxis(const StringVector& surv, const StringVector& obs,
   const StringVector& size, const StringVector& sizeb,
   const StringVector& sizec, const StringVector& repst, const StringVector& fec,
   const StringVector& matstat, bool historical, int response,
@@ -2329,7 +2339,7 @@ List praxis(const StringVector& surv, const StringVector& obs,
   return output;
 }
 
-//' Main Formula Creation for Function \code{modelsearch()}
+//' Main Formula Creation for Function modelsearch()
 //'
 //' Function \code{stovokor()} creates the list of formulae to be used as input
 //' in the global model calls used in function \code{\link{modelsearch}()}.
@@ -2448,7 +2458,7 @@ List praxis(const StringVector& surv, const StringVector& obs,
 //' @keywords internal
 //' @noRd
 // [[Rcpp::export(.stovokor)]]
-List stovokor(const StringVector& surv, const StringVector& obs,
+Rcpp::List stovokor(const StringVector& surv, const StringVector& obs,
   const StringVector& size, const StringVector& sizeb,
   const StringVector& sizec, const StringVector& repst, const StringVector& fec,
   const StringVector& matstat, const StringVector& vitalrates, bool historical,
@@ -3492,7 +3502,7 @@ List stovokor(const StringVector& surv, const StringVector& obs,
 //' 
 //' @export
 // [[Rcpp::export(create_pm)]]
-DataFrame create_pm(bool name_terms = false) {
+Rcpp::DataFrame create_pm(bool name_terms = false) {
   
   DataFrame output = paramnames_skeleton(name_terms);
     
@@ -3518,7 +3528,7 @@ DataFrame create_pm(bool name_terms = false) {
 //' 
 //' @keywords internal
 //' @noRd
-NumericVector vrmf_inator (NumericVector coef_vec, bool zi = false) {
+Rcpp::NumericVector vrmf_inator (NumericVector coef_vec, bool zi = false) {
   
   NumericVector main_out (128);
   
