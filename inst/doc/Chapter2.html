@@ -368,27 +368,30 @@ Ehrlén</h4>
 
 <p style="text-indent: 20px">
 In this vignette, we will use the <code>lathyrus</code> dataset to
-illustrate the estimation of <strong>empirical</strong> or
-<strong>raw</strong> MPMs. We will produce matrices similar to those
+illustrate the estimation of <strong>empirical</strong>, or
+<strong>raw</strong>, MPMs. We will produce matrices similar to those
 published in <span class="citation">Ehrlén (2000)</span>, though there
 will be some differences because our dataset includes data for more
 individuals as well as an extra year of monitoring. It also includes
 differences in classification due to different assumptions regarding
-transitions to and from the vegetative dormancy life stage.
+transitions to and from vegetative dormancy.
 </p>
 <p style="text-indent: 20px">
 To reduce vignette size, we have prevented some statements from running
 if they produce long stretches of output. Examples include most
 <code>summary()</code> calls. In these cases, we include hashtagged
 versions of these calls, and we encourage the user to run these
-statements without hashtags.
+statements without hashtags to examine the output.
 </p>
 <p style="text-indent: 20px">
 This vignette is only a sample analysis. Detailed information and
 instructions on using <code>lefko3</code> are available through a free
-online e-book called <em>lefko3: a gentle introduction</em>, available
-on <a href="http://www.sheffersonlab.com/projects.html">the projects
-page</a> of the Shefferson lab website.
+online e-book called
+<a href="https://bookdown.org/cdorm/lefko3gentle/"><em>lefko3: a
+gentle introduction</em></a>, as well as through the resources found on
+the
+<a href="http://www.revolutionarydemography.com/projects.html"><strong>{r}evolutionary
+demography</strong></a> website.
 </p>
 <div id="organism-and-population" class="section level3">
 <h3>ORGANISM AND POPULATION</h3>
@@ -447,11 +450,10 @@ yearly sowing experiments in separate plots adjacent to each subplot
 <p style="text-indent: 20px">
 Our dataset is organized in horizontal format, with rows corresponding
 to unique individuals and columns corresponding to individual condition
-in particular observation occasions (which we also refer to as
-<em>years</em> here). The original spreadsheet file used to keep the
-dataset has a repeating pattern to these columns, with each year having
-a similarly arranged group of variables. Let’s take a look at this
-dataset.
+in specific monitoring occasions (which we also refer to as
+<em>years</em>). The original spreadsheet file used to keep the dataset
+has a repeating pattern to these columns, with each year having a
+similarly arranged group of variables.
 </p>
 <div class="sourceCode" id="cb1"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" tabindex="-1"></a><span class="fu">library</span>(lefko3)</span>
 <span id="cb1-2"><a href="#cb1-2" tabindex="-1"></a></span>
@@ -462,38 +464,35 @@ dataset.
 <p style="text-indent: 20px">
 This dataset includes information on 1,119 individuals arranged
 horizontally, by row. There are 38 variables, by column. The first two
-columns are variables giving identifying information about each
-individual. This is followed by four sets of nine columns, each named
-<code>VolumeXX</code>, <code>lnVolXX</code>, <code>FCODEXX</code>,
-<code>FlowXX</code>, <code>IntactseedXX</code>, <code>Dead19XX</code>,
-<code>DormantXX</code>, <code>Missing19XX</code>, and
-<code>SeedlingXX</code>, where <code>XX</code> corresponds to the year
-of observation and with years organized consecutively. Thus, columns
-3-11 refer to year 1988, columns 12-20 refer to year 1989, etc. This
-strictly repeating pattern allows us to manipulate the original dataset
-quickly and efficiently via <code>lefko3</code>. There are four years of
-data, from 1988 to 1991. Ideally, we should also have arranged the
-columns in the same order for each year, with years in consecutive order
-with no extra columns between them. This order is not required, provided
-that we input all variable names in correct order when transforming the
-dataset later.
+columns identify each individual. This is followed by four sets of nine
+columns, each named <code>VolumeXX</code>, <code>lnVolXX</code>,
+<code>FCODEXX</code>, <code>FlowXX</code>, <code>IntactseedXX</code>,
+<code>Dead19XX</code>, <code>DormantXX</code>, <code>Missing19XX</code>,
+and <code>SeedlingXX</code>, where <code>XX</code> corresponds to the
+year of observation and with years organized consecutively. Thus,
+columns 3-11 refer to year 1988, columns 12-20 refer to year 1989, etc.
+This strictly repeating pattern allows us to manipulate the original
+dataset quickly and efficiently via <code>lefko3</code>. There are four
+years of data, from 1988 to 1991. Ideally, we should also have arranged
+the columns in the same order for each year, with years in consecutive
+order with no extra columns between them (this order is not required,
+provided that we input all variable names in correct order when
+standardizing the dataset).
 </p>
 <div id="step-1.-life-history-model-development" class="section level4">
 <h4>Step 1. Life history model development</h4>
 <p style="text-indent: 20px">
 We will now create a <strong>stageframe</strong>, which is a data frame
-that describes all stages in the life history of the organism, in a way
-usable by the functions in this package and using stage names and
-descriptions that completely match those used in the dataset. It links
-the dataset to the <em>life cycle graph</em> used to model the
-organism’s life history. It should include complete descriptions of all
-stages that occur in the dataset, with each stage defined uniquely.
-Since this object can be used for automated classification, all sizes,
-reproductive states, and other characteristics defining each stage in
-the dataset need to be accounted for explicitly. The final description
-of each stage occurring in the dataset must not completely overlap with
-any other stage also found in the dataset, although partial overlap is
-allowed and expected.
+that describes all stages in the life history of the organism in a way
+usable by the functions in this package. It links the dataset to the
+<em>life cycle graph</em> used to model the organism’s life history. It
+should include complete descriptions of all stages that occur in the
+dataset, with each stage defined uniquely. Since this object can be used
+for automated classification, all sizes, reproductive states, and other
+characteristics defining each stage in the dataset need to be accounted
+for explicitly. The final description of each stage occurring in the
+dataset must not completely overlap with any other stage also found in
+the dataset, although partial overlap is allowed and expected.
 </p>
 <p style="text-indent: 20px">
 Here, we create a stageframe named <code>lathframe</code> based on the
@@ -633,15 +632,16 @@ see a longer summary by removing <code>full = FALSE</code>.
 </p>
 <p style="text-indent: 20px">
 If we remove <code>full = FALSE</code> from the
-<code>summary_hfv()</code> call, then our summary will reveal that the
-<code>verticalize3()</code> function has automatically subset the data
-to only those instances in which the individual is alive in occasion
-<em>t</em> (please look at the variable <code>alive2</code>). Knowing
-this can help us interpret other variables. For example, the mean value
-for <code>alive3</code> suggests very high survival to occasion
-<em>t</em>+1 (92.2%). Further, the minimum values for all size variables
-are zero, suggesting that unobservable stages occur within the dataset
-(these are instances of vegetative dormancy).
+<code>summary_hfv()</code> call, then the extended portion of our
+summary will reveal that the <code>verticalize3()</code> function has
+automatically subset the data to only those instances in which the
+individual is alive in occasion <em>t</em> (please look at the variable
+<code>alive2</code>). Knowing this can help us interpret other
+variables. For example, the mean value for <code>alive3</code> suggests
+very high survival to occasion <em>t</em>+1 (92.2%). Further, the
+minimum values for all size variables are zero, suggesting that
+unobservable stages occur within the dataset (these are instances of
+vegetative dormancy).
 </p>
 <p style="text-indent: 20px">
 The <code>verticalize3()</code> function has made stage assignments for
@@ -712,27 +712,29 @@ to tell R which transitions are the fecundity transitions.
 <span id="cb5-2"><a href="#cb5-2" tabindex="-1"></a>  <span class="at">stage2 =</span> <span class="fu">c</span>(<span class="st">&quot;Sd&quot;</span>, <span class="st">&quot;Sd&quot;</span>, <span class="st">&quot;rep&quot;</span>, <span class="st">&quot;rep&quot;</span>),</span>
 <span id="cb5-3"><a href="#cb5-3" tabindex="-1"></a>  <span class="at">givenrate =</span> <span class="fu">c</span>(<span class="fl">0.345</span>, <span class="fl">0.054</span>, <span class="cn">NA</span>, <span class="cn">NA</span>),</span>
 <span id="cb5-4"><a href="#cb5-4" tabindex="-1"></a>  <span class="at">multiplier =</span> <span class="fu">c</span>(<span class="cn">NA</span>, <span class="cn">NA</span>, <span class="fl">0.345</span>, <span class="fl">0.054</span>),</span>
-<span id="cb5-5"><a href="#cb5-5" tabindex="-1"></a>  <span class="at">type =</span> <span class="fu">c</span>(<span class="dv">1</span>, <span class="dv">1</span>, <span class="dv">3</span>, <span class="dv">3</span>), <span class="at">stageframe =</span> lathframe, <span class="at">historical =</span> <span class="cn">FALSE</span>)</span>
-<span id="cb5-6"><a href="#cb5-6" tabindex="-1"></a><span class="co">#lathsupp2</span></span></code></pre></div>
+<span id="cb5-5"><a href="#cb5-5" tabindex="-1"></a>  <span class="at">type =</span> <span class="fu">c</span>(<span class="st">&quot;S&quot;</span>, <span class="st">&quot;S&quot;</span>, <span class="st">&quot;R&quot;</span>, <span class="st">&quot;R&quot;</span>), <span class="at">stageframe =</span> lathframe, <span class="at">historical =</span> <span class="cn">FALSE</span>)</span>
+<span id="cb5-6"><a href="#cb5-6" tabindex="-1"></a><span class="co">#&gt; Warning: NA values in argument multiplier will be treated as 1 values.</span></span>
+<span id="cb5-7"><a href="#cb5-7" tabindex="-1"></a><span class="co">#lathsupp2</span></span></code></pre></div>
 <p style="text-indent: 20px">
-The supplement table above will only work with ahistorical MPMs, while
-the next supplement table will work for historical MPMs. The primary
-difference is the incorporation of stage in time <em>t</em>-1. Going
-back a further step to look at time <em>t</em>-1 shows us that there are
-two ways that a dormant seed in time <em>t</em> can be a dormant seed in
-time <em>t</em>+1 - it could have been a dormant seed in time
-<em>t</em>-1, or it could have been produced by a flowering adult in
-time <em>t</em>-1. Likewise, a seed in occasion <em>t</em> could have
-become a seedling in occasion <em>t</em>+1 after being produced by a
-flowering adult in occasion <em>t</em>-1, or remaining in the seed bank
-in occasion <em>t</em>-1. So, we will enter four given transitions in
-the historical case, rather than two transitions as in the ahistorical
-case. We will also designate that transitions from seed in occasion
-<em>t</em>-1 and seedling in occasion <em>t</em> to mature stages in
-occasion <em>t</em>+1 should originate from the <code>NotAlive</code>
-stage in occasion <em>t</em>-1, because the seed stage does not actually
-occur in the dataset and so function <code>rlefko3()</code> will not
-estimate these transitions without knowing the appropriate proxy set.
+The supplement table above will only work with ahistorical and
+age-by-stage MPMs, while the next supplement table will work only for
+historical MPMs. The primary difference is the incorporation of stage in
+time <em>t</em>-1. Going back a further step to look at time
+<em>t</em>-1 shows us that there are two ways that a dormant seed in
+time <em>t</em> can be a dormant seed in time <em>t</em>+1 - it could
+have been a dormant seed in time <em>t</em>-1, or it could have been
+produced by a flowering adult in time <em>t</em>-1. Likewise, a seed in
+occasion <em>t</em> could have become a seedling in occasion
+<em>t</em>+1 after being produced by a flowering adult in occasion
+<em>t</em>-1, or remaining in the seed bank in occasion <em>t</em>-1.
+So, we will enter four given transitions in the historical case, rather
+than two transitions as in the ahistorical case. We will also designate
+that transitions from seed in occasion <em>t</em>-1 and seedling in
+occasion <em>t</em> to mature stages in occasion <em>t</em>+1 should
+originate from the <code>NotAlive</code> stage in occasion <em>t</em>-1,
+because the seed stage does not occur in the dataset and so function
+<code>rlefko3()</code> cannot estimate these transitions without
+assuming an appropriate proxy.
 </p>
 <div class="sourceCode" id="cb6"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" tabindex="-1"></a>lathsupp3 <span class="ot">&lt;-</span> <span class="fu">supplemental</span>(<span class="at">stage3 =</span> <span class="fu">c</span>(<span class="st">&quot;Sd&quot;</span>, <span class="st">&quot;Sd&quot;</span>, <span class="st">&quot;Sdl&quot;</span>, <span class="st">&quot;Sdl&quot;</span>, <span class="st">&quot;Sd&quot;</span>, <span class="st">&quot;Sdl&quot;</span>, <span class="st">&quot;mat&quot;</span>),</span>
 <span id="cb6-2"><a href="#cb6-2" tabindex="-1"></a>  <span class="at">stage2 =</span> <span class="fu">c</span>(<span class="st">&quot;Sd&quot;</span>, <span class="st">&quot;Sd&quot;</span>, <span class="st">&quot;Sd&quot;</span>, <span class="st">&quot;Sd&quot;</span>, <span class="st">&quot;rep&quot;</span>, <span class="st">&quot;rep&quot;</span>, <span class="st">&quot;Sdl&quot;</span>),</span>
@@ -742,9 +744,11 @@ estimate these transitions without knowing the appropriate proxy set.
 <span id="cb6-6"><a href="#cb6-6" tabindex="-1"></a>  <span class="at">eststage1 =</span> <span class="fu">c</span>(<span class="cn">NA</span>, <span class="cn">NA</span>, <span class="cn">NA</span>, <span class="cn">NA</span>, <span class="cn">NA</span>, <span class="cn">NA</span>, <span class="st">&quot;NotAlive&quot;</span>),</span>
 <span id="cb6-7"><a href="#cb6-7" tabindex="-1"></a>  <span class="at">givenrate =</span> <span class="fu">c</span>(<span class="fl">0.345</span>, <span class="fl">0.345</span>, <span class="fl">0.054</span>, <span class="fl">0.054</span>, <span class="cn">NA</span>, <span class="cn">NA</span>, <span class="cn">NA</span>),</span>
 <span id="cb6-8"><a href="#cb6-8" tabindex="-1"></a>  <span class="at">multiplier =</span> <span class="fu">c</span>(<span class="cn">NA</span>, <span class="cn">NA</span>, <span class="cn">NA</span>, <span class="cn">NA</span>, <span class="fl">0.345</span>, <span class="fl">0.054</span>, <span class="cn">NA</span>),</span>
-<span id="cb6-9"><a href="#cb6-9" tabindex="-1"></a>  <span class="at">type =</span> <span class="fu">c</span>(<span class="dv">1</span>, <span class="dv">1</span>, <span class="dv">1</span>, <span class="dv">1</span>, <span class="dv">3</span>, <span class="dv">3</span>, <span class="dv">1</span>), <span class="at">type_t12 =</span> <span class="fu">c</span>(<span class="dv">1</span>, <span class="dv">2</span>, <span class="dv">1</span>, <span class="dv">2</span>, <span class="dv">1</span>, <span class="dv">1</span>, <span class="dv">1</span>),</span>
-<span id="cb6-10"><a href="#cb6-10" tabindex="-1"></a>  <span class="at">stageframe =</span> lathframe, <span class="at">historical =</span> <span class="cn">TRUE</span>)</span>
-<span id="cb6-11"><a href="#cb6-11" tabindex="-1"></a><span class="co">#lathsupp3</span></span></code></pre></div>
+<span id="cb6-9"><a href="#cb6-9" tabindex="-1"></a>  <span class="at">type =</span> <span class="fu">c</span>(<span class="st">&quot;S&quot;</span>, <span class="st">&quot;S&quot;</span>, <span class="st">&quot;S&quot;</span>, <span class="st">&quot;S&quot;</span>, <span class="st">&quot;R&quot;</span>, <span class="st">&quot;R&quot;</span>, <span class="st">&quot;S&quot;</span>),</span>
+<span id="cb6-10"><a href="#cb6-10" tabindex="-1"></a>  <span class="at">type_t12 =</span> <span class="fu">c</span>(<span class="st">&quot;S&quot;</span>, <span class="st">&quot;F&quot;</span>, <span class="st">&quot;S&quot;</span>, <span class="st">&quot;F&quot;</span>, <span class="st">&quot;S&quot;</span>, <span class="st">&quot;S&quot;</span>, <span class="st">&quot;S&quot;</span>),</span>
+<span id="cb6-11"><a href="#cb6-11" tabindex="-1"></a>  <span class="at">stageframe =</span> lathframe, <span class="at">historical =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb6-12"><a href="#cb6-12" tabindex="-1"></a><span class="co">#&gt; Warning: NA values in argument multiplier will be treated as 1 values.</span></span>
+<span id="cb6-13"><a href="#cb6-13" tabindex="-1"></a><span class="co">#lathsupp3</span></span></code></pre></div>
 <p style="text-indent: 20px">
 These two supplement tables show us that we have survival-transition
 probabilities (<code>type = 1</code>, whereas fecundity rates would be
@@ -762,10 +766,10 @@ wished, we could have used the values of transitions to be estimated
 within this matrix as proxies for these values, in which case we would
 enter the stages corresponding to the correct transitions in the
 <code>eststageX</code> columns, and the <code>givenrate</code> column
-would be blank. This is precisely what we did for one set of transitions
-- namely transitions from the seedling class to mature stages. Finally,
-we have also included fecundity multipliers for newly produced seed in
-the bottom two rows.
+would be blank. This is what we did with one set of transitions - namely
+transitions from the seedling class to mature stages. Finally, we have
+also included fecundity multipliers for newly produced seed in the
+bottom two rows.
 </p>
 <p style="text-indent: 20px">
 Note that the <code>supplemental()</code> function allowed us to isolate
@@ -789,22 +793,19 @@ multipliers.
 We have chosen to build both ahistorical and historical MPMs in this
 vignette. However, in a typical analysis, it is most parsimonious to
 test whether history influences the demography of the population
-significantly first, and only use historical MPMs if the test supports
-the hypothesis that it does. A number of methods exist to conduct these
-tests, and we recommend <span class="citation">Brownie et al.
-(1993)</span>, <span class="citation">Pradel, Wintrebert, and Gimenez
-(2003)</span>, <span class="citation">Pradel (2005)</span>, and <span class="citation">Cole et al. (2014)</span> for good discussions and
-tools to help with this.
+significantly first, using historical MPMs only if the test supports
+doing so. A number of methods exist to conduct these tests, and we
+recommend <span class="citation">Brownie et al. (1993)</span>, <span class="citation">Pradel, Wintrebert, and Gimenez (2003)</span>, <span class="citation">Pradel (2005)</span>, and <span class="citation">Cole
+et al. (2014)</span> for good discussions and tools to help with this.
 </p>
 <p style="text-indent: 20px">
-In <code>lefko3</code>, we provide a function that can be used to test
-for the effects of history directly from the historical vertical
-dataset: <code>modelsearch()</code>. Function <code>modelsearch()</code>
-estimates best-fit linear models of the key vital rates used to
-propagate elements in function-based MPMs. There are up to 14 different
-vital rates possible to test, of which seven are adult vital rates and
-seven are juvenile vital rates. The standard vital rates that we may
-wish to test are survival (marked as <code>surv</code> in
+In <code>lefko3</code>, function <code>modelsearch()</code> can be used
+to test for the effects of history directly from the historical vertical
+dataset. This function estimates best-fit linear models of the key vital
+rates used to propagate elements in function-based MPMs. There are up to
+14 different vital rates possible to test, of which seven are adult
+vital rates and seven are juvenile vital rates. The standard vital rates
+that we may wish to test are survival (marked as <code>surv</code> in
 <code>vitalrates</code>), primary size (<code>size</code>), and
 fecundity (<code>fec</code>), which are the default vital rates assumed
 by the function. Here, we also test observation status
@@ -828,10 +829,10 @@ stage (if juvenile vital rates are to be estimated and such stages occur
 in the dataset), 6) set the proper distributions to use for size and
 fecundity, and 7) note which variables code for individual identity
 (used to treat identity as a random factor in mixed linear models),
-patch identity (if multiple patches occur in the dataset and vital rates
-should be estimated with patch as a factor), and observation occasion.
-We also set <code>quiet = &quot;partial&quot;</code> to limit the amount of text
-output while the function runs.
+patch identity (if there are multiple patches and vital rates should be
+estimated with patch as a factor), and observation occasion. We also set
+<code>quiet = &quot;partial&quot;</code> to limit the amount of text output while
+the function runs.
 </p>
 <div class="sourceCode" id="cb7"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" tabindex="-1"></a>histtest <span class="ot">&lt;-</span> <span class="fu">modelsearch</span>(lathvert, <span class="at">historical =</span> <span class="cn">TRUE</span>, <span class="at">suite =</span> <span class="st">&quot;main&quot;</span>,</span>
 <span id="cb7-2"><a href="#cb7-2" tabindex="-1"></a>  <span class="at">vitalrates =</span> <span class="fu">c</span>(<span class="st">&quot;surv&quot;</span>, <span class="st">&quot;obs&quot;</span>, <span class="st">&quot;size&quot;</span>, <span class="st">&quot;repst&quot;</span>, <span class="st">&quot;fec&quot;</span>), <span class="at">juvestimate =</span> <span class="st">&quot;Sdl&quot;</span>, </span>
@@ -869,14 +870,15 @@ output while the function runs.
 <span id="cb7-34"><a href="#cb7-34" tabindex="-1"></a><span class="co">#&gt; </span></span>
 <span id="cb7-35"><a href="#cb7-35" tabindex="-1"></a><span class="co">#&gt; Developing global model of juvenile primary size...</span></span>
 <span id="cb7-36"><a href="#cb7-36" tabindex="-1"></a><span class="co">#&gt; </span></span>
-<span id="cb7-37"><a href="#cb7-37" tabindex="-1"></a><span class="co">#&gt; </span></span>
-<span id="cb7-38"><a href="#cb7-38" tabindex="-1"></a><span class="co">#&gt; Developing global model of juvenile primary size...</span></span>
-<span id="cb7-39"><a href="#cb7-39" tabindex="-1"></a><span class="co">#&gt; </span></span>
-<span id="cb7-40"><a href="#cb7-40" tabindex="-1"></a><span class="co">#&gt; Global model of juvenile primary size developed. Proceeding with model dredge...</span></span>
-<span id="cb7-41"><a href="#cb7-41" tabindex="-1"></a><span class="co">#&gt; Warning: Juvenile reproductive status in time t+1 appears to be constant, and so will be set to constant.</span></span>
-<span id="cb7-42"><a href="#cb7-42" tabindex="-1"></a><span class="co">#&gt; </span></span>
-<span id="cb7-43"><a href="#cb7-43" tabindex="-1"></a><span class="co">#&gt; Finished selecting best-fit models.</span></span>
-<span id="cb7-44"><a href="#cb7-44" tabindex="-1"></a><span class="co">#summary(histtest)</span></span></code></pre></div>
+<span id="cb7-37"><a href="#cb7-37" tabindex="-1"></a><span class="co">#&gt; Global model estimation failed. Dropping individual identity term.</span></span>
+<span id="cb7-38"><a href="#cb7-38" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb7-39"><a href="#cb7-39" tabindex="-1"></a><span class="co">#&gt; Redeveloping global model of juvenile primary size...</span></span>
+<span id="cb7-40"><a href="#cb7-40" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb7-41"><a href="#cb7-41" tabindex="-1"></a><span class="co">#&gt; Global model of juvenile primary size developed. Proceeding with model dredge...</span></span>
+<span id="cb7-42"><a href="#cb7-42" tabindex="-1"></a><span class="co">#&gt; Warning: Juvenile reproductive status in time t+1 appears to be constant, and so will be set to constant.</span></span>
+<span id="cb7-43"><a href="#cb7-43" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb7-44"><a href="#cb7-44" tabindex="-1"></a><span class="co">#&gt; Finished selecting best-fit models.</span></span>
+<span id="cb7-45"><a href="#cb7-45" tabindex="-1"></a><span class="co">#summary(histtest)</span></span></code></pre></div>
 <p style="text-indent: 20px">
 The summary generated is quite long, and likely resulted in a series of
 warnings from the model-building functions utilized. For our purposes,
@@ -894,15 +896,15 @@ model, in standard R formula notation (i.e. <span class="math inline">\(y = ax 
 coding for size in occasions <em>t</em> and <em>t</em>-1, given as
 <code>sizea2</code> and <code>sizea1</code>, and reproductive status in
 occasions <em>t</em> and <em>t</em>-1, given as <code>repstatus2</code>
-and <code>repstatus1</code>, respectively. Since several vital rates
-show <code>sizea1</code> or <code>repstatus1</code> as term in the
-best-fit models, most notably for adult survival, primary size,
-reproduction probability, and fecundity, we see that individual history
-has a significant impact on the demography of this population. The
-quality control information in element <code>qc</code> is also of
-interest, showing that some of our models are quite strong, with
-accuracy of 0.982 for adult survival and 0.903 for observation, while
-others are less accurate, most notably primary size and fecundity.
+and <code>repstatus1</code>, respectively. Several vital rates
+incorporate <code>sizea1</code> or <code>repstatus1</code> in the
+best-fit models (notably adult survival, primary size, reproduction
+probability, and fecundity), and so individual history does have a
+significant impact on the demography of this population. The quality
+control information in element <code>qc</code> is also of interest,
+showing that some of our models are quite strong, with accuracy of
+roughly 1.0 for adult survival and 0.903 for observation, while others
+are less accurate, most notably primary size and fecundity.
 </p>
 </div>
 <div id="step-4.-mpm-estimation" class="section level4">
@@ -984,11 +986,17 @@ transition and fecundity elements were actually estimated, both overall
 and per matrix, the number of populations, patches, and time steps
 covered by the MPM, and the number of individuals and transitions the
 matrices are based on (these last numbers can be used to understand
-matrix quality). Finally, the last section shows summaries of the column
-sums from the survival-transition (<code>U</code>) matrices in this
+matrix quality). The next section shows summaries of the column sums
+from the survival-transition (<code>U</code>) matrices in this
 <code>lefkoMat</code> object. These column sums correspond to the
 survival probabilities of the different life stages, and so the
-summaries must show numbers ranging from 0.0 to 1.0.
+summaries must show numbers ranging from 0.0 to 1.0. If any matrices had
+elements below 0.0, and if any survival matrix columns summed to a
+number greater than 1.0, then we would see warnings to that effect in
+the summary output. Finally, the very last line of the summary notes
+that the first matrix appears to have a broken life cycle, meaning that
+some of the transitions expected based on our assumed life cycle are
+equal to 0.0.
 </p>
 <p style="text-indent: 20px">
 The matrix creation functions in this package sort the stages provided
@@ -1071,7 +1079,7 @@ vectors used in output for the <code>summary()</code> function
 <p style="text-indent: 20px">
 Now we will estimate the historical element-wise mean matrix. We will
 show only the top-left corner of the rather large matrix (a section
-comprised of the first twenty rows and eight columns of the 30 x 30
+comprised of the first twenty rows and eight columns of the 49 x 49
 matrix).
 </p>
 <div class="sourceCode" id="cb14"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1" tabindex="-1"></a>ehrlen3mean <span class="ot">&lt;-</span> <span class="fu">lmean</span>(ehrlen3)</span>
@@ -1101,8 +1109,8 @@ element [1, 2] represents the transition probability from seedling in
 occasion <em>t</em>-1 and very small adult in occasion <em>t</em>
 (column pair), to dormant seed in occasion <em>t</em> and in occasion
 <em>t</em>+1 (row pair). Clearly [1, 2] is a structural zero because it
-is impossible for an individual to be both a dormant seed and a very
-small adult at the same time.
+is impossible for an individual to be concurrently a dormant seed and a
+very small adult.
 </p>
 <p style="text-indent: 20px">
 Error-checking is more difficult with historical matrices because they
@@ -1133,7 +1141,8 @@ individuals that had been vegetatively dormant in occasion <em>t</em>-1.
 Quick scans will show many transitions missing, because each stage has
 only certain stages that can transition from it, and to which it can
 transition. Further transitions are missing because the MPM is raw, and
-some transitions are not parameterized because no individuals made them.
+so some transitions are not parameterized because no individuals made
+them.
 </p>
 <p style="text-indent: 20px">
 One last error-checking technique before we analyze our MPMs: matrix
@@ -1179,8 +1188,8 @@ population growth rate (<span class="math inline">\(\lambda\)</span>)
 and the stochastic population growth rate (<span class="math inline">\(a
 = \text{log} \lambda _{S}\)</span>) from the ahistorical MPMs, including
 both the annual MPM and the mean. For the stochastic case, we will set
-the seed for R’s random number generation to make our output
-reproducible. Note that each <span class="math inline">\(\lambda\)</span> estimate includes a data frame
+the seed for <code>R</code>’s random number generation to make our
+output reproducible. Note that each <span class="math inline">\(\lambda\)</span> estimate includes a data frame
 describing the matrices in order (given as the <code>labels</code>
 object within the output list). Here is the set of ahistorical annual
 <span class="math inline">\(\lambda\)</span> estimates, followed by
@@ -1204,24 +1213,24 @@ the stochastic population growth rate (<span class="math inline">\(a =
 <span id="cb20-14"><a href="#cb20-14" tabindex="-1"></a><span class="co">#&gt;   pop patch           a        var        sd          se</span></span>
 <span id="cb20-15"><a href="#cb20-15" tabindex="-1"></a><span class="co">#&gt; 1   1     1 -0.04490197 0.03154986 0.1776228 0.001776228</span></span></code></pre></div>
 <p style="text-indent: 20px">
-We will now look at the same numbers for the historical analyses. There
-are several differences in the output in addition to the lower growth
-rate estimates. First, because there are four years of data, there are
-three ahistorical transitions possible for estimation: year 1 to 2, year
-2 to 3, and year 3 to 4. However, in the historical case, only two are
-possible: from years 1 and 2 to 3 (technically, from years 1
-[<em>t</em>-1] and 2 [<em>t</em>] to years 2 [<em>t</em>] and 3
-[<em>t</em>+1]), and from years 2 and 3 to 4. Second, historical
-matrices cover more of the individual heterogeneity in a population by
-splitting ahistorical transitions by stage in occasion <em>t</em>-1.
-This heterogeneity may reflect many sources, for example the impacts of
-trade-offs operating across years <span class="citation">(Shefferson and
-Roach 2010)</span>. One particularly common trade-off is the cost of
-growth: an individual that grows a great deal in one time step due to
-great environmental conditions in that year might pay a large cost of
-survival, growth, or reproduction in the next if those environmental
-conditions deteriorate <span class="citation">(Shefferson, Warren II,
-and Pulliam 2014; Shefferson et al. 2018)</span>.
+We will now analyze the historical MPM. There are several differences in
+the output in addition to the lower growth rate estimates. First,
+because there are four years of data, there are three ahistorical
+transitions possible for estimation: year 1 to 2, year 2 to 3, and year
+3 to 4. However, in the historical case, only two are possible: from
+years 1 and 2 to 3 (technically, from years 1 [<em>t</em>-1] and 2
+[<em>t</em>] to years 2 [<em>t</em>] and 3 [<em>t</em>+1]), and from
+years 2 and 3 to 4. Second, historical matrices cover more of the
+individual heterogeneity in a population by splitting ahistorical
+transitions by stage in occasion <em>t</em>-1. This heterogeneity may
+reflect many sources, for example the impacts of trade-offs operating
+across years <span class="citation">(Shefferson and Roach 2010)</span>.
+One particularly common trade-off is the cost of growth: an individual
+that grows a great deal in one time step due to great environmental
+conditions in that year might pay a large cost of survival, growth, or
+reproduction in the next if those environmental conditions deteriorate
+<span class="citation">(Shefferson, Warren II, and Pulliam 2014;
+Shefferson et al. 2018)</span>.
 </p>
 <div class="sourceCode" id="cb21"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb21-1"><a href="#cb21-1" tabindex="-1"></a><span class="co"># Deterministic historical</span></span>
 <span id="cb21-2"><a href="#cb21-2" tabindex="-1"></a><span class="fu">lambda3</span>(ehrlen3)</span>
@@ -1282,10 +1291,8 @@ pair dominates, in which case we might look at the row with the maximum
 <div class="sourceCode" id="cb24"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb24-1"><a href="#cb24-1" tabindex="-1"></a>ehrlen3mss<span class="sc">$</span>hist[<span class="fu">which</span>(ehrlen3mss<span class="sc">$</span>hist<span class="sc">$</span>ss_prop <span class="sc">==</span> <span class="fu">max</span>(ehrlen3mss<span class="sc">$</span>hist<span class="sc">$</span>ss_prop)),]</span>
 <span id="cb24-2"><a href="#cb24-2" tabindex="-1"></a><span class="co">#&gt;    matrix stage_id_2 stage_id_1 stage_2 stage_1   ss_prop</span></span>
 <span id="cb24-3"><a href="#cb24-3" tabindex="-1"></a><span class="co">#&gt; 17      1          3          3      Tm      Tm 0.2404459</span></span></code></pre></div>
-<p style="text-indent: 20px">
-Here we see that about 24% of the population is expected to be composed
-of tiny adults maintaining themselves as tiny adults.
-</p>
+<p>About 24% of the population is expected to be composed of tiny adults
+maintaining themselves as tiny adults.</p>
 <p style="text-indent: 20px">
 The longer format of the historical stable stage output makes it harder
 to read. However, historical values can also be combined by stage at
@@ -1294,7 +1301,7 @@ occasion <em>t</em> (<code>stage_2</code>) to estimate the
 in the <code>ahist</code> element, which allows comparison to a stable
 stage distribution estimated from a purely ahistorical MPM. Notice below
 that the <code>ss_prop</code> column shows values that are different
-from the purely ahistorical case, suggesting the influence of individual
+from the ahistorical MPM, suggesting the influence of individual
 history.
 </p>
 <div class="sourceCode" id="cb25"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb25-1"><a href="#cb25-1" tabindex="-1"></a>ehrlen3mss<span class="sc">$</span>ahist</span>
@@ -1375,9 +1382,9 @@ vs. historically-corrected reproductive values</div>
 <p style="text-indent: 20px">
 Both deterministic and stochastic analyses show that flowering adults
 have the greatest reproductive value in both ahistorical and historical
-analysis, while dormant seeds have the least. However, the historical
-MPMs suggest lower contributions of seedlings and vegetative dormancy,
-but larger contributions of flowering adults.
+analysis, while dormant seeds have the least. Historical MPMs suggest
+lower contributions of seedlings and vegetative dormancy, but larger
+contributions of flowering adults.
 </p>
 <p style="text-indent: 20px">
 Now we will look at the deterministic sensitivities of <span class="math inline">\(\lambda\)</span> to the ahistorical mean matrix
@@ -1427,16 +1434,16 @@ mean MPM.
 <p style="text-indent: 20px">
 The first element produced in this analysis is <code>h_sensmats</code>,
 which is a list composed of sensitivity matrices of the historical
-matrices, in order (we have only one in our mean matrix object). These
-matrices are the same dimensions as the historical matrices used as
-input, and so can be quite huge. This is followed by
-<code>ah_sensmats</code>, which is a list composed of
+matrices, in order (we have only one in our mean matrix
+<code>lefkoMat</code> object). These matrices are the same dimensions as
+the historical matrices used as input, and so can be quite huge. This is
+followed by <code>ah_sensmats</code>, which is a list composed of
 historically-corrected sensitivity matrices of corresponding ahistorical
 matrix elements (calculated using the historically-corrected stable
 stage distribution and reproductive value vector produced in
-<code>ehrlen3mss</code> and <code>ehrlen3mrv</code>, respectively). So,
-these are different than the sensitivities estimated from the
-ahistorical matrices themselves, but have the same dimensions. Next,
+<code>ehrlen3mss</code> and <code>ehrlen3mrv</code>, respectively).
+These values are different from the sensitivities estimated from the
+ahistorical matrices themselves, but are formatted similarly. Next,
 <code>h_stages</code> and <code>ah_stages</code> give the order of
 paired stages and life history stages used in the historical and
 historically-corrected sensitivity matrices, respectively. Finally, we
@@ -1490,7 +1497,7 @@ function with the <code>stochastic = TRUE</code> argument set, as below.
 <p style="text-indent: 20px">
 A complementary approach to sensitivity analysis is elasticity analysis.
 Elasticities are easier to interpret because projection matrix elements
-valued at 0 produce elasticity values also equal to 0, thus eliminating
+equal to 0 produce elasticity values also equal to 0, thus eliminating
 biologically impossible transitions from consideration. Elasticity
 values are also scaled to sum to 1.0, making elasticities of survival
 transitions easier to compare to those of fecundity. However, they are
@@ -1655,15 +1662,17 @@ fecundity. Environmental stochasticity appears to exacerbate these
 differences.
 </p>
 <p style="text-indent: 20px">
-<p>Package <code>lefko3</code> also includes functions to conduct many
+Package <code>lefko3</code> also includes functions to conduct many
 other analyses, including deterministic and stochastic life table
 response experiments, and general projection including quasi-extinction
 analysis and density dependent analysis. Users wishing to conduct these
-analyses should see our free e-manual called <strong><em>lefko3: a
-gentle introduction</em></strong> and other vignettes, including
-long-format and video vignettes, on
-<a href="http://www.sheffersonlab.com/projects.html">the projects
-page</a> of the Shefferson lab website.</p>
+analyses should see our free e-manual called
+<a href="https://bookdown.org/cdorm/lefko3gentle/"><em>lefko3: a
+gentle introduction</em></a>, as well as through the resources found on
+the
+<a href="http://www.revolutionarydemography.com/projects.html"><strong>{r}evolutionary
+demography</strong></a> website.
+</p>
 </div>
 </div>
 <div id="acknowledgements" class="section level2">

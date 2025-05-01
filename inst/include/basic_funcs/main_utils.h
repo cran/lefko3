@@ -60,8 +60,6 @@ using namespace arma;
 // 47. int whichbrew  Assess if MPM is ahistorical, historical, age-by-stage, or Leslie
 // 48. bool df_compare  Check If Two Data Frames Are Equal
 // 49. void pop_error  Standardized Error Messages
-// 50. bool yesno_to_logic  Take Yes / No and Other Input to Yield a Boolean Value
-// 51. void yesnoauto_to_logic Take Yes / No and Other Input to Yield a Boolean Value
 
 
 
@@ -1193,12 +1191,12 @@ namespace LefkoUtils {
         NumericVector old_var_i = as<NumericVector>(data[i]);
         NumericVector new_var_i (new_rows);
         
-          for (int j = 0; j < new_rows; j++) {
-            new_var_i(j) = old_var_i(keep_index(j));
-          }
-          new_df(i) = new_var_i;
-          
-        } else if (is<IntegerVector>(data[i])) {
+        for (int j = 0; j < new_rows; j++) {
+          new_var_i(j) = old_var_i(keep_index(j));
+        }
+        new_df(i) = new_var_i;
+        
+      } else if (is<IntegerVector>(data[i])) {
           IntegerVector old_var_i = as<IntegerVector>(data[i]);
           IntegerVector new_var_i (new_rows);
           
@@ -2802,7 +2800,7 @@ namespace LefkoUtils {
     double zi_sum = zi_year_sum + zi_patch_sum + zi_indcova2_sum + zi_indcova1_sum +
       zi_indcovb2_sum + zi_indcovb1_sum + zi_indcovc2_sum + zi_indcovc1_sum;
     
-    if (zi_sum > 0.0) {
+    if (zi_sum != 0.0) {
       zero_inflation = true;
     }
     
@@ -3273,7 +3271,7 @@ namespace LefkoUtils {
   //' @name foi_counter
   //' 
   //' @param modelproxy A list holding the contents of a model processed with
-  //' function \code{\link{.modelextract}()}
+  //' function \code{modelextract()}
   //' @param zi A logical value indicating whether to focus on the zero-inflation
   //' parameters.
   //' 
@@ -3331,7 +3329,7 @@ namespace LefkoUtils {
   //' @name flightoficarus
   //' 
   //' @param modelproxy A model proxy list extracted with function
-  //' \code{\link{.modelextract}()}.
+  //' \code{modelextract()}.
   //' 
   //' @return A vector of numeric values for random categorical terms. The order
   //' is: 1) cov a time 2, 2) cov a time 1, 3) cov b time 2, 4) cov b time 1,
@@ -3395,7 +3393,7 @@ namespace LefkoUtils {
   //' @name bootson
   //' 
   //' @param modelproxy A model proxy list extracted with function
-  //' \code{\link{.modelextract}()}.
+  //' \code{modelextract()}.
   //' 
   //' @return A vector holding all covariate name terms. The order is: 1) cov a
   //' time 2, 2) cov a time 1, 3) cov b time 2, 4) cov b time 1, 5) cov c time 2,
@@ -3466,7 +3464,7 @@ namespace LefkoUtils {
   //' @name zero_flightoficarus
   //' 
   //' @param modelproxy A model proxy list extracted with function
-  //' \code{\link{.modelextract}()}.
+  //' \code{modelextract()}.
   //' 
   //' @return A vector of numeric values for random categorical terms. The order
   //' is: 1) cov a time 2, 2) cov a time 1, 3) cov b time 2, 4) cov b time 1,
@@ -3531,7 +3529,7 @@ namespace LefkoUtils {
   //' @name zero_bootson
   //' 
   //' @param modelproxy A model proxy list extracted with function
-  //' \code{\link{.modelextract}()}.
+  //' \code{modelextract()}.
   //' 
   //' @return A vector holding all covariate name terms. The order is: 1) cov a
   //' time 2, 2) cov a time 1, 3) cov b time 2, 4) cov b time 1, 5) cov c time 2,
@@ -4110,7 +4108,8 @@ namespace LefkoUtils {
       }
       
       for (int j = 0; j < no_patches; j++) {
-        if (stringcompare_simple(as<std::string>(fixed_vars(i)), patchvar, false)) {
+        if (stringcompare_simple(as<std::string>(fixed_vars(i)), patchvar, false) ||
+            stringcompare_simple(as<std::string>(fixed_vars(i)), "patch", false)) {
           if (stringcompare_simple(as<std::string>(fixed_vars(i)),
             as<std::string>(mainpatches(j)), false)) {
             patch_coefs(j) = fixed_slopes(i);
@@ -4973,7 +4972,8 @@ namespace LefkoUtils {
         }
       }
       for (int j = 0; j < no_patches; j++) {
-        if (stringcompare_simple(as<std::string>(fixed_zi_vars(i)), patchvar, false)) {
+        if (stringcompare_simple(as<std::string>(fixed_zi_vars(i)), patchvar, false) ||
+            stringcompare_simple(as<std::string>(fixed_zi_vars(i)), "patch", false)) {
           if (stringcompare_simple(as<std::string>(fixed_zi_vars(i)),
             as<std::string>(mainpatches(j)), false)) {
             zeropatch_coefs(j) = fixed_zi_slopes(i);
@@ -5853,7 +5853,8 @@ namespace LefkoUtils {
           }
         }
         
-        if (stringcompare_hard(as<std::string>(random_names(i)), patchvar)) {
+        if (stringcompare_hard(as<std::string>(random_names(i)), patchvar) ||
+            stringcompare_hard(as<std::string>(random_names(i)), "patch")) {
           CharacterVector ran_patch_names = random_vars[i];
           NumericVector ran_patch_slopes = random_slopes[i];
           int no_ran_patch_slopes = ran_patch_names.length();
@@ -5978,7 +5979,8 @@ namespace LefkoUtils {
               }
             }
           }
-          if (stringcompare_hard(as<std::string>(random_zi_names(i)), patchvar)) {
+          if (stringcompare_hard(as<std::string>(random_zi_names(i)), patchvar) ||
+              stringcompare_hard(as<std::string>(random_zi_names(i)), "patch")) {
             CharacterVector ran_zi_patch_names = random_zi_vars[i];
             NumericVector ran_zi_patch_slopes = random_zi_slopes[i];
             int no_ran_zi_patch_slopes = ran_zi_patch_slopes.length();
@@ -9911,17 +9913,6 @@ namespace LefkoUtils {
       eat_my_shorts += input1;
       eat_my_shorts += " is not recognized.";
       
-    } else if (type == 7) { // Should eliminate
-      eat_my_shorts = "Argument ";
-      eat_my_shorts += input1;
-      eat_my_shorts += " must be set to a ";
-      eat_my_shorts += input2;
-      eat_my_shorts += " object, or ";
-      eat_my_shorts += input3;
-      eat_my_shorts += " must be supplied with ";
-      eat_my_shorts += input1;
-      eat_my_shorts += " not set.";
-      
     } else if (type == 8) {
       eat_my_shorts = "Values input for ";
       eat_my_shorts += input1;
@@ -9976,14 +9967,7 @@ namespace LefkoUtils {
       eat_my_shorts += input2;
       eat_my_shorts += ".";
       
-    } else if (type == 18) {
-      eat_my_shorts = "Vector ";
-      eat_my_shorts += input1;
-      eat_my_shorts += " does not include ";
-      eat_my_shorts += input2;
-      eat_my_shorts += " value(s) provided.";
-      
-    } else if (type == 19) {
+    } else if (type == 19) { // Could this be dropped for 29
       eat_my_shorts = "Vector ";
       eat_my_shorts += input1;
       eat_my_shorts += " must be the same length as the number of ";
@@ -10015,210 +9999,11 @@ namespace LefkoUtils {
       eat_my_shorts += input3;
       eat_my_shorts += ".";
       
-    } else if (type == 23) {
-      eat_my_shorts = "Function ";
-      eat_my_shorts += input1;
-      eat_my_shorts += " currently only handles ";
-      eat_my_shorts += input2;
-      eat_my_shorts += ".";
-      
-    } else if (type == 24) {
-      eat_my_shorts = "Do not use arguments ";
-      eat_my_shorts += input1;
-      eat_my_shorts += " and ";
-      eat_my_shorts += input2;
-      eat_my_shorts += " if ";
-      eat_my_shorts += input3;
-      eat_my_shorts += ".";
-      
-    } else if (type == 25) {
-      eat_my_shorts = input1;
-      eat_my_shorts += " are not allowed in argument ";
-      eat_my_shorts += input2;
-      eat_my_shorts += ".";
-      
-    } else if (type == 26) {
-      eat_my_shorts = "Argument ";
-      eat_my_shorts += input1;
-      eat_my_shorts += " is required to ";
-      eat_my_shorts += input2;
-      eat_my_shorts += ".";
-      
-    } else if (type == 27) {
-      eat_my_shorts = "Arguments ";
-      eat_my_shorts += input1;
-      eat_my_shorts += " and ";
-      eat_my_shorts += input2;
-      eat_my_shorts += " must be ";
-      eat_my_shorts += input3;
-      eat_my_shorts += ".";
-      
-    } else if (type == 28) {
-      eat_my_shorts = "Arguments ";
-      eat_my_shorts += input1;
-      eat_my_shorts += " can only be used in ";
-      eat_my_shorts += input2;
-      eat_my_shorts += ".";
-      
-    } else if (type == 29) {
-      eat_my_shorts = "Vector ";
-      eat_my_shorts += input1;
-      eat_my_shorts += " must be the same length as ";
-      eat_my_shorts += input2;
-      eat_my_shorts += ".";
-      
-    } else if (type == 30) {
-      eat_my_shorts = "Elements in argument ";
-      eat_my_shorts += input1;
-      eat_my_shorts += " may not be negative";
-      eat_my_shorts += ".";
-    } else if (type == 31) {
-      eat_my_shorts = "Elements in argument ";
-      eat_my_shorts += input1;
-      eat_my_shorts += " may not be NA.";
     }
     
     throw Rcpp::exception(eat_my_shorts.get_cstring(), false);
     
     return;
   }
-  
-  //' Take Yes / No and Other Input to Yield a Boolean Value
-  //' 
-  //' Function \code{yesno_to_logic()} takes a variety of inputs and interprets
-  //' them, creating a Boolean response.
-  //' 
-  //' @name yesno_to_logic
-  //' 
-  //' @param input RObject to be interpreted.
-  //' @param arg_name Name of argument that is being tested.
-  //' 
-  //' @return Returns a simple Boolean value, or produces an error for
-  //' unintelligible input.
-  inline bool yesno_to_logic (RObject input, String arg_name) {
-    bool final_result = false;
-    
-    if (is<StringVector>(input)) {
-      StringVector yesbits = {"y", "yes", "yea", "yeah", "t", "true", "ja", "tak"};
-      StringVector nobits = {"n", "no", "non", "nah", "f", "false", "nein", "nie"};
-      
-      StringVector input_check_vec = as<StringVector>(input);
-      String input_check = String(input_check_vec(0));
-      
-      int yes_check {0};
-      int no_check {0};
-      
-      for (int i = 0; i < 8; i++) {
-        if (LefkoUtils::stringcompare_simple(input_check, String(yesbits(i)), true)) yes_check++;
-        if (LefkoUtils::stringcompare_simple(input_check, String(nobits(i)), true)) no_check++;
-      }
-      
-      if (yes_check > 0) {
-        final_result = true;
-      } else if (no_check > 0) {
-        final_result = false;
-      } else {
-        String err_out = "Argument ";
-        err_out += arg_name;
-        err_out += " is invalid.";
-        
-        throw Rcpp::exception(err_out.get_cstring(), false);
-      }
-    } else if (is<LogicalVector>(input)) {
-        LogicalVector input_check_vec = as<LogicalVector>(input);
-        final_result = static_cast<bool>(input_check_vec(0));
-    } else if (is<NumericVector>(input)) {
-        IntegerVector input_check_vec = as<IntegerVector>(input);
-        int input_first = static_cast<int>(input_check_vec(0));
-        
-        if (input_first == 1) final_result = true;
-    } else {
-      String err_out = "Argument ";
-      err_out += arg_name;
-      err_out += " is invalid.";
-      
-      throw Rcpp::exception(err_out.get_cstring(), false);
-    }
-    
-    return final_result;
-  }
-  
-  //' Take Yes / No and Other Input to Yield a Boolean Value
-  //' 
-  //' Function \code{yesnoauto_to_logic()} takes a variety of inputs and
-  //' interprets them, altering two Boolean responses that are input as
-  //' arguments.
-  //' 
-  //' @name yesnoauto_to_logic
-  //' 
-  //' @param input RObject to be interpreted.
-  //' @param arg_name Name of the function argument being tested.
-  //' @param yesno_only A Boolean variable holding the yes / no value.
-  //' @param auto_only A Boolean variable holding whether "auto" was chosen.
-  //' 
-  //' @return Alters two Boolean variables on memory based on the input.
-  //' 
-  //' @export yesnoauto_to_logic
-  // [[Rcpp::export(yesnoauto_to_logic)]]
-  inline void yesnoauto_to_logic (RObject input, String arg_name,
-    bool &yesno_only, bool &auto_only) {
-    
-    bool yesno_result = false;
-    bool auto_result = false;
-    
-    if (is<StringVector>(input)) {
-      StringVector yesbits = {"y", "yes", "yea", "yeah", "t", "true", "ja", "tak"};
-      StringVector nobits = {"n", "no", "non", "nah", "f", "false", "nein", "nie"};
-      StringVector autobits = {"au", "aut", "auto", "both", "jidou"};
-      
-      StringVector input_check_vec = as<StringVector>(input);
-      String input_check = String(input_check_vec(0));
-      
-      int auto_check {0};
-      int yes_check {0};
-      int no_check {0};
-      
-      for (int i = 0; i < 8; i++) {
-        if (i < 5) {
-          if (LefkoUtils::stringcompare_simple(input_check, String(autobits(i)), true)) auto_check++;
-        }
-        if (LefkoUtils::stringcompare_simple(input_check, String(yesbits(i)), true)) yes_check++;
-        if (LefkoUtils::stringcompare_simple(input_check, String(nobits(i)), true)) no_check++;
-      }
-      
-      if (auto_check > 0) { 
-        auto_result = true;
-      } else if (yes_check > 0) {
-        yesno_result = true;
-      } else if (no_check > 0) {
-        yesno_result = false;
-      } else {
-        String err_out = "Argument ";
-        err_out += arg_name;
-        err_out += " is invalid.";
-        
-        throw Rcpp::exception(err_out.get_cstring(), false);
-      }
-    } else if (is<LogicalVector>(input)) {
-        LogicalVector input_check_vec = as<LogicalVector>(input);
-        yesno_result = static_cast<bool>(input_check_vec(0));
-    } else if (is<NumericVector>(input)) {
-        IntegerVector input_check_vec = as<IntegerVector>(input);
-        int input_first = static_cast<int>(input_check_vec(0));
-        
-        if (input_first == 1) yesno_result = true;
-    } else {
-      String err_out = "Argument ";
-      err_out += arg_name;
-      err_out += " is invalid.";
-      
-      throw Rcpp::exception(err_out.get_cstring(), false);
-    }
-    
-    yesno_only = yesno_result;
-    auto_only = auto_result;
-  }
-  
 }
-
 #endif

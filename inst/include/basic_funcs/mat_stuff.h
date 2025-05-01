@@ -22,7 +22,7 @@ using namespace arma;
 // 12. String supp_decision2  Decide on Stage for Each Entry in Supplemental Table
 // 13. DataFrame supp_reassess  Expand Supplemental Table Given User Input
 // 14. DataFrame age_expanded  Expand Supplemental Table by Age Inputs
-// 15. DataFrame hst_maker  Creates hstages Data Frames
+// 15. void hst_maker  Creates hstages Data Frames
 // 16. DataFrame age_maker  Creates agestages Data Frames
 // 17. List theoldpizzle  Create Element Index for Matrix Estimation
 // 18. List sf_reassess_internal Standardize Stageframe For MPM Analysis
@@ -1357,7 +1357,7 @@ namespace LefkoMats {
   //' stage designations.
   //' @param group_check An integer used to decide whether to continue checking
   //' group deisngation.
-  //' @param group_ratchet An integer giving a cut-off number for gropup
+  //' @param group_ratchet An integer giving a cut-off number for group
   //' designation, input as a pointer to allow processing across supplemental
   //' table lines.
   //' @param group_baseline An integer used in calculating the correct stage
@@ -1366,7 +1366,7 @@ namespace LefkoMats {
   //' step to be kept in memory.
   //' 
   //' @return This function returns a single string value corresponding to the
-  //' correct stage to include for the given code in the input supplemental table.
+  //' correct stage to include for the given code in the input supplement table.
   //' 
   //' @keywords internal
   //' @noRd
@@ -2091,8 +2091,11 @@ namespace LefkoMats {
   //' @name hst_maker
   //' 
   //' @param sframe The ahistorical stageframe used in MPM development.
+  //' @param format An integer value creating an Ehrlen format data frame if
+  //' \code{format = 1}, and a deVries format data frame if \code{format = 2}.
+  //' Defaults to \code{format = 1}.
   //' 
-  //' @return A data frame with the following columns:
+  //' @return Creates a data frame by reference with the following columns:
   //' \item{stage_id_2}{Integer index of stage in time \emph{t}+1.}
   //' \item{stage_id_1}{Integer index of stage in time \emph{t}.}
   //' \item{stage_2}{String name of stage in time \emph{t}+1.}
@@ -2100,26 +2103,31 @@ namespace LefkoMats {
   //' 
   //' @keywords internal
   //' @noRd
-  inline DataFrame hst_maker (const DataFrame& sframe) {
+  inline void hst_maker (DataFrame& hstages_out, const DataFrame& sframe,
+    int format = 1) {
+    
     StringVector stage_name = as<StringVector>(sframe["stage"]);
     int true_stages = stage_name.length();
     
     IntegerVector stage_id = seq(1, true_stages);
-    int h_stages = true_stages * true_stages;
+    int correction {0};
+    if (format == 2) correction = 1;
+    
+    int h_stages = (true_stages - correction) * true_stages;
     
     IntegerVector stage_id_2 (h_stages);
     IntegerVector stage_id_1 (h_stages);
     StringVector stage_2 (h_stages);
     StringVector stage_1 (h_stages);
     
+    int current_elem {0};
     for (int s1 = 0; s1 < true_stages; s1++) {
-      for (int s2 = 0; s2 < true_stages; s2++) {
-        int current_elem = (s1 * true_stages) + s2;
-        
+      for (int s2 = 0; s2 < (true_stages - correction); s2++) {
         stage_id_2[current_elem] = stage_id[s2];
         stage_id_1[current_elem] = stage_id[s1];
         stage_2[current_elem] = stage_name[s2];
         stage_1[current_elem] = stage_name[s1];
+        current_elem++;
       }
     }
     
@@ -2127,7 +2135,7 @@ namespace LefkoMats {
       _["stage_id_1"] = stage_id_1, _["stage_2"] = stage_2,
       _["stage_1"] = stage_1);
     
-    return output;
+    hstages_out = output;
   }
   
   //' Create agestages Index Object
@@ -2420,34 +2428,34 @@ namespace LefkoMats {
     if (style < 2) {
       if (ovrows > 0) {
         if (ovrows > 1 || ovconvtype(0) != -1.0) {
-        for (int i = 0; i < ovrows; i++) { // Loop across overwrite rows
-          for (int j = 0; j < nostages; j++) { // Loop across stageframe rows
-            if (ovstage3(i) == origstageid(j)) {
-              ovindex3(i) = newstageid(j);
-            }
-            
-            if (ovstage2(i) == origstageid(j)) {
-              ovindex2(i) = newstageid(j);
-            }
-            
-            if (ovstage1(i) == origstageid(j)) {
-              ovindex1(i) = newstageid(j);
-            }
-            
-            if (oveststage3(i) == origstageid(j)) {
-              ovnew3(i) = newstageid(j);
-            }
-            
-            if (oveststage2(i) == origstageid(j)) {
-              ovnew2(i) = newstageid(j);
-            }
-            
-            if (oveststage1(i) == origstageid(j)) {
-              ovnew1(i) = newstageid(j);
-            }
-          } // j for loop
-        } // i for loop
-      } // ovrows if statement
+          for (int i = 0; i < ovrows; i++) { // Loop across overwrite rows
+            for (int j = 0; j < nostages; j++) { // Loop across stageframe rows
+              if (ovstage3(i) == origstageid(j)) {
+                ovindex3(i) = newstageid(j);
+              }
+              
+              if (ovstage2(i) == origstageid(j)) {
+                ovindex2(i) = newstageid(j);
+              }
+              
+              if (ovstage1(i) == origstageid(j)) {
+                ovindex1(i) = newstageid(j);
+              }
+              
+              if (oveststage3(i) == origstageid(j)) {
+                ovnew3(i) = newstageid(j);
+              }
+              
+              if (oveststage2(i) == origstageid(j)) {
+                ovnew2(i) = newstageid(j);
+              }
+              
+              if (oveststage1(i) == origstageid(j)) {
+                ovnew1(i) = newstageid(j);
+              }
+            } // j for loop
+          } // i for loop
+        } // ovrows if statement
       }
     } // style if statement
     
@@ -2713,32 +2721,31 @@ namespace LefkoMats {
       if (ovrows > 0) {
         if (ovrows > 1 || ovconvtype(0) != -1.0) {
           for (int i = 0; i < ovrows; i++) { // Loop across overwrite rows
-          
-          ovindexold321(i) = (ovindex3(i) - 1) + ((ovindex2(i) - 1) * nostages_nodead_nounborn) + 
-            ((ovindex2(i) - 1) * nostages_nodead_nounborn * nostages_nodead_nounborn) + 
-            ((ovindex1(i) - 1) * nostages_nodead_nounborn * nostages_nodead_nounborn * 
-              nostages_nodead_nounborn);
+            ovindexold321(i) = (ovindex3(i) - 1) + ((ovindex2(i) - 1) * nostages_nodead_nounborn) + 
+              ((ovindex2(i) - 1) * nostages_nodead_nounborn * nostages_nodead_nounborn) + 
+              ((ovindex1(i) - 1) * nostages_nodead_nounborn * nostages_nodead_nounborn * 
+                nostages_nodead_nounborn);
+              
+            ovindexnew321(i) = (ovnew3(i) - 1) + ((ovnew2(i) - 1) * nostages_nodead) + 
+              ((ovnew2(i) - 1) * nostages_nodead_nounborn * nostages_nodead_nounborn) + 
+              ((ovnew1(i) - 1) * nostages_nodead_nounborn * nostages_nodead_nounborn * 
+                nostages_nodead_nounborn);
             
-          ovindexnew321(i) = (ovnew3(i) - 1) + ((ovnew2(i) - 1) * nostages_nodead) + 
-            ((ovnew2(i) - 1) * nostages_nodead_nounborn * nostages_nodead_nounborn) + 
-            ((ovnew1(i) - 1) * nostages_nodead_nounborn * nostages_nodead_nounborn * 
-              nostages_nodead_nounborn);
-          
-          if (ovindexold321(i) < 0) ovindexold321(i) = -1.0;
-          if (ovindexnew321(i) < 0) ovindexnew321(i) = -1.0;
-          
-          if (!NumericVector::is_na(ovgivenrate(i))) {
-            ovnewgivenrate(i) = ovgivenrate(i);
-          }
-          if (!NumericVector::is_na(ovoffset(i))) {
-            if (ovoffset(i) != 0.) ovnewoffset(i) = ovoffset(i);
-          }
-          if (NumericVector::is_na(ovmultiplier(i))) {
-            ovmultiplier(i) = 1.0;
-          }
-          ovnewmultiplier(i) = ovmultiplier(i);
-        } // i for loop
-      } // ovrows if statement
+            if (ovindexold321(i) < 0) ovindexold321(i) = -1.0;
+            if (ovindexnew321(i) < 0) ovindexnew321(i) = -1.0;
+            
+            if (!NumericVector::is_na(ovgivenrate(i))) {
+              ovnewgivenrate(i) = ovgivenrate(i);
+            }
+            if (!NumericVector::is_na(ovoffset(i))) {
+              if (ovoffset(i) != 0.) ovnewoffset(i) = ovoffset(i);
+            }
+            if (NumericVector::is_na(ovmultiplier(i))) {
+              ovmultiplier(i) = 1.0;
+            }
+            ovnewmultiplier(i) = ovmultiplier(i);
+          } // i for loop
+        } // ovrows if statement
       }
       
       for (int time1 = 0; time1 < nostages_nodead; time1++) {
@@ -2923,31 +2930,30 @@ namespace LefkoMats {
     } else if (style == 1) { // Ahistorical case
       if (ovrows > 0) {
         if (ovrows > 1 || ovconvtype(0) != -1.0) {
-        for (int i = 0; i < ovrows; i++) { // Loop across overwrite rows
-        
-          ovindexold321(i) = (ovindex3(i) - 1) + ((ovindex2(i) - 1) * nostages);
-          ovindexnew321(i) = (ovnew3(i) - 1) + ((ovnew2(i) - 1) * nostages);
+          for (int i = 0; i < ovrows; i++) { // Loop across overwrite rows
           
-          if (ovindexold321(i) < 0) ovindexold321(i) = -1.0;
-          if (ovindexnew321(i) < 0) ovindexnew321(i) = -1.0;
-          
-          if (!NumericVector::is_na(ovgivenrate(i))) {
-            ovnewgivenrate(i) = ovgivenrate(i);
-          }
-          if (!NumericVector::is_na(ovoffset(i))) {
-            if (ovoffset(i) != 0.) ovnewoffset(i) = ovoffset(i);
-          }
-          if (NumericVector::is_na(ovmultiplier(i))) {
-            ovmultiplier(i) = 1;
-          }
-          ovnewmultiplier(i) = ovmultiplier(i);
-        } // i for loop
-      } // ovrows if statement
+            ovindexold321(i) = (ovindex3(i) - 1) + ((ovindex2(i) - 1) * nostages);
+            ovindexnew321(i) = (ovnew3(i) - 1) + ((ovnew2(i) - 1) * nostages);
+            
+            if (ovindexold321(i) < 0) ovindexold321(i) = -1.0;
+            if (ovindexnew321(i) < 0) ovindexnew321(i) = -1.0;
+            
+            if (!NumericVector::is_na(ovgivenrate(i))) {
+              ovnewgivenrate(i) = ovgivenrate(i);
+            }
+            if (!NumericVector::is_na(ovoffset(i))) {
+              if (ovoffset(i) != 0.) ovnewoffset(i) = ovoffset(i);
+            }
+            if (NumericVector::is_na(ovmultiplier(i))) {
+              ovmultiplier(i) = 1;
+            }
+            ovnewmultiplier(i) = ovmultiplier(i);
+          } // i for loop
+        } // ovrows if statement
       }
       
       for (int time2n = 0; time2n < nostages_nodead; time2n++) {
         for (int time3 = 0; time3 < nostages; time3++) {
-          
           stageorder3(currentindex) = stageorder(time3);
           stageorder2n(currentindex) = stageorder(time2n);
           stageorder2o(currentindex) = stageorder(time2n);
@@ -3049,34 +3055,33 @@ namespace LefkoMats {
             indata2o(currentindex);
             
           currentindex += 1;
-          
         } // time3 loop
       } // time2n loop
       
       if (ovrows > 0) {
         if (ovrows > 1 || ovconvtype(0) != -1.0) {
-        asadditions = LefkoMats::ovreplace(index321, ovindexold321, ovindexnew321,
-          ovconvtype, ovnew3, ovnewgivenrate, ovnewoffset, ovnewmultiplier);
-        
-        ovgivent = asadditions.col(0);
-        ovestt = asadditions.col(1);
-        ovgivenf = asadditions.col(2);
-        ovestf = asadditions.col(3);
-        ovrepentry = asadditions.col(4);
-        ovsurvmult = asadditions.col(5);
-        ovfecmult = asadditions.col(6);
-        ovoffsett = asadditions.col(7);
-        ovoffsetf = asadditions.col(8);
-        
-        arma::uvec workedupindex = find(ovrepentry > 0.0);
-        int changedreps = static_cast<int>(workedupindex.n_elem);
-        
-        if (changedreps > 0) {
-          for (int i = 0; i < changedreps; i++) {
-            repentry3(workedupindex(i)) = ovrepentry(workedupindex(i));
+          asadditions = LefkoMats::ovreplace(index321, ovindexold321, ovindexnew321,
+            ovconvtype, ovnew3, ovnewgivenrate, ovnewoffset, ovnewmultiplier);
+          
+          ovgivent = asadditions.col(0);
+          ovestt = asadditions.col(1);
+          ovgivenf = asadditions.col(2);
+          ovestf = asadditions.col(3);
+          ovrepentry = asadditions.col(4);
+          ovsurvmult = asadditions.col(5);
+          ovfecmult = asadditions.col(6);
+          ovoffsett = asadditions.col(7);
+          ovoffsetf = asadditions.col(8);
+          
+          arma::uvec workedupindex = find(ovrepentry > 0.0);
+          int changedreps = static_cast<int>(workedupindex.n_elem);
+          
+          if (changedreps > 0) {
+            for (int i = 0; i < changedreps; i++) {
+              repentry3(workedupindex(i)) = ovrepentry(workedupindex(i));
+            }
           }
-        }
-      } // ovreplace if statement
+        } // ovreplace if statement
       }
     } else if (style == 2) { // Age-by-stage case
       int age3 {firstage};
@@ -3090,127 +3095,126 @@ namespace LefkoMats {
       // Sets up overwrite tables
       if (ovrows > 0) {
         if (ovrows > 1 || ovconvtype(0) != -1.0) {
-        // First set of loops establishes a number of indices
-        
-        for (int i = 0; i < ovrows; i++) { // Loop across overwrite rows
-          int age2 = ovage2(i);
-          
-          for (int j = 0; j < nostages; j++) { // Loop across stageframe rows
-            ovconvtypeage(i) = ovconvtype(i);
-              
-            if (age2 < totalages) {
-              if (ovconvtype(i) == 1.0) {
-                age3 = age2 + 1;
-              } else {
-                age3 = firstage;
-              }
-              
-              if (ovstage3(i) == origstageid(j)) {
-                ovindex3(i) = j; // newstageid(j) - 1.0
-              }
-              
-              if (ovstage2(i) == origstageid(j)) {
-                ovindex2(i) = j; // newstageid(j) - 1.0
-              }
-              
-              if (oveststage3(i) == origstageid(j)) {
-                ovnew3(i) = j; // newstageid(j) - 1.0
-              }
-              
-              if (oveststage2(i) == origstageid(j)) {
-                ovnew2(i) = j; // newstageid(j) - 1.0
-              }
-              
-              if (ovindex3(i) != -1.0 && ovindex2(i) != -1.0) {
-                ovindexold321(i) = ovindex3(i) + ((age3 - firstage) * nostages) +
-                  (ovindex2(i) * nostages * totalages) + 
-                  ((age2 - firstage) * nostages * nostages * totalages);
-              }
-              
-              if (ovnew3(i) != -1.0 && ovnew2(i) != -1.0) {
-                if (!IntegerVector::is_na(ovestage2(i)) && ovestage2(i) != -1) {
-                  int newage2 = ovestage2(i);
-                  int newage3 = newage2 + 1;
-                  
-                  ovindexnew321(i) = ovnew3(i) + ((newage3 - firstage) * nostages) +
-                    (ovnew2(i) * nostages * totalages) +
-                    ((newage2 - firstage) * nostages * nostages * totalages);
+          // First set of loops establishes a number of indices
+          for (int i = 0; i < ovrows; i++) { // Loop across overwrite rows
+            int age2 = ovage2(i);
+            
+            for (int j = 0; j < nostages; j++) { // Loop across stageframe rows
+              ovconvtypeage(i) = ovconvtype(i);
+                
+              if (age2 < totalages) {
+                if (ovconvtype(i) == 1.0) {
+                  age3 = age2 + 1;
                 } else {
-                  ovindexnew321(i) = ovnew3(i) + ((age3 - firstage) * nostages) +
-                    (ovnew2(i) * nostages * totalages) +
+                  age3 = firstage;
+                }
+                
+                if (ovstage3(i) == origstageid(j)) {
+                  ovindex3(i) = j; // newstageid(j) - 1.0
+                }
+                
+                if (ovstage2(i) == origstageid(j)) {
+                  ovindex2(i) = j; // newstageid(j) - 1.0
+                }
+                
+                if (oveststage3(i) == origstageid(j)) {
+                  ovnew3(i) = j; // newstageid(j) - 1.0
+                }
+                
+                if (oveststage2(i) == origstageid(j)) {
+                  ovnew2(i) = j; // newstageid(j) - 1.0
+                }
+                
+                if (ovindex3(i) != -1.0 && ovindex2(i) != -1.0) {
+                  ovindexold321(i) = ovindex3(i) + ((age3 - firstage) * nostages) +
+                    (ovindex2(i) * nostages * totalages) + 
                     ((age2 - firstage) * nostages * nostages * totalages);
                 }
-              }
-              
-              if (!NumericVector::is_na(ovgivenrate(i))) {
-                ovnewgivenrate(i) = ovgivenrate(i);
-              }
-              if (!NumericVector::is_na(ovoffset(i))) {
-                if (ovoffset(i) != 0.) ovnewoffset(i) = ovoffset(i);
-              }
-              if (NumericVector::is_na(ovmultiplier(i))) ovmultiplier(i) = 1.0;
-              
-              ovnewmultiplier(i) = ovmultiplier(i);
-            } else {
-              if (ovconvtype(i) == 1.0) {
-                age3 = age2;
+                
+                if (ovnew3(i) != -1.0 && ovnew2(i) != -1.0) {
+                  if (!IntegerVector::is_na(ovestage2(i)) && ovestage2(i) != -1) {
+                    int newage2 = ovestage2(i);
+                    int newage3 = newage2 + 1;
+                    
+                    ovindexnew321(i) = ovnew3(i) + ((newage3 - firstage) * nostages) +
+                      (ovnew2(i) * nostages * totalages) +
+                      ((newage2 - firstage) * nostages * nostages * totalages);
+                  } else {
+                    ovindexnew321(i) = ovnew3(i) + ((age3 - firstage) * nostages) +
+                      (ovnew2(i) * nostages * totalages) +
+                      ((age2 - firstage) * nostages * nostages * totalages);
+                  }
+                }
+                
+                if (!NumericVector::is_na(ovgivenrate(i))) {
+                  ovnewgivenrate(i) = ovgivenrate(i);
+                }
+                if (!NumericVector::is_na(ovoffset(i))) {
+                  if (ovoffset(i) != 0.) ovnewoffset(i) = ovoffset(i);
+                }
+                if (NumericVector::is_na(ovmultiplier(i))) ovmultiplier(i) = 1.0;
+                
+                ovnewmultiplier(i) = ovmultiplier(i);
               } else {
-                age3 = firstage;
-              }
-              
-              if (ovstage3(i) == origstageid(j)) {
-                ovindex3(i) = j; // newstageid(j) - 1.0
-              }
-              
-              if (ovstage2(i) == origstageid(j)) {
-                ovindex2(i) = j; // newstageid(j) - 1.0
-              }
-              
-              if (oveststage3(i) == origstageid(j)) {
-                ovnew3(i) = j; // newstageid(j) - 1.0
-              }
-              
-              if (oveststage2(i) == origstageid(j)) {
-                ovnew2(i) = j; // newstageid(j) - 1.0
-              }
-              
-              if (ovindex3(i) != -1.0 && ovindex2(i) != -1.0) {
-                ovindexold321(i) = ovindex3(i) + ((age3 - firstage) * nostages) +
-                  (ovindex2(i) * nostages * totalages) +
-                  ((age2 - firstage) * nostages * nostages * totalages);
-              }
-              
-              if (ovnew3(i) != -1.0 && ovnew2(i) != -1.0) {
-                if (!IntegerVector::is_na(ovestage2(i)) && ovestage2(i) != -1) {
-                  int newage2 = ovestage2(i);
-                  int newage3 = newage2 + 1;
-                  
-                  ovindexnew321(i) = ovnew3(i) + ((newage3 - firstage) * nostages) +
-                    (ovnew2(i) * nostages * totalages) +
-                    ((newage2 - firstage) * nostages * nostages * totalages);
+                if (ovconvtype(i) == 1.0) {
+                  age3 = age2;
                 } else {
-                  ovindexnew321(i) = ovnew3(i) + ((age3 - firstage) * nostages) +
-                    (ovnew2(i) * nostages * totalages) +
+                  age3 = firstage;
+                }
+                
+                if (ovstage3(i) == origstageid(j)) {
+                  ovindex3(i) = j; // newstageid(j) - 1.0
+                }
+                
+                if (ovstage2(i) == origstageid(j)) {
+                  ovindex2(i) = j; // newstageid(j) - 1.0
+                }
+                
+                if (oveststage3(i) == origstageid(j)) {
+                  ovnew3(i) = j; // newstageid(j) - 1.0
+                }
+                
+                if (oveststage2(i) == origstageid(j)) {
+                  ovnew2(i) = j; // newstageid(j) - 1.0
+                }
+                
+                if (ovindex3(i) != -1.0 && ovindex2(i) != -1.0) {
+                  ovindexold321(i) = ovindex3(i) + ((age3 - firstage) * nostages) +
+                    (ovindex2(i) * nostages * totalages) +
                     ((age2 - firstage) * nostages * nostages * totalages);
                 }
+                
+                if (ovnew3(i) != -1.0 && ovnew2(i) != -1.0) {
+                  if (!IntegerVector::is_na(ovestage2(i)) && ovestage2(i) != -1) {
+                    int newage2 = ovestage2(i);
+                    int newage3 = newage2 + 1;
+                    
+                    ovindexnew321(i) = ovnew3(i) + ((newage3 - firstage) * nostages) +
+                      (ovnew2(i) * nostages * totalages) +
+                      ((newage2 - firstage) * nostages * nostages * totalages);
+                  } else {
+                    ovindexnew321(i) = ovnew3(i) + ((age3 - firstage) * nostages) +
+                      (ovnew2(i) * nostages * totalages) +
+                      ((age2 - firstage) * nostages * nostages * totalages);
+                  }
+                }
+                if (!NumericVector::is_na(ovgivenrate(i))) {
+                  ovnewgivenrate(i) = ovgivenrate(i);
+                }
+                if (!NumericVector::is_na(ovoffset(i))) {
+                  if (ovoffset(i) != 0.) ovnewoffset(i) = ovoffset(i);
+                }
+                if (NumericVector::is_na(ovmultiplier(i))) ovmultiplier(i) = 1.0;
+                
+                ovnewmultiplier(i) = ovmultiplier(i);
               }
-              if (!NumericVector::is_na(ovgivenrate(i))) {
-                ovnewgivenrate(i) = ovgivenrate(i);
-              }
-              if (!NumericVector::is_na(ovoffset(i))) {
-                if (ovoffset(i) != 0.) ovnewoffset(i) = ovoffset(i);
-              }
-              if (NumericVector::is_na(ovmultiplier(i))) ovmultiplier(i) = 1.0;
-              
-              ovnewmultiplier(i) = ovmultiplier(i);
-            }
-          } // j for loop
-          
-        if (ovindexold321(i) < 0) ovindexold321(i) = -1.0;
-        if (ovindexnew321(i) < 0) ovindexnew321(i) = -1.0;
-          
-        } // i for loop
-      } // ovrows if statement
+            } // j for loop
+            
+          if (ovindexold321(i) < 0) ovindexold321(i) = -1.0;
+          if (ovindexnew321(i) < 0) ovindexnew321(i) = -1.0;
+            
+          } // i for loop
+        } // ovrows if statement
       }
       for (int age2 = firstage; age2 <= finalage; age2++) {
         if (age2 < finalage) { // First loop takes care of age transitions
@@ -3632,28 +3636,28 @@ namespace LefkoMats {
       if (ovrows > 0) {
         if (ovrows > 1 || ovconvtype(0) != -1.0) {
         
-        asadditions = LefkoMats::ovreplace(index321, ovindexold321, ovindexnew321,
-          ovconvtypeage, ovnew3, ovnewgivenrate, ovnewoffset, ovnewmultiplier);
-        
-        ovgivent = asadditions.col(0);
-        ovestt = asadditions.col(1);
-        ovgivenf = asadditions.col(2);
-        ovestf = asadditions.col(3);
-        ovrepentry = asadditions.col(4);
-        ovsurvmult = asadditions.col(5);
-        ovfecmult = asadditions.col(6);
-        ovoffsett = asadditions.col(7);
-        ovoffsetf = asadditions.col(8);
-        
-        arma::uvec workedupindex = find(ovrepentry > 0.0);
-        int changedreps = static_cast<int>(workedupindex.n_elem);
-        
-        if (changedreps > 0) {
-          for (int i = 0; i < changedreps; i++) {
-            repentry3(workedupindex(i)) = ovrepentry(workedupindex(i));
+          asadditions = LefkoMats::ovreplace(index321, ovindexold321, ovindexnew321,
+            ovconvtypeage, ovnew3, ovnewgivenrate, ovnewoffset, ovnewmultiplier);
+          
+          ovgivent = asadditions.col(0);
+          ovestt = asadditions.col(1);
+          ovgivenf = asadditions.col(2);
+          ovestf = asadditions.col(3);
+          ovrepentry = asadditions.col(4);
+          ovsurvmult = asadditions.col(5);
+          ovfecmult = asadditions.col(6);
+          ovoffsett = asadditions.col(7);
+          ovoffsetf = asadditions.col(8);
+          
+          arma::uvec workedupindex = find(ovrepentry > 0.0);
+          int changedreps = static_cast<int>(workedupindex.n_elem);
+          
+          if (changedreps > 0) {
+            for (int i = 0; i < changedreps; i++) {
+              repentry3(workedupindex(i)) = ovrepentry(workedupindex(i));
+            }
           }
-        }
-      } // ovreplace if statement
+        } // ovreplace if statement
       }
     } // Age-by-stage loop (style = 2)
     

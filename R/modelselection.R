@@ -685,6 +685,9 @@ modelsearch <- function(data, stageframe = NULL, historical = TRUE,
     quiet <- FALSE
   }
   
+  if (length(historical) != 1 | !is.logical(historical)) {
+    stop("Argument historical must be set to a single value of either TRUE or FALSE.")
+  }
   #Input testing, input standardization, and exception handling
   if (all(!is(data, "hfvdata"))) {
     warning("This function was made to work with standardized historically formatted vertical
@@ -1135,8 +1138,13 @@ modelsearch <- function(data, stageframe = NULL, historical = TRUE,
   if (is.element("surv", vitalrates)) {
     if (length(surv) > 3 | length(surv) == 1) {
       stop("This function requires 2 (if ahistorical) or 3 (if historical) survival
-        variables as input parameters, corresponding to survival status in times
-        t+1, t, and, if historical, t-1, respectively.", call. = FALSE)}
+        variables as input, corresponding to survival status in times
+        t+1, t, and, if historical, t-1.", call. = FALSE)
+    }
+    if (historical & length(surv) == 2) {
+      stop("Historical modeling requires 3 survival variables as input, corresponding
+        to survival status in times t+1, t, and t-1.")
+    }
     if (all(is.numeric(surv))) {
       if (any(surv < 1) | any(surv > total_vars)) {
         stop("Survival variable names do not match variables in data frame.",
@@ -1151,8 +1159,14 @@ modelsearch <- function(data, stageframe = NULL, historical = TRUE,
   if (is.element("obs", vitalrates)) {
     if (length(obs) > 3 | length(obs) == 1) {
       stop("This function requires 2 (if ahistorical) or 3 (if historical)
-        observation status variables as input parameters.",
-        call. = FALSE)}
+        observation status variables as input, corresponding to observation
+        status in times t+1, t, and, if historical, t-1.",
+        call. = FALSE)
+    }
+    if (historical & length(obs) == 2) {
+      stop("Historical modeling requires 3 observation status variables as input,
+        corresponding to observation status in times t+1, t, and t-1.")
+    }
     if (all(is.numeric(obs))) {
       if (any(obs < 1) | any(obs > total_vars)) {
         stop("Observation status variable names do not match variables in data frame.",
@@ -1168,7 +1182,13 @@ modelsearch <- function(data, stageframe = NULL, historical = TRUE,
   if (is.element("size", vitalrates)) {
     if (length(size) > 3 | length(size) == 1) {
       stop("This function requires 2 (if ahistorical) or 3 (if historical) size
-        variables as input parameters.", call. = FALSE)}
+        variables as input, corresponding to primary size in times t+1, t, and,
+        if historical, t-1.", call. = FALSE)
+    }
+    if (historical & length(size) == 2) {
+      stop("Historical modeling requires 3 size variables as input, corresponding
+        to primary size in times t+1, t, and t-1.")
+    }
     if (all(is.numeric(size))) {
       if (any(size < 1) | any(size > total_vars)) {
         stop("Primary size variable names do not match variables in data frame.",
@@ -1185,8 +1205,14 @@ modelsearch <- function(data, stageframe = NULL, historical = TRUE,
       }
       if (length(sizeb) > 3 | length(sizeb) == 1) {
         stop("This function requires 2 (if ahistorical) or 3 (if historical)
-          secondary size variables as input parameters.",
-          call. = FALSE)}
+          secondary size variables as input, corresponding to secondary size
+          in times t+1, t, and, if historical, t-1.",
+          call. = FALSE)
+      }
+      if (historical & length(sizeb) == 2) {
+        stop("Historical modeling requires 3 secondary size variables as input,
+          corresponding to secondary size in times t+1, t, and t-1.")
+      }
       if (all(is.numeric(sizeb))) {
         if (any(sizeb < 1) | any(sizeb > total_vars)) {
           stop("Secondary size variable names do not match variables in data frame.",
@@ -1205,8 +1231,14 @@ modelsearch <- function(data, stageframe = NULL, historical = TRUE,
       }
       if (length(sizec) > 3 | length(sizec) == 1) {
         stop("This function requires 2 (if ahistorical) or 3 (if historical)
-          tertiary size variables as input parameters.",
-          call. = FALSE)}
+          tertiary size variables as input, corresponding to tertiary size in
+          times t+1, t, and, if historical, t-1.",
+          call. = FALSE)
+      }
+      if (historical & length(sizec) == 2) {
+        stop("Historical modeling requires 3 tertiary size variables as input,
+          corresponding to tertiary size in times t+1, t, and t-1.")
+      }
       if (all(is.numeric(sizec))) {
         if (any(sizec < 1) | any(sizec > total_vars)) {
           stop("Tertiary size variable names do not match variables in data frame.",
@@ -1224,8 +1256,14 @@ modelsearch <- function(data, stageframe = NULL, historical = TRUE,
   if (is.element("repst", vitalrates)) {
     if (length(repst) > 3 | length(repst) == 1) {
       stop("This function requires 2 (if ahistorical) or 3 (if historical)
-        reproductive status variables as input parameters.",
-        call. = FALSE)}
+        reproductive status variables as input, corresponding to reproductive
+        status in times t+1, t, and, if historical, t-1.",
+        call. = FALSE)
+    }
+    if (historical & length(repst) == 2) {
+      stop("Historical modeling requires 3 reproductive status variables as input,
+        corresponding to reproductive status in times t+1, t, and t-1.")
+    }
     if (all(is.numeric(repst))) {
       if (any(repst < 1) | any(repst > total_vars)) {
         stop("Reproductive status variable names do not match variables in data frame.",
@@ -1241,8 +1279,14 @@ modelsearch <- function(data, stageframe = NULL, historical = TRUE,
   if (is.element("fec", vitalrates)) {
     if (length(fec) > 3 | length(fec) == 1) {
       stop("This function requires 2 (if ahistorical) or 3 (if historical)
-        fecundity variables as input parameters.",
-        call. = FALSE)}
+        fecundity variables as input, corresponding to fecundity in times t+1,
+        t, and, if historical, t-1.",
+        call. = FALSE)
+    }
+    if (historical & length(fec) == 2) {
+      stop("Historical modeling requires 3 fecundity variables as input,
+        corresponding to fecundity in times t+1, t, and t-1.")
+    }
     if (all(is.numeric(fec))) {
       if (any(fec < 1) | any(fec > total_vars)) {
         stop("Fecundity variable names do not match variables in data frame.",

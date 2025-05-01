@@ -6,5 +6,6 @@
 
 #include "basic_funcs/main_utils.h"
 #include "basic_funcs/mat_stuff.h"
+#include "basic_funcs/input_stuff.h"
 
 #endif

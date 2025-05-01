@@ -2378,7 +2378,7 @@ List cycle_check(RObject mpm, Nullable<RObject> quiet = R_NilValue) {
   
   if (quiet.isNotNull()) {
     if (is<RObject>(quiet)) {
-      quiet_bool = yesno_to_logic(as<RObject>(quiet), "quiet");
+      quiet_bool = LefkoInputs::yesno_to_logic(as<RObject>(quiet), "quiet");
     }
   }
   
@@ -2465,7 +2465,7 @@ List cycle_check(RObject mpm, Nullable<RObject> quiet = R_NilValue) {
         int num_cols = current_mat.n_cols;
         
         if (num_cols != num_stages) {
-          pop_error("cycle_check", "ahistorical and age-based MPMs", "", 23);
+          throw Rcpp::exception("This function currently handles only ahistorical and age-based MPMs", false);
         }
         
         for (int current_col = 0; current_col < num_cols; current_col++) {

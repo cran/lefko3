@@ -25,69 +25,71 @@ supplemental(
 )
 }
 \arguments{
-\item{historical}{A logical value indicating whether the MPMs intended will
-be historical or ahistorical. Defaults to \code{TRUE}.}
+\item{historical}{A single logical value indicating whether the MPMs
+intended will be historical or ahistorical. Defaults to \code{TRUE}.}
 
-\item{stagebased}{A logical value indicating whether the MPM will be stage-
-based or age-by-stage. Defaults to \code{TRUE}.}
+\item{stagebased}{A single logical value indicating whether the MPM will be
+stage-based or age-by-stage. Defaults to \code{TRUE}.}
 
-\item{agebased}{A logical value indicating whether the MPM will be age-based
-or age-by-stage. Defaults to \code{FALSE}.}
+\item{agebased}{A single logical value indicating whether the MPM will be
+age-based or age-by-stage. Defaults to \code{FALSE}.}
 
 \item{stageframe}{The stageframe used to produce the MPM. Required if
 producing any stage-based or age-by-stage MPM. Must be omitted for purely
 age-based MPMs.}
 
-\item{stage3}{The name of the stage in occasion \emph{t}+1 in the transition
-to be replaced. Abbreviations for groups of stages are also usable (see
-\code{Notes}). Required in all stage-based and age-by-stage MPMs.}
+\item{stage3}{String vector of stage names in occasion \emph{t}+1 in the
+transition to be affected. Abbreviations for groups of stages are also
+usable (see \code{Notes}). Required in all stage-based and age-by-stage
+MPMs.}
 
-\item{stage2}{The name of the stage in occasion \emph{t} in the transition
-to be replaced. Abbreviations for groups of stages are also usable (see
-\code{Notes}). Required in all stage-based and age-by-stage MPMs.}
+\item{stage2}{String vector of stage names in occasion \emph{t} in the
+transition to be affected. Abbreviations for groups of stages are also
+usable (see \code{Notes}). Required in all stage-based and age-by-stage
+MPMs.}
 
-\item{stage1}{The name of the stage in occasion \emph{t}-1 in the transition
-to be replaced. Only needed if a historical matrix is to be produced.
-Abbreviations for groups of stages are also usable (see \code{Notes}).
-Required for historical stage-based MPMs.}
+\item{stage1}{String vector of stage names in occasion \emph{t}-1 in the
+transition to be affected. Only needed if a historical matrix is to be
+produced. Abbreviations for groups of stages are also usable (see
+\code{Notes}). Required for historical stage-based MPMs.}
 
 \item{age2}{An integer vector of the ages in occasion \emph{t} to use in
-transitions to be changed or replaced. Required for all age- and
-age-by-stage MPMs.}
+transitions to be affected. Required for all age- and age-by-stage MPMs.}
 
-\item{eststage3}{The name of the stage to replace \code{stage3} in a proxy
-transition. Only needed if a transition will be replaced by another
+\item{eststage3}{String vector of stage names to replace \code{stage3} in a
+proxy transition. Only needed if a transition will be replaced by another
 estimated transition, and only in stage-based and age-by-stage MPMs.}
 
-\item{eststage2}{The name of the stage to replace \code{stage2} in a proxy
-transition. Only needed if a transition will be replaced by another
+\item{eststage2}{String vector of stage names to replace \code{stage2} in a
+proxy transition. Only needed if a transition will be replaced by another
 estimated transition, and only in stage-based and age-by-stage MPMs.}
 
-\item{eststage1}{The name of the stage to replace \code{stage1} in a proxy
-historical transition. Only needed if a transition will be replaced by
+\item{eststage1}{String vector of stage names to replace \code{stage1} in a
+proxy historical transition. Only needed if a transition will be replaced by
 another estimated transition, and the matrix to be estimated is historical
 and stage-based. Stage \code{NotAlive} is also possible for raw hMPMs as a
 means of handling the prior stage for individuals entering the population in
 occasion \emph{t}.}
 
-\item{estage2}{The age at time \emph{t} to replace \code{age2} in a proxy
-transition. Only needed if a transition will be replaced by another
-estimated transition, and only in age-based and age-by-stage MPMs.}
+\item{estage2}{Integer vector of age at time \emph{t} to replace \code{age2}
+in a proxy transition. Only needed if a transition will be replaced by
+another estimated transition, and only in age-based and age-by-stage MPMs.}
 
-\item{givenrate}{A fixed rate or probability to replace for the transition
-described by \code{stage3}, \code{stage2}, \code{stage1}, and/or
+\item{givenrate}{A numeric vector of fixed rates or probabilities to replace
+for the transition described by \code{stage3}, \code{stage2}, \code{stage1},
+and/or \code{age2}.}
+
+\item{offset}{A numeric vector of fixed numeric values to add to the
+transitions described by \code{stage3}, \code{stage2}, \code{stage1}, and/or
 \code{age2}.}
 
-\item{offset}{A fixed numeric value to add to the transition described by
-\code{stage3}, \code{stage2}, \code{stage1}, and/or \code{age2}.}
-
-\item{multiplier}{A vector of numeric multipliers for the transition
+\item{multiplier}{A numeric vector of multipliers for the transition
 described by \code{stage3}, \code{stage2}, \code{stage1}, and/or
 \code{age2}, or for the proxy transitions described by \code{eststage3},
 \code{eststage2}, \code{eststage1}, and/or \code{estage2}. Defaults to
 \code{1}.}
 
-\item{type}{A vector denoting the kind of transition between occasions
+\item{type}{Integer vector denoting the kind of transition between occasions
 \emph{t} and \emph{t}+1 to be replaced. This should be entered as \code{1},
 \code{S}, or \code{s} for the replacement of a survival transition;
 \code{2}, \code{F}, or \code{f} for the replacement of a fecundity
@@ -95,12 +97,12 @@ transition; or \code{3}, \code{R}, or \code{r} for a fecundity set value /
 general multiplier. If empty or not provided, then defaults to \code{1} for
 survival transition.}
 
-\item{type_t12}{An optional vector denoting the kind of transition between
-occasions \emph{t}-1 and \emph{t}. Only necessary if a historical MPM in
-deVries format is desired. This should be entered as \code{1}, \code{S}, or
-\code{s} for a survival transition; or \code{2}, \code{F}, or \code{f} for a
-fecundity transitions. Defaults to \code{1} for survival transition, with
-impacts only on the construction of deVries-format hMPMs.}
+\item{type_t12}{An optional integer vector denoting the kind of transition
+between occasions \emph{t}-1 and \emph{t}. Only necessary if a historical
+MPM in deVries format is desired. This should be entered as \code{1},
+\code{S}, or \code{s} for a survival transition; or \code{2}, \code{F}, or
+\code{f} for a fecundity transitions. Defaults to \code{1} for survival
+transition, with impacts only on the construction of deVries-format hMPMs.}
 }
 \value{
 A data frame of class \code{lefkoSD}. This object can be used as

@@ -1,3 +1,27 @@
+# lefko3 6.5.0 (2025-05-02)
+
+## USER VISIBLE CHANGES
+
+* Functions projection3() and f_projection3() now operate more quickly, and use
+  integeronly = TRUE by default.
+
+* Main development site moved to GitHub, with links updated.
+
+* Vignettes updated, including links, function output, and text errors.
+
+## BUG FIXES
+
+* Function miniMod() now correctly retains zero-inflation models.
+
+* Empirical age-by-stage MPMs created with mpm_create() and arlefko2() no longer
+  lead to fatal errors when a final age is used less than the maximum in the
+  dataset.
+
+* Function modelsearch() no longer fails on historical model runs with vital
+  rate variable name vectors with 2 entries.
+  
+* Indexing of hstages element corrected for deVries-format historical MPMs.
+
 # lefko3 6.4.0 (2025-03-13)
 
 ## NEW FEATURES

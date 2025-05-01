@@ -6423,66 +6423,68 @@ DataFrame density_input(List mpm, Nullable<RObject> stage3 = R_NilValue,
 //' 
 //' @name supplemental
 //' 
-//' @param historical A logical value indicating whether the MPMs intended will
-//' be historical or ahistorical. Defaults to \code{TRUE}.
-//' @param stagebased A logical value indicating whether the MPM will be stage-
-//' based or age-by-stage. Defaults to \code{TRUE}.
-//' @param agebased A logical value indicating whether the MPM will be age-based
-//' or age-by-stage. Defaults to \code{FALSE}.
+//' @param historical A single logical value indicating whether the MPMs
+//' intended will be historical or ahistorical. Defaults to \code{TRUE}.
+//' @param stagebased A single logical value indicating whether the MPM will be
+//' stage-based or age-by-stage. Defaults to \code{TRUE}.
+//' @param agebased A single logical value indicating whether the MPM will be
+//' age-based or age-by-stage. Defaults to \code{FALSE}.
 //' @param stageframe The stageframe used to produce the MPM. Required if
 //' producing any stage-based or age-by-stage MPM. Must be omitted for purely
 //' age-based MPMs.
-//' @param stage3 The name of the stage in occasion \emph{t}+1 in the transition
-//' to be replaced. Abbreviations for groups of stages are also usable (see
-//' \code{Notes}). Required in all stage-based and age-by-stage MPMs.
-//' @param stage2 The name of the stage in occasion \emph{t} in the transition
-//' to be replaced. Abbreviations for groups of stages are also usable (see
-//' \code{Notes}). Required in all stage-based and age-by-stage MPMs.
-//' @param stage1 The name of the stage in occasion \emph{t}-1 in the transition
-//' to be replaced. Only needed if a historical matrix is to be produced.
-//' Abbreviations for groups of stages are also usable (see \code{Notes}).
-//' Required for historical stage-based MPMs.
+//' @param stage3 String vector of stage names in occasion \emph{t}+1 in the
+//' transition to be affected. Abbreviations for groups of stages are also
+//' usable (see \code{Notes}). Required in all stage-based and age-by-stage
+//' MPMs.
+//' @param stage2 String vector of stage names in occasion \emph{t} in the
+//' transition to be affected. Abbreviations for groups of stages are also
+//' usable (see \code{Notes}). Required in all stage-based and age-by-stage
+//' MPMs.
+//' @param stage1 String vector of stage names in occasion \emph{t}-1 in the
+//' transition to be affected. Only needed if a historical matrix is to be
+//' produced. Abbreviations for groups of stages are also usable (see
+//' \code{Notes}). Required for historical stage-based MPMs.
 //' @param age2 An integer vector of the ages in occasion \emph{t} to use in
-//' transitions to be changed or replaced. Required for all age- and
-//' age-by-stage MPMs.
-//' @param eststage3 The name of the stage to replace \code{stage3} in a proxy
-//' transition. Only needed if a transition will be replaced by another
+//' transitions to be affected. Required for all age- and age-by-stage MPMs.
+//' @param eststage3 String vector of stage names to replace \code{stage3} in a
+//' proxy transition. Only needed if a transition will be replaced by another
 //' estimated transition, and only in stage-based and age-by-stage MPMs.
-//' @param eststage2 The name of the stage to replace \code{stage2} in a proxy
-//' transition. Only needed if a transition will be replaced by another
+//' @param eststage2 String vector of stage names to replace \code{stage2} in a
+//' proxy transition. Only needed if a transition will be replaced by another
 //' estimated transition, and only in stage-based and age-by-stage MPMs.
-//' @param eststage1 The name of the stage to replace \code{stage1} in a proxy
-//' historical transition. Only needed if a transition will be replaced by
+//' @param eststage1 String vector of stage names to replace \code{stage1} in a
+//' proxy historical transition. Only needed if a transition will be replaced by
 //' another estimated transition, and the matrix to be estimated is historical
 //' and stage-based. Stage \code{NotAlive} is also possible for raw hMPMs as a
 //' means of handling the prior stage for individuals entering the population in
 //' occasion \emph{t}.
-//' @param estage2 The age at time \emph{t} to replace \code{age2} in a proxy
-//' transition. Only needed if a transition will be replaced by another
-//' estimated transition, and only in age-based and age-by-stage MPMs.
-//' @param givenrate A fixed rate or probability to replace for the transition
-//' described by \code{stage3}, \code{stage2}, \code{stage1}, and/or
+//' @param estage2 Integer vector of age at time \emph{t} to replace \code{age2}
+//' in a proxy transition. Only needed if a transition will be replaced by
+//' another estimated transition, and only in age-based and age-by-stage MPMs.
+//' @param givenrate A numeric vector of fixed rates or probabilities to replace
+//' for the transition described by \code{stage3}, \code{stage2}, \code{stage1},
+//' and/or \code{age2}.
+//' @param offset A numeric vector of fixed numeric values to add to the
+//' transitions described by \code{stage3}, \code{stage2}, \code{stage1}, and/or
 //' \code{age2}.
-//' @param offset A fixed numeric value to add to the transition described by
-//' \code{stage3}, \code{stage2}, \code{stage1}, and/or \code{age2}.
-//' @param multiplier A vector of numeric multipliers for the transition
+//' @param multiplier A numeric vector of multipliers for the transition
 //' described by \code{stage3}, \code{stage2}, \code{stage1}, and/or
 //' \code{age2}, or for the proxy transitions described by \code{eststage3},
 //' \code{eststage2}, \code{eststage1}, and/or \code{estage2}. Defaults to
 //' \code{1}.
-//' @param type A vector denoting the kind of transition between occasions
+//' @param type Integer vector denoting the kind of transition between occasions
 //' \emph{t} and \emph{t}+1 to be replaced. This should be entered as \code{1},
 //' \code{S}, or \code{s} for the replacement of a survival transition;
 //' \code{2}, \code{F}, or \code{f} for the replacement of a fecundity
 //' transition; or \code{3}, \code{R}, or \code{r} for a fecundity set value /
 //' general multiplier. If empty or not provided, then defaults to \code{1} for
 //' survival transition.
-//' @param type_t12 An optional vector denoting the kind of transition between
-//' occasions \emph{t}-1 and \emph{t}. Only necessary if a historical MPM in
-//' deVries format is desired. This should be entered as \code{1}, \code{S}, or
-//' \code{s} for a survival transition; or \code{2}, \code{F}, or \code{f} for a
-//' fecundity transitions. Defaults to \code{1} for survival transition, with
-//' impacts only on the construction of deVries-format hMPMs.
+//' @param type_t12 An optional integer vector denoting the kind of transition
+//' between occasions \emph{t}-1 and \emph{t}. Only necessary if a historical
+//' MPM in deVries format is desired. This should be entered as \code{1},
+//' \code{S}, or \code{s} for a survival transition; or \code{2}, \code{F}, or
+//' \code{f} for a fecundity transitions. Defaults to \code{1} for survival
+//' transition, with impacts only on the construction of deVries-format hMPMs.
 //' 
 //' @return A data frame of class \code{lefkoSD}. This object can be used as
 //' input in \code{\link{flefko3}()}, \code{\link{flefko2}()}, 
@@ -6728,15 +6730,12 @@ Rcpp::List supplemental (bool historical = true, bool stagebased = true,
   int eststage2_length {0};
   int eststage1_length {0};
   int estage2_length {0};
-  int givenrate_length {0};
-  int offset_length {0};
-  int multiplier_length {0};
   int type_length {0};
   int type_t12_length {0};
   
   StringVector all_stages;
   StringVector wildcard_names = {"all", "rep", "nrep", "mat", "immat", "prop",
-    "npr", "notalive", "obs", "nobs"};;
+    "npr", "notalive", "obs", "nobs"};
   StringVector all_groups;
   
   if (wtf < 3) {
@@ -7083,205 +7082,24 @@ Rcpp::List supplemental (bool historical = true, bool stagebased = true,
     }
   }
   
-  if (givenrate.isNotNull()) {
-    if (is<NumericVector>(givenrate)) {
-      givenrate_ = as<NumericVector>(givenrate);
-      
-      givenrate_length = static_cast<int>(givenrate_.length());
-      arma::vec gvr_arma = as<arma::vec>(givenrate_);
-      arma::uvec neg_tester = find(gvr_arma < 0.0);
-      if (neg_tester.n_elem > 0) {
-        Rf_warningcall(R_NilValue, "Some entered given rate values are negative.");
-      }
-      
-      if (givenrate_length != stage2_length && givenrate_length != age2_length) {
-        pop_error("givenrate", "vector stage2 or age2", "", 29);
-      }
-    } else if (is<LogicalVector>(givenrate)) {
-      if (age2_length != 0) {
-        NumericVector givenrate_temp (age2_length, NA_REAL);
-        givenrate_ = givenrate_temp;
-      } else if (stage2_length != 0) {
-        NumericVector givenrate_temp (stage2_length, NA_REAL);
-        givenrate_ = givenrate_temp;
-      }
-      
-    } else {
-      throw Rcpp::exception("Please enter argument given rate in numeric format.",
-        false);
-    }
-  } else {
-    if (age2_length != 0) {
-      NumericVector givenrate_temp (age2_length, NA_REAL);
-      givenrate_ = givenrate_temp;
-    } else if (stage2_length != 0) {
-      NumericVector givenrate_temp (stage2_length, NA_REAL);
-      givenrate_ = givenrate_temp;
-    }
-  }
+  LefkoInputs::numeric_vectorizer(givenrate_, givenrate, "givenrate",
+    stage2_length, age2_length, false, 0.);
+  LefkoInputs::numeric_vectorizer(offset_, offset, "offset", stage2_length,
+    age2_length, false, 0.);
+  LefkoInputs::numeric_vectorizer(multiplier_, multiplier, "multiplier",
+    stage2_length, age2_length, true, 1.);
   
-  if (offset.isNotNull()) {
-    if (is<NumericVector>(offset)) {
-      offset_ = as<NumericVector>(offset);
-      
-      offset_length = static_cast<int>(offset_.length());
-      unsigned int na_count {0};
-      for (int i = 0; i < offset_length; i++) { 
-        if (NumericVector::is_na(offset_(i))) {
-          offset_(i) = 0.;
-          na_count++;
-        }
-        if (na_count == 1) {
-          Rf_warningcall(R_NilValue, "NA values in argument offset will be treated as 0.");
-        }
-      }
-      
-      if (offset_length != stage2_length && offset_length != age2_length) {
-        pop_error("offset", "vector stage2 or age2", "", 29);
-      }
-    } else if (is<LogicalVector>(offset)) {
-      if (age2_length != 0) {
-        NumericVector offset_temp (age2_length, 0.);
-        offset_ = offset_temp;
-      } else if (stage2_length != 0) {
-        NumericVector offset_temp (stage2_length, 0.);
-        offset_ = offset_temp;
-      }
-      
-    } else {
-      throw Rcpp::exception("Please enter argument offset in numeric format.",
-        false);
-    }
-  } else {
-    if (age2_length != 0) {
-      NumericVector offset_temp (age2_length, 0.);
-      offset_ = offset_temp;
-    } else if (stage2_length != 0) {
-      NumericVector offset_temp (stage2_length, 0.);
-      offset_ = offset_temp;
-    }
-  }
+  IntegerVector type_int_limits = {1, 2, 3};
+  CharacterVector type_char_limits = {"S", "F", "R"};
+  IntegerVector type12_int_limits = {1, 2};
+  CharacterVector type12_char_limits = {"S", "F"};
   
-  if (multiplier.isNotNull()) {
-    if (is<NumericVector>(multiplier)) {
-      multiplier_ = as<NumericVector>(multiplier);
-      
-      multiplier_length = static_cast<int>(multiplier_.length());
-      arma::vec mpl_arma = as<arma::vec>(multiplier_);
-      arma::uvec neg_tester = find(mpl_arma < 0.0);
-      if (neg_tester.n_elem > 0) {
-        Rf_warningcall(R_NilValue, "Some entered multiplier values are negative.");
-      }
-      
-      if (multiplier_length != stage2_length && multiplier_length != age2_length) {
-        pop_error("multiplier", "vector stage2 or age2", "", 29);
-      }
-    } else if (is<LogicalVector>(multiplier)) {
-      if (age2_length != 0) {
-        NumericVector multiplier_temp (age2_length, 1.0);
-        multiplier_ = multiplier_temp;
-      } else if (stage2_length != 0) {
-        NumericVector multiplier_temp (stage2_length, 1.0);
-        multiplier_ = multiplier_temp;
-      }
-      
-    } else {
-      throw Rcpp::exception("Please enter argument multiplier in numeric format.",
-        false);
-    }
-  } else {
-    if (age2_length != 0) {
-      NumericVector multiplier_temp (age2_length, 1.0);
-      multiplier_ = multiplier_temp;
-    } else if (stage2_length != 0) {
-      NumericVector multiplier_temp (stage2_length, 1.0);
-      multiplier_ = multiplier_temp;
-    }
-  }
+  LefkoInputs::integer_char_vectorizer (type_, type, "type", stage2_length, age2_length,
+    type_int_limits, type_char_limits, true, 1);
+  LefkoInputs::integer_char_vectorizer (type_t12_, type_t12, "type_t12", stage2_length,
+    age2_length, type12_int_limits, type12_char_limits, true, 1);
   
-  if (type.isNotNull()) {
-    if (is<IntegerVector>(type) || is<NumericVector>(type)) {
-      type_ = as<IntegerVector>(type);
-      type_length = static_cast<int>(type_.length());
-      
-      int check_type_min = min(type_);
-      int check_type_max = max(type_);
-      if (check_type_min < 1 || check_type_max > 3) {
-        String ems = "Please enter transition type information (type)";
-        String ems1 = " using only integers 1, 2, and 3.";
-        ems += ems1;
-        
-        throw Rcpp::exception(ems.get_cstring(), false);
-      }
-    } else if (is<StringVector>(type)) {
-      StringVector type_sv = as<StringVector>(type);
-      type_length = static_cast<int>(type_sv.length());
-      
-      IntegerVector type_temp (type_length);
-      
-      for (int i = 0; i < type_length; i++) {
-        if (stringcompare_simple(as<std::string>(type_sv(i)), "s", true)) {
-          type_temp(i) = 1;
-        } else if (stringcompare_simple(as<std::string>(type_sv(i)), "f", true)) {
-          type_temp(i) = 2;
-        } else if (stringcompare_simple(as<std::string>(type_sv(i)), "r", true)) {
-          type_temp(i) = 3;
-        } else {
-          throw Rcpp::exception("Please enter argument type using only integers 1, 2, and 3.",
-            false);
-        }
-        type_ = type_temp;
-      }
-    } else {
-      throw Rcpp::exception("Please enter argument type in integer format.",
-        false);
-    }
-  } else {
-    throw Rcpp::exception("Information on type of transition (type) is required.",
-      false);
-  }
-  
-  if (type_t12.isNotNull()) {
-    if (is<IntegerVector>(type_t12) || is<NumericVector>(type_t12)) {
-      type_t12_ = as<IntegerVector>(type_t12);
-      type_t12_length = static_cast<int>(type_t12_.length());
-      
-      int check_type_min = min(type_t12_);
-      int check_type_max = max(type_t12_);
-      if (check_type_min < 1 || check_type_max > 3) {
-        String ems = "Please enter transition type information (type_t12)";
-        String ems1 = " using only integers 1, 2, and 3.";
-        ems += ems1;
-        
-        throw Rcpp::exception(ems.get_cstring(), false);
-      }
-    } else if (is<StringVector>(type_t12)) {
-      StringVector type_t12_sv = as<StringVector>(type_t12);
-      type_t12_length = static_cast<int>(type_t12_sv.length());
-      
-      IntegerVector type_t12_temp (type_t12_length);
-      
-      for (int i = 0; i < type_t12_length; i++) {
-        if (stringcompare_simple(as<std::string>(type_t12_sv(i)), "s", true)) {
-          type_t12_temp(i) = 1;
-        } else if (stringcompare_simple(as<std::string>(type_t12_sv(i)), "f", true)) {
-          type_t12_temp(i) = 2;
-        } else if (stringcompare_simple(as<std::string>(type_t12_sv(i)), "r", true)) {
-          type_t12_temp(i) = 3;
-        } else {
-          String ems = "Please enter historical transition type information ";
-          String ems1 = "(type_t12) using only integers 1, 2, and 3.";
-          ems += ems1;
-          
-          throw Rcpp::exception(ems.get_cstring(), false);
-        }
-        type_t12_ = type_t12_temp;
-      }
-    } else {
-      throw Rcpp::exception("Please enter argument type_t12 in integer format.",
-        false);
-    }
-  }
+  type_t12_length = static_cast<int>(type_t12_.length());
   
   if (wtf < 3 && type_length != 0  && type_length != stage2_length) { 
     throw Rcpp::exception("All input vectors must be of the same length.", false);
@@ -7341,7 +7159,7 @@ Rcpp::List supplemental (bool historical = true, bool stagebased = true,
     }
   }
   
-  if (type_t12_length == 0) {
+  if ((type_t12_length == 0) & historical) {
     if (age2_length != 0) {
       IntegerVector cvt12_temp (age2_length, 1);
       type_t12_ = cvt12_temp;

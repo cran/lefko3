@@ -369,15 +369,24 @@ Ehrlén</h4>
 
 <p style="text-indent: 20px">
 In this vignette, we use the <code>lathyrus</code> dataset to illustrate
-the estimation of <strong>age-by-stage function-based MPMs</strong>. To
-reduce output size, we have prevented some statements from running if
-they produce long stretches of output. Examples include most
-<code>summary()</code> calls. Remove the hashtags to run these calls.
+the estimation of <strong>age-by-stage function-based MPMs</strong>.
+</p>
+<p style="text-indent: 20px">
+To reduce vignette size, we have prevented some statements from running
+if they produce long stretches of output. Examples include most
+<code>summary()</code> calls. In these cases, we include hashtagged
+versions of these calls, and we encourage the user to run these
+statements without hashtags to examine the output.
+</p>
+<p style="text-indent: 20px">
 This vignette is only a sample analysis. Detailed information and
 instructions on using <code>lefko3</code> are available through a free
-online e-book called <em>lefko3: a gentle introduction</em>, available
-on <a href="http://www.sheffersonlab.com/projects.html">the projects
-page</a> of the Shefferson lab website.
+online e-book called
+<a href="https://bookdown.org/cdorm/lefko3gentle/"><em>lefko3: a
+gentle introduction</em></a>, as well as through the resources found on
+the
+<a href="http://www.revolutionarydemography.com/projects.html"><strong>{r}evolutionary
+demography</strong></a> website.
 </p>
 <div id="organism-and-population" class="section level3">
 <h3>ORGANISM AND POPULATION</h3>
@@ -658,8 +667,8 @@ later.
 <span id="cb8-8"><a href="#cb8-8" tabindex="-1"></a><span class="co">#&gt;   Variable alive3 is a binomial variable.</span></span>
 <span id="cb8-9"><a href="#cb8-9" tabindex="-1"></a><span class="co">#&gt; </span></span>
 <span id="cb8-10"><a href="#cb8-10" tabindex="-1"></a><span class="co">#&gt;   Numbers of categories in data subset in possible random variables:</span></span>
-<span id="cb8-11"><a href="#cb8-11" tabindex="-1"></a><span class="co">#&gt;   indiv id: 931</span></span>
-<span id="cb8-12"><a href="#cb8-12" tabindex="-1"></a><span class="co">#&gt;   year2: 3</span></span>
+<span id="cb8-11"><a href="#cb8-11" tabindex="-1"></a><span class="co">#&gt;   indiv id: 931   (singleton categories: 181)</span></span>
+<span id="cb8-12"><a href="#cb8-12" tabindex="-1"></a><span class="co">#&gt;   year2: 3   (singleton categories: 0)</span></span>
 <span id="cb8-13"><a href="#cb8-13" tabindex="-1"></a><span class="co">#&gt; </span></span>
 <span id="cb8-14"><a href="#cb8-14" tabindex="-1"></a><span class="co">#&gt; Observation status:</span></span>
 <span id="cb8-15"><a href="#cb8-15" tabindex="-1"></a><span class="co">#&gt; </span></span>
@@ -669,8 +678,8 @@ later.
 <span id="cb8-19"><a href="#cb8-19" tabindex="-1"></a><span class="co">#&gt;   Variable obsstatus3 is a binomial variable.</span></span>
 <span id="cb8-20"><a href="#cb8-20" tabindex="-1"></a><span class="co">#&gt; </span></span>
 <span id="cb8-21"><a href="#cb8-21" tabindex="-1"></a><span class="co">#&gt;   Numbers of categories in data subset in possible random variables:</span></span>
-<span id="cb8-22"><a href="#cb8-22" tabindex="-1"></a><span class="co">#&gt;   indiv id: 858</span></span>
-<span id="cb8-23"><a href="#cb8-23" tabindex="-1"></a><span class="co">#&gt;   year2: 3</span></span>
+<span id="cb8-22"><a href="#cb8-22" tabindex="-1"></a><span class="co">#&gt;   indiv id: 858   (singleton categories: 143)</span></span>
+<span id="cb8-23"><a href="#cb8-23" tabindex="-1"></a><span class="co">#&gt;   year2: 3   (singleton categories: 0)</span></span>
 <span id="cb8-24"><a href="#cb8-24" tabindex="-1"></a><span class="co">#&gt; </span></span>
 <span id="cb8-25"><a href="#cb8-25" tabindex="-1"></a><span class="co">#&gt; Primary size:</span></span>
 <span id="cb8-26"><a href="#cb8-26" tabindex="-1"></a><span class="co">#&gt; </span></span>
@@ -687,8 +696,8 @@ later.
 <span id="cb8-37"><a href="#cb8-37" tabindex="-1"></a><span class="co">#&gt;   Variable sizea3 is fully positive, lacking even 0s.</span></span>
 <span id="cb8-38"><a href="#cb8-38" tabindex="-1"></a><span class="co">#&gt; </span></span>
 <span id="cb8-39"><a href="#cb8-39" tabindex="-1"></a><span class="co">#&gt;   Numbers of categories in data subset in possible random variables:</span></span>
-<span id="cb8-40"><a href="#cb8-40" tabindex="-1"></a><span class="co">#&gt;   indiv id: 845</span></span>
-<span id="cb8-41"><a href="#cb8-41" tabindex="-1"></a><span class="co">#&gt;   year2: 3</span></span>
+<span id="cb8-40"><a href="#cb8-40" tabindex="-1"></a><span class="co">#&gt;   indiv id: 845   (singleton categories: 185)</span></span>
+<span id="cb8-41"><a href="#cb8-41" tabindex="-1"></a><span class="co">#&gt;   year2: 3   (singleton categories: 0)</span></span>
 <span id="cb8-42"><a href="#cb8-42" tabindex="-1"></a><span class="co">#&gt; </span></span>
 <span id="cb8-43"><a href="#cb8-43" tabindex="-1"></a><span class="co">#&gt; Reproductive status:</span></span>
 <span id="cb8-44"><a href="#cb8-44" tabindex="-1"></a><span class="co">#&gt; </span></span>
@@ -698,8 +707,8 @@ later.
 <span id="cb8-48"><a href="#cb8-48" tabindex="-1"></a><span class="co">#&gt;   Variable repstatus3 is a binomial variable.</span></span>
 <span id="cb8-49"><a href="#cb8-49" tabindex="-1"></a><span class="co">#&gt; </span></span>
 <span id="cb8-50"><a href="#cb8-50" tabindex="-1"></a><span class="co">#&gt;   Numbers of categories in data subset in possible random variables:</span></span>
-<span id="cb8-51"><a href="#cb8-51" tabindex="-1"></a><span class="co">#&gt;   indiv id: 845</span></span>
-<span id="cb8-52"><a href="#cb8-52" tabindex="-1"></a><span class="co">#&gt;   year2: 3</span></span>
+<span id="cb8-51"><a href="#cb8-51" tabindex="-1"></a><span class="co">#&gt;   indiv id: 845   (singleton categories: 185)</span></span>
+<span id="cb8-52"><a href="#cb8-52" tabindex="-1"></a><span class="co">#&gt;   year2: 3   (singleton categories: 0)</span></span>
 <span id="cb8-53"><a href="#cb8-53" tabindex="-1"></a><span class="co">#&gt; </span></span>
 <span id="cb8-54"><a href="#cb8-54" tabindex="-1"></a><span class="co">#&gt; Fecundity:</span></span>
 <span id="cb8-55"><a href="#cb8-55" tabindex="-1"></a><span class="co">#&gt; </span></span>
@@ -726,8 +735,8 @@ later.
 <span id="cb8-76"><a href="#cb8-76" tabindex="-1"></a><span class="co">#&gt;     Variable feca2 is significantly zero-inflated.</span></span>
 <span id="cb8-77"><a href="#cb8-77" tabindex="-1"></a><span class="co">#&gt; </span></span>
 <span id="cb8-78"><a href="#cb8-78" tabindex="-1"></a><span class="co">#&gt;   Numbers of categories in data subset in possible random variables:</span></span>
-<span id="cb8-79"><a href="#cb8-79" tabindex="-1"></a><span class="co">#&gt;   indiv id: 335</span></span>
-<span id="cb8-80"><a href="#cb8-80" tabindex="-1"></a><span class="co">#&gt;   year2: 3</span></span>
+<span id="cb8-79"><a href="#cb8-79" tabindex="-1"></a><span class="co">#&gt;   indiv id: 335   (singleton categories: 142)</span></span>
+<span id="cb8-80"><a href="#cb8-80" tabindex="-1"></a><span class="co">#&gt;   year2: 3   (singleton categories: 0)</span></span>
 <span id="cb8-81"><a href="#cb8-81" tabindex="-1"></a><span class="co">#&gt; </span></span>
 <span id="cb8-82"><a href="#cb8-82" tabindex="-1"></a><span class="co">#&gt; Juvenile survival:</span></span>
 <span id="cb8-83"><a href="#cb8-83" tabindex="-1"></a><span class="co">#&gt; </span></span>
@@ -737,8 +746,8 @@ later.
 <span id="cb8-87"><a href="#cb8-87" tabindex="-1"></a><span class="co">#&gt;   Variable alive3 is a binomial variable.</span></span>
 <span id="cb8-88"><a href="#cb8-88" tabindex="-1"></a><span class="co">#&gt; </span></span>
 <span id="cb8-89"><a href="#cb8-89" tabindex="-1"></a><span class="co">#&gt;   Numbers of categories in data subset in possible random variables:</span></span>
-<span id="cb8-90"><a href="#cb8-90" tabindex="-1"></a><span class="co">#&gt;   indiv id: 281</span></span>
-<span id="cb8-91"><a href="#cb8-91" tabindex="-1"></a><span class="co">#&gt;   year2: 3</span></span>
+<span id="cb8-90"><a href="#cb8-90" tabindex="-1"></a><span class="co">#&gt;   indiv id: 281   (singleton categories: 281)</span></span>
+<span id="cb8-91"><a href="#cb8-91" tabindex="-1"></a><span class="co">#&gt;   year2: 3   (singleton categories: 0)</span></span>
 <span id="cb8-92"><a href="#cb8-92" tabindex="-1"></a><span class="co">#&gt; </span></span>
 <span id="cb8-93"><a href="#cb8-93" tabindex="-1"></a><span class="co">#&gt; Juvenile observation status:</span></span>
 <span id="cb8-94"><a href="#cb8-94" tabindex="-1"></a><span class="co">#&gt; </span></span>
@@ -748,8 +757,8 @@ later.
 <span id="cb8-98"><a href="#cb8-98" tabindex="-1"></a><span class="co">#&gt;   Variable obsstatus3 is a binomial variable.</span></span>
 <span id="cb8-99"><a href="#cb8-99" tabindex="-1"></a><span class="co">#&gt; </span></span>
 <span id="cb8-100"><a href="#cb8-100" tabindex="-1"></a><span class="co">#&gt;   Numbers of categories in data subset in possible random variables:</span></span>
-<span id="cb8-101"><a href="#cb8-101" tabindex="-1"></a><span class="co">#&gt;   indiv id: 210</span></span>
-<span id="cb8-102"><a href="#cb8-102" tabindex="-1"></a><span class="co">#&gt;   year2: 3</span></span>
+<span id="cb8-101"><a href="#cb8-101" tabindex="-1"></a><span class="co">#&gt;   indiv id: 210   (singleton categories: 210)</span></span>
+<span id="cb8-102"><a href="#cb8-102" tabindex="-1"></a><span class="co">#&gt;   year2: 3   (singleton categories: 0)</span></span>
 <span id="cb8-103"><a href="#cb8-103" tabindex="-1"></a><span class="co">#&gt; </span></span>
 <span id="cb8-104"><a href="#cb8-104" tabindex="-1"></a><span class="co">#&gt; Juvenile primary size:</span></span>
 <span id="cb8-105"><a href="#cb8-105" tabindex="-1"></a><span class="co">#&gt; </span></span>
@@ -766,8 +775,8 @@ later.
 <span id="cb8-116"><a href="#cb8-116" tabindex="-1"></a><span class="co">#&gt;   Variable sizea3 is fully positive, lacking even 0s.</span></span>
 <span id="cb8-117"><a href="#cb8-117" tabindex="-1"></a><span class="co">#&gt; </span></span>
 <span id="cb8-118"><a href="#cb8-118" tabindex="-1"></a><span class="co">#&gt;   Numbers of categories in data subset in possible random variables:</span></span>
-<span id="cb8-119"><a href="#cb8-119" tabindex="-1"></a><span class="co">#&gt;   indiv id: 193</span></span>
-<span id="cb8-120"><a href="#cb8-120" tabindex="-1"></a><span class="co">#&gt;   year2: 3</span></span>
+<span id="cb8-119"><a href="#cb8-119" tabindex="-1"></a><span class="co">#&gt;   indiv id: 193   (singleton categories: 193)</span></span>
+<span id="cb8-120"><a href="#cb8-120" tabindex="-1"></a><span class="co">#&gt;   year2: 3   (singleton categories: 0)</span></span>
 <span id="cb8-121"><a href="#cb8-121" tabindex="-1"></a><span class="co">#&gt; </span></span>
 <span id="cb8-122"><a href="#cb8-122" tabindex="-1"></a><span class="co">#&gt; Juvenile reproductive status:</span></span>
 <span id="cb8-123"><a href="#cb8-123" tabindex="-1"></a><span class="co">#&gt; </span></span>
@@ -777,8 +786,8 @@ later.
 <span id="cb8-127"><a href="#cb8-127" tabindex="-1"></a><span class="co">#&gt;   Variable repstatus3 is a binomial variable.</span></span>
 <span id="cb8-128"><a href="#cb8-128" tabindex="-1"></a><span class="co">#&gt; </span></span>
 <span id="cb8-129"><a href="#cb8-129" tabindex="-1"></a><span class="co">#&gt;   Numbers of categories in data subset in possible random variables:</span></span>
-<span id="cb8-130"><a href="#cb8-130" tabindex="-1"></a><span class="co">#&gt;   indiv id: 193</span></span>
-<span id="cb8-131"><a href="#cb8-131" tabindex="-1"></a><span class="co">#&gt;   year2: 3</span></span>
+<span id="cb8-130"><a href="#cb8-130" tabindex="-1"></a><span class="co">#&gt;   indiv id: 193   (singleton categories: 193)</span></span>
+<span id="cb8-131"><a href="#cb8-131" tabindex="-1"></a><span class="co">#&gt;   year2: 3   (singleton categories: NA)</span></span>
 <span id="cb8-132"><a href="#cb8-132" tabindex="-1"></a><span class="co">#&gt; </span></span>
 <span id="cb8-133"><a href="#cb8-133" tabindex="-1"></a><span class="co">#&gt; Juvenile maturity status:</span></span>
 <span id="cb8-134"><a href="#cb8-134" tabindex="-1"></a><span class="co">#&gt; </span></span>
@@ -788,8 +797,8 @@ later.
 <span id="cb8-138"><a href="#cb8-138" tabindex="-1"></a><span class="co">#&gt;   Variable matstatus3 is a binomial variable.</span></span>
 <span id="cb8-139"><a href="#cb8-139" tabindex="-1"></a><span class="co">#&gt; </span></span>
 <span id="cb8-140"><a href="#cb8-140" tabindex="-1"></a><span class="co">#&gt;   Numbers of categories in data subset in possible random variables:</span></span>
-<span id="cb8-141"><a href="#cb8-141" tabindex="-1"></a><span class="co">#&gt;   indiv id: 210</span></span>
-<span id="cb8-142"><a href="#cb8-142" tabindex="-1"></a><span class="co">#&gt;   year2: 3</span></span></code></pre></div>
+<span id="cb8-141"><a href="#cb8-141" tabindex="-1"></a><span class="co">#&gt;   indiv id: 210   (singleton categories: 210)</span></span>
+<span id="cb8-142"><a href="#cb8-142" tabindex="-1"></a><span class="co">#&gt;   year2: 3   (singleton categories: 0)</span></span></code></pre></div>
 <p style="text-indent: 20px">
 All of the probability variables look like binomials, so we have no
 problem there. Size and juvenile size appear to be continuous variables
@@ -837,7 +846,8 @@ age-specific, while fecundity multipliers incorporated as
 <span id="cb9-2"><a href="#cb9-2" tabindex="-1"></a>  <span class="at">stage2 =</span> <span class="fu">c</span>(<span class="st">&quot;Sd&quot;</span>, <span class="st">&quot;Sd&quot;</span>, <span class="st">&quot;rep&quot;</span>, <span class="st">&quot;rep&quot;</span>), <span class="at">givenrate =</span> <span class="fu">c</span>(<span class="fl">0.345</span>, <span class="fl">0.054</span>, <span class="cn">NA</span>, <span class="cn">NA</span>),</span>
 <span id="cb9-3"><a href="#cb9-3" tabindex="-1"></a>  <span class="at">multiplier =</span> <span class="fu">c</span>(<span class="cn">NA</span>, <span class="cn">NA</span>, <span class="fl">0.345</span>, <span class="fl">0.054</span>), <span class="at">type =</span> <span class="fu">c</span>(<span class="dv">1</span>, <span class="dv">1</span>, <span class="dv">3</span>, <span class="dv">3</span>),</span>
 <span id="cb9-4"><a href="#cb9-4" tabindex="-1"></a>  <span class="at">stageframe =</span> lathframeln, <span class="at">historical =</span> <span class="cn">FALSE</span>, <span class="at">agebased =</span> <span class="cn">TRUE</span>)</span>
-<span id="cb9-5"><a href="#cb9-5" tabindex="-1"></a><span class="co">#lathsupp2</span></span></code></pre></div>
+<span id="cb9-5"><a href="#cb9-5" tabindex="-1"></a><span class="co">#&gt; Warning: NA values in argument multiplier will be treated as 1 values.</span></span>
+<span id="cb9-6"><a href="#cb9-6" tabindex="-1"></a><span class="co">#lathsupp2</span></span></code></pre></div>
 </div>
 <div id="step-3.-tests-of-history-and-vital-rate-modeling" class="section level4">
 <h4>Step 3. Tests of history, and vital rate modeling</h4>
@@ -900,62 +910,64 @@ models of vital rates.
 <span id="cb10-37"><a href="#cb10-37" tabindex="-1"></a><span class="co">#&gt; </span></span>
 <span id="cb10-38"><a href="#cb10-38" tabindex="-1"></a><span class="co">#&gt; Developing global model of juvenile primary size...</span></span>
 <span id="cb10-39"><a href="#cb10-39" tabindex="-1"></a><span class="co">#&gt; </span></span>
-<span id="cb10-40"><a href="#cb10-40" tabindex="-1"></a><span class="co">#&gt; </span></span>
-<span id="cb10-41"><a href="#cb10-41" tabindex="-1"></a><span class="co">#&gt; Developing global model of juvenile primary size...</span></span>
-<span id="cb10-42"><a href="#cb10-42" tabindex="-1"></a><span class="co">#&gt; </span></span>
-<span id="cb10-43"><a href="#cb10-43" tabindex="-1"></a><span class="co">#&gt; Global model of juvenile primary size developed. Proceeding with model dredge...</span></span>
-<span id="cb10-44"><a href="#cb10-44" tabindex="-1"></a><span class="co">#&gt; Warning: Juvenile reproductive status in time t+1 appears to be constant, and so will be set to constant.</span></span>
-<span id="cb10-45"><a href="#cb10-45" tabindex="-1"></a><span class="co">#&gt; </span></span>
-<span id="cb10-46"><a href="#cb10-46" tabindex="-1"></a><span class="co">#&gt; Finished selecting best-fit models.</span></span>
-<span id="cb10-47"><a href="#cb10-47" tabindex="-1"></a>lathmodelsln2p <span class="ot">&lt;-</span> <span class="fu">modelsearch</span>(lathvertln, <span class="at">historical =</span> <span class="cn">FALSE</span>,</span>
-<span id="cb10-48"><a href="#cb10-48" tabindex="-1"></a>  <span class="at">approach =</span> <span class="st">&quot;mixed&quot;</span>, <span class="at">suite =</span> <span class="st">&quot;main&quot;</span>,</span>
-<span id="cb10-49"><a href="#cb10-49" tabindex="-1"></a>  <span class="at">vitalrates =</span> <span class="fu">c</span>(<span class="st">&quot;surv&quot;</span>, <span class="st">&quot;obs&quot;</span>, <span class="st">&quot;size&quot;</span>, <span class="st">&quot;repst&quot;</span>, <span class="st">&quot;fec&quot;</span>), <span class="at">juvestimate =</span> <span class="st">&quot;Sdl&quot;</span>,</span>
-<span id="cb10-50"><a href="#cb10-50" tabindex="-1"></a>  <span class="at">bestfit =</span> <span class="st">&quot;AICc&amp;k&quot;</span>, <span class="at">sizedist =</span> <span class="st">&quot;gaussian&quot;</span>, <span class="at">fecdist =</span> <span class="st">&quot;negbin&quot;</span>,</span>
-<span id="cb10-51"><a href="#cb10-51" tabindex="-1"></a>  <span class="at">indiv =</span> <span class="st">&quot;individ&quot;</span>, <span class="at">patch =</span> <span class="st">&quot;patchid&quot;</span>, <span class="at">year =</span> <span class="st">&quot;year2&quot;</span>, <span class="at">age =</span> <span class="st">&quot;obsage&quot;</span>,</span>
-<span id="cb10-52"><a href="#cb10-52" tabindex="-1"></a>  <span class="at">test.age =</span> <span class="cn">TRUE</span>, <span class="at">year.as.random =</span> <span class="cn">TRUE</span>, <span class="at">patch.as.random =</span> <span class="cn">TRUE</span>,</span>
-<span id="cb10-53"><a href="#cb10-53" tabindex="-1"></a>  <span class="at">show.model.tables =</span> <span class="cn">TRUE</span>, <span class="at">fec.zero =</span> <span class="cn">TRUE</span>, <span class="at">quiet =</span> <span class="st">&quot;partial&quot;</span>)</span>
-<span id="cb10-54"><a href="#cb10-54" tabindex="-1"></a><span class="co">#&gt; </span></span>
-<span id="cb10-55"><a href="#cb10-55" tabindex="-1"></a><span class="co">#&gt; Developing global model of survival probability...</span></span>
-<span id="cb10-56"><a href="#cb10-56" tabindex="-1"></a><span class="co">#&gt; </span></span>
-<span id="cb10-57"><a href="#cb10-57" tabindex="-1"></a><span class="co">#&gt; Global model of survival probability developed. Proceeding with model dredge...</span></span>
-<span id="cb10-58"><a href="#cb10-58" tabindex="-1"></a><span class="co">#&gt; </span></span>
-<span id="cb10-59"><a href="#cb10-59" tabindex="-1"></a><span class="co">#&gt; Developing global model of observation probability...</span></span>
-<span id="cb10-60"><a href="#cb10-60" tabindex="-1"></a><span class="co">#&gt; </span></span>
-<span id="cb10-61"><a href="#cb10-61" tabindex="-1"></a><span class="co">#&gt; Global model of observation probability developed. Proceeding with model dredge...</span></span>
-<span id="cb10-62"><a href="#cb10-62" tabindex="-1"></a><span class="co">#&gt; </span></span>
-<span id="cb10-63"><a href="#cb10-63" tabindex="-1"></a><span class="co">#&gt; Developing global model of primary size...</span></span>
-<span id="cb10-64"><a href="#cb10-64" tabindex="-1"></a><span class="co">#&gt; </span></span>
-<span id="cb10-65"><a href="#cb10-65" tabindex="-1"></a><span class="co">#&gt; Global model of primary size developed. Proceeding with model dredge...</span></span>
-<span id="cb10-66"><a href="#cb10-66" tabindex="-1"></a><span class="co">#&gt; </span></span>
-<span id="cb10-67"><a href="#cb10-67" tabindex="-1"></a><span class="co">#&gt; Developing global model of reproduction probability...</span></span>
-<span id="cb10-68"><a href="#cb10-68" tabindex="-1"></a><span class="co">#&gt; </span></span>
-<span id="cb10-69"><a href="#cb10-69" tabindex="-1"></a><span class="co">#&gt; Global model of reproduction probability developed. Proceeding with model dredge...</span></span>
-<span id="cb10-70"><a href="#cb10-70" tabindex="-1"></a><span class="co">#&gt; </span></span>
-<span id="cb10-71"><a href="#cb10-71" tabindex="-1"></a><span class="co">#&gt; Developing global model of fecundity...</span></span>
-<span id="cb10-72"><a href="#cb10-72" tabindex="-1"></a><span class="co">#&gt; </span></span>
-<span id="cb10-73"><a href="#cb10-73" tabindex="-1"></a><span class="co">#&gt; Global model of fecundity developed. Proceeding with model dredge...</span></span>
-<span id="cb10-74"><a href="#cb10-74" tabindex="-1"></a><span class="co">#&gt; </span></span>
-<span id="cb10-75"><a href="#cb10-75" tabindex="-1"></a><span class="co">#&gt; Developing global model of juvenile survival probability...</span></span>
-<span id="cb10-76"><a href="#cb10-76" tabindex="-1"></a><span class="co">#&gt; </span></span>
-<span id="cb10-77"><a href="#cb10-77" tabindex="-1"></a><span class="co">#&gt; Global model of juvenile survival probability developed. Proceeding with model dredge...</span></span>
-<span id="cb10-78"><a href="#cb10-78" tabindex="-1"></a><span class="co">#&gt; Warning: Juvenile maturity status in time t+1 appears to be constant (1). Setting to constant.</span></span>
-<span id="cb10-79"><a href="#cb10-79" tabindex="-1"></a><span class="co">#&gt; </span></span>
-<span id="cb10-80"><a href="#cb10-80" tabindex="-1"></a><span class="co">#&gt; Developing global model of juvenile observation probability...</span></span>
-<span id="cb10-81"><a href="#cb10-81" tabindex="-1"></a><span class="co">#&gt; </span></span>
-<span id="cb10-82"><a href="#cb10-82" tabindex="-1"></a><span class="co">#&gt; Global model of juvenile observation probability developed. Proceeding with model dredge...</span></span>
-<span id="cb10-83"><a href="#cb10-83" tabindex="-1"></a><span class="co">#&gt; </span></span>
-<span id="cb10-84"><a href="#cb10-84" tabindex="-1"></a><span class="co">#&gt; Developing global model of juvenile primary size...</span></span>
-<span id="cb10-85"><a href="#cb10-85" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb10-40"><a href="#cb10-40" tabindex="-1"></a><span class="co">#&gt; Global model estimation failed. Dropping individual identity term.</span></span>
+<span id="cb10-41"><a href="#cb10-41" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb10-42"><a href="#cb10-42" tabindex="-1"></a><span class="co">#&gt; Redeveloping global model of juvenile primary size...</span></span>
+<span id="cb10-43"><a href="#cb10-43" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb10-44"><a href="#cb10-44" tabindex="-1"></a><span class="co">#&gt; Global model of juvenile primary size developed. Proceeding with model dredge...</span></span>
+<span id="cb10-45"><a href="#cb10-45" tabindex="-1"></a><span class="co">#&gt; Warning: Juvenile reproductive status in time t+1 appears to be constant, and so will be set to constant.</span></span>
+<span id="cb10-46"><a href="#cb10-46" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb10-47"><a href="#cb10-47" tabindex="-1"></a><span class="co">#&gt; Finished selecting best-fit models.</span></span>
+<span id="cb10-48"><a href="#cb10-48" tabindex="-1"></a>lathmodelsln2p <span class="ot">&lt;-</span> <span class="fu">modelsearch</span>(lathvertln, <span class="at">historical =</span> <span class="cn">FALSE</span>,</span>
+<span id="cb10-49"><a href="#cb10-49" tabindex="-1"></a>  <span class="at">approach =</span> <span class="st">&quot;mixed&quot;</span>, <span class="at">suite =</span> <span class="st">&quot;main&quot;</span>,</span>
+<span id="cb10-50"><a href="#cb10-50" tabindex="-1"></a>  <span class="at">vitalrates =</span> <span class="fu">c</span>(<span class="st">&quot;surv&quot;</span>, <span class="st">&quot;obs&quot;</span>, <span class="st">&quot;size&quot;</span>, <span class="st">&quot;repst&quot;</span>, <span class="st">&quot;fec&quot;</span>), <span class="at">juvestimate =</span> <span class="st">&quot;Sdl&quot;</span>,</span>
+<span id="cb10-51"><a href="#cb10-51" tabindex="-1"></a>  <span class="at">bestfit =</span> <span class="st">&quot;AICc&amp;k&quot;</span>, <span class="at">sizedist =</span> <span class="st">&quot;gaussian&quot;</span>, <span class="at">fecdist =</span> <span class="st">&quot;negbin&quot;</span>,</span>
+<span id="cb10-52"><a href="#cb10-52" tabindex="-1"></a>  <span class="at">indiv =</span> <span class="st">&quot;individ&quot;</span>, <span class="at">patch =</span> <span class="st">&quot;patchid&quot;</span>, <span class="at">year =</span> <span class="st">&quot;year2&quot;</span>, <span class="at">age =</span> <span class="st">&quot;obsage&quot;</span>,</span>
+<span id="cb10-53"><a href="#cb10-53" tabindex="-1"></a>  <span class="at">test.age =</span> <span class="cn">TRUE</span>, <span class="at">year.as.random =</span> <span class="cn">TRUE</span>, <span class="at">patch.as.random =</span> <span class="cn">TRUE</span>,</span>
+<span id="cb10-54"><a href="#cb10-54" tabindex="-1"></a>  <span class="at">show.model.tables =</span> <span class="cn">TRUE</span>, <span class="at">fec.zero =</span> <span class="cn">TRUE</span>, <span class="at">quiet =</span> <span class="st">&quot;partial&quot;</span>)</span>
+<span id="cb10-55"><a href="#cb10-55" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb10-56"><a href="#cb10-56" tabindex="-1"></a><span class="co">#&gt; Developing global model of survival probability...</span></span>
+<span id="cb10-57"><a href="#cb10-57" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb10-58"><a href="#cb10-58" tabindex="-1"></a><span class="co">#&gt; Global model of survival probability developed. Proceeding with model dredge...</span></span>
+<span id="cb10-59"><a href="#cb10-59" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb10-60"><a href="#cb10-60" tabindex="-1"></a><span class="co">#&gt; Developing global model of observation probability...</span></span>
+<span id="cb10-61"><a href="#cb10-61" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb10-62"><a href="#cb10-62" tabindex="-1"></a><span class="co">#&gt; Global model of observation probability developed. Proceeding with model dredge...</span></span>
+<span id="cb10-63"><a href="#cb10-63" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb10-64"><a href="#cb10-64" tabindex="-1"></a><span class="co">#&gt; Developing global model of primary size...</span></span>
+<span id="cb10-65"><a href="#cb10-65" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb10-66"><a href="#cb10-66" tabindex="-1"></a><span class="co">#&gt; Global model of primary size developed. Proceeding with model dredge...</span></span>
+<span id="cb10-67"><a href="#cb10-67" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb10-68"><a href="#cb10-68" tabindex="-1"></a><span class="co">#&gt; Developing global model of reproduction probability...</span></span>
+<span id="cb10-69"><a href="#cb10-69" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb10-70"><a href="#cb10-70" tabindex="-1"></a><span class="co">#&gt; Global model of reproduction probability developed. Proceeding with model dredge...</span></span>
+<span id="cb10-71"><a href="#cb10-71" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb10-72"><a href="#cb10-72" tabindex="-1"></a><span class="co">#&gt; Developing global model of fecundity...</span></span>
+<span id="cb10-73"><a href="#cb10-73" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb10-74"><a href="#cb10-74" tabindex="-1"></a><span class="co">#&gt; Global model of fecundity developed. Proceeding with model dredge...</span></span>
+<span id="cb10-75"><a href="#cb10-75" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb10-76"><a href="#cb10-76" tabindex="-1"></a><span class="co">#&gt; Developing global model of juvenile survival probability...</span></span>
+<span id="cb10-77"><a href="#cb10-77" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb10-78"><a href="#cb10-78" tabindex="-1"></a><span class="co">#&gt; Global model of juvenile survival probability developed. Proceeding with model dredge...</span></span>
+<span id="cb10-79"><a href="#cb10-79" tabindex="-1"></a><span class="co">#&gt; Warning: Juvenile maturity status in time t+1 appears to be constant (1). Setting to constant.</span></span>
+<span id="cb10-80"><a href="#cb10-80" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb10-81"><a href="#cb10-81" tabindex="-1"></a><span class="co">#&gt; Developing global model of juvenile observation probability...</span></span>
+<span id="cb10-82"><a href="#cb10-82" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb10-83"><a href="#cb10-83" tabindex="-1"></a><span class="co">#&gt; Global model of juvenile observation probability developed. Proceeding with model dredge...</span></span>
+<span id="cb10-84"><a href="#cb10-84" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb10-85"><a href="#cb10-85" tabindex="-1"></a><span class="co">#&gt; Developing global model of juvenile primary size...</span></span>
 <span id="cb10-86"><a href="#cb10-86" tabindex="-1"></a><span class="co">#&gt; </span></span>
-<span id="cb10-87"><a href="#cb10-87" tabindex="-1"></a><span class="co">#&gt; Developing global model of juvenile primary size...</span></span>
+<span id="cb10-87"><a href="#cb10-87" tabindex="-1"></a><span class="co">#&gt; Global model estimation failed. Dropping individual identity term.</span></span>
 <span id="cb10-88"><a href="#cb10-88" tabindex="-1"></a><span class="co">#&gt; </span></span>
-<span id="cb10-89"><a href="#cb10-89" tabindex="-1"></a><span class="co">#&gt; Global model of juvenile primary size developed. Proceeding with model dredge...</span></span>
-<span id="cb10-90"><a href="#cb10-90" tabindex="-1"></a><span class="co">#&gt; Warning: Juvenile reproductive status in time t+1 appears to be constant, and so will be set to constant.</span></span>
-<span id="cb10-91"><a href="#cb10-91" tabindex="-1"></a><span class="co">#&gt; </span></span>
-<span id="cb10-92"><a href="#cb10-92" tabindex="-1"></a><span class="co">#&gt; Finished selecting best-fit models.</span></span>
-<span id="cb10-93"><a href="#cb10-93" tabindex="-1"></a></span>
-<span id="cb10-94"><a href="#cb10-94" tabindex="-1"></a><span class="co">#summary(lathmodelsln2)</span></span>
-<span id="cb10-95"><a href="#cb10-95" tabindex="-1"></a><span class="co">#summary(lathmodelsln2p)</span></span></code></pre></div>
+<span id="cb10-89"><a href="#cb10-89" tabindex="-1"></a><span class="co">#&gt; Redeveloping global model of juvenile primary size...</span></span>
+<span id="cb10-90"><a href="#cb10-90" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb10-91"><a href="#cb10-91" tabindex="-1"></a><span class="co">#&gt; Global model of juvenile primary size developed. Proceeding with model dredge...</span></span>
+<span id="cb10-92"><a href="#cb10-92" tabindex="-1"></a><span class="co">#&gt; Warning: Juvenile reproductive status in time t+1 appears to be constant, and so will be set to constant.</span></span>
+<span id="cb10-93"><a href="#cb10-93" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb10-94"><a href="#cb10-94" tabindex="-1"></a><span class="co">#&gt; Finished selecting best-fit models.</span></span>
+<span id="cb10-95"><a href="#cb10-95" tabindex="-1"></a></span>
+<span id="cb10-96"><a href="#cb10-96" tabindex="-1"></a><span class="co">#summary(lathmodelsln2)</span></span>
+<span id="cb10-97"><a href="#cb10-97" tabindex="-1"></a><span class="co">#summary(lathmodelsln2p)</span></span></code></pre></div>
 <p style="text-indent: 20px">
 The output can be rather verbose, and so we have limited it with
 <code>quiet = &quot;partial&quot;</code>. The function was developed to provide
@@ -1443,11 +1455,19 @@ LTREs and sLTREs are powerful tools, and more complex versions of both
 analyses exist. Particularly view our other online resources for the
 SNA-LTRE, and please consult <span class="citation">Caswell
 (2001)</span> and <span class="citation">Davison et al. (2013)</span>
-for more information. Users wishing to conduct these analyses should see
-our free e-manual called <strong><em>lefko3: a gentle
-introduction</em></strong> and other vignettes on
-<a href="http://www.sheffersonlab.com/projects.html">the projects
-page</a> of the Shefferson lab website.
+for more information.
+</p>
+<p style="text-indent: 20px">
+Package <code>lefko3</code> also includes functions to conduct many
+other analyses, including deterministic and stochastic life table
+response experiments, and general projection including quasi-extinction
+analysis and density dependent analysis. Users wishing to conduct these
+analyses should see our free e-manual called
+<a href="https://bookdown.org/cdorm/lefko3gentle/"><em>lefko3: a
+gentle introduction</em></a>, as well as through the resources found on
+the
+<a href="http://www.revolutionarydemography.com/projects.html"><strong>{r}evolutionary
+demography</strong></a> website.
 </p>
 </div>
 </div>

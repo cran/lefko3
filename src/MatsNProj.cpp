@@ -1477,14 +1477,16 @@ List subvertedpatrolgroup(const DataFrame& sge3, const arma::ivec& sge2index21,
       
       // Sum all individuals with particular transition
       arma::uvec chosen_index21_vec = find(sge2index21 == dataindex21i(j));
-      int chosen_index21 = chosen_index21_vec(0);
-      
-      stage21fec(chosen_index21, 0) = stage21fec(chosen_index21, 0) + 1.0; 
-      if (dataalive3i(j) > 0) {
-        stage21fec(chosen_index21, 1) = stage21fec(chosen_index21, 1) + 1.0;
+      if (chosen_index21_vec.n_elem > 0) {
+        int chosen_index21 = chosen_index21_vec(0);
+        
+        stage21fec(chosen_index21, 0) = stage21fec(chosen_index21, 0) + 1.0; 
+        if (dataalive3i(j) > 0) {
+          stage21fec(chosen_index21, 1) = stage21fec(chosen_index21, 1) + 1.0;
+        }
+        
+        stage21fec(chosen_index21, 2) = stage21fec(chosen_index21, 2) + datausedfeci(j);
       }
-      
-      stage21fec(chosen_index21, 2) = stage21fec(chosen_index21, 2) + datausedfeci(j);
     }
     
     // Populate vectors of individuals by stage in time t
@@ -1827,13 +1829,15 @@ List subvertedpatrolgroup(const DataFrame& sge3, const arma::ivec& sge2index21,
 //' @param sparse If \code{TRUE}, then outputs matrices in sparse format.
 //' Defaults to \code{FALSE}.
 //' 
-//' @return A list with with up to 5 elements. In order: \code{A}: a list of A
+//' @return A list with with up to 6 elements. In order: \code{A}: a list of A
 //' matrices, or a list of \code{NULL} values if \code{simplicity = TRUE};
 //' \code{U}: a list of U matrices, in the same order as \code{A}; \code{F}:
 //' a list of F matrices, in the same order as \code{A}; \code{prob_out}: a list
 //' of error-checking conditional probability matrices, or a list of \code{NULL}
-//' values if \code{err_check = FALSE}; and \code{allstages}: a data frame
-//' showing the used values of all variables used in transition calculations.
+//' values if \code{err_check = FALSE}; \code{allstages}: a data frame showing
+//' the used values of all variables used in transition calculations; and
+//' \code{proxies}: a list of model proxies output during function-based model
+//' processing.
 //' 
 //' @keywords internal
 //' @noRd
@@ -1859,6 +1863,7 @@ List raymccooney(const DataFrame& listofyears, const List& modelsuite,
   
   // Dud dens_vr inputs
   Rcpp::DataFrame dvr_frame;
+  List err_check_proxies;
   
   // listofyears import and settings
   IntegerVector years = listofyears["yearorder"];
@@ -3176,35 +3181,60 @@ List raymccooney(const DataFrame& listofyears, const List& modelsuite,
     paramnames = as<DataFrame>(modelsuite["paramnames"]);
   }
   
-  List surv_proxy = modelextract(surv_model, paramnames, mainyears, mainpatches,
-    maingroups, mainindcova, mainindcovb, mainindcovc, nodata);
-  List obs_proxy = modelextract(obs_model, paramnames, mainyears, mainpatches,
-    maingroups, mainindcova, mainindcovb, mainindcovc, nodata);
-  List size_proxy = modelextract(size_model, paramnames, mainyears, mainpatches,
-    maingroups, mainindcova, mainindcovb, mainindcovc, nodata);
-  List sizeb_proxy = modelextract(sizeb_model, paramnames, mainyears,
+  List surv_proxy = LefkoUtils::modelextract(surv_model, paramnames, mainyears,
     mainpatches, maingroups, mainindcova, mainindcovb, mainindcovc, nodata);
-  List sizec_proxy = modelextract(sizec_model, paramnames, mainyears,
+  List obs_proxy = LefkoUtils::modelextract(obs_model, paramnames, mainyears,
     mainpatches, maingroups, mainindcova, mainindcovb, mainindcovc, nodata);
-  List repst_proxy = modelextract(repst_model, paramnames, mainyears,
+  List size_proxy = LefkoUtils::modelextract(size_model, paramnames, mainyears,
     mainpatches, maingroups, mainindcova, mainindcovb, mainindcovc, nodata);
-  List fec_proxy = modelextract(fec_model, paramnames, mainyears, mainpatches,
-    maingroups, mainindcova, mainindcovb, mainindcovc, nodata);
+  List sizeb_proxy = LefkoUtils::modelextract(sizeb_model, paramnames, mainyears,
+    mainpatches, maingroups, mainindcova, mainindcovb, mainindcovc, nodata);
+  List sizec_proxy = LefkoUtils::modelextract(sizec_model, paramnames, mainyears,
+    mainpatches, maingroups, mainindcova, mainindcovb, mainindcovc, nodata);
+  List repst_proxy = LefkoUtils::modelextract(repst_model, paramnames, mainyears,
+    mainpatches, maingroups, mainindcova, mainindcovb, mainindcovc, nodata);
+  List fec_proxy = LefkoUtils::modelextract(fec_model, paramnames, mainyears,
+    mainpatches, maingroups, mainindcova, mainindcovb, mainindcovc, nodata);
   
-  List jsurv_proxy = modelextract(jsurv_model, paramnames, mainyears,
+  List jsurv_proxy = LefkoUtils::modelextract(jsurv_model, paramnames, mainyears,
     mainpatches, maingroups, mainindcova, mainindcovb, mainindcovc, nodata);
-  List jobs_proxy = modelextract(jobs_model, paramnames, mainyears, mainpatches,
-    maingroups, mainindcova, mainindcovb, mainindcovc, nodata);
-  List jsize_proxy = modelextract(jsize_model, paramnames, mainyears,
+  List jobs_proxy = LefkoUtils::modelextract(jobs_model, paramnames, mainyears,
     mainpatches, maingroups, mainindcova, mainindcovb, mainindcovc, nodata);
-  List jsizeb_proxy = modelextract(jsizeb_model, paramnames, mainyears,
+  List jsize_proxy = LefkoUtils::modelextract(jsize_model, paramnames, mainyears,
     mainpatches, maingroups, mainindcova, mainindcovb, mainindcovc, nodata);
-  List jsizec_proxy = modelextract(jsizec_model, paramnames, mainyears,
+  List jsizeb_proxy = LefkoUtils::modelextract(jsizeb_model, paramnames, mainyears,
     mainpatches, maingroups, mainindcova, mainindcovb, mainindcovc, nodata);
-  List jrepst_proxy = modelextract(jrepst_model, paramnames, mainyears,
+  List jsizec_proxy = LefkoUtils::modelextract(jsizec_model, paramnames, mainyears,
     mainpatches, maingroups, mainindcova, mainindcovb, mainindcovc, nodata);
-  List jmatst_proxy = modelextract(jmatst_model, paramnames, mainyears,
+  List jrepst_proxy = LefkoUtils::modelextract(jrepst_model, paramnames, mainyears,
     mainpatches, maingroups, mainindcova, mainindcovb, mainindcovc, nodata);
+  List jmatst_proxy = LefkoUtils::modelextract(jmatst_model, paramnames, mainyears,
+    mainpatches, maingroups, mainindcova, mainindcovb, mainindcovc, nodata);
+  
+  if (err_check) {
+    List proxy_out_list (14);
+    proxy_out_list(0) = surv_proxy;
+    proxy_out_list(1) = obs_proxy;
+    proxy_out_list(2) = size_proxy;
+    proxy_out_list(3) = sizeb_proxy;
+    proxy_out_list(4) = sizec_proxy;
+    proxy_out_list(5) = repst_proxy;
+    proxy_out_list(6) = fec_proxy;
+    proxy_out_list(7) = jsurv_proxy;
+    proxy_out_list(8) = jobs_proxy;
+    proxy_out_list(9) = jsize_proxy;
+    proxy_out_list(10) = jsizeb_proxy;
+    proxy_out_list(11) = jsizec_proxy;
+    proxy_out_list(12) = jrepst_proxy;
+    proxy_out_list(13) = jmatst_proxy;
+    
+    CharacterVector pol_names = {"surv_proxy", "obs_proxy", "size_proxy",
+      "sizeb_proxy", "sizec_proxy", "repst_proxy", "fec_proxy", "jsurv_proxy",
+      "jobs_proxy", "jsize_proxy", "jsizeb_proxy", "jsizec_proxy",
+      "jrepst_proxy", "jmatst_proxy"};
+    proxy_out_list.attr("names") = pol_names;
+    err_check_proxies = proxy_out_list;
+  }
   
   // lefkoMat structure
   List A_mats(loy_length);
@@ -3254,12 +3284,13 @@ List raymccooney(const DataFrame& listofyears, const List& modelsuite,
   
   if (simplicity && err_check) {
     output = List::create(_["U"] = U_mats, _["F"] = F_mats, _["prob_out"] = out_mats,
-      _["allstages"] = allstages);
+      _["allstages"] = allstages, _["proxies"] = err_check_proxies);
   } else if (simplicity) {
     output = List::create(_["U"] = U_mats, _["F"] = F_mats);
   } else if (err_check) {
     output = List::create(_["A"] = A_mats, _["U"] = U_mats, _["F"] = F_mats,
-      _["prob_out"] = out_mats, _["allstages"] = allstages);
+      _["prob_out"] = out_mats, _["allstages"] = allstages,
+      _["proxies"] = err_check_proxies);
   } else {
     output = List::create(_["A"] = A_mats, _["U"] = U_mats, _["F"] = F_mats);
   }
@@ -3422,6 +3453,7 @@ List mothermccooney(const DataFrame& listofyears, const List& modelsuite,
   
   // Dud dens_vr inputs
   Rcpp::DataFrame dvr_frame;
+  List err_check_proxies;
   
   // listofyears import and settings
   IntegerVector years = listofyears["yearorder"];
@@ -3746,10 +3778,20 @@ List mothermccooney(const DataFrame& listofyears, const List& modelsuite,
     paramnames = as<DataFrame>(modelsuite["paramnames"]);
   }
   
-  List surv_proxy = modelextract(surv_model, paramnames, mainyears, mainpatches,
-    maingroups, mainindcova, mainindcovb, mainindcovc, nodata);
-  List fec_proxy = modelextract(fec_model, paramnames, mainyears, mainpatches,
-    maingroups, mainindcova, mainindcovb, mainindcovc, nodata);
+  List surv_proxy = LefkoUtils::modelextract(surv_model, paramnames, mainyears,
+    mainpatches, maingroups, mainindcova, mainindcovb, mainindcovc, nodata);
+  List fec_proxy = LefkoUtils::modelextract(fec_model, paramnames, mainyears,
+    mainpatches, maingroups, mainindcova, mainindcovb, mainindcovc, nodata);
+  
+  if (err_check) {
+    List proxy_out_list (2);
+    proxy_out_list(0) = surv_proxy;
+    proxy_out_list(1) = fec_proxy;
+    
+    CharacterVector pol_names = {"surv_proxy", "fec_proxy"};
+    proxy_out_list.attr("names") = pol_names;
+    err_check_proxies = proxy_out_list;
+  }
   
   // Create matrices and order them within correct list structure
   List A_mats(loy_length);
@@ -3791,9 +3833,19 @@ List mothermccooney(const DataFrame& listofyears, const List& modelsuite,
   List output;
   
   if (simplicity) {
-    output = List::create(_["U"] = U_mats, _["F"] = F_mats);
+    if (err_check) {
+      output = List::create(_["U"] = U_mats, _["F"] = F_mats,
+        _["proxies"] = err_check_proxies);
+    } else {
+      output = List::create(_["U"] = U_mats, _["F"] = F_mats);
+    }
   } else {
-    output = List::create(_["A"] = A_mats, _["U"] = U_mats, _["F"] = F_mats);
+    if (err_check) {
+      output = List::create(_["A"] = A_mats, _["U"] = U_mats, _["F"] = F_mats,
+        _["proxies"] = err_check_proxies);
+    } else {
+      output = List::create(_["A"] = A_mats, _["U"] = U_mats, _["F"] = F_mats);
+    }
   }
   return output;
 }
@@ -3850,7 +3902,7 @@ List mothermccooney(const DataFrame& listofyears, const List& modelsuite,
 //' the duration of calculations. Defaults to \code{FALSE}.
 //' @param integeronly A logical value indicating whether to round the number of
 //' individuals projected in each stage at each occasion to the nearest
-//' integer. Defaults to \code{FALSE}.
+//' integer. Defaults to \code{TRUE}.
 //' @param substoch An integer value indicating whether to force survival-
 //' transition matrices to be substochastic in density dependent and density
 //' independent simulations. Defaults to \code{0}, which does not enforce
@@ -4106,9 +4158,14 @@ List mothermccooney(const DataFrame& listofyears, const List& modelsuite,
 //' Second, the \code{repvalue} option should be set to \code{FALSE} unless
 //' reproductive values are genuinely needed, since this step requires
 //' concurrent backward projection and so in some cases may double total run
-//' time. Finally, if the only needed data is the total population size and
+//' time. Next, if the only needed data is the total population size and
 //' age/stage structure at each time step, then setting \code{growthonly = TRUE}
-//' will yield the quickest possible run time.
+//' will yield the quickest possible run time. Finally, the default behavior of
+//' the function is to round down fractional values of individuals, and to stop
+//' running projections (replicates) when the population drops to 0. Setting
+//' \code{integeronly = FALSE} will have the impact of increasing runtime,
+//' potentially dramatically, since the population can reach a point in which
+//' the population size is extremely small but not equal to 0.
 //' 
 //' Projections with large matrices may take a long time to run. To assess the
 //' likely running time, try using a low number of iterations on a single
@@ -4287,8 +4344,7 @@ List mothermccooney(const DataFrame& listofyears, const List& modelsuite,
 //'   jobs_model = jobs_model, jsize_model = jsiz_model,
 //'   jrepst_model = jrepst_model, jmatst_model = jmatst_model,
 //'   times = 100, stochastic = TRUE, standardize = FALSE, growthonly = TRUE,
-//'   integeronly = FALSE, substoch = 0, sp_density = 0, start_frame = e3m_sv,
-//'   density_vr = e3d_vr)
+//'   substoch = 0, sp_density = 0, start_frame = e3m_sv, density_vr = e3d_vr)
 //' }
 //' 
 //' @export f_projection3
@@ -4296,7 +4352,7 @@ List mothermccooney(const DataFrame& listofyears, const List& modelsuite,
 Rcpp::List f_projection3(int format, bool prebreeding = true, int start_age = NA_INTEGER,
   int last_age = NA_INTEGER, int fecage_min = NA_INTEGER, int fecage_max = NA_INTEGER,
   bool cont = true, bool stochastic = false, bool standardize = false,
-  bool growthonly = true, bool repvalue = false, bool integeronly = false,
+  bool growthonly = true, bool repvalue = false, bool integeronly = true,
   int substoch = 0, bool ipm_cdf = true, int nreps = 1, int times = 10000,
   double repmod = 1.0, double exp_tol = 700.0, double theta_tol = 1e8,
   bool random_inda = false, bool random_indb = false, bool random_indc = false,
@@ -4346,7 +4402,7 @@ Rcpp::List f_projection3(int format, bool prebreeding = true, int start_age = NA
   bool sparse_bool = false;
   
   if (sparse.isNotNull()) {
-    yesnoauto_to_logic(as<RObject>(sparse), "sparse", sparse_bool, sparse_auto);
+    LefkoInputs::yesnoauto_to_logic(as<RObject>(sparse), "sparse", sparse_bool, sparse_auto);
     if (sparse_bool) sparse_switch = 1;
   }
   
@@ -6837,34 +6893,34 @@ Rcpp::List f_projection3(int format, bool prebreeding = true, int start_age = NA
   
   // modelextract proxy lists
   CharacterVector my_char = mainyears;
-  List surv_proxy = modelextract(surmodl, pmnames, my_char, mainpatches,
-    maingroups, inda_names, indb_names, indc_names, nodata);
-  List obs_proxy = modelextract(obsmodl, pmnames, my_char, mainpatches,
-    maingroups, inda_names, indb_names, indc_names, nodata);
-  List size_proxy = modelextract(sizmodl, pmnames, my_char, mainpatches,
-    maingroups, inda_names, indb_names, indc_names, nodata);
-  List sizeb_proxy = modelextract(sibmodl, pmnames, my_char, mainpatches,
-    maingroups, inda_names, indb_names, indc_names, nodata);
-  List sizec_proxy = modelextract(sicmodl, pmnames, my_char, mainpatches,
-    maingroups, inda_names, indb_names, indc_names, nodata);
-  List repst_proxy = modelextract(repmodl, pmnames, my_char, mainpatches,
-    maingroups, inda_names, indb_names, indc_names, nodata);
-  List fec_proxy = modelextract(fecmodl, pmnames, my_char, mainpatches,
-    maingroups, inda_names, indb_names, indc_names, nodata);
-  List jsurv_proxy = modelextract(jsurmodl, pmnames, my_char, mainpatches,
-    maingroups, inda_names, indb_names, indc_names, nodata);
-  List jobs_proxy = modelextract(jobsmodl, pmnames, my_char, mainpatches,
-    maingroups, inda_names, indb_names, indc_names, nodata);
-  List jsize_proxy = modelextract(jsizmodl, pmnames, my_char, mainpatches,
-    maingroups, inda_names, indb_names, indc_names, nodata);
-  List jsizeb_proxy = modelextract(jsibmodl, pmnames, my_char, mainpatches,
-    maingroups, inda_names, indb_names, indc_names, nodata);
-  List jsizec_proxy = modelextract(jsicmodl, pmnames, my_char, mainpatches,
-    maingroups, inda_names, indb_names, indc_names, nodata);
-  List jrepst_proxy = modelextract(jrepmodl, pmnames, my_char, mainpatches,
-    maingroups, inda_names, indb_names, indc_names, nodata);
-  List jmatst_proxy = modelextract(jmatmodl, pmnames, my_char, mainpatches,
-    maingroups, inda_names, indb_names, indc_names, nodata);
+  List surv_proxy = LefkoUtils::modelextract(surmodl, pmnames, my_char,
+    mainpatches, maingroups, inda_names, indb_names, indc_names, nodata);
+  List obs_proxy = LefkoUtils::modelextract(obsmodl, pmnames, my_char,
+    mainpatches, maingroups, inda_names, indb_names, indc_names, nodata);
+  List size_proxy = LefkoUtils::modelextract(sizmodl, pmnames, my_char,
+    mainpatches, maingroups, inda_names, indb_names, indc_names, nodata);
+  List sizeb_proxy = LefkoUtils::modelextract(sibmodl, pmnames, my_char,
+    mainpatches, maingroups, inda_names, indb_names, indc_names, nodata);
+  List sizec_proxy = LefkoUtils::modelextract(sicmodl, pmnames, my_char,
+    mainpatches, maingroups, inda_names, indb_names, indc_names, nodata);
+  List repst_proxy = LefkoUtils::modelextract(repmodl, pmnames, my_char,
+    mainpatches, maingroups, inda_names, indb_names, indc_names, nodata);
+  List fec_proxy = LefkoUtils::modelextract(fecmodl, pmnames, my_char,
+    mainpatches, maingroups, inda_names, indb_names, indc_names, nodata);
+  List jsurv_proxy = LefkoUtils::modelextract(jsurmodl, pmnames, my_char,
+    mainpatches, maingroups, inda_names, indb_names, indc_names, nodata);
+  List jobs_proxy = LefkoUtils::modelextract(jobsmodl, pmnames, my_char,
+    mainpatches, maingroups, inda_names, indb_names, indc_names, nodata);
+  List jsize_proxy = LefkoUtils::modelextract(jsizmodl, pmnames, my_char,
+    mainpatches, maingroups, inda_names, indb_names, indc_names, nodata);
+  List jsizeb_proxy = LefkoUtils::modelextract(jsibmodl, pmnames, my_char,
+    mainpatches, maingroups, inda_names, indb_names, indc_names, nodata);
+  List jsizec_proxy = LefkoUtils::modelextract(jsicmodl, pmnames, my_char,
+    mainpatches, maingroups, inda_names, indb_names, indc_names, nodata);
+  List jrepst_proxy = LefkoUtils::modelextract(jrepmodl, pmnames, my_char,
+    mainpatches, maingroups, inda_names, indb_names, indc_names, nodata);
+  List jmatst_proxy = LefkoUtils::modelextract(jmatmodl, pmnames, my_char,
+    mainpatches, maingroups, inda_names, indb_names, indc_names, nodata);
   
   // Main projection set-up
   int yearnumber {0};
@@ -7013,7 +7069,7 @@ Rcpp::List f_projection3(int format, bool prebreeding = true, int start_age = NA
   
   DataFrame hstages;
   if (format < 3) {
-    hstages = hst_maker(ahstages);
+    hst_maker(hstages, ahstages, format);
   } else {
     hstages = R_NilValue;
   }
@@ -7287,12 +7343,6 @@ Rcpp::List f_projection3(int format, bool prebreeding = true, int start_age = NA
   arma::mat Rvecmat(1, (times + 1), fill::zeros);
   arma::mat thesecondprophecy;
   
-  popproj.col(0) = startvec;
-  Rvecmat(0) = sum(startvec);
-  if (!growthonly) {
-    wpopproj.col(0) = startvec / sum(startvec);
-  }
-  
   List all_projections (nreps);
   List all_stagedist (nreps);
   List all_repvalues (nreps);
@@ -7303,6 +7353,16 @@ Rcpp::List f_projection3(int format, bool prebreeding = true, int start_age = NA
   
   if (sparse_switch == 0 || format == 5) {
     for (int rep = 0; rep < nreps; rep++) {
+      Rvecmat.zeros();
+      popproj.zeros();
+      wpopproj.zeros();
+      vpopproj.zeros();
+      
+      popproj.col(0) = startvec;
+      Rvecmat(0) = sum(startvec);
+      if (!growthonly) {
+        wpopproj.col(0) = startvec / sum(startvec);
+      }
       
       theseventhson = startvec;
       arma::rowvec theseventhgrandson = startvec.as_row();
@@ -7459,6 +7519,8 @@ Rcpp::List f_projection3(int format, bool prebreeding = true, int start_age = NA
         popproj.col(i+1) = theseventhson;
         Rvecmat(i+1) = sum(theseventhson);
         
+        if (Rvecmat(i+1) <= 0.0) break;
+        
         if (standardize) {
           theseventhson = theseventhson / sum(theseventhson);
         }
@@ -7540,6 +7602,17 @@ Rcpp::List f_projection3(int format, bool prebreeding = true, int start_age = NA
     arma::sp_mat theseventhgrandson_sp(theseventhgrandson);
     
     for (int rep = 0; rep < nreps; rep++) {
+      Rvecmat.zeros();
+      popproj.zeros();
+      wpopproj.zeros();
+      vpopproj.zeros();
+      
+      popproj.col(0) = startvec;
+      Rvecmat(0) = sum(startvec);
+      if (!growthonly) {
+        wpopproj.col(0) = startvec / sum(startvec);
+      }
+      
       for (int i = 0; i < times; i++) {
         if (i % 25 == 0) Rcpp::checkUserInterrupt();
         
@@ -7677,6 +7750,8 @@ Rcpp::List f_projection3(int format, bool prebreeding = true, int start_age = NA
         }
         popproj.col(i+1) = arma::vec(theseventhson_sp);
         Rvecmat(i+1) = sum(popproj.col(i+1));
+        
+        if (Rvecmat(i+1) <= 0.0) break;
         
         if (standardize) {
           theseventhson_sp = theseventhson_sp / Rvecmat(i+1);
@@ -8328,6 +8403,7 @@ Rcpp::List mpm_create(bool historical = false, bool stage = true, bool age = fal
   StringVector data_vars;
   DataFrame data_;
   IntegerVector dataqc_ = {0, 0};
+  List err_check_proxies;
   
   if (data.isNotNull()) {
     RObject data_input (data);
@@ -8400,25 +8476,8 @@ Rcpp::List mpm_create(bool historical = false, bool stage = true, bool age = fal
   DataFrame supplement_;
   bool supplement_used {false};
   
-  if (supplement.isNotNull()) {
-    RObject supplement_input (supplement);
-    if (is<DataFrame>(supplement_input)) {
-      supplement_ = as<DataFrame>(supplement_input);
-      supplement_used = true;
-      
-      StringVector supplement_class (as<StringVector>(supplement_.attr("class")));
-      
-      int no_supp_classes {static_cast<int>(supplement_class.length())};
-      int matches {0};
-      for (int i = 0; i < no_supp_classes; i++) {
-        if (stringcompare_simple(String(supplement_class(i)), "SD", false)) {
-          matches++;
-        }
-      }
-      if (matches == 0) pop_error("supplement", "a lefkoSD object", "", 1);
-      
-    } else pop_error("supplement", "a lefkoSD object", "", 1);
-  }
+  LefkoInputs::RObj_DFr_input_check("supplement", "lefkoSD", supplement_,
+    supplement_used, true, true, supplement);
   
   DataFrame overwrite_;
   bool overwrite_used {false};
@@ -10455,6 +10514,7 @@ Rcpp::List mpm_create(bool historical = false, bool stage = true, bool age = fal
       stages_int = stages_int_;
       
     } else pop_error("stages", "stage identity", "", 10);
+    
     new_stage3 = as<StringVector>(data_[stages_int(0)]);
     new_stage2 = as<StringVector>(data_[stages_int(1)]);
     if (historical) new_stage1 = as<StringVector>(data_[stages_int(2)]);
@@ -13046,18 +13106,27 @@ Rcpp::List mpm_create(bool historical = false, bool stage = true, bool age = fal
           if (err_check) sge3 = stageexpansion3;
         }
         
-        IntegerVector hst_sid_2 ((melchett_stageframe_length - 1) * (melchett_stageframe_length - 1));
-        IntegerVector hst_sid_1 ((melchett_stageframe_length - 1) * (melchett_stageframe_length - 1));
-        StringVector hst_stage_2 ((melchett_stageframe_length - 1) * (melchett_stageframe_length - 1));
-        StringVector hst_stage_1 ((melchett_stageframe_length - 1) * (melchett_stageframe_length - 1));
         
+        
+        
+        int format_alteration {0};
+        if (!devries) format_alteration = 1;
+        
+        IntegerVector hst_sid_2 ((melchett_stageframe_length - 2 + format_alteration) * (melchett_stageframe_length - 1));
+        IntegerVector hst_sid_1 ((melchett_stageframe_length - 2 + format_alteration) * (melchett_stageframe_length - 1));
+        StringVector hst_stage_2 ((melchett_stageframe_length - 2 + format_alteration) * (melchett_stageframe_length - 1));
+        StringVector hst_stage_1 ((melchett_stageframe_length - 2 + format_alteration) * (melchett_stageframe_length - 1));
+        
+        int hst_n_counter {0};
         for (int i = 0; i < (melchett_stageframe_length - 1); i++) {
-          for (int j = 0; j < (melchett_stageframe_length - 1); j++) {
-            hst_sid_2(j + (i * (melchett_stageframe_length - 1))) = mel_sid(j);
-            hst_sid_1(j + (i * (melchett_stageframe_length - 1))) = mel_sid(i);
+          for (int j = 0; j < (melchett_stageframe_length - 2 + format_alteration); j++) {
+            hst_sid_2(hst_n_counter) = mel_sid(j);
+            hst_sid_1(hst_n_counter) = mel_sid(i);
             
-            hst_stage_2(j + (i * (melchett_stageframe_length - 1))) = melchett_stageframe_stage_(j);
-            hst_stage_1(j + (i * (melchett_stageframe_length - 1))) = melchett_stageframe_stage_(i);
+            hst_stage_2(hst_n_counter) = melchett_stageframe_stage_(j);
+            hst_stage_1(hst_n_counter) = melchett_stageframe_stage_(i);
+            
+            hst_n_counter++;
           }
         }
         
@@ -13155,6 +13224,7 @@ Rcpp::List mpm_create(bool historical = false, bool stage = true, bool age = fal
           f1_indc_cat, r2_inda, r1_inda, r2_indb, r1_indb, r2_indc, r1_indc,
           dev_terms_, density, fecmod, 0, 0, 1, 1, 0, 1, negfec, nodata,
           exp_tol, theta_tol, CDF, err_check, simple, sparse_output);
+        if (err_check) err_check_proxies = new_madsexmadrigal["proxies"];
         
         IntegerVector mat_qc = {0, 0, 0};
         LefkoUtils::matrix_reducer(new_madsexmadrigal, mat_qc, ahstages_now, NA_empty_df,
@@ -13167,6 +13237,9 @@ Rcpp::List mpm_create(bool historical = false, bool stage = true, bool age = fal
         new_madsexmadrigal["matrixqc"] = mat_qc;
         new_madsexmadrigal["modelqc"] = mod_qc_;
         new_madsexmadrigal["dataqc"] = dataqc_;
+        if (err_check) {
+          new_madsexmadrigal["proxies"] = err_check_proxies;
+        }
         output_draft = new_madsexmadrigal;
         
       } else if (stage && age) {
@@ -13212,6 +13285,7 @@ Rcpp::List mpm_create(bool historical = false, bool stage = true, bool age = fal
           r1_indc, dev_terms_, density, fecmod, start_age, last_age, 1, 2, cont,
           2, negfec, nodata, exp_tol, theta_tol, CDF, err_check, simple,
           sparse_output);
+        if (err_check) err_check_proxies = new_madsexmadrigal["proxies"];
         
         IntegerVector mat_qc = {0, 0, 0};
         LefkoUtils::matrix_reducer(new_madsexmadrigal, mat_qc, ahstages_now, NA_empty_df,
@@ -13225,6 +13299,7 @@ Rcpp::List mpm_create(bool historical = false, bool stage = true, bool age = fal
         new_madsexmadrigal["modelqc"] = mod_qc_;
         new_madsexmadrigal["dataqc"] = dataqc_;
         if (err_check) {
+          new_madsexmadrigal["proxies"] = err_check_proxies;
           new_madsexmadrigal["supplement"] = melchett_ovtable_;
         }
         output_draft = new_madsexmadrigal;
@@ -13244,6 +13319,7 @@ Rcpp::List mpm_create(bool historical = false, bool stage = true, bool age = fal
           f2_indc_cat, f1_indc_cat, r2_inda, r1_inda, r2_indb, r1_indb, r2_indc,
           r1_indc, dev_terms_, density, fecmod, last_age, cont, negfec, nodata,
           exp_tol, theta_tol, err_check, simple, sparse_output);
+        if (err_check) err_check_proxies = new_madsexmadrigal["proxies"];
         
         IntegerVector mat_qc = {0, 0, 0};
         LefkoUtils::matrix_reducer(new_madsexmadrigal, mat_qc, ahstages, NA_empty_df,
@@ -13267,19 +13343,25 @@ Rcpp::List mpm_create(bool historical = false, bool stage = true, bool age = fal
         DataFrame ahstages_now = LefkoUtils::df_remove(melchett_stageframe_,
           removal_row, false, true, false, false, true, as<RObject>(removal_var));
         
-        IntegerVector mel_sid = as<IntegerVector>(melchett_stageframe_["stage_id"]);
-        IntegerVector hst_sid_2 ((melchett_stageframe_length - 1) * (melchett_stageframe_length - 1));
-        IntegerVector hst_sid_1 ((melchett_stageframe_length - 1) * (melchett_stageframe_length - 1));
-        StringVector hst_stage_2 ((melchett_stageframe_length - 1) * (melchett_stageframe_length - 1));
-        StringVector hst_stage_1 ((melchett_stageframe_length - 1) * (melchett_stageframe_length - 1));
+        int format_alteration {0};
+        if (!devries) format_alteration = 1;
         
+        IntegerVector mel_sid = as<IntegerVector>(melchett_stageframe_["stage_id"]);
+        IntegerVector hst_sid_2 ((melchett_stageframe_length - 2 + format_alteration) * (melchett_stageframe_length - 1));
+        IntegerVector hst_sid_1 ((melchett_stageframe_length - 2 + format_alteration) * (melchett_stageframe_length - 1));
+        StringVector hst_stage_2 ((melchett_stageframe_length - 2 + format_alteration) * (melchett_stageframe_length - 1));
+        StringVector hst_stage_1 ((melchett_stageframe_length - 2 + format_alteration) * (melchett_stageframe_length - 1));
+        
+        int hst_n_counter {0};
         for (int i = 0; i < (melchett_stageframe_length - 1); i++) {
-          for (int j = 0; j < (melchett_stageframe_length - 1); j++) {
-            hst_sid_2(j + (i * (melchett_stageframe_length - 1))) = mel_sid(j);
-            hst_sid_1(j + (i * (melchett_stageframe_length - 1))) = mel_sid(i);
+          for (int j = 0; j < (melchett_stageframe_length - 2 + format_alteration); j++) {
+            hst_sid_2(hst_n_counter) = mel_sid(j);
+            hst_sid_1(hst_n_counter) = mel_sid(i);
             
-            hst_stage_2(j + (i * (melchett_stageframe_length - 1))) = melchett_stageframe_stage_(j);
-            hst_stage_1(j + (i * (melchett_stageframe_length - 1))) = melchett_stageframe_stage_(i);
+            hst_stage_2(hst_n_counter) = melchett_stageframe_stage_(j);
+            hst_stage_1(hst_n_counter) = melchett_stageframe_stage_(i);
+            
+            hst_n_counter++;
           }
         }
         
@@ -13297,6 +13379,7 @@ Rcpp::List mpm_create(bool historical = false, bool stage = true, bool age = fal
           f2_indc_cat, f1_indc_cat, r2_inda, r1_inda, r2_indb, r1_indb, r2_indc,
           r1_indc, dev_terms_, density, fecmod, 0, 0, format_int, 0, 0, 1, negfec,
           nodata, exp_tol, theta_tol, CDF, err_check, simple, sparse_output);
+        if (err_check) err_check_proxies = new_madsexmadrigal["proxies"];
         
         IntegerVector mat_qc = {0, 0, 0};
         LefkoUtils::matrix_reducer(new_madsexmadrigal, mat_qc, ahstages_now, hstages_now,
@@ -13309,6 +13392,9 @@ Rcpp::List mpm_create(bool historical = false, bool stage = true, bool age = fal
         new_madsexmadrigal["matrixqc"] = mat_qc;
         new_madsexmadrigal["modelqc"] = mod_qc_;
         new_madsexmadrigal["dataqc"] = dataqc_;
+        if (err_check) {
+          new_madsexmadrigal["proxies"] = err_check_proxies;
+        }
         output_draft = new_madsexmadrigal;
       }
     }
@@ -14261,6 +14347,8 @@ arma::mat proj3(const arma::vec& start_vec, const List& core_list,
       popproj.col(i+1) = theseventhson;
       Rvecmat(i+1) = sum(theseventhson);
       
+      if (Rvecmat(i+1) <= 0.0) break;
+      
       if (standardize) {
         theseventhson = theseventhson / sum(theseventhson);
       }
@@ -14304,6 +14392,8 @@ arma::mat proj3(const arma::vec& start_vec, const List& core_list,
       }
       popproj.col(i+1) = arma::vec(arma::mat(sparse_seventhson));
       Rvecmat(i+1) = sum(popproj.col(i+1));
+      
+      if (Rvecmat(i+1) <= 0.0) break;
       
       if (standardize) {
         sparse_seventhson = sparse_seventhson / sum(popproj.col(i+1));
@@ -14411,6 +14501,8 @@ arma::mat proj3sp(const arma::vec& start_vec, const List& core_list,
     }
     popproj.col(i+1) = arma::vec(arma::mat(sparse_seventhson));
     Rvecmat(i+1) = sum(popproj.col(i+1));
+    
+    if (Rvecmat(i+1) <= 0.0) break;
     
     if (standardize) {
       sparse_seventhson = sparse_seventhson / sum(popproj.col(i+1));
@@ -14643,6 +14735,8 @@ arma::mat proj3dens(const arma::vec& start_vec, const List& core_list,
       popproj.col(i+1) = theseventhson;
       Rvecmat(i+1) = sum(theseventhson);
       
+      if (Rvecmat(i+1) <= 0.0) break;
+      
       if (!growthonly) {
         wpopproj.col(i+1) = popproj.col(i+1) / Rvecmat(i+1);
         thesecondprophecy = as<arma::mat>(core_list[(mat_order(theclairvoyant - (i+1)))]);
@@ -14766,6 +14860,8 @@ arma::mat proj3dens(const arma::vec& start_vec, const List& core_list,
       popproj.col(i+1) = arma::vec(arma::mat(sparse_seventhson));
       Rvecmat(i+1) = sum(popproj.col(i+1));
       
+      if (Rvecmat(i+1) <= 0.0) break;
+      
       if (!growthonly) {
         wpopproj.col(i+1) = popproj.col(i+1) / Rvecmat(i+1);
         sparse_secondprophecy = as<arma::sp_mat>(sparse_list[(mat_order(theclairvoyant - (i+1)))]);
@@ -14822,7 +14918,7 @@ arma::mat proj3dens(const arma::vec& start_vec, const List& core_list,
 //' population size at each occasion. Defaults to \code{TRUE}.
 //' @param integeronly A logical value indicating whether to round the number of
 //' individuals projected in each stage at each occasion to the nearest
-//' integer. Defaults to \code{FALSE}.
+//' integer. Defaults to \code{TRUE}.
 //' @param substoch An integer value indicating whether to force survival-
 //' transition matrices to be substochastic in density dependent simulations.
 //' Defaults to \code{0}, which does not force substochasticity. Alternatively,
@@ -14967,7 +15063,12 @@ arma::mat proj3dens(const arma::vec& start_vec, const List& core_list,
 //' determination to forced dense or sparse matrix projection. This will most
 //' likely occur when matrices have between 30 and 300 rows and columns.
 //' Defaults work best when matrices are very small and dense, or very large and
-//' sparse.
+//' sparse. Speed can also be maximized by keeping the default setting,
+//' \code{integeronly = TRUE}, since the default behavior is to run each
+//' projection (replicate) until either the end, or the population size drops
+//' to 0. Setting \code{integeronly = FALSE} may increase runtime dramatically,
+//' since the population size can reach extremely small levels without dropping
+//' to 0.
 //' 
 //' @seealso \code{\link{start_input}()}
 //' @seealso \code{\link{density_input}()}
@@ -15074,7 +15175,7 @@ arma::mat proj3dens(const arma::vec& start_vec, const List& core_list,
 // [[Rcpp::export(projection3)]]
 Rcpp::List projection3(const List& mpm, int nreps = 1, int times = 10000,
   bool historical = false, bool stochastic = false, bool standardize = false,
-  bool growthonly = true, bool integeronly = false, int substoch = 0,
+  bool growthonly = true, bool integeronly = true, int substoch = 0,
   double exp_tol = 700.0, bool sub_warnings = true, bool quiet = false,
   Nullable<IntegerVector> year = R_NilValue,
   Nullable<NumericVector> start_vec = R_NilValue,
@@ -15111,7 +15212,7 @@ Rcpp::List projection3(const List& mpm, int nreps = 1, int times = 10000,
   arma::mat projection;
   
   if (sparse.isNotNull()) {
-    yesnoauto_to_logic(as<RObject>(sparse), "sparse", sparse_bool, sparse_auto);
+    LefkoInputs::yesnoauto_to_logic(as<RObject>(sparse), "sparse", sparse_bool, sparse_auto);
     if (sparse_bool) sparse_switch = 1;
   }
   
@@ -16224,7 +16325,7 @@ DataFrame slambda3(const List& mpm, int times = 10000, bool historical = false,
   if (theclairvoyant < 1) pop_error("times", "a positive integer", "", 1);
   
   if (force_sparse.isNotNull()) {
-    yesnoauto_to_logic(as<RObject>(force_sparse), "force_sparse", sparse_bool,
+    LefkoInputs::yesnoauto_to_logic(as<RObject>(force_sparse), "force_sparse", sparse_bool,
       sparse_auto);
     if (sparse_bool) sparse_switch = 1;
   }
@@ -19670,7 +19771,10 @@ Rcpp::IntegerVector markov_run(Rcpp::IntegerVector main_times,
     start_time = main_times(0);
   }
   
-  if (!start_time_found) pop_error("main_times", "start_time", "", 18);
+  if (!start_time_found) {
+    throw Rcpp::exception("Argument main_times does not include input start_time values",
+      false);
+  }
   
   // Matrix standardization
   NumericVector mat_colsums (mat_rows);
