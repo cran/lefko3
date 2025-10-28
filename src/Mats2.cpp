@@ -16,8 +16,9 @@ using namespace LefkoMats;
 // 3. List thefifthhousemate  Create Historically Structured Version of ahMPM
 // 4. hist_null  Create Historical MPMs Assuming No Influence of Individual History
 // 5. List lmean  Estimate Mean Projection Matrices
-// 6. List add_stage  Add a New Stage to an Existing LefkoMat Object
-// 7. List cycle_check  Check Continuity of Life Cycle through Matrices in lefkoMat Objects
+// 6. void add_stage_single  Add a New Stage to a Single lefkoMat
+// 7. List add_stage  Add a New Stage to an Existing lefkoMat or lefkoMatList Object
+// 8. List cycle_check  Check Continuity of Life Cycle through Matrices in lefkoMat Objects
 
 
 //' Standardize Stageframe For MPM Analysis
@@ -1099,12 +1100,13 @@ Rcpp::List hist_null (RObject mpm, int format = 1, bool err_check = false) {
 //' Function \code{lmean()} estimates mean projection matrices as element-wise
 //' arithmetic means. It produces \code{lefkoMat} objects if provided with them,
 //' or single matrices in a simple one-element list if provided a list of
-//' matrices.
+//' matrices. Will produce a \code{lefkoMatList} object, in which each element
+//' is a \code{lefkoMat} object, if provided with a \code{lefkoMatList} object.
 //' 
 //' @name lmean
 //' 
-//' @param mats A \code{lefkoMat} object, or a list of square matrices of equal
-//' dimension.
+//' @param mats A \code{lefkoMat} object, a \code{lefkoMatList} object, or a
+//' list of square matrices of equal dimension in standard or sparse format.
 //' @param matsout A string identifying which means to estimate. Option
 //' \code{"pop"} indicates population-level only, \code{"patch"} indicates
 //' patch-level only, and \code{"all"} indicates that both patch- and
@@ -1112,7 +1114,9 @@ Rcpp::List hist_null (RObject mpm, int format = 1, bool err_check = false) {
 //' @param force_sparse A logical value identifying whether to output the mean
 //' matrices in sparse format, if input as standard matrices.
 //' 
-//' @return Yields a \code{lefkoMat} object with the following characteristics:
+//' @return Yields a \code{lefkoMat} object, a \code{lefkoMatList} object, or
+//' a list of matrices. If a \code{lefkoMat} object. then will have the
+//' following characteristics:
 //' 
 //' \item{A}{A list of full mean projection matrices in order of sorted
 //' populations, patches, and years. These are typically estimated as the sums
@@ -1249,187 +1253,380 @@ Rcpp::List lmean(RObject mats, Nullable<String> matsout = R_NilValue,
       false);
     
   } else if (is<List>(mats)) {
-    List mats_ = as<List>(mats);
-    if (mats_.hasAttribute("class")) {
-      mats_class = as<StringVector>(mats_.attr("class"));
-    }
-    if (mats_.hasAttribute("names")) {
-      mats_elements = as<StringVector>(mats_.attr("names"));
+    bool found_lefkoMatsList {false};
+    
+    List entered_mats = as<List>(mats);
+    CharacterVector mats_classes = as<CharacterVector>(entered_mats.attr("class"));
+    
+    for (int i = 0; i < static_cast<int>(mats_classes.length()); i++) {
+      if (stringcompare_hard(String(mats_classes(i)), "lefkoMatList")) found_lefkoMatsList = true;
     }
     
-    int mats_class_length = mats_class.length();
-    bool found_it {false};
-    for (int i = 0; i < mats_class_length; i++) {
-      if (stringcompare_hard(String(mats_class(i)), "lefkoMat")) {
-        found_it = true;
-      }
-    }
-    
-    if (found_it) {
-      // lefkoMat input
-      StringVector lefkoMat_required = {"A", "U", "F", "ahstages", "labels"};
-      int found_element {0};
+    if (found_lefkoMatsList) {
+      int total_lefkoMats = static_cast<int>(entered_mats.length());
       
-      for (int i = 0; i < lefkoMat_required.length(); i++) {
-        for (int j = 0; j < mats_elements.length(); j++) {
-          if (stringcompare_hard(String(lefkoMat_required(i)), String(mats_elements(j)))) {
-            found_element++;
-          }
+      List final_output_for_gd (total_lefkoMats);
+      
+      for (int i = 0; i < total_lefkoMats; i++) {
+        List gd_output_currentonly;
+        List mats_ = as<List>(entered_mats(i));
+        if (mats_.hasAttribute("class")) {
+          mats_class = as<StringVector>(mats_.attr("class"));
         }
-      }
-      if (found_element < 5) {
-        throw Rcpp::exception("Argument mats does not appear to be a lefkoMat object.",
-          false);
-      }
-      
-      u_mats = as<List>(mats_["U"]);
-      f_mats = as<List>(mats_["F"]);
-      ahstages = as<DataFrame>(mats_["ahstages"]);
-      agestages = as<DataFrame>(mats_["agestages"]);
-      hstages = as<DataFrame>(mats_["hstages"]);
-      
-      CharacterVector hstages_names = hstages.names();
-      
-      if (hstages_names.length() > 1) historical = true;
-      
-      for (int i = 0; i < mats_elements.length(); i++) {
-        if (stringcompare_hard(String(mats_elements(i)), "dataqc")) {
-          dataqc = as<IntegerVector>(mats_["dataqc"]);
-          dataqc_found = true;
+        if (mats_.hasAttribute("names")) {
+          mats_elements = as<StringVector>(mats_.attr("names"));
         }
         
-        if (stringcompare_hard(String(mats_elements(i)), "modelqc")) {
-          modelqc = as<DataFrame>(mats_["modelqc"]);
-          modelqc_found = true;
+        int mats_class_length = mats_class.length();
+        bool found_it {false};
+        for (int i = 0; i < mats_class_length; i++) {
+          if (stringcompare_hard(String(mats_class(i)), "lefkoMat")) {
+            found_it = true;
+          }
+        }
+        
+        if (found_it) {
+          // lefkoMat input
+          StringVector lefkoMat_required = {"A", "U", "F", "ahstages", "labels"};
+          int found_element {0};
+          
+          for (int i = 0; i < lefkoMat_required.length(); i++) {
+            for (int j = 0; j < mats_elements.length(); j++) {
+              if (stringcompare_hard(String(lefkoMat_required(i)), String(mats_elements(j)))) {
+                found_element++;
+              }
+            }
+          }
+          if (found_element < 5) {
+            throw Rcpp::exception("Argument mats does not appear to be a lefkoMat object.",
+              false);
+          }
+          
+          u_mats = as<List>(mats_["U"]);
+          f_mats = as<List>(mats_["F"]);
+          ahstages = as<DataFrame>(mats_["ahstages"]);
+          agestages = as<DataFrame>(mats_["agestages"]);
+          hstages = as<DataFrame>(mats_["hstages"]);
+          
+          CharacterVector hstages_names = hstages.names();
+          
+          if (hstages_names.length() > 1) historical = true;
+          
+          for (int i = 0; i < mats_elements.length(); i++) {
+            if (stringcompare_hard(String(mats_elements(i)), "dataqc")) {
+              dataqc = as<IntegerVector>(mats_["dataqc"]);
+              dataqc_found = true;
+            }
+            
+            if (stringcompare_hard(String(mats_elements(i)), "modelqc")) {
+              modelqc = as<DataFrame>(mats_["modelqc"]);
+              modelqc_found = true;
+            }
+          }
+          
+          // Quality control for listofyears
+          DataFrame labels = as<DataFrame>(mats_["labels"]);
+          listofyears = loy_inator(labels, true);
+          
+          if (is<S4>(u_mats(0))) mat_input = false;
+          
+          // Matrix averaging
+          if (historical) {
+            gd_output_currentonly = turbogeodiesel(listofyears, u_mats, f_mats, hstages, 
+              agestages, ahstages, patchonly, poponly, mat_input, 0);
+            
+          } else {
+            gd_output_currentonly = geodiesel(listofyears, u_mats, f_mats, agestages, ahstages,
+              patchonly, poponly, mat_input, 0);
+          }
+        
+          gd_output_currentonly["ahstages"] = ahstages;
+          gd_output_currentonly["hstages"] = hstages;
+          gd_output_currentonly["agestages"] = agestages;
+          if (dataqc_found) gd_output_currentonly["dataqc"] = dataqc;
+          if (modelqc_found) gd_output_currentonly["modelqc"] = modelqc;
+          
+          StringVector gd_class = {"lefkoMat"};
+          gd_output_currentonly.attr("class") = gd_class;
+          final_output_for_gd(i) = gd_output_currentonly;
+          
+        } else {
+          // List of NumericMatrix input
+          int mats_length = mats_.length();
+          
+          if (is<S4>(mats_(0))) mat_input = false;
+          
+          arma::mat core_mat;
+          arma::sp_mat core_mat_sp;
+          int mat_rows {0};
+          int mat_cols {0};
+          
+          for (int i = 0; i < mats_length; i++) {
+            RObject test_bit = as<RObject>(mats_[i]);
+            
+            if (!is<NumericMatrix>(test_bit) && !is<S4>(test_bit)) {
+              String eat_my_shorts = "Argument mats must be either a lefkoMat object ";
+              String eat_my_shorts1 = "or a list of numeric matrices.";
+              eat_my_shorts += eat_my_shorts1;
+              
+              throw Rcpp::exception(eat_my_shorts.get_cstring(), false);
+            }
+            
+            if (i == 0) {
+              if (mat_input) {
+                core_mat = as<arma::mat>(mats_[0]);
+                
+                mat_rows = core_mat.n_rows;
+                mat_cols = core_mat.n_cols;
+              } else {
+                core_mat_sp = as<arma::sp_mat>(mats_[0]);
+                
+                mat_rows = core_mat_sp.n_rows;
+                mat_cols = core_mat_sp.n_cols;
+              }
+              
+              if (mat_rows != mat_cols) {
+                throw Rcpp::exception("Input matrices must be square.", false);
+              }
+              
+              if (mat_input) {
+                core_mat = core_mat / mats_length;
+              } else {
+                core_mat_sp = core_mat_sp / mats_length;
+              }
+            } else {
+              if (mat_input) {
+                arma::mat next_mat = as<arma::mat>(mats_[i]);
+                
+                int next_rows = next_mat.n_rows;
+                int next_cols = next_mat.n_cols;
+                
+                if (next_rows != mat_rows || next_cols != mat_cols) {
+                  throw Rcpp::exception("All input matrices must have the same dimensions.",
+                    false);
+                }
+                
+                core_mat = core_mat + (next_mat / mats_length);
+              } else {
+                arma::sp_mat next_mat_sp = as<arma::sp_mat>(mats_[i]);
+                
+                int next_rows = next_mat_sp.n_rows;
+                int next_cols = next_mat_sp.n_cols;
+                
+                if (next_rows != mat_rows || next_cols != mat_cols) {
+                  throw Rcpp::exception("All input matrices must have the same dimensions.",
+                    false);
+                }
+                
+                core_mat_sp = core_mat_sp + (next_mat_sp / mats_length);
+              }
+            }
+            
+            if (mat_input && force_sparse) {
+              arma::sp_mat core_mat_sp_(core_mat);
+              core_mat_sp = core_mat_sp_;
+            }
+            
+            if (mat_input && !force_sparse) {
+              List A = List::create(_["A"] = core_mat);
+              gd_output_currentonly = A;
+            } else {
+              List A = List::create(_["A"] = core_mat_sp);
+              gd_output_currentonly = A;
+            }
+          }
+          final_output_for_gd(i) = gd_output_currentonly;
         }
       }
       
-      // Quality control for listofyears
-      DataFrame labels = as<DataFrame>(mats_["labels"]);
-      listofyears = loy_inator(labels, true);
+      gd_output = final_output_for_gd;
+    } else {
+      List mats_ = as<List>(mats);
+      if (mats_.hasAttribute("class")) {
+        mats_class = as<StringVector>(mats_.attr("class"));
+      }
+      if (mats_.hasAttribute("names")) {
+        mats_elements = as<StringVector>(mats_.attr("names"));
+      }
       
-      if (is<S4>(u_mats(0))) mat_input = false;
+      int mats_class_length = mats_class.length();
+      bool found_it {false};
+      for (int i = 0; i < mats_class_length; i++) {
+        if (stringcompare_hard(String(mats_class(i)), "lefkoMat")) {
+          found_it = true;
+        }
+      }
       
-      // Matrix averaging
-      if (historical) {
-        gd_output = turbogeodiesel(listofyears, u_mats, f_mats, hstages, 
-          agestages, ahstages, patchonly, poponly, mat_input, 0);
+      if (found_it) {
+        // lefkoMat input
+        StringVector lefkoMat_required = {"A", "U", "F", "ahstages", "labels"};
+        int found_element {0};
+        
+        for (int i = 0; i < lefkoMat_required.length(); i++) {
+          for (int j = 0; j < mats_elements.length(); j++) {
+            if (stringcompare_hard(String(lefkoMat_required(i)), String(mats_elements(j)))) {
+              found_element++;
+            }
+          }
+        }
+        if (found_element < 5) {
+          throw Rcpp::exception("Argument mats does not appear to be a lefkoMat object.",
+            false);
+        }
+        
+        u_mats = as<List>(mats_["U"]);
+        f_mats = as<List>(mats_["F"]);
+        ahstages = as<DataFrame>(mats_["ahstages"]);
+        agestages = as<DataFrame>(mats_["agestages"]);
+        hstages = as<DataFrame>(mats_["hstages"]);
+        
+        CharacterVector hstages_names = hstages.names();
+        
+        if (hstages_names.length() > 1) historical = true;
+        
+        for (int i = 0; i < mats_elements.length(); i++) {
+          if (stringcompare_hard(String(mats_elements(i)), "dataqc")) {
+            dataqc = as<IntegerVector>(mats_["dataqc"]);
+            dataqc_found = true;
+          }
+          
+          if (stringcompare_hard(String(mats_elements(i)), "modelqc")) {
+            modelqc = as<DataFrame>(mats_["modelqc"]);
+            modelqc_found = true;
+          }
+        }
+        
+        // Quality control for listofyears
+        DataFrame labels = as<DataFrame>(mats_["labels"]);
+        listofyears = loy_inator(labels, true);
+        
+        if (is<S4>(u_mats(0))) mat_input = false;
+        
+        // Matrix averaging
+        if (historical) {
+          gd_output = turbogeodiesel(listofyears, u_mats, f_mats, hstages, 
+            agestages, ahstages, patchonly, poponly, mat_input, 0);
+          
+        } else {
+          gd_output = geodiesel(listofyears, u_mats, f_mats, agestages, ahstages,
+            patchonly, poponly, mat_input, 0);
+        }
+      
+        gd_output["ahstages"] = ahstages;
+        gd_output["hstages"] = hstages;
+        gd_output["agestages"] = agestages;
+        if (dataqc_found) gd_output["dataqc"] = dataqc;
+        if (modelqc_found) gd_output["modelqc"] = modelqc;
+        
+        StringVector gd_class = {"lefkoMat"};
+        gd_output.attr("class") = gd_class;
         
       } else {
-        gd_output = geodiesel(listofyears, u_mats, f_mats, agestages, ahstages,
-          patchonly, poponly, mat_input, 0);
-      }
-    
-      gd_output["ahstages"] = ahstages;
-      gd_output["hstages"] = hstages;
-      gd_output["agestages"] = agestages;
-      if (dataqc_found) gd_output["dataqc"] = dataqc;
-      if (modelqc_found) gd_output["modelqc"] = modelqc;
-      
-      StringVector gd_class = {"lefkoMat"};
-      gd_output.attr("class") = gd_class;
-      
-    } else {
-      // List of NumericMatrix input
-      int mats_length = mats_.length();
-      
-      if (is<S4>(mats_(0))) mat_input = false;
-      
-      arma::mat core_mat;
-      arma::sp_mat core_mat_sp;
-      int mat_rows {0};
-      int mat_cols {0};
-      
-      for (int i = 0; i < mats_length; i++) {
-        RObject test_bit = as<RObject>(mats_[i]);
+        // List of NumericMatrix input
+        int mats_length = mats_.length();
         
-        if (!is<NumericMatrix>(test_bit) && !is<S4>(test_bit)) {
-          String eat_my_shorts = "Argument mats must be either a lefkoMat object ";
-          String eat_my_shorts1 = "or a list of numeric matrices.";
-          eat_my_shorts += eat_my_shorts1;
-          
-          throw Rcpp::exception(eat_my_shorts.get_cstring(), false);
-        }
+        if (is<S4>(mats_(0))) mat_input = false;
         
-        if (i == 0) {
-          if (mat_input) {
-            core_mat = as<arma::mat>(mats_[0]);
+        arma::mat core_mat;
+        arma::sp_mat core_mat_sp;
+        int mat_rows {0};
+        int mat_cols {0};
+        
+        for (int i = 0; i < mats_length; i++) {
+          RObject test_bit = as<RObject>(mats_[i]);
+          
+          if (!is<NumericMatrix>(test_bit) && !is<S4>(test_bit)) {
+            String eat_my_shorts = "Argument mats must be either a lefkoMat object ";
+            String eat_my_shorts1 = "or a list of numeric matrices.";
+            eat_my_shorts += eat_my_shorts1;
             
-            mat_rows = core_mat.n_rows;
-            mat_cols = core_mat.n_cols;
-          } else {
-            core_mat_sp = as<arma::sp_mat>(mats_[0]);
-            
-            mat_rows = core_mat_sp.n_rows;
-            mat_cols = core_mat_sp.n_cols;
+            throw Rcpp::exception(eat_my_shorts.get_cstring(), false);
           }
           
-          if (mat_rows != mat_cols) {
-            throw Rcpp::exception("Input matrices must be square.", false);
-          }
-          
-          if (mat_input) {
-            core_mat = core_mat / mats_length;
-          } else {
-            core_mat_sp = core_mat_sp / mats_length;
-          }
-        } else {
-          if (mat_input) {
-            arma::mat next_mat = as<arma::mat>(mats_[i]);
-            
-            int next_rows = next_mat.n_rows;
-            int next_cols = next_mat.n_cols;
-            
-            if (next_rows != mat_rows || next_cols != mat_cols) {
-              throw Rcpp::exception("All input matrices must have the same dimensions.",
-                false);
+          if (i == 0) {
+            if (mat_input) {
+              core_mat = as<arma::mat>(mats_[0]);
+              
+              mat_rows = core_mat.n_rows;
+              mat_cols = core_mat.n_cols;
+            } else {
+              core_mat_sp = as<arma::sp_mat>(mats_[0]);
+              
+              mat_rows = core_mat_sp.n_rows;
+              mat_cols = core_mat_sp.n_cols;
             }
             
-            core_mat = core_mat + (next_mat / mats_length);
-          } else {
-            arma::sp_mat next_mat_sp = as<arma::sp_mat>(mats_[i]);
-            
-            int next_rows = next_mat_sp.n_rows;
-            int next_cols = next_mat_sp.n_cols;
-            
-            if (next_rows != mat_rows || next_cols != mat_cols) {
-              throw Rcpp::exception("All input matrices must have the same dimensions.",
-                false);
+            if (mat_rows != mat_cols) {
+              throw Rcpp::exception("Input matrices must be square.", false);
             }
             
-            core_mat_sp = core_mat_sp + (next_mat_sp / mats_length);
+            if (mat_input) {
+              core_mat = core_mat / mats_length;
+            } else {
+              core_mat_sp = core_mat_sp / mats_length;
+            }
+          } else {
+            if (mat_input) {
+              arma::mat next_mat = as<arma::mat>(mats_[i]);
+              
+              int next_rows = next_mat.n_rows;
+              int next_cols = next_mat.n_cols;
+              
+              if (next_rows != mat_rows || next_cols != mat_cols) {
+                throw Rcpp::exception("All input matrices must have the same dimensions.",
+                  false);
+              }
+              
+              core_mat = core_mat + (next_mat / mats_length);
+            } else {
+              arma::sp_mat next_mat_sp = as<arma::sp_mat>(mats_[i]);
+              
+              int next_rows = next_mat_sp.n_rows;
+              int next_cols = next_mat_sp.n_cols;
+              
+              if (next_rows != mat_rows || next_cols != mat_cols) {
+                throw Rcpp::exception("All input matrices must have the same dimensions.",
+                  false);
+              }
+              
+              core_mat_sp = core_mat_sp + (next_mat_sp / mats_length);
+            }
           }
-        }
-        
-        if (mat_input && force_sparse) {
-          arma::sp_mat core_mat_sp_(core_mat);
-          core_mat_sp = core_mat_sp_;
-        }
-        
-        if (mat_input && !force_sparse) {
-          List A = List::create(_["A"] = core_mat);
-          gd_output = A;
-        } else {
-          List A = List::create(_["A"] = core_mat_sp);
-          gd_output = A;
+          
+          if (mat_input && force_sparse) {
+            arma::sp_mat core_mat_sp_(core_mat);
+            core_mat_sp = core_mat_sp_;
+          }
+          
+          if (mat_input && !force_sparse) {
+            List A = List::create(_["A"] = core_mat);
+            gd_output = A;
+          } else {
+            List A = List::create(_["A"] = core_mat_sp);
+            gd_output = A;
+          }
         }
       }
     }
+    if (found_lefkoMatsList) {
+      StringVector gd_class = {"lefkoMatList"};
+      gd_output.attr("class") = gd_class;
+    }
+  
   }
   
   return gd_output;
 }
 
-//' Add a New Stage to an Existing LefkoMat Object
+//' Add a New Stage to a Single lefkoMat
 //' 
-//' Function \code{add_stage()} adds a new stage to an existing \code{lefkoMat}
-//' object. In addition to altering the \code{ahstages} object within the MPM,
-//' it alters the \code{hstages} and \code{agestages} objects and adds the
-//' appropriate number of new rows and columns depending on the kind of MPM
-//' input.
+//' Function \code{add_stage_single()} adds a new stage to an existing
+//' \code{lefkoMat} object. It is the workhorse function behind
+//' \code{add_stage()}.
 //' 
-//' @name add_stage
+//' @name add_stage_single
 //' 
+//' @param final_output A reference to the final list to modify.
 //' @param mpm The \code{lefkoMat} object to add a stage to.
 //' @param add_before The index of the stage to insert a new stage before. This
 //' index should be derived from the \code{ahstages} of the input \code{mpm}.
@@ -1440,55 +1637,15 @@ Rcpp::List lmean(RObject mats, Nullable<String> matsout = R_NilValue,
 //' @param stage_name The name of the new stage to add. Defaults to
 //' \code{new_stage}. 
 //' 
-//' @return A new copy of the original MPM edited to include new rows and
-//' columns in the associated matrices, and with \code{ahstages},
+//' @return Creates a new copy of the original MPM edited to include new rows
+//' and columns in the associated matrices, and with \code{ahstages},
 //' \code{agestages}, and \code{hstages} objects edited to include the new
-//' stage.
+//' stage, and makes it accessible by reference.
 //' 
-//' @seealso \code{\link{edit_lM}()}
-//' 
-//' @examples
-//' data(cypdata)
-//' 
-//' cyp_lesl_data <- verticalize3(data = cypdata, noyears = 6, firstyear = 2004, 
-//'   patchidcol = "patch", individcol = "plantid", blocksize = 4, 
-//'   sizeacol = "Inf2.04", sizebcol = "Inf.04", sizeccol = "Veg.04", 
-//'   repstracol = "Inf.04", repstrbcol = "Inf2.04", fecacol = "Pod.04", 
-//'   stagesize = "sizeadded", NAas0 = TRUE, age_offset = 2)
-//' 
-//' cyp_survival <- glm(alive3 ~ obsage + as.factor(year2), data = cyp_lesl_data,
-//'   family = "binomial")
-//' cyp_fecundity <- glm(feca2 ~ 1 + obsage + as.factor(year2),
-//'   data = cyp_lesl_data, family = "poisson")
-//' 
-//' mod_params <- create_pm(name_terms = TRUE)
-//' mod_params$modelparams[22] <- "obsage"
-//' 
-//' germination <- 0.08
-//' protocorm_to_seedling <- 0.10
-//' seeding_to_adult <- 0.20
-//' seeds_per_fruit <- 8000
-//' 
-//' cyp_lesl_supp <- supplemental(historical = FALSE, stagebased = FALSE,
-//'   agebased = TRUE, age2 = c(1, 2), type = c(1, 1),
-//'   givenrate = c(protocorm_to_seedling, seeding_to_adult))
-//' 
-//' cyp_lesl_fb_mpm <- fleslie(data = cyp_lesl_data, surv_model = cyp_survival,
-//'   fec_model = cyp_fecundity, paramnames = mod_params, last_age = 7,
-//'   fecage_min = 3, fecmod = (germination * seeds_per_fruit),
-//'   supplement = cyp_lesl_supp)
-//' 
-//' altered1 <- add_stage(cyp_lesl_fb_mpm, add_before = 1, stage_name = "DS")
-//' 
-//' @export add_stage
-// [[Rcpp::export(add_stage)]]
-Rcpp::List add_stage (const RObject mpm, int add_before = 0,
+//' @keywords internal
+//' @noRd
+void add_stage_single (List& final_output, const List mpm, int add_before = 0,
   int add_after = 0, Nullable<CharacterVector> stage_name  = R_NilValue) {
-  
-  if (add_before > 0 && add_after > 0) {
-    throw Rcpp::exception("Please set either add_before or add_after, but not both.",
-      false);
-  }
   
   String stage_name_to_add;
   if (stage_name.isNotNull()) {
@@ -1505,35 +1662,24 @@ Rcpp::List add_stage (const RObject mpm, int add_before = 0,
     stage_name_to_add = "new_stage";
   }
   
-  List mpm_list;
-  
-  if (is<List>(mpm)) mpm_list = mpm;
-  StringVector mpm_class = mpm_list.attr("class");
-  
-  String mpm_error = "Please enter a lefkoMat object as input.";
-  bool mpm_yes {false};
-  
-  if (!mpm_list.containsElementNamed("ahstages")) {
+  String mpm_error = "Please enter a lefkoMat or lefkoMatList object as input.";
+  if (!mpm.containsElementNamed("ahstages")) {
     throw Rcpp::exception(mpm_error.get_cstring(), false);
   }
-  if (!mpm_list.containsElementNamed("hstages")) {
+  if (!mpm.containsElementNamed("hstages")) {
     throw Rcpp::exception(mpm_error.get_cstring(), false);
   }
-  if (!mpm_list.containsElementNamed("agestages")) {
+  if (!mpm.containsElementNamed("agestages")) {
     throw Rcpp::exception(mpm_error.get_cstring(), false);
   }
-  if (!mpm_list.containsElementNamed("labels")) {
+  if (!mpm.containsElementNamed("labels")) {
     throw Rcpp::exception(mpm_error.get_cstring(), false);
   }
-  for (int i = 0; i < static_cast<int>(mpm_class.length()); i++) {
-    if (mpm_class(i) == "lefkoMat") mpm_yes = true;
-  }
-  if (!mpm_yes) throw Rcpp::exception(mpm_error.get_cstring(), false);
   
-  Rcpp::DataFrame ahstages = as<DataFrame>(mpm_list["ahstages"]);
-  Rcpp::DataFrame hstages = as<DataFrame>(mpm_list["hstages"]);
-  Rcpp::DataFrame agestages = as<DataFrame>(mpm_list["agestages"]);
-  Rcpp::DataFrame labels = as<DataFrame>(mpm_list["labels"]);
+  Rcpp::DataFrame ahstages = as<DataFrame>(mpm["ahstages"]);
+  Rcpp::DataFrame hstages = as<DataFrame>(mpm["hstages"]);
+  Rcpp::DataFrame agestages = as<DataFrame>(mpm["agestages"]);
+  Rcpp::DataFrame labels = as<DataFrame>(mpm["labels"]);
   
   int wtf = LefkoUtils::whichbrew(ahstages, hstages, agestages);
   // wtf possible results: \code{0}: historical MPM, \code{1}:
@@ -1791,13 +1937,13 @@ Rcpp::List add_stage (const RObject mpm, int add_before = 0,
     num_rows_to_add = 1;
     num_stages_base = num_stages;
     
-    DataFrame old_hstages = as<DataFrame>(mpm_list["hstages"]);
-    DataFrame old_agestages = as<DataFrame>(mpm_list["agestages"]);
+    DataFrame old_hstages = as<DataFrame>(mpm["hstages"]);
+    DataFrame old_agestages = as<DataFrame>(mpm["agestages"]);
     new_hstages = old_hstages;
     new_agestages = old_agestages;
     
   } else if (wtf == 0) {
-    Rcpp::DataFrame hstages = as<DataFrame>(mpm_list["hstages"]);
+    Rcpp::DataFrame hstages = as<DataFrame>(mpm["hstages"]);
     arma::ivec sid2 = as<arma::ivec>(hstages["stage_id_2"]);
     arma::ivec sid1 = as<arma::ivec>(hstages["stage_id_1"]);
     StringVector h_stage2 = as<StringVector>(hstages["stage_2"]);
@@ -1824,7 +1970,6 @@ Rcpp::List add_stage (const RObject mpm, int add_before = 0,
       second_stretch(i) = first_new_col_row * (num_stages + 1) + 1 + i;
     }
     
-    
     int num_first_stretch = first_stretch.n_elem;
     int num_second_stretch = second_stretch.n_elem;
     num_rows_to_add = num_first_stretch + num_second_stretch;
@@ -1832,7 +1977,7 @@ Rcpp::List add_stage (const RObject mpm, int add_before = 0,
     int hstages_dim = sid2.n_elem;
     num_stages_base = hstages_dim;
     
-    DataFrame old_agestages = as<DataFrame>(mpm_list["agestages"]);
+    DataFrame old_agestages = as<DataFrame>(mpm["agestages"]);
     new_agestages = old_agestages;
     
     int new_vec_length = num_rows_to_add + num_stages_base;
@@ -1919,7 +2064,7 @@ Rcpp::List add_stage (const RObject mpm, int add_before = 0,
     new_hstages = new_hstages_pre;
     
   } else if (wtf == 2) {
-    Rcpp::DataFrame agestages = as<DataFrame>(mpm_list["agestages"]);
+    Rcpp::DataFrame agestages = as<DataFrame>(mpm["agestages"]);
     arma::ivec sid = as<arma::ivec>(agestages["stage_id"]);
     StringVector age_stage = as<StringVector>(agestages["stage"]);
     IntegerVector age_age = as<IntegerVector>(agestages["age"]);
@@ -1941,7 +2086,7 @@ Rcpp::List add_stage (const RObject mpm, int add_before = 0,
     int agestages_dim = sid.n_elem;
     num_stages_base = agestages_dim;
     
-    DataFrame old_hstages = as<DataFrame>(mpm_list["hstages"]);
+    DataFrame old_hstages = as<DataFrame>(mpm["hstages"]);
     new_hstages = old_hstages;
     
     int new_vec_length = num_rows_to_add + num_stages_base;
@@ -2006,25 +2151,25 @@ Rcpp::List add_stage (const RObject mpm, int add_before = 0,
   bool mat_sparse {false};
   int mat_num {0};
   
-  if (mpm_list.containsElementNamed("A")) {
-    if (is<List>(mpm_list["A"])) {
-      List new_A_mats = as<List>(mpm_list["A"]);
+  if (mpm.containsElementNamed("A")) {
+    if (is<List>(mpm["A"])) {
+      List new_A_mats = as<List>(mpm["A"]);
       A_mats = clone(new_A_mats);
       A_used = true;
       mat_num = static_cast<int>(A_mats.length());
       
       if (is<S4>(A_mats(0))) mat_sparse = true;
     }
-    if (is<List>(mpm_list["U"])) {
-      List new_U_mats = as<List>(mpm_list["U"]);
+    if (is<List>(mpm["U"])) {
+      List new_U_mats = as<List>(mpm["U"]);
       U_mats = clone(new_U_mats);
       U_used = true;
       mat_num = static_cast<int>(U_mats.length());
       
       if (is<S4>(U_mats(0))) mat_sparse = true;
     }
-    if (is<List>(mpm_list["F"])) {
-      List new_F_mats = as<List>(mpm_list["F"]);
+    if (is<List>(mpm["F"])) {
+      List new_F_mats = as<List>(mpm["F"]);
       F_mats = clone(new_F_mats);
       F_used = true;
       mat_num = static_cast<int>(F_mats.length());
@@ -2186,13 +2331,13 @@ Rcpp::List add_stage (const RObject mpm, int add_before = 0,
   }
   
   // MPM final processing
-  bool found_modelqc = mpm_list.containsElementNamed("modelqc");
-  bool found_dataqc = mpm_list.containsElementNamed("dataqc");
+  bool found_modelqc = mpm.containsElementNamed("modelqc");
+  bool found_dataqc = mpm.containsElementNamed("dataqc");
   
   List true_output;
   if (!found_modelqc && !found_dataqc) {
-    DataFrame new_labels = as<DataFrame>(mpm_list["labels"]);
-    IntegerVector new_matrixqc = as<IntegerVector>(mpm_list["matrixqc"]);
+    DataFrame new_labels = as<DataFrame>(mpm["labels"]);
+    IntegerVector new_matrixqc = as<IntegerVector>(mpm["matrixqc"]);
     
     List new_mpm (8);
     new_mpm(0) = A_mats;
@@ -2213,9 +2358,9 @@ Rcpp::List add_stage (const RObject mpm, int add_before = 0,
     true_output = new_mpm;
     
   } else if (!found_modelqc) {
-    DataFrame new_labels = as<DataFrame>(mpm_list["labels"]);
-    IntegerVector new_matrixqc = as<IntegerVector>(mpm_list["matrixqc"]);
-    IntegerVector new_dataqc = as<IntegerVector>(mpm_list["dataqc"]);
+    DataFrame new_labels = as<DataFrame>(mpm["labels"]);
+    IntegerVector new_matrixqc = as<IntegerVector>(mpm["matrixqc"]);
+    IntegerVector new_dataqc = as<IntegerVector>(mpm["dataqc"]);
     
     List new_mpm (9);
     new_mpm(0) = A_mats;
@@ -2237,9 +2382,9 @@ Rcpp::List add_stage (const RObject mpm, int add_before = 0,
     true_output = new_mpm;
     
   } else if (!found_dataqc) {
-    DataFrame new_labels = as<DataFrame>(mpm_list["labels"]);
-    IntegerVector new_matrixqc = as<IntegerVector>(mpm_list["matrixqc"]);
-    DataFrame new_modelqc = as<DataFrame>(mpm_list["modelqc"]);
+    DataFrame new_labels = as<DataFrame>(mpm["labels"]);
+    IntegerVector new_matrixqc = as<IntegerVector>(mpm["matrixqc"]);
+    DataFrame new_modelqc = as<DataFrame>(mpm["modelqc"]);
     
     List new_mpm (9);
     new_mpm(0) = A_mats;
@@ -2261,10 +2406,10 @@ Rcpp::List add_stage (const RObject mpm, int add_before = 0,
     true_output = new_mpm;
     
   } else {
-    DataFrame new_labels = as<DataFrame>(mpm_list["labels"]);
-    IntegerVector new_matrixqc = as<IntegerVector>(mpm_list["matrixqc"]);
-    DataFrame new_modelqc = as<DataFrame>(mpm_list["modelqc"]);
-    IntegerVector new_dataqc = as<IntegerVector>(mpm_list["dataqc"]);
+    DataFrame new_labels = as<DataFrame>(mpm["labels"]);
+    IntegerVector new_matrixqc = as<IntegerVector>(mpm["matrixqc"]);
+    DataFrame new_modelqc = as<DataFrame>(mpm["modelqc"]);
+    IntegerVector new_dataqc = as<IntegerVector>(mpm["dataqc"]);
     
     List new_mpm (10);
     new_mpm(0) = A_mats;
@@ -2286,8 +2431,118 @@ Rcpp::List add_stage (const RObject mpm, int add_before = 0,
     
     true_output = new_mpm;
   }
+  final_output = true_output;
+}
+
+//' Add a New Stage to an Existing lefkoMat or lefkoMatList Object
+//' 
+//' Function \code{add_stage()} adds a new stage to an existing \code{lefkoMat}
+//' or \code{lefkoMatList} object. In addition to altering the \code{ahstages}
+//' object within the MPM, it alters the \code{hstages} and \code{agestages}
+//' objects and adds the appropriate number of new rows and columns depending on
+//' the kind of MPM input. Note that, if entering a \code{lefkoMatList} object,
+//' then a stage will be added to all \code{lefkoMat} objects contained therein.
+//' 
+//' @name add_stage
+//' 
+//' @param mpm The \code{lefkoMat} or \code{lefkoMatList} object to add a stage
+//' to.
+//' @param add_before The index of the stage to insert a new stage before. This
+//' index should be derived from the \code{ahstages} of the input \code{mpm}.
+//' Cannot be set if \code{add_after} is to be used.
+//' @param add_after The index of the stage to insert a new stage after. This
+//' index should be derived from the \code{ahstages} of the input \code{mpm}.
+//' Cannot be set if \code{add_before} is to be used.
+//' @param stage_name The name of the new stage to add. Defaults to
+//' \code{new_stage}. 
+//' 
+//' @return A new copy of the original MPM edited to include new rows and
+//' columns in the associated matrices, and with \code{ahstages},
+//' \code{agestages}, and \code{hstages} objects edited to include the new
+//' stage.
+//' 
+//' @seealso \code{\link{edit_lM}()}
+//' 
+//' @examples
+//' data(cypdata)
+//' 
+//' cyp_lesl_data <- verticalize3(data = cypdata, noyears = 6, firstyear = 2004, 
+//'   patchidcol = "patch", individcol = "plantid", blocksize = 4, 
+//'   sizeacol = "Inf2.04", sizebcol = "Inf.04", sizeccol = "Veg.04", 
+//'   repstracol = "Inf.04", repstrbcol = "Inf2.04", fecacol = "Pod.04", 
+//'   stagesize = "sizeadded", NAas0 = TRUE, age_offset = 2)
+//' 
+//' cyp_survival <- glm(alive3 ~ obsage + as.factor(year2), data = cyp_lesl_data,
+//'   family = "binomial")
+//' cyp_fecundity <- glm(feca2 ~ 1 + obsage + as.factor(year2),
+//'   data = cyp_lesl_data, family = "poisson")
+//' 
+//' mod_params <- create_pm(name_terms = TRUE)
+//' mod_params$modelparams[22] <- "obsage"
+//' 
+//' germination <- 0.08
+//' protocorm_to_seedling <- 0.10
+//' seeding_to_adult <- 0.20
+//' seeds_per_fruit <- 8000
+//' 
+//' cyp_lesl_supp <- supplemental(historical = FALSE, stagebased = FALSE,
+//'   agebased = TRUE, age2 = c(1, 2), type = c(1, 1),
+//'   givenrate = c(protocorm_to_seedling, seeding_to_adult))
+//' 
+//' cyp_lesl_fb_mpm <- fleslie(data = cyp_lesl_data, surv_model = cyp_survival,
+//'   fec_model = cyp_fecundity, paramnames = mod_params, last_age = 7,
+//'   fecage_min = 3, fecmod = (germination * seeds_per_fruit),
+//'   supplement = cyp_lesl_supp)
+//' 
+//' altered1 <- add_stage(cyp_lesl_fb_mpm, add_before = 1, stage_name = "DS")
+//' 
+//' @export add_stage
+// [[Rcpp::export(add_stage)]]
+Rcpp::List add_stage (const RObject mpm, int add_before = 0,
+  int add_after = 0, Nullable<CharacterVector> stage_name  = R_NilValue) {
   
-  return true_output;;
+  List mpm_list;
+  List final_output;
+  
+  if (is<List>(mpm)) mpm_list = as<List>(mpm);
+  StringVector mpm_class = mpm_list.attr("class");
+  
+  String mpm_error = "Please enter a lefkoMat or lefkoMatList object as input.";
+  bool mpm_yes {false};
+  bool mpmlist_yes {false};
+  
+  for (int i = 0; i < static_cast<int>(mpm_class.length()); i++) {
+    if (mpm_class(i) == "lefkoMat") mpm_yes = true;
+    if (mpm_class(i) == "lefkoMatList") mpmlist_yes = true;
+  }
+  if (!mpm_yes && !mpmlist_yes) throw Rcpp::exception(mpm_error.get_cstring(), false);
+  
+  if (add_before > 0 && add_after > 0) {
+    throw Rcpp::exception("Please set either add_before or add_after, but not both.",
+      false);
+  }
+  
+  if (mpm_yes) {
+    add_stage_single(final_output, mpm_list, add_before, add_after, stage_name);
+  } else if (mpmlist_yes) {
+    int length_of_mpmlist = static_cast<int>(mpm_list.length());
+    List semifinal_output (length_of_mpmlist);
+    
+    for (int i = 0; i < length_of_mpmlist; i++) {
+      List current_output;
+      List current_mpm = as<List>(mpm_list(i));
+      
+      add_stage_single(current_output, current_mpm, add_before, add_after, stage_name);
+      
+      semifinal_output(i) = current_output;
+    }
+    CharacterVector final_class = "lefkoMatList";
+    semifinal_output.attr("class") = final_class;
+    
+    final_output = semifinal_output;
+  } else throw Rcpp::exception(mpm_error.get_cstring(), false);
+  
+  return final_output;
 }
 
 //' Check Continuity of Life Cycle through Matrices in lefkoMat Objects
@@ -2441,6 +2696,8 @@ List cycle_check(RObject mpm, Nullable<RObject> quiet = R_NilValue) {
         int num_cols = current_mat.n_cols;
         
         for (int current_col = 0; current_col < num_cols; current_col++) {
+          if (current_col % 5 == 0) Rcpp::checkUserInterrupt();
+          
           arma::vec check_col = current_mat.col(current_col);
           arma::uvec nonzeros_vec = find(check_col);
           
@@ -2469,6 +2726,8 @@ List cycle_check(RObject mpm, Nullable<RObject> quiet = R_NilValue) {
         }
         
         for (int current_col = 0; current_col < num_cols; current_col++) {
+          if (current_col % 5 == 0) Rcpp::checkUserInterrupt();
+          
           arma::vec check_col = arma::vec(current_mat.col(current_col));
           arma::uvec nonzeros_vec = find(check_col);
           
@@ -2543,6 +2802,8 @@ List cycle_check(RObject mpm, Nullable<RObject> quiet = R_NilValue) {
     int num_cols = current_mat.n_cols;
     
     for (int current_col = 0; current_col < num_cols; current_col++) {
+      if (current_col % 5 == 0) Rcpp::checkUserInterrupt();
+      
       arma::vec check_col = current_mat.col(current_col);
       arma::uvec nonzeros_vec = find(check_col);
       
@@ -2600,6 +2861,8 @@ List cycle_check(RObject mpm, Nullable<RObject> quiet = R_NilValue) {
     arma::uvec problem_vector (num_stages, fill::zeros); // Stages without outward transitions (as 1)
     
     for (int current_col = 0; current_col < num_cols; current_col++) {
+      if (current_col % 5 == 0) Rcpp::checkUserInterrupt();
+      
       arma::vec check_col = arma::vec(current_mat.col(current_col));
       arma::uvec nonzeros_vec = find(check_col);
       

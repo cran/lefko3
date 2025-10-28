@@ -206,6 +206,7 @@ stablestage3 <- function(mats, ...) UseMethod("stablestage3")
 #' @seealso \code{\link{stablestage3.list}()}
 #' @seealso \code{\link{stablestage3.matrix}()}
 #' @seealso \code{\link{stablestage3.dgCMatrix}()}
+#' @seealso \code{\link{stablestage3.lefkoMatList}()}
 #' 
 #' @examples
 #' # Lathyrus deterministic example
@@ -300,7 +301,7 @@ stablestage3 <- function(mats, ...) UseMethod("stablestage3")
 stablestage3.lefkoMat <- function(mats, stochastic = FALSE, times = 10000,
   tweights = NA, seed = NA, force_sparse = "auto", ...) {
   
-  matrix_set <- theprohecy <- NULL
+  matrix_set <- theprophecy <- NULL
   sparsemethod <- sparse_auto <- sparse_input <- FALSE
   
   if (is(mats$A[[1]], "dgCMatrix")) sparse_input <- TRUE
@@ -591,6 +592,7 @@ stablestage3.lefkoMat <- function(mats, stochastic = FALSE, times = 10000,
 #' 
 #' @seealso \code{\link{stablestage3}()}
 #' @seealso \code{\link{stablestage3.lefkoMat}()}
+#' @seealso \code{\link{stablestage3.lefkoMatList}()}
 #' @seealso \code{\link{stablestage3.list}()}
 #' @seealso \code{\link{stablestage3.dgCMatrix}()}
 #' 
@@ -686,6 +688,7 @@ stablestage3.matrix <- function(mats, force_sparse = "auto", ...)
 #' @seealso \code{\link{stablestage3.lefkoMat}()}
 #' @seealso \code{\link{stablestage3.list}()}
 #' @seealso \code{\link{stablestage3.matrix}()}
+#' @seealso \code{\link{stablestage3.lefkoMatList}()}
 #' 
 #' @examples
 #' data(lathyrus)
@@ -736,6 +739,235 @@ stablestage3.dgCMatrix <- function(mats, ...)
   wcorr <- .ss3matrix_sp(mats)
   
   return(wcorr)
+}
+
+#' Estimate Stable Stage Distribution of Matrices in lefkoMatList Object
+#' 
+#' \code{stablestage3.lefkoMatList()} returns the deterministic stable stage
+#' distributions of all \code{A} matrices in all objects of class
+#' \code{lefkoMat} stored within the entered \code{lefkoMatList} object, as well
+#' as the long-run projected mean stage distribution in stochastic analysis.
+#' This function can handle large and sparse matrices, and so can be used with
+#' large historical matrices, IPMs, age x stage matrices, as well as ahistorical
+#' matrices.
+#' 
+#' @name stablestage3.lefkoMatList
+#' 
+#' @param mats An object of class \code{lefkoMatList}.
+#' @param stochastic A logical value indicating whether to use deterministic
+#' (\code{FALSE}) or stochastic (\code{TRUE}) analysis. Defaults to
+#' \code{FALSE}.
+#' @param times An integer variable indicating number of occasions to project if
+#' using stochastic analysis. Defaults to 10000.
+#' @param tweights An optional numeric vector or matrix denoting the
+#' probabilities of choosing each matrix in a stochastic projection. If a matrix
+#' is input, then a first-order Markovian environment is assumed, in which the
+#' probability of choosing a specific annual matrix depends on which annual
+#' matrix is currently chosen. If a vector is input, then the choice of annual
+#' matrix is assumed to be independent of the current matrix. Defaults to equal
+#' weighting among matrices.
+#' @param seed A number to use as a random number seed in stochastic projection.
+#' @param force_sparse A text string indicating whether to use sparse matrix
+#' encoding (\code{"yes"}) if standard matrices are provided. Defaults to
+#' \code{"auto"}, in which case sparse matrix encoding is used with square
+#' matrices with at least 50 rows and no more than 50\% of elements with values
+#' greater than zero.
+#' @param ... Other parameters.
+#' 
+#' @return This function returns a list with two elements. The first is the mean
+#' stable stage distribution (and long-run mean stage distributions from
+#' stochastic analysis), and the second is a list of stable stage distributions
+#' (and long-run mean stage distributions from stochastic analysis)
+#' corresponding to the \code{lefkoMat} objects in the original \code{mats}
+#' list.
+#' 
+#' The format of distributions in both cases depends on whether the
+#' \code{lefkoMat} objects used as input are ahistorical or historical, and
+#' whether the analysis is deterministic or stochastic. If deterministic and
+#' ahistorical, then a single data frame is output, which includes the number of
+#' the matrix within the \code{A} element of the input \code{lefkoMat} object,
+#' followed by the stage id (numeric and assigned through
+#' \code{\link{sf_create}()}), the stage name, and the estimated proportion of
+#' the stable stage distribution (\code{ss_prop}). If stochastic and
+#' ahistorical, then a single data frame is output starting with the number of
+#' the population-patch (\code{matrix_set}), a string concatenating the names of
+#' the population and the patch (\code{poppatch}), the assigned stage id number
+#' (\code{stage_id}), and the stage name (\code{stage}), and the long-run
+#' average stage distribution (\code{ss_prop}).
+#' 
+#' If historical matrices are used as input, then two data frames are output
+#' into a list object. The \code{hist} element describes the historical
+#' stage-pair distribution, while the \code{ahist} element describes the stage
+#' distribution. If deterministic, then \code{hist} contains a data frame
+#' including the matrix number (\code{matrix}), the numeric stage designations for
+#' stages in occasions \emph{t} and \emph{t}-1, (\code{stage_id_2} and
+#' \code{stage_id_1}, respectively), followed by the respective stage names (
+#' \code{stage_2} and \code{stage_1}), and ending with the estimated stable
+#' stage-pair distribution. The associated \code{ahist} element is as before. If
+#' stochastic, then the \code{hist} element contains a single data frame with
+#' the number of the population-patch (\code{matrix_set}), a string
+#' concatenating the names of the population and the patch (\code{poppatch}),
+#' the assigned stage id numbers in times \emph{t} and \emph{t}-1 (
+#' \code{stage_id_2} and \code{stage_id_2}, respectively), and the associated
+#' stage names (\code{stage_2} and \code{stage_1}, respectively), and the
+#' long-run average stage distribution (\code{ss_prop}). The associated
+#' \code{ahist} element is as before in the ahistorical, stochastic case.
+#'
+#' In addition to the data frames noted above, stochastic analysis will result
+#' in the additional output of a list of matrices containing the actual
+#' projected stage distributions across all projected occasions, in the order of
+#' population-patch combinations in the \code{lefkoMat} input.
+#'
+#' @section Notes:
+#' In stochastic analysis, the projected mean distribution is the arithmetic
+#' mean across the final 1000 projected occasions if the simulation is at least
+#' 2000 projected occasions long. If between 500 and 2000 projected occasions
+#' long, then only the final 200 are used, and if fewer than 500 occasions are
+#' used, then all are used. Note that because stage distributions in stochastic
+#' simulations can change greatly in the initial portion of the run, we
+#' encourage a minimum of 2000 projected occasions per simulation, with 10000
+#' preferred.
+#' 
+#' Speed can sometimes be increased by shifting from automatic sparse matrix
+#' determination to forced dense or sparse matrix projection. This will most
+#' likely occur when matrices have between 30 and 300 rows and columns.
+#' Defaults work best when matrices are very small and dense, or very large and
+#' sparse.
+#' 
+#' @seealso \code{\link{stablestage3}()}
+#' @seealso \code{\link{stablestage3.list}()}
+#' @seealso \code{\link{stablestage3.matrix}()}
+#' @seealso \code{\link{stablestage3.dgCMatrix}()}
+#' @seealso \code{\link{stablestage3.lefkoMat}()}
+#' 
+#' @examples
+#' # Lathyrus deterministic example
+#' data(lathyrus)
+#' 
+#' sizevector <- c(0, 100, 13, 127, 3730, 3800, 0)
+#' stagevector <- c("Sd", "Sdl", "VSm", "Sm", "VLa", "Flo", "Dorm")
+#' repvector <- c(0, 0, 0, 0, 0, 1, 0)
+#' obsvector <- c(0, 1, 1, 1, 1, 1, 0)
+#' matvector <- c(0, 0, 1, 1, 1, 1, 1)
+#' immvector <- c(1, 1, 0, 0, 0, 0, 0)
+#' propvector <- c(1, 0, 0, 0, 0, 0, 0)
+#' indataset <- c(0, 1, 1, 1, 1, 1, 1)
+#' binvec <- c(0, 100, 11, 103, 3500, 3800, 0.5)
+#' 
+#' lathframe <- sf_create(sizes = sizevector, stagenames = stagevector,
+#'   repstatus = repvector, obsstatus = obsvector, matstatus = matvector,
+#'   immstatus = immvector, indataset = indataset, binhalfwidth = binvec,
+#'   propstatus = propvector)
+#' 
+#' lathvert <- verticalize3(lathyrus, noyears = 4, firstyear = 1988,
+#'   patchidcol = "SUBPLOT", individcol = "GENET", blocksize = 9,
+#'   juvcol = "Seedling1988", sizeacol = "Volume88", repstracol = "FCODE88",
+#'   fecacol = "Intactseed88", deadacol = "Dead1988",
+#'   nonobsacol = "Dormant1988", stageassign = lathframe, stagesize = "sizea",
+#'   censorcol = "Missing1988", censorkeep = NA, censor = TRUE)
+#' 
+#' lathvert_boot <- bootstrap3(lathvert, reps = 3)
+#' 
+#' lathsupp3 <- supplemental(stage3 = c("Sd", "Sd", "Sdl", "Sdl", "Sd", "Sdl", "mat"),
+#'   stage2 = c("Sd", "Sd", "Sd", "Sd", "rep", "rep", "Sdl"),
+#'   stage1 = c("Sd", "rep", "Sd", "rep", "npr", "npr", "Sd"),
+#'   eststage3 = c(NA, NA, NA, NA, NA, NA, "mat"),
+#'   eststage2 = c(NA, NA, NA, NA, NA, NA, "Sdl"),
+#'   eststage1 = c(NA, NA, NA, NA, NA, NA, "NotAlive"),
+#'   givenrate = c(0.345, 0.345, 0.054, 0.054, NA, NA, NA),
+#'   multiplier = c(NA, NA, NA, NA, 0.345, 0.054, NA),
+#'   type = c(1, 1, 1, 1, 3, 3, 1), type_t12 = c(1, 2, 1, 2, 1, 1, 1),
+#'   stageframe = lathframe, historical = TRUE)
+#' 
+#' ehrlen3_boot <- rlefko3(data = lathvert_boot, stageframe = lathframe,
+#'   year = "all", stages = c("stage3", "stage2", "stage1"),
+#'   supplement = lathsupp3, yearcol = "year2", indivcol = "individ")
+#' 
+#' ehrlen3mean <- lmean(ehrlen3_boot)
+#' stablestage3(ehrlen3mean)
+#' 
+#' # Cypripedium stochastic example
+#' data(cypdata)
+#' 
+#' sizevector <- c(0, 0, 0, 0, 0, 0, 1, 2.5, 4.5, 8, 17.5)
+#' stagevector <- c("SD", "P1", "P2", "P3", "SL", "D", "XSm", "Sm", "Md", "Lg",
+#'   "XLg")
+#' repvector <- c(0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1)
+#' obsvector <- c(0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1)
+#' matvector <- c(0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1)
+#' immvector <- c(0, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0)
+#' propvector <- c(1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)
+#' indataset <- c(0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1)
+#' binvec <- c(0, 0, 0, 0, 0, 0.5, 0.5, 1, 1, 2.5, 7)
+#' 
+#' cypframe_raw <- sf_create(sizes = sizevector, stagenames = stagevector,
+#'   repstatus = repvector, obsstatus = obsvector, matstatus = matvector,
+#'   propstatus = propvector, immstatus = immvector, indataset = indataset,
+#'   binhalfwidth = binvec)
+#' 
+#' cypraw_v1 <- verticalize3(data = cypdata, noyears = 6, firstyear = 2004,
+#'   patchidcol = "patch", individcol = "plantid", blocksize = 4,
+#'   sizeacol = "Inf2.04", sizebcol = "Inf.04", sizeccol = "Veg.04",
+#'   repstracol = "Inf.04", repstrbcol = "Inf2.04", fecacol = "Pod.04",
+#'   stageassign = cypframe_raw, stagesize = "sizeadded", NAas0 = TRUE,
+#'   NRasRep = TRUE)
+#' 
+#' cypraw_v1_boot <- bootstrap3(cypraw_v1, reps = 3)
+#' 
+#' # Here we use supplemental() to provide overwrite and reproductive info
+#' cypsupp2r <- supplemental(stage3 = c("SD", "P1", "P2", "P3", "SL", "D", 
+#'     "XSm", "Sm", "SD", "P1"),
+#'   stage2 = c("SD", "SD", "P1", "P2", "P3", "SL", "SL", "SL", "rep",
+#'     "rep"),
+#'   eststage3 = c(NA, NA, NA, NA, NA, "D", "XSm", "Sm", NA, NA),
+#'   eststage2 = c(NA, NA, NA, NA, NA, "XSm", "XSm", "XSm", NA, NA),
+#'   givenrate = c(0.10, 0.20, 0.20, 0.20, 0.25, NA, NA, NA, NA, NA),
+#'   multiplier = c(NA, NA, NA, NA, NA, NA, NA, NA, 0.5, 0.5),
+#'   type =c(1, 1, 1, 1, 1, 1, 1, 1, 3, 3),
+#'   stageframe = cypframe_raw, historical = FALSE)
+#' 
+#' cypmatrix2r_boot <- rlefko2(data = cypraw_v1_boot, stageframe = cypframe_raw, 
+#'   year = "all", patch = "all", stages = c("stage3", "stage2", "stage1"),
+#'   size = c("size3added", "size2added"), supplement = cypsupp2r,
+#'   yearcol = "year2", patchcol = "patchid", indivcol = "individ")
+#' 
+#' stablestage3(cypmatrix2r_boot, stochastic = TRUE)
+#' 
+#' @export
+stablestage3.lefkoMatList <- function(mats, stochastic = FALSE, times = 10000,
+  tweights = NA, seed = NA, force_sparse = "auto", ...) {
+  
+  length_of_list = length(mats)
+  output_list <- vector(mode = "list", length = length_of_list)
+  focused_frame <- NULL
+  
+  for (i in c(1:length_of_list)) {
+    new_correction <- stablestage3(mats[[i]],
+      stochastic = stochastic, times = times, tweights = tweights, seed = NA,
+      force_sparse = force_sparse, ...)
+    output_list[[i]] <- new_correction
+    
+    if (i == 1) {
+      focused_frame <- new_correction
+      
+      if (!is.data.frame(focused_frame)) {
+        focused_frame$hist$ss_prop <- focused_frame$hist$ss_prop / length_of_list
+        focused_frame$ahist$ss_prop <- focused_frame$ahist$ss_prop / length_of_list
+      } else {
+        focused_frame$ss_prop <- new_correction$ss_prop / length_of_list
+      }
+    } else {
+      if (!is.data.frame(focused_frame)) {
+        focused_frame$hist$ss_prop <- focused_frame$hist$ss_prop + (new_correction$hist$ss_prop / length_of_list)
+        focused_frame$ahist$ss_prop <- focused_frame$ahist$ss_prop + (new_correction$ahist$ss_prop / length_of_list)
+      } else {
+        focused_frame$ss_prop <- focused_frame$ss_prop + (new_correction$ss_prop / length_of_list)
+      }
+    }
+  }
+  
+  final_output <- list(mean = focused_frame, summaries = output_list)
+  return(final_output)
 }
 
 #' Estimate Stable Stage Distribution of a List of Projection Matrices
@@ -1743,6 +1975,231 @@ repvalue3.dgCMatrix <- function(mats, ...)
   return(v)
 }
 
+#' Estimate Reproductive Value Vectors of Matrices in a lefkoMatList Object
+#' 
+#' \code{repvalue3.lefkoMatList()} returns the reproductive values for stages in
+#' sets of population projection matrices provided within a \code{lefkoMatList}
+#' object. This function can handle large and sparse matrices, and so can be
+#' used with large historical matrices, IPMs, age x stage matrices, as well as
+#' ahistorical matrices.
+#' 
+#' @name repvalue3.lefkoMatList
+#' 
+#' @param mats An object of class \code{lefkoMatList} object.
+#' @param stochastic A logical value indicating whether to use deterministic
+#' (\code{FALSE}) or stochastic (\code{TRUE}) analysis. Defaults to
+#' \code{FALSE}.
+#' @param times An integer variable indicating number of occasions to project if
+#' using stochastic analysis. Defaults to 10000.
+#' @param tweights An optional numeric vector or matrix denoting the
+#' probabilities of choosing each matrix in a stochastic projection. If a matrix
+#' is input, then a first-order Markovian environment is assumed, in which the
+#' probability of choosing a specific annual matrix depends on which annual
+#' matrix is currently chosen. If a vector is input, then the choice of annual
+#' matrix is assumed to be independent of the current matrix. Defaults to equal
+#' weighting among matrices.
+#' @param seed A number to use as a random number seed.
+#' @param force_sparse A text string indicating whether to use sparse matrix
+#' encoding (\code{"yes"}) when supplied with standard matrices. Defaults to
+#' \code{"auto"}, in which case sparse matrix encoding is used with square
+#' matrices with at least 50 rows and no more than 50\% of elements with values
+#' greater than zero.
+#' @param ... Other parameters.
+#' 
+#' @return This function returns a list with two elements. The first is the mean
+#' reproductive value vector (and long-run mean reproductive value vectors from
+#' stochastic analysis), and the second is a list of reproductive value vectors
+#' (and long-run mean reproductive value vectors from stochastic analysis)
+#' corresponding to the \code{lefkoMat} objects in the original
+#' \code{lefkoMatList} list input in argument \code{mats}.
+#' 
+#' The vector format depends on whether the \code{lefkoMat} object used as input
+#' is ahistorical or historical, and whether the analysis is deterministic or
+#' stochastic. If deterministic and ahistorical, then a single data frame is
+#' output, which includes the number of the matrix within the \code{A} element
+#' of the input \code{lefkoMat} object, followed by the stage id (numeric and
+#' assigned through \code{\link{sf_create}()}), the stage name, and the
+#' estimated proportion of the reproductive value vector (\code{rep_value}). If
+#' stochastic and ahistorical, then a single data frame is output starting with
+#' the number of the population-patch (\code{matrix_set}), a string
+#' concatenating the names of the population and the patch (\code{poppatch}),
+#' the assigned stage id number (\code{stage_id}), and the stage name
+#' (\code{stage}), and the long-run mean reproductive value vector
+#' (\code{rep_value}).
+#' 
+#' If a historical matrix is used as input, then two data frames are output
+#' into a list object. The \code{hist} element describes the historical
+#' stage-pair reproductive values, while the \code{ahist} element describes the
+#' stage reproductive values. If deterministic, then \code{hist} contains a data
+#' frame including the matrix number (\code{matrix}), the numeric stage
+#' designations for stages in occasions \emph{t} and \emph{t}-1,
+#' (\code{stage_id_2} and \code{stage_id_1}, respectively), followed by the
+#' respective stage names (\code{stage_2} and \code{stage_1}), and ending with
+#' the estimated reproductive values (\code{rep_value}). The associated
+#' \code{ahist} element is as before. If stochastic, then the \code{hist}
+#' element contains a single data frame with the number of the population-patch
+#' (\code{matrix_set}), a string concatenating the names of the population and
+#' the patch (\code{poppatch}), the assigned stage id numbers in times \emph{t}
+#' and \emph{t}-1 (\code{stage_id_2} and \code{stage_id_2}, respectively), and
+#' the associated stage names (\code{stage_2} and \code{stage_1}, respectively),
+#' and the long-run mean reproductive values (\code{rep_value}). The associated
+#' \code{ahist} element is as before in the ahistorical, stochastic case.
+#'
+#' In addition to the data frames noted above, stochastic analysis will result
+#' in the additional output of a list of matrices containing the actual
+#' projected reproductive value vectors across all projected occasions, in the
+#' order of population-patch combinations in the \code{lefkoMat} input.
+#'
+#' @section Notes:
+#' In stochastic analysis, the projected mean reproductive value vector is the
+#' arithmetic mean across the final projected 1000 occasions if the simulation
+#' is at least 2000 projected occasions long. If between 500 and 2000 projected
+#' occasions long, then only the final 200 are used, and if fewer than 500
+#' occasions are used, then all are used. Note that because reproductive values
+#' in stochastic simulations can change greatly in the initial portion of the
+#' run, we encourage a minimum 2000 projected occasions per simulation, with
+#' 10000 preferred.
+#' 
+#' Speed can sometimes be increased by shifting from automatic sparse matrix
+#' determination to forced dense or sparse matrix projection. This will most
+#' likely occur when matrices have several hundred rows and columns. Defaults
+#' work best when matrices are very small and dense, or very large and sparse.
+#' 
+#' @seealso \code{\link{repvalue3}()}
+#' @seealso \code{\link{repvalue3.matrix}()}
+#' @seealso \code{\link{repvalue3.dgCMatrix}()}
+#' @seealso \code{\link{repvalue3.list}()}
+#' 
+#' @examples
+#' # Lathyrus deterministic example
+#' data(lathyrus)
+#' 
+#' sizevector <- c(0, 100, 13, 127, 3730, 3800, 0)
+#' stagevector <- c("Sd", "Sdl", "VSm", "Sm", "VLa", "Flo", "Dorm")
+#' repvector <- c(0, 0, 0, 0, 0, 1, 0)
+#' obsvector <- c(0, 1, 1, 1, 1, 1, 0)
+#' matvector <- c(0, 0, 1, 1, 1, 1, 1)
+#' immvector <- c(1, 1, 0, 0, 0, 0, 0)
+#' propvector <- c(1, 0, 0, 0, 0, 0, 0)
+#' indataset <- c(0, 1, 1, 1, 1, 1, 1)
+#' binvec <- c(0, 100, 11, 103, 3500, 3800, 0.5)
+#' 
+#' lathframe <- sf_create(sizes = sizevector, stagenames = stagevector,
+#'   repstatus = repvector, obsstatus = obsvector, matstatus = matvector,
+#'   immstatus = immvector, indataset = indataset, binhalfwidth = binvec,
+#'   propstatus = propvector)
+#' 
+#' lathvert <- verticalize3(lathyrus, noyears = 4, firstyear = 1988,
+#'   patchidcol = "SUBPLOT", individcol = "GENET", blocksize = 9,
+#'   juvcol = "Seedling1988", sizeacol = "Volume88", repstracol = "FCODE88",
+#'   fecacol = "Intactseed88", deadacol = "Dead1988",
+#'   nonobsacol = "Dormant1988", stageassign = lathframe, stagesize = "sizea",
+#'   censorcol = "Missing1988", censorkeep = NA, censor = TRUE)
+#' 
+#' lathvert_boot <- bootstrap3(lathvert, reps = 3)
+#' 
+#' lathsupp3 <- supplemental(stage3 = c("Sd", "Sd", "Sdl", "Sdl", "Sd", "Sdl", "mat"),
+#'   stage2 = c("Sd", "Sd", "Sd", "Sd", "rep", "rep", "Sdl"),
+#'   stage1 = c("Sd", "rep", "Sd", "rep", "npr", "npr", "Sd"),
+#'   eststage3 = c(NA, NA, NA, NA, NA, NA, "mat"),
+#'   eststage2 = c(NA, NA, NA, NA, NA, NA, "Sdl"),
+#'   eststage1 = c(NA, NA, NA, NA, NA, NA, "NotAlive"),
+#'   givenrate = c(0.345, 0.345, 0.054, 0.054, NA, NA, NA),
+#'   multiplier = c(NA, NA, NA, NA, 0.345, 0.054, NA),
+#'   type = c(1, 1, 1, 1, 3, 3, 1), type_t12 = c(1, 2, 1, 2, 1, 1, 1),
+#'   stageframe = lathframe, historical = TRUE)
+#' 
+#' ehrlen3_boot <- rlefko3(data = lathvert_boot, stageframe = lathframe,
+#'   year = "all", stages = c("stage3", "stage2", "stage1"),
+#'   supplement = lathsupp3, yearcol = "year2", indivcol = "individ")
+#' 
+#' ehrlen3mean <- lmean(ehrlen3_boot)
+#' repvalue3(ehrlen3mean)
+#' 
+#' # Cypripedium stochastic example
+#' data(cypdata)
+#' 
+#' sizevector <- c(0, 0, 0, 0, 0, 0, 1, 2.5, 4.5, 8, 17.5)
+#' stagevector <- c("SD", "P1", "P2", "P3", "SL", "D", "XSm", "Sm", "Md", "Lg",
+#'   "XLg")
+#' repvector <- c(0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1)
+#' obsvector <- c(0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1)
+#' matvector <- c(0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1)
+#' immvector <- c(0, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0)
+#' propvector <- c(1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)
+#' indataset <- c(0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1)
+#' binvec <- c(0, 0, 0, 0, 0, 0.5, 0.5, 1, 1, 2.5, 7)
+#' 
+#' cypframe_raw <- sf_create(sizes = sizevector, stagenames = stagevector,
+#'   repstatus = repvector, obsstatus = obsvector, matstatus = matvector,
+#'   propstatus = propvector, immstatus = immvector, indataset = indataset,
+#'   binhalfwidth = binvec)
+#' 
+#' cypraw_v1 <- verticalize3(data = cypdata, noyears = 6, firstyear = 2004,
+#'   patchidcol = "patch", individcol = "plantid", blocksize = 4,
+#'   sizeacol = "Inf2.04", sizebcol = "Inf.04", sizeccol = "Veg.04",
+#'   repstracol = "Inf.04", repstrbcol = "Inf2.04", fecacol = "Pod.04",
+#'   stageassign = cypframe_raw, stagesize = "sizeadded", NAas0 = TRUE,
+#'   NRasRep = TRUE)
+#' 
+#' cypraw_v1_boot <- bootstrap3(cypraw_v1, reps = 3)
+#' 
+#' # Here we use supplemental() to provide overwrite and reproductive info
+#' cypsupp2r <- supplemental(stage3 = c("SD", "P1", "P2", "P3", "SL", "D", 
+#'     "XSm", "Sm", "SD", "P1"),
+#'   stage2 = c("SD", "SD", "P1", "P2", "P3", "SL", "SL", "SL", "rep",
+#'     "rep"),
+#'   eststage3 = c(NA, NA, NA, NA, NA, "D", "XSm", "Sm", NA, NA),
+#'   eststage2 = c(NA, NA, NA, NA, NA, "XSm", "XSm", "XSm", NA, NA),
+#'   givenrate = c(0.10, 0.20, 0.20, 0.20, 0.25, NA, NA, NA, NA, NA),
+#'   multiplier = c(NA, NA, NA, NA, NA, NA, NA, NA, 0.5, 0.5),
+#'   type =c(1, 1, 1, 1, 1, 1, 1, 1, 3, 3),
+#'   stageframe = cypframe_raw, historical = FALSE)
+#' 
+#' cypmatrix2r_boot <- rlefko2(data = cypraw_v1_boot, stageframe = cypframe_raw, 
+#'   year = "all", patch = "all", stages = c("stage3", "stage2", "stage1"),
+#'   size = c("size3added", "size2added"), supplement = cypsupp2r,
+#'   yearcol = "year2", patchcol = "patchid", indivcol = "individ")
+#' 
+#' repvalue3(cypmatrix2r_boot, stochastic = TRUE)
+#' 
+#' @export
+repvalue3.lefkoMatList <- function(mats, stochastic = FALSE, times = 10000,
+  tweights = NA, seed = NA, force_sparse = "auto", ...) {
+  
+  length_of_list = length(mats)
+  output_list <- vector(mode = "list", length = length_of_list)
+  focused_frame <- NULL
+  
+  for (i in c(1:length_of_list)) {
+    new_correction <- repvalue3(mats[[i]],
+      stochastic = stochastic, times = times, tweights = tweights, seed = NA,
+      force_sparse = force_sparse, ...)
+    output_list[[i]] <- new_correction
+    
+    if (i == 1) {
+      focused_frame <- new_correction
+      
+      if (!is.data.frame(focused_frame)) {
+        focused_frame$hist$rep_value <- focused_frame$hist$rep_value / length_of_list
+        focused_frame$ahist$rep_value <- focused_frame$ahist$rep_value / length_of_list
+      } else {
+        focused_frame$rep_value <- new_correction$rep_value / length_of_list
+      }
+    } else {
+      if (!is.data.frame(focused_frame)) {
+        focused_frame$hist$rep_value <- focused_frame$hist$rep_value + (new_correction$hist$rep_value / length_of_list)
+        focused_frame$ahist$rep_value <- focused_frame$ahist$rep_value + (new_correction$ahist$rep_value / length_of_list)
+      } else {
+        focused_frame$rep_value <- focused_frame$rep_value + (new_correction$rep_value / length_of_list)
+      }
+    }
+  }
+  
+  final_output <- list(mean = focused_frame, summaries = output_list)
+  return(final_output)
+}
+
 #' Estimate Reproductive Value Vector for a List of Projection Matrices
 #' 
 #' \code{repvalue3.list()} returns the reproductive values for stages in
@@ -2108,6 +2565,7 @@ sensitivity3 <- function(mats, ...) UseMethod("sensitivity3")
 #' @seealso \code{\link{sensitivity3.matrix}()}
 #' @seealso \code{\link{sensitivity3.dgCMatrix}()}
 #' @seealso \code{\link{sensitivity3.list}()}
+#' @seealso \code{\link{sensitivity3.lefkoMatList}()}
 #' 
 #' @examples
 #' data(lathyrus)
@@ -2329,6 +2787,7 @@ sensitivity3.lefkoMat <- function(mats, stochastic = FALSE, times = 10000,
 #' @seealso \code{\link{sensitivity3.lefkoMat}()}
 #' @seealso \code{\link{sensitivity3.dgCMatrix}()}
 #' @seealso \code{\link{sensitivity3.list}()}
+#' @seealso \code{\link{sensitivity3.lefkoMatList}()}
 #' 
 #' @examples
 #' data(lathyrus)
@@ -2436,6 +2895,7 @@ sensitivity3.matrix <- function(mats, sparse = "auto", ...)
 #' @seealso \code{\link{sensitivity3.lefkoMat}()}
 #' @seealso \code{\link{sensitivity3.list}()}
 #' @seealso \code{\link{sensitivity3.matrix}()}
+#' @seealso \code{\link{sensitivity3.lefkoMatList}()}
 #' 
 #' @examples
 #' data(lathyrus)
@@ -2515,6 +2975,182 @@ sensitivity3.dgCMatrix <- function(mats, sparse = "auto", ...)
   return(wcorr)
 }
 
+#' Estimate Sensitivity of Population Growth Rate of a lefkoMatList Object
+#' 
+#' \code{sensitivity3.lefkoMatList()} returns the sensitivities of population
+#' growth rate to elements of all \code{$A} matrices in all \code{lefkoMat}
+#' objects in a list of class \code{lefkoMatList}. If deterministic, then
+#' \eqn{\lambda} is taken as the population growth rate. If stochastic, then the
+#' log of stochastic \eqn{\lambda}, or the log stochastic growth rate, is taken
+#' as the population growth rate. This function can handle large and sparse
+#' matrices, and so can be used with large historical matrices, IPMs, age x
+#' stage matrices, as well as smaller ahistorical matrices.
+#' 
+#' @name sensitivity3.lefkoMatList
+#' 
+#' @param mats An object of class \code{lefkoMatList}.
+#' @param stochastic A logical value determining whether to conduct a
+#' deterministic (FALSE) or stochastic (TRUE) sensitivity analysis. Defaults to
+#' FALSE.
+#' @param times The number of occasions to project forward in stochastic
+#' simulation. Defaults to \code{10000}.
+#' @param tweights An optional numeric vector or matrix denoting the
+#' probabilities of choosing each matrix in a stochastic projection. If a matrix
+#' is input, then a first-order Markovian environment is assumed, in which the
+#' probability of choosing a specific annual matrix depends on which annual
+#' matrix is currently chosen. If a vector is input, then the choice of annual
+#' matrix is assumed to be independent of the current matrix. Defaults to equal
+#' weighting among matrices.
+#' @param seed A number to use as a random number seed in stochastic projection.
+#' @param sparse A text string indicating whether to use sparse matrix encoding
+#' (\code{"yes"}) or dense matrix encoding (\code{"no"}). Defaults to
+#' \code{"auto"}, in which case sparse matrix encoding is used with square
+#' matrices with at least 50 rows and no more than 50\% of elements with values
+#' greater than zero.
+#' @param append_mats A logical value indicating whether to include the original
+#' A, U, and F matrices in the output \code{lefkoSens} object.
+#' @param ... Other parameters.
+#' 
+#' @return This function returns a list with two elements. The first is an
+#' object of class \code{lefkoSens} that contains the mean sensitivity matrices
+#' of the bootstrapped sensitivity matrices. The second is a list containing
+#' \code{lefkoSens} objects giving the sensitivity matrices of all bootstrapped
+#' matrices.
+#' 
+#' Within these lists are objects of class \code{lefkoSens}, which are comprised
+#' of lists of 8 elements. The first, \code{h_sensmats}, is a list of historical
+#' sensitivity matrices (\code{NULL} if an ahMPM is used as input). The second,
+#' \code{ah_elasmats}, is a list of either ahistorical sensitivity matrices if
+#' an ahMPM is used as input, or, if an hMPM is used as input, then the result
+#' is a list of ahistorical matrices based on the equivalent historical
+#' dependencies assumed in the input historical matrices. The third element,
+#' \code{hstages}, is a data frame showing historical stage pairs (\code{NULL}
+#' if an ahMPM used as input). The fourth element, \code{agestages}, show the
+#' order of age-stage combinations, if age-by-stage MPMs have been supplied. The
+#' fifth element, \code{ahstages}, is a data frame showing the order of
+#' ahistorical stages. The last 3 elements are the A, U, and F portions of the
+#' input.
+#' 
+#' @section Notes:
+#' All sensitivity matrix outputs from this function are in standard matrix
+#' format.
+#' 
+#' Deterministic sensitivities are estimated as eqn. 9.14 in Caswell (2001,
+#' Matrix Population Models). Stochastic sensitivities are estimated as eqn.
+#' 14.97 in Caswell (2001). Note that stochastic sensitivities are of the log of
+#' the stochastic \eqn{\lambda}.
+#'
+#' Speed can sometimes be increased by shifting from automatic sparse matrix
+#' determination to forced dense or sparse matrix projection. This will most
+#' likely occur when matrices have between 30 and 300 rows and columns.
+#' Defaults work best when matrices are very small and dense, or very large and
+#' sparse.
+#' 
+#' The \code{time_weights} and \code{steps} arguments are now deprecated.
+#' Instead, please use the \code{tweights} and \code{times} arguments.
+#' 
+#' @seealso \code{\link{sensitivity3}()}
+#' @seealso \code{\link{sensitivity3.lefkoMat}()}
+#' @seealso \code{\link{sensitivity3.matrix}()}
+#' @seealso \code{\link{sensitivity3.dgCMatrix}()}
+#' @seealso \code{\link{sensitivity3.list}()}
+#' 
+#' @examples
+#' data(lathyrus)
+#' 
+#' sizevector <- c(0, 100, 13, 127, 3730, 3800, 0)
+#' stagevector <- c("Sd", "Sdl", "VSm", "Sm", "VLa", "Flo", "Dorm")
+#' repvector <- c(0, 0, 0, 0, 0, 1, 0)
+#' obsvector <- c(0, 1, 1, 1, 1, 1, 0)
+#' matvector <- c(0, 0, 1, 1, 1, 1, 1)
+#' immvector <- c(1, 1, 0, 0, 0, 0, 0)
+#' propvector <- c(1, 0, 0, 0, 0, 0, 0)
+#' indataset <- c(0, 1, 1, 1, 1, 1, 1)
+#' binvec <- c(0, 100, 11, 103, 3500, 3800, 0.5)
+#' 
+#' lathframe <- sf_create(sizes = sizevector, stagenames = stagevector,
+#'   repstatus = repvector, obsstatus = obsvector, matstatus = matvector,
+#'   immstatus = immvector, indataset = indataset, binhalfwidth = binvec,
+#'   propstatus = propvector)
+#' 
+#' lathvert <- verticalize3(lathyrus, noyears = 4, firstyear = 1988,
+#'   patchidcol = "SUBPLOT", individcol = "GENET", blocksize = 9,
+#'   juvcol = "Seedling1988", sizeacol = "Volume88", repstracol = "FCODE88",
+#'   fecacol = "Intactseed88", deadacol = "Dead1988",
+#'   nonobsacol = "Dormant1988", stageassign = lathframe, stagesize = "sizea",
+#'   censorcol = "Missing1988", censorkeep = NA, censor = TRUE)
+#' 
+#' lathvert_boot <- bootstrap3(lathvert, reps = 3)
+#' 
+#' lathsupp3 <- supplemental(stage3 = c("Sd", "Sd", "Sdl", "Sdl", "Sd", "Sdl", "mat"),
+#'   stage2 = c("Sd", "Sd", "Sd", "Sd", "rep", "rep", "Sdl"),
+#'   stage1 = c("Sd", "rep", "Sd", "rep", "npr", "npr", "Sd"),
+#'   eststage3 = c(NA, NA, NA, NA, NA, NA, "mat"),
+#'   eststage2 = c(NA, NA, NA, NA, NA, NA, "Sdl"),
+#'   eststage1 = c(NA, NA, NA, NA, NA, NA, "NotAlive"),
+#'   givenrate = c(0.345, 0.345, 0.054, 0.054, NA, NA, NA),
+#'   multiplier = c(NA, NA, NA, NA, 0.345, 0.054, NA),
+#'   type = c(1, 1, 1, 1, 3, 3, 1), type_t12 = c(1, 2, 1, 2, 1, 1, 1),
+#'   stageframe = lathframe, historical = TRUE)
+#' 
+#' ehrlen3_boot <- rlefko3(data = lathvert_boot, stageframe = lathframe,
+#'   year = "all", stages = c("stage3", "stage2", "stage1"),
+#'   supplement = lathsupp3, yearcol = "year2", indivcol = "individ")
+#' 
+#' sensitivity3(ehrlen3_boot, stochastic = TRUE)
+#' 
+#' @export
+sensitivity3.lefkoMatList <- function(mats, stochastic = FALSE, times = 10000,
+  tweights = NA, seed = NA, sparse = "auto", append_mats = FALSE, ...) {
+  
+  length_of_list = length(mats)
+  output_list <- vector(mode = "list", length = length_of_list)
+  focused_frame <- NULL
+  
+  for (i in c(1:length_of_list)) {
+    new_correction <- sensitivity3(mats[[i]],
+      stochastic = stochastic, times = times, tweights = tweights, seed = NA,
+      sparse = sparse, append_mats = append_mats, ...)
+    output_list[[i]] <- new_correction
+    
+    if (i == 1) {
+      focused_frame <- new_correction
+      
+      if (is.matrix(focused_frame$ah_sensmats)) {
+        focused_frame$ah_sensmats <- focused_frame$ah_sensmats / length_of_list
+        if (is.matrix(focused_frame$h_sensmats)) {
+          focused_frame$h_sensmats <- focused_frame$h_sensmats / length_of_list
+        }
+      } else {
+        for (i in c(1:length(focused_frame$ah_sensmats))) {
+          focused_frame$ah_sensmats[[i]] <- focused_frame$ah_sensmats[[i]] / length_of_list
+          if (is.list(focused_frame$h_sensmats)) {
+            focused_frame$h_sensmats[[i]] <- focused_frame$h_sensmats[[i]] / length_of_list
+          }
+        }
+      }
+    } else {
+      if (is.matrix(focused_frame$ah_sensmats)) {
+        focused_frame$ah_sensmats <- focused_frame$ah_sensmats + (new_correction$ah_sensmats / length_of_list)
+        if (is.matrix(focused_frame$h_sensmats)) {
+          focused_frame$h_sensmats <- focused_frame$h_sensmats + (new_correction$h_sensmats / length_of_list)
+        }
+      } else {
+        for (i in c(1:length(focused_frame$ah_sensmats))) {
+          focused_frame$ah_sensmats[[i]] <- focused_frame$ah_sensmats[[i]] + (new_correction$ah_sensmats[[i]] / length_of_list)
+          if (is.list(focused_frame$h_sensmats)) {
+            focused_frame$h_sensmats[[i]] <- focused_frame$h_sensmats[[i]] + (new_correction$h_sensmats[[i]] / length_of_list)
+          }
+        }
+      }
+    }
+  }
+  
+  final_output <- list(mean = focused_frame, summaries = output_list)
+  
+  return(final_output)
+}
+
 #' Estimate Sensitivity of Population Growth Rate of a List of Matrices
 #' 
 #' \code{sensitivity3.list()} returns the sensitivities of population growth
@@ -2589,6 +3225,7 @@ sensitivity3.dgCMatrix <- function(mats, sparse = "auto", ...)
 #' @seealso \code{\link{sensitivity3.lefkoMat}()}
 #' @seealso \code{\link{sensitivity3.matrix}()}
 #' @seealso \code{\link{sensitivity3.dgCMatrix}()}
+#' @seealso \code{\link{sensitivity3.lefkoMatList}()}
 #' 
 #' @examples
 #' # Lathyrus example
@@ -2808,6 +3445,7 @@ sensitivity3.list <- function(mats, stochastic = FALSE, times = 10000,
 #' @seealso \code{\link{elasticity3.matrix}()}
 #' @seealso \code{\link{elasticity3.dgCMatrix}()}
 #' @seealso \code{\link{elasticity3.list}()}
+#' @seealso \code{\link{elasticity3.lefkoMatList}()}
 #' @seealso \code{\link{summary.lefkoElas}()}
 #' 
 #' @examples
@@ -2974,6 +3612,7 @@ elasticity3 <- function(mats, ...) UseMethod("elasticity3")
 #' @seealso \code{\link{elasticity3.dgCMatrix}()}
 #' @seealso \code{\link{elasticity3.matrix}()}
 #' @seealso \code{\link{elasticity3.list}()}
+#' @seealso \code{\link{elasticity3.lefkoMatList}()}
 #' @seealso \code{\link{summary.lefkoElas}()}
 #' 
 #' @examples
@@ -3258,6 +3897,7 @@ elasticity3.lefkoMat <- function(mats, stochastic = FALSE, times = 10000,
 #' @seealso \code{\link{elasticity3.lefkoMat}()}
 #' @seealso \code{\link{elasticity3.list}()}
 #' @seealso \code{\link{elasticity3.dgCMatrix}()}
+#' @seealso \code{\link{elasticity3.lefkoMatList}()}
 #' @seealso \code{\link{summary.lefkoElas}()}
 #' 
 #' @examples
@@ -3368,6 +4008,7 @@ elasticity3.matrix <- function(mats, sparse = "auto", ...)
 #' @seealso \code{\link{elasticity3.lefkoMat}()}
 #' @seealso \code{\link{elasticity3.list}()}
 #' @seealso \code{\link{elasticity3.matrix}()}
+#' @seealso \code{\link{elasticity3.lefkoMatList}()}
 #' @seealso \code{\link{summary.lefkoElas}()}
 #' 
 #' @examples
@@ -3449,6 +4090,231 @@ elasticity3.dgCMatrix <- function(mats, sparse = "auto", ...)
   return(wcorr)
 }
 
+#' Estimate Elasticity of Population Growth Rate of a lefkoMatList Object
+#' 
+#' \code{elasticity3.lefkoMatList()} returns the elasticities of population growth
+#' growth rate to elements of all \code{A} matrices in all bootstrapped
+#' \code{lefkoMat} objects within an entered object of class
+#' \code{lefkoMatList}. If deterministic, then \eqn{\lambda} is taken as the
+#' population growth rate. If stochastic, then stochastic \eqn{\lambda}, or
+#' the stochastic growth rate, is taken as the population growth rate. This
+#' function can handle large and sparse matrices, and so can be used with large
+#' historical matrices, IPMs, age x stage matrices, as well as smaller
+#' ahistorical matrices.
+#' 
+#' @name elasticity3.lefkoMatList
+#' 
+#' @param mats An object of class \code{lefkoMatList}.
+#' @param stochastic A logical value determining whether to conduct a
+#' deterministic (FALSE) or stochastic (TRUE) elasticity analysis. Defaults to
+#' FALSE.
+#' @param times The number of occasions to project forward in stochastic
+#' simulation. Defaults to 10,000.
+#' @param tweights An optional numeric vector or matrix denoting the
+#' probabilities of choosing each matrix in a stochastic projection. If a matrix
+#' is input, then a first-order Markovian environment is assumed, in which the
+#' probability of choosing a specific annual matrix depends on which annual
+#' matrix is currently chosen. If a vector is input, then the choice of annual
+#' matrix is assumed to be independent of the current matrix. Defaults to equal
+#' weighting among matrices.
+#' @param seed A number to use as a random number seed in stochastic projection.
+#' @param sparse A text string indicating whether to use sparse matrix encoding
+#' (\code{"yes"}) or dense matrix encoding (\code{"no"}). Defaults to
+#' \code{"auto"}, in which case sparse matrix encoding is used with square
+#' matrices with at least 50 rows and no more than 50\% of elements with values
+#' greater than zero.
+#' @param append_mats A logical value indicating whether to include the original
+#' A, U, and F matrices in the output \code{lefkoElas} object.
+#' @param ... Other parameters.
+#' 
+#' @return This function returns a list with two elements. The first is an
+#' object of class \code{lefkoElas} that contains the mean elasticity matrices
+#' of the bootstrapped sensitivity matrices. The second is a list containing
+#' \code{lefkoElas} objects giving the elasticity matrices of all bootstrapped
+#' matrices.
+#' 
+#' Within these lists are objects of class \code{lefkoElas}, which are comprised
+#' of lists of 8 elements. The first, \code{h_elasmats}, is a list of historical
+#' elasticity matrices (\code{NULL} if an ahMPM is used as input). The second,
+#' \code{ah_elasmats}, is a list of either ahistorical elasticity matrices if an
+#' ahMPM is used as input, or, if an hMPM is used as input, then the result is a
+#' list of elasticity matrices in which historical elasticities have been summed
+#' by the stage in occasions \emph{t} and \emph{t}+1 to produce
+#' historically-corrected elasticity matrices, which are equivalent in dimension
+#' to ahistorical elasticity matrices but reflect the effects of stage in
+#' occasion \emph{t}-1. The third element, \code{hstages}, is a data frame
+#' showing historical stage pairs (NULL if ahMPM used as input). The fourth
+#' element, \code{agestages}, shows age-stage combinations in the order used in
+#' age-by-stage MPMs, if suppled. The fifth element, \code{ahstages}, is a data
+#' frame showing the order of ahistorical stages. The last 3 elements are the A,
+#' U, and F portions of the input.
+#' 
+#' @section Notes:
+#' Deterministic elasticities are estimated as eqn. 9.72 in Caswell (2001,
+#' Matrix Population Models). Stochastic elasticities are estimated as eqn.
+#' 14.99 in Caswell (2001). Note that stochastic elasticities are of the
+#' stochastic \eqn{\lambda}, while stochastic sensitivities are with regard to
+#' the log of the stochastic \eqn{\lambda}.
+#' 
+#' Speed can sometimes be increased by shifting from automatic sparse matrix
+#' determination to forced dense or sparse matrix projection. This will most
+#' likely occur when matrices have between 30 and 300 rows and columns.
+#' Defaults work best when matrices are very small and dense, or very large and
+#' sparse.
+#' 
+#' The \code{time_weights}, \code{steps}, and \code{force_sparse} arguments are
+#' now deprecated. Instead, please use the \code{tweights}, \code{times}, and
+#' \code{sparse} arguments.
+#' 
+#' @seealso \code{\link{elasticity3}()}
+#' @seealso \code{\link{elasticity3.lefkoMat}()}
+#' @seealso \code{\link{elasticity3.dgCMatrix}()}
+#' @seealso \code{\link{elasticity3.matrix}()}
+#' @seealso \code{\link{elasticity3.list}()}
+#' @seealso \code{\link{summary.lefkoElas}()}
+#' 
+#' @examples
+#' # Lathyrus example
+#' data(lathyrus)
+#' 
+#' sizevector <- c(0, 100, 13, 127, 3730, 3800, 0)
+#' stagevector <- c("Sd", "Sdl", "VSm", "Sm", "VLa", "Flo", "Dorm")
+#' repvector <- c(0, 0, 0, 0, 0, 1, 0)
+#' obsvector <- c(0, 1, 1, 1, 1, 1, 0)
+#' matvector <- c(0, 0, 1, 1, 1, 1, 1)
+#' immvector <- c(1, 1, 0, 0, 0, 0, 0)
+#' propvector <- c(1, 0, 0, 0, 0, 0, 0)
+#' indataset <- c(0, 1, 1, 1, 1, 1, 1)
+#' binvec <- c(0, 100, 11, 103, 3500, 3800, 0.5)
+#' 
+#' lathframe <- sf_create(sizes = sizevector, stagenames = stagevector,
+#'   repstatus = repvector, obsstatus = obsvector, matstatus = matvector,
+#'   immstatus = immvector, indataset = indataset, binhalfwidth = binvec,
+#'   propstatus = propvector)
+#' 
+#' lathvert <- verticalize3(lathyrus, noyears = 4, firstyear = 1988,
+#'   patchidcol = "SUBPLOT", individcol = "GENET", blocksize = 9,
+#'   juvcol = "Seedling1988", sizeacol = "Volume88", repstracol = "FCODE88",
+#'   fecacol = "Intactseed88", deadacol = "Dead1988",
+#'   nonobsacol = "Dormant1988", stageassign = lathframe, stagesize = "sizea",
+#'   censorcol = "Missing1988", censorkeep = NA, censor = TRUE)
+#' 
+#' lathvert_boot <- bootstrap3(lathvert, reps = 3)
+#' 
+#' lathsupp3 <- supplemental(stage3 = c("Sd", "Sd", "Sdl", "Sdl", "Sd", "Sdl", "mat"),
+#'   stage2 = c("Sd", "Sd", "Sd", "Sd", "rep", "rep", "Sdl"),
+#'   stage1 = c("Sd", "rep", "Sd", "rep", "npr", "npr", "Sd"),
+#'   eststage3 = c(NA, NA, NA, NA, NA, NA, "mat"),
+#'   eststage2 = c(NA, NA, NA, NA, NA, NA, "Sdl"),
+#'   eststage1 = c(NA, NA, NA, NA, NA, NA, "NotAlive"),
+#'   givenrate = c(0.345, 0.345, 0.054, 0.054, NA, NA, NA),
+#'   multiplier = c(NA, NA, NA, NA, 0.345, 0.054, NA),
+#'   type = c(1, 1, 1, 1, 3, 3, 1), type_t12 = c(1, 2, 1, 2, 1, 1, 1),
+#'   stageframe = lathframe, historical = TRUE)
+#' 
+#' ehrlen3_boot <- rlefko3(data = lathvert_boot, stageframe = lathframe,
+#'   year = "all", stages = c("stage3", "stage2", "stage1"),
+#'   supplement = lathsupp3, yearcol = "year2", indivcol = "individ")
+#' 
+#' elasticity3(ehrlen3_boot, stochastic = TRUE)
+#' 
+#' # Cypripedium example
+#' data(cypdata)
+#' 
+#' sizevector <- c(0, 0, 0, 0, 0, 0, 1, 2.5, 4.5, 8, 17.5)
+#' stagevector <- c("SD", "P1", "P2", "P3", "SL", "D", "XSm", "Sm", "Md", "Lg",
+#'   "XLg")
+#' repvector <- c(0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1)
+#' obsvector <- c(0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1)
+#' matvector <- c(0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1)
+#' immvector <- c(0, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0)
+#' propvector <- c(1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)
+#' indataset <- c(0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1)
+#' binvec <- c(0, 0, 0, 0, 0, 0.5, 0.5, 1, 1, 2.5, 7)
+#' 
+#' cypframe_raw <- sf_create(sizes = sizevector, stagenames = stagevector,
+#'   repstatus = repvector, obsstatus = obsvector, matstatus = matvector,
+#'   propstatus = propvector, immstatus = immvector, indataset = indataset,
+#'   binhalfwidth = binvec)
+#' 
+#' cypraw_v1 <- verticalize3(data = cypdata, noyears = 6, firstyear = 2004,
+#'   patchidcol = "patch", individcol = "plantid", blocksize = 4,
+#'   sizeacol = "Inf2.04", sizebcol = "Inf.04", sizeccol = "Veg.04",
+#'   repstracol = "Inf.04", repstrbcol = "Inf2.04", fecacol = "Pod.04",
+#'   stageassign = cypframe_raw, stagesize = "sizeadded", NAas0 = TRUE,
+#'   NRasRep = TRUE)
+#' 
+#' cypraw_v1_boot <- bootstrap3(cypraw_v1, reps = 3)
+#' 
+#' cypsupp2r <- supplemental(stage3 = c("SD", "P1", "P2", "P3", "SL", "D", 
+#'     "XSm", "Sm", "SD", "P1"),
+#'   stage2 = c("SD", "SD", "P1", "P2", "P3", "SL", "SL", "SL", "rep",
+#'     "rep"),
+#'   eststage3 = c(NA, NA, NA, NA, NA, "D", "XSm", "Sm", NA, NA),
+#'   eststage2 = c(NA, NA, NA, NA, NA, "XSm", "XSm", "XSm", NA, NA),
+#'   givenrate = c(0.10, 0.20, 0.20, 0.20, 0.25, NA, NA, NA, NA, NA),
+#'   multiplier = c(NA, NA, NA, NA, NA, NA, NA, NA, 0.5, 0.5),
+#'   type =c(1, 1, 1, 1, 1, 1, 1, 1, 3, 3),
+#'   stageframe = cypframe_raw, historical = FALSE)
+#' 
+#' cypmatrix2r_boot <- rlefko2(data = cypraw_v1_boot, stageframe = cypframe_raw, 
+#'   year = "all", patch = "all", stages = c("stage3", "stage2", "stage1"),
+#'   size = c("size3added", "size2added"), supplement = cypsupp2r,
+#'   yearcol = "year2", patchcol = "patchid", indivcol = "individ")
+#' 
+#' elasticity3(cypmatrix2r_boot)
+#' 
+#' @export
+elasticity3.lefkoMatList <- function(mats, stochastic = FALSE, times = 10000,
+  tweights = NA, seed = NA, sparse = "auto", append_mats = FALSE, ...) {
+  
+  length_of_list = length(mats)
+  output_list <- vector(mode = "list", length = length_of_list)
+  focused_frame <- NULL
+  
+  for (i in c(1:length_of_list)) {
+    new_correction <- elasticity3(mats[[i]],
+      stochastic = stochastic, times = times, tweights = tweights, seed = NA,
+      sparse = sparse, append_mats = append_mats, ...)
+    output_list[[i]] <- new_correction
+    
+    if (i == 1) {
+      focused_frame <- new_correction
+      
+      if (is.matrix(focused_frame$ah_elasmats)) {
+        focused_frame$ah_elasmats <- focused_frame$ah_elasmats / length_of_list
+        if (is.matrix(focused_frame$h_elasmats)) {
+          focused_frame$h_elasmats <- focused_frame$h_elasmats / length_of_list
+        }
+      } else {
+        for (i in c(1:length(focused_frame$ah_elasmats))) {
+          focused_frame$ah_elasmats[[i]] <- focused_frame$ah_elasmats[[i]] / length_of_list
+          if (is.list(focused_frame$h_elasmats)) {
+            focused_frame$h_elasmats[[i]] <- focused_frame$h_elasmats[[i]] / length_of_list
+          }
+        }
+      }
+    } else {
+      if (is.matrix(focused_frame$ah_elasmats)) {
+        focused_frame$ah_elasmats <- focused_frame$ah_elasmats + (new_correction$ah_elasmats / length_of_list)
+        if (is.matrix(focused_frame$h_elasmats)) {
+          focused_frame$h_elasmats <- focused_frame$h_elasmats + (new_correction$h_elasmats / length_of_list)
+        }
+      } else {
+        for (i in c(1:length(focused_frame$ah_elasmats))) {
+          focused_frame$ah_elasmats[[i]] <- focused_frame$ah_elasmats[[i]] + (new_correction$ah_elasmats[[i]] / length_of_list)
+          if (is.list(focused_frame$h_elasmats)) {
+            focused_frame$h_elasmats[[i]] <- focused_frame$h_elasmats[[i]] + (new_correction$h_elasmats[[i]] / length_of_list)
+          }
+        }
+      }
+    }
+  }
+  
+  final_output <- list(mean = focused_frame, summaries = output_list)
+  
+  return(final_output)
+}
 #' Estimate Elasticity of Population Growth Rate of a List of Matrices
 #' 
 #' \code{elasticity3.list()} returns the elasticities of lambda to elements
@@ -3513,6 +4379,7 @@ elasticity3.dgCMatrix <- function(mats, sparse = "auto", ...)
 #' @seealso \code{\link{elasticity3.lefkoMat}()}
 #' @seealso \code{\link{elasticity3.matrix}()}
 #' @seealso \code{\link{elasticity3.dgCMatrix}()}
+#' @seealso \code{\link{elasticity3.lefkoMatList}()}
 #' @seealso \code{\link{summary.lefkoElas}()}
 #' 
 #' @examples
@@ -3785,6 +4652,9 @@ elasticity3.list <- function(mats, stochastic = FALSE, times = 10000,
 #' U, and F matrices.
 #' 
 #' @section Notes:
+#' Function \code{ltre3()} cannot handle \code{lefkoMatList} inputs, although
+#' individual \code{lefkoMat} elements within these lists can be used.
+#' 
 #' Deterministic LTRE is one-way, fixed, and based on the sensitivities of the
 #' matrix midway between each input matrix and the reference matrix, per Caswell
 #' (2001, Matrix Population Models, Sinauer Associates, MA, USA). Stochastic

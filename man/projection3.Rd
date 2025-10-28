@@ -22,12 +22,14 @@ projection3(
   start_frame = NULL,
   tweights = NULL,
   density = NULL,
+  stage_weights = NULL,
   sparse = NULL
 )
 }
 \arguments{
-\item{mpm}{A matrix projection model of class \code{lefkoMat}, or a list of
-full matrix projection matrices.}
+\item{mpm}{A matrix projection model of class \code{lefkoMat}, a list of
+class \code{lefkoMatList} including bootstrapped MPMs, or a list of full
+matrix projection matrices.}
 
 \item{nreps}{The number of replicate projections.}
 
@@ -105,6 +107,14 @@ dependence that they will be subject to. The data frame used should be an
 object of class \code{lefkoDens}, which is the output from function
 \code{\link{density_input}()}.}
 
+\item{stage_weights}{An optional object of class \code{lefkoEq} giving the
+degree to which individuals in each stage are equivalent to one another.
+May also be a numeric vector, in which case the vector must have the same
+number of elements as the number of rows in the associated MPM, with each
+element giving the effect of an individual of that age, stage, age-stage, or
+stage-pair, depending on whether the MPM is age-based, ahistorical
+stage-based, age-by-stage, or historical stage-based, respectively.}
+
 \item{sparse}{A text string indicating whether to use sparse matrix encoding
 (\code{"yes"}) or dense matrix encoding (\code{"no"}), if the
 \code{lefkoMat} object input as \code{mpm} is composed of standard matrices.
@@ -114,9 +124,11 @@ elements with values greater than zero, or when input \code{lefkoMat}
 objects include matrices of class \code{dgCMatrix}.}
 }
 \value{
-A list of class \code{lefkoProj}, which always includes the first
-three elements of the following, and also includes the remaining elements
-below when a \code{lefkoMat} object is used as input:
+If a \code{lefkoMat} object or a simple list of matrices is used as
+input, then this function will produce a list of class \code{lefkoProj},
+which always includes the first three elements of the following, and also
+includes the remaining elements below when a \code{lefkoMat} object is used
+as input:
 \item{projection}{A list of lists of matrices showing the total number of
 individuals per stage per occasion. The first list corresponds to each
 pop-patch followed by each population. The inner list corresponds to
@@ -139,6 +151,10 @@ item \code{projection}.}
 number of occasions projected per replicate.}
 \item{density}{The data frame input under the density option. Only provided
 if input by the user.}
+
+If a \code{lefkoMatList} object is entered, then this function will produce
+a list of class \code{lefkoProjList}, in which each element is an object of
+class \code{lefkoProj}.
 }
 \description{
 Function \code{projection3()} runs projection simulations. It projects the
@@ -152,6 +168,11 @@ matrices will be shuffled within patches and populations. Also produces
 replicates if set.
 }
 \section{Notes}{
+
+Density dependent projections require \code{lefkoMat} objects as inputs.
+Users using simple lists of matrices cannot set density dependence without
+first setting a life history model and importing their matrices using
+function \code{\link{create_lM}()}.
 
 Projections are run both at the patch level and at the population level.
 Population level estimates will be noted at the end of the data frame with

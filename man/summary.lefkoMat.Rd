@@ -11,7 +11,7 @@
 
 \item{colsums}{A logical value indicating whether column sums should be shown
 for U matrices, allowing users to check stage survival probabilities.
-Defaults to TRUE.}
+Defaults to \code{TRUE}.}
 
 \item{check_cycle}{A logical value indicating whether to test matrices for
 stage discontinuities in the life cycle. Defaults to \code{TRUE}.}

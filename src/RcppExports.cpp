@@ -142,6 +142,26 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// bootstrap3
+Rcpp::List bootstrap3(RObject data, Nullable<RObject> by_pop, Nullable<RObject> by_patch, Nullable<RObject> by_indiv, Nullable<RObject> prop_size, Nullable<RObject> max_limit, Nullable<RObject> reps, Nullable<RObject> popcol, Nullable<RObject> patchcol, Nullable<RObject> indivcol);
+RcppExport SEXP _lefko3_bootstrap3(SEXP dataSEXP, SEXP by_popSEXP, SEXP by_patchSEXP, SEXP by_indivSEXP, SEXP prop_sizeSEXP, SEXP max_limitSEXP, SEXP repsSEXP, SEXP popcolSEXP, SEXP patchcolSEXP, SEXP indivcolSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< RObject >::type data(dataSEXP);
+    Rcpp::traits::input_parameter< Nullable<RObject> >::type by_pop(by_popSEXP);
+    Rcpp::traits::input_parameter< Nullable<RObject> >::type by_patch(by_patchSEXP);
+    Rcpp::traits::input_parameter< Nullable<RObject> >::type by_indiv(by_indivSEXP);
+    Rcpp::traits::input_parameter< Nullable<RObject> >::type prop_size(prop_sizeSEXP);
+    Rcpp::traits::input_parameter< Nullable<RObject> >::type max_limit(max_limitSEXP);
+    Rcpp::traits::input_parameter< Nullable<RObject> >::type reps(repsSEXP);
+    Rcpp::traits::input_parameter< Nullable<RObject> >::type popcol(popcolSEXP);
+    Rcpp::traits::input_parameter< Nullable<RObject> >::type patchcol(patchcolSEXP);
+    Rcpp::traits::input_parameter< Nullable<RObject> >::type indivcol(indivcolSEXP);
+    rcpp_result_gen = Rcpp::wrap(bootstrap3(data, by_pop, by_patch, by_indiv, prop_size, max_limit, reps, popcol, patchcol, indivcol));
+    return rcpp_result_gen;
+END_RCPP
+}
 // hoffmannofstuttgart
 Rcpp::List hoffmannofstuttgart(arma::mat& mainmat, DataFrame indices, int ahstages, StringVector stagenames);
 RcppExport SEXP _lefko3_hoffmannofstuttgart(SEXP mainmatSEXP, SEXP indicesSEXP, SEXP ahstagesSEXP, SEXP stagenamesSEXP) {
@@ -378,8 +398,8 @@ BEGIN_RCPP
 END_RCPP
 }
 // f_projection3
-Rcpp::List f_projection3(int format, bool prebreeding, int start_age, int last_age, int fecage_min, int fecage_max, bool cont, bool stochastic, bool standardize, bool growthonly, bool repvalue, bool integeronly, int substoch, bool ipm_cdf, int nreps, int times, double repmod, double exp_tol, double theta_tol, bool random_inda, bool random_indb, bool random_indc, bool err_check, bool quiet, Nullable<DataFrame> data, Nullable<DataFrame> stageframe, Nullable<DataFrame> supplement, Nullable<NumericMatrix> repmatrix, Nullable<DataFrame> overwrite, Nullable<List> modelsuite, Nullable<DataFrame> paramnames, Nullable<NumericVector> year, Nullable<CharacterVector> patch, Nullable<NumericVector> sp_density, Nullable<RObject> ind_terms, Nullable<RObject> ann_terms, Nullable<RObject> dev_terms, Nullable<RObject> surv_model, Nullable<RObject> obs_model, Nullable<RObject> size_model, Nullable<RObject> sizeb_model, Nullable<RObject> sizec_model, Nullable<RObject> repst_model, Nullable<RObject> fec_model, Nullable<RObject> jsurv_model, Nullable<RObject> jobs_model, Nullable<RObject> jsize_model, Nullable<RObject> jsizeb_model, Nullable<RObject> jsizec_model, Nullable<RObject> jrepst_model, Nullable<RObject> jmatst_model, Nullable<NumericVector> start_vec, Nullable<RObject> start_frame, Nullable<RObject> tweights, Nullable<RObject> density, Nullable<RObject> density_vr, Nullable<RObject> sparse);
-RcppExport SEXP _lefko3_f_projection3(SEXP formatSEXP, SEXP prebreedingSEXP, SEXP start_ageSEXP, SEXP last_ageSEXP, SEXP fecage_minSEXP, SEXP fecage_maxSEXP, SEXP contSEXP, SEXP stochasticSEXP, SEXP standardizeSEXP, SEXP growthonlySEXP, SEXP repvalueSEXP, SEXP integeronlySEXP, SEXP substochSEXP, SEXP ipm_cdfSEXP, SEXP nrepsSEXP, SEXP timesSEXP, SEXP repmodSEXP, SEXP exp_tolSEXP, SEXP theta_tolSEXP, SEXP random_indaSEXP, SEXP random_indbSEXP, SEXP random_indcSEXP, SEXP err_checkSEXP, SEXP quietSEXP, SEXP dataSEXP, SEXP stageframeSEXP, SEXP supplementSEXP, SEXP repmatrixSEXP, SEXP overwriteSEXP, SEXP modelsuiteSEXP, SEXP paramnamesSEXP, SEXP yearSEXP, SEXP patchSEXP, SEXP sp_densitySEXP, SEXP ind_termsSEXP, SEXP ann_termsSEXP, SEXP dev_termsSEXP, SEXP surv_modelSEXP, SEXP obs_modelSEXP, SEXP size_modelSEXP, SEXP sizeb_modelSEXP, SEXP sizec_modelSEXP, SEXP repst_modelSEXP, SEXP fec_modelSEXP, SEXP jsurv_modelSEXP, SEXP jobs_modelSEXP, SEXP jsize_modelSEXP, SEXP jsizeb_modelSEXP, SEXP jsizec_modelSEXP, SEXP jrepst_modelSEXP, SEXP jmatst_modelSEXP, SEXP start_vecSEXP, SEXP start_frameSEXP, SEXP tweightsSEXP, SEXP densitySEXP, SEXP density_vrSEXP, SEXP sparseSEXP) {
+Rcpp::List f_projection3(int format, bool prebreeding, int start_age, int last_age, int fecage_min, int fecage_max, bool cont, bool stochastic, bool standardize, bool growthonly, bool repvalue, bool integeronly, int substoch, bool ipm_cdf, int nreps, int times, double repmod, double exp_tol, double theta_tol, bool random_inda, bool random_indb, bool random_indc, bool err_check, bool quiet, Nullable<RObject> data, Nullable<DataFrame> stageframe, Nullable<DataFrame> supplement, Nullable<NumericMatrix> repmatrix, Nullable<DataFrame> overwrite, Nullable<List> modelsuite, Nullable<DataFrame> paramnames, Nullable<NumericVector> year, Nullable<CharacterVector> patch, Nullable<NumericVector> sp_density, Nullable<RObject> ind_terms, Nullable<RObject> ann_terms, Nullable<RObject> dev_terms, Nullable<RObject> surv_model, Nullable<RObject> obs_model, Nullable<RObject> size_model, Nullable<RObject> sizeb_model, Nullable<RObject> sizec_model, Nullable<RObject> repst_model, Nullable<RObject> fec_model, Nullable<RObject> jsurv_model, Nullable<RObject> jobs_model, Nullable<RObject> jsize_model, Nullable<RObject> jsizeb_model, Nullable<RObject> jsizec_model, Nullable<RObject> jrepst_model, Nullable<RObject> jmatst_model, Nullable<NumericVector> start_vec, Nullable<RObject> start_frame, Nullable<RObject> tweights, Nullable<RObject> density, Nullable<RObject> density_vr, Nullable<RObject> stage_weights, Nullable<RObject> sparse);
+RcppExport SEXP _lefko3_f_projection3(SEXP formatSEXP, SEXP prebreedingSEXP, SEXP start_ageSEXP, SEXP last_ageSEXP, SEXP fecage_minSEXP, SEXP fecage_maxSEXP, SEXP contSEXP, SEXP stochasticSEXP, SEXP standardizeSEXP, SEXP growthonlySEXP, SEXP repvalueSEXP, SEXP integeronlySEXP, SEXP substochSEXP, SEXP ipm_cdfSEXP, SEXP nrepsSEXP, SEXP timesSEXP, SEXP repmodSEXP, SEXP exp_tolSEXP, SEXP theta_tolSEXP, SEXP random_indaSEXP, SEXP random_indbSEXP, SEXP random_indcSEXP, SEXP err_checkSEXP, SEXP quietSEXP, SEXP dataSEXP, SEXP stageframeSEXP, SEXP supplementSEXP, SEXP repmatrixSEXP, SEXP overwriteSEXP, SEXP modelsuiteSEXP, SEXP paramnamesSEXP, SEXP yearSEXP, SEXP patchSEXP, SEXP sp_densitySEXP, SEXP ind_termsSEXP, SEXP ann_termsSEXP, SEXP dev_termsSEXP, SEXP surv_modelSEXP, SEXP obs_modelSEXP, SEXP size_modelSEXP, SEXP sizeb_modelSEXP, SEXP sizec_modelSEXP, SEXP repst_modelSEXP, SEXP fec_modelSEXP, SEXP jsurv_modelSEXP, SEXP jobs_modelSEXP, SEXP jsize_modelSEXP, SEXP jsizeb_modelSEXP, SEXP jsizec_modelSEXP, SEXP jrepst_modelSEXP, SEXP jmatst_modelSEXP, SEXP start_vecSEXP, SEXP start_frameSEXP, SEXP tweightsSEXP, SEXP densitySEXP, SEXP density_vrSEXP, SEXP stage_weightsSEXP, SEXP sparseSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -407,7 +427,7 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< bool >::type random_indc(random_indcSEXP);
     Rcpp::traits::input_parameter< bool >::type err_check(err_checkSEXP);
     Rcpp::traits::input_parameter< bool >::type quiet(quietSEXP);
-    Rcpp::traits::input_parameter< Nullable<DataFrame> >::type data(dataSEXP);
+    Rcpp::traits::input_parameter< Nullable<RObject> >::type data(dataSEXP);
     Rcpp::traits::input_parameter< Nullable<DataFrame> >::type stageframe(stageframeSEXP);
     Rcpp::traits::input_parameter< Nullable<DataFrame> >::type supplement(supplementSEXP);
     Rcpp::traits::input_parameter< Nullable<NumericMatrix> >::type repmatrix(repmatrixSEXP);
@@ -439,8 +459,9 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< Nullable<RObject> >::type tweights(tweightsSEXP);
     Rcpp::traits::input_parameter< Nullable<RObject> >::type density(densitySEXP);
     Rcpp::traits::input_parameter< Nullable<RObject> >::type density_vr(density_vrSEXP);
+    Rcpp::traits::input_parameter< Nullable<RObject> >::type stage_weights(stage_weightsSEXP);
     Rcpp::traits::input_parameter< Nullable<RObject> >::type sparse(sparseSEXP);
-    rcpp_result_gen = Rcpp::wrap(f_projection3(format, prebreeding, start_age, last_age, fecage_min, fecage_max, cont, stochastic, standardize, growthonly, repvalue, integeronly, substoch, ipm_cdf, nreps, times, repmod, exp_tol, theta_tol, random_inda, random_indb, random_indc, err_check, quiet, data, stageframe, supplement, repmatrix, overwrite, modelsuite, paramnames, year, patch, sp_density, ind_terms, ann_terms, dev_terms, surv_model, obs_model, size_model, sizeb_model, sizec_model, repst_model, fec_model, jsurv_model, jobs_model, jsize_model, jsizeb_model, jsizec_model, jrepst_model, jmatst_model, start_vec, start_frame, tweights, density, density_vr, sparse));
+    rcpp_result_gen = Rcpp::wrap(f_projection3(format, prebreeding, start_age, last_age, fecage_min, fecage_max, cont, stochastic, standardize, growthonly, repvalue, integeronly, substoch, ipm_cdf, nreps, times, repmod, exp_tol, theta_tol, random_inda, random_indb, random_indc, err_check, quiet, data, stageframe, supplement, repmatrix, overwrite, modelsuite, paramnames, year, patch, sp_density, ind_terms, ann_terms, dev_terms, surv_model, obs_model, size_model, sizeb_model, sizec_model, repst_model, fec_model, jsurv_model, jobs_model, jsize_model, jsizeb_model, jsizec_model, jrepst_model, jmatst_model, start_vec, start_frame, tweights, density, density_vr, stage_weights, sparse));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -704,8 +725,8 @@ BEGIN_RCPP
 END_RCPP
 }
 // projection3
-Rcpp::List projection3(const List& mpm, int nreps, int times, bool historical, bool stochastic, bool standardize, bool growthonly, bool integeronly, int substoch, double exp_tol, bool sub_warnings, bool quiet, Nullable<IntegerVector> year, Nullable<NumericVector> start_vec, Nullable<DataFrame> start_frame, Nullable<RObject> tweights, Nullable<DataFrame> density, Nullable<RObject> sparse);
-RcppExport SEXP _lefko3_projection3(SEXP mpmSEXP, SEXP nrepsSEXP, SEXP timesSEXP, SEXP historicalSEXP, SEXP stochasticSEXP, SEXP standardizeSEXP, SEXP growthonlySEXP, SEXP integeronlySEXP, SEXP substochSEXP, SEXP exp_tolSEXP, SEXP sub_warningsSEXP, SEXP quietSEXP, SEXP yearSEXP, SEXP start_vecSEXP, SEXP start_frameSEXP, SEXP tweightsSEXP, SEXP densitySEXP, SEXP sparseSEXP) {
+Rcpp::List projection3(const List& mpm, int nreps, int times, bool historical, bool stochastic, bool standardize, bool growthonly, bool integeronly, int substoch, double exp_tol, bool sub_warnings, bool quiet, Nullable<IntegerVector> year, Nullable<NumericVector> start_vec, Nullable<DataFrame> start_frame, Nullable<RObject> tweights, Nullable<DataFrame> density, Nullable<RObject> stage_weights, Nullable<RObject> sparse);
+RcppExport SEXP _lefko3_projection3(SEXP mpmSEXP, SEXP nrepsSEXP, SEXP timesSEXP, SEXP historicalSEXP, SEXP stochasticSEXP, SEXP standardizeSEXP, SEXP growthonlySEXP, SEXP integeronlySEXP, SEXP substochSEXP, SEXP exp_tolSEXP, SEXP sub_warningsSEXP, SEXP quietSEXP, SEXP yearSEXP, SEXP start_vecSEXP, SEXP start_frameSEXP, SEXP tweightsSEXP, SEXP densitySEXP, SEXP stage_weightsSEXP, SEXP sparseSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -726,8 +747,9 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< Nullable<DataFrame> >::type start_frame(start_frameSEXP);
     Rcpp::traits::input_parameter< Nullable<RObject> >::type tweights(tweightsSEXP);
     Rcpp::traits::input_parameter< Nullable<DataFrame> >::type density(densitySEXP);
+    Rcpp::traits::input_parameter< Nullable<RObject> >::type stage_weights(stage_weightsSEXP);
     Rcpp::traits::input_parameter< Nullable<RObject> >::type sparse(sparseSEXP);
-    rcpp_result_gen = Rcpp::wrap(projection3(mpm, nreps, times, historical, stochastic, standardize, growthonly, integeronly, substoch, exp_tol, sub_warnings, quiet, year, start_vec, start_frame, tweights, density, sparse));
+    rcpp_result_gen = Rcpp::wrap(projection3(mpm, nreps, times, historical, stochastic, standardize, growthonly, integeronly, substoch, exp_tol, sub_warnings, quiet, year, start_vec, start_frame, tweights, density, stage_weights, sparse));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -1025,8 +1047,8 @@ BEGIN_RCPP
 END_RCPP
 }
 // edit_lM
-Rcpp::List edit_lM(const RObject mpm, Nullable<RObject> pop, Nullable<RObject> patch, Nullable<RObject> year2, Nullable<RObject> stage3, Nullable<RObject> stage2, Nullable<RObject> stage1, Nullable<RObject> age2, Nullable<RObject> eststage3, Nullable<RObject> eststage2, Nullable<RObject> eststage1, Nullable<RObject> estage2, Nullable<RObject> givenrate, Nullable<RObject> multiplier, Nullable<RObject> type, Nullable<RObject> type_t12);
-RcppExport SEXP _lefko3_edit_lM(SEXP mpmSEXP, SEXP popSEXP, SEXP patchSEXP, SEXP year2SEXP, SEXP stage3SEXP, SEXP stage2SEXP, SEXP stage1SEXP, SEXP age2SEXP, SEXP eststage3SEXP, SEXP eststage2SEXP, SEXP eststage1SEXP, SEXP estage2SEXP, SEXP givenrateSEXP, SEXP multiplierSEXP, SEXP typeSEXP, SEXP type_t12SEXP) {
+Rcpp::List edit_lM(const RObject mpm, Nullable<RObject> pop, Nullable<RObject> patch, Nullable<RObject> year2, Nullable<RObject> stage3, Nullable<RObject> stage2, Nullable<RObject> stage1, Nullable<RObject> age2, Nullable<RObject> eststage3, Nullable<RObject> eststage2, Nullable<RObject> eststage1, Nullable<RObject> estage2, Nullable<RObject> givenrate, Nullable<RObject> offset, Nullable<RObject> multiplier, Nullable<RObject> type, Nullable<RObject> type_t12, Nullable<RObject> target_mpm);
+RcppExport SEXP _lefko3_edit_lM(SEXP mpmSEXP, SEXP popSEXP, SEXP patchSEXP, SEXP year2SEXP, SEXP stage3SEXP, SEXP stage2SEXP, SEXP stage1SEXP, SEXP age2SEXP, SEXP eststage3SEXP, SEXP eststage2SEXP, SEXP eststage1SEXP, SEXP estage2SEXP, SEXP givenrateSEXP, SEXP offsetSEXP, SEXP multiplierSEXP, SEXP typeSEXP, SEXP type_t12SEXP, SEXP target_mpmSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -1043,10 +1065,12 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< Nullable<RObject> >::type eststage1(eststage1SEXP);
     Rcpp::traits::input_parameter< Nullable<RObject> >::type estage2(estage2SEXP);
     Rcpp::traits::input_parameter< Nullable<RObject> >::type givenrate(givenrateSEXP);
+    Rcpp::traits::input_parameter< Nullable<RObject> >::type offset(offsetSEXP);
     Rcpp::traits::input_parameter< Nullable<RObject> >::type multiplier(multiplierSEXP);
     Rcpp::traits::input_parameter< Nullable<RObject> >::type type(typeSEXP);
     Rcpp::traits::input_parameter< Nullable<RObject> >::type type_t12(type_t12SEXP);
-    rcpp_result_gen = Rcpp::wrap(edit_lM(mpm, pop, patch, year2, stage3, stage2, stage1, age2, eststage3, eststage2, eststage1, estage2, givenrate, multiplier, type, type_t12));
+    Rcpp::traits::input_parameter< Nullable<RObject> >::type target_mpm(target_mpmSEXP);
+    rcpp_result_gen = Rcpp::wrap(edit_lM(mpm, pop, patch, year2, stage3, stage2, stage1, age2, eststage3, eststage2, eststage1, estage2, givenrate, offset, multiplier, type, type_t12, target_mpm));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -1155,6 +1179,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_lefko3_pfj", (DL_FUNC) &_lefko3_pfj, 42},
     {"_lefko3_jpf", (DL_FUNC) &_lefko3_jpf, 54},
     {"_lefko3_density3", (DL_FUNC) &_lefko3_density3, 5},
+    {"_lefko3_bootstrap3", (DL_FUNC) &_lefko3_bootstrap3, 10},
     {"_lefko3_hoffmannofstuttgart", (DL_FUNC) &_lefko3_hoffmannofstuttgart, 4},
     {"_lefko3_hoffmannofstuttgart_sp", (DL_FUNC) &_lefko3_hoffmannofstuttgart_sp, 4},
     {"_lefko3_cond_hmpm", (DL_FUNC) &_lefko3_cond_hmpm, 3},
@@ -1171,7 +1196,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_lefko3_lmean", (DL_FUNC) &_lefko3_lmean, 3},
     {"_lefko3_add_stage", (DL_FUNC) &_lefko3_add_stage, 4},
     {"_lefko3_cycle_check", (DL_FUNC) &_lefko3_cycle_check, 2},
-    {"_lefko3_f_projection3", (DL_FUNC) &_lefko3_f_projection3, 57},
+    {"_lefko3_f_projection3", (DL_FUNC) &_lefko3_f_projection3, 58},
     {"_lefko3_mpm_create", (DL_FUNC) &_lefko3_mpm_create, 59},
     {"_lefko3_ss3matrix", (DL_FUNC) &_lefko3_ss3matrix, 2},
     {"_lefko3_ss3matrix_sp", (DL_FUNC) &_lefko3_ss3matrix_sp, 1},
@@ -1188,7 +1213,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_lefko3_elas3sp_hlefko", (DL_FUNC) &_lefko3_elas3sp_hlefko, 3},
     {"_lefko3_proj3", (DL_FUNC) &_lefko3_proj3, 8},
     {"_lefko3_proj3sp", (DL_FUNC) &_lefko3_proj3sp, 6},
-    {"_lefko3_projection3", (DL_FUNC) &_lefko3_projection3, 18},
+    {"_lefko3_projection3", (DL_FUNC) &_lefko3_projection3, 19},
     {"_lefko3_slambda3", (DL_FUNC) &_lefko3_slambda3, 5},
     {"_lefko3_stoch_senselas", (DL_FUNC) &_lefko3_stoch_senselas, 7},
     {"_lefko3_ltre3matrix", (DL_FUNC) &_lefko3_ltre3matrix, 5},
@@ -1202,7 +1227,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_lefko3_actualstage3", (DL_FUNC) &_lefko3_actualstage3, 10},
     {"_lefko3_density_input", (DL_FUNC) &_lefko3_density_input, 11},
     {"_lefko3_supplemental", (DL_FUNC) &_lefko3_supplemental, 17},
-    {"_lefko3_edit_lM", (DL_FUNC) &_lefko3_edit_lM, 16},
+    {"_lefko3_edit_lM", (DL_FUNC) &_lefko3_edit_lM, 18},
     {"_lefko3_bambi3", (DL_FUNC) &_lefko3_bambi3, 2},
     {"_lefko3_bambi2", (DL_FUNC) &_lefko3_bambi2, 1},
     {"_lefko3_demolition4", (DL_FUNC) &_lefko3_demolition4, 1},

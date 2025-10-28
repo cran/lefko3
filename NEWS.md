@@ -1,3 +1,45 @@
+# lefko3 6.6.0 (2025-10-28)
+
+## NEW FEATURES
+
+* Function bootstrap3() now adds hfvdata bootstrapping capability.
+
+* All MPM creation functions can now create bootstrapped MPMs, and all
+  projection functions can run bootstrapped projections.
+
+* Function summary_hfv() can now summarize hfvlist objects.
+
+* Functions add_lM(), add_stage(), delete_lM(), edit_lM(), elasticity3(),
+  f_projection3(), lambda3(), lmean(), projection3(), repvalue3(),
+  sensitivity3(), slambda3(), subset_lM(), and stablestage3() can now handle
+  lefkoMatList objects.
+
+* Function summary.lefkoMatList() created to summarize lefkoMatList objects.
+
+* Function stage_weight() created to provide stage weight vector for density
+  dependent projection.
+
+## USER VISIBLE CHANGES
+
+* Vignettes have been updated for bootstrap3() and new versions of related
+  functions.
+  
+* Functions projection3() and f_projection3() now throw errors when a density
+  frame is entered with stages undefined in the associated stage frame.
+  
+* User interrupt added to function cycle_check().
+
+## BUG FIXES
+
+* Function historicalize3() no longer crashes when string-based individual
+  covariates are entered, and no longer gives botches row order of individual
+  covariates under numeric and integer entries.
+  
+* Function edit_lM() now handles offset values without yielding fatal errors.
+
+* Fixed fatal error with stage_id occurring when importing matrices from
+  COMPADRE or COMADRE with create_lM().
+
 # lefko3 6.5.1 (2025-08-27)
 
 ## USER VISIBLE CHANGES

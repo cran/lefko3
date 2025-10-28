@@ -189,5 +189,7 @@ elasticity3(cypmatrix2r)
 
 \code{\link{elasticity3.list}()}
 
+\code{\link{elasticity3.lefkoMatList}()}
+
 \code{\link{summary.lefkoElas}()}
 }

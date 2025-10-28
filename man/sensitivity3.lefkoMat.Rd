@@ -142,4 +142,6 @@ sensitivity3(ehrlen3, stochastic = TRUE)
 \code{\link{sensitivity3.dgCMatrix}()}
 
 \code{\link{sensitivity3.list}()}
+
+\code{\link{sensitivity3.lefkoMatList}()}
 }
