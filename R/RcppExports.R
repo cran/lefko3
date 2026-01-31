@@ -1018,6 +1018,10 @@ NULL
 #' @param format An integer indicating whether matrices will be in Ehrlen
 #' format (if set to 1), or deVries format (if set to 2). Setting to deVries
 #' format adds one extra stage to account for the prior status of newborns.
+#' @param import_lM A logical value indicating whether the lefkoMat object
+#' being dealt with was imported using \code{create_lM()} or a similar
+#' function. If \code{TRUE}, then warnings related to missing supplements will
+#' be skipped. Defaults to \code{FALSE}.
 #' 
 #' @return This function returns a list with a modified \code{stageframe}
 #' usable in MPM construction, an associated \code{repmatrix}, and a general
@@ -1028,8 +1032,8 @@ NULL
 #' 
 #' @keywords internal
 #' @noRd
-.sf_reassess <- function(stageframe, supplement = NULL, overwrite = NULL, repmatrix = NULL, agemat = FALSE, historical = FALSE, format = 1L) {
-    .Call('_lefko3_sf_reassess', PACKAGE = 'lefko3', stageframe, supplement, overwrite, repmatrix, agemat, historical, format)
+.sf_reassess <- function(stageframe, supplement = NULL, overwrite = NULL, repmatrix = NULL, agemat = FALSE, historical = FALSE, format = 1L, import_lM = FALSE) {
+    .Call('_lefko3_sf_reassess', PACKAGE = 'lefko3', stageframe, supplement, overwrite, repmatrix, agemat, historical, format, import_lM)
 }
 
 #' Create Skeleton Stageframe
@@ -1379,7 +1383,7 @@ cycle_check <- function(mpm, quiet = NULL) {
 #' @name specialpatrolgroup
 #' 
 #' @param sge9l The Allstages data frame developed for \code{rlefko3()}
-#' covering stage pairs across times \emph{t}+1, \emph{t} and \emph{t}-1.
+#' covering stage triplets across times \emph{t}+1, \emph{t} and \emph{t}-1.
 #' Generally termed \code{stageexpansion9}.
 #' @param sge3index21 Integer index vector of stages in times \emph{t}-1 and
 #' \emph{t}, from \code{stageexpansion3}.
@@ -2151,20 +2155,21 @@ NULL
 #' to equal weighting among matrices.
 #' @param density An optional data frame describing the matrix elements that
 #' will be subject to density dependence, and the exact kind of density
-#' dependence that they will be subject to. The data frame used should be an
-#' object of class \code{lefkoDens}, which is the output from function
-#' \code{\link{density_input}()}.
+#' dependence that they will be subject to, or a list of such objects. The data
+#' frame used should be an object of class \code{lefkoDens}, which is the
+#' output from function \code{\link{density_input}()}.
 #' @param density_vr An optional data frame describing density dependence
 #' relationships in vital rates, if such relationships are to be assumed. The
 #' data frame must be of class \code{lefkoDensVR}, which is the output from the
 #' function \code{\link{density_vr}()}.
 #' @param stage_weights An optional object of class \code{lefkoEq} giving the
-#' degree to which individuals in each stage are equivalent to one another.
-#' May also be a numeric vector, in which case the vector must have the same
-#' number of elements as the number of rows in the associated MPM, with each
-#' element giving the effect of an individual of that age, stage, age-stage, or
-#' stage-pair, depending on whether the MPM is age-based, ahistorical
-#' stage-based, age-by-stage, or historical stage-based, respectively.
+#' degree to which individuals in each stage are equivalent to one another, or
+#' a list of such objects. May also be a numeric vector, or a list thereof, in
+#' which case the vector must have the same number of elements as the number of
+#' rows in the associated MPM, with each element giving the effect of an
+#' individual of that age, stage, age-stage, or stage-pair, depending on
+#' whether the MPM is age-based, ahistorical stage-based, age-by-stage, or
+#' historical stage-based, respectively.
 #' @param sparse A text string indicating whether to use sparse matrix encoding
 #' (\code{"yes"}) or dense matrix encoding (\code{"no"}). Defaults to
 #' \code{"auto"}, in which case sparse matrix encoding is used with square
@@ -2233,7 +2238,7 @@ NULL
 #' \code{1} forces all survival-transition elements to range from 0.0 to 1.0
 #' and fecundity to be non-negative, and \code{2} forces all column rows to
 #' total no more than 1.0.
-#' @param dens_input The original \code{lefkoDens} data frame supplied through
+#' @param dens_RO The original \code{lefkoDens} data frame(s) supplied through
 #' the \code{\link{density_input}()} function.
 #' @param dens_index A list giving the indices of elements in object
 #' \code{dens_input}.
@@ -2332,16 +2337,17 @@ NULL
 #' to equal weighting among matrices.
 #' @param density An optional data frame describing the matrix elements that
 #' will be subject to density dependence, and the exact kind of density
-#' dependence that they will be subject to. The data frame used should be an
-#' object of class \code{lefkoDens}, which is the output from function
-#' \code{\link{density_input}()}.
+#' dependence that they will be subject to, or a list of such objects. The data
+#' frame used should be an object of class \code{lefkoDens}, which is the
+#' output from function \code{\link{density_input}()}.
 #' @param stage_weights An optional object of class \code{lefkoEq} giving the
-#' degree to which individuals in each stage are equivalent to one another.
-#' May also be a numeric vector, in which case the vector must have the same
-#' number of elements as the number of rows in the associated MPM, with each
-#' element giving the effect of an individual of that age, stage, age-stage, or
-#' stage-pair, depending on whether the MPM is age-based, ahistorical
-#' stage-based, age-by-stage, or historical stage-based, respectively.
+#' degree to which individuals in each stage are equivalent to one another, or
+#' a list of such objects. May also be a numeric vector (or a list thereof), in
+#' which case the vector must have the same number of elements as the number of
+#' rows in the associated MPM, with each element giving the effect of an
+#' individual of that age, stage, age-stage, or stage-pair, depending on
+#' whether the MPM is age-based, ahistorical stage-based, age-by-stage, or
+#' historical stage-based, respectively.
 #' @param sparse A text string indicating whether to use sparse matrix encoding
 #' (\code{"yes"}) or dense matrix encoding (\code{"no"}), if the
 #' \code{lefkoMat} object input as \code{mpm} is composed of standard matrices.
@@ -2635,20 +2641,21 @@ NULL
 #' to equal weighting among matrices.
 #' @param density An optional data frame describing the matrix elements that
 #' will be subject to density dependence, and the exact kind of density
-#' dependence that they will be subject to. The data frame used should be an
-#' object of class \code{lefkoDens}, which is the output from function
-#' \code{\link{density_input}()}.
+#' dependence that they will be subject to, or a list of such objects. The data
+#' frame used should be an object of class \code{lefkoDens}, which is the
+#' output from function \code{\link{density_input}()}.
 #' @param density_vr An optional data frame describing density dependence
 #' relationships in vital rates, if such relationships are to be assumed. The
 #' data frame must be of class \code{lefkoDensVR}, which is the output from the
 #' function \code{\link{density_vr}()}.
 #' @param stage_weights An optional object of class \code{lefkoEq} giving the
-#' degree to which individuals in each stage are equivalent to one another.
-#' May also be a numeric vector, in which case the vector must have the same
-#' number of elements as the number of rows in the associated MPM, with each
-#' element giving the effect of an individual of that age, stage, age-stage, or
-#' stage-pair, depending on whether the MPM is age-based, ahistorical
-#' stage-based, age-by-stage, or historical stage-based, respectively.
+#' degree to which individuals in each stage are equivalent to one another, or
+#' a list of such objects. May also be a numeric vector (or a list thereof), in
+#' which case the vector must have the same number of elements as the number of
+#' rows in the associated MPM, with each element giving the effect of an
+#' individual of that age, stage, age-stage, or stage-pair, depending on
+#' whether the MPM is age-based, ahistorical stage-based, age-by-stage, or
+#' historical stage-based, respectively.
 #' @param sparse A text string indicating whether to use sparse matrix encoding
 #' (\code{"yes"}) or dense matrix encoding (\code{"no"}). Defaults to
 #' \code{"auto"}, in which case sparse matrix encoding is used with square
@@ -3818,16 +3825,17 @@ mpm_create <- function(historical = FALSE, stage = TRUE, age = FALSE, devries = 
 #' to equal weighting among matrices.
 #' @param density An optional data frame describing the matrix elements that
 #' will be subject to density dependence, and the exact kind of density
-#' dependence that they will be subject to. The data frame used should be an
-#' object of class \code{lefkoDens}, which is the output from function
-#' \code{\link{density_input}()}.
+#' dependence that they will be subject to, or a list of such objects. The data
+#' frame used should be an object of class \code{lefkoDens}, which is the
+#' output from function \code{\link{density_input}()}.
 #' @param stage_weights An optional object of class \code{lefkoEq} giving the
-#' degree to which individuals in each stage are equivalent to one another.
-#' May also be a numeric vector, in which case the vector must have the same
-#' number of elements as the number of rows in the associated MPM, with each
-#' element giving the effect of an individual of that age, stage, age-stage, or
-#' stage-pair, depending on whether the MPM is age-based, ahistorical
-#' stage-based, age-by-stage, or historical stage-based, respectively.
+#' degree to which individuals in each stage are equivalent to one another, or
+#' a list of such objects. May also be a numeric vector (or a list thereof), in
+#' which case the vector must have the same number of elements as the number of
+#' rows in the associated MPM, with each element giving the effect of an
+#' individual of that age, stage, age-stage, or stage-pair, depending on
+#' whether the MPM is age-based, ahistorical stage-based, age-by-stage, or
+#' historical stage-based, respectively.
 #' @param sparse A text string indicating whether to use sparse matrix encoding
 #' (\code{"yes"}) or dense matrix encoding (\code{"no"}), if the
 #' \code{lefkoMat} object input as \code{mpm} is composed of standard matrices.
@@ -3869,10 +3877,13 @@ mpm_create <- function(historical = FALSE, stage = TRUE, age = FALSE, devries = 
 #' class \code{lefkoProj}.
 #' 
 #' @section Notes:
-#' Density dependent projections require \code{lefkoMat} objects as inputs.
-#' Users using simple lists of matrices cannot set density dependence without
-#' first setting a life history model and importing their matrices using
-#' function \code{\link{create_lM}()}.
+#' Users are encourage to run density dependent projections with
+#' \code{lefkoMat} objects as inputs. Users using simple lists of matrices
+#' should first develop a life history model and import matrices using
+#' function \code{\link{create_lM}()}. Lists of matrices can still be run in
+#' this fashion without the use of a \code{lefkoMat} object, if the user
+#' assumes that the stage name is equal to the associated column number in the
+#' associated matrix.
 #' 
 #' Projections are run both at the patch level and at the population level.
 #' Population level estimates will be noted at the end of the data frame with
@@ -5313,12 +5324,12 @@ actualstage3 <- function(data, check_stage = TRUE, check_age = FALSE, historical
 #' 
 #' Function \code{density_input()} provides all necessary data to incorporate
 #' density dependence into a \code{lefkoMat} object, a list of matrices, or a
-#' single matrix. Four forms of density dependence are allowed, including the
-#' Ricker function, the Beverton-Holt function, the Usher function, and the
-#' logistic function. In each case, density must have an effect with a delay of
-#' at least one time-step (see Notes). The resulting data frame provides a
-#' guide for other \code{lefko3} functions to modify matrix elements by
-#' density.
+#' single matrix. Five forms of density dependence are allowed, including the
+#' Ricker function, the Beverton-Holt function, the Usher function, the
+#' logistic function, and the additive limit function. In each case, density
+#' must have an effect with a delay of at least one time-step (see Notes). The
+#' resulting data frame provides a guide for other \code{lefko3} functions to
+#' modify matrix elements by density.
 #'
 #' @name density_input
 #' 
@@ -5334,35 +5345,41 @@ actualstage3 <- function(data, check_stage = TRUE, check_age = FALSE, historical
 #' \emph{t}-1 in the transition to be affected by density. Only needed if a
 #' historical MPM is used. Abbreviations for groups of stages are also usable
 #' (see Notes).
-#' @param age2 A vector showing the age of the stage in occasion \emph{t} in the
-#' transition to be affected by density. Only needed if an age-by-stage MPM is
-#' used.
+#' @param age2 A vector showing the age of the stage in occasion \emph{t} in
+#' the transition to be affected by density. Only needed if an age-by-stage MPM
+#' is used.
 #' @param style A vector coding for the style of density dependence on each
 #' transition subject to density dependence. Options include \code{1},
 #' \code{ricker}, \code{ric}, or \code{r} for the Ricker function; \code{2},
 #' \code{beverton}, \code{bev}, and \code{b} for the Beverton-Holt function;
-#' \code{3}, \code{usher}, \code{ush}, and \code{u} for the Usher function; and
+#' \code{3}, \code{usher}, \code{ush}, and \code{u} for the Usher function;
 #' \code{4}, \code{logistic}, \code{log}, and \code{l} for the logistic
-#' function. If only a single code is provided, then all noted transitions are
-#' assumed to be subject to this style of density dependence. Defaults to
-#' \code{ricker}.
+#' function; and \code{5}, \code{additive}, \code{add}, and \code{a} for the
+#' additive limit function. If only a single code is provided, then all
+#' noted transitions are assumed to be subject to this style of density
+#' dependence. Defaults to \code{ricker}.
 #' @param time_delay An integer vector indicating the number of occasions back
 #' on which density dependence operates. Defaults to \code{1}, and may not equal
 #' any integer less than 1. If a single number is input, then all noted
-#' transitions are assumed to be subject to this time delay.  Defaults to
-#' \code{1}.
+#' transitions are assumed to be subject to this time delay. Does not apply to
+#' the additive limit function, which uses only the current population.
 #' @param alpha A vector indicating the numeric values to use as the
 #' alpha term in the two parameter Ricker, Beverton-Holt, or Usher function, or
-#' the value of the carrying capacity \emph{K} to use in the logistic equation
-#' (see \code{Notes} section for more on this term). If a single number is
+#' the value of the carrying capacity \emph{K} to use in the logistic or
+#' additive limit functions (see \code{Notes} section for more on this term).
+#' If a single number is provided, then all noted transitions are assumed to be
+#' subject to this value of alpha. Defaults to \code{1}.
+#' @param beta A vector indicating the numeric values to use as the beta term
+#' in the two parameter Ricker, Beverton-Holt, or Usher function, or the
+#' multiplier on the previous population size in the additive limit function.
+#' Also used to indicate whether to use \emph{K} as a hard limit in the
+#' logistic equation (see section \code{Notes} below). If a single number is
 #' provided, then all noted transitions are assumed to be subject to this value
-#' of alpha. Defaults to \code{1}.
-#' @param beta A vector indicating the numeric values to use as the beta term in
-#' the two parameter Ricker, Beverton-Holt, or Usher function. Used to indicate
-#' whether to use \emph{K} as a hard limit in the logistic equation (see section
-#' \code{Notes} below). If a single number is provided, then all noted
-#' transitions are assumed to be subject to this value of \code{beta}. Defaults
-#' to \code{1}.
+#' of \code{beta}. Defaults to \code{1}.
+#' @param gamma A vector indicating the numeric values to use as the gamma term
+#' in any function using a third term. Currently, this is only used in the
+#' additive limit function, and denotes the minimum number of individuals
+#' allowed in a particular stage.
 #' @param type A vector denoting the kind of transition between occasions
 #' \emph{t} and \emph{t}+1 to be replaced. This should be entered as \code{1},
 #' \code{S}, or \code{s} for the replacement of a survival transition; or 
@@ -5386,14 +5403,17 @@ actualstage3 <- function(data, check_stage = TRUE, check_age = FALSE, historical
 #' if applicable.}
 #' \item{age2}{Age at occasion \emph{t} in the transition to be replaced, if
 #' applicable.}
-#' \item{style}{Style of density dependence, coded as 1, 2, 3, or 4 for the
-#' Ricker, Beverton-Holt, Usher, or logistic function, respectively.}
+#' \item{style}{Style of density dependence, coded as 1, 2, 3, 4, or 5 for the
+#' Ricker, Beverton-Holt, Usher, logistic, or additive limit function,
+#' respectively.}
 #' \item{time_delay}{The time delay on density dependence, in time steps.}
 #' \item{alpha}{The value of alpha in the Ricker, Beverton-Holt, or Usher
-#' function, or the value of carrying capacity, \emph{K}, in the logistic
-#' function.}
+#' function, or the value of carrying capacity, \emph{K}, in the logistic or
+#' additive limit functions.}
 #' \item{beta}{The value of beta in the Ricker, Beverton-Holt, or Usher
-#' function.}
+#' function, or the value of the multiplier in the additive limit function.}
+#' \item{gamma}{The value of gamma, if such a value exists, as in the additive
+#' limit function.}
 #' \item{type}{Designates whether the transition from occasion \emph{t} to
 #' occasion \emph{t}+1 is a survival transition probability (1), or a fecundity
 #' rate (2).}
@@ -5411,9 +5431,15 @@ actualstage3 <- function(data, check_stage = TRUE, check_age = FALSE, historical
 #' 
 #' The parameters \code{alpha} and \code{beta} are applied according to the
 #' two-parameter Ricker function, the two-parameter Beverton-Holt function, the
-#' two-parameter Usher function, or the one-parameter logistic function.
-#' Although the default is that a 1 time step delay is assumed, greater time
-#' delays can be set through the \code{time_delay} option.
+#' two-parameter Usher function, the one-parameter logistic function, or the
+#' additive limit function. Although the default is that a 1 time step delay is
+#' assumed, greater time delays can be set through the \code{time_delay}
+#' option.
+#' 
+#' The gamma term is currently only used for the additive limit function, and
+#' designates a minimum number of individuals in a particular stage, if other
+#' than 0. If used, then the limit will be applied to the stage given in
+#' \code{stage3}.
 #' 
 #' Entries in \code{stage3}, \code{stage2}, and \code{stage1} can include
 #' abbreviations for groups of stages. Use \code{rep} if all reproductive stages
@@ -5487,8 +5513,8 @@ actualstage3 <- function(data, check_stage = TRUE, check_age = FALSE, historical
 #' }
 #' 
 #' @export density_input
-density_input <- function(mpm, stage3 = NULL, stage2 = NULL, stage1 = NULL, age2 = NULL, style = NULL, time_delay = NULL, alpha = NULL, beta = NULL, type = NULL, type_t12 = NULL) {
-    .Call('_lefko3_density_input', PACKAGE = 'lefko3', mpm, stage3, stage2, stage1, age2, style, time_delay, alpha, beta, type, type_t12)
+density_input <- function(mpm, stage3 = NULL, stage2 = NULL, stage1 = NULL, age2 = NULL, style = NULL, time_delay = NULL, alpha = NULL, beta = NULL, gamma = NULL, type = NULL, type_t12 = NULL) {
+    .Call('_lefko3_density_input', PACKAGE = 'lefko3', mpm, stage3, stage2, stage1, age2, style, time_delay, alpha, beta, gamma, type, type_t12)
 }
 
 #' Create a Data Frame of Supplemental Data for MPM Development
@@ -5595,8 +5621,8 @@ density_input <- function(mpm, stage3 = NULL, stage2 = NULL, stage1 = NULL, age2
 #' occasion \emph{t}+1 is a survival transition probability (1), a fecundity
 #' rate (2), or a fecundity multiplier (3).}
 #' \item{convtype_t12}{Designates whether the transition from occasion
-#' \emph{t}-1 to occasion \emph{t} is a survival transition probability (1), a
-#' fecundity rate (2).}
+#' \emph{t}-1 to occasion \emph{t} is a survival transition probability (1), or
+#' a fecundity rate (2).}
 #' 
 #' @section Notes:
 #' Negative values are not allowed in \code{givenrate} and \code{multiplier}
@@ -5733,6 +5759,24 @@ density_input <- function(mpm, stage3 = NULL, stage2 = NULL, stage1 = NULL, age2
 #' @export supplemental
 supplemental <- function(historical = TRUE, stagebased = TRUE, agebased = FALSE, stageframe = NULL, stage3 = NULL, stage2 = NULL, stage1 = NULL, age2 = NULL, eststage3 = NULL, eststage2 = NULL, eststage1 = NULL, estage2 = NULL, givenrate = NULL, offset = NULL, multiplier = NULL, type = NULL, type_t12 = NULL) {
     .Call('_lefko3_supplemental', PACKAGE = 'lefko3', historical, stagebased, agebased, stageframe, stage3, stage2, stage1, age2, eststage3, eststage2, eststage1, estage2, givenrate, offset, multiplier, type, type_t12)
+}
+
+#' Create A Supplement Skeleton Data Frame
+#' 
+#' @name sup_skeleton
+#' 
+#' @param rows An integer giving the number of rows to include.
+#' 
+#' @return A data frame with the format of a supplement, of class
+#' \code{lefkoSD}.
+#' 
+#' @examples
+#' new_supp <- sup_skeleton(3)
+#' new_supp
+#' 
+#' @export sup_skeleton
+sup_skeleton <- function(rows = NULL) {
+    .Call('_lefko3_sup_skeleton', PACKAGE = 'lefko3', rows)
 }
 
 #' Edit lefkoMat or lefkoMatList Object based on Supplemental Data

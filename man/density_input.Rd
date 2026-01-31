@@ -14,6 +14,7 @@ density_input(
   time_delay = NULL,
   alpha = NULL,
   beta = NULL,
+  gamma = NULL,
   type = NULL,
   type_t12 = NULL
 )
@@ -35,39 +36,46 @@ groups of stages are also usable (see Notes).}
 historical MPM is used. Abbreviations for groups of stages are also usable
 (see Notes).}
 
-\item{age2}{A vector showing the age of the stage in occasion \emph{t} in the
-transition to be affected by density. Only needed if an age-by-stage MPM is
-used.}
+\item{age2}{A vector showing the age of the stage in occasion \emph{t} in
+the transition to be affected by density. Only needed if an age-by-stage MPM
+is used.}
 
 \item{style}{A vector coding for the style of density dependence on each
 transition subject to density dependence. Options include \code{1},
 \code{ricker}, \code{ric}, or \code{r} for the Ricker function; \code{2},
 \code{beverton}, \code{bev}, and \code{b} for the Beverton-Holt function;
-\code{3}, \code{usher}, \code{ush}, and \code{u} for the Usher function; and
+\code{3}, \code{usher}, \code{ush}, and \code{u} for the Usher function;
 \code{4}, \code{logistic}, \code{log}, and \code{l} for the logistic
-function. If only a single code is provided, then all noted transitions are
-assumed to be subject to this style of density dependence. Defaults to
-\code{ricker}.}
+function; and \code{5}, \code{additive}, \code{add}, and \code{a} for the
+additive limit function. If only a single code is provided, then all
+noted transitions are assumed to be subject to this style of density
+dependence. Defaults to \code{ricker}.}
 
 \item{time_delay}{An integer vector indicating the number of occasions back
 on which density dependence operates. Defaults to \code{1}, and may not equal
 any integer less than 1. If a single number is input, then all noted
-transitions are assumed to be subject to this time delay.  Defaults to
-\code{1}.}
+transitions are assumed to be subject to this time delay. Does not apply to
+the additive limit function, which uses only the current population.}
 
 \item{alpha}{A vector indicating the numeric values to use as the
 alpha term in the two parameter Ricker, Beverton-Holt, or Usher function, or
-the value of the carrying capacity \emph{K} to use in the logistic equation
-(see \code{Notes} section for more on this term). If a single number is
-provided, then all noted transitions are assumed to be subject to this value
-of alpha. Defaults to \code{1}.}
+the value of the carrying capacity \emph{K} to use in the logistic or
+additive limit functions (see \code{Notes} section for more on this term).
+If a single number is provided, then all noted transitions are assumed to be
+subject to this value of alpha. Defaults to \code{1}.}
 
-\item{beta}{A vector indicating the numeric values to use as the beta term in
-the two parameter Ricker, Beverton-Holt, or Usher function. Used to indicate
-whether to use \emph{K} as a hard limit in the logistic equation (see section
-\code{Notes} below). If a single number is provided, then all noted
-transitions are assumed to be subject to this value of \code{beta}. Defaults
-to \code{1}.}
+\item{beta}{A vector indicating the numeric values to use as the beta term
+in the two parameter Ricker, Beverton-Holt, or Usher function, or the
+multiplier on the previous population size in the additive limit function.
+Also used to indicate whether to use \emph{K} as a hard limit in the
+logistic equation (see section \code{Notes} below). If a single number is
+provided, then all noted transitions are assumed to be subject to this value
+of \code{beta}. Defaults to \code{1}.}
+
+\item{gamma}{A vector indicating the numeric values to use as the gamma term
+in any function using a third term. Currently, this is only used in the
+additive limit function, and denotes the minimum number of individuals
+allowed in a particular stage.}
 
 \item{type}{A vector denoting the kind of transition between occasions
 \emph{t} and \emph{t}+1 to be replaced. This should be entered as \code{1},
@@ -94,14 +102,17 @@ Variables in this object include the following:
 if applicable.}
 \item{age2}{Age at occasion \emph{t} in the transition to be replaced, if
 applicable.}
-\item{style}{Style of density dependence, coded as 1, 2, 3, or 4 for the
-Ricker, Beverton-Holt, Usher, or logistic function, respectively.}
+\item{style}{Style of density dependence, coded as 1, 2, 3, 4, or 5 for the
+Ricker, Beverton-Holt, Usher, logistic, or additive limit function,
+respectively.}
 \item{time_delay}{The time delay on density dependence, in time steps.}
 \item{alpha}{The value of alpha in the Ricker, Beverton-Holt, or Usher
-function, or the value of carrying capacity, \emph{K}, in the logistic
-function.}
+function, or the value of carrying capacity, \emph{K}, in the logistic or
+additive limit functions.}
 \item{beta}{The value of beta in the Ricker, Beverton-Holt, or Usher
-function.}
+function, or the value of the multiplier in the additive limit function.}
+\item{gamma}{The value of gamma, if such a value exists, as in the additive
+limit function.}
 \item{type}{Designates whether the transition from occasion \emph{t} to
 occasion \emph{t}+1 is a survival transition probability (1), or a fecundity
 rate (2).}
@@ -112,12 +123,12 @@ occasion \emph{t} is a survival transition probability (1), a fecundity rate
 \description{
 Function \code{density_input()} provides all necessary data to incorporate
 density dependence into a \code{lefkoMat} object, a list of matrices, or a
-single matrix. Four forms of density dependence are allowed, including the
-Ricker function, the Beverton-Holt function, the Usher function, and the
-logistic function. In each case, density must have an effect with a delay of
-at least one time-step (see Notes). The resulting data frame provides a
-guide for other \code{lefko3} functions to modify matrix elements by
-density.
+single matrix. Five forms of density dependence are allowed, including the
+Ricker function, the Beverton-Holt function, the Usher function, the
+logistic function, and the additive limit function. In each case, density
+must have an effect with a delay of at least one time-step (see Notes). The
+resulting data frame provides a guide for other \code{lefko3} functions to
+modify matrix elements by density.
 }
 \section{Notes}{
 
@@ -130,9 +141,15 @@ provide the correct inputs.
 
 The parameters \code{alpha} and \code{beta} are applied according to the
 two-parameter Ricker function, the two-parameter Beverton-Holt function, the
-two-parameter Usher function, or the one-parameter logistic function.
-Although the default is that a 1 time step delay is assumed, greater time
-delays can be set through the \code{time_delay} option.
+two-parameter Usher function, the one-parameter logistic function, or the
+additive limit function. Although the default is that a 1 time step delay is
+assumed, greater time delays can be set through the \code{time_delay}
+option.
+
+The gamma term is currently only used for the additive limit function, and
+designates a minimum number of individuals in a particular stage, if other
+than 0. If used, then the limit will be applied to the stage given in
+\code{stage3}.
 
 Entries in \code{stage3}, \code{stage2}, and \code{stage1} can include
 abbreviations for groups of stages. Use \code{rep} if all reproductive stages

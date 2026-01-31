@@ -10,27 +10,33 @@ using namespace arma;
 // Function index:
 // 1. arma::uvec spmat_index  Create Element Index Meeting Condition for Sparse Matrix
 // 2. arma::uvec general_index  Create General Element Index for Any lefkoMat Matrix
+// 
 // 3. List decomp3  Full Eigen Analysis of a Single Dense Matrix
 // 4. List decomp3sp  Full Eigen Analysis of a Single Sparse Matrix
 // 5. List decomp3sp_inp  Full Eigen Analysis of a Single Sparse Matrix, with Sparse Input
+// 
 // 6. arma::mat ovreplace  Re-index Projection Matrix On Basis of Overwrite Table
+// 
 // 7. DataFrame sf_core  Creates Base Skeleton Stageframe
 // 8. DataFrame paramnames_skeleton  Base Skeleton Data Frame for Paramnames Objects
+// 
 // 9. List turbogeodiesel  Estimates Mean LefkoMat Object for Historical MPM
 // 10. List geodiesel  Estimates Mean LefkoMat Object for Ahistorical MPM
+// 
 // 11. int supp_decision1  Create Skeleton Plan of Expanded Supplemental Table
 // 12. String supp_decision2  Decide on Stage for Each Entry in Supplemental Table
 // 13. DataFrame supp_reassess  Expand Supplemental Table Given User Input
 // 14. DataFrame age_expanded  Expand Supplemental Table by Age Inputs
+// 
 // 15. void hst_maker  Creates hstages Data Frames
 // 16. DataFrame age_maker  Creates agestages Data Frames
+// 
 // 17. List theoldpizzle  Create Element Index for Matrix Estimation
-// 18. List sf_reassess_internal Standardize Stageframe For MPM Analysis
-// 19. List sf_leslie Create Stageframe for Population Matrix Projection Analysis
+// 18. List sf_reassess_internal  Standardize Stageframe For MPM Analysis
+// 19. List sf_leslie  Create Stageframe for Population Matrix Projection Analysis
 
 
 namespace LefkoMats {
-
   //' Create Element Index Meeting Condition for Sparse Matrix
   //' 
   //' This function takes a single sparse matrix (dgCMatrix) and creates a
@@ -1456,11 +1462,60 @@ namespace LefkoMats {
     bool historical, Nullable<DataFrame> supplement = R_NilValue,
     Nullable<DataFrame> overwrite = R_NilValue) {
     
+    // Rcout << "Entered supp_reassess" << endl;
+    
     StringVector stagevec = as<StringVector>(stageframe["stage"]);
+    IntegerVector agevec = as<IntegerVector>(stageframe["min_age"]);
     
     arma::ivec groupvec = as<arma::ivec>(stageframe["group"]);
     int stageframe_length {static_cast<int>(stagevec.length())};
     IntegerVector stage_id = seq(1, stageframe_length);
+    
+    // Rcout << "supp_reassess A" << endl;
+    
+    // Determine if MPM is a Leslie MPM based on the stageframe
+    bool Leslie_mpm {false};
+    int age_related_stages {0};
+    int age_related_min_ages {0};
+    int min_age_tracker {0};
+    bool cont_tracker {true};
+    
+    for (int i = 0; i < stageframe_length; i++) {
+      bool found_age_as_stage {false};
+      bool found_min_age {false};
+      
+      if (cont_tracker) {
+        if (LefkoUtils::stringcompare_simple(String(stagevec(i)), "age", true)) {
+          found_age_as_stage = true;
+          age_related_stages++;
+        }
+        
+        if (i > 0) {
+          if (!IntegerVector::is_na(agevec(i))) {
+            int found_age = agevec(i);
+            
+            if (found_age == (min_age_tracker + 1)) {
+              found_min_age = true;
+              age_related_min_ages++;
+              min_age_tracker = found_age;
+            }
+          }
+        
+        } else {
+          if (!IntegerVector::is_na(agevec(0))) {
+            min_age_tracker = agevec(0);
+            found_min_age = true;
+            age_related_min_ages++;
+          }
+        }
+        
+        if (!found_min_age && !found_age_as_stage) cont_tracker = false;
+      } else break;
+    }
+    
+    // Rcout << "supp_reassess B" << endl;
+    
+    if (cont_tracker) Leslie_mpm = true;
     
     // Identify all groups
     arma::ivec all_groups = unique(groupvec);
@@ -1471,6 +1526,8 @@ namespace LefkoMats {
       group_text(i) = "group";
       group_text(i) += std::to_string(all_groups(i));
     }
+    
+    // Rcout << "supp_reassess C" << endl;
     
     StringVector stage3_supp;
     StringVector stage2_supp;
@@ -1493,6 +1550,8 @@ namespace LefkoMats {
     int supp_rows {0};
     
     if (supplement.isNotNull()) {
+      // Rcout << "supp_reassess D" << endl;
+    
       Rcpp::DataFrame supplement_true(supplement);
       
       stage3_supp = as<StringVector>(supplement_true["stage3"]);
@@ -1538,7 +1597,11 @@ namespace LefkoMats {
         year2_supp = year2_supp_;
       }
       
+      // Rcout << "supp_reassess E" << endl;
+    
     } else if (overwrite.isNotNull()) {
+      // Rcout << "supp_reassess F" << endl;
+    
       Rcpp::DataFrame supplement_true(supplement);
       
       stage3_supp = as<StringVector>(supplement_true["stage3"]);
@@ -1569,9 +1632,13 @@ namespace LefkoMats {
       patch_supp = patch_supp_;
       year2_supp = year2_supp_;
       
+      // Rcout << "supp_reassess G" << endl;
+    
     } else {
       throw Rcpp::exception("No supplement provided.", false);
     }
+    
+    // Rcout << "supp_reassess H" << endl;
     
     StringVector unique_stages = unique(stagevec);
     StringVector extra_terms = {"rep", "nrep", "immat", "mat", "prop", "npr", "all", "obs", "nobs"};
@@ -1590,44 +1657,54 @@ namespace LefkoMats {
       all_possible_stage_terms(i + no_newstages + no_extraterms) = group_text(i);
     }
     
+    // Rcout << "supp_reassess I" << endl;
+    
     // Check entries in supplement / overwrite table
     for (int i = 0; i < static_cast<int>(stage3_supp.length()); i++) {
       int s3supp_count {0};
       int s2supp_count {0};
       int s1supp_count {0};
+      int a2supp_count {0};
       
       bool ests3_used {false};
       bool ests2_used {false};
       bool ests1_used {false};
+      bool esta2_used {false};
       
       for (int j = 0; j < static_cast<int>(all_possible_stage_terms.length()); j++) {
         if (stage3_supp(i) == all_possible_stage_terms(j)) s3supp_count++;
         if (stage2_supp(i) == all_possible_stage_terms(j)) s2supp_count++;
+        if (!IntegerVector::is_na(age2_supp(i))) {
+          if (age2_supp(i) > 0) a2supp_count++;
+        }
         
         if (!StringVector::is_na(eststage3_supp(i))) {
-          ests3_used = true;
+          if (!(String(eststage3_supp(i)) == "")) ests3_used = true;
         }
         if (!StringVector::is_na(eststage2_supp(i))) {
-          ests2_used = true;
+          if (!(String(eststage2_supp(i)) == "")) ests2_used = true;
+        }
+        if (!IntegerVector::is_na(estage2_supp(i))) {
+          if (estage2_supp(i) != 0) esta2_used = true;
         }
         
         if (historical) {
           if (stage1_supp(i) == all_possible_stage_terms(j)) s1supp_count++;
           
           if (!StringVector::is_na(eststage1_supp(i))) {
-            ests1_used = true;
+            if (!(String(eststage1_supp(i)) == "")) ests1_used = true;
           }
         } 
       }
       
-      if (s3supp_count == 0) {
+      if (s3supp_count == 0 && !Leslie_mpm && a2supp_count == 0) {
         String eat_my_shorts = "Stage names in supplement or overwrite table ";
         String eat_my_shorts1 = "(stage3) must match stageframe.";
         eat_my_shorts += eat_my_shorts1;
         
         throw Rcpp::exception(eat_my_shorts.get_cstring(), false);
       }
-      if (s2supp_count == 0) {
+      if (s2supp_count == 0 && !Leslie_mpm && a2supp_count == 0) {
         String eat_my_shorts = "Stage names in supplement or overwrite table ";
         String eat_my_shorts1 = "(stage2) must match stageframe.";
         eat_my_shorts += eat_my_shorts1;
@@ -1671,6 +1748,8 @@ namespace LefkoMats {
         }
       }
     }
+    
+    // Rcout << "supp_reassess J" << endl;
     
     IntegerVector s1_calls (supp_rows, 1);
     IntegerVector s2_calls (supp_rows, 1);
@@ -1722,6 +1801,8 @@ namespace LefkoMats {
     int no_s = static_cast<int>(newobs_stages.n_elem);
     int no0_s = static_cast<int>(newobs0_stages.n_elem);
     int a_s = static_cast<int>(all_stages.n_elem);
+    
+    // Rcout << "supp_reassess K" << endl;
     
     // Build expanded supplement table
     for (int i = 0; i < supp_rows; i++) {
@@ -1802,12 +1883,16 @@ namespace LefkoMats {
       s123_calls(i) = s3_planned(i) * s2_planned(i) * s1_planned(i);
     }
     
+    // Rcout << "supp_reassess L" << endl;
+    
     NumericVector basepoints(supp_rows, 0.0);
     for (int i = 0; i < (supp_rows - 1); i++) {
       basepoints(i+1) = basepoints(i) + s123_calls(i);
     }
     
     int newsupp_rows = sum(s123_calls);
+    
+    // Rcout << "supp_reassess M" << endl;
     
     StringVector stage3_newsupp (newsupp_rows);
     StringVector stage2_newsupp (newsupp_rows);
@@ -1850,6 +1935,8 @@ namespace LefkoMats {
     int prevle3 {0};
     int prevle2 {0};
     int prevle1 {0};
+    
+    // Rcout << "supp_reassess N" << endl;
     
     for (int i = 0; i < supp_rows; i++) {
       overall_counter = 0;
@@ -1917,6 +2004,8 @@ namespace LefkoMats {
       }
     }
     
+    // Rcout << "supp_reassess O" << endl;
+    
     Rcpp::List newsupplement(16);
     
     newsupplement(0) = stage3_newsupp;
@@ -1943,6 +2032,8 @@ namespace LefkoMats {
     newsupplement.attr("names") = su_namevec;
     newsupplement.attr("row.names") = Rcpp::IntegerVector::create(NA_INTEGER, newsupp_rows);
     newsupplement.attr("class") = su_newclasses;
+    
+    // Rcout << "supp_reassess P" << endl;
     
     return newsupplement;
   }
@@ -4001,7 +4092,7 @@ namespace LefkoMats {
   
   //' Standardize Stageframe For MPM Analysis
   //' 
-  //' Function \code{sf_reassess()} takes a stageframe as input, and uses
+  //' Function \code{sf_reassess_internal()} takes a stageframe as input, and uses
   //' information supplied there and through the supplement, reproduction and
   //' overwrite tables to rearrange this into a format usable by the matrix
   //' creation functions, \code{mpm_create()}, \code{flefko3()},
@@ -4015,11 +4106,16 @@ namespace LefkoMats {
   //' @param overwrite An overwrite table.
   //' @param repmatrix The original reproduction matrix. Can also equal \code{NA},
   //' \code{0}, or \code{NULL} (the last value by default).
-  //' @param agemat A logical value indicating whether MPM is age-by-stage.
-  //' @param historical A logical value indicating whether MPM is historical.
+  //' @param agemat A Boolean value indicating whether MPM is age-by-stage.
+  //' @param historical A Boolean value indicating whether MPM is historical.
   //' @param format An integer indicating whether matrices will be in Ehrlen
   //' format (if set to 1), or deVries format (if set to 2). Setting to deVries
   //' format adds one extra stage to account for the prior status of newborns.
+  //' @param import_lM A Boolean value indicating whether the lefkoMat object
+  //' being dealt with was imported. If \code{TRUE}, then will skip warnings
+  //' related to the lack of supplements being input (since supplements cannot
+  //' be input via the create_lM() function and its relatives). Defaults to
+  //' \code{FALSE}.
   //' 
   //' @return This function returns a list with a modified \code{stageframe}
   //' usable in MPM construction, an associated \code{repmatrix}, and a general
@@ -4034,7 +4130,10 @@ namespace LefkoMats {
     Nullable<DataFrame> supplement = R_NilValue,
     Nullable<DataFrame> overwrite = R_NilValue,
     Nullable<NumericMatrix> repmatrix = R_NilValue,
-    bool agemat = false, bool historical = false, int format = 1) {
+    bool agemat = false, bool historical = false, int format = 1,
+    bool import_lM = false) {
+    
+    // Rcout << "Entered sf_reassess_internal.  ";
     
     bool supp_provided = false;
     
@@ -4042,9 +4141,22 @@ namespace LefkoMats {
     arma::mat repmatrix_true;
     
     StringVector stagevec = as<StringVector>(stageframe["stage"]);
-    NumericVector origsizevec = as<NumericVector>(stageframe["size"]);
-    NumericVector origsizebvec = as<NumericVector>(stageframe["size_b"]);
-    NumericVector origsizecvec = as<NumericVector>(stageframe["size_c"]);
+    
+    NumericVector origsizevec;
+    NumericVector origsizebvec;
+    NumericVector origsizecvec;
+    if (stageframe.containsElementNamed("size")) {
+      origsizevec = as<NumericVector>(stageframe["size"]);
+      origsizebvec = as<NumericVector>(stageframe["size_b"]);
+      origsizecvec = as<NumericVector>(stageframe["size_c"]);
+    } else {
+      origsizevec = as<NumericVector>(stageframe["original_size"]);
+      origsizebvec = as<NumericVector>(stageframe["original_size_b"]);
+      origsizecvec = as<NumericVector>(stageframe["original_size_c"]);
+    }
+    
+    // Rcout << "sf_reassess_internal A.  ";
+    
     NumericVector minagevec = as<NumericVector>(stageframe["min_age"]);
     NumericVector maxagevec = as<NumericVector>(stageframe["max_age"]);
     arma::uvec repvec = as<arma::uvec>(stageframe["repstatus"]);
@@ -4070,6 +4182,8 @@ namespace LefkoMats {
     NumericVector sizecwidthvec = as<NumericVector>(stageframe["sizebinc_width"]);
     arma::ivec groupvec = as<arma::ivec>(stageframe["group"]);
     StringVector comvec = as<StringVector>(stageframe["comments"]);
+    
+    // Rcout << "sf_reassess_internal B.  ";
     
     StringVector stage3_supp;
     StringVector stage2_supp;
@@ -4099,6 +4213,8 @@ namespace LefkoMats {
       group_text(i) += std::to_string(all_groups(i));
     }
     
+    // Rcout << "sf_reassess_internal C.  ";
+    
     if (supplement.isNotNull()) {
       supp_provided = true;
       
@@ -4111,6 +4227,8 @@ namespace LefkoMats {
       offset_supp = supplement_true["offset"];
       convtype_supp = supplement_true["convtype"];
     }
+    
+    // Rcout << "sf_reassess_internal D.  ";
     
     if (repmatrix.isNotNull()) {
       NumericMatrix repmatrix_thru(repmatrix);
@@ -4163,6 +4281,8 @@ namespace LefkoMats {
         repmatrix_true = token_mat;
       }
     } else if (supp_provided) {
+      // Rcout << "sf_reassess_internal E.  ";
+      
       arma::ivec cv_supp_arma = as<arma::ivec>(convtype_supp);
       arma::uvec mult_elems = find(cv_supp_arma == 3);
       
@@ -4203,6 +4323,8 @@ namespace LefkoMats {
           }
         }
       }
+      
+      // Rcout << "sf_reassess_internal F.  ";
       
       if (agemat) {
         arma::ivec needed_reprods(stageframe_length, fill::zeros);
@@ -4258,6 +4380,8 @@ namespace LefkoMats {
         repmatrix_true = token_mat;
       }
     } else {
+      // Rcout << "sf_reassess_internal G.  ";
+      
       int count_of_offspring_stages {0};
       
       for (int i = 0; i < stageframe_length; i++) {
@@ -4270,12 +4394,14 @@ namespace LefkoMats {
         }
       }
       
+      // Rcout << "sf_reassess_internal H.  ";
+      
       int rev_checksum = sum(repentryvec);
       if(rev_checksum == 0) {
         repentryvec(0) = 1;
         Rf_warningcall(R_NilValue,
           "Reproductive entry stages unknown. Assuming stage 1 is entry stage.");
-      } else {
+      } else if (!import_lM) {
         Rf_warningcall(R_NilValue,
           "No supplement provided. Assuming fecundity yields all propagule and immature stages.");
       }
@@ -4285,6 +4411,8 @@ namespace LefkoMats {
       arma::uvec repentry_calls = find(repentryvec);
       arma::uvec rep_calls = find(repvec);
       
+      // Rcout << "sf_reassess_internal I" << endl;
+      
       if (repentry_calls.n_elem > 0 && rep_calls.n_elem > 0) {
         for (int i = 0; i < static_cast<int>(repentry_calls.n_elem); i++) {
           for (int j = 0; j < static_cast<int>(rep_calls.n_elem); j++) {
@@ -4293,6 +4421,8 @@ namespace LefkoMats {
         }
       }
       repmatrix_true = token_mat;
+      
+      // Rcout << "sf_reassess_internal J.  ";
       
       // Build new supplement for this case
       StringVector novel_stage3 (count_of_offspring_stages);
@@ -4311,7 +4441,7 @@ namespace LefkoMats {
       
       int place_counter {0};
       
-      for (int i = 0; i < stageframe_length; i++) { 
+      for (int i = 0; i < stageframe_length; i++) {
         if (repentryvec(i) == 1) {
           novel_stage3(place_counter) = String(stagevec(i));
           novel_stage2(place_counter) = "rep";
@@ -4340,6 +4470,8 @@ namespace LefkoMats {
         }
       }
       
+      // Rcout << "sf_reassess_internal K.  ";
+      
       Rcpp::DataFrame supplement_thru = DataFrame::create(_["stage3"] = novel_stage3,
         _["stage2"] = novel_stage2, _["stage1"] = novel_stage1, _["age2"] = novel_age2,
         _["eststage3"] =  novel_eststage3, _["eststage2"] =  novel_eststage2,
@@ -4367,6 +4499,8 @@ namespace LefkoMats {
       supp_provided = true;
     }
     
+    // Rcout << "sf_reassess_internal L.  ";
+    
     // Reorder stageframe
     arma::uvec prop_stages = find(propvec);
     arma::uvec prop0_stages = find(propvec == 0);
@@ -4386,6 +4520,8 @@ namespace LefkoMats {
     int no_prop_stages {static_cast<int>(prop_stages.n_elem)};
     int no_p0_im_stages {static_cast<int>(p0_im_stages.n_elem)};
     int no_r0_im_mt_stages {static_cast<int>(rep0_mat_imm0_stages.n_elem)};
+    
+    // Rcout << "sf_reassess_internal M.  ";
     
     int counter {0};
     for (int j = 0; j < no_prop_stages; j++) {
@@ -4410,6 +4546,8 @@ namespace LefkoMats {
       neworder(counter) = remaining_elems(j);
       counter++;
     }
+    
+    // Rcout << "sf_reassess_internal N.  ";
     
     StringVector newstagevec(stageframe_length + format);
     IntegerVector newstageidvec(stageframe_length + format);
@@ -4447,6 +4585,8 @@ namespace LefkoMats {
     
     arma::mat repmat1(stageframe_length, stageframe_length);
     arma::mat repmat2(stageframe_length, stageframe_length);
+    
+    // Rcout << "sf_reassess_internal O.  ";
     
     for (int i = 0; i < stageframe_length; i++) {
       newstagevec(i) = stagevec(neworder(i));
@@ -4486,9 +4626,13 @@ namespace LefkoMats {
       repmat1.col(i) = repmatrix_true.col(neworder(i));
     }
     
+    // Rcout << "sf_reassess_internal P.  ";
+    
     for (int i = 0; i < stageframe_length; i++) {
       repmat2.row(i) = repmat1.row(neworder(i));
     }
+    
+    // Rcout << "sf_reassess_internal Q.  ";
     
     if (format == 2) {
       newstagevec(stageframe_length) = "AlmostBorn";
@@ -4532,6 +4676,8 @@ namespace LefkoMats {
       }
     }
     
+    // Rcout << "sf_reassess_internal R.  ";
+    
     newstagevec(stageframe_length + (format - 1)) = "Dead";
     newstageidvec(stageframe_length + (format - 1)) = stageframe_length + 1 + (format - 1);
     neworigsizevec(stageframe_length + (format - 1)) = 0.0;
@@ -4572,9 +4718,27 @@ namespace LefkoMats {
     }
     
     StringVector newstagevec_check = unique(newstagevec);
-    if (newstagevec_check.length() < newstagevec.length()) {
+    
+    int total_stagecheck_length = static_cast<int>(newstagevec.length());
+    int total_uniquestage_length = static_cast<int>(newstagevec_check.length());
+    int presence_AlmostBorn {0};
+    int presence_Dead {0};
+    int stage_adjustment {0};
+    
+    for (int stage_i = 0; stage_i < total_stagecheck_length; stage_i++) {
+      if (newstagevec(stage_i) == "AlmostBorn") presence_AlmostBorn++;
+      if (newstagevec(stage_i) == "Dead") presence_Dead++;
+    }
+    if (presence_AlmostBorn > 0 && presence_Dead > 0) {
+      stage_adjustment = (presence_AlmostBorn - 1) + (presence_Dead - 1);
+    } else if (presence_Dead > 0){
+      stage_adjustment = (presence_Dead - 1);
+    }
+    if (total_uniquestage_length < (total_stagecheck_length - stage_adjustment)) {
       throw Rcpp::exception("All stage names must be unique.", false);
     }
+    
+    // Rcout << "sf_reassess_internal S.  ";
     
     Rcpp::List newstageframe(33);
     
@@ -4626,10 +4790,14 @@ namespace LefkoMats {
         (stageframe_length + format));
     newstageframe.attr("class") = newclasses;
     
+    // Rcout << "sf_reassess_internal T.  ";
+    
     if (supp_provided) {
       DataFrame newsupplement = supp_reassess(newstageframe, historical,
         supplement_true, overwrite);
       
+    // Rcout << "sf_reassess_internal U.  ";
+    
       return Rcpp::List::create(_["stageframe"] = newstageframe,
         _["repmatrix"] = repmat2, _["ovtable"] = newsupplement);
     } else {
