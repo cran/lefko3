@@ -1,4 +1,16 @@
-# lefko3 6.7.1 (2025-01-31)
+# lefko3 6.7.2 (2026-02-11)
+
+## NEW FEATURES
+
+* Functions `mpm_create()`, `flefko3()`, `flefko2()`, `arlefko2()`, and
+  `fleslie()` now can create matrices initialized with `NaN` values, using
+  argument `initial_nan`.
+  
+## BUG FIXES
+  
+* Fixed issue with memory management in some cases when density_input() is used.
+
+# lefko3 6.7.1 (2026-01-31)
 
 ## NEW FEATURES
 
