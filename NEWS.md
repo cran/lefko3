@@ -1,3 +1,26 @@
+# lefko3 6.7.3 (2026-04-24)
+
+## NEW FEATURES
+
+* Function `lambda3()` can now calculate the dominant eigenvalue of the `A`,
+  `U`, or `F` matrices, using the `style` argument.
+  
+* Function `bootstrap3()` now replaces individual identity with unique values if
+  `rename = TRUE`.
+
+## USER VISIBLE CHANGES
+
+* Matrix creation functions now give more meaningful error messages when
+  lefkoMod objects are input without their original `hfvdata` datasets.
+  
+## BUG FIXES
+
+* Corrected issue in which ahistorical or age-by-stage MPMs can be misidentified
+  as historical by function `stage_weight()`.
+  
+* Function `bootstrap3()` no longer throws an exception when using string-based
+  individual identities.
+
 # lefko3 6.7.2 (2026-02-11)
 
 ## NEW FEATURES

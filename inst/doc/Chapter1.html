@@ -48,7 +48,6 @@ ul.task-list{list-style: none;}
 div.csl-bib-body { }
 div.csl-entry {
 clear: both;
-margin-bottom: 0em;
 }
 .hanging div.csl-entry {
 margin-left:2em;
@@ -270,25 +269,25 @@ Ehrlén</h4>
 <p style="text-indent: 20px">
 <em>R</em> package <code>lefko3</code> is a complete environment for the
 construction and analysis of matrix projection models (MPMs) and
-integral projection models (IPMs) <span class="citation">(Shefferson,
-Kurokawa, and Ehrlén 2021)</span>. It was originally developed to
-estimate and analyze <em>historical</em> size-classified matrix
-projection models (hMPMs), which incorporate not only current state but
-also past history into each matrix. hMPM matrices are large, typically
-having dimensions higher than their standard, ahistorical counterparts
-(the latter will be hereafter referred to as ahistorical MPMs, or
-ahMPMs, while the acronym MPM will be used to refer to all matrix
-projection models, whether historical or not). As this package has
-developed, we have broadened its scope to include age-classified,
-age-by-stage, and stage-classified MPMs and IPMs, with function-based
-MPMs and IPMs capable of handling a large range of possible response
-distributions. We have also added the ability to project matrices and
-IPMs in customized, complex ways. Throughout, we have prioritized the
-development of core algorithms and methods to construct these models and
-projections quickly, efficiently, and relatively painlessly. Perhaps
-most importantly, we have incorporated quality control routines in the
-core functions of all steps of the workflow, giving users the
-opportunity to assess where weaknesses and errors lie.
+integral projection models (IPMs) <span class="citation">(Shefferson et
+al. 2021)</span>. It was originally developed to estimate and analyze
+<em>historical</em> size-classified matrix projection models (hMPMs),
+which incorporate not only current state but also past history into each
+matrix. hMPM matrices are large, typically having dimensions higher than
+their standard, ahistorical counterparts (the latter will be hereafter
+referred to as ahistorical MPMs, or ahMPMs, while the acronym MPM will
+be used to refer to all matrix projection models, whether historical or
+not). As this package has developed, we have broadened its scope to
+include age-classified, age-by-stage, and stage-classified MPMs and
+IPMs, with function-based MPMs and IPMs capable of handling a large
+range of possible response distributions. We have also added the ability
+to project matrices and IPMs in customized, complex ways. Throughout, we
+have prioritized the development of core algorithms and methods to
+construct these models and projections quickly, efficiently, and
+relatively painlessly. Perhaps most importantly, we have incorporated
+quality control routines in the core functions of all steps of the
+workflow, giving users the opportunity to assess where weaknesses and
+errors lie.
 </p>
 <p style="text-indent: 20px">
 This vignette was written as a basic introduction to the concepts and
@@ -496,9 +495,8 @@ individual. In fact, at the time of writing, we are aware of only five
 examples of studies breaking these assumptions and using a
 <strong>historical</strong> approach, meaning that they incorporated
 some degree of individual history into matrix estimation and analysis
-<span class="citation">(Ehrlén 2000; Shefferson, Warren II, and Pulliam
-2014; Shefferson, Mizuta, and Hutchings 2017; Shefferson et al. 2018;
-deVries and Caswell 2018)</span>.
+<span class="citation">(Ehrlén 2000; Shefferson et al. 2014, 2017, 2018;
+<span class="nocase">deVries and Caswell</span> 2018)</span>.
 </p>
 <p style="text-indent: 20px">
 The <strong>historical MPM</strong> (hMPM) is an extension of the matrix
@@ -509,15 +507,14 @@ only on its stage in occasion <em>t</em> but also on its stage in
 occasion <em>t</em>-1. Population ecologists considering this problem
 analytically might be inclined to add an extra dimension to the matrix
 to deal with this, thus creating a 3d array or cube. However, this is
-mathematically intractable, with many analyses becoming impossible <span class="citation">(deVries and Caswell 2018)</span>. Instead, we utilize
-the approach developed by <span class="citation">Ehrlén (2000)</span>,
-in which rows and columns represent life history stages paired in
-consecutive occasions. Thus, columns now represent the
-<strong>From</strong> pair of stages (stage in occasions <em>t</em> and
-<em>t</em>-1), and rows now represent the <strong>To</strong> pair of
-stages (stage in occasions <em>t</em> and <em>t</em>+1), as in Figure
-1.2. This model is equivalent to the second-order model proposed by
-<span class="citation">deVries and Caswell (2018)</span>, although the
+mathematically intractable, with many analyses becoming impossible <span class="citation">(<span class="nocase">deVries and Caswell</span>
+2018)</span>. Instead, we utilize the approach developed by <span class="citation">Ehrlén (2000)</span>, in which rows and columns
+represent life history stages paired in consecutive occasions. Thus,
+columns now represent the <strong>From</strong> pair of stages (stage in
+occasions <em>t</em> and <em>t</em>-1), and rows now represent the
+<strong>To</strong> pair of stages (stage in occasions <em>t</em> and
+<em>t</em>+1), as in Figure 1.2. This model is equivalent to the
+second-order model proposed by <span class="citation"><span class="nocase">deVries and Caswell</span> (2018)</span>, although the
 latter incorporates more history into transitions involving individuals
 just born (we explain the difference further in this vignette).
 </p>
@@ -765,23 +762,22 @@ recent inventions than raw MPMs, and their strengths are making them
 increasingly common in the literature.
 </p>
 <p style="text-indent: 20px">
-<span class="citation">Easterling, Ellner, and Dixon (2000)</span>
-proposed a method of analyzing population dynamics called the
-<strong>integral projection model (IPM)</strong>, which modeled the life
-history of an organism using a continuous size metric modeled on a
-Gaussian distribution. At least theoretically, the aim was to produce a
-model that was not contingent on a stage classification together with a
-function-based kernel to model population dynamics. In practice,
-however, size was and is discretized into many fine-scale size classes.
-The result is that, in practice, IPMs are actually high resolution
-function-based MPMs, breaking up a life history into many fine-scale
-size classes using a continuous measure of size and then estimating
-survival-transitions and fecundity according to these fine-scale size
-classes <span class="citation">(Ellner and Rees 2006)</span>. Package
-<em>lefko3</em> easily handles the creation and analysis of IPMs. We
-include a vignette in <code>lefko3</code> showing an example, and also
-devote a chapter of the free e-book <strong><em>lefko3: a gentle
-introduction</em></strong> to the topic.
+<span class="citation">Easterling et al. (2000)</span> proposed a method
+of analyzing population dynamics called the <strong>integral projection
+model (IPM)</strong>, which modeled the life history of an organism
+using a continuous size metric modeled on a Gaussian distribution. At
+least theoretically, the aim was to produce a model that was not
+contingent on a stage classification together with a function-based
+kernel to model population dynamics. In practice, however, size was and
+is discretized into many fine-scale size classes. The result is that, in
+practice, IPMs are actually high resolution function-based MPMs,
+breaking up a life history into many fine-scale size classes using a
+continuous measure of size and then estimating survival-transitions and
+fecundity according to these fine-scale size classes <span class="citation">(Ellner and Rees 2006)</span>. Package <em>lefko3</em>
+easily handles the creation and analysis of IPMs. We include a vignette
+in <code>lefko3</code> showing an example, and also devote a chapter of
+the free e-book <strong><em>lefko3: a gentle introduction</em></strong>
+to the topic.
 </p>
 <p style="text-indent: 20px">
 The example from Figures 1.1 and 1.2 may help to illustrate the
@@ -854,41 +850,39 @@ supposed to occur in order to check their values properly.
 <div id="different-parameterizations-of-the-historical-mpm" class="section level3">
 <h3>Different parameterizations of the historical MPM</h3>
 <p style="text-indent: 20px">
-<span class="citation">deVries and Caswell (2018)</span> detail
-different approaches to the development of hMPMs, differing in how state
-or stage in occasion <em>t</em>-1 is incorporated into the matrix.
-<strong>Full prior stage dependence models</strong> deal with history by
-incorporating prior condition as the exact stage of an organism in
-occasion <em>t</em>-1, yielding a matrix showing stage pairs in occasion
-<em>t</em>-1 and <em>t</em> along the columns of the matrix, and stage
-pairs in occasion <em>t</em> and <em>t</em>+1 along the rows of the
-matrix. <strong>Prior condition models</strong> deal with history by
-making the transition from stage <em>t</em> to stage <em>t</em>+1 a
-function of stage at occasion <em>t</em> and condition in occasion
-<em>t</em>-1. Prior condition can be determined in the same way that
-current stage is determined (e.g. size classification), or a different
-measure of condition can be used, such as growth (i.e. the change in
-size between occasions <em>t</em>-1 and <em>t</em>).
+<span class="citation"><span class="nocase">deVries and Caswell</span>
+(2018)</span> detail different approaches to the development of hMPMs,
+differing in how state or stage in occasion <em>t</em>-1 is incorporated
+into the matrix. <strong>Full prior stage dependence models</strong>
+deal with history by incorporating prior condition as the exact stage of
+an organism in occasion <em>t</em>-1, yielding a matrix showing stage
+pairs in occasion <em>t</em>-1 and <em>t</em> along the columns of the
+matrix, and stage pairs in occasion <em>t</em> and <em>t</em>+1 along
+the rows of the matrix. <strong>Prior condition models</strong> deal
+with history by making the transition from stage <em>t</em> to stage
+<em>t</em>+1 a function of stage at occasion <em>t</em> and condition in
+occasion <em>t</em>-1. Prior condition can be determined in the same way
+that current stage is determined (e.g. size classification), or a
+different measure of condition can be used, such as growth (i.e. the
+change in size between occasions <em>t</em>-1 and <em>t</em>).
 </p>
 <p style="text-indent: 20px">
-One key feature proposed by <span class="citation">deVries and Caswell
-(2018)</span> is the addition of a new stage to account for the prior
-status of newborn individuals. This reflects a slightly different
-interpretation from <span class="citation">Ehrlén (2000)</span> of the
-historical transition. In <span class="citation">Ehrlén (2000)</span>,
-all matrix elements simply reflect the order of the events in a single
-transition, including both fecundity and survival-transition events.
-However, in <span class="citation">deVries and Caswell (2018)</span>,
-these matrix elements must also reflect the history of specific
-individuals. In the latter case, the fact that a newborn in occasion
-<em>t</em> did not exist in occasion <em>t</em>-1 leads to the creation
-of a new prior stage to account for the time immediately prior to birth.
-This new stage only exists in the immediate prior occasion, and is only
-used for newborns in the first survival transition from birth. So, for
-example, in a three stage MPM where the 1st stage is the newborn stage
-and only the 3rd stage is reproductive, we add a 4th stage to the prior
-portion of the row and column. Thus, we may start with the following
-hMPM in <span class="citation">Ehrlén (2000)</span> format:
+One key feature proposed by <span class="citation"><span class="nocase">deVries and Caswell</span> (2018)</span> is the addition
+of a new stage to account for the prior status of newborn individuals.
+This reflects a slightly different interpretation from <span class="citation">Ehrlén (2000)</span> of the historical transition. In
+<span class="citation">Ehrlén (2000)</span>, all matrix elements simply
+reflect the order of the events in a single transition, including both
+fecundity and survival-transition events. However, in <span class="citation"><span class="nocase">deVries and Caswell</span>
+(2018)</span>, these matrix elements must also reflect the history of
+specific individuals. In the latter case, the fact that a newborn in
+occasion <em>t</em> did not exist in occasion <em>t</em>-1 leads to the
+creation of a new prior stage to account for the time immediately prior
+to birth. This new stage only exists in the immediate prior occasion,
+and is only used for newborns in the first survival transition from
+birth. So, for example, in a three stage MPM where the 1st stage is the
+newborn stage and only the 3rd stage is reproductive, we add a 4th stage
+to the prior portion of the row and column. Thus, we may start with the
+following hMPM in <span class="citation">Ehrlén (2000)</span> format:
 </p>
 <p><span class="math display">\[\begin{equation}
 \tag{8}
@@ -937,8 +931,7 @@ n _{1,BC} \\
 n _{1,CC}
 \end{array}\right]  
 \end{equation}\]</span></p>
-<p>This hMPM becomes as follows in <span class="citation">deVries and
-Caswell (2018)</span> format:</p>
+<p>This hMPM becomes as follows in <span class="citation"><span class="nocase">deVries and Caswell</span> (2018)</span> format:</p>
 <p><span class="math display">\[\begin{equation}
 \tag{9}
 \tiny
@@ -1009,23 +1002,23 @@ matrices developed with <code>lefko3</code> can be seen as falling
 within the <strong>prior condition model</strong> approach where prior
 condition is determined in the same way as current stage. We also
 implement both the <span class="citation">Ehrlén (2000)</span> format
-and the <span class="citation">deVries and Caswell (2018)</span> format,
-and use the former as the default. We leave it to the user to decide
-which approach to use.
+and the <span class="citation"><span class="nocase">deVries and
+Caswell</span> (2018)</span> format, and use the former as the default.
+We leave it to the user to decide which approach to use.
 </p>
 <p style="text-indent: 20px">
-<span class="citation">deVries and Caswell (2018)</span> also suggest
-that hMPMs can be organized differently to yield more intuitive models.
-In particular, matrices may be as organized as block matrices where the
-component blocks are essentially matrices showing the transitions from
-all stages in occasion <em>t</em> to stages in occasion <em>t</em>+1
-conditioned on individuals having been in the same stage in occasion
-<em>t</em>-1. We refer to these block component matrices as
-<strong>conditional matrices</strong>, since they show transitions from
-occasion <em>t</em> to occasion <em>t</em>+1 conditional on the same
-previous stage in occasion <em>t</em>-1. We have developed function
-<code>cond_hmpm()</code> to take full hMPMs and decompose them into
-their associated conditional matrices.
+<span class="citation"><span class="nocase">deVries and Caswell</span>
+(2018)</span> also suggest that hMPMs can be organized differently to
+yield more intuitive models. In particular, matrices may be as organized
+as block matrices where the component blocks are essentially matrices
+showing the transitions from all stages in occasion <em>t</em> to stages
+in occasion <em>t</em>+1 conditioned on individuals having been in the
+same stage in occasion <em>t</em>-1. We refer to these block component
+matrices as <strong>conditional matrices</strong>, since they show
+transitions from occasion <em>t</em> to occasion <em>t</em>+1
+conditional on the same previous stage in occasion <em>t</em>-1. We have
+developed function <code>cond_hmpm()</code> to take full hMPMs and
+decompose them into their associated conditional matrices.
 </p>
 </div>
 <div id="leslie-age-classified-mpms" class="section level3">
@@ -1337,10 +1330,9 @@ reader to use the principle of parsimony in deciding this. For example,
 users may analyze whether lagged effects of previous stage appear to
 influence vital rates. Package <code>lefko3</code> includes one method
 to do this based on linear modeling. A number of other methods exist,
-mostly focused on what are known as <em>memory models</em> <span class="citation">(Brownie et al. 1993; Pradel, Wintrebert, and Gimenez
-2003; Cole et al. 2014)</span>. Here, we focus only on the main
-<code>lefko3</code> method, and leave it to the reader to explore other
-options.
+mostly focused on what are known as <em>memory models</em> <span class="citation">(Brownie et al. 1993; Pradel et al. 2003; Cole et al.
+2014)</span>. Here, we focus only on the main <code>lefko3</code>
+method, and leave it to the reader to explore other options.
 </p>
 <p style="text-indent: 20px">
 In <code>lefko3</code>, function <code>modelsearch()</code> allows users
@@ -1637,11 +1629,12 @@ function in <code>glmmTMB</code> <span class="citation">(Brooks et al.
 <code>MASS</code>, the <code>vglm()</code> function in package
 <code>VGAM</code> <span class="citation">(Yee and Wild 1996; Yee
 2015)</span>, or the <code>zeroinfl()</code> function in package
-<code>pscl</code> <span class="citation">(Zeileis, Kleiber, and Jackman
-2008)</span>. Exhaustive model building proceeds through the
-<code>dredge()</code> function in package <code>MuMIn</code> <span class="citation">(Bartoń 2014)</span>. Model selection is handled
-through assessment of AICc and the number of parameters estimated per
-model (see 6. <strong>Best-fit criterion</strong> above).
+<code>pscl</code> <span class="citation">(Zeileis et al. 2008)</span>.
+Exhaustive model building proceeds through the <code>dredge()</code>
+function in package <code>MuMIn</code> <span class="citation">(Bartoń
+2014)</span>. Model selection is handled through assessment of AICc and
+the number of parameters estimated per model (see 6. <strong>Best-fit
+criterion</strong> above).
 </p>
 <p style="text-indent: 20px">
 If <code>modelsearch()</code> is set for historical analysis
@@ -2316,11 +2309,11 @@ analysis functions in other packages need only extract the matrices from
 them. This allows the use of all functions that work with matrices,
 including functions in base <em>R</em> such as <code>eigen()</code>, as
 well as in packages such as <code>popbio</code> <span class="citation">(Stubben and Milligan 2007)</span> and
-<code>popdemo</code> <span class="citation">(Stott, Hodgson, and Townley
-2012)</span>. We encourage users to explore whether the packages and
-functions they wish to use can handle sparse matrices, as well as large
-matrices - some were not designed to and can fail or yield unpredictable
-behavior when applied particularly to historical matrices produced by
+<code>popdemo</code> <span class="citation">(Stott et al. 2012)</span>.
+We encourage users to explore whether the packages and functions they
+wish to use can handle sparse matrices, as well as large matrices - some
+were not designed to and can fail or yield unpredictable behavior when
+applied particularly to historical matrices produced by
 <code>lefko3</code>.
 </p>
 </div>
@@ -2337,10 +2330,10 @@ the Promotion of Science.
 </div>
 <div id="literature-cited" class="section level2">
 <h2>Literature cited</h2>
-<div id="refs" class="references csl-bib-body hanging-indent" entry-spacing="0">
+<div id="refs" class="references csl-bib-body hanging-indent">
 <div id="ref-barton_mumin_2014" class="csl-entry">
-Bartoń, Kamil A. 2014. <span>“<span>MuMIn</span>: Multi-Model
-Inference.”</span> <a href="https://CRAN.R-project.org/package=MuMIn">https://CRAN.R-project.org/package=MuMIn</a>.
+Bartoń, Kamil A. 2014. <em><span>MuMIn</span>: Multi-Model
+Inference</em>. <a href="https://CRAN.R-project.org/package=MuMIn">https://CRAN.R-project.org/package=MuMIn</a>.
 </div>
 <div id="ref-bates_fitting_2015" class="csl-entry">
 Bates, Douglas, Martin Maechler, Ben Bolker, and Steve Walker. 2015.
@@ -2354,11 +2347,10 @@ Management.”</span> <em>Journal of Wildlife Management</em> 62 (3):
 821–41. <a href="https://doi.org/10.2307/3802534">https://doi.org/10.2307/3802534</a>.
 </div>
 <div id="ref-brooks_glmmtmb_2017" class="csl-entry">
-Brooks, Mollie E., Kasper Kristensen, Koen J. van Benthem, Arni
-Magnusson, Casper W. Berg, Anders Nielsen, Hans J. Skaug, Martin
-Machler, and Benjamin M. Bolker. 2017. <span>“<span class="nocase">glmmTMB</span> Balances Speed and Flexibility Among
-Packages for Zero-Inflated Generalized Linear Mixed Modeling.”</span>
-<em>The R Journal</em> 9 (2): 378–400. <a href="https://doi.org/10.32614/RJ-2017-066">https://doi.org/10.32614/RJ-2017-066</a>.
+Brooks, Mollie E., Kasper Kristensen, Koen J. van Benthem, et al. 2017.
+<span>“<span class="nocase">glmmTMB</span> Balances Speed and
+Flexibility Among Packages for Zero-Inflated Generalized Linear Mixed
+Modeling.”</span> <em>The R Journal</em> 9 (2): 378–400. <a href="https://doi.org/10.32614/RJ-2017-066">https://doi.org/10.32614/RJ-2017-066</a>.
 </div>
 <div id="ref-brownie_capture-recapture_1993" class="csl-entry">
 Brownie, C., James E. Hines, James D. Nichols, Kenneth H. Pollock, and
@@ -2368,13 +2360,13 @@ Strata Including Non-<span>Markovian</span> Transitions.”</span>
 </div>
 <div id="ref-caswell_matrix_2001" class="csl-entry">
 Caswell, Hal. 2001. <em>Matrix Population Models: Construction,
-Analysis, and Interpretation</em>. Second edition. Sunderland,
-Massachusetts, USA: Sinauer Associates, Inc.
+Analysis, and Interpretation</em>. Second edition. Sinauer Associates,
+Inc.
 </div>
 <div id="ref-caswell_sensitivity_2019" class="csl-entry">
-———. 2019. <em>Sensitivity Analysis: Matrix Methods in Demography and
-Ecology</em>. Demographic <span>Research</span> <span>Methods</span>.
-Cham, Switerland: Springer Nature. <a href="https://doi.org/10.1007/978-3-030-10534-1">https://doi.org/10.1007/978-3-030-10534-1</a>.
+Caswell, Hal. 2019. <em>Sensitivity Analysis: Matrix Methods in
+Demography and Ecology</em>. Demographic <span>Research</span>
+<span>Methods</span>. Springer Nature. <a href="https://doi.org/10.1007/978-3-030-10534-1">https://doi.org/10.1007/978-3-030-10534-1</a>.
 </div>
 <div id="ref-cole_does_2014" class="csl-entry">
 Cole, Diana J., Byron J. T. Morgan, Rachel S. McCrea, Roger Pradel,
@@ -2397,17 +2389,16 @@ Components of Stochastic Population Growth in
 Naturalist</em> 181 (3): 410–20. <a href="https://doi.org/10.1086/669155">https://doi.org/10.1086/669155</a>.
 </div>
 <div id="ref-de_vries_demography_2018" class="csl-entry">
-deVries, Charlotte, and Hal Caswell. 2018. <span>“Demography When
-History Matters: Construction and Analysis of Second-Order Matrix
-Population Models.”</span> <em>Theoretical Ecology</em> 11 (2): 129–40.
-<a href="https://doi.org/10.1007/s12080-017-0353-0">https://doi.org/10.1007/s12080-017-0353-0</a>.
+<span class="nocase">deVries, Charlotte, and Hal Caswell</span>. 2018.
+<span>“Demography When History Matters: Construction and Analysis of
+Second-Order Matrix Population Models.”</span> <em>Theoretical
+Ecology</em> 11 (2): 129–40. <a href="https://doi.org/10.1007/s12080-017-0353-0">https://doi.org/10.1007/s12080-017-0353-0</a>.
 </div>
 <div id="ref-doak_critical_2021" class="csl-entry">
-Doak, Daniel F., Ellen Waddle, Ryan E. Langendorf, Allison M. Louthan,
-Nathalie Isabelle Chardon, Reilly R. Dibner, Douglas A. Keinath, et al.
-2021. <span>“A Critical Comparison of Integral Projection and Matrix
-Projection Models for Demographic Analysis.”</span> <em>Ecological
-Monographs</em> 91 (2): e01447. <a href="https://doi.org/10.1002/ecm.1447">https://doi.org/10.1002/ecm.1447</a>.
+Doak, Daniel F., Ellen Waddle, Ryan E. Langendorf, et al. 2021. <span>“A
+Critical Comparison of Integral Projection and Matrix Projection Models
+for Demographic Analysis.”</span> <em>Ecological Monographs</em> 91 (2):
+e01447. <a href="https://doi.org/10.1002/ecm.1447">https://doi.org/10.1002/ecm.1447</a>.
 </div>
 <div id="ref-easterling_size-specific_2000" class="csl-entry">
 Easterling, Michael R., Stephen P. Ellner, and Philip M. Dixon. 2000.
@@ -2462,7 +2453,7 @@ Model.”</span> <em>Wetlands</em> 18 (4): 634–45. <a href="https://doi.org/10
 <div id="ref-morris_quantitative_2002" class="csl-entry">
 Morris, William F., and Daniel F. Doak. 2002. <em>Quantitative
 Conservation Biology: Theory and Practice of Population Viability
-Analysis</em>. Sunderland, Massachusetts, USA: Sinauer Associates, Inc.
+Analysis</em>. Sinauer Associates, Inc.
 </div>
 <div id="ref-pradel_proposal_2003" class="csl-entry">
 Pradel, Roger, C. Wintrebert, and O. Gimenez. 2003. <span>“A Proposal
@@ -2476,10 +2467,9 @@ Plant Shrinkage in the Demographic Loop.”</span> <em>Journal of
 Ecology</em> 98: 312–23. <a href="https://doi.org/10.1111/j.1365-2745.2009.01616.x">https://doi.org/10.1111/j.1365-2745.2009.01616.x</a>.
 </div>
 <div id="ref-shefferson_drivers_2018" class="csl-entry">
-Shefferson, Richard P., Tiiu Kull, Michael J. Hutchings, Marc-André
-Selosse, Hans Jacquemyn, Kimberly M. Kellett, Eric S. Menges, et al.
-2018. <span>“Drivers of Vegetative Dormancy Across Herbaceous Perennial
-Plant Species.”</span> <em>Ecology Letters</em> 21 (5): 724–33. <a href="https://doi.org/10.1111/ele.12940">https://doi.org/10.1111/ele.12940</a>.
+Shefferson, Richard P., Tiiu Kull, Michael J. Hutchings, et al. 2018.
+<span>“Drivers of Vegetative Dormancy Across Herbaceous Perennial Plant
+Species.”</span> <em>Ecology Letters</em> 21 (5): 724–33. <a href="https://doi.org/10.1111/ele.12940">https://doi.org/10.1111/ele.12940</a>.
 </div>
 <div id="ref-shefferson_lefko3_2021" class="csl-entry">
 Shefferson, Richard P., Shun Kurokawa, and Johan Ehrlén. 2021.
@@ -2521,10 +2511,10 @@ Wardle, Glenda M. 1998. <span>“A Graph Theory Approach to Demographic
 Loop Analysis.”</span> <em>Ecology</em> 79 (7): 2539–49. <a href="https://doi.org/10.1890/0012-9658(1998)079%5B2539:AGTATD%5D2.0.CO;2">https://doi.org/10.1890/0012-9658(1998)079[2539:AGTATD]2.0.CO;2</a>.
 </div>
 <div id="ref-yee_vector_2015" class="csl-entry">
-Yee, Thomas W. 2015. <span>“Vector <span>Generalized</span>
+Yee, Thomas W. 2015. <em>Vector <span>Generalized</span>
 <span>Linear</span> and <span>Additive</span> <span>Models</span>:
-<span>With</span> an <span>Implementation</span> in
-<span>R</span>.”</span> <a href="https://CRAN.R-project.org/package=VGAM">https://CRAN.R-project.org/package=VGAM</a>.
+<span>With</span> an <span>Implementation</span> in <span>R</span></em>.
+<a href="https://CRAN.R-project.org/package=VGAM">https://CRAN.R-project.org/package=VGAM</a>.
 </div>
 <div id="ref-yee_vector_1996" class="csl-entry">
 Yee, Thomas W., and C. J. Wild. 1996. <span>“Vector Generalized Additive
